@@ -1,4 +1,8 @@
 import { supabase } from "@/lib/supabase/browser";
+import type {
+  VisualData,
+  VisualType,
+} from "@/lib/visuals/types";
 
 export interface Question {
   id: string;
@@ -30,6 +34,24 @@ export interface Question {
 
   explanation: string | null;
   image_url: string | null;
+
+  /* =================================
+     SISTEMA DE VISUALES
+  ================================= */
+
+  requires_visual: boolean;
+
+  visual_type: VisualType | null;
+
+  visual_description: string | null;
+
+  visual_data: VisualData | null;
+
+  /*
+  * Compatibilidad temporal con el
+  * sistema anterior de gráficas.
+  */
+  chart_data: unknown | null;
 
   year: number | null;
   source: string | null;

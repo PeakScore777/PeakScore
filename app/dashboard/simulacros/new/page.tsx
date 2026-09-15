@@ -1,304 +1,432 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Calculator,
   BookOpen,
-  Globe,
-  Microscope,
-  Languages,
+  Check,
+  Clock3,
   Sparkles,
 } from "lucide-react";
 
-const subjects = [
+const SUBJECTS = [
   {
-    id: "Matemáticas",
     name: "Matemáticas",
-    icon: Calculator,
+    description:
+      "Resuelve problemas y fortalece tu razonamiento matemático.",
   },
   {
-    id: "Lectura Crítica",
     name: "Lectura Crítica",
-    icon: BookOpen,
+    description:
+      "Analiza textos, argumentos e interpreta información.",
   },
   {
-    id: "Sociales y Ciudadanas",
     name: "Sociales y Ciudadanas",
-    icon: Globe,
+    description:
+      "Analiza fenómenos sociales, históricos y ciudadanos.",
   },
   {
-    id: "Ciencias Naturales",
     name: "Ciencias Naturales",
-    icon: Microscope,
+    description:
+      "Pon a prueba tus conocimientos científicos y capacidad de análisis.",
   },
   {
-    id: "Inglés",
     name: "Inglés",
-    icon: Languages,
+    description:
+      "Practica comprensión de lectura y uso del idioma.",
   },
 ];
 
+const QUESTION_AMOUNTS = [5, 10, 25, 50];
+
+const DIFFICULTIES = [
+  {
+    value: "Mixta",
+    label: "Mixta",
+    description: "Una combinación equilibrada de niveles.",
+  },
+  {
+    value: "Fácil",
+    label: "Fácil",
+    description: "Ideal para reforzar fundamentos.",
+  },
+  {
+    value: "Media",
+    label: "Media",
+    description: "Un nivel de entrenamiento estándar.",
+  },
+  {
+    value: "Difícil",
+    label: "Difícil",
+    description: "Un reto para llevar tu nivel más lejos.",
+  },
+];
+
+function calculateDuration(amount: number) {
+  return Math.max(10, Math.ceil(amount * 1.5));
+}
+
 export default function NewSimulationPage() {
-  const [name, setName] = useState("");
-  const [session, setSession] = useState("1");
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-  const [questionsPerSubject, setQuestionsPerSubject] = useState(5);
+  const router = useRouter();
 
-  const toggleSubject = (subject: string) => {
-    setSelectedSubjects((current) =>
-      current.includes(subject)
-        ? current.filter((item) => item !== subject)
-        : [...current, subject]
-    );
-  };
+  const [subject, setSubject] = useState("Matemáticas");
+  const [amount, setAmount] = useState(10);
+  const [difficulty, setDifficulty] = useState("Mixta");
 
-  const totalQuestions =
-    selectedSubjects.length * questionsPerSubject;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const selectedSubject = useMemo(
+    () => SUBJECTS.find((item) => item.name === subject),
+    [subject]
+  );
+
+  const duration = calculateDuration(amount);
+
+  async function handleGenerate() {
+    if (loading) return;
+
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/simulations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "normal",
+          subject,
+          amount,
+          difficulty,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.error || "No fue posible generar el simulacro."
+        );
+      }
+
+      if (!result.simulation?.id) {
+        throw new Error(
+          "El simulacro fue creado, pero no se recibió su identificador."
+        );
+      }
+
+      router.push(`/simulacros/${result.simulation.id}`);
+    } catch (err) {
+      console.error("Error generando simulacro:", err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Ocurrió un error generando el simulacro."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
-    <main className="min-h-screen bg-slate-100 p-8">
+    <main className="min-h-screen bg-slate-100 px-6 py-10">
       <div className="mx-auto max-w-5xl">
 
+        {/* VOLVER */}
+
+        <button
+          type="button"
+          onClick={() => router.push("/dashboard/simulacros")}
+          className="mb-8 flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+        >
+          <ArrowLeft size={17} />
+          Volver a simulacros
+        </button>
+
         {/* HEADER */}
-        <div className="mb-8">
 
-          <Link
-            href="/dashboard/simulacros"
-            className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-900"
-          >
-            <ArrowLeft size={18} />
-            Volver a simulacros
-          </Link>
+        <div className="mb-10">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-semibold text-blue-700">
+            <Sparkles size={15} />
+            Entrenamiento personalizado
+          </div>
 
-          <h1 className="text-4xl font-bold text-slate-900">
-            Crear simulacro
+          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+            Genera tu simulacro
           </h1>
 
-          <p className="mt-2 text-slate-600">
-            Configura tu simulacro antes de generarlo.
+          <p className="mt-3 max-w-2xl text-base leading-7 text-slate-500">
+            Elige una materia, define cuántas preguntas quieres resolver
+            y deja que PeakScore prepare tu entrenamiento.
           </p>
-
         </div>
 
-        {/* FORMULARIO */}
-        <section className="rounded-3xl bg-white p-8 shadow-sm">
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
 
-          {/* INFORMACIÓN GENERAL */}
-          <div className="mb-10">
+          {/* CONFIGURACIÓN */}
 
-            <h2 className="text-2xl font-bold text-slate-900">
-              Información general
-            </h2>
+          <section className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
 
-            <p className="mt-2 text-slate-500">
-              Define las características principales del simulacro.
-            </p>
+            {/* MATERIA */}
 
-            <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <div>
+              <div className="mb-4">
+                <h2 className="text-lg font-bold text-slate-900">
+                  1. Elige una materia
+                </h2>
 
-              {/* NOMBRE */}
-              <div className="md:col-span-2">
-
-                <label className="mb-2 block font-semibold text-slate-700">
-                  Nombre del simulacro
-                </label>
-
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ej: Simulacro ICFES - Sesión 1"
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                />
-
+                <p className="mt-1 text-sm text-slate-500">
+                  Cada simulacro personalizado trabaja una sola materia.
+                </p>
               </div>
 
-              {/* SESIÓN */}
-              <div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {SUBJECTS.map((item) => {
+                  const selected = subject === item.name;
 
-                <label className="mb-2 block font-semibold text-slate-700">
-                  Sesión
-                </label>
+                  return (
+                    <button
+                      key={item.name}
+                      type="button"
+                      onClick={() => setSubject(item.name)}
+                      className={`group rounded-2xl border p-4 text-left transition ${
+                        selected
+                          ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100"
+                          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
 
-                <select
-                  value={session}
-                  onChange={(e) => setSession(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                >
-                  <option value="1">Sesión 1</option>
-                  <option value="2">Sesión 2</option>
-                </select>
+                        <div>
+                          <h3
+                            className={`font-semibold ${
+                              selected
+                                ? "text-blue-700"
+                                : "text-slate-900"
+                            }`}
+                          >
+                            {item.name}
+                          </h3>
 
+                          <p className="mt-1 text-xs leading-5 text-slate-500">
+                            {item.description}
+                          </p>
+                        </div>
+
+                        {selected && (
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white">
+                            <Check size={14} />
+                          </div>
+                        )}
+
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-
-              {/* PREGUNTAS */}
-              <div>
-
-                <label className="mb-2 block font-semibold text-slate-700">
-                  Preguntas por materia
-                </label>
-
-                <input
-                  type="number"
-                  min="1"
-                  max="100"
-                  value={questionsPerSubject}
-                  onChange={(e) =>
-                    setQuestionsPerSubject(
-                      Number(e.target.value)
-                    )
-                  }
-                  className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                />
-
-              </div>
-
             </div>
 
-          </div>
+            {/* CANTIDAD */}
 
-          {/* MATERIAS */}
-          <div className="border-t border-slate-200 pt-10">
+            <div className="mt-9">
+              <div className="mb-4">
+                <h2 className="text-lg font-bold text-slate-900">
+                  2. ¿Cuántas preguntas?
+                </h2>
 
-            <h2 className="text-2xl font-bold text-slate-900">
-              Materias
-            </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  Elige el tamaño de tu entrenamiento.
+                </p>
+              </div>
 
-            <p className="mt-2 text-slate-500">
-              Selecciona las materias que quieres incluir.
-            </p>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {QUESTION_AMOUNTS.map((value) => {
+                  const selected = amount === value;
 
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-
-              {subjects.map((subject) => {
-                const Icon = subject.icon;
-
-                const selected = selectedSubjects.includes(
-                  subject.id
-                );
-
-                return (
-                  <button
-                    key={subject.id}
-                    type="button"
-                    onClick={() =>
-                      toggleSubject(subject.id)
-                    }
-                    className={`flex items-center gap-4 rounded-2xl border p-5 text-left transition ${
-                      selected
-                        ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
-                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                    }`}
-                  >
-
-                    <div
-                      className={`rounded-xl p-3 ${
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setAmount(value)}
+                      className={`rounded-2xl border px-3 py-4 text-center transition ${
                         selected
-                          ? "bg-blue-600 text-white"
-                          : "bg-slate-100 text-slate-500"
+                          ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                          : "border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-slate-50"
                       }`}
                     >
-                      <Icon size={24} />
-                    </div>
+                      <span className="block text-xl font-bold">
+                        {value}
+                      </span>
 
-                    <div className="flex-1">
+                      <span
+                        className={`text-xs ${
+                          selected
+                            ? "text-blue-100"
+                            : "text-slate-400"
+                        }`}
+                      >
+                        preguntas
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
-                      <p className="font-bold text-slate-800">
-                        {subject.name}
-                      </p>
+            {/* DIFICULTAD */}
 
-                      <p className="mt-1 text-sm text-slate-500">
-                        {questionsPerSubject} preguntas
-                      </p>
+            <div className="mt-9">
+              <div className="mb-4">
+                <h2 className="text-lg font-bold text-slate-900">
+                  3. Elige la dificultad
+                </h2>
 
-                    </div>
+                <p className="mt-1 text-sm text-slate-500">
+                  Selecciona el nivel de desafío.
+                </p>
+              </div>
 
-                    <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+              <div className="grid gap-3 sm:grid-cols-2">
+                {DIFFICULTIES.map((item) => {
+                  const selected = difficulty === item.value;
+
+                  return (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => setDifficulty(item.value)}
+                      className={`rounded-2xl border p-4 text-left transition ${
                         selected
-                          ? "border-blue-600 bg-blue-600"
-                          : "border-slate-300"
+                          ? "border-blue-600 bg-blue-50"
+                          : "border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50"
                       }`}
                     >
-                      {selected && (
-                        <span className="text-xs font-bold text-white">
-                          ✓
+                      <div className="flex items-center justify-between">
+                        <span
+                          className={`font-semibold ${
+                            selected
+                              ? "text-blue-700"
+                              : "text-slate-900"
+                          }`}
+                        >
+                          {item.label}
                         </span>
-                      )}
-                    </div>
 
-                  </button>
-                );
-              })}
+                        {selected && (
+                          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white">
+                            <Check size={14} />
+                          </div>
+                        )}
+                      </div>
 
+                      <p className="mt-1 text-xs text-slate-500">
+                        {item.description}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-          </div>
+            {/* ERROR */}
 
-          {/* RESUMEN */}
-          <div className="mt-10 rounded-2xl bg-slate-50 p-6">
-
-            <h3 className="font-bold text-slate-900">
-              Resumen
-            </h3>
-
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-
-              <div>
-                <p className="text-sm text-slate-500">
-                  Sesión
-                </p>
-
-                <p className="mt-1 font-bold text-slate-900">
-                  Sesión {session}
-                </p>
+            {error && (
+              <div className="mt-7 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
               </div>
+            )}
 
-              <div>
-                <p className="text-sm text-slate-500">
-                  Materias seleccionadas
-                </p>
-
-                <p className="mt-1 font-bold text-slate-900">
-                  {selectedSubjects.length}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-500">
-                  Total de preguntas
-                </p>
-
-                <p className="mt-1 text-2xl font-extrabold text-blue-600">
-                  {totalQuestions}
-                </p>
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* BOTÓN */}
-          <div className="mt-8 flex justify-end border-t border-slate-200 pt-6">
+            {/* BOTÓN */}
 
             <button
               type="button"
-              disabled={
-                !name.trim() ||
-                selectedSubjects.length === 0
-              }
-              className="flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={handleGenerate}
+              disabled={loading}
+              className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-4 font-bold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <Sparkles size={20} />
-              Generar simulacro
+              {loading ? (
+                "Generando simulacro..."
+              ) : (
+                <>
+                  <Sparkles size={18} />
+                  Generar simulacro
+                </>
+              )}
             </button>
 
-          </div>
+          </section>
 
-        </section>
+          {/* RESUMEN */}
 
+          <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-6 shadow-sm lg:sticky lg:top-6">
+
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+              <BookOpen size={23} />
+            </div>
+
+            <h2 className="mt-5 text-xl font-bold text-slate-900">
+              Tu entrenamiento
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              PeakScore preparará una prueba enfocada únicamente
+              en el área que seleccionaste.
+            </p>
+
+            <div className="mt-6 space-y-3">
+
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-medium text-slate-400">
+                  Materia
+                </p>
+
+                <p className="mt-1 font-semibold text-slate-900">
+                  {selectedSubject?.name}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-medium text-slate-400">
+                  Preguntas
+                </p>
+
+                <p className="mt-1 font-semibold text-slate-900">
+                  {amount}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-slate-50 p-4">
+                <p className="text-xs font-medium text-slate-400">
+                  Dificultad
+                </p>
+
+                <p className="mt-1 font-semibold text-slate-900">
+                  {difficulty}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-blue-50 p-4">
+                <div className="flex items-center gap-2 text-blue-600">
+                  <Clock3 size={17} />
+
+                  <p className="text-xs font-semibold">
+                    Tiempo estimado
+                  </p>
+                </div>
+
+                <p className="mt-2 text-2xl font-bold text-slate-900">
+                  {duration} min
+                </p>
+              </div>
+
+            </div>
+          </aside>
+
+        </div>
       </div>
     </main>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   LayoutDashboard,
   BookOpen,
@@ -8,14 +10,44 @@ import {
   Medal,
   Settings,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 
 import SidebarItem from "./SidebarItem";
 
+import { supabase } from "@/lib/supabase/browser";
+import { getProfile } from "@/lib/services/profile.service";
+
 export default function DashboardSidebar() {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) return;
+
+        const profile = await getProfile(user.id);
+
+        setIsAdmin(profile?.role === "admin");
+      } catch (error) {
+        console.error(
+          "Error obteniendo el perfil:",
+          error
+        );
+      }
+    }
+
+    loadProfile();
+  }, []);
+
   return (
     <aside className="flex h-screen w-72 flex-col border-r border-slate-200 bg-white">
-      {/* Logo */}
+      
+      {/* LOGO */}
       <div className="border-b border-slate-200 p-6">
         <h1 className="text-3xl font-extrabold text-blue-600">
           PeakScore
@@ -26,8 +58,9 @@ export default function DashboardSidebar() {
         </p>
       </div>
 
-      {/* Menú */}
+      {/* MENÚ */}
       <nav className="flex-1 space-y-2 p-4">
+
         <SidebarItem
           href="/dashboard"
           icon={LayoutDashboard}
@@ -70,15 +103,37 @@ export default function DashboardSidebar() {
           icon={Settings}
           label="Configuración"
         />
+
+        {/* ===================================
+            ADMINISTRACIÓN
+            SOLO VISIBLE PARA ADMIN
+        =================================== */}
+
+        {isAdmin && (
+          <>
+            <div className="my-3 border-t border-slate-200" />
+
+            <SidebarItem
+              href="/dashboard/admin"
+              icon={ShieldCheck}
+              label="Administración"
+            />
+          </>
+        )}
+
       </nav>
 
-      {/* Salir */}
+      {/* CERRAR SESIÓN */}
       <div className="border-t border-slate-200 p-4">
-        <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50">
+        <button
+          type="button"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition hover:bg-red-50"
+        >
           <LogOut size={20} />
           Cerrar sesión
         </button>
       </div>
+
     </aside>
   );
 }

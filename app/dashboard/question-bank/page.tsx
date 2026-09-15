@@ -1,21 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import {
   BookOpen,
   Calculator,
   Globe,
-  Microscope,
   Languages,
-  Upload,
-  Plus,
   Loader2,
+  Microscope,
   Pencil,
-  Trash2,
+  Plus,
   Search,
+  Sparkles,
+  Trash2,
+  Upload,
   X,
   FileText,
 } from "lucide-react";
@@ -27,6 +28,12 @@ import {
   deleteQuestion,
   type Question,
 } from "@/lib/services/question.service";
+
+import QuestionVisualRenderer from "@/components/questions/QuestionVisualRenderer";
+
+/* =========================================================
+   MATERIAS
+========================================================= */
 
 const subjects = [
   {
@@ -56,13 +63,25 @@ const subjects = [
   },
 ];
 
+/* =========================================================
+   PÁGINA
+========================================================= */
+
 export default function QuestionBankPage() {
   const router = useRouter();
+
+  /* -----------------------------
+     ESTADO
+  ----------------------------- */
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  /* -----------------------------
+     FILTROS
+  ----------------------------- */
 
   const [search, setSearch] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("");
@@ -70,12 +89,15 @@ export default function QuestionBankPage() {
   const [difficultyFilter, setDifficultyFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
 
+  /* =========================================================
+     CARGAR PREGUNTAS
+  ========================================================= */
+
   const loadQuestions = async () => {
     setLoading(true);
 
     try {
       const data = await getQuestions();
-
       setQuestions(data);
     } catch (error) {
       console.error("Error cargando preguntas:", error);
@@ -84,6 +106,10 @@ export default function QuestionBankPage() {
       setLoading(false);
     }
   };
+
+  /* =========================================================
+     VERIFICAR ADMIN
+  ========================================================= */
 
   useEffect(() => {
     async function checkAdminAccess() {
@@ -133,7 +159,11 @@ export default function QuestionBankPage() {
     }
 
     checkAdminAccess();
-  }, []);
+  }, [router]);
+
+  /* =========================================================
+     CONTAR PREGUNTAS POR MATERIA
+  ========================================================= */
 
   const getSubjectCount = (subjectName: string) => {
     return questions.filter(
@@ -142,11 +172,16 @@ export default function QuestionBankPage() {
     ).length;
   };
 
-  const filteredQuestions = useMemo(() => {
-    return questions.filter((question) => {
-      const searchValue =
-        search.toLowerCase().trim();
+  /* =========================================================
+     FILTRAR PREGUNTAS
+  ========================================================= */
 
+  const filteredQuestions = useMemo(() => {
+    const searchValue = search
+      .toLowerCase()
+      .trim();
+
+    return questions.filter((question) => {
       const contextText =
         question.context_text
           ?.toLowerCase()
@@ -207,6 +242,10 @@ export default function QuestionBankPage() {
     yearFilter,
   ]);
 
+  /* =========================================================
+     LIMPIAR FILTROS
+  ========================================================= */
+
   const clearFilters = () => {
     setSearch("");
     setSubjectFilter("");
@@ -216,18 +255,24 @@ export default function QuestionBankPage() {
   };
 
   const hasFilters =
-    search ||
-    subjectFilter ||
-    sessionFilter ||
-    difficultyFilter ||
-    yearFilter;
+    Boolean(search) ||
+    Boolean(subjectFilter) ||
+    Boolean(sessionFilter) ||
+    Boolean(difficultyFilter) ||
+    Boolean(yearFilter);
+
+  /* =========================================================
+     ELIMINAR PREGUNTA
+  ========================================================= */
 
   const handleDelete = async (id: string) => {
-    const confirmDelete = confirm(
+    const confirmDelete = window.confirm(
       "¿Seguro que quieres eliminar esta pregunta?"
     );
 
-    if (!confirmDelete) return;
+    if (!confirmDelete) {
+      return;
+    }
 
     try {
       setDeleting(id);
@@ -246,13 +291,17 @@ export default function QuestionBankPage() {
         error
       );
 
-      alert(
+      window.alert(
         "No se pudo eliminar la pregunta."
       );
     } finally {
       setDeleting(null);
     }
   };
+
+  /* =========================================================
+     CARGANDO PERMISOS
+  ========================================================= */
 
   if (checkingAdmin) {
     return (
@@ -271,10 +320,17 @@ export default function QuestionBankPage() {
     );
   }
 
+  /* =========================================================
+     INTERFAZ
+  ========================================================= */
+
   return (
     <main className="min-h-screen bg-slate-100 p-8">
       <div className="mx-auto max-w-7xl">
-        {/* HEADER */}
+
+        {/* =================================================
+            HEADER
+        ================================================= */}
 
         <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div>
@@ -283,12 +339,14 @@ export default function QuestionBankPage() {
             </h1>
 
             <p className="mt-2 text-slate-600">
-              Administra todas las preguntas
-              de PeakScore.
+              Administra todas las preguntas de PeakScore.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-4">
+
+            {/* IMPORTAR PDF */}
+
             <Link
               href="/dashboard/import-pdf"
               className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700"
@@ -296,6 +354,18 @@ export default function QuestionBankPage() {
               <Upload size={20} />
               Importar PDF
             </Link>
+
+            {/* GENERAR CON IA */}
+
+            <Link
+              href="/dashboard/question-bank/new?mode=ai"
+              className="flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 font-semibold text-white transition hover:bg-purple-700"
+            >
+              <Sparkles size={20} />
+              Generar con IA
+            </Link>
+
+            {/* NUEVA PREGUNTA */}
 
             <Link
               href="/dashboard/question-bank/new"
@@ -307,15 +377,17 @@ export default function QuestionBankPage() {
           </div>
         </div>
 
-        {/* MATERIAS */}
+        {/* =================================================
+            MATERIAS
+        ================================================= */}
 
         <div className="mb-10 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {subjects.map((subject) => {
             const Icon = subject.icon;
-            const total =
-              getSubjectCount(
-                subject.name
-              );
+
+            const total = getSubjectCount(
+              subject.name
+            );
 
             return (
               <Link
@@ -326,6 +398,7 @@ export default function QuestionBankPage() {
                 className="group block"
               >
                 <div className="h-full rounded-3xl bg-white p-8 shadow-sm transition duration-200 group-hover:-translate-y-1 group-hover:shadow-xl">
+
                   <div
                     className={`mb-6 inline-flex rounded-2xl p-4 ${subject.color}`}
                   >
@@ -364,9 +437,12 @@ export default function QuestionBankPage() {
           })}
         </div>
 
-        {/* LISTA */}
+        {/* =================================================
+            LISTADO
+        ================================================= */}
 
         <section className="rounded-3xl bg-white shadow-sm">
+
           {/* CABECERA */}
 
           <div className="border-b border-slate-200 p-8">
@@ -375,15 +451,18 @@ export default function QuestionBankPage() {
             </h2>
 
             <p className="mt-2 text-slate-500">
-              Busca y filtra las preguntas
-              del banco.
+              Busca y filtra las preguntas del banco.
             </p>
           </div>
 
-          {/* FILTROS */}
+          {/* =================================================
+              FILTROS
+          ================================================= */}
 
           <div className="border-b border-slate-200 bg-slate-50 p-6">
+
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+
               {/* BUSCAR */}
 
               <div className="relative lg:col-span-2">
@@ -395,8 +474,8 @@ export default function QuestionBankPage() {
                 <input
                   type="text"
                   value={search}
-                  onChange={(e) =>
-                    setSearch(e.target.value)
+                  onChange={(event) =>
+                    setSearch(event.target.value)
                   }
                   placeholder="Buscar pregunta o texto..."
                   className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -407,9 +486,9 @@ export default function QuestionBankPage() {
 
               <select
                 value={subjectFilter}
-                onChange={(e) =>
+                onChange={(event) =>
                   setSubjectFilter(
-                    e.target.value
+                    event.target.value
                   )
                 }
                 className="rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500"
@@ -432,9 +511,9 @@ export default function QuestionBankPage() {
 
               <select
                 value={sessionFilter}
-                onChange={(e) =>
+                onChange={(event) =>
                   setSessionFilter(
-                    e.target.value
+                    event.target.value
                   )
                 }
                 className="rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500"
@@ -456,9 +535,9 @@ export default function QuestionBankPage() {
 
               <select
                 value={difficultyFilter}
-                onChange={(e) =>
+                onChange={(event) =>
                   setDifficultyFilter(
-                    e.target.value
+                    event.target.value
                   )
                 }
                 className="rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500"
@@ -481,9 +560,10 @@ export default function QuestionBankPage() {
               </select>
             </div>
 
-            {/* SEGUNDA FILA */}
+            {/* AÑO + LIMPIAR */}
 
             <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
               <div className="flex items-center gap-3">
                 <label className="font-medium text-slate-600">
                   Año:
@@ -492,9 +572,9 @@ export default function QuestionBankPage() {
                 <input
                   type="number"
                   value={yearFilter}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setYearFilter(
-                      e.target.value
+                      event.target.value
                     )
                   }
                   placeholder="Ej. 2025"
@@ -515,7 +595,9 @@ export default function QuestionBankPage() {
             </div>
           </div>
 
-          {/* RESULTADOS */}
+          {/* =================================================
+              CONTADOR
+          ================================================= */}
 
           <div className="border-b border-slate-200 px-8 py-4">
             {loading ? (
@@ -537,7 +619,9 @@ export default function QuestionBankPage() {
             )}
           </div>
 
-          {/* PREGUNTAS */}
+          {/* =================================================
+              CARGANDO
+          ================================================= */}
 
           {loading ? (
             <div className="flex items-center justify-center gap-3 p-12 text-slate-500">
@@ -548,8 +632,12 @@ export default function QuestionBankPage() {
 
               Cargando preguntas...
             </div>
-          ) : filteredQuestions.length ===
-            0 ? (
+          ) : filteredQuestions.length === 0 ? (
+
+            /* =================================================
+               SIN RESULTADOS
+            ================================================= */
+
             <div className="p-12 text-center">
               <Search
                 size={40}
@@ -561,8 +649,7 @@ export default function QuestionBankPage() {
               </p>
 
               <p className="mt-2 text-slate-500">
-                Prueba cambiando los filtros
-                de búsqueda.
+                Prueba cambiando los filtros de búsqueda.
               </p>
 
               {hasFilters && (
@@ -575,8 +662,15 @@ export default function QuestionBankPage() {
                 </button>
               )}
             </div>
+
           ) : (
+
+            /* =================================================
+               PREGUNTAS
+            ================================================= */
+
             <div className="divide-y divide-slate-200">
+
               {filteredQuestions.map(
                 (question, index) => (
                   <div
@@ -584,49 +678,47 @@ export default function QuestionBankPage() {
                     className="p-8 transition hover:bg-slate-50"
                   >
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+
                       {/* INFORMACIÓN */}
 
                       <div className="min-w-0 flex-1">
+
+                        {/* BADGES */}
+
                         <div className="mb-3 flex flex-wrap items-center gap-2">
+
                           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                            #
-                            {index + 1}
+                            #{index + 1}
                           </span>
 
                           <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-                            {
-                              question.subject
-                            }
+                            {question.subject}
                           </span>
 
                           {question.difficulty && (
                             <span className="rounded-full bg-purple-100 px-3 py-1 text-sm font-semibold text-purple-700">
-                              {
-                                question.difficulty
-                              }
+                              {question.difficulty}
                             </span>
                           )}
 
                           <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
-                            Sesión{" "}
-                            {
-                              question.session
-                            }
+                            Sesión {question.session}
                           </span>
 
                           {question.year && (
                             <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
-                              {
-                                question.year
-                              }
+                              {question.year}
                             </span>
                           )}
                         </div>
 
-                        {/* CONTEXTO / TEXTO */}
+                        {/* =================================================
+                            TEXTO DE CONTEXTO
+                        ================================================= */}
 
                         {question.context_text && (
                           <div className="mb-6 overflow-hidden rounded-2xl border border-purple-200 bg-purple-50">
+
                             <div className="flex items-center gap-2 border-b border-purple-200 bg-purple-100 px-5 py-3">
                               <FileText
                                 size={19}
@@ -634,113 +726,146 @@ export default function QuestionBankPage() {
                               />
 
                               <span className="font-bold text-purple-800">
-                                Texto de
-                                contexto
+                                Texto de contexto
                               </span>
                             </div>
 
                             <div className="whitespace-pre-line px-5 py-5 text-[15px] leading-7 text-slate-700">
-                              {
-                                question.context_text
-                              }
+                              {question.context_text}
                             </div>
                           </div>
                         )}
 
-                        {/* PREGUNTA */}
+                        {/* =================================================
+                            IMAGEN
+                        ================================================= */}
+
+                        {question.image_url && (
+                          <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
+
+                            <div className="mb-3 flex items-center gap-2">
+                              <FileText
+                                size={18}
+                                className="text-slate-600"
+                              />
+
+                              <span className="font-bold text-slate-700">
+                                Imagen de apoyo
+                              </span>
+                            </div>
+
+                            <img
+                              src={question.image_url}
+                              alt="Imagen de apoyo de la pregunta"
+                              className="max-h-[500px] w-full rounded-xl object-contain"
+                            />
+                          </div>
+                        )}
+
+                        {/* =================================================
+                            PREGUNTA
+                        ================================================= */}
 
                         <h3 className="text-lg font-semibold leading-7 text-slate-900">
-                          {
-                            question.question
-                          }
+                          {question.question}
                         </h3>
 
-                        {/* OPCIONES */}
+                        {/* =================================================
+                            VISUAL
+                        ================================================= */}
+
+                        <QuestionVisualRenderer
+                          requiresVisual={question.requires_visual}
+                          visualType={question.visual_type}
+                          visualDescription={question.visual_description}
+                          visualData={question.visual_data}
+                        />
+
+                        {/* =================================================
+                            OPCIONES
+                        ================================================= */}
 
                         <div className="mt-5 grid gap-3 md:grid-cols-2">
+
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <span className="font-semibold">
                               A.
                             </span>{" "}
-                            {
-                              question.option_a
-                            }
+                            {question.option_a}
                           </div>
 
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <span className="font-semibold">
                               B.
                             </span>{" "}
-                            {
-                              question.option_b
-                            }
+                            {question.option_b}
                           </div>
 
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <span className="font-semibold">
                               C.
                             </span>{" "}
-                            {
-                              question.option_c
-                            }
+                            {question.option_c}
                           </div>
 
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <span className="font-semibold">
                               D.
                             </span>{" "}
-                            {
-                              question.option_d
-                            }
+                            {question.option_d}
                           </div>
                         </div>
 
-                        {/* RESPUESTA */}
+                        {/* =================================================
+                            RESPUESTA
+                        ================================================= */}
 
                         <div className="mt-5 text-green-700">
                           Respuesta correcta:{" "}
                           <strong>
-                            {
-                              question.correct_answer
-                            }
+                            {question.correct_answer}
                           </strong>
                         </div>
 
-                        {/* COMPONENTE Y COMPETENCIA */}
+                        {/* =================================================
+                            COMPONENTE / COMPETENCIA
+                        ================================================= */}
 
                         <div className="mt-4 flex flex-wrap gap-2">
+
                           {question.component && (
                             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                               Componente:{" "}
-                              {
-                                question.component
-                              }
+                              {question.component}
                             </span>
                           )}
 
                           {question.competence && (
                             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                               Competencia:{" "}
-                              {
-                                question.competence
-                              }
+                              {question.competence}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* ACCIONES */}
+                      {/* =================================================
+                          ACCIONES
+                      ================================================= */}
 
                       <div className="flex shrink-0 gap-3">
+
+                        {/* EDITAR */}
+
                         <Link
                           href={`/dashboard/question-bank/edit/${question.id}`}
                           className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-100"
                         >
-                          <Pencil
-                            size={18}
-                          />
+                          <Pencil size={18} />
                           Editar
                         </Link>
+
+                        {/* ELIMINAR */}
 
                         <button
                           type="button"
@@ -750,8 +875,7 @@ export default function QuestionBankPage() {
                             )
                           }
                           disabled={
-                            deleting ===
-                            question.id
+                            deleting === question.id
                           }
                           className="flex items-center gap-2 rounded-xl bg-red-50 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
@@ -762,9 +886,7 @@ export default function QuestionBankPage() {
                               className="animate-spin"
                             />
                           ) : (
-                            <Trash2
-                              size={18}
-                            />
+                            <Trash2 size={18} />
                           )}
 
                           Eliminar

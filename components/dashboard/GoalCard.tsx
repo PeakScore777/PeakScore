@@ -1,7 +1,5 @@
 "use client";
 
-import { Target } from "lucide-react";
-
 interface GoalCardProps {
   currentScore?: number;
   targetScore?: number;
@@ -11,84 +9,279 @@ export default function GoalCard({
   currentScore = 378,
   targetScore = 500,
 }: GoalCardProps) {
+  const safeTarget = Math.max(targetScore, 1);
+
   const percentage = Math.min(
-    (currentScore / targetScore) * 100,
+    (currentScore / safeTarget) * 100,
     100
   );
 
   const remaining = Math.max(
-    targetScore - currentScore,
+    safeTarget - currentScore,
     0
   );
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
+    <section
+      className="
+        relative
+        overflow-hidden
+        rounded-[24px]
+        border
+        border-slate-200/80
+        bg-white
+        p-7
+        shadow-[0_4px_20px_rgba(15,23,42,0.045)]
+        transition-all
+        duration-300
+        hover:border-slate-300
+        hover:shadow-[0_14px_35px_rgba(15,23,42,0.07)]
+      "
+    >
+      {/* DETALLE DECORATIVO */}
 
-      <div className="mb-6 flex items-center gap-3">
+      <div
+        className="
+          pointer-events-none
+          absolute
+          -right-20
+          -top-20
+          h-48
+          w-48
+          rounded-full
+          bg-blue-500/[0.035]
+          blur-2xl
+        "
+      />
 
-        <div className="rounded-2xl bg-blue-100 p-3">
-          <Target className="text-blue-600" size={28} />
+      {/* CABECERA */}
+
+      <div className="relative">
+
+        <p
+          className="
+            text-[10px]
+            font-bold
+            uppercase
+            tracking-[0.18em]
+            text-blue-600
+          "
+        >
+          Objetivo
+        </p>
+
+        <div className="mt-2 flex items-end justify-between gap-4">
+
+          <div>
+            <h2
+              className="
+                text-[21px]
+                font-bold
+                tracking-[-0.025em]
+                text-slate-950
+              "
+            >
+              Objetivo ICFES
+            </h2>
+
+            <p className="mt-1 text-[12px] font-medium text-slate-400">
+              Tu progreso hacia el puntaje que quieres alcanzar.
+            </p>
+          </div>
+
         </div>
-
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800">
-            Objetivo ICFES
-          </h2>
-
-          <p className="text-sm text-slate-500">
-            Sigue avanzando hacia tu meta.
-          </p>
-        </div>
-
       </div>
 
-      <div className="space-y-6">
+      {/* MÉTRICAS */}
 
-        <div className="flex justify-between">
-          <span className="text-slate-500">
-            Puntaje actual
-          </span>
+      <div className="relative mt-8">
 
-          <span className="font-bold text-blue-600">
-            {currentScore}
-          </span>
-        </div>
+        <div className="grid grid-cols-2 gap-5">
 
-        <div className="flex justify-between">
-          <span className="text-slate-500">
-            Meta
-          </span>
-
-          <span className="font-bold text-green-600">
-            {targetScore}
-          </span>
-        </div>
-
-        <div className="h-4 rounded-full bg-slate-200">
+          {/* ACTUAL */}
 
           <div
-            className="h-4 rounded-full bg-blue-600 transition-all duration-700"
+            className="
+              rounded-2xl
+              border
+              border-slate-200
+              bg-slate-50/70
+              px-5
+              py-4
+            "
+          >
+            <p
+              className="
+                text-[10px]
+                font-semibold
+                uppercase
+                tracking-[0.12em]
+                text-slate-400
+              "
+            >
+              Puntaje actual
+            </p>
+
+            <div className="mt-2 flex items-baseline gap-1.5">
+
+              <span
+                className="
+                  text-[32px]
+                  font-bold
+                  leading-none
+                  tracking-[-0.04em]
+                  text-slate-950
+                "
+              >
+                {currentScore}
+              </span>
+
+              <span className="text-[11px] font-medium text-slate-400">
+                pts
+              </span>
+
+            </div>
+          </div>
+
+          {/* META */}
+
+          <div
+            className="
+              rounded-2xl
+              border
+              border-blue-100
+              bg-blue-50/50
+              px-5
+              py-4
+            "
+          >
+            <p
+              className="
+                text-[10px]
+                font-semibold
+                uppercase
+                tracking-[0.12em]
+                text-blue-500
+              "
+            >
+              Meta
+            </p>
+
+            <div className="mt-2 flex items-baseline gap-1.5">
+
+              <span
+                className="
+                  text-[32px]
+                  font-bold
+                  leading-none
+                  tracking-[-0.04em]
+                  text-blue-600
+                "
+              >
+                {targetScore}
+              </span>
+
+              <span className="text-[11px] font-medium text-blue-400">
+                pts
+              </span>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* PROGRESO */}
+
+      <div className="relative mt-7">
+
+        <div className="mb-2.5 flex items-center justify-between">
+
+          <span
+            className="
+              text-[11px]
+              font-semibold
+              text-slate-500
+            "
+          >
+            Progreso
+          </span>
+
+          <span
+            className="
+              text-[11px]
+              font-bold
+              text-slate-700
+            "
+          >
+            {Math.round(percentage)}%
+          </span>
+
+        </div>
+
+        <div
+          className="
+            h-[7px]
+            w-full
+            overflow-hidden
+            rounded-full
+            bg-slate-100
+          "
+        >
+          <div
+            className="
+              h-full
+              rounded-full
+              bg-blue-600
+              transition-all
+              duration-700
+              ease-out
+            "
             style={{
               width: `${percentage}%`,
             }}
           />
-
-        </div>
-
-        <div className="flex justify-between text-sm">
-
-          <span className="text-slate-500">
-            Te faltan
-          </span>
-
-          <span className="font-semibold text-slate-800">
-            {remaining} puntos
-          </span>
-
         </div>
 
       </div>
 
-    </div>
+      {/* DISTANCIA A LA META */}
+
+      <div
+        className="
+          relative
+          mt-6
+          flex
+          items-center
+          justify-between
+          border-t
+          border-slate-100
+          pt-5
+        "
+      >
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+            Distancia restante
+          </p>
+
+          <p className="mt-1 text-[13px] font-semibold text-slate-700">
+            {remaining > 0
+              ? `${remaining} puntos para alcanzar tu meta`
+              : "Meta alcanzada"}
+          </p>
+        </div>
+
+        <div
+          className="
+            text-right
+            text-[11px]
+            font-semibold
+            text-slate-400
+          "
+        >
+          {currentScore} / {targetScore}
+        </div>
+      </div>
+    </section>
   );
 }

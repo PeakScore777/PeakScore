@@ -4,12 +4,14 @@ interface QuestionCardProps {
   questionNumber: number;
   statement: string;
   context?: string;
+  imageUrl?: string;
 }
 
 export default function QuestionCard({
   questionNumber,
   statement,
   context,
+  imageUrl,
 }: QuestionCardProps) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
@@ -25,6 +27,16 @@ export default function QuestionCard({
           <p className="leading-8 text-slate-700">
             {context}
           </p>
+        </div>
+      )}
+
+      {imageUrl && (
+        <div className="mb-8 flex justify-center">
+          <img
+            src={imageUrl}
+            alt={`Recurso visual de la pregunta ${questionNumber}`}
+            className="max-h-[500px] w-auto max-w-full rounded-2xl border border-slate-200 object-contain"
+          />
         </div>
       )}
 

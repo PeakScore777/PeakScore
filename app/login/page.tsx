@@ -25,6 +25,7 @@ import {
   Zap,
 } from "lucide-react";
 
+import { Turnstile } from "@marsidev/react-turnstile";
 import { supabase } from "@/lib/supabase/browser";
 import PeakMascot from "@/components/login/PeakMascot";
 
@@ -37,6 +38,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaKey, setCaptchaKey] = useState(0);
 
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -56,12 +59,20 @@ export default function LoginPage() {
       return;
     }
 
+    if (!captchaToken) {
+      setError("Completa la verificación de seguridad antes de iniciar sesión.");
+      return;
+    }
+
     setLoading(true);
 
     const { data, error: signInError } =
       await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
+        options: {
+          captchaToken,
+        },
       });
 
     if (signInError) {
@@ -70,15 +81,26 @@ export default function LoginPage() {
         signInError
       );
 
-      setError(
-        "El correo o la contraseña no son correctos."
-      );
+      setCaptchaToken("");
+      setCaptchaKey((previous) => previous + 1);
+
+      if (signInError.message.toLowerCase().includes("captcha")) {
+        setError(
+          "La verificación de seguridad expiró. Completa el CAPTCHA nuevamente e inténtalo otra vez."
+        );
+      } else {
+        setError(
+          "El correo o la contraseña no son correctos."
+        );
+      }
 
       setLoading(false);
       return;
     }
 
     if (!data.session) {
+      setCaptchaToken("");
+      setCaptchaKey((previous) => previous + 1);
       setError(
         "No se pudo establecer la sesión. Intenta nuevamente."
       );
@@ -2076,6 +2098,36 @@ export default function LoginPage() {
                   </button>
 
                 </div>
+              </div>
+
+              {/* CAPTCHA */}
+
+              <div className="flex justify-center">
+                <Turnstile
+                  key={`login-captcha-${captchaKey}`}
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                  onSuccess={(token) => {
+                    setCaptchaToken(token);
+                    setError("");
+                  }}
+                  onExpire={() => {
+                    setCaptchaToken("");
+                    setError(
+                      "La verificación de seguridad expiró. Completa el CAPTCHA nuevamente."
+                    );
+                  }}
+                  onError={() => {
+                    setCaptchaToken("");
+                    setError(
+                      "No se pudo cargar la verificación de seguridad. Inténtalo nuevamente."
+                    );
+                  }}
+                  options={{
+                    language: "es",
+                    size: "flexible",
+                    appearance: "always",
+                  }}
+                />
               </div>
 
               {/* ERROR */}

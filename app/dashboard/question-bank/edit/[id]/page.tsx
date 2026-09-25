@@ -24,6 +24,8 @@ import type {
   VisualType,
 } from "@/lib/visuals/types";
 
+import { supabase } from "@/lib/supabase/client";
+
 const VISUAL_TYPES: VisualType[] = [
   "chart",
   "table",
@@ -56,6 +58,7 @@ export default function EditQuestionPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -167,6 +170,107 @@ export default function EditQuestionPage() {
     }));
   }
 
+  async function handleImageUpload(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setError("");
+    setSuccess("");
+
+    const allowedTypes = [
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setError(
+        "Formato no permitido. Usa PNG, JPG o WEBP."
+      );
+      event.target.value = "";
+      return;
+    }
+
+    const maxSize = 10 * 1024 * 1024;
+
+    if (file.size > maxSize) {
+      setError(
+        "La imagen supera el límite de 10 MB."
+      );
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingImage(true);
+
+      const extension =
+        file.name.split(".").pop()?.toLowerCase() || "jpg";
+
+      const filePath =
+        `questions/${id}/${crypto.randomUUID()}.${extension}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from("question-images")
+          .upload(filePath, file, {
+            contentType: file.type,
+            upsert: false,
+          });
+
+      if (uploadError) {
+        console.error(
+          "Error subiendo imagen:",
+          uploadError
+        );
+
+        setError(
+          "No fue posible subir la imagen."
+        );
+
+        return;
+      }
+
+      const {
+        data: publicUrlData,
+      } = supabase.storage
+        .from("question-images")
+        .getPublicUrl(filePath);
+
+      if (!publicUrlData?.publicUrl) {
+        setError(
+          "La imagen se subió, pero no fue posible obtener su URL."
+        );
+
+        return;
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        image_url: publicUrlData.publicUrl,
+      }));
+
+      setSuccess(
+        "Imagen subida correctamente. Guarda la pregunta para conservarla."
+      );
+    } catch (err) {
+      console.error(
+        "Error inesperado subiendo imagen:",
+        err
+      );
+
+      setError(
+        "Ocurrió un error al subir la imagen."
+      );
+    } finally {
+      setUploadingImage(false);
+      event.target.value = "";
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -176,19 +280,20 @@ export default function EditQuestionPage() {
       setSuccess("");
 
       /*
-       * Si la pregunta tiene visual, necesitamos como mínimo:
+       * Si la pregunta tiene visual, necesitamos:
        * - requires_visual = true
        * - visual_type
-       * - visual_data
+       * - visual_description
        *
-       * No permitimos guardar una configuración visual incompleta.
+       * visual_data ya NO es obligatorio.
+       * La imagen real se agregará manualmente mediante image_url.
        */
       if (
         form.requires_visual &&
-        (!form.visual_type || !form.visual_data)
+        (!form.visual_type || !form.visual_description.trim())
       ) {
         setError(
-          "La pregunta está marcada para usar un visual, pero faltan datos del visual."
+          "La pregunta está marcada para usar un visual, pero falta el tipo o la descripción del visual."
         );
         return;
       }
@@ -932,31 +1037,51 @@ export default function EditQuestionPage() {
             </div>
 
             <div className="grid gap-5 p-6 md:grid-cols-2">
-              {/* Image URL */}
+              {/* Image */}
               <div className="md:col-span-2">
                 <label
-                  htmlFor="image_url"
+                  htmlFor="image_upload"
                   className="mb-2 block text-sm font-medium text-slate-700"
                 >
-                  URL de imagen
+                  Imagen de la pregunta
                 </label>
 
-                <input
-                  id="image_url"
-                  name="image_url"
-                  type="url"
-                  value={form.image_url}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                />
+                <div className="space-y-4">
+                  <input
+                    id="image_upload"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage || saving}
+                    className="block w-full cursor-pointer rounded-xl border border-slate-200 bg-white text-sm text-slate-600 file:mr-4 file:cursor-pointer file:border-0 file:bg-slate-900 file:px-4 file:py-3 file:text-sm file:font-medium file:text-white hover:file:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
 
-                <p className="mt-2 text-xs text-slate-500">
-                  Este campo se conserva como imagen externa/legacy.
-                  Los nuevos gráficos y diagramas utilizan
-                  `visual_data`.
-                </p>
-              </div>
+                  {uploadingImage && (
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Subiendo imagen...
+                    </div>
+                  )}
+
+                  {form.image_url && (
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <p className="mb-3 text-xs font-medium text-slate-500">
+                        Imagen actual
+                      </p>
+
+                      <img
+                        src={form.image_url}
+                        alt="Imagen de la pregunta"
+                        className="max-h-80 w-full rounded-lg object-contain"
+                      />
+                    </div>
+                  )}
+
+                  <p className="text-xs text-slate-500">
+                    Formatos permitidos: PNG, JPG y WEBP. Tamaño máximo: 10 MB.
+                  </p>
+                 </div>
+                </div>
 
               {/* Year */}
               <div>

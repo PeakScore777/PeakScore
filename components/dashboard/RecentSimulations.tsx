@@ -2,34 +2,117 @@
 
 import { useEffect, useState } from "react";
 import {
-  Clock3,
+  ArrowRight,
+  BarChart3,
   CheckCircle2,
+  Clock3,
   FileText,
-  ArrowUpRight,
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase/browser";
+
+/* ============================================================
+   TIPOS
+============================================================ */
 
 interface RecentSimulation {
   id: string;
   date: string;
   score: number;
   duration: string;
-  status: string;
 }
+
+/* ============================================================
+   COMPONENTE AUXILIAR
+   NUBE PIXELADA
+============================================================ */
+
+function PixelCloud({
+  className = "",
+  opacity = "opacity-70",
+}: {
+  className?: string;
+  opacity?: string;
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`pointer-events-none absolute ${opacity} ${className}`}
+    >
+      <div className="relative h-10 w-32">
+        <span className="absolute bottom-0 left-3 h-4 w-20 bg-fuchsia-300/20 blur-[2px]" />
+        <span className="absolute bottom-2 left-8 h-7 w-14 bg-fuchsia-300/25 blur-[3px]" />
+        <span className="absolute bottom-1 left-20 h-5 w-16 bg-pink-300/20 blur-[3px]" />
+        <span className="absolute bottom-0 left-0 h-3 w-10 bg-pink-300/20 blur-[2px]" />
+
+        <span className="absolute left-5 top-1 h-2 w-5 bg-fuchsia-300/20 blur-[1px]" />
+        <span className="absolute left-12 top-0 h-3 w-7 bg-pink-300/20 blur-[2px]" />
+        <span className="absolute left-24 top-2 h-2 w-5 bg-fuchsia-300/20 blur-[1px]" />
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   COMPONENTE AUXILIAR
+   ESTRELLA / PARTÍCULA
+============================================================ */
+
+function PixelParticle({
+  className = "",
+  type = "dot",
+}: {
+  className?: string;
+  type?: "dot" | "diamond" | "star";
+}) {
+  if (type === "diamond") {
+    return (
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute h-2 w-2 rotate-45 bg-fuchsia-300 shadow-[0_0_12px_rgba(244,114,182,0.8)] ${className}`}
+      />
+    );
+  }
+
+  if (type === "star") {
+    return (
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none absolute text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.9)] ${className}`}
+      >
+        ✦
+      </span>
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className={`pointer-events-none absolute h-1 w-1 rounded-full bg-cyan-300 shadow-[0_0_9px_rgba(34,211,238,0.9)] ${className}`}
+    />
+  );
+}
+
+/* ============================================================
+   COMPONENTE PRINCIPAL
+============================================================ */
 
 export default function RecentSimulations() {
   const [simulations, setSimulations] = useState<RecentSimulation[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /* ==========================================================
+     CARGAR SIMULACROS
+  ========================================================== */
+
   useEffect(() => {
+    let mounted = true;
+
     async function loadRecentSimulations() {
       try {
-        /*
-         * =====================================
-         * USUARIO ACTUAL
-         * =====================================
-         */
+        /* ------------------------------------------------------
+           1. USUARIO
+        ------------------------------------------------------ */
 
         const {
           data: { user },
@@ -37,23 +120,20 @@ export default function RecentSimulations() {
         } = await supabase.auth.getUser();
 
         if (userError || !user) {
-          console.error(
-            "[PeakScore] Error obteniendo usuario:",
-            userError
-          );
+          if (mounted) {
+            setSimulations([]);
+            setLoading(false);
+          }
 
-          setSimulations([]);
           return;
         }
 
-        /*
-         * =====================================
-         * ÚLTIMOS INTENTOS
-         * =====================================
-         */
+        /* ------------------------------------------------------
+           2. OBTENER INTENTOS TERMINADOS
+        ------------------------------------------------------ */
 
         const {
-          data: attempts,
+          data: attemptRows,
           error: attemptsError,
         } = await supabase
           .from("simulation_attempts")
@@ -65,89 +145,167 @@ export default function RecentSimulations() {
           .order("completed_at", {
             ascending: false,
           })
-          .limit(5);
+          .limit(20);
 
         if (attemptsError) {
-          console.error(
-            "[PeakScore] Error obteniendo simulacros recientes:",
+          console.warn(
+            "[PeakScore] No fue posible obtener los intentos:",
             attemptsError
           );
 
-          setSimulations([]);
+          if (mounted) {
+            setSimulations([]);
+            setLoading(false);
+          }
+
           return;
         }
 
-        if (!attempts || attempts.length === 0) {
-          setSimulations([]);
+        /* ------------------------------------------------------
+           3. SIN INTENTOS
+        ------------------------------------------------------ */
+
+        if (!attemptRows || attemptRows.length === 0) {
+          if (mounted) {
+            setSimulations([]);
+            setLoading(false);
+          }
+
           return;
         }
 
-        /*
-         * =====================================
-         * INFORMACIÓN DE SIMULACROS
-         * =====================================
-         */
+        /* ------------------------------------------------------
+           4. OBTENER IDS DE SIMULACIONES
+        ------------------------------------------------------ */
 
-        const simulationIds = [
-          ...new Set(
-            attempts.map(
-              (attempt) => attempt.simulation_id
-            )
-          ),
-        ];
-
-        const {
-          data: simulationData,
-          error: simulationError,
-        } = await supabase
-          .from("simulations")
-          .select("id, title, duration")
-          .in("id", simulationIds);
-
-        if (simulationError) {
-          console.error(
-            "[PeakScore] Error obteniendo información de simulacros:",
-            simulationError
-          );
-
-          setSimulations([]);
-          return;
-        }
-
-        /*
-         * =====================================
-         * MAPA DE SIMULACROS
-         * =====================================
-         */
-
-        const simulationMap = new Map(
-          (simulationData ?? []).map(
-            (simulation) => [
-              simulation.id,
-              simulation,
-            ]
+        const simulationIds = Array.from(
+          new Set(
+            attemptRows
+              .map((attempt) => attempt.simulation_id)
+              .filter(
+                (id): id is string =>
+                  typeof id === "string" && id.length > 0
+              )
           )
         );
 
-        /*
-         * =====================================
-         * FORMATEAR RESULTADOS
-         * =====================================
-         */
+        if (simulationIds.length === 0) {
+          if (mounted) {
+            setSimulations([]);
+            setLoading(false);
+          }
 
-        const formattedSimulations: RecentSimulation[] =
-          attempts.map((attempt) => {
-            const simulation = simulationMap.get(
-              attempt.simulation_id
+          return;
+        }
+
+        /* ------------------------------------------------------
+           5. OBTENER INFORMACIÓN DE LAS SIMULACIONES
+
+           Importante:
+           Filtramos también por user_id.
+
+           Esto ayuda a que Supabase trabaje con la fila
+           correspondiente al usuario y evita problemas
+           innecesarios con RLS.
+        ------------------------------------------------------ */
+
+        const {
+          data: simulationRows,
+          error: simulationsError,
+        } = await supabase
+          .from("simulations")
+          .select("id, type, session")
+          .eq("user_id", user.id)
+          .in("id", simulationIds);
+
+        if (simulationsError) {
+          console.warn(
+            "[PeakScore] No fue posible obtener las simulaciones:",
+            simulationsError
+          );
+
+          if (mounted) {
+            setSimulations([]);
+            setLoading(false);
+          }
+
+          return;
+        }
+
+        /* ------------------------------------------------------
+           6. MAPA DE SIMULACIONES
+        ------------------------------------------------------ */
+
+        const simulationMap = new Map<
+          string,
+          {
+            id: string;
+            type: string | null;
+            session: number | null;
+          }
+        >();
+
+        for (const simulation of simulationRows ?? []) {
+          simulationMap.set(simulation.id, simulation);
+        }
+
+        /* ------------------------------------------------------
+           7. SOLO SIMULACROS COMPLETOS
+
+           PeakScore considera como bitácora únicamente:
+
+           type = completo
+           session = 1 o 2
+        ------------------------------------------------------ */
+
+        const completeAttempts = attemptRows.filter((attempt) => {
+          const simulation = simulationMap.get(
+            attempt.simulation_id
+          );
+
+          if (!simulation) {
+            return false;
+          }
+
+          const type = String(simulation.type ?? "")
+            .trim()
+            .toLowerCase();
+
+          return (
+            type === "completo" &&
+            (simulation.session === 1 ||
+              simulation.session === 2)
+          );
+        });
+
+        /* ------------------------------------------------------
+           8. SIN SIMULACROS COMPLETOS
+        ------------------------------------------------------ */
+
+        if (completeAttempts.length === 0) {
+          if (mounted) {
+            setSimulations([]);
+            setLoading(false);
+          }
+
+          return;
+        }
+
+        /* ------------------------------------------------------
+           9. FORMATEAR
+
+           Solo mostramos los 3 más recientes.
+        ------------------------------------------------------ */
+
+        const formatted: RecentSimulation[] =
+          completeAttempts.slice(0, 3).map((attempt) => {
+            /* --------------------------------------------------
+               FECHA
+            -------------------------------------------------- */
+
+            const completedDate = new Date(
+              attempt.completed_at
             );
-
-            /*
-             * FECHA
-             */
-
-            const completedDate = attempt.completed_at
-              ? new Date(attempt.completed_at)
-              : new Date();
 
             const date = completedDate.toLocaleDateString(
               "es-CO",
@@ -158,9 +316,9 @@ export default function RecentSimulations() {
               }
             );
 
-            /*
-             * DURACIÓN REAL
-             */
+            /* --------------------------------------------------
+               DURACIÓN
+            -------------------------------------------------- */
 
             let duration = "—";
 
@@ -192,17 +350,17 @@ export default function RecentSimulations() {
               const minutes = totalMinutes % 60;
 
               if (hours > 0) {
-                duration = `${hours}h ${minutes
-                  .toString()
-                  .padStart(2, "0")}m`;
+                duration = `${hours}h ${String(
+                  minutes
+                ).padStart(2, "0")}m`;
               } else {
                 duration = `${minutes} min`;
               }
             }
 
-            /*
-             * PUNTAJE
-             */
+            /* --------------------------------------------------
+               PUNTAJE
+            -------------------------------------------------- */
 
             const score =
               typeof attempt.score === "number"
@@ -214,84 +372,83 @@ export default function RecentSimulations() {
               date,
               score,
               duration,
-              status: "Completado",
             };
           });
 
-        setSimulations(formattedSimulations);
+        if (mounted) {
+          setSimulations(formatted);
+        }
       } catch (error) {
-        console.error(
-          "[PeakScore] Error cargando simulacros recientes:",
+        console.warn(
+          "[PeakScore] Error cargando Bitácora de Expedición:",
           error
         );
 
-        setSimulations([]);
+        if (mounted) {
+          setSimulations([]);
+        }
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     }
 
     loadRecentSimulations();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  /*
-   * =====================================
-   * LOADING
-   * =====================================
-   */
+  /* ==========================================================
+     LOADING
+  ========================================================== */
 
   if (loading) {
     return (
       <article
         className="
-          rounded-[26px]
+          relative
+          overflow-hidden
+          rounded-[28px]
           border
-          border-slate-200/80
-          bg-white
-          p-7
-          shadow-[0_4px_24px_rgba(15,23,42,0.05)]
+          border-[#123453]
+          bg-[#03111f]
+          shadow-[0_20px_60px_rgba(0,20,40,0.22)]
         "
       >
-        <div className="flex items-center gap-3">
+        <div className="relative h-[185px] overflow-hidden">
+          <img
+            src="/dashboard/peakyboveda.png?v=3"
+            alt="Bitácora de expedición PeakScore"
+            className="
+              absolute
+              inset-0
+              h-full
+              w-full
+              object-cover
+              object-center
+            "
+          />
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50">
-            <FileText
-              size={17}
-              strokeWidth={1.8}
-              className="text-slate-500"
-            />
-          </div>
-
-          <div>
-            <h2 className="text-[17px] font-bold tracking-[-0.02em] text-slate-900">
-              Últimos simulacros
-            </h2>
-
-            <p className="mt-0.5 text-[11px] font-medium text-slate-400">
-              Historial reciente
-            </p>
-          </div>
-
+          <div className="absolute inset-0 bg-gradient-to-t from-[#03111f] via-transparent to-transparent" />
         </div>
 
-        <div className="mt-7 space-y-3">
+        <div className="relative bg-[#03111f] p-5">
+          <div className="h-4 w-48 animate-pulse rounded bg-white/10" />
 
-          <div className="h-12 animate-pulse rounded-xl bg-slate-100" />
+          <div className="mt-5 h-3 w-32 animate-pulse rounded bg-white/10" />
 
-          <div className="h-12 animate-pulse rounded-xl bg-slate-100" />
-
-          <div className="h-12 animate-pulse rounded-xl bg-slate-100" />
-
+          <div className="mt-5 h-32 animate-pulse rounded-[22px] bg-white/[0.04]" />
         </div>
       </article>
     );
   }
 
-  /*
-   * =====================================
-   * SIN SIMULACROS
-   * =====================================
-   */
+  /* ==========================================================
+     ESTADO VACÍO
+  ========================================================== */
 
   if (simulations.length === 0) {
     return (
@@ -299,289 +456,948 @@ export default function RecentSimulations() {
         className="
           relative
           overflow-hidden
-          rounded-[26px]
+          rounded-[28px]
           border
-          border-slate-200/80
-          bg-white
-          p-7
-          shadow-[0_4px_24px_rgba(15,23,42,0.05)]
+          border-[#123453]
+          bg-[#03111f]
+          shadow-[0_20px_60px_rgba(0,20,40,0.28)]
         "
       >
-        {/* DECORACIÓN */}
+        {/* ====================================================
+            DECORACIÓN SUPERIOR
+        ==================================================== */}
 
-        <div
-          className="
-            pointer-events-none
-            absolute
-            -right-16
-            -top-16
-            h-40
-            w-40
-            rounded-full
-            bg-blue-500/[0.035]
-            blur-2xl
-          "
-        />
+        <div className="relative h-[185px] overflow-hidden">
+          <img
+            src="/dashboard/peakyboveda.png?v=3"
+            alt="Bitácora de expedición PeakScore"
+            className="
+              absolute
+              inset-0
+              h-full
+              w-full
+              object-cover
+              object-center
+            "
+          />
 
-        {/* HEADER */}
+          {/* Overlay */}
+          <div
+            className="
+              absolute
+              inset-0
+              bg-gradient-to-b
+              from-transparent
+              via-transparent
+              to-[#03111f]
+            "
+          />
 
-        <div className="relative flex items-center gap-3">
+          {/* NUBES ROSAS */}
+          <PixelCloud
+            className="-bottom-2 left-[5%] scale-75"
+            opacity="opacity-70"
+          />
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-            <FileText
-              size={17}
-              strokeWidth={1.8}
-            />
-          </div>
+          <PixelCloud
+            className="bottom-2 right-[5%] scale-90"
+            opacity="opacity-60"
+          />
 
-          <div>
+          {/* PARTÍCULAS */}
+          <PixelParticle
+            className="left-[13%] top-[25%]"
+            type="diamond"
+          />
 
-            <h2 className="text-[17px] font-bold tracking-[-0.02em] text-slate-900">
-              Últimos simulacros
-            </h2>
+          <PixelParticle
+            className="left-[42%] top-[18%]"
+            type="star"
+          />
 
-            <p className="mt-0.5 text-[11px] font-medium text-slate-400">
-              Historial reciente
-            </p>
+          <PixelParticle
+            className="right-[16%] top-[31%]"
+            type="diamond"
+          />
 
-          </div>
-
+          <PixelParticle
+            className="right-[30%] top-[18%]"
+          />
         </div>
 
-        {/* EMPTY STATE */}
+        {/* ====================================================
+            CONTENIDO
+        ==================================================== */}
 
         <div
           className="
             relative
-            mt-7
-            flex
-            min-h-[255px]
-            flex-col
-            items-center
-            justify-center
-            rounded-2xl
-            border
-            border-dashed
-            border-slate-200
-            bg-slate-50/50
-            px-6
-            text-center
+            overflow-hidden
+            bg-[#03111f]
+            px-5
+            pb-6
+            pt-5
           "
         >
+          {/* BRILLOS */}
 
-          <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -left-20
+              bottom-[-70px]
+              h-48
+              w-48
+              rounded-full
+              bg-fuchsia-500/[0.10]
+              blur-3xl
+            "
+          />
 
-            <FileText
-              size={23}
-              strokeWidth={1.6}
-              className="text-slate-400"
+          <div
+            className="
+              pointer-events-none
+              absolute
+              -right-20
+              top-[-70px]
+              h-48
+              w-48
+              rounded-full
+              bg-cyan-400/[0.09]
+              blur-3xl
+            "
+          />
+
+          {/* NUBES ROSAS PIXELADAS */}
+
+          <PixelCloud
+            className="-bottom-4 left-[-15px] scale-75"
+            opacity="opacity-50"
+          />
+
+          <PixelCloud
+            className="right-[-15px] top-4 scale-75"
+            opacity="opacity-40"
+          />
+
+          {/* PARTÍCULAS */}
+
+          <PixelParticle
+            className="left-[8%] top-[17%]"
+            type="star"
+          />
+
+          <PixelParticle
+            className="right-[12%] top-[25%]"
+            type="diamond"
+          />
+
+          <PixelParticle
+            className="left-[24%] bottom-[23%]"
+          />
+
+          <PixelParticle
+            className="right-[24%] bottom-[19%]"
+          />
+
+          {/* HEADER */}
+
+          <div className="relative flex items-start justify-between gap-4">
+            <div>
+              <div>
+                <p
+                  className="
+                    text-[8px]
+                    font-black
+                    uppercase
+                    tracking-[0.22em]
+                    text-cyan-300
+                  "
+                >
+                  BITÁCORA DE EXPEDICIÓN
+                </p>
+              </div>
+
+              <p
+                className="
+                  mt-1
+                  text-[9px]
+                  font-medium
+                  text-slate-500
+                "
+              >
+                Tus últimos simulacros completos
+              </p>
+            </div>
+
+            <div
+              className="
+                flex
+                items-center
+                gap-1.5
+                rounded-full
+                border
+                border-cyan-400/30
+                bg-cyan-400/[0.05]
+                px-3
+                py-1.5
+                text-[8px]
+                font-black
+                text-cyan-300
+                shadow-[0_0_20px_rgba(34,211,238,0.05)]
+              "
+            >
+              <FileText size={11} />
+
+              <span>0 recientes</span>
+            </div>
+          </div>
+
+          {/* LÍNEA PEAKSCORE */}
+
+          <div className="mt-5 flex items-center gap-2">
+            <span className="h-[2px] w-10 bg-cyan-400" />
+
+            <span className="h-px flex-1 bg-cyan-400/10" />
+
+            <span
+              className="
+                h-1.5
+                w-1.5
+                rounded-full
+                bg-cyan-400
+                shadow-[0_0_12px_rgba(34,211,238,0.95)]
+              "
+            />
+          </div>
+
+          {/* ==================================================
+              PANEL CENTRAL
+          ================================================== */}
+
+          <div
+            className="
+              relative
+              mt-5
+              min-h-[280px]
+              overflow-hidden
+              rounded-[22px]
+              border
+              border-cyan-400/20
+              bg-[#051725]
+              px-5
+              py-9
+              text-center
+              shadow-[inset_0_0_50px_rgba(34,211,238,0.025)]
+            "
+          >
+            {/* GRID */}
+
+            <div
+              className="
+                pointer-events-none
+                absolute
+                inset-0
+                opacity-40
+                [background-image:linear-gradient(rgba(45,212,191,0.045)_1px,transparent_1px),linear-gradient(90deg,rgba(45,212,191,0.045)_1px,transparent_1px)]
+                [background-size:18px_18px]
+              "
             />
 
+            {/* GLOW ROSA */}
+
+            <div
+              className="
+                pointer-events-none
+                absolute
+                bottom-[-80px]
+                left-1/2
+                h-44
+                w-72
+                -translate-x-1/2
+                rounded-full
+                bg-fuchsia-500/[0.12]
+                blur-3xl
+              "
+            />
+
+            {/* NUBES ROSAS */}
+
+            <PixelCloud
+              className="-bottom-3 left-[-20px] scale-110"
+              opacity="opacity-55"
+            />
+
+            <PixelCloud
+              className="-bottom-4 right-[-15px] scale-95"
+              opacity="opacity-50"
+            />
+
+            <PixelCloud
+              className="left-[5%] top-[20%] scale-50"
+              opacity="opacity-30"
+            />
+
+            <PixelCloud
+              className="right-[3%] top-[30%] scale-50"
+              opacity="opacity-30"
+            />
+
+            {/* PARTÍCULAS */}
+
+            <PixelParticle
+              className="left-[15%] top-[18%]"
+              type="diamond"
+            />
+
+            <PixelParticle
+              className="left-[31%] top-[30%]"
+              type="star"
+            />
+
+            <PixelParticle
+              className="right-[16%] top-[26%]"
+              type="diamond"
+            />
+
+            <PixelParticle
+              className="right-[25%] bottom-[22%]"
+              type="star"
+            />
+
+            <PixelParticle
+              className="left-[8%] bottom-[25%]"
+            />
+
+            {/* TEXTO */}
+
+            <div className="relative">
+              <p
+                className="
+                  mt-5
+                  text-[8px]
+                  font-black
+                  uppercase
+                  tracking-[0.25em]
+                  text-cyan-300
+                "
+              >
+                Primera expedición
+              </p>
+
+              <h3
+                className="
+                  mt-3
+                  text-[18px]
+                  font-black
+                  tracking-[-0.03em]
+                  text-white
+                "
+              >
+                Aún no hay expediciones
+              </h3>
+
+              <p
+                className="
+                  mx-auto
+                  mt-3
+                  max-w-[290px]
+                  text-[10px]
+                  font-medium
+                  leading-5
+                  text-slate-400
+                "
+              >
+                Completa las sesiones 1 y 2 de un
+                simulacro completo para comenzar tu
+                bitácora.
+              </p>
+
+              {/* DIVISOR */}
+
+              <div className="mt-6 flex items-center justify-center gap-3">
+                <span className="h-px w-8 bg-cyan-400/30" />
+
+                <span
+                  className="
+                    text-[7px]
+                    font-black
+                    uppercase
+                    tracking-[0.18em]
+                    text-slate-500
+                  "
+                >
+                  Sesión 1 + Sesión 2
+                </span>
+
+                <span className="h-px w-8 bg-cyan-400/30" />
+              </div>
+            </div>
           </div>
 
-          <h3 className="mt-5 text-[14px] font-bold text-slate-800">
-            Aún no hay resultados
-          </h3>
+          {/* FOOTER */}
 
-          <p className="mt-2 max-w-[230px] text-[11px] font-medium leading-5 text-slate-400">
-            Completa tu primer simulacro para comenzar a construir tu historial de rendimiento.
-          </p>
+          <div className="mt-5 flex items-center justify-center gap-3">
+            <span className="h-px w-8 bg-cyan-400/20" />
 
-          <div className="mt-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-300">
+            <span
+              className="
+                text-[7px]
+                font-black
+                uppercase
+                tracking-[0.18em]
+                text-slate-600
+              "
+            >
+              Tu próxima expedición comienza aquí
+            </span>
 
-            <span className="h-px w-8 bg-slate-200" />
-
-            PeakScore
-
-            <span className="h-px w-8 bg-slate-200" />
-
+            <span className="h-px w-8 bg-cyan-400/20" />
           </div>
-
         </div>
       </article>
     );
   }
 
-  /*
-   * =====================================
-   * HISTORIAL
-   * =====================================
-   */
+  /* ==========================================================
+     HISTORIAL
+  ========================================================== */
 
   return (
     <article
       className="
-        rounded-[26px]
+        relative
+        overflow-hidden
+        rounded-[28px]
         border
-        border-slate-200/80
-        bg-white
-        p-7
-        shadow-[0_4px_24px_rgba(15,23,42,0.05)]
+        border-[#123453]
+        bg-[#03111f]
+        shadow-[0_20px_60px_rgba(0,20,40,0.28)]
       "
     >
-      {/* HEADER */}
+      {/* ======================================================
+          BANNER SUPERIOR
+      ====================================================== */}
 
-      <div className="flex items-center justify-between">
+      <div
+        className="
+          relative
+          h-[185px]
+          w-full
+          overflow-hidden
+          bg-[#03111f]
+        "
+      >
+        <img
+          src="/dashboard/peakyboveda.png?v=3"
+          alt="Bitácora de expedición PeakScore"
+          className="
+            absolute
+            inset-0
+            h-full
+            w-full
+            object-cover
+            object-center
+          "
+        />
 
-        <div className="flex items-center gap-3">
+        {/* OVERLAY */}
 
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-            <FileText
-              size={17}
-              strokeWidth={1.8}
-            />
-          </div>
+        <div
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            bg-gradient-to-b
+            from-transparent
+            via-transparent
+            to-[#03111f]
+          "
+        />
 
-          <div>
+        {/* NUBES ROSAS */}
 
-            <h2 className="text-[17px] font-bold tracking-[-0.02em] text-slate-900">
-              Últimos simulacros
-            </h2>
+        <PixelCloud
+          className="-bottom-3 left-[-15px] scale-90"
+          opacity="opacity-50"
+        />
 
-            <p className="mt-0.5 text-[11px] font-medium text-slate-400">
-              Historial reciente
-            </p>
+        <PixelCloud
+          className="-bottom-2 right-[-10px] scale-90"
+          opacity="opacity-45"
+        />
 
-          </div>
+        {/* PARTICULAS */}
 
-        </div>
+        <PixelParticle
+          className="left-[8%] top-[20%]"
+          type="star"
+        />
 
-        <span className="rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-bold text-slate-400">
-          {simulations.length} recientes
-        </span>
-
+        <PixelParticle
+          className="right-[13%] top-[27%]"
+          type="diamond"
+        />
       </div>
 
-      {/* LISTA */}
+      {/* ======================================================
+          CONTENIDO
+      ====================================================== */}
 
-      <div className="mt-7 space-y-3">
+      <div
+        className="
+          relative
+          overflow-hidden
+          bg-[#03111f]
+          px-5
+          pb-6
+          pt-5
+        "
+      >
+        {/* GLOWS */}
 
-        {simulations.map(
-          (simulation, index) => (
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -left-24
+            top-20
+            h-48
+            w-48
+            rounded-full
+            bg-fuchsia-500/[0.06]
+            blur-3xl
+          "
+        />
+
+        <div
+          className="
+            pointer-events-none
+            absolute
+            -right-20
+            bottom-10
+            h-48
+            w-48
+            rounded-full
+            bg-cyan-400/[0.05]
+            blur-3xl
+          "
+        />
+
+        {/* HEADER */}
+
+        <div className="relative flex items-start justify-between gap-4">
+          <div>
+            <div>
+              <p
+                className="
+                  text-[8px]
+                  font-black
+                  uppercase
+                  tracking-[0.22em]
+                  text-cyan-300
+                "
+              >
+                Bitácora de expedición
+              </p>
+            </div>
+
+            <p
+              className="
+                mt-1
+                text-[9px]
+                font-medium
+                text-slate-500
+              "
+            >
+              Tus últimos simulacros completos
+            </p>
+          </div>
+
+          <div
+            className="
+              flex
+              items-center
+              gap-1.5
+              rounded-full
+              border
+              border-cyan-400/30
+              bg-cyan-400/[0.05]
+              px-3
+              py-1.5
+              text-[8px]
+              font-black
+              text-cyan-300
+            "
+          >
+            <FileText size={11} />
+
+            <span>{simulations.length} recientes</span>
+          </div>
+        </div>
+
+        {/* LÍNEA */}
+
+        <div className="mt-5 flex items-center gap-2">
+          <span className="h-[2px] w-10 bg-cyan-400" />
+
+          <span className="h-px flex-1 bg-cyan-400/10" />
+
+          <span
+            className="
+              h-1.5
+              w-1.5
+              rounded-full
+              bg-cyan-400
+              shadow-[0_0_12px_rgba(34,211,238,0.9)]
+            "
+          />
+        </div>
+
+        {/* ====================================================
+            TARJETAS
+        ==================================================== */}
+
+        <div className="relative mt-5 space-y-4">
+          {simulations.map((simulation, index) => (
             <div
               key={simulation.id}
               className="
                 group
-                rounded-2xl
+                relative
+                overflow-hidden
+                rounded-[22px]
                 border
-                border-slate-100
-                bg-slate-50/50
-                p-4
+                border-[#123c5d]
+                bg-[#061827]
+                p-5
                 transition-all
                 duration-200
-                hover:border-slate-200
-                hover:bg-white
-                hover:shadow-sm
+                hover:border-cyan-400/40
+                hover:bg-[#071c2e]
               "
             >
+              {/* GLOW */}
 
-              <div className="flex items-center justify-between gap-4">
+              <div
+                className="
+                  pointer-events-none
+                  absolute
+                  -right-16
+                  -top-16
+                  h-32
+                  w-32
+                  rounded-full
+                  bg-cyan-400/[0.05]
+                  blur-3xl
+                "
+              />
 
-                {/* IZQUIERDA */}
+              <div
+                className="
+                  pointer-events-none
+                  absolute
+                  -left-16
+                  -bottom-20
+                  h-32
+                  w-32
+                  rounded-full
+                  bg-fuchsia-500/[0.04]
+                  blur-3xl
+                "
+              />
 
-                <div className="flex min-w-0 items-center gap-3">
+              {/* PARTÍCULA */}
 
+              <span
+                className="
+                  pointer-events-none
+                  absolute
+                  right-6
+                  top-5
+                  h-1
+                  w-1
+                  rounded-full
+                  bg-cyan-300
+                  opacity-60
+                "
+              />
+
+              <div
+                className="
+                  relative
+                  grid
+                  grid-cols-[72px_1fr]
+                  gap-5
+                  md:grid-cols-[100px_1fr]
+                "
+              >
+                {/* ==================================================
+                    FECHA
+                ================================================== */}
+
+                <div className="border-r border-cyan-400/10 pr-4">
                   <div
                     className="
                       flex
-                      h-10
-                      w-10
-                      shrink-0
+                      h-16
+                      w-16
                       items-center
                       justify-center
                       rounded-xl
                       border
-                      border-blue-100
-                      bg-blue-50
-                      text-[11px]
-                      font-bold
-                      text-blue-600
+                      border-cyan-400/60
+                      bg-[#071d2d]
+                      text-[22px]
+                      font-black
+                      text-cyan-300
+                      shadow-[0_0_20px_rgba(34,211,238,0.06)]
                     "
                   >
                     {String(index + 1).padStart(2, "0")}
                   </div>
 
-                  <div className="min-w-0">
-
-                    <p className="truncate text-[12px] font-bold text-slate-800">
-                      Simulacro {index + 1}
+                  <div
+                    className="
+                      mt-5
+                      border-l-2
+                      border-cyan-400
+                      pl-3
+                    "
+                  >
+                    <p
+                      className="
+                        text-[12px]
+                        font-bold
+                        uppercase
+                        leading-5
+                        text-slate-400
+                      "
+                    >
+                      {simulation.date
+                        .replace(/\./g, "")
+                        .split(" ")
+                        .map((part, i) => (
+                          <span
+                            key={`${simulation.id}-${i}`}
+                            className="block"
+                          >
+                            {part.toUpperCase()}
+                          </span>
+                        ))}
                     </p>
-
-                    <div className="mt-1 flex items-center gap-2">
-
-                      <span className="text-[10px] font-medium text-slate-400">
-                        {simulation.date}
-                      </span>
-
-                      <span className="h-1 w-1 rounded-full bg-slate-300" />
-
-                      <span className="flex items-center gap-1 text-[10px] font-medium text-slate-400">
-
-                        <Clock3
-                          size={11}
-                          strokeWidth={1.8}
-                        />
-
-                        {simulation.duration}
-
-                      </span>
-
-                    </div>
-
                   </div>
-
                 </div>
 
-                {/* DERECHA */}
+                {/* ==================================================
+                    CONTENIDO
+                ================================================== */}
 
-                <div className="flex shrink-0 items-center gap-4">
+                <div className="min-w-0">
+                  {/* TÍTULO */}
 
-                  <div className="text-right">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3
+                        className="
+                          text-[17px]
+                          font-black
+                          tracking-[-0.02em]
+                          text-white
+                        "
+                      >
+                        Simulacro Completo
+                      </h3>
 
-                    <p className="text-[9px] font-bold uppercase tracking-[0.1em] text-slate-400">
+                      <p
+                        className="
+                          mt-1
+                          text-[12px]
+                          font-medium
+                          text-slate-400
+                        "
+                      >
+                        Sesión 1 + Sesión 2
+                      </p>
+                    </div>
+
+                    {/* ESTADO */}
+
+                    <div
+                      className="
+                        flex
+                        shrink-0
+                        items-center
+                        gap-2
+                        rounded-full
+                        border
+                        border-emerald-400/40
+                        bg-emerald-400/[0.06]
+                        px-3
+                        py-2
+                        text-[10px]
+                        font-black
+                        text-emerald-400
+                      "
+                    >
+                      <CheckCircle2
+                        size={14}
+                        strokeWidth={2}
+                      />
+
+                      Completado
+                    </div>
+                  </div>
+
+                  {/* SEPARADOR */}
+
+                  <div className="my-4 h-px bg-cyan-400/10" />
+
+                  {/* PUNTAJE */}
+
+                  <div>
+                    <p
+                      className="
+                        text-[11px]
+                        font-black
+                        uppercase
+                        tracking-[0.16em]
+                        text-slate-500
+                      "
+                    >
                       Puntaje
                     </p>
 
-                    <p className="mt-0.5 text-[17px] font-bold tracking-[-0.02em] text-slate-900">
-                      {simulation.score}
-                    </p>
+                    <div className="mt-1 flex items-end gap-2">
+                      <span
+                        className="
+                          text-[40px]
+                          font-black
+                          leading-none
+                          tracking-[-0.04em]
+                          text-white
+                        "
+                      >
+                        {simulation.score}
+                      </span>
 
+                      <span
+                        className="
+                          mb-1
+                          text-[17px]
+                          font-medium
+                          text-slate-500
+                        "
+                      >
+                        / 500
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="hidden h-8 w-px bg-slate-200 sm:block" />
+                  {/* DURACIÓN */}
 
-                  <div className="hidden items-center gap-1.5 text-[10px] font-semibold text-emerald-600 sm:flex">
-
-                    <CheckCircle2
-                      size={14}
+                  <div
+                    className="
+                      mt-3
+                      flex
+                      items-center
+                      gap-2
+                      text-[10px]
+                      font-medium
+                      text-slate-500
+                    "
+                  >
+                    <Clock3
+                      size={12}
                       strokeWidth={1.8}
                     />
 
-                    Completado
-
+                    {simulation.duration}
                   </div>
 
-                  <ArrowUpRight
-                    size={14}
-                    strokeWidth={1.8}
+                  {/* BOTÓN */}
+
+                  <div
                     className="
-                      text-slate-300
-                      transition-transform
+                      mt-5
+                      flex
+                      h-12
+                      items-center
+                      justify-between
+                      rounded-xl
+                      border
+                      border-blue-500/70
+                      bg-blue-500/[0.04]
+                      px-4
+                      text-cyan-300
+                      transition-all
                       duration-200
-                      group-hover:-translate-y-0.5
-                      group-hover:translate-x-0.5
-                      group-hover:text-blue-500
+                      group-hover:border-cyan-400
+                      group-hover:bg-cyan-400/[0.06]
+                      group-hover:shadow-[0_0_25px_rgba(34,211,238,0.08)]
                     "
-                  />
+                  >
+                    <div className="flex items-center gap-3">
+                      <BarChart3
+                        size={20}
+                        strokeWidth={2}
+                      />
 
+                      <span
+                        className="
+                          text-[12px]
+                          font-black
+                        "
+                      >
+                        Ver resultados de la expedición
+                      </span>
+                    </div>
+
+                    <ArrowRight
+                      size={21}
+                      strokeWidth={2}
+                      className="
+                        transition-transform
+                        duration-200
+                        group-hover:translate-x-1
+                      "
+                    />
+                  </div>
                 </div>
-
               </div>
-
             </div>
-          )
-        )}
+          ))}
+        </div>
 
+        {/* FOOTER */}
+
+        <div
+          className="
+            relative
+            mt-6
+            flex
+            items-center
+            justify-center
+            gap-3
+          "
+        >
+          <span className="h-px w-10 bg-cyan-400/20" />
+
+          <span
+            className="
+              text-[8px]
+              font-black
+              uppercase
+              tracking-[0.2em]
+              text-slate-600
+            "
+          >
+            Cada simulacro te acerca más a tu Peak
+          </span>
+
+          <span className="h-px w-10 bg-cyan-400/20" />
+        </div>
       </div>
     </article>
   );

@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  Search,
-  Bell,
-  LogOut,
-  ChevronDown,
-  GraduationCap,
-  ArrowUpRight,
-} from "lucide-react";
+import Image from "next/image";
+import { LogOut } from "lucide-react";
 
 interface HeaderProps {
   userName: string;
@@ -22,349 +16,221 @@ export default function Header({
     userName?.charAt(0).toUpperCase() || "U";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/95 backdrop-blur-xl">
-      <div className="flex h-[88px] items-center justify-between px-6 md:px-8 lg:px-10">
+    <header
+      className="
+        sticky
+        top-0
+        z-50
+        h-[76px]
+        overflow-hidden
+        border-b
+        border-cyan-400/10
+        bg-[#020817]
+      "
+    >
+      {/* =====================================================
+          FONDO PEAKSCORE
+      ===================================================== */}
 
-        {/* ==================================================
-            IDENTIDAD DEL DASHBOARD
-        ================================================== */}
+      <div className="pointer-events-none absolute inset-0">
+        {/* Base */}
+        <div className="absolute inset-0 bg-[#020817]" />
 
-        <div className="flex min-w-0 items-center gap-4">
+        {/* Imagen espacial transparente */}
+        <Image
+          src="/dashboard/header-space.png"
+          alt=""
+          fill
+          priority
+          className="
+            object-cover
+            object-center
+            opacity-95
+          "
+        />
 
-          {/* =================================================
-              PEAKSCORE VISUAL MARK
-          ================================================= */}
+        {/* Degradado para que el contenido siga siendo legible */}
+        <div
+          className="
+            absolute
+            inset-0
+            bg-gradient-to-r
+            from-[#020817]/90
+            via-[#020817]/35
+            to-[#020817]/75
+          "
+        />
 
-          <div className="relative hidden h-[48px] w-[48px] shrink-0 sm:block">
+        {/* Oscurecimiento inferior */}
+        <div
+          className="
+            absolute
+            inset-x-0
+            bottom-0
+            h-8
+            bg-gradient-to-t
+            from-[#020817]/80
+            to-transparent
+          "
+        />
 
-            {/* Glow */}
+        {/* Línea luminosa inferior */}
+        <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-px
+            bg-gradient-to-r
+            from-transparent
+            via-cyan-400/30
+            to-transparent
+          "
+        />
+      </div>
 
-            <div className="absolute inset-0 rounded-[15px] bg-blue-500/15 blur-md" />
+      {/* =====================================================
+          CONTENIDO
+      ===================================================== */}
 
-            {/* Main square */}
-
-            <div
-              className="
-                relative
-                flex
-                h-full
-                w-full
-                items-center
-                justify-center
-                overflow-hidden
-                rounded-[15px]
-                bg-gradient-to-br
-                from-blue-500
-                via-blue-600
-                to-blue-700
-                shadow-[0_8px_24px_rgba(37,99,235,0.22)]
-              "
-            >
-              {/* Decorative shine */}
-
-              <div className="absolute -right-3 -top-4 h-8 w-8 rounded-full bg-white/15" />
-
-              <div className="absolute -bottom-4 -left-3 h-7 w-7 rounded-full bg-white/10" />
-
-              {/* PeakScore mark */}
-
-              <span className="relative text-[21px] font-black tracking-[-0.08em] text-white">
-                P
-              </span>
-            </div>
-
-            {/* Active indicator */}
-
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
-          </div>
-
-          {/* =================================================
-              GREETING CONTENT
-          ================================================= */}
-
-          <div className="min-w-0">
-
-            {/* Top line */}
-
-            <div className="mb-1.5 flex items-center gap-2">
-
-              <div className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-
-                <span className="text-[9px] font-bold uppercase tracking-[0.19em] text-slate-400">
-                  Sesión activa
-                </span>
-              </div>
-
-              <span className="h-3 w-px bg-slate-200" />
-
-              <span className="text-[9px] font-semibold uppercase tracking-[0.15em] text-blue-600">
-                PeakScore
-              </span>
-            </div>
-
-            {/* Main greeting */}
-
-            <div className="flex items-center gap-3">
-
-              <h1 className="truncate text-[25px] font-bold leading-none tracking-[-0.045em] text-slate-950 md:text-[27px]">
-                Hola, {userName}
-              </h1>
-
-              {/* Study status */}
-
-              <div
-                className="
-                  hidden
-                  items-center
-                  gap-1.5
-                  rounded-full
-                  border
-                  border-blue-100
-                  bg-blue-50/70
-                  px-2.5
-                  py-1
-                  md:flex
-                "
-              >
-                <GraduationCap
-                  size={11}
-                  strokeWidth={2}
-                  className="text-blue-600"
-                />
-
-                <span className="text-[9px] font-bold uppercase tracking-[0.08em] text-blue-600">
-                  Preparación ICFES
-                </span>
-              </div>
-
-            </div>
-
-            {/* Supporting line */}
-
-            <div className="mt-1.5 flex items-center gap-2">
-
-              <p className="text-[11px] font-medium text-slate-400">
-                Tu progreso comienza con una sesión más.
-              </p>
-
-              <ArrowUpRight
-                size={12}
-                strokeWidth={2}
-                className="text-slate-300"
-              />
-
-            </div>
-
-          </div>
-        </div>
-
-        {/* ==================================================
-            CONTROLES
-        ================================================== */}
-
-        <div className="flex items-center gap-2 md:gap-3">
-
-          {/* =================================================
-              BUSCADOR
-          ================================================= */}
-
-          <div
-            className="
-              hidden
-              h-[42px]
-              w-[220px]
-              items-center
-              rounded-xl
-              border
-              border-slate-200
-              bg-slate-50/50
-              px-3.5
-              transition-all
-              duration-200
-              focus-within:border-blue-300
-              focus-within:bg-white
-              focus-within:shadow-[0_0_0_4px_rgba(37,99,235,0.05)]
-              lg:flex
-            "
-          >
-            <Search
-              size={16}
-              strokeWidth={1.8}
-              className="shrink-0 text-slate-400"
-            />
-
-            <input
-              type="text"
-              placeholder="Buscar..."
-              className="
-                ml-2.5
-                h-full
-                min-w-0
-                flex-1
-                bg-transparent
-                text-[12px]
-                font-medium
-                text-slate-700
-                outline-none
-                placeholder:text-slate-400
-              "
-            />
-
-            <span
-              className="
-                ml-2
-                hidden
-                rounded-md
-                border
-                border-slate-200
-                bg-white
-                px-1.5
-                py-0.5
-                text-[9px]
-                font-semibold
-                text-slate-400
-                xl:block
-              "
-            >
-              /
-            </span>
-          </div>
-
-          {/* =================================================
-              NOTIFICACIONES
-          ================================================= */}
-
-          <button
-            type="button"
-            aria-label="Notificaciones"
-            className="
-              relative
-              flex
-              h-[42px]
-              w-[42px]
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-slate-200
-              bg-white
-              text-slate-500
-              transition-all
-              duration-200
-              hover:border-slate-300
-              hover:bg-slate-50
-              hover:text-slate-800
-              active:scale-95
-            "
-          >
-            <Bell
-              size={17}
-              strokeWidth={1.8}
-            />
-
-            <span
-              className="
-                absolute
-                right-[9px]
-                top-[8px]
-                h-1.5
-                w-1.5
-                rounded-full
-                bg-blue-600
-                ring-2
-                ring-white
-              "
-            />
-          </button>
-
-          {/* =================================================
-              DIVISOR
-          ================================================= */}
-
-          <div className="mx-1 hidden h-8 w-px bg-slate-200 md:block" />
+      <div
+        className="
+          relative
+          z-10
+          flex
+          h-full
+          items-center
+          justify-end
+          px-5
+          md:px-8
+          lg:px-10
+        "
+      >
+        <div className="flex items-center gap-3">
 
           {/* =================================================
               PERFIL
           ================================================= */}
 
-          <button
-            type="button"
+          <div
             className="
-              group
               flex
               items-center
-              gap-2.5
-              rounded-xl
-              px-1.5
-              py-1
-              transition-colors
-              duration-200
-              hover:bg-slate-50
+              gap-3
+              rounded-2xl
+              border
+              border-cyan-400/20
+              bg-[#061224]/80
+              px-3
+              py-2
+              shadow-[0_0_24px_rgba(34,211,238,0.08)]
+              backdrop-blur-md
             "
           >
-
             {/* Avatar */}
 
             <div
               className="
+                relative
                 flex
-                h-[42px]
-                w-[42px]
+                h-9
+                w-9
                 shrink-0
                 items-center
                 justify-center
+                overflow-hidden
                 rounded-xl
-                bg-gradient-to-br
-                from-blue-500
-                via-blue-600
-                to-blue-700
-                text-[13px]
-                font-bold
-                text-white
-                shadow-[0_6px_18px_rgba(37,99,235,0.20)]
+                border
+                border-cyan-400/40
+                bg-[#071a30]
+                shadow-[0_0_14px_rgba(34,211,238,0.12)]
               "
             >
-              {initial}
+              {/* Brillo */}
+
+              <div
+                className="
+                  absolute
+                  inset-0
+                  bg-[radial-gradient(circle_at_50%_20%,rgba(34,211,238,0.28),transparent_65%)]
+                "
+              />
+
+              <span
+                className="
+                  relative
+                  z-10
+                  text-[13px]
+                  font-black
+                  text-cyan-300
+                "
+              >
+                {initial}
+              </span>
             </div>
 
-            {/* User info */}
+            {/* Información */}
 
-            <div className="hidden min-w-0 text-left xl:block">
-
-              <p className="max-w-[120px] truncate text-[12px] font-bold leading-tight text-slate-800">
+            <div className="hidden min-w-0 sm:block">
+              <p
+                className="
+                  max-w-[150px]
+                  truncate
+                  text-[12px]
+                  font-bold
+                  leading-tight
+                  text-white
+                "
+              >
                 {userName}
               </p>
 
-              <p className="mt-1 text-[10px] font-medium leading-none text-slate-400">
-                Estudiante
-              </p>
+              <div className="mt-1 flex items-center gap-1.5">
+                <span
+                  className="
+                    h-1.5
+                    w-1.5
+                    rounded-full
+                    bg-emerald-400
+                    shadow-[0_0_7px_rgba(52,211,153,0.9)]
+                  "
+                />
 
+                <span
+                  className="
+                    text-[8px]
+                    font-bold
+                    uppercase
+                    tracking-[0.18em]
+                    text-cyan-300/70
+                  "
+                >
+                  Tu perfil
+                </span>
+              </div>
             </div>
-
-            <ChevronDown
-              size={14}
-              strokeWidth={1.8}
-              className="
-                hidden
-                text-slate-400
-                transition-transform
-                duration-200
-                group-hover:translate-y-0.5
-                xl:block
-              "
-            />
-
-          </button>
+          </div>
 
           {/* =================================================
               DIVISOR
           ================================================= */}
 
-          <div className="hidden h-8 w-px bg-slate-200 md:block" />
+          <div
+            className="
+              hidden
+              h-9
+              w-px
+              bg-gradient-to-b
+              from-transparent
+              via-cyan-400/25
+              to-transparent
+              sm:block
+            "
+          />
 
           {/* =================================================
-              LOGOUT
+              CERRAR SESIÓN
           ================================================= */}
 
           <button
@@ -373,30 +239,37 @@ export default function Header({
             aria-label="Cerrar sesión"
             title="Cerrar sesión"
             className="
+              group
               flex
-              h-[42px]
-              w-[42px]
+              h-10
+              w-10
               items-center
               justify-center
               rounded-xl
               border
-              border-slate-200
-              bg-white
+              border-cyan-400/15
+              bg-[#061224]/80
               text-slate-400
+              shadow-[0_0_18px_rgba(34,211,238,0.04)]
+              backdrop-blur-md
               transition-all
               duration-200
-              hover:border-red-200
-              hover:bg-red-50
-              hover:text-red-500
+              hover:border-red-400/40
+              hover:bg-red-500/10
+              hover:text-red-400
               active:scale-95
             "
           >
             <LogOut
-              size={17}
+              size={16}
               strokeWidth={1.8}
+              className="
+                transition-transform
+                duration-200
+                group-hover:translate-x-0.5
+              "
             />
           </button>
-
         </div>
       </div>
     </header>

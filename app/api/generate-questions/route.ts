@@ -81,127 +81,1035 @@ interface GeneratedQuestion {
   * de forma exacta.
   */
   visual_data: VisualData | null;
-  image_url: string | null;
+ 
 }
+
+type CognitiveOperation =
+  | "interpretar"
+  | "inferir"
+  | "comparar"
+  | "relacionar"
+  | "analizar"
+  | "aplicar"
+  | "calcular"
+  | "justificar"
+  | "evaluar"
+  | "predecir";
 
 interface GenerationPlanItem {
   component: string | null;
   competence: string | null;
   skill: string | null;
+  difficulty: string | null;
   structure_type: string | null;
   context_type: string | null;
   requires_visual: boolean | null;
+  cognitive_operation: CognitiveOperation | null;
+  visual_type: VisualType | null;
+
+  assessment_target: string | null;
+
+  claim: string | null;
+  evidences: string[] | null;
+}
+
+interface GenerationBlockResult {
+  questions: GeneratedQuestion[];
+  consumedPlanSlots: number;
+}
+
+/* =========================================================
+   OPERACIÓN COGNITIVA
+========================================================= */
+
+function getCognitiveOperations(
+  subject: string
+): CognitiveOperation[] {
+  const normalizedSubject = normalize(subject);
+
+  if (normalizedSubject === "matematicas") {
+    return [
+      "interpretar",
+      "comparar",
+      "relacionar",
+      "calcular",
+      "analizar",
+      "justificar",
+    ];
+  }
+
+  if (normalizedSubject === "lectura critica") {
+    return [
+      "interpretar",
+      "inferir",
+      "relacionar",
+      "comparar",
+      "analizar",
+      "evaluar",
+    ];
+  }
+
+  if (normalizedSubject === "sociales y ciudadanas") {
+    return [
+      "interpretar",
+      "relacionar",
+      "comparar",
+      "analizar",
+      "evaluar",
+      "justificar",
+    ];
+  }
+
+  if (normalizedSubject === "ciencias naturales") {
+    return [
+      "interpretar",
+      "relacionar",
+      "analizar",
+      "comparar",
+      "predecir",
+      "justificar",
+    ];
+  }
+
+  if (normalizedSubject === "ingles") {
+    return [
+      "interpretar",
+      "inferir",
+      "relacionar",
+      "comparar",
+      "analizar",
+      "aplicar",
+    ];
+  }
+
+  return [
+    "interpretar",
+    "inferir",
+    "comparar",
+    "relacionar",
+    "analizar",
+    "aplicar",
+  ];
+}
+
+/* =========================================================
+   PLANIFICADOR VISUAL
+========================================================= */
+
+function getPlannedVisualType(
+  subject: string,
+  operation: CognitiveOperation | null,
+  requiresVisual: boolean | null,
+  structureType: string | null,
+  topic: string | null
+): VisualType | null {
+  if (requiresVisual !== true) {
+    return null;
+  }
+
+  const normalizedSubject = normalize(subject);
+
+  const normalizedStructure = normalize(
+    structureType ?? ""
+  );
+
+  const normalizedTopic = normalize(
+    topic ?? ""
+  );
+
+    // Inferencia visual basada en la estructura de referencia.
+  // Esto evita caer automáticamente en "table" cuando
+  // todavía no existe una operación cognitiva planificada.
+
+  if (
+    normalizedStructure.includes("chart") ||
+    normalizedStructure.includes("grafica") ||
+    normalizedStructure.includes("gráfica") ||
+    normalizedStructure.includes("grafico") ||
+    normalizedStructure.includes("gráfico") ||
+    normalizedStructure.includes("linea") ||
+    normalizedStructure.includes("línea")
+  ) {
+    return "chart";
+  }
+
+  if (
+    normalizedStructure.includes("table") ||
+    normalizedStructure.includes("tabla")
+  ) {
+    return "table";
+  }
+
+  if (
+    normalizedStructure.includes("math_graph") ||
+    normalizedStructure.includes("math graph") ||
+    normalizedStructure.includes("plano cartesiano") ||
+    normalizedStructure.includes("funcion") ||
+    normalizedStructure.includes("función")
+  ) {
+    return "math_graph";
+  }
+
+  if (
+    normalizedStructure.includes("diagram") ||
+    normalizedStructure.includes("diagrama") ||
+    normalizedStructure.includes("proceso") ||
+    normalizedStructure.includes("flujo")
+  ) {
+    return "diagram";
+  }
+
+  if (
+    normalizedStructure.includes("geometr") ||
+    normalizedTopic.includes("geometr") ||
+    normalizedTopic.includes("area") ||
+    normalizedTopic.includes("perimetro") ||
+    normalizedTopic.includes("volumen")
+  ) {
+    return "geometry";
+  }
+
+  if (normalizedSubject === "matematicas") {
+    if (
+      operation === "calcular" ||
+      operation === "relacionar"
+    ) {
+      return "math_graph";
+    }
+
+    if (
+      operation === "interpretar" ||
+      operation === "comparar" ||
+      operation === "analizar"
+    ) {
+      return "chart";
+    }
+
+    if (
+      operation === "aplicar" ||
+      operation === "justificar"
+    ) {
+      return "geometry";
+    }
+
+    return "table";
+  }
+
+  if (normalizedSubject === "ciencias naturales") {
+    if (
+      operation === "interpretar" ||
+      operation === "comparar" ||
+      operation === "analizar"
+    ) {
+      return "chart";
+    }
+
+    if (operation === "predecir") {
+      return "diagram";
+    }
+
+    if (
+      operation === "relacionar" ||
+      operation === "justificar"
+    ) {
+      return "diagram";
+    }
+
+    return "table";
+  }
+
+  if (normalizedSubject === "sociales y ciudadanas") {
+    if (
+      operation === "interpretar" ||
+      operation === "comparar" ||
+      operation === "analizar"
+    ) {
+      return "chart";
+    }
+
+    if (
+      operation === "relacionar" ||
+      operation === "evaluar"
+    ) {
+      return "table";
+    }
+
+    return "diagram";
+  }
+
+  if (normalizedSubject === "lectura critica") {
+    if (
+      operation === "interpretar" ||
+      operation === "comparar"
+    ) {
+      return "table";
+    }
+
+    if (
+      operation === "analizar" ||
+      operation === "relacionar"
+    ) {
+      return "diagram";
+    }
+
+    return null;
+  }
+
+  if (normalizedSubject === "ingles") {
+    if (
+      operation === "interpretar" ||
+      operation === "comparar"
+    ) {
+      return "table";
+    }
+
+    return null;
+  }
+
+  return "table";
 }
 
 /* =========================================================
    PLANIFICADOR DE ARQUITECTURA DEL LOTE
 ========================================================= */
 
-function buildGenerationPlan(
+interface BlueprintTarget {
+  id: string;
+  label: string;
+  weight: number;
+
+  claim?: string;
+
+  evidences?: string[];
+}
+
+function getOfficialBlueprintTargets(
+  subject: string
+): BlueprintTarget[] {
+  const normalizedSubject = normalize(subject);
+
+  /*
+   * =====================================================
+   * MATEMÁTICAS
+   * =====================================================
+   */
+
+  if (normalizedSubject === "matematicas") {
+    return [
+      {
+        id: "math.interpretacion",
+        label:
+          "Interpretación y representación: comprender y transformar información matemática presentada en diferentes formatos.",
+        weight: 34,
+
+        claim:
+          "Comprende y transforma la información cuantitativa y esquemática presentada en distintos formatos.",
+
+        evidences: [
+          "1.1 Da cuenta de las características básicas de la información presentada en diferentes formatos, como series, gráficas, tablas y esquemas.",
+          "1.2 Transforma la representación de una o más piezas de información.",
+        ],
+      },
+
+      {
+        id: "math.formulacion_ejecucion",
+        label:
+          "Formulación y ejecución: plantear e implementar estrategias para resolver situaciones matemáticas.",
+        weight: 43,
+
+        claim:
+          "Frente a un problema que involucre información cuantitativa, plantea e implementa estrategias que lleven a soluciones adecuadas.",
+
+        evidences: [
+          "2.1 Diseña planes para la solución de problemas que involucran información cuantitativa o esquemática.",
+          "2.2 Ejecuta un plan de solución para un problema que involucra información cuantitativa o esquemática.",
+          "2.3 Resuelve un problema que involucra información cuantitativa o esquemática.",
+        ],
+      },
+
+      {
+        id: "math.argumentacion",
+        label:
+          "Argumentación: validar o refutar procedimientos, estrategias, soluciones o interpretaciones mediante razonamiento matemático.",
+        weight: 23,
+
+        claim:
+          "Valida procedimientos y estrategias matemáticas utilizadas para dar solución a problemas.",
+
+        evidences: [
+          "3.1 Plantea afirmaciones que sustentan o refutan una interpretación dada a la información disponible en el marco de la solución de un problema.",
+          "3.2 Argumenta a favor o en contra de un procedimiento para resolver un problema a la luz de criterios presentados o establecidos.",
+          "3.3 Establece la validez o pertinencia de una solución propuesta a un problema dado.",
+        ],
+      },
+    ];
+  }
+
+  /*
+   * =====================================================
+   * LECTURA CRÍTICA
+   * =====================================================
+   */
+
+  if (
+    normalizedSubject === "lectura critica"
+  ) {
+    return [
+      {
+        id: "reading.local",
+        label:
+          "Sentido local: identificar y comprender contenidos locales que conforman el texto.",
+        weight: 25,
+      },
+      {
+        id: "reading.global",
+        label:
+          "Sentido global: comprender cómo se articulan las partes del texto para construir su sentido.",
+        weight: 42,
+      },
+      {
+        id: "reading.critical",
+        label:
+          "Reflexión y evaluación: reflexionar a partir del texto y evaluar su contenido.",
+        weight: 33,
+      },
+    ];
+  }
+
+  /*
+   * =====================================================
+   * SOCIALES Y CIUDADANAS
+   * =====================================================
+   */
+
+  if (
+    normalizedSubject ===
+    "sociales y ciudadanas"
+  ) {
+    return [
+      {
+        id: "social.pensamiento_social",
+        label:
+          "Pensamiento social: analizar situaciones utilizando conceptos y relaciones básicas de las ciencias sociales.",
+        weight: 30,
+      },
+      {
+        id: "social.perspectivas",
+        label:
+          "Interpretación y análisis de perspectivas: reconocer, comparar y evaluar perspectivas, intereses, argumentos y fuentes.",
+        weight: 40,
+      },
+      {
+        id: "social.sistemico",
+        label:
+          "Pensamiento reflexivo y sistémico: establecer relaciones entre dimensiones de una problemática y evaluar alternativas.",
+        weight: 30,
+      },
+    ];
+  }
+
+  /*
+   * =====================================================
+   * CIENCIAS NATURALES
+   * =====================================================
+   */
+
+  if (
+    normalizedSubject ===
+    "ciencias naturales"
+  ) {
+    return [
+      {
+        id: "science.use.bio",
+        label:
+          "Uso comprensivo del conocimiento científico × componente biológico.",
+        weight: 9,
+      },
+      {
+        id: "science.use.physics",
+        label:
+          "Uso comprensivo del conocimiento científico × componente físico.",
+        weight: 9,
+      },
+      {
+        id: "science.use.chemistry",
+        label:
+          "Uso comprensivo del conocimiento científico × componente químico.",
+        weight: 9,
+      },
+      {
+        id: "science.use.cts",
+        label:
+          "Uso comprensivo del conocimiento científico × Ciencia, Tecnología y Sociedad.",
+        weight: 3,
+      },
+
+      {
+        id: "science.explanation.bio",
+        label:
+          "Explicación de fenómenos × componente biológico.",
+        weight: 9,
+      },
+      {
+        id: "science.explanation.physics",
+        label:
+          "Explicación de fenómenos × componente físico.",
+        weight: 9,
+      },
+      {
+        id: "science.explanation.chemistry",
+        label:
+          "Explicación de fenómenos × componente químico.",
+        weight: 9,
+      },
+      {
+        id: "science.explanation.cts",
+        label:
+          "Explicación de fenómenos × Ciencia, Tecnología y Sociedad.",
+        weight: 3,
+      },
+
+      {
+        id: "science.inquiry.bio",
+        label:
+          "Indagación × componente biológico.",
+        weight: 12,
+      },
+      {
+        id: "science.inquiry.physics",
+        label:
+          "Indagación × componente físico.",
+        weight: 12,
+      },
+      {
+        id: "science.inquiry.chemistry",
+        label:
+          "Indagación × componente químico.",
+        weight: 12,
+      },
+      {
+        id: "science.inquiry.cts",
+        label:
+          "Indagación × Ciencia, Tecnología y Sociedad.",
+        weight: 4,
+      },
+    ];
+  }
+
+  /*
+   * =====================================================
+   * INGLÉS
+   * =====================================================
+   */
+
+  if (
+    normalizedSubject === "ingles"
+  ) {
+    return [
+      {
+        id: "english.part1",
+        label:
+          "Inglés — Parte 1: conocimiento lexical.",
+        weight: 11,
+      },
+      {
+        id: "english.part2",
+        label:
+          "Inglés — Parte 2: conocimiento pragmático.",
+        weight: 11,
+      },
+      {
+        id: "english.part3",
+        label:
+          "Inglés — Parte 3: conocimiento comunicativo.",
+        weight: 11,
+      },
+      {
+        id: "english.part4",
+        label:
+          "Inglés — Parte 4: conocimiento gramatical en contexto.",
+        weight: 18,
+      },
+      {
+        id: "english.part5",
+        label:
+          "Inglés — Parte 5: comprensión de lectura literal.",
+        weight: 16,
+      },
+      {
+        id: "english.part6",
+        label:
+          "Inglés — Parte 6: lectura inferencial.",
+        weight: 11,
+      },
+      {
+        id: "english.part7",
+        label:
+          "Inglés — Parte 7: conocimiento gramatical y lexical en contexto.",
+        weight: 22,
+      },
+    ];
+  }
+
+  return [];
+}
+
+function allocateBlueprintTargets(
   amount: number,
-  profiles: ReferenceProfile[]
+  targets: BlueprintTarget[]
+): BlueprintTarget[] {
+  if (
+    amount <= 0 ||
+    targets.length === 0
+  ) {
+    return [];
+  }
+
+  const totalWeight =
+    targets.reduce(
+      (sum, target) =>
+        sum + target.weight,
+      0
+    );
+
+  if (totalWeight <= 0) {
+    return Array.from(
+      { length: amount },
+      (_, index) =>
+        targets[
+          index % targets.length
+        ]
+    );
+  }
+
+  const allocations = targets.map(
+    (target, index) => {
+      const exact =
+        (amount * target.weight) /
+        totalWeight;
+
+      return {
+        target,
+        index,
+        base: Math.floor(exact),
+        remainder:
+          exact - Math.floor(exact),
+      };
+    }
+  );
+
+  let assigned =
+    allocations.reduce(
+      (sum, item) =>
+        sum + item.base,
+      0
+    );
+
+  let remaining =
+    amount - assigned;
+
+  allocations.sort(
+    (a, b) => {
+      if (
+        b.remainder !==
+        a.remainder
+      ) {
+        return (
+          b.remainder -
+          a.remainder
+        );
+      }
+
+      return (
+        a.index -
+        b.index
+      );
+    }
+  );
+
+  for (
+    let index = 0;
+    index < allocations.length &&
+    remaining > 0;
+    index++
+  ) {
+    allocations[index].base++;
+    remaining--;
+  }
+
+  const expanded: BlueprintTarget[] = [];
+
+  for (
+    const allocation of allocations
+  ) {
+    for (
+      let count = 0;
+      count < allocation.base;
+      count++
+    ) {
+      expanded.push(
+        allocation.target
+      );
+    }
+  }
+
+  const result: BlueprintTarget[] = [];
+  const remainingCounts =
+    new Map<string, number>();
+
+  for (
+    const target of expanded
+  ) {
+    remainingCounts.set(
+      target.id,
+      (remainingCounts.get(
+        target.id
+      ) ?? 0) + 1
+    );
+  }
+
+  while (
+    result.length < amount
+  ) {
+    let addedThisRound = false;
+
+    for (
+      const target of targets
+    ) {
+      const count =
+        remainingCounts.get(
+          target.id
+        ) ?? 0;
+
+      if (count <= 0) {
+        continue;
+      }
+
+      result.push(target);
+
+      remainingCounts.set(
+        target.id,
+        count - 1
+      );
+
+      addedThisRound = true;
+
+      if (
+        result.length >= amount
+      ) {
+        break;
+      }
+    }
+
+    if (!addedThisRound) {
+      break;
+    }
+  }
+
+  return result;
+}
+
+function buildGenerationPlan(
+  subject: string,
+  amount: number,
+  profiles: ReferenceProfile[],
+  requestedDifficulty: Difficulty
 ): GenerationPlanItem[] {
   if (amount <= 0) {
     return [];
   }
 
-  const candidates = profiles.filter(
-    (profile) =>
-      profile.component ||
-      profile.competence ||
-      profile.skill ||
-      profile.structure_type ||
-      profile.context_type
-  );
+  const blueprintTargets =
+    getOfficialBlueprintTargets(subject);
 
-  if (candidates.length === 0) {
+  const plannedTargets =
+    allocateBlueprintTargets(
+      amount,
+      blueprintTargets
+    );
+
+  /*
+   * =====================================================
+   * FALLBACK
+   * =====================================================
+   *
+   * Si no existe un blueprint específico para la materia,
+   * mantenemos un plan seguro.
+   */
+
+  if (plannedTargets.length === 0) {
     return Array.from(
       { length: amount },
-      () => ({
+      (_, index) => ({
         component: null,
         competence: null,
         skill: null,
+
+        difficulty:
+          requestedDifficulty === "Mixta"
+            ? (() => {
+                const targets =
+                  getMixedDifficultyTargets(
+                    amount
+                  );
+
+                const easyEnd =
+                  targets.Fácil;
+
+                const mediumEnd =
+                  easyEnd +
+                  targets.Media;
+
+                if (
+                  index < easyEnd
+                ) {
+                  return "Fácil";
+                }
+
+                if (
+                  index < mediumEnd
+                ) {
+                  return "Media";
+                }
+
+                return "Difícil";
+              })()
+            : requestedDifficulty,
+
         structure_type: null,
         context_type: null,
-        requires_visual: null,
+
+        /*
+         * Generador básico:
+         * nunca genera visuales.
+         */
+        requires_visual: false,
+
+        cognitive_operation: null,
+        visual_type: null,
+
+        assessment_target: null,
+
+        claim: null,
+        evidences: null,
       })
     );
   }
 
-  const selected: ReferenceProfile[] = [];
+  /*
+   * =====================================================
+   * PERFILES DE REFERENCIA
+   * =====================================================
+   *
+   * Los perfiles NO determinan la distribución.
+   *
+   * El blueprint determina qué se evalúa.
+   * Los perfiles solamente ayudan a calibrar:
+   *
+   * - competencia
+   * - componente
+   * - habilidad
+   * - estructura
+   * - contexto
+   */
 
-  for (let index = 0; index < amount; index++) {
-    let bestCandidate: ReferenceProfile | null = null;
-    let bestScore = -Infinity;
+  const candidates =
+    profiles.filter(
+      (profile) =>
+        profile.component ||
+        profile.competence ||
+        profile.skill ||
+        profile.structure_type ||
+        profile.context_type
+    );
 
-    for (const candidate of candidates) {
-      if (selected.includes(candidate)) {
-        continue;
-      }
+  /*
+   * =====================================================
+   * REGISTRO DEL BLUEPRINT
+   * =====================================================
+   */
 
+  console.log(
+    "[PeakScore] ====================================="
+  );
+
+  console.log(
+    "[PeakScore] BLUEPRINT EVALUATIVO DEL LOTE"
+  );
+
+  console.log(
+    `[PeakScore] Materia: ${subject}`
+  );
+
+  console.log(
+    `[PeakScore] Preguntas: ${amount}`
+  );
+
+  plannedTargets.forEach(
+    (target, index) => {
+      console.log(
+        `[PeakScore] Slot ${index + 1}: ${target.id}`
+      );
+
+      console.log(
+        `[PeakScore] Objetivo: ${target.label}`
+      );
+    }
+  );
+
+  console.log(
+    "[PeakScore] ====================================="
+  );
+
+  /*
+   * =====================================================
+   * CONTROL DE REUTILIZACIÓN DE PERFILES
+   * =====================================================
+   */
+
+  const usedProfiles =
+    new Set<ReferenceProfile>();
+
+  /*
+   * =====================================================
+   * SELECCIÓN DEL PERFIL DE CALIBRACIÓN
+   * =====================================================
+   *
+   * Importante:
+   *
+   * El perfil no puede cambiar el objetivo evaluativo.
+   *
+   * Ejemplo:
+   *
+   * si el slot exige Argumentación,
+   * no lo convertimos en Interpretación
+   * porque el perfil encontrado tenga otra etiqueta.
+   */
+
+  const selectProfileForTarget = (
+    target: BlueprintTarget,
+    slotIndex: number
+  ): ReferenceProfile | null => {
+    if (
+      candidates.length === 0
+    ) {
+      return null;
+    }
+
+    let bestCandidate:
+      | ReferenceProfile
+      | null = null;
+
+    let bestScore =
+      -Infinity;
+
+    const targetText =
+      normalize(
+        target.label
+      );
+
+    for (
+      const candidate of candidates
+    ) {
       let score = 0;
 
+      const alreadyUsed =
+        usedProfiles.has(
+          candidate
+        );
+
       /*
-       * Premiar componentes diferentes.
+       * Preferir perfiles distintos.
        */
+      if (!alreadyUsed) {
+        score += 20;
+      }
+
+      /*
+       * =================================================
+       * COHERENCIA SEMÁNTICA
+       * =================================================
+       *
+       * Solo sirve como señal de calibración.
+       */
+
+      const component =
+        normalize(
+          candidate.component ??
+          ""
+        );
+
+      const competence =
+        normalize(
+          candidate.competence ??
+          ""
+        );
+
+      const skill =
+        normalize(
+          candidate.skill ??
+          ""
+        );
+
       if (
-        candidate.component &&
-        !selected.some(
-          (item) =>
-            item.component === candidate.component
+        competence &&
+        targetText.includes(
+          competence
+        )
+      ) {
+        score += 100;
+      }
+
+      if (
+        component &&
+        targetText.includes(
+          component
+        )
+      ) {
+        score += 8;
+      }
+
+      if (
+        skill &&
+        targetText.includes(
+          skill
         )
       ) {
         score += 5;
       }
 
       /*
-       * Premiar competencias diferentes.
+       * =================================================
+       * DIVERSIDAD DE ESTRUCTURA
+       * =================================================
        */
-      if (
-        candidate.competence &&
-        !selected.some(
-          (item) =>
-            item.competence === candidate.competence
-        )
-      ) {
-        score += 5;
-      }
 
-      /*
-       * Premiar habilidades diferentes.
-       */
       if (
-        candidate.skill &&
-        !selected.some(
-          (item) =>
-            item.skill === candidate.skill
+        candidate.structure_type &&
+        !Array.from(
+          usedProfiles
+        ).some(
+          (used) =>
+            used.structure_type ===
+            candidate.structure_type
         )
       ) {
         score += 4;
       }
 
       /*
-       * Premiar estructuras diferentes.
+       * =================================================
+       * DIVERSIDAD DE CONTEXTO
+       * =================================================
        */
-      if (
-        candidate.structure_type &&
-        !selected.some(
-          (item) =>
-            item.structure_type ===
-            candidate.structure_type
-        )
-      ) {
-        score += 6;
-      }
 
-      /*
-       * Premiar contextos diferentes.
-       */
       if (
         candidate.context_type &&
-        !selected.some(
-          (item) =>
-            item.context_type ===
+        !Array.from(
+          usedProfiles
+        ).some(
+          (used) =>
+            used.context_type ===
             candidate.context_type
         )
       ) {
@@ -209,58 +1117,225 @@ function buildGenerationPlan(
       }
 
       /*
-       * Evitar repetir innecesariamente
-       * el mismo tipo de visual.
+       * Pequeño desempate determinista.
        */
-      if (
-        candidate.requires_visual !== null &&
-        !selected.some(
-          (item) =>
-            item.requires_visual ===
-            candidate.requires_visual
-        )
-      ) {
-        score += 2;
-      }
 
-      /*
-       * Pequeña variación para no depender
-       * siempre del primer perfil.
-       */
       score +=
-        (index + candidates.indexOf(candidate)) %
-        3;
+        (
+          slotIndex +
+          candidates.indexOf(
+            candidate
+          )
+        ) % 3;
 
-      if (score > bestScore) {
-        bestScore = score;
-        bestCandidate = candidate;
+      if (
+        score >
+        bestScore
+      ) {
+        bestScore =
+          score;
+
+        bestCandidate =
+          candidate;
       }
     }
 
-    /*
-     * Si ya utilizamos todos los perfiles,
-     * permitimos reutilizarlos solamente
-     * cuando la cantidad solicitada lo exige.
-     */
-    if (!bestCandidate) {
-      bestCandidate =
-        candidates[index % candidates.length];
+    if (
+      bestCandidate
+    ) {
+      usedProfiles.add(
+        bestCandidate
+      );
     }
 
-    selected.push(bestCandidate);
-  }
+    return bestCandidate;
+  };
 
-  return selected.map((profile) => ({
-    component: profile.component,
-    competence: profile.competence,
-    skill: profile.skill,
-    structure_type:
-      profile.structure_type,
-    context_type:
-      profile.context_type,
-    requires_visual:
-      profile.requires_visual,
-  }));
+  /*
+   * =====================================================
+   * CONSTRUIR PLAN FINAL
+   * =====================================================
+   */
+
+  const plan =
+    plannedTargets.map(
+      (target, index) => {
+        const profile =
+          selectProfileForTarget(
+            target,
+            index
+          );
+
+        /*
+         * =================================================
+         * DIFICULTAD INTERNA
+         * =================================================
+         *
+         * Mantiene nuestra escala propia:
+         *
+         * Fácil / Media / Difícil
+         *
+         * NO pretende representar directamente
+         * los niveles oficiales de desempeño del ICFES.
+         */
+
+        const difficulty =
+          requestedDifficulty ===
+          "Mixta"
+            ? (() => {
+                const targets =
+                  getMixedDifficultyTargets(
+                    amount
+                  );
+
+                const easyEnd =
+                  targets.Fácil;
+
+                const mediumEnd =
+                  easyEnd +
+                  targets.Media;
+
+                if (
+                  index <
+                  easyEnd
+                ) {
+                  return "Fácil";
+                }
+
+                if (
+                  index <
+                  mediumEnd
+                ) {
+                  return "Media";
+                }
+
+                return "Difícil";
+              })()
+            : requestedDifficulty;
+
+        /*
+         * =================================================
+         * OPERACIÓN COGNITIVA
+         * =================================================
+         *
+         * Todavía no la hacemos obligatoria.
+         *
+         * Primero establecemos el blueprint evaluativo.
+         * Después conectaremos:
+         *
+         * afirmación → evidencia → tarea → operación.
+         */
+
+        const cognitiveOperation:
+          CognitiveOperation | null =
+            null;
+
+        return {
+          component:
+            profile?.component ??
+            null,
+
+          competence:
+            profile?.competence &&
+            normalize(target.label).includes(
+              normalize(profile.competence)
+            )
+              ? profile.competence
+              : null,
+
+          skill:
+            profile?.competence &&
+            normalize(target.label).includes(
+              normalize(profile.competence)
+            )
+              ? profile?.skill ?? null
+              : null,
+
+          difficulty,
+
+          structure_type:
+            profile?.structure_type ??
+            null,
+
+          context_type:
+            profile?.context_type ??
+            null,
+
+          /*
+           * Generador básico:
+           * nunca produce visuales automáticamente.
+           */
+          requires_visual:
+            false,
+
+          cognitive_operation:
+            cognitiveOperation,
+
+          visual_type:
+            null,
+
+          /*
+           * ESTE ES EL OBJETIVO EVALUATIVO
+           * REAL DEL SLOT.
+           *
+           * No se guarda en la pregunta.
+           * No se devuelve a la IA como campo de salida.
+           */
+          assessment_target:
+            target.label,
+
+          claim:
+            target.claim ??
+            null,
+
+          evidences:
+            target.evidences ??
+            null,
+        };
+      }
+    );
+
+  /*
+   * =====================================================
+   * DIAGNÓSTICO FINAL DEL PLAN
+   * =====================================================
+   */
+
+  console.log(
+    "[PeakScore] Plan de generación construido:"
+  );
+
+  plan.forEach(
+    (item, index) => {
+      console.log(
+        `[PeakScore] Slot ${index + 1}:`,
+        {
+          assessment_target:
+            item.assessment_target,
+
+          component:
+            item.component,
+
+          competence:
+            item.competence,
+
+          skill:
+            item.skill,
+
+          difficulty:
+            item.difficulty,
+
+          structure_type:
+            item.structure_type,
+
+          context_type:
+            item.context_type,
+        }
+      );
+    }
+  );
+
+  return plan;
 }
 
 interface ExistingQuestionForSimilarity {
@@ -296,11 +1371,11 @@ const SUBJECT_SESSION_MAP: Record<string, number[]> = {
  *   se solicitan las restantes.
  */
 
-const REQUEST_BLOCK_SIZE = 3;
+const REQUEST_BLOCK_SIZE = 2;
 const MAX_AMOUNT = 100;
 
 const MAX_BLOCK_ATTEMPTS = 2;
-const MAX_TOTAL_ATTEMPTS = 40;
+const MAX_TOTAL_ATTEMPTS = 60;
 const MAX_NO_PROGRESS_ATTEMPTS = 3;
 
 const RETRY_BASE_DELAY_MS = 1500;
@@ -407,6 +1482,65 @@ function jaccardSimilarity(
     : intersection / union;
 }
 
+function isLikelyMathExpression(
+  value: unknown
+): boolean {
+  if (typeof value !== "string") {
+    return false;
+  }
+
+  const text = value.trim();
+
+  if (!text) {
+    return false;
+  }
+
+  /*
+   * Expresiones matemáticas explícitas.
+   *
+   * Ejemplos:
+   * 2000 + 15x
+   * 3x / 2
+   * 2x² + 5
+   * f(x) = 3x + 1
+   * x = 12
+   */
+  if (
+    /[0-9]/.test(text) &&
+    (
+      /[+\-*/=<>^]/.test(text) ||
+      /\b(?:x|y|f\(x\)|g\(x\))\b/i.test(text)
+    )
+  ) {
+    return true;
+  }
+
+  /*
+   * Valores cuantitativos.
+   *
+   * Evita falsos positivos cuando las opciones son
+   * cantidades diferentes pero comparten la misma unidad.
+   *
+   * Ejemplos:
+   * 56 cm²
+   * 48 cm²
+   * 64 cm²
+   * 72 cm²
+   * 15 m
+   * 20 kg
+   * 3,5 L
+   */
+  if (
+    /^\s*-?\d+(?:[.,]\d+)?\s*(?:%|km|kilometro|kilometros|kilómetro|kilómetros|metros?|m|centimetros?|centímetros?|cm|milimetros?|milímetros?|mm|kilogramos?|kg|gramos?|g|miligramos?|mg|litros?|l|L|mililitros?|ml|segundos?|s|minutos?|min|horas?|h|°|°C|grados?|cm2|cm²|centimetros cuadrados|centímetros cuadrados|m2|m²|metros cuadrados|km2|km²|kilometros cuadrados|kilómetros cuadrados|cm3|cm³|centimetros cubicos|centímetros cúbicos|m3|m³|metros cubicos|metros cúbicos|km3|km³|kilometros cubicos|kilómetros cúbicos)\s*$/i.test(
+      text
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function getStructuralTokens(
   value: unknown
 ): Set<string> {
@@ -461,11 +1595,100 @@ function buildQuestionFingerprint(
 }
 
 function cleanJson(text: string): string {
-  return text
+  let cleaned = text
+    .replace(/^\uFEFF/, "")
+    .trim();
+
+  // Quitar bloques Markdown de código si el proveedor los agregó.
+  cleaned = cleaned
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/\s*```$/i, "")
     .trim();
+
+  // Si ya es JSON válido, no tocarlo.
+  try {
+    JSON.parse(cleaned);
+    return cleaned;
+  } catch {
+    // Continuar con extracción tolerante.
+  }
+
+  /*
+   * Algunos proveedores pueden devolver texto adicional
+   * antes o después del JSON.
+   *
+   * Buscamos el primer objeto JSON balanceado y respetamos
+   * correctamente strings, escapes y objetos/arreglos internos.
+   */
+  const firstObject = cleaned.indexOf("{");
+
+  if (firstObject === -1) {
+    return cleaned;
+  }
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (
+    let i = firstObject;
+    i < cleaned.length;
+    i++
+  ) {
+    const char = cleaned[i];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (char === "\\") {
+        escaped = true;
+        continue;
+      }
+
+      if (char === '"') {
+        inString = false;
+      }
+
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === "{") {
+      depth++;
+      continue;
+    }
+
+    if (char === "}") {
+      depth--;
+
+      if (depth === 0) {
+        const candidate = cleaned.slice(
+          firstObject,
+          i + 1
+        );
+
+        try {
+          JSON.parse(candidate);
+          return candidate;
+        } catch {
+          // El primer objeto balanceado no era JSON válido.
+          // Se devuelve el texto original para que el caller
+          // lo rechace de forma segura.
+          return cleaned;
+        }
+      }
+    }
+  }
+
+  return cleaned;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -625,7 +1848,7 @@ function findSimilarQuestion(
     if (
       candidateStructuralTokens.size >= 3 &&
       generatedStructuralTokens.size >= 3 &&
-      structuralSimilarity >= 0.60
+      structuralSimilarity >= 0.80
     ) {
       return {
         isDuplicate: true,
@@ -692,7 +1915,7 @@ function findSimilarQuestion(
     if (
       candidateStructuralTokens.size >= 3 &&
       existingStructuralTokens.size >= 3 &&
-      structuralSimilarity >= 0.60
+      structuralSimilarity >= 0.80
     ) {
       return {
         isDuplicate: true,
@@ -1034,6 +2257,766 @@ function isQuestionVisualCoherent(
   return true;
 }
 
+function validateExplicitNumericAnswer(
+  item: GeneratedQuestion
+): boolean {
+  if (
+    !item ||
+    !item.question ||
+    !item.correct_answer
+  ) {
+    return true;
+  }
+
+  const options: Record<Answer, string> = {
+    A: item.option_a ?? "",
+    B: item.option_b ?? "",
+    C: item.option_c ?? "",
+    D: item.option_d ?? "",
+  };
+
+  const correctOption =
+    options[item.correct_answer];
+
+  if (!correctOption) {
+    return true;
+  }
+
+  /*
+   * Esta validación NO intenta resolver matemáticas.
+   *
+   * Su objetivo es mucho más específico:
+   * detectar únicamente cuando la explicación
+   * DECLARA EXPLÍCITAMENTE un resultado final
+   * que coincide con una opción diferente a
+   * correct_answer.
+   *
+   * No se consideran suficientes:
+   * - números mencionados como datos;
+   * - resultados intermedios;
+   * - números usados para explicar distractores;
+   * - números mencionados para negar un procedimiento;
+   * - porcentajes o cantidades del contexto.
+   */
+
+  const numericPattern =
+    /(?:\$?\s*)\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?(?:\s*%|\s*(?:m2|m²|cm2|cm²|km|m|cm|kg|g|usuarios?|personas?|pesos?))?/gi;
+
+  const normalizeNumericToken = (
+    value: string
+  ): number | null => {
+    let cleaned = value
+      .replace(/\$/g, "")
+      .replace(/%/g, "")
+      .replace(/\s+/g, "")
+      .toLowerCase();
+
+    if (
+      /^\d{1,3}(?:\.\d{3})+$/.test(cleaned)
+    ) {
+      cleaned = cleaned.replace(/\./g, "");
+    } else if (
+      /^\d{1,3}(?:,\d{3})+$/.test(cleaned)
+    ) {
+      cleaned = cleaned.replace(/,/g, "");
+    } else {
+      cleaned = cleaned.replace(",", ".");
+    }
+
+    const number = Number(
+      cleaned.replace(/[^0-9.-]/g, "")
+    );
+
+    return Number.isFinite(number)
+      ? number
+      : null;
+  };
+
+  const optionNumbers =
+    Object.entries(options).map(
+      ([letter, text]) => ({
+        letter: letter as Answer,
+        text,
+        numbers:
+          text.match(numericPattern) ?? [],
+      })
+    );
+
+  const correctValues =
+    optionNumbers
+      .find(
+        (option) =>
+          option.letter ===
+          item.correct_answer
+      )
+      ?.numbers
+      .map(normalizeNumericToken)
+      .filter(
+        (value): value is number =>
+          value !== null
+      ) ?? [];
+
+  /*
+   * Buscamos SOLO expresiones que normalmente
+   * introducen una conclusión o resultado final.
+   */
+  const finalAnswerPatterns = [
+    /(?:por lo tanto|por tanto|por consiguiente|en consecuencia|finalmente)[^.!?]{0,100}?((?:\$?\s*)\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?(?:\s*%|\s*(?:m2|m²|cm2|cm²|km|m|cm|kg|g|usuarios?|personas?|pesos?))?)/i,
+
+    /(?:la respuesta correcta es|la respuesta es|la respuesta corresponde a)[^.!?]{0,80}?((?:\$?\s*)\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?(?:\s*%|\s*(?:m2|m²|cm2|cm²|km|m|cm|kg|g|usuarios?|personas?|pesos?))?)/i,
+
+    /(?:la respuesta final es|el resultado final es|el valor final es|el área solicitada es|el área que se debe pintar es|el área que debe pintarse es|el área que se debe cubrir es|el área que debe cubrirse es|la cantidad solicitada es)[^.!?]{0,80}?((?:\$?\s*)\d{1,3}(?:[.,]\d{3})*(?:\s*%|\s*(?:m2|m²|cm2|cm²|km|m|cm|kg|g|usuarios?|personas?|pesos?))?)/i,
+  ];
+
+  const explanation =
+    item.explanation ?? "";
+
+  /*
+   * Si la explicación NO contiene una conclusión
+   * numérica explícita, no intentamos juzgarla.
+   */
+  const explicitFinalValues: number[] = [];
+
+  for (const pattern of finalAnswerPatterns) {
+    const match =
+      explanation.match(pattern);
+
+    if (!match?.[1]) {
+      continue;
+    }
+
+    const value =
+      normalizeNumericToken(match[1]);
+
+    if (value !== null) {
+      explicitFinalValues.push(value);
+    }
+  }
+
+  if (explicitFinalValues.length === 0) {
+    return true;
+  }
+
+  /*
+   * Ahora sí:
+   *
+   * Si la explicación declara explícitamente
+   * un resultado final que NO coincide con la
+   * opción marcada pero SÍ coincide con otra
+   * opción, tenemos una inconsistencia fuerte.
+   */
+  for (const finalValue of explicitFinalValues) {
+    const matchesCorrect =
+      correctValues.some(
+        (correctValue) =>
+          Math.abs(
+            correctValue - finalValue
+          ) < 0.000001
+      );
+
+    if (matchesCorrect) {
+      continue;
+    }
+
+    const conflictingOption =
+      optionNumbers.find(
+        (option) =>
+          option.letter !==
+            item.correct_answer &&
+          option.numbers
+            .map(normalizeNumericToken)
+            .some(
+              (optionValue) =>
+                optionValue !== null &&
+                Math.abs(
+                  optionValue - finalValue
+                ) < 0.000001
+            )
+      );
+
+    if (conflictingOption) {
+      console.warn(
+        "[PeakScore] ❌ Inconsistencia numérica explícita detectada:",
+        {
+          correct_answer:
+            item.correct_answer,
+          explicit_final_value:
+            finalValue,
+          conflicting_option:
+            conflictingOption.letter,
+          correct_option:
+            correctOption,
+        }
+      );
+
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function validateGeometryNumericAnswer(
+  item: GeneratedQuestion
+): boolean {
+  /*
+   * Validación determinística de geometría.
+   *
+   * Actualmente validamos:
+   * - rectángulos
+   * - cuadrados
+   * - preguntas de área/superficie
+   *
+   * La función debe poder reconocer dimensiones
+   * aunque el visual las represente únicamente
+   * como "5 m", "3 m", etc.
+   */
+
+  if (
+    !item ||
+    item.requires_visual !== true ||
+    item.visual_type !== "geometry" ||
+    !item.visual_data
+  ) {
+    return true;
+  }
+
+  const textToAnalyze = [
+    item.question ?? "",
+    item.explanation ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  /*
+   * Solo aplicamos esta validación cuando realmente
+   * se está preguntando por área o superficie.
+   */
+  if (
+    !/\b(área|area|superficie)\b/i.test(
+      textToAnalyze
+    )
+  ) {
+    return true;
+  }
+
+  const visualData = item.visual_data;
+
+  if (
+    !("shape" in visualData) ||
+    !("measurements" in visualData)
+  ) {
+    return true;
+  }
+
+  /*
+   * Primera versión determinística:
+   * rectángulos y cuadrados.
+   */
+  if (
+    visualData.shape !== "rectangle" &&
+    visualData.shape !== "square"
+  ) {
+    return true;
+  }
+
+  const parseNumber = (
+    value: unknown
+  ): number | null => {
+    if (
+      typeof value !== "string" &&
+      typeof value !== "number"
+    ) {
+      return null;
+    }
+
+    const match = String(value)
+      .replace(",", ".")
+      .match(
+        /-?\d+(?:\.\d+)?/
+      );
+
+    if (!match) {
+      return null;
+    }
+
+    const number = Number(match[0]);
+
+    return Number.isFinite(number)
+      ? number
+      : null;
+  };
+
+  /*
+   * -------------------------------------------------------
+   * DIMENSIONES EXTERIORES
+   * -------------------------------------------------------
+   *
+   * Primero intentamos encontrar dimensiones mediante
+   * etiquetas explícitas:
+   *
+   * ancho, base, alto, altura.
+   *
+   * Si no existen, usamos las etiquetas visuales simples
+   * como "5 m" y "3 m".
+   */
+
+  let width: number | null = null;
+  let height: number | null = null;
+
+  const safeMeasurements =
+    Array.isArray(
+      visualData.measurements
+    )
+      ? visualData.measurements
+      : [];
+
+  /*
+   * 1. Primero buscamos etiquetas semánticas.
+   */
+  for (
+    const measurement of safeMeasurements
+  ) {
+    const label =
+      typeof measurement?.label === "string"
+        ? measurement.label
+            .trim()
+            .toLowerCase()
+        : "";
+
+    const value =
+      parseNumber(
+        measurement?.value
+      );
+
+    if (
+      value === null ||
+      value <= 0
+    ) {
+      continue;
+    }
+
+    const isCutoutMeasurement =
+      /\b(ventana|recorte|puerta|hueco|abertura)\b/i.test(
+        label
+      );
+
+    if (
+      width === null &&
+      !isCutoutMeasurement &&
+      /\b(ancho|base|horizontal|longitud)\b/i.test(
+        label
+      )
+    ) {
+      width = value;
+      continue;
+    }
+
+    if (
+      height === null &&
+      !isCutoutMeasurement &&
+      /\b(alto|altura|vertical)\b/i.test(
+        label
+      )
+    ) {
+      height = value;
+    }
+  }
+
+  /*
+   * 2. Si no encontramos las dimensiones exteriores
+   * mediante etiquetas semánticas, buscamos medidas
+   * simples como:
+   *
+   * "5 m"
+   * "3 m"
+   *
+   * ignorando explícitamente las medidas de ventanas,
+   * recortes, puertas y otros elementos internos.
+   */
+  if (
+    width === null ||
+    height === null
+  ) {
+    const genericMeasurements =
+      safeMeasurements
+        .map((measurement) => {
+          const label =
+            typeof measurement?.label === "string"
+              ? measurement.label
+                  .trim()
+                  .toLowerCase()
+              : "";
+
+          const value =
+            parseNumber(
+              measurement?.value
+            );
+
+          return {
+            label,
+            value,
+          };
+        })
+        .filter(
+          (
+            measurement
+          ) =>
+            measurement.value !== null &&
+            measurement.value > 0 &&
+            !/\b(ventana|recorte|puerta|hueco|abertura)\b/i.test(
+              measurement.label
+            )
+        );
+
+    /*
+     * Solo usamos esta estrategia cuando hay exactamente
+     * dos medidas exteriores inequívocas.
+     */
+    if (
+      genericMeasurements.length === 2
+    ) {
+      if (width === null) {
+        width =
+          genericMeasurements[0]
+            .value;
+      }
+
+      if (height === null) {
+        height =
+          genericMeasurements[1]
+            .value;
+      }
+    }
+  }
+
+  /*
+   * 3. Último respaldo:
+   *
+   * Algunas geometrías guardan las dimensiones
+   * directamente como labels visuales:
+   *
+   * labels: [
+   *   { text: "5 m", position: "bottom" },
+   *   { text: "3 m", position: "left" }
+   * ]
+   *
+   * En ese caso podemos interpretar:
+   *
+   * bottom/top -> dimensión horizontal
+   * left/right -> dimensión vertical
+   */
+
+  if (
+    ("labels" in visualData) &&
+    Array.isArray(
+      visualData.labels
+    )
+  ) {
+    const horizontalLabels: number[] = [];
+    const verticalLabels: number[] = [];
+
+    for (
+      const label of visualData.labels
+    ) {
+      if (
+        !label ||
+        typeof label.text !== "string"
+      ) {
+        continue;
+      }
+
+      const value =
+        parseNumber(label.text);
+
+      if (
+        value === null ||
+        value <= 0
+      ) {
+        continue;
+      }
+
+      const position =
+        typeof label.position === "string"
+          ? label.position
+              .toLowerCase()
+          : "";
+
+      if (
+        position === "top" ||
+        position === "bottom"
+      ) {
+        horizontalLabels.push(value);
+      }
+
+      if (
+        position === "left" ||
+        position === "right"
+      ) {
+        verticalLabels.push(value);
+      }
+    }
+
+    if (
+      width === null &&
+      horizontalLabels.length === 1
+    ) {
+      width =
+        horizontalLabels[0];
+    }
+
+    if (
+      height === null &&
+      verticalLabels.length === 1
+    ) {
+      height =
+        verticalLabels[0];
+    }
+  }
+
+  /*
+   * Si todavía no tenemos las dos dimensiones,
+   * no podemos verificar matemáticamente el área.
+   *
+   * En este punto NO inventamos dimensiones.
+   */
+  if (
+    width === null ||
+    height === null ||
+    width <= 0 ||
+    height <= 0
+  ) {
+    console.warn(
+      "[PeakScore] ⚠️ No fue posible extraer las dimensiones exteriores de la geometría.",
+      {
+        width,
+        height,
+        shape: visualData.shape,
+        question: item.question,
+      }
+    );
+
+    return true;
+  }
+
+  /*
+   * -------------------------------------------------------
+   * ÁREA EXTERIOR
+   * -------------------------------------------------------
+   */
+
+  let expectedArea =
+    width * height;
+
+  /*
+   * -------------------------------------------------------
+   * RECORTES / VENTANAS / HUECOS
+   * -------------------------------------------------------
+   */
+
+  const cutouts =
+    "cutouts" in visualData &&
+    Array.isArray(
+      visualData.cutouts
+    )
+      ? visualData.cutouts
+      : [];
+
+  for (
+    const cutout of cutouts
+  ) {
+    if (
+      !cutout ||
+      cutout.removed !== true
+    ) {
+      continue;
+    }
+
+    if (
+      cutout.type !== "rectangle"
+    ) {
+      /*
+       * Todavía no calculamos automáticamente
+       * otros tipos de recorte.
+       */
+      continue;
+    }
+
+    const cutoutWidth =
+      parseNumber(
+        cutout.width
+      );
+
+    const cutoutHeight =
+      parseNumber(
+        cutout.height
+      );
+
+    if (
+      cutoutWidth === null ||
+      cutoutHeight === null ||
+      cutoutWidth <= 0 ||
+      cutoutHeight <= 0
+    ) {
+      continue;
+    }
+
+    expectedArea -=
+      cutoutWidth *
+      cutoutHeight;
+  }
+
+  /*
+   * Evitar resultados imposibles.
+   */
+  if (
+    expectedArea <= 0
+  ) {
+    return false;
+  }
+
+  /*
+   * -------------------------------------------------------
+   * COMPARAR CON LAS OPCIONES
+   * -------------------------------------------------------
+   */
+
+  const options: Array<{
+    letter: "A" | "B" | "C" | "D";
+    text: string;
+  }> = [
+    {
+      letter: "A",
+      text: item.option_a,
+    },
+    {
+      letter: "B",
+      text: item.option_b,
+    },
+    {
+      letter: "C",
+      text: item.option_c,
+    },
+    {
+      letter: "D",
+      text: item.option_d,
+    },
+  ];
+
+  const normalizeNumericToken = (
+    value: string
+  ): number | null => {
+    const match =
+      value
+        .replace(",", ".")
+        .match(
+          /-?\d+(?:\.\d+)?/
+        );
+
+    if (!match) {
+      return null;
+    }
+
+    const number =
+      Number(match[0]);
+
+    return Number.isFinite(number)
+      ? number
+      : null;
+  };
+
+  const correctOption =
+    options.find(
+      (option) =>
+        option.letter ===
+        item.correct_answer
+    );
+
+  if (!correctOption) {
+    return false;
+  }
+
+  const correctOptionValue =
+    normalizeNumericToken(
+      correctOption.text
+    );
+
+  if (
+    correctOptionValue === null
+  ) {
+    return false;
+  }
+
+  /*
+   * La opción correcta debe coincidir
+   * exactamente con el área calculada.
+   */
+  if (
+    Math.abs(
+      correctOptionValue -
+        expectedArea
+    ) > 0.000001
+  ) {
+    console.warn(
+      "[PeakScore] ❌ Respuesta matemática de geometría incorrecta.",
+      {
+        width,
+        height,
+        expectedArea,
+        correct_answer:
+          item.correct_answer,
+        correct_option:
+          correctOption.text,
+      }
+    );
+
+    return false;
+  }
+
+  /*
+   * Ninguna otra opción puede contener
+   * el mismo resultado correcto.
+   */
+  for (
+    const option of options
+  ) {
+    if (
+      option.letter ===
+      item.correct_answer
+    ) {
+      continue;
+    }
+
+    const optionValue =
+      normalizeNumericToken(
+        option.text
+      );
+
+    if (
+      optionValue !== null &&
+      Math.abs(
+        optionValue -
+          expectedArea
+      ) < 0.000001
+    ) {
+      console.warn(
+        "[PeakScore] ❌ Más de una opción coincide con el área correcta.",
+        {
+          expectedArea,
+          conflicting_option:
+            option.letter,
+          correct_option:
+            item.correct_answer,
+        }
+      );
+
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function isAnswerExplanationCoherent(
   item: GeneratedQuestion
 ): boolean {
@@ -1134,10 +3117,1463 @@ function isAnswerExplanationCoherent(
   return true;
 }
 
+function validateQuestionSolvability(
+  item: GeneratedQuestion
+): boolean {
+  if (!item || typeof item !== "object") {
+    return false;
+  }
+
+  const context = normalize(
+    item.context_text ?? ""
+  );
+
+  const question = normalize(
+    item.question ?? ""
+  );
+
+  const explanation = normalize(
+    item.explanation ?? ""
+  );
+
+  if (!question.trim()) {
+    return false;
+  }
+
+  /*
+   * =====================================================
+   * 1. UN VISUAL INEXISTENTE NO PUEDE SER NECESARIO
+   * =====================================================
+   */
+
+  if (item.requires_visual !== true) {
+    const forbiddenVisualReferences = [
+      /\bsegun la grafica\b/,
+      /\bsegun el grafico\b/,
+      /\bsegun la tabla\b/,
+      /\bsegun las tablas\b/,
+      /\bsegun la figura\b/,
+      /\bsegun el diagrama\b/,
+      /\bcomo se muestra\b/,
+      /\bcomo se observa en la grafica\b/,
+      /\bcomo se observa en el grafico\b/,
+      /\bcomo se observa en la figura\b/,
+      /\ben la grafica\b/,
+      /\ben el grafico\b/,
+      /\ben la tabla\b/,
+      /\ben la figura\b/,
+      /\ben el diagrama\b/,
+      /\ben la imagen\b/,
+      /\ben la figura anterior\b/,
+      /\ben el grafico anterior\b/,
+      /\ben la tabla anterior\b/,
+    ];
+
+    if (
+      forbiddenVisualReferences.some(
+        (pattern) =>
+          pattern.test(question)
+      )
+    ) {
+      return false;
+    }
+  }
+
+  /*
+   * =====================================================
+   * 2. REFERENCIAS EXPLÍCITAS A UN TEXTO/CONTEXTO
+   *    REQUIEREN QUE ESE TEXTO EXISTA
+   * =====================================================
+   *
+   * IMPORTANTE:
+   * No exigimos context_text para todas las preguntas.
+   *
+   * Una pregunta puede contener todos los datos
+   * directamente en el enunciado.
+   */
+
+  const requiresContextPatterns = [
+    /\bsegun el texto\b/,
+    /\bsegun el contexto\b/,
+    /\bde acuerdo con el texto\b/,
+    /\bde acuerdo con el contexto\b/,
+    /\btexto anterior\b/,
+    /\bfragmento anterior\b/,
+    /\bcaso anterior\b/,
+    /\bsituacion anterior\b/,
+    /\binformacion anterior\b/,
+    /\bdato anterior\b/,
+    /\bcomo se menciona anteriormente\b/,
+    /\bcomo se indico anteriormente\b/,
+  ];
+
+  if (
+    requiresContextPatterns.some(
+      (pattern) =>
+        pattern.test(question)
+    ) &&
+    !context.trim()
+  ) {
+    return false;
+  }
+
+  /*
+   * =====================================================
+   * 3. REFERENCIAS A INFORMACIÓN VISUAL
+   *    TAMBIÉN DEBEN TENER VISUAL REAL
+   * =====================================================
+   */
+
+  const visualReferencePatterns = [
+    /\btabla\b/,
+    /\bgrafica\b/,
+    /\bgrafico\b/,
+    /\bdiagrama\b/,
+    /\bfigura\b/,
+    /\bimagen\b/,
+  ];
+
+  if (
+    item.requires_visual !== true &&
+    visualReferencePatterns.some(
+      (pattern) =>
+        pattern.test(question)
+    )
+  ) {
+    return false;
+  }
+
+  /*
+   * =====================================================
+   * 4. NO PERMITIR DEPENDENCIA EXPLÍCITA DE INFORMACIÓN
+   *    QUE EL ENUNCIADO DICE QUE NO ESTÁ DISPONIBLE
+   * =====================================================
+   *
+   * Solo rechazamos la pregunta cuando el PROPIO
+   * ENUNCIADO declara que falta información.
+   *
+   * No analizamos la explicación para esto porque
+   * una explicación puede decir legítimamente que una
+   * afirmación no puede concluirse.
+   */
+
+  const missingInformationInQuestion = [
+    /\bno se proporciona el dato\b/,
+    /\bno se proporciona la informacion\b/,
+    /\bno se proporcionan los datos\b/,
+    /\bfalta el dato necesario\b/,
+    /\bfaltan los datos necesarios\b/,
+    /\bno se dispone de la informacion necesaria\b/,
+    /\bno hay informacion suficiente\b/,
+    /\bno hay datos suficientes\b/,
+  ];
+
+  if (
+    missingInformationInQuestion.some(
+      (pattern) =>
+        pattern.test(question)
+    )
+  ) {
+    return false;
+  }
+
+  /*
+   * =====================================================
+   * 5. SI LA PREGUNTA PIDE INFERIR/CONCLUIR,
+   *    DEBE EXISTIR ALGUNA BASE INFORMACIONAL
+   * =====================================================
+   *
+   * Puede estar en:
+   * - context_text
+   * - question
+   *
+   * Por eso NO exigimos context_text.
+   */
+
+  const inferencePattern =
+    /\bse puede concluir\b|\bse puede inferir\b|\bse puede deducir\b|\bque se puede concluir\b|\bque se puede deducir\b/;
+
+  if (
+    inferencePattern.test(question) &&
+    question.length < 40 &&
+    !context.trim()
+  ) {
+    return false;
+  }
+
+  /*
+   * =====================================================
+   * 6. PREDICCIONES
+   * =====================================================
+   *
+   * Igual que arriba:
+   * no exigimos context_text obligatoriamente.
+   *
+   * El propio enunciado puede contener las condiciones.
+   */
+
+  const predictionPattern =
+    /\bque ocurrira\b|\bque sucedera\b|\bse espera que\b|\bpredecir\b|\bpredeciria\b/;
+
+  if (
+    predictionPattern.test(question) &&
+    question.length < 40 &&
+    !context.trim()
+  ) {
+    return false;
+  }
+
+  /*
+   * =====================================================
+   * 7. EXPLICACIÓN
+   * =====================================================
+   *
+   * NO usamos similitud textual para decidir si una
+   * explicación es válida.
+   *
+   * Una explicación matemática puede tener poco
+   * vocabulario compartido con la pregunta.
+   */
+
+  if (
+    explanation.trim().length === 0
+  ) {
+    return false;
+  }
+
+  /*
+   * =====================================================
+   * 8. EVITAR EXPLICACIONES QUE DECLAREN UN ERROR
+   *    ESTRUCTURAL IRRESOLUBLE
+   *
+   * Solo rechazamos frases muy explícitas que indiquen
+   * que la pregunta fue construida sin los datos necesarios.
+   *
+   * NO rechazamos:
+   * - "no se puede concluir que..."
+   * - "la información no permite afirmar que..."
+   * porque pueden formar parte de una respuesta correcta.
+   */
+
+  const malformedExplanationPatterns = [
+    /\bla pregunta no puede resolverse\b/,
+    /\besta pregunta no puede resolverse\b/,
+    /\bno hay datos para responder\b/,
+    /\bno existen datos para responder\b/,
+    /\bfaltan datos para resolver la pregunta\b/,
+    /\bfalta informacion para resolver la pregunta\b/,
+    /\bno se puede resolver la pregunta\b/,
+  ];
+
+  if (
+    malformedExplanationPatterns.some(
+      (pattern) =>
+        pattern.test(explanation)
+    )
+  ) {
+    return false;
+  }
+
+  return true;
+}
+
+function validateFunctionComparisonAnswer(
+  item: GeneratedQuestion
+): boolean {
+  const text = [
+    item.context_text ?? "",
+    item.question ?? "",
+    item.option_a ?? "",
+    item.option_b ?? "",
+    item.option_c ?? "",
+    item.option_d ?? "",
+  ].join(" ");
+
+  /*
+   * Esta validación solamente se activa cuando
+   * encontramos una comparación explícita entre:
+   *
+   * f(t) = a + bt
+   * g(t) = c * r^t
+   *
+   * No intenta interpretar expresiones matemáticas
+   * arbitrarias.
+   */
+
+  const linearMatch = text.match(
+    /\bf\s*\(\s*t\s*\)\s*=\s*(-?\d+(?:[.,]\d+)?)\s*\+\s*(-?\d+(?:[.,]\d+)?)\s*t\b/i
+  );
+
+  const exponentialMatch = text.match(
+    /\bg\s*\(\s*t\s*\)\s*=\s*(-?\d+(?:[.,]\d+)?)\s*\*\s*\(\s*(-?\d+(?:[.,]\d+)?)\s*\)\s*\^\s*t\b/i
+  );
+
+  if (!linearMatch || !exponentialMatch) {
+    return true;
+  }
+
+  const linearA = Number(
+    linearMatch[1].replace(",", ".")
+  );
+
+  const linearB = Number(
+    linearMatch[2].replace(",", ".")
+  );
+
+  const exponentialA = Number(
+    exponentialMatch[1].replace(",", ".")
+  );
+
+  const exponentialRate = Number(
+    exponentialMatch[2].replace(",", ".")
+  );
+
+  if (
+    ![
+      linearA,
+      linearB,
+      exponentialA,
+      exponentialRate,
+    ].every(Number.isFinite)
+  ) {
+    return true;
+  }
+
+  /*
+   * Detectar afirmaciones que comparan ambas funciones
+   * en un instante concreto, por ejemplo:
+   *
+   * "en t=7"
+   * "a t=7"
+   * "para t=7"
+   */
+
+  const comparisonPattern =
+    /\b(?:en|a|para)\s*t\s*=\s*(\d+(?:[.,]\d+)?)\b[\s\S]{0,180}?\b(supera|mayor|menor|inferior|superior)\b/i;
+
+  const matches = [
+    ...text.matchAll(
+      /(?:en|a|para)\s*t\s*=\s*(\d+(?:[.,]\d+)?)/gi
+    ),
+  ];
+
+  if (matches.length === 0) {
+    return true;
+  }
+
+  const options: Record<Answer, string> = {
+    A: item.option_a,
+    B: item.option_b,
+    C: item.option_c,
+    D: item.option_d,
+  };
+
+  const correctOption =
+    options[item.correct_answer];
+
+  if (!correctOption) {
+    return false;
+  }
+
+  /*
+   * Verificamos afirmaciones concretas de cada opción.
+   */
+  for (const match of matches) {
+    const t = Number(
+      match[1].replace(",", ".")
+    );
+
+    if (!Number.isFinite(t)) {
+      continue;
+    }
+
+    const linearValue =
+      linearA + linearB * t;
+
+    const exponentialValue =
+      exponentialA *
+      Math.pow(exponentialRate, t);
+
+    if (
+      !Number.isFinite(linearValue) ||
+      !Number.isFinite(exponentialValue)
+    ) {
+      continue;
+    }
+
+    /*
+     * Determinar cuál función es realmente mayor.
+     */
+    const exponentialIsGreater =
+      exponentialValue > linearValue;
+
+    /*
+     * Buscar dentro de cada opción afirmaciones
+     * explícitas sobre B frente a A.
+     */
+    for (const letter of [
+      "A",
+      "B",
+      "C",
+      "D",
+    ] as Answer[]) {
+      const optionText =
+        options[letter];
+
+      const normalizedOption =
+        normalize(optionText);
+
+      const saysBGreater =
+        /\b(?:b|canal b)\b[\s\S]{0,80}?\b(supera|mayor|superior|mayor que)\b[\s\S]{0,80}?\b(?:a|canal a)\b/i.test(
+          normalizedOption
+        ) ||
+        /\b(?:b|canal b)\b[\s\S]{0,80}?\b(supera|mayor|superior|mayor que)\b/i.test(
+          normalizedOption
+        );
+
+      const saysALarger =
+        /\b(?:a|canal a)\b[\s\S]{0,80}?\b(supera|mayor|superior|mayor que)\b[\s\S]{0,80}?\b(?:b|canal b)\b/i.test(
+          normalizedOption
+        ) ||
+        /\b(?:a|canal a)\b[\s\S]{0,80}?\b(supera|mayor|superior|mayor que)\b/i.test(
+          normalizedOption
+        );
+
+      if (saysBGreater && !exponentialIsGreater) {
+        if (letter === item.correct_answer) {
+          console.warn(
+            "[PeakScore] ❌ Comparación de funciones incorrecta:",
+            {
+              t,
+              linearValue,
+              exponentialValue,
+              correct_answer:
+                item.correct_answer,
+              conflicting_option:
+                letter,
+            }
+          );
+
+          return false;
+        }
+      }
+
+      if (saysALarger && exponentialIsGreater) {
+        if (letter === item.correct_answer) {
+          console.warn(
+            "[PeakScore] ❌ Comparación de funciones incorrecta:",
+            {
+              t,
+              linearValue,
+              exponentialValue,
+              correct_answer:
+                item.correct_answer,
+              conflicting_option:
+                letter,
+            }
+          );
+
+          return false;
+        }
+      }
+    }
+  }
+
+  /*
+   * Caso específico frecuente:
+   *
+   * "durante el intervalo [0,10]"
+   *
+   * Verificamos algunos puntos del intervalo para
+   * evitar que la IA declare que una función mantiene
+   * ventaja cuando realmente no la mantiene.
+   */
+  const intervalMatch = text.match(
+    /\[\s*(\d+(?:[.,]\d+)?)\s*,\s*(\d+(?:[.,]\d+)?)\s*\]/
+  );
+
+  if (intervalMatch) {
+    const start = Number(
+      intervalMatch[1].replace(",", ".")
+    );
+
+    const end = Number(
+      intervalMatch[2].replace(",", ".")
+    );
+
+    if (
+      Number.isFinite(start) &&
+      Number.isFinite(end) &&
+      end > start
+    ) {
+      const samplePoints = [
+        start,
+        start + (end - start) * 0.5,
+        end,
+      ];
+
+      /*
+       * Si la respuesta afirma que A mantiene
+       * ventaja durante todo el intervalo, B no
+       * puede ser mayor en ninguno de estos puntos.
+       */
+      const answerText =
+        normalize(correctOption);
+
+      const claimsAAlwaysGreater =
+        /\b(?:a|canal a)\b[\s\S]{0,120}?\b(mayor|superior|ventaja)\b[\s\S]{0,120}?\b(?:todo|intervalo|periodo)\b/i.test(
+          answerText
+        );
+
+      const claimsBAlwaysGreater =
+        /\b(?:b|canal b)\b[\s\S]{0,120}?\b(mayor|superior|ventaja)\b[\s\S]{0,120}?\b(?:todo|intervalo|periodo)\b/i.test(
+          answerText
+        );
+
+      if (claimsAAlwaysGreater) {
+        const invalidPoint =
+          samplePoints.find((t) => {
+            const a =
+              linearA + linearB * t;
+
+            const b =
+              exponentialA *
+              Math.pow(
+                exponentialRate,
+                t
+              );
+
+            return b > a;
+          });
+
+        if (invalidPoint !== undefined) {
+          console.warn(
+            "[PeakScore] ❌ La respuesta afirma ventaja de A durante todo el intervalo, pero B la supera.",
+            {
+              invalidPoint,
+              linearValue:
+                linearA +
+                linearB * invalidPoint,
+              exponentialValue:
+                exponentialA *
+                Math.pow(
+                  exponentialRate,
+                  invalidPoint
+                ),
+            }
+          );
+
+          return false;
+        }
+      }
+
+      if (claimsBAlwaysGreater) {
+        const invalidPoint =
+          samplePoints.find((t) => {
+            const a =
+              linearA + linearB * t;
+
+            const b =
+              exponentialA *
+              Math.pow(
+                exponentialRate,
+                t
+              );
+
+            return a > b;
+          });
+
+        if (invalidPoint !== undefined) {
+          console.warn(
+            "[PeakScore] ❌ La respuesta afirma ventaja de B durante todo el intervalo, pero A la supera.",
+            {
+              invalidPoint,
+              linearValue:
+                linearA +
+                linearB * invalidPoint,
+              exponentialValue:
+                exponentialA *
+                Math.pow(
+                  exponentialRate,
+                  invalidPoint
+                ),
+            }
+          );
+
+          return false;
+        }
+      }
+    }
+  }
+
+  /*
+   * Si no encontramos una contradicción determinística,
+   * dejamos continuar la pregunta.
+   */
+  return true;
+}
+
+function validatePercentageConsistency(
+  item: GeneratedQuestion
+): boolean {
+  if (!item || typeof item !== "object") {
+    return false;
+  }
+
+  const question = normalize(
+    `${item.context_text ?? ""} ${item.question ?? ""}`
+  );
+
+  const explanation = normalize(
+    item.explanation ?? ""
+  );
+
+  const options = [
+    item.option_a ?? "",
+    item.option_b ?? "",
+    item.option_c ?? "",
+    item.option_d ?? "",
+  ].map((option) => normalize(option));
+
+  /*
+   * =====================================================
+   * SOLO ACTIVAR EN PREGUNTAS QUE REALMENTE TRABAJEN
+   * CON PORCENTAJES / PROPORCIONES
+   * =====================================================
+   */
+
+  const isPercentageQuestion =
+    /\bporcentaje\b|\bporcentual\b|\bproporcion\b|\bproporcional\b|\btasa\b|\bfraccion\b/.test(
+      question
+    );
+
+  if (!isPercentageQuestion) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * EXTRAER EXPRESIONES DEL TIPO:
+   *
+   * 60 de 100
+   * 30 de 100
+   * 25 de 50
+   *
+   * También permite "60 entre 100".
+   * =====================================================
+   */
+
+  const ratioPattern =
+    /(\d+(?:[.,]\d+)?)\s+(?:de|entre)\s+(\d+(?:[.,]\d+)?)/g;
+
+  const ratios: Array<{
+    numerator: number;
+    denominator: number;
+    percentage: number;
+  }> = [];
+
+  let match: RegExpExecArray | null;
+
+  while ((match = ratioPattern.exec(question)) !== null) {
+    const numerator = Number(
+      match[1].replace(",", ".")
+    );
+
+    const denominator = Number(
+      match[2].replace(",", ".")
+    );
+
+    if (
+      !Number.isFinite(numerator) ||
+      !Number.isFinite(denominator) ||
+      denominator === 0
+    ) {
+      continue;
+    }
+
+    ratios.push({
+      numerator,
+      denominator,
+      percentage:
+        (numerator / denominator) * 100,
+    });
+  }
+
+  /*
+   * Si no encontramos una operación matemática explícita,
+   * no intentamos adivinar.
+   */
+
+  if (ratios.length === 0) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * BUSCAR PORCENTAJES EXPLÍCITOS EN LA EXPLICACIÓN
+   * =====================================================
+   */
+
+  const explanationPercentages =
+    [...explanation.matchAll(
+      /(\d+(?:[.,]\d+)?)\s*%/g
+    )].map((match) =>
+      Number(match[1].replace(",", "."))
+    );
+
+  /*
+   * =====================================================
+   * CADA PORCENTAJE EXPLÍCITO DE LA EXPLICACIÓN DEBE
+   * SER COMPATIBLE CON ALGUNA OPERACIÓN DEL CONTEXTO.
+   *
+   * Ejemplo:
+   *
+   * 60 de 100 = 60%
+   *
+   * =====================================================
+   */
+
+  for (const percentage of explanationPercentages) {
+    const matchesCalculatedValue = ratios.some(
+      (ratio) =>
+        Math.abs(
+          ratio.percentage - percentage
+        ) < 0.01
+    );
+
+    if (!matchesCalculatedValue) {
+      return false;
+    }
+  }
+
+  /*
+   * =====================================================
+   * SI LA EXPLICACIÓN COMPARA DOS PROPORCIONES,
+   * COMPROBAR QUE LA RELACIÓN SEA CORRECTA.
+   * =====================================================
+   */
+
+  if (
+    ratios.length >= 2 &&
+    /\bmayor\b|\bmenor\b|\bsuperior\b|\binferior\b|\bigual\b|\bmas alta\b|\bmas baja\b/.test(
+      explanation
+    )
+  ) {
+    const first = ratios[0].percentage;
+    const second = ratios[1].percentage;
+
+    if (
+      /\bmayor\b|\bsuperior\b|\bmas alta\b/.test(
+        explanation
+      )
+    ) {
+      /*
+       * La primera proporción debe ser mayor
+       * solamente si la explicación está comparando
+       * en ese sentido.
+       *
+       * Si ambas son iguales, no puede afirmar "mayor".
+       */
+
+      if (
+        Math.abs(first - second) < 0.01
+      ) {
+        return false;
+      }
+    }
+
+    if (
+      /\bmenor\b|\binferior\b|\bmas baja\b/.test(
+        explanation
+      )
+    ) {
+      if (
+        Math.abs(first - second) < 0.01
+      ) {
+        return false;
+      }
+    }
+  }
+
+  /*
+   * =====================================================
+   * EVITAR QUE UNA OPCIÓN NUMÉRICA SEA INCOMPATIBLE
+   * CON EL RESULTADO CALCULADO.
+   *
+   * Solo hacemos esta comprobación cuando existe
+   * exactamente un resultado porcentual inequívoco.
+   * =====================================================
+   */
+
+  if (ratios.length === 1) {
+    const expectedPercentage =
+      ratios[0].percentage;
+
+    const numericOptions = options.flatMap(
+      (option) =>
+        [...option.matchAll(
+          /(\d+(?:[.,]\d+)?)\s*%/g
+        )].map((match) =>
+          Number(match[1].replace(",", "."))
+        )
+    );
+
+    if (
+      numericOptions.length > 0 &&
+      !numericOptions.some(
+        (value) =>
+          Math.abs(
+            value - expectedPercentage
+          ) < 0.01
+      )
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function validateWeightedPercentageProcedure(
+  item: GeneratedQuestion
+): boolean {
+  if (!item || typeof item !== "object") {
+    return false;
+  }
+
+  /*
+   * =====================================================
+   * SOLO ACTIVAR EN PREGUNTAS DE MATEMÁTICAS QUE
+   * PRESENTEN UN PROCEDIMIENTO Y PREGUNTEN POR SU ERROR.
+   * =====================================================
+   */
+
+  if (
+    normalize(item.subject) !== "matematicas"
+  ) {
+    return true;
+  }
+
+  const question = normalize(
+    item.question ?? ""
+  );
+
+  const context = normalize(
+    item.context_text ?? ""
+  );
+
+  const combinedText =
+    `${context} ${question}`;
+
+  const asksAboutProcedureError =
+    /\bprocedimiento\b/.test(question) &&
+    (
+      /\bincorrecto\b/.test(question) ||
+      /\berror\b/.test(question) ||
+      /\bincorrecta\b/.test(question) ||
+      /\bpor que\b.*\bincorrecto\b/.test(question)
+    );
+
+  if (!asksAboutProcedureError) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * 1. EXTRAER CANTIDAD TOTAL
+   *
+   * Ejemplo:
+   * "200 usuarios"
+   * "150 clientes"
+   * =====================================================
+   */
+
+  const totalMatch = combinedText.match(
+    /(\d+(?:[.,]\d+)?)\s+(?:usuarios?|clientes?|personas?|estudiantes?|socios?)/i
+  );
+
+  if (!totalMatch) {
+    return true;
+  }
+
+  const total = Number(
+    totalMatch[1].replace(/\./g, "").replace(",", ".")
+  );
+
+  if (
+    !Number.isFinite(total) ||
+    total <= 0
+  ) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * 2. BUSCAR EL PRIMER PORCENTAJE Y SU VALOR BASE
+   *
+   * Ejemplo:
+   *
+   * "el 50% de los usuarios paga una mensualidad
+   *  de 100 mil pesos"
+   *
+   * => porcentaje = 50
+   * => valor = 100000
+   * =====================================================
+   */
+
+  const firstGroupMatch =
+    combinedText.match(
+      /(\d+(?:[.,]\d+)?)\s*%\s+(?:de\s+)?(?:los|las|un|una|usuarios?|clientes?|personas?|estudiantes?|socios?)[^.;:]*?(?:paga|pagan|tiene|tienen|cuesta|cuestan|corresponde|recibe|reciben)?[^.;:]*?(\$?\s*\d+(?:[.,]\d+)?(?:\s+mil|\s+millon(?:es)?|\s+millones?)?)/i
+    );
+
+  if (!firstGroupMatch) {
+    return true;
+  }
+
+  const firstPercentage =
+    Number(
+      firstGroupMatch[1]
+        .replace(",", ".")
+    );
+
+  if (
+    !Number.isFinite(firstPercentage) ||
+    firstPercentage <= 0 ||
+    firstPercentage >= 100
+  ) {
+    return true;
+  }
+
+  const parseSpanishAmount = (
+    raw: string
+  ): number | null => {
+    let value = raw
+      .toLowerCase()
+      .replace(/\$/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    const hasMil =
+      /\bmil\b/.test(value);
+
+    const hasMillion =
+      /\bmillon(?:es)?\b|\bmillones\b/.test(
+        value
+      );
+
+    value = value
+      .replace(/\bmil\b/g, "")
+      .replace(/\bmillon(?:es)?\b/g, "")
+      .replace(/\bmillones\b/g, "")
+      .trim();
+
+    let number: number;
+
+    /*
+     * 100.000 -> 100000
+     * 100,5 -> 100.5
+     * 100000 -> 100000
+     */
+
+    if (
+      /^\d{1,3}(?:\.\d{3})+$/.test(value)
+    ) {
+      number = Number(
+        value.replace(/\./g, "")
+      );
+    } else if (
+      /^\d{1,3}(?:,\d{3})+$/.test(value)
+    ) {
+      number = Number(
+        value.replace(/,/g, "")
+      );
+    } else {
+      number = Number(
+        value.replace(",", ".")
+      );
+    }
+
+    if (!Number.isFinite(number)) {
+      return null;
+    }
+
+    if (hasMil) {
+      number *= 1000;
+    }
+
+    if (hasMillion) {
+      number *= 1_000_000;
+    }
+
+    return number;
+  };
+
+  const firstValue =
+    parseSpanishAmount(
+      firstGroupMatch[2]
+    );
+
+  if (
+    firstValue === null ||
+    firstValue <= 0
+  ) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * 3. BUSCAR EL VALOR DEL SEGUNDO GRUPO
+   *
+   * Ejemplo:
+   *
+   * "el resto paga el 80% de ese valor"
+   *
+   * Entonces:
+   *
+   * segundo valor =
+   * 100000 × 0.80
+   * =====================================================
+   */
+
+  const secondPercentageMatch =
+    combinedText.match(
+      /\b(?:el\s+)?resto\b[^.;:]*?(\d+(?:[.,]\d+)?)\s*%\s+de\s+(?:ese|dicho|tal)\s+valor/i
+    );
+
+  if (!secondPercentageMatch) {
+    return true;
+  }
+
+  const secondPercentage =
+    Number(
+      secondPercentageMatch[1]
+        .replace(",", ".")
+    );
+
+  if (
+    !Number.isFinite(secondPercentage) ||
+    secondPercentage <= 0
+  ) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * 4. CALCULAR EL RESULTADO CORRECTO DEL PROBLEMA
+   * =====================================================
+   */
+
+  const firstCount =
+    total *
+    (firstPercentage / 100);
+
+  const secondCount =
+    total -
+    firstCount;
+
+  const secondValue =
+    firstValue *
+    (secondPercentage / 100);
+
+  const expectedTotal =
+    firstCount * firstValue +
+    secondCount * secondValue;
+
+  if (
+    !Number.isFinite(expectedTotal)
+  ) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * 5. BUSCAR EL PROCEDIMIENTO MATEMÁTICO ESCRITO
+   *    EN LA PREGUNTA
+   *
+   * Ejemplo:
+   *
+   * (200 * 100000) * 0.5 +
+   * (200 * 80000) * 0.5
+   * =====================================================
+   */
+
+  const procedureMarker =
+    question.match(
+      /\b(?:asi|así|procedimiento|calcula(?:r)?\s+el\s+(?:ingreso|costo|total))\s*:\s*/i
+    );
+
+  if (!procedureMarker) {
+    return true;
+  }
+
+  const markerIndex =
+    procedureMarker.index;
+
+  if (
+    markerIndex === undefined
+  ) {
+    return true;
+  }
+
+  let procedureText =
+    question.slice(
+      markerIndex +
+      procedureMarker[0].length
+    );
+
+  /*
+   * La pregunta normalmente continúa con:
+   *
+   * "¿Por qué es incorrecto...?"
+   *
+   * No queremos interpretar esa parte.
+   */
+
+  procedureText =
+    procedureText.split(
+      /[¿?]\s*por\s+qu[eé]\b/i
+    )[0];
+
+  /*
+   * Normalizar operadores.
+   */
+
+  procedureText =
+    procedureText
+      .replace(/×/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/,/g, ".")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  /*
+   * =====================================================
+   * 6. EVALUADOR ARITMÉTICO SEGURO
+   *
+   * NO usamos eval().
+   * Solo permitimos:
+   *
+   * números
+   * +
+   * -
+   * *
+   * /
+   * paréntesis
+   * =====================================================
+   */
+
+  const evaluateArithmetic = (
+    expression: string
+  ): number | null => {
+    const cleaned =
+      expression
+        .replace(/\s+/g, "")
+        .replace(/(\d)\.(?=\d{3}(?:\D|$))/g, "$1");
+
+    /*
+     * Si aparecen letras o símbolos extraños,
+     * no intentamos resolver.
+     */
+
+    if (
+      !/^[0-9+\-*/().]+$/.test(
+        cleaned
+      )
+    ) {
+      return null;
+    }
+
+    let index = 0;
+
+    const parseExpression =
+      (): number | null => {
+        let value =
+          parseTerm();
+
+        if (value === null) {
+          return null;
+        }
+
+        while (
+          index <
+          cleaned.length
+        ) {
+          const operator =
+            cleaned[index];
+
+          if (
+            operator !== "+" &&
+            operator !== "-"
+          ) {
+            break;
+          }
+
+          index++;
+
+          const right =
+            parseTerm();
+
+          if (right === null) {
+            return null;
+          }
+
+          if (operator === "+") {
+            value += right;
+          } else {
+            value -= right;
+          }
+        }
+
+        return value;
+      };
+
+    const parseTerm =
+      (): number | null => {
+        let value =
+          parseFactor();
+
+        if (value === null) {
+          return null;
+        }
+
+        while (
+          index <
+          cleaned.length
+        ) {
+          const operator =
+            cleaned[index];
+
+          if (
+            operator !== "*" &&
+            operator !== "/"
+          ) {
+            break;
+          }
+
+          index++;
+
+          const right =
+            parseFactor();
+
+          if (right === null) {
+            return null;
+          }
+
+          if (operator === "*") {
+            value *= right;
+          } else {
+            if (right === 0) {
+              return null;
+            }
+
+            value /= right;
+          }
+        }
+
+        return value;
+      };
+
+    const parseFactor =
+      (): number | null => {
+        if (
+          cleaned[index] === "("
+        ) {
+          index++;
+
+          const value =
+            parseExpression();
+
+          if (
+            cleaned[index] !== ")"
+          ) {
+            return null;
+          }
+
+          index++;
+
+          return value;
+        }
+
+        const start =
+          index;
+
+        if (
+          cleaned[index] === "+"
+        ) {
+          index++;
+        } else if (
+          cleaned[index] === "-"
+        ) {
+          index++;
+        }
+
+        while (
+          index <
+            cleaned.length &&
+          /[0-9.]/.test(
+            cleaned[index]
+          )
+        ) {
+          index++;
+        }
+
+        if (
+          start === index
+        ) {
+          return null;
+        }
+
+        const number =
+          Number(
+            cleaned.slice(
+              start,
+              index
+            )
+          );
+
+        return Number.isFinite(
+          number
+        )
+          ? number
+          : null;
+      };
+
+    const result =
+      parseExpression();
+
+    if (
+      result === null ||
+      index !== cleaned.length ||
+      !Number.isFinite(result)
+    ) {
+      return null;
+    }
+
+    return result;
+  };
+
+  const calculatedProcedure =
+    evaluateArithmetic(
+      procedureText
+    );
+
+  /*
+   * Si no podemos interpretar de forma segura
+   * el procedimiento, no rechazamos la pregunta.
+   */
+
+  if (
+    calculatedProcedure === null
+  ) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * 7. COMPARAR PROCEDIMIENTO VS RESULTADO CORRECTO
+   * =====================================================
+   */
+
+  const tolerance =
+    Math.max(
+      0.01,
+      Math.abs(expectedTotal) *
+        0.000001
+    );
+
+  const procedureIsCorrect =
+    Math.abs(
+      calculatedProcedure -
+        expectedTotal
+    ) <= tolerance;
+
+  if (!procedureIsCorrect) {
+    return true;
+  }
+
+  /*
+   * =====================================================
+   * 8. SI EL PROCEDIMIENTO ES CORRECTO,
+   *    UNA RESPUESTA MARCADA COMO "EL PROCEDIMIENTO
+   *    ES INCORRECTO" NO PUEDE SER ACEPTADA.
+   * =====================================================
+   */
+
+  const options: Record<
+    Answer,
+    string
+  > = {
+    A: normalize(item.option_a),
+    B: normalize(item.option_b),
+    C: normalize(item.option_c),
+    D: normalize(item.option_d),
+  };
+
+  const selectedOption =
+    options[item.correct_answer] ?? "";
+
+  const saysProcedureCorrect =
+    /\bprocedimiento\s+(?:es|esta)\s+correct[oa]\b/.test(
+      selectedOption
+    ) ||
+    /\bno\s+hay\s+error\b/.test(
+      selectedOption
+    ) ||
+    /\bel\s+procedimiento\s+es\s+correcto\b/.test(
+      selectedOption
+    );
+
+  const saysProcedureIncorrect =
+    /\bprocedimiento\s+(?:es|esta)\s+incorrect[oa]\b/.test(
+      selectedOption
+    ) ||
+    /\bel\s+error\s+esta\b/.test(
+      selectedOption
+    ) ||
+    /\bel\s+error\s+est[aá]\b/.test(
+      selectedOption
+    ) ||
+    /\bporque\s+.*\berror\b/.test(
+      selectedOption
+    ) ||
+    /\bporque\s+.*\bincorrect[oa]\b/.test(
+      selectedOption
+    );
+
+  if (
+    saysProcedureIncorrect &&
+    !saysProcedureCorrect
+  ) {
+    console.warn(
+      "[PeakScore] ❌ Procedimiento matemático correcto marcado como incorrecto.",
+      {
+        expectedTotal,
+        calculatedProcedure,
+        correct_answer:
+          item.correct_answer,
+        selectedOption:
+          item[
+            `option_${item.correct_answer.toLowerCase()}` as
+              | "option_a"
+              | "option_b"
+              | "option_c"
+              | "option_d"
+          ],
+      }
+    );
+
+    return false;
+  }
+
+  return true;
+}
+
 function diagnoseQuestionValidation(
   item: GeneratedQuestion,
   subject: string,
-  session: number
+  session: number,
+  plannedOperation: CognitiveOperation | null = null,
+  plannedVisualType: VisualType | null = null
 ): string[] {
   const failures: string[] = [];
 
@@ -1148,6 +4584,19 @@ function diagnoseQuestionValidation(
   ) {
     failures.push("item no es un objeto válido");
     return failures;
+  }
+
+  // =====================================================
+  // GENERADOR BÁSICO SIN VISUALES
+  // =====================================================
+  // La generación automática no crea visuales.
+  // Las imágenes se agregarán posteriormente desde
+  // el editor de preguntas.
+
+  if (item.requires_visual === true) {
+    failures.push(
+      "el generador básico no permite visuales generados por IA"
+    );
   }
 
   if (
@@ -1178,41 +4627,137 @@ function diagnoseQuestionValidation(
   const questionText =
     normalizeForSimilarity(item.question);
 
-  const cognitivePatterns = [
-    /\bcalcular\b/,
-    /\bdeterminar\b/,
-    /\bestimar\b/,
-    /\bcomparar\b/,
-    /\binterpretar\b/,
-    /\binferir\b/,
-    /\bdeducir\b/,
-    /\bconcluir\b/,
-    /\bexplicar\b/,
-    /\bjustificar\b/,
-    /\banalizar\b/,
-    /\bevaluar\b/,
-    /\bidentificar\b/,
-    /\bpredecir\b/,
-    /\bseleccionar\b/,
-    /\bestablecer\b/,
-    /\brelacionar\b/,
-    /\bdescribir\b/,
-    /\bcual\b/,
-    /\bque\b/,
-    /\bcomo\b/,
-    /\bpor que\b/,
-    /\bporque\b/,
-    /\bcuanto\b/,
-    /\bcuanta\b/,
-    /\bcual es\b/,
-  ];
+  const cognitiveOperationPatterns: Record<
+    CognitiveOperation,
+    RegExp[]
+  > = {
+    interpretar: [
+      /\binterpret/i,
+      /\bsegún (?:la|el|los|las)\b/i,
+      /\bde acuerdo con\b/i,
+      /\bqué información\b/i,
+      /\bqué representa\b/i,
+      /\bqué significa\b/i,
+    ],
 
-  if (
-    !cognitivePatterns.some(
-      (pattern) => pattern.test(questionText)
-    )
-  ) {
-    failures.push("sin señal cognitiva");
+    inferir: [
+      /\binfer/i,
+      /\bdeduc/i,
+      /\bconcluir/i,
+      /\bse puede concluir\b/i,
+      /\bse puede inferir\b/i,
+      /\bqué se puede deducir\b/i,
+    ],
+
+    comparar: [
+      /\bcompar/i,
+      /\bdiferencia/i,
+      /\bsimilitud/i,
+      /\bsemejanza/i,
+      /\bmayor que\b/i,
+      /\bmenor que\b/i,
+      /\bentre .* y\b/i,
+    ],
+
+    relacionar: [
+      /\brelacion/i,
+      /\brelación\b/i,
+      /\bcorrespond/i,
+      /\bvincul/i,
+      /\bconectar/i,
+      /\bentre .* y\b/i,
+    ],
+
+    analizar: [
+      /\banaliz/i,
+      /\bpatrón/i,
+      /\bcausa/i,
+      /\bconsecuencia/i,
+      /\brelación entre\b/i,
+      /\bevidencia/i,
+      /\bcomportamiento/i,
+    ],
+
+    aplicar: [
+      /\baplic/i,
+      /\butiliz/i,
+      /\busando\b/i,
+      /\bempleando\b/i,
+      /\bprocedimiento\b/i,
+      /\bprincipio\b/i,
+      /\bpropiedad\b/i,
+    ],
+
+    calcular: [
+      /\bcalcul/i,
+      /\boperación\b/i,
+      /\bresultado\b/i,
+      /\bcuánto\b/i,
+      /\bcuánto se obtiene\b/i,
+      /\bvalor\b/i,
+
+      /*
+       * Formas frecuentes de preguntas cuantitativas
+       * que implican cálculo aunque no utilicen
+       * literalmente la palabra "calcular".
+       */
+      /\bcu[aá]l es el [áa]rea\b/i,
+      /\bcu[aá]l es el [áa]rea total\b/i,
+      /\bcu[aá]l es la medida\b/i,
+      /\bcu[aá]l es el per[ií]metro\b/i,
+      /\bcu[aá]l es el volumen\b/i,
+      /\bcu[aá]l es la cantidad\b/i,
+      /\bcu[aá]nto mide\b/i,
+      /\bcu[aá]ntos\b/i,
+      /\bporcentaje\b/i,
+      /\btotal\b/i,
+    ],
+
+    justificar: [
+      /\bjustific/i,
+      /\bsustent/i,
+      /\bfundament/i,
+      /\bevidencia\b/i,
+      /\brazón\b/i,
+      /\bargument/i,
+    ],
+
+    evaluar: [
+      /\bevalu/i,
+      /\bvalidez\b/i,
+      /\bválid/i,
+      /\bcorrect[oa]\b/i,
+      /\badecuad[oa]\b/i,
+      /\bpertinente\b/i,
+      /\bmejor explicación\b/i,
+    ],
+
+    predecir: [
+      /\bpredic/i,
+      /\bpredec/i,
+      /\besper/i,
+      /\bse espera\b/i,
+      /\bqué ocurrirá\b/i,
+      /\bqué sucederá\b/i,
+      /\bcomportará\b/i,
+    ],
+  };
+
+  if (plannedOperation) {
+    const operationPatterns =
+      cognitiveOperationPatterns[plannedOperation];
+
+    const operationDetected =
+      operationPatterns.some(
+        (pattern) =>
+          pattern.test(questionText)
+      );
+
+    if (!operationDetected) {
+      failures.push(
+        `la pregunta no cumple la operación cognitiva planificada: ${plannedOperation}`
+      );
+    }
   }
 
   const options = [
@@ -1257,10 +4802,31 @@ function diagnoseQuestionValidation(
       j < normalizedOptions.length;
       j++
     ) {
-      const similarity = jaccardSimilarity(
-        getSimilarityTokens(normalizedOptions[i]),
-        getSimilarityTokens(normalizedOptions[j])
-      );
+      /*
+       * Las expresiones matemáticas no deben compararse
+       * mediante Jaccard textual porque ese algoritmo
+       * ignora operadores y estructura.
+       */
+      if (
+        isLikelyMathExpression(
+          normalizedOptions[i]
+        ) &&
+        isLikelyMathExpression(
+          normalizedOptions[j]
+        )
+      ) {
+        continue;
+      }
+
+      const similarity =
+        jaccardSimilarity(
+          getSimilarityTokens(
+            normalizedOptions[i]
+          ),
+          getSimilarityTokens(
+            normalizedOptions[j]
+          )
+        );
 
       if (similarity >= 0.85) {
         failures.push(
@@ -1343,12 +4909,63 @@ function diagnoseQuestionValidation(
   }
 
   if (
-    explicitlyReferencesVisual(item) &&
-    item.requires_visual !== true
+    item.explanation !== null &&
+    typeof item.explanation !== "string"
   ) {
-    failures.push(
-      "menciona un visual pero requires_visual=false"
-    );
+    failures.push("explanation inválida");
+  }
+
+  if (
+    item.context_text !== null &&
+    typeof item.context_text !== "string"
+  ) {
+    failures.push("context_text inválido");
+  }
+
+  if (
+    item.visual_type !== null &&
+    typeof item.visual_type !== "string"
+  ) {
+    failures.push("visual_type inválido");
+  }
+
+  if (
+    item.visual_description !== null &&
+    typeof item.visual_description !== "string"
+  ) {
+    failures.push("visual_description inválida");
+  }
+
+  if (item.requires_visual === true) {
+    if (!item.visual_type) {
+      failures.push("visual_type faltante");
+    }
+
+    if (!item.visual_description?.trim()) {
+      failures.push(
+        "visual_description faltante"
+      );
+    }
+
+    // El generador básico NO construye visual_data.
+    // El visual se añadirá posteriormente desde el editor.
+  }
+  
+  if (plannedVisualType !== null) {
+    if (item.requires_visual !== true) {
+      failures.push(
+        `requires_visual no coincide con el plan: se esperaba true y se recibió ${item.requires_visual}`
+      );
+    }
+
+    if (
+      item.requires_visual === true &&
+      item.visual_type !== plannedVisualType
+    ) {
+      failures.push(
+        `visual_type no coincide con el plan: se esperaba ${plannedVisualType} y se recibió ${item.visual_type ?? "null"}`
+      );
+    }
   }
 
   if (
@@ -1392,425 +5009,69 @@ function diagnoseQuestionValidation(
     }
   }
 
-        if (!isAnswerExplanationCoherent(item)) {
-          failures.push(
-            "explicación contradice la respuesta"
-          );
-        }
+  if (!validateQuestionSolvability(item)) {
+    failures.push(
+      "la pregunta no es completamente resoluble con la información proporcionada"
+    );
+  }
 
-        return failures;
-      }
+  if (!validatePercentageConsistency(item)) {
+    failures.push(
+      "inconsistencia matemática en porcentajes o proporciones"
+    );
+  }
+
+  if (!validateFunctionComparisonAnswer(item)) {
+    failures.push(
+      "respuesta matemática inconsistente en comparación de funciones"
+    );
+  }
+
+  if (!validateWeightedPercentageProcedure(item)) {
+    failures.push(
+      "procedimiento matemático inconsistente con los datos"
+    );
+  }
+
+  if (!validateExplicitNumericAnswer(item)) {
+    failures.push(
+      "respuesta numérica inconsistente"
+    );
+  }
+
+  if (!validateGeometryNumericAnswer(item)) {
+  failures.push(
+    "respuesta matemática de geometría incorrecta"
+  );
+}
+  
+  if (!isAnswerExplanationCoherent(item)) {
+    failures.push(
+      "explicación contradice la respuesta"
+    );
+  }
+    
+  return failures;
+}
 
 function isValidQuestion(
   item: GeneratedQuestion,
   subject: string,
-  session: number
+  session: number,
+  plannedOperation: CognitiveOperation | null = null,
+  plannedVisualType: VisualType | null = null
 ): boolean {
-  if (
-    !item ||
-    typeof item !== "object" ||
-    Array.isArray(item)
-  ) {
-    return false;
-  }
-
-  if (
-    typeof item.subject !== "string" ||
-    normalize(item.subject) !==
-      normalize(subject)
-  ) {
-    return false;
-  }
-
-  if (
-    !Number.isInteger(Number(item.session)) ||
-    Number(item.session) !== session
-  ) {
-    return false;
-  }
-
-  /*
-   * La dificultad generada por la IA debe ser explícita y válida.
-   * La comprobación de coincidencia con la solicitud se realiza
-   * en generateBlock(), donde también podemos controlar Mixta.
-   */
-  if (!normalizeDifficulty(item.difficulty)) {
-    return false;
-  }
-
-  if (
-    typeof item.question !== "string" ||
-    !item.question.trim()
-  ) {
-    return false;
-  }
-
-  /*
-   * Una pregunta tipo ICFES debe plantear alguna
-   * acción cognitiva: interpretar, comparar,
-   * calcular, inferir, explicar, identificar una
-   * relación, predecir, evaluar, etc.
-   *
-   * Es un filtro conservador: no exige una palabra
-   * específica, solo evita preguntas excesivamente
-   * vacías o puramente declarativas.
-   */
-  const questionText =
-    normalizeForSimilarity(item.question);
-
-  const cognitiveActionPatterns = [
-    /\bcalcular\b/,
-    /\bdeterminar\b/,
-    /\bestimar\b/,
-    /\bcomparar\b/,
-    /\binterpretar\b/,
-    /\binferir\b/,
-    /\bdeducir\b/,
-    /\bconcluir\b/,
-    /\bexplicar\b/,
-    /\bjustificar\b/,
-    /\banalizar\b/,
-    /\bevaluar\b/,
-    /\bidentificar\b/,
-    /\bpredecir\b/,
-    /\bseleccionar\b/,
-    /\bestablecer\b/,
-    /\brelacionar\b/,
-    /\bdescribir\b/,
-    /\bcual\b/,
-    /\bque\b/,
-    /\bcomo\b/,
-    /\bpor que\b/,
-    /\bporque\b/,
-    /\bcuanto\b/,
-    /\bcuanta\b/,
-    /\bcual es\b/,
-  ];
-
-  const hasCognitiveSignal =
-    cognitiveActionPatterns.some(
-      (pattern) => pattern.test(questionText)
+  const failures =
+    diagnoseQuestionValidation(
+      item,
+      subject,
+      session,
+      plannedOperation,
+      plannedVisualType
     );
 
-  if (!hasCognitiveSignal) {
-    return false;
-  }
-
-  if (
-    typeof item.option_a !== "string" ||
-    !item.option_a.trim()
-  ) {
-    return false;
-  }
-
-  if (
-    typeof item.option_b !== "string" ||
-    !item.option_b.trim()
-  ) {
-    return false;
-  }
-
-  if (
-    typeof item.option_c !== "string" ||
-    !item.option_c.trim()
-  ) {
-    return false;
-  }
-
-  if (
-    typeof item.option_d !== "string" ||
-    !item.option_d.trim()
-  ) {
-    return false;
-  }
-
-  if (
-    !["A", "B", "C", "D"].includes(
-      item.correct_answer
-    )
-  ) {
-    return false;
-  }
-
-  /*
-   * Las cuatro opciones deben ser realmente diferentes.
-   * Se normalizan para detectar duplicados aunque
-   * cambien mayúsculas, espacios o acentos.
-   */
-  const normalizedOptions = [
-    item.option_a,
-    item.option_b,
-    item.option_c,
-    item.option_d,
-  ].map((option) => normalize(option));
-
-  /*
-   * Evitar opciones prácticamente equivalentes.
-   *
-   * Dos opciones con una similitud textual muy alta
-   * pueden funcionar como la misma respuesta aunque
-   * tengan pequeñas diferencias de formato.
-   */
-  for (let i = 0; i < normalizedOptions.length; i++) {
-    for (
-      let j = i + 1;
-      j < normalizedOptions.length;
-      j++
-    ) {
-      const similarity =
-        jaccardSimilarity(
-          getSimilarityTokens(
-            normalizedOptions[i]
-          ),
-          getSimilarityTokens(
-            normalizedOptions[j]
-          )
-        );
-
-      if (similarity >= 0.85) {
-        return false;
-      }
-    }
-  }
-
-  /*
-   * Evitar opciones que revelen la respuesta por
-   * contener literalmente otra opción como unidad
-   * principal de la respuesta.
-   *
-   * Se aplica únicamente a opciones suficientemente
-   * cortas para evitar falsos positivos en preguntas
-   * de lectura, ciencias y sociales.
-   */
-  const compactOptions = normalizedOptions.map(
-    (option) =>
-      option
-        .replace(
-          /\b(unidades?|estudiantes?|personas?|casos?|elementos?|metros?|cm|km|kg|g|ml|l|por ciento|%)\b/gi,
-          ""
-        )
-        .replace(/\s+/g, " ")
-        .trim()
-  );
-
-  for (let i = 0; i < compactOptions.length; i++) {
-    for (
-      let j = i + 1;
-      j < compactOptions.length;
-      j++
-    ) {
-      if (
-        compactOptions[i].length >= 2 &&
-        compactOptions[i] === compactOptions[j]
-      ) {
-        return false;
-      }
-    }
-  }
-
-  if (
-    new Set(normalizedOptions).size !== 4
-  ) {
-    return false;
-  }
-
-  /*
-   * Evitar opciones vacías o prácticamente idénticas
-   * después de la normalización.
-   */
-  const optionLengths = normalizedOptions.map(
-    (option) => option.length
-  );
-
-  if (
-    optionLengths.some(
-      (length) => length < 1
-    )
-  ) {
-    return false;
-  }
-
-  /*
-   * Una opción extremadamente dominante en longitud
-   * puede revelar la respuesta sin resolver la pregunta.
-   *
-   * Se aplica solamente cuando las demás opciones son
-   * relativamente cortas, evitando penalizar preguntas
-   * de lectura o ciencias donde una explicación más larga
-   * puede ser legítima.
-   */
-  const maxOptionLength =
-    Math.max(...optionLengths);
-
-  const minOptionLength =
-    Math.min(...optionLengths);
-
-  if (
-    minOptionLength >= 10 &&
-    maxOptionLength >=
-      minOptionLength * 4
-  ) {
-    return false;
-  }
-
-  if (
-    item.explanation !== null &&
-    typeof item.explanation !== "string"
-  ) {
-    return false;
-  }
-
-  if (
-    item.context_text !== null &&
-    typeof item.context_text !== "string"
-  ) {
-    return false;
-  }
-
-  if (
-    typeof item.requires_visual !== "boolean"
-  ) {
-    return false;
-  }
-
-  if (
-    explicitlyReferencesVisual(item) &&
-    item.requires_visual !== true
-  ) {
-    return false;
-  }
-
-  if (
-    item.visual_type !== null &&
-    typeof item.visual_type !== "string"
-  ) {
-    return false;
-  }
-
-  if (
-    item.visual_description !== null &&
-    typeof item.visual_description !== "string"
-  ) {
-    return false;
-  }
-
-  if (
-    item.image_url !== null &&
-    item.image_url !== undefined &&
-    typeof item.image_url !== "string"
-  ) {
-    return false;
-  }
-
-  /*
-   * VALIDACIÓN DE ELEMENTOS VISUALES
-   *
-   * El contrato es estricto:
-   * - sin visual => todos los campos visuales son null;
-   * - con visual => tipo, descripción y datos son obligatorios.
-   */
-
-  if (item.requires_visual === true) {
-    if (
-      !item.visual_type ||
-      !item.visual_description?.trim() ||
-      !item.visual_data ||
-      typeof item.visual_data !== "object" ||
-      Array.isArray(item.visual_data)
-    ) {
-      return false;
-    }
-  } else {
-    if (
-      item.visual_type !== null ||
-      item.visual_description !== null ||
-      item.visual_data !== null
-    ) {
-      return false;
-    }
-  }
-
-  /*
-   * Validar coherencia completa
-   * de los datos visuales.
-   */
-  const visual = {
-    requires_visual: item.requires_visual,
-    visual_type: item.visual_type,
-    visual_description: item.visual_description,
-    visual_data: item.visual_data,
-  };
-
-  if (!isValidQuestionVisual(visual)) {
-    return false;
-  }
-
-  if (!isQuestionVisualCoherent(item)) {
-    return false;
-  }
-
-  if (!isAnswerExplanationCoherent(item)) {
-    return false;
-  }
-
-  /*
-   * Una gráfica generada debe contener datos realmente renderizables.
-   * No basta con que visual_data sea un objeto válido.
-   */
-  if (item.requires_visual && item.visual_type === "chart") {
-    const chart = item.visual_data;
-
-    if (
-      !chart ||
-      typeof chart !== "object" ||
-      Array.isArray(chart) ||
-      !("categories" in chart) ||
-      !("series" in chart)
-    ) {
-      return false;
-    }
-
-    const categories = chart.categories;
-    const series = chart.series;
-
-    if (!Array.isArray(categories) || !Array.isArray(series)) {
-      return false;
-    }
-
-    if (categories.length === 0 || series.length === 0) {
-      return false;
-    }
-
-    for (const category of categories) {
-      if (typeof category !== "string" || !category.trim()) {
-        return false;
-      }
-    }
-
-    for (const currentSeries of series) {
-      if (!currentSeries || typeof currentSeries !== "object" || Array.isArray(currentSeries)) {
-        return false;
-      }
-
-      if (!("values" in currentSeries)) {
-        return false;
-      }
-
-      const values = currentSeries.values;
-
-      if (!Array.isArray(values) || values.length !== categories.length) {
-        return false;
-      }
-
-      if (values.some((value) => typeof value !== "number" || !Number.isFinite(value))) {
-        return false;
-      }
-    }
-  }
-
-  return true;
+  return failures.length === 0;
 }
-
 
 /* =========================================================
    OBTENER REFERENCIAS
@@ -1968,10 +5229,7 @@ async function getProfiles(
      2. REFERENCE_QUESTIONS
   ======================================================= */
 
-  const {
-    data: references,
-    error: referencesError,
-  } = await supabase
+  let referenceQuestionsQuery = supabase
     .from("reference_questions")
     .select(`
       subject,
@@ -1983,8 +5241,26 @@ async function getProfiles(
       structure_type,
       context_type,
       requires_visual
-    `)
-    .limit(300);
+    `);
+
+  if (sourceIds.length > 0) {
+    referenceQuestionsQuery =
+      referenceQuestionsQuery
+        .in(
+          "reference_source_id",
+          sourceIds
+        )
+        .limit(300);
+  } else {
+    referenceQuestionsQuery =
+      referenceQuestionsQuery.limit(0);
+  }
+
+  const {
+    data: references,
+    error: referencesError,
+  } =
+    await referenceQuestionsQuery;
 
   if (referencesError) {
     console.warn(
@@ -2138,8 +5414,13 @@ function buildPrompt(
   totalRequested: number = amount,
   generationPlan: GenerationPlanItem[]
 ): string {
-  const mixedTargets =
-    getMixedDifficultyTargets(totalRequested);
+  const normalizedSubject = normalize(subject);
+
+  /* =========================================================
+     DIFICULTAD
+     ========================================================= */
+
+  const mixedTargets = getMixedDifficultyTargets(totalRequested);
 
   const currentDifficultyCounts =
     existingDifficulties.reduce(
@@ -2172,115 +5453,120 @@ function buildPrompt(
   const difficultyRule =
     difficulty === "Mixta"
       ? `
-  DISTRIBUCIÓN DE DIFICULTAD OBLIGATORIA:
+  DIFICULTAD DEL LOTE:
 
-  Para este lote completo de ${totalRequested} preguntas, utiliza exactamente esta distribución objetivo:
-  - ${mixedTargets.Fácil} Fácil.
-  - ${mixedTargets.Media} Media.
-  - ${mixedTargets.Difícil} Difícil.
+  Total solicitado: ${totalRequested}.
 
-  Ya se han generado:
-  - ${currentDifficultyCounts.Fácil} Fácil.
-  - ${currentDifficultyCounts.Media} Media.
-  - ${currentDifficultyCounts.Difícil} Difícil.
+  Distribución objetivo:
+  - Fácil: ${mixedTargets.Fácil}
+  - Media: ${mixedTargets.Media}
+  - Difícil: ${mixedTargets.Difícil}
 
-  Para las preguntas que estás generando AHORA, prioriza las siguientes cantidades restantes:
-  - ${remainingDifficultyTargets.Fácil} Fácil.
-  - ${remainingDifficultyTargets.Media} Media.
-  - ${remainingDifficultyTargets.Difícil} Difícil.
+  Ya generadas:
+  - Fácil: ${currentDifficultyCounts.Fácil}
+  - Media: ${currentDifficultyCounts.Media}
+  - Difícil: ${currentDifficultyCounts.Difícil}
 
-  CALIBRACIÓN OBLIGATORIA DE DIFICULTAD:
+  Cupos restantes:
+  - Fácil: ${remainingDifficultyTargets.Fácil}
+  - Media: ${remainingDifficultyTargets.Media}
+  - Difícil: ${remainingDifficultyTargets.Difícil}
 
-  Cada pregunta debe ser clasificada por la complejidad REAL del razonamiento necesario para resolverla.
+  Cada slot del PLAN DE ARQUITECTURA tiene una dificultad asignada.
+  Respeta exactamente la dificultad de su slot.
+
+  CRITERIOS:
 
   FÁCIL:
-  - Puede resolverse mediante una idea matemática o conceptual directa.
-  - Normalmente requiere un solo paso de razonamiento.
-  - La información relevante es clara.
-  - No requiere combinar varias evidencias.
-  - No requiere comparar estrategias complejas.
-  - No debe tener trampas artificiales.
-  - Ejemplos de dificultad adecuada: cálculo directo, lectura simple de una tabla, identificación inmediata de una relación o aplicación directa de un procedimiento conocido.
+  Razonamiento directo, interpretación clara o procedimiento sencillo.
+  Los datos relevantes están disponibles y la solución no exige combinar
+  múltiples condiciones.
 
   MEDIA:
-  - DEBE requerir más que una operación o identificación directa.
-  - Debe exigir al menos dos pasos de razonamiento relacionados, o una interpretación no inmediata de la información.
-  - Debe existir una decisión, comparación, transformación o relación entre varios datos.
-  - El estudiante debe procesar la información antes de llegar a la respuesta.
-  - Una pregunta que pueda resolverse leyendo directamente un dato o aplicando una única operación sencilla NO debe clasificarse como Media.
-  - Una pregunta como "25 - 16 y dividir entre 5 - 2" sin ningún razonamiento adicional es demasiado sencilla para Media.
-  - Los números grandes, los textos largos o muchas operaciones NO convierten una pregunta Fácil en Media.
+  Requiere relacionar información, interpretar una representación,
+  realizar varios pasos o descartar alternativas plausibles.
+  La relación necesaria no debe ser inmediata.
 
   DIFÍCIL:
-  - Debe exigir razonamiento de varios pasos o una inferencia no evidente.
-  - Debe integrar dos o más ideas, representaciones, condiciones o evidencias.
-  - Puede requerir comparar estrategias, analizar restricciones, detectar una relación implícita, interpretar una representación compleja o justificar una conclusión.
-  - Los distractores deben corresponder a errores de razonamiento plausibles.
-  - La respuesta no debe ser evidente después de una sola operación o lectura superficial.
-  - NO hagas una pregunta Difícil simplemente aumentando los números o agregando operaciones innecesarias.
+  Requiere integrar varias condiciones, evidencias, representaciones
+  o pasos de razonamiento. Puede exigir inferir, comparar, analizar,
+  evaluar o combinar información. Debe seguir siendo completamente
+  resoluble con los datos proporcionados.
 
-  REGLA CRÍTICA:
-  Antes de asignar la etiqueta de dificultad, resuelve mentalmente cada pregunta y determina cuál es el nivel mínimo de razonamiento necesario para obtener la respuesta correcta.
+  REGLAS:
+  - La dificultad depende del razonamiento, no de la longitud del texto.
+  - No uses números grandes, cálculos innecesarios, vocabulario rebuscado
+    ni datos irrelevantes para simular dificultad.
+  - Varias operaciones mecánicas no convierten una pregunta en difícil.
+  - Una pregunta puede ser difícil con números sencillos si exige
+    interpretar, relacionar, inferir, analizar o evaluar.
+  - Una pregunta puede ser fácil aunque tenga una operación matemática
+    si los datos y procedimiento son directos.
+  - La dificultad debe ser coherente con competencia, habilidad,
+    operación cognitiva, estructura, contexto y tarea.
+  - Si una pregunta no cumple la dificultad de su slot, descártala
+    y genera otra.
 
-  Si una pregunta inicialmente parece Media pero puede resolverse mediante una sola operación directa, DEBES clasificarla como Fácil o modificar la pregunta para aumentar legítimamente el razonamiento.
-
-  Si una pregunta inicialmente parece Difícil pero puede resolverse mediante una operación directa o una lectura evidente, NO puede ser Difícil.
-
-  No inventes ni cambies la etiqueta de dificultad únicamente para cumplir la distribución. La etiqueta debe corresponder al razonamiento real de la pregunta.
-
+  VERIFICACIÓN INTERNA:
+  Antes de devolver cada pregunta, comprueba que la dificultad planificada
+  corresponda realmente al razonamiento requerido y que los datos sean
+  suficientes. No alteres artificialmente la dificultad para completar
+  la distribución.
   `
       : `
-  DIFICULTAD SOLICITADA:
-  Todas las preguntas deben tener dificultad "${difficulty}".
+  DIFICULTAD PLANIFICADA:
 
-  CALIBRACIÓN OBLIGATORIA DE DIFICULTAD:
+  Todas las preguntas deben tener exactamente la dificultad "${difficulty}".
 
-  FÁCIL:
-  - Puede resolverse mediante una idea matemática o conceptual directa.
-  - Normalmente requiere un solo paso de razonamiento.
-  - La información relevante es clara.
-  - No requiere combinar varias evidencias.
+  CRITERIOS:
+  - Fácil: razonamiento directo, interpretación clara o procedimiento sencillo.
+  - Media: relación de información, varios pasos o interpretación no inmediata.
+  - Difícil: integración de condiciones, evidencias o relaciones; puede exigir
+    inferencia, comparación, análisis o evaluación.
 
-  MEDIA:
-  - DEBE requerir más que una operación o identificación directa.
-  - Debe exigir al menos dos pasos de razonamiento relacionados, o una interpretación no inmediata.
-  - Debe implicar comparar, relacionar, transformar o analizar información.
-  - Una pregunta que pueda resolverse leyendo directamente un dato o aplicando una única operación sencilla NO es suficientemente difícil para Media.
-  - No uses números grandes, textos largos ni operaciones innecesarias para aparentar dificultad.
-
-  DIFÍCIL:
-  - Debe exigir razonamiento de varios pasos o una inferencia no evidente.
-  - Debe integrar dos o más ideas, condiciones, representaciones o evidencias.
-  - Puede requerir comparar estrategias, analizar restricciones, interpretar información compleja o justificar una conclusión.
-  - No debe poder resolverse mediante una sola operación o lectura superficial.
-  - No hagas que "Difícil" signifique simplemente hacer cálculos más largos.
-
-  REGLA CRÍTICA:
-  Antes de asignar la etiqueta de dificultad, resuelve mentalmente cada pregunta y determina cuál es el nivel mínimo de razonamiento necesario.
-
-  Si la pregunta puede resolverse mediante una sola operación directa, NO la clasifiques como Media ni Difícil.
-
-  Si una pregunta no alcanza realmente el nivel "${difficulty}", debes modificar su estructura para que el razonamiento corresponda al nivel solicitado.
-
-  La dificultad debe surgir del razonamiento, no del tamaño de los números, la longitud del texto ni operaciones artificiales.
+  REGLAS:
+  - La dificultad depende del razonamiento, no de la longitud.
+  - No uses números grandes, cálculos innecesarios, vocabulario artificialmente
+    complejo ni información irrelevante para simular dificultad.
+  - Varias operaciones mecánicas no equivalen a mayor dificultad.
+  - La pregunta debe ser completamente resoluble con la información proporcionada.
+  - Si no cumple realmente la dificultad "${difficulty}", descártala y genera otra.
   `;
-  const compactGenerationPlan =
-    generationPlan.slice(0, amount).map(
-      (item, index) => ({
-        question_number: index + 1,
-        component: item.component,
-        competence: item.competence,
-        skill: item.skill,
-        structure_type:
-          item.structure_type,
-        context_type:
-          item.context_type,
-        requires_visual:
-          item.requires_visual,
-      })
-    );
-  
-  const normalizedSubject = normalize(subject);
+
+  /* =========================================================
+     PLAN DE ARQUITECTURA
+     ========================================================= */
+
+  const compactGenerationPlan = generationPlan
+    .slice(0, amount)
+    .map((item, index) => ({
+      n: index + 1,
+      component: item.component,
+      competence: item.competence,
+      skill: item.skill,
+      difficulty: item.difficulty,
+      structure_type: item.structure_type,
+      context_type: item.context_type,
+
+      assessment_target:
+        item.assessment_target,
+      
+      claim:
+        item.claim,
+
+      evidences:
+        item.evidences,
+      
+      requires_visual: item.requires_visual,
+      cognitive_operation:
+        item.cognitive_operation,
+      visual_type:
+        item.visual_type,
+    }));
+
+  /* =========================================================
+     CALIBRACIÓN DE REFERENCIAS
+     ========================================================= */
 
   const referenceComponents = Array.from(
     new Set(
@@ -2288,8 +5574,7 @@ function buildPrompt(
         .map((profile) => profile.component)
         .filter(
           (value): value is string =>
-            typeof value === "string" &&
-            value.trim().length > 0
+            typeof value === "string" && value.trim().length > 0
         )
     )
   );
@@ -2300,1493 +5585,806 @@ function buildPrompt(
         .map((profile) => profile.competence)
         .filter(
           (value): value is string =>
-            typeof value === "string" &&
-            value.trim().length > 0
+            typeof value === "string" && value.trim().length > 0
         )
     )
   );
 
-  const referenceCalibrationSection =
-    referenceComponents.length > 0 ||
-    referenceCompetences.length > 0
+  const compactReferenceProfiles = profiles.slice(0, 4).map((profile) => ({
+    component: profile.component,
+    competence: profile.competence,
+    skill: profile.skill,
+    difficulty: profile.difficulty,
+    structure_type: profile.structure_type,
+    context_type: profile.context_type,
+    requires_visual: profile.requires_visual,
+  }));
+
+  const referenceSection =
+    profiles.length > 0
       ? `
-  =========================================================
-  CALIBRACIÓN ESTRUCTURAL A PARTIR DEL MATERIAL DE REFERENCIA
-  =========================================================
+REFERENCIAS DE PEAKSCORE:
+Componentes observados: ${
+          referenceComponents.length
+            ? referenceComponents.join(" | ")
+            : "ninguno"
+        }
+Competencias observadas: ${
+          referenceCompetences.length
+            ? referenceCompetences.join(" | ")
+            : "ninguna"
+        }
+Perfiles:
+${JSON.stringify(compactReferenceProfiles)}
 
-  Componentes observados en el material de referencia:
-  ${
-    referenceComponents.length > 0
-    ? referenceComponents.join(" | ")
-    : "No disponibles"
-  }
-
-  Competencias observadas en el material de referencia:
-  ${
-    referenceCompetences.length > 0
-      ? referenceCompetences.join(" | ")
-      : "No disponibles"
-  }
-
-  REGLAS:
-
-  - Utiliza estos elementos para orientar la variedad de las preguntas.
-  - No repitas innecesariamente el mismo componente.
-  - No repitas innecesariamente la misma competencia.
-  - Cuando la cantidad solicitada lo permita, distribuye las preguntas
-    entre diferentes componentes y competencias.
-  - Mantén siempre la coherencia con la materia y sesión solicitadas.
-  - No inventes nombres de competencias o componentes que no estén
-    respaldados por el blueprint de la materia.
-  - Estos datos sirven para calibrar la estructura pedagógica,
-    NO para copiar preguntas del material de referencia.
-  `
+Úsalos SOLO para calibrar patrones pedagógicos. No copies textos, preguntas, opciones, números, nombres ni escenarios.
+`
       : `
-  =========================================================
-  CALIBRACIÓN ESTRUCTURAL
-  =========================================================
-
-  No hay suficientes perfiles de referencia para establecer una
-  distribución específica.
-
-  Utiliza el blueprint de la materia y rota las competencias,
-  componentes y tipos de razonamiento cuando la cantidad solicitada
-  lo permita.
-  `;
-
-  const diversitySection = `
-  =========================================================
-  DIVERSIDAD OBLIGATORIA DE ESTRUCTURAS
-  =========================================================
-
-  No generes todas las preguntas usando el mismo patrón de
-  razonamiento.
-
-  Para el lote actual, distribuye las preguntas entre diferentes
-  estructuras cuando la cantidad solicitada lo permita.
-
-  Alterna entre estructuras como:
-
-  1. Interpretación de información.
-  2. Comparación de datos o situaciones.
-  3. Aplicación de un procedimiento a una situación.
-  4. Inferencia a partir de información.
-  5. Predicción de un resultado.
-  6. Evaluación de una afirmación o conclusión.
-  7. Validación de un procedimiento.
-  8. Relación entre diferentes representaciones.
-  9. Selección o justificación de una estrategia.
-  10. Análisis de una relación, cambio o tendencia.
-
-  REGLAS:
-
-  - No uses la misma estructura de razonamiento en preguntas
-    consecutivas salvo que el contexto pedagógico lo justifique.
-  - Cambiar únicamente números, nombres, meses o escenarios NO
-    cuenta como una estructura diferente.
-  - Si dos preguntas utilizan una gráfica, procura que no ambas
-    pidan simplemente identificar el mayor o menor valor.
-  - Si dos preguntas utilizan una tabla, procura que exijan
-    operaciones o interpretaciones diferentes.
-  - Los cambios deben afectar el razonamiento requerido, no solo
-    la apariencia superficial de la pregunta.
-  - Mantén siempre coherencia con la competencia, componente,
-    dificultad y blueprint de la materia.
-  `;
-
-    /* =========================================================
-       DIVERSIDAD VISUAL POR MATERIA
-    ========================================================= */
-
-    const visualDiversityRules = `
-  =========================================================
-  SELECCIÓN Y DIVERSIDAD DE VISUALES POR MATERIA
-  =========================================================
-
-  El visual NO debe elegirse al azar.
-
-  Primero determina qué representación permite evaluar mejor
-  la habilidad de la pregunta y después selecciona el tipo visual
-  más apropiado.
-
-  MATEMÁTICAS
-  - chart → datos estadísticos, tendencias y comparaciones.
-  - table → organización y análisis de datos.
-  - math_graph → funciones, relaciones, variación y coordenadas.
-  - geometry → propiedades, medidas y relaciones espaciales.
-  - diagram → procesos, relaciones o representaciones matemáticas.
-
-  No conviertas todas las preguntas estadísticas en gráficas
-  del mismo tipo.
-
-  CIENCIAS NATURALES
-  - chart → resultados experimentales, variables y tendencias.
-  - table → mediciones, observaciones y resultados experimentales.
-  - diagram → procesos, sistemas y relaciones causales.
-  - math_graph → relaciones cuantitativas cuando una gráfica
-    cartesiana sea realmente necesaria.
-  - geometry → modelos espaciales o representaciones físicas
-    cuando las medidas sean relevantes.
-
-  Una pregunta científica no debe convertirse automáticamente
-  en una gráfica.
-
-  LECTURA CRÍTICA
-  Utiliza visuales solamente cuando formen parte real del
-  material que debe interpretarse.
-
-  Prioriza:
-  - diagram → relación entre elementos.
-  - table → comparación organizada de información.
-  - chart → datos explícitos que deban interpretarse.
-
-  No agregues un visual solamente para decorar.
-
-  SOCIALES Y CIUDADANAS
-  - chart → estadísticas y tendencias sociales.
-  - table → comparación de datos.
-  - diagram → relaciones institucionales, procesos o estructuras.
-  - geometry → solamente cuando exista una representación espacial
-    o cuantitativa pertinente.
-
-  No conviertas automáticamente un fenómeno histórico o político
-  en una gráfica.
-
-  INGLÉS
-  - table → horarios, precios, información organizada
-    o comparaciones.
-  - diagram → relaciones o secuencias simples.
-  - chart → datos explícitos que formen parte del contexto.
-
-  No utilices visuales cuando el texto por sí solo sea suficiente.
-
-  REGLAS DE DIVERSIDAD VISUAL
-  - No repitas el mismo visual_type en todas las preguntas del lote.
-  - Si varias representaciones son igualmente válidas, procura
-    alternar el tipo visual.
-  - No cambies el visual únicamente para aparentar diversidad.
-  - El visual debe seguir siendo necesario para resolver la pregunta.
-  - La estructura de la pregunta y el visual pueden variar
-    independientemente cuando sea pedagógicamente apropiado.
-  - Un mismo tipo visual puede repetirse si el contenido realmente
-    lo exige.
-  - Nunca fuerces un visual que no corresponda con la competencia.
-
-  PRIORIDAD:
-  1. Coherencia con la competencia.
-  2. Utilidad para resolver la pregunta.
-  3. Fidelidad al estímulo.
-  4. Diversidad.
-  5. Apariencia profesional.
-
-  No escribas estas reglas en el JSON final.
-  Úsalas internamente para decidir el visual.
-  `;
+REFERENCIAS:
+No hay perfiles específicos. Usa el blueprint de la materia.
+`;
 
   /* =========================================================
-     PERFIL DE EVALUACIÓN POR MATERIA
-  ========================================================= */
+     PREGUNTAS YA GENERADAS
+     ========================================================= */
+
+  const compactExistingQuestions = existingQuestions
+    .slice(-6)
+    .map((question, index) => {
+      const normalized = question.replace(/\s+/g, " ").trim();
+      return `${index + 1}. ${normalized.slice(0, 100)}`;
+    });
+
+  const excludedSection =
+    existingQuestions.length > 0
+      ? `
+PREGUNTAS YA GENERADAS:
+${compactExistingQuestions.join("\n")}
+
+No las repitas ni las parafrasees. Cambia razonamiento, contexto, datos y distractores.
+`
+      : `
+PREGUNTAS PREVIAS:
+No hay. Aun así, todas las preguntas del bloque deben ser genuinamente diferentes.
+`;
+
+  /* =========================================================
+     BLUEPRINT POR MATERIA
+     ========================================================= */
 
   const subjectBlueprints: Record<string, string> = {
     matematicas: `
-=========================================================
-MATEMÁTICAS — BLUEPRINT
-=========================================================
-
-PROPÓSITO:
-Evalúa la capacidad del estudiante para interpretar información,
-resolver situaciones utilizando herramientas matemáticas y
-justificar decisiones o procedimientos.
-
-COMPETENCIAS PRINCIPALES:
-1. Interpretación y representación.
-2. Formulación y ejecución.
-3. Argumentación.
-
-COMPONENTES QUE DEBES ROTAR:
-- Numérico-variacional.
-- Geométrico-métrico.
-- Aleatorio.
-
-TIPOS DE SITUACIÓN:
-- Situaciones de la vida cotidiana.
-- Datos estadísticos.
-- Tablas.
-- Gráficas.
-- Porcentajes.
-- Proporciones.
-- Variación.
-- Modelación.
-- Geometría.
-- Medición.
-- Probabilidad.
-- Análisis de información.
-- Situaciones financieras o sociales cuando sean apropiadas.
-
-REGLAS:
-- No conviertas la pregunta en un ejercicio escolar mecánico.
-- Evita preguntas del tipo "resuelve X" sin contexto cuando el contexto sea pertinente.
-- Prioriza interpretar una situación y tomar una decisión matemática.
-- Cuando uses cálculos, debe existir una razón para realizarlos.
-- Puedes incluir tablas o datos de apoyo dentro de context_text cuando sean parte del estímulo.
-- Si la pregunta depende de interpretar una gráfica, DEBES generar el visual estructurado correspondiente. No reemplaces una gráfica necesaria por una simple descripción textual o una tabla.
-- Incluye distractores asociados a errores matemáticos plausibles.
-- Una opción no puede ser incorrecta simplemente porque contiene un número absurdo.
-- Algunas preguntas deben exigir dos o más pasos de razonamiento.
-- Algunas deben exigir comparar estrategias.
-- Algunas deben exigir interpretar una representación.
-- Algunas deben exigir justificar por qué un procedimiento es válido o inválido.
-
-EJEMPLOS DE ESTRUCTURA, NO PARA COPIAR:
-- Una situación presenta datos y el estudiante debe identificar qué representación permite responder una pregunta.
-- Una situación presenta dos procedimientos y el estudiante debe determinar cuál es correcto.
-- Una situación presenta una variación y el estudiante debe inferir qué ocurrirá bajo una condición diferente.
-- Una situación presenta información estadística y el estudiante debe evaluar una conclusión.
-- Una situación geométrica exige relacionar medidas, propiedades y representación.
-
-EVITA:
-- Operaciones aisladas.
-- Preguntas de memoria de fórmulas.
-- "¿Cuánto es 5 + 7?" disfrazado de contexto.
-- Procedimientos sin interpretación.
+MATEMÁTICAS
+Competencias: Interpretación y representación; Formulación y ejecución; Argumentación.
+Componentes: Numérico-variacional; Geométrico-métrico; Aleatorio.
+Prioriza situaciones con datos, porcentajes, proporciones, variación, modelación, geometría, medición, probabilidad y análisis de información.
+Evita operaciones aisladas, memoria de fórmulas y ejercicios mecánicos.
+Cuando uses cálculos, deben apoyar una decisión o interpretación.
 `,
-
     "lectura critica": `
-=========================================================
-LECTURA CRÍTICA — BLUEPRINT
-=========================================================
-
-PROPÓSITO:
-Evalúa la capacidad de comprender, interpretar y evaluar textos
-de ámbitos cotidianos y académicos no especializados.
-
-COMPETENCIAS:
-1. Comprender el sentido local de los componentes del texto.
-2. Comprender cómo se articulan las partes para construir el sentido global.
-3. Reflexionar y evaluar el contenido y la forma del texto.
-
-TIPOS DE TEXTO:
-- Argumentativo.
-- Expositivo.
-- Informativo.
-- Narrativo.
-- Ensayístico.
-- Divulgativo.
-- Texto de opinión.
-- Fragmentos de textos académicos no especializados.
-
-TIPOS DE TAREA:
-- Identificar una idea explícita relevante.
-- Inferir información.
-- Relacionar partes del texto.
-- Identificar función de una expresión.
-- Reconstruir relaciones lógicas.
-- Determinar propósito.
-- Evaluar una afirmación.
-- Analizar una postura.
-- Identificar supuestos.
-- Contrastar perspectivas.
-- Evaluar la fuerza de un argumento.
-
-REGLAS:
-- El contexto_text debe contener el texto completo necesario para responder.
-- No dependas de conocimiento externo.
-- La respuesta debe obtenerse mediante lectura y razonamiento sobre el texto.
-- Las cuatro opciones deben parecer posibles para alguien que haya leído superficialmente.
-- Los distractores deben representar interpretaciones plausibles pero incorrectas.
-- No hagas preguntas de vocabulario aislado salvo que la palabra sea relevante para el sentido del texto.
-- No preguntes simplemente "¿de qué trata?" repetidamente.
-- Varía la posición de la respuesta correcta.
-- Alterna preguntas locales, globales y críticas.
-
-EVITA:
-- Preguntas de memoria.
-- Preguntas cuya respuesta no esté sustentada por el texto.
-- Opciones obviamente absurdas.
-- Textos excesivamente simples.
-- Preguntas repetitivas sobre la idea principal.
+LECTURA CRÍTICA
+Competencias: sentido local; sentido global; reflexión y evaluación.
+Usa textos argumentativos, expositivos, informativos, narrativos, ensayísticos, divulgativos u opinión.
+Evalúa inferencia, relaciones entre partes, propósito, supuestos, posturas, perspectivas y fuerza de argumentos.
+El context_text debe contener todo el texto necesario. La respuesta debe sustentarse en el texto.
+Evita vocabulario aislado, memoria y repetir preguntas sobre idea principal.
 `,
-
     "sociales y ciudadanas": `
-=========================================================
-SOCIALES Y CIUDADANAS — BLUEPRINT
-=========================================================
-
-PROPÓSITO:
-Evalúa conocimientos y habilidades para comprender fenómenos
-sociales y utilizar esa comprensión para analizar situaciones
-relacionadas con la ciudadanía.
-
-EJES DE RAZONAMIENTO:
-- Pensamiento social.
-- Interpretación y análisis de perspectivas.
-- Pensamiento reflexivo y sistémico.
-
-TIPOS DE CONTEXTO:
-- Situaciones políticas.
-- Situaciones económicas.
-- Situaciones históricas.
-- Conflictos sociales.
-- Problemas ambientales.
-- Participación ciudadana.
-- Derechos y deberes.
-- Instituciones.
-- Relaciones de poder.
-- Cambios históricos.
-- Problemas públicos.
-- Situaciones donde existan perspectivas enfrentadas.
-
-REGLAS:
-- No conviertas la pregunta en memorización de fechas, nombres o artículos.
-- El conocimiento disciplinar debe utilizarse para interpretar una situación.
-- Presenta información suficiente para razonar.
-- Cuando existan perspectivas diferentes, representa correctamente las posiciones.
-- Las opciones incorrectas deben ser interpretaciones plausibles.
-- Algunas preguntas deben exigir identificar una perspectiva.
-- Algunas deben exigir explicar una relación causal o histórica.
-- Algunas deben exigir evaluar una decisión.
-- Algunas deben exigir analizar consecuencias de una acción.
-- Algunas deben exigir integrar diferentes elementos de una situación.
-
-EVITA:
-- "¿En qué año ocurrió...?" como pregunta aislada.
-- Preguntas de cultura general.
-- Preguntas donde la opción correcta sea simplemente la opinión moralmente más atractiva.
-- Preguntas partidistas o ideológicamente sesgadas.
+SOCIALES Y CIUDADANAS
+Ejes: pensamiento social; análisis de perspectivas; pensamiento reflexivo y sistémico.
+Usa situaciones políticas, económicas, históricas, ambientales, ciudadanas, institucionales y de problemas públicos.
+Evalúa perspectivas, relaciones causales/históricas, consecuencias y decisiones fundamentadas.
+Evita memorizar fechas/nombres/artículos, cultura general, sesgos partidistas o respuestas basadas solo en una opinión moral.
 `,
-
     "ciencias naturales": `
-=========================================================
-CIENCIAS NATURALES — BLUEPRINT
-=========================================================
-
-PROPÓSITO:
-Evalúa la capacidad para comprender y utilizar conceptos y
-teorías de las ciencias naturales en situaciones y problemas,
-así como interpretar evidencia y razonar científicamente.
-
-ÁREAS QUE DEBEN ROTARSE:
-- Biología.
-- Física.
-- Química.
-- Ciencia, tecnología y sociedad.
-
-TIPOS DE TAREA:
-- Explicar un fenómeno.
-- Interpretar datos.
-- Analizar resultados experimentales.
-- Identificar una variable.
-- Evaluar una hipótesis.
-- Relacionar evidencia con una conclusión.
-- Predecir un resultado bajo determinadas condiciones.
-- Analizar una representación.
-- Comparar explicaciones.
-- Evaluar la validez de una conclusión.
-
-REGLAS:
-- Prioriza razonamiento científico sobre memorización.
-- Si incluyes un experimento, proporciona la información necesaria.
-- Las preguntas experimentales deben permitir identificar variables,
-  controles, resultados o conclusiones.
-- Los distractores deben corresponder a errores científicos plausibles.
-- No utilices información científica innecesariamente avanzada para grado 11.
-- Integra conceptos cuando el contexto lo permita.
-- Algunas preguntas deben exigir interpretar datos antes de responder.
-- Algunas deben exigir conectar evidencia y explicación.
-
-EVITA:
-- Definiciones aisladas.
-- Preguntas de memoria sin aplicación.
-- Datos insuficientes.
-- Explicaciones que dependan de conocimiento universitario especializado.
+CIENCIAS NATURALES
+Áreas: Biología, Física, Química y Ciencia-Tecnología-Sociedad.
+Prioriza fenómenos, datos, experimentos, variables, hipótesis, evidencia, predicción, representaciones y comparación de explicaciones.
+Si incluyes un experimento, entrega información suficiente para razonar.
+Evita definiciones aisladas y conocimiento universitario innecesario.
 `,
-
     ingles: `
-=========================================================
-INGLÉS — BLUEPRINT
-=========================================================
-
-PROPÓSITO:
-Evalúa la competencia comunicativa en lengua inglesa.
-
-REGLAS GENERALES:
-- Todo el material lingüístico evaluado debe estar en inglés.
-- Utiliza inglés natural y apropiado para estudiantes de grado 11.
-- No introduzcas vocabulario innecesariamente raro.
-- Las opciones incorrectas deben ser lingüísticamente plausibles.
-- Evita que la respuesta correcta destaque por longitud o gramática.
-
-TIPOS DE TAREA:
-- Comprensión de avisos y textos breves.
-- Comprensión de conversaciones.
-- Comprensión de mensajes.
-- Comprensión de textos informativos.
-- Vocabulario en contexto.
-- Gramática en contexto.
-- Relaciones entre información.
-- Comprensión global.
-- Inferencia.
-
-REGLAS:
-- El contexto debe ser suficiente para resolver la pregunta.
-- No conviertas la prueba en una lista de reglas gramaticales.
-- Prioriza comunicación y comprensión.
-- Alterna contextos cotidianos y académicos apropiados.
-- Las opciones deben mantener coherencia gramatical con el contexto.
-- Si evalúas una palabra, su significado debe depender del contexto.
-
-EVITA:
-- Traducciones directas al español.
-- Preguntas de gramática completamente aisladas.
-- Vocabulario extremadamente especializado.
-- Opciones obviamente incorrectas.
+INGLÉS
+Evalúa competencia comunicativa. El material lingüístico evaluado debe estar en inglés.
+Usa avisos, mensajes, conversaciones y textos informativos; comprensión global/local, inferencia, vocabulario o gramática en contexto.
+Usa inglés natural de grado 11 y distractores lingüísticamente plausibles.
+Evita traducciones directas, reglas gramaticales aisladas y vocabulario innecesariamente especializado.
 `,
   };
 
   const blueprint =
     subjectBlueprints[normalizedSubject] ??
     `
-=========================================================
-MATERIA — BLUEPRINT GENERAL
-=========================================================
-
-Evalúa conocimientos y habilidades de grado 11 mediante situaciones
-que exijan interpretar información, aplicar conocimientos, analizar
-evidencia, establecer relaciones y justificar una respuesta.
-
-No generes ejercicios mecánicos ni preguntas de memorización
-cuando puedan sustituirse por una situación de aplicación.
+MATERIA
+Evalúa conocimientos y habilidades de grado 11 mediante situaciones que exijan interpretar, aplicar, analizar evidencia, establecer relaciones y justificar una respuesta.
 `;
 
   /* =========================================================
-     DISTRIBUCIÓN DE ESTRUCTURAS
-  ========================================================= */
+     REGLAS DE RAZONAMIENTO Y ESTRUCTURA
+     ========================================================= */
+
+  const hasPlannedCognitiveOperation =
+    generationPlan.some(
+      (plan) =>
+        plan.cognitive_operation !== null
+    );
 
   const structureRules = `
-=========================================================
-VARIACIÓN OBLIGATORIA DE ESTRUCTURAS
-=========================================================
+  ESTRUCTURA:
 
-No generes ${amount} preguntas con la misma plantilla.
+  Cada pregunta debe mantener coherencia entre:
 
-Debes variar entre estructuras como:
+  competencia → habilidad → tarea → estímulo → opciones → respuesta → explicación.
 
-1. Situación + pregunta directa.
-2. Situación + interpretación de datos.
-3. Texto/estímulo + inferencia.
-4. Texto/estímulo + análisis de una afirmación.
-5. Tabla + conclusión.
-6. Datos + predicción.
-7. Problema + selección de estrategia.
-8. Situación + comparación de alternativas.
-9. Evidencia + explicación.
-10. Situación + evaluación de una decisión.
-11. Dos perspectivas + análisis.
-12. Procedimiento + identificación del error.
-13. Modelo o representación + interpretación.
-14. Situación + consecuencia de modificar una condición.
+  La tarea debe evaluar realmente la habilidad prevista.
+  No uses preguntas cuya dificultad provenga únicamente de texto largo,
+  vocabulario complejo o cambios superficiales de contexto.
 
-NO significa que debas usar todas en cada lote.
+  VARIACIÓN:
 
-Significa que debes evitar que todas las preguntas tengan
-exactamente la misma arquitectura.
+  Alterna, cuando sea compatible con la tarea:
 
-No empieces todas las preguntas con:
-- "Un estudiante..."
-- "Una empresa..."
-- "En una escuela..."
-- "¿Cuál de las siguientes...?"
+  - situaciones contextuales;
+  - interpretación de datos;
+  - tablas;
+  - gráficas;
+  - representaciones matemáticas;
+  - experimentos;
+  - procedimientos;
+  - relaciones entre variables;
+  - textos;
+  - evidencias;
+  - comparación de alternativas;
+  - análisis de situaciones;
+  - problemas de varios pasos.
 
-Varía los escenarios y la redacción.
-`;
+  El contexto debe aportar información necesaria para resolver la pregunta.
+  Evita información decorativa, estructuras repetitivas y conocimiento
+  externo innecesario.
 
-  /* =========================================================
-     REGLAS DE ESTÍMULOS
-  ========================================================= */
+  PLAN INTERNO:
 
-  const stimulusRules = `
-=========================================================
-ESTÍMULOS Y CONTEXTO
-=========================================================
+  Respeta estrictamente los campos del PLAN DE ARQUITECTURA.
 
-Una pregunta tipo ICFES puede partir de un estímulo.
+  ${hasPlannedCognitiveOperation ? `
+  OPERACIÓN COGNITIVA:
 
-Cuando sea útil, utiliza:
-- textos,
-- tablas,
-- datos,
-- descripciones de gráficas,
-- diálogos,
-- experimentos,
-- situaciones sociales,
-- escenarios matemáticos,
-- fragmentos informativos.
+  La operación indicada en el plan debe manifestarse realmente en la tarea.
 
-El estímulo debe tener una función real.
+  - interpretar: comprender información o representaciones.
+  - inferir: obtener conclusiones no explícitas.
+  - comparar: establecer diferencias, semejanzas o condiciones.
+  - relacionar: conectar variables, ideas, datos o condiciones.
+  - analizar: identificar relaciones, patrones, causas o evidencias.
+  - aplicar: utilizar procedimientos, principios o propiedades.
+  - calcular: realizar cálculos necesarios para resolver la tarea.
+  - justificar: sustentar una respuesta mediante evidencia o razonamiento.
+  - evaluar: valorar afirmaciones, procedimientos o evidencias mediante criterios.
+  - predecir: determinar resultados a partir de datos, condiciones o patrones.
 
-NO agregues contexto únicamente para hacer la pregunta más larga.
+  No sustituyas una operación por otra más sencilla.
+  Si la tarea no exige realmente la operación planificada, descarta la pregunta.
 
-Si context_text no es necesario:
-"context_text": null
+  ` : `
+  La operación cognitiva todavía no está asignada por el plan.
+  No inventes una operación ni agregues un campo cognitive_operation al JSON.
+  `}
 
-Si es necesario:
-"context_text" debe contener TODO el material que el estudiante
-necesita para responder.
+  La estructura, contexto, opciones y explicación deben ser coherentes
+  con el razonamiento requerido.
 
-La pregunta no debe depender de información externa que no aparezca
-en el estímulo o que no corresponda razonablemente al conocimiento
-esperado de grado 11.
-`;
+  No incluyas cognitive_operation en el JSON final.
+  `;
 
   /* =========================================================
-     REGLAS DE OPCIONES
-  ========================================================= */
+     OPCIONES
+     ========================================================= */
 
   const optionRules = `
-=========================================================
-OPCIONES DE RESPUESTA
-=========================================================
+  OPCIONES:
 
-Cada pregunta tiene EXACTAMENTE cuatro opciones:
-A, B, C y D.
+  Cada pregunta debe tener exactamente cuatro opciones: A, B, C y D,
+  con una sola respuesta correcta.
 
-Debe existir UNA ÚNICA respuesta correcta.
+  REGLAS:
 
-=========================================================
-DIFERENCIACIÓN OBLIGATORIA DE LAS OPCIONES
-=========================================================
+  - Las opciones deben ser materialmente diferentes.
+  - No repitas una respuesta cambiando únicamente unidades, signos,
+    palabras o formato.
+  - Cada distractor debe ser plausible y representar un error,
+    interpretación o razonamiento diferente.
+  - En Matemáticas, los distractores deben derivarse de errores
+    matemáticos plausibles.
+  - La respuesta correcta no debe destacar por longitud, precisión,
+    vocabulario, detalle o cantidad de información.
+  - Evita pistas involuntarias que permitan identificar la respuesta
+    sin resolver la tarea.
+  - Evita opciones absurdas o claramente descartables.
+  - Cuando el bloque lo permita, distribuye la posición de la respuesta
+    correcta entre A, B, C y D.
 
-Las cuatro opciones DEBEN ser materialmente diferentes entre sí.
+  VERIFICACIÓN INTERNA:
 
-Antes de entregar cada pregunta, verifica internamente que:
+  Antes de devolver cada pregunta:
 
-- A, B, C y D no sean iguales.
-- A, B, C y D no sean prácticamente iguales.
-- No repitas la misma respuesta cambiando únicamente unidades,
-  signos, palabras menores o formato.
-- No copies una opción dentro de otra.
-- No generes cuatro opciones que expresen exactamente la misma idea.
-- Cada distractor debe representar un razonamiento o error diferente.
-- Debe existir una sola opción que pueda defenderse como correcta.
+  1. Resuelve la tarea.
+  2. Determina la única respuesta correcta.
+  3. Construye tres distractores plausibles.
+  4. Comprueba que A, B, C y D sean diferentes.
+  5. Comprueba que ninguna otra opción pueda ser correcta.
+  6. Comprueba que la explicación sea coherente con la opción marcada.
 
-EJEMPLO INCORRECTO:
-
-A: "20"
-B: "20"
-C: "20"
-D: "20"
-
-EJEMPLO INCORRECTO:
-
-A: "50 estudiantes"
-B: "50 estudiantes"
-C: "50 estudiantes"
-D: "50 estudiantes"
-
-EJEMPLO INCORRECTO:
-
-A: "12 m"
-B: "12 metros"
-C: "12 metros de longitud"
-D: "12 m de longitud"
-
-Estas opciones representan esencialmente la misma respuesta y NO deben generarse.
-
-EJEMPLO CORRECTO:
-
-A: "12 m"
-B: "15 m"
-C: "18 m"
-D: "20 m"
-
-=========================================================
-DISTRACTORES
-=========================================================
-
-Los distractores deben representar errores o razonamientos
-plausibles y DIFERENTES entre sí.
-
-Pueden representar:
-
-- una interpretación parcial,
-- un error de procedimiento,
-- una confusión conceptual,
-- una inferencia incorrecta,
-- una lectura superficial,
-- una aplicación incorrecta de una regla,
-- una conclusión que parece razonable pero no está sustentada.
-
-Para preguntas matemáticas:
-
-- Los distractores deben provenir de errores matemáticos plausibles.
-- No generes cuatro resultados iguales.
-- No generes resultados equivalentes expresados de otra manera.
-- Si una opción representa un error de cálculo, las demás deben
-  representar errores diferentes.
-- Comprueba internamente el resultado correcto antes de construir
-  las opciones.
-
-NO utilices distractores absurdos.
-
-=========================================================
-RESPUESTA CORRECTA
-=========================================================
-
-NO hagas que la respuesta correcta:
-
-- sea siempre la más larga,
-- sea siempre la más específica,
-- tenga más información,
-- utilice vocabulario más sofisticado,
-- sea siempre B o C.
-
-Distribuye A, B, C y D como respuesta correcta.
-
-=========================================================
-VERIFICACIÓN OBLIGATORIA ANTES DEL JSON
-=========================================================
-
-Antes de entregar cada pregunta:
-
-1. Resuelve la pregunta internamente.
-2. Determina cuál es la única respuesta correcta.
-3. Construye tres distractores plausibles basados en errores diferentes.
-4. Compara A, B, C y D.
-5. Si dos opciones son iguales o prácticamente equivalentes,
-   DESCARTA esas opciones y crea distractores nuevos.
-6. Verifica nuevamente que exista UNA SOLA respuesta correcta.
-7. Solo después entrega la pregunta en el JSON.
-
-Las cuatro opciones deben tener una longitud razonablemente
-comparable cuando la naturaleza de la pregunta lo permita.
-`;
+  Si existe ambigüedad o más de una opción puede defenderse correctamente,
+  descarta la pregunta y genera otra.
+  `;
 
   /* =========================================================
-     RAZONAMIENTO ICFES
-  ========================================================= */
-
-  const icfesReasoningRules = `
-=========================================================
-ESTILO DE RAZONAMIENTO
-=========================================================
-
-La pregunta debe evaluar una HABILIDAD.
-
-Antes de crear cada pregunta determina internamente:
-
-1. ¿Qué competencia se está evaluando?
-2. ¿Qué conocimiento o recurso necesita el estudiante?
-3. ¿Qué operación cognitiva debe realizar?
-4. ¿Qué evidencia demuestra que eligió correctamente?
-5. ¿Por qué cada distractor resulta plausible?
-6. ¿Qué hace que esta pregunta no sea simplemente memorística?
-
-NO escribas esas respuestas en el JSON.
-
-Úsalas para construir la pregunta.
-
-PRIORIZA:
-- interpretación,
-- inferencia,
-- análisis,
-- aplicación,
-- comparación,
-- evaluación,
-- argumentación,
-- relación entre variables,
-- uso de evidencia,
-- toma de decisiones fundamentada.
-
-REDUCE:
-- memoria literal,
-- definiciones,
-- operaciones mecánicas,
-- preguntas de una sola palabra,
-- preguntas resolubles por eliminación superficial.
-`;
-
-  /* =========================================================
-     CONTROL DE CALIDAD
-  ========================================================= */
+     CALIDAD
+     ========================================================= */
 
   const qualityRules = `
-=========================================================
-CONTROL DE CALIDAD ANTES DE RESPONDER
-=========================================================
+  CALIDAD Y VALIDEZ:
 
-Antes de entregar el JSON revisa internamente CADA pregunta.
+  Cada pregunta debe ser clara, precisa, autocontenida y resoluble con la
+  información proporcionada.
 
-DESCARTA Y REEMPLAZA cualquier pregunta que:
+  - Debe existir una relación directa entre competencia, habilidad, tarea,
+    estímulo, opciones y respuesta correcta.
+  - No dependas de información externa innecesaria.
+  - Evita ambigüedades, datos contradictorios, supuestos ocultos y
+    información insuficiente.
+  - El contexto debe aportar información útil para resolver la pregunta.
+  - Evita contenido decorativo o texto innecesariamente largo.
+  - La pregunta debe evaluar razonamiento y no depender de pistas formales.
+  - La respuesta correcta debe estar respaldada por el estímulo, los datos
+    o el procedimiento planteado.
+  - La explicación debe justificar por qué la respuesta correcta es correcta
+    y, cuando sea pertinente, mostrar el razonamiento necesario.
+  - No introduzcas errores conceptuales, matemáticos, científicos,
+    lingüísticos o de interpretación.
 
-- sea demasiado básica para grado 11;
-- sea una pregunta escolar mecánica sin razonamiento;
-- tenga más de una respuesta defendible;
-- no tenga información suficiente;
-- dependa de información externa innecesaria;
-- tenga una opción obviamente correcta;
-- tenga distractores absurdos;
-- repita la estructura de otra pregunta;
-- sea prácticamente una paráfrasis de otra;
-- tenga una respuesta correcta inconsistente con el contexto;
-- utilice un concepto fuera del nivel esperado;
-- dependa de ambigüedad lingüística accidental;
-- evalúe otra competencia diferente a la declarada;
-- use un contexto artificial únicamente para disfrazar un ejercicio simple.
+  - En Matemáticas, identifica primero exactamente qué magnitud solicita la pregunta:
+  tasa, cantidad total, valor de una variable, expresión, porcentaje, proporción,
+  área, perímetro, longitud, volumen, probabilidad u otra.
+  - Distingue siempre entre una tasa y una cantidad acumulada.
+  - Comprueba que las unidades de la respuesta correspondan exactamente a la magnitud solicitada.
+  - Si interviene una variable, verifica que su presencia tenga sentido en la magnitud pedida
+    y no la incluyas simplemente porque aparece en los datos.
+  - Si existe una conversión de unidades, realiza la conversión completa antes de construir
+    las opciones.
+  - La opción marcada como correcta debe representar exactamente el resultado de resolver
+    la tarea solicitada, no una cantidad relacionada pero diferente.
+  - Antes de devolver una pregunta matemática, resuélvela de principio a fin y comprueba:
+    datos → operación → unidades → resultado → opción correcta → explicación.
+  - Si el resultado correcto no coincide exactamente con una de las cuatro opciones,
+    DESCARTA la pregunta y genera otra.
 
-Una pregunta de calidad debe poder defenderse pedagógicamente:
-debe existir una razón clara por la cual la respuesta correcta
-es correcta y las otras tres son incorrectas.
+  ANTES DE ENTREGAR:
 
-VERIFICACIÓN MATEMÁTICA OBLIGATORIA:
+  Comprueba internamente:
 
-Cuando la pregunta implique cálculos, fórmulas, relaciones numéricas,
-probabilidad, porcentajes, proporciones, geometría, funciones, datos
-estadísticos o interpretación cuantitativa:
+  1. La pregunta puede resolverse con la información disponible.
+  2. Existe una única respuesta correcta.
+  3. La respuesta marcada coincide con la solución.
+  4. Las opciones y la explicación son coherentes.
+  5. No existen contradicciones internas.
+  6. La dificultad corresponde al nivel solicitado.
 
-- Resuelve internamente la pregunta antes de construir el JSON.
-- Comprueba nuevamente el procedimiento y el resultado.
-- Comprueba que la opción indicada en "correct_answer" coincide exactamente
-  con el resultado obtenido.
-- Comprueba que ninguna otra opción también pueda ser correcta.
-- Si utilizas porcentajes, razones o proporciones, verifica las operaciones.
-- Si utilizas geometría, verifica las medidas y las relaciones geométricas.
-- Si utilizas tablas o gráficas, verifica que los datos del visual coincidan
-  exactamente con la pregunta y con la respuesta correcta.
-- Si utilizas una función, ecuación o expresión algebraica, verifica que
-  los valores utilizados sean consistentes con ella.
-- Los distractores matemáticos deben provenir de errores plausibles,
-  no de resultados aleatorios.
-- Si detectas una inconsistencia entre el enunciado, los datos, las opciones,
-  la respuesta correcta o el visual, DESCARTA esa pregunta y créala de nuevo.
-
-La respuesta correcta nunca debe depender de un cálculo incorrecto,
-un dato contradictorio o una interpretación matemática ambigua.
-
-No expliques este proceso en la respuesta.
-`;
+  Si alguna condición falla, descarta la pregunta y genera otra.
+  `;
 
   /* =========================================================
-     DIFICULTAD
-  ========================================================= */
-
-  const difficultyInstructions = `
-=========================================================
-DIFICULTAD
-=========================================================
-
-${difficultyRule}
-
-Para aumentar dificultad puedes modificar:
-
-- cantidad de información relevante;
-- necesidad de integrar varias evidencias;
-- cantidad de pasos razonables;
-- relación entre diferentes representaciones;
-- presencia de información distractora pertinente;
-- necesidad de comparar alternativas;
-- nivel de inferencia;
-- complejidad del razonamiento.
-
-NO aumentes dificultad simplemente:
-- haciendo números enormes;
-- haciendo textos innecesariamente largos;
-- utilizando palabras raras;
-- agregando operaciones sin propósito.
-`;
-
-  /* =========================================================
-     ORIGINALIDAD
-  ========================================================= */
-
-  const compactExistingQuestions =
-    existingQuestions.slice(-12).map((question, index) => {
-      const normalized = question
-        .replace(/\s+/g, " ")
-        .trim();
-
-      return `${index + 1}. ${normalized.slice(0, 140)}`;
-    });
-  
-  const excludedSection =
-    existingQuestions.length > 0
-      ? `
-=========================================================
-PREGUNTAS YA GENERADAS
-=========================================================
-
-Estas preguntas ya fueron generadas en esta misma solicitud:
-
-${compactExistingQuestions.join("\n")}
-
-REGLAS:
-
-- NO repitas ninguna pregunta.
-- NO parafrasees ninguna pregunta.
-- NO reutilices el mismo escenario cambiando únicamente números.
-- NO reutilices la misma estructura con palabras diferentes.
-- Cambia el contexto.
-- Cambia la habilidad evaluada cuando sea posible.
-- Cambia los datos.
-- Cambia el razonamiento necesario.
-- Cambia los distractores.
-
-La nueva pregunta debe ser genuinamente diferente.
-`
-      : `
-=========================================================
-PREGUNTAS PREVIAS
-=========================================================
-
-No existen preguntas previas en este lote.
-
-Aun así, todas las preguntas deben ser diferentes entre sí.
-`;
-
-  /* =========================================================
-     REFERENCIAS
-  ========================================================= */
-
-  const compactReferenceProfiles = profiles
-    .slice(0, 8)
-    .map((profile) => ({
-      component: profile.component,
-      competence: profile.competence,
-      skill: profile.skill,
-      difficulty: profile.difficulty,
-      structure_type: profile.structure_type,
-      context_type: profile.context_type,
-      requires_visual: profile.requires_visual,
-    }));
-  
-  const referenceSection =
-    profiles.length > 0
-      ? `
-=========================================================
-PERFILES DE REFERENCIA DE PEAKSCORE
-=========================================================
-
-Los siguientes perfiles provienen de preguntas/perfiles existentes
-en PeakScore.
+     VISUALES
+     ========================================================= */
+
+  const plannedVisualTypes = Array.from(
+    new Set(
+      generationPlan
+        .map((item) => item.visual_type)
+        .filter(
+          (value): value is VisualType =>
+            value !== null
+        )
+    )
+  );
+
+   const visualContracts: string[] = [];
+
+  if (plannedVisualTypes.includes("chart")) {
+    visualContracts.push(`
+  CHART:
+
+  - Úsalo para datos, tendencias, distribuciones o comparaciones.
+  - chart_type: bar | line | pie | scatter | area.
+  - categories y values deben tener longitudes coherentes.
+  - Todos los valores deben ser numéricos finitos.
+  - Los datos deben coincidir exactamente con contexto, pregunta y solución.
+  - No generes gráficos decorativos.
+  - x_label es obligatorio y debe identificar claramente el eje horizontal.
+  - y_label es obligatorio y debe identificar claramente el eje vertical.
+
+  CONTRATO ESTRUCTURAL:
+
+  visual_data DEBE incluir:
+  - title
+  - chart_type
+  - categories
+  - series
+
+  No omitas "title".
+  "title" debe ser string o null.
+  `);
+  }
+
+  if (plannedVisualTypes.includes("table")) {
+    visualContracts.push(`
+  TABLE:
+
+  - Úsala solo cuando los datos tabulares sean necesarios.
+  - headers y rows deben ser coherentes.
+  - Cada fila debe tener exactamente headers.length columnas.
+  - No agregues columnas no declaradas.
+  - La tabla debe coincidir con contexto, pregunta, opciones,
+    respuesta y explicación.
+  - No generes tablas decorativas.
+
+  CONTRATO ESTRUCTURAL:
+
+  visual_data DEBE incluir:
+  - title
+  - headers
+  - rows
+
+  No omitas "title".
+  "title" debe ser string o null.
+  `);
+  }
+
+  if (plannedVisualTypes.includes("math_graph")) {
+    visualContracts.push(`
+  MATH_GRAPH:
+
+  - Úsalo para funciones, puntos, coordenadas o relaciones entre variables.
+  - graph_type: function | points | coordinate_plane | mixed.
+  - x_range e y_range deben ser pares numéricos válidos.
+  - Las funciones deben usar expresiones matemáticas válidas.
+  - Los puntos deben ser coherentes con funciones, coordenadas y datos.
+  - El gráfico debe aportar información necesaria para resolver o interpretar.
+  - No generes gráficos decorativos.
+
+  CONTRATO ESTRUCTURAL:
+
+  visual_data DEBE incluir:
+  - title
+  - graph_type
+  - x_range
+  - y_range
+  - points
+
+  No omitas "title".
+  "title" debe ser string o null.
+  `);
+  }
+
+  if (plannedVisualTypes.includes("geometry")) {
+    visualContracts.push(`
+  GEOMETRY:
+
+  La geometría debe representar UNA SOLA FIGURA PRINCIPAL.
+
+  SHAPES PERMITIDOS:
+
+  - triangle
+  - rectangle
+  - circle
+  - polygon
 
-UTILÍZALOS PARA CALIBRAR:
-- componente,
-- competencia,
-- dificultad,
-- tipo de contexto,
-- estructura,
-- necesidad de recursos visuales.
+  Para cuadrados:
+  - usa shape="rectangle"
+  - incluye la medida correspondiente del lado.
 
-IMPORTANTE:
+  No uses:
+  - square
+  - semicircle
+  - trapezoid
+  - parallelogram
+  - rhombus
+  - composite
 
-Las referencias NO deben copiarse.
+  No inventes propiedades para representar figuras
+  que el contrato no soporte.
 
-NO reproduzcas:
-- textos,
-- preguntas,
-- opciones,
-- números,
-- nombres,
-- escenarios específicos.
+  CONTRATO ESTRUCTURAL OBLIGATORIO:
 
-Solo estudia sus patrones pedagógicos.
+  visual_data DEBE incluir SIEMPRE:
 
-PERFILES:
+  {
+    "title": string | null,
+    "shape": "...",
+    "labels": [],
+    "measurements": []
+  }
 
-${JSON.stringify(compactReferenceProfiles)}
-`
-      : `
-=========================================================
-REFERENCIAS
-=========================================================
+  MUY IMPORTANTE:
 
-No hay perfiles específicos disponibles.
+  - "title" es OBLIGATORIO.
+  - Aunque no necesites un título visible para resolver
+    la pregunta, DEBES enviar la propiedad.
+  - Si no necesitas título descriptivo, usa:
+    "title": null
+  - NUNCA omitas la propiedad "title".
 
-Utiliza el blueprint de la materia y las reglas de evaluación
-proporcionadas en este prompt.
-`;
+  LABELS:
 
-  const isCalibrationBlock = profiles.length > 0;
+  Cada label debe tener:
 
-  const adaptivePromptSections = isCalibrationBlock
-    ? `
-    ${referenceCalibrationSection}
+  {
+    "text": "string",
+    "position":
+      "top | bottom | left | right | center |
+       top_left | top_right | bottom_left | bottom_right"
+  }
 
-    ${diversitySection}
+  MEASUREMENTS:
 
-    ${visualDiversityRules}
+  Cada measurement debe tener:
 
-    ${difficultyInstructions}
+  {
+    "label": "string",
+    "value": "string"
+  }
 
-    ${referenceSection}
+  No uses "unit" como propiedad separada.
 
-    ${excludedSection}
-    `
-    : `
-    =========================================================
-    BLOQUE POSTERIOR — MANTENER CALIDAD Y VARIAR
-    =========================================================
+  CUTOUTS:
 
-    La calibración estructural ya fue realizada en el primer bloque.
+  Los cutouts permitidos por el contrato actual son:
 
-    Mantén estas reglas obligatorias:
+  - semicircle
+  - circle
+  - rectangle
+  - triangle
 
-    - Genera preguntas genuinamente nuevas.
-    - No repitas ni parafrasees preguntas anteriores.
-    - Cambia el razonamiento requerido.
-    - Cambia contexto, datos y distractores.
-    - Mantén coherencia con ${subject} y la sesión ${session}.
-    - Respeta la dificultad solicitada.
-    - Utiliza visuales solamente cuando sean necesarios.
-    - Mantén coherencia entre pregunta, visual, respuesta y explicación.
-    - Evita reutilizar el mismo patrón de razonamiento.
-    - Devuelve exactamente ${amount} preguntas.
+  Los lados permitidos son:
 
-    ${excludedSection}
-    `;
+  - top
+  - bottom
+  - left
+  - right
+  - center
 
-  /* =========================================================
-     PROMPT FINAL
-  ========================================================= */
+  Para un recorte rectangular:
 
-  return `
-Eres un especialista senior en evaluación educativa y diseño de
-preguntas para estudiantes colombianos de grado 11.
+  {
+    "type": "rectangle",
+    "side": "center",
+    "width": number,
+    "height": number,
+    "removed": true
+  }
 
-Tu tarea es crear preguntas NUEVAS para PeakScore, una plataforma
-de preparación para el examen Saber 11°.
+  Para un recorte circular:
 
-El objetivo NO es producir ejercicios escolares genéricos.
+  {
+    "type": "circle",
+    "side": "center",
+    "radius": number,
+    "removed": true
+  }
 
-El objetivo es producir preguntas de selección múltiple con única
-respuesta que exijan razonamiento, interpretación, aplicación,
-análisis o evaluación, siguiendo una estructura pedagógica
-compatible con el enfoque de evaluación del ICFES.
+  Para un recorte semicircular:
 
-=========================================================
-SOLICITUD
-=========================================================
+  {
+    "type": "semicircle",
+    "side": "top | bottom | left | right",
+    "radius": number,
+    "removed": true
+  }
 
-Genera EXACTAMENTE ${amount} preguntas nuevas.
+  Para un recorte triangular:
 
-Materia:
-${subject}
+  {
+    "type": "triangle",
+    "side": "top | bottom | left | right | center",
+    "removed": true
+  }
 
-Sesión:
-${session}
+  No inventes propiedades adicionales.
 
-${isCalibrationBlock
-  ? blueprint
-  : `
-BLUEPRINT YA CALIBRADO
+  INTEGRIDAD MATEMÁTICA OBLIGATORIA:
 
-Mantén estrictamente la materia "${subject}" y la sesión ${session}.
+  Si la pregunta solicita calcular área, superficie,
+  perímetro, longitud, volumen u otra magnitud geométrica:
 
-Conserva la coherencia con los componentes, competencias,
-habilidades y tipos de razonamiento definidos para esta materia.
+  1. Calcula internamente el resultado antes de construir
+     las opciones.
 
-No inventes componentes ni competencias fuera del blueprint
-ya establecido.
-`}
+  2. La respuesta correcta debe coincidir exactamente
+     con ese cálculo.
 
-${adaptivePromptSections}
+  3. La explicación debe mostrar un procedimiento matemático
+     coherente con los datos del visual.
 
-=========================================================
-PLAN DE ARQUITECTURA DEL BLOQUE
-=========================================================
+  4. Si existen recortes, ventanas, puertas, agujeros
+     u otras partes removidas, debes incorporarlos
+     correctamente al cálculo.
 
-Cada pregunta debe seguir la arquitectura indicada para su posición.
+  5. Para un rectángulo con recortes rectangulares:
 
-${JSON.stringify(compactGenerationPlan)}
+     área válida =
+     área exterior -
+     suma de las áreas removidas.
 
-No copies literalmente los perfiles.
-Utilízalos únicamente para determinar:
+  6. Ejemplo:
 
-- componente
-- competencia
-- habilidad
-- estructura de pregunta
-- tipo de contexto
-- necesidad de visual
+     figura exterior:
+     6 m × 4 m
 
-La arquitectura debe guiar el razonamiento de cada pregunta,
-pero el contenido debe ser completamente nuevo.
+     área exterior:
+     24 m²
 
-=========================================================
-REGLAS GENERALES
-=========================================================
+     recorte:
+     2 m × 1.5 m
 
-1. Todas las preguntas deben corresponder a "${subject}".
+     área removida:
+     3 m²
 
-2. Todas deben corresponder a la sesión ${session}.
+     área restante:
+     21 m²
 
-3. Cada pregunta debe tener una única respuesta correcta.
+     Por lo tanto:
 
-4. Las preguntas deben ser apropiadas para estudiantes de grado 11
-   en Colombia.
+     - si la pregunta pide el área restante,
+       la respuesta correcta debe ser 21 m².
+     - NO marques 24 m² como respuesta correcta.
 
-5. Utiliza español natural y claro, excepto en la prueba de Inglés,
-   donde el material evaluado debe estar en inglés.
+  7. Nunca declares en la explicación un resultado final
+     diferente de la opción marcada como correcta.
 
-6. No copies preguntas oficiales del ICFES.
+  8. Comprueba esta cadena completa:
 
-7. No reproduzcas material protegido.
+     visual_data
+        ↓
+     measurements
+        ↓
+     cálculo
+        ↓
+     opciones
+        ↓
+     correct_answer
+        ↓
+     explanation
 
-8. No inventes datos externos necesarios para resolver la pregunta.
+  9. Todos deben representar exactamente el mismo resultado.
 
-9. Cuando una pregunta necesite datos, proporciona esos datos.
+  10. Si no puedes garantizar la consistencia matemática,
+      DESCARTA esa pregunta y genera otra.
 
-10. Cuando utilices un texto, el texto debe ser original.
+  11. No generes Geometry únicamente porque el perfil
+      de referencia sea visual.
 
-11. No utilices nombres de instituciones reales de manera innecesaria.
+  12. El visual debe ser realmente necesario para resolver
+      o interpretar la pregunta.
 
-12. No dependas de acontecimientos recientes que puedan quedar
-    desactualizados.
+  REGLA DE SEGURIDAD:
 
-13. No generes preguntas triviales.
+  Si para construir una geometría correcta necesitas
+  inventar una propiedad, una estructura o una shape
+  que no está permitida por este contrato:
 
-14. No hagas todas las preguntas difíciles.
+  NO la generes.
 
-15. No hagas todas las preguntas con contexto.
+  Genera otra pregunta compatible.
+  `);
+  }
 
-16. No hagas todas las preguntas sin contexto.
+  if (plannedVisualTypes.includes("diagram")) {
+    visualContracts.push(`
+  DIAGRAM:
 
-17. No hagas todas las preguntas con la misma estructura.
+  - Úsalo para procesos, sistemas, relaciones o flujos.
+  - Los ids de nodos deben ser únicos.
+  - from y to deben referenciar nodos existentes.
+  - layout: horizontal | vertical | free.
+  - Las relaciones deben coincidir exactamente con el contexto
+    y la pregunta.
+  - No agregues nodos o conexiones decorativas.
 
-18. Varía la posición de la respuesta correcta entre A, B, C y D.
+  CONTRATO ESTRUCTURAL:
 
-19. Cada pregunta debe evaluar una habilidad o razonamiento concreto.
+  visual_data DEBE incluir:
+  - title
+  - elements
+  - connections
 
-20. Las opciones deben ser plausibles.
+  No omitas "title".
+  "title" debe ser string o null.
+  `);
+  }
 
-21. Los distractores deben tener una justificación pedagógica.
+  const visualRules = `
+REGLA DE VISUALES — GENERADOR BÁSICO:
 
-22. Evita pistas involuntarias en la redacción.
+ESTE GENERADOR NO GENERA VISUALES.
 
-23. No pongas la respuesta correcta dentro del contexto.
+Para TODAS las preguntas debes devolver exactamente:
 
-24. La explicación debe justificar por qué la respuesta correcta es
-    correcta y, cuando sea útil, explicar el error conceptual principal
-    de los distractores.
-
-25. No incluyas comentarios fuera del JSON.
-
-=========================================================
-REGLAS SOBRE COMPONENTE Y COMPETENCIA
-=========================================================
-
-El campo "component" debe representar el componente correspondiente
-a la materia.
-
-El campo "competence" debe representar la competencia realmente
-evaluada por la pregunta.
-
-No asignes componentes o competencias aleatoriamente.
-
-La combinación debe tener sentido pedagógico.
-
-Si la pregunta evalúa principalmente interpretación y representación,
-no la etiquetes como argumentación.
-
-Si evalúa análisis de perspectivas, no la etiquetes como simple
-recuerdo de conocimiento histórico.
-
-Si evalúa evidencia científica, la competencia debe reflejar esa
-naturaleza.
-
-=========================================================
-REGLAS SOBRE DISEÑO CENTRADO EN EVIDENCIAS
-=========================================================
-
-Construye internamente cada pregunta siguiendo esta lógica:
-
-DOMINIO
-→ COMPETENCIA
-→ LO QUE EL ESTUDIANTE DEBE PODER HACER
-→ TAREA
-→ ESTÍMULO
-→ OPCIONES
-→ EVIDENCIA DE RESPUESTA
-
-No debes imprimir esta cadena.
-
-Solo debe reflejarse en la calidad final de la pregunta.
-
-=========================================================
-REGLAS SOBRE CONTEXTO
-=========================================================
-
-No confundas "contextualizada" con "larga".
-
-Un contexto es bueno cuando aporta información necesaria para
-resolver la tarea.
-
-Un contexto es malo cuando solo añade palabras.
-
-Por lo tanto:
-
-- Contexto breve cuando sea suficiente.
-- Contexto más elaborado cuando la competencia lo requiera.
-- Datos estructurados cuando faciliten el análisis.
-- Texto cuando la lectura sea el objeto de evaluación.
-- Situación experimental cuando se evalúe razonamiento científico.
-- Situación matemática cuando la aplicación matemática sea central.
-
-=========================================================
-CONTRATO VISUAL PEAKSCORE
-=========================================================
-
-Los visuales forman parte del razonamiento cuando sean necesarios.
-NO los uses como decoración.
-
-TIPOS PERMITIDOS:
-- chart
-- table
-- math_graph
-- geometry
-- diagram
-
-NO generes map, illustration, infographic ni image_context.
-
-REGLA GENERAL:
-
-Si requires_visual === false:
+- requires_visual = false
 - visual_type = null
 - visual_description = null
 - visual_data = null
 
-Si requires_visual === true:
-- visual_type debe ser uno de los tipos permitidos.
-- visual_description debe describir el visual de forma breve.
-- visual_data debe contener únicamente datos necesarios para construirlo.
-- Los datos deben ser coherentes con el contexto, pregunta, opciones y respuesta.
-- Nunca generes un visual que contradiga el enunciado.
+NO generes:
+- gráficas
+- tablas visuales
+- diagramas
+- figuras geométricas estructuradas
+- planos cartesianos
+- coordenadas visuales
+- objetos chart
+- objetos geometry
+- objetos diagram
+- visual_data
+- imágenes
 
----------------------------------------------------------
-CHART
----------------------------------------------------------
+La pregunta debe contener en su propio texto todos los datos
+necesarios para resolverla.
 
-Para barras, líneas, circular, dispersión o área.
+Si una referencia original contiene una gráfica, tabla, figura,
+diagrama o imagen, NO la reproduzcas como visual.
 
-visual_data:
+En ese caso, transforma la idea evaluativa en una pregunta
+completamente resoluble mediante texto, números, datos,
+descripciones y opciones.
 
-{
-  "chart_type": "bar | line | pie | scatter | area",
-  "title": "string | null",
-  "x_label": "string | null",
-  "y_label": "string | null",
-  "categories": ["string"],
-  "series": [
-    {
-      "name": "string",
-      "values": [number]
-    }
-  ]
-}
-
-Opcionales:
-show_values, show_legend, show_grid, y_min, y_max.
-
-Regla:
-categories.length debe coincidir con values.length de cada serie.
-Todos los valores deben ser números finitos.
-
----------------------------------------------------------
-TABLE
----------------------------------------------------------
-
-Úsala cuando la información tabular sea necesaria para resolver
-o interpretar la pregunta.
-
-visual_data:
-
-{
-  "title": "string | null",
-  "headers": ["string"],
-  "rows": [["string | number | boolean | null"]]
-}
-
-Opcionales:
-emphasize_first_column, show_row_numbers.
-
-Regla:
-cada fila debe tener exactamente headers.length columnas.
-
----------------------------------------------------------
-MATH_GRAPH
----------------------------------------------------------
-
-Para planos cartesianos, funciones, puntos y relaciones entre
-variables.
-
-visual_data:
-
-{
-  "graph_type": "function | points | coordinate_plane | mixed",
-  "title": "string | null",
-  "x_label": "string | null",
-  "y_label": "string | null",
-  "x_range": [number, number],
-  "y_range": [number, number],
-  "points": [],
-  "functions": []
-}
-
-Los puntos pueden contener:
-x, y, label, id, show_label.
-
-Las funciones pueden contener:
-id, expression, label, domain, visible.
-
-Las expresiones deben ser matemáticamente válidas.
-
-Opcionales:
-show_grid, show_axis_numbers, show_axes, x_axis, y_axis.
-
----------------------------------------------------------
-GEOMETRY
----------------------------------------------------------
-
-Para figuras geométricas que el renderer actual puede representar.
-
-Shapes permitidas:
-- triangle
-- rectangle
-- circle
-- polygon
-
-Para cuadrados usa "rectangle".
-
-NO uses como shape:
-- square
-- semicircle
-- trapezoid
-- parallelogram
-- rhombus
-- composite
-
-visual_data DEBE tener esta estructura:
-
-{
-  "title": "string | null",
-  "shape": "triangle | rectangle | circle | polygon",
-  "labels": [
-    {
-      "text": "string",
-      "position": "top | bottom | left | right | center | top_left | top_right | bottom_left | bottom_right"
-      - USA ÚNICAMENTE las posiciones indicadas arriba.
-      - NO inventes ni uses posiciones como "bottom_center", "top_center", "middle_left", "middle_right" u otras variantes.
-    }
-  ],
-  "measurements": [
-    {
-      "label": "string",
-      "value": "string"
-    }
-  ]
-}
-
-REGLAS OBLIGATORIAS PARA "labels":
-
-- "labels" SIEMPRE debe ser un arreglo.
-- Cada elemento de "labels" DEBE ser un objeto.
-- Cada objeto DEBE tener:
-  - "text": string
-  - "position": una de las posiciones permitidas.
-- NO uses strings directamente dentro de "labels".
-- INCORRECTO:
-  "labels": ["Fachada"]
-- CORRECTO:
-  "labels": [
-    {
-      "text": "Fachada",
-      "position": "center"
-    }
-  ]
-
-REGLAS OBLIGATORIAS PARA "measurements":
-
-- "measurements" SIEMPRE debe ser un arreglo.
-- Cada elemento DEBE ser un objeto.
-- Cada objeto DEBE tener:
-  - "label": string
-  - "value": string
-- "value" DEBE ser string aunque represente un número.
-- Si necesitas expresar una unidad, inclúyela dentro de "value".
-- INCORRECTO:
-  {
-    "label": "Ancho",
-    "value": 12,
-    "unit": "m"
-  }
-- CORRECTO:
-  {
-    "label": "Ancho",
-    "value": "12 m"
-  }
-
-NO agregues "unit" como propiedad separada.
-
-Las etiquetas deben describir elementos relevantes de la figura
-y utilizar posiciones válidas.
-
-Las medidas deben corresponder realmente a dimensiones,
-longitudes, radios u otras cantidades representadas en la figura.
-
-Puede incluir opcionalmente:
-
-- points
-- segments
-- preserve_aspect_ratio
-- show_measurements
-
-Si utilizas "points":
-
-- Cada punto debe tener un "id" único.
-- "x" debe ser numérico.
-- "y" debe ser numérico.
-- Los puntos deben corresponder a la figura.
-
-Si utilizas "segments":
-
-- "from" debe referenciar el "id" de un punto existente.
-- "to" debe referenciar el "id" de un punto existente.
-- No referencias puntos inexistentes.
-
-Las medidas, etiquetas, puntos y segmentos deben ser
-coherentes entre sí y con la figura.
-
-Nunca generes propiedades inventadas para Geometry.
+Las imágenes serán añadidas posteriormente de forma manual
+desde el editor de preguntas de PeakScore.
 
 IMPORTANTE:
-El JSON generado debe respetar exactamente este contrato.
-No simplifiques "labels" ni "measurements".
+Nunca devuelvas requires_visual=true.
+Nunca devuelvas visual_type distinto de null.
+Nunca devuelvas visual_description distinto de null.
+Nunca devuelvas visual_data distinto de null.
+`;
+  /* =========================================================
+     INSTRUCCIONES ADAPTATIVAS
+     ========================================================= */
 
-IMPORTANTE SOBRE CUTOUTS:
+  const isFirstBlock = profiles.length > 0;
 
-El renderer actual de PeakScore representa de forma nativa
-recortes semicirculares en geometría.
+  const calibration = `
+CALIBRACIÓN:
 
-Por lo tanto, cuando una figura requiera un recorte:
+Usa las referencias únicamente para calibrar:
+- competencia;
+- habilidad;
+- dificultad;
+- estructura;
+- contexto;
+- tipo de razonamiento;
+- uso de visuales.
 
-{
-  "cutouts": [
-    {
-      "type": "semicircle",
-      "side": "top | bottom | left | right",
-      "radius": number,
-      "removed": true
-    }
-  ]
-}
+NO copies preguntas, textos, números, nombres, escenarios ni estructuras
+superficiales de las referencias.
 
-NO generes cutouts de tipo:
-- rectangle
-- triangle
-- circle
+La dificultad debe surgir del razonamiento requerido, no de la longitud,
+el vocabulario, números grandes o texto innecesario.
 
-aunque esos tipos puedan existir en definiciones internas
-de compatibilidad.
+VERIFICACIÓN INTERNA:
 
-Para puertas, ventanas, huecos rectangulares u otras regiones
-internas que no puedan representarse como recorte semicircular,
-NO uses cutouts.
+Antes de entregar cada pregunta comprueba que:
+1. la dificultad corresponda al razonamiento requerido;
+2. competencia y habilidad sean coherentes con la tarea;
+3. el contexto aporte información necesaria;
+4. exista una única respuesta correcta;
+5. el visual, si existe, sea necesario y coherente;
+6. la explicación justifique la respuesta marcada.
 
-En ese caso, utiliza una figura geométrica cuya información
-necesaria pueda representarse mediante:
-- shape
-- labels
-- measurements
-- points
-- segments
+Si alguna condición falla, descarta la pregunta y genera otra.
+`;
 
-Nunca generes datos visuales que el renderer no pueda representar.
+  /* =========================================================
+     PROMPT FINAL
+     ========================================================= */
+  console.log("[PeakScore] 📊 Tamaño de secciones del prompt:", {
+    difficultyRule: difficultyRule.length,
+    generationPlan: JSON.stringify(compactGenerationPlan).length,
+    referenceSection: referenceSection.length,
+    excludedSection: excludedSection.length,
+    structureRules: structureRules.length,
+    optionRules: optionRules.length,
+    qualityRules: qualityRules.length,
+    visualRules: visualRules.length,
+    blueprint: blueprint.length,
+    calibration: calibration.length,
+  });
+     
+  return `
+Eres especialista senior en evaluación educativa para estudiantes colombianos de grado 11.
+Crea preguntas NUEVAS para PeakScore, compatibles con el enfoque pedagógico del Saber 11°.
+No copies preguntas oficiales ni material protegido.
 
----------------------------------------------------------
-DIAGRAM
----------------------------------------------------------
+SOLICITUD:
+Genera exactamente ${amount} preguntas.
+Materia: ${subject}
+Sesión: ${session}
 
-Para procesos, experimentos, relaciones, sistemas y flujos.
+${blueprint}
 
-visual_data:
+${calibration}
 
-{
-  "title": "string | null",
-  "elements": [
-    {
-      "id": "string",
-      "label": "string"
-    }
-  ],
-  "connections": [
-    {
-      "from": "id existente",
-      "to": "id existente",
-      "label": "string | null"
-    }
-  ]
-}
+PLAN DE ARQUITECTURA OBLIGATORIO:
+${JSON.stringify(compactGenerationPlan)}
 
-Los ids deben ser únicos.
-Toda conexión debe apuntar a elementos existentes.
+CORRESPONDENCIA OBLIGATORIA ENTRE EL PLAN Y LA SALIDA:
 
-Opcionales:
-type, x, y, width, height, directional, layout.
+- assessment_target es un objetivo evaluativo interno del slot.
+- La pregunta DEBE construirse para medir específicamente ese objetivo.
+- Usa assessment_target para orientar la tarea, el estímulo y el razonamiento requerido.
+- NO devuelvas assessment_target en el JSON final.
+- NO inventes ni sustituyas un objetivo evaluativo diferente para completar el slot.
 
-layout:
-horizontal | vertical | free
+- claim representa la afirmación evaluativa que debe sustentar la pregunta.
+- La tarea debe permitir obtener evidencia observable relacionada con esa afirmación.
+- evidences contiene evidencias evaluativas de referencia para el slot.
+- Selecciona una de las evidencias proporcionadas y diseña la pregunta para obtenerla de manera clara.
+- NO mezcles evidencias de diferentes slots.
+- NO inventes una afirmación o evidencia que contradiga el slot.
+- claim y evidences son instrucciones internas y NO deben aparecer como campos en el JSON final.
 
----------------------------------------------------------
-CALIDAD VISUAL
----------------------------------------------------------
+- La pregunta 1 del array "questions" debe cumplir exactamente el slot cuyo "n" sea 1.
+- La pregunta 2 debe cumplir exactamente el slot cuyo "n" sea 2.
+- La pregunta 3 debe cumplir exactamente el slot cuyo "n" sea 3.
+- Continúa de la misma manera para todas las preguntas solicitadas.
+- NO intercambies los slots entre preguntas.
+- NO conviertas una pregunta visual planificada en una pregunta sin visual.
+- NO conviertas una operación cognitiva planificada en otra diferente.
+- Respeta simultáneamente component, competence, skill, difficulty,
+  structure_type, context_type, requires_visual, cognitive_operation
+  y visual_type del slot correspondiente.
+- Si una idea de pregunta no cumple el slot asignado, DESCÁRTALA y crea otra.
+- Antes de devolver cada pregunta, verifica mentalmente que cumple su slot
+  correspondiente completo.
 
-El visual debe parecer material educativo profesional.
+${difficultyRule}
 
-Prioriza:
-- claridad
-- exactitud
-- proporciones coherentes
-- etiquetas legibles
-- simplicidad
-- utilidad para resolver la pregunta
+${structureRules}
 
-Evita:
-- decoración innecesaria
-- datos ambiguos
-- colores o elementos irrelevantes
-- gráficos imposibles de interpretar
-- complejidad sin propósito
+${optionRules}
 
-REGLA CRÍTICA:
+${qualityRules}
 
-El estudiante debe necesitar la información visual para resolver
-la tarea cuando requires_visual sea true.
+${visualRules}
 
-El visual, la pregunta, las opciones, la respuesta correcta y la
-explicación deben describir exactamente la misma situación.
+${referenceSection}
 
-=========================================================
-FORMATO DE SALIDA
-=========================================================
+${excludedSection}
 
-Devuelve ÚNICAMENTE JSON válido.
+REGLAS ADICIONALES:
+- Usa español natural, excepto Inglés, cuyo material evaluado debe estar en inglés.
+- Proporciona todos los datos necesarios para resolver la pregunta.
+- Evalúa razonamiento, no memoria literal cuando pueda evaluarse aplicación o interpretación.
+- Mantén coherencia entre subject, session, component, competence, skill, structure_type,
+  context_type, dificultad, contexto, pregunta, opciones, respuesta, explicación y visual.
+- La competencia y el componente deben corresponder realmente a la tarea.
+- No dependas de acontecimientos recientes.
+- No uses nombres de instituciones reales innecesariamente.
+- Las preguntas del mismo bloque deben ser genuinamente diferentes.
 
-NO uses Markdown.
+FORMATO:
+Devuelve únicamente JSON válido. No escribas texto fuera del JSON.
 
-NO uses bloques \`\`\`.
-
-NO escribas explicaciones antes ni después del JSON.
-
-La estructura EXACTA debe ser:
+La respuesta debe tener esta estructura raíz:
 
 {
   "questions": [
     {
-      "subject": "${subject}",
-      "session": ${session},
+      "subject": "string",
+      "session": 1,
       "component": "string o null",
       "competence": "string o null",
       "skill": "string o null",
-      "difficulty": "Fácil | Media | Difícil",
+      "difficulty": "Fácil, Media o Difícil",
       "structure_type": "string o null",
       "context_type": "string o null",
       "question": "string",
@@ -3794,45 +6392,25 @@ La estructura EXACTA debe ser:
       "option_b": "string",
       "option_c": "string",
       "option_d": "string",
-      "correct_answer": "A | B | C | D",
+      "correct_answer": "A, B, C o D",
       "explanation": "string",
       "context_text": "string o null",
-      "requires_visual": true | false,
-      "visual_type": "chart | table | math_graph | diagram | geometry | null",
-      "visual_description": "string o null",
-      "visual_data": "object o null"
+      "requires_visual": false,
+      "visual_type": null,
+      "visual_description": null,
+      "visual_data": null     
     }
   ]
 }
 
-La respuesta DEBE contener exactamente ${amount} objetos dentro de
-"questions".
+Siempre:
 
-No agregues propiedades adicionales.
+requires_visual=false
+visual_type=null
+visual_description=null
+visual_data=null
 
-=========================================================
-VALIDACIÓN FINAL INTERNA
-=========================================================
-
-Antes de responder, verifica internamente:
-
-- Exactamente ${amount} preguntas.
-- Todas pertenecen a ${subject}, sesión ${session} y dificultad solicitada.
-- Cada pregunta tiene A, B, C y D y una única respuesta correcta.
-- La respuesta correcta coincide con el razonamiento.
-- Los distractores son plausibles y no contienen pistas.
-- La competencia y el componente corresponden a la tarea evaluada.
-- No hay duplicados ni paráfrasis entre preguntas.
-- Cada pregunta exige razonamiento apropiado al nivel solicitado.
-- El contexto, estímulo, visual, opciones, respuesta y explicación
-  son coherentes entre sí.
-- Si existe visual, sus datos son válidos y necesarios.
-- El JSON cumple exactamente el esquema solicitado.
-
-Si una pregunta falla una comprobación, reemplázala antes de responder.
-
-No informes las comprobaciones.
-Devuelve únicamente el JSON.
+Devuelve JSON válido y únicamente JSON.
 `;
 }
 
@@ -3847,13 +6425,16 @@ async function generateBlock(
   difficulty: Difficulty,
   profiles: ReferenceProfile[],
   existingQuestions: string[],
+  existingBankQuestions: ExistingQuestionForSimilarity[],
+  existingGeneratedQuestions: GeneratedQuestion[],
   existingDifficulties: GeneratedDifficulty[],
   totalRequested: number,
   generationPlan: GenerationPlanItem[]
-): Promise<GeneratedQuestion[]> {
+): Promise<GenerationBlockResult> {
   let lastError: unknown = null;
 
   const acceptedQuestions: GeneratedQuestion[] = [];
+  let planAssignmentCursor = 0;
 
   for (
     let attempt = 1;
@@ -3864,7 +6445,13 @@ async function generateBlock(
       amount - acceptedQuestions.length;
 
     if (remainingAmount <= 0) {
-      return acceptedQuestions;
+      return {
+        questions: acceptedQuestions,
+        consumedPlanSlots: Math.min(
+          planAssignmentCursor,
+          generationPlan.length
+        ),
+      };
     }
 
     try {
@@ -3873,6 +6460,8 @@ async function generateBlock(
       );
 
       const response = await generateAI({
+        provider: "groq",
+        
         prompt: buildPrompt(
           subject,
           session,
@@ -3901,9 +6490,9 @@ async function generateBlock(
           ],
           totalRequested,
           generationPlan.slice(
-            acceptedQuestions.length,
+            planAssignmentCursor,
             Math.min(
-              acceptedQuestions.length +
+              planAssignmentCursor +
                 remainingAmount,
               generationPlan.length
             )
@@ -3912,7 +6501,8 @@ async function generateBlock(
 
         task: "question_generation",
 
-        useFallback: true,
+        useFallback: 
+          attempt === MAX_BLOCK_ATTEMPTS,
       });
 
       const raw =
@@ -3946,7 +6536,7 @@ async function generateBlock(
       const generated =
         Array.isArray(parsed.questions)
           ? parsed.questions
-          : [];
+          : [];      
 
       const unique =
         new Set<string>();
@@ -3958,6 +6548,8 @@ async function generateBlock(
               normalize(question)
           )
         );
+
+      const similarityAcceptedQuestions: GeneratedQuestion[] = [];
 
       console.log(
         `[PeakScore] Groq generó ${generated.length} preguntas antes de validación.`
@@ -3975,20 +6567,160 @@ async function generateBlock(
         );
       });
       
-        const valid =
+      const planBaseCursor =
+        planAssignmentCursor;
+
+      let lastContiguousCandidateIndex =
+        -1;
+      
+      const valid =
         generated.filter(
-          (item: GeneratedQuestion) => {
+          (
+            item: GeneratedQuestion,
+            generatedIndex
+          ) => {
+            if (acceptedQuestions.length >= amount) {
+              return false;
+            }
+
             const difficultyValid =
               isDifficultyAllowed(
                 item.difficulty,
                 difficulty
               );
 
+            if (
+              planAssignmentCursor >=
+              generationPlan.length
+            ) {
+              console.warn(
+                `[PeakScore] ❌ Candidato ${generated.indexOf(item) + 1}: no quedan slots disponibles en el plan de generación.`
+              );
+
+              return false;
+            }
+
+            const candidatePlanIndex =
+              planBaseCursor + generatedIndex;
+
+            const plannedDifficulty =
+              generationPlan[
+                candidatePlanIndex
+              ]?.difficulty ?? null;
+
+            const plannedOperation =
+              generationPlan[
+                candidatePlanIndex
+              ]?.cognitive_operation ?? null;
+
+            const plannedVisualType: VisualType | null = null;
+
+            const plannedCompetence =
+              generationPlan[
+                candidatePlanIndex
+              ]?.competence ?? null;
+
+            const plannedSkill =
+              generationPlan[
+                candidatePlanIndex
+              ]?.skill ?? null;
+
+            if (
+              plannedSkill &&
+              normalize(item.skill) !==
+                normalize(plannedSkill)
+            ) {
+              console.warn(
+                `[PeakScore] ❌ Candidato ${generated.indexOf(item) + 1}: habilidad no coincide con el slot del plan.`,
+                {
+                  plannedSkill,
+                  generatedSkill:
+                    item.skill,
+                }
+              );
+
+              return false;
+            }
+
+            const plannedStructureType =
+              generationPlan[
+                candidatePlanIndex
+              ]?.structure_type ?? null;
+
+            if (
+              plannedStructureType &&
+              !item.structure_type?.trim()
+            ) {
+              console.warn(
+                `[PeakScore] ❌ Candidato ${generated.indexOf(item) + 1}: structure_type faltante para el slot del plan.`,
+                {
+                  plannedStructureType,
+                }
+              );
+
+              return false;
+            }
+
+            const plannedContextType =
+              generationPlan[
+                candidatePlanIndex
+              ]?.context_type ?? null;
+
+            if (
+              plannedContextType &&
+              !item.context_type?.trim()
+            ) {
+              console.warn(
+                `[PeakScore] ❌ Candidato ${generated.indexOf(item) + 1}: context_type faltante para el slot del plan.`,
+                {
+                  plannedContextType,
+                }
+              );
+
+              return false;
+            }
+
+            if (
+              plannedCompetence &&
+              normalize(item.competence) !==
+                normalize(plannedCompetence)
+            ) {
+              console.warn(
+                `[PeakScore] ❌ Candidato ${generated.indexOf(item) + 1}: competencia no coincide con el slot del plan.`,
+                {
+                  plannedCompetence,
+                  generatedCompetence:
+                    item.competence,
+                }
+              );
+
+              return false;
+            }
+
+            if (
+              difficulty === "Mixta" &&
+              normalizeDifficulty(item.difficulty) !==
+                normalizeDifficulty(plannedDifficulty)
+            ) {
+              console.warn(
+                `[PeakScore] ❌ Candidato ${generated.indexOf(item) + 1}: dificultad no coincide con el slot del plan.`,
+                {
+                  plannedDifficulty,
+                  generatedDifficulty:
+                    item.difficulty,
+                }
+              );
+
+              return false;
+            }
+
             const questionValid =
               isValidQuestion(
                 item,
                 subject,
-                session
+                session,
+                plannedOperation,
+                plannedVisualType
               );
 
             if (!difficultyValid || !questionValid) {
@@ -4015,7 +6747,9 @@ async function generateBlock(
                 diagnoseQuestionValidation(
                   item,
                   subject,
-                  session
+                  session,
+                  plannedOperation,
+                  plannedVisualType
                 );
 
               console.warn(
@@ -4053,6 +6787,19 @@ async function generateBlock(
               return false;
             }
 
+            if (
+              acceptedQuestions.some(
+                (accepted) =>
+                  normalize(accepted.question) === key
+              )
+            ) {
+              console.warn(
+                `[PeakScore] ❌ Candidato ${generated.indexOf(item) + 1}: la pregunta ya fue aceptada en un intento anterior del mismo bloque.`
+              );
+
+              return false;
+            }
+
             /*
              * Evitar duplicados dentro
              * de la misma respuesta.
@@ -4077,77 +6824,48 @@ async function generateBlock(
               return false;
             }
 
-            if (difficulty === "Mixta") {
-              const candidateDifficulty =
-                normalizeDifficulty(item.difficulty);
-
-              if (!candidateDifficulty) {
-                return false;
-              }
-
-              const mixedTargets =
-                getMixedDifficultyTargets(
-                  totalRequested
-                );
-
-              const currentCount =
+            const similarityResult =
+              findSimilarQuestion(
+                item,
+                existingBankQuestions,
                 [
-                  ...existingDifficulties,
-                  ...acceptedQuestions
-                    .map((question) =>
-                      normalizeDifficulty(
-                        question.difficulty
-                      )
-                    )
-                    .filter(
-                      (value): value is GeneratedDifficulty =>
-                        value !== null
-                    ),
-                ].filter(
-                  (current) =>
-                    current === candidateDifficulty
-                ).length;
+                  ...existingGeneratedQuestions,
+                  ...acceptedQuestions,
+                  ...similarityAcceptedQuestions,
+                ]
+              );
 
-              const acceptedInResponse =
-                Array.from(unique).filter(
-                  (existingKey) => {
-                    const candidate =
-                      generated.find(
-                        (currentItem) =>
-                           normalize(currentItem.question) ===
-                           existingKey
-                      );
+            if (similarityResult.isDuplicate) {
+              console.warn(
+                "[PeakScore] ❌ Candidato descartado por similitud antes de consumir slot del plan.",
+                {
+                  similarity:
+                    similarityResult.similarity,
+                  matchedQuestionId:
+                    similarityResult.matchedQuestionId,
+                }
+              );
 
-                    return (
-                      candidate &&
-                      normalizeDifficulty(
-                        candidate.difficulty
-                      ) === candidateDifficulty
-                    );
-                  }
-                ).length;
-
-              if (
-                currentCount +
-                  acceptedInResponse >=
-                mixedTargets[candidateDifficulty]
-              ) {
-                console.warn(
-                  `[PeakScore] ❌ Candidato ${generated.indexOf(item) + 1}: excede el cupo de dificultad Mixta.`,
-                  {
-                    candidateDifficulty,
-                    currentCount,
-                    acceptedInResponse,
-                    target:
-                      mixedTargets[candidateDifficulty],
-                  }
-                );
-
-                return false;
-              }
+              return false;
             }
 
+            if (
+              generatedIndex !==
+              lastContiguousCandidateIndex + 1
+            ) {
+              console.warn(
+                `[PeakScore] ⚠️ Candidato ${generatedIndex + 1} fue validado para el slot ${candidatePlanIndex + 1}, pero no se consumirá porque existe un slot anterior pendiente.`
+              );
+
+              return false;
+            }
+
+            lastContiguousCandidateIndex =
+              generatedIndex;
+            
+            similarityAcceptedQuestions.push(item);
             unique.add(key);
+            planAssignmentCursor++;
 
             return true;
           }
@@ -4187,7 +6905,13 @@ async function generateBlock(
         if (
           acceptedQuestions.length >= amount
         ) {
-          return acceptedQuestions.slice(0, amount);
+          return {
+            questions: acceptedQuestions.slice(0, amount),
+            consumedPlanSlots: Math.min(
+              planAssignmentCursor,
+              generationPlan.length
+            ),
+          };
         }
 
         console.log(
@@ -4233,7 +6957,7 @@ async function generateBlock(
         "code" in error &&
         error.code === "AI_UNAVAILABLE"
       ) {
-        break;
+        continue;
       }
 
       const delay =
@@ -4249,7 +6973,13 @@ async function generateBlock(
   }
 
   if (acceptedQuestions.length > 0) {
-    return acceptedQuestions.slice(0, amount);
+    return {
+      questions: acceptedQuestions.slice(0, amount),
+      consumedPlanSlots: Math.min(
+        planAssignmentCursor,
+        generationPlan.length
+      ),
+    };
   }
 
   if (lastError instanceof Error) {
@@ -4317,14 +7047,6 @@ function toRows(
     context_text:
       q.context_text?.trim() ||
       null,
-
-    /*
-     * URL de imagen.
-     */
-    image_url:
-      typeof q.image_url === "string"
-        ? q.image_url.trim() || null
-        : null,
 
     /* =====================================================
        SISTEMA VISUAL NUEVO
@@ -4691,8 +7413,10 @@ export async function POST(
 
     const generationPlan =
       buildGenerationPlan(
+        subject,
         amount,
-        profiles
+        profiles,
+        difficulty
       );
 
     let totalAttempts = 0;
@@ -4703,6 +7427,8 @@ export async function POST(
      * exactamente la cantidad solicitada.
      */
 
+    let generationPlanCursor = 0;
+    
     while (
       generatedQuestions.length <
       amount
@@ -4721,6 +7447,15 @@ export async function POST(
       const remaining =
         amount -
         generatedQuestions.length;
+
+      if (
+        generationPlanCursor >=
+          generationPlan.length
+      ) {
+        throw new Error(
+          `El plan de generación se agotó antes de completar las ${amount} preguntas. Se obtuvieron ${generatedQuestions.length}.`
+        );
+      }
 
       const requestedBlock =
         Math.min(
@@ -4745,16 +7480,16 @@ export async function POST(
             question.question
         );
 
-      const block =
+      const blockResult =
         await generateBlock(
           subject,
           session,
           generationRequestAmount,
           difficulty,
-          generatedQuestions.length === 0
-            ? profiles.slice(0, 5)
-            : [],
+          profiles,
           existingQuestions,
+          existingBankQuestions,
+          generatedQuestions,
           generatedQuestions
             .map(
               (question) =>
@@ -4768,13 +7503,23 @@ export async function POST(
             ),
           amount,
           generationPlan.slice(
-            generatedQuestions.length,
+            generationPlanCursor,
             Math.min(
-              generatedQuestions.length + generationRequestAmount,
+              generationPlanCursor + generationRequestAmount,
               generationPlan.length
             )
           )
         );
+
+      const block = blockResult.questions;
+
+      /*
+       * El cursor del plan NO avanza todavía.
+       *
+       * Primero debemos comprobar qué preguntas del bloque
+       * sobreviven la validación final de similitud y realmente
+       * entran en generatedQuestions.
+       */
 
       /*
        * Filtrar duplicados nuevamente
@@ -4803,29 +7548,6 @@ export async function POST(
           continue;
         }
 
-        const similarityResult =
-          findSimilarQuestion(
-            question,
-            existingBankQuestions,
-            generatedQuestions
-          );
-
-        if (
-          similarityResult.isDuplicate
-        ) {
-          console.warn(
-            "[PeakScore] Pregunta descartada por similitud:",
-            {
-              similarity:
-                similarityResult.similarity,
-              matchedQuestionId:
-                similarityResult.matchedQuestionId,
-            }
-          );
-
-          continue;
-        }
-
         if (
           generatedQuestions.length >=
           amount
@@ -4841,6 +7563,16 @@ export async function POST(
 
         added++;
       }
+
+      /*
+       * El bloque ya terminó su asignación de plan.
+       *
+       * Avanzamos según los slots realmente recorridos
+       * por generateBlock(), NO según las preguntas que
+       * sobrevivieron la validación final de similitud.
+       */
+      generationPlanCursor +=
+        blockResult.consumedPlanSlots;
 
       console.log(
         `[PeakScore] Groq aportó ${added} preguntas nuevas. Total: ${generatedQuestions.length}/${amount}.`

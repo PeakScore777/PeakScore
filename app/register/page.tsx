@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 
 import {
@@ -28,6 +28,53 @@ export default function RegisterPage() {
 
   /*
    * ============================================================
+   * VERIFICACIÓN DE CORREO
+   * ============================================================
+   */
+
+  const [verificationMode, setVerificationMode] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationLoading, setVerificationLoading] =
+    useState(false);
+  const [verificationError, setVerificationError] = useState("");
+
+  // 10 minutos para que expire el código
+  const [verificationSeconds, setVerificationSeconds] =
+    useState(600);
+
+  // Supabase recomienda limitar el reenvío de correos.
+  // Usamos 60 segundos entre reenvíos.
+  const [resendCooldown, setResendCooldown] = useState(60);
+
+  /*
+   * ============================================================
+   * CONTADOR DE VERIFICACIÓN
+   * ============================================================
+   */
+
+  useEffect(() => {
+    if (!verificationMode) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setVerificationSeconds((previous) =>
+        Math.max(previous - 1, 0)
+      );
+
+      setResendCooldown((previous) =>
+        Math.max(previous - 1, 0)
+      );
+    }, 1000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [verificationMode]);
+
+  /*
+   * ============================================================
    * SEGURIDAD DE CONTRASEÑA
    * ============================================================
    */
@@ -40,6 +87,23 @@ export default function RegisterPage() {
         : password.length < 12
           ? 2
           : 3;
+
+  /*
+   * ============================================================
+   * FORMATO DEL TIEMPO
+   * ============================================================
+   */
+
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${minutes
+      .toString()
+      .padStart(2, "0")}:${remainingSeconds
+      .toString()
+      .padStart(2, "0")}`;
+  };
 
   /*
    * ============================================================
@@ -80,24 +144,24 @@ export default function RegisterPage() {
 
     setLoading(true);
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     /*
      * ==========================================================
      * CREAR USUARIO EN SUPABASE AUTH
      * ==========================================================
      *
-     * IMPORTANTE:
-     *
      * El perfil NO se crea desde aquí.
      *
      * PostgreSQL lo crea automáticamente mediante el trigger
-     * que acabamos de configurar sobre auth.users.
+     * configurado sobre auth.users.
      */
 
     const {
       data,
       error: registerError,
     } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: normalizedEmail,
       password,
       options: {
         data: {
@@ -128,13 +192,13 @@ export default function RegisterPage() {
      * CUENTA CREADA
      * ==========================================================
      *
-     * En este punto:
+     * Supabase enviará el correo de confirmación.
      *
-     * auth.users -> creado
-     * profiles   -> creado por el trigger
+     * Como configuramos la plantilla con:
      *
-     * Si la confirmación por correo está activada,
-     * Supabase normalmente no inicia sesión todavía.
+     * {{ .Token }}
+     *
+     * el usuario recibirá un código OTP.
      */
 
     if (data.user) {
@@ -144,23 +208,224 @@ export default function RegisterPage() {
       );
     }
 
-    setLoading(false);
-
     /*
-     * AVISO AL USUARIO
+     * ==========================================================
+     * MOSTRAR PANTALLA DE VERIFICACIÓN
+     * ==========================================================
      */
 
-    alert(
-      "Cuenta creada correctamente. Revisa tu correo para confirmar tu cuenta."
-    );
+    setVerificationEmail(normalizedEmail);
+    setVerificationCode("");
+    setVerificationError("");
+
+    // 10 minutos de validez visual
+    setVerificationSeconds(600);
+
+    // 60 segundos antes de permitir otro envío
+    setResendCooldown(60);
+
+    setVerificationMode(true);
 
     /*
-     * Limpiamos el formulario
+     * Limpiamos solamente la contraseña.
+     *
+     * Conservamos el correo porque lo necesitamos para
+     * verificar el código.
      */
 
-    setName("");
-    setEmail("");
     setPassword("");
+
+    setLoading(false);
+  };
+
+  /*
+   * ============================================================
+   * VERIFICAR CÓDIGO OTP
+   * ============================================================
+   */
+
+  const handleVerifyCode = async (
+    e: FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+
+    setVerificationError("");
+
+    const code = verificationCode.trim();
+
+    /*
+     * VALIDAR QUE SEAN 8 DÍGITOS
+     */
+
+    if (!/^\d{8}$/.test(code)) {
+      setVerificationError(
+        "Introduce el código completo de 8 dígitos."
+      );
+
+      return;
+    }
+
+    /*
+     * VALIDAR EXPIRACIÓN VISUAL
+     */
+
+    if (verificationSeconds <= 0) {
+      setVerificationError(
+        "El código ha expirado. Solicita un nuevo código."
+      );
+
+      return;
+    }
+
+    setVerificationLoading(true);
+
+    /*
+     * ==========================================================
+     * VERIFICAR OTP CON SUPABASE
+     * ==========================================================
+     */
+
+    const { error: verifyError } =
+      await supabase.auth.verifyOtp({
+        email: verificationEmail,
+        token: code,
+        type: "email",
+      });
+
+    /*
+     * CÓDIGO INCORRECTO / EXPIRADO
+     */
+
+    if (verifyError) {
+      console.error(
+        "[PeakScore] Error verificando correo:",
+        verifyError
+      );
+
+      setVerificationLoading(false);
+
+      setVerificationError(
+        "El código no es válido o ya expiró. Revisa el código e inténtalo nuevamente."
+      );
+
+      return;
+    }
+
+    /*
+     * ==========================================================
+     * VERIFICACIÓN CORRECTA
+     * ==========================================================
+     *
+     * IMPORTANTE:
+     *
+     * Supabase puede crear una sesión después de verificar
+     * correctamente el correo.
+     *
+     * Pero PeakScore NO debe mandar al usuario directamente
+     * al Dashboard.
+     *
+     * Por eso cerramos la sesión inmediatamente.
+     *
+     * El usuario deberá entrar manualmente desde /login.
+     */
+
+    await supabase.auth.signOut();
+
+    setVerificationLoading(false);
+
+    /*
+     * Mandamos al usuario al login.
+     *
+     * El parámetro verified permite que posteriormente
+     * podamos mostrar un mensaje como:
+     *
+     * "Correo verificado correctamente."
+     */
+
+    window.location.href = "/login?verified=1";
+  };
+
+  /*
+   * ============================================================
+   * REENVIAR CÓDIGO
+   * ============================================================
+   */
+
+  const handleResendCode = async () => {
+    setVerificationError("");
+
+    /*
+     * EVITAR SPAM
+     */
+
+    if (resendCooldown > 0) {
+      return;
+    }
+
+    if (!verificationEmail) {
+      setVerificationError(
+        "No encontramos el correo de verificación."
+      );
+
+      return;
+    }
+
+    setVerificationLoading(true);
+
+    /*
+     * ==========================================================
+     * SOLICITAR NUEVO CÓDIGO
+     * ==========================================================
+     */
+
+    const { error: resendError } =
+      await supabase.auth.resend({
+        type: "signup",
+        email: verificationEmail,
+      });
+
+    if (resendError) {
+      console.error(
+        "[PeakScore] Error reenviando código:",
+        resendError
+      );
+
+      setVerificationLoading(false);
+
+      setVerificationError(
+        "No pudimos reenviar el código. Espera unos segundos e inténtalo nuevamente."
+      );
+
+      return;
+    }
+
+    /*
+     * NUEVO CÓDIGO
+     */
+
+    setVerificationCode("");
+
+    // Reiniciar los 10 minutos
+    setVerificationSeconds(600);
+
+    // Esperar 60 segundos antes de otro reenvío
+    setResendCooldown(60);
+
+    setVerificationLoading(false);
+  };
+
+  /*
+   * ============================================================
+   * VOLVER AL REGISTRO
+   * ============================================================
+   */
+
+  const handleBackToRegister = () => {
+    setVerificationMode(false);
+    setVerificationCode("");
+    setVerificationError("");
+    setVerificationSeconds(600);
+    setResendCooldown(60);
   };
 
   /*
@@ -297,7 +562,7 @@ export default function RegisterPage() {
           </section>
 
           {/* ==================================================
-              REGISTRO
+              REGISTRO / VERIFICACIÓN
           ================================================== */}
 
           <section className="mx-auto w-full max-w-[480px]">
@@ -323,254 +588,433 @@ export default function RegisterPage() {
               </div>
 
               {/* ==================================================
-                  CABECERA
+                  PANTALLA DE VERIFICACIÓN
               ================================================== */}
 
-              <div>
+              {verificationMode ? (
+                <>
+                  <div>
 
-                <p className="text-sm font-bold text-blue-600">
-                  PEAKSCORE
-                </p>
+                    <p className="text-sm font-bold text-blue-600">
+                      PEAKSCORE
+                    </p>
 
-                <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-950">
-                  Crea tu cuenta
-                </h2>
+                    <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-950">
+                      Verifica tu correo
+                    </h2>
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Empieza tu preparación y lleva tu progreso
-                  contigo.
-                </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Enviamos un código de 8 dígitos a:
+                    </p>
 
-              </div>
-
-              {/* ==================================================
-                  FORMULARIO
-              ================================================== */}
-
-              <form
-                onSubmit={handleRegister}
-                className="mt-8 space-y-5"
-              >
-
-                {/* NOMBRE */}
-
-                <div>
-
-                  <label
-                    htmlFor="name"
-                    className="mb-2 block text-sm font-semibold text-slate-800"
-                  >
-                    Nombre completo
-                  </label>
-
-                  <div className="relative">
-
-                    <User className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
-
-                    <input
-                      id="name"
-                      type="text"
-                      autoComplete="name"
-                      placeholder="Tu nombre"
-                      value={name}
-                      onChange={(e) =>
-                        setName(e.target.value)
-                      }
-                      className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                      required
-                    />
+                    <p className="mt-1 break-all text-sm font-bold text-slate-900">
+                      {verificationEmail}
+                    </p>
 
                   </div>
 
-                </div>
-
-                {/* CORREO */}
-
-                <div>
-
-                  <label
-                    htmlFor="email"
-                    className="mb-2 block text-sm font-semibold text-slate-800"
+                  <form
+                    onSubmit={handleVerifyCode}
+                    className="mt-8 space-y-5"
                   >
-                    Correo electrónico
-                  </label>
 
-                  <div className="relative">
+                    {/* CÓDIGO */}
 
-                    <Mail className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+                    <div>
 
-                    <input
-                      id="email"
-                      type="email"
-                      autoComplete="email"
-                      placeholder="tu@correo.com"
-                      value={email}
-                      onChange={(e) =>
-                        setEmail(e.target.value)
+                      <label
+                        htmlFor="verification-code"
+                        className="mb-2 block text-sm font-semibold text-slate-800"
+                      >
+                        Código de verificación
+                      </label>
+
+                      <input
+                        id="verification-code"
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        maxLength={8}
+                        placeholder="00000000"
+                        value={verificationCode}
+                        onChange={(e) => {
+                          const onlyNumbers =
+                            e.target.value.replace(
+                              /\D/g,
+                              ""
+                            );
+
+                          setVerificationCode(
+                            onlyNumbers.slice(0, 8)
+                          );
+
+                          setVerificationError("");
+                        }}
+                        className="h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-center text-2xl font-black tracking-[0.35em] text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                        required
+                      />
+
+                    </div>
+
+                    {/* TEMPORIZADOR */}
+
+                    <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-center">
+
+                      {verificationSeconds > 0 ? (
+                        <>
+                          <p className="text-xs font-semibold text-blue-700">
+                            El código es válido durante
+                          </p>
+
+                          <p className="mt-1 text-2xl font-black tabular-nums text-blue-600">
+                            {formatTime(
+                              verificationSeconds
+                            )}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-sm font-bold text-red-600">
+                            El código ha expirado.
+                          </p>
+
+                          <p className="mt-1 text-xs text-slate-500">
+                            Solicita un nuevo código para
+                            continuar.
+                          </p>
+                        </>
+                      )}
+
+                    </div>
+
+                    {/* ERROR */}
+
+                    {verificationError && (
+                      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-600">
+                        {verificationError}
+                      </div>
+                    )}
+
+                    {/* BOTÓN VERIFICAR */}
+
+                    <button
+                      type="submit"
+                      disabled={
+                        verificationLoading ||
+                        verificationCode.length !== 8
                       }
-                      className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                      required
-                    />
-
-                  </div>
-
-                </div>
-
-                {/* CONTRASEÑA */}
-
-                <div>
-
-                  <div className="mb-2 flex items-center justify-between">
-
-                    <label
-                      htmlFor="password"
-                      className="text-sm font-semibold text-slate-800"
+                      className="group flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_16px_32px_rgba(37,99,235,0.27)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      Contraseña
-                    </label>
 
-                    <span className="text-[11px] text-slate-400">
-                      Mínimo 12 caracteres
-                    </span>
+                      {verificationLoading ? (
+                        <>
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
 
-                  </div>
+                          Verificando...
+                        </>
+                      ) : (
+                        <>
+                          Verificar correo
 
-                  <div className="relative">
+                          <Check className="h-4 w-4 transition-transform duration-200 group-hover:scale-110" />
+                        </>
+                      )}
 
-                    <Lock className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+                    </button>
 
-                    <input
-                      id="password"
-                      type={
-                        showPassword
-                          ? "text"
-                          : "password"
-                      }
-                      autoComplete="new-password"
-                      placeholder="Crea una contraseña segura"
-                      value={password}
-                      onChange={(e) =>
-                        setPassword(e.target.value)
-                      }
-                      className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
-                      required
-                    />
+                  </form>
+
+                  {/* REENVIAR */}
+
+                  <div className="mt-6 text-center">
+
+                    <p className="text-sm text-slate-500">
+                      ¿No recibiste el código?
+                    </p>
 
                     <button
                       type="button"
-                      onClick={() =>
-                        setShowPassword(
-                          (value) => !value
-                        )
+                      onClick={handleResendCode}
+                      disabled={
+                        verificationLoading ||
+                        resendCooldown > 0
                       }
-                      className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                      aria-label={
-                        showPassword
-                          ? "Ocultar contraseña"
-                          : "Mostrar contraseña"
-                      }
+                      className="mt-2 text-sm font-bold text-blue-600 transition hover:text-blue-700 disabled:cursor-not-allowed disabled:text-slate-400"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-[18px] w-[18px]" />
-                      ) : (
-                        <Eye className="h-[18px] w-[18px]" />
-                      )}
+                      {resendCooldown > 0
+                        ? `Reenviar código en ${resendCooldown}s`
+                        : "Reenviar código"}
                     </button>
 
                   </div>
 
-                  {/* FUERZA */}
+                  {/* VOLVER */}
 
-                  {password.length > 0 && (
-                    <div className="mt-3">
+                  <div className="mt-6 border-t border-slate-100 pt-6 text-center">
 
-                      <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleBackToRegister}
+                      className="text-sm font-bold text-slate-500 transition hover:text-slate-800"
+                    >
+                      ← Volver al registro
+                    </button>
 
-                        {[1, 2, 3].map((level) => (
-                          <div
-                            key={level}
-                            className={`h-1.5 flex-1 rounded-full transition-colors ${
-                              passwordStrength >= level
-                                ? "bg-blue-500"
-                                : "bg-slate-200"
-                            }`}
-                          />
-                        ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* ==================================================
+                      CABECERA REGISTRO
+                  ================================================== */}
+
+                  <div>
+
+                    <p className="text-sm font-bold text-blue-600">
+                      PEAKSCORE
+                    </p>
+
+                    <h2 className="mt-2 text-3xl font-black tracking-[-0.04em] text-slate-950">
+                      Crea tu cuenta
+                    </h2>
+
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Empieza tu preparación y lleva tu progreso
+                      contigo.
+                    </p>
+
+                  </div>
+
+                  {/* ==================================================
+                      FORMULARIO
+                  ================================================== */}
+
+                  <form
+                    onSubmit={handleRegister}
+                    className="mt-8 space-y-5"
+                  >
+
+                    {/* NOMBRE */}
+
+                    <div>
+
+                      <label
+                        htmlFor="name"
+                        className="mb-2 block text-sm font-semibold text-slate-800"
+                      >
+                        Nombre completo
+                      </label>
+
+                      <div className="relative">
+
+                        <User className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+
+                        <input
+                          id="name"
+                          type="text"
+                          autoComplete="name"
+                          placeholder="Tu nombre"
+                          value={name}
+                          onChange={(e) =>
+                            setName(e.target.value)
+                          }
+                          className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                          required
+                        />
 
                       </div>
 
-                      <p className="mt-1.5 text-[11px] text-slate-400">
+                    </div>
 
-                        {passwordStrength === 1 &&
-                          "Añade más caracteres."}
+                    {/* CORREO */}
 
-                        {passwordStrength === 2 &&
-                          "Ya casi. Hazla más segura."}
+                    <div>
 
-                        {passwordStrength === 3 &&
-                          "Contraseña fuerte."}
+                      <label
+                        htmlFor="email"
+                        className="mb-2 block text-sm font-semibold text-slate-800"
+                      >
+                        Correo electrónico
+                      </label>
 
-                      </p>
+                      <div className="relative">
+
+                        <Mail className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+
+                        <input
+                          id="email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="tu@correo.com"
+                          value={email}
+                          onChange={(e) =>
+                            setEmail(e.target.value)
+                          }
+                          className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-4 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                          required
+                        />
+
+                      </div>
 
                     </div>
-                  )}
 
-                </div>
+                    {/* CONTRASEÑA */}
 
-                {/* ERROR */}
+                    <div>
 
-                {error && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-600">
-                    {error}
+                      <div className="mb-2 flex items-center justify-between">
+
+                        <label
+                          htmlFor="password"
+                          className="text-sm font-semibold text-slate-800"
+                        >
+                          Contraseña
+                        </label>
+
+                        <span className="text-[11px] text-slate-400">
+                          Mínimo 12 caracteres
+                        </span>
+
+                      </div>
+
+                      <div className="relative">
+
+                        <Lock className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+
+                        <input
+                          id="password"
+                          type={
+                            showPassword
+                              ? "text"
+                              : "password"
+                          }
+                          autoComplete="new-password"
+                          placeholder="Crea una contraseña segura"
+                          value={password}
+                          onChange={(e) =>
+                            setPassword(e.target.value)
+                          }
+                          className="h-12 w-full rounded-xl border border-slate-300 bg-white pl-11 pr-12 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+                          required
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowPassword(
+                              (value) => !value
+                            )
+                          }
+                          className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                          aria-label={
+                            showPassword
+                              ? "Ocultar contraseña"
+                              : "Mostrar contraseña"
+                          }
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-[18px] w-[18px]" />
+                          ) : (
+                            <Eye className="h-[18px] w-[18px]" />
+                          )}
+                        </button>
+
+                      </div>
+
+                      {/* FUERZA */}
+
+                      {password.length > 0 && (
+                        <div className="mt-3">
+
+                          <div className="flex gap-1.5">
+
+                            {[1, 2, 3].map((level) => (
+                              <div
+                                key={level}
+                                className={`h-1.5 flex-1 rounded-full transition-colors ${
+                                  passwordStrength >= level
+                                    ? "bg-blue-500"
+                                    : "bg-slate-200"
+                                }`}
+                              />
+                            ))}
+
+                          </div>
+
+                          <p className="mt-1.5 text-[11px] text-slate-400">
+
+                            {passwordStrength === 1 &&
+                              "Añade más caracteres."}
+
+                            {passwordStrength === 2 &&
+                              "Ya casi. Hazla más segura."}
+
+                            {passwordStrength === 3 &&
+                              "Contraseña fuerte."}
+
+                          </p>
+
+                        </div>
+                      )}
+
+                    </div>
+
+                    {/* ERROR */}
+
+                    {error && (
+                      <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-5 text-red-600">
+                        {error}
+                      </div>
+                    )}
+
+                    {/* ==================================================
+                        BOTÓN
+                    ================================================== */}
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="group flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_16px_32px_rgba(37,99,235,0.27)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+
+                      {loading ? (
+                        <>
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+
+                          Creando cuenta...
+                        </>
+                      ) : (
+                        <>
+                          Crear mi cuenta
+
+                          <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+                        </>
+                      )}
+
+                    </button>
+
+                  </form>
+
+                  {/* ==================================================
+                      LOGIN
+                  ================================================== */}
+
+                  <div className="mt-7 border-t border-slate-100 pt-6 text-center">
+
+                    <p className="text-sm text-slate-500">
+                      ¿Ya tienes una cuenta?
+                    </p>
+
+                    <Link
+                      href="/login"
+                      className="mt-1 inline-block text-sm font-bold text-blue-600 transition hover:text-blue-700"
+                    >
+                      Iniciar sesión
+                    </Link>
+
                   </div>
-                )}
-
-                {/* ==================================================
-                    BOTÓN
-                ================================================== */}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="group flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.22)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_16px_32px_rgba(37,99,235,0.27)] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-
-                  {loading ? (
-                    <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-
-                      Creando cuenta...
-                    </>
-                  ) : (
-                    <>
-                      Crear mi cuenta
-
-                      <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
-                    </>
-                  )}
-
-                </button>
-
-              </form>
-
-              {/* ==================================================
-                  LOGIN
-              ================================================== */}
-
-              <div className="mt-7 border-t border-slate-100 pt-6 text-center">
-
-                <p className="text-sm text-slate-500">
-                  ¿Ya tienes una cuenta?
-                </p>
-
-                <Link
-                  href="/login"
-                  className="mt-1 inline-block text-sm font-bold text-blue-600 transition hover:text-blue-700"
-                >
-                  Iniciar sesión
-                </Link>
-
-              </div>
+                </>
+              )}
 
             </div>
 

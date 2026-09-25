@@ -571,6 +571,7 @@ function isValidGeometryLabel(
 
   if (
     value.offset_x !== undefined &&
+    value.offset_x !== null &&
     !isNumber(value.offset_x)
   ) {
     return false;
@@ -578,6 +579,7 @@ function isValidGeometryLabel(
 
   if (
     value.offset_y !== undefined &&
+    value.offset_y !== null &&
     !isNumber(value.offset_y)
   ) {
     return false;
@@ -650,6 +652,7 @@ function isValidGeometryCutout(
 
   if (
     value.radius !== undefined &&
+    value.radius !== null &&
     !isNumber(value.radius)
   ) {
     return false;
@@ -657,6 +660,7 @@ function isValidGeometryCutout(
 
   if (
     value.width !== undefined &&
+    value.width !== null &&
     !isNumber(value.width)
   ) {
     return false;
@@ -664,6 +668,7 @@ function isValidGeometryCutout(
 
   if (
     value.height !== undefined &&
+    value.height !== null &&
     !isNumber(value.height)
   ) {
     return false;
@@ -803,6 +808,7 @@ function isValidGeometryData(
 
   if (
     data.points !== undefined &&
+    data.points !== null &&
     (
       !isArray(data.points) ||
       !data.points.every(
@@ -815,10 +821,11 @@ function isValidGeometryData(
 
   if (
     data.segments !== undefined &&
+    data.segments !== null &&
     (
       !isArray(data.segments) ||
       !data.segments.every(
-        isValidGeometrySegment
+          isValidGeometrySegment
       )
     )
   ) {
@@ -827,6 +834,7 @@ function isValidGeometryData(
 
   if (
     data.preserve_aspect_ratio !== undefined &&
+    data.preserve_aspect_ratio !== null &&
     !isBoolean(data.preserve_aspect_ratio)
   ) {
     return false;
@@ -834,6 +842,7 @@ function isValidGeometryData(
 
   if (
     data.show_measurements !== undefined &&
+    data.show_measurements !== null &&
     !isBoolean(data.show_measurements)
   ) {
     return false;

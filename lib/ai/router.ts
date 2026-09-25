@@ -284,6 +284,955 @@ function sleep(
    GROQ
 ===================================================== */
 
+const GROQ_QUESTION_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+
+  properties: {
+    questions: {
+      type: "array",
+
+      items: {
+        type: "object",
+        additionalProperties: false,
+
+        properties: {
+          subject: {
+            type: "string",
+          },
+
+          session: {
+            type: "integer",
+          },
+
+          component: {
+            type: ["string", "null"],
+          },
+
+          competence: {
+            type: ["string", "null"],
+          },
+
+          skill: {
+            type: ["string", "null"],
+          },
+
+          difficulty: {
+            type: "string",
+            enum: [
+              "Fácil",
+              "Media",
+              "Difícil",
+            ],
+          },
+
+          structure_type: {
+            type: ["string", "null"],
+          },
+
+          context_type: {
+            type: ["string", "null"],
+          },
+
+          question: {
+            type: "string",
+          },
+
+          option_a: {
+            type: "string",
+          },
+
+          option_b: {
+            type: "string",
+          },
+
+          option_c: {
+            type: "string",
+          },
+
+          option_d: {
+            type: "string",
+          },
+
+          correct_answer: {
+            type: "string",
+            enum: [
+              "A",
+              "B",
+              "C",
+              "D",
+            ],
+          },
+
+          explanation: {
+            type: "string",
+          },
+
+          context_text: {
+            type: ["string", "null"],
+          },
+
+          requires_visual: {
+            type: "boolean",
+          },
+
+          visual_type: {
+            anyOf: [
+              {
+                type: "string",
+                enum: [
+                  "chart",
+                  "table",
+                  "math_graph",
+                  "diagram",
+                  "geometry",
+                ],
+              },
+              {
+                type: "null",
+              },
+            ],
+          },
+
+          visual_description: {
+            type: ["string", "null"],
+          },
+
+          visual_data: {
+            anyOf: [
+              {
+                type: "null",
+              },
+
+              /* =========================
+                 CHART
+              ========================== */
+
+              {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                  chart_type: {
+                    type: "string",
+                    enum: [
+                      "bar",
+                      "line",
+                      "pie",
+                      "scatter",
+                      "area",
+                    ],
+                  },
+
+                  title: {
+                    type: ["string", "null"],
+                  },
+
+                  x_label: {
+                    type: ["string", "null"],
+                  },
+
+                  y_label: {
+                    type: ["string", "null"],
+                  },
+
+                  categories: {
+                    type: "array",
+                    items: {
+                      type: "string",
+                    },
+                  },
+
+                  series: {
+                    type: "array",
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        name: {
+                          type: "string",
+                        },
+
+                        values: {
+                          type: "array",
+                          items: {
+                            type: "number",
+                          },
+                        },
+                      },
+
+                      required: [
+                        "name",
+                        "values",
+                      ],
+                    },
+                  },
+
+                  show_values: {
+                    type: ["boolean", "null"],
+                  },
+
+                  show_legend: {
+                    type: ["boolean", "null"],
+                  },
+
+                  show_grid: {
+                    type: ["boolean", "null"],
+                  },
+
+                  y_min: {
+                    type: ["number", "null"],
+                  },
+
+                  y_max: {
+                    type: ["number", "null"],
+                  },
+                },
+
+                required: [
+                  "chart_type",
+                  "title",
+                  "x_label",
+                  "y_label",
+                  "categories",
+                  "series",
+                  "show_values",
+                  "show_legend",
+                  "show_grid",
+                  "y_min",
+                  "y_max",
+                ],
+              },
+
+              /* =========================
+                 TABLE
+              ========================== */
+
+              {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                  title: {
+                    type: ["string", "null"],
+                  },
+
+                  headers: {
+                    type: "array",
+                    items: {
+                      type: "string",
+                    },
+                  },
+
+                  rows: {
+                    type: "array",
+
+                    items: {
+                      type: "array",
+
+                      items: {
+                        anyOf: [
+                          {
+                            type: "string",
+                          },
+                          {
+                            type: "number",
+                          },
+                          {
+                            type: "boolean",
+                          },
+                          {
+                            type: "null",
+                          },
+                        ],
+                      },
+                    },
+                  },
+
+                  emphasize_first_column: {
+                    type: ["boolean", "null"],
+                  },
+
+                  show_row_numbers: {
+                    type: ["boolean", "null"],
+                  },
+                },
+
+                required: [
+                  "title",
+                  "headers",
+                  "rows",
+                  "emphasize_first_column",
+                  "show_row_numbers",
+                ],
+              },
+
+              /* =========================
+                 MATH GRAPH
+              ========================== */
+
+              {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                  graph_type: {
+                    type: "string",
+                    enum: [
+                      "function",
+                      "points",
+                      "coordinate_plane",
+                      "mixed",
+                    ],
+                  },
+
+                  title: {
+                    type: ["string", "null"],
+                  },
+
+                  x_label: {
+                    type: ["string", "null"],
+                  },
+
+                  y_label: {
+                    type: ["string", "null"],
+                  },
+
+                  x_range: {
+                    type: "array",
+                    items: {
+                      type: "number",
+                    },                    
+                  },
+
+                  y_range: {
+                    type: "array",
+                    items: {
+                      type: "number",
+                    },                  
+                  },
+
+                  points: {
+                    type: "array",
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        x: {
+                          type: "number",
+                        },
+
+                        y: {
+                          type: "number",
+                        },
+
+                        label: {
+                          type: ["string", "null"],
+                        },
+
+                        id: {
+                          type: ["string", "null"],
+                        },
+
+                        show_label: {
+                          type: ["boolean", "null"],
+                        },
+                      },
+
+                      required: [
+                        "x",
+                        "y",
+                        "label",
+                        "id",
+                        "show_label",
+                      ],
+                    },
+                  },
+
+                  functions: {
+                    type: "array",
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        id: {
+                          type: "string",
+                        },
+
+                        expression: {
+                          type: "string",
+                        },
+
+                        label: {
+                          type: "string",
+                        },
+
+                        domain: {
+                          anyOf: [
+                            {
+                              type: "array",
+                              items: {
+                                type: "number",
+                              },                              
+                            },
+                            {
+                              type: "null",
+                            },
+                          ],
+                        },
+
+                        visible: {
+                          type: ["boolean", "null"],
+                        },
+                      },
+
+                      required: [
+                        "id",
+                        "expression",
+                        "label",
+                        "domain",
+                        "visible",
+                      ],
+                    },
+                  },
+
+                  show_grid: {
+                    type: ["boolean", "null"],
+                  },
+
+                  show_axis_numbers: {
+                    type: ["boolean", "null"],
+                  },
+
+                  show_axes: {
+                    type: ["boolean", "null"],
+                  },
+
+                  x_axis: {
+                    anyOf: [
+                      {
+                        type: "object",
+                        additionalProperties: false,
+
+                        properties: {
+                          min: {
+                            type: "number",
+                          },
+
+                          max: {
+                            type: "number",
+                          },
+
+                          step: {
+                            type: ["number", "null"],
+                          },
+                        },
+
+                        required: [
+                          "min",
+                          "max",
+                          "step",
+                        ],
+                      },
+                      {
+                        type: "null",
+                      },
+                    ],
+                  },
+
+                  y_axis: {
+                    anyOf: [
+                      {
+                        type: "object",
+                        additionalProperties: false,
+
+                        properties: {
+                          min: {
+                            type: "number",
+                          },
+
+                          max: {
+                            type: "number",
+                          },
+
+                          step: {
+                            type: ["number", "null"],
+                          },
+                        },
+
+                        required: [
+                          "min",
+                          "max",
+                          "step",
+                        ],
+                      },
+                      {
+                        type: "null",
+                      },
+                    ],
+                  },
+                },
+
+                required: [
+                  "graph_type",
+                  "title",
+                  "x_label",
+                  "y_label",
+                  "x_range",
+                  "y_range",
+                  "points",
+                  "functions",
+                  "show_grid",
+                  "show_axis_numbers",
+                  "show_axes",
+                  "x_axis",
+                  "y_axis",
+                ],
+              },
+
+              /* =========================
+                 GEOMETRY
+              ========================== */
+
+              {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                  title: {
+                    type: ["string", "null"],
+                  },
+
+                  shape: {
+                    type: "string",
+                    enum: [
+                      "triangle",
+                      "rectangle",
+                      "circle",
+                      "polygon",
+                    ],
+                  },
+
+                  labels: {
+                    type: "array",
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        text: {
+                          type: "string",
+                        },
+
+                        position: {
+                          type: "string",
+                          enum: [
+                            "top",
+                            "bottom",
+                            "left",
+                            "right",
+                            "center",
+                            "top_left",
+                            "top_right",
+                            "bottom_left",
+                            "bottom_right",
+                          ],
+                        },
+
+                        offset_x: {
+                          type: ["number", "null"],
+                        },
+
+                        offset_y: {
+                          type: ["number", "null"],
+                        },
+                      },
+
+                      required: [
+                        "text",
+                        "position",
+                        "offset_x",
+                        "offset_y",
+                      ],
+                    },
+                  },
+
+                  measurements: {
+                    type: "array",
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        label: {
+                          type: "string",
+                        },
+
+                        value: {
+                          type: "string",
+                        },
+
+                        position: {
+                          anyOf: [
+                            {
+                              type: "string",
+                              enum: [
+                                "top",
+                                "bottom",
+                                "left",
+                                "right",
+                                "center",
+                                "top_left",
+                                "top_right",
+                                "bottom_left",
+                                "bottom_right",
+                              ],
+                            },
+                            {
+                              type: "null",
+                            },
+                          ],
+                        },
+                      },
+
+                      required: [
+                        "label",
+                        "value",
+                        "position",
+                      ],
+                    },
+                  },
+
+                  cutouts: {
+                    type: ["array", "null"],
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        id: {
+                          type: ["string", "null"],
+                        },
+
+                        type: {
+                          type: "string",
+                          enum: [
+                            "semicircle",
+                            "circle",
+                            "rectangle",
+                            "triangle",
+                          ],
+                        },
+
+                        side: {
+                          type: "string",
+                          enum: [
+                            "top",
+                            "bottom",
+                            "left",
+                            "right",
+                            "center",
+                          ],
+                        },
+
+                        radius: {
+                          type: ["number", "null"],
+                        },
+
+                        width: {
+                          type: ["number", "null"],
+                        },
+
+                        height: {
+                          type: ["number", "null"],
+                        },
+
+                        removed: {
+                          type: ["boolean", "null"],
+                        },
+                      },
+
+                      required: [
+                        "id",
+                        "type",
+                        "side",
+                        "radius",
+                        "width",
+                        "height",
+                        "removed",
+                      ],
+                    },
+                  },
+
+                  points: {
+                    type: ["array", "null"],
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        id: {
+                          type: "string",
+                        },
+
+                        x: {
+                          type: "number",
+                        },
+
+                        y: {
+                          type: "number",
+                        },
+
+                        label: {
+                          type: ["string", "null"],
+                        },
+                      },
+
+                      required: [
+                        "id",
+                        "x",
+                        "y",
+                        "label",
+                      ],
+                    },
+                  },
+
+                  segments: {
+                    type: ["array", "null"],
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        from: {
+                          type: "string",
+                        },
+
+                        to: {
+                          type: "string",
+                        },
+
+                        label: {
+                          type: ["string", "null"],
+                        },
+
+                        measurement: {
+                          type: ["string", "null"],
+                        },
+                      },
+
+                      required: [
+                        "from",
+                        "to",
+                        "label",
+                        "measurement",
+                      ],
+                    },
+                  },
+
+                  preserve_aspect_ratio: {
+                    type: ["boolean", "null"],
+                  },
+
+                  show_measurements: {
+                    type: ["boolean", "null"],
+                  },
+                },
+
+                required: [
+                  "title",
+                  "shape",
+                  "labels",
+                  "measurements",
+                  "cutouts",
+                  "points",
+                  "segments",
+                  "preserve_aspect_ratio",
+                  "show_measurements",
+                ],
+              },
+
+              /* =========================
+                 DIAGRAM
+              ========================== */
+
+              {
+                type: "object",
+                additionalProperties: false,
+
+                properties: {
+                  title: {
+                    type: ["string", "null"],
+                  },
+
+                  elements: {
+                    type: "array",
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        id: {
+                          type: "string",
+                        },
+
+                        label: {
+                          type: "string",
+                        },
+
+                        type: {
+                          anyOf: [
+                            {
+                              type: "string",
+                              enum: [
+                                "node",
+                                "process",
+                                "decision",
+                                "input",
+                                "output",
+                                "group",
+                              ],
+                            },
+                            {
+                              type: "null",
+                            },
+                          ],
+                        },
+
+                        x: {
+                          type: ["number", "null"],
+                        },
+
+                        y: {
+                          type: ["number", "null"],
+                        },
+
+                        width: {
+                          type: ["number", "null"],
+                        },
+
+                        height: {
+                          type: ["number", "null"],
+                        },
+                      },
+
+                      required: [
+                        "id",
+                        "label",
+                        "type",
+                        "x",
+                        "y",
+                        "width",
+                        "height",
+                      ],
+                    },
+                  },
+
+                  connections: {
+                    type: "array",
+
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+
+                      properties: {
+                        from: {
+                          type: "string",
+                        },
+
+                        to: {
+                          type: "string",
+                        },
+
+                        label: {
+                          type: ["string", "null"],
+                        },
+
+                        directional: {
+                          type: ["boolean", "null"],
+                        },
+                      },
+
+                      required: [
+                        "from",
+                        "to",
+                        "label",
+                        "directional",
+                      ],
+                    },
+                  },
+
+                  layout: {
+                    anyOf: [
+                      {
+                        type: "string",
+                        enum: [
+                          "horizontal",
+                          "vertical",
+                          "free",
+                        ],
+                      },
+                      {
+                        type: "null",
+                      },
+                    ],
+                  },
+                },
+
+                required: [
+                  "title",
+                  "elements",
+                  "connections",
+                  "layout",
+                ],
+              },
+            ],
+          },
+        },
+
+        required: [
+          "subject",
+          "session",
+          "component",
+          "competence",
+          "skill",
+          "difficulty",
+          "structure_type",
+          "context_type",
+          "question",
+          "option_a",
+          "option_b",
+          "option_c",
+          "option_d",
+          "correct_answer",
+          "explanation",
+          "context_text",
+          "requires_visual",
+          "visual_type",
+          "visual_description",
+          "visual_data",
+        ],
+      },
+    },
+  },
+
+  required: [
+    "questions",
+  ],
+};
+
 async function generateWithGroq(
   prompt: string
 ): Promise<string> {
@@ -313,7 +1262,7 @@ async function generateWithGroq(
    *      ↓
    * router → Gemini
    */
-  const MAX_RETRIES = 1;
+  const MAX_RETRIES = 2;
 
   for (
     let attempt = 1;
@@ -350,7 +1299,7 @@ async function generateWithGroq(
 
             body: JSON.stringify({
               model:
-                "openai/gpt-oss-20b",
+                "qwen/qwen3.8-27b",
 
               messages: [
                 {
@@ -367,14 +1316,20 @@ async function generateWithGroq(
               // explanation + visual_data, por lo que 4096
               // tokens puede truncar el JSON antes de cerrarlo.
               max_completion_tokens:
-                12000,
+                7000,
 
               // Obliga a Groq a devolver JSON válido.
               // La validación detallada de la estructura
-              // continúa en /api/generate-questions.
+              // continúa en /api/generate-questions.          
+
               response_format: {
-                type: "json_object",
-              },              
+                type: "json_schema",
+                json_schema: {
+                  name: "peakscore_questions",
+                  strict: true,
+                  schema: GROQ_QUESTION_SCHEMA,
+                },
+              },
             }),
           }
         );
@@ -417,8 +1372,114 @@ async function generateWithGroq(
       ================================================== */
 
       if (response.status === 429) {
+        const retryAfterHeader =
+          response.headers.get(
+            "retry-after"
+          );
+
+        const resetTokensHeader =
+          response.headers.get(
+            "x-ratelimit-reset-tokens"
+          );
+
+        const resetRequestsHeader =
+          response.headers.get(
+            "x-ratelimit-reset-requests"
+          );
+
+        const parseDurationMs = (
+          value: string | null
+        ): number | null => {
+          if (!value) {
+            return null;
+          }
+
+          const trimmed =
+            value.trim();
+
+          const seconds =
+            Number(trimmed);
+
+          if (
+            Number.isFinite(seconds) &&
+            seconds > 0
+          ) {
+            return seconds * 1000;
+          } 
+
+          const match =
+            trimmed.match(
+              /^(?:(\d+(?:\.\d+)?)m)?(?:(\d+(?:\.\d+)?)s)?$/i
+            );
+
+          if (!match) {
+            return null;
+          }
+
+          const minutes =
+            Number(match[1] ?? 0);
+
+          const secondsPart =
+            Number(match[2] ?? 0);
+
+          const totalMs =
+            (minutes * 60 +
+              secondsPart) *
+            1000;
+
+          return totalMs > 0
+            ? totalMs
+            : null;
+        };
+
+        const retryAfterMs =
+          parseDurationMs(
+            retryAfterHeader
+          );
+
+        const resetTokensMs =
+          parseDurationMs(
+            resetTokensHeader
+          );
+
+        const resetRequestsMs =
+          parseDurationMs(
+            resetRequestsHeader
+          );
+
+        const providerWaitMs = Math.min(
+          Math.max(
+            retryAfterMs ?? 0,
+            resetTokensMs ?? 0,
+            resetRequestsMs ?? 0,
+            3000
+          ),
+          15000
+        );
+
+        const jitterMs =
+          Math.floor(
+            Math.random() * 500
+          );
+
+        const waitMs =
+          providerWaitMs +
+          jitterMs;
+
+        if (attempt < MAX_RETRIES) {
+          console.warn(
+            `[PeakScore AI] Groq devolvió 429. Esperando ${waitMs}ms según los headers de rate limit antes de reintentar.`
+          );
+
+          await sleep(
+            waitMs
+          );
+
+          continue;
+        }
+
         console.warn(
-          "[PeakScore AI] Groq devolvió 429. Se activa el fallback inmediatamente."
+          "[PeakScore AI] Groq continúa limitado después del reintento. Se activa el fallback."
         );
 
         throw new AIServiceError(
@@ -440,10 +1501,7 @@ async function generateWithGroq(
             status:
               response.status,
             response:
-              rawText.slice(
-                0,
-                1000
-              ),
+              rawText,
           }
         );
 
@@ -489,23 +1547,43 @@ async function generateWithGroq(
       }
 
       return content;
-    } catch (error) {
+        } catch (error) {
       /**
-       * Si ya es un error controlado de PeakScore,
-       * lo dejamos pasar al router.
+       * Los errores de configuración no deben reintentarse.
        */
       if (
-        error instanceof
-        AIServiceError
+        error instanceof AIServiceError &&
+        error.code === "AI_CONFIGURATION"
       ) {
         throw error;
       }
 
       /**
-       * Error de red, timeout u otro problema.
-       *
-       * Nunca exponemos el error original.
+       * Si todavía quedan reintentos,
+       * esperamos y volvemos a intentar Groq
+       * antes de activar el fallback.
        */
+      if (attempt < MAX_RETRIES) {
+        console.warn(
+          `[PeakScore AI] Groq falló en el intento ${attempt}/${MAX_RETRIES}. Reintentando...`
+        );
+
+        await sleep(
+          1500 * attempt
+        );
+
+        continue;
+      }
+
+      /**
+       * Se agotaron los reintentos.
+       * El router superior decidirá si activa
+       * el siguiente provider.
+       */
+      if (error instanceof AIServiceError) {
+        throw error;
+      }
+
       console.error(
         "[PeakScore AI] Error de comunicación con Groq:",
         error
@@ -526,54 +1604,223 @@ async function generateWithGroq(
    GEMINI
 ===================================================== */
 
-async function generateWithGemini(
-  prompt: string
-) {
-  try {
-    const gemini =
-      getGemini();
+ function getHttpStatus(
+   error: unknown
+ ): number | null {
+   if (
+     typeof error !== "object" ||
+     error === null
+   ) {
+     return null;
+   }
 
-    return await gemini.models.generateContent({
-      model:
-        "gemini-3.6-flash",
+   const status =
+     (error as {
+       status?: unknown;
+     }).status;
 
-      contents:
-        prompt,
+   const numericStatus =
+     Number(status);
 
-      config: {
-        responseMimeType:
-          "application/json",
+   if (
+     !Number.isInteger(
+       numericStatus
+     )
+   ) {
+     return null;
+   }
 
-      httpOptions: {
-        timeout: 60000,
-      },
-    },
-  });
-  } catch (error) {
-    /**
-     * El error real solamente queda en el servidor.
-     */
-    console.error(
-      "[PeakScore AI] Error interno de Gemini:",
-      error
-    );
+   return numericStatus;
+ }
 
-    /*
-     * Si ya es un error controlado de PeakScore,
-     * conservamos su código interno.
-     */
-    if (error instanceof AIServiceError) {
-      throw error;
-    }
+ function isTransientAIError(
+   status: number | null,
+   error?: unknown
+ ): boolean {
+   if (
+     status === 408 ||
+     status === 429 ||
+     (
+       status !== null &&
+       status >= 500 &&
+       status <= 599
+     )
+   ) {
+     return true;
+   }
 
-    /*
-     * Cualquier otro error se convierte en un error
-     * seguro para el sistema.
-     */
-    throw new AIServiceError(
-      "AI_UNAVAILABLE"
-    );
-  }
+   if (
+     error &&
+     typeof error === "object"
+   ) {
+     const candidate =
+       error as {
+         name?: unknown;
+         code?: unknown;
+         message?: unknown;
+       };
+
+     const name =
+       String(
+         candidate.name ?? ""
+       ).toLowerCase();
+
+     const message =
+       String(
+         candidate.message ?? ""
+       ).toLowerCase();
+
+     const code =
+       Number(
+         candidate.code
+       );
+
+     if (
+       name === "aborterror" ||
+       code === 20 ||
+       message.includes("aborted") ||
+       message.includes("timeout")
+     ) {
+       return true;
+     }
+   }
+
+   return false;
+ }
+
+ async function generateWithGemini(
+   prompt: string
+ ) {
+   const MAX_GEMINI_RETRIES = 2;
+
+   for (
+     let attempt = 0;
+     attempt <= MAX_GEMINI_RETRIES;
+     attempt++
+   ) {
+     try {
+       const gemini =
+         getGemini();
+
+       return await gemini.models.generateContent({
+         model:
+           "gemini-3.1-flash-lite",
+
+         contents:
+           prompt,
+
+         config: {
+           responseMimeType:
+             "application/json",
+
+           httpOptions: {
+             timeout: 60000,
+           },
+         },
+       });
+     } catch (error) {
+       console.error(
+         `[PeakScore AI] Error interno de Gemini. Intento ${attempt + 1}/${MAX_GEMINI_RETRIES + 1}:`,
+         error
+       );
+
+       /*
+        * Los errores internos de PeakScore
+        * no deben volver a intentarse aquí.
+        */
+       if (
+         error instanceof AIServiceError
+       ) {
+        throw error;
+       }
+
+       /*
+        * Detectar código HTTP del proveedor.
+        */
+       const status =
+         getHttpStatus(error);
+
+       /*
+        * Solamente son reintentables
+        * los errores transitorios:
+        *
+        * 408 → timeout
+        * 429 → rate limit
+        * 5xx → error temporal del servidor
+        */
+       const transient =
+         isTransientAIError(
+           status,
+           error
+         );
+
+       /*
+        * Si el error NO es transitorio,
+        * no tiene sentido volver a llamar
+        * a Gemini.
+        *
+        * Ejemplo:
+        * 404 → modelo/recurso inexistente
+        * 400 → solicitud inválida
+        * 403 → permisos
+        */
+       if (!transient) {
+         console.error(
+           "[PeakScore AI] Gemini devolvió un error no transitorio. No se reintentará.",
+           {
+             status,
+           }
+         );
+
+         throw new AIServiceError(
+           "AI_UNAVAILABLE"
+         );
+       }
+
+       /*
+        * Si todavía quedan reintentos,
+        * aplicar backoff exponencial + jitter.
+        */
+       if (
+         attempt <
+         MAX_GEMINI_RETRIES
+       ) {
+         const waitMs =
+           Math.min(
+             2000 *
+               Math.pow(
+                 2,
+                 attempt
+               ),
+             10000
+           ) +
+           Math.floor(
+             Math.random() * 500
+           );
+
+         console.warn(
+           `[PeakScore AI] Gemini devolvió un error transitorio (${status}). Esperando ${waitMs}ms antes de reintentar.`
+         );
+
+         await sleep(
+           waitMs
+         );
+
+         continue;
+       }
+
+       /*
+        * Se agotaron los reintentos.
+        */
+       throw new AIServiceError(
+         "AI_UNAVAILABLE"
+       );
+     }
+   }
+
+  throw new AIServiceError(
+    "AI_UNAVAILABLE"
+  );
 }
 
 /* =====================================================

@@ -1,3 +1,6 @@
+"use client";
+
+import Image from "next/image";
 import { ReactNode } from "react";
 
 interface StatCardProps {
@@ -7,35 +10,47 @@ interface StatCardProps {
   color: "blue" | "green" | "orange" | "red";
 }
 
+/* ============================================================
+   TEMAS
+============================================================ */
+
 const themes = {
   blue: {
-    accent: "bg-blue-600",
-    soft: "bg-blue-50",
-    line: "bg-blue-500",
-    text: "text-blue-600",
+    border: "border-cyan-400",
+    accent: "bg-cyan-400",
+    title: "text-cyan-300",
+    glow: "shadow-[0_0_24px_rgba(34,211,238,0.12)]",
+    soft: "bg-cyan-400/[0.08]",
   },
 
   green: {
-    accent: "bg-emerald-500",
-    soft: "bg-emerald-50",
-    line: "bg-emerald-500",
-    text: "text-emerald-600",
+    border: "border-emerald-400",
+    accent: "bg-emerald-400",
+    title: "text-emerald-300",
+    glow: "shadow-[0_0_24px_rgba(16,185,129,0.12)]",
+    soft: "bg-emerald-400/[0.08]",
   },
 
   orange: {
-    accent: "bg-orange-500",
-    soft: "bg-orange-50",
-    line: "bg-orange-500",
-    text: "text-orange-600",
+    border: "border-yellow-400",
+    accent: "bg-yellow-400",
+    title: "text-yellow-300",
+    glow: "shadow-[0_0_24px_rgba(250,204,21,0.12)]",
+    soft: "bg-yellow-400/[0.08]",
   },
 
   red: {
-    accent: "bg-red-500",
-    soft: "bg-red-50",
-    line: "bg-red-500",
-    text: "text-red-600",
+    border: "border-red-400",
+    accent: "bg-red-400",
+    title: "text-red-300",
+    glow: "shadow-[0_0_24px_rgba(248,113,113,0.12)]",
+    soft: "bg-red-400/[0.08]",
   },
 };
+
+/* ============================================================
+   COMPONENTE
+============================================================ */
 
 export default function StatCard({
   title,
@@ -45,256 +60,518 @@ export default function StatCard({
   const theme = themes[color];
 
   const numericValue =
-    typeof value === "number" ? value : Number(value) || 0;
+    typeof value === "number"
+      ? value
+      : Number(value) || 0;
+
+  /* ==========================================================
+     TIPOS DE TARJETA
+  ========================================================== */
+
+  const isGoal =
+    title === "Meta";
+
+  const isSimulations =
+    title === "Simulacros";
+
+  const isStreak =
+    title === "Racha" ||
+    title === "Racha de estudio";
+
+  /* ==========================================================
+     IMÁGENES
+  ========================================================== */
+
+  const imageSrc = isGoal
+    ? "/peaky/homepage/statsmontaña.png"
+    : isStreak
+      ? "/dashboard/racha-pixel.png"
+      : isSimulations
+        ? ""
+        : null;
+
+  /* ==========================================================
+     PROGRESO DE META
+  ========================================================== */
+
+  const goalPercentage = isGoal
+    ? Math.min(
+        Math.max(
+          (numericValue / 500) * 100,
+          0
+        ),
+        100
+      )
+    : 0;
+
+  /* ==========================================================
+     PROGRESO DE RACHA
+     
+     No representa días de la semana.
+     Solamente muestra visualmente la cantidad
+     de días consecutivos alcanzados.
+  ========================================================== */
+
+  const streakPercentage = isStreak
+    ? Math.min(
+        Math.max(
+          (numericValue / 30) * 100,
+          0
+        ),
+        100
+      )
+    : 0;
+
+  /* ============================================================
+     RENDER
+  ============================================================ */
 
   return (
     <article
-      className="
+      className={`
         group
         relative
+        min-w-0
+        min-h-[150px]
         overflow-hidden
-        rounded-[22px]
+        rounded-[18px]
         border
-        border-slate-200/80
-        bg-white
-        px-6
-        py-6
-        shadow-[0_2px_12px_rgba(15,23,42,0.035)]
+        ${theme.border}
+        ${theme.glow}
+        bg-[#061321]
+        px-5
+        py-4
         transition-all
         duration-300
         hover:-translate-y-[2px]
-        hover:border-slate-300
-        hover:shadow-[0_14px_32px_rgba(15,23,42,0.07)]
-      "
+        hover:shadow-[0_14px_35px_rgba(0,0,0,0.30)]
+      `}
     >
-      {/* =====================================================
-          ACENTO
+      {/* ======================================================
+          ACENTO SUPERIOR
       ====================================================== */}
 
       <div
         className={`
+          pointer-events-none
           absolute
           left-0
           top-0
-          h-[2px]
-          w-10
+          h-[3px]
+          w-full
           ${theme.accent}
-          transition-all
-          duration-300
-          group-hover:w-20
         `}
       />
 
-      {/* =====================================================
-          HEADER
+      {/* ======================================================
+          BRILLO SUTIL
       ====================================================== */}
 
-      <div className="flex items-start justify-between gap-4">
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          inset-0
+          bg-[radial-gradient(circle_at_15%_15%,rgba(255,255,255,0.035),transparent_38%)]
+        "
+      />
 
-        <div className="min-w-0">
+      {/* ======================================================
+          BRILLO LATERAL
+      ====================================================== */}
 
-          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-            {title}
+      <div
+        aria-hidden="true"
+        className={`
+          pointer-events-none
+          absolute
+          -right-10
+          -top-10
+          h-24
+          w-24
+          rounded-full
+          blur-3xl
+          ${theme.soft}
+        `}
+      />
+
+      {/* ======================================================
+          CONTENIDO
+      ====================================================== */}
+
+      <div className="relative z-10 flex h-full flex-col">
+
+        {/* ====================================================
+            HEADER
+        ===================================================== */}
+
+        <div className="flex items-start justify-between gap-3">
+
+          <p
+            className={`
+              text-[10px]
+              font-black
+              uppercase
+              tracking-[0.12em]
+              ${theme.title}
+            `}
+            style={{
+              fontFamily:
+                '"Press Start 2P", "Courier New", monospace',
+            }}
+          >
+            {isGoal && "TU META ICFES"}
+
+            {isSimulations && "SIMULACROS"}
+
+            {isStreak && "RACHA DE ESTUDIO"}
           </p>
 
-          <div className="mt-3 flex items-baseline gap-2">
+          {/* ==================================================
+              MENSAJE DE RACHA
+          ================================================== */}
 
-            <span className="text-[38px] font-bold leading-none tracking-[-0.045em] text-slate-950">
-              {value ?? 0}
+          {isStreak && (
+            <span
+              className="
+                shrink-0
+                max-w-[75px]
+                text-right
+                text-[8px]
+                font-black
+                leading-[1.35]
+                tracking-[0.03em]
+                text-red-400
+              "
+              style={{
+                fontFamily:
+                  '"Press Start 2P", "Courier New", monospace',
+              }}
+            >
+              ¡SIGUE ASÍ!
             </span>
+          )}
 
-            {title === "Puntaje promedio" && (
-              <span className="text-[11px] font-semibold text-slate-400">
-                pts
-              </span>
-            )}
+        </div>
 
-            {title === "Meta" && (
-              <span className="text-[11px] font-semibold text-slate-400">
-                pts
-              </span>
-            )}
+        {/* ====================================================
+            CUERPO
+        ===================================================== */}
 
-            {title === "Racha" && (
-              <span className="text-[11px] font-semibold text-slate-400">
-                días
+        <div className="mt-3 flex min-h-[65px] items-center gap-4">
+
+          {/* ==================================================
+              IMAGEN
+          ================================================== */}
+
+          {imageSrc && (
+            <div
+              className={`
+                relative
+                flex
+                h-[58px]
+                w-[58px]
+                shrink-0
+                items-center
+                justify-center
+                overflow-hidden
+                rounded-[14px]
+                ${theme.soft}
+              `}
+            >
+              <Image
+                src={imageSrc}
+                alt=""
+                width={58}
+                height={58}
+                className="
+                  h-[58px]
+                  w-[58px]
+                  object-contain
+                  drop-shadow-[0_0_9px_rgba(34,211,238,0.20)]
+                "
+              />
+            </div>
+          )}
+
+          {/* ==================================================
+              INFORMACIÓN
+          ================================================== */}
+
+          <div className="min-w-0 flex-1">
+
+            {/* =================================================
+                VALOR
+            ================================================= */}
+
+            <div className="flex items-end gap-2">
+
+              <span
+                className="
+                  text-[30px]
+                  font-black
+                  leading-none
+                  tracking-[-0.04em]
+                  text-white
+                "
+              >
+                {value ?? 0}
               </span>
-            )}
+
+              {/* META */}
+
+              {isGoal && (
+                <span
+                  className="
+                    mb-[3px]
+                    text-[10px]
+                    font-bold
+                    text-slate-400
+                  "
+                >
+                  pts
+                </span>
+              )}
+
+              {/* RACHA */}
+
+              {isStreak && (
+                <span
+                  className="
+                    mb-[3px]
+                    text-[10px]
+                    font-bold
+                    text-slate-400
+                  "
+                >
+                  días
+                </span>
+              )}
+
+            </div>
+
+            {/* =================================================
+                DESCRIPCIÓN
+            ================================================= */}
+
+            <p
+              className="
+                mt-2
+                max-w-[190px]
+                text-[11px]
+                font-semibold
+                leading-[1.4]
+                text-slate-300
+              "
+            >
+              {isGoal &&
+                "Objetivo que quieres alcanzar."}
+
+              {isSimulations &&
+                "Simulacros completados."}
+
+              {isStreak &&
+                "Días consecutivos de estudio."}
+            </p>
 
           </div>
 
         </div>
 
-        {/* =================================================
-            INDICADOR VISUAL PROPIO
-            NO ICONOS / NO EMOJIS
-        ================================================= */}
+        {/* ====================================================
+            PARTE INFERIOR
+        ==================================================== */}
 
-        <div
-          className={`
-            relative
-            flex
-            h-[48px]
-            w-[48px]
-            shrink-0
-            items-center
-            justify-center
-            rounded-[15px]
-            ${theme.soft}
-          `}
-        >
+        <div className="mt-auto pt-3">
 
-          {/* PUNTAJE */}
+          {/* ==================================================
+              META ICFES
+          ================================================== */}
 
-          {title === "Puntaje promedio" && (
-            <div className="flex items-end gap-[3px]">
-
-              <span
-                className={`h-3 w-[4px] rounded-full ${theme.line} opacity-40`}
-              />
-
-              <span
-                className={`h-5 w-[4px] rounded-full ${theme.line} opacity-60`}
-              />
-
-              <span
-                className={`h-7 w-[4px] rounded-full ${theme.line}`}
-              />
-
-              <span
-                className={`h-4 w-[4px] rounded-full ${theme.line} opacity-50`}
-              />
-
-            </div>
-          )}
-
-          {/* META */}
-
-          {title === "Meta" && (
-            <div
-              className={`
-                relative
-                h-[27px]
-                w-[27px]
-                rounded-full
-                border-[3px]
-                border-emerald-200
-              `}
-            >
-              <div
-                className="
-                  absolute
-                  left-1/2
-                  top-1/2
-                  h-[13px]
-                  w-[13px]
-                  -translate-x-1/2
-                  -translate-y-1/2
-                  rounded-full
-                  border-[3px]
-                  border-emerald-500
-                "
-              />
+          {isGoal && (
+            <div>
 
               <div
                 className="
-                  absolute
-                  left-1/2
-                  top-1/2
-                  h-[4px]
-                  w-[4px]
-                  -translate-x-1/2
-                  -translate-y-1/2
+                  h-[6px]
+                  overflow-hidden
                   rounded-full
-                  bg-emerald-500
+                  bg-slate-800
                 "
-              />
-            </div>
-          )}
+              >
+                <div
+                  className="
+                    h-full
+                    rounded-full
+                    bg-yellow-400
+                    shadow-[0_0_8px_rgba(250,204,21,0.25)]
+                    transition-all
+                    duration-700
+                  "
+                  style={{
+                    width: `${goalPercentage}%`,
+                  }}
+                />
+              </div>
 
-          {/* SIMULACROS */}
+              <div className="mt-2 flex items-center justify-between">
 
-          {title === "Simulacros" && (
-            <div className="relative h-[26px] w-[30px]">
+                <span
+                  className="
+                    text-[8px]
+                    font-bold
+                    uppercase
+                    tracking-[0.06em]
+                    text-slate-400
+                  "
+                  style={{
+                    fontFamily:
+                      '"Press Start 2P", "Courier New", monospace',
+                  }}
+                >
+                  OBJETIVO ICFES
+                </span>
 
-              <span
-                className="
-                  absolute
-                  left-0
-                  top-2
-                  h-[18px]
-                  w-[22px]
-                  rounded-[5px]
-                  border-2
-                  border-orange-300
-                "
-              />
+                <span
+                  className="
+                    text-[9px]
+                    font-black
+                    text-yellow-300
+                  "
+                  style={{
+                    fontFamily:
+                      '"Press Start 2P", "Courier New", monospace',
+                  }}
+                >
+                  {Math.round(goalPercentage)}%
+                </span>
 
-              <span
-                className="
-                  absolute
-                  left-[5px]
-                  top-1
-                  h-[18px]
-                  w-[22px]
-                  rounded-[5px]
-                  border-2
-                  border-orange-500
-                  bg-orange-50
-                "
-              />
-
-              <span
-                className="
-                  absolute
-                  left-[9px]
-                  top-[7px]
-                  h-[2px]
-                  w-[10px]
-                  rounded-full
-                  bg-orange-400
-                "
-              />
-
-              <span
-                className="
-                  absolute
-                  left-[9px]
-                  top-[12px]
-                  h-[2px]
-                  w-[7px]
-                  rounded-full
-                  bg-orange-300
-                "
-              />
+              </div>
 
             </div>
           )}
 
-          {/* RACHA */}
+          {/* ==================================================
+              SIMULACROS
+          ================================================== */}
 
-          {title === "Racha" && (
-            <div className="relative flex h-[27px] w-[32px] items-end gap-[3px]">
+          {isSimulations && (
+            <div>
 
-              <span
-                className={`h-[7px] w-[4px] rounded-full ${theme.line} opacity-30`}
-              />
+              <div
+                className="
+                  h-[6px]
+                  overflow-hidden
+                  rounded-full
+                  bg-slate-800
+                "
+              >
+                <div
+                  className="
+                    h-full
+                    w-[24%]
+                    rounded-full
+                    bg-orange-400
+                    shadow-[0_0_8px_rgba(251,146,60,0.25)]
+                  "
+                />
+              </div>
 
-              <span
-                className={`h-[12px] w-[4px] rounded-full ${theme.line} opacity-50`}
-              />
+              <div className="mt-2 flex items-center justify-between">
 
-              <span
-                className={`h-[19px] w-[4px] rounded-full ${theme.line} opacity-70`}
-              />
+                <span
+                  className="
+                    text-[8px]
+                    font-bold
+                    uppercase
+                    tracking-[0.06em]
+                    text-slate-500
+                  "
+                >
+                  PEAKSCORE
+                </span>
 
-              <span
-                className={`h-[25px] w-[4px] rounded-full ${theme.line}`}
-              />
+                <span
+                  className="
+                    text-[8px]
+                    font-bold
+                    text-yellow-300
+                  "
+                >
+                  COMPLETADOS
+                </span>
 
-              <span
-                className={`h-[15px] w-[4px] rounded-full ${theme.line} opacity-60`}
-              />
+              </div>
+
+            </div>
+          )}
+
+          {/* ==================================================
+              RACHA
+              
+              IMPORTANTE:
+              NO HAY L M X J V S D.
+          ================================================== */}
+
+          {isStreak && (
+            <div>
+
+              {/* BARRA DE RACHA */}
+
+              <div
+                className="
+                  h-[6px]
+                  overflow-hidden
+                  rounded-full
+                  bg-slate-800
+                "
+              >
+                <div
+                  className="
+                    h-full
+                    rounded-full
+                    bg-red-400
+                    shadow-[0_0_8px_rgba(248,113,113,0.30)]
+                    transition-all
+                    duration-700
+                  "
+                  style={{
+                    width: `${streakPercentage}%`,
+                  }}
+                />
+              </div>
+
+              {/* TEXTO */}
+
+              <div className="mt-2 flex items-center justify-between">
+
+                <span
+                  className="
+                    text-[8px]
+                    font-bold
+                    uppercase
+                    tracking-[0.06em]
+                    text-slate-500
+                  "
+                >
+                  RACHA ACTUAL
+                </span>
+
+                <span
+                  className="
+                    text-[8px]
+                    font-black
+                    text-red-300
+                  "
+                >
+                  {numericValue}{" "}
+                  {numericValue === 1
+                    ? "DÍA"
+                    : "DÍAS"}
+                </span>
+
+              </div>
 
             </div>
           )}
@@ -302,62 +579,6 @@ export default function StatCard({
         </div>
 
       </div>
-
-      {/* =====================================================
-          DESCRIPCIÓN
-      ====================================================== */}
-
-      <p className="mt-3 text-[11px] font-medium text-slate-400">
-        {title === "Puntaje promedio" &&
-          "Tu rendimiento actual"}
-
-        {title === "Meta" &&
-          "Objetivo de preparación"}
-
-        {title === "Simulacros" &&
-          "Completados"}
-
-        {title === "Racha" &&
-          "Mantén el ritmo"}
-      </p>
-
-      {/* =====================================================
-          INDICADOR INFERIOR
-      ====================================================== */}
-
-      <div className="mt-6 flex items-center gap-3">
-
-        <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-slate-100">
-
-          <div
-            className={`
-              h-full
-              rounded-full
-              ${theme.accent}
-              opacity-70
-              transition-all
-              duration-500
-              group-hover:w-[36%]
-            `}
-            style={{
-              width:
-                title === "Meta"
-                  ? `${Math.min(
-                      (numericValue / 500) * 100,
-                      100
-                    )}%`
-                  : "24%",
-            }}
-          />
-
-        </div>
-
-        <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-slate-300">
-          PeakScore
-        </span>
-
-      </div>
-
     </article>
   );
 }

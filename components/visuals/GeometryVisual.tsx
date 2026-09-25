@@ -679,6 +679,16 @@ function RectangleVisual({
         cutout.removed !== false,
     );
 
+  const rectangularCutouts = (data.cutouts ?? []).filter(
+    (cutout) =>
+      cutout.type === "rectangle" &&
+      cutout.removed !== false &&
+      Number.isFinite(cutout.width) &&
+      Number.isFinite(cutout.height) &&
+      Number(cutout.width) > 0 &&
+      Number(cutout.height) > 0,
+  );
+
   const radiusMeasurement = getMeasurement(
     data.measurements,
     [
@@ -768,6 +778,79 @@ function RectangleVisual({
         strokeWidth="3.2"
         strokeLinejoin="round"
       />
+
+      {/* RECORTES RECTANGULARES: ventanas, puertas, aberturas */}
+      {rectangularCutouts.map((cutout, index) => {
+        const cutoutWidth =
+          horizontalValue !== null
+            ? Math.min(
+                width * 0.85,
+                Math.max(
+                  24,
+                  (Number(cutout.width) / horizontalValue) *
+                    width,
+                ),
+              )
+            : Math.min(width * 0.35, 120);
+
+        const cutoutHeight =
+          verticalValue !== null
+            ? Math.min(
+                height * 0.85,
+                Math.max(
+                  24,
+                  (Number(cutout.height) / verticalValue) *
+                    height,
+                ),
+              )
+            : Math.min(height * 0.35, 100);
+
+        let cutoutX = x + (width - cutoutWidth) / 2;
+        let cutoutY = y + (height - cutoutHeight) / 2;
+
+        if (cutout.side === "top") {
+          cutoutY = y;
+        }
+
+        if (cutout.side === "bottom") {
+          cutoutY = bottom - cutoutHeight;
+        }
+
+        if (cutout.side === "left") {
+          cutoutX = x;
+        }
+
+        if (cutout.side === "right") {
+          cutoutX = right - cutoutWidth;
+        }
+
+        return (
+          <g key={`rectangular-cutout-${index}`}>
+            {/* Abertura */}
+            <rect
+              x={cutoutX}
+              y={cutoutY}
+              width={cutoutWidth}
+              height={cutoutHeight}
+              fill={COLORS.background}
+              stroke={COLORS.dimension}
+              strokeWidth="2"
+              strokeDasharray="6 4"
+            />
+
+            {/* Línea interior para identificar claramente la abertura */}
+            <rect
+              x={cutoutX + 5}
+              y={cutoutY + 5}
+              width={Math.max(0, cutoutWidth - 10)}
+              height={Math.max(0, cutoutHeight - 10)}
+              fill="none"
+              stroke={COLORS.dimensionLight}
+              strokeWidth="1"
+            />
+          </g>
+        );
+      })}
 
       {/* LÍNEAS DE DIMENSIÓN */}
 

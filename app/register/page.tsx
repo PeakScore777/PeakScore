@@ -1,9 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
-
 import { Turnstile } from "@marsidev/react-turnstile";
+
+import Link from "next/link";
 
 import {
   ArrowRight,
@@ -28,15 +28,14 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // ============================================================
-  // CLOUDFLARE TURNSTILE
-  // ============================================================
-
   const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaKey, setCaptchaKey] = useState(0);
 
-  // ============================================================
-  // VERIFICACIÓN DE CORREO
-  // ============================================================
+  /*
+   * ============================================================
+   * VERIFICACIÓN DE CORREO
+   * ============================================================
+   */
 
   const [verificationMode, setVerificationMode] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
@@ -49,12 +48,15 @@ export default function RegisterPage() {
   const [verificationSeconds, setVerificationSeconds] =
     useState(600);
 
-  // 60 segundos entre reenvíos
+  // Supabase recomienda limitar el reenvío de correos.
+  // Usamos 60 segundos entre reenvíos.
   const [resendCooldown, setResendCooldown] = useState(60);
 
-  // ============================================================
-  // CONTADOR DE VERIFICACIÓN
-  // ============================================================
+  /*
+   * ============================================================
+   * CONTADOR DE VERIFICACIÓN
+   * ============================================================
+   */
 
   useEffect(() => {
     if (!verificationMode) {
@@ -76,9 +78,11 @@ export default function RegisterPage() {
     };
   }, [verificationMode]);
 
-  // ============================================================
-  // SEGURIDAD DE CONTRASEÑA
-  // ============================================================
+  /*
+   * ============================================================
+   * SEGURIDAD DE CONTRASEÑA
+   * ============================================================
+   */
 
   const passwordStrength =
     password.length === 0
@@ -89,9 +93,11 @@ export default function RegisterPage() {
           ? 2
           : 3;
 
-  // ============================================================
-  // FORMATO DEL TIEMPO
-  // ============================================================
+  /*
+   * ============================================================
+   * FORMATO DEL TIEMPO
+   * ============================================================
+   */
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -104,9 +110,11 @@ export default function RegisterPage() {
       .padStart(2, "0")}`;
   };
 
-  // ============================================================
-  // REGISTRO
-  // ============================================================
+  /*
+   * ============================================================
+   * REGISTRO
+   * ============================================================
+   */
 
   const handleRegister = async (
     e: FormEvent<HTMLFormElement>
@@ -115,9 +123,9 @@ export default function RegisterPage() {
 
     setError("");
 
-    // ----------------------------------------------------------
-    // VALIDACIÓN BÁSICA
-    // ----------------------------------------------------------
+    /*
+     * VALIDACIÓN BÁSICA
+     */
 
     if (!name.trim() || !email.trim() || !password) {
       setError(
@@ -127,9 +135,9 @@ export default function RegisterPage() {
       return;
     }
 
-    // ----------------------------------------------------------
-    // CONTRASEÑA MÍNIMA
-    // ----------------------------------------------------------
+    /*
+     * CONTRASEÑA MÍNIMA
+     */
 
     if (password.length < 12) {
       setError(
@@ -138,10 +146,6 @@ export default function RegisterPage() {
 
       return;
     }
-
-    // ----------------------------------------------------------
-    // CAPTCHA
-    // ----------------------------------------------------------
 
     if (!captchaToken) {
       setError(
@@ -155,9 +159,16 @@ export default function RegisterPage() {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // ==========================================================
-    // CREAR USUARIO EN SUPABASE AUTH
-    // ==========================================================
+    /*
+     * ==========================================================
+     * CREAR USUARIO EN SUPABASE AUTH
+     * ==========================================================
+     *
+     * El perfil NO se crea desde aquí.
+     *
+     * PostgreSQL lo crea automáticamente mediante el trigger
+     * configurado sobre auth.users.
+     */
 
     const {
       data,
@@ -173,9 +184,9 @@ export default function RegisterPage() {
       },
     });
 
-    // ----------------------------------------------------------
-    // ERROR DE REGISTRO
-    // ----------------------------------------------------------
+    /*
+     * ERROR DE REGISTRO
+     */
 
     if (registerError) {
       console.error(
@@ -187,15 +198,22 @@ export default function RegisterPage() {
 
       setError(registerError.message);
 
-      // El token de Turnstile es de un solo uso.
-      setCaptchaToken("");
-
       return;
     }
 
-    // ==========================================================
-    // CUENTA CREADA
-    // ==========================================================
+    /*
+     * ==========================================================
+     * CUENTA CREADA
+     * ==========================================================
+     *
+     * Supabase enviará el correo de confirmación.
+     *
+     * Como configuramos la plantilla con:
+     *
+     * {{ .Token }}
+     *
+     * el usuario recibirá un código OTP.
+     */
 
     if (data.user) {
       console.log(
@@ -204,9 +222,11 @@ export default function RegisterPage() {
       );
     }
 
-    // ==========================================================
-    // MOSTRAR PANTALLA DE VERIFICACIÓN
-    // ==========================================================
+    /*
+     * ==========================================================
+     * MOSTRAR PANTALLA DE VERIFICACIÓN
+     * ==========================================================
+     */
 
     setVerificationEmail(normalizedEmail);
     setVerificationCode("");
@@ -218,20 +238,30 @@ export default function RegisterPage() {
     // 60 segundos antes de permitir otro envío
     setResendCooldown(60);
 
+    // El token usado para crear la cuenta ya no debe reutilizarse.
+    // Montamos un Turnstile nuevo para la pantalla de verificación.
+    setCaptchaToken("");
+    setCaptchaKey((previous) => previous + 1);
+
     setVerificationMode(true);
 
-    // Limpiamos la contraseña
-    setPassword("");
+    /*
+     * Limpiamos solamente la contraseña.
+     *
+     * Conservamos el correo porque lo necesitamos para
+     * verificar el código.
+     */
 
-    // Limpiamos el CAPTCHA porque ya fue utilizado
-    setCaptchaToken("");
+    setPassword("");
 
     setLoading(false);
   };
 
-  // ============================================================
-  // VERIFICAR CÓDIGO OTP
-  // ============================================================
+  /*
+   * ============================================================
+   * VERIFICAR CÓDIGO OTP
+   * ============================================================
+   */
 
   const handleVerifyCode = async (
     e: FormEvent<HTMLFormElement>
@@ -242,9 +272,9 @@ export default function RegisterPage() {
 
     const code = verificationCode.trim();
 
-    // ----------------------------------------------------------
-    // VALIDAR QUE SEAN 8 DÍGITOS
-    // ----------------------------------------------------------
+    /*
+     * VALIDAR QUE SEAN 8 DÍGITOS
+     */
 
     if (!/^\d{8}$/.test(code)) {
       setVerificationError(
@@ -254,9 +284,9 @@ export default function RegisterPage() {
       return;
     }
 
-    // ----------------------------------------------------------
-    // VALIDAR EXPIRACIÓN VISUAL
-    // ----------------------------------------------------------
+    /*
+     * VALIDAR EXPIRACIÓN VISUAL
+     */
 
     if (verificationSeconds <= 0) {
       setVerificationError(
@@ -268,9 +298,11 @@ export default function RegisterPage() {
 
     setVerificationLoading(true);
 
-    // ==========================================================
-    // VERIFICAR OTP CON SUPABASE
-    // ==========================================================
+    /*
+     * ==========================================================
+     * VERIFICAR OTP CON SUPABASE
+     * ==========================================================
+     */
 
     const { error: verifyError } =
       await supabase.auth.verifyOtp({
@@ -279,9 +311,9 @@ export default function RegisterPage() {
         type: "email",
       });
 
-    // ----------------------------------------------------------
-    // CÓDIGO INCORRECTO / EXPIRADO
-    // ----------------------------------------------------------
+    /*
+     * CÓDIGO INCORRECTO / EXPIRADO
+     */
 
     if (verifyError) {
       console.error(
@@ -298,29 +330,53 @@ export default function RegisterPage() {
       return;
     }
 
-    // ==========================================================
-    // VERIFICACIÓN CORRECTA
-    // ==========================================================
-
-    // Supabase puede crear una sesión después de verificar.
-    // PeakScore no debe entrar automáticamente al Dashboard.
+    /*
+     * ==========================================================
+     * VERIFICACIÓN CORRECTA
+     * ==========================================================
+     *
+     * IMPORTANTE:
+     *
+     * Supabase puede crear una sesión después de verificar
+     * correctamente el correo.
+     *
+     * Pero PeakScore NO debe mandar al usuario directamente
+     * al Dashboard.
+     *
+     * Por eso cerramos la sesión inmediatamente.
+     *
+     * El usuario deberá entrar manualmente desde /login.
+     */
 
     await supabase.auth.signOut();
 
     setVerificationLoading(false);
 
-    // Mandar al usuario al login.
+    /*
+     * Mandamos al usuario al login.
+     *
+     * El parámetro verified permite que posteriormente
+     * podamos mostrar un mensaje como:
+     *
+     * "Correo verificado correctamente."
+     */
+
     window.location.href = "/login?verified=1";
   };
 
-  // ============================================================
-  // REENVIAR CÓDIGO
-  // ============================================================
+  /*
+   * ============================================================
+   * REENVIAR CÓDIGO
+   * ============================================================
+   */
 
   const handleResendCode = async () => {
     setVerificationError("");
 
-    // Evitar spam
+    /*
+     * EVITAR SPAM
+     */
+
     if (resendCooldown > 0) {
       return;
     }
@@ -333,16 +389,33 @@ export default function RegisterPage() {
       return;
     }
 
+    /*
+     * SUPABASE EXIGE CAPTCHA TAMBIÉN PARA REENVIAR
+     * EL CORREO DE CONFIRMACIÓN.
+     */
+    if (!captchaToken) {
+      setVerificationError(
+        "Completa la verificación de seguridad antes de reenviar el código."
+      );
+
+      return;
+    }
+
     setVerificationLoading(true);
 
-    // ==========================================================
-    // SOLICITAR NUEVO CÓDIGO
-    // ==========================================================
+    /*
+     * ==========================================================
+     * SOLICITAR NUEVO CÓDIGO
+     * ==========================================================
+     */
 
     const { error: resendError } =
       await supabase.auth.resend({
         type: "signup",
         email: verificationEmail,
+        options: {
+          captchaToken,
+        },
       });
 
     if (resendError) {
@@ -353,18 +426,30 @@ export default function RegisterPage() {
 
       setVerificationLoading(false);
 
+      // El token puede haber expirado o ya haber sido consumido.
+      // Generamos un Turnstile nuevo para el siguiente intento.
+      setCaptchaToken("");
+      setCaptchaKey((previous) => previous + 1);
+
       setVerificationError(
-        "No pudimos reenviar el código. Espera unos segundos e inténtalo nuevamente."
+        resendError.message?.toLowerCase().includes("captcha")
+          ? "La verificación de seguridad expiró. Completa el CAPTCHA nuevamente y vuelve a intentarlo."
+          : "No pudimos reenviar el código. Espera unos segundos e inténtalo nuevamente."
       );
 
       return;
     }
 
-    // ==========================================================
-    // NUEVO CÓDIGO
-    // ==========================================================
+    /*
+     * NUEVO CÓDIGO
+     */
 
     setVerificationCode("");
+
+    // El token de CAPTCHA es de un solo uso.
+    // Generamos uno nuevo después de cada reenvío exitoso.
+    setCaptchaToken("");
+    setCaptchaKey((previous) => previous + 1);
 
     // Reiniciar los 10 minutos
     setVerificationSeconds(600);
@@ -375,23 +460,27 @@ export default function RegisterPage() {
     setVerificationLoading(false);
   };
 
-  // ============================================================
-  // VOLVER AL REGISTRO
-  // ============================================================
+  /*
+   * ============================================================
+   * VOLVER AL REGISTRO
+   * ============================================================
+   */
 
   const handleBackToRegister = () => {
     setVerificationMode(false);
     setVerificationCode("");
+    setCaptchaToken("");
+    setCaptchaKey((previous) => previous + 1);
     setVerificationError("");
     setVerificationSeconds(600);
     setResendCooldown(60);
-    setCaptchaToken("");
-    setError("");
   };
 
-  // ============================================================
-  // INTERFAZ
-  // ============================================================
+  /*
+   * ============================================================
+   * INTERFAZ
+   * ============================================================
+   */
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-50">
@@ -404,6 +493,7 @@ export default function RegisterPage() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 overflow-hidden"
       >
+
         <div className="absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-blue-500/[0.07] blur-[120px]" />
 
         <div className="absolute -right-40 top-[20%] h-[500px] w-[500px] rounded-full bg-cyan-400/[0.06] blur-[130px]" />
@@ -426,6 +516,7 @@ export default function RegisterPage() {
         <div className="absolute bottom-[8%] right-[8%] text-[150px] font-black text-blue-600/[0.02]">
           500
         </div>
+
       </div>
 
       {/* ======================================================
@@ -550,7 +641,6 @@ export default function RegisterPage() {
 
               {verificationMode ? (
                 <>
-
                   <div>
 
                     <p className="text-sm font-bold text-blue-600">
@@ -645,6 +735,37 @@ export default function RegisterPage() {
 
                     </div>
 
+                    {/* ==================================================
+                        CLOUDFLARE TURNSTILE
+                    ================================================== */}
+
+                    <div className="flex justify-center pt-1">
+                      <Turnstile
+                        key={`verification-captcha-${captchaKey}`}
+                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                        onSuccess={(token) => {
+                          setCaptchaToken(token);
+                          setVerificationError("");
+                        }}
+                        onExpire={() => {
+                          setCaptchaToken("");
+                          setVerificationError(
+                            "La verificación de seguridad expiró. Completa el CAPTCHA nuevamente."
+                          );
+                        }}
+                        onError={() => {
+                          setCaptchaToken("");
+                          setVerificationError(
+                            "No se pudo cargar la verificación de seguridad. Inténtalo nuevamente."
+                          );
+                        }}
+                        options={{
+                          language: "es",
+                          size: "flexible",
+                        }}
+                      />
+                    </div>
+                    
                     {/* ERROR */}
 
                     {verificationError && (
@@ -719,11 +840,9 @@ export default function RegisterPage() {
                     </button>
 
                   </div>
-
                 </>
               ) : (
                 <>
-
                   {/* ==================================================
                       CABECERA REGISTRO
                   ================================================== */}
@@ -924,26 +1043,21 @@ export default function RegisterPage() {
                     ================================================== */}
 
                     <div className="flex justify-center pt-1">
-
                       <Turnstile
-                        siteKey={
-                          process.env
-                            .NEXT_PUBLIC_TURNSTILE_SITE_KEY!
-                        }
+                        key={`register-captcha-${captchaKey}`}
+                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
                         onSuccess={(token) => {
                           setCaptchaToken(token);
                           setError("");
                         }}
                         onExpire={() => {
                           setCaptchaToken("");
-
                           setError(
                             "La verificación de seguridad expiró. Completa el CAPTCHA nuevamente."
                           );
                         }}
                         onError={() => {
                           setCaptchaToken("");
-
                           setError(
                             "No se pudo cargar la verificación de seguridad. Inténtalo nuevamente."
                           );
@@ -951,10 +1065,8 @@ export default function RegisterPage() {
                         options={{
                           language: "es",
                           size: "flexible",
-                          appearance: "always",
                         }}
                       />
-
                     </div>
 
                     {/* ERROR */}
@@ -1011,7 +1123,6 @@ export default function RegisterPage() {
                     </Link>
 
                   </div>
-
                 </>
               )}
 

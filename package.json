@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.17.1",
+    "@marsidev/react-turnstile": "^1.6.1",
     "@napi-rs/canvas": "^1.0.8",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",

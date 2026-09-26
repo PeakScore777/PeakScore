@@ -23,8 +23,10 @@ export async function requireAdmin() {
 
   if (error) {
     console.error(
-      "Error verificando permisos de administrador:",
-      error
+      "Error verificando permisos de administrador.",
+      {
+        errorCode: error.code ?? "UNKNOWN",
+      }
     );
 
     redirect("/dashboard");

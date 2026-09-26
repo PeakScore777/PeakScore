@@ -3960,19 +3960,12 @@ export async function POST(
       }
     }
 
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Error desconocido al importar el PDF.";
-
     return NextResponse.json(
       {
         success: false,
-        error: message,
+        error: "No fue posible completar la importación del PDF.",
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

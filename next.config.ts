@@ -1,5 +1,13 @@
 import type { NextConfig } from "next";
 
+const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
+  : "";
+
+const posthogOrigin = process.env.NEXT_PUBLIC_POSTHOG_HOST
+  ? new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST).origin
+  : "";
+
 const securityHeaders = [
   {
     key: "Strict-Transport-Security",
@@ -20,6 +28,24 @@ const securityHeaders = [
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=()",
+  },
+  {
+    key: "Content-Security-Policy",
+    value: [
+      "default-src 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self' data:",
+      `connect-src 'self' ${supabaseOrigin} ${posthogOrigin} https://challenges.cloudflare.com`,
+      "frame-src 'self' https://challenges.cloudflare.com",
+      "worker-src 'self' blob:",
+      "media-src 'self' blob:",
+    ].join("; "),
   },
 ];
 

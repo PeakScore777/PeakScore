@@ -76,8 +76,8 @@ export async function getQuestions(): Promise<Question[]> {
 
   if (error) {
     console.error(
-      "Error obteniendo preguntas:",
-      JSON.stringify(error, null, 2)
+      "Error obteniendo preguntas.",
+      { errorCode: error.code ?? "UNKNOWN" }
     );
 
     return [];
@@ -101,8 +101,8 @@ export async function getQuestionById(
 
   if (error) {
     console.error(
-      "Error obteniendo pregunta:",
-      JSON.stringify(error, null, 2)
+      "Error obteniendo pregunta.",
+      { errorCode: error.code ?? "UNKNOWN" }
     );
 
     return null;
@@ -125,11 +125,10 @@ export async function createQuestion(
     .single();
 
   if (error) {
-    console.error("ERROR SUPABASE CREANDO PREGUNTA");
-    console.error("message:", error.message);
-    console.error("code:", error.code);
-    console.error("details:", error.details);
-    console.error("hint:", error.hint);
+    console.error(
+      "Error creando pregunta.",
+      { errorCode: error.code ?? "UNKNOWN" }
+    );
 
     throw error;
   }
@@ -148,7 +147,10 @@ export async function deleteQuestion(id: string) {
     .eq("id", id);
 
   if (error) {
-    console.error("Error eliminando pregunta:", error);
+    console.error(
+      "Error eliminando pregunta.",
+      { errorCode: error.code ?? "UNKNOWN" }
+    );
     throw error;
   }
 }
@@ -169,7 +171,10 @@ export async function updateQuestion(
     .single();
 
   if (error) {
-    console.error("Error actualizando pregunta:", error);
+    console.error(
+      "Error actualizando pregunta.",
+      { errorCode: error.code ?? "UNKNOWN" }
+    );
     throw error;
   }
 

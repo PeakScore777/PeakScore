@@ -1496,12 +1496,11 @@ async function generateWithGroq(
          * El detalle técnico queda SOLO en el servidor.
          */
         console.error(
-          "[PeakScore AI] Error interno de Groq:",
+          "[PeakScore AI] Error interno de Groq.",
           {
-            status:
-              response.status,
-            response:
-              rawText,
+            status: response.status,
+            statusText: response.statusText,
+            outputLength: rawText.length,
           }
         );
 
@@ -1585,8 +1584,17 @@ async function generateWithGroq(
       }
 
       console.error(
-        "[PeakScore AI] Error de comunicación con Groq:",
-        error
+        "[PeakScore AI] Error de comunicación con Groq.",
+        {
+          errorName:
+            error instanceof Error
+              ? error.name
+              : "UnknownError",
+          code:
+            error instanceof AIServiceError
+              ? error.code
+              : "AI_UNAVAILABLE",
+        }
       );
 
       throw new AIServiceError(
@@ -1720,8 +1728,13 @@ async function generateWithGroq(
        });
      } catch (error) {
        console.error(
-         `[PeakScore AI] Error interno de Gemini. Intento ${attempt + 1}/${MAX_GEMINI_RETRIES + 1}:`,
-         error
+         `[PeakScore AI] Error interno de Gemini. Intento ${attempt + 1}/${MAX_GEMINI_RETRIES + 1}.`,
+         {
+           errorName:
+             error instanceof Error
+               ? error.name
+               : "UnknownError",
+         }
        );
 
        /*

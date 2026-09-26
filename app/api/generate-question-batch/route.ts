@@ -633,8 +633,16 @@ export async function POST(
        LEER REQUEST
     ===================================================== */
 
-    const body =
-      (await request.json()) as Partial<BatchRequest>;
+    let body: Partial<BatchRequest>;
+
+    try {
+      body = (await request.json()) as Partial<BatchRequest>;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "El cuerpo de la solicitud no es válido." },
+        { status: 400 }
+      );
+    }
 
     const subject =
       typeof body.subject === "string"
@@ -981,22 +989,14 @@ export async function POST(
       error
     );
 
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Error desconocido en la generación masiva.";
-
     return NextResponse.json(
       {
         success: false,
-        error: message,
+        error: "No fue posible completar la generación masiva.",
         saved: savedTotal,
-        partial:
-          savedTotal > 0,
+        partial: savedTotal > 0,
       },
-      {
-        status: 500,
-      }
+      { status: 500 }
     );
   }
 }

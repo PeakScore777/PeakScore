@@ -7168,6 +7168,27 @@ export async function POST(
       );
     }
 
+    const { data: rateAllowed, error: rateError } = await authSupabase.rpc("consume_api_rate_limit", {
+      p_bucket: "generate-questions",
+      p_limit: 10,
+      p_window_seconds: 3600,
+    });
+
+    if (rateError) {
+      console.error("[PeakScore] Error verificando límite de generación:", rateError);
+      return NextResponse.json(
+        { success: false, error: "No fue posible validar el límite de generación." },
+        { status: 503 }
+      );
+    }
+
+    if (rateAllowed !== true) {
+      return NextResponse.json(
+        { success: false, error: "Has alcanzado el límite temporal de generación. Inténtalo más tarde." },
+        { status: 429 }
+      );
+    }
+
     /* =====================================================
        LEER REQUEST
     ====================================================== */

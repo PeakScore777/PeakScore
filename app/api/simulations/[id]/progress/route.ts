@@ -23,6 +23,8 @@ interface SimulationAttempt {
   correct_answers: number;
   incorrect_answers: number;
   unanswered_answers: number;
+  current_question: number;
+  time_left: number;
 }
 
 /* ============================================================
@@ -532,7 +534,7 @@ export async function POST(
           incorrect_answers: 0,
           unanswered_answers: 0,
         })
-        .select("*")
+        .select("id, user_id, simulation_id, started_at, completed_at, score, correct_answers, incorrect_answers, unanswered_answers, current_question, time_left")
         .single();
 
       if (
@@ -585,53 +587,6 @@ export async function POST(
         },
         { status: 500 }
       );
-    }
-
-    /* ========================================================
-       FILTRAR RESPUESTAS VÁLIDAS
-    ======================================================== */
-
-    const validAnswers =
-      answers.filter(
-        (answer) =>
-          answer &&
-          typeof answer.question_id === "string" &&
-          (answer.selected_answer === null ||
-            ["A", "B", "C", "D"].includes(
-              String(answer.selected_answer).trim().toUpperCase()
-            ))
-      );
-
-    if (validAnswers.length > simulation.total_questions) {
-      return NextResponse.json(
-        { success: false, error: "Se enviaron demasiadas respuestas." },
-        { status: 400 }
-      );
-    }
-
-    const questionIds = validAnswers.map((answer) => answer.question_id);
-    const uniqueQuestionIds = new Set(questionIds);
-
-    if (uniqueQuestionIds.size !== questionIds.length) {
-      return NextResponse.json(
-        { success: false, error: "Se enviaron respuestas duplicadas." },
-        { status: 400 }
-      );
-    }
-
-    if (questionIds.length > 0) {
-      const { data: validRelations, error: relationsError } = await supabase
-        .from("simulation_questions")
-        .select("question_id")
-        .eq("simulation_id", simulationId)
-        .in("question_id", questionIds);
-
-      if (relationsError || (validRelations?.length ?? 0) !== questionIds.length) {
-        return NextResponse.json(
-          { success: false, error: "Una o más preguntas no pertenecen a este simulacro." },
-          { status: 400 }
-        );
-      }
     }
 
     /* ========================================================

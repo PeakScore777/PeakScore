@@ -136,14 +136,34 @@ export default function RegisterPage() {
     }
 
     /*
-     * CONTRASEÑA MÍNIMA
+     * CONTRASEÑA FUERTE
+     *
+     * La longitud es el control principal. También exigimos
+     * mayúscula, minúscula, número y símbolo para reducir
+     * contraseñas triviales o fáciles de adivinar.
      */
+    const strongPassword =
+      password.length >= 15 &&
+      /[A-Z]/.test(password) &&
+      /[a-z]/.test(password) &&
+      /\d/.test(password) &&
+      /[^A-Za-z0-9]/.test(password);
 
-    if (password.length < 12) {
+    if (!strongPassword) {
       setError(
-        "La contraseña debe tener al menos 12 caracteres."
+        "La contraseña debe tener al menos 15 caracteres e incluir mayúsculas, minúsculas, números y símbolos."
       );
+      return;
+    }
 
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (
+      normalizedEmail.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizedEmail) ||
+      normalizedEmail.includes("..")
+    ) {
+      setError("Introduce un correo electrónico válido.");
       return;
     }
 
@@ -156,8 +176,6 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-
-    const normalizedEmail = email.trim().toLowerCase();
 
     /*
      * ==========================================================

@@ -278,8 +278,13 @@ export async function POST(
       );
     }
 
-    const body =
-      (await request.json()) as ProgressBody;
+    let body: ProgressBody;
+
+    try {
+      body = (await request.json()) as ProgressBody;
+    } catch {
+      return NextResponse.json({ success: false, error: "El cuerpo de la solicitud no es válido." }, { status: 400 });
+    }
 
     const {
       attempt_id,
@@ -306,7 +311,7 @@ export async function POST(
       );
     }
 
-    if (current_question >= 1000) {
+    if (current_question >= 500) {
       return NextResponse.json(
         { success: false, error: "La pregunta actual no es válida." },
         { status: 400 }
@@ -441,7 +446,6 @@ export async function POST(
           {
             success: false,
             error:
-              createAttemptError?.message ||
               "No fue posible crear el intento.",
           },
           { status: 500 }

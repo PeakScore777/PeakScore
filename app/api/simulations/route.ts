@@ -172,7 +172,7 @@ export async function POST(request: Request) {
        BUSCAR PREGUNTAS
     ====================================================== */
 
-    let query = supabase
+    let query = adminSupabase
       .from("questions")
       .select(
         "id, subject, difficulty, is_active"

@@ -54,6 +54,27 @@ export default function RegisterPage() {
 
   /*
    * ============================================================
+   * RECUPERAR REGISTRO PENDIENTE DESPUÉS DE F5
+   * ============================================================
+   *
+   * Nunca almacenamos la contraseña. Solo conservamos el correo
+   * para que un registro ya creado continúe en verificación.
+   */
+  useEffect(() => {
+    const pendingEmail = window.sessionStorage.getItem(
+      "peakscore_pending_signup_email"
+    );
+
+    if (pendingEmail) {
+      setVerificationEmail(pendingEmail);
+      setVerificationMode(true);
+      setVerificationSeconds(600);
+      setResendCooldown(0);
+    }
+  }, []);
+
+  /*
+   * ============================================================
    * CONTADOR DE VERIFICACIÓN
    * ============================================================
    */
@@ -208,13 +229,50 @@ export default function RegisterPage() {
 
     if (registerError) {
       console.error(
-        "[PeakScore] Error creando cuenta:",
-        registerError
+        "[PeakScore] Registro rechazado por Auth.",
+        {
+          errorCode: registerError.code ?? "UNKNOWN",
+          status: registerError.status ?? "UNKNOWN",
+        }
       );
 
       setLoading(false);
 
-      setError("No fue posible crear la cuenta. Verifica los datos e inténtalo nuevamente.");
+      /*
+       * Si Auth ya creó el usuario pero falló la entrega del correo,
+       * NO volvemos a ejecutar signUp(). Continuamos con el estado
+       * pendiente y permitimos reintentar el envío cuando proceda.
+       */
+      if (data.user && !data.session) {
+        window.sessionStorage.setItem(
+          "peakscore_pending_signup_email",
+          normalizedEmail
+        );
+        setVerificationEmail(normalizedEmail);
+        setVerificationCode("");
+        setVerificationError(
+          registerError.code === "over_email_send_rate_limit"
+            ? "La cuenta puede haberse creado, pero el correo alcanzó un límite temporal. No vuelvas a registrarte; intenta reenviar el código más tarde."
+            : "La cuenta puede haber quedado pendiente de verificación. Revisa tu correo o solicita un nuevo código."
+        );
+        setVerificationSeconds(600);
+        setResendCooldown(
+          registerError.code === "over_email_send_rate_limit"
+            ? 60
+            : 0
+        );
+        setCaptchaToken("");
+        setCaptchaKey((previous) => previous + 1);
+        setVerificationMode(true);
+        setPassword("");
+        return;
+      }
+
+      setError(
+        registerError.code === "over_email_send_rate_limit"
+          ? "El servicio de correo alcanzó un límite temporal. Espera unos minutos antes de volver a intentarlo."
+          : "No fue posible crear la cuenta. Verifica los datos e inténtalo nuevamente."
+      );
 
       return;
     }
@@ -256,6 +314,11 @@ export default function RegisterPage() {
     // Montamos un Turnstile nuevo para la pantalla de verificación.
     setCaptchaToken("");
     setCaptchaKey((previous) => previous + 1);
+
+    window.sessionStorage.setItem(
+      "peakscore_pending_signup_email",
+      normalizedEmail
+    );
 
     setVerificationMode(true);
 
@@ -358,6 +421,9 @@ export default function RegisterPage() {
      */
 
     await supabase.auth.signOut();
+    window.sessionStorage.removeItem(
+      "peakscore_pending_signup_email"
+    );
 
     setVerificationLoading(false);
 
@@ -429,8 +495,11 @@ export default function RegisterPage() {
 
     if (resendError) {
       console.error(
-        "[PeakScore] Error reenviando código:",
-        resendError
+        "[PeakScore] Error reenviando código.",
+        {
+          errorCode: resendError.code ?? "UNKNOWN",
+          status: resendError.status ?? "UNKNOWN",
+        }
       );
 
       setVerificationLoading(false);
@@ -476,6 +545,9 @@ export default function RegisterPage() {
    */
 
   const handleBackToRegister = () => {
+    window.sessionStorage.removeItem(
+      "peakscore_pending_signup_email"
+    );
     setVerificationMode(false);
     setVerificationCode("");
     setCaptchaToken("");

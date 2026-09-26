@@ -43,20 +43,62 @@ function shuffle<T>(items: T[]): T[] {
 
 export async function POST(request: Request) {
   try {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  /* =====================================================
+     AUTENTICACIÓN PRIMERO
+  ====================================================== */
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Debes iniciar sesión para crear un simulacro.",
+      },
+      { status: 401 }
+    );
+  }
+
+  /* =====================================================
+     CLIENTE PRIVILEGIADO SOLO DESPUÉS DE AUTENTICAR
+  ====================================================== */
+
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   if (!serviceRoleKey || !supabaseUrl) {
+    console.error(
+      "[PeakScore] Configuración interna de Supabase incompleta."
+    );
+
     return NextResponse.json(
-      { success: false, error: "Configuración del servidor incompleta." },
+      {
+        success: false,
+        error:
+          "No fue posible completar la solicitud.",
+      },
       { status: 500 }
     );
   }
 
-  const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
+  const adminSupabase = createSupabaseClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    }
+  );
 
     /* =====================================================
        LEER BODY
@@ -150,32 +192,6 @@ export async function POST(request: Request) {
       );
     }
 
-    /* =====================================================
-       SUPABASE
-    ====================================================== */
-
-    const supabase = await createClient();
-
-    /* =====================================================
-       USUARIO ACTUAL
-    ====================================================== */
-
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (userError || !user) {
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "Debes iniciar sesión para crear un simulacro.",
-        },
-        { status: 401 }
-      );
-    }
-
     const { data: rateAllowed, error: rateError } = await supabase.rpc("consume_api_rate_limit", {
       p_bucket: "create-simulation",
       p_limit: 20,
@@ -183,7 +199,10 @@ export async function POST(request: Request) {
     });
 
     if (rateError) {
-      console.error("[PeakScore] Error verificando límite de simulacros:", rateError);
+      console.error(
+        "[PeakScore] Falló la validación del límite de simulacros.",
+        { code: rateError.code ?? "UNKNOWN" }
+      );
       return NextResponse.json(
         { success: false, error: "No fue posible validar el límite de creación." },
         { status: 503 }
@@ -227,8 +246,8 @@ export async function POST(request: Request) {
 
     if (questionsError) {
       console.error(
-        "[PeakScore] Error obteniendo preguntas:",
-        questionsError
+        "[PeakScore] Falló la consulta interna de preguntas.",
+        { code: questionsError.code ?? "UNKNOWN" }
       );
 
       return NextResponse.json(
@@ -306,8 +325,8 @@ export async function POST(request: Request) {
       !simulation
     ) {
       console.error(
-        "[PeakScore] Error creando simulacro:",
-        simulationError
+        "[PeakScore] Falló la creación interna del simulacro.",
+        { code: simulationError?.code ?? "UNKNOWN" }
       );
 
       return NextResponse.json(
@@ -345,8 +364,8 @@ export async function POST(request: Request) {
 
     if (relationsError) {
       console.error(
-        "[PeakScore] Error guardando preguntas:",
-        relationsError
+        "[PeakScore] Falló el guardado interno de preguntas.",
+        { code: relationsError.code ?? "UNKNOWN" }
       );
 
       await adminSupabase
@@ -392,12 +411,7 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
-  } catch (error) {
-    console.error(
-      "[PeakScore] ERROR CREANDO SIMULACRO:",
-      error
-    );
-
+  } catch {
     return NextResponse.json(
       {
         success: false,

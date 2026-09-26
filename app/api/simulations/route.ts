@@ -176,6 +176,27 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: rateAllowed, error: rateError } = await supabase.rpc("consume_api_rate_limit", {
+      p_bucket: "create-simulation",
+      p_limit: 20,
+      p_window_seconds: 3600,
+    });
+
+    if (rateError) {
+      console.error("[PeakScore] Error verificando límite de simulacros:", rateError);
+      return NextResponse.json(
+        { success: false, error: "No fue posible validar el límite de creación." },
+        { status: 503 }
+      );
+    }
+
+    if (rateAllowed !== true) {
+      return NextResponse.json(
+        { success: false, error: "Has alcanzado el límite temporal de creación de simulacros. Inténtalo más tarde." },
+        { status: 429 }
+      );
+    }
+
     /* =====================================================
        BUSCAR PREGUNTAS
     ====================================================== */

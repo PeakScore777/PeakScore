@@ -57,6 +57,34 @@ export async function GET(
       );
     }
 
+    const { data: simulation, error: simulationError } = await supabase
+      .from("simulations")
+      .select("id, created_by, total_questions, duration")
+      .eq("id", simulationId)
+      .maybeSingle();
+
+    if (simulationError) {
+      console.error("[PeakScore] Error verificando simulacro:", simulationError);
+      return NextResponse.json(
+        { success: false, error: "No fue posible verificar el simulacro." },
+        { status: 500 }
+      );
+    }
+
+    if (!simulation) {
+      return NextResponse.json(
+        { success: false, error: "El simulacro no existe." },
+        { status: 404 }
+      );
+    }
+
+    if (simulation.created_by !== user.id) {
+      return NextResponse.json(
+        { success: false, error: "No tienes acceso a este simulacro." },
+        { status: 403 }
+      );
+    }
+
     /* ========================================================
        BUSCAR ÚLTIMO INTENTO EN PROGRESO
     ======================================================== */
@@ -454,16 +482,44 @@ export async function POST(
       answers.filter(
         (answer) =>
           answer &&
-          typeof answer.question_id ===
-            "string" &&
-          (
-            answer.selected_answer ===
-              null ||
+          typeof answer.question_id === "string" &&
+          (answer.selected_answer === null ||
             ["A", "B", "C", "D"].includes(
-              answer.selected_answer
-            )
-          )
+              String(answer.selected_answer).trim().toUpperCase()
+            ))
       );
+
+    if (validAnswers.length > simulation.total_questions) {
+      return NextResponse.json(
+        { success: false, error: "Se enviaron demasiadas respuestas." },
+        { status: 400 }
+      );
+    }
+
+    const questionIds = validAnswers.map((answer) => answer.question_id);
+    const uniqueQuestionIds = new Set(questionIds);
+
+    if (uniqueQuestionIds.size !== questionIds.length) {
+      return NextResponse.json(
+        { success: false, error: "Se enviaron respuestas duplicadas." },
+        { status: 400 }
+      );
+    }
+
+    if (questionIds.length > 0) {
+      const { data: validRelations, error: relationsError } = await supabase
+        .from("simulation_questions")
+        .select("question_id")
+        .eq("simulation_id", simulationId)
+        .in("question_id", questionIds);
+
+      if (relationsError || (validRelations?.length ?? 0) !== questionIds.length) {
+        return NextResponse.json(
+          { success: false, error: "Una o más preguntas no pertenecen a este simulacro." },
+          { status: 400 }
+        );
+      }
+    }
 
     /* ========================================================
        PREPARAR RESPUESTAS

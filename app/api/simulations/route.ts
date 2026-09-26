@@ -262,7 +262,7 @@ export async function POST(request: Request) {
     ====================================================== */
 
     const { data: simulation, error: simulationError } =
-      await supabase
+      await adminSupabase
         .from("simulations")
         .insert({
           title: `Práctica de ${subject}`,
@@ -314,7 +314,7 @@ export async function POST(request: Request) {
 
     const {
       error: relationsError,
-    } = await supabase
+    } = await adminSupabase
       .from("simulation_questions")
       .insert(simulationQuestions);
 
@@ -328,7 +328,7 @@ export async function POST(request: Request) {
         relationsError
       );
 
-      await supabase
+      await adminSupabase
         .from("simulations")
         .delete()
         .eq("id", simulation.id);

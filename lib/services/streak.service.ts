@@ -16,8 +16,10 @@ export async function updateUserStreak(
 
   if (error) {
     console.error(
-      "[PeakScore] Error actualizando racha:",
-      error
+      "[PeakScore] Error actualizando racha.",
+      {
+        errorCode: error.code ?? "UNKNOWN",
+      }
     );
 
     return 0;

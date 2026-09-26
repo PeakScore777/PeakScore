@@ -62,8 +62,16 @@ export async function POST(request: Request) {
        LEER BODY
     ====================================================== */
 
-    const body =
-      (await request.json()) as CreateSimulationBody;
+    let body: CreateSimulationBody;
+
+    try {
+      body = (await request.json()) as CreateSimulationBody;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "El cuerpo de la solicitud no es válido." },
+        { status: 400 }
+      );
+    }
 
     const {
       type,
@@ -269,7 +277,7 @@ export async function POST(request: Request) {
           color: "bg-blue-600",
           created_by: user.id,
         })
-        .select("*")
+        .select("id, title, type, total_questions, description, subject, duration, difficulty, color, created_by, created_at")
         .single();
 
     if (

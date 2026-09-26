@@ -530,24 +530,20 @@ export async function POST(
       "[PeakScore] Progreso guardado:",
       {
         simulationId,
-        attemptId: attempt.id,
-        currentQuestion:
-          current_question,
-        timeLeft: time_left,
-        answered:
-          simulationAnswers.length,
+        attemptId: progress.attempt_id,
+        currentQuestion: progress.current_question,
+        timeLeft: progress.time_left,
+        answered: progress.answered,
       }
     );
 
     return NextResponse.json({
       success: true,
       status: "in_progress",
-      attempt_id: attempt.id,
-      current_question:
-        current_question,
-      time_left: time_left,
-      answered:
-        simulationAnswers.length,
+      attempt_id: progress.attempt_id,
+      current_question: progress.current_question,
+      time_left: progress.time_left,
+      answered: progress.answered,
     });
   } catch (error) {
     console.error(

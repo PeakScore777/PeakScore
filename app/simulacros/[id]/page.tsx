@@ -525,76 +525,10 @@ export default function ExamPage() {
   ]);
 
   /* =====================================================
-     CALCULAR RESULTADO
-  ====================================================== */
-
-  const calculateScore = (): ExamResult => {
-    let correctAnswers = 0;
-    let incorrectAnswers = 0;
-    let unansweredAnswers = 0;
-
-    questions.forEach(
-      (question, index) => {
-        const selectedAnswer =
-          answers[index];
-
-        if (
-          selectedAnswer ===
-          undefined
-        ) {
-          unansweredAnswers++;
-          return;
-        }
-
-        const selectedLetter =
-          String.fromCharCode(
-            64 + selectedAnswer
-          );
-
-        const correctAnswer =
-          question.correct_answer
-            ?.trim()
-            .toUpperCase();
-
-        if (
-          selectedLetter.toUpperCase() ===
-          correctAnswer
-        ) {
-          correctAnswers++;
-        } else {
-          incorrectAnswers++;
-        }
-      }
-    );
-
-    const totalQuestions =
-      questions.length;
-
-    const percentage =
-      totalQuestions > 0
-        ? Math.round(
-            (correctAnswers /
-              totalQuestions) *
-              100
-          )
-        : 0;
-
-    return {
-      correctAnswers,
-      incorrectAnswers,
-      unansweredAnswers,
-      totalQuestions,
-      percentage,
-    };
-  };
-
-  /* =====================================================
      GUARDAR INTENTO DEFINITIVO
   ====================================================== */
 
-  const saveAttempt = async (
-    finalResult: ExamResult
-  ) => {
+  const saveAttempt = async () => {
     try {
       setSavingAttempt(true);
 
@@ -725,13 +659,8 @@ export default function ExamPage() {
     finishHandledRef.current =
       true;
 
-    const finalResult =
-      calculateScore();
-
     try {
-      await saveAttempt(
-        finalResult
-      );
+      await saveAttempt();
 
       /* ================================================
          EL SIMULACRO YA ESTÁ FINALIZADO

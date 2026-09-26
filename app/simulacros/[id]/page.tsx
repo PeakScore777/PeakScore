@@ -19,11 +19,7 @@ import {
 import QuestionPalette from "@/components/simulacros/QuestionPalette";
 import ExamResults from "@/components/simulacros/ExamResults";
 
-import {
-  getSimulationById,
-  getSimulationQuestions,
-  type Simulation,
-} from "@/lib/services/simulation.service";
+import { type Simulation } from "@/lib/services/simulation.service";
 
 import type { Question } from "@/lib/services/question.service";
 
@@ -226,13 +222,21 @@ export default function ExamPage() {
       try {
         setLoading(true);
 
-        const [
-          simulationData,
-          questionData,
-        ] = await Promise.all([
-          getSimulationById(simulationId),
-          getSimulationQuestions(simulationId),
-        ]);
+        const examResponse = await fetch(
+          `/api/simulations/${simulationId}/questions`,
+          { cache: "no-store" }
+        );
+
+        const examData = await examResponse.json();
+
+        if (!examResponse.ok || !examData.success) {
+          throw new Error(
+            examData.error || "No fue posible cargar el simulacro."
+          );
+        }
+
+        const simulationData = examData.simulation as Simulation;
+        const questionData = examData.questions as Question[];
 
         setSimulation(simulationData);
         setQuestions(questionData);

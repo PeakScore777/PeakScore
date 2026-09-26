@@ -207,8 +207,18 @@ async function getProfiles(
     .limit(100);
 
   if (error) {
+    console.error(
+      "[PeakScore] No se pudieron obtener referencias.",
+      {
+        errorName:
+          error instanceof Error
+            ? error.name
+            : "UnknownError",
+      }
+    );
+
     throw new Error(
-      `No se pudieron obtener referencias: ${error.message}`
+      "No se pudieron obtener referencias."
     );
   }
 
@@ -387,8 +397,13 @@ async function generateBlock(
         );
       } catch (error) {
         console.error(
-          "[PeakScore] Error parseando JSON de Gemini:",
-          error
+          "[PeakScore] Gemini devolvió JSON inválido.",
+          {
+            errorName:
+              error instanceof Error
+                ? error.name
+                : "UnknownError",
+          }
         );
 
         throw new Error(
@@ -451,14 +466,14 @@ async function generateBlock(
     } catch (error) {
       lastError = error;
 
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String(error);
-
       console.error(
-        `[PeakScore] Error generando bloque. Intento ${attempt}/${MAX_ATTEMPTS}:`,
-        error
+        `[PeakScore] Error generando bloque. Intento ${attempt}/${MAX_ATTEMPTS}.`,
+        {
+          errorName:
+            error instanceof Error
+              ? error.name
+              : "UnknownError",
+        }
       );
 
       if (attempt >= MAX_ATTEMPTS) {
@@ -599,8 +614,18 @@ export async function POST(
 
     if (profileError) {
       console.error(
-        "[PeakScore] Error verificando rol:",
-        profileError
+        "[PeakScore] Error verificando rol.",
+        {
+          errorCode:
+            typeof profileError === "object" &&
+            profileError !== null &&
+            "code" in profileError
+              ? String(
+                  (profileError as { code?: unknown }).code ??
+                    "UNKNOWN"
+                )
+              : "UNKNOWN",
+        }
       );
 
       return NextResponse.json(
@@ -636,7 +661,20 @@ export async function POST(
     });
 
     if (rateError) {
-      console.error("[PeakScore] Error verificando límite de generación:", rateError);
+      console.error(
+        "[PeakScore] Error verificando límite de generación.",
+        {
+          errorCode:
+            typeof rateError === "object" &&
+            rateError !== null &&
+            "code" in rateError
+              ? String(
+                  (rateError as { code?: unknown }).code ??
+                    "UNKNOWN"
+                )
+              : "UNKNOWN",
+        }
+      );
       return NextResponse.json(
         { success: false, error: "No fue posible validar el límite de generación." },
         { status: 503 }
@@ -1006,8 +1044,13 @@ export async function POST(
     });
   } catch (error) {
     console.error(
-      "[PeakScore] Error en generación masiva:",
-      error
+      "[PeakScore] Error en generación masiva.",
+      {
+        errorName:
+          error instanceof Error
+            ? error.name
+            : "UnknownError",
+      }
     );
 
     return NextResponse.json(

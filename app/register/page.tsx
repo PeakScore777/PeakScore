@@ -196,7 +196,7 @@ export default function RegisterPage() {
 
       setLoading(false);
 
-      setError(registerError.message);
+      setError("No fue posible crear la cuenta. Verifica los datos e inténtalo nuevamente.");
 
       return;
     }
@@ -216,10 +216,6 @@ export default function RegisterPage() {
      */
 
     if (data.user) {
-      console.log(
-        "[PeakScore] Usuario creado correctamente:",
-        data.user.id
-      );
     }
 
     /*
@@ -316,11 +312,6 @@ export default function RegisterPage() {
      */
 
     if (verifyError) {
-      console.error(
-        "[PeakScore] Error verificando correo:",
-        verifyError
-      );
-
       setVerificationLoading(false);
 
       setVerificationError(

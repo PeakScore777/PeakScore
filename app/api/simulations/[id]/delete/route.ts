@@ -64,7 +64,6 @@ export async function DELETE(
         {
           success: false,
           error:
-            error.message ||
             "No fue posible eliminar el simulacro.",
         },
         { status: 500 }

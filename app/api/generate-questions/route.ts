@@ -7829,8 +7829,22 @@ export async function POST(
      */
 
     console.error(
-      "[PeakScore] Error interno en generación de preguntas:",
-      error
+      "[PeakScore] Error interno en generación de preguntas.",
+      {
+        errorName:
+          error instanceof Error
+            ? error.name
+            : "UnknownError",
+        errorCode:
+          typeof error === "object" &&
+          error !== null &&
+          "code" in error
+            ? String(
+                (error as { code?: unknown }).code ??
+                  "UNKNOWN"
+              )
+            : "UNKNOWN",
+      }
     );
 
     /*

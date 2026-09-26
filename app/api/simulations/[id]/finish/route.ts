@@ -168,7 +168,12 @@ export async function POST(
     if (finishError || !result) {
       console.error(
         "[PeakScore] Error finalizando simulacro atómicamente:",
-        finishError
+        {
+          simulationId,
+          userId: user.id,
+          errorCode: finishError?.code ?? "UNKNOWN",
+          errorMessage: finishError?.message ?? "UNKNOWN",
+        }
       );
 
       return getRpcErrorResponse(finishError?.message ?? "");
@@ -191,12 +196,7 @@ export async function POST(
       },
       { status: 200 }
     );
-  } catch (error) {
-    console.error(
-      "[PeakScore] ERROR FINALIZANDO SIMULACRO:",
-      error
-    );
-
+  } catch {
     return NextResponse.json(
       { success: false, error: "Error interno del servidor." },
       { status: 500 }

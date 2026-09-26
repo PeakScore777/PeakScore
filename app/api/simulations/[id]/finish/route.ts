@@ -45,9 +45,14 @@ export async function POST(
     const body =
       (await request.json()) as FinishSimulationBody;
 
-    const answers = Array.isArray(body.answers)
-      ? body.answers
-      : [];
+    if (!body || !Array.isArray(body.answers) || body.answers.length > 500) {
+      return NextResponse.json(
+        { success: false, error: "Las respuestas enviadas no son válidas." },
+        { status: 400 }
+      );
+    }
+
+    const answers = body.answers;
 
     /* =====================================================
        SUPABASE
@@ -182,6 +187,13 @@ export async function POST(
     const questionList =
       (questions ?? []) as Question[];
 
+    if (questionList.length !== questionIds.length) {
+      return NextResponse.json(
+        { success: false, error: "Las preguntas del simulacro no pudieron verificarse." },
+        { status: 409 }
+      );
+    }
+
     const questionsMap = new Map(
       questionList.map((question) => [
         question.id,
@@ -198,7 +210,12 @@ export async function POST(
         .filter(
           (answer) =>
             answer &&
-            typeof answer.question_id === "string"
+            typeof answer.question_id === "string" &&
+            questionIds.includes(answer.question_id) &&
+            (answer.selected_answer === null ||
+              ["A", "B", "C", "D"].includes(
+                String(answer.selected_answer).trim().toUpperCase()
+              ))
         )
         .map((answer) => [
           answer.question_id,
@@ -363,7 +380,6 @@ export async function POST(
           {
             success: false,
             error:
-              answersError.message ||
               "No fue posible guardar las respuestas.",
           },
           { status: 500 }

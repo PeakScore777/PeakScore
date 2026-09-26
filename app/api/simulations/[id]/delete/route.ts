@@ -55,10 +55,7 @@ export async function DELETE(
     );
 
     if (error) {
-      console.error(
-        "[PeakScore] Error eliminando simulacro:",
-        error
-      );
+      console.error("[PeakScore] Error eliminando simulacro.", { errorCode: error.code ?? "UNKNOWN" });
 
       return NextResponse.json(
         {
@@ -80,10 +77,7 @@ export async function DELETE(
         "Simulacro eliminado correctamente.",
     });
   } catch (error) {
-    console.error(
-      "[PeakScore] ERROR ELIMINANDO SIMULACRO:",
-      error
-    );
+    console.error("[PeakScore] Error interno eliminando simulacro.", { errorName: error instanceof Error ? error.name : "UnknownError" });
 
     return NextResponse.json(
       {

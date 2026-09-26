@@ -76,11 +76,6 @@ export default function LoginPage() {
       });
 
     if (signInError) {
-      console.error(
-        "[PeakScore] Error iniciando sesión:",
-        signInError
-      );
-
       setCaptchaToken("");
       setCaptchaKey((previous) => previous + 1);
 

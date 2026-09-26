@@ -578,8 +578,8 @@ export default function ExamPage() {
                 "application/json",
             },
             body: JSON.stringify({
-              answers:
-                formattedAnswers,
+              attempt_id: serverAttemptId,
+              answers: formattedAnswers,
             }),
           }
         );

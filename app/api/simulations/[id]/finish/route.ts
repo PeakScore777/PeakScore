@@ -90,7 +90,7 @@ export async function POST(
     } = await supabase
       .from("simulations")
       .select(
-        "id, title, type, total_questions, subject, duration"
+        "id, title, type, total_questions, subject, duration, created_by"
       )
       .eq("id", simulationId)
       .single();
@@ -107,6 +107,14 @@ export async function POST(
           error: "El simulacro no existe.",
         },
         { status: 404 }
+      );
+    }
+
+    // El usuario solo puede finalizar un simulacro que le pertenece.
+    if (simulation.created_by !== user.id) {
+      return NextResponse.json(
+        { success: false, error: "No tienes acceso a este simulacro." },
+        { status: 403 }
       );
     }
 

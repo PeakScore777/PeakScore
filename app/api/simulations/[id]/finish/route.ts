@@ -187,7 +187,7 @@ export async function POST(
     const {
       data: questions,
       error: questionsError,
-    } = await supabase
+    } = await adminSupabase
       .from("questions")
       .select("id, correct_answer")
       .in("id", questionIds);

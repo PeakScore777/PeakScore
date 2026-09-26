@@ -1,3 +1,4 @@
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -42,6 +43,21 @@ function shuffle<T>(items: T[]): T[] {
 
 export async function POST(request: Request) {
   try {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (!serviceRoleKey || !supabaseUrl) {
+    return NextResponse.json(
+      { success: false, error: "Configuración del servidor incompleta." },
+      { status: 500 }
+    );
+  }
+
+  const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+
     /* =====================================================
        LEER BODY
     ====================================================== */

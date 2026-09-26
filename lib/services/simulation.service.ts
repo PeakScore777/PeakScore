@@ -101,10 +101,14 @@ export async function getSimulationQuestions(
     (item) => item.question_id
   );
 
+  // Solo exponemos al navegador los campos necesarios para renderizar
+  // la pregunta. Nunca enviamos correct_answer ni explanation durante el examen.
   const { data: questions, error: questionsError } =
     await supabase
       .from("questions")
-      .select("*")
+      .select(
+        "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at"
+      )
       .in("id", questionIds);
 
   if (questionsError) {

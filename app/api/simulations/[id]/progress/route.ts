@@ -78,7 +78,7 @@ export async function GET(
       .maybeSingle();
 
     if (simulationError) {
-      console.error("[PeakScore] Error verificando simulacro:", simulationError);
+      console.error("[PeakScore] Error verificando simulacro.", { errorCode: simulationError.code ?? "UNKNOWN" });
       return NextResponse.json(
         { success: false, error: "No fue posible verificar el simulacro." },
         { status: 500 }
@@ -118,10 +118,7 @@ export async function GET(
       .limit(1);
 
     if (inProgressError) {
-      console.error(
-        "[PeakScore] Error buscando intento en progreso:",
-        inProgressError
-      );
+      console.error("[PeakScore] Error buscando intento en progreso.", { errorCode: inProgressError.code ?? "UNKNOWN" });
 
       return NextResponse.json(
         {
@@ -154,10 +151,7 @@ export async function GET(
       .limit(1);
 
     if (completedError) {
-      console.error(
-        "[PeakScore] Error buscando intento finalizado:",
-        completedError
-      );
+      console.error("[PeakScore] Error buscando intento finalizado.", { errorCode: completedError.code ?? "UNKNOWN" });
 
       return NextResponse.json(
         {
@@ -208,10 +202,7 @@ export async function GET(
       );
 
     if (answersError) {
-      console.error(
-        "[PeakScore] Error obteniendo respuestas:",
-        answersError
-      );
+      console.error("[PeakScore] Error obteniendo respuestas.", { errorCode: answersError.code ?? "UNKNOWN" });
 
       return NextResponse.json(
         {
@@ -253,10 +244,7 @@ export async function GET(
         completedAttempt ?? null,
     });
   } catch (error) {
-    console.error(
-      "[PeakScore] ERROR OBTENIENDO PROGRESO:",
-      error
-    );
+    console.error("[PeakScore] Error interno obteniendo progreso.", { errorName: error instanceof Error ? error.name : "UnknownError" });
 
     return NextResponse.json(
       {
@@ -508,10 +496,7 @@ export async function POST(
     );
 
     if (progressError || !progress) {
-      console.error(
-        "[PeakScore] Error guardando progreso atómicamente:",
-        progressError
-      );
+      console.error("[PeakScore] Error guardando progreso atómicamente.", { errorCode: progressError?.code ?? "UNKNOWN" });
 
       return NextResponse.json(
         {

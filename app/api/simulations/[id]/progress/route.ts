@@ -144,7 +144,7 @@ export async function GET(
       error: completedError,
     } = await supabase
       .from("simulation_attempts")
-      .select("*")
+      .select("id, user_id, simulation_id, started_at, completed_at, score, correct_answers, incorrect_answers, unanswered_answers, current_question, time_left")
       .eq("user_id", user.id)
       .eq("simulation_id", simulationId)
       .not("completed_at", "is", null)
@@ -475,6 +475,14 @@ export async function POST(
       }
     }
 
+    const validAnswers: ProgressAnswer[] = answers.map((answer) => ({
+      question_id: answer.question_id,
+      selected_answer:
+        answer.selected_answer === null
+          ? null
+          : String(answer.selected_answer).trim().toUpperCase(),
+    }));
+
     /* ========================================================
        BUSCAR INTENTO EXISTENTE
     ======================================================== */
@@ -487,7 +495,7 @@ export async function POST(
         error: attemptError,
       } = await supabase
         .from("simulation_attempts")
-        .select("*")
+        .select("id, user_id, simulation_id, started_at, completed_at, score, correct_answers, incorrect_answers, unanswered_answers, current_question, time_left")
         .eq("id", attempt_id)
         .eq("user_id", user.id)
         .eq("simulation_id", simulationId)

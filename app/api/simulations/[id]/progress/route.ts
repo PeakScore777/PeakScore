@@ -306,6 +306,13 @@ export async function POST(
       );
     }
 
+    if (current_question >= 1000) {
+      return NextResponse.json(
+        { success: false, error: "La pregunta actual no es válida." },
+        { status: 400 }
+      );
+    }
+
     /* ========================================================
        VALIDAR TIEMPO
     ======================================================== */

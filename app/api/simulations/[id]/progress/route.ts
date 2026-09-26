@@ -13,6 +13,18 @@ interface ProgressBody {
   answers: ProgressAnswer[];
 }
 
+interface SimulationAttempt {
+  id: string;
+  user_id: string;
+  simulation_id: string;
+  started_at: string;
+  completed_at: string | null;
+  score: number;
+  correct_answers: number;
+  incorrect_answers: number;
+  unanswered_answers: number;
+}
+
 /* ============================================================
    GET — OBTENER PROGRESO DEL SIMULACRO
 ============================================================ */
@@ -94,7 +106,7 @@ export async function GET(
       error: inProgressError,
     } = await supabase
       .from("simulation_attempts")
-      .select("*")
+      .select("id, user_id, simulation_id, started_at, completed_at, score, correct_answers, incorrect_answers, unanswered_answers")
       .eq("user_id", user.id)
       .eq("simulation_id", simulationId)
       .is("completed_at", null)
@@ -371,11 +383,101 @@ export async function POST(
       );
     }
 
+    const { data: simulation, error: simulationError } = await supabase
+      .from("simulations")
+      .select("id, created_by, total_questions, duration")
+      .eq("id", simulationId)
+      .maybeSingle();
+
+    if (simulationError) {
+      console.error("[PeakScore] Error verificando simulacro:", simulationError);
+      return NextResponse.json(
+        { success: false, error: "No fue posible verificar el simulacro." },
+        { status: 500 }
+      );
+    }
+
+    if (!simulation) {
+      return NextResponse.json(
+        { success: false, error: "El simulacro no existe." },
+        { status: 404 }
+      );
+    }
+
+    if (simulation.created_by !== user.id) {
+      return NextResponse.json(
+        { success: false, error: "No tienes acceso a este simulacro." },
+        { status: 403 }
+      );
+    }
+
+    if (current_question >= simulation.total_questions) {
+      return NextResponse.json(
+        { success: false, error: "La pregunta actual no es válida." },
+        { status: 400 }
+      );
+    }
+
+    const maxTime = Number(simulation.duration ?? 0) * 60;
+    if (maxTime > 0 && time_left > maxTime) {
+      return NextResponse.json(
+        { success: false, error: "El tiempo restante no es válido." },
+        { status: 400 }
+      );
+    }
+
+    if (answers.length > simulation.total_questions) {
+      return NextResponse.json(
+        { success: false, error: "Se enviaron demasiadas respuestas." },
+        { status: 400 }
+      );
+    }
+
+    const invalidAnswer = answers.some(
+      (answer) =>
+        !answer ||
+        typeof answer.question_id !== "string" ||
+        !(answer.selected_answer === null ||
+          ["A", "B", "C", "D"].includes(
+            String(answer.selected_answer).trim().toUpperCase()
+          ))
+    );
+
+    if (invalidAnswer) {
+      return NextResponse.json(
+        { success: false, error: "Una o más respuestas no son válidas." },
+        { status: 400 }
+      );
+    }
+
+    const answerIds = answers.map((answer) => answer.question_id);
+    if (new Set(answerIds).size !== answerIds.length) {
+      return NextResponse.json(
+        { success: false, error: "Se enviaron respuestas duplicadas." },
+        { status: 400 }
+      );
+    }
+
+    if (answerIds.length > 0) {
+      const { data: relations, error: relationsError } = await supabase
+        .from("simulation_questions")
+        .select("question_id")
+        .eq("simulation_id", simulationId)
+        .in("question_id", answerIds);
+
+      if (relationsError || (relations?.length ?? 0) !== answerIds.length) {
+        return NextResponse.json(
+          { success: false, error: "Una o más preguntas no pertenecen a este simulacro." },
+          { status: 400 }
+        );
+      }
+    }
+
     /* ========================================================
        BUSCAR INTENTO EXISTENTE
     ======================================================== */
 
-    let attempt: any = null;
+    let attempt: SimulationAttempt | null = null;
 
     if (attempt_id) {
       const {

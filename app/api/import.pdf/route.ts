@@ -2487,6 +2487,27 @@ export async function POST(
       );
     }
 
+    const { data: rateAllowed, error: rateError } = await supabase.rpc("consume_api_rate_limit", {
+      p_bucket: "import-pdf",
+      p_limit: 2,
+      p_window_seconds: 3600,
+    });
+
+    if (rateError) {
+      console.error("[PeakScore] Error verificando límite de importación:", rateError);
+      return NextResponse.json(
+        { success: false, error: "No fue posible validar el límite de importación." },
+        { status: 503 }
+      );
+    }
+
+    if (rateAllowed !== true) {
+      return NextResponse.json(
+        { success: false, error: "Has alcanzado el límite temporal de importaciones PDF. Inténtalo más tarde." },
+        { status: 429 }
+      );
+    }
+
     /* =====================================================
        5. FORM DATA
     ===================================================== */

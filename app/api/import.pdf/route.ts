@@ -1573,8 +1573,8 @@ ${extractedPdfText}
           result = JSON.parse(text);
         } catch {
           console.error(
-            "Respuesta inválida durante detección:",
-            text.slice(0, 2000)
+            "Respuesta inválida durante detección de preguntas.",
+            { outputLength: text.length }
           );
 
           throw new Error(
@@ -1770,8 +1770,8 @@ ${chunk}
         chunkResult = JSON.parse(text);
       } catch {
         console.warn(
-          `Groq devolvió JSON inválido en el fragmento ${index + 1}:`,
-          text.slice(0, 1000)
+          `Groq devolvió JSON inválido en el fragmento ${index + 1}.`,
+          { outputLength: text.length }
         );
 
         continue;
@@ -1819,8 +1819,8 @@ ${chunk}
       );
     } catch (error) {
       console.error(
-        `Groq falló analizando el fragmento ${index + 1}:`,
-        error
+        `Groq falló analizando el fragmento ${index + 1}.`,
+        { errorName: error instanceof Error ? error.name : "UnknownError" }
       );
     }
   }
@@ -1958,8 +1958,8 @@ ${batchText}
           result = JSON.parse(text);
         } catch {
           console.error(
-            "Respuesta inválida de Gemini:",
-            text.slice(0, 2000)
+            "Respuesta inválida de Gemini.",
+            { outputLength: text.length }
           );
 
           throw new Error(
@@ -1989,8 +1989,8 @@ ${batchText}
         };
       } catch (error) {
         console.error(
-          `Gemini error → modelo=${model} intento=${attempt}`,
-          getGeminiErrorMessage(error)
+          `Error de Gemini → modelo=${model} intento=${attempt}.`,
+          { errorName: error instanceof Error ? error.name : "UnknownError" }
         );
 
         if (
@@ -2097,8 +2097,8 @@ ${extractedPdfText}
     result = JSON.parse(text);
   } catch {
     console.error(
-      "Respuesta inválida de Groq:",
-      text.slice(0, 2000)
+      "Respuesta inválida de Groq.",
+      { outputLength: text.length }
     );
 
     throw new Error(
@@ -2443,8 +2443,8 @@ export async function POST(
 
     if (profileError) {
       console.error(
-        "Error verificando rol:",
-        profileError
+        "Error verificando rol.",
+        { errorCode: typeof profileError === "object" && profileError !== null && "code" in profileError ? String((profileError as {code?: unknown}).code ?? "UNKNOWN") : "UNKNOWN" }
       );
 
       return NextResponse.json(
@@ -2494,7 +2494,7 @@ export async function POST(
     });
 
     if (rateError) {
-      console.error("[PeakScore] Error verificando límite de importación:", rateError);
+      console.error("[PeakScore] Error verificando límite de importación.", { errorCode: typeof rateError === "object" && rateError !== null && "code" in rateError ? String((rateError as {code?: unknown}).code ?? "UNKNOWN") : "UNKNOWN" });
       return NextResponse.json(
         { success: false, error: "No fue posible validar el límite de importación." },
         { status: 503 }
@@ -3008,8 +3008,8 @@ export async function POST(
         detection.model;
     } catch (geminiError) {
       console.error(
-        "Gemini falló durante la detección. Intentando Groq:",
-        getGeminiErrorMessage(geminiError)
+        "Gemini falló durante la detección. Intentando Groq.",
+        { errorName: geminiError instanceof Error ? geminiError.name : "UnknownError" }
       );
 
       const detection =
@@ -3130,8 +3130,8 @@ export async function POST(
         }
 
         console.warn(
-          `Gemini falló en el lote ${batchIndex + 1}. Intentando fallback con Groq...`,
-          errorMessage
+          `Gemini falló en el lote ${batchIndex + 1}. Intentando fallback con Groq.`,
+          { errorName: error instanceof Error ? error.name : "UnknownError" }
         );
 
         const groqResponse =
@@ -3258,8 +3258,8 @@ export async function POST(
             getGeminiErrorMessage(error);
 
           console.warn(
-            `[Import PDF] Gemini falló recuperando preguntas faltantes del lote ${batchIndex + 1}. Intentando Groq...`,
-            errorMessage
+            `[Import PDF] Gemini falló recuperando preguntas faltantes del lote ${batchIndex + 1}. Intentando Groq.`,
+            { errorName: error instanceof Error ? error.name : "UnknownError" }
           );
 
           const groqRecovery =
@@ -3918,8 +3918,8 @@ export async function POST(
     });
   } catch (error) {
     console.error(
-      "ERROR IMPORTANDO PDF:",
-      getGeminiErrorMessage(error)
+      "ERROR IMPORTANDO PDF.",
+      { errorName: error instanceof Error ? error.name : "UnknownError" }
     );
 
     /* =====================================================
@@ -3948,8 +3948,8 @@ export async function POST(
         updateError
       ) {
         console.error(
-          "No se pudo marcar reference_source como error:",
-          updateError
+          "No se pudo marcar reference_source como error.",
+          { errorCode: typeof updateError === "object" && updateError !== null && "code" in updateError ? String((updateError as {code?: unknown}).code ?? "UNKNOWN") : "UNKNOWN" }
         );
       }
     }
@@ -3975,8 +3975,8 @@ export async function POST(
         storageError
       ) {
         console.error(
-          "No se pudo eliminar el PDF:",
-          storageError
+          "No se pudo eliminar el PDF.",
+          { errorCode: typeof storageError === "object" && storageError !== null && "code" in storageError ? String((storageError as {code?: unknown}).code ?? "UNKNOWN") : "UNKNOWN" }
         );
       }
     }

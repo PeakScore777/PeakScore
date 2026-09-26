@@ -10,21 +10,6 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-  if (!serviceRoleKey || !supabaseUrl) {
-    return NextResponse.json(
-      { success: false, error: "Configuración del servidor incompleta." },
-      { status: 500 }
-    );
-  }
-
-  const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-
     const { id: simulationId } = await context.params;
 
     if (!simulationId) {
@@ -34,12 +19,27 @@ export async function GET(
       );
     }
 
-    const supabase = await createClient();
+    if (userError || !user) {
+      return NextResponse.json(
+        { success: false, error: "Debes iniciar sesión." },
+        { status: 401 }
+      );
+    }
 
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+    if (!serviceRoleKey || !supabaseUrl) {
+      console.error("[PeakScore] Configuración de servidor incompleta.");
+      return NextResponse.json(
+        { success: false, error: "Error interno del servidor." },
+        { status: 500 }
+      );
+    }
+
+    const adminSupabase = createSupabaseClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
     if (userError || !user) {
       return NextResponse.json(
@@ -58,7 +58,7 @@ export async function GET(
         .maybeSingle();
 
     if (simulationError) {
-      console.error("[PeakScore] Error verificando simulacro:", simulationError);
+      console.error("[PeakScore] Error verificando simulacro.", { errorCode: simulationError.code ?? "UNKNOWN" });
       return NextResponse.json(
         { success: false, error: "No fue posible obtener el simulacro." },
         { status: 500 }
@@ -87,7 +87,7 @@ export async function GET(
         .order("question_order", { ascending: true });
 
     if (relationsError) {
-      console.error("[PeakScore] Error obteniendo relaciones:", relationsError);
+      console.error("[PeakScore] Error obteniendo relaciones.", { errorCode: relationsError.code ?? "UNKNOWN" });
       return NextResponse.json(
         { success: false, error: "No fue posible obtener las preguntas." },
         { status: 500 }
@@ -110,7 +110,7 @@ export async function GET(
         .in("id", questionIds);
 
     if (questionsError) {
-      console.error("[PeakScore] Error obteniendo preguntas:", questionsError);
+      console.error("[PeakScore] Error obteniendo preguntas.", { errorCode: questionsError.code ?? "UNKNOWN" });
       return NextResponse.json(
         { success: false, error: "No fue posible obtener las preguntas." },
         { status: 500 }
@@ -153,7 +153,7 @@ export async function GET(
       questions: orderedQuestions,
     });
   } catch (error) {
-    console.error("[PeakScore] ERROR OBTENIENDO EXAMEN:", error);
+    console.error("[PeakScore] Error interno obteniendo examen.", { errorName: error instanceof Error ? error.name : "UnknownError" });
     return NextResponse.json(
       { success: false, error: "Error interno del servidor." },
       { status: 500 }

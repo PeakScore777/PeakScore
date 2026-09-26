@@ -484,171 +484,42 @@ export async function POST(
     }));
 
     /* ========================================================
-       BUSCAR INTENTO EXISTENTE
+       GUARDADO ATÓMICO EN SUPABASE
+       El RPC valida propiedad, preguntas, tiempo y respuestas,
+       crea/bloquea el intento y reemplaza sus respuestas dentro
+       de una sola transacción.
     ======================================================== */
 
-    let attempt: SimulationAttempt | null = null;
+    const progressAnswers = validAnswers
+      .filter((answer) => answer.selected_answer !== null)
+      .map((answer) => ({
+        question_id: answer.question_id,
+        selected_answer: answer.selected_answer,
+      }));
 
-    if (attempt_id) {
-      const {
-        data: existingAttempt,
-        error: attemptError,
-      } = await supabase
-        .from("simulation_attempts")
-        .select("id, user_id, simulation_id, started_at, completed_at, score, correct_answers, incorrect_answers, unanswered_answers, current_question, time_left")
-        .eq("id", attempt_id)
-        .eq("user_id", user.id)
-        .eq("simulation_id", simulationId)
-        .is("completed_at", null)
-        .maybeSingle();
-
-      if (attemptError) {
-        console.error(
-          "[PeakScore] Error buscando intento:",
-          attemptError
-        );
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "No fue posible verificar el intento.",
-          },
-          { status: 500 }
-        );
+    const { data: progress, error: progressError } = await supabase.rpc(
+      "save_simulation_progress_atomic",
+      {
+        p_simulation_id: simulationId,
+        p_current_question: current_question,
+        p_time_left: Math.floor(time_left),
+        p_answers: progressAnswers,
       }
+    );
 
-      attempt = existingAttempt;
-    }
-
-    /* ========================================================
-       SI NO EXISTE, CREAR INTENTO
-    ======================================================== */
-
-    if (!attempt) {
-      const {
-        data: newAttempt,
-        error: createAttemptError,
-      } = await supabase
-        .from("simulation_attempts")
-        .insert({
-          user_id: user.id,
-          simulation_id: simulationId,
-          started_at:
-            new Date().toISOString(),
-          completed_at: null,
-          score: 0,
-          correct_answers: 0,
-          incorrect_answers: 0,
-          unanswered_answers: 0,
-        })
-        .select("id, user_id, simulation_id, started_at, completed_at, score, correct_answers, incorrect_answers, unanswered_answers, current_question, time_left")
-        .single();
-
-      if (
-        createAttemptError ||
-        !newAttempt
-      ) {
-        console.error(
-          "[PeakScore] Error creando intento:",
-          createAttemptError
-        );
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "No fue posible crear el intento.",
-          },
-          { status: 500 }
-        );
-      }
-
-      attempt = newAttempt;
-    }
-
-    /* ========================================================
-       ELIMINAR RESPUESTAS ANTERIORES
-    ======================================================== */
-
-    const {
-      error: deleteError,
-    } = await supabase
-      .from("simulation_answers")
-      .delete()
-      .eq(
-        "attempt_id",
-        attempt.id
-      );
-
-    if (deleteError) {
+    if (progressError || !progress) {
       console.error(
-        "[PeakScore] Error eliminando respuestas anteriores:",
-        deleteError
+        "[PeakScore] Error guardando progreso atómicamente:",
+        progressError
       );
 
       return NextResponse.json(
         {
           success: false,
-          error:
-            "No fue posible actualizar las respuestas.",
+          error: "No fue posible guardar el progreso.",
         },
         { status: 500 }
       );
-    }
-
-    /* ========================================================
-       PREPARAR RESPUESTAS
-    ======================================================== */
-
-    const simulationAnswers =
-      validAnswers
-        .filter(
-          (answer) =>
-            answer.selected_answer !==
-            null
-        )
-        .map((answer) => ({
-          attempt_id: attempt.id,
-          question_id:
-            answer.question_id,
-          selected_answer:
-            answer.selected_answer,
-          is_correct: false,
-          answered_at:
-            new Date().toISOString(),
-        }));
-
-    /* ========================================================
-       GUARDAR RESPUESTAS
-    ======================================================== */
-
-    if (
-      simulationAnswers.length > 0
-    ) {
-      const {
-        error: insertAnswersError,
-      } = await supabase
-        .from("simulation_answers")
-        .insert(
-          simulationAnswers
-        );
-
-      if (insertAnswersError) {
-        console.error(
-          "[PeakScore] Error guardando respuestas:",
-          insertAnswersError
-        );
-
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "No fue posible guardar las respuestas.",
-          },
-          { status: 500 }
-        );
-      }
     }
 
     /* ========================================================

@@ -104,7 +104,7 @@ export async function GET(
     const questionIds = relations.map((relation) => relation.question_id);
 
     const { data: questions, error: questionsError } =
-      await supabase
+      await adminSupabase
         .from("questions")
         .select(PUBLIC_QUESTION_FIELDS)
         .in("id", questionIds);

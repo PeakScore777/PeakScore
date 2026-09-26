@@ -47,6 +47,8 @@ export default function LoginPage() {
   const mascotCoverEyes =
     password.length > 0 && !showPassword;
 
+  const normalizedEmail = email.trim().toLowerCase();
+
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ) {
@@ -54,7 +56,11 @@ export default function LoginPage() {
 
     setError("");
 
-    if (!email.trim() || !password) {
+    if (
+      normalizedEmail.length > 254 ||
+      !/^([^\s@]+)@([^\s@]+)\.([^\s@]{2,})$/.test(normalizedEmail) ||
+      !password
+    ) {
       setError("Completa tu correo y contraseña.");
       return;
     }
@@ -68,7 +74,7 @@ export default function LoginPage() {
 
     const { data, error: signInError } =
       await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: normalizedEmail,
         password,
         options: {
           captchaToken,

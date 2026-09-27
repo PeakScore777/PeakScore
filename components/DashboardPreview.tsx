@@ -1,1666 +1,1729 @@
 "use client";
 
-import type { ReactNode } from "react";
-
+import Image from "next/image";
+import Link from "next/link";
 import {
-  ArrowUpRight,
-  ChevronDown,
-  Crosshair,
-  Flame,
-  Target,
-  TrendingUp,
+  ArrowRight,
+  Check,
+  LockKeyhole,
+  X,
 } from "lucide-react";
-import { motion, useReducedMotion } from "framer-motion";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-/* =========================================================
-   DATOS DEL DASHBOARD
-========================================================= */
+import { supabase } from "@/lib/supabase/browser";
+import type { LandingTheme } from "@/components/Navbar";
 
-type SubjectMarkType =
-  | "reading"
-  | "math"
-  | "social"
-  | "science"
-  | "english";
+/* ============================================================
+   TYPES
+============================================================ */
 
-const subjects: Array<{
-  name: string;
-  short: string;
-  score: number;
-  color: string;
-  mark: SubjectMarkType;
-}> = [
+type DashboardPreviewProps = {
+  theme: LandingTheme;
+};
+
+/* ============================================================
+   BACKGROUNDS
+============================================================ */
+
+const backgrounds = {
+  light: {
+    desktop:
+      "/peaky/homepage/peakscore-claro-desktop.webp",
+    mobile:
+      "/peaky/homepage/peakscore-claro-mobile.webp",
+  },
+
+  dark: {
+    desktop:
+      "/peaky/homepage/peakscore-oscuro-desktop.webp",
+    mobile:
+      "/peaky/homepage/peakscore-oscuro-mobile.webp",
+  },
+} as const;
+
+/* ============================================================
+   LOGOS
+============================================================ */
+
+const logos = {
+  light:
+    "/images/branding/peakscore-logo-claro.png",
+
+  dark:
+    "/images/branding/peakscore-logo-transparente2.png",
+} as const;
+
+/* ============================================================
+   SUBJECTS
+============================================================ */
+
+const subjects = [
   {
     name: "Lectura Crítica",
-    short: "LC",
-    score: 76,
-    color: "cyan",
-    mark: "reading",
+    score: 80,
+    color: "bg-sky-400",
+    icon: "/dashboard/lecturaprogress.webp",
   },
   {
     name: "Matemáticas",
-    short: "MAT",
-    score: 80,
-    color: "purple",
-    mark: "math",
+    score: 100,
+    color: "bg-fuchsia-500",
+    icon: "/dashboard/matematicaprogress.webp",
   },
   {
     name: "Sociales y Ciudadanas",
-    short: "SC",
-    score: 80,
-    color: "blue",
-    mark: "social",
+    score: 100,
+    color: "bg-emerald-400",
+    icon: "/dashboard/socialesprogress.webp",
   },
   {
     name: "Ciencias Naturales",
-    short: "CN",
     score: 79,
-    color: "pink",
-    mark: "science",
+    color: "bg-amber-400",
+    icon: "/dashboard/naturalesprogress.webp",
   },
   {
     name: "Inglés",
-    short: "ING",
     score: 100,
-    color: "cyan",
-    mark: "english",
+    color: "bg-cyan-400",
+    icon: "/dashboard/inglesprogress.webp",
   },
 ];
 
-/* =========================================================
-   ICONOS PROPIOS DE ÁREA
-========================================================= */
+/* ============================================================
+   COMPONENT
+============================================================ */
 
-function SubjectMark({
-  type,
-}: {
-  type: SubjectMarkType;
-}) {
-  const strokeProps = {
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.7,
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
+export default function DashboardPreview({
+  theme,
+}: DashboardPreviewProps) {
+  const isDark = theme === "dark";
+
+  const [authGateOpen, setAuthGateOpen] =
+    useState(false);
+
+  const [checkingAuth, setCheckingAuth] =
+    useState(false);
+
+  /* ==========================================================
+     AUTH MODAL SCROLL
+  ========================================================== */
+
+  useEffect(() => {
+    if (!authGateOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
+
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [authGateOpen]);
+
+  /* ==========================================================
+     ESC
+  ========================================================== */
+
+  useEffect(() => {
+    if (!authGateOpen) return;
+
+    const handleEscape = (
+      event: KeyboardEvent
+    ) => {
+      if (event.key === "Escape") {
+        setAuthGateOpen(false);
+      }
+    };
+
+    window.addEventListener(
+      "keydown",
+      handleEscape
+    );
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        handleEscape
+      );
+    };
+  }, [authGateOpen]);
+
+  /* ==========================================================
+     EXPLORE
+  ========================================================== */
+
+  const handleExplore = async () => {
+    if (checkingAuth) return;
+
+    setCheckingAuth(true);
+
+    try {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error(
+          "Error comprobando sesión:",
+          error
+        );
+
+        setAuthGateOpen(true);
+        return;
+      }
+
+      if (session?.user) {
+        window.location.href = "/dashboard";
+        return;
+      }
+
+      setAuthGateOpen(true);
+    } catch (error) {
+      console.error(
+        "Error comprobando autenticación:",
+        error
+      );
+
+      setAuthGateOpen(true);
+    } finally {
+      setCheckingAuth(false);
+    }
   };
 
   return (
-    <svg
-      viewBox="0 0 32 32"
-      aria-hidden="true"
-      className="h-5 w-5 shrink-0"
-    >
-      {type === "reading" && (
-        <g {...strokeProps}>
-          <path d="M7 7.5h8.2c2 0 3.8.9 4.8 2.3v14.7c-1-1.2-2.5-1.9-4.5-1.9H7z" />
-          <path d="M25 7.5h-6.2c-2 0-3.8.9-4.8 2.3v14.7c1-1.2 2.5-1.9 4.5-1.9H25z" />
-          <path d="M14 9.8v12.9" />
-          <path d="M9.5 11.5h3M9.5 15h3M19 11.5h3M19 15h3" />
-        </g>
-      )}
-
-      {type === "math" && (
-        <g {...strokeProps}>
-          <rect
-            x="6.5"
-            y="6.5"
-            width="19"
-            height="19"
-            rx="3.5"
-          />
-          <path d="M10 11h12" />
-          <path d="M10.5 17h5M13 14.5v5" />
-          <path d="M19.5 15.5h3M21 14v3" />
-          <path d="M19.5 21h3" />
-        </g>
-      )}
-
-      {type === "social" && (
-        <g {...strokeProps}>
-          <path d="M8 12.5 16 7l8 5.5" />
-          <path d="M10 12.5v11h12v-11" />
-          <path d="M13 23.5v-6h6v6" />
-          <path d="M7 25h18" />
-          <path d="M11.5 13.5v2M16 13.5v2M20.5 13.5v2" />
-        </g>
-      )}
-
-      {type === "science" && (
-        <g {...strokeProps}>
-          <path d="M12 6v7.2l-5.1 9.1a2.7 2.7 0 0 0 2.4 4h13.4a2.7 2.7 0 0 0 2.4-4L20 13.2V6" />
-          <path d="M10.2 17h11.6" />
-          <path d="M12.3 20.5h2.2M18 22.5h2.2" />
-          <circle
-            cx="16"
-            cy="19.2"
-            r="1.1"
-            fill="currentColor"
-            stroke="none"
-          />
-          <circle
-            cx="21"
-            cy="18"
-            r="0.9"
-            fill="currentColor"
-            stroke="none"
-          />
-        </g>
-      )}
-
-      {type === "english" && (
-        <g {...strokeProps}>
-          <path d="M7 8.5c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2h-7l-5 4v-4H9c-1.1 0-2-.9-2-2z" />
-          <path d="M11 12h8M11 16h5" />
-          <path d="M22.5 8.5v-2M25 10l1.5-1.5M9.5 10 8 8.5" />
-        </g>
-      )}
-    </svg>
-  );
-}
-
-/* =========================================================
-   PARTICULAS PIXEL
-========================================================= */
-
-function PixelParticles() {
-  const particles = [
-    { x: "4%", y: "9%", delay: 0, size: 3 },
-    { x: "11%", y: "19%", delay: 0.8, size: 2 },
-    { x: "18%", y: "7%", delay: 1.4, size: 2 },
-    { x: "27%", y: "13%", delay: 0.4, size: 3 },
-    { x: "36%", y: "6%", delay: 1.2, size: 2 },
-    { x: "46%", y: "16%", delay: 0.6, size: 2 },
-    { x: "56%", y: "8%", delay: 1.7, size: 3 },
-    { x: "66%", y: "15%", delay: 0.3, size: 2 },
-    { x: "76%", y: "6%", delay: 1.1, size: 3 },
-    { x: "87%", y: "13%", delay: 0.5, size: 2 },
-    { x: "95%", y: "8%", delay: 1.8, size: 2 },
-
-    { x: "6%", y: "35%", delay: 1.2, size: 2 },
-    { x: "15%", y: "46%", delay: 0.2, size: 3 },
-    { x: "25%", y: "32%", delay: 1.5, size: 2 },
-    { x: "34%", y: "42%", delay: 0.9, size: 2 },
-    { x: "48%", y: "35%", delay: 1.8, size: 3 },
-    { x: "61%", y: "43%", delay: 0.7, size: 2 },
-    { x: "72%", y: "34%", delay: 1.3, size: 2 },
-    { x: "84%", y: "45%", delay: 0.1, size: 3 },
-    { x: "94%", y: "37%", delay: 1.6, size: 2 },
-
-    { x: "8%", y: "65%", delay: 0.4, size: 2 },
-    { x: "19%", y: "76%", delay: 1.5, size: 3 },
-    { x: "31%", y: "63%", delay: 0.8, size: 2 },
-    { x: "43%", y: "73%", delay: 1.2, size: 2 },
-    { x: "57%", y: "65%", delay: 0.3, size: 3 },
-    { x: "69%", y: "76%", delay: 1.7, size: 2 },
-    { x: "81%", y: "64%", delay: 0.6, size: 2 },
-    { x: "93%", y: "72%", delay: 1.1, size: 3 },
-  ];
-
-  return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      {particles.map((particle, index) => (
-        <motion.span
-          key={index}
-          className="absolute block bg-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.95)]"
-          style={{
-            left: particle.x,
-            top: particle.y,
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-          }}
-          animate={{
-            opacity: [0.25, 1, 0.25],
-            scale: [0.8, 1.5, 0.8],
-            y: [0, -8, 0],
-          }}
-          transition={{
-            duration: 3,
-            delay: particle.delay,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-/* =========================================================
-   CRUCES PIXELADAS
-========================================================= */
-
-function PixelCrosses() {
-  return (
-    <div className="pointer-events-none absolute inset-0">
-      <motion.div
-        className="absolute left-[5%] top-[16%]"
-        animate={{
-          opacity: [0.35, 1, 0.35],
-          scale: [0.8, 1.1, 0.8],
-        }}
-        transition={{
-          duration: 3,
-          repeat: Infinity,
-        }}
-      >
-        <span className="absolute left-2 top-0 h-6 w-1 bg-fuchsia-400 shadow-[0_0_14px_rgba(217,70,239,0.9)]" />
-        <span className="absolute left-0 top-2 h-1 w-6 bg-fuchsia-400 shadow-[0_0_14px_rgba(217,70,239,0.9)]" />
-      </motion.div>
-
-      <motion.div
-        className="absolute right-[7%] top-[27%]"
-        animate={{
-          opacity: [0.25, 1, 0.25],
-          rotate: [0, 90, 180],
-        }}
-        transition={{
-          duration: 5,
-          repeat: Infinity,
-        }}
-      >
-        <span className="absolute left-2 top-0 h-5 w-1 bg-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.9)]" />
-        <span className="absolute left-0 top-2 h-1 w-5 bg-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.9)]" />
-      </motion.div>
-
-      <motion.div
-        className="absolute bottom-[16%] left-[8%]"
-        animate={{
-          opacity: [0.3, 0.9, 0.3],
-          scale: [1, 0.75, 1],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-        }}
-      >
-        <span className="absolute left-1.5 top-0 h-4 w-1 bg-blue-400" />
-        <span className="absolute left-0 top-1.5 h-1 w-4 bg-blue-400" />
-      </motion.div>
-    </div>
-  );
-}
-
-/* =========================================================
-   NUBE PIXEL ART
-========================================================= */
-
-function PixelCloud({
-  className = "",
-  scale = "normal",
-}: {
-  className?: string;
-  scale?: "small" | "normal" | "large";
-}) {
-  const dimensions =
-    scale === "large"
-      ? "h-28 w-56"
-      : scale === "small"
-        ? "h-12 w-28"
-        : "h-20 w-40";
-
-  return (
-    <motion.div
-      className={`pointer-events-none absolute ${dimensions} ${className}`}
-      animate={{
-        x: [0, 10, 0],
-        y: [0, -4, 0],
-      }}
-      transition={{
-        duration: 8,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-    >
-      <div className="absolute inset-0 bg-fuchsia-500/15 blur-2xl" />
-
-      <div
-        className="absolute inset-0 bg-gradient-to-b from-pink-300 via-fuchsia-500 to-purple-900 shadow-[0_0_25px_rgba(217,70,239,0.25)]"
-        style={{
-          clipPath:
-            "polygon(0 62%, 7% 62%, 7% 44%, 15% 44%, 15% 29%, 25% 29%, 25% 17%, 37% 17%, 37% 29%, 48% 29%, 48% 8%, 61% 8%, 61% 18%, 72% 18%, 72% 32%, 83% 32%, 83% 22%, 93% 22%, 93% 44%, 100% 44%, 100% 100%, 0 100%)",
-        }}
-      />
-
-      <div
-        className="absolute inset-0 bg-pink-100/60"
-        style={{
-          clipPath:
-            "polygon(12% 48%, 20% 48%, 20% 31%, 30% 31%, 30% 21%, 38% 21%, 38% 38%, 49% 38%, 49% 19%, 57% 19%, 57% 31%, 68% 31%, 68% 45%, 78% 45%, 78% 37%, 88% 37%, 88% 53%, 100% 53%, 100% 64%, 12% 64%)",
-        }}
-      />
-
-      <div
-        className="absolute bottom-0 left-0 right-0 h-[35%] bg-purple-950/60"
-        style={{
-          clipPath:
-            "polygon(0 25%, 18% 25%, 18% 0, 36% 0, 36% 30%, 53% 30%, 53% 8%, 72% 8%, 72% 34%, 100% 34%, 100% 100%, 0 100%)",
-        }}
-      />
-    </motion.div>
-  );
-}
-
-/* =========================================================
-   TARJETA BASE
-========================================================= */
-
-function DashboardCard({
-  children,
-  className = "",
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={[
-        "rounded-[20px]",
-        "border border-[#263d7a]",
-        "bg-[linear-gradient(145deg,#071633_0%,#030a20_100%)]",
-        "shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_18px_45px_rgba(0,0,0,0.25)]",
-        className,
-      ].join(" ")}
-    >
-      {children}
-    </div>
-  );
-}
-
-/* =========================================================
-   GRÁFICA ICFES
-   ESCALA OFICIAL: 0 - 500
-========================================================= */
-
-function PerformanceChart() {
-  /*
-    Puntaje global Saber 11:
-    - Escala: 0 a 500.
-    - El valor actual de esta preview es 402.
-    - La serie anterior es ilustrativa y termina en el valor actual.
-  */
-
-  const data = [
-    { label: "12 jun", score: 344 },
-    { label: "15 jun", score: 357 },
-    { label: "18 jun", score: 353 },
-    { label: "21 jun", score: 369 },
-    { label: "25 jun", score: 365 },
-    { label: "29 jun", score: 381 },
-    { label: "03 jul", score: 376 },
-    { label: "07 jul", score: 390 },
-    { label: "11 jul", score: 386 },
-    { label: "16 jul", score: 397 },
-    { label: "19 jul", score: 400 },
-    { label: "21 jul", score: 402 },
-  ];
-
-  const width = 1100;
-  const height = 380;
-
-  const minScore = 0;
-  const maxScore = 500;
-
-  const paddingLeft = 58;
-  const paddingRight = 28;
-  const paddingTop = 34;
-  const paddingBottom = 54;
-
-  const chartWidth = width - paddingLeft - paddingRight;
-  const chartHeight = height - paddingTop - paddingBottom;
-
-  const points = data.map((item, index) => {
-    const x =
-      paddingLeft +
-      (index / (data.length - 1)) * chartWidth;
-
-    const y =
-      paddingTop +
-      ((maxScore - item.score) /
-        (maxScore - minScore)) *
-        chartHeight;
-
-    return {
-      ...item,
-      x,
-      y,
-    };
-  });
-
-  const linePath = points
-    .map((point, index) => {
-      if (index === 0) {
-        return `M ${point.x} ${point.y}`;
-      }
-
-      const previous = points[index - 1];
-      const controlX =
-        previous.x +
-        (point.x - previous.x) * 0.5;
-
-      return `
-        C
-        ${controlX} ${previous.y},
-        ${controlX} ${point.y},
-        ${point.x} ${point.y}
-      `;
-    })
-    .join(" ");
-
-  const baselineY = height - paddingBottom;
-
-  const areaPath = `
-    ${linePath}
-    L ${points[points.length - 1].x} ${baselineY}
-    L ${points[0].x} ${baselineY}
-    Z
-  `;
-
-  const gridValues = [500, 400, 300, 200, 100, 0];
-
-  const targetScore = 470;
-
-  const targetY =
-    paddingTop +
-    ((maxScore - targetScore) /
-      (maxScore - minScore)) *
-      chartHeight;
-
-  const current = data[data.length - 1];
-
-  return (
-    <div className="relative h-[285px] w-full sm:h-[310px]">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
-        className="absolute inset-0 h-full w-full"
-      >
-        <defs>
-          <linearGradient
-            id="icfes-chart-area"
-            x1="0"
-            y1="0"
-            x2="0"
-            y2="1"
-          >
-            <stop
-              offset="0%"
-              stopColor="#22d3ee"
-              stopOpacity="0.30"
-            />
-            <stop
-              offset="42%"
-              stopColor="#3b82f6"
-              stopOpacity="0.14"
-            />
-            <stop
-              offset="100%"
-              stopColor="#7c3aed"
-              stopOpacity="0"
-            />
-          </linearGradient>
-
-          <linearGradient
-            id="icfes-chart-line"
-            x1="0"
-            y1="0"
-            x2="1"
-            y2="0"
-          >
-            <stop
-              offset="0%"
-              stopColor="#3b82f6"
-            />
-            <stop
-              offset="50%"
-              stopColor="#22d3ee"
-            />
-            <stop
-              offset="100%"
-              stopColor="#67e8f9"
-            />
-          </linearGradient>
-
-          <filter
-            id="icfes-chart-glow"
-            x="-30%"
-            y="-40%"
-            width="160%"
-            height="180%"
-          >
-            <feGaussianBlur
-              stdDeviation="5"
-              result="blur"
-            />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-
-          <filter
-            id="icfes-point-glow"
-            x="-100%"
-            y="-100%"
-            width="300%"
-            height="300%"
-          >
-            <feGaussianBlur
-              stdDeviation="4"
-              result="pointBlur"
-            />
-            <feMerge>
-              <feMergeNode in="pointBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Guías horizontales de la escala 0–500 */}
-        {gridValues.map((value) => {
-          const y =
-            paddingTop +
-            ((maxScore - value) /
-              (maxScore - minScore)) *
-              chartHeight;
-
-          return (
-            <g key={value}>
-              <line
-                x1={paddingLeft}
-                x2={width - paddingRight}
-                y1={y}
-                y2={y}
-                stroke={
-                  value === 0
-                    ? "#304575"
-                    : "#15284f"
-                }
-                strokeWidth={
-                  value === 0 ? "1.5" : "1"
-                }
-                strokeDasharray={
-                  value === 0
-                    ? undefined
-                    : "3 12"
-                }
-              />
-
-              <text
-                x="4"
-                y={y + 3}
-                fill="#50618a"
-                fontSize="10"
-                fontWeight="700"
-                fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
-              >
-                {value}
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Guías verticales sutiles */}
-        {points.map((point, index) => (
-          <line
-            key={`vertical-${index}`}
-            x1={point.x}
-            x2={point.x}
-            y1={paddingTop}
-            y2={baselineY}
-            stroke="#102044"
-            strokeWidth="1"
-            opacity={
-              index === 0 ||
-              index === points.length - 1
-                ? 0.5
-                : 0.25
-            }
-          />
-        ))}
-
-        {/* Zona superior cercana a la meta */}
-        <rect
-          x={paddingLeft}
-          y={paddingTop}
-          width={chartWidth}
-          height={Math.max(
-            0,
-            targetY - paddingTop,
-          )}
-          fill="#a855f7"
-          opacity="0.025"
-        />
-
-        {/* Línea de meta */}
-        <line
-          x1={paddingLeft}
-          x2={width - paddingRight}
-          y1={targetY}
-          y2={targetY}
-          stroke="#c084fc"
-          strokeWidth="1.5"
-          strokeDasharray="6 9"
-          opacity="0.65"
-        />
-
-        {/* Área bajo la evolución */}
-        <motion.path
-          d={areaPath}
-          fill="url(#icfes-chart-area)"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9 }}
-        />
-
-        {/* Glow de la línea */}
-        <motion.path
-          d={linePath}
-          fill="none"
-          stroke="#22d3ee"
-          strokeWidth="10"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          opacity="0.14"
-          filter="url(#icfes-chart-glow)"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={{
-            duration: 1.7,
-            ease: "easeOut",
-          }}
-        />
-
-        {/* Línea principal */}
-        <motion.path
-          d={linePath}
-          fill="none"
-          stroke="url(#icfes-chart-line)"
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          filter="url(#icfes-chart-glow)"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={{
-            duration: 1.7,
-            ease: "easeOut",
-          }}
-        />
-
-        {/* Puntos de cada sesión */}
-        {points.map((point, index) => (
-          <g
-            key={`${point.label}-${index}`}
-          >
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r={
-                index === points.length - 1
-                  ? 12
-                  : 8
-              }
-              fill="#22d3ee"
-              opacity={
-                index === points.length - 1
-                  ? 0.12
-                  : 0.07
-              }
-            />
-
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r={
-                index === points.length - 1
-                  ? 5
-                  : 4
-              }
-              fill="#06132f"
-              stroke="#38d9f5"
-              strokeWidth="2.5"
-              filter={
-                index === points.length - 1
-                  ? "url(#icfes-point-glow)"
-                  : undefined
-              }
-            />
-          </g>
-        ))}
-
-        {/* Pulso del punto actual */}
-        <motion.circle
-          cx={points[points.length - 1].x}
-          cy={points[points.length - 1].y}
-          r="12"
-          fill="none"
-          stroke="#22d3ee"
-          strokeWidth="1.5"
-          initial={{
-            opacity: 0.55,
-            r: 8,
-          }}
-          animate={{
-            opacity: [0.55, 0, 0.55],
-            r: [8, 20, 8],
-          }}
-          transition={{
-            duration: 2.2,
-            repeat: Infinity,
-            ease: "easeOut",
-          }}
-        />
-      </svg>
-
-      {/* Meta */}
-      <div
-        className="absolute right-0 rounded-md border border-fuchsia-400/30 bg-[#090d26]/95 px-2.5 py-1.5 shadow-[0_0_18px_rgba(168,85,247,0.08)]"
-        style={{
-          top: `${Math.max(
-            3,
-            (targetY / height) * 100 - 3,
-          )}%`,
-        }}
-      >
-        <div className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-fuchsia-400" />
-
-          <span className="text-[8px] font-black uppercase tracking-[0.12em] text-fuchsia-300">
-            Meta 470
-          </span>
-        </div>
-      </div>
-
-      {/* Valor actual */}
-      <motion.div
-        initial={{
-          opacity: 0,
-          y: 8,
-        }}
-        whileInView={{
-          opacity: 1,
-          y: 0,
-        }}
-        viewport={{
-          once: true,
-        }}
-        transition={{
-          duration: 0.5,
-          delay: 1.15,
-        }}
-        className="absolute right-0 top-[38%] min-w-[108px] rounded-xl border border-cyan-400/35 bg-[#071333]/95 px-3.5 py-2.5 shadow-[0_0_28px_rgba(34,211,238,0.12)]"
-      >
-        <div className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(34,211,238,1)]" />
-
-          <span className="text-[7px] font-black uppercase tracking-[0.14em] text-slate-500">
-            Actual
-          </span>
-        </div>
-
-        <p className="mt-1 font-mono text-2xl font-black leading-none text-white">
-          {current.score}
-
-          <span className="ml-1 text-[9px] font-bold text-slate-500">
-            /500
-          </span>
-        </p>
-      </motion.div>
-
-      {/* Fechas */}
-      <div className="absolute bottom-0 left-[58px] right-[28px] flex justify-between text-[8px] font-bold text-slate-600">
-        <span>{data[0].label}</span>
-
-        <span className="hidden sm:block">
-          {data[Math.floor(data.length / 2)].label}
-        </span>
-
-        <span>
-          {data[data.length - 1].label}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   CIRCULO DE PREPARACION
-========================================================= */
-
-function ProgressRing({
-  value,
-}: {
-  value: number;
-}) {
-  const radius = 42;
-
-  const circumference =
-    2 * Math.PI * radius;
-
-  const offset =
-    circumference -
-    (value / 100) * circumference;
-
-  return (
-    <div className="relative h-28 w-28 shrink-0">
-      <svg
-        viewBox="0 0 100 100"
-        className="h-full w-full -rotate-90"
-      >
-        <defs>
-          <linearGradient
-            id="dashboard-ring"
-            x1="0"
-            y1="0"
-            x2="1"
-            y2="1"
-          >
-            <stop
-              offset="0%"
-              stopColor="#2563eb"
-            />
-
-            <stop
-              offset="55%"
-              stopColor="#7c3aed"
-            />
-
-            <stop
-              offset="100%"
-              stopColor="#d946ef"
-            />
-          </linearGradient>
-        </defs>
-
-        <circle
-          cx="50"
-          cy="50"
-          r={radius}
-          fill="none"
-          stroke="#14244a"
-          strokeWidth="7"
-        />
-
-        <motion.circle
-          cx="50"
-          cy="50"
-          r={radius}
-          fill="none"
-          stroke="url(#dashboard-ring)"
-          strokeWidth="7"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{
-            strokeDashoffset: circumference,
-          }}
-          whileInView={{
-            strokeDashoffset: offset,
-          }}
-          viewport={{
-            once: true,
-          }}
-          transition={{
-            duration: 1.2,
-            ease: "easeOut",
-          }}
-        />
-      </svg>
-
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-mono text-2xl font-black text-white">
-          {value}%
-        </span>
-
-        <span className="text-[7px] font-bold uppercase tracking-[0.12em] text-slate-500">
-          preparado
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   RACHA PIXEL
-========================================================= */
-
-function ActivityDots() {
-  const days = [
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    true,
-    false,
-  ];
-
-  return (
-    <div className="flex gap-1">
-      {days.map((active, index) => (
-        <motion.div
-          key={index}
-          animate={
-            active
-              ? {
-                  y: [0, -3, 0],
-                }
-              : undefined
+    <>
+      {/* ========================================================
+          MAIN SECTION
+      ======================================================== */}
+
+      <section
+        id="progress"
+        className={`
+          relative
+          isolate
+          w-full
+          overflow-hidden
+          ${
+            isDark
+              ? "bg-[#020617]"
+              : "bg-[#eef6ff]"
           }
-          transition={{
-            duration: 1.4,
-            delay: index * 0.08,
-            repeat: Infinity,
-          }}
-          className={`flex h-7 w-7 items-center justify-center ${
-            active
-              ? "text-orange-400 drop-shadow-[0_0_9px_rgba(251,146,60,0.65)]"
-              : "text-[#142142]"
-          }`}
-        >
-          <Flame
-            className="h-6 w-6"
-            fill={
-              active
-                ? "currentColor"
-                : "none"
-            }
-          />
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-/* =========================================================
-   MINI PROGRESO
-========================================================= */
-
-function MiniProgress() {
-  return (
-    <div className="mt-5">
-      <div className="flex items-center justify-between text-[10px]">
-        <span className="font-medium text-slate-500">
-          Dominio
-        </span>
-
-        <span className="font-black text-white">
-          91%
-        </span>
-      </div>
-
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#14244a]">
-        <motion.div
-          initial={{
-            width: 0,
-          }}
-          whileInView={{
-            width: "91%",
-          }}
-          viewport={{
-            once: true,
-          }}
-          transition={{
-            duration: 0.9,
-          }}
-          className="h-full rounded-full bg-gradient-to-r from-blue-600 via-cyan-400 to-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.5)]"
-        />
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   DASHBOARD PREVIEW
-========================================================= */
-
-export default function DashboardPreview() {
-  const shouldReduceMotion =
-    useReducedMotion();
-
-  const reveal = (y = 20) =>
-    shouldReduceMotion
-      ? false
-      : {
-          opacity: 0,
-          y,
-        };
-
-  return (
-    <section
-      id="progress"
-      className="relative overflow-hidden bg-[#020617] py-28 sm:py-36"
-    >
-      {/* =====================================================
-          FONDO ESPACIAL
-      ===================================================== */}
-
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        {/* Glow azul */}
-
-        <div className="absolute left-1/2 top-[-180px] h-[650px] w-[1000px] -translate-x-1/2 rounded-full bg-blue-700/10 blur-[150px]" />
-
-        {/* Glow morado */}
-
-        <div className="absolute bottom-[-200px] left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-purple-700/10 blur-[150px]" />
-
-        {/* Gradientes */}
-
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_15%,rgba(37,99,235,0.2),transparent_38%),radial-gradient(circle_at_50%_85%,rgba(126,34,206,0.12),transparent_45%)]" />
-
-        {/* Grid pixel */}
+        `}
+      >
+        {/* ======================================================
+            DESKTOP
+        ====================================================== */}
 
         <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(46,74,135,.45) 1px, transparent 1px), linear-gradient(90deg, rgba(46,74,135,.45) 1px, transparent 1px)",
-            backgroundSize:
-              "54px 54px",
-          }}
-        />
-
-        <PixelParticles />
-
-        <PixelCrosses />
-
-        {/* Nubes */}
-
-        <PixelCloud
-          className="left-[-25px] top-[17%] opacity-90"
-          scale="normal"
-        />
-
-        <PixelCloud
-          className="right-[-25px] top-[9%] opacity-85"
-          scale="normal"
-        />
-
-        <PixelCloud
-          className="bottom-[5%] left-[-35px] opacity-95"
-          scale="large"
-        />
-
-        <PixelCloud
-          className="bottom-[5%] right-[-30px] opacity-90"
-          scale="normal"
-        />
-      </div>
-
-      {/* =====================================================
-          CONTENIDO
-      ===================================================== */}
-
-      <div className="relative mx-auto max-w-[1180px] px-5 sm:px-7 lg:px-8">
-        {/* =====================================================
-            HEADER
-        ===================================================== */}
-
-        <motion.div
-          initial={reveal(20)}
-          whileInView={
-            shouldReduceMotion
-              ? undefined
-              : {
-                  opacity: 1,
-                  y: 0,
-                }
-          }
-          viewport={{
-            once: true,
-            margin: "-100px",
-          }}
-          transition={{
-            duration: 0.65,
-          }}
-          className="grid gap-8 lg:grid-cols-[1.1fr_0.75fr] lg:items-end"
+          className="
+            relative
+            hidden
+            aspect-[3/2]
+            w-full
+            overflow-hidden
+            md:block
+          "
         >
-          <div>
-            <div className="mb-5 flex items-center gap-3">
-              <span className="h-[2px] w-9 bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.9)]" />
+          {/* ====================================================
+              LIGHT BACKGROUND
+          ==================================================== */}
 
-              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-cyan-300">
-                Tu progreso
-              </span>
-            </div>
-
-            <h2 className="max-w-3xl text-5xl font-black leading-[0.94] tracking-[-0.055em] text-white sm:text-6xl lg:text-[62px]">
-              Tu preparación,
-              <br />
-
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-fuchsia-500 bg-clip-text text-transparent">
-                convertida en datos.
-              </span>
-            </h2>
+          <div
+            className={`
+              absolute
+              inset-0
+              z-0
+              transition-opacity
+              duration-500
+              ${
+                isDark
+                  ? "opacity-0"
+                  : "opacity-100"
+              }
+            `}
+          >
+            <Image
+              src={backgrounds.light.desktop}
+              alt=""
+              fill
+              priority={!isDark}
+              sizes="100vw"
+              className="
+                select-none
+                object-cover
+                object-center
+              "
+            />
           </div>
 
-          <p className="max-w-md text-sm leading-6 text-slate-400 lg:justify-self-end">
-            Cada simulacro, cada pregunta y cada
-            sesión construyen una imagen más clara
-            de tu preparación.
-          </p>
-        </motion.div>
+          {/* ====================================================
+              DARK BACKGROUND
+          ==================================================== */}
 
-        {/* =====================================================
-            DASHBOARD
-        ===================================================== */}
+          <div
+            className={`
+              absolute
+              inset-0
+              z-0
+              transition-opacity
+              duration-500
+              ${
+                isDark
+                  ? "opacity-100"
+                  : "opacity-0"
+              }
+            `}
+          >
+            <Image
+              src={backgrounds.dark.desktop}
+              alt=""
+              fill
+              priority={isDark}
+              sizes="100vw"
+              className="
+                select-none
+                object-cover
+                object-center
+              "
+            />
+          </div>
 
-        <motion.div
-          initial={reveal(35)}
-          whileInView={
-            shouldReduceMotion
-              ? undefined
-              : {
-                  opacity: 1,
-                  y: 0,
-                }
-          }
-          viewport={{
-            once: true,
-            margin: "-70px",
-          }}
-          transition={{
-            duration: 0.8,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          className="relative mt-14"
-        >
-          {/* Marco principal */}
+          {/* ====================================================
+              LIGHT READABILITY
+          ==================================================== */}
 
-          <div className="relative overflow-hidden rounded-[26px] border border-[#304782] bg-[#03091d] shadow-[0_35px_100px_rgba(0,0,0,0.55),0_0_80px_rgba(37,99,235,0.08)]">
-            {/* Línea superior */}
+          <div
+            className={`
+              pointer-events-none
+              absolute
+              inset-0
+              z-[2]
+              transition-opacity
+              duration-500
+              ${
+                isDark
+                  ? "opacity-0"
+                  : "opacity-100"
+              }
+            `}
+          >
+            <div
+              className="
+                absolute
+                inset-y-0
+                left-0
+                w-[58%]
+                bg-gradient-to-r
+                from-white/82
+                via-white/42
+                to-transparent
+              "
+            />
 
-            <div className="absolute left-0 right-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+            <div
+              className="
+                absolute
+                inset-y-0
+                left-0
+                w-[35%]
+                bg-white/20
+              "
+            />
+          </div>
 
-            {/* =================================================
-                BARRA
-            ================================================= */}
+          {/* ====================================================
+              DARK READABILITY
+          ==================================================== */}
 
-            <div className="flex h-14 items-center justify-between border-b border-[#243762] px-5 sm:px-7">
-              <div className="flex items-center gap-3">
-                <div className="flex gap-2">
-                  <span className="h-3 w-3 rounded-full bg-fuchsia-500 shadow-[0_0_10px_rgba(217,70,239,0.7)]" />
+          <div
+            className={`
+              pointer-events-none
+              absolute
+              inset-0
+              z-[2]
+              transition-opacity
+              duration-500
+              ${
+                isDark
+                  ? "opacity-100"
+                  : "opacity-0"
+              }
+            `}
+          >
+            <div
+              className="
+                absolute
+                inset-y-0
+                left-0
+                w-[55%]
+                bg-gradient-to-r
+                from-[#020617]/65
+                via-[#020617]/25
+                to-transparent
+              "
+            />
+          </div>
 
-                  <span className="h-3 w-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.7)]" />
+          {/* ====================================================
+              CONTENT
+          ==================================================== */}
 
-                  <span className="h-3 w-3 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.7)]" />
-                </div>
+          <div className="absolute inset-0 z-10">
+            {/* ==================================================
+                LOGO
+            ================================================== */}
 
-                <div className="hidden h-5 w-px bg-[#263965] sm:block" />
+            <div
+              className="
+                absolute
+                left-[5.5%]
+                top-[4.5%]
+                z-40
+                w-[7.2%]
+                min-w-[72px]
+                max-w-[110px]
+              "
+            >
+              <Image
+                key={isDark ? "peakscore-logo-dark" : "peakscore-logo-light"}
+                src={isDark ? logos.dark : logos.light}
+                alt="PeakScore"
+                width={1254}
+                height={1254}
+                priority
+                unoptimized
+                sizes="110px"
+                className="
+                  h-auto
+                  w-full
+                  object-contain
+                  object-left
+                  drop-shadow-[0_5px_18px_rgba(0,0,0,0.25)]
+                "
+              />
+            </div>
 
-                <span className="text-sm font-black text-white">
-                  Peak
-                  <span className="text-blue-400">
-                    Score
-                  </span>
-                </span>
-              </div>
+            {/* ==================================================
+                HERO COPY
+            ================================================== */}
 
-              <div className="flex items-center gap-4">
-                <span className="hidden text-[10px] font-bold text-blue-400 sm:block">
-                  Vista general
-                </span>
+            <div
+              className="
+                absolute
+                left-[5.5%]
+                top-[16%]
+                z-30
+                w-[35%]
+              "
+            >
+              {/* BADGE */}
 
-                <motion.div
-                  animate={{
-                    boxShadow: [
-                      "0 0 0 rgba(34,211,238,0)",
-                      "0 0 22px rgba(34,211,238,0.25)",
-                      "0 0 0 rgba(34,211,238,0)",
-                    ],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                  }}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-cyan-400/40 bg-[#071333] text-cyan-300"
+              <div
+                className={`
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  border
+                  px-3
+                  py-1.5
+                  text-[clamp(8px,0.7vw,12px)]
+                  font-black
+                  uppercase
+                  tracking-[0.08em]
+                  backdrop-blur-md
+                  ${
+                    isDark
+                      ? `
+                        border-cyan-400/45
+                        bg-[#04152e]/85
+                        text-cyan-300
+                      `
+                      : `
+                        border-blue-700/20
+                        bg-white/80
+                        text-blue-700
+                      `
+                  }
+                `}
+              >
+                <span
+                  className={
+                    isDark
+                      ? "text-cyan-300"
+                      : "text-blue-600"
+                  }
                 >
-                  <TrendingUp className="h-5 w-5" />
-                </motion.div>
+                  ✦
+                </span>
+
+                TU CAMINO AL ICFES
+              </div>
+
+              {/* TITLE */}
+
+              <h2
+                className={`
+                  mt-[2.8%]
+                  max-w-[620px]
+                  text-[clamp(30px,3.25vw,55px)]
+                  font-black
+                  leading-[0.98]
+                  tracking-[-0.045em]
+                  ${
+                    isDark
+                      ? "text-white"
+                      : "text-slate-950"
+                  }
+                `}
+              >
+                Cada simulacro
+                <br />
+                te acerca a tu{" "}
+                <span
+                  className="
+                    bg-gradient-to-r
+                    from-cyan-400
+                    via-blue-500
+                    to-fuchsia-500
+                    bg-clip-text
+                    text-transparent
+                  "
+                >
+                  Peak
+                </span>
+              </h2>
+
+              {/* DESCRIPTION */}
+
+              <p
+                className={`
+                  mt-[4%]
+                  max-w-[520px]
+                  text-[clamp(9px,0.82vw,15px)]
+                  font-medium
+                  leading-[1.55]
+                  ${
+                    isDark
+                      ? "text-blue-50/80"
+                      : "text-slate-700/90"
+                  }
+                `}
+              >
+                Prepárate con una experiencia
+                construida alrededor de las pruebas
+                que realmente vas a presentar.
+              </p>
+
+              {/* ==================================================
+                  PEAKSCORE PRODUCT FEATURES
+              ================================================== */}
+
+              <div
+                className="
+                  mt-[5%]
+                  space-y-[3%]
+                "
+              >
+                {/* =================================================
+                    FEATURE 1
+                ================================================= */}
+
+                <ProductFeature
+                  type="sessions"
+                  isDark={isDark}
+                  eyebrow="SIMULACROS"
+                  title="Entrena como en Saber 11"
+                  description="Sesiones separadas para practicar con la estructura real del examen."
+                />
+
+                {/* =================================================
+                    FEATURE 2
+                ================================================= */}
+
+                <ProductFeature
+                  type="bank"
+                  isDark={isDark}
+                  eyebrow="BANCO DE PREGUNTAS"
+                  title="Practica exactamente lo que necesitas"
+                  description="Filtra tus preguntas por área, sesión y dificultad para enfocar cada práctica."
+                />
+
+                {/* =================================================
+                    FEATURE 3
+                ================================================= */}
+
+                <ProductFeature
+                  type="analysis"
+                  isDark={isDark}
+                  eyebrow="ANÁLISIS"
+                  title="Convierte cada error en progreso"
+                  description="Después de practicar, identifica dónde fallaste y qué debes reforzar."
+                />
               </div>
             </div>
 
-            {/* =================================================
-                CONTENIDO
-            ================================================= */}
+            {/* ==================================================
+                NO FLOATING CARDS
+                NO GENERIC INFO CARD
+            ================================================== */}
 
-            <div className="bg-[radial-gradient(circle_at_50%_0%,rgba(23,55,125,0.13),transparent_45%),#03091d] p-4 sm:p-6 lg:p-7">
-              {/* =================================================
-                  TOP
-              ================================================= */}
+            {/* ==================================================
+                SUBJECT BAR
+            ================================================== */}
 
-              <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr]">
-                {/* =================================================
-                    IZQUIERDA
-                ================================================= */}
+            <SubjectBar />
 
-                <div className="space-y-5">
-                  {/* Puntaje */}
+            {/* ==================================================
+                CTA
+            ================================================== */}
 
-                  <DashboardCard className="relative overflow-hidden p-6 sm:p-7">
-                    <div className="absolute right-[-50px] top-[-50px] h-32 w-32 rounded-full bg-blue-500/10 blur-3xl" />
+            <ExploreButton
+              checkingAuth={checkingAuth}
+              onClick={handleExplore}
+            />
+          </div>
+        </div>
 
-                    <div className="relative flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-300">
-                        Puntaje global
-                      </span>
+        {/* ======================================================
+            MOBILE
+        ====================================================== */}
 
-                      <span className="rounded-md border border-emerald-400/30 bg-emerald-400/5 px-2 py-1 text-[9px] font-black text-emerald-300">
-                        ↗ +12
-                      </span>
-                    </div>
+        <div
+          className="
+            relative
+            min-h-[900px]
+            w-full
+            overflow-hidden
+            md:hidden
+          "
+        >
+          {/* ====================================================
+              MOBILE LIGHT
+          ==================================================== */}
 
-                    <div className="relative mt-6 flex items-end gap-2">
-                      <motion.span
-                        initial={{
-                          opacity: 0,
-                          y: 10,
-                        }}
-                        whileInView={{
-                          opacity: 1,
-                          y: 0,
-                        }}
-                        viewport={{
-                          once: true,
-                        }}
-                        transition={{
-                          duration: 0.6,
-                        }}
-                        className="font-mono text-6xl font-black tracking-[-0.08em] text-white sm:text-7xl"
-                      >
-                        423
-                      </motion.span>
+          <div
+            className={`
+              absolute
+              inset-0
+              transition-opacity
+              duration-500
+              ${
+                isDark
+                  ? "opacity-0"
+                  : "opacity-100"
+              }
+            `}
+          >
+            <Image
+              src={backgrounds.light.mobile}
+              alt=""
+              fill
+              priority={!isDark}
+              sizes="100vw"
+              className="
+                select-none
+                object-cover
+                object-center
+              "
+            />
+          </div>
 
-                      <span className="mb-2 text-lg text-slate-500">
-                        /500
-                      </span>
-                    </div>
+          {/* ====================================================
+              MOBILE DARK
+          ==================================================== */}
 
-                    <div className="relative mt-6">
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-slate-400">
-                          Progreso hacia tu meta
-                        </span>
+          <div
+            className={`
+              absolute
+              inset-0
+              transition-opacity
+              duration-500
+              ${
+                isDark
+                  ? "opacity-100"
+                  : "opacity-0"
+              }
+            `}
+          >
+            <Image
+              src={backgrounds.dark.mobile}
+              alt=""
+              fill
+              priority={isDark}
+              sizes="100vw"
+              className="
+                select-none
+                object-cover
+                object-center
+              "
+            />
+          </div>
 
-                        <span className="font-black text-white">
-                          85.5%
-                        </span>
-                      </div>
+          {/* ====================================================
+              MOBILE LIGHT OVERLAY
+          ==================================================== */}
 
-                      <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#14244a]">
-                        <motion.div
-                          initial={{
-                            width: 0,
-                          }}
-                          whileInView={{
-                            width: "85.5%",
-                          }}
-                          viewport={{
-                            once: true,
-                          }}
-                          transition={{
-                            duration: 1,
-                          }}
-                          className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 via-blue-500 to-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.55)]"
-                        />
-                      </div>
-                    </div>
+          <div
+            className={`
+              pointer-events-none
+              absolute
+              inset-0
+              z-[2]
+              ${
+                isDark
+                  ? "opacity-0"
+                  : "opacity-100"
+              }
+            `}
+          >
+            <div
+              className="
+                absolute
+                inset-x-0
+                top-0
+                h-[58%]
+                bg-gradient-to-b
+                from-white/75
+                via-white/25
+                to-transparent
+              "
+            />
 
-                    <div className="relative mt-4 flex justify-between text-[8px] text-slate-600">
-                      <span>0</span>
-                      <span>250</span>
-                      <span>500</span>
-                    </div>
-                  </DashboardCard>
+            <div
+              className="
+                absolute
+                inset-y-0
+                left-0
+                w-[92%]
+                bg-gradient-to-r
+                from-white/60
+                via-white/20
+                to-transparent
+              "
+            />
+          </div>
 
-                  {/* Preparación */}
+          {/* ====================================================
+              MOBILE DARK OVERLAY
+          ==================================================== */}
 
-                  <DashboardCard className="p-6 sm:p-7">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-300">
-                          Preparación
-                        </p>
+          <div
+            className={`
+              pointer-events-none
+              absolute
+              inset-0
+              z-[2]
+              ${
+                isDark
+                  ? "opacity-100"
+                  : "opacity-0"
+              }
+            `}
+          >
+            <div
+              className="
+                absolute
+                inset-x-0
+                top-0
+                h-[58%]
+                bg-gradient-to-b
+                from-[#020617]/60
+                via-[#020617]/20
+                to-transparent
+              "
+            />
+          </div>
 
-                        <p className="mt-1 text-base font-black text-white">
-                          Nivel general
-                        </p>
-                      </div>
+          {/* ====================================================
+              MOBILE CONTENT
+          ==================================================== */}
 
-                      <span className="rounded-md border border-emerald-400/30 px-2 py-1 text-[9px] font-black text-emerald-300">
-                        Bueno
-                      </span>
-                    </div>
+          <div className="absolute inset-0 z-10">
+            {/* LOGO */}
 
-                    <div className="mt-7 flex items-center gap-5">
-                      <ProgressRing value={82} />
+            <div
+              className="
+                absolute
+                left-[6%]
+                top-[3.5%]
+                z-40
+                w-[82px]
+              "
+            >
+              <Image
+                key={isDark ? "peakscore-logo-dark-mobile" : "peakscore-logo-light-mobile"}
+                src={isDark ? logos.dark : logos.light}
+                alt="PeakScore"
+                width={1254}
+                height={1254}
+                priority
+                unoptimized
+                sizes="82px"
+                className="
+                  h-auto
+                  w-full
+                  object-contain
+                  object-left
+                  drop-shadow-[0_5px_15px_rgba(0,0,0,0.2)]
+                "
+              />
+            </div>
 
-                      <div>
-                        <p className="text-sm font-black text-white">
-                          Vas avanzando.
-                        </p>
+            {/* ==================================================
+                MOBILE HERO
+            ================================================== */}
 
-                        <p className="mt-2 max-w-[180px] text-[10px] leading-5 text-slate-400">
-                          Tu dedicación muestra una
-                          tendencia positiva en las
-                          últimas sesiones.
-                        </p>
+            <div
+              className="
+                absolute
+                left-[6%]
+                right-[6%]
+                top-[11%]
+                z-30
+              "
+            >
+              <div
+                className={`
+                  inline-flex
+                  items-center
+                  gap-1.5
+                  rounded-full
+                  border
+                  px-2.5
+                  py-1
+                  text-[8px]
+                  font-black
+                  uppercase
+                  tracking-[0.07em]
+                  backdrop-blur-md
+                  ${
+                    isDark
+                      ? `
+                        border-cyan-400/45
+                        bg-[#04152e]/85
+                        text-cyan-300
+                      `
+                      : `
+                        border-blue-700/20
+                        bg-white/80
+                        text-blue-700
+                      `
+                  }
+                `}
+              >
+                <span>✦</span>
 
-                        <div className="mt-3 flex items-center gap-2">
-                          <Target className="h-3.5 w-3.5 text-fuchsia-400" />
-
-                          <span className="text-[9px] font-bold text-fuchsia-300">
-                            Meta: 470
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </DashboardCard>
-                </div>
-
-                {/* =================================================
-                    DERECHA
-                ================================================= */}
-
-                <div className="space-y-5">
-                  {/* Gráfica */}
-
-                  <DashboardCard className="p-5 sm:p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-300">
-                          Puntaje global
-                        </p>
-
-                        <h3 className="mt-2 text-xl font-black text-white">
-                          Rendimiento en el tiempo
-                        </h3>
-
-                        <p className="mt-1 text-[9px] text-slate-500">
-                          Escala oficial Saber 11 · 0–500
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="hidden items-center gap-1 rounded-lg border border-[#304274] bg-[#071332] px-3 py-2 text-[10px] font-bold text-slate-300 sm:flex"
-                      >
-                        30 días
-
-                        <ChevronDown className="h-3 w-3" />
-                      </button>
-                    </div>
-
-                    <div className="mt-4">
-                      <PerformanceChart />
-                    </div>
-                  </DashboardCard>
-
-                  {/* Materias */}
-
-                  <DashboardCard className="p-5 sm:p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-300">
-                          Áreas evaluadas
-                        </p>
-
-                        <h3 className="mt-2 text-xl font-black text-white">
-                          Rendimiento por prueba
-                        </h3>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="text-[10px] font-black text-fuchsia-400"
-                      >
-                        Ver todo
-                      </button>
-                    </div>
-
-                    <div className="mt-6 space-y-4">
-                      {subjects.map(
-                        (subject, index) => {
-                          const barColors = [
-                            "from-blue-500 to-cyan-400",
-                            "from-violet-500 to-fuchsia-400",
-                            "from-cyan-400 to-sky-400",
-                            "from-fuchsia-500 to-pink-400",
-                            "from-blue-500 to-cyan-400",
-                          ];
-
-                          return (
-                            <div
-                              key={subject.name}
-                            >
-                              <div className="mb-2 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <span
-                                    className={[
-                                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                                      "border bg-[#071735]/90",
-                                      "shadow-[inset_0_0_12px_rgba(34,211,238,0.06)]",
-                                      subject.color ===
-                                      "purple"
-                                        ? "border-violet-400/45 text-violet-300"
-                                        : subject.color ===
-                                          "blue"
-                                          ? "border-sky-400/45 text-sky-300"
-                                          : subject.color ===
-                                            "pink"
-                                            ? "border-fuchsia-400/45 text-fuchsia-300"
-                                            : "border-cyan-400/45 text-cyan-300",
-                                    ].join(" ")}
-                                  >
-                                    <SubjectMark
-                                      type={
-                                        subject.mark
-                                      }
-                                    />
-                                  </span>
-
-                                  <span className="text-[10px] font-semibold text-slate-200 sm:text-xs">
-                                    {subject.name}
-                                  </span>
-                                </div>
-
-                                <span className="font-mono text-[10px] font-black text-white">
-                                  {subject.score}/100
-                                </span>
-                              </div>
-
-                              <div className="h-1.5 overflow-hidden rounded-full bg-[#14244a]">
-                                <motion.div
-                                  initial={{
-                                    width: 0,
-                                  }}
-                                  whileInView={{
-                                    width: `${subject.score}%`,
-                                  }}
-                                  viewport={{
-                                    once: true,
-                                  }}
-                                  transition={{
-                                    duration: 0.8,
-                                    delay:
-                                      index * 0.08,
-                                  }}
-                                  className={`h-full rounded-full bg-gradient-to-r ${barColors[index]} shadow-[0_0_8px_rgba(34,211,238,0.35)]`}
-                                />
-                              </div>
-                            </div>
-                          );
-                        }
-                      )}
-                    </div>
-                  </DashboardCard>
-                </div>
+                TU CAMINO AL ICFES
               </div>
 
-              {/* =================================================
-                  INFERIOR
-              ================================================= */}
+              <h2
+                className={`
+                  mt-3
+                  max-w-[410px]
+                  text-[31px]
+                  font-black
+                  leading-[0.98]
+                  tracking-[-0.045em]
+                  ${
+                    isDark
+                      ? "text-white"
+                      : "text-slate-950"
+                  }
+                `}
+              >
+                Cada simulacro
+                <br />
+                te acerca a tu{" "}
+                <span
+                  className="
+                    bg-gradient-to-r
+                    from-cyan-400
+                    via-blue-500
+                    to-fuchsia-500
+                    bg-clip-text
+                    text-transparent
+                  "
+                >
+                  Peak
+                </span>
+              </h2>
 
-              <div className="mt-5 grid gap-5 md:grid-cols-3">
-                {/* Racha */}
+              <p
+                className={`
+                  mt-4
+                  max-w-[390px]
+                  text-[11px]
+                  font-medium
+                  leading-[1.55]
+                  ${
+                    isDark
+                      ? "text-blue-50/80"
+                      : "text-slate-700/90"
+                  }
+                `}
+              >
+                Prepárate con una experiencia
+                construida alrededor de las pruebas
+                que realmente vas a presentar.
+              </p>
 
-                <DashboardCard className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-300">
-                        Actividad
-                      </p>
+              {/* ==================================================
+                  MOBILE PRODUCT FEATURES
+              ================================================== */}
 
-                      <p className="mt-1 text-base font-black text-white">
-                        14 días de racha
-                      </p>
-                    </div>
+              <div className="mt-6 space-y-1.5">
+                <MobileProductFeature
+                  isDark={isDark}
+                  type="sessions"
+                  eyebrow="SIMULACROS"
+                  title="Entrena como en Saber 11"
+                  description="Sesiones 1 y 2 con sus respectivas áreas."
+                />
 
-                    <span className="rounded-md border border-emerald-400/30 px-2 py-1 text-[8px] font-black text-emerald-300">
-                      ACTIVA
-                    </span>
-                  </div>
+                <MobileProductFeature
+                  isDark={isDark}
+                  type="bank"
+                  eyebrow="BANCO DE PREGUNTAS"
+                  title="Practica por objetivo"
+                  description="Área, sesión y dificultad en un mismo flujo."
+                />
 
-                  <div className="mt-5">
-                    <ActivityDots />
-                  </div>
+                <MobileProductFeature
+                  isDark={isDark}
+                  type="analysis"
+                  eyebrow="ANÁLISIS"
+                  title="Aprende de tus errores"
+                  description="Detecta qué necesitas reforzar después de practicar."
+                />
+              </div>
+            </div>
 
-                  <p className="mt-3 text-[9px] text-slate-500">
-                    ¡Sigue así!
-                  </p>
-                </DashboardCard>
+            {/* ==================================================
+                MOBILE SUBJECTS
+            ================================================== */}
 
-                {/* Objetivo */}
+            <MobileSubjectBar />
 
-                <DashboardCard className="p-5">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-300">
-                        Próximo objetivo
-                      </p>
+            {/* ==================================================
+                MOBILE CTA
+            ================================================== */}
 
-                      <p className="mt-1 text-base font-black text-white">
-                        Matemáticas
-                      </p>
-                    </div>
+            <ExploreButton
+              checkingAuth={checkingAuth}
+              onClick={handleExplore}
+              mobile
+            />
+          </div>
+        </div>
+      </section>
 
-                    <motion.div
-                      animate={{
-                        rotate: [0, 8, -8, 0],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                      }}
-                      className="flex h-9 w-9 items-center justify-center rounded-full border border-cyan-400/40 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]"
-                    >
-                      <Crosshair className="h-5 w-5" />
-                    </motion.div>
-                  </div>
+      {/* ========================================================
+          AUTH GATE
+      ======================================================== */}
 
-                  <MiniProgress />
+      {authGateOpen && (
+        <div
+          className="
+            fixed
+            inset-0
+            z-[999]
+            flex
+            items-center
+            justify-center
+            bg-black/70
+            px-4
+            py-6
+            backdrop-blur-md
+          "
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget
+            ) {
+              setAuthGateOpen(false);
+            }
+          }}
+        >
+          <div
+            className={`
+              relative
+              w-full
+              max-w-[430px]
+              overflow-hidden
+              rounded-3xl
+              border
+              p-6
+              shadow-[0_30px_100px_rgba(0,0,0,0.45)]
+              ${
+                isDark
+                  ? "border-white/10 bg-[#071329]"
+                  : "border-slate-200 bg-white"
+              }
+            `}
+          >
+            {/* CLOSE */}
 
-                  <p className="mt-3 text-[9px] text-slate-500">
-                    9 puntos para superar tu mejor
-                    resultado.
-                  </p>
-                </DashboardCard>
+            <button
+              type="button"
+              onClick={() =>
+                setAuthGateOpen(false)
+              }
+              aria-label="Cerrar"
+              className={`
+                absolute
+                right-4
+                top-4
+                flex
+                h-9
+                w-9
+                items-center
+                justify-center
+                rounded-full
+                ${
+                  isDark
+                    ? "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white"
+                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                }
+              `}
+            >
+              <X className="h-4 w-4" />
+            </button>
 
-                {/* Última sesión */}
+            {/* LOGO */}
 
-                <DashboardCard className="relative overflow-hidden border-fuchsia-500/70 p-5 shadow-[0_0_30px_rgba(217,70,239,0.12)]">
-                  <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-fuchsia-500/10 blur-2xl" />
+            <div className="mb-6 w-[145px]">
+              <Image
+                src={
+                  isDark
+                    ? logos.dark
+                    : logos.light
+                }
+                alt="PeakScore"
+                width={330}
+                height={100}
+                unoptimized
+                className="
+                  h-auto
+                  w-full
+                  object-contain
+                  object-left
+                "
+              />
+            </div>
 
-                  <div className="absolute right-4 top-4 text-fuchsia-400/60">
-                    <ArrowUpRight className="h-4 w-4" />
-                  </div>
+            {/* ICON */}
 
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-cyan-300">
-                      Última sesión
-                    </p>
+            <div
+              className={`
+                mb-4
+                flex
+                h-12
+                w-12
+                items-center
+                justify-center
+                rounded-2xl
+                ${
+                  isDark
+                    ? "bg-cyan-400/10 text-cyan-300"
+                    : "bg-blue-50 text-blue-600"
+                }
+              `}
+            >
+              <LockKeyhole className="h-5 w-5" />
+            </div>
 
-                    <p className="mt-1 text-base font-black text-white">
-                      Simulacro completo
-                    </p>
-                  </div>
+            {/* TITLE */}
 
-                  <div className="mt-5 flex items-end justify-between">
-                    <div>
-                      <p className="font-mono text-4xl font-black text-cyan-300 drop-shadow-[0_0_10px_rgba(34,211,238,0.45)]">
-                        402
-                      </p>
+            <h2
+              className={`
+                text-2xl
+                font-black
+                tracking-tight
+                ${
+                  isDark
+                    ? "text-white"
+                    : "text-slate-950"
+                }
+              `}
+            >
+              Tu aventura comienza aquí
+            </h2>
 
-                      <p className="mt-1 text-[9px] text-slate-400">
-                        Puntaje obtenido
-                      </p>
-                    </div>
+            {/* DESCRIPTION */}
 
-                    <span className="rounded-md border border-fuchsia-500/40 bg-fuchsia-500/10 px-2.5 py-1 text-[8px] font-black text-fuchsia-300">
-                      HOY
-                    </span>
-                  </div>
+            <p
+              className={`
+                mt-2
+                text-sm
+                leading-6
+                ${
+                  isDark
+                    ? "text-white/55"
+                    : "text-slate-500"
+                }
+              `}
+            >
+              Para explorar tu camino, guardar
+              tu progreso y acceder a tu dashboard
+              necesitas una cuenta de PeakScore.
+            </p>
 
-                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#14244a]">
-                    <motion.div
-                      initial={{
-                        width: 0,
-                      }}
-                      whileInView={{
-                        width: "85.5%",
-                      }}
-                      viewport={{
-                        once: true,
-                      }}
-                      transition={{
-                        duration: 0.9,
-                      }}
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 shadow-[0_0_12px_rgba(34,211,238,0.5)]"
-                    />
-                  </div>
-                </DashboardCard>
+            {/* BENEFITS */}
+
+            <div className="mt-5 space-y-2.5">
+              {[
+                "Guarda tu progreso",
+                "Consulta tus resultados",
+                "Sigue tu camino hacia el Peak",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className={`
+                    flex
+                    items-center
+                    gap-2.5
+                    text-xs
+                    font-semibold
+                    ${
+                      isDark
+                        ? "text-white/70"
+                        : "text-slate-600"
+                    }
+                  `}
+                >
+                  <span
+                    className={`
+                      flex
+                      h-5
+                      w-5
+                      items-center
+                      justify-center
+                      rounded-full
+                      ${
+                        isDark
+                          ? "bg-emerald-400/10 text-emerald-300"
+                          : "bg-emerald-50 text-emerald-600"
+                      }
+                    `}
+                  >
+                    <Check className="h-3 w-3" />
+                  </span>
+
+                  {item}
+                </div>
+              ))}
+            </div>
+
+            {/* ACTIONS */}
+
+            <div className="mt-7 space-y-2.5">
+              <Link
+                href="/login"
+                onClick={() =>
+                  setAuthGateOpen(false)
+                }
+                className={`
+                  flex
+                  h-12
+                  w-full
+                  items-center
+                  justify-center
+                  rounded-xl
+                  border
+                  text-sm
+                  font-black
+                  ${
+                    isDark
+                      ? "border-white/10 bg-white/5 text-white hover:bg-white/10"
+                      : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50"
+                  }
+                `}
+              >
+                Ya tengo una cuenta
+              </Link>
+
+              <Link
+                href="/register"
+                onClick={() =>
+                  setAuthGateOpen(false)
+                }
+                className="
+                  group
+                  flex
+                  h-12
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-xl
+                  bg-gradient-to-r
+                  from-blue-600
+                  via-violet-600
+                  to-fuchsia-600
+                  text-sm
+                  font-black
+                  text-white
+                  shadow-[0_10px_30px_rgba(79,70,229,0.28)]
+                  transition-transform
+                  duration-200
+                  hover:-translate-y-0.5
+                "
+              >
+                Crear mi cuenta
+
+                <ArrowRight
+                  className="
+                    h-4
+                    w-4
+                    transition-transform
+                    duration-200
+                    group-hover:translate-x-1
+                  "
+                />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ============================================================
+   PRODUCT FEATURE — DESKTOP
+============================================================ */
+
+function ProductFeature({
+  eyebrow,
+  title,
+  description,
+  isDark,
+  type,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  isDark: boolean;
+  type: "sessions" | "bank" | "analysis";
+}) {
+  const accent =
+    type === "sessions"
+      ? isDark
+        ? "text-cyan-300"
+        : "text-blue-700"
+      : type === "bank"
+        ? isDark
+          ? "text-violet-300"
+          : "text-violet-700"
+        : isDark
+          ? "text-amber-300"
+          : "text-amber-700";
+
+  const line =
+    type === "sessions"
+      ? isDark
+        ? "bg-cyan-400"
+        : "bg-blue-600"
+      : type === "bank"
+        ? isDark
+          ? "bg-violet-400"
+          : "bg-violet-600"
+        : isDark
+          ? "bg-amber-400"
+          : "bg-amber-500";
+
+  const number =
+    type === "sessions" ? "01" : type === "bank" ? "02" : "03";
+
+  return (
+    <div
+      className={`
+        group relative flex items-start gap-[2.2%]
+        border-b pb-[2.5%] pt-[1.2%]
+        last:border-b-0
+        ${isDark ? "border-white/8" : "border-slate-900/10"}
+      `}
+    >
+      <div className="flex w-[clamp(24px,2.2vw,34px)] shrink-0 flex-col items-center self-stretch">
+        <span
+          className={`
+            pt-0.5 font-mono text-[clamp(7px,0.55vw,10px)]
+            font-bold tracking-[0.16em] ${accent}
+          `}
+        >
+          {number}
+        </span>
+        <span className={`mt-2 w-px flex-1 opacity-35 ${line}`} />
+      </div>
+
+      <div className="min-w-0 flex-1 pb-0.5">
+        <div className="flex items-center gap-2">
+          <p
+            className={`
+              text-[clamp(6px,0.52vw,9px)]
+              font-black uppercase tracking-[0.16em] ${accent}
+            `}
+          >
+            {eyebrow}
+          </p>
+          <span
+            className={`
+              h-px w-[clamp(18px,2vw,34px)]
+              ${isDark ? "bg-white/12" : "bg-slate-900/12"}
+            `}
+          />
+        </div>
+
+        <p
+          className={`
+            mt-0.5 text-[clamp(11px,0.82vw,16px)]
+            font-black tracking-[-0.02em]
+            ${isDark ? "text-white" : "text-slate-950"}
+          `}
+        >
+          {title}
+        </p>
+
+        <p
+          className={`
+            mt-0.5 max-w-[500px]
+            text-[clamp(7px,0.55vw,10.5px)]
+            font-medium leading-[1.35]
+            ${isDark ? "text-blue-100/55" : "text-slate-600"}
+          `}
+        >
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   MOBILE PRODUCT FEATURE
+============================================================ */
+
+function MobileProductFeature({
+  eyebrow,
+  title,
+  description,
+  isDark,
+  type,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  isDark: boolean;
+  type: "sessions" | "bank" | "analysis";
+}) {
+  const accent =
+    type === "sessions"
+      ? isDark
+        ? "text-cyan-300"
+        : "text-blue-700"
+      : type === "bank"
+        ? isDark
+          ? "text-violet-300"
+          : "text-violet-700"
+        : isDark
+          ? "text-amber-300"
+          : "text-amber-700";
+
+  const number =
+    type === "sessions" ? "01" : type === "bank" ? "02" : "03";
+
+  return (
+    <div
+      className={`
+        relative flex items-start gap-3 border-t py-3
+        ${isDark ? "border-white/10" : "border-slate-900/10"}
+      `}
+    >
+      <span
+        className={`
+          w-5 shrink-0 pt-0.5 font-mono text-[8px]
+          font-black tracking-[0.12em] ${accent}
+        `}
+      >
+        {number}
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p
+          className={`
+            text-[7px] font-black uppercase
+            tracking-[0.12em] ${accent}
+          `}
+        >
+          {eyebrow}
+        </p>
+
+        <p
+          className={`
+            mt-0.5 text-[11px] font-black leading-tight
+            ${isDark ? "text-white" : "text-slate-950"}
+          `}
+        >
+          {title}
+        </p>
+
+        <p
+          className={`
+            mt-1 max-w-[330px] text-[8px]
+            font-medium leading-[1.35]
+            ${isDark ? "text-white/50" : "text-slate-600"}
+          `}
+        >
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+   SUBJECT BAR — DESKTOP
+============================================================ */
+
+function SubjectBar() {
+  return (
+    <div
+      className="
+        absolute
+        bottom-[13.5%]
+        left-[5.5%]
+        z-30
+        flex
+        w-[89%]
+        items-stretch
+        overflow-hidden
+        rounded-[clamp(12px,1.2vw,20px)]
+        border
+        border-cyan-400/55
+        bg-[#071a35]/92
+        shadow-[0_15px_40px_rgba(0,0,0,0.22)]
+        backdrop-blur-xl
+      "
+    >
+      {subjects.map(
+        (subject, index) => (
+          <div
+            key={subject.name}
+            className={`
+              flex
+              min-w-0
+              flex-1
+              items-center
+              gap-[5%]
+              px-[1.35%]
+              py-[1.15%]
+              ${
+                index !==
+                subjects.length - 1
+                  ? "border-r border-blue-300/15"
+                  : ""
+              }
+            `}
+          >
+            <div
+              className="
+                relative
+                h-[clamp(35px,3.7vw,60px)]
+                w-[clamp(35px,3.7vw,60px)]
+                shrink-0
+              "
+            >
+              <Image
+                src={subject.icon}
+                alt=""
+                fill
+                sizes="60px"
+                className="object-contain"
+              />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p
+                className="
+                  truncate
+                  text-[clamp(6px,0.62vw,11px)]
+                  font-bold
+                  text-white
+                "
+              >
+                {subject.name}
+              </p>
+
+              <p
+                className="
+                  mt-0.5
+                  text-[clamp(14px,1.35vw,23px)]
+                  font-black
+                  leading-none
+                  text-white
+                "
+              >
+                {subject.score}
+
+                <span
+                  className="
+                    ml-1
+                    text-[clamp(7px,0.58vw,10px)]
+                    font-bold
+                    text-blue-200/55
+                  "
+                >
+                  /100
+                </span>
+              </p>
+
+              <div
+                className="
+                  mt-1.5
+                  h-[clamp(4px,0.4vw,7px)]
+                  overflow-hidden
+                  rounded-full
+                  bg-white/10
+                "
+              >
+                <div
+                  className={`
+                    h-full
+                    rounded-full
+                    ${subject.color}
+                  `}
+                  style={{
+                    width: `${subject.score}%`,
+                  }}
+                />
               </div>
             </div>
           </div>
-        </motion.div>
+        )
+      )}
+    </div>
+  );
+}
 
-        {/* =====================================================
-            CIERRE
-        ===================================================== */}
+/* ============================================================
+   SUBJECT BAR — MOBILE
+============================================================ */
 
-        <motion.div
-          initial={reveal(10)}
-          whileInView={
-            shouldReduceMotion
-              ? undefined
-              : {
-                  opacity: 1,
-                  y: 0,
+function MobileSubjectBar() {
+  return (
+    <div
+      className="
+        absolute
+        bottom-[9%]
+        left-[5%]
+        z-30
+        grid
+        w-[90%]
+        grid-cols-2
+        overflow-hidden
+        rounded-2xl
+        border
+        border-cyan-400/55
+        bg-[#071a35]/92
+        shadow-[0_15px_35px_rgba(0,0,0,0.22)]
+        backdrop-blur-xl
+      "
+    >
+      {subjects.map(
+        (subject, index) => {
+          const isLast =
+            index === subjects.length - 1;
+
+          return (
+            <div
+              key={subject.name}
+              className={`
+                flex
+                min-w-0
+                items-center
+                gap-2
+                px-2.5
+                py-2.5
+                ${
+                  isLast
+                    ? "col-span-2 justify-center"
+                    : ""
                 }
-          }
-          viewport={{
-            once: true,
-          }}
-          transition={{
-            duration: 0.6,
-          }}
-          className="mx-auto mt-10 flex max-w-2xl items-center gap-4"
-        >
-          <div className="hidden h-px flex-1 bg-[#20325c] sm:block" />
+                ${
+                  !isLast
+                    ? "border-b border-blue-300/15"
+                    : ""
+                }
+                ${
+                  index % 2 === 0 &&
+                  !isLast
+                    ? "border-r border-blue-300/15"
+                    : ""
+                }
+              `}
+            >
+              <div
+                className="
+                  relative
+                  h-[38px]
+                  w-[38px]
+                  shrink-0
+                "
+              >
+                <Image
+                  src={subject.icon}
+                  alt=""
+                  fill
+                  sizes="38px"
+                  className="object-contain"
+                />
+              </div>
 
-          <p className="text-center text-[10px] font-medium leading-5 text-slate-500">
-            No estudies a ciegas.
-            <br className="sm:hidden" />
-            Conoce exactamente dónde estás y hacia
-            dónde avanzar.
-          </p>
+              <div className="min-w-0">
+                <p
+                  className="
+                    truncate
+                    text-[8px]
+                    font-bold
+                    text-white
+                  "
+                >
+                  {subject.name}
+                </p>
 
-          <div className="hidden h-px flex-1 bg-[#20325c] sm:block" />
-        </motion.div>
-      </div>
-    </section>
+                <p
+                  className="
+                    mt-0.5
+                    text-[17px]
+                    font-black
+                    leading-none
+                    text-white
+                  "
+                >
+                  {subject.score}
+
+                  <span
+                    className="
+                      ml-0.5
+                      text-[8px]
+                      font-bold
+                      text-blue-200/55
+                    "
+                  >
+                    /100
+                  </span>
+                </p>
+
+                <div
+                  className="
+                    mt-1.5
+                    h-1
+                    overflow-hidden
+                    rounded-full
+                    bg-white/10
+                  "
+                >
+                  <div
+                    className={`
+                      h-full
+                      rounded-full
+                      ${subject.color}
+                    `}
+                    style={{
+                      width: `${subject.score}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          );
+        }
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   CTA
+============================================================ */
+
+function ExploreButton({
+  checkingAuth,
+  onClick,
+  mobile = false,
+}: {
+  checkingAuth: boolean;
+  onClick: () => void;
+  mobile?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={checkingAuth}
+      className={`
+        absolute
+        left-1/2
+        z-40
+        flex
+        -translate-x-1/2
+        items-center
+        justify-center
+        gap-2
+        rounded-full
+        bg-gradient-to-r
+        from-cyan-400
+        via-blue-500
+        to-fuchsia-500
+        font-black
+        text-white
+        shadow-[0_12px_40px_rgba(42,100,255,0.4)]
+        transition-all
+        duration-200
+        hover:scale-[1.035]
+        hover:shadow-[0_16px_50px_rgba(42,100,255,0.55)]
+        focus:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-cyan-300
+        disabled:cursor-wait
+        disabled:opacity-80
+        ${
+          mobile
+            ? `
+              bottom-[2.5%]
+              h-[43px]
+              w-[58%]
+              text-[11px]
+            `
+            : `
+              bottom-[3.2%]
+              h-[5.6%]
+              w-[21%]
+              text-[clamp(9px,1vw,17px)]
+            `
+        }
+      `}
+    >
+      {checkingAuth
+        ? "Comprobando..."
+        : "Explora tu camino"}
+
+      {!checkingAuth && (
+        <ArrowRight
+          className="
+            h-[1em]
+            w-[1em]
+          "
+        />
+      )}
+    </button>
   );
 }

@@ -13,11 +13,14 @@ import {
    TIPOS
 ============================================================ */
 
+export type LandingTheme = "light" | "dark";
+
 type FeatureCardProps = {
   src: string;
   alt: string;
   delay: number;
   priority?: boolean;
+  theme: LandingTheme;
 };
 
 /* ============================================================
@@ -29,20 +32,13 @@ function FeatureCard({
   alt,
   delay,
   priority = false,
+  theme,
 }: FeatureCardProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  /*
-   * Valores de movimiento del mouse.
-   *
-   * Se mantienen en 0 cuando no estamos interactuando.
-   */
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  /*
-   * Spring para que el movimiento no sea brusco.
-   */
   const springX = useSpring(mouseX, {
     stiffness: 180,
     damping: 22,
@@ -55,27 +51,23 @@ function FeatureCard({
     mass: 0.5,
   });
 
-  /*
-   * Rotación 3D.
-   *
-   * El rango es pequeño para que se vea premium
-   * y no como una animación exagerada.
-   */
-  const rotateY = useTransform(springX, [-1, 1], [-7, 7]);
-  const rotateX = useTransform(springY, [-1, 1], [7, -7]);
+  const rotateY = useTransform(
+    springX,
+    [-1, 1],
+    [-7, 7]
+  );
 
-  /*
-   * Movimiento vertical muy leve.
-   */
-  const translateY = useTransform(springY, [-1, 1], [3, -3]);
+  const rotateX = useTransform(
+    springY,
+    [-1, 1],
+    [7, -7]
+  );
 
-  /* ==========================================================
-     MOUSE ENTER
-  ========================================================== */
-
-  const handleMouseEnter = () => {
-    if (shouldReduceMotion) return;
-  };
+  const translateY = useTransform(
+    springY,
+    [-1, 1],
+    [3, -3]
+  );
 
   /* ==========================================================
      MOUSE MOVE
@@ -86,17 +78,17 @@ function FeatureCard({
   ) => {
     if (shouldReduceMotion) return;
 
-    const rect = event.currentTarget.getBoundingClientRect();
+    const rect =
+      event.currentTarget.getBoundingClientRect();
 
     const x =
-      (event.clientX - rect.left) / rect.width;
+      (event.clientX - rect.left) /
+      rect.width;
 
     const y =
-      (event.clientY - rect.top) / rect.height;
+      (event.clientY - rect.top) /
+      rect.height;
 
-    /*
-     * Convertimos 0 → 1 en -1 → 1.
-     */
     mouseX.set(x * 2 - 1);
     mouseY.set(y * 2 - 1);
   };
@@ -109,6 +101,8 @@ function FeatureCard({
     mouseX.set(0);
     mouseY.set(0);
   };
+
+  const isDark = theme === "dark";
 
   return (
     <motion.div
@@ -143,7 +137,6 @@ function FeatureCard({
         w-full
         [perspective:1200px]
       "
-      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
@@ -152,7 +145,7 @@ function FeatureCard({
       ====================================================== */}
 
       <motion.div
-        className="
+        className={`
           pointer-events-none
           absolute
           left-1/2
@@ -162,14 +155,17 @@ function FeatureCard({
           -translate-x-1/2
           -translate-y-1/2
           rounded-full
-          bg-blue-400/10
           blur-[70px]
           opacity-0
           transition-opacity
           duration-500
           group-hover:opacity-100
-          dark:bg-violet-500/15
-        "
+          ${
+            isDark
+              ? "bg-violet-500/20"
+              : "bg-lime-400/20"
+          }
+        `}
       />
 
       {/* ======================================================
@@ -217,7 +213,7 @@ function FeatureCard({
         "
       >
         {/* ====================================================
-            IMAGEN DE LA TARJETA
+            IMAGEN
         ==================================================== */}
 
         <Image
@@ -226,12 +222,13 @@ function FeatureCard({
           width={1000}
           height={1000}
           priority={priority}
+          unoptimized
           sizes="
             (max-width: 639px) 92vw,
             (max-width: 1023px) 70vw,
             31vw
           "
-          className="
+          className={`
             relative
             z-10
             h-auto
@@ -239,15 +236,16 @@ function FeatureCard({
             object-contain
             transition-[filter]
             duration-500
-            drop-shadow-[0_22px_30px_rgba(15,23,42,0.18)]
-            group-hover:drop-shadow-[0_32px_42px_rgba(15,23,42,0.30)]
-            dark:drop-shadow-[0_24px_38px_rgba(0,0,0,0.45)]
-            dark:group-hover:drop-shadow-[0_35px_52px_rgba(0,0,0,0.65)]
-          "
+            ${
+              isDark
+                ? "drop-shadow-[0_24px_38px_rgba(0,0,0,0.45)] group-hover:drop-shadow-[0_35px_52px_rgba(0,0,0,0.65)]"
+                : "drop-shadow-[0_22px_30px_rgba(15,23,42,0.18)] group-hover:drop-shadow-[0_32px_42px_rgba(15,23,42,0.30)]"
+            }
+          `}
         />
 
         {/* ====================================================
-            BRILLO GAME UI
+            BRILLO
         ==================================================== */}
 
         <motion.div
@@ -279,7 +277,7 @@ function FeatureCard({
         ==================================================== */}
 
         <div
-          className="
+          className={`
             pointer-events-none
             absolute
             inset-0
@@ -289,9 +287,12 @@ function FeatureCard({
             border-transparent
             transition-all
             duration-500
-            group-hover:border-blue-400/35
-            dark:group-hover:border-violet-400/40
-          "
+            ${
+              isDark
+                ? "group-hover:border-violet-400/45"
+                : "group-hover:border-lime-400/55"
+            }
+          `}
         />
 
         {/* ====================================================
@@ -308,7 +309,7 @@ function FeatureCard({
             h-px
             bg-gradient-to-r
             from-transparent
-            via-white/50
+            via-white/60
             to-transparent
             opacity-0
             transition-opacity
@@ -325,65 +326,183 @@ function FeatureCard({
    PEAKY
 ============================================================ */
 
-function FeaturesPeaky() {
+function FeaturesPeaky({
+  theme,
+}: {
+  theme: LandingTheme;
+}) {
+  const isDark = theme === "dark";
+
   return (
-    <div
-      className="
-        pointer-events-none
-        absolute
-        bottom-[-18px]
-        right-[-10px]
-        z-40
-        hidden
-        h-[185px]
-        w-[150px]
-        sm:block
-        md:h-[215px]
-        md:w-[175px]
-        lg:bottom-[-35px]
-        lg:right-[-5px]
-        lg:h-[255px]
-        lg:w-[205px]
-        xl:right-[10px]
-        xl:h-[280px]
-        xl:w-[225px]
-      "
-    >
+    <>
       {/* ======================================================
-          PEAKY CLARO
+          PEAKY DESKTOP / TABLET
       ====================================================== */}
 
-      <Image
-        src="/peaky/homepage/featurespeakyclaro.png"
-        alt=""
-        fill
-        sizes="225px"
+      <div
+        aria-hidden="true"
         className="
-          object-contain
-          object-bottom
-          drop-shadow-[0_20px_25px_rgba(20,50,25,0.25)]
-          dark:hidden
-        "
-      />
-
-      {/* ======================================================
-          PEAKY OSCURO / MORADO
-      ====================================================== */}
-
-      <Image
-        src="/peaky/homepage/featurespeakyscuro.png"
-        alt=""
-        fill
-        sizes="225px"
-        className="
+          pointer-events-none
+          absolute
+          bottom-[-42px]
+          right-[-5px]
+          z-40
           hidden
-          object-contain
-          object-bottom
-          drop-shadow-[0_20px_30px_rgba(0,0,0,0.6)]
-          dark:block
+          h-[230px]
+          w-[185px]
+          sm:block
+          md:h-[255px]
+          md:w-[205px]
+          lg:bottom-[-48px]
+          lg:right-[-5px]
+          lg:h-[285px]
+          lg:w-[225px]
+          xl:right-[15px]
+          xl:h-[315px]
+          xl:w-[250px]
         "
-      />
-    </div>
+      >
+        {/* PEAKY OSCURO */}
+
+        <Image
+          src="/peaky/homepage/featurespeakyoscuro.webp"
+          alt=""
+          fill
+          unoptimized
+          sizes="
+            (max-width: 767px) 205px,
+            (max-width: 1023px) 225px,
+            250px
+          "
+          className={`
+            absolute
+            inset-0
+            object-contain
+            object-bottom
+            transition-opacity
+            duration-500
+            ease-out
+            ${
+              isDark
+                ? "opacity-100"
+                : "opacity-0"
+            }
+            ${
+              isDark
+                ? "drop-shadow-[0_20px_35px_rgba(0,0,0,0.65)]"
+                : ""
+            }
+          `}
+        />
+
+        {/* PEAKY CLARO */}
+
+        <Image
+          src="/peaky/homepage/featurespeakyclaro.webp"
+          alt=""
+          fill
+          unoptimized
+          sizes="
+            (max-width: 767px) 205px,
+            (max-width: 1023px) 225px,
+            250px
+          "
+          className={`
+            absolute
+            inset-0
+            object-contain
+            object-bottom
+            transition-opacity
+            duration-500
+            ease-out
+            ${
+              isDark
+                ? "opacity-0"
+                : "opacity-100"
+            }
+            ${
+              !isDark
+                ? "drop-shadow-[0_20px_30px_rgba(20,50,25,0.25)]"
+                : ""
+            }
+          `}
+        />
+      </div>
+
+      {/* ======================================================
+          PEAKY MOBILE
+      ====================================================== */}
+
+      <div
+        aria-hidden="true"
+        className="
+          relative
+          mx-auto
+          mt-[-8px]
+          h-[190px]
+          w-[155px]
+          sm:hidden
+        "
+      >
+        {/* PEAKY OSCURO */}
+
+        <Image
+          src="/peaky/homepage/featurespeakyoscuro.webp"
+          alt=""
+          fill
+          unoptimized
+          sizes="155px"
+          className={`
+            absolute
+            inset-0
+            object-contain
+            object-bottom
+            transition-opacity
+            duration-500
+            ease-out
+            ${
+              isDark
+                ? "opacity-100"
+                : "opacity-0"
+            }
+            ${
+              isDark
+                ? "drop-shadow-[0_18px_28px_rgba(0,0,0,0.65)]"
+                : ""
+            }
+          `}
+        />
+
+        {/* PEAKY CLARO */}
+
+        <Image
+          src="/peaky/homepage/featurespeakyclaro.webp"
+          alt=""
+          fill
+          unoptimized
+          sizes="155px"
+          className={`
+            absolute
+            inset-0
+            object-contain
+            object-bottom
+            transition-opacity
+            duration-500
+            ease-out
+            ${
+              isDark
+                ? "opacity-0"
+                : "opacity-100"
+            }
+            ${
+              !isDark
+                ? "drop-shadow-[0_18px_25px_rgba(20,50,25,0.25)]"
+                : ""
+            }
+          `}
+        />
+      </div>
+    </>
   );
 }
 
@@ -391,22 +510,36 @@ function FeaturesPeaky() {
    FEATURES
 ============================================================ */
 
-export default function Features() {
+type FeaturesProps = {
+  theme: LandingTheme;
+};
+
+export default function Features({
+  theme,
+}: FeaturesProps) {
   const shouldReduceMotion = useReducedMotion();
+
+  const isDark = theme === "dark";
 
   return (
     <section
       id="features"
-      className="
+      className={`
         relative
         isolate
         overflow-hidden
-        bg-[#f5f8ff]
         py-20
         sm:py-24
         lg:py-28
-        dark:bg-[#050713]
-      "
+        transition-colors
+        duration-300
+        ease-out
+        ${
+          isDark
+            ? "bg-[#050713]"
+            : "bg-[#f5f8ff]"
+        }
+      `}
     >
       {/* ======================================================
           FONDOS
@@ -422,75 +555,117 @@ export default function Features() {
         "
       >
         {/* ====================================================
-            CLARO DESKTOP
+            DESKTOP OSCURO
         ==================================================== */}
 
         <Image
-          src="/peaky/homepage/featuresclaro.png"
+          src="/peaky/homepage/featuresoscuro.webp"
           alt=""
           fill
           priority
+          unoptimized
           sizes="100vw"
-          className="
+          className={`
+            absolute
+            inset-0
             hidden
             object-cover
             object-center
+            transition-opacity
+            duration-500
+            ease-out
             md:block
-            dark:hidden
-          "
+            ${
+              isDark
+                ? "opacity-100"
+                : "opacity-0"
+            }
+          `}
         />
 
         {/* ====================================================
-            CLARO MOBILE
+            DESKTOP CLARO
         ==================================================== */}
 
         <Image
-          src="/peaky/homepage/featuresmobileclaro.png"
+          src="/peaky/homepage/featuresclaro.webp"
           alt=""
           fill
           priority
+          unoptimized
           sizes="100vw"
-          className="
-            object-cover
-            object-center
-            md:hidden
-            dark:hidden
-          "
-        />
-
-        {/* ====================================================
-            OSCURO DESKTOP
-        ==================================================== */}
-
-        <Image
-          src="/peaky/homepage/featuresoscuro.png"
-          alt=""
-          fill
-          sizes="100vw"
-          className="
+          className={`
+            absolute
+            inset-0
             hidden
             object-cover
             object-center
+            transition-opacity
+            duration-500
+            ease-out
             md:block
-            dark:block
-          "
+            ${
+              isDark
+                ? "opacity-0"
+                : "opacity-100"
+            }
+          `}
         />
 
         {/* ====================================================
-            OSCURO MOBILE
+            MOBILE OSCURO
         ==================================================== */}
 
         <Image
-          src="/peaky/homepage/featuresmobileoscuro.png"
+          src="/peaky/homepage/featuresmobileoscuro.webp"
           alt=""
           fill
+          priority
+          unoptimized
           sizes="100vw"
-          className="
+          className={`
+            absolute
+            inset-0
             object-cover
             object-center
+            transition-opacity
+            duration-500
+            ease-out
             md:hidden
-            dark:block
-          "
+            ${
+              isDark
+                ? "opacity-100"
+                : "opacity-0"
+            }
+          `}
+        />
+
+        {/* ====================================================
+            MOBILE CLARO
+        ==================================================== */}
+
+        <Image
+          src="/peaky/homepage/featuresmobileclaro.webp"
+          alt=""
+          fill
+          priority
+          unoptimized
+          sizes="100vw"
+          className={`
+            absolute
+            inset-0
+            object-cover
+            object-center
+            transition-opacity
+            duration-500
+            ease-out
+            md:hidden
+            ${
+              isDark
+                ? "opacity-0"
+                : "opacity-100"
+            }
+          `}
         />
 
         {/* ====================================================
@@ -498,12 +673,18 @@ export default function Features() {
         ==================================================== */}
 
         <div
-          className="
+          className={`
             absolute
             inset-0
-            bg-white/5
-            dark:bg-[#02030b]/20
-          "
+            transition-colors
+            duration-500
+            ease-out
+            ${
+              isDark
+                ? "bg-[#02030b]/20"
+                : "bg-white/5"
+            }
+          `}
         />
 
         {/* ====================================================
@@ -511,16 +692,22 @@ export default function Features() {
         ==================================================== */}
 
         <div
-          className="
+          className={`
             absolute
             inset-x-0
             bottom-0
             h-32
             bg-gradient-to-t
-            from-[#f5f8ff]
             to-transparent
-            dark:from-[#050713]
-          "
+            transition-colors
+            duration-500
+            ease-out
+            ${
+              isDark
+                ? "from-[#050713]"
+                : "from-[#f5f8ff]"
+            }
+          `}
         />
       </div>
 
@@ -575,7 +762,9 @@ export default function Features() {
             text-center
           "
         >
-          {/* Etiqueta */}
+          {/* ==================================================
+              ETIQUETA
+          ================================================== */}
 
           <div
             className="
@@ -587,89 +776,121 @@ export default function Features() {
             "
           >
             <span
-              className="
+              className={`
                 h-px
                 w-8
-                bg-emerald-500
-                dark:bg-lime-400
-              "
+                transition-colors
+                duration-300
+                ${
+                  isDark
+                    ? "bg-lime-400"
+                    : "bg-emerald-500"
+                }
+              `}
             />
 
             <span
-              className="
+              className={`
                 text-[9px]
                 font-extrabold
                 uppercase
                 tracking-[0.24em]
-                text-emerald-700
-                dark:text-lime-300
-              "
+                transition-colors
+                duration-300
+                ${
+                  isDark
+                    ? "text-lime-300"
+                    : "text-emerald-700"
+                }
+              `}
             >
               Todo en un solo lugar
             </span>
 
             <span
-              className="
+              className={`
                 h-px
                 w-8
-                bg-emerald-500
-                dark:bg-lime-400
-              "
+                transition-colors
+                duration-300
+                ${
+                  isDark
+                    ? "bg-lime-400"
+                    : "bg-emerald-500"
+                }
+              `}
             />
           </div>
 
-          {/* Título */}
+          {/* ==================================================
+              TÍTULO
+          ================================================== */}
 
           <h2
-            className="
+            className={`
               text-[38px]
               font-black
               leading-[1]
               tracking-[-0.045em]
-              text-slate-950
+              transition-colors
+              duration-300
+              ease-out
               sm:text-[48px]
               lg:text-[58px]
-              dark:text-white
-            "
+              ${
+                isDark
+                  ? "text-white"
+                  : "text-slate-950"
+              }
+            `}
           >
             Prepárate.
             <br />
 
             <span
-              className="
+              className={`
                 bg-gradient-to-r
-                from-emerald-600
-                via-teal-500
-                to-blue-600
                 bg-clip-text
                 text-transparent
-                dark:from-lime-300
-                dark:via-emerald-300
-                dark:to-cyan-300
-              "
+                transition-all
+                duration-300
+                ${
+                  isDark
+                    ? "from-lime-300 via-emerald-300 to-cyan-300"
+                    : "from-emerald-600 via-teal-500 to-blue-600"
+                }
+              `}
             >
               Practica. Mejora.
             </span>
           </h2>
 
-          {/* Descripción */}
+          {/* ==================================================
+              DESCRIPCIÓN
+          ================================================== */}
 
           <p
-            className="
+            className={`
               mx-auto
               mt-5
               max-w-xl
               text-[13px]
               font-medium
               leading-6
-              text-slate-600
+              transition-colors
+              duration-300
+              ease-out
               sm:text-[15px]
-              dark:text-white/60
-            "
+              ${
+                isDark
+                  ? "text-white/60"
+                  : "text-slate-600"
+              }
+            `}
           >
-            Simulacros tipo ICFES, práctica enfocada y seguimiento
-            de tu progreso. Todo lo que necesitas para prepararte
-            en un solo lugar.
+            Simulacros tipo ICFES, práctica enfocada y
+            seguimiento de tu progreso. Todo lo que
+            necesitas para prepararte en un solo lugar.
           </p>
         </motion.div>
 
@@ -698,10 +919,11 @@ export default function Features() {
           ================================================== */}
 
           <FeatureCard
-            src="/peaky/homepage/featuressimulacros.png"
+            src="/peaky/homepage/featuressimulacros.webp"
             alt="Simulacros PeakScore"
             delay={0}
             priority
+            theme={theme}
           />
 
           {/* ==================================================
@@ -709,9 +931,10 @@ export default function Features() {
           ================================================== */}
 
           <FeatureCard
-            src="/peaky/homepage/featurespractica.png"
+            src="/peaky/homepage/featurespractica.webp"
             alt="Práctica PeakScore"
             delay={0.1}
+            theme={theme}
           />
 
           {/* ==================================================
@@ -719,17 +942,19 @@ export default function Features() {
           ================================================== */}
 
           <FeatureCard
-            src="/peaky/homepage/featuresprogreso.png"
+            src="/peaky/homepage/featuresprogreso.webp"
             alt="Progreso PeakScore"
             delay={0.2}
+            theme={theme}
           />
-
-          {/* ==================================================
-              PEAKY
-          ================================================== */}
-
-          <FeaturesPeaky />
         </div>
+
+        {/* ====================================================
+            PEAKY
+            FUERA DEL GRID PARA QUE NUNCA ELIMINE UNA TARJETA
+        ==================================================== */}
+
+        <FeaturesPeaky theme={theme} />
       </div>
     </section>
   );

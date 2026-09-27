@@ -31,58 +31,87 @@ export default function Sidebar() {
    */
 
   useEffect(() => {
-    async function checkAdminRole() {
-      try {
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+  let cancelled = false;
 
-        if (userError) {
-          console.error(
-            "Error obteniendo usuario:",
-            userError
-          );
+  async function checkAdminRole() {
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-          setIsAdmin(false);
+      // Si no existe una sesión, no es un error del Sidebar.
+      // Simplemente no mostramos la sección de administración.
+      if (userError) {
+        if (userError.name === "AuthSessionMissingError") {
+          if (!cancelled) {
+            setIsAdmin(false);
+          }
+
           return;
         }
 
-        if (!user) {
-          setIsAdmin(false);
-          return;
-        }
-
-        const { data, error } = await supabase
-          .from("institution_members")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-
-        if (error) {
-          console.error(
-            "Error verificando rol:",
-            error
-          );
-
-          setIsAdmin(false);
-          return;
-        }
-
-        setIsAdmin(data?.role === "admin");
-      } catch (error) {
         console.error(
-          "Error inesperado verificando administrador:",
+          "Error obteniendo usuario:",
+          userError
+        );
+
+        if (!cancelled) {
+          setIsAdmin(false);
+        }
+
+        return;
+      }
+
+      if (!user) {
+        if (!cancelled) {
+          setIsAdmin(false);
+        }
+
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("institution_members")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (error) {
+        console.error(
+          "Error verificando rol:",
           error
         );
 
+        if (!cancelled) {
+          setIsAdmin(false);
+        }
+
+        return;
+      }
+
+      if (!cancelled) {
+        setIsAdmin(data?.role === "admin");
+      }
+    } catch (error) {
+      console.error(
+        "Error inesperado verificando administrador:",
+        error
+      );
+
+      if (!cancelled) {
         setIsAdmin(false);
       }
     }
+  }
 
-    checkAdminRole();
-  }, []);
+  checkAdminRole();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
   /*
    * ============================================================

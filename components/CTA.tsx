@@ -1,153 +1,512 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
-export default function CTA() {
+export type LandingTheme = "light" | "dark";
+
+type CTAProps = {
+  theme?: LandingTheme;
+};
+
+export default function CTA({ theme: externalTheme }: CTAProps) {
+  const [internalTheme, setInternalTheme] =
+    useState<LandingTheme>("dark");
+
+  /*
+   * ============================================================
+   * TEMA
+   *
+   * Si page.tsx entrega el tema, ese es el que manda.
+   *
+   * El fallback interno solamente existe para no romper
+   * el componente si se utiliza en otro lugar.
+   * ============================================================
+   */
+
+  useEffect(() => {
+    if (externalTheme) {
+      setInternalTheme(externalTheme);
+      return;
+    }
+
+    const syncTheme = () => {
+      const currentTheme =
+        document.documentElement.dataset.theme;
+
+      setInternalTheme(
+        currentTheme === "light" ? "light" : "dark"
+      );
+    };
+
+    syncTheme();
+
+    const observer = new MutationObserver(syncTheme);
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [externalTheme]);
+
+  const theme = externalTheme ?? internalTheme;
+  const isDark = theme === "dark";
+
+  /*
+   * ============================================================
+   * FONDOS OFICIALES DEL CTA
+   *
+   * NO SE CAMBIAN.
+   * ============================================================
+   */
+
+  const desktopLight =
+    "/peaky/homepage/CTA-desktop-claro.webp";
+
+  const desktopDark =
+    "/peaky/homepage/CTA-desktop-oscuro.webp";
+
+  const mobileLight =
+    "/peaky/homepage/CTA-mobile-claro.webp";
+
+  const mobileDark =
+    "/peaky/homepage/CTA-mobile-oscuro.webp";
+
+  /*
+   * ============================================================
+   * COLORES
+   * ============================================================
+   */
+
+  const titleAccent = isDark
+    ? "bg-gradient-to-r from-[#a87cff] via-[#8e70ff] to-[#52ddff] bg-clip-text text-transparent"
+    : "bg-gradient-to-r from-[#246fd3] via-[#1687cf] to-[#38b86f] bg-clip-text text-transparent";
+
+  const description = isDark
+    ? "text-white/82"
+    : "text-[#173252]/88";
+
+  /*
+   * ============================================================
+   * RETURN
+   * ============================================================
+   */
+
   return (
-    <section className="relative isolate min-h-[680px] overflow-hidden bg-[#09051b]">
-      {/* =========================================================
-          CIELO DEL ATARDECER
-      ========================================================== */}
+    <section
+      id="cta"
+      aria-labelledby="cta-title"
+      className={`
+        relative
+        isolate
+        min-h-[760px]
+        overflow-hidden
+        transition-colors
+        duration-500
+        sm:min-h-[800px]
+        lg:min-h-[820px]
+        ${
+          isDark
+            ? "bg-[#02030d]"
+            : "bg-[#eaf7ff]"
+        }
+      `}
+    >
+      {/* ========================================================
+          FONDO DESKTOP OSCURO
+      ========================================================= */}
 
-      <div className="absolute inset-0">
-        {/* Gradiente principal */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#08051c] via-[#24104b] to-[#ff5f91]" />
-
-        {/* Luz del horizonte */}
-        <div className="absolute bottom-[22%] left-1/2 h-[260px] w-[900px] -translate-x-1/2 rounded-full bg-[#ff7b9c]/25 blur-[100px]" />
-
-        {/* Luz azul superior */}
-        <div className="absolute left-1/2 top-0 h-[300px] w-[900px] -translate-x-1/2 bg-[#3156ff]/10 blur-[120px]" />
-
-        {/* =====================================================
-            PIXEL STARS
-        ====================================================== */}
-
-        <div className="absolute left-[8%] top-[18%] h-2 w-2 bg-[#55dfff]" />
-        <div className="absolute left-[8.7%] top-[17.5%] h-1 w-1 bg-[#55dfff]" />
-
-        <div className="absolute left-[19%] top-[27%] h-1.5 w-1.5 bg-[#c477ff]" />
-
-        <div className="absolute left-[31%] top-[12%] h-1 w-1 bg-[#5ce5ff]" />
-
-        <div className="absolute right-[17%] top-[20%] h-2 w-2 bg-[#f47cff]" />
-        <div className="absolute right-[17.8%] top-[19.5%] h-1 w-1 bg-[#f47cff]" />
-
-        <div className="absolute right-[8%] top-[35%] h-1.5 w-1.5 bg-[#5ce5ff]" />
-
-        <div className="absolute left-[42%] top-[17%] h-1 w-1 bg-white/60" />
-
-        <div className="absolute right-[38%] top-[11%] h-1 w-1 bg-white/50" />
-
-        {/* =====================================================
-            NUBES PIXELADAS
-        ====================================================== */}
-
-        {/* Nube izquierda */}
-        <div className="absolute bottom-[31%] left-[-20px] h-[75px] w-[280px] opacity-90">
-          <div className="absolute bottom-0 left-0 h-8 w-full bg-[#6d267e]" />
-          <div className="absolute bottom-7 left-8 h-9 w-24 bg-[#87358d]" />
-          <div className="absolute bottom-7 left-20 h-12 w-24 bg-[#8e398f]" />
-          <div className="absolute bottom-7 left-36 h-7 w-20 bg-[#70277f]" />
-          <div className="absolute bottom-16 left-14 h-6 w-20 bg-[#9c4297]" />
-          <div className="absolute bottom-14 left-48 h-5 w-14 bg-[#8d398d]" />
-        </div>
-
-        {/* Nube derecha */}
-        <div className="absolute bottom-[34%] right-[-30px] h-[95px] w-[330px] opacity-90">
-          <div className="absolute bottom-0 right-0 h-9 w-full bg-[#662477]" />
-          <div className="absolute bottom-8 right-8 h-10 w-28 bg-[#833184]" />
-          <div className="absolute bottom-8 right-20 h-14 w-28 bg-[#963c8f]" />
-          <div className="absolute bottom-8 right-44 h-8 w-20 bg-[#742a7e]" />
-          <div className="absolute bottom-20 right-28 h-7 w-24 bg-[#a34594]" />
-          <div className="absolute bottom-18 right-4 h-6 w-16 bg-[#8e358a]" />
-        </div>
-
-        {/* =====================================================
-            SOL PIXELADO
-        ====================================================== */}
-
-        <div className="absolute bottom-[27%] left-1/2 h-[150px] w-[150px] -translate-x-1/2">
-          {/* resplandor */}
-          <div className="absolute -inset-16 bg-[#ff9b75]/20 blur-[60px]" />
-
-          {/* pixel sun */}
-          <div className="absolute left-[35px] top-[35px] h-[80px] w-[80px] bg-[#ffcf78]" />
-
-          <div className="absolute left-[25px] top-[45px] h-[60px] w-[100px] bg-[#ffb06e]" />
-
-          <div className="absolute left-[45px] top-[25px] h-[100px] w-[60px] bg-[#ffc873]" />
-
-          <div className="absolute left-[35px] top-[35px] h-[80px] w-[80px] bg-gradient-to-b from-[#ffd979] to-[#ff8b79]" />
-        </div>
-
-        {/* =====================================================
-            HORIZONTE
-        ========================================================== */}
-
-        <div className="absolute bottom-0 left-0 right-0 h-[31%]">
-          {/* montaña lejana */}
-          <div className="absolute bottom-0 left-[-5%] h-[190px] w-[65%] bg-[#130d31] [clip-path:polygon(0_100%,0_75%,18%_55%,30%_68%,44%_38%,57%_65%,73%_45%,100%_75%,100%_100%)]" />
-
-          {/* montaña derecha */}
-          <div className="absolute bottom-0 right-[-5%] h-[220px] w-[70%] bg-[#100a2b] [clip-path:polygon(0_100%,0_72%,16%_58%,29%_72%,45%_35%,59%_62%,74%_45%,100%_72%,100%_100%)]" />
-
-          {/* montaña central */}
-          <div className="absolute bottom-0 left-1/2 h-[250px] w-[560px] -translate-x-1/2 bg-[#0b0825] [clip-path:polygon(0_100%,18%_72%,31%_80%,50%_28%,68%_78%,83%_61%,100%_100%)]" />
-
-          {/* reflejo pixelado del horizonte */}
-          <div className="absolute bottom-[18%] left-0 right-0 h-[3px] bg-[#ff6f9d]/40" />
-          <div className="absolute bottom-[13%] left-[8%] h-[3px] w-[130px] bg-[#b34b91]/40" />
-          <div className="absolute bottom-[10%] right-[12%] h-[3px] w-[180px] bg-[#b34b91]/30" />
-        </div>
-
-        {/* =====================================================
-            PIXEL PARTICLES CERCA DEL HORIZONTE
-        ========================================================== */}
-
-        <div className="absolute bottom-[25%] left-[14%] h-2 w-6 bg-[#e75c9d]/50" />
-        <div className="absolute bottom-[29%] left-[22%] h-1.5 w-10 bg-[#ff8aa7]/40" />
-
-        <div className="absolute bottom-[27%] right-[20%] h-2 w-8 bg-[#db5799]/50" />
-        <div className="absolute bottom-[32%] right-[11%] h-1.5 w-12 bg-[#ff89a8]/40" />
-
-        {/* degradado inferior */}
-        <div className="absolute bottom-0 left-0 right-0 h-[18%] bg-gradient-to-t from-[#050417] to-transparent" />
+      <div
+        className={`
+          absolute
+          inset-0
+          hidden
+          md:block
+          transition-opacity
+          duration-500
+          ${
+            isDark
+              ? "opacity-100"
+              : "pointer-events-none opacity-0"
+          }
+        `}
+      >
+        <Image
+          src={desktopDark}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="
+            object-cover
+            object-center
+          "
+        />
       </div>
 
-      {/* =========================================================
-          CONTENIDO
-      ========================================================== */}
+      {/* ========================================================
+          FONDO DESKTOP CLARO
+      ========================================================= */}
 
-      <div className="relative z-10 mx-auto flex min-h-[680px] max-w-5xl items-center justify-center px-6 py-24">
+      <div
+        className={`
+          absolute
+          inset-0
+          hidden
+          md:block
+          transition-opacity
+          duration-500
+          ${
+            isDark
+              ? "pointer-events-none opacity-0"
+              : "opacity-100"
+          }
+        `}
+      >
+        <Image
+          src={desktopLight}
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="
+            object-cover
+            object-center
+          "
+        />
+      </div>
+
+      {/* ========================================================
+          FONDO MOBILE OSCURO
+      ========================================================= */}
+
+      <div
+        className={`
+          absolute
+          inset-0
+          md:hidden
+          transition-opacity
+          duration-500
+          ${
+            isDark
+              ? "opacity-100"
+              : "pointer-events-none opacity-0"
+          }
+        `}
+      >
+        <Image
+          src={mobileDark}
+          alt=""
+          priority
+          fill
+          sizes="100vw"
+          className="
+            object-cover
+            object-center
+          "
+        />
+      </div>
+
+      {/* ========================================================
+          FONDO MOBILE CLARO
+      ========================================================= */}
+
+      <div
+        className={`
+          absolute
+          inset-0
+          md:hidden
+          transition-opacity
+          duration-500
+          ${
+            isDark
+              ? "pointer-events-none opacity-0"
+              : "opacity-100"
+          }
+        `}
+      >
+        <Image
+          src={mobileLight}
+          alt=""
+          fill
+          sizes="100vw"
+          className="
+            object-cover
+            object-center
+          "
+        />
+      </div>
+
+      {/* ========================================================
+          CAPA DE LEGIBILIDAD
+
+          El objetivo es proteger el contenido sin tapar
+          la ilustración de Peaky.
+      ========================================================= */}
+
+      <div
+        aria-hidden="true"
+        className={`
+          pointer-events-none
+          absolute
+          inset-0
+          ${
+            isDark
+              ? `
+                bg-[linear-gradient(
+                  90deg,
+                  rgba(1,3,15,0.985)_0%,
+                  rgba(2,4,18,0.94)_22%,
+                  rgba(2,4,18,0.78)_40%,
+                  rgba(2,4,18,0.40)_57%,
+                  rgba(2,4,18,0.08)_73%,
+                  transparent_84%
+                )]
+                md:bg-[linear-gradient(
+                  90deg,
+                  rgba(1,3,15,0.985)_0%,
+                  rgba(2,4,18,0.93)_23%,
+                  rgba(2,4,18,0.74)_42%,
+                  rgba(2,4,18,0.32)_59%,
+                  rgba(2,4,18,0.05)_76%,
+                  transparent_88%
+                )]
+              `
+              : `
+                bg-[linear-gradient(
+                  90deg,
+                  rgba(240,250,255,0.985)_0%,
+                  rgba(240,250,255,0.94)_22%,
+                  rgba(240,250,255,0.80)_42%,
+                  rgba(240,250,255,0.47)_59%,
+                  rgba(240,250,255,0.12)_76%,
+                  transparent_88%
+                )]
+                md:bg-[linear-gradient(
+                  90deg,
+                  rgba(240,250,255,0.985)_0%,
+                  rgba(240,250,255,0.91)_23%,
+                  rgba(240,250,255,0.72)_43%,
+                  rgba(240,250,255,0.38)_60%,
+                  rgba(240,250,255,0.08)_78%,
+                  transparent_90%
+                )]
+              `
+          }
+        `}
+      />
+
+      {/* ========================================================
+          HALO DE LEGIBILIDAD
+
+          No es una tarjeta.
+          Es una capa atmosférica detrás del contenido.
+      ========================================================= */}
+
+      <div
+        aria-hidden="true"
+        className={`
+          pointer-events-none
+          absolute
+          left-[-12%]
+          top-[16%]
+          h-[62%]
+          w-[62%]
+          rounded-full
+          blur-[90px]
+          ${
+            isDark
+              ? "bg-[#030617]/55"
+              : "bg-[#effaff]/65"
+          }
+        `}
+      />
+
+      {/* ========================================================
+          GRADIENTE INFERIOR
+      ========================================================= */}
+
+      <div
+        aria-hidden="true"
+        className={`
+          pointer-events-none
+          absolute
+          inset-x-0
+          bottom-0
+          h-[35%]
+          ${
+            isDark
+              ? "bg-gradient-to-t from-[#02030d] via-[#02030d]/65 to-transparent"
+              : "bg-gradient-to-t from-[#eaf7ff]/75 via-[#eaf7ff]/20 to-transparent"
+          }
+        `}
+      />
+
+      {/* ========================================================
+          CONTENIDO
+      ========================================================= */}
+
+      <div
+        className="
+          relative
+          z-10
+          mx-auto
+          flex
+          min-h-[760px]
+          max-w-[1500px]
+          items-start
+          px-5
+          pb-24
+          pt-28
+          sm:px-8
+          sm:pt-32
+          lg:min-h-[820px]
+          lg:items-center
+          lg:px-14
+          lg:py-24
+          xl:px-20
+        "
+      >
         <motion.div
           initial={{
             opacity: 0,
-            y: 30,
+            x: -35,
           }}
           whileInView={{
             opacity: 1,
-            y: 0,
+            x: 0,
           }}
           viewport={{
             once: true,
             margin: "-100px",
           }}
           transition={{
-            duration: 0.8,
+            duration: 0.75,
             ease: "easeOut",
           }}
-          className="relative mx-auto max-w-3xl text-center"
+          className="
+            relative
+            w-full
+            max-w-[570px]
+          "
         >
-          {/* =====================================================
-              ETIQUETA
-          ========================================================== */}
+          {/* ====================================================
+              IDENTIDAD PEAKSCORE
+          ===================================================== */}
 
           <motion.div
             initial={{
               opacity: 0,
-              y: 10,
+              x: -15,
+            }}
+            whileInView={{
+              opacity: 1,
+              x: 0,
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              delay: 0.08,
+              duration: 0.45,
+            }}
+            className="mb-7 flex items-center"
+          >
+            <div
+              className={`
+                relative
+                flex
+                h-8
+                items-center
+                overflow-hidden
+                border
+                px-3.5
+                ${
+                  isDark
+                    ? "border-[#806cff]/55 bg-[#050719]/88 shadow-[0_0_22px_rgba(104,82,255,0.18)]"
+                    : "border-[#276ed0]/35 bg-[#f8fdff]/88 shadow-[0_8px_25px_rgba(39,91,150,0.12)]"
+                }
+              `}
+              style={{
+                clipPath:
+                  "polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%)",
+              }}
+            >
+              <span
+                aria-hidden="true"
+                className={`
+                  mr-2
+                  h-1.5
+                  w-1.5
+                  ${
+                    isDark
+                      ? "bg-[#5ee7ff] shadow-[0_0_10px_rgba(94,231,255,0.95)]"
+                      : "bg-[#2e7de0] shadow-[0_0_8px_rgba(46,125,224,0.45)]"
+                  }
+                `}
+              />
+
+              <span
+                className={`
+                  text-[8px]
+                  font-black
+                  uppercase
+                  tracking-[0.28em]
+                  ${
+                    isDark
+                      ? "text-white/80"
+                      : "text-[#102e52]"
+                  }
+                `}
+              >
+                CRUZAR EL PORTAL
+              </span>
+
+              <span
+                aria-hidden="true"
+                className={`
+                  ml-3
+                  h-1
+                  w-1
+                  ${
+                    isDark
+                      ? "bg-[#a276ff]"
+                      : "bg-[#48a7e8]"
+                  }
+                `}
+              />
+            </div>
+
+            <span
+              aria-hidden="true"
+              className={`
+                ml-3
+                h-px
+                w-16
+                ${
+                  isDark
+                    ? "bg-gradient-to-r from-[#8b6dff] to-transparent"
+                    : "bg-gradient-to-r from-[#2e7de0] to-transparent"
+                }
+              `}
+            />
+          </motion.div>
+
+          {/* ====================================================
+              TITULO
+          ===================================================== */}
+
+          <motion.h2
+            id="cta-title"
+            initial={{
+              opacity: 0,
+              y: 20,
             }}
             whileInView={{
               opacity: 1,
@@ -157,96 +516,304 @@ export default function CTA() {
               once: true,
             }}
             transition={{
-              delay: 0.15,
-              duration: 0.5,
+              delay: 0.14,
+              duration: 0.65,
             }}
-            className="mb-7 inline-flex items-center border border-white/20 bg-[#09051b]/55 px-5 py-2 backdrop-blur-md"
+            className={`
+              max-w-[620px]
+              text-[48px]
+              font-black
+              leading-[0.91]
+              tracking-[-0.055em]
+              sm:text-[62px]
+              lg:text-[76px]
+              ${
+                isDark
+                  ? "text-white drop-shadow-[0_3px_18px_rgba(0,0,0,0.42)]"
+                  : "text-[#071a35] drop-shadow-[0_2px_0_rgba(255,255,255,0.65)]"
+              }
+            `}
           >
-            <span className="mr-3 h-1.5 w-1.5 bg-[#ff7aa8]" />
-
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/80">
-              El siguiente paso
-            </span>
-
-            <span className="ml-3 h-1.5 w-1.5 bg-[#48dfff]" />
-          </motion.div>
-
-          {/* =====================================================
-              TITULO
-          ========================================================== */}
-
-          <h2 className="text-5xl font-black leading-[0.92] tracking-[-0.055em] text-white sm:text-6xl md:text-7xl">
-            Tu meta no está
+            Tu próximo
             <br />
-
-            <span className="relative inline-block">
-              tan lejos.
-              <span className="absolute -bottom-2 left-1/2 h-[3px] w-[75%] -translate-x-1/2 bg-gradient-to-r from-transparent via-[#ff78a5] to-transparent opacity-80" />
+            nivel
+            <br />
+            <span className={titleAccent}>
+              empieza aquí.
             </span>
-          </h2>
+          </motion.h2>
 
-          {/* =====================================================
-              DESCRIPCIÓN
-          ========================================================== */}
-
-          <p className="mx-auto mt-8 max-w-xl text-sm leading-7 text-white/75 md:text-base">
-            Empieza a practicar, descubre dónde puedes mejorar y convierte
-            cada sesión en un paso hacia tu mejor resultado en el ICFES.
-          </p>
-
-          {/* =====================================================
-              BOTÓN
-          ========================================================== */}
+          {/* ====================================================
+              LINEA DE ENERGÍA
+          ===================================================== */}
 
           <motion.div
             initial={{
               opacity: 0,
+              scaleX: 0,
+            }}
+            whileInView={{
+              opacity: 1,
+              scaleX: 1,
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              delay: 0.28,
+              duration: 0.55,
+            }}
+            className={`
+              mt-6
+              h-[3px]
+              w-32
+              origin-left
+              ${
+                isDark
+                  ? "bg-gradient-to-r from-[#a274ff] via-[#726cff] to-[#58ddff] shadow-[0_0_16px_rgba(117,103,255,0.55)]"
+                  : "bg-gradient-to-r from-[#246fd3] via-[#1687cf] to-[#38b86f] shadow-[0_0_12px_rgba(45,139,190,0.20)]"
+              }
+            `}
+          />
+
+          {/* ====================================================
+              DESCRIPCIÓN
+          ===================================================== */}
+
+          <motion.p
+            initial={{
+              opacity: 0,
+              y: 14,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              delay: 0.34,
+              duration: 0.5,
+            }}
+            className={`
+              mt-6
+              max-w-[500px]
+              text-[14px]
+              leading-6
+              sm:text-[15px]
+              sm:leading-7
+              ${description}
+            `}
+          >
+            Tu preparación no termina en un simulacro.
+            Cada práctica te acerca a entender mejor tus
+            resultados, fortalecer tus áreas y avanzar con
+            más confianza hacia el ICFES.
+          </motion.p>
+
+          {/* ====================================================
+              BOTÓN PRINCIPAL — ÚNETE
+          ===================================================== */}
+
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 18,
               scale: 0.96,
             }}
             whileInView={{
               opacity: 1,
+              y: 0,
               scale: 1,
             }}
             viewport={{
               once: true,
             }}
             transition={{
-              delay: 0.35,
-              duration: 0.5,
+              delay: 0.45,
+              duration: 0.55,
+              ease: "easeOut",
             }}
-            className="mt-10"
+            className="mt-9"
           >
             <Link
               href="/register"
-              className="group relative inline-flex items-center overflow-hidden border border-white/40 bg-[#0a0720]/90 px-8 py-4 text-sm font-bold text-white shadow-[0_10px_35px_rgba(0,0,0,0.35)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-white/70 hover:bg-[#120b31]"
+              aria-label="Únete a PeakScore"
+              className={`
+                group
+                relative
+                inline-flex
+                min-h-[48px]
+                min-w-[116px]
+                items-center
+                justify-center
+                overflow-hidden
+                rounded-[9px]
+                px-6
+                py-3
+                text-[14px]
+                font-black
+                tracking-[-0.01em]
+                outline-none
+                transition-all
+                duration-300
+                hover:-translate-y-1
+                active:translate-y-0
+                active:scale-[0.97]
+                focus-visible:ring-2
+                focus-visible:ring-offset-2
+                ${
+                  isDark
+                    ? "bg-[#7ed957] text-[#07110a] shadow-[0_10px_30px_rgba(126,217,87,0.22)] hover:bg-[#8bea62] hover:shadow-[0_14px_38px_rgba(126,217,87,0.34)] focus-visible:ring-[#7ed957] focus-visible:ring-offset-[#050719]"
+                    : "bg-[#7ed957] text-[#07110a] shadow-[0_10px_26px_rgba(72,153,45,0.20)] hover:bg-[#8bea62] hover:shadow-[0_14px_34px_rgba(72,153,45,0.28)] focus-visible:ring-[#5ebf3e] focus-visible:ring-offset-[#eaf7ff]"
+                }
+              `}
             >
-              {/* reflejo */}
-              <span className="absolute inset-y-0 -left-12 w-8 -skew-x-12 bg-white/30 transition-all duration-500 group-hover:left-[120%]" />
+              <span
+                aria-hidden="true"
+                className="
+                  absolute
+                  inset-x-0
+                  top-0
+                  h-px
+                  bg-white/45
+                "
+              />
 
-              <span className="relative">
-                Empieza gratis
-              </span>
+              <span
+                aria-hidden="true"
+                className="
+                  absolute
+                  -left-8
+                  top-0
+                  h-full
+                  w-8
+                  -skew-x-12
+                  bg-white/30
+                  opacity-0
+                  transition-all
+                  duration-500
+                  group-hover:left-[120%]
+                  group-hover:opacity-100
+                "
+              />
 
-              <span className="relative ml-4 text-lg text-[#ff80a8] transition-transform duration-300 group-hover:translate-x-1">
-                →
+              <span className="relative z-10">
+                Únete
               </span>
             </Link>
           </motion.div>
 
-          {/* =====================================================
-              TEXTO INFERIOR
-          ========================================================== */}
+          {/* ====================================================
+              MICROCOPY
+          ===================================================== */}
 
-          <div className="mt-7 flex items-center justify-center gap-4">
-            <span className="h-px w-12 bg-gradient-to-r from-transparent to-white/20" />
+          <motion.div
+            initial={{
+              opacity: 0,
+            }}
+            whileInView={{
+              opacity: 1,
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              delay: 0.62,
+              duration: 0.45,
+            }}
+            className="mt-5 flex items-center gap-3"
+          >
+            <span
+              aria-hidden="true"
+              className={`
+                h-px
+                w-7
+                ${
+                  isDark
+                    ? "bg-[#8c76ff]/50"
+                    : "bg-[#3975d7]/30"
+                }
+              `}
+            />
 
-            <span className="text-[8px] font-medium uppercase tracking-[0.22em] text-white/40">
-              Prepárate · avanza · alcanza tu objetivo
+            <span
+              className={`
+                text-[8px]
+                font-bold
+                uppercase
+                tracking-[0.28em]
+                ${
+                  isDark
+                    ? "text-white/48"
+                    : "text-[#19365b]/52"
+                }
+              `}
+            >
+              Explora · practica · supera tus límites
             </span>
-
-            <span className="h-px w-12 bg-gradient-to-l from-transparent to-white/20" />
-          </div>
+          </motion.div>
         </motion.div>
+      </div>
+
+      {/* ========================================================
+          FIRMA PEAKSCORE
+      ========================================================= */}
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          bottom-5
+          left-1/2
+          z-20
+          hidden
+          -translate-x-1/2
+          items-center
+          gap-3
+          md:flex
+        "
+      >
+        <span
+          className={`
+            h-px
+            w-10
+            ${
+              isDark
+                ? "bg-white/18"
+                : "bg-[#17365b]/18"
+            }
+          `}
+        />
+
+        <span
+          className={`
+            text-[8px]
+            font-bold
+            uppercase
+            tracking-[0.32em]
+            ${
+              isDark
+                ? "text-white/32"
+                : "text-[#17365b]/35"
+            }
+          `}
+        >
+          PeakScore
+        </span>
+
+        <span
+          className={`
+            h-px
+            w-10
+            ${
+              isDark
+                ? "bg-white/18"
+                : "bg-[#17365b]/18"
+            }
+          `}
+        />
       </div>
     </section>
   );

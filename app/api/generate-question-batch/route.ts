@@ -484,6 +484,11 @@ async function generateBlock(
         RETRY_BASE_DELAY_MS *
         Math.pow(2, attempt - 1);
 
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : String(error);
+
       console.warn(
         `[PeakScore] Gemini falló: ${errorMessage}. Reintentando en ${delay / 1000}s...`
       );

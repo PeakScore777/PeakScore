@@ -56,7 +56,7 @@ export default function Hero({ theme }: HeroProps) {
             alt=""
             fill
             priority
-            sizes="100vw"
+            sizes="100%"
             className={`
               object-cover
               object-center
@@ -78,7 +78,7 @@ export default function Hero({ theme }: HeroProps) {
             alt=""
             fill
             priority
-            sizes="100vw"
+            sizes="100%"
             className={`
               object-cover
               object-center
@@ -106,7 +106,7 @@ export default function Hero({ theme }: HeroProps) {
             alt=""
             fill
             priority
-            sizes="100vw"
+            sizes="100%"
             className={`
               object-cover
               object-center
@@ -128,7 +128,7 @@ export default function Hero({ theme }: HeroProps) {
             alt=""
             fill
             priority
-            sizes="100vw"
+            sizes="100%"
             className={`
               object-cover
               object-center

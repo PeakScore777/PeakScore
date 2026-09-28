@@ -142,7 +142,7 @@ export default function CTA({ theme: externalTheme }: CTAProps) {
           alt=""
           fill
           priority
-          sizes="100vw"
+          sizes="100%"
           className="
             object-cover
             object-center
@@ -174,7 +174,7 @@ export default function CTA({ theme: externalTheme }: CTAProps) {
           alt=""
           fill
           priority
-          sizes="100vw"
+          sizes="100%"
           className="
             object-cover
             object-center
@@ -205,7 +205,7 @@ export default function CTA({ theme: externalTheme }: CTAProps) {
           alt=""
           priority
           fill
-          sizes="100vw"
+          sizes="100%"
           className="
             object-cover
             object-center
@@ -235,7 +235,7 @@ export default function CTA({ theme: externalTheme }: CTAProps) {
           src={mobileLight}
           alt=""
           fill
-          sizes="100vw"
+          sizes="100%"
           className="
             object-cover
             object-center

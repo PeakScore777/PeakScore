@@ -253,7 +253,7 @@ export default function DashboardPreview({
               alt=""
               fill
               priority={!isDark}
-              sizes="100vw"
+              sizes="100%"
               className="
                 select-none
                 object-cover
@@ -285,7 +285,7 @@ export default function DashboardPreview({
               alt=""
               fill
               priority={isDark}
-              sizes="100vw"
+              sizes="100%"
               className="
                 select-none
                 object-cover
@@ -626,7 +626,7 @@ export default function DashboardPreview({
               alt=""
               fill
               priority={!isDark}
-              sizes="100vw"
+              sizes="100%"
               className="
                 select-none
                 object-cover
@@ -657,7 +657,7 @@ export default function DashboardPreview({
               alt=""
               fill
               priority={isDark}
-              sizes="100vw"
+              sizes="100%"
               className="
                 select-none
                 object-cover

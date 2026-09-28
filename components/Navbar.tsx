@@ -297,7 +297,7 @@ export default function Navbar({
               alt=""
               fill
               priority
-              sizes="100vw"
+              sizes="100%"
               className={`
                 object-cover
                 object-center
@@ -317,7 +317,7 @@ export default function Navbar({
               alt=""
               fill
               priority
-              sizes="100vw"
+              sizes="100%"
               className={`
                 object-cover
                 object-center
@@ -366,7 +366,7 @@ export default function Navbar({
               alt=""
               fill
               priority
-              sizes="100vw"
+              sizes="100%"
               className={`
                 object-cover
                 object-center
@@ -386,7 +386,7 @@ export default function Navbar({
               alt=""
               fill
               priority
-              sizes="100vw"
+              sizes="100%"
               className={`
                 object-cover
                 object-center

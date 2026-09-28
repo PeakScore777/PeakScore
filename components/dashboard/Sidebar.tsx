@@ -666,7 +666,7 @@ export default function Sidebar() {
             "
           >
             <Image
-              src="/images/branding/peakscore-logo-transparente.png"
+              src="/images/branding/peakscore-logo-transparente2.png"
               alt="PeakScore"
               fill
               priority
@@ -1314,7 +1314,7 @@ export default function Sidebar() {
             "
           >
             <Image
-              src="/images/branding/peakscore-logo-transparente.png"
+              src="/images/branding/peakscore-logo-transparente2.png"
               alt="PeakScore"
               fill
               sizes="30px"

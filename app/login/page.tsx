@@ -1844,7 +1844,7 @@ export default function LoginPage() {
 
                 <div className="relative h-10 w-10 shrink-0">
                   <Image
-                    src="/images/branding/peakscore-logo-transparente.png"
+                    src="/images/branding/peakscore-logo-transparente2.png"
                     alt="PeakScore"
                     fill
                     priority

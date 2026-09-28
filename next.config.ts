@@ -8,6 +8,9 @@ const posthogOrigin = process.env.NEXT_PUBLIC_POSTHOG_HOST
   ? new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST).origin
   : "";
 
+const isDevelopment =
+  process.env.NODE_ENV === "development";
+
 const securityHeaders = [
   {
     key: "Strict-Transport-Security",
@@ -46,13 +49,37 @@ const securityHeaders = [
       "object-src 'none'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com",
+
+      [
+        "script-src",
+        "'self'",
+        "'unsafe-inline'",
+        ...(isDevelopment ? ["'unsafe-eval'"] : []),
+        "https://challenges.cloudflare.com",
+        "https://us-assets.i.posthog.com",
+      ].join(" "),
+
       "style-src 'self' 'unsafe-inline'",
+
       "img-src 'self' data: blob:",
+
       "font-src 'self' data:",
-      `connect-src 'self' ${supabaseOrigin} ${posthogOrigin} https://challenges.cloudflare.com`,
+
+      [
+        "connect-src",
+        "'self'",
+        supabaseOrigin,
+        posthogOrigin,
+        "https://us-assets.i.posthog.com",
+        "https://challenges.cloudflare.com",
+      ]
+        .filter(Boolean)
+        .join(" "),
+
       "frame-src 'self' https://challenges.cloudflare.com",
+
       "worker-src 'self' blob:",
+
       "media-src 'self' blob:",
     ].join("; "),
   },
@@ -63,6 +90,10 @@ const nextConfig: NextConfig = {
     "pdf-parse",
     "@napi-rs/canvas",
   ],
+
+  images: {
+    qualities: [75, 78, 85],
+  },
 
   async headers() {
     return [

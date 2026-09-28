@@ -17,9 +17,14 @@
 - Añadido `proxy.ts` siguiendo la convención de Next.js 16.
 - El proxy llama a `supabase.auth.getClaims()` y sincroniza cookies entre request y response.
 - No se modificó la arquitectura del dashboard ni se reemplazaron sus comprobaciones de autorización.
-- Referencias: commit `b67af93` y commit `392ca51`.
+- Referencias: commits `b67af93` y `392ca51`.
+
+### Corrección 2 — Cliente OpenAI
+- Añadido `import "server-only";` en `lib/ai/openai.ts`.
+- El cliente OpenAI queda explícitamente restringido a código servidor, evitando imports accidentales desde componentes/rutas cliente.
+- No se modificó la configuración de la API key ni la lógica de IA.
 
 ### Estado actual
-- Corrección 1 aplicada en `main`.
+- Correcciones 1 y 2 aplicadas en `main`.
 - No se consideran corregidos los demás hallazgos de la auditoría.
-- Siguiente bloque: revisar y definir la arquitectura de roles antes de tocar RLS, grants o Storage.
+- Siguiente bloque: terminar el mapa de roles y revisar RLS/grants antes de cambiar políticas.

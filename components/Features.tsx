@@ -231,7 +231,7 @@ function FeatureCard({
           className={`
             relative
             z-10
-            h-auto
+            aspect-square
             w-full
             object-contain
             transition-[filter]

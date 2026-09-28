@@ -32,6 +32,7 @@
 - Las preguntas enviadas al cliente durante un simulacro excluyen correct_answer y explanation.
 - Existe CodeQL y Dependabot.
 - .env* está ignorado por Git.
+- Supabase SSR ahora tiene proxy.ts + lib/supabase/proxy.ts para refresco de sesión.
 - No guardar secretos reales en este archivo.
 
 ## Auth / roles — estado pendiente
@@ -59,11 +60,14 @@ No unificar/eliminar ninguna fuente hasta mapear todos sus usos.
 - No cambiar URLs de imágenes/branding sin comprobar referencias.
 
 ## Sesión SSR
-- Actualmente no existe proxy.ts ni middleware.ts.
-- Siguiente corrección iniciada: añadir proxy.ts y lib/supabase/proxy.ts para refresco de sesión SSR con @supabase/ssr.
+- CORREGIDO: se añadió proxy.ts en la raíz y lib/supabase/proxy.ts.
+- proxy.ts delega en updateSession().
+- lib/supabase/proxy.ts crea el cliente SSR, sincroniza cookies request/response y ejecuta supabase.auth.getClaims() para refrescar/verificar la sesión.
+- El matcher excluye recursos estáticos e imágenes comunes.
+- El dashboard mantiene su comprobación server-side con getUser(); el proxy no reemplaza las autorizaciones de cada ruta.
 
 ## Pendientes prioritarios
-- [ ] Añadir proxy SSR.
+- [x] Añadir proxy SSR.
 - [ ] Resolver arquitectura definitiva de roles.
 - [ ] Endurecer RLS/reference_*.
 - [ ] Endurecer Storage.

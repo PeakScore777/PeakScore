@@ -107,3 +107,10 @@
 - Se corrigió únicamente esa referencia a `/dashboard/racha-pixel.webp`, correspondiente al asset existente.
 - No se modificaron otras rutas de imágenes, branding ni estructura del dashboard.
 - El cambio quedó guardado en GitHub antes de sincronizarlo con VSC.
+
+
+### Corrección de registro — StatCard / racha
+- Aclaración: el cambio de `/dashboard/racha-pixel.png` a `/dashboard/racha-pixel.webp` fue realizado manualmente por el usuario en VSC.
+- No debe atribuirse como cambio de código realizado por el asistente.
+- La referencia correcta ya está presente en la copia local de VSC y debe conservarse al subir los cambios locales a GitHub.
+- No se realizó ninguna otra modificación de `StatCard.tsx`.

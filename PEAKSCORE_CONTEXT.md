@@ -128,3 +128,9 @@ Antes de modificar:
 - Security Advisor: 6 WARN de funciones SECURITY DEFINER ejecutables por authenticated. Se consideran intencionales y protegidas internamente; no revocar EXECUTE sin refactorizar sus llamadas.
 - Security Advisor: 1 WARN pendiente manual: Leaked Password Protection está desactivado en Supabase Auth.
 - No se aplicó ningún cambio adicional a estas alertas en esta ronda.
+
+
+## Estado de sincronización — 2026-09-29
+- Punto de control: los cambios de seguridad documentados hasta la auditoría del 2026-09-29 están en `main`.
+- Próximo paso operativo: sincronizar `main` con la copia local de VSC antes de realizar tareas manuales de Supabase o nuevos cambios de código.
+- No se considera completada la sincronización local hasta verificarla en VSC.

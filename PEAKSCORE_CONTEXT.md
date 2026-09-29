@@ -117,3 +117,7 @@ Antes de modificar:
 - Detectado pendiente: questions RLS todavía usa institution_members.role = admin para SELECT/INSERT/UPDATE/DELETE. El modelo actual exige profiles.role = admin para el dueño global. Debe migrarse manualmente en Supabase después de sincronizar/verificar VSC.
 - Pendiente de código en VSC: StatCard.tsx referencia /dashboard/racha-pixel.png, pero el archivo existente es /dashboard/racha-pixel.webp. No se aplicó ese cambio todavía.
 - No crear paneles ni permisos institucionales; institution_members se trata como estructura futura/legacy hasta mapear dependencias.
+
+- CORREGIDO: Sidebar ahora verifica el administrador global mediante profiles.role = admin, no institution_members.
+- CORREGIDO: /dashboard/question-bank/page.tsx ahora usa profiles.role = admin para su comprobación client-side, consistente con el layout server-side y requireAdmin().
+- CORREGIDO: enlace del Panel de administración a Importar PDF apuntaba a una ruta inexistente; ahora apunta a /dashboard/import-pdf.

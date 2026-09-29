@@ -93,6 +93,7 @@
 - [ ] Revisar índices FK según consultas reales.
 - [ ] Completar auditoría histórica de secretos.
 - [ ] Revisar protección de main/CI cuando el flujo de desarrollo lo permita.
+- [ ] Leaked Password Protection: pendiente por disponibilidad del plan Free; disponible en Pro y superiores.
 
 ## No tocar sin motivo
 - Diseño/branding actual y logo peakscore-logo-transparente2.png.
@@ -134,3 +135,9 @@ Antes de modificar:
 - Punto de control: los cambios de seguridad documentados hasta la auditoría del 2026-09-29 están en `main`.
 - Próximo paso operativo: sincronizar `main` con la copia local de VSC antes de realizar tareas manuales de Supabase o nuevos cambios de código.
 - No se considera completada la sincronización local hasta verificarla en VSC.
+
+
+## Supabase Auth — Leaked Password Protection
+- Verificado en el dashboard actual del proyecto que la opción no aparece en el plan Free.
+- Confirmado en la documentación oficial de Supabase que Leaked Password Protection está disponible en Pro y superiores.
+- Estado: pendiente por disponibilidad del plan; no se realizará ningún cambio de plan por esta alerta.

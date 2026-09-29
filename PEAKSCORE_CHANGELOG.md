@@ -137,3 +137,12 @@
 - RLS está habilitado en todas las tablas públicas auditadas, pero PostgreSQL especifica que operaciones como TRUNCATE y REFERENCES no están sujetas a RLS. Por ello estos privilegios requieren revisión independiente.
 - Se detectó DEFAULT PRIVILEGES del rol postgres que asigna Dxtm a anon y authenticated para nuevas tablas públicas.
 - No se revocaron grants todavía. Primero se mapearán las operaciones reales del código y las dependencias para aplicar mínimo privilegio sin romper PeakScore.
+
+
+### Mapeo — Uso de tablas y grants antes de hardening
+- Se revisaron servicios y rutas actuales para determinar qué tablas usa PeakScore y desde qué capa.
+- Se identificó que varias operaciones sensibles de simulacros/importación se ejecutan desde APIs con service_role después de autenticar al usuario, mientras que algunas lecturas y operaciones propias usan el rol authenticated con RLS.
+- Se confirmó que profiles/subjects/subscriptions y varias tablas de referencia tienen acceso cliente limitado por RLS; reference_analyses es el principal caso donde authenticated necesita CRUD propio.
+- Se confirmó que los permisos Dxtm (TRUNCATE, REFERENCES, TRIGGER, MAINTAIN) no están justificados por los usos de aplicación observados y deben tratarse como exceso de privilegios, pero todavía no se revocan para evitar romper dependencias no mapeadas.
+- institution_members/institutions y user_roles quedan fuera de cambios funcionales: se preservan hasta completar su trazabilidad histórica.
+- Próximo paso: preparar una migración de mínimo privilegio, empezando por retirar privilegios innecesarios de tabla y corrigiendo DEFAULT PRIVILEGES, con verificación posterior.

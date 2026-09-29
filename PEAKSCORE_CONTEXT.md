@@ -109,3 +109,11 @@ Antes de modificar:
 4. Hacer el cambio mínimo.
 5. Ejecutar/verificar build o checks disponibles.
 6. Actualizar este archivo y PEAKSCORE_CHANGELOG.md con lo confirmado.
+
+
+## Auditoría actual — rutas administrativas
+- CORREGIDO: se añadieron layouts server-side para /dashboard/question-bank y /dashboard/import-pdf usando requireAdmin(). Esto protege todas sus subrutas antes de renderizar la UI.
+- Las APIs /api/generate-questions, /api/generate-question-batch y /api/import.pdf ya validan profiles.role = admin server-side; no se sustituyeron.
+- Detectado pendiente: questions RLS todavía usa institution_members.role = admin para SELECT/INSERT/UPDATE/DELETE. El modelo actual exige profiles.role = admin para el dueño global. Debe migrarse manualmente en Supabase después de sincronizar/verificar VSC.
+- Pendiente de código en VSC: StatCard.tsx referencia /dashboard/racha-pixel.png, pero el archivo existente es /dashboard/racha-pixel.webp. No se aplicó ese cambio todavía.
+- No crear paneles ni permisos institucionales; institution_members se trata como estructura futura/legacy hasta mapear dependencias.

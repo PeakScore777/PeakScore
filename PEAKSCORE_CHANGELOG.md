@@ -44,3 +44,11 @@
 - Se eliminaron políticas SELECT duplicadas de `reference_questions`.
 - Se eliminaron políticas INSERT duplicadas en `reference_sources` y `reference_analyses`.
 - Verificado directamente en Supabase que las políticas resultantes ya no contienen `USING (true)` en esas cuatro tablas.
+
+
+### Corrección 5 — Privilegios exclusivos del dueño de la plataforma
+- Se aclaró la arquitectura: `profiles.role = admin` representa al dueño global de PeakScore; `institution_members.role` no concede privilegios de plataforma.
+- Se ajustaron las políticas SELECT del corpus de referencia para usar exclusivamente `profiles.role = admin` como privilegio global, manteniendo acceso al propietario de sus propios recursos.
+- Storage `question-images`: la escritura quedó restringida al dueño global de plataforma.
+- Storage `reference-pdfs`: subida, lectura y borrado quedaron restringidos al dueño global; el bucket es privado y limitado a PDF de máximo 30 MB.
+- Verificado directamente en Supabase después de las migraciones.

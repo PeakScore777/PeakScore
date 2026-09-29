@@ -37,25 +37,56 @@ export default function ForgotPasswordPage() {
 
     setLoading(true);
 
-    const redirectTo = `${window.location.origin}/update-password`;
-    const { error: resetError } =
-      await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-        redirectTo,
-        captchaToken,
-      });
+    try {
+      const redirectTo = `${window.location.origin}/update-password`;
 
-    setCaptchaToken("");
-    setCaptchaKey((value) => value + 1);
-    setLoading(false);
+      const { error: resetError } =
+        await supabase.auth.resetPasswordForEmail(
+          normalizedEmail,
+          {
+            redirectTo,
+            captchaToken,
+          }
+        );
 
-    if (resetError) {
+      if (resetError) {
+        console.error(
+          "[PeakScore] Solicitud de recuperación rechazada por Auth.",
+          {
+            errorCode:
+              resetError.code ?? "UNKNOWN",
+            status:
+              resetError.status ?? "UNKNOWN",
+          }
+        );
+
+        setError(
+          "No fue posible procesar la solicitud. Inténtalo nuevamente."
+        );
+        return;
+      }
+
+      setSubmitted(true);
+    } catch (resetError) {
+      console.error(
+        "[PeakScore] Error inesperado solicitando recuperación.",
+        {
+          errorName:
+            resetError instanceof Error
+              ? resetError.name
+              : "UnknownError",
+        }
+      );
+
       setError(
         "No fue posible procesar la solicitud. Inténtalo nuevamente."
       );
-      return;
+    } finally {
+      // Los tokens de Turnstile son de un solo uso.
+      setCaptchaToken("");
+      setCaptchaKey((value) => value + 1);
+      setLoading(false);
     }
-
-    setSubmitted(true);
   }
 
   return (

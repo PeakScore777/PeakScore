@@ -114,3 +114,10 @@
 - No debe atribuirse como cambio de código realizado por el asistente.
 - La referencia correcta ya está presente en la copia local de VSC y debe conservarse al subir los cambios locales a GitHub.
 - No se realizó ninguna otra modificación de `StatCard.tsx`.
+
+
+### Registro — Leaked Password Protection y plan Supabase
+- Se verificó en el dashboard del proyecto que la opción de Leaked Password Protection no está disponible en el plan Free.
+- Se contrastó con la documentación oficial actual de Supabase: Leaked Password Protection está disponible en Pro y superiores.
+- No se cambió el plan ni otras opciones de autenticación por esta alerta.
+- Estado: pendiente por disponibilidad del plan; se mantiene como WARN conocido de Supabase Security Advisor.

@@ -65,6 +65,16 @@
 - reference-pdfs es privado; solo el dueño global puede subir, leer y borrar. Bucket limitado a PDF y 30 MB.
 - No cambiar URLs de imágenes/branding sin comprobar referencias.
 
+## Recuperación de contraseña
+- CORREGIDO: /forgot-password mantiene Turnstile, respuesta genérica para no revelar si una cuenta existe y ahora maneja excepciones sin exponer detalles de Auth.
+- CORREGIDO: /update-password valida el flujo de recuperación antes de permitir cambiar la contraseña.
+- El flujo soporta el código PKCE devuelto por Supabase mediante exchangeCodeForSession() y elimina el código de la URL después del intercambio.
+- Se valida que exista una sesión recuperada antes de ejecutar updateUser({ password }).
+- La nueva contraseña exige mínimo 15 caracteres, mayúscula, minúscula, número y símbolo.
+- Después de un cambio correcto se revocan las sesiones globales y se obliga a iniciar sesión nuevamente.
+- Los errores de enlace expirado/inválido se muestran de forma genérica y ofrecen solicitar otro enlace.
+- Pendiente manual Supabase: revisar Auth URL Configuration para que /update-password esté en Redirect URLs y revisar expiración/configuración del correo de recuperación.
+
 ## Sesión SSR
 - CORREGIDO: se añadió proxy.ts en la raíz y lib/supabase/proxy.ts.
 - proxy.ts delega en updateSession().

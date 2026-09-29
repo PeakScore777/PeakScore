@@ -121,3 +121,11 @@
 - Se contrastó con la documentación oficial actual de Supabase: Leaked Password Protection está disponible en Pro y superiores.
 - No se cambió el plan ni otras opciones de autenticación por esta alerta.
 - Estado: pendiente por disponibilidad del plan; se mantiene como WARN conocido de Supabase Security Advisor.
+
+
+### Corrección — RLS de questions
+- Se verificaron las políticas RLS existentes de public.questions antes del cambio.
+- Se reemplazaron manualmente las cuatro políticas administrativas: SELECT, INSERT, UPDATE y DELETE.
+- La autorización ahora se basa en public.profiles con id = auth.uid() y role = 'admin', consistente con el único administrador global actual de PeakScore.
+- Verificación posterior en pg_policies: las cuatro políticas ya no dependen de institution_members.
+- No se creó ni modificó ningún panel o sistema institucional.

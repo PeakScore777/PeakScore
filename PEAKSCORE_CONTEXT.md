@@ -121,3 +121,10 @@ Antes de modificar:
 - CORREGIDO: Sidebar ahora verifica el administrador global mediante profiles.role = admin, no institution_members.
 - CORREGIDO: /dashboard/question-bank/page.tsx ahora usa profiles.role = admin para su comprobación client-side, consistente con el layout server-side y requireAdmin().
 - CORREGIDO: enlace del Panel de administración a Importar PDF apuntaba a una ruta inexistente; ahora apunta a /dashboard/import-pdf.
+
+
+## Advisor Supabase — 2026-09-29
+- Security Advisor: 1 INFO esperado: api_rate_limits tiene RLS sin políticas porque debe ser accesible solo mediante la función SECURITY DEFINER de rate limit.
+- Security Advisor: 6 WARN de funciones SECURITY DEFINER ejecutables por authenticated. Se consideran intencionales y protegidas internamente; no revocar EXECUTE sin refactorizar sus llamadas.
+- Security Advisor: 1 WARN pendiente manual: Leaked Password Protection está desactivado en Supabase Auth.
+- No se aplicó ningún cambio adicional a estas alertas en esta ronda.

@@ -35,7 +35,7 @@
 - Supabase SSR ahora tiene proxy.ts + lib/supabase/proxy.ts para refresco de sesión.
 - lib/ai/openai.ts usa server-only.
 - El rate limiter ahora define los límites por bucket dentro de la función SECURITY DEFINER; los parámetros de límite/ventana enviados por el cliente ya no controlan la política efectiva.
-- Los SECURITY DEFINER corregidos usan search_path vacío en consume_api_rate_limit y save_simulation_progress_atomic.
+- Todos los SECURITY DEFINER actuales usan search_path='' tras revisión de sus definiciones.
 - No guardar secretos reales en este archivo.
 
 ## Auth / roles
@@ -78,8 +78,7 @@
 - [x] Endurecer Storage.
 - [x] Corregir esquema/RPC base de progreso/resume de simulacros.
 - [x] Endurecer rate limiter para ignorar límites elegibles por el cliente.
-- [x] Endurecer search_path de las dos funciones SECURITY DEFINER modificadas.
-- [ ] Revisar SECURITY DEFINER restantes y search_path.
+- [x] Endurecer search_path de todas las funciones SECURITY DEFINER revisadas.
 - [ ] Revisar grants de anon/authenticated en el resto de tablas.
 - [ ] Revisar índices FK según consultas reales.
 - [ ] Completar auditoría histórica de secretos.

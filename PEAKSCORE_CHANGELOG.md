@@ -94,3 +94,9 @@
 - Supabase Security Advisor sigue mostrando únicamente las 6 funciones SECURITY DEFINER intencionales, api_rate_limits sin políticas (INFO) y Leaked Password Protection desactivado (WARN).
 - No se revocaron EXECUTE de las funciones porque son llamadas RPC legítimas del producto y hacerlo sin refactorizar rompería el flujo.
 - Leaked Password Protection queda como tarea manual.
+
+
+## 2026-09-29 — Punto de control para sincronización VSC
+- Se registró que los cambios de seguridad documentados hasta esta fecha ya están en `main`.
+- Antes de continuar con nuevas correcciones, se debe sincronizar `main` en la copia local de Visual Studio Code.
+- No se aplicaron cambios de código en este punto de control.

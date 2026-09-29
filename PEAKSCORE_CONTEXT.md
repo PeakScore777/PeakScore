@@ -73,7 +73,7 @@ No unificar/eliminar ninguna fuente hasta mapear todos sus usos.
 ## Pendientes prioritarios
 - [x] Añadir proxy SSR.
 - [ ] Resolver arquitectura definitiva de roles.
-- [ ] Endurecer RLS/reference_*.
+- [x] Endurecer RLS/reference_*.
 - [ ] Endurecer Storage.
 - [x] Corregir esquema/RPC base de progreso/resume de simulacros.
 - [x] Endurecer rate limiter para ignorar límites elegibles por el cliente.

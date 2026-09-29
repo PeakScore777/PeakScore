@@ -60,3 +60,15 @@
 - Se confirmó que sus tablas están referenciadas como public.* y que no era necesario mantener public en search_path.
 - Se cambió su configuración a search_path='' mediante migración.
 - Verificado en Supabase: las ocho funciones SECURITY DEFINER actuales tienen search_path vacío.
+
+
+### Corrección 8 — Recuperación de contraseña
+- Se revisaron /forgot-password y /update-password y se reprodujo conceptualmente el fallo mostrado: la pantalla de nueva contraseña podía llegar sin una sesión de recuperación válida y mostrar errores genéricos de enlace.
+- /update-password ahora soporta el flujo PKCE de Supabase mediante exchangeCodeForSession(code) cuando el enlace devuelve un código.
+- El código de recuperación se elimina de la URL después del intercambio.
+- Se comprueba una sesión válida antes de permitir updateUser({ password }).
+- La contraseña de recuperación ahora exige mínimo 15 caracteres, mayúscula, minúscula, número y símbolo, manteniendo la política fuerte usada en el registro.
+- Tras cambiar correctamente la contraseña se revocan las sesiones globales y se obliga a iniciar sesión nuevamente.
+- /forgot-password ahora maneja excepciones inesperadas, mantiene respuesta genérica y consume/renueva el token de Turnstile.
+- Pendiente manual: verificar en Supabase Auth URL Configuration que la URL de producción /update-password esté permitida y revisar la configuración de expiración/plantilla del correo de recuperación.
+- Commits: aef92cdc3afca887c425cfd283db5e011ea94180 y 543f4ef67844bf3b40797ace781e0bfe91d13179.

@@ -149,3 +149,12 @@ Antes de modificar:
 - Las cuatro ahora autorizan exclusivamente al dueño global mediante public.profiles (id = auth.uid() y role = 'admin').
 - Se confirmó directamente en pg_policies que ninguna de las cuatro políticas usa institution_members.
 - No se modificó institution_members ni se creó ninguna funcionalidad institucional.
+
+
+## Auditoría de grants — 2026-09-29
+- Se auditó directamente information_schema.role_table_grants, pg_class.relacl y pg_default_acl para las tablas públicas.
+- Hallazgo importante: anon y authenticated conservan privilegios Dxtm (TRUNCATE, REFERENCES, TRIGGER, MAINTAIN) sobre múltiples tablas públicas. En varias tablas authenticated también conserva CRUD completo.
+- RLS está habilitado en las 20 tablas públicas auditadas, pero RLS no controla operaciones de tabla completa como TRUNCATE ni REFERENCES; por tanto, esos privilegios no deben considerarse protegidos por las políticas RLS. PostgreSQL documenta que TRUNCATE y REFERENCES no están sujetos a RLS.
+- Los privilegios amplios parecen provenir también de DEFAULT PRIVILEGES del rol postgres para tablas nuevas: anon= Dxtm y authenticated=Dxtm. Esto debe corregirse después de mapear las operaciones reales del código para no romper el producto.
+- No se revocó ningún grant en esta ronda.
+- Siguiente paso: mapear por tabla las operaciones reales usadas por PeakScore y reducir privilegios a mínimo necesario, incluyendo corregir DEFAULT PRIVILEGES para futuras tablas.

@@ -85,7 +85,7 @@ export default function StatCard({
   const imageSrc = isGoal
     ? "/peaky/homepage/statsmontaña.png"
     : isStreak
-      ? "/dashboard/racha-pixel.png"
+      ? "/dashboard/racha-pixel.webp"
       : isSimulations
         ? ""
         : null;

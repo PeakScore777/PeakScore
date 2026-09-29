@@ -158,3 +158,24 @@ Antes de modificar:
 - Los privilegios amplios parecen provenir también de DEFAULT PRIVILEGES del rol postgres para tablas nuevas: anon= Dxtm y authenticated=Dxtm. Esto debe corregirse después de mapear las operaciones reales del código para no romper el producto.
 - No se revocó ningún grant en esta ronda.
 - Siguiente paso: mapear por tabla las operaciones reales usadas por PeakScore y reducir privilegios a mínimo necesario, incluyendo corregir DEFAULT PRIVILEGES para futuras tablas.
+
+
+## Mapeo de uso de grants — 2026-09-29
+- Se revisó el código actual del repositorio para mapear las tablas públicas antes de revocar permisos.
+- profiles: acceso de navegador mediante lib/services/profile.service.ts y comprobaciones de rol; RLS limita SELECT al propio perfil. No requiere DML del cliente.
+- questions: usado por question.service.ts para CRUD del banco administrativo y por servicios/API de simulacros; las rutas administrativas usan autorización de admin y algunas APIs usan service_role. RLS actual limita el acceso administrativo global a profiles.role='admin'.
+- subjects: usado como catálogo de materias; la política actual permite SELECT a authenticated. No se observó necesidad de DML del cliente.
+- simulations: leído desde el cliente y manipulado en APIs de servidor; la creación normal usa service_role después de autenticar al usuario. Las políticas actuales permiten al usuario ver/eliminar sus propios simulacros; no hay políticas de INSERT/UPDATE para usuarios.
+- simulation_questions: leído por el flujo de simulacros; creación/eliminación se realiza en APIs/servicios privilegiados según el código revisado. La política cliente actual es SELECT condicionado al propietario del simulacro.
+- simulation_attempts: el dashboard y flujo de simulacro leen intentos propios; el progreso/creación usa endpoints y RPCs. Las políticas actuales permiten INSERT/SELECT del propio usuario; otras escrituras directas no tienen políticas cliente equivalentes.
+- simulation_answers: el cliente consulta respuestas propias para rendimiento; el guardado/actualización del progreso se realiza mediante RPC atómica. La política cliente visible es SELECT de respuestas pertenecientes a intentos propios.
+- reference_sources: usado por importación PDF y procesamiento de referencia; la importación usa tanto cliente autenticado como service_role para operaciones administrativas internas. RLS limita el acceso a uploaded_by y el admin global.
+- reference_questions: usado por importación/generación de referencia; INSERT está restringido por ownership del source y SELECT por ownership/admin. La limpieza masiva durante importación usa service_role.
+- reference_analyses: INSERT/SELECT/UPDATE/DELETE para análisis propios; RLS limita user_id al usuario autenticado. Es un caso donde authenticated necesita CRUD, pero no privilegios de administración de tabla como TRUNCATE/REFERENCES/TRIGGER/MAINTAIN.
+- reference_profiles/reference_sets/reference_set_questions: acceso principalmente de lectura condicionado por owner/admin y escritura interna/privilegiada según el flujo de importación. No hay necesidad demostrada de TRUNCATE/REFERENCES/TRIGGER/MAINTAIN para los roles de aplicación.
+- student_progress: actualmente solo se observa SELECT para el propio usuario desde RLS; las escrituras se realizan mediante lógica/RPC/servidor según el código auditado. No se justifican privilegios de tabla amplios para anon/authenticated.
+- subscriptions: RLS actual permite SELECT del propio user_id; no se observó necesidad de DML del cliente en el código auditado.
+- institution_members/institutions: existen en la BD y tienen grants amplios, pero NO se desarrollará ni modificará el sistema institucional en esta auditoría. Se mantienen fuera del cambio hasta mapear dependencias históricas con precisión.
+- user_roles: existe como estructura legacy/pendiente de mapeo; authenticated solo tiene UPDATE según ACL y RLS SELECT propio. No se modificará hasta decidir su futuro junto con sus referencias.
+- Hallazgo transversal: los permisos Dxtm (TRUNCATE, REFERENCES, TRIGGER, MAINTAIN) de anon/authenticated son más amplios de lo necesario para la aplicación y no deben considerarse protegidos por RLS. Se revocarán solo después de cerrar el inventario de dependencias y confirmar que no existen operaciones que los requieran.
+- También existen DEFAULT PRIVILEGES del rol postgres que conceden Dxtm a anon/authenticated para nuevas tablas; debe corregirse después de definir el modelo mínimo de grants.

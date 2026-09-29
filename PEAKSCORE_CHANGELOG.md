@@ -81,3 +81,10 @@
 - No se creó ni modificó ningún panel institucional.
 - Pendiente: al sincronizar el código en VSC, cambiar StatCard.tsx de /dashboard/racha-pixel.png a /dashboard/racha-pixel.webp.
 - Pendiente manual Supabase: migrar las políticas RLS de questions de institution_members.role = admin a profiles.role = admin, después de verificar que no existe una dependencia institucional actual.
+
+
+### Corrección 10 — Consistencia del administrador global
+- Sidebar: la visibilidad de las herramientas administrativas ahora usa profiles.role = admin.
+- Question Bank: la comprobación client-side de acceso ahora usa profiles.role = admin, alineada con el nuevo layout server-side.
+- Panel de administración: corregido el enlace roto de Importar PDF (/dashboard/question-bank/import-pdf → /dashboard/import-pdf).
+- No se añadieron permisos institucionales ni se modificó el modelo de instituciones.

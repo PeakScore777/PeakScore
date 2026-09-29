@@ -72,3 +72,12 @@
 - /forgot-password ahora maneja excepciones inesperadas, mantiene respuesta genérica y consume/renueva el token de Turnstile.
 - Pendiente manual: verificar en Supabase Auth URL Configuration que la URL de producción /update-password esté permitida y revisar la configuración de expiración/plantilla del correo de recuperación.
 - Commits: aef92cdc3afca887c425cfd283db5e011ea94180 y 543f4ef67844bf3b40797ace781e0bfe91d13179.
+
+
+### Corrección 9 — Protección de rutas administrativas
+- Se detectó que varias páginas del Banco de Preguntas dependían de comprobaciones client-side o de RLS basado en institution_members.role, aunque el modelo actual de PeakScore define profiles.role = admin como único administrador global.
+- Se añadieron layouts server-side en /dashboard/question-bank y /dashboard/import-pdf usando requireAdmin(). Esto protege todas las subrutas del banco y la página de importación antes de renderizar/ejecutar la UI.
+- Las APIs sensibles ya tenían comprobación server-side de profiles.role = admin y no se reemplazaron.
+- No se creó ni modificó ningún panel institucional.
+- Pendiente: al sincronizar el código en VSC, cambiar StatCard.tsx de /dashboard/racha-pixel.png a /dashboard/racha-pixel.webp.
+- Pendiente manual Supabase: migrar las políticas RLS de questions de institution_members.role = admin a profiles.role = admin, después de verificar que no existe una dependencia institucional actual.

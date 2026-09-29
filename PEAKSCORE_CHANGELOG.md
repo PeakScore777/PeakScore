@@ -88,3 +88,9 @@
 - Question Bank: la comprobación client-side de acceso ahora usa profiles.role = admin, alineada con el nuevo layout server-side.
 - Panel de administración: corregido el enlace roto de Importar PDF (/dashboard/question-bank/import-pdf → /dashboard/import-pdf).
 - No se añadieron permisos institucionales ni se modificó el modelo de instituciones.
+
+
+### Auditoría 2026-09-29 — Advisor y rutas administrativas
+- Supabase Security Advisor sigue mostrando únicamente las 6 funciones SECURITY DEFINER intencionales, api_rate_limits sin políticas (INFO) y Leaked Password Protection desactivado (WARN).
+- No se revocaron EXECUTE de las funciones porque son llamadas RPC legítimas del producto y hacerlo sin refactorizar rompería el flujo.
+- Leaked Password Protection queda como tarea manual.

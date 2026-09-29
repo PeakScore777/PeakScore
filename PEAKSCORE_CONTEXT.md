@@ -55,12 +55,12 @@ No unificar/eliminar ninguna fuente hasta mapear todos sus usos.
 
 ## Reference / IA
 - Existen reference_sources, reference_analyses, reference_profiles, reference_questions, reference_sets y reference_set_questions.
-- Algunas políticas actuales permiten lectura autenticada demasiado amplia. Revisar antes de exponer corpus interno a estudiantes.
+- El corpus de referencia está restringido por RLS al propietario y al dueño global de plataforma (`profiles.role = admin`). `institution_members.role` NO concede privilegios de plataforma.
 - generate-questions y generate-question-batch son rutas administrativas.
 
 ## Storage
-- question-images es público para lectura y actualmente tiene superficie de escritura autenticada que debe revisarse/restringirse.
-- reference-pdfs es privado, pero sus límites de tamaño/MIME de bucket deben endurecerse.
+- question-images es público para lectura, pero solo el dueño global de plataforma (`profiles.role = admin`) puede subir.
+- reference-pdfs es privado; solo el dueño global puede subir, leer y borrar. Bucket limitado a PDF y 30 MB.
 - No cambiar URLs de imágenes/branding sin comprobar referencias.
 
 ## Sesión SSR

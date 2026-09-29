@@ -72,10 +72,9 @@ export default function Sidebar() {
       }
 
       const { data, error } = await supabase
-        .from("institution_members")
+        .from("profiles")
         .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
+        .eq("id", user.id)
         .maybeSingle();
 
       if (error) {

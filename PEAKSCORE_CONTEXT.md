@@ -33,6 +33,9 @@
 - Existe CodeQL y Dependabot.
 - .env* está ignorado por Git.
 - Supabase SSR ahora tiene proxy.ts + lib/supabase/proxy.ts para refresco de sesión.
+- lib/ai/openai.ts usa server-only.
+- El rate limiter ahora define los límites por bucket dentro de la función SECURITY DEFINER; los parámetros de límite/ventana enviados por el cliente ya no controlan la política efectiva.
+- Los SECURITY DEFINER corregidos usan search_path vacío en consume_api_rate_limit y save_simulation_progress_atomic.
 - No guardar secretos reales en este archivo.
 
 ## Auth / roles — estado pendiente
@@ -44,10 +47,11 @@ No unificar/eliminar ninguna fuente hasta mapear todos sus usos.
 
 ## Simulacros
 - simulations, simulation_questions, simulation_attempts y simulation_answers existen.
+- simulation_attempts ahora tiene total_questions, current_question y time_left para soportar el flujo de progreso/resume.
 - Hay un índice único parcial para impedir más de un intento abierto por usuario/simulacro.
 - /api/simulations/[id]/questions filtra campos sensibles.
 - /api/simulations/[id]/finish usa finish_simulation_atomic.
-- Existe un problema confirmado: simulation_attempts no tiene current_question, time_left ni total_questions, mientras progress/route.ts y save_simulation_progress_atomic esperan/usan parte de esos datos. Debe corregirse coordinando BD + RPC + API + frontend; no parchear una sola capa.
+- El RPC save_simulation_progress_atomic ahora persiste current_question/time_left y valida ownership, límites, estructura de respuestas, duplicados y pertenencia de preguntas.
 
 ## Reference / IA
 - Existen reference_sources, reference_analyses, reference_profiles, reference_questions, reference_sets y reference_set_questions.
@@ -71,9 +75,10 @@ No unificar/eliminar ninguna fuente hasta mapear todos sus usos.
 - [ ] Resolver arquitectura definitiva de roles.
 - [ ] Endurecer RLS/reference_*.
 - [ ] Endurecer Storage.
-- [ ] Corregir progreso/resume de simulacros.
-- [ ] Revisar SECURITY DEFINER y search_path.
-- [ ] Revisar rate limiting para que los límites no sean elegibles libremente por el cliente.
+- [x] Corregir esquema/RPC base de progreso/resume de simulacros.
+- [x] Endurecer rate limiter para ignorar límites elegibles por el cliente.
+- [x] Endurecer search_path de las dos funciones SECURITY DEFINER modificadas.
+- [ ] Revisar SECURITY DEFINER restantes y search_path.
 - [ ] Revisar grants de anon/authenticated.
 - [ ] Revisar índices FK según consultas reales.
 - [ ] Completar auditoría histórica de secretos.

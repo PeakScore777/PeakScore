@@ -100,3 +100,10 @@
 - Se registró que los cambios de seguridad documentados hasta esta fecha ya están en `main`.
 - Antes de continuar con nuevas correcciones, se debe sincronizar `main` en la copia local de Visual Studio Code.
 - No se aplicaron cambios de código en este punto de control.
+
+
+### Corrección 11 — Asset de racha del dashboard
+- Se verificó que `components/dashboard/StatCard.tsx` apuntaba a `/dashboard/racha-pixel.png`.
+- Se corrigió únicamente esa referencia a `/dashboard/racha-pixel.webp`, correspondiente al asset existente.
+- No se modificaron otras rutas de imágenes, branding ni estructura del dashboard.
+- El cambio quedó guardado en GitHub antes de sincronizarlo con VSC.

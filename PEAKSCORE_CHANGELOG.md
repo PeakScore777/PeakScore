@@ -53,3 +53,10 @@
 - En Supabase se revocaron a authenticated los privilegios de escritura y privilegios administrativos innecesarios sobre profiles y user_roles.
 - La arquitectura mantiene profiles.role = admin exclusivamente para el dueño global de plataforma.
 - Pendiente: mapear todos los usos de user_roles e institution_members antes de eliminar o unificar fuentes de roles.
+
+### Corrección 7 — SECURITY DEFINER
+- Se revisaron las ocho funciones SECURITY DEFINER existentes en public.
+- Las cuatro que todavía tenían search_path=public fueron inspeccionadas antes del cambio: delete_user_simulation, finish_simulation_atomic, get_subject_performance_for_attempts y update_user_streak.
+- Se confirmó que sus tablas están referenciadas como public.* y que no era necesario mantener public en search_path.
+- Se cambió su configuración a search_path='' mediante migración.
+- Verificado en Supabase: las ocho funciones SECURITY DEFINER actuales tienen search_path vacío.

@@ -115,7 +115,7 @@ Antes de modificar:
 ## Auditoría actual — rutas administrativas
 - CORREGIDO: se añadieron layouts server-side para /dashboard/question-bank y /dashboard/import-pdf usando requireAdmin(). Esto protege todas sus subrutas antes de renderizar la UI.
 - Las APIs /api/generate-questions, /api/generate-question-batch y /api/import.pdf ya validan profiles.role = admin server-side; no se sustituyeron.
-- Detectado pendiente: questions RLS todavía usa institution_members.role = admin para SELECT/INSERT/UPDATE/DELETE. El modelo actual exige profiles.role = admin para el dueño global. Debe migrarse manualmente en Supabase después de sincronizar/verificar VSC.
+- CORREGIDO MANUALMENTE EN SUPABASE: las políticas RLS de questions para SELECT/INSERT/UPDATE/DELETE ahora verifican profiles.id = auth.uid() y profiles.role = 'admin'. Ya no dependen de institution_members para conceder privilegios sobre questions.
 - CORREGIDO MANUALMENTE EN VSC: StatCard.tsx referencia /dashboard/racha-pixel.webp. Este cambio fue realizado manualmente por el usuario; no debe tratarse como una corrección de código realizada por el asistente. Mantenerlo al sincronizar VSC → GitHub.
 - No crear paneles ni permisos institucionales; institution_members se trata como estructura futura/legacy hasta mapear dependencias.
 
@@ -141,3 +141,11 @@ Antes de modificar:
 - Verificado en el dashboard actual del proyecto que la opción no aparece en el plan Free.
 - Confirmado en la documentación oficial de Supabase que Leaked Password Protection está disponible en Pro y superiores.
 - Estado: pendiente por disponibilidad del plan; no se realizará ningún cambio de plan por esta alerta.
+
+
+### RLS questions — 2026-09-29
+- Se verificaron las 4 políticas existentes de public.questions antes del cambio.
+- Se reemplazaron manualmente en Supabase las políticas SELECT, INSERT, UPDATE y DELETE.
+- Las cuatro ahora autorizan exclusivamente al dueño global mediante public.profiles (id = auth.uid() y role = 'admin').
+- Se confirmó directamente en pg_policies que ninguna de las cuatro políticas usa institution_members.
+- No se modificó institution_members ni se creó ninguna funcionalidad institucional.

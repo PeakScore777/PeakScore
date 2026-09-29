@@ -36,3 +36,11 @@
 - `simulation_attempts` recibió `total_questions`, `current_question` y `time_left` para alinear BD, RPC y API.
 - `save_simulation_progress_atomic` ahora persiste estado de progreso y mantiene las validaciones de ownership y respuestas.
 - Verificado en Supabase que las tres columnas existen y las funciones corregidas tienen search_path vacío.
+
+
+### Corrección 4 — RLS del corpus de referencia
+- Se confirmó que `reference_profiles`, `reference_questions`, `reference_set_questions` y `reference_sets` tenían SELECT demasiado amplio para cualquier usuario autenticado.
+- Se reemplazó el acceso público a autenticados por acceso del propietario y administradores institucionales.
+- Se eliminaron políticas SELECT duplicadas de `reference_questions`.
+- Se eliminaron políticas INSERT duplicadas en `reference_sources` y `reference_analyses`.
+- Verificado directamente en Supabase que las políticas resultantes ya no contienen `USING (true)` en esas cuatro tablas.

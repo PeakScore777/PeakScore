@@ -38,12 +38,14 @@
 - Los SECURITY DEFINER corregidos usan search_path vacío en consume_api_rate_limit y save_simulation_progress_atomic.
 - No guardar secretos reales en este archivo.
 
-## Auth / roles — estado pendiente
-Existen tres conceptos actualmente:
-1. profiles.role: user | admin.
-2. institution_members.role: student | teacher | coordinator | rector | admin.
-3. user_roles: admin | student; actualmente sin filas confirmadas.
-No unificar/eliminar ninguna fuente hasta mapear todos sus usos.
+## Auth / roles
+- profiles.role: user | admin; admin representa exclusivamente al dueño global de la plataforma.
+- institution_members.role: student | teacher | coordinator | rector | admin; este admin es institucional y NO concede privilegios globales de plataforma.
+- user_roles: admin | student; actualmente sin filas confirmadas y pendiente de mapear usos antes de eliminar/unificar.
+- profiles solo tiene SELECT para el propio usuario mediante RLS; no existe política RLS de INSERT/UPDATE/DELETE para usuarios autenticados.
+- El trigger prevent_profile_privilege_changes() es SECURITY DEFINER, usa search_path='' y bloquea al propio usuario de modificar campos protegidos como role, email y métricas del perfil.
+- Se verificó la definición de handle_new_user(); es SECURITY DEFINER con search_path='' y crea el perfil inicial sin asignar role=admin.
+- Grants de profiles y user_roles para anon/authenticated fueron reducidos en Supabase: no se permite escritura directa ni privilegios administrativos innecesarios desde esos roles. El acceso SELECT queda sujeto a las políticas RLS existentes.
 
 ## Simulacros
 - simulations, simulation_questions, simulation_attempts y simulation_answers existen.
@@ -55,11 +57,11 @@ No unificar/eliminar ninguna fuente hasta mapear todos sus usos.
 
 ## Reference / IA
 - Existen reference_sources, reference_analyses, reference_profiles, reference_questions, reference_sets y reference_set_questions.
-- El corpus de referencia está restringido por RLS al propietario y al dueño global de plataforma (`profiles.role = admin`). `institution_members.role` NO concede privilegios de plataforma.
+- El corpus de referencia está restringido por RLS al propietario y al dueño global de plataforma (profiles.role = admin). institution_members.role NO concede privilegios de plataforma.
 - generate-questions y generate-question-batch son rutas administrativas.
 
 ## Storage
-- question-images es público para lectura, pero solo el dueño global de plataforma (`profiles.role = admin`) puede subir.
+- question-images es público para lectura, pero solo el dueño global de plataforma (profiles.role = admin) puede subir.
 - reference-pdfs es privado; solo el dueño global puede subir, leer y borrar. Bucket limitado a PDF y 30 MB.
 - No cambiar URLs de imágenes/branding sin comprobar referencias.
 
@@ -71,15 +73,14 @@ No unificar/eliminar ninguna fuente hasta mapear todos sus usos.
 - El dashboard mantiene su comprobación server-side con getUser(); el proxy no reemplaza las autorizaciones de cada ruta.
 
 ## Pendientes prioritarios
-- [x] Añadir proxy SSR.
-- [ ] Resolver arquitectura definitiva de roles.
+- [ ] Resolver mapa definitivo de roles/usos de user_roles e institution_members.
 - [x] Endurecer RLS/reference_*.
-- [ ] Endurecer Storage.
+- [x] Endurecer Storage.
 - [x] Corregir esquema/RPC base de progreso/resume de simulacros.
 - [x] Endurecer rate limiter para ignorar límites elegibles por el cliente.
 - [x] Endurecer search_path de las dos funciones SECURITY DEFINER modificadas.
 - [ ] Revisar SECURITY DEFINER restantes y search_path.
-- [ ] Revisar grants de anon/authenticated.
+- [ ] Revisar grants de anon/authenticated en el resto de tablas.
 - [ ] Revisar índices FK según consultas reales.
 - [ ] Completar auditoría histórica de secretos.
 - [ ] Revisar protección de main/CI cuando el flujo de desarrollo lo permita.

@@ -115,7 +115,7 @@ Antes de modificar:
 - CORREGIDO: se añadieron layouts server-side para /dashboard/question-bank y /dashboard/import-pdf usando requireAdmin(). Esto protege todas sus subrutas antes de renderizar la UI.
 - Las APIs /api/generate-questions, /api/generate-question-batch y /api/import.pdf ya validan profiles.role = admin server-side; no se sustituyeron.
 - Detectado pendiente: questions RLS todavía usa institution_members.role = admin para SELECT/INSERT/UPDATE/DELETE. El modelo actual exige profiles.role = admin para el dueño global. Debe migrarse manualmente en Supabase después de sincronizar/verificar VSC.
-- Pendiente de código en VSC: StatCard.tsx referencia /dashboard/racha-pixel.png, pero el archivo existente es /dashboard/racha-pixel.webp. No se aplicó ese cambio todavía.
+- CORREGIDO: StatCard.tsx ahora referencia /dashboard/racha-pixel.webp, que es el asset existente para la racha. No se modificó ninguna otra ruta de imagen ni branding.
 - No crear paneles ni permisos institucionales; institution_members se trata como estructura futura/legacy hasta mapear dependencias.
 
 - CORREGIDO: Sidebar ahora verifica el administrador global mediante profiles.role = admin, no institution_members.

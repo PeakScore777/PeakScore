@@ -109,7 +109,7 @@ export default async function AdminPage() {
 
             {/* IMPORTAR PDF */}
             <Link
-              href="/dashboard/question-bank/import-pdf"
+              href="/dashboard/import-pdf"
               className="group rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
             >
               <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 text-red-600">

@@ -28,3 +28,11 @@
 - Correcciones 1 y 2 aplicadas en `main`.
 - No se consideran corregidos los demás hallazgos de la auditoría.
 - Siguiente bloque: terminar el mapa de roles y revisar RLS/grants antes de cambiar políticas.
+
+
+### Corrección 3 — Rate limiting y progreso
+- El rate limiter ahora fija los límites por bucket en la función SECURITY DEFINER y no confía en p_limit/p_window_seconds proporcionados por el cliente.
+- `consume_api_rate_limit` y `save_simulation_progress_atomic` usan `search_path = ''`.
+- `simulation_attempts` recibió `total_questions`, `current_question` y `time_left` para alinear BD, RPC y API.
+- `save_simulation_progress_atomic` ahora persiste estado de progreso y mantiene las validaciones de ownership y respuestas.
+- Verificado en Supabase que las tres columnas existen y las funciones corregidas tienen search_path vacío.

@@ -242,3 +242,24 @@ Antes de modificar:
 
 ### Regla operativa añadida
 Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evaluarse como si un atacante tuviera acceso directo a la URL/API/REST/RPC y conociera los IDs internos. Nunca considerar una página oculta o un botón deshabilitado como control de seguridad.
+
+## Sincronización VSC ↔ GitHub — 2026-09-29
+
+- Se verificó el estado real de `main` después de la sincronización.
+- El commit local `7a6cf0d` se integró con los commits que estaban en GitHub mediante el merge `3134214f5b1bc235b7fb567a53d0f4e61d1beb50`.
+- El merge se completó sin conflictos.
+- El push posterior terminó correctamente con `main -> main`.
+- Verificación actual en GitHub: `components/dashboard/StatCard.tsx` usa `/dashboard/racha-pixel.webp`.
+- Estado: GitHub `main` contiene el cambio local y los cambios previos de seguridad/documentación.
+- Antes de continuar con nuevas modificaciones, verificar primero el estado real de GitHub y VSC.
+
+## Base de verificación institucional — verificada en Supabase
+
+- Se crearon y verificaron `institution_verification_requests` e `institution_verification_documents` como base para la futura verificación institucional.
+- `institution_verification_requests` permite estados `pending`, `under_review`, `approved`, `changes_requested` y `rejected`.
+- Se creó un índice único parcial para impedir más de una solicitud activa por institución en estados `pending` o `under_review`.
+- RLS está habilitado en ambas tablas.
+- El flujo frontend de registro institucional todavía no está implementado.
+- La creación sensible de solicitudes y datos institucionales debe pasar por backend/server-side con validación estricta antes de producción.
+- El registro normal de usuarios permanece separado del registro institucional.
+- No se debe asumir que las tablas de verificación por sí solas constituyen un sistema completo de registro institucional.

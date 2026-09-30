@@ -161,3 +161,26 @@
 - Hallazgo 🟡: `institutions` e `institution_members` ya existen en Supabase; el nuevo panel institucional local creado durante esta fecha aún no está en `main`, por lo que su código no ha sido auditado.
 - No se modificó código, RLS, grants ni esquema durante esta fase.
 - Próximo paso: auditar el código local del panel institucional cuando esté disponible y luego endurecer autorización con el principio de mínimo privilegio.
+
+## 2026-09-29 — Sincronización VSC → GitHub completada
+
+- Se protegió el cambio local del usuario mediante el commit `7a6cf0d`.
+- GitHub `main` tenía commits que no estaban en la copia local.
+- Se ejecutó `git fetch origin` y posteriormente `git merge origin/main`.
+- El merge se completó sin conflictos mediante el commit `3134214f5b1bc235b7fb567a53d0f4e61d1beb50`.
+- Se realizó `git push origin main`.
+- GitHub confirmó el push de `main -> main`.
+- Verificación posterior: `components/dashboard/StatCard.tsx` mantiene la referencia `/dashboard/racha-pixel.webp`.
+- Estado: la copia local y GitHub quedaron sincronizados respecto a este flujo.
+
+### Base institucional — verificación preliminar en Supabase
+
+- Se crearon las tablas `institution_verification_requests` e `institution_verification_documents`.
+- Se habilitó RLS en ambas tablas.
+- Se configuraron políticas para que el representante autenticado pueda consultar/crear sus propios registros y el administrador global pueda revisar/actualizar las solicitudes y documentos.
+- Se creó un índice único parcial para impedir solicitudes activas duplicadas por institución.
+- Esta fase establece únicamente la base de verificación.
+- El registro institucional completo todavía no está implementado.
+- Antes de habilitar el flujo se debe mover la creación sensible a backend/server-side y validar estrictamente los campos y archivos.
+- También debe revisarse el aislamiento entre instituciones, Storage y autorización institucional antes de producción.
+- El registro normal de PeakScore no se modifica; el flujo institucional permanece separado después de la autenticación.

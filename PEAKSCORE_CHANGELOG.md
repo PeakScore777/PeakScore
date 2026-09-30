@@ -100,3 +100,64 @@
 - Se registró que los cambios de seguridad documentados hasta esta fecha ya están en `main`.
 - Antes de continuar con nuevas correcciones, se debe sincronizar `main` en la copia local de Visual Studio Code.
 - No se aplicaron cambios de código en este punto de control.
+
+
+### Corrección 11 — Asset de racha del dashboard
+- Se verificó que `components/dashboard/StatCard.tsx` apuntaba a `/dashboard/racha-pixel.png`.
+- Se corrigió únicamente esa referencia a `/dashboard/racha-pixel.webp`, correspondiente al asset existente.
+- No se modificaron otras rutas de imágenes, branding ni estructura del dashboard.
+- El cambio quedó guardado en GitHub antes de sincronizarlo con VSC.
+
+
+### Corrección de registro — StatCard / racha
+- Aclaración: el cambio de `/dashboard/racha-pixel.png` a `/dashboard/racha-pixel.webp` fue realizado manualmente por el usuario en VSC.
+- No debe atribuirse como cambio de código realizado por el asistente.
+- La referencia correcta ya está presente en la copia local de VSC y debe conservarse al subir los cambios locales a GitHub.
+- No se realizó ninguna otra modificación de `StatCard.tsx`.
+
+
+### Registro — Leaked Password Protection y plan Supabase
+- Se verificó en el dashboard del proyecto que la opción de Leaked Password Protection no está disponible en el plan Free.
+- Se contrastó con la documentación oficial actual de Supabase: Leaked Password Protection está disponible en Pro y superiores.
+- No se cambió el plan ni otras opciones de autenticación por esta alerta.
+- Estado: pendiente por disponibilidad del plan; se mantiene como WARN conocido de Supabase Security Advisor.
+
+
+### Corrección — RLS de questions
+- Se verificaron las políticas RLS existentes de public.questions antes del cambio.
+- Se reemplazaron manualmente las cuatro políticas administrativas: SELECT, INSERT, UPDATE y DELETE.
+- La autorización ahora se basa en public.profiles con id = auth.uid() y role = 'admin', consistente con el único administrador global actual de PeakScore.
+- Verificación posterior en pg_policies: las cuatro políticas ya no dependen de institution_members.
+- No se creó ni modificó ningún panel o sistema institucional.
+
+
+### Auditoría — Grants de tablas públicas
+- Se auditó directamente information_schema.role_table_grants, ACLs de pg_class y DEFAULT PRIVILEGES.
+- Se detectó que anon y authenticated mantienen Dxtm (TRUNCATE, REFERENCES, TRIGGER, MAINTAIN) en múltiples tablas públicas; authenticated además conserva CRUD completo en varias tablas.
+- RLS está habilitado en todas las tablas públicas auditadas, pero PostgreSQL especifica que operaciones como TRUNCATE y REFERENCES no están sujetas a RLS. Por ello estos privilegios requieren revisión independiente.
+- Se detectó DEFAULT PRIVILEGES del rol postgres que asigna Dxtm a anon y authenticated para nuevas tablas públicas.
+- No se revocaron grants todavía. Primero se mapearán las operaciones reales del código y las dependencias para aplicar mínimo privilegio sin romper PeakScore.
+
+
+### Mapeo — Uso de tablas y grants antes de hardening
+- Se revisaron servicios y rutas actuales para determinar qué tablas usa PeakScore y desde qué capa.
+- Se identificó que varias operaciones sensibles de simulacros/importación se ejecutan desde APIs con service_role después de autenticar al usuario, mientras que algunas lecturas y operaciones propias usan el rol authenticated con RLS.
+- Se confirmó que profiles/subjects/subscriptions y varias tablas de referencia tienen acceso cliente limitado por RLS; reference_analyses es el principal caso donde authenticated necesita CRUD propio.
+- Se confirmó que los permisos Dxtm (TRUNCATE, REFERENCES, TRIGGER, MAINTAIN) no están justificados por los usos de aplicación observados y deben tratarse como exceso de privilegios, pero todavía no se revocan para evitar romper dependencias no mapeadas.
+- institution_members/institutions y user_roles quedan fuera de cambios funcionales: se preservan hasta completar su trazabilidad histórica.
+- Próximo paso: preparar una migración de mínimo privilegio, empezando por retirar privilegios innecesarios de tabla y corrigiendo DEFAULT PRIVILEGES, con verificación posterior.
+
+
+## 2026-09-29 — Auditoría global de seguridad (fase de reconocimiento)
+
+### Resultado
+- Se auditó el estado real de `main` y Supabase sin aplicar correcciones.
+- Confirmado: existe exactamente 1 perfil `admin` y su correo es `aragonyostynsena07@gmail.com`.
+- Confirmado: RLS de `questions` usa `profiles.role='admin'` y no `institution_members`.
+- Confirmado: las funciones SECURITY DEFINER revisadas usan `search_path=''\` y las RPC de usuario contienen controles de autenticación/ownership.
+- Confirmado: headers/CSP de Next.js tienen una base sólida de hardening.
+- Hallazgo 🟡: `requireAdmin()` y las APIs administrativas siguen confiando únicamente en `profiles.role='admin'`; todavía no exigen la identidad canónica del propietario.
+- Hallazgo 🟡: persisten grants `TRUNCATE/REFERENCES/TRIGGER` y, en algunas tablas, CRUD amplio para `anon/authenticated`. También existen DEFAULT PRIVILEGES amplios para futuras tablas.
+- Hallazgo 🟡: `institutions` e `institution_members` ya existen en Supabase; el nuevo panel institucional local creado durante esta fecha aún no está en `main`, por lo que su código no ha sido auditado.
+- No se modificó código, RLS, grants ni esquema durante esta fase.
+- Próximo paso: auditar el código local del panel institucional cuando esté disponible y luego endurecer autorización con el principio de mínimo privilegio.

@@ -179,3 +179,66 @@ Antes de modificar:
 - user_roles: existe como estructura legacy/pendiente de mapeo; authenticated solo tiene UPDATE según ACL y RLS SELECT propio. No se modificará hasta decidir su futuro junto con sus referencias.
 - Hallazgo transversal: los permisos Dxtm (TRUNCATE, REFERENCES, TRIGGER, MAINTAIN) de anon/authenticated son más amplios de lo necesario para la aplicación y no deben considerarse protegidos por RLS. Se revocarán solo después de cerrar el inventario de dependencias y confirmar que no existen operaciones que los requieran.
 - También existen DEFAULT PRIVILEGES del rol postgres que conceden Dxtm a anon/authenticated para nuevas tablas; debe corregirse después de definir el modelo mínimo de grants.
+
+
+## Auditoría global de seguridad — 2026-09-29 — reconocimiento sin correcciones
+
+### Alcance
+- Auditoría realizada contra el estado real de GitHub `main` y el proyecto Supabase activo de PeakScore.
+- Se revisaron autenticación/autorización administrativa, RLS, Storage, SECURITY DEFINER, triggers, grants, DEFAULT PRIVILEGES, APIs sensibles, headers/CSP, estructura de instituciones y estado de migraciones.
+- Esta fase es exclusivamente de reconocimiento/documentación. No se aplicaron correcciones de código ni cambios de esquema durante esta auditoría.
+- El panel institucional creado localmente durante esta fecha NO está presente en el `main` auditado. Por tanto, su código local aún no puede considerarse auditado hasta que esté disponible para revisión.
+
+### 🟢 Correcto / controles confirmados
+- Supabase reporta exactamente 1 perfil con `role='admin'`, y el correo de ese perfil coincide exactamente con `aragonyostynsena07@gmail.com`.
+- Las políticas RLS actuales de `questions` para SELECT/INSERT/UPDATE/DELETE dependen de `profiles.id = auth.uid()` y `profiles.role='admin'`; no usan `institution_members.role`.
+- Las tablas públicas auditadas tienen RLS habilitado.
+- Las funciones SECURITY DEFINER existentes revisadas tienen `search_path=''\` y las funciones RPC de usuario verifican `auth.uid()`/ownership antes de operar.
+- `handle_new_user()` crea perfiles sin asignar `role='admin'`.
+- `prevent_profile_privilege_changes()` protege cambios directos de campos sensibles del perfil y el acceso RLS de `profiles` no concede escritura directa a usuarios autenticados.
+- Las APIs administrativas revisadas comprueban autenticación y `profiles.role='admin'` en servidor; no dependen únicamente de la UI.
+- Los headers/CSP de `next.config.ts` incluyen HSTS, nosniff, frame-ancestors/X-Frame-Options, Referrer-Policy, Permissions-Policy y CSP.
+
+### 🟡 Riesgos / mejoras pendientes
+1. **Admin canónico no aplicado como segunda barrera**
+   - `lib/auth/admin.ts` autoriza mediante `profiles.role='admin'` pero no exige el correo canónico.
+   - Las rutas `/api/generate-questions`, `/api/generate-question-batch` y `/api/import.pdf` también comprueban el role, pero no la identidad canónica.
+   - Estado actual de datos: solo existe un admin y coincide con el correo canónico, por lo que no se observa una escalada activa; sin embargo, el modelo todavía no implementa la regla de doble condición exigida para el dueño global.
+   - Corrección futura: una única comprobación server-side reutilizable que exija usuario autenticado + identidad canónica + `profiles.role='admin'`, y que también sea reflejada en las políticas RLS administrativas donde corresponda.
+
+2. **Grants excesivos en PostgreSQL**
+   - `anon` y `authenticated` conservan `TRUNCATE`, `REFERENCES` y `TRIGGER` sobre numerosas tablas públicas; en varias tablas `authenticated` conserva además CRUD completo.
+   - Estos privilegios no deben considerarse protegidos por RLS: operaciones como TRUNCATE/REFERENCES no están gobernadas por las policies de filas.
+   - Además, DEFAULT PRIVILEGES del rol `postgres` conceden `Dxtm` a `anon` y `authenticated` para tablas públicas nuevas.
+   - Estado: **no corregir todavía**. Primero terminar el mapa de operaciones reales y dependencias, especialmente ahora que se está incorporando el sistema institucional.
+
+3. **Institutional surface requiere auditoría específica**
+   - La BD ya contiene `institutions` y `institution_members`; actualmente hay 1 institución y 1 miembro.
+   - Las policies visibles actuales son conservadoras para lectura y no conceden DML directo mediante RLS a usuarios autenticados.
+   - Sin embargo, los grants de tabla son amplios, por lo que el sistema institucional debe auditarse antes de habilitar operaciones de creación/edición/asignación de miembros.
+   - El código del nuevo panel institucional local todavía no está en `main`; no se debe asumir que sus Server Actions/API/RPC están protegidos.
+
+4. **Funciones SECURITY DEFINER expuestas**
+   - Security Advisor mantiene 6 funciones ejecutables por `authenticated`.
+   - No se consideran automáticamente vulnerables: las funciones revisadas validan autenticación/ownership y tienen `search_path=''\`.
+   - Deben seguir auditándose cada vez que se agregue una RPC nueva, especialmente las relacionadas con instituciones y administración.
+
+5. **Leaked Password Protection**
+   - Sigue como WARN de Supabase Auth y pendiente por disponibilidad del plan actual.
+   - No cambiar plan automáticamente.
+
+### 🔴 No se confirmó una vulnerabilidad explotable durante esta fase
+- No se encontró un segundo perfil con `role='admin'`.
+- No se encontró evidencia, en las estructuras revisadas, de que `institution_members.role='admin'` esté concediendo actualmente administración global.
+- No se encontró una función SECURITY DEFINER sin `search_path=''\` entre las funciones revisadas.
+- Esto NO significa que PeakScore esté terminado: los grants excesivos y la ausencia de identidad canónica en la autorización global siguen siendo superficies que deben endurecerse.
+
+### Prioridad siguiente
+1. Auditar el código local no sincronizado del nuevo panel institucional.
+2. Cerrar el modelo de autorización institucional: qué puede hacer student/teacher/coordinator/rector y qué nunca puede hacer respecto al sistema global.
+3. Implementar después el blindaje de admin canónico con cambio mínimo.
+4. Continuar con mínimo privilegio de grants y DEFAULT PRIVILEGES, verificando dependencias antes de revocar.
+5. Repetir Security Advisor y pruebas negativas después de cada cambio.
+
+### Regla operativa añadida
+Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evaluarse como si un atacante tuviera acceso directo a la URL/API/REST/RPC y conociera los IDs internos. Nunca considerar una página oculta o un botón deshabilitado como control de seguridad.

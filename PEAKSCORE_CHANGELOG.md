@@ -146,3 +146,18 @@
 - Se confirmó que los permisos Dxtm (TRUNCATE, REFERENCES, TRIGGER, MAINTAIN) no están justificados por los usos de aplicación observados y deben tratarse como exceso de privilegios, pero todavía no se revocan para evitar romper dependencias no mapeadas.
 - institution_members/institutions y user_roles quedan fuera de cambios funcionales: se preservan hasta completar su trazabilidad histórica.
 - Próximo paso: preparar una migración de mínimo privilegio, empezando por retirar privilegios innecesarios de tabla y corrigiendo DEFAULT PRIVILEGES, con verificación posterior.
+
+
+## 2026-09-29 — Auditoría global de seguridad (fase de reconocimiento)
+
+### Resultado
+- Se auditó el estado real de `main` y Supabase sin aplicar correcciones.
+- Confirmado: existe exactamente 1 perfil `admin` y su correo es `aragonyostynsena07@gmail.com`.
+- Confirmado: RLS de `questions` usa `profiles.role='admin'` y no `institution_members`.
+- Confirmado: las funciones SECURITY DEFINER revisadas usan `search_path=''\` y las RPC de usuario contienen controles de autenticación/ownership.
+- Confirmado: headers/CSP de Next.js tienen una base sólida de hardening.
+- Hallazgo 🟡: `requireAdmin()` y las APIs administrativas siguen confiando únicamente en `profiles.role='admin'`; todavía no exigen la identidad canónica del propietario.
+- Hallazgo 🟡: persisten grants `TRUNCATE/REFERENCES/TRIGGER` y, en algunas tablas, CRUD amplio para `anon/authenticated`. También existen DEFAULT PRIVILEGES amplios para futuras tablas.
+- Hallazgo 🟡: `institutions` e `institution_members` ya existen en Supabase; el nuevo panel institucional local creado durante esta fecha aún no está en `main`, por lo que su código no ha sido auditado.
+- No se modificó código, RLS, grants ni esquema durante esta fase.
+- Próximo paso: auditar el código local del panel institucional cuando esté disponible y luego endurecer autorización con el principio de mínimo privilegio.

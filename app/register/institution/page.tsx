@@ -232,6 +232,9 @@ export default function InstitutionRegisterPage() {
   const [submitted, setSubmitted] =
     useState(false);
 
+  const [submitting, setSubmitting] =
+    useState(false);
+
   /* ==========================================================
      CLASES
   ========================================================== */
@@ -560,10 +563,14 @@ export default function InstitutionRegisterPage() {
      ENVIAR SOLICITUD
   ========================================================== */
 
-  const handleSubmit = (
+  const handleSubmit = async (
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+
+    if (submitting) {
+      return;
+    }
 
     setError("");
 
@@ -606,15 +613,17 @@ export default function InstitutionRegisterPage() {
       return;
     }
 
-    const requestData = {
-      institution: {
-        name:
+    setSubmitting(true);
+
+    try {
+      const requestData = {
+        institutionName:
           form.institutionName.trim(),
 
         nit:
           form.nit.trim(),
 
-        type:
+        institutionType:
           form.institutionType,
 
         department:
@@ -626,59 +635,74 @@ export default function InstitutionRegisterPage() {
         address:
           form.address.trim(),
 
-        email:
+        institutionalEmail:
           form.institutionalEmail
             .trim()
             .toLowerCase(),
 
-        phone:
+        institutionalPhone:
           form.institutionalPhone.trim(),
-      },
 
-      rector: {
-        fullName:
+        rectorName:
           form.rectorName.trim(),
 
+        // El backend también lo fuerza a CC.
         documentType: "CC",
 
         documentNumber:
           form.documentNumber.trim(),
 
-        email:
+        rectorEmail:
           form.rectorEmail
             .trim()
             .toLowerCase(),
 
-        phone:
+        rectorPhone:
           form.rectorPhone.trim(),
-      },
 
-      legal: {
-        acceptTerms:
+        termsAccepted:
           form.acceptTerms,
 
-        acceptPrivacy:
+        privacyAccepted:
           form.acceptPrivacy,
 
-        marketing:
+        marketingAccepted:
           form.marketing,
-      },
 
-      captchaToken,
-    };
+        captchaToken,
+      };
 
-    /*
-      Todavía no enviamos a una API institucional inventada.
-      Este será el payload para el backend seguro cuando
-      conectemos la solicitud con Supabase.
-    */
+      const response = await fetch(
+        "/api/institution/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestData),
+        }
+      );
 
-    console.log(
-      "[PeakScore] Solicitud institucional preparada:",
-      requestData
-    );
+      const data = await response.json();
+ 
+      if (!response.ok) {
+        setError(
+          typeof data?.error === "string"
+            ? data.error
+            : "No fue posible enviar la solicitud."
+        );
 
-    setSubmitted(true);
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setError(
+        "No pudimos conectar con el servidor. Inténtalo nuevamente."
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   /* ==========================================================
@@ -751,11 +775,11 @@ export default function InstitutionRegisterPage() {
               </p>
 
               <h1 className="mt-3 text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">
-                Solicitud preparada
+                Solicitud enviada
               </h1>
 
               <p className="mx-auto mt-4 max-w-md font-mono text-xs leading-6 text-slate-300">
-                La información fue validada correctamente.
+                Tu solicitud institucional fue registrada correctamente y quedó pendiente de verificación por parte de PeakScore.
               </p>
             </div>
 
@@ -2009,6 +2033,7 @@ export default function InstitutionRegisterPage() {
                       <button
                         type="submit"
                         disabled={
+                          submitting ||
                           !captchaToken ||
                           !form.acceptTerms ||
                           !form.acceptPrivacy
@@ -2038,7 +2063,9 @@ export default function InstitutionRegisterPage() {
                           disabled:opacity-40
                         "
                       >
-                        Enviar solicitud
+                        {submitting
+                          ? "Enviando..."
+                          : "Enviar solicitud"}
 
                         <ArrowRight className="h-4 w-4" />
                       </button>

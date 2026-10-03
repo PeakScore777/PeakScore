@@ -5,6 +5,7 @@ import {
   Database,
   Zap,
   ShieldCheck,
+  Building2,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -127,6 +128,29 @@ export default async function AdminPage() {
 
               <div className="mt-5 text-sm font-semibold text-red-600">
                 Abrir herramienta →
+              </div>
+            </Link>
+
+            {/* SOLICITUDES INSTITUCIONALES */}
+            <Link
+              href="/dashboard/admin/institutions"
+              className="group rounded-2xl border border-slate-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <Building2 size={24} />
+              </div>
+
+              <h3 className="text-lg font-bold text-slate-900">
+                Solicitudes institucionales
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Revisa y gestiona las solicitudes de
+                colegios que desean incorporar PeakScore.
+              </p>
+
+              <div className="mt-5 text-sm font-semibold text-emerald-600">
+                Ver solicitudes →
               </div>
             </Link>
 

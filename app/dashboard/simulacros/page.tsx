@@ -91,27 +91,33 @@ export default function SimulationsPage() {
                   ? data.attempt
                   : null;
 
-              const isCompleted =
-                data.completed === true ||
-                data.status === "completed" ||
-                Boolean(data.lastCompletedAttempt);
-
+              // Si existe un intento abierto, ese estado tiene
+              // prioridad sobre cualquier intento finalizado anterior.
+              // Esto permite continuar correctamente después de
+              // pulsar "Continuar luego".
               const isInProgress =
-                !isCompleted &&
                 Boolean(activeAttempt);
+
+              const isCompleted =
+                !isInProgress &&
+                (
+                  data.completed === true ||
+                  data.status === "completed" ||
+                  Boolean(data.lastCompletedAttempt)
+                );
 
               let status: SimulationStatus["status"] =
                 "not_started";
 
-              if (isCompleted) {
-                status = "completed";
-              } else if (isInProgress) {
+              if (isInProgress) {
                 status = "in_progress";
+              } else if (isCompleted) {
+                status = "completed";
               }
 
-              const attempt = isCompleted
-                ? data.lastCompletedAttempt ?? null
-                : activeAttempt;
+              const attempt = isInProgress
+                ? activeAttempt
+                : data.lastCompletedAttempt ?? null;
 
               const answered =
                 answers.length > 0

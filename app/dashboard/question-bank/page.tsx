@@ -139,7 +139,7 @@ export default function QuestionBankPage() {
           return;
         }
 
-        if (!data) {
+        if (!data || data.role !== "admin") {
           router.push("/dashboard");
           return;
         }

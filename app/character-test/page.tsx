@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { useMemo, useState } from "react";
 
 type ViewId =
   | "front"
@@ -10,10 +12,16 @@ type ViewId =
   | "three-right"
   | "back";
 
-type Offset = {
-  scale: number;
+type SpriteLayerConfig = {
+  width: number;
   x: number;
   y: number;
+};
+
+type CharacterComposition = {
+  body: SpriteLayerConfig;
+  head: SpriteLayerConfig;
+  hair: SpriteLayerConfig;
 };
 
 const views: { id: ViewId; label: string }[] = [
@@ -24,15 +32,6 @@ const views: { id: ViewId; label: string }[] = [
   { id: "three-right", label: "3/4 Der." },
   { id: "back", label: "Espalda" },
 ];
-
-const viewIndex: Record<ViewId, number> = {
-  front: 0,
-  "three-left": 1,
-  "side-left": 2,
-  "side-right": 3,
-  "three-right": 4,
-  back: 5,
-};
 
 const assets: Record<
   ViewId,
@@ -74,280 +73,299 @@ const assets: Record<
   },
 };
 
-const initial: Offset = { scale: 100, x: 0, y: 0 };
+/*
+ * Posiciones internas del sistema.
+ * El usuario nunca tiene que mover HEAD o HAIR manualmente.
+ */
+const composition: Record<ViewId, CharacterComposition> = {
+  front: {
+    body: { width: 270, x: 0, y: 0 },
+    head: { width: 138, x: 0, y: -153 },
+    hair: { width: 177, x: 0, y: -196 },
+  },
+  "three-left": {
+    body: { width: 257, x: 0, y: 0 },
+    head: { width: 135, x: -2, y: -151 },
+    hair: { width: 176, x: -4, y: -194 },
+  },
+  "side-left": {
+    body: { width: 232, x: 2, y: 0 },
+    head: { width: 130, x: -6, y: -147 },
+    hair: { width: 170, x: -8, y: -190 },
+  },
+  "side-right": {
+    body: { width: 232, x: -2, y: 0 },
+    head: { width: 130, x: 6, y: -147 },
+    hair: { width: 170, x: 8, y: -190 },
+  },
+  "three-right": {
+    body: { width: 257, x: 0, y: 0 },
+    head: { width: 135, x: 2, y: -151 },
+    hair: { width: 176, x: 4, y: -194 },
+  },
+  back: {
+    body: { width: 270, x: 0, y: 0 },
+    head: { width: 138, x: 0, y: -151 },
+    hair: { width: 178, x: 0, y: -196 },
+  },
+};
 
-function SpriteLayer({
+const MIN_POSITION = -190;
+const MAX_POSITION = 190;
+const POSITION_STEP = 24;
+
+function CharacterLayer({
   src,
-  offset,
-  visible,
+  config,
+  positionX,
+  zIndex,
 }: {
   src: string;
-  offset: Offset;
-  visible: boolean;
+  config: SpriteLayerConfig;
+  positionX: number;
+  zIndex: number;
 }) {
-  if (!visible) return null;
-
   return (
-    <img
+    <Image
       src={src}
       alt=""
       aria-hidden="true"
       draggable={false}
-      className="pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
+      width={512}
+      height={512}
+      unoptimized
+      className="pointer-events-none absolute h-auto max-w-none select-none"
       style={{
-        transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${
-          offset.scale / 100
-        })`,
+        width: config.width + "px",
+        left: "calc(50% + " + (positionX + config.x) + "px)",
+        top: "calc(50% + " + config.y + "px)",
+        transform: "translate(-50%, -50%)",
         transformOrigin: "center center",
         imageRendering: "pixelated",
+        zIndex,
       }}
     />
   );
 }
 
-function Slider({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-}: {
-  label: string;
-  value: number;
-  min: number;
-  max: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <label className="block">
-      <div className="mb-1 flex justify-between text-[10px] font-black uppercase font-mono">
-        <span className="text-white/50">{label}</span>
-        <span className="text-cyan-300">{value}</span>
-      </div>
-
-      <input
-        type="range"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        className="w-full accent-cyan-400"
-      />
-    </label>
-  );
-}
-
 export default function CharacterTestPage() {
   const [view, setView] = useState<ViewId>("front");
-  const [head, setHead] = useState<Offset>(initial);
-  const [hair, setHair] = useState<Offset>(initial);
-
-  const [showBody, setShowBody] = useState(true);
-  const [showHead, setShowHead] = useState(true);
-  const [showHair, setShowHair] = useState(true);
+  const [positionX, setPositionX] = useState(0);
 
   const currentAssets = assets[view];
+  const currentComposition = useMemo(
+    () => composition[view],
+    [view],
+  );
 
-  const reset = () => {
-    setHead(initial);
-    setHair(initial);
+  const moveCharacter = (direction: -1 | 1) => {
+    setPositionX((current) =>
+      Math.max(
+        MIN_POSITION,
+        Math.min(
+          MAX_POSITION,
+          current + direction * POSITION_STEP,
+        ),
+      ),
+    );
   };
 
-  const panel =
-    "rounded-2xl border border-white/10 bg-[#071426]/90 backdrop-blur-xl";
+  const resetPosition = () => setPositionX(0);
 
   return (
-    <main className="min-h-screen bg-[#020814] px-4 py-6 text-white sm:px-6">
-      <div className="mx-auto max-w-[1400px]">
-        <header className="mb-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-300 font-mono">
-            PeakScore · Dev Tool
-          </p>
+    <main className="min-h-screen overflow-hidden bg-[#020814] text-white">
+      <div className="mx-auto min-h-screen max-w-[1500px] px-4 py-5 sm:px-6 lg:px-8">
+        <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="font-mono text-[9px] font-black uppercase tracking-[0.22em] text-cyan-300/80">
+              PeakScore · Character Lab
+            </p>
 
-          <h1 className="mt-1 text-3xl font-black font-mono">
-            Character Test
-          </h1>
+            <h1 className="mt-1 font-mono text-2xl font-black tracking-[-0.04em] sm:text-3xl">
+              Peaky Nova
+            </h1>
 
-          <p className="mt-2 text-sm text-white/50 font-mono">
-            Prueba el ensamblaje BODY + HEAD + HAIR antes de crear animaciones.
-          </p>
+            <p className="mt-1 font-mono text-[11px] text-white/40">
+              Ensamblaje automático · BODY + HEAD + HAIR
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="hidden rounded-full border border-white/10 bg-white/[0.02] px-3 py-2 font-mono text-[9px] text-white/30 sm:block">
+              Vista:{" "}
+              {views.find((item) => item.id === view)?.label}
+            </span>
+
+            <button
+              type="button"
+              onClick={resetPosition}
+              className="
+                inline-flex items-center gap-2 rounded-lg border border-white/10
+                bg-white/[0.03] px-3 py-2 font-mono text-[9px] font-black
+                uppercase tracking-[0.12em] text-white/45 transition
+                hover:border-white/20 hover:bg-white/[0.06] hover:text-white
+              "
+            >
+              <RotateCcw size={13} />
+              Centrar
+            </button>
+          </div>
         </header>
 
-        <div className="grid gap-5 lg:grid-cols-[1fr_330px]">
-          <section className={`${panel} p-4 sm:p-5`}>
-            <div className="mb-4 flex flex-wrap gap-2">
+        <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#071426]/85 shadow-[0_30px_100px_rgba(0,0,0,.35)]">
+          <div className="border-b border-white/10 px-4 py-3 sm:px-5">
+            <div className="flex flex-wrap items-center gap-2">
               {views.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => setView(item.id)}
                   className={`
-                    rounded-lg border px-3 py-2 text-[10px] font-black font-mono
+                    rounded-lg border px-3 py-2 font-mono text-[9px] font-black uppercase
                     transition
-                    ${
-                      view === item.id
-                        ? "border-cyan-300/60 bg-cyan-300/10 text-cyan-200"
-                        : "border-white/10 bg-white/[0.02] text-white/50 hover:text-white"
-                    }
+                    ${view === item.id
+                      ? "border-cyan-300/60 bg-cyan-300/[0.08] text-cyan-200"
+                      : "border-white/10 bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white"}
                   `}
                 >
                   {item.label}
                 </button>
               ))}
+            </div>
+          </div>
 
-              <button
-                type="button"
-                onClick={reset}
-                className="ml-auto rounded-lg border border-white/10 px-3 py-2 text-[10px] font-black font-mono text-white/50 hover:text-white"
-              >
-                Restablecer
-              </button>
+          <div
+            className="
+              relative flex min-h-[680px] items-center justify-center
+              overflow-hidden
+              bg-[radial-gradient(circle_at_50%_34%,rgba(34,211,238,.10),transparent_25%),linear-gradient(180deg,#071426_0%,#040d1a_63%,#020711_100%)]
+            "
+          >
+            <div
+              aria-hidden="true"
+              className="
+                pointer-events-none absolute inset-x-0 bottom-0 h-[40%]
+                border-t border-cyan-300/10
+                bg-[linear-gradient(180deg,rgba(34,211,238,.03),rgba(0,0,0,.17))]
+              "
+            />
+
+            <div
+              aria-hidden="true"
+              className="
+                pointer-events-none absolute inset-x-0 bottom-0 h-[40%] opacity-35
+                [background-image:linear-gradient(rgba(255,255,255,.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.04)_1px,transparent_1px)]
+                [background-size:52px_52px]
+                [mask-image:linear-gradient(to_bottom,transparent,black_30%)]
+              "
+            />
+
+            <div
+              aria-hidden="true"
+              className="
+                pointer-events-none absolute bottom-[54px] left-1/2
+                h-7 w-[300px] -translate-x-1/2 rounded-[50%]
+                bg-black/45 blur-xl
+              "
+            />
+
+            <div
+              aria-hidden="true"
+              className="
+                pointer-events-none absolute bottom-[49px] left-1/2
+                h-px w-[470px] -translate-x-1/2
+                bg-gradient-to-r from-transparent via-cyan-300/30 to-transparent
+              "
+            />
+
+            <div className="relative z-20 h-[570px] w-full max-w-[760px]">
+              <CharacterLayer
+                src={currentAssets.body}
+                config={currentComposition.body}
+                positionX={positionX}
+                zIndex={10}
+              />
+
+              <CharacterLayer
+                src={currentAssets.head}
+                config={currentComposition.head}
+                positionX={positionX}
+                zIndex={20}
+              />
+
+              <CharacterLayer
+                src={currentAssets.hair}
+                config={currentComposition.hair}
+                positionX={positionX}
+                zIndex={30}
+              />
             </div>
 
-            <div className="grid min-h-[650px] place-items-center overflow-hidden rounded-2xl border border-white/10 bg-[#030b17]">
-              <div
-                className="relative aspect-square w-full max-w-[620px] overflow-hidden"
-                style={{
-                  background:
-                    "radial-gradient(circle, rgba(34,211,238,.08), transparent 42%)",
-                }}
-              >
-                <SpriteLayer
-                  src={currentAssets.body}
-                  offset={initial}
-                  visible={showBody}
-                />
+            <button
+              type="button"
+              onClick={() => moveCharacter(-1)}
+              disabled={positionX <= MIN_POSITION}
+              aria-label="Mover Peaky a la izquierda"
+              className="
+                absolute left-4 top-1/2 z-40 flex h-14 w-14 -translate-y-1/2
+                items-center justify-center rounded-xl border border-white/10
+                bg-[#061426]/90 text-white/45 backdrop-blur-xl transition
+                hover:border-cyan-300/40 hover:bg-cyan-300/[0.06]
+                hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-20
+              "
+            >
+              <ChevronLeft size={25} />
+            </button>
 
-                <SpriteLayer
-                  src={currentAssets.head}
-                  offset={head}
-                  visible={showHead}
-                />
+            <button
+              type="button"
+              onClick={() => moveCharacter(1)}
+              disabled={positionX >= MAX_POSITION}
+              aria-label="Mover Peaky a la derecha"
+              className="
+                absolute right-4 top-1/2 z-40 flex h-14 w-14 -translate-y-1/2
+                items-center justify-center rounded-xl border border-white/10
+                bg-[#061426]/90 text-white/45 backdrop-blur-xl transition
+                hover:border-cyan-300/40 hover:bg-cyan-300/[0.06]
+                hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-20
+              "
+            >
+              <ChevronRight size={25} />
+            </button>
 
-                <SpriteLayer
-                  src={currentAssets.hair}
-                  offset={hair}
-                  visible={showHair}
-                />
-              </div>
+            <div className="absolute bottom-4 left-1/2 z-40 -translate-x-1/2 rounded-full border border-white/10 bg-[#020814]/80 px-3 py-1.5 font-mono text-[8px] font-black uppercase tracking-[0.14em] text-white/30 backdrop-blur">
+              Posición {positionX > 0 ? "+" : ""}
+              {positionX}
             </div>
+          </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="border-t border-white/10 bg-[#06101f]/75 p-4">
+            <div className="grid gap-3 sm:grid-cols-3">
               {[
-                {
-                  label: "BODY",
-                  visible: showBody,
-                  onToggle: () =>
-                    setShowBody((value) => !value),
-                },
-                {
-                  label: "HEAD",
-                  visible: showHead,
-                  onToggle: () =>
-                    setShowHead((value) => !value),
-                },
-                {
-                  label: "HAIR",
-                  visible: showHair,
-                  onToggle: () =>
-                    setShowHair((value) => !value),
-                },
-              ].map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={item.onToggle}
-                  className={`
-                    rounded-xl border px-3 py-2 text-[10px] font-black font-mono
-                    ${
-                      item.visible
-                        ? "border-emerald-300/25 bg-emerald-300/[0.05] text-emerald-200"
-                        : "border-white/10 text-white/30"
-                    }
-                  `}
+                ["BODY", "base del personaje"],
+                ["HEAD", "pieza facial"],
+                ["HAIR", "capa superior"],
+              ].map(([label, description]) => (
+                <div
+                  key={label}
+                  className="rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3"
                 >
-                  {item.label} · {item.visible ? "ON" : "OFF"}
-                </button>
-              ))}            </div>
-          </section>
+                  <p className="font-mono text-[9px] font-black uppercase text-cyan-300/70">
+                    {label}
+                  </p>
 
-          <aside className="space-y-5">
-            <section className={`${panel} p-5`}>
-              <h2 className="text-sm font-black font-mono">HEAD</h2>
-              <div className="mt-4 space-y-4">
-                <Slider
-                  label="Escala"
-                  value={head.scale}
-                  min={85}
-                  max={115}
-                  onChange={(value) =>
-                    setHead((current) => ({ ...current, scale: value }))
-                  }
-                />
-                <Slider
-                  label="X"
-                  value={head.x}
-                  min={-80}
-                  max={80}
-                  onChange={(value) =>
-                    setHead((current) => ({ ...current, x: value }))
-                  }
-                />
-                <Slider
-                  label="Y"
-                  value={head.y}
-                  min={-120}
-                  max={120}
-                  onChange={(value) =>
-                    setHead((current) => ({ ...current, y: value }))
-                  }
-                />
-              </div>
-            </section>
+                  <p className="mt-1 font-mono text-[9px] text-white/30">
+                    {description}
+                  </p>
 
-            <section className={`${panel} p-5`}>
-              <h2 className="text-sm font-black font-mono">HAIR</h2>
-              <div className="mt-4 space-y-4">
-                <Slider
-                  label="Escala"
-                  value={hair.scale}
-                  min={85}
-                  max={115}
-                  onChange={(value) =>
-                    setHair((current) => ({ ...current, scale: value }))
-                  }
-                />
-                <Slider
-                  label="X"
-                  value={hair.x}
-                  min={-80}
-                  max={80}
-                  onChange={(value) =>
-                    setHair((current) => ({ ...current, x: value }))
-                  }
-                />
-                <Slider
-                  label="Y"
-                  value={hair.y}
-                  min={-120}
-                  max={120}
-                  onChange={(value) =>
-                    setHair((current) => ({ ...current, y: value }))
-                  }
-                />
-              </div>
-            </section>
-
-            <section className={`${panel} p-5`}>
-              <h2 className="text-sm font-black font-mono">MASTER ASSETS</h2>
-              <div className="mt-3 space-y-2 text-[10px] text-white/40 font-mono">
-                <p className="break-all">BODY · {currentAssets.body}</p>
-                <p className="break-all">HEAD · {currentAssets.head}</p>
-                <p className="break-all">HAIR · {currentAssets.hair}</p>
-              </div>
-            </section>
-          </aside>
-        </div>
+                  <p className="mt-2 font-mono text-[8px] text-white/20">
+                    posición automática
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );

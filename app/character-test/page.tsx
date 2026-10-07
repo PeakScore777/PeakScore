@@ -34,50 +34,74 @@ const viewIndex: Record<ViewId, number> = {
   back: 5,
 };
 
-const assets = {
-  body: "/characters/peaky-nova/body/master/body-sheet.png",
-  head: "/characters/peaky-nova/head/master/head-sheet.png",
-  hair: "/characters/peaky-nova/hair/master/hair-sheet.png",
+const assets: Record<
+  ViewId,
+  {
+    body: string;
+    head: string;
+    hair: string;
+  }
+> = {
+  front: {
+    body: "/characters/peaky-nova/body/front.png",
+    head: "/characters/peaky-nova/head/front.png",
+    hair: "/characters/peaky-nova/hair/front.png",
+  },
+  "three-left": {
+    body: "/characters/peaky-nova/body/three-quarter-left.png",
+    head: "/characters/peaky-nova/head/three-quarter-left.png",
+    hair: "/characters/peaky-nova/hair/three-quarter-left.png",
+  },
+  "side-left": {
+    body: "/characters/peaky-nova/body/side-left.png",
+    head: "/characters/peaky-nova/head/side-left.png",
+    hair: "/characters/peaky-nova/hair/side-left.png",
+  },
+  "side-right": {
+    body: "/characters/peaky-nova/body/side-right.png",
+    head: "/characters/peaky-nova/head/side-right.png",
+    hair: "/characters/peaky-nova/hair/side-right.png",
+  },
+  "three-right": {
+    body: "/characters/peaky-nova/body/three-quarter-right.png",
+    head: "/characters/peaky-nova/head/three-quarter-right.png",
+    hair: "/characters/peaky-nova/hair/three-quarter-right.png",
+  },
+  back: {
+    body: "/characters/peaky-nova/body/back.png",
+    head: "/characters/peaky-nova/head/back.png",
+    hair: "/characters/peaky-nova/hair/back.png",
+  },
 };
 
 const initial: Offset = { scale: 100, x: 0, y: 0 };
 
 function SpriteLayer({
   src,
-  index,
   offset,
   visible,
 }: {
   src: string;
-  index: number;
   offset: Offset;
   visible: boolean;
 }) {
   if (!visible) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div
-        className="absolute inset-0"
-        style={{
-          transform: `translate(${offset.x}px, ${offset.y}px) scale(${
-            offset.scale / 100
-          })`,
-          transformOrigin: "center center",
-        }}
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: `url("${src}")`,
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "600% 100%",
-            backgroundPosition: `${(index / 5) * 100}% center`,
-            imageRendering: "pixelated",
-          }}
-        />
-      </div>
-    </div>
+    <img
+      src={src}
+      alt=""
+      aria-hidden="true"
+      draggable={false}
+      className="pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto max-w-none -translate-x-1/2 -translate-y-1/2 select-none"
+      style={{
+        transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${
+          offset.scale / 100
+        })`,
+        transformOrigin: "center center",
+        imageRendering: "pixelated",
+      }}
+    />
   );
 }
 
@@ -122,7 +146,7 @@ export default function CharacterTestPage() {
   const [showHead, setShowHead] = useState(true);
   const [showHair, setShowHair] = useState(true);
 
-  const index = viewIndex[view];
+  const currentAssets = assets[view];
 
   const reset = () => {
     setHead(initial);
@@ -189,22 +213,19 @@ export default function CharacterTestPage() {
                 }}
               >
                 <SpriteLayer
-                  src={assets.body}
-                  index={index}
+                  src={currentAssets.body}
                   offset={initial}
                   visible={showBody}
                 />
 
                 <SpriteLayer
-                  src={assets.head}
-                  index={index}
+                  src={currentAssets.head}
                   offset={head}
                   visible={showHead}
                 />
 
                 <SpriteLayer
-                  src={assets.hair}
-                  index={index}
+                  src={currentAssets.hair}
                   offset={hair}
                   visible={showHair}
                 />
@@ -320,9 +341,9 @@ export default function CharacterTestPage() {
             <section className={`${panel} p-5`}>
               <h2 className="text-sm font-black font-mono">MASTER ASSETS</h2>
               <div className="mt-3 space-y-2 text-[10px] text-white/40 font-mono">
-                <p className="break-all">BODY · {assets.body}</p>
-                <p className="break-all">HEAD · {assets.head}</p>
-                <p className="break-all">HAIR · {assets.hair}</p>
+                <p className="break-all">BODY · {currentAssets.body}</p>
+                <p className="break-all">HEAD · {currentAssets.head}</p>
+                <p className="break-all">HAIR · {currentAssets.hair}</p>
               </div>
             </section>
           </aside>

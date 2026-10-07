@@ -100,38 +100,35 @@ export async function GET() {
       is_active: boolean;
     }> = [];
 
-    if (characterIds.length > 0) {
-      const {
-        data: characterRows,
-        error: charactersError,
-      } = await supabase
-        .from("characters")
-        .select(`
-          id,
-          name,
-          description,
-          price_coins,
-          xp_bonus_percent,
-          coin_bonus_percent,
-          is_active
-        `)
-        .in("id", characterIds)
-        .eq("is_active", true);
+    const {
+      data: characterRows,
+      error: charactersError,
+    } = await supabase
+      .from("characters")
+      .select(`
+        id,
+        name,
+        description,
+        price_coins,
+        xp_bonus_percent,
+        coin_bonus_percent,
+        is_active
+      `)
+      .eq("is_active", true);
 
-      if (charactersError) {
-        console.error(
-          "Characters query error:",
-          charactersError,
-        );
+    if (charactersError) {
+      console.error(
+        "Characters query error:",
+        charactersError,
+      );
 
-        return NextResponse.json(
-          { error: "No se pudieron obtener los personajes" },
-          { status: 500 },
-        );
-      }
-
-      characters = characterRows ?? [];
+      return NextResponse.json(
+        { error: "No se pudieron obtener los personajes" },
+        { status: 500 },
+      );
     }
+
+    characters = characterRows ?? [];
 
     // ============================================================
     // 5. INSIGNIAS DESBLOQUEADAS

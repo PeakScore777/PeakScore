@@ -223,6 +223,12 @@ export default function PerfilPage() {
 
   const [profileLoading, setProfileLoading] = useState(true);
 
+  const [characterActionLoading, setCharacterActionLoading] =
+    useState(false);
+
+  const [characterActionError, setCharacterActionError] =
+    useState<string | null>(null);
+
   const [editingDescription, setEditingDescription] =
     useState(false);
 
@@ -374,8 +380,146 @@ export default function PerfilPage() {
     getBadge(id),
   );
 
-  const changeCharacter = (id: string) => {
-    setSelectedCharacterId(id);
+  const changeCharacter = async (id: string) => {
+    if (
+      characterActionLoading ||
+      id === selectedCharacterId
+    ) {
+      return;
+    }
+
+    if (!unlockedCharacterIds.includes(id)) {
+      return;
+    }
+
+    try {
+      setCharacterActionLoading(true);
+      setCharacterActionError(null);
+
+      const response = await fetch(
+        "/api/profile/character",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "equip",
+            characterId: id,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ?? "No se pudo equipar el personaje",
+        );
+      }
+
+      setSelectedCharacterId(
+        data.profile?.selectedCharacter ?? id,
+      );
+
+      setProfileData((current) =>
+        current
+          ? {
+              ...current,
+              selectedCharacter:
+                data.profile?.selectedCharacter ?? id,
+            }
+          : current,
+      );
+    } catch (error) {
+      console.error(
+        "Error equipando personaje:",
+        error,
+      );
+
+      setCharacterActionError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo equipar el personaje",
+      );
+    } finally {
+      setCharacterActionLoading(false);
+    }
+  };
+
+  const purchaseCharacter = async (id: string) => {
+    if (characterActionLoading) return;
+
+    const character = characters.find(
+      (item) => item.id === id,
+    );
+
+    if (!character) return;
+
+    if (unlockedCharacterIds.includes(id)) {
+      return;
+    }
+
+    try {
+      setCharacterActionLoading(true);
+      setCharacterActionError(null);
+
+      const response = await fetch(
+        "/api/profile/character",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "purchase",
+            characterId: id,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ?? "No se pudo comprar el personaje",
+        );
+      }
+
+      setUnlockedCharacterIds((current) => [
+        ...current,
+        id,
+      ]);
+
+      if (data.profile) {
+        setProfileData((current) =>
+          current
+            ? {
+                ...current,
+                coins: data.profile.coins,
+                xp: data.profile.xp,
+                level: data.profile.level,
+                selectedCharacter:
+                  data.profile.selectedCharacter ??
+                  current.selectedCharacter,
+              }
+            : current,
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error comprando personaje:",
+        error,
+      );
+
+      setCharacterActionError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo comprar el personaje",
+      );
+    } finally {
+      setCharacterActionLoading(false);
+    }
   };
 
   const openBadgeSelector = (slot: number) => {
@@ -1279,9 +1423,12 @@ export default function PerfilPage() {
                       key={character.id}
                       type="button"
                       onClick={() => {
-                        if (!unlocked) return;
+                        if (unlocked) {
+                          changeCharacter(character.id);
+                          return;
+                        }
 
-                        changeCharacter(character.id);
+                        purchaseCharacter(character.id);
                       }}
                       className={`
                         group

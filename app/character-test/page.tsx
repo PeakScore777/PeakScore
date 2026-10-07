@@ -213,31 +213,41 @@ export default function CharacterTestPage() {
 
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {[
-                ["BODY", showBody, setShowBody],
-                ["HEAD", showHead, setShowHead],
-                ["HAIR", showHair, setShowHair],
-              ].map(([label, visible, setter]) => (
+                {
+                  label: "BODY",
+                  visible: showBody,
+                  onToggle: () =>
+                    setShowBody((value) => !value),
+                },
+                {
+                  label: "HEAD",
+                  visible: showHead,
+                  onToggle: () =>
+                    setShowHead((value) => !value),
+                },
+                {
+                  label: "HAIR",
+                  visible: showHair,
+                  onToggle: () =>
+                    setShowHair((value) => !value),
+                },
+              ].map((item) => (
                 <button
-                  key={String(label)}
+                  key={item.label}
                   type="button"
-                  onClick={() =>
-                    (setter as React.Dispatch<React.SetStateAction<boolean>>)(
-                      (value) => !value,
-                    )
-                  }
+                  onClick={item.onToggle}
                   className={`
                     rounded-xl border px-3 py-2 text-[10px] font-black font-mono
                     ${
-                      visible
+                      item.visible
                         ? "border-emerald-300/25 bg-emerald-300/[0.05] text-emerald-200"
                         : "border-white/10 text-white/30"
                     }
                   `}
                 >
-                  {label} · {visible ? "ON" : "OFF"}
+                  {item.label} · {item.visible ? "ON" : "OFF"}
                 </button>
-              ))}
-            </div>
+              ))}            </div>
           </section>
 
           <aside className="space-y-5">

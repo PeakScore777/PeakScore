@@ -34,6 +34,16 @@ type Character = {
   characterWidth: string;
 };
 
+type CharacterCatalogEntry = {
+  id: string;
+  name: string;
+  description: string;
+  price_coins: number;
+  xp_bonus_percent: number;
+  coin_bonus_percent: number;
+  is_active: boolean;
+};
+
 type Badge = {
   id: string;
   name: string;
@@ -218,6 +228,9 @@ export default function PerfilPage() {
   const [unlockedCharacterIds, setUnlockedCharacterIds] =
     useState<string[]>([]);
 
+  const [characterCatalog, setCharacterCatalog] =
+    useState<CharacterCatalogEntry[]>([]);
+
   const [unlockedBadgeIds, setUnlockedBadgeIds] =
     useState<string[]>([]);
 
@@ -287,6 +300,10 @@ export default function PerfilPage() {
 
         setUnlockedCharacterIds(
           data.unlockedCharacterIds ?? [],
+        );
+
+        setCharacterCatalog(
+          data.characters ?? [],
         );
 
         setUnlockedBadgeIds(
@@ -454,7 +471,11 @@ export default function PerfilPage() {
       (item) => item.id === id,
     );
 
-    if (!character) return;
+    const catalogCharacter = characterCatalog.find(
+      (item) => item.id === id,
+    );
+
+    if (!character || !catalogCharacter) return;
 
     if (unlockedCharacterIds.includes(id)) {
       return;
@@ -1413,10 +1434,15 @@ export default function PerfilPage() {
                 {characters.map((character) => {
                   const selected =
                     character.id === selectedCharacterId;
-                    
+
                   const unlocked = unlockedCharacterIds.includes(
                     character.id,
                   );
+
+                  const catalogCharacter =
+                    characterCatalog.find(
+                      (item) => item.id === character.id,
+                    );
 
                   return (
                     <button
@@ -1523,6 +1549,28 @@ export default function PerfilPage() {
                         >
                           {character.description}
                         </p>
+
+                        {!unlocked && (
+                          <span
+                            className="
+                              mt-2
+                              inline-flex
+                              items-center
+                              rounded-md
+                              border
+                              border-yellow-400/20
+                              bg-yellow-400/[0.06]
+                              px-2
+                              py-1
+                              text-[8px]
+                              font-black
+                              text-yellow-300
+                              font-mono
+                            "
+                          >
+                            🪙 {catalogCharacter?.price_coins ?? "—"}
+                          </span>
+                        )}
                       </div>
                     </button>
                   );

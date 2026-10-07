@@ -207,6 +207,22 @@ export default function PerfilPage() {
 
   const [description, setDescription] = useState("Date a conocer...");
 
+  const [profileData, setProfileData] = useState<{
+    xp: number;
+    coins: number;
+    level: number;
+    simulations: number;
+    selectedCharacter: string;
+  } | null>(null);
+
+  const [unlockedCharacterIds, setUnlockedCharacterIds] =
+    useState<string[]>([]);
+
+  const [unlockedBadgeIds, setUnlockedBadgeIds] =
+    useState<string[]>([]);
+
+  const [profileLoading, setProfileLoading] = useState(true);
+
   const [editingDescription, setEditingDescription] =
     useState(false);
 
@@ -242,13 +258,48 @@ export default function PerfilPage() {
    */
 
   useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setProfileLoading(true);
+
+        const response = await fetch("/api/profile", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("No se pudo cargar el perfil");
+        }
+
+        const data = await response.json();
+
+        setProfileData(data.profile);
+
+        setSelectedCharacterId(
+          data.profile.selectedCharacter ?? "peaky-nova",
+        );
+
+        setUnlockedCharacterIds(
+          data.unlockedCharacterIds ?? [],
+        );
+
+        setUnlockedBadgeIds(
+          data.unlockedBadgeIds ?? [],
+        );
+      } catch (error) {
+        console.error("Error cargando perfil:", error);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+  }, []);
+  
+  useEffect(() => {
     const savedTheme = window.localStorage.getItem(
       "peakscore-profile-theme",
     ) as Theme | null;
-
-    const savedCharacter = window.localStorage.getItem(
-      "peakscore-profile-character",
-    );
 
     const savedDescription = window.localStorage.getItem(
       "peakscore-profile-description",
@@ -260,15 +311,6 @@ export default function PerfilPage() {
 
     if (savedTheme === "light" || savedTheme === "dark") {
       setTheme(savedTheme);
-    }
-
-    if (
-      savedCharacter &&
-      characters.some(
-        (character) => character.id === savedCharacter,
-      )
-    ) {
-      setSelectedCharacterId(savedCharacter);
     }
 
     if (savedDescription) {
@@ -304,13 +346,6 @@ export default function PerfilPage() {
       theme,
     );
   }, [theme]);
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      "peakscore-profile-character",
-      selectedCharacterId,
-    );
-  }, [selectedCharacterId]);
 
   useEffect(() => {
     window.localStorage.setItem(
@@ -1096,7 +1131,7 @@ export default function PerfilPage() {
                       font-mono
                     "
                   >
-                    12
+                    {profileData?.level ?? 1}
                   </span>
                 </div>
               </div>
@@ -1120,7 +1155,7 @@ export default function PerfilPage() {
                   <span>Experiencia</span>
 
                   <span className="font-bold text-white/80">
-                    850 / 1.200 XP
+                    {profileData?.xp ?? 0} XP
                   </span>
                 </div>
 
@@ -1135,13 +1170,20 @@ export default function PerfilPage() {
                   <div
                     className="
                       h-full
-                      w-[71%]
                       rounded-full
                       bg-gradient-to-r
                       from-cyan-400
                       via-blue-500
                       to-violet-500
+                      transition-all
+                      duration-500
                     "
+                    style={{
+                      width: `${Math.min(
+                        ((profileData?.xp ?? 0) / 1200) * 100,
+                        100,
+                      )}%`,
+                    }}
                   />
                 </div>
               </div>
@@ -1210,7 +1252,7 @@ export default function PerfilPage() {
                     font-mono
                   "
                 >
-                  4 / 8 DISPONIBLES
+                  {unlockedCharacterIds.length} / 8 DISPONIBLES
                 </span>
               </div>
 
@@ -1226,18 +1268,21 @@ export default function PerfilPage() {
               >
                 {characters.map((character) => {
                   const selected =
-                    character.id ===
-                    selectedCharacterId;
+                    character.id === selectedCharacterId;
+                    
+                  const unlocked = unlockedCharacterIds.includes(
+                    character.id,
+                  );
 
                   return (
                     <button
                       key={character.id}
                       type="button"
-                      onClick={() =>
-                        changeCharacter(
-                          character.id,
-                        )
-                      }
+                      onClick={() => {
+                        if (!unlocked) return;
+
+                        changeCharacter(character.id);
+                      }}
                       className={`
                         group
                         relative
@@ -1250,7 +1295,9 @@ export default function PerfilPage() {
                         ${
                           selected
                             ? "border-yellow-400 bg-yellow-400/[0.06] shadow-[0_0_20px_rgba(250,204,21,.12)]"
-                            : "border-white/10 bg-[#07182c]/80 hover:border-fuchsia-400/40"
+                            : unlocked
+                              ? "border-white/10 bg-[#07182c]/80 hover:border-fuchsia-400/40"
+                              : "border-white/[0.06] bg-[#03101f]/60 opacity-50"
                         }
                       `}
                     >

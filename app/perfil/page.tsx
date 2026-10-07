@@ -3,15 +3,22 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  ArrowLeft,
+  ArrowRight,
+  BarChart3,
+  BookOpen,
   ChevronRight,
   Coins,
+  Flame,
+  Home,
   Lock,
   Moon,
-  Pencil,
-  Plus,
+  Shield,
+  Sparkles,
+  Sun,
+  Target,
+  Trophy,
+  UserRound,
   X,
-  LampDesk,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
@@ -21,18 +28,8 @@ type Character = {
   id: string;
   name: string;
   description: string;
-
-  // Imagen EXCLUSIVA para la tarjeta de personajes
   avatar: string;
-
-  // Imagen EXCLUSIVA para la foto de perfil
   profile: string;
-
-  // Bioma de la tarjeta izquierda
-  biome: string;
-
-  characterPosition: string;
-  characterWidth: string;
 };
 
 type CharacterCatalogEntry = {
@@ -51,365 +48,284 @@ type Badge = {
   level: string;
   image: string;
   description: string;
-  progress: number;
-  target: number;
+  group: "aprendizaje" | "constante" | "racha";
+};
+
+type ProfileData = {
+  id: string;
+  fullName: string;
+  email: string;
+  avatarUrl: string | null;
+  targetScore: number | null;
+  averageScore: number | null;
+  streak: number;
+  simulations: number;
+  xp: number;
+  coins: number;
+  level: number;
+  selectedCharacter: string;
+};
+
+type Rank = {
+  id: string;
+  name: string;
+  minXp: number;
+  maxXp: number | null;
+  identity: string;
 };
 
 const characters: Character[] = [
   {
     id: "peaky-nova",
     name: "Peaky Nova",
-    description: "El guardián del universo PeakScore.",
-
-    // SOLO PERSONAJE
-    avatar: "/avatars/peaky-nova.webp",
-
-    // SOLO FOTO DE PERFIL
-    profile: "/avatars/photo_perfil/peaky-nova-profile.png",
-
-    // SOLO BIOMA
-    biome: "/characters/peaky-nova.png",
-
-    characterPosition: "bottom-[58px]",
-    characterWidth: "w-[64%]",
+    description: "Guardián del conocimiento y del universo PeakScore.",
+    avatar: "/characters/peaky-nova/peaky-nova-front.png",
+    profile: "/avatars/photo_perfil/peaky-nova.png",
   },
-
   {
     id: "peaky-nox",
     name: "Peaky Nox",
     description: "La fuerza del multiverso oscuro.",
-
-    // SOLO PERSONAJE
     avatar: "/avatars/peaky-nox.webp",
-
-    // SOLO FOTO DE PERFIL
-    profile: "/avatars/photo_perfil/peaky-nox-profile.png",
-
-    // SOLO BIOMA
-    biome: "/characters/peaky-nox.png",
-
-    characterPosition: "bottom-[58px]",
-    characterWidth: "w-[64%]",
+    profile: "/avatars/photo_perfil/peaky-nox.png",
   },
-
   {
     id: "zyra",
     name: "Zyra",
     description: "Curiosidad, exploración y aprendizaje.",
-
-    // SOLO PERSONAJE
     avatar: "/avatars/zorra.webp",
-
-    // SOLO FOTO DE PERFIL
-    profile: "/avatars/photo_perfil/zyra-profile.png",
-
-    // SOLO BIOMA
-    biome: "/characters/zyra.png",
-
-    characterPosition: "bottom-[78px]",
-    characterWidth: "w-[64%]",
+    profile: "/avatars/photo_perfil/zyra.png",
   },
-
   {
     id: "orby",
     name: "Orby",
     description: "Tecnología, precisión e inteligencia.",
-
-    // SOLO PERSONAJE
     avatar: "/avatars/orby.webp",
-
-    // SOLO FOTO DE PERFIL
-    profile: "/avatars/photo_perfil/orby-profile.png",
-
-    // SOLO BIOMA
-    biome: "/characters/orby.png",
-
-    characterPosition: "bottom-[84px]",
-    characterWidth: "w-[64%]",
+    profile: "/avatars/photo_perfil/orby.png",
   },
 ];
-
-const lockedCharacters = 4;
 
 const badges: Badge[] = [
   {
     id: "aprendizaje-1",
-    name: "APRENDIZAJE",
+    name: "Aprendizaje",
     level: "Nivel I",
     image: "/badges/aprendizaje-1.png",
     description: "Completa 5 simulacros simples.",
-    progress: 5,
-    target: 5,
+    group: "aprendizaje",
   },
-
   {
     id: "aprendizaje-2",
-    name: "APRENDIZAJE",
+    name: "Aprendizaje",
     level: "Nivel II",
     image: "/badges/aprendizaje-2.png",
     description: "Completa 20 simulacros simples.",
-    progress: 20,
-    target: 20,
+    group: "aprendizaje",
   },
-
   {
     id: "aprendizaje-3",
-    name: "APRENDIZAJE",
+    name: "Aprendizaje",
     level: "Nivel III",
     image: "/badges/aprendizaje-3.png",
     description: "Completa 50 simulacros simples.",
-    progress: 50,
-    target: 50,
+    group: "aprendizaje",
   },
-
   {
     id: "constante-1",
-    name: "CONSTANTE",
+    name: "Constante",
     level: "Nivel I",
     image: "/badges/constante-1.png",
     description: "Completa 3 simulacros completos.",
-    progress: 3,
-    target: 3,
+    group: "constante",
   },
-
   {
     id: "racha-1",
-    name: "RACHA",
+    name: "Racha",
     level: "Nivel I",
     image: "/badges/racha-1.png",
     description: "Mantén una racha de 10 días.",
-    progress: 10,
-    target: 10,
+    group: "racha",
   },
-
   {
     id: "racha-2",
-    name: "RACHA",
+    name: "Racha",
     level: "Nivel II",
     image: "/badges/racha-2.png",
     description: "Mantén una racha de 20 días.",
-    progress: 20,
-    target: 20,
+    group: "racha",
   },
-
   {
     id: "racha-3",
-    name: "RACHA",
+    name: "Racha",
     level: "Nivel III",
     image: "/badges/racha-3.png",
     description: "Mantén una racha de 30 días.",
-    progress: 30,
-    target: 30,
+    group: "racha",
   },
 ];
 
-const defaultEquippedBadges = [
-  "aprendizaje-3",
-  "constante-1",
-  "racha-3",
-  "aprendizaje-2",
+const ranks: Rank[] = [
+  { id: "novato", name: "Novato", minXp: 0, maxXp: 499, identity: "Recién comienza" },
+  { id: "aprendiz", name: "Aprendiz", minXp: 500, maxXp: 1499, identity: "Está construyendo bases" },
+  { id: "explorador", name: "Explorador", minXp: 1500, maxXp: 2999, identity: "Empieza a dominar" },
+  { id: "competidor", name: "Competidor", minXp: 3000, maxXp: 4999, identity: "Buen rendimiento" },
+  { id: "avanzado", name: "Avanzado", minXp: 5000, maxXp: 7499, identity: "Alto nivel" },
+  { id: "elite", name: "Élite", minXp: 7500, maxXp: 9999, identity: "Muy buen dominio" },
+  { id: "maestro", name: "Maestro", minXp: 10000, maxXp: 14999, identity: "Dominio excepcional" },
+  { id: "gran-maestro", name: "Gran Maestro", minXp: 15000, maxXp: 24999, identity: "Nivel sobresaliente" },
+  { id: "peak", name: "Peak", minXp: 25000, maxXp: null, identity: "Máximo rango" },
 ];
+
+const rankIcons: Record<string, string> = {
+  novato: "✦",
+  aprendiz: "🌱",
+  explorador: "⚡",
+  competidor: "🔥",
+  avanzado: "💎",
+  elite: "🏆",
+  maestro: "👑",
+  "gran-maestro": "🌟",
+  peak: "🚀",
+};
+
+const navItems = [
+  { label: "Inicio", href: "/dashboard", icon: Home },
+  { label: "Simulacros", href: "/dashboard/simulacros", icon: Target },
+  { label: "Progreso", href: "/dashboard", icon: BarChart3 },
+  { label: "Aprender", href: "/dashboard", icon: BookOpen },
+  { label: "Retos", href: "/dashboard", icon: Sparkles },
+  { label: "Insignias", href: "#insignias", icon: Shield },
+  { label: "Mi Perfil", href: "/perfil", icon: UserRound },
+];
+
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat("es-CO").format(value);
 
 export default function PerfilPage() {
   const [theme, setTheme] = useState<Theme>("light");
-
-  const [selectedCharacterId, setSelectedCharacterId] =
-    useState("peaky-nova");
-
-  const [description, setDescription] = useState("Date a conocer...");
-
-  const [profileData, setProfileData] = useState<{
-    xp: number;
-    coins: number;
-    level: number;
-    simulations: number;
-    selectedCharacter: string;
-  } | null>(null);
-
-  const [unlockedCharacterIds, setUnlockedCharacterIds] =
-    useState<string[]>([]);
-
-  const [characterCatalog, setCharacterCatalog] =
-    useState<CharacterCatalogEntry[]>([]);
-
-  const [unlockedBadgeIds, setUnlockedBadgeIds] =
-    useState<string[]>([]);
-
+  const [selectedCharacterId, setSelectedCharacterId] = useState("peaky-nova");
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [characterCatalog, setCharacterCatalog] = useState<CharacterCatalogEntry[]>([]);
+  const [unlockedCharacterIds, setUnlockedCharacterIds] = useState<string[]>([]);
+  const [unlockedBadgeIds, setUnlockedBadgeIds] = useState<string[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [characterActionLoading, setCharacterActionLoading] = useState(false);
+  const [characterActionError, setCharacterActionError] = useState<string | null>(null);
+  const [rankModalOpen, setRankModalOpen] = useState(false);
+  const [collectionModalOpen, setCollectionModalOpen] = useState(false);
+  const [purchaseModalCharacterId, setPurchaseModalCharacterId] = useState<string | null>(null);
 
-  const [characterActionLoading, setCharacterActionLoading] =
-    useState(false);
+  const selectedCharacter =
+    characters.find((character) => character.id === selectedCharacterId) ??
+    characters[0];
 
-  const [characterActionError, setCharacterActionError] =
-    useState<string | null>(null);
-
-  const [editingDescription, setEditingDescription] =
-    useState(false);
-
-  const [equippedBadges, setEquippedBadges] =
-    useState<string[]>(defaultEquippedBadges);
-
-  const [badgeSelectorOpen, setBadgeSelectorOpen] =
-    useState(false);
-
-  const [selectedBadgeSlot, setSelectedBadgeSlot] =
-    useState<number | null>(null);
-
-  const [allBadgesOpen, setAllBadgesOpen] = useState(false);
-
-  const [purchaseModalCharacterId, setPurchaseModalCharacterId] =
-    useState<string | null>(null);
-
-  /*
-   * ============================================================
-   * PERSONAJE SELECCIONADO
-   * ============================================================
-   */
-
-  const selectedCharacter = useMemo(() => {
-    return (
-      characters.find(
-        (character) => character.id === selectedCharacterId,
-      ) ?? characters[0]
-    );
-  }, [selectedCharacterId]);
-
-  /*
-   * ============================================================
-   * CARGAR CONFIGURACIÓN LOCAL
-   * ============================================================
-   */
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        setProfileLoading(true);
-
-        const response = await fetch("/api/profile", {
-          method: "GET",
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error("No se pudo cargar el perfil");
-        }
-
-        const data = await response.json();
-
-        setProfileData(data.profile);
-
-        setSelectedCharacterId(
-          data.profile.selectedCharacter ?? "peaky-nova",
-        );
-
-        setUnlockedCharacterIds(
-          data.unlockedCharacterIds ?? [],
-        );
-
-        setCharacterCatalog(
-          data.characters ?? [],
-        );
-
-        setUnlockedBadgeIds(
-          data.unlockedBadgeIds ?? [],
-        );
-      } catch (error) {
-        console.error("Error cargando perfil:", error);
-      } finally {
-        setProfileLoading(false);
-      }
-    };
-
-    loadProfile();
-  }, []);
-  
-  useEffect(() => {
-    const savedTheme = window.localStorage.getItem(
-      "peakscore-profile-theme",
-    ) as Theme | null;
-
-    const savedDescription = window.localStorage.getItem(
-      "peakscore-profile-description",
-    );
-
-    const savedBadges = window.localStorage.getItem(
-      "peakscore-profile-badges",
-    );
-
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setTheme(savedTheme);
-    }
-
-    if (savedDescription) {
-      setDescription(savedDescription);
-    }
-
-    if (savedBadges) {
-      try {
-        const parsed = JSON.parse(savedBadges);
-
-        if (
-          Array.isArray(parsed) &&
-          parsed.length <= 4 &&
-          parsed.every((id) => typeof id === "string")
-        ) {
-          setEquippedBadges(parsed);
-        }
-      } catch {
-        // Datos corruptos: mantenemos valores por defecto.
-      }
-    }
-  }, []);
-
-  /*
-   * ============================================================
-   * GUARDAR CONFIGURACIÓN
-   * ============================================================
-   */
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      "peakscore-profile-theme",
-      theme,
-    );
-  }, [theme]);
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      "peakscore-profile-description",
-      description,
-    );
-  }, [description]);
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      "peakscore-profile-badges",
-      JSON.stringify(equippedBadges),
-    );
-  }, [equippedBadges]);
-
-  /*
-   * ============================================================
-   * FUNCIONES
-   * ============================================================
-   */
-
-  const getBadge = (id: string) =>
-    badges.find((badge) => badge.id === id);
-
-  const selectedBadges = equippedBadges.map((id) =>
-    getBadge(id),
+  const selectedCatalogCharacter = characterCatalog.find(
+    (character) => character.id === selectedCharacterId,
   );
+
+  const currentRank = useMemo(() => {
+    const xp = profileData?.xp ?? 0;
+
+    return (
+      ranks.find(
+        (rank) =>
+          xp >= rank.minXp &&
+          (rank.maxXp === null || xp <= rank.maxXp),
+      ) ?? ranks[0]
+    );
+  }, [profileData?.xp]);
+
+  const currentRankIndex = ranks.findIndex(
+    (rank) => rank.id === currentRank.id,
+  );
+
+  const nextRank =
+    currentRankIndex >= 0 && currentRankIndex < ranks.length - 1
+      ? ranks[currentRankIndex + 1]
+      : null;
+
+  const rankProgress = useMemo(() => {
+    const xp = profileData?.xp ?? 0;
+
+    if (!nextRank) return 100;
+
+    const span = nextRank.minXp - currentRank.minXp;
+
+    if (span <= 0) return 100;
+
+    return Math.max(
+      0,
+      Math.min(
+        100,
+        ((xp - currentRank.minXp) / span) * 100,
+      ),
+    );
+  }, [currentRank, nextRank, profileData?.xp]);
+
+  const collectionGroups = [
+    {
+      id: "aprendizaje",
+      label: "Aprendizaje",
+      items: badges.filter((badge) => badge.group === "aprendizaje"),
+      icon: "🌱",
+    },
+    {
+      id: "constante",
+      label: "Constantes",
+      items: badges.filter((badge) => badge.group === "constante"),
+      icon: "⚔️",
+    },
+    {
+      id: "racha",
+      label: "Rachas",
+      items: badges.filter((badge) => badge.group === "racha"),
+      icon: "🔥",
+    },
+  ];
+
+  const loadProfile = async () => {
+    try {
+      setProfileLoading(true);
+
+      const response = await fetch("/api/profile", {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error("No se pudo cargar el perfil");
+      }
+
+      const data = await response.json();
+
+      setProfileData(data.profile);
+      setSelectedCharacterId(
+        data.profile?.selectedCharacter ?? "peaky-nova",
+      );
+      setCharacterCatalog(data.characters ?? []);
+      setUnlockedCharacterIds(data.unlockedCharacterIds ?? []);
+      setUnlockedBadgeIds(data.unlockedBadgeIds ?? []);
+    } catch (error) {
+      console.error("Error cargando perfil:", error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadProfile();
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("peakscore-profile-theme", theme);
+  }, [theme]);
 
   const changeCharacter = async (id: string) => {
     if (
       characterActionLoading ||
-      id === selectedCharacterId
+      id === selectedCharacterId ||
+      !unlockedCharacterIds.includes(id)
     ) {
-      return;
-    }
-
-    if (!unlockedCharacterIds.includes(id)) {
       return;
     }
 
@@ -417,19 +333,14 @@ export default function PerfilPage() {
       setCharacterActionLoading(true);
       setCharacterActionError(null);
 
-      const response = await fetch(
-        "/api/profile/character",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: "equip",
-            characterId: id,
-          }),
-        },
-      );
+      const response = await fetch("/api/profile/character", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "equip",
+          characterId: id,
+        }),
+      });
 
       const data = await response.json();
 
@@ -439,25 +350,17 @@ export default function PerfilPage() {
         );
       }
 
-      setSelectedCharacterId(
-        data.profile?.selectedCharacter ?? id,
-      );
+      const nextCharacter =
+        data.profile?.selectedCharacter ?? id;
+
+      setSelectedCharacterId(nextCharacter);
 
       setProfileData((current) =>
         current
-          ? {
-              ...current,
-              selectedCharacter:
-                data.profile?.selectedCharacter ?? id,
-            }
+          ? { ...current, selectedCharacter: nextCharacter }
           : current,
       );
     } catch (error) {
-      console.error(
-        "Error equipando personaje:",
-        error,
-      );
-
       setCharacterActionError(
         error instanceof Error
           ? error.message
@@ -468,22 +371,11 @@ export default function PerfilPage() {
     }
   };
 
-  const purchaseCharacter = async (
-    id: string,
-  ): Promise<boolean> => {
-    if (characterActionLoading) return false;
-
-    const character = characters.find(
-      (item) => item.id === id,
-    );
-
-    const catalogCharacter = characterCatalog.find(
-      (item) => item.id === id,
-    );
-
-    if (!character || !catalogCharacter) return false;
-
-    if (unlockedCharacterIds.includes(id)) {
+  const purchaseCharacter = async (id: string) => {
+    if (
+      characterActionLoading ||
+      unlockedCharacterIds.includes(id)
+    ) {
       return false;
     }
 
@@ -491,19 +383,14 @@ export default function PerfilPage() {
       setCharacterActionLoading(true);
       setCharacterActionError(null);
 
-      const response = await fetch(
-        "/api/profile/character",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            action: "purchase",
-            characterId: id,
-          }),
-        },
-      );
+      const response = await fetch("/api/profile/character", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "purchase",
+          characterId: id,
+        }),
+      });
 
       const data = await response.json();
 
@@ -513,10 +400,9 @@ export default function PerfilPage() {
         );
       }
 
-      setUnlockedCharacterIds((current) => [
-        ...current,
-        id,
-      ]);
+      setUnlockedCharacterIds((current) =>
+        current.includes(id) ? current : [...current, id],
+      );
 
       if (data.profile) {
         setProfileData((current) =>
@@ -536,11 +422,6 @@ export default function PerfilPage() {
 
       return true;
     } catch (error) {
-      console.error(
-        "Error comprando personaje:",
-        error,
-      );
-
       setCharacterActionError(
         error instanceof Error
           ? error.message
@@ -553,1048 +434,597 @@ export default function PerfilPage() {
     }
   };
 
-  const openPurchaseModal = (id: string) => {
-    if (characterActionLoading) return;
+  const selectedPurchaseCharacter = purchaseModalCharacterId
+    ? characters.find(
+        (character) => character.id === purchaseModalCharacterId,
+      ) ?? null
+    : null;
 
-    if (unlockedCharacterIds.includes(id)) return;
+  const selectedPurchaseCatalog = purchaseModalCharacterId
+    ? characterCatalog.find(
+        (character) => character.id === purchaseModalCharacterId,
+      ) ?? null
+    : null;
 
-    if (!characterCatalog.some((character) => character.id === id)) {
-      return;
-    }
+  const purchasePrice =
+    selectedPurchaseCatalog?.price_coins ?? 0;
 
-    setCharacterActionError(null);
-    setPurchaseModalCharacterId(id);
-  };
+  const hasEnoughCoins =
+    (profileData?.coins ?? 0) >= purchasePrice;
 
-  const closePurchaseModal = () => {
-    if (characterActionLoading) return;
+  const surface =
+    theme === "dark"
+      ? "border-white/10 bg-[#10091a]"
+      : "border-black/8 bg-white";
 
-    setPurchaseModalCharacterId(null);
-    setCharacterActionError(null);
-  };
+  const muted =
+    theme === "dark" ? "text-white/45" : "text-[#6c786f]";
 
-  const openBadgeSelector = (slot: number) => {
-    setSelectedBadgeSlot(slot);
-    setBadgeSelectorOpen(true);
-  };
-
-  const equipBadge = (badgeId: string) => {
-    if (selectedBadgeSlot === null) return;
-
-    setEquippedBadges((current) => {
-      const next = [...current];
-
-      const oldIndex = next.indexOf(badgeId);
-
-      if (
-        oldIndex !== -1 &&
-        oldIndex !== selectedBadgeSlot
-      ) {
-        next[oldIndex] = "";
-      }
-
-      next[selectedBadgeSlot] = badgeId;
-
-      return next;
-    });
-
-    setBadgeSelectorOpen(false);
-    setSelectedBadgeSlot(null);
-  };
-
-  const removeBadge = (slot: number) => {
-    setEquippedBadges((current) => {
-      const next = [...current];
-
-      next[slot] = "";
-
-      return next;
-    });
-  };
-
-  /*
-   * ============================================================
-   * FONDOS GLOBALES
-   * ============================================================
-   *
-   * Los dos archivos se mantienen cargados.
-   * No se desmonta el fondo oscuro al estar en claro.
-   *
-   * El fondo se coloca directamente sobre el viewport.
-   * Esto evita que una capa sólida del main tape el bioma.
-   */
-
-  const lightBiome = "/perfil/biome-profile-light.webp";
-  const darkBiome = "/perfil/biome-profile-dark.webp";
+  const accent =
+    theme === "dark" ? "text-violet-300" : "text-emerald-700";
 
   return (
     <main
-      className="
-        relative
-        min-h-screen
-        overflow-x-hidden
-        bg-[#020814]
-        text-white
-        isolate
-      "
+      className={
+        theme === "dark"
+          ? "min-h-screen bg-[#07040d] text-white"
+          : "min-h-screen bg-[#f7faf7] text-[#102019]"
+      }
     >
-      {/*
-       * ========================================================
-       * BIOMAS GLOBALES
-       * ========================================================
-       */}
-
-      <div
-        className="
-          pointer-events-none
-          fixed
-          inset-0
-          z-0
-          overflow-hidden
-        "
+      <header
+        className={
+          theme === "dark"
+            ? "sticky top-0 z-40 border-b border-violet-400/20 bg-[#0b0713]/95 backdrop-blur-xl"
+            : "sticky top-0 z-40 border-b border-emerald-300/40 bg-white/95 backdrop-blur-xl"
+        }
       >
-        {/*
-         * FONDO CLARO
-         *
-         * Se utiliza img nativo aquí deliberadamente para que
-         * el fondo global no dependa del procesamiento de
-         * next/image.
-         */}
-
-        <img
-          src={lightBiome}
-          alt=""
-          aria-hidden="true"
-          className={`
-            absolute
-            inset-0
-            h-full
-            w-full
-            object-cover
-            object-center
-            scale-[1.06]
-            transition-opacity
-            duration-500
-            ${
-              theme === "light"
-                ? "opacity-100"
-                : "opacity-0"
-            }
-          `}
-        />
-
-        {/*
-         * FONDO OSCURO
-         */}
-
-        <img
-          src={darkBiome}
-          alt=""
-          aria-hidden="true"
-          className={`
-            absolute
-            inset-0
-            h-full
-            w-full
-            object-cover
-            object-center
-            scale-[1.06]
-            transition-opacity
-            duration-500
-            ${
-              theme === "dark"
-                ? "opacity-100"
-                : "opacity-0"
-            }
-          `}
-        />
-
-        {/*
-         * CAPA DE LEGIBILIDAD
-         */}
-
-        <div
-          className={`
-            absolute
-            inset-0
-            ${
-              theme === "light"
-                ? "bg-[#031326]/30"
-                : "bg-[#01030a]/58"
-            }
-          `}
-        />
-
-        {/*
-         * VIÑETA
-         */}
-
-        <div
-          className="
-            absolute
-            inset-0
-            bg-[radial-gradient(circle_at_center,transparent_12%,rgba(0,0,0,.42)_100%)]
-          "
-        />
-
-        <div
-          className="
-            absolute
-            inset-0
-            bg-gradient-to-b
-            from-[#020814]/10
-            via-transparent
-            to-[#020814]/55
-          "
-        />
-      </div>
-
-      {/*
-       * ========================================================
-       * CONTENIDO
-       * ========================================================
-       */}
-
-      <div
-        className="
-          relative
-          z-10
-          mx-auto
-          min-h-screen
-          w-full
-          max-w-[1540px]
-          px-4
-          py-5
-          sm:px-6
-          lg:px-8
-        "
-      >
-        {/*
-         * ======================================================
-         * TOP BAR
-         * ======================================================
-         */}
-
-        <div className="flex items-center justify-between">
+        <div className="mx-auto flex h-[64px] w-full max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link
             href="/dashboard"
-            className="
-              inline-flex
-              items-center
-              gap-2
-              rounded-lg
-              border
-              border-white/15
-              bg-[#061426]/85
-              px-3
-              py-2
-              text-xs
-              font-bold
-              text-white/80
-              backdrop-blur-md
-              transition
-              hover:border-cyan-400/50
-              hover:text-white
-              font-mono
-            "
-          >
-            <ArrowLeft size={14} />
-
-            Volver al Dashboard
-          </Link>
-
-          {/*
-           * ====================================================
-           * BOTÓN DE TEMA
-           *
-           * Claro = lámpara
-           * Oscuro = luna
-           * ====================================================
-           */}
-
-          <button
-            type="button"
-            aria-label={
-              theme === "light"
-                ? "Cambiar a modo oscuro"
-                : "Cambiar a modo claro"
-            }
-            title={
-              theme === "light"
-                ? "Cambiar a modo oscuro"
-                : "Cambiar a modo claro"
-            }
-            onClick={() =>
-              setTheme((current) =>
-                current === "light"
-                  ? "dark"
-                  : "light",
-              )
-            }
-            className="
-              group
-              flex
-              h-12
-              w-12
-              items-center
-              justify-center
-              rounded-full
-              border
-              border-white/20
-              bg-black/35
-              shadow-[0_8px_30px_rgba(0,0,0,.35)]
-              backdrop-blur-xl
-              transition-all
-              duration-300
-              hover:scale-105
-              hover:border-white/40
-            "
+            className="flex items-center gap-2.5"
           >
             <span
-              className={`
-                flex
-                h-9
-                w-9
-                items-center
-                justify-center
-                rounded-full
-                transition-all
-                duration-300
-                ${
-                  theme === "light"
-                    ? "bg-cyan-400 text-[#03101d] shadow-[0_0_18px_rgba(34,211,238,.55)]"
-                    : "bg-violet-500 text-white shadow-[0_0_18px_rgba(139,92,246,.55)]"
-                }
-              `}
+              className={
+                theme === "dark"
+                  ? "flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/35 bg-emerald-400/10 text-emerald-300"
+                  : "flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/60 bg-emerald-50 text-emerald-700"
+              }
             >
-              {theme === "light" ? (
-                <LampDesk
-                  size={18}
-                  strokeWidth={2.2}
-                />
-              ) : (
-                <Moon
-                  size={17}
-                  strokeWidth={2.2}
-                />
-              )}
+              <Sparkles size={17} />
             </span>
-          </button>
+
+            <span className="text-lg font-black font-mono">
+              PeakScore
+            </span>
+          </Link>
+
+          <nav className="hidden items-center gap-1 lg:flex">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = item.label === "Mi Perfil";
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={
+                    active
+                      ? theme === "dark"
+                        ? "flex items-center gap-2 rounded-lg border border-emerald-300/35 bg-emerald-400/10 px-3 py-2 text-[9px] font-black text-emerald-200 font-mono"
+                        : "flex items-center gap-2 rounded-lg border border-emerald-300/50 bg-emerald-50 px-3 py-2 text-[9px] font-black text-emerald-700 font-mono"
+                      : theme === "dark"
+                        ? "flex items-center gap-2 rounded-lg px-3 py-2 text-[9px] font-bold text-white/50 transition hover:bg-white/[0.03] hover:text-white font-mono"
+                        : "flex items-center gap-2 rounded-lg px-3 py-2 text-[9px] font-bold text-[#65736a] transition hover:bg-[#f0f5f1] hover:text-[#17251d] font-mono"
+                  }
+                >
+                  <Icon size={14} />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <span
+              className={
+                theme === "dark"
+                  ? "hidden items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[9px] font-black text-yellow-200 font-mono sm:flex"
+                  : "hidden items-center gap-1.5 rounded-lg border border-black/8 bg-white px-3 py-2 text-[9px] font-black text-yellow-700 font-mono sm:flex"
+              }
+            >
+              <Coins size={14} />
+              {formatNumber(profileData?.coins ?? 0)}
+            </span>
+
+            <span
+              className={
+                theme === "dark"
+                  ? "hidden items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-[9px] font-black text-orange-300 font-mono sm:flex"
+                  : "hidden items-center gap-1.5 rounded-lg border border-black/8 bg-white px-3 py-2 text-[9px] font-black text-orange-600 font-mono sm:flex"
+              }
+            >
+              <Flame size={14} fill="currentColor" />
+              {formatNumber(profileData?.streak ?? 0)}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setTheme((current) =>
+                  current === "light" ? "dark" : "light",
+                )
+              }
+              aria-label="Cambiar tema"
+              className={
+                theme === "dark"
+                  ? "flex h-9 w-9 items-center justify-center rounded-lg border border-violet-300/25 bg-violet-500/10 text-violet-200 transition hover:border-violet-300/50"
+                  : "flex h-9 w-9 items-center justify-center rounded-lg border border-emerald-300/50 bg-emerald-50 text-emerald-700 transition hover:border-emerald-400"
+              }
+            >
+              {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+            </button>
+
+            <div
+              className={
+                theme === "dark"
+                  ? "h-9 w-9 overflow-hidden rounded-lg border border-emerald-300/35 bg-emerald-400/10"
+                  : "h-9 w-9 overflow-hidden rounded-lg border border-emerald-300/60 bg-emerald-50"
+              }
+            >
+              <Image
+                src={selectedCharacter.profile}
+                alt={selectedCharacter.name}
+                width={64}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className={"text-[9px] font-black uppercase tracking-[0.18em] " + accent + " font-mono"}>
+              PEAKSCORE
+            </p>
+
+            <h1 className="mt-1 text-4xl font-black tracking-[-0.04em] font-mono sm:text-5xl">
+              MI PERFIL
+            </h1>
+
+            <p className={"mt-1 text-xs " + muted + " font-mono"}>
+              Tu progreso, personajes e insignias en un solo lugar.
+            </p>
+          </div>
+
+          <div
+            className={
+              theme === "dark"
+                ? "rounded-xl border border-emerald-300/20 bg-emerald-400/[0.04] px-4 py-2.5"
+                : "rounded-xl border border-emerald-300/35 bg-emerald-50 px-4 py-2.5"
+            }
+          >
+            <p className="text-[9px] font-black uppercase tracking-[0.12em] text-emerald-300 font-mono">
+              Peaky Nova
+            </p>
+            <p className={"mt-0.5 text-[8px] " + muted + " font-mono"}>
+              Identidad visual de PeakScore
+            </p>
+          </div>
         </div>
 
-        {/*
-         * ======================================================
-         * HEADER
-         * ======================================================
-         */}
-
-        <header className="mx-auto mt-6 w-full max-w-[1240px]">
-          <h1
-            className="
-              mt-1
-              text-4xl
-              font-black
-              tracking-[-0.04em]
-              text-white
-              sm:text-5xl
-              font-mono
-            "
-          >
-            MI PERFIL
-          </h1>
-
-          <p className="mt-1 text-sm text-white/75 font-mono">
-            Personaliza tu identidad en PeakScore.
-          </p>
-        </header>
-
-        {/*
-         * ======================================================
-         * GRID PRINCIPAL
-         * ======================================================
-         */}
-
-        <div
-          className="
-            mx-auto
-            mt-5
-            grid
-            w-full
-            max-w-[1240px]
-            gap-4
-            lg:grid-cols-[320px_1fr]
-          "
-        >
-          {/*
-           * ====================================================
-           * TARJETA IZQUIERDA
-           * ====================================================
-           */}
-
-          <aside
-            className="
-              rounded-2xl
-              border
-              border-white/15
-              bg-[#061a31]/90
-              p-4
-              shadow-[0_15px_50px_rgba(0,0,0,.30)]
-              backdrop-blur-md
-            "
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-cyan-300/80 font-mono">
-                  Perfil
+        <div className="grid gap-4 lg:grid-cols-[310px_1fr]">
+          <aside className="space-y-4">
+            <section className={"overflow-hidden rounded-2xl border " + surface}>
+              <div className="border-b border-emerald-300/15 px-4 py-3">
+                <p className="text-[8px] font-black uppercase tracking-[0.14em] text-emerald-300 font-mono">
+                  Perfil actual
                 </p>
-
-                <h2 className="mt-1 text-lg font-black text-white font-mono">
-                  TU PERSONAJE
+                <h2 className="mt-1 text-lg font-black font-mono">
+                  Tu personaje
                 </h2>
               </div>
 
-              <span
-                className="
-                  rounded-full
-                  border border-emerald-300/20
-                  bg-emerald-400/[0.06]
-                  px-2.5
-                  py-1
-                  text-[8px]
-                  font-black
-                  uppercase
-                  tracking-[0.08em]
-                  text-emerald-200
-                  font-mono
-                "
-              >
-                Equipado
-              </span>
-            </div>
-
-            <div
-              className="
-                relative
-                mt-4
-                overflow-hidden
-                rounded-xl
-                border border-white/10
-                bg-[radial-gradient(circle_at_50%_32%,rgba(34,211,238,.12),transparent_40%),linear-gradient(180deg,#0a2038_0%,#061426_100%)]
-                px-4
-                py-4
-              "
-            >
               <div
-                aria-hidden="true"
-                className="
-                  pointer-events-none
-                  absolute
-                  inset-x-8
-                  bottom-5
-                  h-px
-                  bg-gradient-to-r
-                  from-transparent
-                  via-cyan-300/25
-                  to-transparent
-                "
-              />
-
-              <Image
-                key={selectedCharacter.profile}
-                src={selectedCharacter.profile}
-                alt={selectedCharacter.name}
-                width={512}
-                height={512}
-                sizes="220px"
-                className="
-                  relative
-                  z-10
-                  mx-auto
-                  h-[190px]
-                  w-[190px]
-                  object-contain
-                  [image-rendering:pixelated]
-                  drop-shadow-[0_14px_18px_rgba(0,0,0,.45)]
-                "
-              />
-            </div>
-
-            <div className="mt-4">
-              <h3
-                className="
-                  truncate
-                  text-lg
-                  font-black
-                  text-white
-                  font-mono
-                "
+                className={
+                  theme === "dark"
+                    ? "relative flex min-h-[255px] items-end justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_25%,rgba(168,85,247,.18),transparent_42%),linear-gradient(180deg,#140c22_0%,#090612_100%)] px-4 pt-5"
+                    : "relative flex min-h-[255px] items-end justify-center overflow-hidden bg-[radial-gradient(circle_at_50%_25%,rgba(34,197,94,.13),transparent_42%),linear-gradient(180deg,#f0faf2_0%,#eaf1ec_100%)] px-4 pt-5"
+                }
               >
-                {selectedCharacter.name}
-              </h3>
+                <div className="absolute inset-x-10 bottom-6 h-px bg-gradient-to-r from-transparent via-emerald-300/30 to-transparent" />
 
-              <p
-                className="
-                  mt-1
-                  min-h-[34px]
-                  text-[10px]
-                  leading-4
-                  text-white/50
-                  font-mono
-                "
-              >
-                {selectedCharacter.description}
-              </p>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5">
-                <p className="text-[8px] font-black uppercase text-white/30 font-mono">
-                  Estado
-                </p>
-
-                <p className="mt-1 text-[10px] font-black text-emerald-200 font-mono">
-                  Equipado
-                </p>
+                <Image
+                  src={selectedCharacter.avatar}
+                  alt={selectedCharacter.name}
+                  width={420}
+                  height={420}
+                  className="relative z-10 max-h-[220px] w-auto object-contain drop-shadow-[0_14px_20px_rgba(0,0,0,.35)]"
+                />
               </div>
 
-              <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5">
-                <p className="text-[8px] font-black uppercase text-white/30 font-mono">
-                  Bonus
-                </p>
-
-                <p className="mt-1 text-[10px] font-black text-cyan-200 font-mono">
-                  {(() => {
-                    const catalogCharacter =
-                      characterCatalog.find(
-                        (item) =>
-                          item.id === selectedCharacter.id,
-                      );
-
-                    const xpBonus =
-                      catalogCharacter?.xp_bonus_percent ?? 0;
-                    const coinBonus =
-                      catalogCharacter?.coin_bonus_percent ?? 0;
-
-                    if (xpBonus > 0) {
-                      return `+${xpBonus}% XP`;
-                    }
-
-                    if (coinBonus > 0) {
-                      return `+${coinBonus}% monedas`;
-                    }
-
-                    return "Sin bonus";
-                  })()}
-                </p>
-              </div>
-            </div>
-
-            <a
-              href="#personajes"
-              className="
-                mt-3
-                flex
-                w-full
-                items-center
-                justify-center
-                gap-2
-                rounded-xl
-                border border-cyan-300/25
-                bg-cyan-300/[0.05]
-                px-4
-                py-3
-                text-[9px]
-                font-black
-                uppercase
-                tracking-[0.12em]
-                text-cyan-200
-                font-mono
-                transition
-                hover:border-cyan-300/45
-                hover:bg-cyan-300/[0.09]
-                hover:text-white
-              "
-            >
-              Cambiar personaje
-              <ChevronRight size={13} />
-            </a>
-          </aside>
-
-          {/*
-           * ====================================================
-           * COLUMNA DERECHA
-           * ====================================================
-           */}
-
-          <section className="space-y-4">
-            {/*
-             * ==================================================
-             * DATOS DEL PERFIL
-             * ==================================================
-             */}
-
-            <section
-              className="
-                rounded-2xl
-                border
-                border-white/15
-                bg-[#061a31]/90
-                p-5
-                shadow-[0_15px_50px_rgba(0,0,0,.25)]
-                backdrop-blur-md
-              "
-            >
-              <div
-                className="
-                  flex
-                  flex-col
-                  gap-5
-                  sm:flex-row
-                  sm:items-start
-                "
-              >
-                {/*
-                 * FOTO DE PERFIL
-                 *
-                 * SOLO usa profile.
-                 */}
-
-                <div
-                  className="
-                    relative
-                    h-[76px]
-                    w-[76px]
-                    shrink-0
-                    overflow-hidden
-                    rounded-xl
-                    border
-                    border-fuchsia-400/50
-                    bg-[#03101f]
-                  "
-                >
-                  <Image
-                    src={selectedCharacter.profile}
-                    alt={selectedCharacter.name}
-                    fill
-                    sizes="76px"
-                    className="object-cover"
-                  />
-                </div>
-
-                {/*
-                 * INFORMACIÓN
-                 */}
-
-                <div className="min-w-0 flex-1">
-                  <div
-                    className="
-                      flex
-                      flex-wrap
-                      items-center
-                      gap-3
-                    "
-                  >
-                    <h2
-                      className="
-                        text-2xl
-                        font-black
-                        sm:text-3xl
-                        font-mono
-                      "
-                    >
-                      Yostyn Aragón
-                    </h2>
-
-                    <div className="flex items-center gap-2">
-                      {selectedBadges.map(
-                        (badge, index) => (
-                          <button
-                            key={`profile-badge-${index}`}
-                            type="button"
-                            onClick={() =>
-                              openBadgeSelector(index)
-                            }
-                            className="
-                              group
-                              relative
-                              flex
-                              h-10
-                              w-10
-                              items-center
-                              justify-center
-                              rounded-lg
-                              border
-                              border-white/15
-                              bg-black/20
-                              transition
-                              hover:scale-105
-                              hover:border-fuchsia-400/60
-                            "
-                          >
-                            {badge ? (
-                              <Image
-                                src={badge.image}
-                                alt={badge.name}
-                                width={36}
-                                height={36}
-                                className="
-                                  h-8
-                                  w-8
-                                  object-contain
-                                "
-                              />
-                            ) : (
-                              <Plus
-                                size={17}
-                                className="
-                                  text-white/40
-                                  transition
-                                  group-hover:text-fuchsia-300
-                                "
-                              />
-                            )}
-                          </button>
-                        ),
-                      )}
-                    </div>
+              <div className="px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-black font-mono">
+                      {profileData?.fullName ?? "Mi perfil"}
+                    </p>
+                    <p className={"mt-1 text-[8px] " + muted + " font-mono"}>
+                      Estudiante · Nivel {profileData?.level ?? 1}
+                    </p>
                   </div>
 
-                  {/*
-                   * DESCRIPCIÓN
-                   */}
-
-                  <div
-                    className="
-                      mt-3
-                      flex
-                      max-w-[360px]
-                      items-center
-                      gap-2
-                    "
-                  >
-                    {editingDescription ? (
-                      <input
-                        autoFocus
-                        value={description}
-                        maxLength={80}
-                        onChange={(event) =>
-                          setDescription(
-                            event.target.value,
-                          )
-                        }
-                        onBlur={() =>
-                          setEditingDescription(false)
-                        }
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            setEditingDescription(
-                              false,
-                            );
-                          }
-                        }}
-                        className="
-                          w-full
-                          rounded-md
-                          border
-                          border-fuchsia-400/40
-                          bg-black/20
-                          px-3
-                          py-2
-                          text-sm
-                          text-white
-                          outline-none
-                          font-mono
-                        "
-                      />
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setEditingDescription(true)
-                        }
-                        className="
-                          group
-                          flex
-                          min-w-0
-                          items-center
-                          gap-2
-                          text-left
-                          text-sm
-                          italic
-                          text-white/60
-                          transition
-                          hover:text-white
-                          font-mono
-                        "
-                      >
-                        <span className="truncate">
-                          {description}
-                        </span>
-
-                        <Pencil
-                          size={13}
-                          className="
-                            opacity-50
-                            group-hover:text-fuchsia-300
-                          "
-                        />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/*
-                 * NIVEL
-                 */}
-
-                <div
-                  className="
-                    flex
-                    h-[82px]
-                    w-[82px]
-                    shrink-0
-                    flex-col
-                    items-center
-                    justify-center
-                    rounded-xl
-                    border
-                    border-yellow-400/60
-                    bg-yellow-400/[0.06]
-                  "
-                >
-                  <span className="text-xl text-yellow-300">
-                    ★
-                  </span>
-
-                  <span
-                    className="
-                      text-[8px]
-                      font-black
-                      tracking-wider
-                      text-yellow-200
-                      font-mono
-                    "
-                  >
-                    NIVEL
-                  </span>
-
-                  <span
-                    className="
-                      text-2xl
-                      font-black
-                      leading-none
-                      text-yellow-300
-                      font-mono
-                    "
-                  >
-                    {profileData?.level ?? 1}
+                  <span className="shrink-0 rounded-full border border-emerald-300/30 bg-emerald-400/10 px-2.5 py-1 text-[7px] font-black text-emerald-200 font-mono">
+                    EQUIPADO
                   </span>
                 </div>
-              </div>
 
-              {/*
-               * XP
-               */}
+                <h3 className="mt-3 text-sm font-black font-mono">
+                  {selectedCharacter.name}
+                </h3>
 
-              <div className="mt-5">
+                <p className={"mt-1 text-[9px] leading-4 " + muted + " font-mono"}>
+                  {selectedCharacter.description}
+                </p>
+
                 <div
-                  className="
-                    mb-2
-                    flex
-                    items-center
-                    justify-between
-                    text-[11px]
-                    text-white/60
-                    font-mono
-                  "
+                  className={
+                    theme === "dark"
+                      ? "mt-3 rounded-xl border border-white/8 bg-white/[0.02] p-3"
+                      : "mt-3 rounded-xl border border-black/7 bg-[#fbfcfb] p-3"
+                  }
                 >
-                  <span>Experiencia</span>
-
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-white/80">
-                      {profileData?.xp ?? 0} XP
+                  <div className="flex items-center justify-between">
+                    <span className={"text-[7px] uppercase tracking-[0.1em] " + muted + " font-mono"}>
+                      Bonus
                     </span>
-
-                    <span
-                      className="
-                        inline-flex
-                        items-center
-                        gap-1.5
-                        rounded-md
-                        border
-                        border-yellow-400/20
-                        bg-yellow-400/[0.06]
-                        px-2
-                        py-1
-                        text-[9px]
-                        font-black
-                        text-yellow-300
-                        font-mono
-                      "
-                    >
-                      <Coins size={12} />
-                      {profileData?.coins ?? 0}
-                    </span>
+                    <Sparkles size={13} className="text-cyan-300" />
                   </div>
+
+                  <p className="mt-1 text-[10px] font-black text-cyan-200 font-mono">
+                    {selectedCatalogCharacter?.xp_bonus_percent
+                      ? "+" + selectedCatalogCharacter.xp_bonus_percent + "% XP"
+                      : selectedCatalogCharacter?.coin_bonus_percent
+                        ? "+" + selectedCatalogCharacter.coin_bonus_percent + "% monedas"
+                        : "Sin bonus"}
+                  </p>
                 </div>
 
-                <div
-                  className="
-                    h-2.5
-                    overflow-hidden
-                    rounded-full
-                    bg-white/10
-                  "
+                <button
+                  type="button"
+                  onClick={() =>
+                    document
+                      .getElementById("personajes")
+                      ?.scrollIntoView({ behavior: "smooth" })
+                  }
+                  className={
+                    theme === "dark"
+                      ? "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-400/[0.05] px-4 py-3 text-[8px] font-black uppercase tracking-[0.1em] text-emerald-200 font-mono transition hover:bg-emerald-400/[0.09]"
+                      : "mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/45 bg-emerald-50 px-4 py-3 text-[8px] font-black uppercase tracking-[0.1em] text-emerald-700 font-mono transition hover:bg-emerald-100"
+                  }
                 >
-                  <div
-                    className="
-                      h-full
-                      rounded-full
-                      bg-gradient-to-r
-                      from-cyan-400
-                      via-blue-500
-                      to-violet-500
-                      transition-all
-                      duration-500
-                    "
-                    style={{
-                      width: `${Math.min(
-                        ((profileData?.xp ?? 0) / 1200) * 100,
-                        100,
-                      )}%`,
-                    }}
-                  />
+                  Cambiar personaje
+                  <ArrowRight size={13} />
+                </button>
+              </div>
+            </section>
+
+            <section className={"rounded-2xl border " + surface + " p-4"}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={"text-[8px] font-black uppercase tracking-[0.14em] " + accent + " font-mono"}>
+                    Estadísticas
+                  </p>
+                  <h2 className="mt-1 text-lg font-black font-mono">
+                    Tu rendimiento
+                  </h2>
+                </div>
+                <BarChart3 size={18} className={accent} />
+              </div>
+
+              <div className="mt-4 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <span className={"text-[9px] " + muted + " font-mono"}>XP total</span>
+                  <span className="text-[10px] font-black font-mono">
+                    {formatNumber(profileData?.xp ?? 0)} XP
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className={"text-[9px] " + muted + " font-mono"}>Simulacros</span>
+                  <span className="text-[10px] font-black font-mono">
+                    {formatNumber(profileData?.simulations ?? 0)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className={"text-[9px] " + muted + " font-mono"}>Promedio ICFES</span>
+                  <span className="text-[10px] font-black text-amber-300 font-mono">
+                    {profileData?.averageScore != null
+                      ? profileData.averageScore + "%"
+                      : "0%"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className={"text-[9px] " + muted + " font-mono"}>Racha</span>
+                  <span className="text-[10px] font-black text-orange-300 font-mono">
+                    {formatNumber(profileData?.streak ?? 0)} días
+                  </span>
                 </div>
               </div>
             </section>
 
-            {/*
-             * ==================================================
-             * PERSONAJES
-             * ==================================================
-             */}
-
-            <section
-              id="personajes"
-              className="
-                rounded-2xl
-                border
-                border-white/15
-                bg-[#061a31]/90
-                p-5
-                backdrop-blur-md
-              "
-            >
-              <div
-                className="
-                  flex
-                  items-start
-                  justify-between
-                  gap-3
-                "
-              >
+            <section className={"rounded-2xl border " + surface + " p-4"}>
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h2
-                    className="
-                      text-xl
-                      font-black
-                      font-mono
-                    "
+                  <p className={"text-[8px] font-black uppercase tracking-[0.14em] " + accent + " font-mono"}>
+                    Temporada
+                  </p>
+                  <h2 className="mt-1 text-lg font-black font-mono">
+                    Tu rango
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setRankModalOpen(true)}
+                  className={"text-[8px] font-black uppercase tracking-[0.08em] " + accent + " font-mono"}
+                >
+                  Ver rangos
+                </button>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3">
+                <div
+                  className={
+                    theme === "dark"
+                      ? "h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-violet-300/40 bg-violet-400/10"
+                      : "h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-emerald-400 bg-emerald-50"
+                  }
+                >
+                  <Image
+                    src={selectedCharacter.profile}
+                    alt={selectedCharacter.name}
+                    width={96}
+                    height={96}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-black font-mono">
+                      {currentRank.name}
+                    </p>
+                    <span>{rankIcons[currentRank.id]}</span>
+                  </div>
+
+                  <p className={"mt-0.5 text-[8px] " + muted + " font-mono"}>
+                    {formatNumber(currentRank.minXp)}+ XP
+                  </p>
+
+                  <div
+                    className={
+                      theme === "dark"
+                        ? "mt-2 h-1.5 overflow-hidden rounded-full bg-white/10"
+                        : "mt-2 h-1.5 overflow-hidden rounded-full bg-black/8"
+                    }
                   >
-                    PERSONAJES
+                    <div
+                      className={
+                        theme === "dark"
+                          ? "h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400"
+                          : "h-full rounded-full bg-gradient-to-r from-emerald-400 to-lime-400"
+                      }
+                      style={{ width: rankProgress + "%" }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className={
+                  theme === "dark"
+                    ? "mt-4 rounded-xl border border-violet-300/15 bg-violet-500/[0.05] p-3"
+                    : "mt-4 rounded-xl border border-emerald-300/30 bg-emerald-50 p-3"
+                }
+              >
+                <p className="text-[9px] font-black font-mono">
+                  Próximo: {nextRank?.name ?? "Peak"}
+                </p>
+
+                <p className={"mt-1 text-[8px] leading-4 " + muted + " font-mono"}>
+                  Al reiniciar la temporada, el rango competitivo quedará en Renacer. El reinicio mensual se conectará cuando definamos la temporada.
+                </p>
+              </div>
+            </section>
+          </aside>
+
+          <section className="min-w-0 space-y-4">
+            <section className={"rounded-2xl border " + surface + " p-4"}>
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+                <div>
+                  <p className={"text-[8px] font-black uppercase tracking-[0.14em] " + accent + " font-mono"}>
+                    Tu identidad
+                  </p>
+
+                  <h2 className="mt-1 text-2xl font-black font-mono">
+                    {profileData?.fullName ?? "Mi perfil"}
                   </h2>
 
-                  <p
-                    className="
-                      mt-1
-                      text-[11px]
-                      text-white/55
-                      font-mono
-                    "
+                  <p className={"mt-1 text-[9px] " + muted + " font-mono"}>
+                    Estudiante · Nivel {profileData?.level ?? 1}
+                  </p>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className={"text-[8px] " + muted + " font-mono"}>
+                      Experiencia
+                    </span>
+                    <span className="text-[9px] font-black font-mono">
+                      {formatNumber(profileData?.xp ?? 0)} XP
+                    </span>
+                  </div>
+
+                  <div
+                    className={
+                      theme === "dark"
+                        ? "mt-2 h-3 overflow-hidden rounded-full bg-white/10"
+                        : "mt-2 h-3 overflow-hidden rounded-full bg-black/8"
+                    }
                   >
-                    Elige el personaje que te
-                    representará en PeakScore.
+                    <div
+                      className={
+                        theme === "dark"
+                          ? "h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-cyan-300"
+                          : "h-full rounded-full bg-gradient-to-r from-emerald-400 via-lime-300 to-cyan-300"
+                      }
+                      style={{
+                        width:
+                          (nextRank
+                            ? Math.min(
+                                100,
+                                ((profileData?.xp ?? 0) /
+                                  Math.max(nextRank.minXp, 1)) *
+                                  100,
+                              )
+                            : 100) + "%",
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div
+                  className={
+                    theme === "dark"
+                      ? "rounded-xl border border-emerald-300/20 bg-emerald-400/[0.04] p-3"
+                      : "rounded-xl border border-emerald-300/30 bg-emerald-50 p-3"
+                  }
+                >
+                  <p className={"text-[8px] uppercase tracking-[0.12em] " + muted + " font-mono"}>
+                    Rango actual
+                  </p>
+
+                  <p className="mt-1 text-xl font-black font-mono">
+                    {rankIcons[currentRank.id]} {currentRank.name}
+                  </p>
+
+                  <p className={"mt-1 text-[8px] " + muted + " font-mono"}>
+                    {formatNumber(currentRank.minXp)}+ XP
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section className={"rounded-2xl border " + surface + " p-4"}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={"text-[8px] font-black uppercase tracking-[0.14em] " + accent + " font-mono"}>
+                    Aprender
+                  </p>
+
+                  <h2 className="mt-1 text-lg font-black font-mono">
+                    Mi progreso
+                  </h2>
+
+                  <p className={"mt-1 text-[9px] " + muted + " font-mono"}>
+                    Espacio reservado para los mundos y niveles de Aprender.
                   </p>
                 </div>
 
                 <span
-                  className="
-                    rounded-full
-                    border
-                    border-white/10
-                    bg-white/[0.03]
-                    px-3
-                    py-1.5
-                    text-[9px]
-                    font-bold
-                    text-white/50
-                    font-mono
-                  "
+                  className={
+                    theme === "dark"
+                      ? "rounded-full border border-violet-300/20 bg-violet-400/10 px-2.5 py-1 text-[8px] font-black text-violet-200 font-mono"
+                      : "rounded-full border border-emerald-300/30 bg-emerald-50 px-2.5 py-1 text-[8px] font-black text-emerald-700 font-mono"
+                  }
                 >
-                  {unlockedCharacterIds.length} / 8 DISPONIBLES
+                  PRÓXIMAMENTE
+                </span>
+              </div>
+
+              <div
+                className={
+                  theme === "dark"
+                    ? "mt-4 flex min-h-[210px] items-center justify-center rounded-2xl border border-dashed border-violet-300/15 bg-violet-400/[0.03]"
+                    : "mt-4 flex min-h-[210px] items-center justify-center rounded-2xl border border-dashed border-emerald-300/35 bg-emerald-50/40"
+                }
+              >
+                <div className="max-w-md px-6 text-center">
+                  <BookOpen
+                    size={30}
+                    className={
+                      theme === "dark"
+                        ? "mx-auto text-violet-300/70"
+                        : "mx-auto text-emerald-600/70"
+                    }
+                  />
+
+                  <p className="mt-3 text-sm font-black font-mono">
+                    Aquí aparecerá tu avance por mundos.
+                  </p>
+
+                  <p className={"mt-2 text-[9px] leading-4 " + muted + " font-mono"}>
+                    Matemáticas, Lectura Crítica, Sociales, Ciencias Naturales e Inglés.
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            <section
+              id="personajes"
+              className={"rounded-2xl border " + surface + " p-4"}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className={"text-[8px] font-black uppercase tracking-[0.14em] " + accent + " font-mono"}>
+                    Colección
+                  </p>
+
+                  <h2 className="mt-1 text-lg font-black font-mono">
+                    Mis personajes
+                  </h2>
+                </div>
+
+                <span
+                  className={
+                    theme === "dark"
+                      ? "rounded-full border border-emerald-300/20 bg-emerald-400/[0.05] px-2.5 py-1 text-[8px] font-black text-emerald-200 font-mono"
+                      : "rounded-full border border-emerald-300/35 bg-emerald-50 px-2.5 py-1 text-[8px] font-black text-emerald-700 font-mono"
+                  }
+                >
+                  {unlockedCharacterIds.length}/4
                 </span>
               </div>
 
               {characterActionError && (
                 <div
                   role="alert"
-                  className="
-                    mt-4
-                    flex
-                    items-center
-                    justify-between
-                    gap-3
-                    rounded-lg
-                    border
-                    border-red-400/25
-                    bg-red-400/[0.06]
-                    px-3
-                    py-2.5
-                    text-[10px]
-                    font-bold
-                    text-red-200
-                    font-mono
-                  "
+                  className={
+                    theme === "dark"
+                      ? "mt-3 flex items-center justify-between gap-3 rounded-xl border border-red-300/20 bg-red-400/[0.05] px-3 py-2 text-[9px] text-red-200 font-mono"
+                      : "mt-3 flex items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[9px] text-red-700 font-mono"
+                  }
                 >
                   <span>{characterActionError}</span>
-
                   <button
                     type="button"
                     onClick={() => setCharacterActionError(null)}
-                    aria-label="Cerrar mensaje"
-                    className="
-                      shrink-0
-                      rounded-md
-                      px-2
-                      py-1
-                      text-red-200/70
-                      transition
-                      hover:bg-red-400/10
-                      hover:text-red-100
-                    "
+                    aria-label="Cerrar error"
                   >
-                    ×
+                    <X size={13} />
                   </button>
                 </div>
               )}
 
-              <div
-                className="
-                  mt-4
-                  grid
-                  grid-cols-2
-                  gap-3
-                  sm:grid-cols-4
-                  xl:grid-cols-8
-                "
-              >
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                 {characters.map((character) => {
-                  const selected =
-                    character.id === selectedCharacterId;
-
-                  const unlocked = unlockedCharacterIds.includes(
-                    character.id,
-                  );
+                  const unlocked =
+                    unlockedCharacterIds.includes(character.id);
+                  const equipped =
+                    selectedCharacterId === character.id;
 
                   const catalogCharacter =
                     characterCatalog.find(
@@ -1605,1498 +1035,686 @@ export default function PerfilPage() {
                     <button
                       key={character.id}
                       type="button"
+                      disabled={characterActionLoading}
                       onClick={() => {
                         if (unlocked) {
-                          changeCharacter(character.id);
-                          return;
+                          void changeCharacter(character.id);
+                        } else {
+                          setCharacterActionError(null);
+                          setPurchaseModalCharacterId(character.id);
                         }
-
-                        openPurchaseModal(character.id);
                       }}
-                      className={`
-                        group
-                        relative
-                        overflow-hidden
-                        rounded-xl
-                        border
-                        p-2
-                        text-left
-                        transition-all
-                        ${
-                          selected
-                            ? "border-yellow-400 bg-yellow-400/[0.06] shadow-[0_0_20px_rgba(250,204,21,.12)]"
-                            : unlocked
-                              ? "border-white/10 bg-[#07182c]/80 hover:border-fuchsia-400/40"
-                              : "border-white/[0.06] bg-[#03101f]/60 opacity-50"
-                        }
-                      `}
+                      className={
+                        equipped
+                          ? theme === "dark"
+                            ? "rounded-2xl border border-emerald-300/50 bg-emerald-400/[0.05] p-3 text-left"
+                            : "rounded-2xl border border-emerald-400 bg-emerald-50 p-3 text-left"
+                          : theme === "dark"
+                            ? "rounded-2xl border border-white/8 bg-white/[0.02] p-3 text-left transition hover:border-violet-300/30 hover:bg-white/[0.04]"
+                            : "rounded-2xl border border-black/7 bg-[#fbfcfb] p-3 text-left transition hover:border-emerald-300/45 hover:bg-emerald-50"
+                      }
                     >
-                      {selected && (
-                        <span
-                          className="
-                            absolute
-                            left-2
-                            top-2
-                            z-10
-                            rounded-md
-                            bg-yellow-400
-                            px-2
-                            py-1
-                            text-[7px]
-                            font-black
-                            text-black
-                            font-mono
-                          "
-                        >
-                          EQUIPADO
-                        </span>
-                      )}
-
                       <div
-                        className="
-                          relative
-                          aspect-[3/4]
-                          overflow-hidden
-                          rounded-lg
-                          bg-black/20
-                        "
+                        className={
+                          theme === "dark"
+                            ? "relative flex h-[165px] items-end justify-center overflow-hidden rounded-xl bg-[radial-gradient(circle_at_50%_25%,rgba(168,85,247,.16),transparent_48%),#0b0712]"
+                            : "relative flex h-[165px] items-end justify-center overflow-hidden rounded-xl bg-[radial-gradient(circle_at_50%_25%,rgba(34,197,94,.12),transparent_48%),#eef5ef]"
+                        }
                       >
-                        {/*
-                         * IMPORTANTE:
-                         *
-                         * Aquí SOLO avatar.
-                         * Nunca profile.
-                         */}
+                        {!unlocked && (
+                          <span className="absolute right-2 top-2 z-20 flex h-7 w-7 items-center justify-center rounded-lg border border-white/10 bg-black/25">
+                            <Lock size={13} className="text-white/60" />
+                          </span>
+                        )}
 
                         <Image
                           src={character.avatar}
                           alt={character.name}
-                          fill
-                          sizes="150px"
-                          className="
-                            object-contain
-                            transition
-                            duration-300
-                            group-hover:scale-105
-                          "
+                          width={300}
+                          height={300}
+                          className={
+                            unlocked
+                              ? "max-h-[150px] w-auto object-contain"
+                              : "max-h-[150px] w-auto object-contain opacity-45 grayscale"
+                          }
                         />
                       </div>
 
-                      <div className="mt-2 px-1 pb-1">
-                        <p
-                          className="
-                            truncate
-                            text-[12px]
-                            font-black
-                            font-mono
-                          "
-                        >
-                          {character.name}
-                        </p>
+                      <div className="mt-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="truncate text-sm font-black font-mono">
+                            {character.name}
+                          </h3>
 
-                        <p
-                          className="
-                            mt-1
-                            line-clamp-2
-                            text-[9px]
-                            leading-tight
-                            text-white/50
-                            font-mono
-                          "
-                        >
+                          {equipped && (
+                            <span className="rounded-full bg-emerald-400 px-2 py-1 text-[7px] font-black text-[#07130d] font-mono">
+                              EQUIPADO
+                            </span>
+                          )}
+                        </div>
+
+                        <p className={"mt-1 line-clamp-2 text-[8px] leading-4 " + muted + " font-mono"}>
                           {character.description}
                         </p>
 
-                        {!unlocked && (
-                          <span
-                            className="
-                              mt-2
-                              inline-flex
-                              items-center
-                              rounded-md
-                              border
-                              border-yellow-400/20
-                              bg-yellow-400/[0.06]
-                              px-2
-                              py-1
-                              text-[8px]
-                              font-black
-                              text-yellow-300
-                              font-mono
-                            "
-                          >
-                            🪙 {catalogCharacter?.price_coins ?? "—"}
-                          </span>
-                        )}
+                        <div className="mt-3 flex items-center justify-between gap-2">
+                          {!unlocked && catalogCharacter ? (
+                            <span className="inline-flex items-center gap-1 rounded-lg border border-yellow-300/20 bg-yellow-300/[0.05] px-2 py-1 text-[8px] font-black text-yellow-200 font-mono">
+                              <Coins size={10} />
+                              {formatNumber(
+                                catalogCharacter.price_coins,
+                              )}
+                            </span>
+                          ) : (
+                            <span className={"text-[8px] " + muted + " font-mono"}>
+                              Disponible
+                            </span>
+                          )}
+
+                          {catalogCharacter?.xp_bonus_percent ? (
+                            <span className="text-[8px] font-black text-cyan-300 font-mono">
+                              +{catalogCharacter.xp_bonus_percent}% XP
+                            </span>
+                          ) : catalogCharacter?.coin_bonus_percent ? (
+                            <span className="text-[8px] font-black text-yellow-300 font-mono">
+                              +{catalogCharacter.coin_bonus_percent}% 🪙
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                     </button>
                   );
                 })}
-
-                {/*
-                 * BLOQUEADOS
-                 */}
-
-                {Array.from({
-                  length: lockedCharacters,
-                }).map((_, index) => (
-                  <div
-                    key={`locked-${index}`}
-                    className="
-                      relative
-                      overflow-hidden
-                      rounded-xl
-                      border
-                      border-white/[0.06]
-                      bg-[#03101f]/75
-                      p-2
-                    "
-                  >
-                    <div
-                      className="
-                        relative
-                        flex
-                        aspect-[3/4]
-                        items-center
-                        justify-center
-                        rounded-lg
-                        border
-                        border-white/[0.04]
-                        bg-black/10
-                      "
-                    >
-                      <div
-                        className="
-                          flex
-                          h-10
-                          w-10
-                          items-center
-                          justify-center
-                          rounded-full
-                          border
-                          border-white/10
-                          text-white/20
-                        "
-                      >
-                        <span
-                          className="
-                            text-xl
-                            font-black
-                            font-mono
-                          "
-                        >
-                          ?
-                        </span>
-                      </div>
-
-                      <Lock
-                        size={11}
-                        className="
-                          absolute
-                          bottom-2
-                          right-2
-                          text-white/20
-                        "
-                      />
-                    </div>
-
-                    <div className="px-1 pb-1 pt-2">
-                      <p
-                        className="
-                          text-[10px]
-                          font-black
-                          text-white/25
-                          font-mono
-                        "
-                      >
-                        ???
-                      </p>
-
-                      <p
-                        className="
-                          text-[8px]
-                          text-white/20
-                          font-mono
-                        "
-                      >
-                        Próximamente
-                      </p>
-                    </div>
-                  </div>
-                ))}
               </div>
             </section>
 
-            {/*
-             * ==================================================
-             * INSIGNIAS
-             * ==================================================
-             */}
+            <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+              <section className={"rounded-2xl border " + surface + " p-4"}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={"text-[8px] font-black uppercase tracking-[0.14em] " + accent + " font-mono"}>
+                      Recompensas
+                    </p>
 
-            <section
-              className="
-                rounded-2xl
-                border
-                border-white/15
-                bg-[#061a31]/90
-                p-5
-                backdrop-blur-md
-              "
-            >
-              <div
-                className="
-                  flex
-                  items-start
-                  justify-between
-                  gap-3
-                "
-              >
-                <div>
-                  <h2
-                    className="
-                      text-xl
-                      font-black
-                      font-mono
-                    "
-                  >
-                    INSIGNIAS
-                  </h2>
+                    <h2 className="mt-1 text-lg font-black font-mono">
+                      Misión del día
+                    </h2>
+                  </div>
 
-                  <p
-                    className="
-                      mt-1
-                      text-[11px]
-                      text-white/55
-                      font-mono
-                    "
-                  >
-                    Colecciona logros y muestra tus
-                    mejores insignias.
-                  </p>
+                  <Flame size={18} className="text-orange-300" />
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setAllBadgesOpen(true)
-                  }
-                  className="
-                    inline-flex
-                    items-center
-                    gap-1
-                    rounded-lg
-                    border
-                    border-fuchsia-400/60
-                    bg-fuchsia-400/[0.06]
-                    px-4
-                    py-2
-                    text-[10px]
-                    font-bold
-                    text-white
-                    transition
-                    hover:bg-fuchsia-400/15
-                    font-mono
-                  "
-                >
-                  Ver más insignias
+                <p className={"mt-3 text-[9px] " + muted + " font-mono"}>
+                  Completa 3 actividades hoy y obtén:
+                </p>
 
-                  <ChevronRight size={13} />
-                </button>
-              </div>
+                <div className="mt-3 flex gap-2">
+                  <span
+                    className={
+                      theme === "dark"
+                        ? "rounded-lg border border-violet-300/15 bg-violet-400/[0.05] px-3 py-2 text-[9px] font-black text-violet-200 font-mono"
+                        : "rounded-lg border border-emerald-300/30 bg-emerald-50 px-3 py-2 text-[9px] font-black text-emerald-700 font-mono"
+                    }
+                  >
+                    +150 XP
+                  </span>
 
-              <div
-                className="
-                  mt-4
-                  grid
-                  grid-cols-2
-                  gap-3
-                  sm:grid-cols-4
-                "
-              >
-                {selectedBadges.map(
-                  (badge, index) => (
-                    <button
-                      key={`main-badge-${index}`}
-                      type="button"
-                      onClick={() =>
-                        openBadgeSelector(index)
+                  <span className="rounded-lg border border-yellow-300/20 bg-yellow-300/[0.04] px-3 py-2 text-[9px] font-black text-yellow-200 font-mono">
+                    +100 🪙
+                  </span>
+                </div>
+
+                <div className="mt-4">
+                  <div className="flex items-center justify-between">
+                    <span className={"text-[8px] " + muted + " font-mono"}>
+                      Progreso
+                    </span>
+                    <span className="text-[8px] font-black font-mono">
+                      2/3
+                    </span>
+                  </div>
+
+                  <div
+                    className={
+                      theme === "dark"
+                        ? "mt-2 h-2 overflow-hidden rounded-full bg-white/10"
+                        : "mt-2 h-2 overflow-hidden rounded-full bg-black/8"
+                    }
+                  >
+                    <div
+                      className={
+                        theme === "dark"
+                          ? "h-full w-2/3 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400"
+                          : "h-full w-2/3 rounded-full bg-gradient-to-r from-emerald-400 to-lime-400"
                       }
-                      className="
-                        group
-                        relative
-                        flex
-                        min-h-[145px]
-                        items-center
-                        justify-center
-                        overflow-hidden
-                        rounded-xl
-                        border
-                        border-white/10
-                        bg-gradient-to-b
-                        from-[#0b233c]
-                        to-[#061426]
-                        transition
-                        hover:border-fuchsia-400/40
-                      "
-                    >
-                      {badge ? (
-                        <>
-                          <Image
-                            src={badge.image}
-                            alt={badge.name}
-                            width={150}
-                            height={150}
-                            className="
-                              h-[100px]
-                              w-[100px]
-                              object-contain
-                              transition
-                              group-hover:scale-105
-                            "
-                          />
+                    />
+                  </div>
+                </div>
 
-                          <span
-                            className="
-                              absolute
-                              bottom-2
-                              left-0
-                              right-0
-                              text-center
-                              text-[9px]
-                              font-bold
-                              text-white/45
-                              font-mono
-                            "
-                          >
-                            {badge.name} ·{" "}
-                            {badge.level}
-                          </span>
-                        </>
-                      ) : (
-                        <div
-                          className="
-                            flex
-                            flex-col
-                            items-center
-                            gap-1
-                            text-white/30
-                          "
-                        >
-                          <Plus size={22} />
+                <div className="mt-4 flex items-center justify-between gap-3">
+                  <div>
+                    <p className={"text-[8px] " + muted + " font-mono"}>
+                      Siguiente
+                    </p>
+                    <p className="mt-1 text-[10px] font-black font-mono">
+                      Párrafos con P
+                    </p>
+                  </div>
 
-                          <span
-                            className="
-                              text-[9px]
-                              font-mono
-                            "
-                          >
-                            Agregar insignia
-                          </span>
-                        </div>
-                      )}
-                    </button>
-                  ),
-                )}
-              </div>
+                  <button
+                    type="button"
+                    disabled
+                    className={
+                      theme === "dark"
+                        ? "rounded-xl border border-violet-300/15 bg-violet-400/10 px-3 py-2 text-[8px] font-black uppercase tracking-[0.08em] text-violet-200 opacity-70 font-mono"
+                        : "rounded-xl border border-emerald-300/30 bg-emerald-50 px-3 py-2 text-[8px] font-black uppercase tracking-[0.08em] text-emerald-700 opacity-70 font-mono"
+                    }
+                  >
+                    Próximamente
+                  </button>
+                </div>
+              </section>
 
-              <p
-                className="
-                  mt-3
-                  text-center
-                  text-[8px]
-                  text-white/25
-                  font-mono
-                "
+              <section
+                id="insignias"
+                className={"rounded-2xl border " + surface + " p-4"}
               >
-                Puedes mostrar hasta 4 insignias
-                junto a tu nombre.
-              </p>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className={"text-[8px] font-black uppercase tracking-[0.14em] " + accent + " font-mono"}>
+                      Colección
+                    </p>
+
+                    <h2 className="mt-1 text-lg font-black font-mono">
+                      Mi colección
+                    </h2>
+
+                    <p className={"mt-1 text-[9px] " + muted + " font-mono"}>
+                      Insignias agrupadas por colección.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCollectionModalOpen(true)}
+                    className={
+                      theme === "dark"
+                        ? "inline-flex items-center gap-1 text-[8px] font-black text-violet-200 font-mono"
+                        : "inline-flex items-center gap-1 text-[8px] font-black text-emerald-700 font-mono"
+                    }
+                  >
+                    Ver colección
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {collectionGroups.map((group) => {
+                    const unlockedCount = group.items.filter((badge) =>
+                      unlockedBadgeIds.includes(badge.id),
+                    ).length;
+
+                    const cover = group.items[0];
+
+                    return (
+                      <div
+                        key={group.id}
+                        className={
+                          theme === "dark"
+                            ? "rounded-xl border border-white/8 bg-white/[0.02] p-2.5"
+                            : "rounded-xl border border-black/7 bg-[#fbfcfb] p-2.5"
+                        }
+                      >
+                        <div className="flex h-[82px] items-center justify-center">
+                          <Image
+                            src={cover.image}
+                            alt={group.label}
+                            width={90}
+                            height={90}
+                            className={
+                              unlockedCount > 0
+                                ? "h-[70px] w-[70px] object-contain"
+                                : "h-[70px] w-[70px] object-contain opacity-25 grayscale"
+                            }
+                          />
+                        </div>
+
+                        <p className="truncate text-[9px] font-black font-mono">
+                          {group.icon} {group.label}
+                        </p>
+                        <p className={"mt-0.5 text-[8px] " + muted + " font-mono"}>
+                          {unlockedCount}/{group.items.length}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
             </section>
           </section>
         </div>
       </div>
 
-      {/*
-       * ========================================================
-       * MODAL — DESBLOQUEAR PERSONAJE
-       * ========================================================
-       */}
+      {rankModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setRankModalOpen(false);
+            }
+          }}
+        >
+          <div
+            className={
+              theme === "dark"
+                ? "max-h-[86vh] w-full max-w-[860px] overflow-hidden rounded-2xl border border-violet-300/20 bg-[#10091a]"
+                : "max-h-[86vh] w-full max-w-[860px] overflow-hidden rounded-2xl border border-black/10 bg-white"
+            }
+          >
+            <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+              <div>
+                <p className={"text-[8px] font-black uppercase tracking-[0.12em] " + accent + " font-mono"}>
+                  Progresión
+                </p>
+                <h3 className="mt-1 text-xl font-black font-mono">
+                  Rangos PeakScore
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setRankModalOpen(false)}
+                className="rounded-lg p-2 text-white/50 hover:bg-white/5 hover:text-white"
+                aria-label="Cerrar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="max-h-[72vh] overflow-y-auto p-5">
+              <div
+                className={
+                  theme === "dark"
+                    ? "rounded-xl border border-violet-300/15 bg-violet-400/[0.03] p-4"
+                    : "rounded-xl border border-emerald-300/30 bg-emerald-50 p-4"
+                }
+              >
+                <p className="text-[10px] font-black font-mono">
+                  Renacer · reinicio mensual
+                </p>
+
+                <p className={"mt-1 text-[9px] leading-4 " + muted + " font-mono"}>
+                  Esta tarjeta deja preparada la experiencia de temporada. Después del reinicio, el jugador partirá desde Renacer y avanzará por los rangos definidos de PeakScore. La automatización mensual se conectará más adelante.
+                </p>
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-xl border border-white/8">
+                {ranks.map((rank) => {
+                  const active = rank.id === currentRank.id;
+
+                  return (
+                    <div
+                      key={rank.id}
+                      className={
+                        active
+                          ? theme === "dark"
+                            ? "grid grid-cols-[1fr_.9fr_1.3fr] gap-3 border-b border-white/8 bg-violet-500/[0.08] px-4 py-3"
+                            : "grid grid-cols-[1fr_.9fr_1.3fr] gap-3 border-b border-black/7 bg-emerald-50 px-4 py-3"
+                          : theme === "dark"
+                            ? "grid grid-cols-[1fr_.9fr_1.3fr] gap-3 border-b border-white/8 px-4 py-3"
+                            : "grid grid-cols-[1fr_.9fr_1.3fr] gap-3 border-b border-black/7 px-4 py-3"
+                      }
+                    >
+                      <div className="flex items-center gap-2">
+                        <span>{rankIcons[rank.id]}</span>
+                        <span className="text-[9px] font-black font-mono">
+                          {rank.name}
+                        </span>
+                      </div>
+
+                      <span className="text-right text-[9px] font-black font-mono">
+                        {rank.maxXp === null
+                          ? formatNumber(rank.minXp) + "+"
+                          : formatNumber(rank.minXp) +
+                            " – " +
+                            formatNumber(rank.maxXp)}
+                      </span>
+
+                      <span className={"text-[8px] " + muted + " font-mono"}>
+                        {rank.identity}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {collectionModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setCollectionModalOpen(false);
+            }
+          }}
+        >
+          <div
+            className={
+              theme === "dark"
+                ? "max-h-[86vh] w-full max-w-[980px] overflow-hidden rounded-2xl border border-violet-300/20 bg-[#10091a]"
+                : "max-h-[86vh] w-full max-w-[980px] overflow-hidden rounded-2xl border border-black/10 bg-white"
+            }
+          >
+            <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+              <div>
+                <p className={"text-[8px] font-black uppercase tracking-[0.12em] " + accent + " font-mono"}>
+                  Mi colección
+                </p>
+                <h3 className="mt-1 text-xl font-black font-mono">
+                  Biblioteca de insignias
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCollectionModalOpen(false)}
+                className="rounded-lg p-2 text-white/50 hover:bg-white/5 hover:text-white"
+                aria-label="Cerrar"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="max-h-[72vh] overflow-y-auto p-5">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {badges.map((badge) => {
+                  const unlocked = unlockedBadgeIds.includes(badge.id);
+
+                  return (
+                    <div
+                      key={badge.id}
+                      className={
+                        theme === "dark"
+                          ? "rounded-2xl border border-white/8 bg-white/[0.02] p-3"
+                          : "rounded-2xl border border-black/7 bg-[#fbfcfb] p-3"
+                      }
+                    >
+                      <div
+                        className={
+                          theme === "dark"
+                            ? "relative flex h-[175px] items-center justify-center rounded-xl bg-[#0c0815]"
+                            : "relative flex h-[175px] items-center justify-center rounded-xl bg-[#eef5ef]"
+                        }
+                      >
+                        <Image
+                          src={badge.image}
+                          alt={badge.name}
+                          width={180}
+                          height={180}
+                          className={
+                            unlocked
+                              ? "h-[145px] w-[145px] object-contain"
+                              : "h-[145px] w-[145px] object-contain opacity-20 grayscale"
+                          }
+                        />
+
+                        {!unlocked && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/30">
+                              <Lock size={16} />
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex items-center justify-between gap-2">
+                        <div>
+                          <p className="text-[10px] font-black font-mono">
+                            {badge.name}
+                          </p>
+                          <p className={"mt-0.5 text-[8px] " + muted + " font-mono"}>
+                            {badge.level}
+                          </p>
+                        </div>
+
+                        <span
+                          className={
+                            unlocked
+                              ? "rounded-full bg-emerald-400 px-2 py-1 text-[7px] font-black text-[#07130d] font-mono"
+                              : "rounded-full border border-white/10 px-2 py-1 text-[7px] font-black text-white/30 font-mono"
+                          }
+                        >
+                          {unlocked ? "DESBLOQUEADA" : "BLOQUEADA"}
+                        </span>
+                      </div>
+
+                      <p className={"mt-2 text-[8px] leading-4 " + muted + " font-mono"}>
+                        {badge.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {purchaseModalCharacterId &&
-        (() => {
-          const visualCharacter = characters.find(
-            (character) => character.id === purchaseModalCharacterId,
-          );
-
-          const catalogCharacter = characterCatalog.find(
-            (character) => character.id === purchaseModalCharacterId,
-          );
-
-          if (!visualCharacter || !catalogCharacter) {
-            return null;
-          }
-
-          const balance = profileData?.coins ?? 0;
-          const price = catalogCharacter.price_coins;
-          const hasEnoughCoins = balance >= price;
-          const remainingCoins = Math.max(balance - price, 0);
-
-          return (
+        selectedPurchaseCharacter &&
+        selectedPurchaseCatalog && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+            onMouseDown={(event) => {
+              if (
+                event.target === event.currentTarget &&
+                !characterActionLoading
+              ) {
+                setPurchaseModalCharacterId(null);
+                setCharacterActionError(null);
+              }
+            }}
+          >
             <div
-              className="
-                fixed
-                inset-0
-                z-[60]
-                flex
-                items-center
-                justify-center
-                bg-[#010711]/80
-                p-4
-                backdrop-blur-md
-              "
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="purchase-character-title"
-              onMouseDown={(event) => {
-                if (
-                  event.target === event.currentTarget &&
-                  !characterActionLoading
-                ) {
-                  closePurchaseModal();
-                }
-              }}
+              className={
+                theme === "dark"
+                  ? "w-full max-w-[760px] overflow-hidden rounded-2xl border border-violet-300/20 bg-[#10091a]"
+                  : "w-full max-w-[760px] overflow-hidden rounded-2xl border border-black/10 bg-white"
+              }
             >
-              <div
-                className="
-                  relative
-                  w-full
-                  max-w-[760px]
-                  overflow-hidden
-                  rounded-[22px]
-                  border
-                  border-cyan-300/20
-                  bg-[#061326]
-                  shadow-[0_40px_140px_rgba(0,0,0,.75),0_0_80px_rgba(34,211,238,.10)]
-                "
-              >
-                <div
-                  aria-hidden="true"
-                  className="
-                    absolute
-                    inset-0
-                    bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,.14),transparent_34%),radial-gradient(circle_at_88%_85%,rgba(168,85,247,.12),transparent_32%)]
-                  "
-                />
+              <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+                <div>
+                  <p className={"text-[8px] font-black uppercase tracking-[0.12em] " + accent + " font-mono"}>
+                    Personaje
+                  </p>
+                  <h3 className="mt-1 text-xl font-black font-mono">
+                    {selectedPurchaseCharacter.name}
+                  </h3>
+                </div>
 
-                <div
-                  aria-hidden="true"
-                  className="
-                    absolute
-                    left-0
-                    right-0
-                    top-0
-                    h-px
-                    bg-gradient-to-r
-                    from-transparent
-                    via-cyan-300/80
-                    to-transparent
-                  "
-                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (characterActionLoading) return;
+                    setPurchaseModalCharacterId(null);
+                    setCharacterActionError(null);
+                  }}
+                  className="rounded-lg p-2 text-white/50 hover:bg-white/5 hover:text-white"
+                  aria-label="Cerrar"
+                >
+                  <X size={18} />
+                </button>
+              </div>
 
-                <div className="relative">
+              <div className="grid gap-4 p-5 md:grid-cols-[250px_1fr]">
+                <div
+                  className={
+                    theme === "dark"
+                      ? "flex min-h-[300px] items-end justify-center rounded-2xl border border-white/8 bg-[radial-gradient(circle_at_50%_28%,rgba(168,85,247,.16),transparent_48%),#0b0712] px-4 pt-4"
+                      : "flex min-h-[300px] items-end justify-center rounded-2xl border border-black/7 bg-[radial-gradient(circle_at_50%_28%,rgba(34,197,94,.12),transparent_48%),#eef5ef] px-4 pt-4"
+                  }
+                >
+                  <Image
+                    src={selectedPurchaseCharacter.avatar}
+                    alt={selectedPurchaseCharacter.name}
+                    width={420}
+                    height={420}
+                    className="max-h-[285px] w-auto object-contain"
+                  />
+                </div>
+
+                <div>
+                  <p className={"text-xs leading-5 " + muted + " font-mono"}>
+                    {selectedPurchaseCharacter.description}
+                  </p>
+
                   <div
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                      border-b
-                      border-white/10
-                      px-5
-                      py-4
-                      sm:px-7
-                    "
+                    className={
+                      theme === "dark"
+                        ? "mt-4 rounded-xl border border-white/8 bg-white/[0.02] p-4"
+                        : "mt-4 rounded-xl border border-black/7 bg-[#fbfcfb] p-4"
+                    }
                   >
-                    <div>
-                      <p
-                        className="
-                          text-[9px]
-                          font-black
-                          uppercase
-                          tracking-[0.18em]
-                          text-cyan-300/75
-                          font-mono
-                        "
-                      >
-                        PERSONAJE · LOCKED
-                      </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className={"text-[8px] uppercase tracking-[0.12em] " + muted + " font-mono"}>
+                          Precio
+                        </p>
 
-                      <h2
-                        id="purchase-character-title"
-                        className="
-                          mt-1
-                          text-2xl
-                          font-black
-                          uppercase
-                          tracking-[-0.03em]
-                          text-white
-                          font-mono
-                          sm:text-3xl
-                        "
-                      >
-                        Desbloquear
-                      </h2>
+                        <p className="mt-1 flex items-center gap-2 text-2xl font-black font-mono">
+                          <Coins size={20} className="text-yellow-300" />
+                          {formatNumber(purchasePrice)}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className={"text-[8px] uppercase tracking-[0.12em] " + muted + " font-mono"}>
+                          Tu saldo
+                        </p>
+
+                        <p className="mt-1 text-lg font-black font-mono">
+                          {formatNumber(profileData?.coins ?? 0)}
+                        </p>
+                      </div>
                     </div>
+
+                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                      {selectedPurchaseCatalog.xp_bonus_percent > 0 && (
+                        <div className="rounded-lg border border-cyan-300/20 bg-cyan-300/[0.04] px-3 py-2">
+                          <p className="text-[8px] font-black uppercase text-cyan-300 font-mono">
+                            Bonus XP
+                          </p>
+                          <p className="mt-1 text-sm font-black text-cyan-200 font-mono">
+                            +{selectedPurchaseCatalog.xp_bonus_percent}%
+                          </p>
+                        </div>
+                      )}
+
+                      {selectedPurchaseCatalog.coin_bonus_percent > 0 && (
+                        <div className="rounded-lg border border-yellow-300/20 bg-yellow-300/[0.04] px-3 py-2">
+                          <p className="text-[8px] font-black uppercase text-yellow-300 font-mono">
+                            Bonus monedas
+                          </p>
+                          <p className="mt-1 text-sm font-black text-yellow-200 font-mono">
+                            +{selectedPurchaseCatalog.coin_bonus_percent}%
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    className={
+                      hasEnoughCoins
+                        ? theme === "dark"
+                          ? "mt-4 rounded-xl border border-emerald-300/15 bg-emerald-400/[0.04] p-3"
+                          : "mt-4 rounded-xl border border-emerald-300/30 bg-emerald-50 p-3"
+                        : theme === "dark"
+                          ? "mt-4 rounded-xl border border-red-300/15 bg-red-400/[0.04] p-3"
+                          : "mt-4 rounded-xl border border-red-200 bg-red-50 p-3"
+                    }
+                  >
+                    <p className={hasEnoughCoins ? "text-[9px] font-black uppercase text-emerald-300 font-mono" : "text-[9px] font-black uppercase text-red-300 font-mono"}>
+                      {hasEnoughCoins ? "Saldo listo" : "Saldo insuficiente"}
+                    </p>
+
+                    <p className={"mt-1 text-[8px] leading-4 " + muted + " font-mono"}>
+                      {hasEnoughCoins
+                        ? "Después de comprarlo tendrás " +
+                          formatNumber(
+                            (profileData?.coins ?? 0) - purchasePrice,
+                          ) +
+                          " monedas."
+                        : "Te faltan " +
+                          formatNumber(
+                            purchasePrice - (profileData?.coins ?? 0),
+                          ) +
+                          " monedas."}
+                    </p>
+                  </div>
+
+                  {characterActionError && (
+                    <div className="mt-3 rounded-xl border border-red-300/20 bg-red-400/[0.05] p-3">
+                      <p className="text-[8px] text-red-200 font-mono">
+                        {characterActionError}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      disabled={
+                        characterActionLoading ||
+                        !hasEnoughCoins
+                      }
+                      onClick={async () => {
+                        const purchased =
+                          await purchaseCharacter(
+                            selectedPurchaseCharacter.id,
+                          );
+
+                        if (purchased) {
+                          setPurchaseModalCharacterId(null);
+                        }
+                      }}
+                      className={
+                        theme === "dark"
+                          ? "rounded-xl border border-violet-300/35 bg-violet-500 px-4 py-3 text-[9px] font-black uppercase tracking-[0.1em] text-white font-mono transition hover:bg-violet-400 disabled:opacity-35"
+                          : "rounded-xl border border-emerald-400 bg-emerald-500 px-4 py-3 text-[9px] font-black uppercase tracking-[0.1em] text-white font-mono transition hover:bg-emerald-600 disabled:opacity-35"
+                      }
+                    >
+                      {characterActionLoading
+                        ? "Desbloqueando..."
+                        : hasEnoughCoins
+                          ? "Desbloquear personaje"
+                          : "Necesitas más monedas"}
+                    </button>
 
                     <button
                       type="button"
-                      onClick={closePurchaseModal}
                       disabled={characterActionLoading}
-                      aria-label="Cerrar ventana"
-                      className="
-                        flex
-                        h-10
-                        w-10
-                        items-center
-                        justify-center
-                        rounded-lg
-                        border
-                        border-white/10
-                        bg-white/[0.03]
-                        text-white/50
-                        transition
-                        hover:border-white/20
-                        hover:bg-white/[0.06]
-                        hover:text-white
-                        disabled:cursor-not-allowed
-                        disabled:opacity-40
-                      "
+                      onClick={() => {
+                        setPurchaseModalCharacterId(null);
+                        setCharacterActionError(null);
+                      }}
+                      className={
+                        theme === "dark"
+                          ? "rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[9px] font-black uppercase tracking-[0.1em] text-white/55 font-mono"
+                          : "rounded-xl border border-black/8 bg-[#f7f9f7] px-4 py-3 text-[9px] font-black uppercase tracking-[0.1em] text-[#657168] font-mono"
+                      }
                     >
-                      <X size={18} />
+                      Volver
                     </button>
                   </div>
-
-                  <div
-                    className="
-                      grid
-                      gap-6
-                      p-5
-                      sm:p-7
-                      lg:grid-cols-[250px_1fr]
-                    "
-                  >
-                    <div
-                      className="
-                        relative
-                        overflow-hidden
-                        rounded-2xl
-                        border
-                        border-white/10
-                        bg-[#030b17]
-                      "
-                    >
-                      <div
-                        aria-hidden="true"
-                        className="
-                          absolute
-                          inset-0
-                          bg-[radial-gradient(circle_at_50%_30%,rgba(34,211,238,.16),transparent_45%)]
-                        "
-                      />
-
-                      <div
-                        className="
-                          relative
-                          flex
-                          min-h-[300px]
-                          items-end
-                          justify-center
-                          p-5
-                        "
-                      >
-                        <Image
-                          src={visualCharacter.avatar}
-                          alt={visualCharacter.name}
-                          width={270}
-                          height={340}
-                          className="
-                            relative
-                            z-10
-                            h-[290px]
-                            w-full
-                            object-contain
-                            drop-shadow-[0_20px_25px_rgba(0,0,0,.45)]
-                          "
-                        />
-                      </div>
-
-                      <div
-                        className="
-                          border-t
-                          border-white/10
-                          bg-black/20
-                          px-4
-                          py-3
-                        "
-                      >
-                        <p
-                          className="
-                            text-[8px]
-                            font-black
-                            uppercase
-                            tracking-[0.15em]
-                            text-cyan-300/70
-                            font-mono
-                          "
-                        >
-                          NUEVO PERSONAJE
-                        </p>
-
-                        <p
-                          className="
-                            mt-1
-                            text-xl
-                            font-black
-                            text-white
-                            font-mono
-                          "
-                        >
-                          {visualCharacter.name}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col">
-                      <p
-                        className="
-                          text-sm
-                          leading-6
-                          text-white/60
-                          font-sans
-                        "
-                      >
-                        {visualCharacter.description}
-                      </p>
-
-                      <div
-                        className="
-                          mt-6
-                          rounded-xl
-                          border
-                          border-white/10
-                          bg-black/15
-                          p-4
-                        "
-                      >
-                        <div
-                          className="
-                            flex
-                            items-center
-                            justify-between
-                            gap-4
-                          "
-                        >
-                          <div>
-                            <p
-                              className="
-                                text-[8px]
-                                font-black
-                                uppercase
-                                tracking-[0.14em]
-                                text-white/35
-                                font-mono
-                              "
-                            >
-                              PRECIO
-                            </p>
-
-                            <div className="mt-1 flex items-center gap-2">
-                              <Coins
-                                size={18}
-                                className="text-yellow-300"
-                              />
-
-                              <span
-                                className="
-                                  text-2xl
-                                  font-black
-                                  text-yellow-300
-                                  font-mono
-                                "
-                              >
-                                {price}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <p
-                              className="
-                                text-[8px]
-                                font-black
-                                uppercase
-                                tracking-[0.14em]
-                                text-white/35
-                                font-mono
-                              "
-                            >
-                              TU SALDO
-                            </p>
-
-                            <p
-                              className="
-                                mt-1
-                                text-lg
-                                font-black
-                                text-white
-                                font-mono
-                              "
-                            >
-                              🪙 {balance}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
-                          <div
-                            className={
-                              "h-full rounded-full transition-all duration-500 " +
-                              (hasEnoughCoins
-                                ? "bg-gradient-to-r from-cyan-400 to-violet-500"
-                                : "bg-red-400/60")
-                            }
-                            style={{
-                              width: `${Math.min(
-                                (balance / Math.max(price, 1)) * 100,
-                                100,
-                              )}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {(catalogCharacter.xp_bonus_percent > 0 ||
-                        catalogCharacter.coin_bonus_percent > 0) && (
-                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                          {catalogCharacter.xp_bonus_percent > 0 && (
-                            <div
-                              className="
-                                rounded-lg
-                                border
-                                border-cyan-300/15
-                                bg-cyan-300/[0.04]
-                                px-3
-                                py-2.5
-                              "
-                            >
-                              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-cyan-200/60 font-mono">
-                                BONO XP
-                              </p>
-
-                              <p className="mt-0.5 text-sm font-black text-cyan-200 font-mono">
-                                +{catalogCharacter.xp_bonus_percent}%
-                              </p>
-                            </div>
-                          )}
-
-                          {catalogCharacter.coin_bonus_percent > 0 && (
-                            <div
-                              className="
-                                rounded-lg
-                                border
-                                border-yellow-300/15
-                                bg-yellow-300/[0.04]
-                                px-3
-                                py-2.5
-                              "
-                            >
-                              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-yellow-200/60 font-mono">
-                                BONO MONEDAS
-                              </p>
-
-                              <p className="mt-0.5 text-sm font-black text-yellow-200 font-mono">
-                                +{catalogCharacter.coin_bonus_percent}%
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {!hasEnoughCoins ? (
-                        <div
-                          className="
-                            mt-4
-                            rounded-xl
-                            border
-                            border-red-300/20
-                            bg-red-400/[0.06]
-                            px-4
-                            py-3
-                          "
-                        >
-                          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-red-200 font-mono">
-                            SALDO INSUFICIENTE
-                          </p>
-
-                          <p className="mt-1 text-[9px] leading-4 text-red-100/60 font-mono">
-                            Te faltan {price - balance} monedas para desbloquear este personaje.
-                          </p>
-                        </div>
-                      ) : (
-                        <div
-                          className="
-                            mt-4
-                            rounded-xl
-                            border
-                            border-emerald-300/20
-                            bg-emerald-400/[0.05]
-                            px-4
-                            py-3
-                          "
-                        >
-                          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200 font-mono">
-                            SALDO LISTO
-                          </p>
-
-                          <p className="mt-1 text-[9px] leading-4 text-emerald-100/60 font-mono">
-                            Después de comprarlo tendrás {remainingCoins} monedas.
-                          </p>
-                        </div>
-                      )}
-
-                      {characterActionError && (
-                        <div
-                          role="alert"
-                          className="
-                            mt-4
-                            rounded-xl
-                            border
-                            border-red-300/20
-                            bg-red-400/[0.06]
-                            px-4
-                            py-3
-                          "
-                        >
-                          <p className="text-[9px] font-bold text-red-100 font-mono">
-                            {characterActionError}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="mt-auto pt-6">
-                        <button
-                          type="button"
-                          disabled={
-                            characterActionLoading ||
-                            !hasEnoughCoins
-                          }
-                          onClick={async () => {
-                            const purchased =
-                              await purchaseCharacter(
-                                purchaseModalCharacterId,
-                              );
-
-                            if (purchased) {
-                              setPurchaseModalCharacterId(null);
-                            }
-                          }}
-                          className="
-                            w-full
-                            rounded-xl
-                            border
-                            border-cyan-300/50
-                            bg-gradient-to-r
-                            from-cyan-400
-                            to-blue-500
-                            px-5
-                            py-3.5
-                            text-[11px]
-                            font-black
-                            uppercase
-                            tracking-[0.12em]
-                            text-[#02101c]
-                            font-mono
-                            shadow-[0_10px_30px_rgba(34,211,238,.20)]
-                            transition
-                            hover:-translate-y-0.5
-                            hover:shadow-[0_15px_40px_rgba(34,211,238,.28)]
-                            disabled:cursor-not-allowed
-                            disabled:opacity-40
-                            disabled:hover:translate-y-0
-                          "
-                        >
-                          {characterActionLoading
-                            ? "DESBLOQUEANDO..."
-                            : hasEnoughCoins
-                              ? "CONFIRMAR DESBLOQUEO"
-                              : "NECESITAS MÁS MONEDAS"}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={closePurchaseModal}
-                          disabled={characterActionLoading}
-                          className="
-                            mt-2
-                            w-full
-                            rounded-xl
-                            border
-                            border-white/10
-                            bg-white/[0.03]
-                            px-5
-                            py-2.5
-                            text-[9px]
-                            font-bold
-                            uppercase
-                            tracking-[0.12em]
-                            text-white/50
-                            font-mono
-                            transition
-                            hover:border-white/20
-                            hover:bg-white/[0.06]
-                            hover:text-white
-                            disabled:cursor-not-allowed
-                            disabled:opacity-40
-                          "
-                        >
-                          VOLVER
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })()}
-
-      {/*
-       * ========================================================
-       * MODAL — ELEGIR INSIGNIA
-       * ========================================================
-       */}
-
-      {badgeSelectorOpen && (
-        <div
-          className="
-            fixed
-            inset-0
-            z-50
-            flex
-            items-center
-            justify-center
-            bg-black/70
-            p-4
-            backdrop-blur-sm
-          "
-          onMouseDown={(event) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              setBadgeSelectorOpen(false);
-              setSelectedBadgeSlot(null);
-            }
-          }}
-        >
-          <div
-            className="
-              w-full
-              max-w-[700px]
-              overflow-hidden
-              rounded-2xl
-              border
-              border-white/15
-              bg-[#061426]
-              shadow-[0_30px_100px_rgba(0,0,0,.65)]
-            "
-          >
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                border-b
-                border-white/10
-                px-6
-                py-5
-              "
-            >
-              <div>
-                <h3
-                  className="
-                    text-xl
-                    font-black
-                    font-mono
-                  "
-                >
-                  Elegir insignia
-                </h3>
-
-                <p
-                  className="
-                    mt-1
-                    text-[10px]
-                    text-white/45
-                    font-mono
-                  "
-                >
-                  Selecciona la insignia que quieres
-                  mostrar.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setBadgeSelectorOpen(false);
-                  setSelectedBadgeSlot(null);
-                }}
-                className="
-                  rounded-lg
-                  p-2
-                  text-white/50
-                  hover:bg-white/5
-                  hover:text-white
-                "
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div
-              className="
-                grid
-                max-h-[65vh]
-                grid-cols-2
-                gap-3
-                overflow-y-auto
-                p-5
-                sm:grid-cols-3
-              "
-            >
-              {badges.map((badge) => (
-                <button
-                  key={badge.id}
-                  type="button"
-                  onClick={() =>
-                    equipBadge(badge.id)
-                  }
-                  className="
-                    group
-                    rounded-xl
-                    border
-                    border-white/10
-                    bg-[#081b30]
-                    p-4
-                    text-center
-                    transition
-                    hover:border-fuchsia-400/50
-                  "
-                >
-                  <Image
-                    src={badge.image}
-                    alt={badge.name}
-                    width={120}
-                    height={120}
-                    className="
-                      mx-auto
-                      h-[100px]
-                      w-[100px]
-                      object-contain
-                      transition
-                      group-hover:scale-105
-                    "
-                  />
-
-                  <p
-                    className="
-                      mt-2
-                      text-[11px]
-                      font-black
-                      font-mono
-                    "
-                  >
-                    {badge.name}
-                  </p>
-
-                  <span
-                    className="
-                      mt-1
-                      inline-flex
-                      rounded-full
-                      border
-                      border-white/10
-                      px-2
-                      py-1
-                      text-[8px]
-                      font-bold
-                      text-white/60
-                      font-mono
-                    "
-                  >
-                    {badge.level}
-                  </span>
-
-                  <p
-                    className="
-                      mt-2
-                      text-[9px]
-                      leading-tight
-                      text-white/40
-                      font-mono
-                    "
-                  >
-                    {badge.description}
-                  </p>
-                </button>
-              ))}
-            </div>
-
-            {selectedBadgeSlot !== null &&
-              equippedBadges[
-                selectedBadgeSlot
-              ] && (
-                <div
-                  className="
-                    border-t
-                    border-white/10
-                    px-5
-                    py-4
-                  "
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      removeBadge(
-                        selectedBadgeSlot,
-                      );
-
-                      setBadgeSelectorOpen(
-                        false,
-                      );
-
-                      setSelectedBadgeSlot(
-                        null,
-                      );
-                    }}
-                    className="
-                      w-full
-                      rounded-lg
-                      border
-                      border-red-400/20
-                      bg-red-400/[0.04]
-                      py-2.5
-                      text-[10px]
-                      font-bold
-                      text-red-300
-                      hover:bg-red-400/10
-                      font-mono
-                    "
-                  >
-                    Quitar insignia de este
-                    espacio
-                  </button>
-                </div>
-              )}
-          </div>
-        </div>
-      )}
-
-      {/*
-       * ========================================================
-       * MODAL — TODAS LAS INSIGNIAS
-       * ========================================================
-       */}
-
-      {allBadgesOpen && (
-        <div
-          className="
-            fixed
-            inset-0
-            z-50
-            flex
-            items-center
-            justify-center
-            bg-black/75
-            p-4
-            backdrop-blur-sm
-          "
-          onMouseDown={(event) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              setAllBadgesOpen(false);
-            }
-          }}
-        >
-          <div
-            className="
-              w-full
-              max-w-[900px]
-              overflow-hidden
-              rounded-2xl
-              border
-              border-white/15
-              bg-[#061426]
-              shadow-[0_30px_100px_rgba(0,0,0,.7)]
-            "
-          >
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                border-b
-                border-white/10
-                px-6
-                py-5
-              "
-            >
-              <div>
-                <h3
-                  className="
-                    text-xl
-                    font-black
-                    font-mono
-                  "
-                >
-                  Biblioteca de insignias
-                </h3>
-
-                <p
-                  className="
-                    mt-1
-                    text-[10px]
-                    text-white/45
-                    font-mono
-                  "
-                >
-                  Completa desafíos para desbloquear
-                  nuevas insignias.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setAllBadgesOpen(false)
-                }
-                className="
-                  rounded-lg
-                  p-2
-                  text-white/50
-                  hover:bg-white/5
-                  hover:text-white
-                "
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div
-              className="
-                grid
-                max-h-[70vh]
-                grid-cols-2
-                gap-4
-                overflow-y-auto
-                p-6
-                sm:grid-cols-3
-                lg:grid-cols-4
-              "
-            >
-              {badges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className="
-                    rounded-xl
-                    border
-                    border-white/10
-                    bg-gradient-to-b
-                    from-[#0b233c]
-                    to-[#061426]
-                    p-4
-                    text-center
-                  "
-                >
-                  <Image
-                    src={badge.image}
-                    alt={badge.name}
-                    width={140}
-                    height={140}
-                    className="
-                      mx-auto
-                      h-[120px]
-                      w-[120px]
-                      object-contain
-                    "
-                  />
-
-                  <p
-                    className="
-                      text-[11px]
-                      font-black
-                      font-mono
-                    "
-                  >
-                    {badge.name}
-                  </p>
-
-                  <span
-                    className="
-                      mt-1
-                      inline-flex
-                      rounded-full
-                      border
-                      border-white/10
-                      px-2
-                      py-1
-                      text-[8px]
-                      font-bold
-                      text-white/60
-                      font-mono
-                    "
-                  >
-                    {badge.level}
-                  </span>
-
-                  <p
-                    className="
-                      mt-2
-                      min-h-[30px]
-                      text-[9px]
-                      leading-tight
-                      text-white/40
-                      font-mono
-                    "
-                  >
-                    {badge.description}
-                  </p>
-
-                  <div className="mt-4">
-                    <div
-                      className="
-                        mb-1
-                        flex
-                        justify-between
-                        text-[8px]
-                        text-white/40
-                        font-mono
-                      "
-                    >
-                      <span>Progreso</span>
-
-                      <span>
-                        {badge.progress}/
-                        {badge.target}
-                      </span>
-                    </div>
-
-                    <div
-                      className="
-                        h-2
-                        overflow-hidden
-                        rounded-full
-                        bg-white/10
-                      "
-                    >
-                      <div
-                        className="
-                          h-full
-                          w-full
-                          rounded-full
-                          bg-gradient-to-r
-                          from-cyan-400
-                          to-violet-500
-                        "
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {Array.from({
-                length: 5,
-              }).map((_, index) => (
-                <div
-                  key={`future-badge-${index}`}
-                  className="
-                    rounded-xl
-                    border
-                    border-white/[0.06]
-                    bg-[#030b17]/60
-                    p-4
-                    text-center
-                  "
-                >
-                  <div
-                    className="
-                      mx-auto
-                      flex
-                      h-[120px]
-                      w-[120px]
-                      items-center
-                      justify-center
-                    "
-                  >
-                    <div
-                      className="
-                        flex
-                        h-16
-                        w-16
-                        items-center
-                        justify-center
-                        rounded-full
-                        border
-                        border-white/10
-                        text-3xl
-                        font-black
-                        text-white/20
-                        font-mono
-                      "
-                    >
-                      ?
-                    </div>
-                  </div>
-
-                  <p
-                    className="
-                      text-[11px]
-                      font-black
-                      text-white/30
-                      font-mono
-                    "
-                  >
-                    PRÓXIMAMENTE
-                  </p>
-
-                  <p
-                    className="
-                      mt-2
-                      text-[9px]
-                      text-white/20
-                      font-mono
-                    "
-                  >
-                    Sigue avanzando para descubrir
-                    esta insignia.
-                  </p>
-
-                  <Lock
-                    size={14}
-                    className="
-                      mx-auto
-                      mt-3
-                      text-white/20
-                    "
-                  />
-                </div>
-              ))}
             </div>
           </div>
-        </div>
-      )}
+        )}
     </main>
   );
 }

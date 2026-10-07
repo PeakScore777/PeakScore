@@ -100,14 +100,67 @@ export async function POST(request: Request) {
       );
 
       if (error) {
-        console.error(
-          "purchase_character error:",
-          error,
-        );
+        const rpcMessage =
+          typeof error.message === "string"
+            ? error.message
+            : "";
+
+        let reason:
+          | "INSUFFICIENT_COINS"
+          | "CHARACTER_ALREADY_OWNED"
+          | "CHARACTER_NOT_FOUND"
+          | "PROFILE_NOT_FOUND"
+          | "UNAUTHENTICATED"
+          | "INVALID_CHARACTER"
+          | "UNKNOWN" = "UNKNOWN";
+
+        if (rpcMessage.includes("INSUFFICIENT_COINS")) {
+          reason = "INSUFFICIENT_COINS";
+        } else if (
+          rpcMessage.includes("CHARACTER_ALREADY_OWNED")
+        ) {
+          reason = "CHARACTER_ALREADY_OWNED";
+        } else if (
+          rpcMessage.includes("CHARACTER_NOT_FOUND")
+        ) {
+          reason = "CHARACTER_NOT_FOUND";
+        } else if (
+          rpcMessage.includes("PROFILE_NOT_FOUND")
+        ) {
+          reason = "PROFILE_NOT_FOUND";
+        } else if (
+          rpcMessage.includes("UNAUTHENTICATED")
+        ) {
+          reason = "UNAUTHENTICATED";
+        } else if (
+          rpcMessage.includes("INVALID_CHARACTER")
+        ) {
+          reason = "INVALID_CHARACTER";
+        }
+
+        if (reason !== "UNKNOWN") {
+          console.warn(
+            "purchase_character rejected:",
+            reason,
+          );
+        } else {
+          console.error(
+            "purchase_character error:",
+            error,
+          );
+        }
+
+        const errorMessage =
+          reason === "INSUFFICIENT_COINS"
+            ? "No tienes suficientes monedas."
+            : reason === "CHARACTER_ALREADY_OWNED"
+              ? "Ya tienes este personaje."
+              : "No se pudo comprar el personaje.";
 
         return NextResponse.json(
           {
-            error: "No se pudo comprar el personaje",
+            error: errorMessage,
+            reason,
             code: error.code ?? null,
           },
           {

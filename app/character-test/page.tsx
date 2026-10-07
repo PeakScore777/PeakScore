@@ -71,7 +71,7 @@ function SpriteLayer({
           style={{
             backgroundImage: `url("${src}")`,
             backgroundRepeat: "no-repeat",
-            backgroundSize: "600% auto",
+            backgroundSize: "600% 100%",
             backgroundPosition: `${(index / 5) * 100}% center`,
             imageRendering: "pixelated",
           }}

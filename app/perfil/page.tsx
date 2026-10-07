@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ChevronRight,
+  Coins,
   Lock,
   Moon,
   Pencil,
@@ -1319,9 +1320,32 @@ export default function PerfilPage() {
                 >
                   <span>Experiencia</span>
 
-                  <span className="font-bold text-white/80">
-                    {profileData?.xp ?? 0} XP
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-white/80">
+                      {profileData?.xp ?? 0} XP
+                    </span>
+
+                    <span
+                      className="
+                        inline-flex
+                        items-center
+                        gap-1.5
+                        rounded-md
+                        border
+                        border-yellow-400/20
+                        bg-yellow-400/[0.06]
+                        px-2
+                        py-1
+                        text-[9px]
+                        font-black
+                        text-yellow-300
+                        font-mono
+                      "
+                    >
+                      <Coins size={12} />
+                      {profileData?.coins ?? 0}
+                    </span>
+                  </div>
                 </div>
 
                 <div

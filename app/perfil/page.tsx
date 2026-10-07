@@ -933,130 +933,191 @@ export default function PerfilPage() {
 
           <aside
             className="
-              relative
-              min-h-[700px]
-              overflow-hidden
               rounded-2xl
               border
-              border-white/20
-              bg-[#061426]/70
-              shadow-[0_20px_70px_rgba(0,0,0,.45)]
-              backdrop-blur-[2px]
+              border-white/15
+              bg-[#061a31]/90
+              p-4
+              shadow-[0_15px_50px_rgba(0,0,0,.30)]
+              backdrop-blur-md
             "
           >
-            {/*
-             * BIOMA
-             */}
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-[0.14em] text-cyan-300/80 font-mono">
+                  Perfil
+                </p>
 
-            <div className="absolute inset-0">
-              <Image
-                key={selectedCharacter.biome}
-                src={selectedCharacter.biome}
-                alt={`${selectedCharacter.name} biome`}
-                fill
-                priority
-                sizes="320px"
+                <h2 className="mt-1 text-lg font-black text-white font-mono">
+                  TU PERSONAJE
+                </h2>
+              </div>
+
+              <span
                 className="
-                  object-cover
-                  object-center
+                  rounded-full
+                  border border-emerald-300/20
+                  bg-emerald-400/[0.06]
+                  px-2.5
+                  py-1
+                  text-[8px]
+                  font-black
+                  uppercase
+                  tracking-[0.08em]
+                  text-emerald-200
+                  font-mono
                 "
-              />
+              >
+                Equipado
+              </span>
+            </div>
 
+            <div
+              className="
+                relative
+                mt-4
+                overflow-hidden
+                rounded-xl
+                border border-white/10
+                bg-[radial-gradient(circle_at_50%_32%,rgba(34,211,238,.12),transparent_40%),linear-gradient(180deg,#0a2038_0%,#061426_100%)]
+                px-4
+                py-4
+              "
+            >
               <div
+                aria-hidden="true"
                 className="
+                  pointer-events-none
                   absolute
-                  inset-x-0
-                  bottom-0
-                  h-[34%]
-                  bg-gradient-to-t
-                  from-[#020814]
-                  via-[#020814]/65
+                  inset-x-8
+                  bottom-5
+                  h-px
+                  bg-gradient-to-r
+                  from-transparent
+                  via-cyan-300/25
                   to-transparent
                 "
               />
-            </div>
 
-            {/*
-             * PERSONAJE
-             *
-             * IMPORTANTE:
-             * Aquí SOLO usamos avatar.
-             *
-             * Nunca usamos profile.
-             */}
-
-            <div
-              className="
-                pointer-events-none
-                absolute
-                inset-x-0
-                top-0
-                bottom-[92px]
-                z-10
-              "
-            >
-              <img
-                key={selectedCharacter.avatar}
-                src={`${selectedCharacter.avatar}?character=${selectedCharacter.id}`}
+              <Image
+                key={selectedCharacter.profile}
+                src={selectedCharacter.profile}
                 alt={selectedCharacter.name}
-                className={`
-                  absolute
-                  left-1/2
-                  ${selectedCharacter.characterPosition}
-                  ${selectedCharacter.characterWidth}
-                  max-w-[270px]
-                  -translate-x-1/2
+                width={512}
+                height={512}
+                sizes="220px"
+                className="
+                  relative
+                  z-10
+                  mx-auto
+                  h-[190px]
+                  w-[190px]
                   object-contain
-                  drop-shadow-[0_14px_16px_rgba(0,0,0,.65)]
-                `}
+                  [image-rendering:pixelated]
+                  drop-shadow-[0_14px_18px_rgba(0,0,0,.45)]
+                "
               />
             </div>
 
-            {/*
-             * FOOTER
-             *
-             * Solo nombre + descripción.
-             */}
+            <div className="mt-4">
+              <h3
+                className="
+                  truncate
+                  text-lg
+                  font-black
+                  text-white
+                  font-mono
+                "
+              >
+                {selectedCharacter.name}
+              </h3>
 
-            <div
-              className="
-                absolute
-                inset-x-0
-                bottom-0
-                z-20
-                border-t
-                border-white/15
-                bg-[#020814]/92
-                px-4
-                py-4
-                backdrop-blur-md
-              "
-            >
-              <div className="min-w-0">
-                <h2
-                  className="
-                    truncate
-                    text-xl
-                    font-black
-                    font-mono
-                  "
-                >
-                  {selectedCharacter.name}
-                </h2>
+              <p
+                className="
+                  mt-1
+                  min-h-[34px]
+                  text-[10px]
+                  leading-4
+                  text-white/50
+                  font-mono
+                "
+              >
+                {selectedCharacter.description}
+              </p>
+            </div>
 
-                <p
-                  className="
-                    mt-1
-                    truncate
-                    text-[11px]
-                    text-white/60
-                    font-mono
-                  "
-                >
-                  {selectedCharacter.description}
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5">
+                <p className="text-[8px] font-black uppercase text-white/30 font-mono">
+                  Estado
+                </p>
+
+                <p className="mt-1 text-[10px] font-black text-emerald-200 font-mono">
+                  Equipado
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5">
+                <p className="text-[8px] font-black uppercase text-white/30 font-mono">
+                  Bonus
+                </p>
+
+                <p className="mt-1 text-[10px] font-black text-cyan-200 font-mono">
+                  {(() => {
+                    const catalogCharacter =
+                      characterCatalog.find(
+                        (item) =>
+                          item.id === selectedCharacter.id,
+                      );
+
+                    const xpBonus =
+                      catalogCharacter?.xp_bonus_percent ?? 0;
+                    const coinBonus =
+                      catalogCharacter?.coin_bonus_percent ?? 0;
+
+                    if (xpBonus > 0) {
+                      return `+${xpBonus}% XP`;
+                    }
+
+                    if (coinBonus > 0) {
+                      return `+${coinBonus}% monedas`;
+                    }
+
+                    return "Sin bonus";
+                  })()}
                 </p>
               </div>
             </div>
+
+            <a
+              href="#personajes"
+              className="
+                mt-3
+                flex
+                w-full
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                border border-cyan-300/25
+                bg-cyan-300/[0.05]
+                px-4
+                py-3
+                text-[9px]
+                font-black
+                uppercase
+                tracking-[0.12em]
+                text-cyan-200
+                font-mono
+                transition
+                hover:border-cyan-300/45
+                hover:bg-cyan-300/[0.09]
+                hover:text-white
+              "
+            >
+              Cambiar personaje
+              <ChevronRight size={13} />
+            </a>
           </aside>
 
           {/*

@@ -257,6 +257,9 @@ export default function PerfilPage() {
 
   const [allBadgesOpen, setAllBadgesOpen] = useState(false);
 
+  const [purchaseModalCharacterId, setPurchaseModalCharacterId] =
+    useState<string | null>(null);
+
   /*
    * ============================================================
    * PERSONAJE SELECCIONADO
@@ -465,7 +468,9 @@ export default function PerfilPage() {
     }
   };
 
-  const purchaseCharacter = async (id: string) => {
+  const purchaseCharacter = async (
+    id: string,
+  ): Promise<boolean> => {
     if (characterActionLoading) return;
 
     const character = characters.find(
@@ -528,6 +533,8 @@ export default function PerfilPage() {
             : current,
         );
       }
+
+      return true;
     } catch (error) {
       console.error(
         "Error comprando personaje:",
@@ -539,9 +546,31 @@ export default function PerfilPage() {
           ? error.message
           : "No se pudo comprar el personaje",
       );
+
+      return false;
     } finally {
       setCharacterActionLoading(false);
     }
+  };
+
+  const openPurchaseModal = (id: string) => {
+    if (characterActionLoading) return;
+
+    if (unlockedCharacterIds.includes(id)) return;
+
+    if (!characterCatalog.some((character) => character.id === id)) {
+      return;
+    }
+
+    setCharacterActionError(null);
+    setPurchaseModalCharacterId(id);
+  };
+
+  const closePurchaseModal = () => {
+    if (characterActionLoading) return;
+
+    setPurchaseModalCharacterId(null);
+    setCharacterActionError(null);
   };
 
   const openBadgeSelector = (slot: number) => {
@@ -1521,7 +1550,7 @@ export default function PerfilPage() {
                           return;
                         }
 
-                        purchaseCharacter(character.id);
+                        openPurchaseModal(character.id);
                       }}
                       className={`
                         group
@@ -1925,6 +1954,559 @@ export default function PerfilPage() {
           </section>
         </div>
       </div>
+
+      {/*
+       * ========================================================
+       * MODAL — DESBLOQUEAR PERSONAJE
+       * ========================================================
+       */}
+
+      {purchaseModalCharacterId &&
+        (() => {
+          const visualCharacter = characters.find(
+            (character) => character.id === purchaseModalCharacterId,
+          );
+
+          const catalogCharacter = characterCatalog.find(
+            (character) => character.id === purchaseModalCharacterId,
+          );
+
+          if (!visualCharacter || !catalogCharacter) {
+            return null;
+          }
+
+          const balance = profileData?.coins ?? 0;
+          const price = catalogCharacter.price_coins;
+          const hasEnoughCoins = balance >= price;
+          const remainingCoins = Math.max(balance - price, 0);
+
+          return (
+            <div
+              className="
+                fixed
+                inset-0
+                z-[60]
+                flex
+                items-center
+                justify-center
+                bg-[#010711]/80
+                p-4
+                backdrop-blur-md
+              "
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="purchase-character-title"
+              onMouseDown={(event) => {
+                if (
+                  event.target === event.currentTarget &&
+                  !characterActionLoading
+                ) {
+                  closePurchaseModal();
+                }
+              }}
+            >
+              <div
+                className="
+                  relative
+                  w-full
+                  max-w-[760px]
+                  overflow-hidden
+                  rounded-[22px]
+                  border
+                  border-cyan-300/20
+                  bg-[#061326]
+                  shadow-[0_40px_140px_rgba(0,0,0,.75),0_0_80px_rgba(34,211,238,.10)]
+                "
+              >
+                <div
+                  aria-hidden="true"
+                  className="
+                    absolute
+                    inset-0
+                    bg-[radial-gradient(circle_at_15%_10%,rgba(34,211,238,.14),transparent_34%),radial-gradient(circle_at_88%_85%,rgba(168,85,247,.12),transparent_32%)]
+                  "
+                />
+
+                <div
+                  aria-hidden="true"
+                  className="
+                    absolute
+                    left-0
+                    right-0
+                    top-0
+                    h-px
+                    bg-gradient-to-r
+                    from-transparent
+                    via-cyan-300/80
+                    to-transparent
+                  "
+                />
+
+                <div className="relative">
+                  <div
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                      border-b
+                      border-white/10
+                      px-5
+                      py-4
+                      sm:px-7
+                    "
+                  >
+                    <div>
+                      <p
+                        className="
+                          text-[9px]
+                          font-black
+                          uppercase
+                          tracking-[0.18em]
+                          text-cyan-300/75
+                          font-mono
+                        "
+                      >
+                        PERSONAJE · LOCKED
+                      </p>
+
+                      <h2
+                        id="purchase-character-title"
+                        className="
+                          mt-1
+                          text-2xl
+                          font-black
+                          uppercase
+                          tracking-[-0.03em]
+                          text-white
+                          font-mono
+                          sm:text-3xl
+                        "
+                      >
+                        Desbloquear
+                      </h2>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={closePurchaseModal}
+                      disabled={characterActionLoading}
+                      aria-label="Cerrar ventana"
+                      className="
+                        flex
+                        h-10
+                        w-10
+                        items-center
+                        justify-center
+                        rounded-lg
+                        border
+                        border-white/10
+                        bg-white/[0.03]
+                        text-white/50
+                        transition
+                        hover:border-white/20
+                        hover:bg-white/[0.06]
+                        hover:text-white
+                        disabled:cursor-not-allowed
+                        disabled:opacity-40
+                      "
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <div
+                    className="
+                      grid
+                      gap-6
+                      p-5
+                      sm:p-7
+                      lg:grid-cols-[250px_1fr]
+                    "
+                  >
+                    <div
+                      className="
+                        relative
+                        overflow-hidden
+                        rounded-2xl
+                        border
+                        border-white/10
+                        bg-[#030b17]
+                      "
+                    >
+                      <div
+                        aria-hidden="true"
+                        className="
+                          absolute
+                          inset-0
+                          bg-[radial-gradient(circle_at_50%_30%,rgba(34,211,238,.16),transparent_45%)]
+                        "
+                      />
+
+                      <div
+                        className="
+                          relative
+                          flex
+                          min-h-[300px]
+                          items-end
+                          justify-center
+                          p-5
+                        "
+                      >
+                        <Image
+                          src={visualCharacter.avatar}
+                          alt={visualCharacter.name}
+                          width={270}
+                          height={340}
+                          className="
+                            relative
+                            z-10
+                            h-[290px]
+                            w-full
+                            object-contain
+                            drop-shadow-[0_20px_25px_rgba(0,0,0,.45)]
+                          "
+                        />
+                      </div>
+
+                      <div
+                        className="
+                          border-t
+                          border-white/10
+                          bg-black/20
+                          px-4
+                          py-3
+                        "
+                      >
+                        <p
+                          className="
+                            text-[8px]
+                            font-black
+                            uppercase
+                            tracking-[0.15em]
+                            text-cyan-300/70
+                            font-mono
+                          "
+                        >
+                          NUEVO PERSONAJE
+                        </p>
+
+                        <p
+                          className="
+                            mt-1
+                            text-xl
+                            font-black
+                            text-white
+                            font-mono
+                          "
+                        >
+                          {visualCharacter.name}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col">
+                      <p
+                        className="
+                          text-sm
+                          leading-6
+                          text-white/60
+                          font-sans
+                        "
+                      >
+                        {visualCharacter.description}
+                      </p>
+
+                      <div
+                        className="
+                          mt-6
+                          rounded-xl
+                          border
+                          border-white/10
+                          bg-black/15
+                          p-4
+                        "
+                      >
+                        <div
+                          className="
+                            flex
+                            items-center
+                            justify-between
+                            gap-4
+                          "
+                        >
+                          <div>
+                            <p
+                              className="
+                                text-[8px]
+                                font-black
+                                uppercase
+                                tracking-[0.14em]
+                                text-white/35
+                                font-mono
+                              "
+                            >
+                              PRECIO
+                            </p>
+
+                            <div className="mt-1 flex items-center gap-2">
+                              <Coins
+                                size={18}
+                                className="text-yellow-300"
+                              />
+
+                              <span
+                                className="
+                                  text-2xl
+                                  font-black
+                                  text-yellow-300
+                                  font-mono
+                                "
+                              >
+                                {price}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="text-right">
+                            <p
+                              className="
+                                text-[8px]
+                                font-black
+                                uppercase
+                                tracking-[0.14em]
+                                text-white/35
+                                font-mono
+                              "
+                            >
+                              TU SALDO
+                            </p>
+
+                            <p
+                              className="
+                                mt-1
+                                text-lg
+                                font-black
+                                text-white
+                                font-mono
+                              "
+                            >
+                              🪙 {balance}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                          <div
+                            className={
+                              "h-full rounded-full transition-all duration-500 " +
+                              (hasEnoughCoins
+                                ? "bg-gradient-to-r from-cyan-400 to-violet-500"
+                                : "bg-red-400/60")
+                            }
+                            style={{
+                              width: `${Math.min(
+                                (balance / Math.max(price, 1)) * 100,
+                                100,
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {(catalogCharacter.xp_bonus_percent > 0 ||
+                        catalogCharacter.coin_bonus_percent > 0) && (
+                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                          {catalogCharacter.xp_bonus_percent > 0 && (
+                            <div
+                              className="
+                                rounded-lg
+                                border
+                                border-cyan-300/15
+                                bg-cyan-300/[0.04]
+                                px-3
+                                py-2.5
+                              "
+                            >
+                              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-cyan-200/60 font-mono">
+                                BONO XP
+                              </p>
+
+                              <p className="mt-0.5 text-sm font-black text-cyan-200 font-mono">
+                                +{catalogCharacter.xp_bonus_percent}%
+                              </p>
+                            </div>
+                          )}
+
+                          {catalogCharacter.coin_bonus_percent > 0 && (
+                            <div
+                              className="
+                                rounded-lg
+                                border
+                                border-yellow-300/15
+                                bg-yellow-300/[0.04]
+                                px-3
+                                py-2.5
+                              "
+                            >
+                              <p className="text-[8px] font-black uppercase tracking-[0.12em] text-yellow-200/60 font-mono">
+                                BONO MONEDAS
+                              </p>
+
+                              <p className="mt-0.5 text-sm font-black text-yellow-200 font-mono">
+                                +{catalogCharacter.coin_bonus_percent}%
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {!hasEnoughCoins ? (
+                        <div
+                          className="
+                            mt-4
+                            rounded-xl
+                            border
+                            border-red-300/20
+                            bg-red-400/[0.06]
+                            px-4
+                            py-3
+                          "
+                        >
+                          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-red-200 font-mono">
+                            SALDO INSUFICIENTE
+                          </p>
+
+                          <p className="mt-1 text-[9px] leading-4 text-red-100/60 font-mono">
+                            Te faltan {price - balance} monedas para desbloquear este personaje.
+                          </p>
+                        </div>
+                      ) : (
+                        <div
+                          className="
+                            mt-4
+                            rounded-xl
+                            border
+                            border-emerald-300/20
+                            bg-emerald-400/[0.05]
+                            px-4
+                            py-3
+                          "
+                        >
+                          <p className="text-[10px] font-black uppercase tracking-[0.12em] text-emerald-200 font-mono">
+                            SALDO LISTO
+                          </p>
+
+                          <p className="mt-1 text-[9px] leading-4 text-emerald-100/60 font-mono">
+                            Después de comprarlo tendrás {remainingCoins} monedas.
+                          </p>
+                        </div>
+                      )}
+
+                      {characterActionError && (
+                        <div
+                          role="alert"
+                          className="
+                            mt-4
+                            rounded-xl
+                            border
+                            border-red-300/20
+                            bg-red-400/[0.06]
+                            px-4
+                            py-3
+                          "
+                        >
+                          <p className="text-[9px] font-bold text-red-100 font-mono">
+                            {characterActionError}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="mt-auto pt-6">
+                        <button
+                          type="button"
+                          disabled={
+                            characterActionLoading ||
+                            !hasEnoughCoins
+                          }
+                          onClick={async () => {
+                            const purchased =
+                              await purchaseCharacter(
+                                purchaseModalCharacterId,
+                              );
+
+                            if (purchased) {
+                              setPurchaseModalCharacterId(null);
+                            }
+                          }}
+                          className="
+                            w-full
+                            rounded-xl
+                            border
+                            border-cyan-300/50
+                            bg-gradient-to-r
+                            from-cyan-400
+                            to-blue-500
+                            px-5
+                            py-3.5
+                            text-[11px]
+                            font-black
+                            uppercase
+                            tracking-[0.12em]
+                            text-[#02101c]
+                            font-mono
+                            shadow-[0_10px_30px_rgba(34,211,238,.20)]
+                            transition
+                            hover:-translate-y-0.5
+                            hover:shadow-[0_15px_40px_rgba(34,211,238,.28)]
+                            disabled:cursor-not-allowed
+                            disabled:opacity-40
+                            disabled:hover:translate-y-0
+                          "
+                        >
+                          {characterActionLoading
+                            ? "DESBLOQUEANDO..."
+                            : hasEnoughCoins
+                              ? "CONFIRMAR DESBLOQUEO"
+                              : "NECESITAS MÁS MONEDAS"}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={closePurchaseModal}
+                          disabled={characterActionLoading}
+                          className="
+                            mt-2
+                            w-full
+                            rounded-xl
+                            border
+                            border-white/10
+                            bg-white/[0.03]
+                            px-5
+                            py-2.5
+                            text-[9px]
+                            font-bold
+                            uppercase
+                            tracking-[0.12em]
+                            text-white/50
+                            font-mono
+                            transition
+                            hover:border-white/20
+                            hover:bg-white/[0.06]
+                            hover:text-white
+                            disabled:cursor-not-allowed
+                            disabled:opacity-40
+                          "
+                        >
+                          VOLVER
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       {/*
        * ========================================================

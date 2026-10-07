@@ -471,7 +471,7 @@ export default function PerfilPage() {
   const purchaseCharacter = async (
     id: string,
   ): Promise<boolean> => {
-    if (characterActionLoading) return;
+    if (characterActionLoading) return false;
 
     const character = characters.find(
       (item) => item.id === id,
@@ -481,10 +481,10 @@ export default function PerfilPage() {
       (item) => item.id === id,
     );
 
-    if (!character || !catalogCharacter) return;
+    if (!character || !catalogCharacter) return false;
 
     if (unlockedCharacterIds.includes(id)) {
-      return;
+      return false;
     }
 
     try {

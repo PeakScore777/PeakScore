@@ -2438,12 +2438,68 @@ function BugReportModal({
      endpoint, tabla ni bucket que no existan.
   ========================================================== */
 
-  const handleSubmit = (
+  const handleSubmit = async (
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
-    setSubmitted(true);
+    if (!description.trim()) {
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+
+      formData.append(
+        "description",
+        description.trim()
+      );
+
+      formData.append(
+        "pageUrl",
+        window.location.href
+      );
+
+      if (screenshot) {
+        formData.append(
+          "screenshot",
+          screenshot
+        );
+      }
+  
+      const response = await fetch(
+        "/api/bug-reports",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data?.success) {
+        throw new Error(
+          data?.error ||
+            "No pudimos enviar el reporte."
+        );
+      }
+
+      setSubmitted(true);
+
+      setDescription("");
+      setScreenshot(null);
+    } catch (error) {
+      console.error(
+        "[BugReport] Error enviando reporte:",
+        error
+      );
+  
+      alert(
+        error instanceof Error
+          ? error.message
+          : "No pudimos enviar el reporte."
+      );
+    }
   };
 
   return (
@@ -2607,7 +2663,7 @@ function BugReportModal({
                 }
               `}
             >
-              Reporte preparado
+              Reporte enviado
             </h3>
 
             <p
@@ -2624,10 +2680,8 @@ function BugReportModal({
                 }
               `}
             >
-              La interfaz está lista. La conexión
-              con el sistema de reportes se
-              conectará cuando tengamos el backend
-              correspondiente.
+              Tu reporte fue recibido correctamente.
+              Gracias por ayudarnos a mejorar PeakScore.
             </p>
 
             <button

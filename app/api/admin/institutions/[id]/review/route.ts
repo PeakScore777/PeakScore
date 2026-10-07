@@ -41,10 +41,25 @@ const TRANSITIONS: Record<
   },
 };
 
+const MAX_REASON_LENGTH = 1000;
+const MIN_REASON_LENGTH = 10;
+
 function isValidUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
     value
   );
+}
+
+function normalizeReason(value: unknown) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value
+    .normalize("NFC")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_REASON_LENGTH);
 }
 
 export async function POST(
@@ -59,24 +74,29 @@ export async function POST(
     if (!isValidUuid(id)) {
       return NextResponse.json(
         {
-          error: "Identificador de solicitud inválido.",
+          error:
+            "Identificador de solicitud inválido.",
         },
         { status: 400 }
       );
     }
 
     /*
-     * Protección básica contra solicitudes cross-origin.
+     * Protección básica contra solicitudes
+     * provenientes de otro origen.
      */
     const origin = request.headers.get("origin");
 
     if (origin) {
-      const requestOrigin = new URL(request.url).origin;
+      const requestOrigin = new URL(
+        request.url
+      ).origin;
 
       if (origin !== requestOrigin) {
         return NextResponse.json(
           {
-            error: "Origen no autorizado.",
+            error:
+              "Origen no autorizado.",
           },
           { status: 403 }
         );
@@ -84,19 +104,23 @@ export async function POST(
     }
 
     /*
-     * Autenticación mediante la sesión normal de Supabase.
+     * Autenticación mediante la sesión normal
+     * de Supabase.
      */
-    const supabase = await createClient();
+    const supabase =
+      await createClient();
 
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } =
+      await supabase.auth.getUser();
 
     if (userError || !user) {
       return NextResponse.json(
         {
-          error: "Debes iniciar sesión.",
+          error:
+            "Debes iniciar sesión.",
         },
         { status: 401 }
       );
@@ -104,39 +128,52 @@ export async function POST(
 
     /*
      * Autorización:
-     * solamente profiles.role = admin puede revisar instituciones.
+     * solamente profiles.role = admin.
      */
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+    const {
+      data: profile,
+      error: profileError,
+    } =
+      await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
 
     if (profileError) {
-      console.error("Error verificando rol administrativo.", {
-        userId: user.id,
-        errorCode: profileError.code ?? "UNKNOWN",
-      });
+      console.error(
+        "Error verificando rol administrativo.",
+        {
+          userId: user.id,
+          errorCode:
+            profileError.code ??
+            "UNKNOWN",
+        }
+      );
 
       return NextResponse.json(
         {
-          error: "No fue posible verificar los permisos.",
+          error:
+            "No fue posible verificar los permisos.",
         },
         { status: 500 }
       );
     }
 
-    if (profile?.role !== "admin") {
+    if (
+      profile?.role !== "admin"
+    ) {
       return NextResponse.json(
         {
-          error: "No tienes permisos para realizar esta acción.",
+          error:
+            "No tienes permisos para realizar esta acción.",
         },
         { status: 403 }
       );
     }
 
     /*
-     * Leer acción.
+     * Leer body.
      */
     let body: unknown;
 
@@ -145,12 +182,16 @@ export async function POST(
     } catch {
       return NextResponse.json(
         {
-          error: "Solicitud inválida.",
+          error:
+            "Solicitud inválida.",
         },
         { status: 400 }
       );
     }
 
+    /*
+     * Extraer action y reason de forma segura.
+     */
     const action =
       typeof body === "object" &&
       body !== null &&
@@ -159,38 +200,108 @@ export async function POST(
         ? body.action
         : null;
 
-    if (!action || !ALLOWED_ACTIONS.includes(action as ReviewAction)) {
+    const reason =
+      typeof body === "object" &&
+      body !== null &&
+      "reason" in body
+        ? normalizeReason(
+            body.reason
+          )
+        : "";
+
+    /*
+     * Validar acción.
+     */
+    if (
+      !action ||
+      !ALLOWED_ACTIONS.includes(
+        action as ReviewAction
+      )
+    ) {
       return NextResponse.json(
         {
-          error: "Acción de revisión no válida.",
+          error:
+            "Acción de revisión no válida.",
         },
         { status: 400 }
       );
     }
 
-    const reviewAction = action as ReviewAction;
-    const transition = TRANSITIONS[reviewAction];
+    const reviewAction =
+      action as ReviewAction;
+
+    const transition =
+      TRANSITIONS[reviewAction];
+
+    /*
+     * Las acciones que comunican una decisión
+     * al solicitante deben tener un motivo.
+     */
+    if (
+      reviewAction ===
+        "request_changes" ||
+      reviewAction === "reject"
+    ) {
+      if (
+        reason.length <
+        MIN_REASON_LENGTH
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Debes proporcionar un motivo de al menos 10 caracteres.",
+          },
+          { status: 400 }
+        );
+      }
+
+      if (
+        reason.length >
+        MAX_REASON_LENGTH
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "El motivo no puede superar los 1000 caracteres.",
+          },
+          { status: 400 }
+        );
+      }
+    }
 
     /*
      * Obtener estado actual.
      */
-    const { data: currentRequest, error: requestError } =
+    const {
+      data: currentRequest,
+      error: requestError,
+    } =
       await supabaseAdmin
-        .from("institution_verification_requests")
-        .select("id, verification_status")
+        .from(
+          "institution_verification_requests"
+        )
+        .select(
+          "id, verification_status"
+        )
         .eq("id", id)
         .maybeSingle();
 
     if (requestError) {
-      console.error("Error consultando solicitud institucional.", {
-        userId: user.id,
-        requestId: id,
-        errorCode: requestError.code ?? "UNKNOWN",
-      });
+      console.error(
+        "Error consultando solicitud institucional.",
+        {
+          userId: user.id,
+          requestId: id,
+          errorCode:
+            requestError.code ??
+            "UNKNOWN",
+        }
+      );
 
       return NextResponse.json(
         {
-          error: "No fue posible consultar la solicitud.",
+          error:
+            "No fue posible consultar la solicitud.",
         },
         { status: 500 }
       );
@@ -199,16 +310,20 @@ export async function POST(
     if (!currentRequest) {
       return NextResponse.json(
         {
-          error: "La solicitud no existe.",
+          error:
+            "La solicitud no existe.",
         },
         { status: 404 }
       );
     }
 
     /*
-     * Impedir transiciones arbitrarias.
+     * Impedir transiciones no permitidas.
      */
-    if (currentRequest.verification_status !== transition.from) {
+    if (
+      currentRequest.verification_status !==
+      transition.from
+    ) {
       return NextResponse.json(
         {
           error: `La solicitud está en estado "${currentRequest.verification_status}" y no puede realizar esta acción.`,
@@ -217,44 +332,94 @@ export async function POST(
       );
     }
 
+    const now =
+      new Date().toISOString();
+
     /*
-     * Actualización exclusivamente desde servidor
-     * utilizando service_role.
+     * Preparar actualización.
+     *
+     * reviewer_message se guarda solamente
+     * para acciones que requieren comunicar
+     * un motivo al solicitante.
      */
-    const { data: updatedRequest, error: updateError } =
+    const updatePayload = {
+      verification_status:
+        transition.to,
+
+      reviewed_at: now,
+
+      reviewed_by: user.id,
+
+      updated_at: now,
+
+      ...(reviewAction ===
+        "request_changes" ||
+      reviewAction === "reject"
+        ? {
+            reviewer_message:
+              reason,
+          }
+        : {}),
+    };
+
+    /*
+     * UPDATE server-side mediante
+     * service_role.
+     *
+     * El estado anterior forma parte del filtro
+     * para evitar sobrescribir una revisión
+     * concurrente.
+     */
+    const {
+      data: updatedRequest,
+      error: updateError,
+    } =
       await supabaseAdmin
-        .from("institution_verification_requests")
-        .update({
-          verification_status: transition.to,
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: user.id,
-          updated_at: new Date().toISOString(),
-        })
+        .from(
+          "institution_verification_requests"
+        )
+        .update(updatePayload)
         .eq("id", id)
-        .eq("verification_status", transition.from)
+        .eq(
+          "verification_status",
+          transition.from
+        )
         .select(
-          "id, institution_id, verification_status, reviewed_at, reviewed_by"
+          `
+            id,
+            institution_id,
+            verification_status,
+            reviewed_at,
+            reviewed_by,
+            reviewer_message
+          `
         )
         .maybeSingle();
 
     if (updateError) {
-      console.error("Error actualizando solicitud institucional.", {
-        userId: user.id,
-        requestId: id,
-        errorCode: updateError.code ?? "UNKNOWN",
-      });
+      console.error(
+        "Error actualizando solicitud institucional.",
+        {
+          userId: user.id,
+          requestId: id,
+          errorCode:
+            updateError.code ??
+            "UNKNOWN",
+        }
+      );
 
       return NextResponse.json(
         {
-          error: "No fue posible actualizar la solicitud.",
+          error:
+            "No fue posible actualizar la solicitud.",
         },
         { status: 500 }
       );
     }
 
     /*
-     * Si otra operación cambió el estado entre la lectura
-     * y el UPDATE, no sobrescribimos nada.
+     * Si otra revisión modificó el estado primero,
+     * no sobrescribimos nada.
      */
     if (!updatedRequest) {
       return NextResponse.json(
@@ -271,14 +436,20 @@ export async function POST(
       request: updatedRequest,
     });
   } catch (error) {
-    console.error("Error inesperado revisando institución.", {
-      error:
-        error instanceof Error ? error.name : "UNKNOWN_ERROR",
-    });
+    console.error(
+      "Error inesperado revisando institución.",
+      {
+        error:
+          error instanceof Error
+            ? error.name
+            : "UNKNOWN_ERROR",
+      }
+    );
 
     return NextResponse.json(
       {
-        error: "Ocurrió un error inesperado.",
+        error:
+          "Ocurrió un error inesperado.",
       },
       { status: 500 }
     );

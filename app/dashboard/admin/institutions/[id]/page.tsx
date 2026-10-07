@@ -68,6 +68,10 @@ type InstitutionVerificationRequest = {
     | string
     | null;
 
+  reviewer_message:
+    | string
+    | null;
+
   internal_review_notes:
     | string
     | null;
@@ -281,6 +285,7 @@ export default async function InstitutionRequestDetailPage(
         reviewed_at,
         reviewed_by,
         applicant_message,
+        reviewer_message,
         internal_review_notes,
         created_at,
         updated_at

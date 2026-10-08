@@ -1,19 +1,27 @@
-import "./globals.css";
 import type { Metadata } from "next";
+import { ReactNode } from "react";
+
+import GlobalNavbar from "@/components/layout/GlobalNavbar";
+
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "PeakScore",
-  description: "Plataforma profesional de preparación para el ICFES",
+  description: "Preparación ICFES",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: ReactNode;
+}) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <GlobalNavbar />
+
+        {children}
+      </body>
     </html>
   );
 }

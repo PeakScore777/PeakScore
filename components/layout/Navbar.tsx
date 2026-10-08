@@ -3,6 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Bell,
+  Bug,
+  ChevronDown,
+  Moon,
+  Sun,
+  Upload,
+  X,
+} from "lucide-react";
+import {
   useEffect,
   useMemo,
   useRef,
@@ -13,20 +22,6 @@ import {
 
 import { supabase } from "@/lib/supabase/browser";
 
-import {
-  Bell,
-  Bug,
-  ChevronDown,
-  Moon,
-  Sun,
-  Upload,
-  X,
-} from "lucide-react";
-
-/* ============================================================
-   TEMA
-============================================================ */
-
 export type GlobalTheme = "light" | "dark";
 
 type NavbarProps = {
@@ -34,14 +29,7 @@ type NavbarProps = {
   onThemeChange: (theme: GlobalTheme) => void;
 };
 
-/* ============================================================
-   TIPOS
-============================================================ */
-
-type DropdownName =
-  | "learn"
-  | "community"
-  | null;
+type DropdownName = "learn" | "community" | null;
 
 type ProfileData = {
   id: string;
@@ -53,27 +41,12 @@ type ProfileData = {
   selectedCharacter: string | null;
 };
 
-/* ============================================================
-   AVATARES DE PERSONAJES
-============================================================ */
-
 const characterAvatars: Record<string, string> = {
-  "peaky-nova":
-    "/avatars/photo_perfil/peaky-nova.png",
-
-  "peaky-nox":
-    "/avatars/photo_perfil/peaky-nox.png",
-
-  zyra:
-    "/avatars/photo_perfil/zyrap.png",
-
-  orby:
-    "/avatars/photo_perfil/orbyp.png",
+  "peaky-nova": "/avatars/photo_perfil/peaky-nova.png",
+  "peaky-nox": "/avatars/photo_perfil/peaky-nox.png",
+  zyra: "/avatars/photo_perfil/zyrap.png",
+  orby: "/avatars/photo_perfil/orbyp.png",
 };
-
-/* ============================================================
-   NAVBAR
-============================================================ */
 
 export default function Navbar({
   theme,
@@ -81,33 +54,15 @@ export default function Navbar({
 }: NavbarProps) {
   const isDark = theme === "dark";
 
-  const [openDropdown, setOpenDropdown] =
-    useState<DropdownName>(null);
+  const [openDropdown, setOpenDropdown] = useState<DropdownName>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [bugOpen, setBugOpen] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(false);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
 
-  const [profileOpen, setProfileOpen] =
-    useState(false);
-
-  const [mobileOpen, setMobileOpen] =
-    useState(false);
-
-  const [bugOpen, setBugOpen] =
-    useState(false);
-
-  const [checkingAuth, setCheckingAuth] =
-    useState(false);
-
-  const [profile, setProfile] =
-    useState<ProfileData | null>(null);
-
-  const dropdownRef =
-    useRef<HTMLDivElement | null>(null);
-
-  const profileRef =
-    useRef<HTMLDivElement | null>(null);
-
-  /* ==========================================================
-     CARGAR PERFIL
-  ========================================================== */
+  const navRef = useRef<HTMLDivElement | null>(null);
+  const profileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -125,13 +80,10 @@ export default function Navbar({
           return;
         }
 
-        const response = await fetch(
-          "/api/profile",
-          {
-            method: "GET",
-            cache: "no-store",
-          },
-        );
+        const response = await fetch("/api/profile", {
+          method: "GET",
+          cache: "no-store",
+        });
 
         if (!response.ok) {
           setProfile(null);
@@ -140,33 +92,19 @@ export default function Navbar({
 
         const data = await response.json();
 
-        if (!mounted) return;
+        if (!mounted || !data?.profile) return;
 
-        if (data?.profile) {
-          setProfile({
-            id: data.profile.id,
-            fullName:
-              data.profile.fullName ?? null,
-            email:
-              data.profile.email ??
-              session.user.email ??
-              null,
-            avatarUrl:
-              data.profile.avatarUrl ?? null,
-            streak:
-              Number(data.profile.streak ?? 0),
-            coins:
-              Number(data.profile.coins ?? 0),
-            selectedCharacter:
-              data.profile.selectedCharacter ??
-              null,
-          });
-        }
+        setProfile({
+          id: data.profile.id,
+          fullName: data.profile.fullName ?? null,
+          email: data.profile.email ?? session.user.email ?? null,
+          avatarUrl: data.profile.avatarUrl ?? null,
+          streak: Number(data.profile.streak ?? 0),
+          coins: Number(data.profile.coins ?? 0),
+          selectedCharacter: data.profile.selectedCharacter ?? null,
+        });
       } catch (error) {
-        console.error(
-          "[Navbar] Error cargando perfil:",
-          error,
-        );
+        console.error("[Navbar] Error cargando perfil:", error);
       }
     };
 
@@ -177,14 +115,8 @@ export default function Navbar({
     };
   }, []);
 
-  /* ==========================================================
-     ESC
-  ========================================================== */
-
   useEffect(() => {
-    const handleEscape = (
-      event: KeyboardEvent,
-    ) => {
+    const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
 
       setOpenDropdown(null);
@@ -193,114 +125,59 @@ export default function Navbar({
       setBugOpen(false);
     };
 
-    window.addEventListener(
-      "keydown",
-      handleEscape,
-    );
+    window.addEventListener("keydown", handleEscape);
 
     return () => {
-      window.removeEventListener(
-        "keydown",
-        handleEscape,
-      );
+      window.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
-  /* ==========================================================
-     CLICK AFUERA
-  ========================================================== */
-
   useEffect(() => {
-    const handlePointerDown = (
-      event: MouseEvent,
-    ) => {
+    const handlePointerDown = (event: MouseEvent) => {
       const target = event.target as Node;
 
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target)
-      ) {
+      if (navRef.current && !navRef.current.contains(target)) {
         setOpenDropdown(null);
       }
 
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(target)
-      ) {
+      if (profileRef.current && !profileRef.current.contains(target)) {
         setProfileOpen(false);
       }
     };
 
-    document.addEventListener(
-      "mousedown",
-      handlePointerDown,
-    );
+    document.addEventListener("mousedown", handlePointerDown);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handlePointerDown,
-      );
+      document.removeEventListener("mousedown", handlePointerDown);
     };
   }, []);
 
-  /* ==========================================================
-     BLOQUEAR SCROLL CON MODALES
-  ========================================================== */
-
   useEffect(() => {
-    if (!bugOpen) {
-      document.body.style.overflow = "";
-      return;
-    }
-
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = bugOpen ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
     };
   }, [bugOpen]);
 
-  /* ==========================================================
-     DATOS DE USUARIO
-  ========================================================== */
-
-  const displayName = useMemo(() => {
-    if (!profile?.fullName?.trim()) {
-      return "Estudiante";
-    }
-
-    return profile.fullName.trim();
-  }, [profile?.fullName]);
+  const displayName = useMemo(
+    () => profile?.fullName?.trim() || "Estudiante",
+    [profile?.fullName],
+  );
 
   const email = profile?.email ?? "";
 
-  const firstInitial = useMemo(() => {
-    return (
-      displayName
-        .trim()
-        .charAt(0)
-        .toUpperCase() || "A"
-    );
-  }, [displayName]);
+  const firstInitial = useMemo(
+    () => displayName.charAt(0).toUpperCase() || "E",
+    [displayName],
+  );
 
   const selectedCharacterAvatar = useMemo(() => {
-    if (!profile?.selectedCharacter) {
-      return null;
-    }
-
-    return (
-      characterAvatars[
-        profile.selectedCharacter
-      ] ?? null
-    );
+    const selected = profile?.selectedCharacter;
+    return selected ? characterAvatars[selected] ?? null : null;
   }, [profile?.selectedCharacter]);
 
-  /* ==========================================================
-     ACCIONES
-  ========================================================== */
-
-  const closeEverything = () => {
+  const closeMenus = () => {
     setOpenDropdown(null);
     setProfileOpen(false);
     setMobileOpen(false);
@@ -310,28 +187,11 @@ export default function Navbar({
     name: Exclude<DropdownName, null>,
   ) => {
     setProfileOpen(false);
-
-    setOpenDropdown((current) =>
-      current === name ? null : name,
-    );
+    setOpenDropdown((current) => (current === name ? null : name));
   };
-
-  const handleThemeChange = (
-    nextTheme: GlobalTheme,
-  ) => {
-    if (nextTheme === theme) {
-      return;
-    }
-
-    onThemeChange(nextTheme);
-  };
-
-  /* ==========================================================
-     SIMULACROS
-  ========================================================== */
 
   const handleSimulations = async () => {
-    closeEverything();
+    closeMenus();
 
     if (checkingAuth) return;
 
@@ -348,594 +208,303 @@ export default function Navbar({
           "[Navbar] Error verificando sesión:",
           error,
         );
-
         window.location.href = "/login";
         return;
       }
 
-      if (session?.user) {
-        window.location.href =
-          "/dashboard/simulacros/new";
-
-        return;
-      }
-
-      window.location.href = "/login";
+      window.location.href = session?.user
+        ? "/dashboard/simulacros/new"
+        : "/login";
     } catch (error) {
-      console.error(
-        "[Navbar] Error inesperado:",
-        error,
-      );
-
+      console.error("[Navbar] Error inesperado:", error);
       window.location.href = "/login";
     } finally {
       setCheckingAuth(false);
     }
   };
 
-  /* ==========================================================
-     LOGOUT
-  ========================================================== */
-
   const handleLogout = async () => {
-    closeEverything();
+    closeMenus();
 
     try {
       await supabase.auth.signOut();
     } catch (error) {
-      console.error(
-        "[Navbar] Error cerrando sesión:",
-        error,
-      );
+      console.error("[Navbar] Error cerrando sesión:", error);
     } finally {
       window.location.href = "/login";
     }
   };
 
-  /* ==========================================================
-     BUG
-  ========================================================== */
-
   const openBugReport = () => {
-    closeEverything();
+    closeMenus();
     setBugOpen(true);
   };
-
-  /* ==========================================================
-     RENDER
-  ========================================================== */
 
   return (
     <>
       <header
-        className={`
-          sticky
-          top-0
-          z-[100]
-          w-full
-          border-b
-          backdrop-blur-xl
-          ${
-            isDark
-              ? "border-white/10 bg-[#10101b]/95"
-              : "border-slate-200 bg-white/95"
-          }
-        `}
+        className={
+          isDark
+            ? "sticky top-0 z-[100] w-full border-b border-white/10 bg-[#10101b]/95 backdrop-blur-xl"
+            : "sticky top-0 z-[100] w-full border-b border-slate-200 bg-white/95 backdrop-blur-xl"
+        }
       >
-        {/* ====================================================
-            NAV DESKTOP
-        ==================================================== */}
-
         <nav
-          className="
-            relative
-            mx-auto
-            flex
-            min-h-[72px]
-            w-full
-            max-w-[1600px]
-            items-center
-            px-4
-            sm:px-6
-            lg:px-7
-            xl:px-8
-          "
+          className="relative flex min-h-[72px] w-full items-center px-5 sm:px-7 lg:px-9 xl:px-10 2xl:px-12"
           aria-label="Navegación principal"
         >
-          {/* ==================================================
-              LOGO
-          ================================================== */}
+          {/* LOGO IZQUIERDA */}
 
           <Link
             href="/"
             aria-label="PeakScore inicio"
-            onClick={closeEverything}
-            className="
-              group
-              flex
-              shrink-0
-              items-center
-              justify-start
-            "
+            onClick={closeMenus}
+            className="group flex shrink-0 items-center gap-2.5"
           >
-            <div
-              className={`
-                relative
-                h-[49px]
-                w-[148px]
-                transition-transform
-                duration-200
-                group-hover:-translate-y-0.5
-                ${
-                  isDark
-                    ? "drop-shadow-[0_4px_18px_rgba(81,93,255,0.24)]"
-                    : "drop-shadow-[0_4px_18px_rgba(56,189,248,0.16)]"
-                }
-              `}
+            <span
+              className={
+                isDark
+                  ? "relative flex h-11 w-11 items-center justify-center drop-shadow-[0_4px_18px_rgba(81,93,255,0.24)]"
+                  : "relative flex h-11 w-11 items-center justify-center drop-shadow-[0_4px_18px_rgba(56,189,248,0.16)]"
+              }
             >
               <Image
-                src={
-                  isDark
-                    ? "/images/branding/peakscore-logo-transparente2.png"
-                    : "/images/branding/peakscore-logo-claro.png"
-                }
-                alt="PeakScore"
+                src="/images/branding/peakscore-logo-transparente2.png"
+                alt=""
                 fill
                 priority
-                sizes="148px"
-                className="object-contain object-left"
+                sizes="44px"
+                className="object-contain"
               />
-            </div>
+            </span>
+
+            <span
+              className={
+                isDark
+                  ? "text-[19px] font-black tracking-[-0.03em] text-white transition-opacity group-hover:opacity-85"
+                  : "text-[19px] font-black tracking-[-0.03em] text-slate-950 transition-opacity group-hover:opacity-80"
+              }
+            >
+              PeakScore
+            </span>
           </Link>
 
-          {/* ==================================================
-              ZONA CENTRAL
-          ================================================== */}
+          {/* NAVEGACIÓN CENTRAL EXACTAMENTE CENTRADA */}
 
           <div
-            ref={dropdownRef}
+            ref={navRef}
             className="
+              absolute
+              left-1/2
+              top-1/2
               hidden
-              flex-1
-              items-center
-              justify-center
-              lg:flex
+              -translate-x-1/2
+              -translate-y-1/2
+              lg:block
             "
           >
-            <div
-              className="
-                flex
-                items-center
-                gap-1
-              "
-            >
-              {/* =================================================
-                  APRENDER
-              ================================================= */}
-
+            <div className="flex items-center gap-0.5">
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() =>
-                    toggleDropdown("learn")
+                  onClick={() => toggleDropdown("learn")}
+                  aria-expanded={openDropdown === "learn"}
+                  className={
+                    isDark
+                      ? "flex h-11 items-center gap-1.5 rounded-xl px-4 text-[13px] font-extrabold text-white/80 transition hover:bg-white/[0.05] hover:text-white"
+                      : "flex h-11 items-center gap-1.5 rounded-xl px-4 text-[13px] font-extrabold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
                   }
-                  aria-expanded={
-                    openDropdown === "learn"
-                  }
-                  className={`
-                    group
-                    flex
-                    h-11
-                    items-center
-                    gap-2
-                    rounded-xl
-                    px-4
-                    text-[13px]
-                    font-extrabold
-                    transition-all
-                    duration-200
-                    ${
-                      isDark
-                        ? "text-white/80 hover:bg-white/[0.05] hover:text-white"
-                        : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
-                    }
-                  `}
                 >
-                  <span>
-                    Aprender
-                  </span>
+                  Aprender
 
                   <ChevronDown
-                    className={`
-                      h-3.5
-                      w-3.5
-                      opacity-55
-                      transition-transform
-                      duration-200
-                      ${
-                        openDropdown ===
-                        "learn"
-                          ? "rotate-180"
-                          : ""
-                      }
-                    `}
+                    className={
+                      openDropdown === "learn"
+                        ? "h-3.5 w-3.5 rotate-180 opacity-55 transition-transform"
+                        : "h-3.5 w-3.5 opacity-55 transition-transform"
+                    }
                   />
                 </button>
 
-                {openDropdown ===
-                  "learn" && (
+                {openDropdown === "learn" && (
                   <LearnDropdown
                     theme={theme}
-                    onClose={() =>
-                      setOpenDropdown(null)
-                    }
-                    onSimulations={
-                      handleSimulations
-                    }
+                    onClose={() => setOpenDropdown(null)}
+                    onSimulations={handleSimulations}
                   />
                 )}
               </div>
 
-              {/* =================================================
-                  PROGRESO
-              ================================================= */}
-
               <Link
                 href="/progreso"
-                onClick={closeEverything}
-                className={`
-                  flex
-                  h-11
-                  items-center
-                  rounded-xl
-                  px-4
-                  text-[13px]
-                  font-extrabold
-                  transition-all
-                  duration-200
-                  ${
-                    isDark
-                      ? "text-white/80 hover:bg-white/[0.05] hover:text-white"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
-                  }
-                `}
+                onClick={closeMenus}
+                className={
+                  isDark
+                    ? "flex h-11 items-center rounded-xl px-4 text-[13px] font-extrabold text-white/80 transition hover:bg-white/[0.05] hover:text-white"
+                    : "flex h-11 items-center rounded-xl px-4 text-[13px] font-extrabold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
+                }
               >
                 Progreso
               </Link>
 
-              {/* =================================================
-                  RETOS
-              ================================================= */}
-
               <Link
                 href="/retos"
-                onClick={closeEverything}
-                className={`
-                  flex
-                  h-11
-                  items-center
-                  rounded-xl
-                  px-4
-                  text-[13px]
-                  font-extrabold
-                  transition-all
-                  duration-200
-                  ${
-                    isDark
-                      ? "text-white/80 hover:bg-white/[0.05] hover:text-white"
-                      : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
-                  }
-                `}
+                onClick={closeMenus}
+                className={
+                  isDark
+                    ? "flex h-11 items-center rounded-xl px-4 text-[13px] font-extrabold text-white/80 transition hover:bg-white/[0.05] hover:text-white"
+                    : "flex h-11 items-center rounded-xl px-4 text-[13px] font-extrabold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
+                }
               >
                 Retos
               </Link>
 
-              {/* =================================================
-                  COMUNIDAD
-              ================================================= */}
-
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() =>
-                    toggleDropdown(
-                      "community",
-                    )
+                  onClick={() => toggleDropdown("community")}
+                  aria-expanded={openDropdown === "community"}
+                  className={
+                    isDark
+                      ? "flex h-11 items-center gap-1.5 rounded-xl px-4 text-[13px] font-extrabold text-white/80 transition hover:bg-white/[0.05] hover:text-white"
+                      : "flex h-11 items-center gap-1.5 rounded-xl px-4 text-[13px] font-extrabold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950"
                   }
-                  aria-expanded={
-                    openDropdown ===
-                    "community"
-                  }
-                  className={`
-                    group
-                    flex
-                    h-11
-                    items-center
-                    gap-2
-                    rounded-xl
-                    px-4
-                    text-[13px]
-                    font-extrabold
-                    transition-all
-                    duration-200
-                    ${
-                      isDark
-                        ? "text-white/80 hover:bg-white/[0.05] hover:text-white"
-                        : "text-slate-700 hover:bg-slate-100 hover:text-slate-950"
-                    }
-                  `}
                 >
-                  <span>
-                    Comunidad
-                  </span>
+                  Comunidad
 
                   <ChevronDown
-                    className={`
-                      h-3.5
-                      w-3.5
-                      opacity-55
-                      transition-transform
-                      duration-200
-                      ${
-                        openDropdown ===
-                        "community"
-                          ? "rotate-180"
-                          : ""
-                      }
-                    `}
+                    className={
+                      openDropdown === "community"
+                        ? "h-3.5 w-3.5 rotate-180 opacity-55 transition-transform"
+                        : "h-3.5 w-3.5 opacity-55 transition-transform"
+                    }
                   />
                 </button>
 
-                {openDropdown ===
-                  "community" && (
+                {openDropdown === "community" && (
                   <CommunityDropdown
                     theme={theme}
-                    onClose={() =>
-                      setOpenDropdown(null)
-                    }
+                    onClose={() => setOpenDropdown(null)}
                   />
                 )}
               </div>
-            </div>
-          </div>
 
-          {/* ==================================================
-              PRECIOS + BUG
-          ================================================== */}
+              {/* PRECIOS CENTRADO CON EL RESTO */}
 
-          <div
-            className="
-              hidden
-              items-center
-              lg:flex
-            "
-          >
-            {/* =================================================
-                PRECIOS
-            ================================================= */}
-
-            <Link
-              href="/precios"
-              onClick={closeEverything}
-              className="
-                group
-                relative
-                flex
-                h-11
-                items-center
-                overflow-hidden
-                rounded-xl
-                px-4
-                text-[13px]
-                font-black
-              "
-            >
-              <span
+              <Link
+                href="/precios"
+                onClick={closeMenus}
                 className="
-                  pointer-events-none
-                  absolute
-                  inset-0
+                  group
+                  relative
+                  flex
+                  h-11
+                  items-center
                   overflow-hidden
                   rounded-xl
+                  px-4
+                  text-[13px]
+                  font-black
                 "
               >
                 <span
+                  aria-hidden="true"
                   className="
+                    pointer-events-none
                     absolute
-                    -inset-y-4
+                    -inset-y-3
                     left-0
-                    w-7
+                    w-5
                     translate-x-[-180%]
-                    rotate-[12deg]
+                    rotate-[16deg]
                     bg-white/70
                     opacity-0
-                    blur-[7px]
+                    blur-[6px]
                     transition-all
-                    duration-[1300ms]
+                    duration-[1100ms]
                     ease-out
-                    group-hover:translate-x-[240%]
+                    group-hover:translate-x-[620%]
                     group-hover:opacity-100
                   "
                 />
-              </span>
 
-              <span
-                className={`
-                  relative
-                  z-10
-                  bg-gradient-to-r
-                  bg-clip-text
-                  text-transparent
-                  transition-all
-                  duration-200
-                  ${
+                <span
+                  className={
                     isDark
-                      ? "from-cyan-300 via-violet-300 to-cyan-300"
-                      : "from-emerald-600 via-cyan-500 to-violet-500"
+                      ? "relative z-10 bg-gradient-to-r from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent transition-all duration-200 group-hover:brightness-125"
+                      : "relative z-10 bg-gradient-to-r from-emerald-600 via-cyan-500 to-violet-500 bg-clip-text text-transparent transition-all duration-200 group-hover:brightness-125"
                   }
-                `}
-                style={{
-                  animation:
-                    "peakscorePriceGlow 2.8s ease-in-out infinite",
-                }}
-              >
-                Precios
-              </span>
-            </Link>
+                >
+                  Precios
+                </span>
+              </Link>
 
-            {/* =================================================
-                BUG
-            ================================================= */}
+              {/* BUG */}
 
-            <button
-              type="button"
-              onClick={openBugReport}
-              className={`
-                flex
-                h-11
-                items-center
-                rounded-xl
-                px-4
-                text-[13px]
-                font-extrabold
-                transition-all
-                duration-200
-                ${
+              <button
+                type="button"
+                onClick={openBugReport}
+                className={
                   isDark
-                    ? "text-white/50 hover:bg-white/[0.05] hover:text-white"
-                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                    ? "flex h-11 items-center rounded-xl px-4 text-[13px] font-extrabold text-white/50 transition hover:bg-white/[0.05] hover:text-white"
+                    : "flex h-11 items-center rounded-xl px-4 text-[13px] font-extrabold text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
                 }
-              `}
-            >
-              Bug
-            </button>
+              >
+                Bug
+              </button>
+            </div>
           </div>
 
-          {/* ==================================================
-              ZONA DERECHA
-          ================================================== */}
+          {/* DERECHA: TEMA + NOTIFICACIONES + PERFIL */}
 
           <div
             ref={profileRef}
-            className="
-              relative
-              ml-auto
-              flex
-              shrink-0
-              items-center
-              gap-2
-            "
+            className="ml-auto flex shrink-0 items-center gap-1.5"
           >
-            {/* =================================================
-                TEMA
-            ================================================= */}
+            {/* TEMA: UN SOLO BOTÓN */}
 
-            <div
-              className={`
-                hidden
-                items-center
-                rounded-xl
-                border
-                p-1
-                sm:flex
-                ${
-                  isDark
-                    ? "border-white/10 bg-white/[0.03]"
-                    : "border-slate-200 bg-slate-50"
-                }
-              `}
+            <button
+              type="button"
+              onClick={() =>
+                handleThemeChange(
+                  isDark ? "light" : "dark",
+                )
+              }
+              aria-label={
+                isDark
+                  ? "Cambiar a tema claro"
+                  : "Cambiar a tema oscuro"
+              }
+              title={
+                isDark
+                  ? "Tema oscuro · cambiar a claro"
+                  : "Tema claro · cambiar a oscuro"
+              }
+              className={
+                isDark
+                  ? "flex h-11 w-11 items-center justify-center rounded-xl text-violet-200 transition hover:bg-white/[0.05] hover:text-white"
+                  : "flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
+              }
             >
-              <button
-                type="button"
-                onClick={() =>
-                  handleThemeChange(
-                    "dark",
-                  )
-                }
-                aria-label="Tema oscuro"
-                aria-pressed={
-                  isDark
-                }
-                className={`
-                  flex
-                  h-9
-                  w-9
-                  items-center
-                  justify-center
-                  rounded-lg
-                  transition-all
-                  ${
-                    isDark
-                      ? "bg-violet-600 text-white shadow-[0_0_18px_rgba(124,58,237,0.35)]"
-                      : "text-slate-400 hover:text-slate-700"
-                  }
-                `}
-              >
-                <Moon className="h-4 w-4" />
-              </button>
+              {isDark ? (
+                <Moon className="h-[18px] w-[18px]" />
+              ) : (
+                <Sun className="h-[18px] w-[18px]" />
+              )}
+            </button>
 
-              <button
-                type="button"
-                onClick={() =>
-                  handleThemeChange(
-                    "light",
-                  )
-                }
-                aria-label="Tema claro"
-                aria-pressed={
-                  !isDark
-                }
-                className={`
-                  flex
-                  h-9
-                  w-9
-                  items-center
-                  justify-center
-                  rounded-lg
-                  transition-all
-                  ${
-                    !isDark
-                      ? "bg-white text-slate-800 shadow-sm"
-                      : "text-white/35 hover:text-white/70"
-                  }
-                `}
-              >
-                <Sun className="h-4 w-4" />
-              </button>
-            </div>
-
-            {/* =================================================
-                NOTIFICACIONES
-            ================================================= */}
+            {/* NOTIFICACIONES */}
 
             <button
               type="button"
               aria-label="Notificaciones"
-              className={`
-                relative
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-xl
-                transition-all
-                ${
-                  isDark
-                    ? "text-white/60 hover:bg-white/[0.05] hover:text-white"
-                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                }
-              `}
+              className={
+                isDark
+                  ? "relative flex h-11 w-11 items-center justify-center rounded-xl text-white/60 transition hover:bg-white/[0.05] hover:text-white"
+                  : "relative flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
+              }
             >
-              <Bell
-                className="
-                  h-[18px]
-                  w-[18px]
-                  transition-transform
-                  duration-200
-                  hover:animate-pulse
-                "
-              />
+              <Bell className="h-[18px] w-[18px]" />
 
               <span
                 className="
@@ -951,22 +520,16 @@ export default function Navbar({
               />
             </button>
 
-            {/* =================================================
-                PERFIL
-            ================================================= */}
+            {/* PERFIL */}
 
             <button
               type="button"
               onClick={() => {
                 setOpenDropdown(null);
-                setProfileOpen(
-                  (current) => !current,
-                );
+                setProfileOpen((current) => !current);
               }}
               aria-label="Abrir menú de usuario"
-              aria-expanded={
-                profileOpen
-              }
+              aria-expanded={profileOpen}
               className="
                 group
                 relative
@@ -981,19 +544,11 @@ export default function Navbar({
             >
               {selectedCharacterAvatar ? (
                 <Image
-                  src={
-                    selectedCharacterAvatar
-                  }
+                  src={selectedCharacterAvatar}
                   alt={displayName}
                   fill
                   sizes="44px"
-                  className="
-                    object-cover
-                    object-center
-                    transition-transform
-                    duration-200
-                    group-hover:scale-105
-                  "
+                  className="object-cover object-center transition-transform duration-200 group-hover:scale-105"
                 />
               ) : profile?.avatarUrl ? (
                 <Image
@@ -1001,10 +556,7 @@ export default function Navbar({
                   alt={displayName}
                   fill
                   sizes="44px"
-                  className="
-                    object-cover
-                    object-center
-                  "
+                  className="object-cover object-center"
                 />
               ) : (
                 <span
@@ -1027,21 +579,8 @@ export default function Navbar({
                 </span>
               )}
 
-              <span
-                className="
-                  pointer-events-none
-                  absolute
-                  inset-0
-                  rounded-full
-                  ring-1
-                  ring-white/20
-                "
-              />
+              <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-white/20" />
             </button>
-
-            {/* =================================================
-                MENU USUARIO
-            ================================================= */}
 
             {profileOpen && (
               <UserMenu
@@ -1050,364 +589,144 @@ export default function Navbar({
                 displayName={displayName}
                 email={email}
                 firstInitial={firstInitial}
-                selectedCharacterAvatar={
-                  selectedCharacterAvatar
-                }
-                onClose={() =>
-                  setProfileOpen(false)
-                }
-                onLogout={
-                  handleLogout
-                }
+                selectedCharacterAvatar={selectedCharacterAvatar}
+                onClose={() => setProfileOpen(false)}
+                onLogout={handleLogout}
               />
             )}
           </div>
 
-          {/* ==================================================
-              MOBILE BUTTON
-          ================================================== */}
+          {/* MOBILE */}
 
           <button
             type="button"
-            onClick={() =>
-              setMobileOpen(
-                (current) => !current,
-              )
-            }
+            onClick={() => setMobileOpen((current) => !current)}
             aria-label="Abrir navegación"
-            aria-expanded={
-              mobileOpen
+            aria-expanded={mobileOpen}
+            className={
+              isDark
+                ? "ml-2 flex h-11 w-11 items-center justify-center rounded-xl text-white/75 hover:bg-white/[0.05] lg:hidden"
+                : "ml-2 flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 lg:hidden"
             }
-            className={`
-              ml-2
-              flex
-              h-11
-              w-11
-              items-center
-              justify-center
-              rounded-xl
-              lg:hidden
-              ${
-                isDark
-                  ? "text-white/75 hover:bg-white/[0.05]"
-                  : "text-slate-600 hover:bg-slate-100"
-              }
-            `}
           >
-            <span className="text-lg">
-              {mobileOpen
-                ? "×"
-                : "☰"}
-            </span>
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <span className="text-xl leading-none">☰</span>
+            )}
           </button>
         </nav>
 
-        {/* ====================================================
-            MOBILE
-        ==================================================== */}
+        {/* MOBILE MENU */}
 
         {mobileOpen && (
           <div
-            className={`
-              border-t
-              px-4
-              pb-4
-              pt-3
-              lg:hidden
-              ${
-                isDark
-                  ? "border-white/10 bg-[#10101b]"
-                  : "border-slate-200 bg-white"
-              }
-            `}
+            className={
+              isDark
+                ? "border-t border-white/10 bg-[#10101b] px-4 pb-4 pt-3 lg:hidden"
+                : "border-t border-slate-200 bg-white px-4 pb-4 pt-3 lg:hidden"
+            }
           >
             <div className="space-y-1">
-              <button
-                type="button"
-                onClick={() =>
-                  setOpenDropdown(
-                    (current) =>
-                      current ===
-                      "learn"
-                        ? null
-                        : "learn",
-                  )
-                }
-                className={`
-                  flex
-                  h-12
-                  w-full
-                  items-center
-                  justify-between
-                  rounded-xl
-                  px-4
-                  text-sm
-                  font-black
-                  ${
-                    isDark
-                      ? "text-white/85 hover:bg-white/[0.05]"
-                      : "text-slate-800 hover:bg-slate-100"
-                  }
-                `}
-              >
-                Aprender
+              <MobileDropdownTrigger
+                label="Aprender"
+                open={openDropdown === "learn"}
+                theme={theme}
+                onClick={() => toggleDropdown("learn")}
+              />
 
-                <ChevronDown
-                  className={`
-                    h-4
-                    w-4
-                    opacity-50
-                    transition-transform
-                    ${
-                      openDropdown ===
-                      "learn"
-                        ? "rotate-180"
-                        : ""
-                    }
-                  `}
-                />
-              </button>
-
-              {openDropdown ===
-                "learn" && (
+              {openDropdown === "learn" && (
                 <div className="space-y-1 px-2">
-                  <Link
+                  <MobileLink
                     href="/aprender"
-                    onClick={closeEverything}
-                    className={`
-                      flex
-                      h-11
-                      items-center
-                      rounded-lg
-                      px-3
-                      text-sm
-                      font-bold
-                      ${
-                        isDark
-                          ? "text-white/60 hover:bg-white/[0.04] hover:text-white"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                      }
-                    `}
+                    theme={theme}
+                    onClick={closeMenus}
                   >
                     Niveles
-                  </Link>
+                  </MobileLink>
 
                   <button
                     type="button"
-                    onClick={
-                      handleSimulations
+                    onClick={handleSimulations}
+                    className={
+                      isDark
+                        ? "flex h-11 w-full items-center rounded-lg px-3 text-left text-sm font-bold text-white/60 hover:bg-white/[0.04] hover:text-white"
+                        : "flex h-11 w-full items-center rounded-lg px-3 text-left text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     }
-                    className={`
-                      flex
-                      h-11
-                      w-full
-                      items-center
-                      rounded-lg
-                      px-3
-                      text-sm
-                      font-bold
-                      ${
-                        isDark
-                          ? "text-white/60 hover:bg-white/[0.04] hover:text-white"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                      }
-                    `}
                   >
                     Simulacros
                   </button>
                 </div>
               )}
 
-              <Link
+              <MobileLink
                 href="/progreso"
-                onClick={closeEverything}
-                className={`
-                  flex
-                  h-12
-                  items-center
-                  rounded-xl
-                  px-4
-                  text-sm
-                  font-black
-                  ${
-                    isDark
-                      ? "text-white/85 hover:bg-white/[0.05]"
-                      : "text-slate-800 hover:bg-slate-100"
-                  }
-                `}
+                theme={theme}
+                onClick={closeMenus}
               >
                 Progreso
-              </Link>
+              </MobileLink>
 
-              <Link
+              <MobileLink
                 href="/retos"
-                onClick={closeEverything}
-                className={`
-                  flex
-                  h-12
-                  items-center
-                  rounded-xl
-                  px-4
-                  text-sm
-                  font-black
-                  ${
-                    isDark
-                      ? "text-white/85 hover:bg-white/[0.05]"
-                      : "text-slate-800 hover:bg-slate-100"
-                  }
-                `}
+                theme={theme}
+                onClick={closeMenus}
               >
                 Retos
-              </Link>
+              </MobileLink>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setOpenDropdown(
-                    (current) =>
-                      current ===
-                      "community"
-                        ? null
-                        : "community",
-                  )
-                }
-                className={`
-                  flex
-                  h-12
-                  w-full
-                  items-center
-                  justify-between
-                  rounded-xl
-                  px-4
-                  text-sm
-                  font-black
-                  ${
-                    isDark
-                      ? "text-white/85 hover:bg-white/[0.05]"
-                      : "text-slate-800 hover:bg-slate-100"
-                  }
-                `}
-              >
-                Comunidad
+              <MobileDropdownTrigger
+                label="Comunidad"
+                open={openDropdown === "community"}
+                theme={theme}
+                onClick={() => toggleDropdown("community")}
+              />
 
-                <ChevronDown
-                  className={`
-                    h-4
-                    w-4
-                    opacity-50
-                    transition-transform
-                    ${
-                      openDropdown ===
-                      "community"
-                        ? "rotate-180"
-                        : ""
-                    }
-                  `}
-                />
-              </button>
-
-              {openDropdown ===
-                "community" && (
+              {openDropdown === "community" && (
                 <div className="space-y-1 px-2">
-                  <Link
+                  <MobileLink
                     href="/comunidad/ranking"
-                    onClick={
-                      closeEverything
-                    }
-                    className={`
-                      flex
-                      h-11
-                      items-center
-                      rounded-lg
-                      px-3
-                      text-sm
-                      font-bold
-                      ${
-                        isDark
-                          ? "text-white/60 hover:bg-white/[0.04] hover:text-white"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                      }
-                    `}
+                    theme={theme}
+                    onClick={closeMenus}
                   >
                     Ranking
-                  </Link>
+                  </MobileLink>
 
-                  <Link
+                  <MobileLink
                     href="/comunidad"
-                    onClick={
-                      closeEverything
-                    }
-                    className={`
-                      flex
-                      h-11
-                      items-center
-                      rounded-lg
-                      px-3
-                      text-sm
-                      font-bold
-                      ${
-                        isDark
-                          ? "text-white/60 hover:bg-white/[0.04] hover:text-white"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                      }
-                    `}
+                    theme={theme}
+                    onClick={closeMenus}
                   >
                     Comunidad
-                  </Link>
+                  </MobileLink>
                 </div>
               )}
 
               <div
-                className={`
-                  my-2
-                  h-px
-                  ${
-                    isDark
-                      ? "bg-white/10"
-                      : "bg-slate-200"
-                  }
-                `}
+                className={
+                  isDark
+                    ? "my-2 h-px bg-white/10"
+                    : "my-2 h-px bg-slate-200"
+                }
               />
 
-              <Link
+              <MobileLink
                 href="/precios"
-                onClick={closeEverything}
-                className={`
-                  flex
-                  h-12
-                  items-center
-                  rounded-xl
-                  px-4
-                  text-sm
-                  font-black
-                  ${
-                    isDark
-                      ? "bg-gradient-to-r from-cyan-300 via-violet-300 to-cyan-300 bg-clip-text text-transparent"
-                      : "bg-gradient-to-r from-emerald-600 via-cyan-500 to-violet-500 bg-clip-text text-transparent"
-                  }
-                `}
+                theme={theme}
+                onClick={closeMenus}
+                premium
               >
                 Precios
-              </Link>
+              </MobileLink>
 
               <button
                 type="button"
                 onClick={openBugReport}
-                className={`
-                  flex
-                  h-12
-                  w-full
-                  items-center
-                  rounded-xl
-                  px-4
-                  text-sm
-                  font-black
-                  ${
-                    isDark
-                      ? "text-white/65 hover:bg-white/[0.05] hover:text-white"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }
-                `}
+                className={
+                  isDark
+                    ? "flex h-12 w-full items-center rounded-xl px-4 text-sm font-black text-white/65 hover:bg-white/[0.05] hover:text-white"
+                    : "flex h-12 w-full items-center rounded-xl px-4 text-sm font-black text-slate-700 hover:bg-slate-100"
+                }
               >
                 Bug
               </button>
@@ -1416,16 +735,10 @@ export default function Navbar({
         )}
       </header>
 
-      {/* ======================================================
-          MODAL BUG
-      ====================================================== */}
-
       {bugOpen && (
         <BugReportModal
           theme={theme}
-          onClose={() =>
-            setBugOpen(false)
-          }
+          onClose={() => setBugOpen(false)}
         />
       )}
     </>

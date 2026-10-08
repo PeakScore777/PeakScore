@@ -407,63 +407,6 @@ export default function Navbar({
 
   return (
     <>
-      <style jsx global>{`
-        @keyframes peakscorePriceShine {
-          0% {
-            transform: translateX(-160%) skewX(-18deg);
-            opacity: 0;
-          }
-
-          16% {
-            opacity: 0;
-          }
-
-          28% {
-            opacity: 0.9;
-          }
-
-          52%,
-          100% {
-            transform: translateX(180%) skewX(-18deg);
-            opacity: 0;
-          }
-        }
-
-        @keyframes peakscorePriceGlow {
-          0%,
-          100% {
-            filter: brightness(1);
-          }
-
-          50% {
-            filter: brightness(1.25);
-          }
-        }
-
-        @keyframes peakscoreNotification {
-          0%,
-          100% {
-            transform: rotate(0deg);
-          }
-
-          12% {
-            transform: rotate(-9deg);
-          }
-
-          24% {
-            transform: rotate(9deg);
-          }
-
-          36% {
-            transform: rotate(-5deg);
-          }
-
-          48% {
-            transform: rotate(5deg);
-          }
-        }
-      `}</style>
-
       <header
         className={`
           sticky
@@ -802,14 +745,17 @@ export default function Navbar({
                     -inset-y-4
                     left-0
                     w-7
+                    translate-x-[-180%]
                     rotate-[12deg]
                     bg-white/70
+                    opacity-0
                     blur-[7px]
+                    transition-all
+                    duration-[1300ms]
+                    ease-out
+                    group-hover:translate-x-[240%]
+                    group-hover:opacity-100
                   "
-                  style={{
-                    animation:
-                      "peakscorePriceShine 2.8s linear infinite",
-                  }}
                 />
               </span>
 
@@ -985,11 +931,10 @@ export default function Navbar({
                 className="
                   h-[18px]
                   w-[18px]
+                  transition-transform
+                  duration-200
+                  hover:animate-pulse
                 "
-                style={{
-                  animation:
-                    "peakscoreNotification 4.5s ease-in-out infinite",
-                }}
               />
 
               <span

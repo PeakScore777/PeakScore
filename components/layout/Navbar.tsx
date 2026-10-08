@@ -410,14 +410,22 @@ export default function Navbar({
       <style jsx global>{`
         @keyframes peakscorePriceShine {
           0% {
-            transform: translateX(-150%)
-              skewX(-18deg);
+            transform: translateX(-160%) skewX(-18deg);
+            opacity: 0;
           }
 
-          55%,
+          16% {
+            opacity: 0;
+          }
+
+          28% {
+            opacity: 0.9;
+          }
+
+          52%,
           100% {
-            transform: translateX(170%)
-              skewX(-18deg);
+            transform: translateX(180%) skewX(-18deg);
+            opacity: 0;
           }
         }
 
@@ -795,10 +803,8 @@ export default function Navbar({
                     left-0
                     w-7
                     rotate-[12deg]
-                    bg-white/60
-                    opacity-0
+                    bg-white/70
                     blur-[7px]
-                    group-hover:opacity-100
                   "
                   style={{
                     animation:
@@ -866,6 +872,7 @@ export default function Navbar({
           <div
             ref={profileRef}
             className="
+              relative
               ml-auto
               flex
               shrink-0

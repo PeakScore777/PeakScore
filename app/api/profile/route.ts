@@ -1,6 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+import {
+  getCurrentSeasonContext,
+} from "@/lib/gamification/season-service";
+
+import {
+  getRankBySeasonXp,
+  getRankProgress,
+  getXpToNextRank,
+} from "@/lib/gamification/ranks";
+
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -25,37 +35,90 @@ export async function GET() {
     // 2. PERFIL
     // ============================================================
 
-    const { data: profile, error: profileError } =
-      await supabase
-        .from("profiles")
-        .select(`
-          id,
-          full_name,
-          email,
-          avatar_url,
-          target_score,
-          average_score,
-          streak,
-          simulations,
-          xp,
-          coins,
-          level,
-          selected_character
-        `)
-        .eq("id", user.id)
-        .single();
+    const {
+      data: profile,
+      error: profileError,
+    } = await supabase
+      .from("profiles")
+      .select(`
+        id,
+        full_name,
+        email,
+        avatar_url,
+        target_score,
+        average_score,
+        streak,
+        simulations,
+        xp,
+        season_xp,
+        coins,
+        level,
+        selected_character
+      `)
+      .eq("id", user.id)
+      .single();
 
     if (profileError || !profile) {
-      console.error("Profile query error:", profileError);
+      console.error(
+        "Profile query error:",
+        profileError,
+      );
 
       return NextResponse.json(
-        { error: "No se pudo obtener el perfil" },
+        {
+          error:
+            "No se pudo obtener el perfil",
+        },
         { status: 500 },
       );
     }
 
     // ============================================================
-    // 3. PERSONAJES DESBLOQUEADOS DEL USUARIO
+    // 3. TEMPORADA ACTUAL
+    // ============================================================
+
+    const {
+      season,
+      participation,
+    } =
+      await getCurrentSeasonContext(user.id);
+
+    /**
+     * `startingRank` nos permite saber si el usuario
+     * comenzó su primera temporada como Aprendiz o si
+     * entró como veterano mediante Renacer.
+     *
+     * Esto NO determina directamente el rango actual.
+     * El rango actual se calcula con seasonXp.
+     */
+    const isNewAccount =
+      participation.startingRank ===
+      "aprendiz";
+
+    // ============================================================
+    // 4. RANGO ACTUAL
+    // ============================================================
+
+    const currentRank =
+      getRankBySeasonXp(
+        participation.seasonXp,
+        isNewAccount,
+      );
+
+    const rankProgress =
+      getRankProgress(
+        participation.seasonXp,
+        currentRank,
+      );
+
+    const xpToNextRank =
+      getXpToNextRank(
+        participation.seasonXp,
+        currentRank,
+      );
+
+    // ============================================================
+    // 5. PERSONAJES DESBLOQUEADOS
     // ============================================================
 
     const {
@@ -76,18 +139,22 @@ export async function GET() {
       );
 
       return NextResponse.json(
-        { error: "No se pudieron obtener los personajes" },
+        {
+          error:
+            "No se pudieron obtener los personajes",
+        },
         { status: 500 },
       );
     }
 
     const characterIds =
       userCharacters?.map(
-        (character) => character.character_id,
+        (character) =>
+          character.character_id,
       ) ?? [];
 
     // ============================================================
-    // 4. DATOS DE LOS PERSONAJES
+    // 6. DATOS DE LOS PERSONAJES
     // ============================================================
 
     let characters: Array<{
@@ -123,7 +190,10 @@ export async function GET() {
       );
 
       return NextResponse.json(
-        { error: "No se pudieron obtener los personajes" },
+        {
+          error:
+            "No se pudieron obtener los personajes",
+        },
         { status: 500 },
       );
     }
@@ -131,7 +201,7 @@ export async function GET() {
     characters = characterRows ?? [];
 
     // ============================================================
-    // 5. INSIGNIAS DESBLOQUEADAS
+    // 7. INSIGNIAS DESBLOQUEADAS
     // ============================================================
 
     const {
@@ -152,7 +222,10 @@ export async function GET() {
       );
 
       return NextResponse.json(
-        { error: "No se pudieron obtener las insignias" },
+        {
+          error:
+            "No se pudieron obtener las insignias",
+        },
         { status: 500 },
       );
     }
@@ -163,7 +236,7 @@ export async function GET() {
       ) ?? [];
 
     // ============================================================
-    // 6. DATOS DE LAS INSIGNIAS
+    // 8. DATOS DE LAS INSIGNIAS
     // ============================================================
 
     let badges: Array<{
@@ -198,7 +271,10 @@ export async function GET() {
         );
 
         return NextResponse.json(
-          { error: "No se pudieron obtener las insignias" },
+          {
+            error:
+              "No se pudieron obtener las insignias",
+          },
           { status: 500 },
         );
       }
@@ -207,7 +283,7 @@ export async function GET() {
     }
 
     // ============================================================
-    // 7. RESPUESTA
+    // 9. RESPUESTA
     // ============================================================
 
     return NextResponse.json({
@@ -216,30 +292,108 @@ export async function GET() {
         fullName: profile.full_name,
         email: profile.email,
         avatarUrl: profile.avatar_url,
-        targetScore: profile.target_score,
-        averageScore: profile.average_score,
-        streak: profile.streak,
-        simulations: profile.simulations,
+
+        targetScore:
+          profile.target_score,
+
+        averageScore:
+          profile.average_score,
+
+        streak:
+          profile.streak,
+
+        simulations:
+          profile.simulations,
+
+        /**
+         * EXP histórica.
+         *
+         * Esta EXP no determina el rango competitivo.
+         */
         xp: profile.xp,
-        coins: profile.coins,
-        level: profile.level,
-        selectedCharacter: profile.selected_character,
+
+        historicalXp:
+          profile.xp,
+
+        /**
+         * EXP actual de temporada.
+         *
+         * Fuente de verdad:
+         * user_seasons.season_xp
+         */
+        seasonXp:
+          participation.seasonXp,
+
+        coins:
+          profile.coins,
+
+        level:
+          profile.level,
+
+        selectedCharacter:
+          profile.selected_character,
       },
 
-      // TODOS los personajes disponibles
+      // ========================================================
+      // TEMPORADA
+      // ========================================================
+
+      season: {
+        id: season.id,
+        number: season.seasonNumber,
+        name: season.name,
+        startsAt: season.startsAt,
+        endsAt: season.endsAt,
+        status: season.status,
+      },
+
+      // ========================================================
+      // RANGO
+      // ========================================================
+
+      rank: {
+        id: currentRank.id,
+        name: currentRank.name,
+        identity: currentRank.identity,
+        minSeasonXp:
+          currentRank.minSeasonXp,
+        maxSeasonXp:
+          currentRank.maxSeasonXp,
+        progress:
+          rankProgress,
+        xpToNextRank,
+          isNewAccount,
+      },
+
+      // ========================================================
+      // PERSONAJES
+      // ========================================================
+
       characters,
 
-      // SOLO los personajes que el usuario posee
-      unlockedCharacterIds: characterIds,
+      unlockedCharacterIds:
+        characterIds,
 
-      // SOLO las insignias que el usuario ha desbloqueado
-      unlockedBadgeIds: badgeIds,
+      // ========================================================
+      // INSIGNIAS
+      // ========================================================
+
+      unlockedBadgeIds:
+        badgeIds,
+
+      badges,
     });
   } catch (error) {
-    console.error("Profile API unexpected error:", error);
+    console.error(
+      "Profile API unexpected error:",
+      error,
+    );
 
     return NextResponse.json(
-      { error: "Error interno del servidor" },
+      {
+        error:
+          "Error interno del servidor",
+      },
       { status: 500 },
     );
   }

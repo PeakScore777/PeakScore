@@ -60,9 +60,24 @@ export default function Navbar({
   const [bugOpen, setBugOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(false);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [cachedCharacter, setCachedCharacter] = useState<string | null>(null);
 
   const navRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    try {
+      const cached = window.localStorage.getItem(
+        "peakscore-selected-character",
+      );
+
+      if (cached && characterAvatars[cached]) {
+        setCachedCharacter(cached);
+      }
+    } catch {
+      // La caché visual no es obligatoria.
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -94,6 +109,9 @@ export default function Navbar({
 
         if (!mounted || !data?.profile) return;
 
+        const selectedCharacter =
+          data.profile.selectedCharacter ?? null;
+
         setProfile({
           id: data.profile.id,
           fullName: data.profile.fullName ?? null,
@@ -101,8 +119,21 @@ export default function Navbar({
           avatarUrl: data.profile.avatarUrl ?? null,
           streak: Number(data.profile.streak ?? 0),
           coins: Number(data.profile.coins ?? 0),
-          selectedCharacter: data.profile.selectedCharacter ?? null,
+          selectedCharacter,
         });
+
+        if (selectedCharacter && characterAvatars[selectedCharacter]) {
+          setCachedCharacter(selectedCharacter);
+
+          try {
+            window.localStorage.setItem(
+              "peakscore-selected-character",
+              selectedCharacter,
+            );
+          } catch {
+            // Solo optimización visual; Supabase sigue siendo la fuente de verdad.
+          }
+        }
       } catch (error) {
         console.error("[Navbar] Error cargando perfil:", error);
       }
@@ -172,10 +203,13 @@ export default function Navbar({
     [displayName],
   );
 
+  const selectedCharacter = profile?.selectedCharacter ?? cachedCharacter;
+
   const selectedCharacterAvatar = useMemo(() => {
-    const selected = profile?.selectedCharacter;
-    return selected ? characterAvatars[selected] ?? null : null;
-  }, [profile?.selectedCharacter]);
+    return selectedCharacter
+      ? characterAvatars[selectedCharacter] ?? null
+      : null;
+  }, [selectedCharacter]);
 
   const closeMenus = () => {
     setOpenDropdown(null);
@@ -565,23 +599,20 @@ export default function Navbar({
                 />
               ) : (
                 <span
+                  aria-hidden="true"
                   className="
                     flex
                     h-full
                     w-full
+                    animate-pulse
                     items-center
                     justify-center
                     bg-gradient-to-br
-                    from-cyan-500
-                    via-blue-500
-                    to-violet-600
-                    text-sm
-                    font-black
-                    text-white
+                    from-slate-700
+                    via-slate-800
+                    to-slate-950
                   "
-                >
-                  {firstInitial}
-                </span>
+                />
               )}
 
               <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-white/20" />
@@ -1277,19 +1308,20 @@ function UserMenu({
             />
           ) : (
             <span
+              aria-hidden="true"
               className="
                 flex
                 h-full
                 w-full
+                animate-pulse
                 items-center
                 justify-center
-                text-base
-                font-black
-                text-white
+                bg-gradient-to-br
+                from-slate-700
+                via-slate-800
+                to-slate-950
               "
-            >
-              {firstInitial}
-            </span>
+            />
           )}
         </div>
 

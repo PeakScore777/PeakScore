@@ -2,10 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import Navbar, {
-  type LandingTheme,
-} from "@/components/Navbar";
-
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
@@ -13,19 +9,29 @@ import DashboardPreview from "@/components/DashboardPreview";
 import CTA from "@/components/CTA";
 import Footer from "@/components/Footer";
 
+type LandingTheme = "light" | "dark";
+
 export default function Home() {
   const [theme, setTheme] =
     useState<LandingTheme>("dark");
 
-  /* ==========================================================
-     RECUPERAR TEMA GUARDADO
-  ========================================================== */
-
   useEffect(() => {
+    const syncTheme = (event: Event) => {
+      const customEvent =
+        event as CustomEvent<LandingTheme>;
+
+      if (
+        customEvent.detail === "light" ||
+        customEvent.detail === "dark"
+      ) {
+        setTheme(customEvent.detail);
+      }
+    };
+
     try {
       const savedTheme =
         window.localStorage.getItem(
-          "peakscore-theme"
+          "peakscore-theme",
         );
 
       if (
@@ -35,83 +41,24 @@ export default function Home() {
         setTheme(savedTheme);
       }
     } catch {
-      // Si localStorage falla, se mantiene el tema oscuro.
-    }
-  }, []);
-
-  /* ==========================================================
-     SINCRONIZAR TEMA GLOBAL
-     
-     Permite que los componentes que todavía utilizan
-     clases dark: de Tailwind también respondan al tema.
-  ========================================================== */
-
-  useEffect(() => {
-    const root = document.documentElement;
-
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
+      // Se mantiene el tema oscuro como fallback.
     }
 
-    root.dataset.theme = theme;
+    window.addEventListener(
+      "peakscore-theme-change",
+      syncTheme,
+    );
 
-    try {
-      window.localStorage.setItem(
-        "peakscore-theme",
-        theme
+    return () => {
+      window.removeEventListener(
+        "peakscore-theme-change",
+        syncTheme,
       );
-    } catch {
-      // El cambio visual continúa aunque localStorage falle.
-    }
-  }, [theme]);
-
-  /* ==========================================================
-     CAMBIO DE TEMA
-     
-     Usa View Transitions cuando el navegador lo soporta.
-     Si no lo soporta, simplemente cambia el tema normalmente.
-  ========================================================== */
-
-  const handleThemeChange = (
-    nextTheme: LandingTheme
-  ) => {
-    if (nextTheme === theme) return;
-
-    const updateTheme = () => {
-      setTheme(nextTheme);
     };
-
-    if (
-      typeof document !== "undefined" &&
-      "startViewTransition" in document
-    ) {
-      (
-        document as Document & {
-          startViewTransition?: (
-            callback: () => void
-          ) => unknown;
-        }
-      ).startViewTransition?.(updateTheme);
-
-      return;
-    }
-
-    setTheme(nextTheme);
-  };
-
-  /* ==========================================================
-     RENDER
-  ========================================================== */
+  }, []);
 
   return (
     <main className="min-h-screen">
-      <Navbar
-        theme={theme}
-        onThemeChange={handleThemeChange}
-      />
-
       <Hero theme={theme} />
 
       <Features theme={theme} />

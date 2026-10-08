@@ -27,6 +27,7 @@ export type GlobalTheme = "light" | "dark";
 type NavbarProps = {
   theme: GlobalTheme;
   onThemeChange: (theme: GlobalTheme) => void;
+  initialProfile?: ProfileData | null;
 };
 
 type DropdownName = "learn" | "community" | null;
@@ -51,6 +52,7 @@ const characterAvatars: Record<string, string> = {
 export default function Navbar({
   theme,
   onThemeChange,
+  initialProfile = null,
 }: NavbarProps) {
   const isDark = theme === "dark";
 
@@ -59,8 +61,10 @@ export default function Navbar({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(false);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [cachedCharacter, setCachedCharacter] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(initialProfile);
+  const [cachedCharacter, setCachedCharacter] = useState<string | null>(
+    initialProfile?.selectedCharacter ?? null,
+  );
 
   const navRef = useRef<HTMLDivElement | null>(null);
   const profileRef = useRef<HTMLDivElement | null>(null);
@@ -600,21 +604,13 @@ export default function Navbar({
               ) : (
                 <span
                   aria-hidden="true"
-                  className="
-                    flex
-                    h-full
-                    w-full
-                    animate-pulse
-                    items-center
-                    justify-center
-                    bg-gradient-to-br
-                    from-slate-700
-                    via-slate-800
-                    to-slate-950
-                  "
+                  className={
+                    isDark
+                      ? "block h-full w-full animate-pulse bg-white/[0.05]"
+                      : "block h-full w-full animate-pulse bg-slate-100"
+                  }
                 />
               )}
-
               <span className="pointer-events-none absolute inset-0 rounded-full ring-1 ring-white/20" />
             </button>
 

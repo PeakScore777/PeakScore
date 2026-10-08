@@ -1,3431 +1,558 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
-import {
-  ArrowRight,
-  BarChart3,
-  BookOpen,
-  ChevronRight,
-  Coins,
-  Flame,
-  Home,
-  Lock,
-  Moon,
-  Shield,
-  Sparkles,
-  Sun,
-  Target,
-  UserRound,
-  X,
-} from "lucide-react";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type MouseEvent,
-  type ReactNode,
-} from "react";
-
-/* ============================================================
-   TIPOS
-============================================================ */
-
-type Theme = "light" | "dark";
+import { AlertTriangle, Check, Pencil, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 type ProfileData = {
   id: string;
-  fullName: string;
-  email: string;
+  fullName: string | null;
+  email: string | null;
   avatarUrl: string | null;
   targetScore: number | null;
   averageScore: number | null;
   streak: number;
   simulations: number;
   xp: number;
+  historicalXp?: number;
+  seasonXp?: number;
   coins: number;
   level: number;
-  selectedCharacter: string;
+  selectedCharacter: string | null;
 };
 
-type CharacterCatalogEntry = {
+type SeasonData = {
   id: string;
+  number: number;
   name: string;
-  description: string;
-  price_coins: number;
-  xp_bonus_percent: number;
-  coin_bonus_percent: number;
-  is_active: boolean;
+  startsAt: string;
+  endsAt: string;
+  status: string;
 };
 
-type PeakCharacter = {
+type RankData = {
   id: string;
   name: string;
-  description: string;
-  history: string;
-  ability: string;
-  rarity: string;
-  avatar: string;
-  profile: string;
-  card: string;
-};
-
-type Badge = {
-  id: string;
-  name: string;
-  level: string;
-  image: string;
-  description: string;
-  group: "aprendizaje" | "constante" | "racha";
-};
-
-type Rank = {
-  id: string;
-  name: string;
-  minXp: number;
-  maxXp: number | null;
   identity: string;
+  minSeasonXp: number;
+  maxSeasonXp: number | null;
+  progress: number;
+  xpToNextRank: number;
+  isNewAccount: boolean;
 };
 
-/* ============================================================
-   PERSONAJES
-============================================================ */
-
-const peakCharacters: PeakCharacter[] = [
-  {
-    id: "peaky-nova",
-
-    name: "Peaky Nova",
-
-    description:
-      "Guardián del conocimiento que protege el equilibrio del universo PeakScore.",
-
-    history:
-      "Nacido en el corazón del universo PeakScore, Peaky Nova recorre los mundos en busca de conocimiento. Su misión es ayudar a cada aventurero a alcanzar su máximo potencial.",
-
-    ability:
-      "SIN NINGUNA HABILIDAD",
-
-    rarity:
-      "PERSONAJE: INICIAL",
-
-    avatar:
-      "/characters/peaky-nova/peaky-nova/peaky-nova-front.png",
-
-    profile:
-      "/avatars/photo_perfil/peaky-nova.png",
-
-    card:
-      "/characters/peaky-nova/card/peaky-nova-card.png",
-  },
-
-  {
-    id: "peaky-nox",
-
-    name: "Peaky Nox",
-
-    description:
-      "La fuerza del multiverso oscuro.",
-
-    history:
-      "Peaky Nox procede de una realidad distinta dentro del universo PeakScore. Su historia está conectada con los mundos oscuros que descubriremos más adelante.",
-
-    ability:
-      "POR DEFINIR",
-
-    rarity:
-      "PERSONAJE: DESBLOQUEABLE",
-
-    avatar:
-      "/avatars/peaky-nox.webp",
-
-    profile:
-      "/avatars/photo_perfil/peaky-nox.png",
-
-    card:
-      "/avatars/peaky-nox.webp",
-  },
-
-  {
-    id: "zyra",
-
-    name: "Zyra",
-
-    description:
-      "Curiosidad, exploración y aprendizaje.",
-
-    history:
-      "Zyra representa la curiosidad que impulsa a explorar más allá de lo conocido. Su mundo y su verdadera historia serán revelados más adelante.",
-
-    ability:
-      "+10% XP",
-
-    rarity:
-      "PERSONAJE: DESBLOQUEABLE",
-
-    avatar:
-      "/avatars/zorra.webp",
-
-    profile:
-      "/avatars/photo_perfil/zyra.png",
-
-    card:
-      "/avatars/zorra.webp",
-  },
-
-  {
-    id: "orby",
-
-    name: "Orby",
-
-    description:
-      "Tecnología, precisión e inteligencia.",
-
-    history:
-      "Orby fue diseñado para analizar, aprender y detectar patrones. Su origen tecnológico todavía guarda muchos secretos.",
-
-    ability:
-      "+10% MONEDAS",
-
-    rarity:
-      "PERSONAJE: DESBLOQUEABLE",
-
-    avatar:
-      "/avatars/orby.webp",
-
-    profile:
-      "/avatars/photo_perfil/orby.png",
-
-    card:
-      "/avatars/orby.webp",
-  },
-];
-
-/* ============================================================
-   INSIGNIAS
-============================================================ */
-
-const badges: Badge[] = [
-  {
-    id: "aprendizaje-1",
-    name: "Dominio",
-    level: "Nivel I",
-    image: "/badges/aprendizaje-1.png",
-    description:
-      "Completa 5 simulacros simples.",
-    group: "aprendizaje",
-  },
-
-  {
-    id: "aprendizaje-2",
-    name: "Dominio",
-    level: "Nivel II",
-    image: "/badges/aprendizaje-2.png",
-    description:
-      "Completa 20 simulacros simples.",
-    group: "aprendizaje",
-  },
-
-  {
-    id: "aprendizaje-3",
-    name: "Dominio",
-    level: "Nivel III",
-    image: "/badges/aprendizaje-3.png",
-    description:
-      "Completa 50 simulacros simples.",
-    group: "aprendizaje",
-  },
-
-  {
-    id: "constante-1",
-    name: "Constancia",
-    level: "Nivel I",
-    image: "/badges/constante-1.png",
-    description:
-      "Completa 3 simulacros completos.",
-    group: "constante",
-  },
-
-  {
-    id: "racha-1",
-    name: "Racha",
-    level: "Nivel I",
-    image: "/badges/racha-1.png",
-    description:
-      "Mantén una racha de 10 días.",
-    group: "racha",
-  },
-
-  {
-    id: "racha-2",
-    name: "Racha",
-    level: "Nivel II",
-    image: "/badges/racha-2.png",
-    description:
-      "Mantén una racha de 20 días.",
-    group: "racha",
-  },
-
-  {
-    id: "racha-3",
-    name: "Racha",
-    level: "Nivel III",
-    image: "/badges/racha-3.png",
-    description:
-      "Mantén una racha de 30 días.",
-    group: "racha",
-  },
-];
-
-/* ============================================================
-   RANGOS PEAKSCORE
-============================================================ */
-
-const ranks: Rank[] = [
-  {
-    id: "renacer",
-    name: "Renacer",
-    minXp: 0,
-    maxXp: 499,
-    identity: "El comienzo de un nuevo ascenso",
-  },
-
-  {
-    id: "aprendiz",
-    name: "Aprendiz",
-    minXp: 500,
-    maxXp: 1499,
-    identity: "Construyendo las bases",
-  },
-
-  {
-    id: "explorador",
-    name: "Explorador",
-    minXp: 1500,
-    maxXp: 2999,
-    identity: "Comienza a dominar",
-  },
-
-  {
-    id: "competidor",
-    name: "Competidor",
-    minXp: 3000,
-    maxXp: 4999,
-    identity: "Buen rendimiento",
-  },
-
-  {
-    id: "avanzado",
-    name: "Avanzado",
-    minXp: 5000,
-    maxXp: 7499,
-    identity: "Alto nivel",
-  },
-
-  {
-    id: "elite",
-    name: "Élite",
-    minXp: 7500,
-    maxXp: 9999,
-    identity: "Muy buen dominio",
-  },
-
-  {
-    id: "maestro",
-    name: "Maestro",
-    minXp: 10000,
-    maxXp: 14999,
-    identity: "Dominio excepcional",
-  },
-
-  {
-    id: "gran-maestro",
-    name: "Gran Maestro",
-    minXp: 15000,
-    maxXp: 24999,
-    identity: "Nivel sobresaliente",
-  },
-
-  {
-    id: "peak",
-    name: "Peak",
-    minXp: 25000,
-    maxXp: null,
-    identity: "Máximo rango",
-  },
-];
-
-const rankIcons: Record<string, string> = {
-  renacer: "✦",
-  aprendiz: "🌱",
-  explorador: "⚡",
-  competidor: "🔥",
-  avanzado: "💎",
-  elite: "🏆",
-  maestro: "👑",
-  "gran-maestro": "🌟",
-  peak: "🚀",
+type BadgeData = {
+  id: string;
+  name: string;
+  description: string;
+  requirement_type: string;
+  requirement_target: number;
+  icon: string | null;
 };
 
-/* ============================================================
-   NAVBAR
-============================================================ */
+type ProfileResponse = {
+  profile: ProfileData;
+  season: SeasonData;
+  rank: RankData;
+  unlockedBadgeIds: string[];
+  badges: BadgeData[];
+};
 
-const navItems = [
-  {
-    label: "Inicio",
-    href: "/dashboard",
-    icon: Home,
-  },
+const PROFILE_IMAGES: Record<string, string> = {
+  "peaky-nova": "/avatars/photo_perfil/peaky-nova.png",
+  "peaky-nox": "/avatars/photo_perfil/peaky-nox.png",
+  zyra: "/avatars/photo_perfil/zyrap.png",
+  orby: "/avatars/photo_perfil/orbyp.png",
+};
 
-  {
-    label: "Simulacros",
-    href: "/dashboard/simulacros",
-    icon: Target,
-  },
+const RANK_IMAGES: Record<string, string> = {
+  renacer: "/images/ranks/renacer.webp",
+  aprendiz: "/images/ranks/aprendiz.webp",
+  explorador: "/images/ranks/explorador.webp",
+  competidor: "/images/ranks/competidor.webp",
+  avanzado: "/images/ranks/avanzado.webp",
+  elite: "/images/ranks/elite.webp",
+  maestro: "/images/ranks/maestro.webp",
+  "gran-maestro": "/images/ranks/granmaestro.webp",
+  leyenda: "/images/ranks/leyenda.webp",
+  peak: "/images/ranks/peak.webp",
+};
 
-  {
-    label: "Progreso",
-    href: "/dashboard",
-    icon: BarChart3,
-  },
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("es-CO").format(value);
+}
 
-  {
-    label: "Aprender",
-    href: "/dashboard",
-    icon: BookOpen,
-  },
+function getProfileImage(characterId: string | null) {
+  return PROFILE_IMAGES[characterId ?? ""] ?? PROFILE_IMAGES["peaky-nova"];
+}
 
-  {
-    label: "Retos",
-    href: "/dashboard",
-    icon: Sparkles,
-  },
-
-  {
-    label: "Comunidad",
-    href: "/dashboard",
-    icon: UserRound,
-  },
-
-  {
-    label: "Mi Perfil",
-    href: "/perfil",
-    icon: UserRound,
-  },
-];
-
-const formatNumber = (value: number) =>
-  new Intl.NumberFormat("es-CO").format(value);
-
-/* ============================================================
-   PAGE
-============================================================ */
+function getRankImage(rankId: string) {
+  return RANK_IMAGES[rankId] ?? RANK_IMAGES.renacer;
+}
 
 export default function PerfilPage() {
-  const [theme, setTheme] =
-    useState<Theme>("light");
-
-  const [profileData, setProfileData] =
-    useState<ProfileData | null>(null);
-
-  const [
-    characterCatalog,
-    setCharacterCatalog,
-  ] = useState<CharacterCatalogEntry[]>(
-    [],
-  );
-
-  const [
-    unlockedCharacterIds,
-    setUnlockedCharacterIds,
-  ] = useState<string[]>([]);
-
-  const [
-    unlockedBadgeIds,
-    setUnlockedBadgeIds,
-  ] = useState<string[]>([]);
-
-  const [
-    profileLoading,
-    setProfileLoading,
-  ] = useState(true);
-
-  const [
-    characterActionLoading,
-    setCharacterActionLoading,
-  ] = useState(false);
-
-  const [
-    characterActionError,
-    setCharacterActionError,
-  ] = useState<string | null>(null);
-
-  const [
-    characterModalOpen,
-    setCharacterModalOpen,
-  ] = useState(false);
-
-  const [
-    rankModalOpen,
-    setRankModalOpen,
-  ] = useState(false);
-
-  const [
-    collectionModalOpen,
-    setCollectionModalOpen,
-  ] = useState(false);
-
-  const [
-    purchaseModalCharacterId,
-    setPurchaseModalCharacterId,
-  ] = useState<string | null>(null);
-
-  /* ==========================================================
-     CARD HOVER
-  ========================================================== */
-
-  const cardRef =
-    useRef<HTMLButtonElement | null>(
-      null,
-    );
-
-  const [
-    cardTransform,
-    setCardTransform,
-  ] = useState({
-    x: 0,
-    y: 0,
-    glowX: 50,
-    glowY: 50,
-  });
-
-  /* ==========================================================
-     PERSONAJE SELECCIONADO
-  ========================================================== */
-
-  const selectedCharacterId =
-    profileData?.selectedCharacter ??
-    "peaky-nova";
-
-  const selectedCharacter =
-    peakCharacters.find(
-      (character) =>
-        character.id ===
-        selectedCharacterId,
-    ) ?? peakCharacters[0];
-
-  const selectedCatalogCharacter =
-    characterCatalog.find(
-      (character) =>
-        character.id ===
-        selectedCharacter.id,
-    );
-
-  /* ==========================================================
-     RANGO
-  ========================================================== */
-
-  const currentRank =
-    useMemo(() => {
-      const xp =
-        profileData?.xp ?? 0;
-
-      return (
-        ranks.find(
-          (rank) =>
-            xp >= rank.minXp &&
-            (rank.maxXp === null ||
-              xp <= rank.maxXp),
-        ) ?? ranks[0]
-      );
-    }, [profileData?.xp]);
-
-  const currentRankIndex =
-    ranks.findIndex(
-      (rank) =>
-        rank.id ===
-        currentRank.id,
-    );
-
-  const nextRank =
-    currentRankIndex >= 0 &&
-    currentRankIndex <
-      ranks.length - 1
-      ? ranks[
-          currentRankIndex + 1
-        ]
-      : null;
-
-  const rankProgress =
-    useMemo(() => {
-      const xp =
-        profileData?.xp ?? 0;
-
-      if (!nextRank) {
-        return 100;
-      }
-
-      const total =
-        nextRank.minXp -
-        currentRank.minXp;
-
-      if (total <= 0) {
-        return 100;
-      }
-
-      return Math.max(
-        0,
-        Math.min(
-          100,
-          ((xp -
-            currentRank.minXp) /
-            total) *
-            100,
-        ),
-      );
-    }, [
-      currentRank,
-      nextRank,
-      profileData?.xp,
-    ]);
-
-  /* ==========================================================
-     COLECCIONES
-  ========================================================== */
-
-  const collectionGroups =
-    useMemo(
-      () => [
-        {
-          id: "aprendizaje",
-          label: "Conocimiento",
-          description:
-            "Dominio académico",
-          icon: "◆",
-          items:
-            badges.filter(
-              (badge) =>
-                badge.group ===
-                "aprendizaje",
-            ),
-        },
-
-        {
-          id: "constante",
-          label: "Constancia",
-          description:
-            "Disciplina PeakScore",
-          icon: "✦",
-          items:
-            badges.filter(
-              (badge) =>
-                badge.group ===
-                "constante",
-            ),
-        },
-
-        {
-          id: "racha",
-          label: "Racha",
-          description:
-            "Continuidad",
-          icon: "🔥",
-          items:
-            badges.filter(
-              (badge) =>
-                badge.group ===
-                "racha",
-            ),
-        },
-      ],
-      [],
-    );
-
-  /* ==========================================================
-     CARGA REAL DE SUPABASE
-  ========================================================== */
+  const [data, setData] = useState<ProfileResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [badgePickerOpen, setBadgePickerOpen] = useState(false);
+  const [featuredBadgeIds, setFeaturedBadgeIds] = useState<string[]>([]);
 
   useEffect(() => {
-    const loadProfile =
-      async () => {
-        try {
-          setProfileLoading(
-            true,
-          );
+    let active = true;
 
-          const response =
-            await fetch(
-              "/api/profile",
-              {
-                method: "GET",
-                cache: "no-store",
-              },
-            );
+    const loadProfile = async () => {
+      try {
+        setLoading(true);
 
-          if (!response.ok) {
-            throw new Error(
-              "No se pudo cargar el perfil.",
-            );
-          }
+        const response = await fetch("/api/profile", {
+          method: "GET",
+          cache: "no-store",
+        });
 
-          const data =
-            await response.json();
+        const result = await response.json();
 
-          setProfileData(
-            data.profile ??
-              null,
-          );
+        if (!response.ok) {
+          throw new Error(result?.error ?? "No se pudo cargar el perfil.");
+        }
 
-          setCharacterCatalog(
-            data.characters ??
-              [],
-          );
+        if (!active) return;
 
-          setUnlockedCharacterIds(
-            data.unlockedCharacterIds ??
-              [],
-          );
+        const profileResult = result as ProfileResponse;
+        setData(profileResult);
 
-          setUnlockedBadgeIds(
-            data.unlockedBadgeIds ??
-              [],
-          );
-        } catch (error) {
-          console.error(
-            "Error cargando perfil:",
-            error,
-          );
-        } finally {
-          setProfileLoading(
-            false,
+        setFeaturedBadgeIds(
+          profileResult.badges
+            .filter((badge) => profileResult.unlockedBadgeIds.includes(badge.id))
+            .slice(0, 3)
+            .map((badge) => badge.id),
+        );
+      } catch (requestError) {
+        console.error("[Perfil] Error cargando perfil:", requestError);
+
+        if (active) {
+          setError(
+            requestError instanceof Error
+              ? requestError.message
+              : "No se pudo cargar el perfil.",
           );
         }
-      };
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
     void loadProfile();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  /* ==========================================================
-     TEMA
-  ========================================================== */
+  const unlockedBadges = useMemo(() => {
+    if (!data) return [];
 
-  useEffect(() => {
-    const storedTheme =
-      window.localStorage.getItem(
-        "peakscore-profile-theme",
-      );
-
-    if (
-      storedTheme === "light" ||
-      storedTheme === "dark"
-    ) {
-      setTheme(storedTheme);
-    }
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(
-      "peakscore-profile-theme",
-      theme,
+    return data.badges.filter((badge) =>
+      data.unlockedBadgeIds.includes(badge.id),
     );
+  }, [data]);
 
-    document.documentElement.style.backgroundColor =
-      theme === "dark"
-        ? "#07040d"
-        : "#ffffff";
+  const featuredBadges = useMemo(
+    () =>
+      featuredBadgeIds
+        .map((id) => unlockedBadges.find((badge) => badge.id === id))
+        .filter((badge): badge is BadgeData => Boolean(badge)),
+    [featuredBadgeIds, unlockedBadges],
+  );
 
-    document.body.style.backgroundColor =
-      theme === "dark"
-        ? "#07040d"
-        : "#ffffff";
+  const toggleFeaturedBadge = (badgeId: string) => {
+    setFeaturedBadgeIds((current) => {
+      if (current.includes(badgeId)) {
+        return current.filter((id) => id !== badgeId);
+      }
 
-    document.body.style.transition =
-      "background-color 180ms ease";
-  }, [theme]);
+      if (current.length >= 3) return current;
 
-  /* ==========================================================
-     TILT + GLOW
-  ========================================================== */
-
-  const handleCardMove = (
-    event: MouseEvent<HTMLButtonElement>,
-  ) => {
-    const element =
-      cardRef.current;
-
-    if (!element) {
-      return;
-    }
-
-    const rect =
-      element.getBoundingClientRect();
-
-    const x =
-      event.clientX -
-      rect.left;
-
-    const y =
-      event.clientY -
-      rect.top;
-
-    const percentX =
-      (x / rect.width) * 100;
-
-    const percentY =
-      (y / rect.height) * 100;
-
-    setCardTransform({
-      x:
-        (50 - percentY) *
-        0.06,
-      y:
-        (percentX - 50) *
-        0.06,
-      glowX: percentX,
-      glowY: percentY,
+      return [...current, badgeId];
     });
   };
 
-  const resetCardMove = () => {
-    setCardTransform({
-      x: 0,
-      y: 0,
-      glowX: 50,
-      glowY: 50,
-    });
-  };
-
-  /* ==========================================================
-     EQUIPAR
-  ========================================================== */
-
-  const changeCharacter =
-    async (
-      id: string,
-    ) => {
-      if (
-        characterActionLoading ||
-        id ===
-          selectedCharacterId ||
-        !unlockedCharacterIds.includes(
-          id,
-        )
-      ) {
-        return;
-      }
-
-      try {
-        setCharacterActionLoading(
-          true,
-        );
-
-        setCharacterActionError(
-          null,
-        );
-
-        const response =
-          await fetch(
-            "/api/profile/character",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              body: JSON.stringify(
-                {
-                  action:
-                    "equip",
-                  characterId:
-                    id,
-                },
-              ),
-            },
-          );
-
-        const data =
-          await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.error ??
-              "No se pudo equipar el personaje.",
-          );
-        }
-
-        const newSelected =
-          data.profile
-            ?.selectedCharacter ??
-          id;
-
-        setProfileData(
-          (current) =>
-            current
-              ? {
-                  ...current,
-                  selectedCharacter:
-                    newSelected,
-                }
-              : current,
-        );
-      } catch (error) {
-        console.error(
-          "Error equipando personaje:",
-          error,
-        );
-
-        setCharacterActionError(
-          error instanceof
-            Error
-            ? error.message
-            : "No se pudo equipar el personaje.",
-        );
-      } finally {
-        setCharacterActionLoading(
-          false,
-        );
-      }
-    };
-
-  /* ==========================================================
-     COMPRAR
-  ========================================================== */
-
-  const purchaseCharacter =
-    async (
-      id: string,
-    ) => {
-      if (
-        characterActionLoading ||
-        unlockedCharacterIds.includes(
-          id,
-        )
-      ) {
-        return false;
-      }
-
-      try {
-        setCharacterActionLoading(
-          true,
-        );
-
-        setCharacterActionError(
-          null,
-        );
-
-        const response =
-          await fetch(
-            "/api/profile/character",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-              body: JSON.stringify(
-                {
-                  action:
-                    "purchase",
-                  characterId:
-                    id,
-                },
-              ),
-            },
-          );
-
-        const data =
-          await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            data.error ??
-              "No se pudo comprar el personaje.",
-          );
-        }
-
-        setUnlockedCharacterIds(
-          (current) =>
-            current.includes(id)
-              ? current
-              : [
-                  ...current,
-                  id,
-                ],
-        );
-
-        if (data.profile) {
-          setProfileData(
-            (current) =>
-              current
-                ? {
-                    ...current,
-                    coins:
-                      data.profile
-                        .coins,
-                    xp:
-                      data.profile
-                        .xp,
-                    level:
-                      data.profile
-                        .level,
-                    selectedCharacter:
-                      data.profile
-                        .selectedCharacter ??
-                      current.selectedCharacter,
-                  }
-                : current,
-          );
-        }
-
-        return true;
-      } catch (error) {
-        console.error(
-          "Error comprando personaje:",
-          error,
-        );
-
-        setCharacterActionError(
-          error instanceof
-            Error
-            ? error.message
-            : "No se pudo comprar el personaje.",
-        );
-
-        return false;
-      } finally {
-        setCharacterActionLoading(
-          false,
-        );
-      }
-    };
-
-  const purchaseCharacterData =
-    purchaseModalCharacterId
-      ? peakCharacters.find(
-          (character) =>
-            character.id ===
-            purchaseModalCharacterId,
-        ) ?? null
-      : null;
-
-  const purchaseCatalog =
-    purchaseModalCharacterId
-      ? characterCatalog.find(
-          (character) =>
-            character.id ===
-            purchaseModalCharacterId,
-        ) ?? null
-      : null;
-
-  const purchasePrice =
-    purchaseCatalog
-      ?.price_coins ?? 0;
-
-  const enoughCoins =
-    (profileData?.coins ??
-      0) >= purchasePrice;
-
-  const dark =
-    theme === "dark";
-
-  /* ==========================================================
-     LOADING
-  ========================================================== */
-
-  if (profileLoading) {
+  if (loading) {
     return (
-      <main
-        className={
-          dark
-            ? "flex min-h-screen items-center justify-center bg-[#07040d] text-white"
-            : "flex min-h-screen items-center justify-center bg-white text-[#102019]"
-        }
-      >
-        <div className="text-center">
-          <div
-            className={
-              dark
-                ? "mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-300/20 bg-violet-500/10"
-                : "mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/50 bg-emerald-50"
-            }
-          >
-            <Sparkles
-              size={22}
-              className={
-                dark
-                  ? "text-violet-300"
-                  : "text-emerald-600"
-              }
-            />
+      <main className="min-h-screen bg-[#05030b] px-4 py-8 text-white sm:px-6 lg:px-8">
+        <div className="ml-auto w-full max-w-[1240px]">
+          <div className="flex min-h-[410px] items-center justify-center rounded-[26px] border border-violet-400/15 bg-[#08050f]">
+            <div className="text-center">
+              <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-white/10 border-t-violet-400" />
+              <p className="mt-4 font-mono text-[9px] font-black uppercase tracking-[0.16em] text-white/35">
+                Cargando perfil
+              </p>
+            </div>
           </div>
-
-          <p className="mt-4 text-sm font-black font-mono">
-            Cargando PeakScore...
-          </p>
         </div>
       </main>
     );
   }
 
+  if (!data) {
+    return (
+      <main className="min-h-screen bg-[#05030b] px-4 py-8 text-white sm:px-6 lg:px-8">
+        <div className="ml-auto w-full max-w-[1240px]">
+          <div className="rounded-[26px] border border-red-400/20 bg-[#08050f] p-10 text-center">
+            <AlertTriangle className="mx-auto h-9 w-9 text-red-300/70" />
+            <p className="mt-4 font-mono text-sm font-black uppercase text-red-200">
+              {error ?? "No se pudo cargar el perfil."}
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const historicalXp = data.profile.historicalXp ?? data.profile.xp ?? 0;
+  const seasonXp = data.profile.seasonXp ?? 0;
+  const profileImage = getProfileImage(data.profile.selectedCharacter);
+  const rankImage = getRankImage(data.rank.id);
+  const displayName = data.profile.fullName?.trim().toUpperCase() || "USUARIO";
+  const username = data.profile.email?.split("@")[0]?.trim() || "usuario";
+
   return (
-    <main
-      className={
-        dark
-          ? "min-h-screen bg-[#07040d] text-white"
-          : "min-h-screen bg-white text-[#102019]"
-      }
-    >
-      {/* ======================================================
-          NAVBAR
-      ====================================================== */}
+    <main className="min-h-screen overflow-x-hidden bg-[#05030b] px-3 pb-12 pt-7 text-white sm:px-5 lg:px-8 lg:pt-9">
+      {/* app/layout.tsx ya monta GlobalNavbar. No se agrega otro Navbar aquí. */}
 
-      <header
-        className={
-          dark
-            ? "sticky top-0 z-40 border-b border-violet-400/20 bg-[#0b0713]/95 backdrop-blur-xl"
-            : "sticky top-0 z-40 border-b border-emerald-300/45 bg-white/95 backdrop-blur-xl"
-        }
-      >
-        <div className="mx-auto flex h-[64px] w-full max-w-[1480px] items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-2.5"
-          >
-            <span
-              className={
-                dark
-                  ? "flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/35 bg-emerald-400/10 text-emerald-300"
-                  : "flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/60 bg-emerald-50 text-emerald-700"
-              }
-            >
-              <Sparkles size={17} />
-            </span>
+      <section className="relative ml-auto w-full max-w-[1240px] overflow-hidden rounded-[26px] border border-violet-400/20 bg-[#08050f] shadow-[0_28px_90px_rgba(0,0,0,0.55)]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.13]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 18% 50%, rgba(52,211,153,.18), transparent 28%), radial-gradient(circle at 85% 50%, rgba(139,92,246,.18), transparent 32%)",
+          }}
+        />
 
-            <span className="text-lg font-black font-mono">
-              PeakScore
-            </span>
-          </Link>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-0 top-0 h-px w-[55%] bg-gradient-to-r from-emerald-400/70 via-cyan-400/30 to-transparent"
+        />
 
-          <nav className="hidden items-center gap-1 lg:flex">
-            {navItems.map(
-              (item) => {
-                const Icon =
-                  item.icon;
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 right-0 h-px w-[55%] bg-gradient-to-l from-violet-400/70 via-fuchsia-400/25 to-transparent"
+        />
 
-                const active =
-                  item.label ===
-                  "Mi Perfil";
+        <div className="relative z-10 grid min-h-[410px] grid-cols-[150px_minmax(0,1fr)_245px] gap-6 p-6 xl:grid-cols-[170px_minmax(0,1fr)_275px] xl:gap-7 xl:p-7">
+          {/* FOTO_PERFIL */}
 
-                return (
-                  <Link
-                    key={
-                      item.label
-                    }
-                    href={
-                      item.href
-                    }
-                    className={
-                      active
-                        ? dark
-                          ? "flex items-center gap-2 rounded-xl border border-violet-300/35 bg-violet-500/10 px-3 py-2 text-[9px] font-black text-violet-200 font-mono"
-                          : "flex items-center gap-2 rounded-xl border border-emerald-300/50 bg-emerald-50 px-3 py-2 text-[9px] font-black text-emerald-700 font-mono"
-                        : dark
-                          ? "flex items-center gap-2 rounded-xl px-3 py-2 text-[9px] font-bold text-white/45 transition hover:bg-white/[0.03] hover:text-white font-mono"
-                          : "flex items-center gap-2 rounded-xl px-3 py-2 text-[9px] font-bold text-[#65736a] transition hover:bg-[#f0f5f1] hover:text-[#17251d] font-mono"
-                    }
-                  >
-                    <Icon size={14} />
+          <div className="flex items-center justify-center">
+            <div className="relative flex h-[175px] w-[145px] items-center justify-center overflow-hidden rounded-[22px] border border-emerald-300/30 bg-[#07130e] shadow-[0_0_30px_rgba(52,211,153,0.07)]">
+              <span aria-hidden="true" className="absolute left-2 top-2 h-2 w-2 bg-emerald-300 shadow-[0_0_9px_rgba(110,231,183,.8)]" />
+              <span aria-hidden="true" className="absolute right-2 top-2 h-2 w-2 bg-cyan-300 shadow-[0_0_9px_rgba(103,232,249,.8)]" />
+              <span aria-hidden="true" className="absolute bottom-2 left-2 h-2 w-2 bg-violet-300" />
+              <span aria-hidden="true" className="absolute bottom-2 right-2 h-2 w-2 bg-fuchsia-300" />
 
-                    {
-                      item.label
-                    }
-                  </Link>
-                );
-              },
-            )}
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <div
-              className={
-                dark
-                  ? "hidden items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 sm:flex"
-                  : "hidden items-center gap-1.5 rounded-xl border border-black/8 bg-white px-3 py-2 sm:flex"
-              }
-            >
-              <Coins
-                size={15}
-                className="text-yellow-400"
+              <Image
+                src={profileImage}
+                alt="Foto de perfil"
+                width={180}
+                height={180}
+                priority
+                className="h-[172px] w-auto object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,.75)]"
               />
+            </div>
+          </div>
 
-              <span className="text-[9px] font-black font-mono">
-                {formatNumber(
-                  profileData?.coins ??
-                    0,
-                )}
-              </span>
+          {/* USER + LEVEL + SEASON + BADGES */}
+
+          <div className="min-w-0">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="truncate font-mono text-[30px] font-black uppercase leading-none tracking-[-0.06em] text-white xl:text-[36px]">
+                  {displayName}
+                </h1>
+
+                <p className="mt-1 font-mono text-[10px] font-bold text-white/35">
+                  @{username}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                aria-label="Editar perfil"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-violet-300/25 bg-violet-400/[0.05] text-violet-200/70 transition hover:border-violet-200/60 hover:bg-violet-400/15 hover:text-white"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
             </div>
 
-            <div
-              className={
-                dark
-                  ? "hidden items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 sm:flex"
-                  : "hidden items-center gap-1.5 rounded-xl border border-black/8 bg-white px-3 py-2 sm:flex"
-              }
-            >
-              <Flame
-                size={15}
-                className="text-orange-400"
-                fill="currentColor"
-              />
+            <div className="mt-5 grid max-w-[640px] grid-cols-2 gap-3">
+              {/* NIVEL: AMARILLO, SOLIDO, DELGADO */}
 
-              <span className="text-[9px] font-black font-mono">
-                {formatNumber(
-                  profileData?.streak ??
-                    0,
-                )}{" "}
-                días
-              </span>
+              <div className="relative min-h-[88px] overflow-hidden rounded-xl border border-yellow-300/55 bg-[#2a2108] px-4 py-3 shadow-[inset_0_0_25px_rgba(250,204,21,0.045)]">
+                <span aria-hidden="true" className="absolute right-0 top-0 h-px w-20 bg-yellow-200/70" />
+
+                <p className="font-mono text-[7px] font-black uppercase tracking-[0.18em] text-yellow-300/70">
+                  NIVEL
+                </p>
+
+                <p className="mt-1 font-mono text-[21px] font-black leading-none text-white">
+                  Nivel {data.profile.level}
+                </p>
+
+                <p className="mt-2 font-mono text-[8px] font-black uppercase text-yellow-100/55">
+                  {formatNumber(historicalXp)} XP
+                </p>
+              </div>
+
+              {/* TEMPORADA: AZUL, SOLIDO, MISMO TAMANO */}
+
+              <div className="relative min-h-[88px] overflow-hidden rounded-xl border border-cyan-300/55 bg-[#0a2851] px-4 py-3 shadow-[inset_0_0_25px_rgba(34,211,238,0.055)]">
+                <span aria-hidden="true" className="absolute right-0 top-0 h-px w-20 bg-cyan-200/70" />
+
+                <p className="font-mono text-[7px] font-black uppercase tracking-[0.18em] text-cyan-200/80">
+                  TEMPORADA
+                </p>
+
+                <p className="mt-1 font-mono text-[21px] font-black leading-none text-white">
+                  Temporada {data.season.number}
+                </p>
+
+                <p className="mt-2 font-mono text-[8px] font-black uppercase text-cyan-100/60">
+                  {formatNumber(seasonXp)} XP DE TEMPORADA
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 h-px w-full max-w-[650px] bg-gradient-to-r from-emerald-300/45 via-white/10 to-transparent" />
+
+            {/* INSIGNIAS */}
+
+            <div className="mt-4 max-w-[650px]">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="font-mono text-[8px] font-black uppercase tracking-[0.16em] text-white/45">
+                  INSIGNIAS
+                </p>
+
+                {unlockedBadges.length > 0 && (
+                  <p className="font-mono text-[7px] font-bold text-white/25">
+                    {unlockedBadges.length} DESBLOQUEADAS
+                  </p>
+                )}
+              </div>
+
+              {unlockedBadges.length === 0 ? (
+                <div className="flex min-h-[78px] items-center gap-3 rounded-xl border border-dashed border-yellow-300/20 bg-[#161007] px-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-yellow-300/15 bg-yellow-300/[0.04]">
+                    <AlertTriangle className="h-4 w-4 text-yellow-300/55" />
+                  </div>
+
+                  <div>
+                    <p className="font-mono text-[8px] font-black uppercase text-yellow-100/55">
+                      AÚN NO TIENES INSIGNIAS
+                    </p>
+
+                    <p className="mt-1 max-w-[470px] font-mono text-[7px] leading-4 text-white/25">
+                      Completa actividades para conseguir tus primeras insignias.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: 5 }).map((_, index) => {
+                    const badge = featuredBadges[index];
+
+                    if (!badge) {
+                      return (
+                        <button
+                          key={"empty-" + index}
+                          type="button"
+                          onClick={() => setBadgePickerOpen(true)}
+                          className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-xl border border-dashed border-violet-300/25 bg-[#0b0812] text-violet-200/45 transition hover:border-violet-300/55 hover:bg-violet-400/[0.06] hover:text-white"
+                          aria-label="Agregar insignia"
+                        >
+                          <Plus className="h-5 w-5" />
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={badge.id}
+                        type="button"
+                        onClick={() => setBadgePickerOpen(true)}
+                        title={badge.name}
+                        className="relative flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-xl border border-violet-300/20 bg-[#0b0812] transition hover:-translate-y-0.5 hover:border-violet-300/50"
+                      >
+                        {badge.icon ? (
+                          <Image
+                            src={badge.icon}
+                            alt={badge.name}
+                            width={52}
+                            height={52}
+                            className="h-[52px] w-[52px] object-contain"
+                          />
+                        ) : (
+                          <span className="font-mono text-[8px] text-white/25">?</span>
+                        )}
+
+                        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border border-[#08050f] bg-emerald-400">
+                          <Check className="h-2.5 w-2.5 text-black" />
+                        </span>
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => setBadgePickerOpen(true)}
+                    className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-xl border border-dashed border-violet-300/30 bg-violet-400/[0.035] text-violet-200/55 transition hover:border-violet-300/65 hover:bg-violet-400/[0.08] hover:text-white"
+                    aria-label="Agregar insignia"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* RANGO GRANDE, SIN TARJETA ALREDEDOR.
+              El fondo negro del WEBP se conserva por ahora. */}
+
+          <div className="relative flex min-h-[360px] flex-col items-center justify-center">
+            <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[42%] h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald-300/10 blur-[60px]" />
+
+            <div className="relative h-[250px] w-[250px]">
+              <Image
+                src={rankImage}
+                alt=""
+                fill
+                sizes="250px"
+                priority
+                className="object-contain drop-shadow-[0_0_28px_rgba(110,231,183,0.14)]"
+              />
+            </div>
+
+            <div className="relative -mt-5 text-center">
+              <p className="font-mono text-[10px] font-black uppercase tracking-[0.16em] text-white/65">
+                {data.rank.name}
+              </p>
+
+              <p className="mt-1 font-mono text-[8px] font-black uppercase text-emerald-300/75">
+                {formatNumber(seasonXp)} XP
+              </p>
+
+              {data.rank.xpToNextRank > 0 && (
+                <p className="mt-0.5 font-mono text-[7px] text-white/25">
+                  {formatNumber(data.rank.xpToNextRank)} XP para subir
+                </p>
+              )}
             </div>
 
             <button
               type="button"
-              onClick={() =>
-                setTheme(
-                  (current) =>
-                    current ===
-                    "light"
-                      ? "dark"
-                      : "light",
-                )
-              }
-              aria-label="Cambiar tema"
-              className={
-                dark
-                  ? "flex h-9 w-9 items-center justify-center rounded-xl border border-violet-300/25 bg-violet-500/10 text-violet-200"
-                  : "flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300/55 bg-emerald-50 text-emerald-700"
-              }
+              className="group relative mt-4 flex h-10 w-[170px] items-center justify-center gap-2 overflow-hidden rounded-xl border border-violet-300/45 bg-gradient-to-r from-violet-700 via-purple-600 to-fuchsia-500 font-mono text-[8px] font-black uppercase tracking-[0.12em] text-white shadow-[0_8px_25px_rgba(139,92,246,0.25)] transition-all hover:-translate-y-0.5 hover:border-violet-100 hover:shadow-[0_12px_32px_rgba(168,85,247,0.4)]"
             >
-              {dark ? (
-                <Sun size={15} />
-              ) : (
-                <Moon size={15} />
-              )}
+              <span aria-hidden="true" className="absolute inset-y-0 left-[-35%] w-[25%] rotate-[18deg] bg-white/35 blur-md transition-transform duration-700 group-hover:translate-x-[500%]" />
+              <Pencil className="relative z-10 h-3.5 w-3.5" />
+              <span className="relative z-10">EDITAR PERFIL</span>
+              <span className="relative z-10 text-violet-200">→</span>
             </button>
-
-            <div
-              className={
-                dark
-                  ? "h-9 w-9 overflow-hidden rounded-xl border border-violet-300/20 bg-violet-500/10"
-                  : "h-9 w-9 overflow-hidden rounded-xl border border-emerald-300/55 bg-emerald-50"
-              }
-            >
-              <Image
-                src={
-                  selectedCharacter.profile
-                }
-                alt={
-                  selectedCharacter.name
-                }
-                width={64}
-                height={64}
-                className="h-full w-full object-cover"
-              />
-            </div>
           </div>
         </div>
-      </header>
+      </section>
 
-      {/* ======================================================
-          CONTENIDO
-      ====================================================== */}
+      {/* SELECTOR DE INSIGNIAS */}
 
-      <div className="mx-auto w-full max-w-[1480px] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-5">
-          <p
-            className={
-              dark
-                ? "text-[9px] font-black uppercase tracking-[0.18em] text-violet-300 font-mono"
-                : "text-[9px] font-black uppercase tracking-[0.18em] text-emerald-700 font-mono"
+      {badgePickerOpen && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setBadgePickerOpen(false);
             }
-          >
-            PEAKSCORE
-          </p>
-
-          <h1 className="mt-1 text-4xl font-black tracking-[-0.04em] font-mono sm:text-5xl">
-            MI PERFIL
-          </h1>
-
-          <p
-            className={
-              dark
-                ? "mt-1 text-xs text-white/40 font-mono"
-                : "mt-1 text-xs text-[#707a73] font-mono"
-            }
-          >
-            Tu progreso, tu Peak y tus recompensas.
-          </p>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-[315px_minmax(0,1fr)]">
-          {/* ==================================================
-              SIDEBAR
-          ================================================== */}
-
-          <aside className="space-y-4">
-            {/* =================================================
-                TU PEAK
-            ================================================= */}
-
-            <section
-              className={
-                dark
-                  ? "overflow-hidden rounded-2xl border border-violet-300/15 bg-[#10091a]"
-                  : "overflow-hidden rounded-2xl border border-black/8 bg-white"
-              }
-            >
-              {/* SOLO EL TÍTULO */}
-
-              <div
-                className={
-                  dark
-                    ? "border-b border-white/8 px-4 py-4"
-                    : "border-b border-black/7 px-4 py-4"
-                }
-              >
-                <p
-                  className={
-                    dark
-                      ? "text-[8px] font-black uppercase tracking-[0.18em] text-violet-300 font-mono"
-                      : "text-[8px] font-black uppercase tracking-[0.18em] text-emerald-700 font-mono"
-                  }
-                >
-                  TU PEAK
+          }}
+        >
+          <div className="w-full max-w-[720px] overflow-hidden rounded-[24px] border border-violet-300/20 bg-[#0b0712] shadow-[0_30px_100px_rgba(0,0,0,.7)]">
+            <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
+              <div>
+                <p className="font-mono text-[8px] font-black uppercase tracking-[0.15em] text-violet-300">
+                  INSIGNIAS
                 </p>
+                <h2 className="mt-1 font-mono text-lg font-black text-white">
+                  Personaliza tus insignias
+                </h2>
               </div>
 
-              {/* =================================================
-                  TARJETA COMPLETA
-              ================================================= */}
-
-              <div className="p-2">
-                <button
-                  ref={cardRef}
-                  type="button"
-                  onClick={() =>
-                    setCharacterModalOpen(
-                      true,
-                    )
-                  }
-                  onMouseMove={
-                    handleCardMove
-                  }
-                  onMouseLeave={
-                    resetCardMove
-                  }
-                  className="group relative block w-full cursor-pointer text-left [perspective:1400px]"
-                  aria-label={`Abrir ${selectedCharacter.name}`}
-                >
-                  <div
-                    className="relative transition-transform duration-150 ease-out"
-                    style={{
-                      transform: `
-                        rotateX(${cardTransform.x}deg)
-                        rotateY(${cardTransform.y}deg)
-                      `,
-                    }}
-                  >
-                    {/* GLOW EXTERIOR */}
-
-                    <div
-                      className="
-                        pointer-events-none
-                        absolute
-                        -inset-4
-                        rounded-[30px]
-                        bg-emerald-400/0
-                        blur-3xl
-                        transition-all
-                        duration-500
-                        group-hover:bg-emerald-400/20
-                      "
-                    />
-
-                    {/* IMAGEN */}
-
-                    <div className="relative overflow-hidden rounded-xl">
-                      <Image
-                        src={
-                          selectedCharacter.card
-                        }
-                        alt={
-                          selectedCharacter.name
-                        }
-                        width={
-                          700
-                        }
-                        height={
-                          1100
-                        }
-                        priority
-                        className="
-                          block
-                          h-auto
-                          w-full
-                          select-none
-                          object-cover
-                          transition-transform
-                          duration-500
-                          ease-out
-                          group-hover:scale-[1.015]
-                        "
-                      />
-
-                      {/* GLOW DEL CURSOR */}
-
-                      <div
-                        className="
-                          pointer-events-none
-                          absolute
-                          inset-0
-                          opacity-0
-                          transition-opacity
-                          duration-300
-                          group-hover:opacity-100
-                        "
-                        style={{
-                          background: `radial-gradient(
-                            circle 180px at ${cardTransform.glowX}% ${cardTransform.glowY}%,
-                            rgba(110,255,170,0.23),
-                            rgba(110,255,170,0.07) 35%,
-                            transparent 73%
-                          )`,
-                        }}
-                      />
-
-                      {/* DESTELLO */}
-
-                      <div
-                        className="
-                          pointer-events-none
-                          absolute
-                          -left-[65%]
-                          top-[-30%]
-                          z-30
-                          h-[170%]
-                          w-[27%]
-                          rotate-[18deg]
-                          bg-gradient-to-r
-                          from-transparent
-                          via-white/35
-                          to-transparent
-                          opacity-0
-                          transition-all
-                          duration-700
-                          group-hover:left-[135%]
-                          group-hover:opacity-100
-                        "
-                      />
-
-                      {/* BORDE GLOW */}
-
-                      <div
-                        className="
-                          pointer-events-none
-                          absolute
-                          inset-0
-                          rounded-xl
-                          border
-                          border-transparent
-                          transition-all
-                          duration-300
-                          group-hover:border-emerald-300/50
-                          group-hover:shadow-[inset_0_0_36px_rgba(52,211,153,0.16)]
-                        "
-                      />
-
-                      {/* =================================================
-                          DESCRIPCIÓN
-                          SOLO DESCRIPCIÓN
-                          SIN HABILIDAD
-                          SIN RAREZA
-                          SIN BOTÓN
-                      ================================================= */}
-
-                      <div
-                        className="
-                          pointer-events-none
-                          absolute
-                          inset-x-2
-                          bottom-2
-                          z-40
-                          translate-y-[115%]
-                          rounded-xl
-                          border
-                          border-emerald-300/15
-                          bg-[#07100c]/96
-                          px-4
-                          py-3
-                          opacity-0
-                          shadow-2xl
-                          backdrop-blur-xl
-                          transition-all
-                          duration-300
-                          ease-out
-                          group-hover:translate-y-0
-                          group-hover:opacity-100
-                        "
-                      >
-                        <p className="text-[7px] font-black uppercase tracking-[0.18em] text-emerald-300 font-mono">
-                          DESCRIPCIÓN
-                        </p>
-
-                        <h3 className="mt-1 text-base font-black text-white font-mono">
-                          {
-                            selectedCharacter.name
-                          }
-                        </h3>
-
-                        <p className="mt-2 text-[8px] leading-5 text-white/65 font-mono">
-                          {
-                            selectedCharacter.description
-                          }
-                        </p>
-
-                        <p className="mt-3 text-[6px] font-black uppercase tracking-[0.15em] text-white/25 font-mono">
-                          Haz clic para conocer al personaje
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              </div>
-            </section>
-
-            {/* =================================================
-                RANGO
-            ================================================= */}
-
-            <section
-              className={
-                dark
-                  ? "rounded-2xl border border-violet-300/15 bg-[#10091a] p-4"
-                  : "rounded-2xl border border-black/8 bg-white p-4"
-              }
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                        : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                    }
-                  >
-                    TEMPORADA
-                  </p>
-
-                  <h2 className="mt-1 text-lg font-black font-mono">
-                    Tu rango
-                  </h2>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setRankModalOpen(
-                      true,
-                    )
-                  }
-                  className={
-                    dark
-                      ? "text-[8px] font-black text-violet-200 font-mono"
-                      : "text-[8px] font-black text-emerald-700 font-mono"
-                  }
-                >
-                  Ver rangos
-                </button>
-              </div>
-
-              <div className="mt-4 flex items-center gap-3">
-                {/* FOTO DEL PERSONAJE EQUIPADO */}
-
-                <div
-                  className={
-                    dark
-                      ? "h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-violet-300/35 bg-violet-500/10"
-                      : "h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-emerald-400 bg-emerald-50"
-                  }
-                >
-                  <Image
-                    src={
-                      selectedCharacter.profile
-                    }
-                    alt={
-                      selectedCharacter.name
-                    }
-                    width={
-                      100
-                    }
-                    height={
-                      100
-                    }
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-black font-mono">
-                      {
-                        currentRank.name
-                      }
-                    </p>
-
-                    <span className="text-lg">
-                      {
-                        rankIcons[
-                          currentRank.id
-                        ]
-                      }
-                    </span>
-                  </div>
-
-                  <p
-                    className={
-                      dark
-                        ? "mt-0.5 text-[8px] text-white/35 font-mono"
-                        : "mt-0.5 text-[8px] text-[#7c867f] font-mono"
-                    }
-                  >
-                    {formatNumber(
-                      currentRank.minXp,
-                    )}{" "}
-                    XP+
-                  </p>
-
-                  <div
-                    className={
-                      dark
-                        ? "mt-2 h-2 overflow-hidden rounded-full bg-white/10"
-                        : "mt-2 h-2 overflow-hidden rounded-full bg-black/8"
-                    }
-                  >
-                    <div
-                      className={
-                        dark
-                          ? "h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400 transition-all duration-500"
-                          : "h-full rounded-full bg-gradient-to-r from-emerald-400 to-lime-400 transition-all duration-500"
-                      }
-                      style={{
-                        width: `${rankProgress}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className={
-                  dark
-                    ? "mt-4 rounded-xl border border-violet-300/15 bg-violet-500/[0.05] p-3"
-                    : "mt-4 rounded-xl border border-emerald-300/30 bg-emerald-50 p-3"
-                }
+              <button
+                type="button"
+                onClick={() => setBadgePickerOpen(false)}
+                className="rounded-lg border border-white/10 px-3 py-2 font-mono text-[7px] font-black uppercase text-white/45 hover:text-white"
               >
-                <p className="text-[8px] font-black font-mono">
-                  {nextRank
-                    ? `Siguiente · ${nextRank.name}`
-                    : "Rango máximo"}
-                </p>
+                CERRAR
+              </button>
+            </div>
 
-                <p
-                  className={
-                    dark
-                      ? "mt-1 text-[8px] text-white/35 font-mono"
-                      : "mt-1 text-[8px] text-[#78827b] font-mono"
-                  }
-                >
-                  {nextRank
-                    ? `${formatNumber(
-                        Math.max(
-                          0,
-                          nextRank.minXp -
-                            (profileData?.xp ??
-                              0),
-                        ),
-                      )} XP para avanzar.`
-                    : "Has alcanzado el máximo rango."}
-                </p>
-              </div>
-            </section>
-
-            {/* =================================================
-                ESTADÍSTICAS
-            ================================================= */}
-
-            <section
-              className={
-                dark
-                  ? "rounded-2xl border border-violet-300/15 bg-[#10091a] p-4"
-                  : "rounded-2xl border border-black/8 bg-white p-4"
-              }
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                        : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                    }
-                  >
-                    DATOS
+            <div className="max-h-[70vh] overflow-y-auto p-5">
+              {unlockedBadges.length === 0 ? (
+                <div className="flex min-h-[230px] flex-col items-center justify-center text-center">
+                  <AlertTriangle className="h-9 w-9 text-yellow-300/55" />
+                  <p className="mt-4 font-mono text-sm font-black uppercase text-white/55">
+                    AÚN NO TIENES INSIGNIAS
                   </p>
-
-                  <h2 className="mt-1 text-lg font-black font-mono">
-                    Estadísticas
-                  </h2>
-                </div>
-
-                <BarChart3
-                  size={18}
-                  className={
-                    dark
-                      ? "text-violet-300"
-                      : "text-emerald-600"
-                  }
-                />
-              </div>
-
-              <div className="mt-4 space-y-3">
-                <MiniStat
-                  dark={dark}
-                  label="XP Total"
-                  value={`${formatNumber(
-                    profileData?.xp ??
-                      0,
-                  )} XP`}
-                  valueClass="text-cyan-400"
-                />
-
-                <MiniStat
-                  dark={dark}
-                  label="Simulacros"
-                  value={formatNumber(
-                    profileData?.simulations ??
-                      0,
-                  )}
-                />
-
-                <MiniStat
-                  dark={dark}
-                  label="Promedio ICFES"
-                  value={
-                    profileData?.averageScore !=
-                    null
-                      ? `${profileData.averageScore}%`
-                      : "0%"
-                  }
-                  valueClass="text-yellow-400"
-                />
-              </div>
-            </section>
-          </aside>
-
-          {/* ==================================================
-              MAIN
-          ================================================== */}
-
-          <section className="min-w-0 space-y-4">
-            {/* =================================================
-                IDENTIDAD DEL USUARIO
-            ================================================= */}
-
-            <section
-              className={
-                dark
-                  ? "rounded-2xl border border-violet-300/15 bg-[#10091a] p-4"
-                  : "rounded-2xl border border-black/8 bg-white p-4"
-              }
-            >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex items-center gap-4">
-                  <div
-                    className={
-                      dark
-                        ? "h-[72px] w-[72px] shrink-0 overflow-hidden rounded-2xl border border-violet-300/20 bg-violet-500/10"
-                        : "h-[72px] w-[72px] shrink-0 overflow-hidden rounded-2xl border border-emerald-300/50 bg-emerald-50"
-                    }
-                  >
-                    <Image
-                      src={
-                        selectedCharacter.profile
-                      }
-                      alt={
-                        selectedCharacter.name
-                      }
-                      width={
-                        110
-                      }
-                      height={
-                        110
-                      }
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-2xl font-black tracking-[-0.04em] font-mono sm:text-3xl">
-                        {profileData?.fullName ??
-                          "Mi perfil"}
-                      </h2>
-
-                      <span
-                        className={
-                          dark
-                            ? "rounded-full border border-violet-300/20 bg-violet-500/10 px-2.5 py-1 text-[7px] font-black text-violet-200 font-mono"
-                            : "rounded-full border border-emerald-300/35 bg-emerald-50 px-2.5 py-1 text-[7px] font-black text-emerald-700 font-mono"
-                        }
-                      >
-                        ESTUDIANTE
-                      </span>
-                    </div>
-
-                    <p
-                      className={
-                        dark
-                          ? "mt-1 text-[9px] text-white/35 font-mono"
-                          : "mt-1 text-[9px] text-[#7a847d] font-mono"
-                      }
-                    >
-                      Nivel{" "}
-                      {profileData?.level ??
-                        1}
-                    </p>
-                  </div>
-                </div>
-
-                {/* LEVEL */}
-
-                <div
-                  className="
-                    relative
-                    overflow-hidden
-                    rounded-2xl
-                    border
-                    border-yellow-300/25
-                    bg-yellow-300/[0.03]
-                    px-7
-                    py-3
-                    text-center
-                  "
-                >
-                  <div className="pointer-events-none absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-yellow-200/10 to-transparent" />
-
-                  <p className="relative text-[9px] font-black uppercase tracking-[0.25em] text-yellow-300 font-mono">
-                    LEVEL
-                  </p>
-
-                  <p className="relative mt-0.5 text-2xl font-black text-yellow-300 font-mono">
-                    {profileData?.level ??
-                      1}
+                  <p className="mt-2 max-w-sm font-mono text-[8px] leading-5 text-white/25">
+                    Completa actividades para desbloquearlas.
                   </p>
                 </div>
-              </div>
-
-              <div className="mt-4">
-                <div className="flex items-center justify-between">
-                  <span
-                    className={
-                      dark
-                        ? "text-[8px] text-white/35 font-mono"
-                        : "text-[8px] text-[#77817f] font-mono"
-                    }
-                  >
-                    Experiencia
-                  </span>
-
-                  <span className="text-[9px] font-black text-cyan-400 font-mono">
-                    {formatNumber(
-                      profileData?.xp ??
-                        0,
-                    )}{" "}
-                    XP
-                  </span>
-                </div>
-
-                <div
-                  className={
-                    dark
-                      ? "mt-2 h-3 overflow-hidden rounded-full bg-white/10"
-                      : "mt-2 h-3 overflow-hidden rounded-full bg-black/8"
-                  }
-                >
-                  <div
-                    className={
-                      dark
-                        ? "h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-cyan-300"
-                        : "h-full rounded-full bg-gradient-to-r from-emerald-400 via-lime-300 to-cyan-300"
-                    }
-                    style={{
-                      width: `${Math.max(
-                        3,
-                        Math.min(
-                          100,
-                          rankProgress,
-                        ),
-                      )}%`,
-                    }}
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* =================================================
-                STATS
-            ================================================= */}
-
-            <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <StatCard
-                dark={dark}
-                label="Monedas"
-                value={formatNumber(
-                  profileData?.coins ??
-                    0,
-                )}
-                icon={
-                  <Coins
-                    size={23}
-                    className="text-yellow-400"
-                  />
-                }
-              />
-
-              <StatCard
-                dark={dark}
-                label="Racha"
-                value={`${formatNumber(
-                  profileData?.streak ??
-                    0,
-                )} días`}
-                icon={
-                  <Image
-                    src="/dashboard/racha-pixel.webp"
-                    alt="Racha"
-                    width={60}
-                    height={60}
-                    className="h-12 w-12 object-contain"
-                  />
-                }
-              />
-
-              <StatCard
-                dark={dark}
-                label="Simulacros"
-                value={formatNumber(
-                  profileData?.simulations ??
-                    0,
-                )}
-                subtitle="Completados"
-                icon={
-                  <Image
-                    src="/peaky/homepage/statslibro.png"
-                    alt="Simulacros"
-                    width={60}
-                    height={60}
-                    className="h-12 w-12 object-contain"
-                  />
-                }
-              />
-
-              <StatCard
-                dark={dark}
-                label="Promedio"
-                value={
-                  profileData?.averageScore !=
-                  null
-                    ? `${profileData.averageScore}%`
-                    : "0%"
-                }
-                subtitle="Resultado ICFES"
-                icon={
-                  <Image
-                    src="/dashboard/premio-pixel.webp"
-                    alt="Promedio"
-                    width={60}
-                    height={60}
-                    className="h-12 w-12 object-contain"
-                  />
-                }
-              />
-            </section>
-
-            {/* =================================================
-                AVENTURA
-            ================================================= */}
-
-            <section
-              className={
-                dark
-                  ? "rounded-2xl border border-violet-300/15 bg-[#10091a] p-4"
-                  : "rounded-2xl border border-black/8 bg-white p-4"
-              }
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                        : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                    }
-                  >
-                    EXPLORACIÓN
-                  </p>
-
-                  <h2 className="mt-1 text-xl font-black font-mono">
-                    Aventura
-                  </h2>
-                </div>
-
-                <span
-                  className={
-                    dark
-                      ? "rounded-full border border-violet-300/20 bg-violet-500/10 px-3 py-1 text-[7px] font-black text-violet-200 font-mono"
-                      : "rounded-full border border-emerald-300/35 bg-emerald-50 px-3 py-1 text-[7px] font-black text-emerald-700 font-mono"
-                  }
-                >
-                  PRÓXIMAMENTE
-                </span>
-              </div>
-
-              <div
-                className={
-                  dark
-                    ? "mt-4 flex min-h-[340px] items-center justify-center rounded-2xl border border-dashed border-violet-300/15 bg-[#0c0712]"
-                    : "mt-4 flex min-h-[340px] items-center justify-center rounded-2xl border border-dashed border-emerald-300/35 bg-[#fcfdfc]"
-                }
-              >
-                <div className="max-w-md text-center">
-                  <div
-                    className={
-                      dark
-                        ? "mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-300/15 bg-violet-500/10"
-                        : "mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-300/35 bg-emerald-50"
-                    }
-                  >
-                    <Sparkles
-                      size={28}
-                      className={
-                        dark
-                          ? "text-violet-300"
-                          : "text-emerald-600"
-                      }
-                    />
-                  </div>
-
-                  <h3 className="mt-4 text-lg font-black font-mono">
-                    Tu aventura todavía está preparándose.
-                  </h3>
-
-                  <p
-                    className={
-                      dark
-                        ? "mt-2 text-[9px] leading-5 text-white/35 font-mono"
-                        : "mt-2 text-[9px] leading-5 text-[#78827b] font-mono"
-                    }
-                  >
-                    Aquí conectaremos los mundos,
-                    niveles y progreso de Aprender
-                    cuando terminemos ese sistema.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* =================================================
-                MIS PERSONAJES
-            ================================================= */}
-
-            <section
-              className={
-                dark
-                  ? "rounded-2xl border border-violet-300/15 bg-[#10091a] p-4"
-                  : "rounded-2xl border border-black/8 bg-white p-4"
-              }
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                        : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                    }
-                  >
-                    COLECCIÓN
-                  </p>
-
-                  <h2 className="mt-1 text-xl font-black font-mono">
-                    Mis personajes
-                  </h2>
-                </div>
-
-                <span
-                  className={
-                    dark
-                      ? "text-[8px] font-black text-violet-200 font-mono"
-                      : "text-[8px] font-black text-emerald-700 font-mono"
-                  }
-                >
-                  {unlockedCharacterIds.length}{" "}
-                  desbloqueados
-                </span>
-              </div>
-
-              <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {peakCharacters.map(
-                  (character) => {
-                    const unlocked =
-                      unlockedCharacterIds.includes(
-                        character.id,
-                      );
-
-                    const equipped =
-                      character.id ===
-                      selectedCharacterId;
-
-                    const catalog =
-                      characterCatalog.find(
-                        (item) =>
-                          item.id ===
-                          character.id,
-                      );
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {unlockedBadges.map((badge) => {
+                    const selected = featuredBadgeIds.includes(badge.id);
 
                     return (
                       <button
-                        key={
-                          character.id
-                        }
+                        key={badge.id}
                         type="button"
-                        onClick={() => {
-                          if (equipped) {
-                            setCharacterModalOpen(
-                              true,
-                            );
-                            return;
-                          }
-
-                          if (
-                            unlocked
-                          ) {
-                            void changeCharacter(
-                              character.id,
-                            );
-                            return;
-                          }
-
-                          if (
-                            catalog
-                          ) {
-                            setPurchaseModalCharacterId(
-                              character.id,
-                            );
-                          }
-                        }}
+                        onClick={() => toggleFeaturedBadge(badge.id)}
                         className={
-                          equipped
-                            ? dark
-                              ? "group rounded-2xl border border-emerald-300/40 bg-emerald-400/[0.04] p-3 text-left"
-                              : "group rounded-2xl border border-emerald-400 bg-emerald-50 p-3 text-left"
-                            : dark
-                              ? "group rounded-2xl border border-white/8 bg-white/[0.02] p-3 text-left transition hover:-translate-y-1 hover:border-violet-300/25"
-                              : "group rounded-2xl border border-black/7 bg-[#fbfcfb] p-3 text-left transition hover:-translate-y-1 hover:border-emerald-300/40"
+                          selected
+                            ? "rounded-2xl border border-emerald-300/40 bg-emerald-400/[0.06] p-4 text-left"
+                            : "rounded-2xl border border-white/8 bg-white/[0.02] p-4 text-left hover:border-violet-300/30"
                         }
                       >
-                        <div
-                          className={
-                            dark
-                              ? "relative flex h-[175px] items-end justify-center overflow-hidden rounded-xl bg-[#0c0712]"
-                              : "relative flex h-[175px] items-end justify-center overflow-hidden rounded-xl bg-[#f4faf5]"
-                          }
-                        >
-                          <Image
-                            src={
-                              character.avatar
-                            }
-                            alt={
-                              character.name
-                            }
-                            width={
-                              250
-                            }
-                            height={
-                              250
-                            }
-                            className={
-                              unlocked
-                                ? "max-h-[165px] w-auto object-contain transition duration-300 group-hover:scale-105"
-                                : "max-h-[165px] w-auto object-contain opacity-40 grayscale"
-                            }
-                          />
-
-                          {!unlocked && (
-                            <div className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/25">
-                              <Lock
-                                size={
-                                  12
-                                }
-                                className="text-white/55"
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="truncate text-[10px] font-black font-mono">
-                              {
-                                character.name
-                              }
-                            </p>
-
-                            <p
-                              className={
-                                dark
-                                  ? "mt-0.5 text-[8px] text-white/35 font-mono"
-                                  : "mt-0.5 text-[8px] text-[#7b857e] font-mono"
-                              }
-                            >
-                              {
-                                character.rarity
-                              }
-                            </p>
-                          </div>
-
-                          {equipped ? (
-                            <span className="rounded-full bg-emerald-400 px-2 py-1 text-[6px] font-black text-[#07130d] font-mono">
-                              EQUIPADO
-                            </span>
-                          ) : unlocked ? (
-                            <span className="text-[7px] font-black text-cyan-400 font-mono">
-                              EQUIPAR
-                            </span>
-                          ) : catalog ? (
-                            <span className="flex items-center gap-1 rounded-full border border-yellow-300/20 bg-yellow-300/[0.04] px-2 py-1 text-[7px] font-black text-yellow-300 font-mono">
-                              <Coins
-                                size={
-                                  10
-                                }
-                              />
-                              {formatNumber(
-                                catalog.price_coins,
-                              )}
-                            </span>
+                        <div className="flex h-28 items-center justify-center">
+                          {badge.icon ? (
+                            <Image
+                              src={badge.icon}
+                              alt={badge.name}
+                              width={100}
+                              height={100}
+                              className="h-24 w-24 object-contain"
+                            />
                           ) : (
-                            <span className="text-[7px] text-white/25 font-mono">
-                              PRÓXIMAMENTE
-                            </span>
+                            <Plus className="h-8 w-8 text-white/20" />
                           )}
                         </div>
+
+                        <p className="font-mono text-[9px] font-black text-white">
+                          {badge.name}
+                        </p>
+
+                        <p className="mt-1 font-mono text-[7px] leading-4 text-white/30">
+                          {badge.description}
+                        </p>
+
+                        {selected && (
+                          <p className="mt-2 font-mono text-[6px] font-black uppercase text-emerald-300">
+                            MOSTRADA EN PERFIL
+                          </p>
+                        )}
                       </button>
                     );
-                  },
-                )}
-              </div>
-
-              {characterActionError && (
-                <div className="mt-3 rounded-xl border border-red-300/20 bg-red-400/[0.05] p-3">
-                  <p className="text-[8px] text-red-200 font-mono">
-                    {
-                      characterActionError
-                    }
-                  </p>
+                  })}
                 </div>
               )}
-            </section>
-
-            {/* =================================================
-                INSIGNIAS
-            ================================================= */}
-
-            <section
-              id="insignias"
-              className={
-                dark
-                  ? "rounded-2xl border border-violet-300/15 bg-[#10091a] p-4"
-                  : "rounded-2xl border border-black/8 bg-white p-4"
-              }
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                        : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                    }
-                  >
-                    RECOMPENSAS
-                  </p>
-
-                  <h2 className="mt-1 text-xl font-black font-mono">
-                    Mi colección
-                  </h2>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCollectionModalOpen(
-                      true,
-                    )
-                  }
-                  className={
-                    dark
-                      ? "inline-flex items-center gap-1 text-[8px] font-black text-violet-200 font-mono"
-                      : "inline-flex items-center gap-1 text-[8px] font-black text-emerald-700 font-mono"
-                  }
-                >
-                  Ver colección
-                  <ChevronRight
-                    size={13}
-                  />
-                </button>
-              </div>
-
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                {collectionGroups.map(
-                  (group) => {
-                    const unlockedCount =
-                      group.items.filter(
-                        (badge) =>
-                          unlockedBadgeIds.includes(
-                            badge.id,
-                          ),
-                      ).length;
-
-                    const cover =
-                      group.items[0];
-
-                    return (
-                      <button
-                        key={
-                          group.id
-                        }
-                        type="button"
-                        onClick={() =>
-                          setCollectionModalOpen(
-                            true,
-                          )
-                        }
-                        className={
-                          dark
-                            ? "group rounded-2xl border border-white/8 bg-white/[0.02] p-3 text-left transition hover:-translate-y-1 hover:border-violet-300/25"
-                            : "group rounded-2xl border border-black/7 bg-[#fbfcfb] p-3 text-left transition hover:-translate-y-1 hover:border-emerald-300/40"
-                        }
-                      >
-                        <div
-                          className={
-                            dark
-                              ? "flex h-[150px] items-center justify-center rounded-xl bg-[#0c0712]"
-                              : "flex h-[150px] items-center justify-center rounded-xl bg-[#f4faf5]"
-                          }
-                        >
-                          <Image
-                            src={
-                              cover.image
-                            }
-                            alt={
-                              group.label
-                            }
-                            width={
-                              130
-                            }
-                            height={
-                              130
-                            }
-                            className={
-                              unlockedCount >
-                              0
-                                ? "h-[105px] w-[105px] object-contain transition duration-300 group-hover:scale-105"
-                                : "h-[105px] w-[105px] object-contain opacity-20 grayscale"
-                            }
-                          />
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between">
-                          <div>
-                            <p className="text-[10px] font-black font-mono">
-                              {
-                                group.icon
-                              }{" "}
-                              {
-                                group.label
-                              }
-                            </p>
-
-                            <p
-                              className={
-                                dark
-                                  ? "mt-1 text-[8px] text-white/30 font-mono"
-                                  : "mt-1 text-[8px] text-[#7b857e] font-mono"
-                              }
-                            >
-                              {
-                                group.description
-                              }
-                            </p>
-                          </div>
-
-                          <span
-                            className={
-                              dark
-                                ? "text-[8px] font-black text-violet-200 font-mono"
-                                : "text-[8px] font-black text-emerald-700 font-mono"
-                            }
-                          >
-                            {
-                              unlockedCount
-                            }
-                            /
-                            {
-                              group
-                                .items
-                                .length
-                            }
-                          </span>
-                        </div>
-                      </button>
-                    );
-                  },
-                )}
-              </div>
-            </section>
-
-            {/* =================================================
-                MISIÓN DEL DÍA
-            ================================================= */}
-
-            <section
-              className={
-                dark
-                  ? "rounded-2xl border border-violet-300/15 bg-[#10091a] p-4"
-                  : "rounded-2xl border border-black/8 bg-white p-4"
-              }
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                        : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                    }
-                  >
-                    RECOMPENSA
-                  </p>
-
-                  <h2 className="mt-1 text-xl font-black font-mono">
-                    Misión del día
-                  </h2>
-                </div>
-
-                <Flame
-                  size={19}
-                  className="text-orange-400"
-                  fill="currentColor"
-                />
-              </div>
-
-              <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_220px]">
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-[9px] text-white/40 font-mono"
-                        : "text-[9px] text-[#707a73] font-mono"
-                    }
-                  >
-                    Completa 3 actividades hoy y gana:
-                  </p>
-
-                  <div className="mt-3 flex gap-2">
-                    <span
-                      className={
-                        dark
-                          ? "rounded-lg border border-violet-300/15 bg-violet-500/[0.05] px-3 py-2 text-[9px] font-black text-violet-200 font-mono"
-                          : "rounded-lg border border-emerald-300/35 bg-emerald-50 px-3 py-2 text-[9px] font-black text-emerald-700 font-mono"
-                      }
-                    >
-                      +150 XP
-                    </span>
-
-                    <span className="rounded-lg border border-yellow-300/20 bg-yellow-300/[0.04] px-3 py-2 text-[9px] font-black text-yellow-300 font-mono">
-                      +100 🪙
-                    </span>
-                  </div>
-
-                  <div className="mt-4">
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={
-                          dark
-                            ? "text-[8px] text-white/30 font-mono"
-                            : "text-[8px] text-[#7a847d] font-mono"
-                        }
-                      >
-                        Progreso
-                      </span>
-
-                      <span className="text-[8px] font-black font-mono">
-                        2/3
-                      </span>
-                    </div>
-
-                    <div
-                      className={
-                        dark
-                          ? "mt-2 h-2 overflow-hidden rounded-full bg-white/10"
-                          : "mt-2 h-2 overflow-hidden rounded-full bg-black/8"
-                      }
-                    >
-                      <div
-                        className={
-                          dark
-                            ? "h-full w-2/3 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-400"
-                            : "h-full w-2/3 rounded-full bg-gradient-to-r from-emerald-400 to-lime-400"
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div
-                  className={
-                    dark
-                      ? "rounded-2xl border border-violet-300/15 bg-violet-500/[0.04] p-4"
-                      : "rounded-2xl border border-emerald-300/30 bg-emerald-50 p-4"
-                  }
-                >
-                  <p
-                    className={
-                      dark
-                        ? "text-[7px] uppercase tracking-[0.12em] text-white/30 font-mono"
-                        : "text-[7px] uppercase tracking-[0.12em] text-[#78827b] font-mono"
-                    }
-                  >
-                    Siguiente
-                  </p>
-
-                  <p className="mt-1 text-sm font-black font-mono">
-                    Párrafos con P
-                  </p>
-
-                  <button
-                    type="button"
-                    disabled
-                    className={
-                      dark
-                        ? "mt-4 w-full rounded-xl border border-violet-300/15 bg-violet-500/10 px-4 py-3 text-[8px] font-black uppercase text-violet-200 opacity-60 font-mono"
-                        : "mt-4 w-full rounded-xl border border-emerald-300/30 bg-white px-4 py-3 text-[8px] font-black uppercase text-emerald-700 opacity-60 font-mono"
-                    }
-                  >
-                    Próximamente
-                  </button>
-                </div>
-              </div>
-            </section>
-          </section>
-        </div>
-      </div>
-
-      {/* ======================================================
-          MODAL DEL PERSONAJE
-          AQUÍ SÍ VA HISTORIA + HABILIDAD + TIPO
-      ====================================================== */}
-
-      {characterModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
-          onMouseDown={(
-            event,
-          ) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              setCharacterModalOpen(
-                false,
-              );
-            }
-          }}
-        >
-          <div
-            className={
-              dark
-                ? "max-h-[90vh] w-full max-w-[900px] overflow-hidden rounded-2xl border border-violet-300/20 bg-[#10091a]"
-                : "max-h-[90vh] w-full max-w-[900px] overflow-hidden rounded-2xl border border-black/10 bg-white"
-            }
-          >
-            {/* HEADER */}
-
-            <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
-              <div>
-                <p
-                  className={
-                    dark
-                      ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                      : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                  }
-                >
-                  PERSONAJE
-                </p>
-
-                <h2 className="mt-1 text-xl font-black font-mono">
-                  {
-                    selectedCharacter.name
-                  }
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setCharacterModalOpen(
-                    false,
-                  )
-                }
-                className="rounded-xl p-2 text-white/45 transition hover:bg-white/5 hover:text-white"
-                aria-label="Cerrar"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* CONTENIDO */}
-
-            <div className="max-h-[80vh] overflow-y-auto">
-              <div className="grid gap-5 p-5 md:grid-cols-[300px_1fr]">
-                <div
-                  className={
-                    dark
-                      ? "flex min-h-[390px] items-end justify-center rounded-2xl border border-white/8 bg-[#0c0712] px-4"
-                      : "flex min-h-[390px] items-end justify-center rounded-2xl border border-black/7 bg-[#f4faf5] px-4"
-                  }
-                >
-                  <Image
-                    src={
-                      selectedCharacter.avatar
-                    }
-                    alt={
-                      selectedCharacter.name
-                    }
-                    width={
-                      450
-                    }
-                    height={
-                      450
-                    }
-                    className="max-h-[370px] w-auto object-contain"
-                  />
-                </div>
-
-                <div>
-                  {/* DESCRIPCIÓN */}
-
-                  <section>
-                    <p
-                      className={
-                        dark
-                          ? "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-300 font-mono"
-                          : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                      }
-                    >
-                      DESCRIPCIÓN
-                    </p>
-
-                    <p
-                      className={
-                        dark
-                          ? "mt-2 text-sm leading-6 text-white/60 font-mono"
-                          : "mt-2 text-sm leading-6 text-[#68736c] font-mono"
-                      }
-                    >
-                      {
-                        selectedCharacter.description
-                      }
-                    </p>
-                  </section>
-
-                  {/* HISTORIA */}
-
-                  <section
-                    className={
-                      dark
-                        ? "mt-5 rounded-2xl border border-violet-300/15 bg-violet-500/[0.04] p-4"
-                        : "mt-5 rounded-2xl border border-emerald-300/30 bg-emerald-50 p-4"
-                    }
-                  >
-                    <p className="text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono">
-                      HISTORIA
-                    </p>
-
-                    <p
-                      className={
-                        dark
-                          ? "mt-2 text-[9px] leading-5 text-white/50 font-mono"
-                          : "mt-2 text-[9px] leading-5 text-[#728077] font-mono"
-                      }
-                    >
-                      {
-                        selectedCharacter.history
-                      }
-                    </p>
-                  </section>
-
-                  {/* DATOS */}
-
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <div
-                      className={
-                        dark
-                          ? "rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.03] p-4"
-                          : "rounded-2xl border border-cyan-300/30 bg-cyan-50 p-4"
-                      }
-                    >
-                      <p className="text-[7px] font-black uppercase tracking-[0.14em] text-cyan-300 font-mono">
-                        HABILIDAD
-                      </p>
-
-                      <p className="mt-2 text-[9px] font-black text-cyan-200 font-mono">
-                        {
-                          selectedCharacter.ability
-                        }
-                      </p>
-                    </div>
-
-                    <div
-                      className={
-                        dark
-                          ? "rounded-2xl border border-emerald-300/15 bg-emerald-400/[0.03] p-4"
-                          : "rounded-2xl border border-emerald-300/30 bg-emerald-50 p-4"
-                      }
-                    >
-                      <p className="text-[7px] font-black uppercase tracking-[0.14em] text-emerald-300 font-mono">
-                        TIPO
-                      </p>
-
-                      <p className="mt-2 text-[9px] font-black text-emerald-200 font-mono">
-                        {
-                          selectedCharacter.rarity
-                        }
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* BONUS */}
-
-                  {selectedCatalogCharacter &&
-                    (selectedCatalogCharacter.xp_bonus_percent >
-                      0 ||
-                      selectedCatalogCharacter.coin_bonus_percent >
-                        0) && (
-                      <section
-                        className={
-                          dark
-                            ? "mt-3 rounded-2xl border border-yellow-300/15 bg-yellow-300/[0.03] p-4"
-                            : "mt-3 rounded-2xl border border-yellow-300/30 bg-yellow-50 p-4"
-                        }
-                      >
-                        <p className="text-[7px] font-black uppercase tracking-[0.14em] text-yellow-300 font-mono">
-                          BONUS
-                        </p>
-
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {selectedCatalogCharacter.xp_bonus_percent >
-                            0 && (
-                            <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-[8px] font-black text-cyan-300 font-mono">
-                              +
-                              {
-                                selectedCatalogCharacter.xp_bonus_percent
-                              }
-                              % XP
-                            </span>
-                          )}
-
-                          {selectedCatalogCharacter.coin_bonus_percent >
-                            0 && (
-                            <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-[8px] font-black text-yellow-300 font-mono">
-                              +
-                              {
-                                selectedCatalogCharacter.coin_bonus_percent
-                              }
-                              % MONEDAS
-                            </span>
-                          )}
-                        </div>
-                      </section>
-                    )}
-                </div>
-              </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* ======================================================
-          MODAL DE RANGOS
-      ====================================================== */}
-
-      {rankModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
-          onMouseDown={(
-            event,
-          ) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              setRankModalOpen(
-                false,
-              );
-            }
-          }}
-        >
-          <div
-            className={
-              dark
-                ? "max-h-[90vh] w-full max-w-[900px] overflow-hidden rounded-2xl border border-violet-300/20 bg-[#10091a]"
-                : "max-h-[90vh] w-full max-w-[900px] overflow-hidden rounded-2xl border border-black/10 bg-white"
-            }
-          >
-            <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
-              <div>
-                <p
-                  className={
-                    dark
-                      ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                      : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                  }
-                >
-                  PROGRESIÓN
-                </p>
-
-                <h2 className="mt-1 text-xl font-black font-mono">
-                  Rangos PeakScore
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setRankModalOpen(
-                    false,
-                  )
-                }
-                className="rounded-xl p-2 text-white/45 hover:bg-white/5 hover:text-white"
-                aria-label="Cerrar"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="max-h-[78vh] overflow-y-auto p-5">
-              <div
-                className={
-                  dark
-                    ? "rounded-xl border border-violet-300/15 bg-violet-500/[0.04] p-4"
-                    : "rounded-xl border border-emerald-300/30 bg-emerald-50 p-4"
-                }
-              >
-                <p className="text-[9px] font-black font-mono">
-                  Reinicio mensual
-                </p>
-
-                <p
-                  className={
-                    dark
-                      ? "mt-1 text-[8px] leading-4 text-white/40 font-mono"
-                      : "mt-1 text-[8px] leading-4 text-[#78827b] font-mono"
-                  }
-                >
-                  Cada temporada comenzará
-                  nuevamente desde Renacer.
-                  La automatización del reinicio
-                  se conectará después.
-                </p>
-              </div>
-
-              <div className="mt-4 overflow-hidden rounded-xl border border-white/8">
-                {ranks.map(
-                  (rank) => {
-                    const active =
-                      rank.id ===
-                      currentRank.id;
-
-                    return (
-                      <div
-                        key={
-                          rank.id
-                        }
-                        className={
-                          active
-                            ? dark
-                              ? "grid grid-cols-[1fr_auto_1.3fr] gap-3 border-b border-white/8 bg-violet-500/[0.08] px-4 py-3"
-                              : "grid grid-cols-[1fr_auto_1.3fr] gap-3 border-b border-black/7 bg-emerald-50 px-4 py-3"
-                            : dark
-                              ? "grid grid-cols-[1fr_auto_1.3fr] gap-3 border-b border-white/8 px-4 py-3"
-                              : "grid grid-cols-[1fr_auto_1.3fr] gap-3 border-b border-black/7 px-4 py-3"
-                        }
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">
-                            {
-                              rankIcons[
-                                rank.id
-                              ]
-                            }
-                          </span>
-
-                          <span className="text-[9px] font-black font-mono">
-                            {
-                              rank.name
-                            }
-                          </span>
-                        </div>
-
-                        <span className="text-right text-[9px] font-black font-mono">
-                          {rank.maxXp ===
-                          null
-                            ? `${formatNumber(
-                                rank.minXp,
-                              )}+`
-                            : `${formatNumber(
-                                rank.minXp,
-                              )} – ${formatNumber(
-                                rank.maxXp,
-                              )}`}
-                        </span>
-
-                        <span
-                          className={
-                            dark
-                              ? "text-[8px] text-white/35 font-mono"
-                              : "text-[8px] text-[#78827b] font-mono"
-                          }
-                        >
-                          {
-                            rank.identity
-                          }
-                        </span>
-                      </div>
-                    );
-                  },
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================
-          MODAL COLECCIÓN
-      ====================================================== */}
-
-      {collectionModalOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 p-4 backdrop-blur-md"
-          onMouseDown={(
-            event,
-          ) => {
-            if (
-              event.target ===
-              event.currentTarget
-            ) {
-              setCollectionModalOpen(
-                false,
-              );
-            }
-          }}
-        >
-          <div
-            className={
-              dark
-                ? "max-h-[90vh] w-full max-w-[1000px] overflow-hidden rounded-2xl border border-violet-300/20 bg-[#10091a]"
-                : "max-h-[90vh] w-full max-w-[1000px] overflow-hidden rounded-2xl border border-black/10 bg-white"
-            }
-          >
-            <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
-              <div>
-                <p
-                  className={
-                    dark
-                      ? "text-[8px] font-black uppercase tracking-[0.15em] text-violet-300 font-mono"
-                      : "text-[8px] font-black uppercase tracking-[0.15em] text-emerald-700 font-mono"
-                  }
-                >
-                  COLECCIÓN
-                </p>
-
-                <h2 className="mt-1 text-xl font-black font-mono">
-                  Biblioteca de insignias
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setCollectionModalOpen(
-                    false,
-                  )
-                }
-                className="rounded-xl p-2 text-white/45 hover:bg-white/5 hover:text-white"
-                aria-label="Cerrar"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="max-h-[80vh] overflow-y-auto p-5">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {badges.map(
-                  (badge) => {
-                    const unlocked =
-                      unlockedBadgeIds.includes(
-                        badge.id,
-                      );
-
-                    return (
-                      <div
-                        key={
-                          badge.id
-                        }
-                        className={
-                          dark
-                            ? "rounded-2xl border border-white/8 bg-white/[0.02] p-3"
-                            : "rounded-2xl border border-black/7 bg-[#fbfcfb] p-3"
-                        }
-                      >
-                        <div
-                          className={
-                            dark
-                              ? "relative flex h-[175px] items-center justify-center rounded-xl bg-[#0c0712]"
-                              : "relative flex h-[175px] items-center justify-center rounded-xl bg-[#f4faf5]"
-                          }
-                        >
-                          <Image
-                            src={
-                              badge.image
-                            }
-                            alt={
-                              badge.name
-                            }
-                            width={
-                              180
-                            }
-                            height={
-                              180
-                            }
-                            className={
-                              unlocked
-                                ? "h-[140px] w-[140px] object-contain"
-                                : "h-[140px] w-[140px] object-contain opacity-20 grayscale"
-                            }
-                          />
-
-                          {!unlocked && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/30">
-                                <Lock
-                                  size={
-                                    16
-                                  }
-                                />
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between gap-2">
-                          <div>
-                            <p className="text-[10px] font-black font-mono">
-                              {
-                                badge.name
-                              }
-                            </p>
-
-                            <p
-                              className={
-                                dark
-                                  ? "mt-0.5 text-[8px] text-white/35 font-mono"
-                                  : "mt-0.5 text-[8px] text-[#7b857e] font-mono"
-                              }
-                            >
-                              {
-                                badge.level
-                              }
-                            </p>
-                          </div>
-
-                          <span
-                            className={
-                              unlocked
-                                ? "rounded-full bg-emerald-400 px-2 py-1 text-[7px] font-black text-[#07130d] font-mono"
-                                : "rounded-full border border-white/10 px-2 py-1 text-[7px] font-black text-white/30 font-mono"
-                            }
-                          >
-                            {unlocked
-                              ? "DESBLOQUEADA"
-                              : "BLOQUEADA"}
-                          </span>
-                        </div>
-
-                        <p
-                          className={
-                            dark
-                              ? "mt-2 text-[8px] leading-4 text-white/35 font-mono"
-                              : "mt-2 text-[8px] leading-4 text-[#78827b] font-mono"
-                          }
-                        >
-                          {
-                            badge.description
-                          }
-                        </p>
-                      </div>
-                    );
-                  },
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================
-          MODAL DE COMPRA
-      ====================================================== */}
-
-      {purchaseModalCharacterId &&
-        purchaseCharacterData &&
-        purchaseCatalog && (
-          <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
-            onMouseDown={(
-              event,
-            ) => {
-              if (
-                event.target ===
-                  event.currentTarget &&
-                !characterActionLoading
-              ) {
-                setPurchaseModalCharacterId(
-                  null,
-                );
-              }
-            }}
-          >
-            <div
-              className={
-                dark
-                  ? "w-full max-w-[760px] overflow-hidden rounded-2xl border border-violet-300/20 bg-[#10091a]"
-                  : "w-full max-w-[760px] overflow-hidden rounded-2xl border border-black/10 bg-white"
-              }
-            >
-              <div className="flex items-center justify-between border-b border-white/8 px-5 py-4">
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-[8px] font-black uppercase tracking-[0.12em] text-violet-300 font-mono"
-                        : "text-[8px] font-black uppercase tracking-[0.12em] text-emerald-700 font-mono"
-                    }
-                  >
-                    PERSONAJE
-                  </p>
-
-                  <h3 className="mt-1 text-xl font-black font-mono">
-                    {
-                      purchaseCharacterData.name
-                    }
-                  </h3>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPurchaseModalCharacterId(
-                      null,
-                    )
-                  }
-                  className="rounded-xl p-2 text-white/45 hover:bg-white/5 hover:text-white"
-                  aria-label="Cerrar"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="grid gap-5 p-5 md:grid-cols-[250px_1fr]">
-                <div
-                  className={
-                    dark
-                      ? "flex min-h-[320px] items-end justify-center rounded-2xl border border-white/8 bg-[#0c0712] px-4"
-                      : "flex min-h-[320px] items-end justify-center rounded-2xl border border-black/7 bg-[#f4faf5] px-4"
-                  }
-                >
-                  <Image
-                    src={
-                      purchaseCharacterData.avatar
-                    }
-                    alt={
-                      purchaseCharacterData.name
-                    }
-                    width={
-                      420
-                    }
-                    height={
-                      420
-                    }
-                    className="max-h-[300px] w-auto object-contain"
-                  />
-                </div>
-
-                <div>
-                  <p
-                    className={
-                      dark
-                        ? "text-xs leading-5 text-white/50 font-mono"
-                        : "text-xs leading-5 text-[#69746d] font-mono"
-                    }
-                  >
-                    {
-                      purchaseCharacterData.description
-                    }
-                  </p>
-
-                  <div
-                    className={
-                      dark
-                        ? "mt-5 rounded-2xl border border-white/8 bg-white/[0.02] p-4"
-                        : "mt-5 rounded-2xl border border-black/7 bg-[#fbfcfb] p-4"
-                    }
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p
-                          className={
-                            dark
-                              ? "text-[7px] uppercase tracking-[0.12em] text-white/30 font-mono"
-                              : "text-[7px] uppercase tracking-[0.12em] text-[#79837c] font-mono"
-                          }
-                        >
-                          Precio
-                        </p>
-
-                        <p className="mt-1 flex items-center gap-2 text-2xl font-black font-mono">
-                          <Coins
-                            size={
-                              20
-                            }
-                            className="text-yellow-300"
-                          />
-
-                          {formatNumber(
-                            purchasePrice,
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="text-right">
-                        <p
-                          className={
-                            dark
-                              ? "text-[7px] uppercase tracking-[0.12em] text-white/30 font-mono"
-                              : "text-[7px] uppercase tracking-[0.12em] text-[#79837c] font-mono"
-                          }
-                        >
-                          Tu saldo
-                        </p>
-
-                        <p className="mt-1 text-lg font-black font-mono">
-                          {formatNumber(
-                            profileData?.coins ??
-                              0,
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {!enoughCoins && (
-                    <p className="mt-3 rounded-xl border border-red-300/15 bg-red-400/[0.05] p-3 text-[8px] text-red-200 font-mono">
-                      Te faltan{" "}
-                      {formatNumber(
-                        purchasePrice -
-                          (profileData?.coins ??
-                            0),
-                      )}{" "}
-                      monedas.
-                    </p>
-                  )}
-
-                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                    <button
-                      type="button"
-                      disabled={
-                        characterActionLoading ||
-                        !enoughCoins
-                      }
-                      onClick={async () => {
-                        const purchased =
-                          await purchaseCharacter(
-                            purchaseCharacterData.id,
-                          );
-
-                        if (
-                          purchased
-                        ) {
-                          setPurchaseModalCharacterId(
-                            null,
-                          );
-                        }
-                      }}
-                      className={
-                        dark
-                          ? "rounded-xl bg-violet-500 px-4 py-3 text-[9px] font-black uppercase tracking-[0.08em] text-white transition hover:bg-violet-400 disabled:opacity-30 font-mono"
-                          : "rounded-xl bg-emerald-500 px-4 py-3 text-[9px] font-black uppercase tracking-[0.08em] text-white transition hover:bg-emerald-600 disabled:opacity-30 font-mono"
-                      }
-                    >
-                      {characterActionLoading
-                        ? "Desbloqueando..."
-                        : enoughCoins
-                          ? "Desbloquear personaje"
-                          : "Necesitas más monedas"}
-                    </button>
-
-                    <button
-                      type="button"
-                      disabled={
-                        characterActionLoading
-                      }
-                      onClick={() =>
-                        setPurchaseModalCharacterId(
-                          null,
-                        )
-                      }
-                      className={
-                        dark
-                          ? "rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-[9px] font-black uppercase tracking-[0.08em] text-white/55 font-mono"
-                          : "rounded-xl border border-black/8 bg-[#f7f9f7] px-4 py-3 text-[9px] font-black uppercase tracking-[0.08em] text-[#657168] font-mono"
-                      }
-                    >
-                      Volver
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
     </main>
-  );
-}
-
-/* ============================================================
-   COMPONENTES
-============================================================ */
-
-function MiniStat({
-  dark,
-  label,
-  value,
-  valueClass = "",
-}: {
-  dark: boolean;
-  label: string;
-  value: string;
-  valueClass?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between">
-      <span
-        className={
-          dark
-            ? "text-[9px] text-white/40 font-mono"
-            : "text-[9px] text-[#707a73] font-mono"
-        }
-      >
-        {label}
-      </span>
-
-      <span
-        className={
-          "text-[10px] font-black font-mono " +
-          valueClass
-        }
-      >
-        {value}
-      </span>
-    </div>
-  );
-}
-
-function StatCard({
-  dark,
-  label,
-  value,
-  subtitle,
-  icon,
-}: {
-  dark: boolean;
-  label: string;
-  value: string;
-  subtitle?: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div
-      className={
-        dark
-          ? "rounded-2xl border border-violet-300/15 bg-[#10091a] p-4"
-          : "rounded-2xl border border-black/8 bg-white p-4"
-      }
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl">
-          {icon}
-        </div>
-
-        <span
-          className={
-            dark
-              ? "text-[7px] uppercase text-white/30 font-mono"
-              : "text-[7px] uppercase text-[#7c867f] font-mono"
-          }
-        >
-          {label}
-        </span>
-      </div>
-
-      <p className="mt-4 text-2xl font-black font-mono">
-        {value}
-      </p>
-
-      {subtitle && (
-        <p
-          className={
-            dark
-              ? "mt-1 text-[8px] text-white/30 font-mono"
-              : "mt-1 text-[8px] text-[#7b857e] font-mono"
-          }
-        >
-          {subtitle}
-        </p>
-      )}
-    </div>
   );
 }

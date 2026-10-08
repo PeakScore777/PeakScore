@@ -1,28 +1,14 @@
 "use client";
 
-import {
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { useEffect, useState } from "react";
 
 import Navbar, {
   type GlobalTheme,
 } from "@/components/layout/Navbar";
 
-type GlobalNavbarProps = {
-  children?: ReactNode;
-};
-
-export default function GlobalNavbar({
-  children,
-}: GlobalNavbarProps) {
+export default function GlobalNavbar() {
   const [theme, setTheme] =
     useState<GlobalTheme>("dark");
-
-  /* ==========================================================
-     RECUPERAR TEMA
-  ========================================================== */
 
   useEffect(() => {
     try {
@@ -42,10 +28,6 @@ export default function GlobalNavbar({
     }
   }, []);
 
-  /* ==========================================================
-     SINCRONIZAR TEMA GLOBAL
-  ========================================================== */
-
   useEffect(() => {
     const root =
       document.documentElement;
@@ -64,31 +46,23 @@ export default function GlobalNavbar({
         theme,
       );
     } catch {
-      // El tema sigue funcionando aunque
-      // localStorage no esté disponible.
+      // El tema sigue funcionando aunque localStorage no esté disponible.
     }
+
+    window.dispatchEvent(
+      new CustomEvent<GlobalTheme>(
+        "peakscore-theme-change",
+        {
+          detail: theme,
+        },
+      ),
+    );
   }, [theme]);
 
-  /* ==========================================================
-     CAMBIO DE TEMA
-  ========================================================== */
-
-  const handleThemeChange = (
-    nextTheme: GlobalTheme,
-  ) => {
-    if (nextTheme === theme) return;
-
-    setTheme(nextTheme);
-  };
-
   return (
-    <>
-      <Navbar
-        theme={theme}
-        onThemeChange={handleThemeChange}
-      />
-
-      {children}
-    </>
+    <Navbar
+      theme={theme}
+      onThemeChange={setTheme}
+    />
   );
 }

@@ -190,6 +190,11 @@ export default function Navbar({
     setOpenDropdown((current) => (current === name ? null : name));
   };
 
+  const handleThemeChange = (nextTheme: GlobalTheme) => {
+    if (nextTheme === theme) return;
+    onThemeChange(nextTheme);
+  };
+
   const handleSimulations = async () => {
     closeMenus();
 
@@ -742,6 +747,91 @@ export default function Navbar({
         />
       )}
     </>
+  );
+}
+
+/* ============================================================
+   MOBILE DROPDOWN TRIGGER
+============================================================ */
+
+function MobileDropdownTrigger({
+  label,
+  open,
+  theme,
+  onClick,
+}: {
+  label: string;
+  open: boolean;
+  theme: GlobalTheme;
+  onClick: () => void;
+}) {
+  const isDark = theme === "dark";
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={open}
+      className={
+        isDark
+          ? "flex h-12 w-full items-center justify-between rounded-xl px-4 text-sm font-black text-white/85 hover:bg-white/[0.05]"
+          : "flex h-12 w-full items-center justify-between rounded-xl px-4 text-sm font-black text-slate-800 hover:bg-slate-100"
+      }
+    >
+      {label}
+
+      <ChevronDown
+        className={
+          open
+            ? "h-4 w-4 rotate-180 opacity-50 transition-transform"
+            : "h-4 w-4 opacity-50 transition-transform"
+        }
+      />
+    </button>
+  );
+}
+
+/* ============================================================
+   MOBILE LINK
+============================================================ */
+
+function MobileLink({
+  href,
+  theme,
+  onClick,
+  premium = false,
+  compact = false,
+  children,
+}: {
+  href: string;
+  theme: GlobalTheme;
+  onClick: () => void;
+  premium?: boolean;
+  compact?: boolean;
+  children: React.ReactNode;
+}) {
+  const isDark = theme === "dark";
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={
+        premium
+          ? isDark
+            ? "flex h-12 items-center rounded-xl bg-gradient-to-r from-cyan-300 via-violet-300 to-cyan-300 bg-clip-text px-4 text-sm font-black text-transparent"
+            : "flex h-12 items-center rounded-xl bg-gradient-to-r from-emerald-600 via-cyan-500 to-violet-500 bg-clip-text px-4 text-sm font-black text-transparent"
+          : compact
+            ? isDark
+              ? "flex h-11 items-center rounded-lg px-3 text-sm font-bold text-white/60 hover:bg-white/[0.04] hover:text-white"
+              : "flex h-11 items-center rounded-lg px-3 text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            : isDark
+              ? "flex h-12 items-center rounded-xl px-4 text-sm font-black text-white/85 hover:bg-white/[0.05]"
+              : "flex h-12 items-center rounded-xl px-4 text-sm font-black text-slate-800 hover:bg-slate-100"
+      }
+    >
+      {children}
+    </Link>
   );
 }
 

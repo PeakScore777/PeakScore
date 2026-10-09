@@ -1,4 +1,3 @@
-
 "use client";
 
 import Image from "next/image";
@@ -332,7 +331,7 @@ export default function MiPerfil() {
       {/* TARJETA PRINCIPAL */}
 
       <section
-        className="relative isolate w-full overflow-hidden rounded-[17px] border border-violet-300/25 bg-[#070511] shadow-[0_12px_40px_rgba(0,0,0,0.42)] lg:w-fit lg:max-w-full"
+        className="relative isolate w-full min-w-0 overflow-hidden rounded-[20px] border border-violet-300/25 bg-[#070511] shadow-[0_16px_50px_rgba(0,0,0,0.42)]"
         style={{
           backgroundImage: `linear-gradient(100deg,rgba(5,3,14,.72),rgba(5,5,20,.73)),url("${PROFILE_BACKGROUND}")`,
           backgroundPosition: "center",
@@ -345,7 +344,7 @@ export default function MiPerfil() {
         />
 
         {/* Personaje + contenido + rango */}
-        <div className="grid grid-cols-[76px_minmax(0,1fr)] items-center gap-x-3 gap-y-3 p-3 sm:grid-cols-[100px_minmax(0,1fr)] sm:p-4 lg:grid-cols-[110px_290px_140px] lg:gap-x-2 lg:gap-y-0 lg:p-3">
+        <div className="grid min-w-0 grid-cols-[76px_minmax(0,1fr)] items-center gap-x-3 gap-y-4 p-3 sm:grid-cols-[100px_minmax(0,1fr)] sm:gap-x-4 sm:p-5 lg:grid-cols-[120px_minmax(0,1fr)_180px] lg:gap-x-5 lg:gap-y-0 lg:p-5">
           {/* PERSONAJE Y BIOMA */}
 
           <div className="profile-capsule group relative mx-auto w-full max-w-[110px]">
@@ -360,7 +359,7 @@ export default function MiPerfil() {
                 alt=""
                 fill
                 priority
-                sizes="110px"
+                sizes="(min-width: 1024px) 120px, (min-width: 640px) 100px, 76px"
                 className="object-cover object-center transition duration-500 group-hover:scale-[1.04]"
               />
 
@@ -374,7 +373,7 @@ export default function MiPerfil() {
                 alt="Personaje de perfil"
                 fill
                 priority
-                sizes="110px"
+                sizes="(min-width: 1024px) 120px, (min-width: 640px) 100px, 76px"
                 className="object-contain object-bottom drop-shadow-[0_0_10px_rgba(52,255,166,0.22)]"
               />
 
@@ -387,12 +386,12 @@ export default function MiPerfil() {
 
           {/* NOMBRE, NIVEL, EDITAR E INSIGNIAS */}
 
-          <div className="min-w-0 py-1 lg:w-[290px]">
-            <h1 className="break-words text-[14px] font-black leading-tight tracking-[-0.035em] text-white sm:text-base">
+          <div className="min-w-0 py-1">
+            <h1 className="break-words text-[14px] font-black leading-tight tracking-[-0.035em] text-white sm:text-base lg:text-lg">
               Bienvenido de nuevo, {displayName}
             </h1>
 
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               {/* NIVEL */}
 
               <button
@@ -450,7 +449,7 @@ export default function MiPerfil() {
 
             {/* CINCO ESPACIOS PARA INSIGNIAS */}
 
-            <div className="mt-3 grid max-w-[260px] grid-cols-5 gap-1.5">
+            <div className="mt-3 grid w-full max-w-[260px] grid-cols-5 gap-1.5">
               {Array.from({ length: BADGE_SLOTS }, (_, slot) => {
                 const badge = equippedBadges[slot];
 
@@ -507,37 +506,37 @@ export default function MiPerfil() {
             </div>
           </div>
 
-          {/* RANGO: EMBLEMA GRANDE Y DATOS VISIBLES */}
+          {/* RANGO: EMBLEMA Y DATOS */}
 
-          <div className="relative col-span-2 flex items-center justify-center gap-3 border-t border-violet-300/15 pt-3 sm:col-span-2 lg:col-span-1 lg:w-[140px] lg:flex-col lg:gap-0 lg:border-t-0 lg:pt-0">
+          <div className="relative col-span-2 flex min-w-0 items-center justify-center gap-3 border-t border-violet-300/15 pt-3 sm:col-span-2 sm:gap-4 lg:col-span-1 lg:w-full lg:flex-col lg:gap-0 lg:border-t-0 lg:pt-0">
             <div
               aria-hidden="true"
               className="pointer-events-none absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/15 blur-[28px]"
             />
 
-            <div className="relative h-[116px] w-[116px] shrink-0 transition-transform duration-300 hover:scale-105">
+            <div className="relative h-[104px] w-[104px] shrink-0 transition-transform duration-300 sm:h-[116px] sm:w-[116px] lg:h-[136px] lg:w-[136px]">
               <Image
                 key={rankImage}
                 src={`${rankImage}?v=${RANK_VERSION}`}
                 alt={`Emblema de ${data.rank.name}`}
                 fill
-                sizes="116px"
+                sizes="(min-width: 1024px) 136px, (min-width: 640px) 116px, 104px"
                 unoptimized
                 className="object-contain drop-shadow-[0_0_18px_rgba(0,190,255,0.28)]"
               />
             </div>
 
-            <div className="relative -mt-1 min-w-0 text-center">
-              <p className="font-mono text-[12px] font-black uppercase tracking-[0.02em] text-white">
+            <div className="relative min-w-0 text-center lg:mt-3">
+              <p className="break-words font-mono text-[12px] font-black uppercase tracking-[0.02em] text-white">
                 {data.rank.name}
               </p>
 
-              <p className="mt-0.5 font-mono text-[10px] font-black text-emerald-300">
+              <p className="mt-1 font-mono text-[10px] font-black text-emerald-300">
                 {formatNumber(seasonXp)} XP
               </p>
 
               {data.rank.xpToNextRank > 0 && (
-                <p className="mt-0.5 whitespace-nowrap font-mono text-[8px] text-slate-300">
+                <p className="mt-1 whitespace-normal font-mono text-[8px] leading-4 text-slate-300">
                   {formatNumber(data.rank.xpToNextRank)} XP para subir
                 </p>
               )}

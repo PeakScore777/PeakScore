@@ -488,13 +488,16 @@ export async function PATCH(request: Request) {
     }
 
     if (updateSeasonXp && seasonId) {
-      const { error: seasonUpdateError } = await supabaseAdmin
+      const { data: seasonUpdated, error: seasonUpdateError } = await supabaseAdmin
         .from("user_seasons")
         .update({ season_xp: requestedSeasonXp as number })
         .eq("user_id", targetUserId)
-        .eq("season_id", seasonId);
+        .eq("season_id", seasonId)
+        .select("id")
+        .maybeSingle();
 
-      if (seasonUpdateError) {
+      if (seasonUpdateError || !seasonUpdated) {
+        const seasonFailureCode = seasonUpdateError?.code ?? "NO_ROW_UPDATED";
         // Compensate only fields changed by this request, avoiding overwriting
         // unrelated values that could have changed concurrently.
         let rollbackSucceeded = true;
@@ -516,14 +519,14 @@ export async function PATCH(request: Request) {
               ...auditMetadata,
               status: "failed",
               failureStage: "season_xp_update",
-              errorCode: seasonUpdateError.code ?? "UNKNOWN",
+              errorCode: seasonFailureCode,
               rollbackSucceeded,
             },
           })
           .eq("id", auditRow.id);
 
         console.error("[AdminProfiles] Error al actualizar EXP de temporada.", {
-          code: seasonUpdateError.code ?? "UNKNOWN",
+          code: seasonFailureCode,
           rollbackSucceeded,
           auditFailureCode: auditFailureError?.code ?? null,
         });

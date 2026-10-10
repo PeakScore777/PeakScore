@@ -136,7 +136,7 @@ export default function AdminProfileManager() {
           streak: form.streak,
           simulations: form.simulations,
           historicalXp: form.historicalXp,
-          seasonXp: form.seasonXp,
+          ...(form.seasonXp === null ? {} : { seasonXp: form.seasonXp }),
           coins: form.coins,
           level: form.level,
           selectedCharacter: form.selectedCharacter || null,

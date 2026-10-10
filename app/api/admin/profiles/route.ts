@@ -78,13 +78,14 @@ async function authorizeAdmin() {
     };
   }
 
-  if (
-    assurance.nextLevel === "aal2" &&
-    assurance.currentLevel !== "aal2"
-  ) {
+  if (assurance.currentLevel !== "aal2") {
     return {
       response: NextResponse.json(
-        { error: "Completa la autenticación en dos pasos.", mfaRequired: true },
+        {
+          error: "El panel de administración exige autenticación en dos pasos. Configura o verifica tu autenticador antes de continuar.",
+          mfaRequired: true,
+          settingsUrl: "/perfil/configuracion",
+        },
         { status: 403 },
       ),
       user: null,

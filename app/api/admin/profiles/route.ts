@@ -63,6 +63,34 @@ async function authorizeAdmin() {
     };
   }
 
+  const {
+    data: assurance,
+    error: assuranceError,
+  } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+  if (assuranceError) {
+    return {
+      response: NextResponse.json(
+        { error: "No se pudo comprobar el nivel de seguridad de la sesión." },
+        { status: 503 },
+      ),
+      user: null,
+    };
+  }
+
+  if (
+    assurance.nextLevel === "aal2" &&
+    assurance.currentLevel !== "aal2"
+  ) {
+    return {
+      response: NextResponse.json(
+        { error: "Completa la autenticación en dos pasos.", mfaRequired: true },
+        { status: 403 },
+      ),
+      user: null,
+    };
+  }
+
   return { response: null, user };
 }
 

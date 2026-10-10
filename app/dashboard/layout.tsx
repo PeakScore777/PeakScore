@@ -19,6 +19,22 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
+  const {
+    data: assurance,
+    error: assuranceError,
+  } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+  if (assuranceError) {
+    redirect("/login");
+  }
+
+  if (
+    assurance.nextLevel === "aal2" &&
+    assurance.currentLevel !== "aal2"
+  ) {
+    redirect("/login/mfa");
+  }
+
   return (
     <div className="min-h-screen bg-slate-100">
       <div className="flex min-h-[calc(100vh-72px)]">

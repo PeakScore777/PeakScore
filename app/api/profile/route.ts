@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isCanonicalAdmin } from "@/lib/auth/admin";
 
 import {
   getCurrentSeasonContext,
@@ -334,7 +335,7 @@ export async function GET() {
         selectedCharacter:
           profile.selected_character,
 
-        role: profile.role,
+        isAdmin: isCanonicalAdmin(user.id, profile.role),
       },
 
       // ========================================================

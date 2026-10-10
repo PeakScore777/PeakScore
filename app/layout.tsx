@@ -36,7 +36,7 @@ export default async function RootLayout({
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "id, full_name, email, avatar_url, streak, coins, selected_character",
+        "id, full_name, email, avatar_url, streak, coins, selected_character, role",
       )
       .eq("id", user.id)
       .maybeSingle();
@@ -45,12 +45,13 @@ export default async function RootLayout({
       initialProfile = {
         id: profile.id,
         fullName: profile.full_name ?? null,
-        email: profile.email ?? user.email ?? null,
+        email: user.email ?? profile.email ?? null,
         avatarUrl: profile.avatar_url ?? null,
         streak: Number(profile.streak ?? 0),
         coins: Number(profile.coins ?? 0),
         selectedCharacter:
           profile.selected_character ?? null,
+        role: profile.role ?? null,
       };
     }
   }

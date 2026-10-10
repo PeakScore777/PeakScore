@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import PerfilSidebar from "@/components/perfil/PerfilSidebar";
 import { createClient } from "@/lib/supabase/server";
 
-export default function PerfilLayout({
+export default async function PerfilLayout({
   children,
 }: {
   children: ReactNode;

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCanonicalAdmin } from "@/lib/auth/admin";
 import { generateAI } from "@/lib/ai/router";
 import {
   createClient,
@@ -645,17 +646,30 @@ export async function POST(
       );
     }
 
-    // Usuario autenticado pero no administrador
-    if (profile?.role !== "admin") {
+    // La identidad canónica, el rol de la base de datos y MFA son obligatorios.
+    if (!isCanonicalAdmin(user.id, profile?.role)) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "No tienes permisos para realizar generación masiva.",
+          error: "No tienes permisos para realizar generación masiva.",
         },
+        { status: 403 }
+      );
+    }
+
+    const {
+      data: assurance,
+      error: assuranceError,
+    } = await authSupabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    if (assuranceError || assurance.currentLevel !== "aal2") {
+      return NextResponse.json(
         {
-          status: 403,
-        }
+          success: false,
+          error: "La generación masiva requiere autenticación en dos pasos.",
+          mfaRequired: true,
+        },
+        { status: 403 }
       );
     }
 

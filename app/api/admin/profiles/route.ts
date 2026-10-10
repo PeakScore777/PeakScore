@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isCanonicalAdmin } from "@/lib/auth/admin";
 
 type AdminProfileRow = {
   id: string;
@@ -53,7 +54,7 @@ async function authorizeAdmin() {
     };
   }
 
-  if (currentProfile?.role !== "admin") {
+  if (!isCanonicalAdmin(user.id, currentProfile?.role)) {
     return {
       response: NextResponse.json(
         { error: "No tienes permiso para usar esta herramienta." },

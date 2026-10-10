@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import {
-  AtSign,
   CheckCircle2,
   KeyRound,
   LoaderCircle,
@@ -14,7 +13,14 @@ import {
   UserRound,
   XCircle,
 } from "lucide-react";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type FormEvent,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
 
 import { supabase } from "@/lib/supabase/browser";
 
@@ -35,7 +41,7 @@ type PendingEnrollment = {
   secret: string;
 };
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function FieldLabel({ children }: { children: ReactNode }) {
   return (
     <span className="mb-2 block text-xs font-bold uppercase tracking-[0.12em] text-violet-200/80">
       {children}
@@ -44,7 +50,7 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
 }
 
 function TextField(
-  props: React.InputHTMLAttributes<HTMLInputElement>,
+  props: InputHTMLAttributes<HTMLInputElement>,
 ) {
   return (
     <input
@@ -62,8 +68,8 @@ function Card({
 }: {
   title: string;
   description: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
+  icon: ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#100d1d]/95 shadow-[0_16px_46px_rgba(0,0,0,.18)]">
@@ -560,7 +566,7 @@ export default function ConfiguracionPanel({
             <p className="text-sm leading-6 text-white/65">Escanea este QR con Google Authenticator, Microsoft Authenticator u otra aplicación TOTP compatible.</p>
             <div className="inline-flex rounded-xl bg-white p-3">
               <img
-                src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(enrollment.qrCode)}`}
+                src={enrollment.qrCode}
                 alt="Código QR para configurar la autenticación en dos pasos"
                 className="h-44 w-44"
               />

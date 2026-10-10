@@ -6,6 +6,10 @@ import { useCallback, useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { Check, ShoppingCart, X } from "lucide-react";
 import {
+  CharacterSkeleton,
+  PersonajesHeaderSkeleton,
+} from "./CharacterSkeleton";
+import {
   CHARACTER_LORE,
   type PeakScoreCharacterId,
 } from "@/lib/characters/lore";
@@ -438,68 +442,6 @@ function CharacterStoryModal({
   );
 }
 
-function CharacterSkeleton() {
-  return (
-    <div
-      className="animate-pulse space-y-6"
-      aria-label="Cargando personajes"
-    >
-      {/* Contador de personajes */}
-      <div className="flex justify-end">
-        <div className="h-3 w-36 rounded bg-[var(--app-surface-secondary)]" />
-      </div>
-
-      {/* Cuatro tarjetas de personajes */}
-      <div className="grid grid-cols-2 items-stretch gap-3 sm:gap-4 xl:grid-cols-4">
-        {[1, 2, 3, 4].map((item) => (
-          <div
-            key={item}
-            className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-[var(--app-border)] bg-[var(--app-surface)]"
-          >
-            {/* Imagen del personaje */}
-            <div className="relative h-[165px] overflow-hidden bg-[var(--app-surface-secondary)] sm:h-[220px] lg:h-[245px]">
-              <div className="absolute inset-4 rounded-lg bg-white/5" />
-              <div className="absolute left-2 top-2 h-6 w-20 rounded bg-white/10" />
-            </div>
-
-            {/* Texto y botones */}
-            <div className="flex flex-1 flex-col gap-3 p-3 sm:p-4">
-              <div className="h-4 w-3/4 rounded bg-[var(--app-surface-secondary)]" />
-              <div className="h-3 w-1/2 rounded bg-[var(--app-surface-secondary)]" />
-
-              <div className="space-y-2 pt-2">
-                <div className="h-3 w-full rounded bg-[var(--app-surface-secondary)]" />
-                <div className="h-3 w-5/6 rounded bg-[var(--app-surface-secondary)]" />
-                <div className="h-3 w-2/3 rounded bg-[var(--app-surface-secondary)]" />
-              </div>
-
-              <div className="mt-2 h-10 rounded-lg bg-[var(--app-surface-secondary)]" />
-              <div className="mt-auto h-10 rounded-lg bg-[var(--app-surface-secondary)]" />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Panel inferior de PeakCoin */}
-      <div className="grid gap-5 rounded-2xl border border-[var(--app-border)] bg-[var(--app-surface)] p-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-7">
-        <div className="space-y-4">
-          <div className="h-4 w-32 rounded bg-[var(--app-surface-secondary)]" />
-          <div className="h-3 w-full max-w-md rounded bg-[var(--app-surface-secondary)]" />
-          <div className="h-3 w-4/5 max-w-sm rounded bg-[var(--app-surface-secondary)]" />
-        </div>
-
-        <div className="flex items-center gap-3 border-t border-[var(--app-border)] pt-4 sm:border-l sm:border-t-0 sm:pl-6 sm:pt-0">
-          <div className="size-10 shrink-0 rounded-full bg-[var(--app-surface-secondary)]" />
-          <div className="space-y-2">
-            <div className="h-3 w-16 rounded bg-[var(--app-surface-secondary)]" />
-            <div className="h-6 w-24 rounded bg-[var(--app-surface-secondary)]" />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function PersonajesPage() {
   const [data, setData] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -604,57 +546,62 @@ export default function PersonajesPage() {
     <main className="min-h-screen overflow-x-clip bg-[#05030b] px-3 pb-28 pt-5 text-white sm:px-5 sm:pt-7 lg:px-8 lg:pb-12">
       <div className="mx-auto w-full max-w-[1500px] space-y-6">
 
-        {/* Encabezado con los biomas y Peaky */}
-        <header className="relative isolate flex min-h-[170px] items-center overflow-hidden rounded-2xl border border-white/10 bg-[#0a1020] sm:min-h-[205px]">
-          <Image
-            src="/perfil/biome-profile-dark.webp"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="-z-20 object-cover opacity-70"
-          />
-
-          <Image
-            src="/perfil/biome-profile-light.webp"
-            alt=""
-            fill
-            sizes="100vw"
-            className="-z-20 object-cover opacity-35 mix-blend-screen"
-          />
-
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#080b19]/95 via-[#0c1027]/75 to-[#101a23]/30" />
-
-          <div className="relative z-10 w-full max-w-[760px] px-5 py-6 sm:px-8 sm:py-8 lg:px-10">
-            <h1
-              className="text-2xl font-black uppercase tracking-tight sm:text-4xl lg:text-5xl"
-              style={{ fontFamily: PIXEL_FONT }}
-            >
-              PERSONAJES
-            </h1>
-
-            <p className="mt-4 max-w-xl text-sm leading-6 text-slate-200 sm:text-base">
-              Colecciona, desbloquea y elige a tu compañero en PeakScore.
-              Cada personaje te acompaña en tu progreso.
-            </p>
-          </div>
-
-          {/* Peaky solo aparece en pantallas sm en adelante */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] sm:block">
+        {/* Encabezado: skeleton mientras carga, diseño original después */}
+        {loading ? (
+          <PersonajesHeaderSkeleton />
+        ) : (
+          <header className="relative isolate flex min-h-[170px] items-center overflow-hidden rounded-2xl border border-white/10 bg-[#0a1020] sm:min-h-[205px]">
             <Image
-              src="/images/profile/personajes-banner.png"
+              src="/perfil/biome-profile-dark.webp"
               alt=""
               fill
               priority
-              sizes="(max-width: 640px) 48vw, 600px"
-              className="object-contain object-right"
+              sizes="100vw"
+              className="-z-20 object-cover opacity-70"
             />
 
-            <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[#0a1020] to-transparent" />
-          </div>
-        </header>
+            <Image
+              src="/perfil/biome-profile-light.webp"
+              alt=""
+              fill
+              sizes="100vw"
+              className="-z-20 object-cover opacity-35 mix-blend-screen"
+            />
 
-        {loading && <CharacterSkeleton />}
+            <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#080b19]/95 via-[#0c1027]/75 to-[#101a23]/30" />
+
+            <div className="relative z-10 w-full max-w-[760px] px-5 py-6 sm:px-8 sm:py-8 lg:px-10">
+              <h1
+                className="text-2xl font-black uppercase tracking-tight sm:text-4xl lg:text-5xl"
+                style={{ fontFamily: PIXEL_FONT }}
+              >
+                PERSONAJES
+              </h1>
+
+              <p className="mt-4 max-w-xl text-sm leading-6 text-slate-200 sm:text-base">
+                Colecciona, desbloquea y elige a tu compañero en PeakScore.
+                Cada personaje te acompaña en tu progreso.
+              </p>
+            </div>
+
+            {/* Peaky del encabezado original */}
+              <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] sm:block">
+                <Image
+                  src="/images/profile/personajes-banner.png"
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 640px) 48vw, 600px"
+                  className="object-contain object-right"
+                />
+
+                <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[#0a1020] to-transparent" />
+              </div>
+            </header>
+          )}
+
+          {/* Skeleton de tarjetas y PeakCoin durante la carga de datos */}
+          {loading && <CharacterSkeleton />}
 
         {!loading && error && (
           <section className="rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-5">

@@ -833,7 +833,7 @@ export default function RangoPage() {
         </div>
 
         {/* FUNDADOR: CENTRADO SOBRE LA PLATAFORMA EN ESCRITORIO */}
-          <div className="rank-founder-desktop pointer-events-none absolute bottom-0 left-[27%] z-10 hidden h-full w-[58%] items-end justify-center sm:flex">
+          <div className="rank-founder-desktop pointer-events-none absolute bottom-0 left-[27%] z-10 hidden h-full w-[58%] items-end justify-center xl:flex">
             <Image
               src={FOUNDER_GIF}
               alt="Fundador de PeakScore sentado en su trono"

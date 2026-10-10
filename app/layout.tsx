@@ -12,6 +12,7 @@ const pixelFont = Press_Start_2P({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-press-start",
+  preload: false,
 });
 
 export const metadata: Metadata = {

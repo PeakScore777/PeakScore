@@ -1,7 +1,7 @@
-
 "use client";
 
 import Image from "next/image";
+import InsigniasSkeleton from "./InsigniasSkeleton";
 import { createPortal } from "react-dom";
 import {
   useCallback,
@@ -30,6 +30,7 @@ type BadgeStyle = CSSProperties & {
 
 const ASSETS = {
   header: "/images/profile/insignias-header-peaky-nova.png",
+  headerMobile: "/images/profile/insignias-header-mobile.png",
   lightBackground: "/images/profile/insignias-fondo-claro.png",
   darkBackground: "/images/profile/insignias-fondo-oscuro.png",
   lock: "/images/ranks/ui/rank-lock.webp",
@@ -555,6 +556,20 @@ function BadgeDetails({
 }
 
 export default function InsigniasPage() {
+  const [showDevSkeleton, setShowDevSkeleton] = useState(
+    () => process.env.NODE_ENV === "development",
+  );
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "development") return;
+
+    const timerId = window.setTimeout(() => {
+      setShowDevSkeleton(false);
+    }, 1200);
+
+    return () => window.clearTimeout(timerId);
+  }, []);
+
   const [selectedBadge, setSelectedBadge] = useState<BadgeItem | null>(null);
 
   const closeDetails = useCallback(() => {
@@ -564,18 +579,40 @@ export default function InsigniasPage() {
   const unlockedBadges = BADGES.filter((badge) => badge.unlocked);
   const lockedBadges = BADGES.filter((badge) => !badge.unlocked);
 
+  if (showDevSkeleton) {
+    return <InsigniasSkeleton />;
+  }
+
   return (
     <main className="insignias-page min-h-screen overflow-x-clip px-3 py-5 text-white transition-colors duration-300 sm:px-5 sm:py-6 lg:px-7 lg:py-8">
       <div className="mx-auto max-w-[1500px] space-y-6">
         {/* ENCABEZADO PROPIO DE INSIGNIAS */}
-        <header className="badge-header relative isolate flex min-h-[230px] items-center overflow-hidden rounded-2xl border border-white/10 bg-[#0A1020] sm:min-h-[250px] lg:min-h-[275px]">
+        <header
+          className="badge-header relative isolate flex min-h-[230px] items-center overflow-hidden rounded-2xl border border-sky-300/30 sm:min-h-[250px] lg:min-h-[275px]"
+          style={{
+            background:
+            "linear-gradient(135deg, #0874D1 0%, #0753A5 48%, #092B61 100%)",
+          }}
+        >
+          {/* Imagen original para escritorio */}
           <Image
             src={ASSETS.header}
             alt="Mundo de Peaky Nova y medalla de PeakScore"
             fill
             priority
-            sizes="(max-width: 768px) 100vw, 1500px"
-            className="badge-header-image object-cover object-center"
+            sizes="(max-width: 639px) 1px, (max-width: 768px) 100vw, 1500px"
+            className="badge-header-image hidden scale-y-[1.4] object-cover object-center sm:block xl:scale-y-[1.2] 2xl:scale-y-100"
+          />
+
+          {/* Composición independiente para móvil */}
+          <Image
+            src={ASSETS.headerMobile}
+            alt=""
+            aria-hidden="true"
+            fill
+            priority
+            sizes="(max-width: 639px) calc(100vw - 24px), (max-width: 1023px) calc(100vw - 40px), (max-width: 1564px) calc(100vw - 64px), 1500px"
+            className="badge-header-image block scale-y-[1.4] object-cover object-center sm:hidden"
           />
 
           <span aria-hidden="true" className="badge-header-overlay" />
@@ -743,11 +780,11 @@ export default function InsigniasPage() {
           pointer-events: none;
           background: linear-gradient(
             90deg,
-            rgba(3, 10, 22, 0.05) 0%,
-            rgba(3, 10, 22, 0.32) 20%,
-            rgba(3, 10, 22, 0.6) 39%,
-            rgba(3, 10, 22, 0.37) 61%,
-            rgba(3, 10, 22, 0.04) 81%
+            rgba(3, 35, 82, 0.04) 0%,
+            rgba(4, 43, 96, 0.12) 20%,
+            rgba(3, 35, 82, 0.25) 39%,
+            rgba(4, 43, 96, 0.14) 61%,
+            rgba(3, 43, 82, 0.03) 81%
           );
         }
 
@@ -761,8 +798,8 @@ export default function InsigniasPage() {
           pointer-events: none;
           background: radial-gradient(
             ellipse at center,
-            rgba(3, 10, 22, 0.38) 0%,
-            rgba(3, 10, 22, 0.2) 52%,
+            rgba(5, 71, 143, 0.18) 0%,
+            rgba(4, 55, 115, 0.10) 52%,
             transparent 78%
           );
           filter: blur(8px);

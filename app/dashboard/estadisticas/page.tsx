@@ -354,7 +354,7 @@ export default async function StatisticsPage() {
             <p className="mt-6 rounded-xl bg-slate-50 p-5 text-sm text-slate-500">Aún no tienes puntajes registrados. Cuando completes un simulacro con resultado guardado, aparecerá aquí.</p>
           ) : (
             <div className="mt-7 space-y-4">
-              {chartItems.map(({ attempt, score }, index) => {
+              {chartItems.map(({ attempt, score }) => {
                 const maxScore = Math.max(...chartItems.map((item) => item.score), 1);
                 const percentage = Math.max(2, (score / maxScore) * 100);
                 return (

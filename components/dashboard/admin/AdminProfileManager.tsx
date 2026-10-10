@@ -81,8 +81,13 @@ export default function AdminProfileManager() {
       const response = await fetch(`/api/admin/profiles?q=${encodeURIComponent(query.trim())}`, {
         cache: "no-store",
       });
-      const data = (await response.json()) as { profiles?: AdminProfile[]; error?: string };
-      if (!response.ok) throw new Error(data.error ?? "No se pudieron buscar perfiles.");
+      const data = (await response.json()) as { profiles?: AdminProfile[]; error?: string; mfaRequired?: boolean };
+      if (!response.ok) {
+        const suffix = data.mfaRequired
+          ? " Abre Configuración desde el avatar, activa la autenticación en dos pasos y vuelve a ingresar."
+          : "";
+        throw new Error((data.error ?? "No se pudieron buscar perfiles.") + suffix);
+      }
       setResults(data.profiles ?? []);
       if (!data.profiles?.length) {
         setNotice({ kind: "error", text: "No encontramos perfiles con ese nombre o correo." });
@@ -142,8 +147,13 @@ export default function AdminProfileManager() {
           selectedCharacter: form.selectedCharacter || null,
         }),
       });
-      const data = (await response.json()) as { success?: boolean; error?: string };
-      if (!response.ok || !data.success) throw new Error(data.error ?? "No se pudieron guardar los cambios.");
+      const data = (await response.json()) as { success?: boolean; error?: string; mfaRequired?: boolean };
+      if (!response.ok || !data.success) {
+        const suffix = data.mfaRequired
+          ? " Activa la autenticación en dos pasos en Configuración y vuelve a ingresar."
+          : "";
+        throw new Error((data.error ?? "No se pudieron guardar los cambios.") + suffix);
+      }
 
       setSelected({ ...form });
       setResults((current) => current.map((item) => item.id === form.id ? { ...form } : item));

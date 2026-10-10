@@ -272,7 +272,7 @@ export default function AdminProfileManager() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <NumberField label="Meta de puntaje" value={form.targetScore} onChange={(value) => update("targetScore", value ?? 0)} max={500} />
-              <NumberField label="Promedio ICFES" value={form.averageScore} onChange={(value) => update("averageScore", value ?? 0)} step="0.1" max={500} />
+              <NumberField label="Promedio ICFES" value={form.averageScore} onChange={(value) => update("averageScore", value ?? 0)} max={500} />
               <NumberField label="Días de racha" value={form.streak} onChange={(value) => update("streak", value ?? 0)} max={1000000} />
               <NumberField label="Simulacros completados" value={form.simulations} onChange={(value) => update("simulations", value ?? 0)} max={10000000} />
               <NumberField label="EXP histórica" value={form.historicalXp} onChange={(value) => update("historicalXp", value ?? 0)} max={1000000000} />

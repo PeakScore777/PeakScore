@@ -41,7 +41,7 @@ type ProfileData = {
   streak: number;
   coins: number;
   selectedCharacter: string | null;
-  role?: string | null;
+  isAdmin?: boolean;
 };
 
 const characterAvatars: Record<string, string> = {
@@ -128,7 +128,7 @@ export default function Navbar({
           streak: Number(data.profile.streak ?? 0),
           coins: Number(data.profile.coins ?? 0),
           selectedCharacter,
-          role: data.profile.role ?? null,
+          isAdmin: data.profile.isAdmin === true,
         });
 
         if (selectedCharacter && characterAvatars[selectedCharacter]) {
@@ -1505,7 +1505,7 @@ function UserMenu({
           Mi cuaderno
         </Link>
 
-        {profile?.role === "admin" && (
+        {profile?.isAdmin === true && (
           <Link
             href="/dashboard/admin"
             onClick={onClose}
@@ -1518,7 +1518,7 @@ function UserMenu({
             `}
           >
             <ShieldCheck size={17} />
-            Panel de administración
+            Panel admin
           </Link>
         )}
       </div>

@@ -75,13 +75,11 @@ export default async function StatisticsPage() {
 
   if (authError || !user) redirect("/login");
 
-  const [{ data: profile, error: profileError }] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("full_name, target_score, streak")
-      .eq("id", user.id)
-      .maybeSingle(),
-  ]);
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("full_name, target_score, streak")
+    .eq("id", user.id)
+    .maybeSingle();
 
   // Paginate the authenticated user's completed attempts instead of relying on
   // the API's default row limit. The exact count powers the total-completions card.
@@ -151,7 +149,7 @@ export default async function StatisticsPage() {
       ((simulations ?? []) as SimulationRow[]).map((simulation) => [
         simulation.id,
         simulation,
-      ]),
+      ] as const),
     );
   }
 
@@ -210,13 +208,13 @@ export default async function StatisticsPage() {
               (subjects as SubjectRow[]).map((subject) => [
                 subject.id,
                 subject.name,
-              ]),
+              ] as const),
             );
           }
         }
 
         const questionById = new Map(
-          typedQuestions.map((question) => [question.id, question]),
+          typedQuestions.map((question) => [question.id, question] as const),
         );
         const grouped = new Map<
           string,

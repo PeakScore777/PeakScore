@@ -137,7 +137,7 @@ export default function ConfiguracionPanel({
         .filter((factor) => factor.status === "verified")
         .map((factor) => ({
           id: factor.id,
-          friendly_name: factor.friendly_name,
+          friendly_name: factor.friendly_name ?? null,
           status: factor.status,
         })),
     );

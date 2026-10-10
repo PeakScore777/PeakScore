@@ -46,7 +46,9 @@ type ProfileData = {
 
 const characterAvatars: Record<string, string> = {
   "peaky-nova": "/avatars/photo_perfil/peaky-nova.png",
+  nova: "/avatars/photo_perfil/peaky-nova.png",
   "peaky-nox": "/avatars/photo_perfil/peaky-nox.png",
+  nox: "/avatars/photo_perfil/peaky-nox.png",
   zyra: "/avatars/photo_perfil/zyrap.png",
   orby: "/avatars/photo_perfil/orbyp.png",
 };

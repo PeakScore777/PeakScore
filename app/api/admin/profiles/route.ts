@@ -108,7 +108,12 @@ function presentProfile(row: AdminProfileRow, seasonXp: number | null) {
     seasonXp,
     coins: Number(row.coins ?? 0),
     level: Number(row.level ?? 1),
-    selectedCharacter: row.selected_character ?? "",
+    selectedCharacter:
+      row.selected_character === "peaky-nova"
+        ? "nova"
+        : row.selected_character === "peaky-nox"
+          ? "nox"
+          : row.selected_character ?? "",
   };
 }
 
@@ -320,7 +325,7 @@ export async function PATCH(request: Request) {
 
     const updateSeasonXp = "seasonXp" in body;
     let seasonId: string | null = null;
-    let previousSeasonXp: number | null = null;
+    let requestedSeasonXp: number | null = null;
 
     if (updateSeasonXp) {
       const value = body.seasonXp;
@@ -351,6 +356,7 @@ export async function PATCH(request: Request) {
         );
       }
       seasonId = season.id;
+      requestedSeasonXp = value;
 
       const { data: participation, error: participationError } = await supabaseAdmin
         .from("user_seasons")
@@ -366,7 +372,6 @@ export async function PATCH(request: Request) {
         );
       }
 
-      previousSeasonXp = Number(participation.season_xp ?? 0);
     }
 
     if (Object.keys(updates).length === 0 && !updateSeasonXp) {
@@ -396,7 +401,7 @@ export async function PATCH(request: Request) {
     if (updateSeasonXp && seasonId) {
       const { error: seasonUpdateError } = await supabaseAdmin
         .from("user_seasons")
-        .update({ season_xp: body.seasonXp })
+        .update({ season_xp: requestedSeasonXp as number })
         .eq("user_id", targetUserId)
         .eq("season_id", seasonId);
 

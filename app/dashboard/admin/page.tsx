@@ -5,6 +5,7 @@ import {
   Database,
   Zap,
   ShieldCheck,
+  ShieldAlert,
   Building2,
   UsersRound,
 } from "lucide-react";
@@ -83,6 +84,21 @@ export default async function AdminPage() {
               <div className="mt-5 text-sm font-semibold text-violet-700">
                 Abrir herramienta →
               </div>
+            </Link>
+
+            {/* MODERACIÓN DE CUENTAS */}
+            <Link
+              href="/dashboard/admin/accounts"
+              className="group rounded-2xl border border-rose-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+                <ShieldAlert size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Moderación de cuentas</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Consulta el estado de una cuenta, aplica o levanta bloqueos y registra el motivo.
+              </p>
+              <div className="mt-5 text-sm font-semibold text-rose-700">Abrir herramienta →</div>
             </Link>
 
             {/* GENERADOR IA */}

@@ -271,7 +271,7 @@ export async function PATCH(request: Request) {
     const updates: Record<string, string | number | null> = {};
     const numberRules = [
       ["targetScore", "target_score", 0, 500, false],
-      ["averageScore", "average_score", 0, 500, false],
+      ["averageScore", "average_score", 0, 500, true],
       ["streak", "streak", 0, 1000000, true],
       ["simulations", "simulations", 0, 10000000, true],
       ["historicalXp", "xp", 0, 1000000000, true],

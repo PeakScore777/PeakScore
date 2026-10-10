@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { isCanonicalAdmin } from "@/lib/auth/admin";
 import ConfiguracionPanel from "@/components/perfil/ConfiguracionPanel";
 
 export default async function ConfiguracionPage() {
@@ -26,7 +27,7 @@ export default async function ConfiguracionPage() {
           initialEmail={user.email ?? ""}
           initialFullName={profile?.full_name ?? user.user_metadata?.full_name ?? ""}
           initialPhone={user.phone_confirmed_at ? user.phone ?? "" : ""}
-          isAdmin={profile?.role === "admin"}
+          isAdmin={isCanonicalAdmin(user.id, profile?.role)}
         />
       </div>
     </main>

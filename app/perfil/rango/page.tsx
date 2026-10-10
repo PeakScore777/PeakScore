@@ -2,6 +2,7 @@
 "use client";
 
 import Image from "next/image";
+import { createPortal } from "react-dom";
 import { useCallback, useEffect, useState } from "react";
 import {
   PEAKSCORE_RANKS,
@@ -220,9 +221,10 @@ function RankDetails({
     };
   }, [onClose]);
 
-  return (
+  return createPortal(
     <div
-      className="rank-modal-backdrop fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/85 p-3 backdrop-blur-lg sm:p-6"
+      className="rank-modal-backdrop fixed inset-0 z-[1000] flex flex-col items-center overflow-x-hidden overflow-y-auto overscroll-y-contain bg-black/85 p-3 backdrop-blur-lg touch-pan-y sm:p-6"
+      style={{ WebkitOverflowScrolling: "touch" }}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -231,7 +233,7 @@ function RankDetails({
         role="dialog"
         aria-modal="true"
         aria-labelledby="rank-detail-title"
-        className={`rank-detail-panel relative my-auto w-full max-w-5xl overflow-hidden rounded-2xl border text-white sm:rounded-3xl ${
+        className={`rank-detail-panel relative my-auto w-full max-w-5xl shrink-0 overflow-hidden rounded-2xl border text-white sm:rounded-3xl ${
           isPeak
             ? "rank-peak-panel border-fuchsia-300/50 bg-[#070416]"
             : `rank-detail-${rank.id} border-violet-300/25 bg-[#0b0819]`
@@ -519,7 +521,8 @@ function RankDetails({
           }
         }
       `}</style>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

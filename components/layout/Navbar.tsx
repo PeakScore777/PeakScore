@@ -9,6 +9,7 @@ import {
   Moon,
   Sun,
   Upload,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import {
@@ -40,6 +41,7 @@ type ProfileData = {
   streak: number;
   coins: number;
   selectedCharacter: string | null;
+  role?: string | null;
 };
 
 const characterAvatars: Record<string, string> = {
@@ -124,6 +126,7 @@ export default function Navbar({
           streak: Number(data.profile.streak ?? 0),
           coins: Number(data.profile.coins ?? 0),
           selectedCharacter,
+          role: data.profile.role ?? null,
         });
 
         if (selectedCharacter && characterAvatars[selectedCharacter]) {
@@ -1469,7 +1472,7 @@ function UserMenu({
             }
           `}
         >
-          Perfil
+          Mi perfil
         </Link>
 
         <Link
@@ -1493,6 +1496,23 @@ function UserMenu({
         >
           Mi cuaderno
         </Link>
+
+        {profile?.role === "admin" && (
+          <Link
+            href="/dashboard/admin"
+            onClick={onClose}
+            className={`
+              flex h-11 items-center gap-2 rounded-xl px-4
+              text-sm font-black transition-colors
+              ${isDark
+                ? "text-violet-200 hover:bg-violet-500/15 hover:text-white"
+                : "text-violet-700 hover:bg-violet-50"}
+            `}
+          >
+            <ShieldCheck size={17} />
+            Panel de administración
+          </Link>
+        )}
       </div>
 
       {/* ======================================================

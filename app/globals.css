@@ -1,8 +1,35 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: light;
+
   --background: #ffffff;
   --foreground: #171717;
+
+  --app-background: #f4f5fb;
+  --app-surface: #ffffff;
+  --app-surface-secondary: #eef0f8;
+  --app-border: rgba(30, 35, 60, 0.14);
+  --app-text: #17172a;
+  --app-text-muted: #62677c;
+
+  --profile-overlay: rgba(245, 247, 255, 0.72);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #05030b;
+  --foreground: #ededed;
+
+  --app-background: #05030b;
+  --app-surface: #0b0915;
+  --app-surface-secondary: #121020;
+  --app-border: rgba(255, 255, 255, 0.12);
+  --app-text: #f5f3ff;
+  --app-text-muted: #aaa4bd;
+
+  --profile-overlay: rgba(5, 3, 14, 0.72);
 }
 
 @theme inline {
@@ -10,17 +37,56 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-pixel: var(--font-press-start);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--app-background);
+  color: var(--app-text);
   font-family: Arial, Helvetica, sans-serif;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
+}
+
+.pixel-font {
+  font-family: var(--font-press-start), monospace;
+}
+
+/* Fondos reutilizables en todas las secciones del perfil */
+.profile-biome-background {
+  background-image:
+    linear-gradient(
+      var(--profile-overlay),
+      var(--profile-overlay)
+    ),
+    url("/perfil/biome-profile-light.webp");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+:root[data-theme="dark"] .profile-biome-background {
+  background-image:
+    linear-gradient(
+      var(--profile-overlay),
+      var(--profile-overlay)
+    ),
+    url("/perfil/biome-profile-dark.webp");
+}
+
+/* Superficies que pueden adaptarse al tema */
+.theme-surface {
+  background-color: var(--app-surface);
+  color: var(--app-text);
+  border-color: var(--app-border);
+}
+
+.theme-surface-secondary {
+  background-color: var(--app-surface-secondary);
+  color: var(--app-text);
+}
+
+.theme-muted {
+  color: var(--app-text-muted);
 }

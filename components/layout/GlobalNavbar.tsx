@@ -1,68 +1,123 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import Navbar, {
   type GlobalTheme,
 } from "@/components/layout/Navbar";
 
-export default function GlobalNavbar() {
-  const [theme, setTheme] =
-    useState<GlobalTheme>("dark");
+type ProfileData = {
+  id: string;
+  fullName: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+  streak: number;
+  coins: number;
+  selectedCharacter: string | null;
+};
 
+type GlobalNavbarProps = {
+  initialProfile?: ProfileData | null;
+};
+
+const THEME_STORAGE_KEY = "peakscore-theme";
+
+function isGlobalTheme(value: unknown): value is GlobalTheme {
+  return value === "light" || value === "dark";
+}
+
+export default function GlobalNavbar({
+  initialProfile = null,
+}: GlobalNavbarProps) {
+  const [theme, setTheme] = useState<GlobalTheme>("dark");
+  const [themeInitialized, setThemeInitialized] = useState(false);
+
+  // Recuperar la preferencia guardada al montar el navbar.
   useEffect(() => {
     try {
-      const savedTheme =
-        window.localStorage.getItem(
-          "peakscore-theme",
-        );
+      const savedTheme = window.localStorage.getItem(
+        THEME_STORAGE_KEY,
+      );
 
-      if (
-        savedTheme === "light" ||
-        savedTheme === "dark"
-      ) {
+      if (isGlobalTheme(savedTheme)) {
         setTheme(savedTheme);
       }
     } catch {
-      // Se conserva dark como fallback.
+      // Se mantiene el tema oscuro como alternativa.
+    } finally {
+      setThemeInitialized(true);
     }
   }, []);
 
+  // Aplicar el tema global a todo el documento.
   useEffect(() => {
-    const root =
-      document.documentElement;
+    if (!themeInitialized) return;
 
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
+    const root = document.documentElement;
 
     root.dataset.theme = theme;
+    root.classList.toggle("dark", theme === "dark");
 
     try {
-      window.localStorage.setItem(
-        "peakscore-theme",
-        theme,
-      );
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
-      // El tema sigue funcionando aunque localStorage no esté disponible.
+      // El tema continúa funcionando aunque no haya almacenamiento.
     }
 
     window.dispatchEvent(
-      new CustomEvent<GlobalTheme>(
-        "peakscore-theme-change",
-        {
-          detail: theme,
-        },
-      ),
+      new CustomEvent<GlobalTheme>("peakscore-theme-change", {
+        detail: theme,
+      }),
     );
-  }, [theme]);
+  }, [theme, themeInitialized]);
+
+  // Sincronizar cambios realizados desde otros componentes o pestañas.
+  useEffect(() => {
+    function handleThemeChange(event: Event) {
+      const customEvent = event as CustomEvent<GlobalTheme>;
+
+      if (isGlobalTheme(customEvent.detail)) {
+        setTheme((current) =>
+          current === customEvent.detail
+            ? current
+            : customEvent.detail,
+        );
+      }
+    }
+
+    function handleStorage(event: StorageEvent) {
+      if (
+        event.key === THEME_STORAGE_KEY &&
+        isGlobalTheme(event.newValue)
+      ) {
+        setTheme(event.newValue);
+      }
+    }
+
+    window.addEventListener(
+      "peakscore-theme-change",
+      handleThemeChange,
+    );
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener(
+        "peakscore-theme-change",
+        handleThemeChange,
+      );
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+  const handleThemeChange = useCallback((nextTheme: GlobalTheme) => {
+    setTheme(nextTheme);
+  }, []);
 
   return (
     <Navbar
       theme={theme}
-      onThemeChange={setTheme}
+      onThemeChange={handleThemeChange}
+      initialProfile={initialProfile}
     />
   );
 }

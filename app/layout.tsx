@@ -1,10 +1,18 @@
 import type { Metadata } from "next";
 import { ReactNode } from "react";
+import { Press_Start_2P } from "next/font/google";
 
 import GlobalNavbar from "@/components/layout/GlobalNavbar";
 import { createClient } from "@/lib/supabase/server";
 
 import "./globals.css";
+
+const pixelFont = Press_Start_2P({
+  weight: "400",
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-press-start",
+});
 
 export const metadata: Metadata = {
   title: "PeakScore",
@@ -49,7 +57,7 @@ export default async function RootLayout({
 
   return (
     <html lang="es">
-      <body>
+      <body className={pixelFont.variable}>
         <GlobalNavbar initialProfile={initialProfile} />
         {children}
       </body>

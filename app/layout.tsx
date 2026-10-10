@@ -4,6 +4,7 @@ import { Press_Start_2P } from "next/font/google";
 
 import GlobalNavbar from "@/components/layout/GlobalNavbar";
 import { createClient } from "@/lib/supabase/server";
+import { isCanonicalAdmin } from "@/lib/auth/admin";
 
 import "./globals.css";
 
@@ -51,7 +52,7 @@ export default async function RootLayout({
         coins: Number(profile.coins ?? 0),
         selectedCharacter:
           profile.selected_character ?? null,
-        role: profile.role ?? null,
+        isAdmin: isCanonicalAdmin(user.id, profile.role),
       };
     }
   }

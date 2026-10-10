@@ -22,6 +22,28 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const {
+      data: assurance,
+      error: assuranceError,
+    } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    if (assuranceError) {
+      return NextResponse.json(
+        { error: "No se pudo comprobar la autenticación de la cuenta." },
+        { status: 503 },
+      );
+    }
+
+    if (
+      assurance.nextLevel === "aal2" &&
+      assurance.currentLevel !== "aal2"
+    ) {
+      return NextResponse.json(
+        { error: "Completa la autenticación en dos pasos antes de cambiar la configuración.", mfaRequired: true },
+        { status: 403 },
+      );
+    }
+
     let body: SettingsBody;
 
     try {

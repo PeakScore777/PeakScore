@@ -6,6 +6,7 @@ import {
   Zap,
   ShieldCheck,
   Building2,
+  UsersRound,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -61,6 +62,28 @@ export default async function AdminPage() {
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
+
+            {/* GESTIÓN DE PERFILES */}
+            <Link
+              href="/dashboard/admin/profiles"
+              className="group rounded-2xl border border-violet-200 bg-white p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-violet-100 text-violet-700">
+                <UsersRound size={24} />
+              </div>
+
+              <h3 className="text-lg font-bold text-slate-900">
+                Gestión de perfiles
+              </h3>
+
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Busca una cuenta y corrige sus estadísticas, progreso y datos visibles.
+              </p>
+
+              <div className="mt-5 text-sm font-semibold text-violet-700">
+                Abrir herramienta →
+              </div>
+            </Link>
 
             {/* GENERADOR IA */}
             <Link

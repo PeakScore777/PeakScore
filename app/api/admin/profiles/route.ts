@@ -335,6 +335,7 @@ export async function PATCH(request: Request) {
     const updateSeasonXp = "seasonXp" in body;
     let seasonId: string | null = null;
     let requestedSeasonXp: number | null = null;
+    let originalSeasonXp: number | null = null;
 
     if (updateSeasonXp) {
       const value = body.seasonXp;
@@ -380,6 +381,7 @@ export async function PATCH(request: Request) {
           { status: 409 },
         );
       }
+      originalSeasonXp = Number(participation.season_xp ?? 0);
 
     }
 
@@ -419,7 +421,7 @@ export async function PATCH(request: Request) {
       seasonId,
       before: {
         ...Object.fromEntries(Object.keys(updates).map((key) => [key, originalValues[key]])),
-        ...(updateSeasonXp ? { season_xp: null } : {}),
+        ...(updateSeasonXp ? { season_xp: originalSeasonXp } : {}),
       },
       requested: {
         ...updates,

@@ -172,6 +172,7 @@ export default function ConfiguracionPanel({
 
       setFullName(result.fullName ?? cleanName);
       setNameInput(result.fullName ?? cleanName);
+      window.dispatchEvent(new Event("peakscore:profile-updated"));
       setNotice({ kind: "success", text: "Nombre actualizado." });
     } catch (error) {
       setNotice({
@@ -621,13 +622,23 @@ export default function ConfiguracionPanel({
       {isAdmin && (
         <Card
           title="Administración de PeakScore"
-          description="Accesos reservados a tu cuenta administradora global."
+          description={
+            verifiedTotp
+              ? "Accesos reservados a tu cuenta administradora global."
+              : "Por seguridad, activa y verifica primero la autenticación en dos pasos en el apartado de seguridad."
+          }
           icon={<ShieldCheck size={19} />}
         >
-          <Link href="/dashboard/admin" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/10 px-4 py-2.5 text-sm font-extrabold text-violet-100 transition hover:bg-violet-400/15">
-            <ShieldCheck size={17} />
-            Abrir panel de administración
-          </Link>
+          {verifiedTotp ? (
+            <Link href="/dashboard/admin" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-violet-300/25 bg-violet-400/10 px-4 py-2.5 text-sm font-extrabold text-violet-100 transition hover:bg-violet-400/15">
+              <ShieldCheck size={17} />
+              Abrir panel de administración
+            </Link>
+          ) : (
+            <p className="text-xs leading-5 text-amber-100/75">
+              Las herramientas globales requieren un segundo factor verificado. Configúralo en esta página antes de entrar al panel de administración.
+            </p>
+          )}
         </Card>
       )}
 

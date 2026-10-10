@@ -25,7 +25,7 @@ export default async function ConfiguracionPage() {
         <ConfiguracionPanel
           initialEmail={user.email ?? ""}
           initialFullName={profile?.full_name ?? user.user_metadata?.full_name ?? ""}
-          initialPhone={user.phone ?? ""}
+          initialPhone={user.phone_confirmed_at ? user.phone ?? "" : ""}
           isAdmin={profile?.role === "admin"}
         />
       </div>

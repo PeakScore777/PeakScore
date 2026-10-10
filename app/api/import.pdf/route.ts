@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCanonicalAdmin } from "@/lib/auth/admin";
 import { GoogleGenAI } from "@google/genai";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
@@ -2457,14 +2458,27 @@ export async function POST(
       );
     }
 
-    if (
-      profile?.role !== "admin"
-    ) {
+    if (!isCanonicalAdmin(user.id, profile?.role)) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "No tienes permisos para importar PDFs.",
+          error: "No tienes permisos para importar PDFs.",
+        },
+        { status: 403 }
+      );
+    }
+
+    const {
+      data: assurance,
+      error: assuranceError,
+    } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    if (assuranceError || assurance.currentLevel !== "aal2") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "La importación de PDF requiere autenticación en dos pasos.",
+          mfaRequired: true,
         },
         { status: 403 }
       );

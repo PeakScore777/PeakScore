@@ -14,7 +14,7 @@ type ProfileData = {
   streak: number;
   coins: number;
   selectedCharacter: string | null;
-  role?: string | null;
+  isAdmin?: boolean;
 };
 
 type GlobalNavbarProps = {

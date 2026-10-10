@@ -37,6 +37,25 @@ export async function requireAdmin() {
     redirect("/dashboard");
   }
 
+  // Las herramientas globales requieren MFA. Si todavía no hay
+  // factor configurado, permite al administrador abrir Configuración.
+  const {
+    data: assurance,
+    error: assuranceError,
+  } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+  if (assuranceError) {
+    redirect("/perfil/configuracion");
+  }
+
+  if (assurance.currentLevel !== "aal2") {
+    if (assurance.nextLevel === "aal2") {
+      redirect("/login/mfa");
+    }
+
+    redirect("/perfil/configuracion");
+  }
+
   return {
     user,
     profile,

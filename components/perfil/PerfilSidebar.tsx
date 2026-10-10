@@ -3,23 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  UserRound,
   UsersRound,
   Trophy,
-  ChartNoAxesColumnIncreasing,
   Medal,
   Settings,
 } from "lucide-react";
 
 const ITEMS = [
-  { label: "Mi perfil", href: "/perfil", icon: UserRound },
   { label: "Personajes", href: "/perfil/personajes", icon: UsersRound },
   { label: "Tu rango", href: "/perfil/rango", icon: Trophy },
-  {
-    label: "Estadísticas",
-    href: "/perfil/estadisticas",
-    icon: ChartNoAxesColumnIncreasing,
-  },
   { label: "Insignias", href: "/perfil/insignias", icon: Medal },
   {
     label: "Configuración",
@@ -32,9 +24,7 @@ export default function PerfilSidebar() {
   const pathname = usePathname();
 
   function isActive(href: string) {
-    return href === "/perfil"
-      ? pathname === "/perfil"
-      : pathname === href || pathname.startsWith(`${href}/`);
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   return (

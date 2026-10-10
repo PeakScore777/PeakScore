@@ -53,7 +53,8 @@ export async function GET() {
         season_xp,
         coins,
         level,
-        selected_character
+        selected_character,
+        role
       `)
       .eq("id", user.id)
       .single();
@@ -290,7 +291,7 @@ export async function GET() {
       profile: {
         id: profile.id,
         fullName: profile.full_name,
-        email: profile.email,
+        email: user.email ?? profile.email,
         avatarUrl: profile.avatar_url,
 
         targetScore:
@@ -332,6 +333,8 @@ export async function GET() {
 
         selectedCharacter:
           profile.selected_character,
+
+        role: profile.role,
       },
 
       // ========================================================

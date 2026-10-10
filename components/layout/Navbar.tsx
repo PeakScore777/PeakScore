@@ -148,10 +148,16 @@ export default function Navbar({
       }
     };
 
+    const handleProfileUpdated = () => {
+      void loadProfile();
+    };
+
+    window.addEventListener("peakscore:profile-updated", handleProfileUpdated);
     void loadProfile();
 
     return () => {
       mounted = false;
+      window.removeEventListener("peakscore:profile-updated", handleProfileUpdated);
     };
   }, []);
 

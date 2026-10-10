@@ -110,7 +110,29 @@ export default function LoginPage() {
       return;
     }
 
-    router.replace("/dashboard");
+    const {
+      data: assurance,
+      error: assuranceError,
+    } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    if (assuranceError) {
+      await supabase.auth.signOut();
+      setError(
+        "No pudimos verificar la seguridad de tu sesión. Intenta iniciar sesión nuevamente.",
+      );
+      setLoading(false);
+      return;
+    }
+
+    if (
+      assurance.nextLevel === "aal2" &&
+      assurance.currentLevel !== "aal2"
+    ) {
+      router.replace("/login/mfa");
+    } else {
+      router.replace("/dashboard");
+    }
+
     router.refresh();
   }
 

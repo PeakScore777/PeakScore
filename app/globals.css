@@ -1,3 +1,4 @@
+
 @import "tailwindcss";
 
 :root {
@@ -14,6 +15,18 @@
   --app-text-muted: #62677c;
 
   --profile-overlay: rgba(245, 247, 255, 0.72);
+
+  /* Fondo general de Insignias: tema claro */
+  --insignias-page-background: #eaf3ff;
+  --insignias-overlay-top: rgba(236, 246, 255, 0.12);
+  --insignias-overlay-bottom: rgba(236, 246, 255, 0.30);
+
+  /* Las tarjetas mantienen su identidad oscura en ambos temas */
+  --insignias-panel: rgba(7, 16, 30, 0.94);
+  --insignias-panel-hover: rgba(11, 24, 42, 0.98);
+  --insignias-panel-border: rgba(139, 190, 240, 0.20);
+  --insignias-text: #f1f5ff;
+  --insignias-muted: #a6b5cb;
 }
 
 :root[data-theme="dark"] {
@@ -30,6 +43,18 @@
   --app-text-muted: #aaa4bd;
 
   --profile-overlay: rgba(5, 3, 14, 0.72);
+
+  /* Fondo general de Insignias: tema oscuro */
+  --insignias-page-background: #050816;
+  --insignias-overlay-top: rgba(3, 7, 21, 0.25);
+  --insignias-overlay-bottom: rgba(3, 7, 21, 0.60);
+
+  /* Las tarjetas siguen oscuras */
+  --insignias-panel: rgba(5, 12, 25, 0.95);
+  --insignias-panel-hover: rgba(10, 22, 39, 0.98);
+  --insignias-panel-border: rgba(150, 190, 255, 0.14);
+  --insignias-text: #f1f5ff;
+  --insignias-muted: #a6b5cb;
 }
 
 @theme inline {
@@ -53,7 +78,7 @@ body {
   font-family: var(--font-press-start), monospace;
 }
 
-/* Fondos reutilizables en todas las secciones del perfil */
+/* Fondos reutilizables en las secciones del perfil */
 .profile-biome-background {
   background-image:
     linear-gradient(
@@ -75,7 +100,7 @@ body {
     url("/perfil/biome-profile-dark.webp");
 }
 
-/* Superficies que pueden adaptarse al tema */
+/* Superficies generales */
 .theme-surface {
   background-color: var(--app-surface);
   color: var(--app-text);
@@ -89,4 +114,266 @@ body {
 
 .theme-muted {
   color: var(--app-text-muted);
+}
+
+/* ==========================================================
+   PEAKSCORE · INSIGNIAS
+   Solo cambia el fondo exterior según el navbar global.
+   ========================================================== */
+
+.insignias-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  color: var(--insignias-text);
+  background-color: var(--insignias-page-background);
+
+  background-image:
+    linear-gradient(
+      180deg,
+      var(--insignias-overlay-top) 0%,
+      var(--insignias-overlay-bottom) 100%
+    ),
+    url("/images/profile/insignias-fondo-claro.png");
+
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+
+  transition:
+    background-color 250ms ease,
+    color 250ms ease;
+}
+
+:root[data-theme="dark"] .insignias-page {
+  background-color: var(--insignias-page-background);
+
+  background-image:
+    linear-gradient(
+      180deg,
+      var(--insignias-overlay-top) 0%,
+      rgba(3, 7, 21, 0.42) 45%,
+      var(--insignias-overlay-bottom) 100%
+    ),
+    url("/images/profile/insignias-fondo-oscuro.png");
+}
+
+/* ==========================================================
+   PANELES DE INSIGNIAS
+   OBTENIDAS, POR CONSEGUIR Y RESUMEN.
+   Permanecen oscuros en los dos temas.
+   ========================================================== */
+
+.insignias-page .insignias-panel {
+  color: var(--insignias-text) !important;
+  background: var(--insignias-panel) !important;
+  border-color: var(--insignias-panel-border) !important;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.16);
+
+  transition:
+    background-color 250ms ease,
+    border-color 250ms ease,
+    box-shadow 250ms ease;
+}
+
+/* ==========================================================
+   TARJETAS INDIVIDUALES
+   No se vuelven blancas al seleccionar el tema claro.
+   ========================================================== */
+
+.insignias-page .insignias-badge-card {
+  color: #f1f5ff !important;
+  background: var(--insignias-panel) !important;
+  border-color: var(--insignias-panel-border) !important;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+
+  transition:
+    background-color 250ms ease,
+    border-color 250ms ease,
+    box-shadow 250ms ease,
+    transform 250ms ease;
+}
+
+.insignias-page .insignias-badge-card:hover {
+  color: #ffffff !important;
+  background: var(--insignias-panel-hover) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--badge-color) 45%,
+    var(--insignias-panel-border)
+  ) !important;
+
+  box-shadow:
+    0 12px 30px rgba(0, 0, 0, 0.25),
+    0 0 18px color-mix(
+      in srgb,
+      var(--badge-color) 9%,
+      transparent
+    );
+}
+
+/* Los títulos nunca cambian a texto oscuro */
+.insignias-page .insignias-badge-card h3 {
+  color: #f8fbff !important;
+}
+
+.insignias-page .insignias-badge-card .text-slate-200 {
+  color: #e4ecfa !important;
+}
+
+.insignias-page .insignias-badge-card .text-slate-300 {
+  color: #c2cee0 !important;
+}
+
+.insignias-page .insignias-badge-card .text-slate-400 {
+  color: #a6b5cb !important;
+}
+
+.insignias-page .insignias-badge-card .text-slate-500 {
+  color: #91a1b9 !important;
+}
+
+/* Los números de progreso mantienen el color de cada insignia */
+.insignias-page .badge-progress-fill {
+  box-shadow:
+    0 0 12px color-mix(
+      in srgb,
+      var(--badge-color) 28%,
+      transparent
+    );
+}
+
+/* La superficie de la tarjeta objetivo también es oscura */
+.insignias-page .badge-objective-panel {
+  color: #f1f5ff;
+  background: rgba(5, 12, 25, 0.88) !important;
+}
+
+/* ==========================================================
+   VENTANA DE DETALLES
+   createPortal la coloca dentro de document.body.
+   Mantenemos el modal oscuro, sin importar el tema exterior.
+   ========================================================== */
+
+.badge-detail-panel {
+  color: #f1f5ff !important;
+  background: #081321 !important;
+  border-color: color-mix(
+    in srgb,
+    var(--badge-color) 45%,
+    rgba(150, 190, 255, 0.12)
+  ) !important;
+
+  box-shadow:
+    0 0 60px color-mix(
+      in srgb,
+      var(--badge-color) 9%,
+      transparent
+    ),
+    0 24px 90px rgba(0, 0, 0, 0.65);
+
+  transition:
+    background-color 250ms ease,
+    border-color 250ms ease,
+    color 250ms ease;
+}
+
+/* Fondo de la ilustración dentro del modal */
+.badge-detail-panel .badge-detail-art {
+  background:
+    linear-gradient(
+      145deg,
+      #080e1a,
+      #0b1827 50%,
+      #050a14
+    ) !important;
+}
+
+/* Garantiza la lectura de títulos y descripciones */
+.badge-detail-panel .text-white {
+  color: #f8fbff !important;
+}
+
+.badge-detail-panel .text-slate-200 {
+  color: #e4ecfa !important;
+}
+
+.badge-detail-panel .text-slate-300 {
+  color: #c2cee0 !important;
+}
+
+.badge-detail-panel .text-slate-400 {
+  color: #a6b5cb !important;
+}
+
+.badge-detail-panel .text-slate-500 {
+  color: #91a1b9 !important;
+}
+
+/* Objetivo y recompensa: superficies oscuras con buen contraste */
+.badge-detail-panel .badge-objective-panel {
+  color: #f1f5ff !important;
+  background: rgba(5, 12, 25, 0.94) !important;
+}
+
+.badge-detail-panel .bg-white\/\[0\.025\] {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+.badge-detail-panel .bg-black\/60 {
+  color: #f1f5ff;
+  background: rgba(0, 0, 0, 0.72) !important;
+}
+
+/* El botón de cerrar mantiene un contraste alto */
+.badge-detail-panel button {
+  color: #f1f5ff;
+}
+
+/* El tema de la página no modifica el fondo del modal */
+:root:not([data-theme="dark"]) .badge-detail-panel {
+  color: #f1f5ff !important;
+  background: #081321 !important;
+}
+
+:root:not([data-theme="dark"]) .badge-detail-panel .badge-detail-art {
+  background:
+    linear-gradient(
+      145deg,
+      #080e1a,
+      #0b1827 50%,
+      #050a14
+    ) !important;
+}
+
+/* Mantener el encabezado visual independiente del tema global */
+.insignias-page .badge-header {
+  color: #ffffff;
+}
+
+/* Ajustes para móviles */
+@media (max-width: 640px) {
+  .insignias-page {
+    background-attachment: scroll;
+    background-position: center top;
+  }
+}
+
+/* Accesibilidad: reducir animaciones si el usuario lo solicita */
+@media (prefers-reduced-motion: reduce) {
+  .insignias-page,
+  .insignias-page .insignias-panel,
+  .insignias-page .insignias-badge-card,
+  .badge-detail-panel {
+    transition: none;
+  }
 }

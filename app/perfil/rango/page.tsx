@@ -854,7 +854,7 @@ export default function RangoPage() {
 
       <section
         id="todos-los-rangos"
-        className="relative z-10 rounded-2xl border border-white/10 bg-[#080612] px-4 pt-4 pb-6 sm:px-5 sm:pt-5 sm:pb-6 lg:px-6 lg:pt-6 lg:pb-7"
+        className="relative z-10 pb-6 bg-[#080612]"
       >
         <div className="mb-5">
           <h2 className="pixel-font text-xs leading-7 sm:text-sm">
@@ -936,7 +936,7 @@ export default function RangoPage() {
                   {item.name}
                 </h3>
 
-                <p className="mt-2 text-[10px] leading-4 text-white/55 sm:text-xs sm:leading-5">
+                <p className="mt-2 text-[10px] leading-4 text-white/60 sm:text-xs sm:leading-5">
                   {getRequirement(item)}
                 </p>
 

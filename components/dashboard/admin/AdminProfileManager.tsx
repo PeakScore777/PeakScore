@@ -26,7 +26,7 @@ type AdminProfile = {
   selectedCharacter: string;
 };
 
-type Notice = { kind: "success" | "error"; text: string };
+type Notice = { kind: "success" | "warning" | "error"; text: string };
 
 function NumberField({
   label,
@@ -69,6 +69,7 @@ export default function AdminProfileManager() {
   const [form, setForm] = useState<AdminProfile | null>(null);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [reason, setReason] = useState("");
 
   async function searchProfiles(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -110,6 +111,12 @@ export default function AdminProfileManager() {
     if (!form) return;
     setNotice(null);
 
+    const cleanReason = reason.trim();
+    if (cleanReason.length < 5 || cleanReason.length > 500) {
+      setNotice({ kind: "error", text: "El motivo debe tener entre 5 y 500 caracteres." });
+      return;
+    }
+
     const requiredNumbers = [
       form.targetScore,
       form.averageScore,
@@ -135,6 +142,7 @@ export default function AdminProfileManager() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: form.id,
+          reason: cleanReason,
           fullName: form.fullName,
           targetScore: form.targetScore,
           averageScore: form.averageScore,
@@ -147,7 +155,12 @@ export default function AdminProfileManager() {
           selectedCharacter: form.selectedCharacter || null,
         }),
       });
-      const data = (await response.json()) as { success?: boolean; error?: string; mfaRequired?: boolean };
+      const data = (await response.json()) as {
+        success?: boolean;
+        error?: string;
+        mfaRequired?: boolean;
+        auditWarning?: boolean;
+      };
       if (!response.ok || !data.success) {
         const suffix = data.mfaRequired
           ? " Activa la autenticación en dos pasos en Configuración y vuelve a ingresar."
@@ -157,7 +170,18 @@ export default function AdminProfileManager() {
 
       setSelected({ ...form });
       setResults((current) => current.map((item) => item.id === form.id ? { ...form } : item));
-      setNotice({ kind: "success", text: "Cambios guardados. Los datos del perfil se volverán a calcular al recargar la página." });
+      setReason("");
+      setNotice(
+        data.auditWarning
+          ? {
+              kind: "warning",
+              text: "Los cambios se guardaron, pero el registro de auditoría no pudo marcarse como aplicado. Revisa los logs antes de repetir esta operación.",
+            }
+          : {
+              kind: "success",
+              text: "Cambios guardados y registrados en la auditoría administrativa.",
+            },
+      );
     } catch (error) {
       setNotice({ kind: "error", text: error instanceof Error ? error.message : "No se pudieron guardar los cambios." });
     } finally {
@@ -186,7 +210,7 @@ export default function AdminProfileManager() {
         </header>
 
         {notice && (
-          <div role="status" aria-live="polite" className={`rounded-xl border px-4 py-3 text-sm ${notice.kind === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-amber-200 bg-amber-50 text-amber-900"}`}>
+          <div role="status" aria-live="polite" className={`rounded-xl border px-4 py-3 text-sm ${notice.kind === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : notice.kind === "warning" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-rose-200 bg-rose-50 text-rose-900"}`}>
             {notice.text}
           </div>
         )}
@@ -225,6 +249,21 @@ export default function AdminProfileManager() {
               <p className="mt-1 break-all text-sm text-slate-500">{selected.email}</p>
               <p className="mt-2 text-[11px] text-slate-400">ID: {selected.id}</p>
             </div>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-bold text-slate-500">Motivo de la modificación (obligatorio)</span>
+              <textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                minLength={5}
+                maxLength={500}
+                required
+                rows={3}
+                placeholder="Explica por qué se necesita este ajuste administrativo (5–500 caracteres)."
+                className="w-full resize-y rounded-xl border border-slate-200 px-3.5 py-3 text-sm outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-200"
+              />
+              <span className="mt-1 block text-right text-xs text-slate-400">{reason.trim().length}/500</span>
+            </label>
 
             <label className="block">
               <span className="mb-2 block text-xs font-bold text-slate-500">Nombre visible</span>

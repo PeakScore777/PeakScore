@@ -40,8 +40,8 @@ export default async function InsigniasPage() {
     });
   }
 
-  const earned = new Map(
-    (userBadges ?? []).map((item) => [item.badge_id, item.unlocked_at]),
+  const earned = new Map<string, string | null>(
+    (userBadges ?? []).map((item) => [item.badge_id, item.unlocked_at] as const),
   );
 
   const badges = (badgeRows ?? []).map((badge) => ({

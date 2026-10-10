@@ -65,7 +65,7 @@ export default function LoginMfaPage() {
 
     setFactor({
       id: verified.id,
-      friendly_name: verified.friendly_name,
+      friendly_name: verified.friendly_name ?? null,
     });
     setLoading(false);
   }, [router]);

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isCanonicalAdmin } from "@/lib/auth/admin";
 import {
   generateAI,
   getSafeAIErrorMessage,
@@ -7155,16 +7156,29 @@ export async function POST(
       );
     }
 
-    if (profile?.role !== "admin") {
+    if (!isCanonicalAdmin(user.id, profile?.role)) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            "No tienes permisos para generar preguntas.",
+          error: "No tienes permisos para generar preguntas.",
         },
+        { status: 403 }
+      );
+    }
+
+    const {
+      data: assurance,
+      error: assuranceError,
+    } = await authSupabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+    if (assuranceError || assurance.currentLevel !== "aal2") {
+      return NextResponse.json(
         {
-          status: 403,
-        }
+          success: false,
+          error: "Esta herramienta administrativa requiere autenticación en dos pasos.",
+          mfaRequired: true,
+        },
+        { status: 403 }
       );
     }
 

@@ -241,6 +241,14 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+    if (reason.length < 5 || reason.length > 500) {
+      return NextResponse.json(
+        { error: "Indica un motivo de entre 5 y 500 caracteres para dejar constancia de la modificación." },
+        { status: 400 },
+      );
+    }
+
     const { data: original, error: targetError } = await supabaseAdmin
       .from("profiles")
       .select(PROFILE_FIELDS)
@@ -382,6 +390,67 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const actorUserId = auth.user?.id;
+    if (!actorUserId) {
+      return NextResponse.json(
+        { error: "La sesión administrativa dejó de estar disponible." },
+        { status: 401 },
+      );
+    }
+
+    const originalValues: Record<string, string | number | null> = {
+      full_name: original.full_name,
+      target_score: original.target_score,
+      average_score: original.average_score,
+      streak: original.streak,
+      simulations: original.simulations,
+      xp: original.xp,
+      coins: original.coins,
+      level: original.level,
+      selected_character: original.selected_character,
+    };
+    const changedFields = [
+      ...Object.keys(updates),
+      ...(updateSeasonXp ? ["season_xp"] : []),
+    ];
+    const auditMetadata = {
+      status: "requested",
+      fields: changedFields,
+      seasonId,
+      before: {
+        ...Object.fromEntries(Object.keys(updates).map((key) => [key, originalValues[key]])),
+        ...(updateSeasonXp ? { season_xp: null } : {}),
+      },
+      requested: {
+        ...updates,
+        ...(updateSeasonXp ? { season_xp: requestedSeasonXp } : {}),
+      },
+    };
+
+    // Create the audit record before mutating data. If audit storage is unavailable,
+    // fail closed and do not perform an unaudited administrative change.
+    const { data: auditRow, error: auditInsertError } = await supabaseAdmin
+      .from("admin_audit_logs")
+      .insert({
+        actor_user_id: actorUserId,
+        target_user_id: targetUserId,
+        event_type: "profile_statistics_update",
+        reason,
+        metadata: auditMetadata,
+      })
+      .select("id")
+      .single();
+
+    if (auditInsertError || !auditRow) {
+      console.error("[AdminProfiles] No se pudo registrar la auditoría previa.", {
+        code: auditInsertError?.code ?? "UNKNOWN",
+      });
+      return NextResponse.json(
+        { error: "No se pudo registrar la auditoría. No se modificó ningún dato." },
+        { status: 503 },
+      );
+    }
+
     if (Object.keys(updates).length > 0) {
       const { error: updateError } = await supabaseAdmin
         .from("profiles")
@@ -389,11 +458,28 @@ export async function PATCH(request: Request) {
         .eq("id", targetUserId);
 
       if (updateError) {
+        const { error: auditFailureError } = await supabaseAdmin
+          .from("admin_audit_logs")
+          .update({
+            metadata: {
+              ...auditMetadata,
+              status: "failed",
+              failureStage: "profile_update",
+              errorCode: updateError.code ?? "UNKNOWN",
+            },
+          })
+          .eq("id", auditRow.id);
+
         console.error("[AdminProfiles] Error al actualizar perfil.", {
           code: updateError.code ?? "UNKNOWN",
+          auditFailureCode: auditFailureError?.code ?? null,
         });
         return NextResponse.json(
-          { error: "No se pudieron guardar los cambios del perfil." },
+          {
+            error: auditFailureError
+              ? "No se pudieron guardar los cambios y tampoco se pudo actualizar el registro de auditoría."
+              : "No se pudieron guardar los cambios del perfil. El intento quedó registrado.",
+          },
           { status: 500 },
         );
       }
@@ -407,41 +493,80 @@ export async function PATCH(request: Request) {
         .eq("season_id", seasonId);
 
       if (seasonUpdateError) {
-        // Compensación para no dejar el perfil parcialmente actualizado.
+        // Compensate only fields changed by this request, avoiding overwriting
+        // unrelated values that could have changed concurrently.
+        let rollbackSucceeded = true;
         if (Object.keys(updates).length > 0) {
-          await supabaseAdmin
+          const rollbackValues = Object.fromEntries(
+            Object.keys(updates).map((column) => [column, originalValues[column]]),
+          ) as Record<string, string | number | null>;
+          const { error: rollbackError } = await supabaseAdmin
             .from("profiles")
-            .update({
-              full_name: original.full_name,
-              target_score: original.target_score,
-              average_score: original.average_score,
-              streak: original.streak,
-              simulations: original.simulations,
-              xp: original.xp,
-              coins: original.coins,
-              level: original.level,
-              selected_character: original.selected_character,
-            })
+            .update(rollbackValues)
             .eq("id", targetUserId);
+          rollbackSucceeded = !rollbackError;
         }
+
+        const { error: auditFailureError } = await supabaseAdmin
+          .from("admin_audit_logs")
+          .update({
+            metadata: {
+              ...auditMetadata,
+              status: "failed",
+              failureStage: "season_xp_update",
+              errorCode: seasonUpdateError.code ?? "UNKNOWN",
+              rollbackSucceeded,
+            },
+          })
+          .eq("id", auditRow.id);
+
         console.error("[AdminProfiles] Error al actualizar EXP de temporada.", {
           code: seasonUpdateError.code ?? "UNKNOWN",
+          rollbackSucceeded,
+          auditFailureCode: auditFailureError?.code ?? null,
         });
+
+        const errorMessage = !rollbackSucceeded
+          ? "Falló la EXP de temporada y la restauración del perfil no se pudo confirmar. Revisa la cuenta antes de editarla de nuevo."
+          : "No se pudo guardar la EXP de temporada. Los demás campos se restauraron.";
         return NextResponse.json(
-          { error: "No se pudo guardar la EXP de temporada. Se intentó restaurar los demás valores." },
+          {
+            error: auditFailureError
+              ? `${errorMessage} Además, no se pudo actualizar el registro de auditoría.`
+              : `${errorMessage} El intento quedó registrado.`,
+          },
           { status: 500 },
         );
       }
     }
 
-    console.info("[AdminProfiles] Stats updated", {
-      adminUserId: auth.user?.id,
-      targetUserId,
-      profileFields: Object.keys(updates),
-      updatedSeasonXp: updateSeasonXp,
-    });
+    const { data: finalizedAudit, error: auditFinalizeError } = await supabaseAdmin
+      .from("admin_audit_logs")
+      .update({
+        metadata: {
+          ...auditMetadata,
+          status: "applied",
+          appliedAt: new Date().toISOString(),
+        },
+      })
+      .eq("id", auditRow.id)
+      .select("id")
+      .maybeSingle();
 
-    return NextResponse.json({ success: true });
+    const auditWarning = Boolean(auditFinalizeError || !finalizedAudit);
+    if (auditWarning) {
+      console.error("[AdminProfiles] La modificación se guardó, pero la auditoría no se pudo finalizar.", {
+        code: auditFinalizeError?.code ?? "NO_ROW_RETURNED",
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      auditWarning,
+      ...(auditWarning
+        ? { warning: "Los cambios se guardaron, pero el registro de auditoría no pudo marcarse como aplicado." }
+        : {}),
+    });
   } catch {
     return NextResponse.json(
       { error: "Ocurrió un error al guardar los cambios." },

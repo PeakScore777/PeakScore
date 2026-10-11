@@ -1,25 +1,21 @@
-
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BookOpen,
   Bug,
   ChevronDown,
-  GraduationCap,
   LogOut,
   Menu,
   Moon,
   NotebookPen,
+  ShieldCheck,
   Sun,
-  Trophy,
   Upload,
   Users,
   UserRound,
   X,
-  type LucideIcon,
 } from "lucide-react";
 import {
   useEffect,
@@ -44,6 +40,8 @@ type ProfileData = {
   streak: number;
   coins: number;
   selectedCharacter: string | null;
+  // Debe proceder de una comprobación confiable del servidor.
+  isAdmin?: boolean;
 };
 
 type GlobalNavbarProps = {
@@ -56,39 +54,35 @@ type NavigationItem = {
   href: string;
   label: string;
   description: string;
-  icon: LucideIcon;
 };
 
 const THEME_STORAGE_KEY = "peakscore-theme";
 
-const characterAvatars: Record<string, string> = {
+const CHARACTER_AVATARS: Record<string, string> = {
   "peaky-nova": "/avatars/photo_perfil/peaky-nova.png",
   "peaky-nox": "/avatars/photo_perfil/peaky-nox.png",
   zyra: "/avatars/photo_perfil/zyrap.png",
   orby: "/avatars/photo_perfil/orbyp.png",
 };
 
-const learnItems: NavigationItem[] = [
+const LEARN_ITEMS: NavigationItem[] = [
   {
     href: "/aprender",
     label: "Niveles",
     description: "Avanza por los mundos de PeakScore.",
-    icon: GraduationCap,
   },
 ];
 
-const communityItems: NavigationItem[] = [
+const COMMUNITY_ITEMS: NavigationItem[] = [
   {
     href: "/comunidad/ranking",
     label: "Ranking",
     description: "Consulta tu posición en la comunidad.",
-    icon: Trophy,
   },
   {
     href: "/comunidad",
     label: "Comunidad",
     description: "Explora el espacio social de PeakScore.",
-    icon: Users,
   },
 ];
 
@@ -104,7 +98,6 @@ export default function GlobalNavbar({
   initialProfile = null,
 }: GlobalNavbarProps) {
   const pathname = usePathname() ?? "/";
-
   const rootRef = useRef<HTMLElement | null>(null);
 
   const [theme, setTheme] = useState<GlobalTheme>("dark");
@@ -122,7 +115,6 @@ export default function GlobalNavbar({
   const [checkingAuth, setCheckingAuth] = useState(false);
 
   const isDark = theme === "dark";
-
   const displayName = profile?.fullName?.trim() || "Estudiante";
   const email = profile?.email ?? "";
   const firstInitial = displayName.charAt(0).toUpperCase() || "E";
@@ -131,10 +123,10 @@ export default function GlobalNavbar({
     profile?.selectedCharacter ?? cachedCharacter;
 
   const selectedCharacterAvatar = selectedCharacter
-    ? characterAvatars[selectedCharacter] ?? null
+    ? CHARACTER_AVATARS[selectedCharacter] ?? null
     : null;
 
-  // 1. Recuperar la preferencia del tema.
+  // Recuperar la preferencia guardada del tema.
   useEffect(() => {
     try {
       const savedTheme = window.localStorage.getItem(
@@ -145,13 +137,13 @@ export default function GlobalNavbar({
         setTheme(savedTheme);
       }
     } catch {
-      // Se utiliza el tema oscuro como alternativa.
+      // El tema oscuro es la alternativa.
     } finally {
       setThemeInitialized(true);
     }
   }, []);
 
-  // 2. Aplicar el tema a toda la aplicación.
+  // Aplicar el tema a todo el documento.
   useEffect(() => {
     if (!themeInitialized) return;
 
@@ -161,7 +153,7 @@ export default function GlobalNavbar({
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, theme);
     } catch {
-      // El tema sigue funcionando durante esta sesión.
+      // El tema sigue funcionando durante la sesión actual.
     }
 
     window.dispatchEvent(
@@ -171,7 +163,7 @@ export default function GlobalNavbar({
     );
   }, [theme, themeInitialized, isDark]);
 
-  // 3. Sincronizar cambios del tema desde otras pestañas/componentes.
+  // Sincronizar cambios del tema entre componentes y pestañas.
   useEffect(() => {
     function handleThemeChange(event: Event) {
       const nextTheme = (event as CustomEvent<GlobalTheme>).detail;
@@ -207,22 +199,22 @@ export default function GlobalNavbar({
     };
   }, []);
 
-  // 4. Recuperar el personaje almacenado para evitar un avatar vacío.
+  // Recuperar el personaje en caché para mostrar su imagen cuanto antes.
   useEffect(() => {
     try {
       const cached = window.localStorage.getItem(
         "peakscore-selected-character",
       );
 
-      if (cached && characterAvatars[cached]) {
+      if (cached && CHARACTER_AVATARS[cached]) {
         setCachedCharacter(cached);
       }
     } catch {
-      // La caché es opcional.
+      // La caché visual es opcional.
     }
   }, []);
 
-  // 5. Obtener el perfil actual mediante la API existente.
+  // Actualizar el perfil con la API existente.
   useEffect(() => {
     let mounted = true;
 
@@ -259,13 +251,16 @@ export default function GlobalNavbar({
           coins: Number(data.profile.coins ?? 0),
           selectedCharacter:
             data.profile.selectedCharacter ?? null,
+          // Solo será true si la API lo proporciona desde una
+          // comprobación confiable del servidor.
+          isAdmin: data.profile.isAdmin === true,
         };
 
         setProfile(nextProfile);
 
         const character = nextProfile.selectedCharacter;
 
-        if (character && characterAvatars[character]) {
+        if (character && CHARACTER_AVATARS[character]) {
           setCachedCharacter(character);
 
           try {
@@ -274,7 +269,7 @@ export default function GlobalNavbar({
               character,
             );
           } catch {
-            // El perfil del servidor sigue siendo la fuente principal.
+            // Supabase/API siguen siendo la fuente del perfil.
           }
         }
       } catch (error) {
@@ -292,7 +287,7 @@ export default function GlobalNavbar({
     };
   }, []);
 
-  // 6. Cerrar menús con Escape o al hacer clic fuera del navbar.
+  // Cerrar los menús al pulsar Escape o hacer clic fuera del navbar.
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
       const target = event.target as Node;
@@ -322,7 +317,7 @@ export default function GlobalNavbar({
     };
   }, []);
 
-  // 7. Evitar que el fondo se desplace detrás del modal de errores.
+  // Bloquear el desplazamiento del fondo durante el reporte.
   useEffect(() => {
     if (!bugOpen) return;
 
@@ -368,7 +363,7 @@ export default function GlobalNavbar({
 
       if (error) {
         console.error(
-          "[GlobalNavbar] Error verificando la sesión:",
+          "[GlobalNavbar] Error verificando sesión:",
           error,
         );
         window.location.href = "/login";
@@ -376,7 +371,7 @@ export default function GlobalNavbar({
       }
 
       window.location.href = session?.user
-        ? "/dashboard/simulacros/new"
+        ? "/simulacros"
         : "/login";
     } catch (error) {
       console.error(
@@ -438,7 +433,7 @@ export default function GlobalNavbar({
           aria-label="Navegación principal"
           className="relative flex min-h-[72px] w-full items-center gap-2 px-3 sm:px-6 lg:px-8"
         >
-          {/* Logo de PeakScore */}
+          {/* LOGO */}
           <Link
             href="/"
             aria-label="PeakScore, inicio"
@@ -465,13 +460,15 @@ export default function GlobalNavbar({
             </span>
           </Link>
 
-          {/* Navegación para escritorio */}
+          {/* NAVEGACIÓN CENTRAL */}
           <div className="absolute left-1/2 hidden -translate-x-1/2 lg:block">
             <div className="flex items-center gap-0.5">
+              {/* APRENDE */}
               <div
-                className="relative"
+                className="relative after:absolute after:left-0 after:right-0 after:top-full after:h-2 after:content-['']"
                 onMouseEnter={() => setOpenDropdown("learn")}
                 onMouseLeave={() => setOpenDropdown(null)}
+                onFocus={() => setOpenDropdown("learn")}
               >
                 <button
                   type="button"
@@ -490,50 +487,40 @@ export default function GlobalNavbar({
                 {openDropdown === "learn" && (
                   <DropdownPanel
                     dark={isDark}
-                    items={learnItems}
+                    items={LEARN_ITEMS}
                     onClose={() => setOpenDropdown(null)}
                   >
                     <button
                       type="button"
                       onClick={() => void handleSimulations()}
                       disabled={checkingAuth}
-                      className={`flex w-full items-start gap-3 rounded-xl p-3 text-left transition ${
+                      className={`block w-full rounded-xl px-4 py-3 text-left transition ${
                         isDark
                           ? "hover:bg-white/[0.06]"
                           : "hover:bg-slate-50"
                       }`}
                     >
                       <span
-                        className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                          isDark
-                            ? "bg-cyan-400/10 text-cyan-200"
-                            : "bg-cyan-50 text-cyan-700"
+                        className={`block text-[13px] font-black ${
+                          isDark ? "text-white" : "text-slate-900"
                         }`}
                       >
-                        <BookOpen className="h-4 w-4" />
+                        Simulacros
                       </span>
 
-                      <span>
-                        <span
-                          className={`block text-[13px] font-black ${
-                            isDark ? "text-white" : "text-slate-900"
-                          }`}
-                        >
-                          Simulacros
-                        </span>
-                        <span
-                          className={`mt-1 block text-[11px] leading-5 ${
-                            isDark ? "text-white/45" : "text-slate-500"
-                          }`}
-                        >
-                          Practica con preguntas tipo ICFES.
-                        </span>
+                      <span
+                        className={`mt-1 block text-[11px] leading-5 ${
+                          isDark ? "text-white/45" : "text-slate-500"
+                        }`}
+                      >
+                        Practica con preguntas tipo ICFES.
                       </span>
                     </button>
                   </DropdownPanel>
                 )}
               </div>
 
+              {/* PROGRESO */}
               <Link
                 href="/progreso"
                 onClick={closeMenus}
@@ -546,6 +533,7 @@ export default function GlobalNavbar({
                 Progreso
               </Link>
 
+              {/* RETOS */}
               <Link
                 href="/retos"
                 onClick={closeMenus}
@@ -558,10 +546,12 @@ export default function GlobalNavbar({
                 Retos
               </Link>
 
+              {/* COMUNIDAD */}
               <div
-                className="relative"
+                className="relative after:absolute after:left-0 after:right-0 after:top-full after:h-2 after:content-['']"
                 onMouseEnter={() => setOpenDropdown("community")}
                 onMouseLeave={() => setOpenDropdown(null)}
+                onFocus={() => setOpenDropdown("community")}
               >
                 <button
                   type="button"
@@ -580,12 +570,13 @@ export default function GlobalNavbar({
                 {openDropdown === "community" && (
                   <DropdownPanel
                     dark={isDark}
-                    items={communityItems}
+                    items={COMMUNITY_ITEMS}
                     onClose={() => setOpenDropdown(null)}
                   />
                 )}
               </div>
 
+              {/* PRECIOS */}
               <Link
                 href="/precios"
                 onClick={closeMenus}
@@ -597,11 +588,26 @@ export default function GlobalNavbar({
               >
                 Precios
               </Link>
+
+              {/* BUG: justo al lado de PRECIOS */}
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenus();
+                  setBugOpen(true);
+                }}
+                className={`${baseNavClass} ${normalNavClass}`}
+                aria-label="Reportar un bug"
+                title="Reportar un bug"
+              >
+                Bug
+              </button>
             </div>
           </div>
 
-          {/* Tema, música, reporte y perfil */}
+          {/* CONTROLES DEL LADO DERECHO */}
           <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+            {/* TEMA */}
             <button
               type="button"
               onClick={handleThemeToggle}
@@ -622,26 +628,10 @@ export default function GlobalNavbar({
               )}
             </button>
 
+            {/* REPRODUCTOR GLOBAL */}
             <PeakScoreMusicPlayer theme={theme} />
 
-            <button
-              type="button"
-              onClick={() => {
-                closeMenus();
-                setBugOpen(true);
-              }}
-              aria-label="Reportar un error"
-              title="Reportar un error"
-              className={`hidden h-10 w-10 items-center justify-center rounded-xl transition sm:flex ${
-                isDark
-                  ? "text-white/60 hover:bg-white/[0.06] hover:text-white"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-              }`}
-            >
-              <Bug className="h-[18px] w-[18px]" />
-            </button>
-
-            {/* Menú de perfil */}
+            {/* PERFIL */}
             <div className="relative">
               <button
                 type="button"
@@ -680,23 +670,20 @@ export default function GlobalNavbar({
                       isDark ? "text-white" : "text-slate-700"
                     }`}
                   >
-                    {profile ? (
-                      firstInitial
-                    ) : (
-                      <Users className="h-4 w-4" />
-                    )}
+                    {profile ? firstInitial : <Users className="h-4 w-4" />}
                   </span>
                 )}
               </button>
 
               {profileOpen && (
                 <div
-                  className={`absolute right-0 top-[50px] z-[170] w-[min(330px,calc(100vw-20px))] overflow-hidden rounded-2xl border shadow-2xl ${
+                  className={`absolute right-0 top-[50px] z-[170] w-[min(340px,calc(100vw-20px))] overflow-hidden rounded-2xl border shadow-2xl ${
                     isDark
                       ? "border-white/10 bg-[#11101f] shadow-black/50"
                       : "border-slate-200 bg-white shadow-slate-300/40"
                   }`}
                 >
+                  {/* CABECERA DEL PERFIL */}
                   <div
                     className={`flex items-center gap-3 border-b p-4 ${
                       isDark ? "border-white/10" : "border-slate-200"
@@ -744,6 +731,7 @@ export default function GlobalNavbar({
                       >
                         {displayName}
                       </p>
+
                       <p
                         className={`mt-1 truncate text-[11px] ${
                           isDark ? "text-white/45" : "text-slate-500"
@@ -754,6 +742,7 @@ export default function GlobalNavbar({
                     </div>
                   </div>
 
+                  {/* RACHA Y SALDO REAL */}
                   {profile && (
                     <div
                       className={`grid grid-cols-2 border-b ${
@@ -761,66 +750,77 @@ export default function GlobalNavbar({
                       }`}
                     >
                       <div
-                        className={`border-r px-4 py-3 ${
+                        className={`flex min-w-0 items-center gap-2 border-r px-3 py-3 ${
                           isDark ? "border-white/10" : "border-slate-200"
                         }`}
                       >
-                        <p
-                          className={`text-sm font-black ${
-                            isDark ? "text-white" : "text-slate-900"
-                          }`}
-                        >
-                          {profile.streak}
-                        </p>
-                        <p
-                          className={`mt-1 text-[10px] ${
-                            isDark ? "text-white/45" : "text-slate-500"
-                          }`}
-                        >
-                          Días de racha
-                        </p>
+                        <div className="relative h-9 w-9 shrink-0">
+                          <Image
+                            src="/dashboard/racha-pixel.webp"
+                            alt="Racha"
+                            fill
+                            sizes="36px"
+                            className="object-contain"
+                          />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p
+                            className={`text-sm font-black ${
+                              isDark ? "text-white" : "text-slate-900"
+                            }`}
+                          >
+                            {profile.streak}
+                          </p>
+
+                          <p
+                            className={`mt-0.5 text-[10px] ${
+                              isDark ? "text-white/45" : "text-slate-500"
+                            }`}
+                          >
+                            Días de racha
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="px-4 py-3">
-                        <p
-                          className={`text-sm font-black ${
-                            isDark ? "text-white" : "text-slate-900"
-                          }`}
-                        >
-                          {profile.coins.toLocaleString("es-CO")} P
-                        </p>
-                        <p
-                          className={`mt-1 text-[10px] ${
-                            isDark ? "text-white/45" : "text-slate-500"
-                          }`}
-                        >
-                          PeakCoins
-                        </p>
+                      <div className="flex min-w-0 items-center gap-2 px-3 py-3">
+                        <div className="relative h-9 w-9 shrink-0">
+                          <Image
+                            src="/images/currency/peakcoin.webp"
+                            alt="PeakCoin"
+                            fill
+                            sizes="36px"
+                            className="object-contain"
+                          />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p
+                            className={`truncate text-sm font-black tabular-nums ${
+                              isDark ? "text-white" : "text-slate-900"
+                            }`}
+                          >
+                            {profile.coins.toLocaleString("es-CO")}
+                          </p>
+
+                          <p
+                            className={`mt-0.5 text-[10px] ${
+                              isDark ? "text-white/45" : "text-slate-500"
+                            }`}
+                          >
+                            PeakCoins
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
 
+                  {/* OPCIONES DEL PERFIL */}
                   <div className="space-y-1 p-2">
                     <ProfileMenuLink
                       href="/perfil"
                       label="Mi perfil"
                       icon={<UserRound className="h-4 w-4" />}
-                      dark={isDark}
-                      onClick={closeMenus}
-                    />
-
-                    <ProfileMenuLink
-                      href="/perfil/rango"
-                      label="Mi rango"
-                      icon={<Trophy className="h-4 w-4" />}
-                      dark={isDark}
-                      onClick={closeMenus}
-                    />
-
-                    <ProfileMenuLink
-                      href="/perfil/insignias"
-                      label="Mis insignias"
-                      icon={<GraduationCap className="h-4 w-4" />}
                       dark={isDark}
                       onClick={closeMenus}
                     />
@@ -832,8 +832,22 @@ export default function GlobalNavbar({
                       dark={isDark}
                       onClick={closeMenus}
                     />
+
+                    {/* El enlace solo aparece cuando la API entrega
+                        isAdmin=true desde una comprobación confiable.
+                        El acceso real debe protegerse también en servidor. */}
+                    {profile?.isAdmin === true && (
+                      <ProfileMenuLink
+                        href="/dashboard/admin"
+                        label="Panel de administración"
+                        icon={<ShieldCheck className="h-4 w-4" />}
+                        dark={isDark}
+                        onClick={closeMenus}
+                      />
+                    )}
                   </div>
 
+                  {/* SESIÓN */}
                   <div
                     className={`border-t p-2 ${
                       isDark ? "border-white/10" : "border-slate-200"
@@ -870,7 +884,7 @@ export default function GlobalNavbar({
               )}
             </div>
 
-            {/* Botón de menú móvil */}
+            {/* MENÚ MÓVIL */}
             <button
               type="button"
               onClick={() => {
@@ -897,7 +911,7 @@ export default function GlobalNavbar({
           </div>
         </nav>
 
-        {/* Navegación móvil */}
+        {/* NAVEGACIÓN MÓVIL */}
         {mobileOpen && (
           <div
             className={`border-t px-3 pb-4 pt-3 lg:hidden ${
@@ -920,13 +934,12 @@ export default function GlobalNavbar({
                 type="button"
                 onClick={() => void handleSimulations()}
                 disabled={checkingAuth}
-                className={`flex h-12 w-full items-center gap-3 rounded-xl px-4 text-left text-sm font-extrabold transition ${
+                className={`flex h-12 w-full items-center rounded-xl px-4 text-left text-sm font-extrabold transition ${
                   isDark
                     ? "text-white/85 hover:bg-white/[0.05]"
                     : "text-slate-800 hover:bg-slate-100"
                 }`}
               >
-                <BookOpen className="h-4 w-4" />
                 Simulacros
               </button>
 
@@ -989,7 +1002,7 @@ export default function GlobalNavbar({
                 }`}
               >
                 <Bug className="h-4 w-4" />
-                Reportar un error
+                Reportar un bug
               </button>
             </div>
           </div>
@@ -1025,47 +1038,32 @@ function DropdownPanel({
           : "border-slate-200 bg-white/[98%] shadow-slate-300/40"
       }`}
     >
-      {items.map((item) => {
-        const Icon = item.icon;
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onClose}
-            className={`flex items-start gap-3 rounded-xl p-3 transition ${
-              dark ? "hover:bg-white/[0.06]" : "hover:bg-slate-50"
+      {items.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          onClick={onClose}
+          className={`block rounded-xl px-4 py-3 transition ${
+            dark ? "hover:bg-white/[0.06]" : "hover:bg-slate-50"
+          }`}
+        >
+          <span
+            className={`block text-[13px] font-black ${
+              dark ? "text-white" : "text-slate-900"
             }`}
           >
-            <span
-              className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                dark
-                  ? "bg-violet-500/15 text-violet-200"
-                  : "bg-violet-50 text-violet-700"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-            </span>
+            {item.label}
+          </span>
 
-            <span>
-              <span
-                className={`block text-[13px] font-black ${
-                  dark ? "text-white" : "text-slate-900"
-                }`}
-              >
-                {item.label}
-              </span>
-              <span
-                className={`mt-1 block text-[11px] leading-5 ${
-                  dark ? "text-white/45" : "text-slate-500"
-                }`}
-              >
-                {item.description}
-              </span>
-            </span>
-          </Link>
-        );
-      })}
+          <span
+            className={`mt-1 block text-[11px] leading-5 ${
+              dark ? "text-white/45" : "text-slate-500"
+            }`}
+          >
+            {item.description}
+          </span>
+        </Link>
+      ))}
 
       {children}
     </div>
@@ -1266,8 +1264,9 @@ function BugReportModal({
                   isDark ? "text-white" : "text-slate-950"
                 }`}
               >
-                Reportar un error
+                Reportar un bug
               </h2>
+
               <p
                 className={`mt-0.5 text-[11px] ${
                   isDark ? "text-white/45" : "text-slate-500"

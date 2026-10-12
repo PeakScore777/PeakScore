@@ -711,7 +711,7 @@ export default function ExamPage() {
       );
 
       router.push(
-        "/dashboard/simulacros"
+        "/simulacros"
       );
     } catch (error) {
       console.error(
@@ -820,7 +820,7 @@ export default function ExamPage() {
               type="button"
               onClick={() =>
                 router.push(
-                  "/dashboard/simulacros"
+                  "/simulacros"
                 )
               }
               className="mt-6 rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
@@ -957,7 +957,7 @@ export default function ExamPage() {
           type="button"
           onClick={() =>
             router.push(
-              "/dashboard/simulacros"
+              "/simulacros"
             )
           }
           className="fixed bottom-8 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-slate-950 px-6 py-3 text-sm font-bold text-white shadow-xl transition hover:bg-slate-800"

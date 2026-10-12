@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -21,6 +22,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useSyncExternalStore,
   type ChangeEvent,
   type FormEvent,
   type ReactNode,
@@ -57,6 +59,7 @@ type NavigationItem = {
 };
 
 const THEME_STORAGE_KEY = "peakscore-theme";
+const CHARACTER_STORAGE_KEY = "peakscore-selected-character";
 
 const CHARACTER_AVATARS: Record<string, string> = {
   "peaky-nova": "/avatars/photo_perfil/peaky-nova.png",
@@ -90,8 +93,147 @@ function isGlobalTheme(value: unknown): value is GlobalTheme {
   return value === "light" || value === "dark";
 }
 
+/* ============================================================
+   TEMA GLOBAL
+   ============================================================ */
+
+function subscribeTheme(callback: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === THEME_STORAGE_KEY) {
+      callback();
+    }
+  };
+
+  const handleThemeChange = (event: Event) => {
+    const nextTheme = (event as CustomEvent<GlobalTheme>).detail;
+
+    if (!isGlobalTheme(nextTheme)) return;
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch {
+      // El tema también funciona durante esta sesión.
+    }
+
+    callback();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(
+    "peakscore-theme-change",
+    handleThemeChange,
+  );
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(
+      "peakscore-theme-change",
+      handleThemeChange,
+    );
+  };
+}
+
+function getThemeSnapshot(): GlobalTheme {
+  try {
+    const savedTheme = window.localStorage.getItem(
+      THEME_STORAGE_KEY,
+    );
+
+    return isGlobalTheme(savedTheme) ? savedTheme : "dark";
+  } catch {
+    return "dark";
+  }
+}
+
+function getServerThemeSnapshot(): GlobalTheme {
+  return "dark";
+}
+
+function publishThemeChange(nextTheme: GlobalTheme) {
+  try {
+    window.localStorage.setItem(
+      THEME_STORAGE_KEY,
+      nextTheme,
+    );
+  } catch {
+    // El tema también funciona durante esta sesión.
+  }
+
+  window.dispatchEvent(
+    new CustomEvent<GlobalTheme>("peakscore-theme-change", {
+      detail: nextTheme,
+    }),
+  );
+}
+
+/* ============================================================
+   PERSONAJE SELECCIONADO
+   ============================================================ */
+
+function subscribeCharacter(callback: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === CHARACTER_STORAGE_KEY) {
+      callback();
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(
+    "peakscore-selected-character-change",
+    callback,
+  );
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(
+      "peakscore-selected-character-change",
+      callback,
+    );
+  };
+}
+
+function getCharacterSnapshot(): string | null {
+  try {
+    const character = window.localStorage.getItem(
+      CHARACTER_STORAGE_KEY,
+    );
+
+    return character && CHARACTER_AVATARS[character]
+      ? character
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function getServerCharacterSnapshot(): string | null {
+  return null;
+}
+
+function publishCharacterChange(character: string) {
+  try {
+    window.localStorage.setItem(
+      CHARACTER_STORAGE_KEY,
+      character,
+    );
+  } catch {
+    // El perfil del servidor sigue siendo la fuente principal.
+  }
+
+  window.dispatchEvent(
+    new Event("peakscore-selected-character-change"),
+  );
+}
+
+/* ============================================================
+   UTILIDADES DE NAVEGACIÓN
+   ============================================================ */
+
 function isActivePath(pathname: string, href: string) {
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return (
+    pathname === href ||
+    pathname.startsWith(`${href}/`)
+  );
 }
 
 export default function GlobalNavbar({
@@ -100,24 +242,39 @@ export default function GlobalNavbar({
   const pathname = usePathname() ?? "/";
   const rootRef = useRef<HTMLElement | null>(null);
 
-  const [theme, setTheme] = useState<GlobalTheme>("dark");
-  const [themeInitialized, setThemeInitialized] = useState(false);
+  const theme = useSyncExternalStore(
+    subscribeTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
+
+  const cachedCharacter = useSyncExternalStore(
+    subscribeCharacter,
+    getCharacterSnapshot,
+    getServerCharacterSnapshot,
+  );
+
   const [profile, setProfile] = useState<ProfileData | null>(
     initialProfile,
   );
-  const [cachedCharacter, setCachedCharacter] = useState<string | null>(
-    initialProfile?.selectedCharacter ?? null,
-  );
-  const [openDropdown, setOpenDropdown] = useState<DropdownName>(null);
+
+  const [openDropdown, setOpenDropdown] =
+    useState<DropdownName>(null);
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(false);
 
   const isDark = theme === "dark";
-  const displayName = profile?.fullName?.trim() || "Estudiante";
+
+  const displayName =
+    profile?.fullName?.trim() || "Estudiante";
+
   const email = profile?.email ?? "";
-  const firstInitial = displayName.charAt(0).toUpperCase() || "E";
+
+  const firstInitial =
+    displayName.charAt(0).toUpperCase() || "E";
 
   const selectedCharacter =
     profile?.selectedCharacter ?? cachedCharacter;
@@ -126,95 +283,23 @@ export default function GlobalNavbar({
     ? CHARACTER_AVATARS[selectedCharacter] ?? null
     : null;
 
-  // Recuperar la preferencia guardada del tema.
+  /* ============================================================
+     APLICAR TEMA AL DOCUMENTO
+     ============================================================ */
+
   useEffect(() => {
-    try {
-      const savedTheme = window.localStorage.getItem(
-        THEME_STORAGE_KEY,
-      );
-
-      if (isGlobalTheme(savedTheme)) {
-        setTheme(savedTheme);
-      }
-    } catch {
-      // El tema oscuro es la alternativa.
-    } finally {
-      setThemeInitialized(true);
-    }
-  }, []);
-
-  // Aplicar el tema a todo el documento.
-  useEffect(() => {
-    if (!themeInitialized) return;
-
     document.documentElement.dataset.theme = theme;
-    document.documentElement.classList.toggle("dark", isDark);
 
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch {
-      // El tema sigue funcionando durante la sesión actual.
-    }
-
-    window.dispatchEvent(
-      new CustomEvent<GlobalTheme>("peakscore-theme-change", {
-        detail: theme,
-      }),
+    document.documentElement.classList.toggle(
+      "dark",
+      theme === "dark",
     );
-  }, [theme, themeInitialized, isDark]);
+  }, [theme]);
 
-  // Sincronizar cambios del tema entre componentes y pestañas.
-  useEffect(() => {
-    function handleThemeChange(event: Event) {
-      const nextTheme = (event as CustomEvent<GlobalTheme>).detail;
+  /* ============================================================
+     CARGAR PERFIL MEDIANTE LA API EXISTENTE
+     ============================================================ */
 
-      if (isGlobalTheme(nextTheme)) {
-        setTheme((current: GlobalTheme) =>
-          current === nextTheme ? current : nextTheme,
-        );
-      }
-    }
-
-    function handleStorage(event: StorageEvent) {
-      if (
-        event.key === THEME_STORAGE_KEY &&
-        isGlobalTheme(event.newValue)
-      ) {
-        setTheme(event.newValue);
-      }
-    }
-
-    window.addEventListener(
-      "peakscore-theme-change",
-      handleThemeChange,
-    );
-    window.addEventListener("storage", handleStorage);
-
-    return () => {
-      window.removeEventListener(
-        "peakscore-theme-change",
-        handleThemeChange,
-      );
-      window.removeEventListener("storage", handleStorage);
-    };
-  }, []);
-
-  // Recuperar el personaje en caché para mostrar su imagen cuanto antes.
-  useEffect(() => {
-    try {
-      const cached = window.localStorage.getItem(
-        "peakscore-selected-character",
-      );
-
-      if (cached && CHARACTER_AVATARS[cached]) {
-        setCachedCharacter(cached);
-      }
-    } catch {
-      // La caché visual es opcional.
-    }
-  }, []);
-
-  // Actualizar el perfil con la API existente.
   useEffect(() => {
     let mounted = true;
 
@@ -245,14 +330,14 @@ export default function GlobalNavbar({
         const nextProfile: ProfileData = {
           id: data.profile.id,
           fullName: data.profile.fullName ?? null,
-          email: data.profile.email ?? session.user.email ?? null,
+          email:
+            data.profile.email ?? session.user.email ?? null,
           avatarUrl: data.profile.avatarUrl ?? null,
           streak: Number(data.profile.streak ?? 0),
           coins: Number(data.profile.coins ?? 0),
           selectedCharacter:
             data.profile.selectedCharacter ?? null,
-          // Solo será true si la API lo proporciona desde una
-          // comprobación confiable del servidor.
+          // Debe venir de una comprobación confiable del servidor.
           isAdmin: data.profile.isAdmin === true,
         };
 
@@ -261,16 +346,7 @@ export default function GlobalNavbar({
         const character = nextProfile.selectedCharacter;
 
         if (character && CHARACTER_AVATARS[character]) {
-          setCachedCharacter(character);
-
-          try {
-            window.localStorage.setItem(
-              "peakscore-selected-character",
-              character,
-            );
-          } catch {
-            // Supabase/API siguen siendo la fuente del perfil.
-          }
+          publishCharacterChange(character);
         }
       } catch (error) {
         console.error(
@@ -287,12 +363,18 @@ export default function GlobalNavbar({
     };
   }, []);
 
-  // Cerrar los menús al pulsar Escape o hacer clic fuera del navbar.
+  /* ============================================================
+     CERRAR MENÚS
+     ============================================================ */
+
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
       const target = event.target as Node;
 
-      if (rootRef.current && !rootRef.current.contains(target)) {
+      if (
+        rootRef.current &&
+        !rootRef.current.contains(target)
+      ) {
         setOpenDropdown(null);
         setProfileOpen(false);
         setMobileOpen(false);
@@ -308,20 +390,35 @@ export default function GlobalNavbar({
       setBugOpen(false);
     }
 
-    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener(
+      "mousedown",
+      handlePointerDown,
+    );
+
     window.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      window.removeEventListener("keydown", handleEscape);
+      document.removeEventListener(
+        "mousedown",
+        handlePointerDown,
+      );
+
+      window.removeEventListener(
+        "keydown",
+        handleEscape,
+      );
     };
   }, []);
 
-  // Bloquear el desplazamiento del fondo durante el reporte.
+  /* ============================================================
+     MODAL DE REPORTE DE BUG
+     ============================================================ */
+
   useEffect(() => {
     if (!bugOpen) return;
 
     const previousOverflow = document.body.style.overflow;
+
     document.body.style.overflow = "hidden";
 
     return () => {
@@ -335,18 +432,25 @@ export default function GlobalNavbar({
     setMobileOpen(false);
   }
 
-  function toggleDropdown(name: Exclude<DropdownName, null>) {
+  function toggleDropdown(
+    name: Exclude<DropdownName, null>,
+  ) {
     setProfileOpen(false);
-    setOpenDropdown((current: DropdownName) =>
+
+    setOpenDropdown((current) =>
       current === name ? null : name,
     );
   }
 
   function handleThemeToggle() {
-    setTheme((current: GlobalTheme) =>
-      current === "dark" ? "light" : "dark",
+    publishThemeChange(
+      theme === "dark" ? "light" : "dark",
     );
   }
+
+  /* ============================================================
+     NAVEGACIÓN A SIMULACROS
+     ============================================================ */
 
   async function handleSimulations() {
     closeMenus();
@@ -366,6 +470,7 @@ export default function GlobalNavbar({
           "[GlobalNavbar] Error verificando sesión:",
           error,
         );
+
         window.location.href = "/login";
         return;
       }
@@ -378,11 +483,16 @@ export default function GlobalNavbar({
         "[GlobalNavbar] Error al abrir simulacros:",
         error,
       );
+
       window.location.href = "/login";
     } finally {
       setCheckingAuth(false);
     }
   }
+
+  /* ============================================================
+     CERRAR SESIÓN
+     ============================================================ */
 
   async function handleLogout() {
     closeMenus();
@@ -395,6 +505,7 @@ export default function GlobalNavbar({
           "[GlobalNavbar] Error cerrando sesión:",
           error,
         );
+
         return;
       }
 
@@ -466,7 +577,9 @@ export default function GlobalNavbar({
               {/* APRENDE */}
               <div
                 className="relative after:absolute after:left-0 after:right-0 after:top-full after:h-2 after:content-['']"
-                onMouseEnter={() => setOpenDropdown("learn")}
+                onMouseEnter={() =>
+                  setOpenDropdown("learn")
+                }
                 onMouseLeave={() => setOpenDropdown(null)}
                 onFocus={() => setOpenDropdown("learn")}
               >
@@ -477,9 +590,12 @@ export default function GlobalNavbar({
                   className={`${baseNavClass} ${normalNavClass}`}
                 >
                   Aprende
+
                   <ChevronDown
                     className={`h-3.5 w-3.5 opacity-55 transition-transform ${
-                      openDropdown === "learn" ? "rotate-180" : ""
+                      openDropdown === "learn"
+                        ? "rotate-180"
+                        : ""
                     }`}
                   />
                 </button>
@@ -502,7 +618,9 @@ export default function GlobalNavbar({
                     >
                       <span
                         className={`block text-[13px] font-black ${
-                          isDark ? "text-white" : "text-slate-900"
+                          isDark
+                            ? "text-white"
+                            : "text-slate-900"
                         }`}
                       >
                         Simulacros
@@ -510,7 +628,9 @@ export default function GlobalNavbar({
 
                       <span
                         className={`mt-1 block text-[11px] leading-5 ${
-                          isDark ? "text-white/45" : "text-slate-500"
+                          isDark
+                            ? "text-white/45"
+                            : "text-slate-500"
                         }`}
                       >
                         Practica con preguntas tipo ICFES.
@@ -549,20 +669,29 @@ export default function GlobalNavbar({
               {/* COMUNIDAD */}
               <div
                 className="relative after:absolute after:left-0 after:right-0 after:top-full after:h-2 after:content-['']"
-                onMouseEnter={() => setOpenDropdown("community")}
+                onMouseEnter={() =>
+                  setOpenDropdown("community")
+                }
                 onMouseLeave={() => setOpenDropdown(null)}
-                onFocus={() => setOpenDropdown("community")}
+                onFocus={() =>
+                  setOpenDropdown("community")
+                }
               >
                 <button
                   type="button"
                   onClick={() => toggleDropdown("community")}
-                  aria-expanded={openDropdown === "community"}
+                  aria-expanded={
+                    openDropdown === "community"
+                  }
                   className={`${baseNavClass} ${normalNavClass}`}
                 >
                   Comunidad
+
                   <ChevronDown
                     className={`h-3.5 w-3.5 opacity-55 transition-transform ${
-                      openDropdown === "community" ? "rotate-180" : ""
+                      openDropdown === "community"
+                        ? "rotate-180"
+                        : ""
                     }`}
                   />
                 </button>
@@ -612,7 +741,9 @@ export default function GlobalNavbar({
               type="button"
               onClick={handleThemeToggle}
               aria-label={
-                isDark ? "Cambiar a tema claro" : "Cambiar a tema oscuro"
+                isDark
+                  ? "Cambiar a tema claro"
+                  : "Cambiar a tema oscuro"
               }
               title={isDark ? "Tema claro" : "Tema oscuro"}
               className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
@@ -629,7 +760,10 @@ export default function GlobalNavbar({
             </button>
 
             {/* REPRODUCTOR GLOBAL */}
-            <PeakScoreMusicPlayer theme={theme} />
+            <PeakScoreMusicPlayer
+              theme={theme}
+              isAuthenticated={Boolean(profile)}
+            />
 
             {/* PERFIL */}
             <div className="relative">
@@ -638,7 +772,7 @@ export default function GlobalNavbar({
                 onClick={() => {
                   setOpenDropdown(null);
                   setMobileOpen(false);
-                  setProfileOpen((current: boolean) => !current);
+                  setProfileOpen((current) => !current);
                 }}
                 aria-label="Abrir menú de usuario"
                 aria-expanded={profileOpen}
@@ -667,10 +801,16 @@ export default function GlobalNavbar({
                 ) : (
                   <span
                     className={`text-sm font-black ${
-                      isDark ? "text-white" : "text-slate-700"
+                      isDark
+                        ? "text-white"
+                        : "text-slate-700"
                     }`}
                   >
-                    {profile ? firstInitial : <Users className="h-4 w-4" />}
+                    {profile ? (
+                      firstInitial
+                    ) : (
+                      <Users className="h-4 w-4" />
+                    )}
                   </span>
                 )}
               </button>
@@ -686,7 +826,9 @@ export default function GlobalNavbar({
                   {/* CABECERA DEL PERFIL */}
                   <div
                     className={`flex items-center gap-3 border-b p-4 ${
-                      isDark ? "border-white/10" : "border-slate-200"
+                      isDark
+                        ? "border-white/10"
+                        : "border-slate-200"
                     }`}
                   >
                     <div
@@ -715,7 +857,9 @@ export default function GlobalNavbar({
                       ) : (
                         <span
                           className={`font-black ${
-                            isDark ? "text-white" : "text-slate-800"
+                            isDark
+                              ? "text-white"
+                              : "text-slate-800"
                           }`}
                         >
                           {firstInitial}
@@ -726,7 +870,9 @@ export default function GlobalNavbar({
                     <div className="min-w-0">
                       <p
                         className={`truncate text-sm font-black ${
-                          isDark ? "text-white" : "text-slate-950"
+                          isDark
+                            ? "text-white"
+                            : "text-slate-950"
                         }`}
                       >
                         {displayName}
@@ -734,7 +880,9 @@ export default function GlobalNavbar({
 
                       <p
                         className={`mt-1 truncate text-[11px] ${
-                          isDark ? "text-white/45" : "text-slate-500"
+                          isDark
+                            ? "text-white/45"
+                            : "text-slate-500"
                         }`}
                       >
                         {email || "Tu espacio en PeakScore"}
@@ -746,12 +894,16 @@ export default function GlobalNavbar({
                   {profile && (
                     <div
                       className={`grid grid-cols-2 border-b ${
-                        isDark ? "border-white/10" : "border-slate-200"
+                        isDark
+                          ? "border-white/10"
+                          : "border-slate-200"
                       }`}
                     >
                       <div
                         className={`flex min-w-0 items-center gap-2 border-r px-3 py-3 ${
-                          isDark ? "border-white/10" : "border-slate-200"
+                          isDark
+                            ? "border-white/10"
+                            : "border-slate-200"
                         }`}
                       >
                         <div className="relative h-9 w-9 shrink-0">
@@ -767,7 +919,9 @@ export default function GlobalNavbar({
                         <div className="min-w-0">
                           <p
                             className={`text-sm font-black ${
-                              isDark ? "text-white" : "text-slate-900"
+                              isDark
+                                ? "text-white"
+                                : "text-slate-900"
                             }`}
                           >
                             {profile.streak}
@@ -775,7 +929,9 @@ export default function GlobalNavbar({
 
                           <p
                             className={`mt-0.5 text-[10px] ${
-                              isDark ? "text-white/45" : "text-slate-500"
+                              isDark
+                                ? "text-white/45"
+                                : "text-slate-500"
                             }`}
                           >
                             Días de racha
@@ -797,7 +953,9 @@ export default function GlobalNavbar({
                         <div className="min-w-0">
                           <p
                             className={`truncate text-sm font-black tabular-nums ${
-                              isDark ? "text-white" : "text-slate-900"
+                              isDark
+                                ? "text-white"
+                                : "text-slate-900"
                             }`}
                           >
                             {profile.coins.toLocaleString("es-CO")}
@@ -805,7 +963,9 @@ export default function GlobalNavbar({
 
                           <p
                             className={`mt-0.5 text-[10px] ${
-                              isDark ? "text-white/45" : "text-slate-500"
+                              isDark
+                                ? "text-white/45"
+                                : "text-slate-500"
                             }`}
                           >
                             PeakCoins
@@ -833,9 +993,7 @@ export default function GlobalNavbar({
                       onClick={closeMenus}
                     />
 
-                    {/* El enlace solo aparece cuando la API entrega
-                        isAdmin=true desde una comprobación confiable.
-                        El acceso real debe protegerse también en servidor. */}
+                    {/* Solo aparece si la API confirma el rol de administrador. */}
                     {profile?.isAdmin === true && (
                       <ProfileMenuLink
                         href="/dashboard/admin"
@@ -850,7 +1008,9 @@ export default function GlobalNavbar({
                   {/* SESIÓN */}
                   <div
                     className={`border-t p-2 ${
-                      isDark ? "border-white/10" : "border-slate-200"
+                      isDark
+                        ? "border-white/10"
+                        : "border-slate-200"
                     }`}
                   >
                     {profile ? (
@@ -890,10 +1050,12 @@ export default function GlobalNavbar({
               onClick={() => {
                 setOpenDropdown(null);
                 setProfileOpen(false);
-                setMobileOpen((current: boolean) => !current);
+                setMobileOpen((current) => !current);
               }}
               aria-label={
-                mobileOpen ? "Cerrar navegación" : "Abrir navegación"
+                mobileOpen
+                  ? "Cerrar navegación"
+                  : "Abrir navegación"
               }
               aria-expanded={mobileOpen}
               className={`ml-1 flex h-10 w-10 items-center justify-center rounded-xl transition lg:hidden ${
@@ -964,7 +1126,10 @@ export default function GlobalNavbar({
               <MobileNavLink
                 href="/comunidad/ranking"
                 dark={isDark}
-                active={isActivePath(pathname, "/comunidad/ranking")}
+                active={isActivePath(
+                  pathname,
+                  "/comunidad/ranking",
+                )}
                 onClick={closeMenus}
               >
                 Comunidad · Ranking
@@ -1044,7 +1209,9 @@ function DropdownPanel({
           href={item.href}
           onClick={onClose}
           className={`block rounded-xl px-4 py-3 transition ${
-            dark ? "hover:bg-white/[0.06]" : "hover:bg-slate-50"
+            dark
+              ? "hover:bg-white/[0.06]"
+              : "hover:bg-slate-50"
           }`}
         >
           <span
@@ -1152,7 +1319,9 @@ function BugReportModal({
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
     const file = event.target.files?.[0];
 
     if (!file) return;
@@ -1173,7 +1342,9 @@ function BugReportModal({
     setScreenshot(file);
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     const cleanDescription = description.trim();
@@ -1243,7 +1414,9 @@ function BugReportModal({
       >
         <div
           className={`flex items-center justify-between border-b px-5 py-4 ${
-            isDark ? "border-white/10" : "border-slate-200"
+            isDark
+              ? "border-white/10"
+              : "border-slate-200"
           }`}
         >
           <div className="flex items-center gap-3">
@@ -1261,7 +1434,9 @@ function BugReportModal({
               <h2
                 id="global-bug-title"
                 className={`text-base font-black ${
-                  isDark ? "text-white" : "text-slate-950"
+                  isDark
+                    ? "text-white"
+                    : "text-slate-950"
                 }`}
               >
                 Reportar un bug
@@ -1269,7 +1444,9 @@ function BugReportModal({
 
               <p
                 className={`mt-0.5 text-[11px] ${
-                  isDark ? "text-white/45" : "text-slate-500"
+                  isDark
+                    ? "text-white/45"
+                    : "text-slate-500"
                 }`}
               >
                 Ayúdanos a mejorar PeakScore.
@@ -1306,7 +1483,9 @@ function BugReportModal({
 
             <h3
               className={`mt-4 text-lg font-black ${
-                isDark ? "text-white" : "text-slate-950"
+                isDark
+                  ? "text-white"
+                  : "text-slate-950"
               }`}
             >
               Reporte enviado
@@ -1314,7 +1493,9 @@ function BugReportModal({
 
             <p
               className={`mx-auto mt-2 max-w-sm text-sm leading-6 ${
-                isDark ? "text-white/55" : "text-slate-500"
+                isDark
+                  ? "text-white/55"
+                  : "text-slate-500"
               }`}
             >
               Tu reporte fue recibido correctamente. Gracias por
@@ -1338,7 +1519,9 @@ function BugReportModal({
               <label
                 htmlFor="global-bug-description"
                 className={`block text-xs font-black ${
-                  isDark ? "text-white" : "text-slate-800"
+                  isDark
+                    ? "text-white"
+                    : "text-slate-800"
                 }`}
               >
                 Describe el problema
@@ -1348,7 +1531,9 @@ function BugReportModal({
                 id="global-bug-description"
                 value={description}
                 onChange={(event) =>
-                  setDescription(event.target.value.slice(0, 1000))
+                  setDescription(
+                    event.target.value.slice(0, 1000),
+                  )
                 }
                 maxLength={1000}
                 required
@@ -1363,7 +1548,9 @@ function BugReportModal({
 
               <p
                 className={`mt-1 text-right text-[10px] ${
-                  isDark ? "text-white/35" : "text-slate-400"
+                  isDark
+                    ? "text-white/35"
+                    : "text-slate-400"
                 }`}
               >
                 {description.length}/1000
@@ -1374,7 +1561,9 @@ function BugReportModal({
               <label
                 htmlFor="global-bug-screenshot"
                 className={`block text-xs font-black ${
-                  isDark ? "text-white" : "text-slate-800"
+                  isDark
+                    ? "text-white"
+                    : "text-slate-800"
                 }`}
               >
                 Captura de pantalla (opcional)
@@ -1390,13 +1579,17 @@ function BugReportModal({
               >
                 <Upload
                   className={`h-5 w-5 ${
-                    isDark ? "text-violet-300" : "text-violet-700"
+                    isDark
+                      ? "text-violet-300"
+                      : "text-violet-700"
                   }`}
                 />
 
                 <span
                   className={`mt-2 text-xs font-bold ${
-                    isDark ? "text-white/75" : "text-slate-700"
+                    isDark
+                      ? "text-white/75"
+                      : "text-slate-700"
                   }`}
                 >
                   {screenshot?.name ?? "Selecciona una imagen"}
@@ -1404,7 +1597,9 @@ function BugReportModal({
 
                 <span
                   className={`mt-1 text-[10px] ${
-                    isDark ? "text-white/40" : "text-slate-500"
+                    isDark
+                      ? "text-white/40"
+                      : "text-slate-500"
                   }`}
                 >
                   PNG, JPG o WEBP · máximo 5 MB
@@ -1424,7 +1619,9 @@ function BugReportModal({
               <p
                 role="alert"
                 className={`text-xs ${
-                  isDark ? "text-red-300" : "text-red-600"
+                  isDark
+                    ? "text-red-300"
+                    : "text-red-600"
                 }`}
               >
                 {errorMessage}

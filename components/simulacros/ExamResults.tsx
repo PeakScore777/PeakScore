@@ -554,7 +554,7 @@ export default function ExamResults({
                 type="button"
                 onClick={() =>
                   router.push(
-                    "/dashboard/simulacros"
+                    "/simulacros"
                   )
                 }
                 className="group mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-sm font-bold text-slate-500 transition duration-300 hover:bg-slate-50 hover:text-slate-900"

@@ -640,6 +640,10 @@ export default function ExamPage() {
      FINALIZAR EXAMEN
   ====================================================== */
 
+  const handleFinishExamRef = useRef<
+    ((automatic?: boolean) => Promise<void>) | null
+  >(null);
+
   const handleFinishExam = async (
     automatic = false
   ) => {
@@ -693,6 +697,8 @@ export default function ExamPage() {
       );
     }
   };
+
+  handleFinishExamRef.current = handleFinishExam;
 
   /* =====================================================
      CONTINUAR LUEGO
@@ -748,7 +754,7 @@ export default function ExamPage() {
         simulation.duration > 0
       ) {
         const finishTimer = window.setTimeout(() => {
-          void handleFinishExam(true);
+          void handleFinishExamRef.current?.(true);
         }, 0);
 
         return () => window.clearTimeout(finishTimer);

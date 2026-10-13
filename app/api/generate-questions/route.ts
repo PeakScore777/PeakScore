@@ -1885,18 +1885,6 @@ function getDifficultyCounts(
    VALIDAR PREGUNTA
 ========================================================= */
 
-function explicitlyReferencesVisual(
-  item: GeneratedQuestion
-): boolean {
-  const text = normalize(
-    `${item.context_text ?? ""} ${item.question}`
-  );
-
-  return /\b(tabla|tablas|grafico|grafica|graficos|graficas|diagrama|diagramas|figura|figuras|se muestra|mostrado|mostrada|representado|representada|representacion)\b/.test(
-    text
-  );
-}
-
 function isQuestionVisualCoherent(
   item: GeneratedQuestion
 ): boolean {

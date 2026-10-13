@@ -2659,10 +2659,6 @@ export async function POST(
     const arrayBuffer =
       await file.arrayBuffer();
 
-    const base64Pdf =
-      Buffer.from(
-        arrayBuffer
-      ).toString("base64");
 
     const pdfBuffer =
       Buffer.from(arrayBuffer);
@@ -3254,8 +3250,6 @@ export async function POST(
           recoveryModel =
             geminiRecovery.model;
         } catch (error) {
-          const errorMessage =
-            getGeminiErrorMessage(error);
 
           console.warn(
             `[Import PDF] Gemini falló recuperando preguntas faltantes del lote ${batchIndex + 1}. Intentando Groq.`,

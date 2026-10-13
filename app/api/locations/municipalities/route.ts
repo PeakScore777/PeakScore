@@ -9,6 +9,19 @@ type Municipality = {
   departmentCode: string;
 };
 
+type DaneMunicipalityFeature = {
+  attributes?: {
+    MPIO_CCDGO?: string | number | null;
+    MPIO_CNMBRE?: string | null;
+    DPTO_CCDGO?: string | number | null;
+  } | null;
+};
+
+type DaneMunicipalitiesResponse = {
+  error?: unknown;
+  features?: DaneMunicipalityFeature[];
+};
+
 export async function GET(
   request: NextRequest
 ) {
@@ -97,7 +110,7 @@ export async function GET(
        RESPUESTA DANE
     ======================================================== */
 
-    const data = await response.json();
+    const data = (await response.json()) as DaneMunicipalitiesResponse;
 
     if (data?.error) {
       console.error(
@@ -123,7 +136,7 @@ export async function GET(
     let municipalities: Municipality[] =
       Array.isArray(data?.features)
         ? data.features
-            .map((feature: any) => {
+            .map((feature: DaneMunicipalityFeature) => {
               const attributes =
                 feature?.attributes ?? {};
 

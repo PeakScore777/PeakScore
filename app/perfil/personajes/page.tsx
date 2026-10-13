@@ -585,14 +585,14 @@ export default function PersonajesPage() {
             </div>
 
             {/* Peaky del encabezado original */}
-              <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] sm:right-3 md:right-5 lg:right-10 xl:right-0 sm:block">
+              <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] sm:block">
                 <Image
                   src="/images/profile/personajes-banner.png"
                   alt=""
                   fill
                   priority
                   sizes="(max-width: 640px) 48vw, 600px"
-                  className="object-contain object-right sm:object-[right_8%] md:object-[right_12%] lg:object-[right_16%] xl:object-right"
+                  className="object-contain object-right"
                 />
 
                 <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-[#0a1020] to-transparent" />

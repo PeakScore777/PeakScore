@@ -23,12 +23,13 @@ export default function RankUnlockAnimation({
   );
 
   useEffect(() => {
-    if (!active) {
-      setPhase("locked");
-      return;
-    }
+    const phaseTimer = window.setTimeout(() => {
+      setPhase(active ? "unlocking" : "locked");
+    }, 0);
 
-    setPhase("unlocking");
+    if (!active) {
+      return () => window.clearTimeout(phaseTimer);
+    }
 
     const revealTimer = window.setTimeout(() => {
       setPhase("revealed");
@@ -39,6 +40,7 @@ export default function RankUnlockAnimation({
     }, 2200);
 
     return () => {
+      window.clearTimeout(phaseTimer);
       window.clearTimeout(revealTimer);
       window.clearTimeout(completeTimer);
     };

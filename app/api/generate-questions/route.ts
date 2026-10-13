@@ -1994,14 +1994,7 @@ function getSupabase(): SupabaseClient {
    CONTROL DE DIFICULTAD
 ========================================================= */
 
-const GENERATED_DIFFICULTIES = [
-  "Fácil",
-  "Media",
-  "Difícil",
-] as const;
-
-type GeneratedDifficulty =
-  (typeof GENERATED_DIFFICULTIES)[number];
+type GeneratedDifficulty = "Fácil" | "Media" | "Difícil";
 
 function normalizeDifficulty(
   value: unknown

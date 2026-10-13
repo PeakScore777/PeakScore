@@ -752,7 +752,9 @@ export default function QuestionBankPage() {
                               <span className="font-bold text-slate-700">
                                 Imagen de apoyo
                               </span>
-                            </di<Image
+                            </div>
+
+                            <Image
                               src={question.image_url}
                               alt="Imagen de apoyo de la pregunta"
                               width={480}

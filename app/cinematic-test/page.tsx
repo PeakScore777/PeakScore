@@ -185,9 +185,12 @@ function SpriteFrame({
         overflow-hidden
       "
     >
-      <img
+      <Image
         src={src}
         alt=""
+        width={FRAME_COUNT * 100}
+        height={100}
+        unoptimized
         draggable={false}
         className="
           absolute

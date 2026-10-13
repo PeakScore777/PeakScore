@@ -116,6 +116,9 @@ export default function ExamPage() {
     }
   };
 
+  const saveLocalProgressRef = useRef(saveLocalProgress);
+  saveLocalProgressRef.current = saveLocalProgress;
+
   /* =====================================================
      ELIMINAR PROGRESO LOCAL
   ====================================================== */
@@ -476,7 +479,7 @@ export default function ExamPage() {
 
     const interval =
       setInterval(() => {
-        saveLocalProgress();
+        saveLocalProgressRef.current();
       }, 5000);
 
     return () => {
@@ -505,7 +508,7 @@ export default function ExamPage() {
     }
 
     const handleBeforeUnload = () => {
-      saveLocalProgress();
+      saveLocalProgressRef.current();
     };
 
     window.addEventListener(

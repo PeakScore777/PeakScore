@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowUpRight,
-  Check,
   RotateCcw,
 } from "lucide-react";
 

@@ -193,6 +193,7 @@ export default function MiPerfil() {
   useEffect(() => {
     if (!data) return;
 
+    let active = true;
     const unlocked = new Set(data.unlockedBadgeIds ?? []);
     let savedIds: string[] = [];
 
@@ -213,8 +214,17 @@ export default function MiPerfil() {
       console.warn("No se pudieron restaurar las insignias:", err);
     }
 
-    setEquipped(normalizeSlots([...new Set(savedIds)]));
-    setPreferencesLoaded(true);
+    const restoreTimeout = window.setTimeout(() => {
+      if (!active) return;
+
+      setEquipped(normalizeSlots([...new Set(savedIds)]));
+      setPreferencesLoaded(true);
+    }, 0);
+
+    return () => {
+      active = false;
+      window.clearTimeout(restoreTimeout);
+    };
   }, [data]);
 
   // Guardar las insignias seleccionadas.

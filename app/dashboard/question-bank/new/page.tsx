@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 import { createQuestion } from "@/lib/services/question.service";
-import { supabase } from "@/lib/supabase/browser";
 
 const subjects = [
   "Matemáticas",
@@ -22,6 +21,18 @@ const subjects = [
 ];
 
 const difficulties = ["Fácil", "Media", "Difícil"];
+
+interface GeneratedQuestionPreview {
+  id?: string | number;
+  difficulty?: string | null;
+  context_text?: string | null;
+  question?: string | null;
+  option_a?: string | null;
+  option_b?: string | null;
+  option_c?: string | null;
+  option_d?: string | null;
+  correct_answer?: string | null;
+}
 
 interface FormState {
   subject: string;
@@ -79,7 +90,7 @@ export default function NewQuestionPage() {
     difficulty: "Mixta",
   });
 
-  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestionPreview[]>([]);
   const [generationComplete, setGenerationComplete] = useState(false);
 
   const [form, setForm] = useState<FormState>(initialForm);

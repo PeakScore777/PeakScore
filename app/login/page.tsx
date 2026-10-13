@@ -10,7 +10,6 @@ import {
   ArrowRight,
   BookOpen,
   Brain,
-  Check,
   Clock3,
   Eye,
   EyeOff,

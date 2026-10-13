@@ -747,7 +747,11 @@ export default function ExamPage() {
         simulation.duration != null &&
         simulation.duration > 0
       ) {
-        void handleFinishExam(true);
+        const finishTimer = window.setTimeout(() => {
+          void handleFinishExam(true);
+        }, 0);
+
+        return () => window.clearTimeout(finishTimer);
       }
 
       return;

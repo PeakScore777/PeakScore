@@ -276,7 +276,6 @@ export async function POST(
     }
 
     const {
-      attempt_id,
       current_question,
       time_left,
       answers,

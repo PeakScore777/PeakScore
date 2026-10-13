@@ -570,7 +570,7 @@ function NewQuestionPageContent() {
                     </p>
 
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
-                      {["a", "b", "c", "d"].map((letter) => (
+                      {(["a", "b", "c", "d"] as const).map((letter) => (
                         <div
                           key={letter}
                           className="rounded-xl border border-slate-200 p-3"
@@ -578,7 +578,7 @@ function NewQuestionPageContent() {
                           <span className="font-bold">
                             {letter.toUpperCase()}.
                           </span>{" "}
-                          {question?.[`option_${letter}`]}
+                          {question?.[`option_${letter}` as keyof GeneratedQuestionPreview]}
                         </div>
                       ))}
                     </div>

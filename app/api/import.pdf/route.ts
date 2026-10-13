@@ -3743,8 +3743,7 @@ export async function POST(
         })
       );
 
-    let insertedReferenceQuestions:
-      any[] = [];
+    let insertedReferenceQuestionCount = 0;
 
     if (
       referenceQuestionRows.length >
@@ -3769,8 +3768,8 @@ export async function POST(
         );
       }
 
-      insertedReferenceQuestions =
-        data ?? [];
+      insertedReferenceQuestionCount =
+        data?.length ?? 0;
     }
 
     /* =====================================================
@@ -3913,7 +3912,7 @@ export async function POST(
           difficultyCounts,
 
         reference_questions_saved:
-          insertedReferenceQuestions.length,
+          insertedReferenceQuestionCount,
       },
     });
   } catch (error) {

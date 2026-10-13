@@ -3448,9 +3448,6 @@ function validateFunctionComparisonAnswer(
    * "para t=7"
    */
 
-  const comparisonPattern =
-    /\b(?:en|a|para)\s*t\s*=\s*(\d+(?:[.,]\d+)?)\b[\s\S]{0,180}?\b(supera|mayor|menor|inferior|superior)\b/i;
-
   const matches = [
     ...text.matchAll(
       /(?:en|a|para)\s*t\s*=\s*(\d+(?:[.,]\d+)?)/gi
@@ -6249,8 +6246,6 @@ Nunca devuelvas visual_data distinto de null.
   /* =========================================================
      INSTRUCCIONES ADAPTATIVAS
      ========================================================= */
-
-  const isFirstBlock = profiles.length > 0;
 
   const calibration = `
 CALIBRACIÓN:

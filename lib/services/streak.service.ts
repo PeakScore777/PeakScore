@@ -10,6 +10,9 @@ import { supabase } from "@/lib/supabase/browser";
 export async function updateUserStreak(
   _userId: string
 ): Promise<number> {
+  // El RPC usa auth.uid() en el servidor; nunca confiamos en un ID enviado por el cliente.
+  void _userId;
+
   const { data, error } = await supabase.rpc(
     "update_user_streak"
   );

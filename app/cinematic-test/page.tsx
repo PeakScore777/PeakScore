@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 
 /* =========================================================
    ASSETS
@@ -905,9 +906,12 @@ export default function CinematicTestPage() {
             BIOME
             =============================================== */}
 
-        <img
+        <Image
           src={BIOME_SRC}
           alt=""
+          width={1920}
+          height={1080}
+          unoptimized
           draggable={false}
           className="
             absolute
@@ -983,9 +987,12 @@ export default function CinematicTestPage() {
 
           {phase ===
             "finished" && (
-            <img
+            <Image
               src={WALK_STATIC}
               alt=""
+              width={640}
+              height={640}
+              unoptimized
               draggable={false}
               className="
                 h-full
@@ -1045,11 +1052,12 @@ export default function CinematicTestPage() {
                 -translate-y-[80%]
               "
             >
-              <img
-                src={
-                  dialogue.expression
-                }
+              <Image
+                src={dialogue.expression}
                 alt=""
+                width={400}
+                height={400}
+                unoptimized
                 draggable={false}
                 className="
                   h-full

@@ -91,58 +91,67 @@ export default function EditQuestionPage() {
     chart_data: null as unknown | null,
   });
 
-  async function loadQuestion() {
-    try {
-      setLoading(true);
-      setError("");
-
-      const question = await getQuestionById(id);
-
-      if (!question) {
-        setError("No se encontró la pregunta.");
-        return;
-      }
-
-      setForm({
-        subject: question.subject ?? "",
-        session: question.session ?? 1,
-        component: question.component ?? "",
-        competence: question.competence ?? "",
-        difficulty: question.difficulty ?? "",
-        context_text: question.context_text ?? "",
-        question: question.question ?? "",
-        option_a: question.option_a ?? "",
-        option_b: question.option_b ?? "",
-        option_c: question.option_c ?? "",
-        option_d: question.option_d ?? "",
-        correct_answer: question.correct_answer ?? "",
-        explanation: question.explanation ?? "",
-        image_url: question.image_url ?? "",
-        year: question.year ?? new Date().getFullYear(),
-        source: question.source ?? "",
-        question_number: question.question_number ?? 1,
-        is_active: question.is_active ?? true,
-        subject_id: question.subject_id ?? "",
-
-        // Visual
-        requires_visual: question.requires_visual === true,
-        visual_type: question.visual_type ?? "",
-        visual_description: question.visual_description ?? "",
-        visual_data: question.visual_data ?? null,
-        chart_data: question.chart_data ?? null,
-      });
-    } catch (err) {
-      console.error("Error cargando pregunta:", err);
-      setError("No fue posible cargar la pregunta.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
     if (!id) return;
 
-    loadQuestion();
+    let cancelled = false;
+
+    async function loadQuestion() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const question = await getQuestionById(id);
+
+        if (cancelled) return;
+
+        if (!question) {
+          setError("No se encontró la pregunta.");
+          return;
+        }
+
+        setForm({
+          subject: question.subject ?? "",
+          session: question.session ?? 1,
+          component: question.component ?? "",
+          competence: question.competence ?? "",
+          difficulty: question.difficulty ?? "",
+          context_text: question.context_text ?? "",
+          question: question.question ?? "",
+          option_a: question.option_a ?? "",
+          option_b: question.option_b ?? "",
+          option_c: question.option_c ?? "",
+          option_d: question.option_d ?? "",
+          correct_answer: question.correct_answer ?? "",
+          explanation: question.explanation ?? "",
+          image_url: question.image_url ?? "",
+          year: question.year ?? new Date().getFullYear(),
+          source: question.source ?? "",
+          question_number: question.question_number ?? 1,
+          is_active: question.is_active ?? true,
+          subject_id: question.subject_id ?? "",
+
+          // Visual
+          requires_visual: question.requires_visual === true,
+          visual_type: question.visual_type ?? "",
+          visual_description: question.visual_description ?? "",
+          visual_data: question.visual_data ?? null,
+          chart_data: question.chart_data ?? null,
+        });
+      } catch (err) {
+        if (cancelled) return;
+        console.error("Error cargando pregunta:", err);
+        setError("No fue posible cargar la pregunta.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void loadQuestion();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   function handleChange(

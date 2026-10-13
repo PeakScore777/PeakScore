@@ -767,6 +767,7 @@ export default function GlobalNavbar({
 
             {/* PERFIL */}
             <div className="relative">
+              {profile ? (
               <button
                 type="button"
                 onClick={() => {
@@ -814,8 +815,21 @@ export default function GlobalNavbar({
                   </span>
                 )}
               </button>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={closeMenus}
+                  className={`flex h-10 items-center justify-center rounded-xl px-4 text-sm font-extrabold transition ${
+                    isDark
+                      ? "bg-violet-500 text-white hover:bg-violet-400"
+                      : "bg-violet-600 text-white hover:bg-violet-700"
+                  }`}
+                >
+                  Unirme
+                </Link>
+              )}
 
-              {profileOpen && (
+              {profile && profileOpen && (
                 <div
                   className={`absolute right-0 top-[50px] z-[170] w-[min(340px,calc(100vw-20px))] overflow-hidden rounded-2xl border shadow-2xl ${
                     isDark

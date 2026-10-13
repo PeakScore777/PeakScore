@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
@@ -90,7 +90,7 @@ export default function ExamPage() {
      GUARDAR PROGRESO LOCAL
   ====================================================== */
 
-  const saveLocalProgress = (
+  const saveLocalProgress = useCallback((
     nextAnswers = answers,
     nextQuestion = currentQuestion,
     nextTime = timeLeft
@@ -114,10 +114,7 @@ export default function ExamPage() {
         error
       );
     }
-  };
-
-  const saveLocalProgressRef = useRef(saveLocalProgress);
-  saveLocalProgressRef.current = saveLocalProgress;
+  }, [answers, currentQuestion, timeLeft, storageKey]);
 
   /* =====================================================
      ELIMINAR PROGRESO LOCAL
@@ -479,7 +476,7 @@ export default function ExamPage() {
 
     const interval =
       setInterval(() => {
-        saveLocalProgressRef.current();
+        saveLocalProgress();
       }, 5000);
 
     return () => {
@@ -492,6 +489,7 @@ export default function ExamPage() {
     currentQuestion,
     timeLeft,
     answers,
+    saveLocalProgress,
   ]);
 
   /* =====================================================

@@ -445,6 +445,7 @@ export default function PersonajesPage() {
   const [data, setData] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const [storyCharacter, setStoryCharacter] =
     useState<PeakScoreCharacterId | null>(null);
 
@@ -503,7 +504,7 @@ export default function PersonajesPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [retryCount]);
 
   const catalog = data?.characters ?? [];
   const unlockedIds = data?.unlockedCharacterIds ?? [];
@@ -621,7 +622,7 @@ export default function PersonajesPage() {
               type="button"
               onClick={() => {
                 setLoading(true);
-                void loadData();
+                setRetryCount((count) => count + 1);
               }}
               className="mt-3 rounded-lg border border-white/15 px-4 py-2 text-sm hover:bg-white/5"
             >

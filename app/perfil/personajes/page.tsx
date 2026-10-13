@@ -451,13 +451,13 @@ export default function PersonajesPage() {
 
   const loadData = useCallback(async () => {
     try {
-      setError(null);
-
       const response = await fetch("/api/profile", {
         cache: "no-store",
       });
 
       const result: unknown = await response.json();
+
+      setError(null);
 
       if (!response.ok) {
         throw new Error(

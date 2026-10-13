@@ -631,10 +631,13 @@ function HudItem({
             }
           `}
         >
-          <img
+          <Image
             src={icon}
             alt=""
             aria-hidden="true"
+            width={44}
+            height={44}
+            unoptimized
             draggable={false}
             className="
               h-11

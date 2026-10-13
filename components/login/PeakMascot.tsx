@@ -23,9 +23,13 @@ export default function PeakMascot({
   const [eyesWereCovered, setEyesWereCovered] = useState(false);
 
   useEffect(() => {
-    if (coverEyes) {
+    if (!coverEyes) return;
+
+    const timeout = window.setTimeout(() => {
       setEyesWereCovered(true);
-    }
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
   }, [coverEyes]);
 
   const pose = welcome

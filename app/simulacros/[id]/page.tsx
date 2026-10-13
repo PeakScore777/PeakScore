@@ -534,7 +534,7 @@ export default function ExamPage() {
      GUARDAR INTENTO DEFINITIVO
   ====================================================== */
 
-  const saveAttempt = async () => {
+  const saveAttempt = useCallback(async () => {
     try {
       setSavingAttempt(true);
 
@@ -636,7 +636,7 @@ export default function ExamPage() {
     } finally {
       setSavingAttempt(false);
     }
-  };
+  }, [answers, questions, serverAttemptId, simulationId]);
 
   /* =====================================================
      FINALIZAR EXAMEN

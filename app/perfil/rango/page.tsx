@@ -539,6 +539,8 @@ export default function RangoPage() {
   const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
+    let themeSyncTimeout: number | undefined;
+
     const syncTheme = (event: Event) => {
       const customEvent = event as CustomEvent<"light" | "dark">;
 
@@ -554,7 +556,11 @@ export default function RangoPage() {
       const savedTheme = window.localStorage.getItem("peakscore-theme");
 
       if (savedTheme === "light" || savedTheme === "dark") {
-        setTheme(savedTheme);
+        // Sincroniza el tema después del efecto para evitar una actualización
+        // de estado síncrona durante el montaje.
+        themeSyncTimeout = window.setTimeout(() => {
+          setTheme(savedTheme);
+        }, 0);
       }
     } catch {
       // Conserva el tema oscuro si localStorage no está disponible.
@@ -564,6 +570,10 @@ export default function RangoPage() {
 
     return () => {
       window.removeEventListener("peakscore-theme-change", syncTheme);
+
+      if (themeSyncTimeout !== undefined) {
+        window.clearTimeout(themeSyncTimeout);
+      }
     };
   }, []);
 

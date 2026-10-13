@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -751,11 +752,12 @@ export default function QuestionBankPage() {
                               <span className="font-bold text-slate-700">
                                 Imagen de apoyo
                               </span>
-                            </div>
-
-                            <img
+                            </di<Image
                               src={question.image_url}
                               alt="Imagen de apoyo de la pregunta"
+                              width={480}
+                              height={320}
+                              unoptimized
                               className="max-h-[500px] w-full rounded-xl object-contain"
                             />
                           </div>

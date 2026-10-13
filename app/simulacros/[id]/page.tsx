@@ -1342,7 +1342,8 @@ export default function ExamPage() {
                     </div>
 
                     {question.image_url && (
-                      <div className="mt-6 flex justify-c<Image
+                      <div className="mt-6 flex justify-center">
+                        <Image
                           src={question.image_url}
                           alt={`Recurso visual de la pregunta ${currentQuestion + 1}`}
                           width={1200}

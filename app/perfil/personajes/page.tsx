@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { Check, ShoppingCart, X } from "lucide-react";
 import {
@@ -449,51 +449,62 @@ export default function PersonajesPage() {
   const [storyCharacter, setStoryCharacter] =
     useState<PeakScoreCharacterId | null>(null);
 
-  const loadData = useCallback(async () => {
-    try {
-      const response = await fetch("/api/profile", {
-        cache: "no-store",
-      });
+  useEffect(() => {
+    let active = true;
 
-      const result: unknown = await response.json();
+    async function loadData() {
+      try {
+        const response = await fetch("/api/profile", {
+          cache: "no-store",
+        });
 
-      setError(null);
+        const result: unknown = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          response.status === 401
-            ? "Inicia sesión para consultar tus personajes."
+        if (!response.ok) {
+          throw new Error(
+            response.status === 401
+              ? "Inicia sesión para consultar tus personajes."
+              : "No se pudo cargar tu colección.",
+          );
+        }
+
+        if (
+          typeof result !== "object" ||
+          result === null ||
+          !("profile" in result) ||
+          !("characters" in result) ||
+          !("unlockedCharacterIds" in result)
+        ) {
+          throw new Error(
+            "La respuesta del perfil no tiene el formato esperado.",
+          );
+        }
+
+        if (active) {
+          setError(null);
+          setData(result as ProfileResponse);
+        }
+      } catch (err) {
+        if (!active) return;
+
+        setError(
+          err instanceof Error
+            ? err.message
             : "No se pudo cargar tu colección.",
         );
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
       }
-
-      if (
-        typeof result !== "object" ||
-        result === null ||
-        !("profile" in result) ||
-        !("characters" in result) ||
-        !("unlockedCharacterIds" in result)
-      ) {
-        throw new Error(
-          "La respuesta del perfil no tiene el formato esperado.",
-        );
-      }
-
-      setData(result as ProfileResponse);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No se pudo cargar tu colección.",
-      );
-    } finally {
-      setLoading(false);
     }
-  }, []);
 
-  useEffect(() => {
     void loadData();
-  }, [loadData]);
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const catalog = data?.characters ?? [];
   const unlockedIds = data?.unlockedCharacterIds ?? [];

@@ -19,7 +19,6 @@ import {
   Users,
   X,
   Menu,
-  LayoutDashboard,
   BarChart3,
   FileText,
   MessageCircle,

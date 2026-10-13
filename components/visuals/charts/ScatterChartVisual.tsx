@@ -55,6 +55,9 @@ const MARGIN = {
   left: 72,
 };
 
+const EMPTY_SERIES: ChartSeries[] = [];
+const EMPTY_CATEGORIES: unknown[] = [];
+
 /* =========================================================
    TIPOS INTERNOS
 ========================================================= */
@@ -156,8 +159,8 @@ function getSafeRange(
 export default function ScatterChartVisual({
   data,
 }: ScatterChartVisualProps) {
-  const series = data.series ?? [];
-  const categories = data.categories ?? [];
+  const series = data.series ?? EMPTY_SERIES;
+  const categories = data.categories ?? EMPTY_CATEGORIES;
 
   /* =======================================================
      PROCESAMIENTO DE DATOS Y ESCALAS

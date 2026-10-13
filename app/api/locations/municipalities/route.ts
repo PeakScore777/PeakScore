@@ -175,38 +175,6 @@ export async function GET(
     );
 
     /* ========================================================
-       CÚCUTA
-       
-       DIVIPOLA:
-       Departamento: 54
-       Municipio: 54001
-    ======================================================== */
-
-    if (department === "54") {
-      const cucutaExists =
-        municipalities.some(
-          (municipality) =>
-            municipality.code ===
-              "54001" ||
-            municipality.name
-              .toLowerCase()
-              .normalize("NFD")
-              .replace(
-                /[\u0300-\u036f]/g,
-                ""
-              ) === "cucuta"
-        );
-
-      if (!cucutaExists) {
-        municipalities.push({
-          code: "54001",
-          name: "Cúcuta",
-          departmentCode: "54",
-        });
-      }
-    }
-
-    /* ========================================================
        ORDEN ALFABÉTICO
        
        localeCompare permite ordenar correctamente

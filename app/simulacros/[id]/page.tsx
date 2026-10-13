@@ -120,7 +120,7 @@ export default function ExamPage() {
      ELIMINAR PROGRESO LOCAL
   ====================================================== */
 
-  const clearLocalProgress = () => {
+  const clearLocalProgress = useCallback(() => {
     try {
       localStorage.removeItem(storageKey);
       setHasSavedProgress(false);
@@ -130,7 +130,7 @@ export default function ExamPage() {
         error
       );
     }
-  };
+  }, [storageKey]);
 
   /* =====================================================
      GUARDAR PROGRESO EN SERVIDOR
@@ -459,7 +459,7 @@ export default function ExamPage() {
     if (simulationId) {
       void loadExam();
     }
-  }, [simulationId]);
+  }, [simulationId, clearLocalProgress]);
 
   /* =====================================================
      GUARDADO AUTOMÁTICO CADA 5 SEGUNDOS

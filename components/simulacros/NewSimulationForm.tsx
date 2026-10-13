@@ -3,6 +3,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   ArrowLeft,
   Check,
@@ -228,8 +229,10 @@ export default function NewSimulationPage() {
 
             <div className="flex items-center gap-4">
               <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center">
-                <img
+                <Image
                   src="/images/simulacros/objetivo-icfes.webp"
+                  width={160}
+                  height={160}
                   alt="Cristal que representa tu objetivo ICFES"
                   className="h-full w-full object-contain"
                 />
@@ -322,8 +325,10 @@ export default function NewSimulationPage() {
                         }`}
                       >
                         <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center">
-                          <img
+                          <Image
                             src={item.image}
+                            width={132}
+                            height={132}
                             alt=""
                             className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
                             loading="lazy"
@@ -477,8 +482,10 @@ export default function NewSimulationPage() {
                         }`}
                       >
                         <div className="flex h-[78px] w-full items-center justify-center">
-                          <img
+                          <Image
                             src={item.image}
+                            width={156}
+                            height={156}
                             alt=""
                             className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
                             loading="lazy"
@@ -609,8 +616,10 @@ export default function NewSimulationPage() {
               <div className="flex items-center gap-3 border border-white/10 bg-[#0d1020] p-3">
                 <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center">
                   {selectedSubject && (
-                    <img
+                    <Image
                       src={selectedSubject.image}
+                      width={108}
+                      height={108}
                       alt=""
                       className="h-full w-full object-contain"
                     />
@@ -654,8 +663,10 @@ export default function NewSimulationPage() {
               <div className="flex items-center gap-4 border border-white/10 bg-[#0d1020] p-4">
                 <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center">
                   {selectedDifficulty && (
-                    <img
+                    <Image
                       src={selectedDifficulty.image}
+                      width={108}
+                      height={108}
                       alt=""
                       className="h-full w-full object-contain"
                     />

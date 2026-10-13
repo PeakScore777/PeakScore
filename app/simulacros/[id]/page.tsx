@@ -646,7 +646,7 @@ export default function ExamPage() {
     ((automatic?: boolean) => Promise<void>) | null
   >(null);
 
-  const handleFinishExam = async (
+  const handleFinishExam = useCallback(async (
     automatic = false
   ) => {
     if (
@@ -698,7 +698,7 @@ export default function ExamPage() {
           : "No fue posible guardar el simulacro."
       );
     }
-  };
+  }, [clearLocalProgress, saveAttempt]);
 
   handleFinishExamRef.current = handleFinishExam;
 

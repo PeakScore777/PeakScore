@@ -265,7 +265,7 @@ export default function CinematicTestPage() {
     const images =
       sources.map((src) => {
         const image =
-          new Image();
+          new window.Image();
 
         image.onload =
           checkLoaded;

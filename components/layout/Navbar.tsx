@@ -70,17 +70,32 @@ export default function Navbar({
   const profileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    let active = true;
+    let restoreTimer: number | undefined;
+
     try {
       const cached = window.localStorage.getItem(
         "peakscore-selected-character",
       );
 
       if (cached && characterAvatars[cached]) {
-        setCachedCharacter(cached);
+        restoreTimer = window.setTimeout(() => {
+          if (active) {
+            setCachedCharacter(cached);
+          }
+        }, 0);
       }
     } catch {
       // La caché visual no es obligatoria.
     }
+
+    return () => {
+      active = false;
+
+      if (restoreTimer !== undefined) {
+        window.clearTimeout(restoreTimer);
+      }
+    };
   }, []);
 
   useEffect(() => {

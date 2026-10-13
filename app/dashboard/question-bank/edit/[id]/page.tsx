@@ -1078,7 +1078,9 @@ export default function EditQuestionPage() {
                     <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3">
                       <p className="mb-3 text-xs font-medium text-slate-500">
                         Imagen actual
-                 <Image
+                      </p>
+
+                      <Image
                         src={form.image_url}
                         alt="Imagen de la pregunta"
                         width={800}

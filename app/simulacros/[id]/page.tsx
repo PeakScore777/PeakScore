@@ -506,7 +506,7 @@ export default function ExamPage() {
     }
 
     const handleBeforeUnload = () => {
-      saveLocalProgressRef.current();
+      saveLocalProgress();
     };
 
     window.addEventListener(
@@ -527,6 +527,7 @@ export default function ExamPage() {
     currentQuestion,
     timeLeft,
     answers,
+    saveLocalProgress,
   ]);
 
   /* =====================================================

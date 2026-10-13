@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import Image from "next/image";
 
 /* =========================================================
    DATOS
@@ -606,9 +607,12 @@ export default function Stats() {
             className="pointer-events-none absolute right-[-50px] top-[-35px] z-10 hidden h-[290px] w-[570px] lg:block"
           >
 
-            <img
+            <Image
               src="/peaky/homepage/statspeakyruta.png"
               alt=""
+width={570}
+              height={290}
+              unoptimized
               className="h-full w-full object-contain object-right drop-shadow-[0_0_30px_rgba(37,99,235,0.25)]"
             />
 
@@ -1094,9 +1098,12 @@ export default function Stats() {
 
             <div className="pointer-events-none absolute right-[-4px] top-[35px] h-[175px] w-[185px]">
 
-              <img
+              <Image
                 src="/peaky/homepage/statspremio.png"
                 alt=""
+width={185}
+                height={175}
+              unoptimized
                 className="h-full w-full object-contain drop-shadow-[0_0_25px_rgba(34,211,238,0.3)] transition-transform duration-500 group-hover:scale-110"
               />
 
@@ -1183,9 +1190,12 @@ export default function Stats() {
 
             <div className="pointer-events-none absolute right-[-3px] top-[35px] h-[175px] w-[185px]">
 
-              <img
+              <Image
                 src="/peaky/homepage/statslibro.png"
                 alt=""
+width={185}
+                height={175}
+              unoptimized
                 className="h-full w-full object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.3)] transition-transform duration-500 group-hover:scale-110"
               />
 
@@ -1272,9 +1282,12 @@ export default function Stats() {
 
             <div className="pointer-events-none absolute right-[-8px] top-[30px] h-[185px] w-[200px]">
 
-              <img
+              <Image
                 src="/peaky/homepage/statsmontaña.png"
                 alt=""
+width={200}
+                height={185}
+              unoptimized
                 className="h-full w-full object-contain drop-shadow-[0_0_25px_rgba(34,211,238,0.3)] transition-transform duration-500 group-hover:scale-110"
               />
 

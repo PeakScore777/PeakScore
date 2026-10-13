@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 
 import {
   AlertTriangle,
@@ -1341,11 +1342,13 @@ export default function ExamPage() {
                     </div>
 
                     {question.image_url && (
-                      <div className="mt-6 flex justify-center">
-                        <img
+                      <div className="mt-6 flex justify-c<Image
                           src={question.image_url}
                           alt={`Recurso visual de la pregunta ${currentQuestion + 1}`}
-                          className="max-h-[500px] w-auto max-w-full rounded-2xl border border-slate-200 object-contain"
+                          width={1200}
+                          height={900}
+                          unoptimized
+                          className="max-h-[500px] h-auto w-auto max-w-full rounded-2xl border border-slate-200 object-contain"
                         />
                      </div>
                    )}

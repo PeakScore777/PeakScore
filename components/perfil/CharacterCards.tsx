@@ -159,14 +159,18 @@ export default function CharacterCards() {
     CHARACTERS[0];
 
   useEffect(() => {
-    setImageFailed(false);
-    setPointer({
-      x: 50,
-      y: 35,
-      rotateX: 0,
-      rotateY: 0,
-      active: false,
-    });
+    const resetTimer = window.setTimeout(() => {
+      setImageFailed(false);
+      setPointer({
+        x: 50,
+        y: 35,
+        rotateX: 0,
+        rotateY: 0,
+        active: false,
+      });
+    }, 0);
+
+    return () => window.clearTimeout(resetTimer);
   }, [selectedId]);
 
   function handlePointerMove(event: PointerEvent<HTMLElement>) {

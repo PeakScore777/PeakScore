@@ -91,12 +91,6 @@ export default function EditQuestionPage() {
     chart_data: null as unknown | null,
   });
 
-  useEffect(() => {
-    if (!id) return;
-
-    loadQuestion();
-  }, [id]);
-
   async function loadQuestion() {
     try {
       setLoading(true);
@@ -144,6 +138,12 @@ export default function EditQuestionPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!id) return;
+
+    loadQuestion();
+  }, [id]);
 
   function handleChange(
     e: React.ChangeEvent<

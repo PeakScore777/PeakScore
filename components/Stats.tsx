@@ -765,9 +765,12 @@ width={570}
                             }`}
                           />
 
-                          <img
+                          <Image
                             src={step.image}
                             alt=""
+                            width={32}
+                            height={32}
+                            unoptimized
                             className="h-8 w-8 object-contain"
                           />
 

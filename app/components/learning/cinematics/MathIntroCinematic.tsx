@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 type MathIntroCinematicProps = {
   onComplete?: () => void;
@@ -265,10 +266,13 @@ export default function MathIntroCinematic({
               ease: "easeInOut",
             }}
           >
-            <img
+            <Image
               src="/characters/peaky/peaky-study-blink.gif?v=8"
               alt="Peaky entrando al portal"
-              className="w-full drop-shadow-[0_20px_30px_rgba(0,0,0,0.9)]"
+              width={460}
+              height={460}
+              unoptimized
+              className="h-auto w-full drop-shadow-[0_20px_30px_rgba(0,0,0,0.9)]"
             />
           </motion.div>
         )}

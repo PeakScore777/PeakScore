@@ -26,10 +26,7 @@ export default function FounderIdle({
   const [dialogueVisible, setDialogueVisible] = useState(false);
 
   useEffect(() => {
-    if (!showDialogue) {
-      setDialogueVisible(false);
-      return;
-    }
+    if (!showDialogue) return;
 
     const initialTimeout = window.setTimeout(() => {
       setDialogueVisible(true);

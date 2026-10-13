@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -76,7 +76,7 @@ const initialForm: FormState = {
   is_active: true,
 };
 
-export default function NewQuestionPage() {
+function NewQuestionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const aiMode = searchParams.get("mode") === "ai";
@@ -941,5 +941,19 @@ export default function NewQuestionPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function NewQuestionPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50 p-6 text-sm text-slate-600">
+          Cargando formulario de preguntas...
+        </main>
+      }
+    >
+      <NewQuestionPageContent />
+    </Suspense>
   );
 }

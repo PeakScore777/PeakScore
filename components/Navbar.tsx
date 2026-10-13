@@ -1987,7 +1987,6 @@ function PreparationDropdown({
 
 function CommunityDropdown({
   theme,
-  onClose,
 }: {
   theme: LandingTheme;
   onClose: () => void;

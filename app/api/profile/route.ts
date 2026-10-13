@@ -44,6 +44,7 @@ export async function GET() {
         id,
         full_name,
         email,
+        role,
         avatar_url,
         target_score,
         average_score,
@@ -291,6 +292,7 @@ export async function GET() {
         id: profile.id,
         fullName: profile.full_name,
         email: profile.email,
+        isAdmin: profile.role === "admin",
         avatarUrl: profile.avatar_url,
 
         targetScore:

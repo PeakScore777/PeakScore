@@ -276,8 +276,9 @@ export default function GlobalNavbar({
   const firstInitial =
     displayName.charAt(0).toUpperCase() || "E";
 
-  const selectedCharacter =
-    profile?.selectedCharacter ?? cachedCharacter;
+  const selectedCharacter = profile
+    ? profile.selectedCharacter ?? cachedCharacter
+    : null;
 
   const selectedCharacterAvatar = selectedCharacter
     ? CHARACTER_AVATARS[selectedCharacter] ?? null
@@ -510,6 +511,17 @@ export default function GlobalNavbar({
       }
 
       setProfile(null);
+
+      try {
+        window.localStorage.removeItem(CHARACTER_STORAGE_KEY);
+      } catch {
+        // La sesión ya se cerró; el avatar no depende de esta caché.
+      }
+
+      window.dispatchEvent(
+        new Event("peakscore-selected-character-change"),
+      );
+
       window.location.href = "/login";
     } catch (error) {
       console.error(
@@ -767,6 +779,7 @@ export default function GlobalNavbar({
 
             {/* PERFIL */}
             <div className="relative">
+              
               <button
                 type="button"
                 onClick={() => {

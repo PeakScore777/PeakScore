@@ -700,7 +700,9 @@ export default function ExamPage() {
     }
   }, [clearLocalProgress, saveAttempt]);
 
-  handleFinishExamRef.current = handleFinishExam;
+  useEffect(() => {
+    handleFinishExamRef.current = handleFinishExam;
+  }, [handleFinishExam]);
 
   /* =====================================================
      CONTINUAR LUEGO

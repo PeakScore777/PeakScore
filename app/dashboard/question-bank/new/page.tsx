@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Save,
@@ -78,8 +78,8 @@ const initialForm: FormState = {
 
 export default function NewQuestionPage() {
   const router = useRouter();
-
-  const [aiMode, setAiMode] = useState(false);
+  const searchParams = useSearchParams();
+  const aiMode = searchParams.get("mode") === "ai";
 
   const [loading, setLoading] = useState(false);
 
@@ -94,14 +94,6 @@ export default function NewQuestionPage() {
   const [generationComplete, setGenerationComplete] = useState(false);
 
   const [form, setForm] = useState<FormState>(initialForm);
-
-  /*
-   * Detectar ?mode=ai
-   */
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setAiMode(params.get("mode") === "ai");
-  }, []);
 
   /*
    * ================================

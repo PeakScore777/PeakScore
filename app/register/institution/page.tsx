@@ -935,13 +935,13 @@ export default function InstitutionRegisterPage() {
 
               lg:w-[550px]
               lg:max-w-[550px]
-              lg:translate-x-8
+              lg:translate-x-0
 
               xl:w-[570px]
               xl:max-w-[570px]
-              xl:translate-x-24
+              xl:translate-x-0
 
-              2xl:translate-x-32
+              2xl:translate-x-0
             "
           >
             <div

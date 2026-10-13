@@ -136,8 +136,12 @@ function ThemeBackground({
       return;
     }
 
-    setIncomingReady(false);
-    setIncomingTheme(theme);
+    const transitionTimer = window.setTimeout(() => {
+      setIncomingReady(false);
+      setIncomingTheme(theme);
+    }, 0);
+
+    return () => window.clearTimeout(transitionTimer);
   }, [theme, visibleTheme]);
 
   useEffect(() => {

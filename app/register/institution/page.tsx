@@ -64,6 +64,12 @@ type MunicipalityOption = {
   departmentCode: string;
 };
 
+type MunicipalityApiItem = {
+  code?: unknown;
+  name?: unknown;
+  departmentCode?: unknown;
+};
+
 /* ============================================================
    DEPARTAMENTOS
 ============================================================ */
@@ -377,7 +383,7 @@ export default function InstitutionRegisterPage() {
 
           const parsedMunicipalities: MunicipalityOption[] =
             data
-              .map((item: any) => ({
+              .map((item: MunicipalityApiItem) => ({
                 code: String(
                   item.code ?? ""
                 ),

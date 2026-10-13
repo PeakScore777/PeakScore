@@ -337,11 +337,9 @@ export default function InstitutionRegisterPage() {
   ========================================================== */
 
   useEffect(() => {
-    if (!form.department) {
-      setMunicipalities([]);
-      setLoadingMunicipalities(false);
-      return;
-    }
+    // El cambio de departamento ya limpia la lista en
+    // handleDepartmentChange; sin departamento no hay nada que cargar.
+    if (!form.department) return;
 
     const controller =
       new AbortController();

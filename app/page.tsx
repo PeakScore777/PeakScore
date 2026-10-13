@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
@@ -11,51 +11,38 @@ import Footer from "@/components/Footer";
 
 type LandingTheme = "light" | "dark";
 
-export default function Home() {
-  const [theme, setTheme] =
-    useState<LandingTheme>("dark");
+function getLandingTheme(): LandingTheme {
+  try {
+    const savedTheme = window.localStorage.getItem("peakscore-theme");
 
-  useEffect(() => {
-    const syncTheme = (event: Event) => {
-      const customEvent =
-        event as CustomEvent<LandingTheme>;
-
-      if (
-        customEvent.detail === "light" ||
-        customEvent.detail === "dark"
-      ) {
-        setTheme(customEvent.detail);
-      }
-    };
-
-    try {
-      const savedTheme =
-        window.localStorage.getItem(
-          "peakscore-theme",
-        );
-
-      if (
-        savedTheme === "light" ||
-        savedTheme === "dark"
-      ) {
-        setTheme(savedTheme);
-      }
-    } catch {
-      // Se mantiene el tema oscuro como fallback.
+    if (savedTheme === "light" || savedTheme === "dark") {
+      return savedTheme;
     }
+  } catch {
+    // Se mantiene el tema oscuro como fallback.
+  }
 
-    window.addEventListener(
-      "peakscore-theme-change",
-      syncTheme,
-    );
+  return "dark";
+}
 
-    return () => {
-      window.removeEventListener(
-        "peakscore-theme-change",
-        syncTheme,
-      );
-    };
-  }, []);
+function subscribeToLandingTheme(onChange: () => void) {
+  window.addEventListener("peakscore-theme-change", onChange);
+
+  return () => {
+    window.removeEventListener("peakscore-theme-change", onChange);
+  };
+}
+
+function getServerLandingTheme(): LandingTheme {
+  return "dark";
+}
+
+export default function Home() {
+  const theme = useSyncExternalStore(
+    subscribeToLandingTheme,
+    getLandingTheme,
+    getServerLandingTheme,
+  );
 
   return (
     <main className="min-h-screen">

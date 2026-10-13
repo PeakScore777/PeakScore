@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import {
-  useCallback,
   useEffect,
   useState,
   type CSSProperties,
@@ -91,42 +90,42 @@ export default function CharacterCards() {
     active: false,
   });
 
-  const loadCharacter = useCallback(async () => {
-    try {
-      const response = await fetch("/api/profile", {
-        cache: "no-store",
-      });
-
-      if (!response.ok) return;
-
-      const data: unknown = await response.json();
-
-      if (
-        typeof data === "object" &&
-        data !== null &&
-        "profile" in data &&
-        typeof data.profile === "object" &&
-        data.profile !== null &&
-        "selectedCharacter" in data.profile
-      ) {
-        const value = data.profile.selectedCharacter;
-
-        if (typeof value === "string" && value.length > 0) {
-          setSelectedId(normalizeCharacterId(value));
-        }
-      }
-    } catch (error) {
-      console.error(
-        "[CharacterCards] Error cargando personaje:",
-        error,
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    void loadCharacter();
+    let active = true;
+
+    async function loadCharacter() {
+      try {
+        const response = await fetch("/api/profile", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) return;
+
+        const data: unknown = await response.json();
+
+        if (
+          typeof data === "object" &&
+          data !== null &&
+          "profile" in data &&
+          typeof data.profile === "object" &&
+          data.profile !== null &&
+          "selectedCharacter" in data.profile
+        ) {
+          const value = data.profile.selectedCharacter;
+
+          if (active && typeof value === "string" && value.length > 0) {
+            setSelectedId(normalizeCharacterId(value));
+          }
+        }
+      } catch (error) {
+        console.error(
+          "[CharacterCards] Error cargando personaje:",
+          error,
+        );
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
 
     const refresh = () => void loadCharacter();
 
@@ -139,11 +138,13 @@ export default function CharacterCards() {
       }
     };
 
+    void loadCharacter();
     window.addEventListener("focus", refresh);
     window.addEventListener("storage", handleStorage);
     window.addEventListener("peakscore:character-changed", refresh);
 
     return () => {
+      active = false;
       window.removeEventListener("focus", refresh);
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(
@@ -151,7 +152,7 @@ export default function CharacterCards() {
         refresh,
       );
     };
-  }, [loadCharacter]);
+  }, []);
 
   const character =
     CHARACTERS.find((item) => item.id === selectedId) ??

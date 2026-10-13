@@ -136,7 +136,7 @@ export default function ExamPage() {
      GUARDAR PROGRESO EN SERVIDOR
   ====================================================== */
 
-  const saveServerProgress = async (
+  const saveServerProgress = useCallback(async (
     nextAnswers = answers,
     nextQuestion = currentQuestion,
     nextTime = timeLeft
@@ -211,7 +211,7 @@ export default function ExamPage() {
     );
 
     return data;
-  };
+  }, [answers, currentQuestion, questions, serverAttemptId, simulationId, timeLeft]);
 
   /* =====================================================
      CARGAR SIMULACRO
@@ -706,7 +706,7 @@ export default function ExamPage() {
      CONTINUAR LUEGO
   ====================================================== */
 
-  const handleContinueLater = async () => {
+  const handleContinueLater = useCallback(async () => {
     saveLocalProgress();
 
     setSavingAttempt(true);
@@ -735,7 +735,7 @@ export default function ExamPage() {
     } finally {
       setSavingAttempt(false);
     }
-  };
+  }, [answers, currentQuestion, router, saveLocalProgress, saveServerProgress, timeLeft]);
 
   /* =====================================================
      TEMPORIZADOR

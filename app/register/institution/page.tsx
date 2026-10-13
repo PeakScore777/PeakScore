@@ -937,7 +937,7 @@ export default function InstitutionRegisterPage() {
 
               lg:w-[550px]
               lg:max-w-[550px]
-              lg:translate-x-16
+              lg:translate-x-8
 
               xl:w-[570px]
               xl:max-w-[570px]

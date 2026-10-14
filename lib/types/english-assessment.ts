@@ -247,7 +247,7 @@ export function validateEnglishQuestionSet(
   }
 
   if (part === 4 || part === 7) {
-    const markerMatches = [...stimulus.content.matchAll(/\\[\\[(\\d+)\\]\\]/g)];
+    const markerMatches = [...stimulus.content.matchAll(/\[\[(\d+)\]\]/g)];
     const markers = markerMatches.map((match) => Number(match[1])).sort((a, b) => a - b);
     const expected = Array.from({ length: markers.length }, (_, index) => index + 1);
 

@@ -4,6 +4,11 @@ import type {
   VisualType,
 } from "@/lib/visuals/types";
 
+export interface QuestionOption {
+  key: string;
+  text: string;
+}
+
 export interface Question {
   id: string;
 
@@ -31,6 +36,17 @@ export interface Question {
   option_d: string;
 
   correct_answer: string;
+
+  /** Campos aditivos para formatos de pregunta no legacy. */
+  question_format?: string;
+  english_part?: number | null;
+  stimulus_id?: string | null;
+  options_json?: QuestionOption[] | null;
+  stimulus_content?: string | null;
+  stimulus_options_json?: QuestionOption[] | null;
+  stimulus_image_url?: string | null;
+  stimulus_image_alt?: string | null;
+  stimulus_type?: string | null;
 
   explanation: string | null;
   image_url: string | null;

@@ -81,6 +81,18 @@ alter table public.questions
   add constraint questions_question_metadata_object
     check (jsonb_typeof(question_metadata) = 'object');
 
+-- Preserve A-D for every legacy/non-Part-1 question. The seven-option
+-- matching bank in English Part 1 may use A-G.
+alter table public.questions
+  drop constraint if exists questions_correct_answer_valid;
+
+alter table public.questions
+  add constraint questions_correct_answer_valid
+  check (
+    correct_answer in ('A', 'B', 'C', 'D')
+    or (english_part = 1 and correct_answer in ('E', 'F', 'G'))
+  );
+
 alter table public.questions
   add constraint questions_stimulus_id_fkey
   foreign key (stimulus_id)

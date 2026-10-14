@@ -36,6 +36,42 @@ alter table public.questions
   add column if not exists question_metadata jsonb not null
     default '{}'::jsonb;
 
+-- Legacy questions still require four non-empty choices. Structured English
+-- items use options_json, while Part 1 uses the shared stimulus word bank.
+alter table public.questions
+  drop constraint if exists questions_options_not_blank;
+
+alter table public.questions
+  add constraint questions_options_not_blank
+  check (
+    (
+      question_format = 'legacy_multiple_choice'
+      and char_length(btrim(option_a)) between 1 and 5000
+      and char_length(btrim(option_b)) between 1 and 5000
+      and char_length(btrim(option_c)) between 1 and 5000
+      and char_length(btrim(option_d)) between 1 and 5000
+    )
+    or (
+      question_format = 'english_matching'
+      and english_part = 1
+      and options_json is null
+      and stimulus_id is not null
+    )
+    or (
+      question_format in (
+        'english_notice',
+        'english_conversation',
+        'english_grammar_cloze',
+        'english_literal_reading',
+        'english_inferential_reading',
+        'english_lexical_cloze'
+      )
+      and options_json is not null
+      and jsonb_typeof(options_json) = 'array'
+      and jsonb_array_length(options_json) between 3 and 4
+    )
+  );
+
 alter table public.questions
   add constraint questions_question_format_allowed
     check (question_format in (

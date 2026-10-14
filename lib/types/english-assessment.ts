@@ -64,6 +64,7 @@ export interface EnglishQuestionDefinition {
   difficulty: "Fácil" | "Media" | "Difícil";
   explanation: string;
   skill: string;
+  questionMetadata?: Record<string, unknown>;
 }
 
 const FORMAT_BY_PART: Record<EnglishPart, EnglishQuestionFormat> = {

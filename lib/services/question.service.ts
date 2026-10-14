@@ -100,7 +100,50 @@ export async function getQuestions(): Promise<Question[]> {
     return [];
   }
 
-  return data as Question[];
+  const questions = data as Question[];
+  const stimulusIds = [
+    ...new Set(
+      questions
+        .map((question) => question.stimulus_id)
+        .filter((id): id is string => typeof id === "string")
+    ),
+  ];
+
+  if (stimulusIds.length === 0) {
+    return questions;
+  }
+
+  const { data: stimuli, error: stimuliError } = await supabase
+    .from("question_stimuli")
+    .select("id, content, options_json, image_url, image_alt, stimulus_type")
+    .in("id", stimulusIds);
+
+  if (stimuliError || !stimuli) {
+    console.error(
+      "Error obteniendo estímulos compartidos de Inglés.",
+      { errorCode: stimuliError?.code ?? "UNKNOWN" }
+    );
+    return [];
+  }
+
+  const stimulusMap = new Map(
+    stimuli.map((stimulus) => [stimulus.id, stimulus])
+  );
+
+  return questions.map((question) => {
+    const stimulus = question.stimulus_id
+      ? stimulusMap.get(question.stimulus_id)
+      : null;
+
+    return {
+      ...question,
+      stimulus_content: stimulus?.content ?? null,
+      stimulus_options_json: stimulus?.options_json ?? null,
+      stimulus_image_url: stimulus?.image_url ?? null,
+      stimulus_image_alt: stimulus?.image_alt ?? null,
+      stimulus_type: stimulus?.stimulus_type ?? null,
+    };
+  });
 }
 
 /* ================================

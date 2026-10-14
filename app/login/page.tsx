@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
+  Chrome,
   BookOpen,
   Brain,
   Clock3,
@@ -36,6 +37,7 @@ export default function LoginPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState(false);
   const [error, setError] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaKey, setCaptchaKey] = useState(0);
@@ -47,6 +49,23 @@ export default function LoginPage() {
     password.length > 0 && !showPassword;
 
   const normalizedEmail = email.trim().toLowerCase();
+
+
+  async function handleGoogleSignIn() {
+    setError("");
+    setOauthLoading(true);
+
+    const redirectTo = `${window.location.origin}/auth/callback?next=/dashboard`;
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
+    });
+
+    if (oauthError) {
+      setError("No se pudo iniciar sesión con Google. Inténtalo nuevamente.");
+      setOauthLoading(false);
+    }
+  }
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -1872,6 +1891,26 @@ export default function LoginPage() {
             {/* =================================================
                 FORMULARIO
             ================================================= */}
+
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={oauthLoading || loading}
+              className="mb-5 flex h-[50px] w-full items-center justify-center gap-3 rounded-[11px] border border-slate-200 bg-white text-[12px] font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {oauthLoading ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-700" />
+              ) : (
+                <Chrome size={17} strokeWidth={1.8} />
+              )}
+              Continuar con Google
+            </button>
+
+            <div className="mb-5 flex items-center gap-3">
+              <span className="h-px flex-1 bg-slate-200" />
+              <span className="text-[10px] font-medium text-slate-400">o con tu correo</span>
+              <span className="h-px flex-1 bg-slate-200" />
+            </div>
 
             <form
               onSubmit={handleSubmit}

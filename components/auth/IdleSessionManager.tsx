@@ -106,17 +106,6 @@ export default function IdleSessionManager() {
       startTimers();
     }
 
-    function handleVisibilityChange() {
-      if (document.visibilityState !== "visible") return;
-
-      if (
-        authenticatedRef.current &&
-        !warningRef.current
-      ) {
-        startTimers();
-      }
-    }
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -156,11 +145,6 @@ export default function IdleSessionManager() {
       });
     }
 
-    document.addEventListener(
-      "visibilitychange",
-      handleVisibilityChange,
-    );
-
     return () => {
       mounted = false;
       clearTimers();
@@ -170,10 +154,6 @@ export default function IdleSessionManager() {
         window.removeEventListener(eventName, handleActivity);
       }
 
-      document.removeEventListener(
-        "visibilitychange",
-        handleVisibilityChange,
-      );
     };
   }, [clearTimers, startTimers]);
 

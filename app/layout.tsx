@@ -4,6 +4,7 @@ import { Press_Start_2P } from "next/font/google";
 
 import GlobalNavbar from "@/components/layout/GlobalNavbar";
 import { createClient } from "@/lib/supabase/server";
+import IdleSessionManager from "@/components/auth/IdleSessionManager";
 
 import "./globals.css";
 
@@ -60,6 +61,7 @@ export default async function RootLayout({
     <html lang="es">
       <body className={pixelFont.variable}>
         <GlobalNavbar initialProfile={initialProfile} />
+        <IdleSessionManager />
         {children}
       </body>
     </html>

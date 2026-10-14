@@ -7334,6 +7334,19 @@ export async function POST(
             requested: amount,
             saved: Number(saveResult.question_count ?? amount),
             sets: saveResult.sets,
+            questions: parsedGeneration.result.sets.flatMap((set) =>
+              set.questions.map((question) => ({
+                difficulty: question.difficulty,
+                context_text: set.stimulus.content,
+                question: question.prompt,
+                options_json: question.options ?? set.stimulus.options ?? [],
+                correct_answer: question.correctAnswer,
+                english_part: part,
+                stimulus_position: question.stimulusPosition,
+                stimulus_type: set.stimulus.type,
+                explanation: question.explanation,
+              }))
+            ),
           },
         },
         { status: 201 }

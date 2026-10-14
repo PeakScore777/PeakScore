@@ -7338,7 +7338,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: true,
-          message: "Conjuntos de Inglés generados, validados y guardados.",
+          message: "Conjuntos de Inglés generados y guardados como pendientes de revisión editorial.",
           data: {
             provider: "groq",
             subject,

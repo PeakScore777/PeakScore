@@ -914,6 +914,31 @@ export default function ExamPage() {
   const question =
     questions[currentQuestion];
 
+  const questionOptions = question
+    ? question.options_json?.length
+      ? question.options_json
+      : question.english_part === 1 && question.stimulus_options_json?.length
+        ? question.stimulus_options_json
+        : [
+            question.option_a,
+            question.option_b,
+            question.option_c,
+            question.option_d,
+          ].map((text, index) => ({
+            key: String.fromCharCode(65 + index),
+            text,
+          }));
+
+  const questionContext =
+    question?.context_text?.trim()
+      ? question.context_text
+      : question?.stimulus_content?.trim()
+        ? question.stimulus_content
+        : null;
+
+  const questionImage =
+    question?.image_url ?? question?.stimulus_image_url ?? null;
+
   const answeredQuestions =
     Object.keys(
       answers
@@ -1290,8 +1315,7 @@ export default function ExamPage() {
                     CONTEXTO
                 ================================================== */}
 
-                {question.context_text &&
-                  question.context_text.trim() && (
+                {questionContext && (
                     <div className="relative mb-7 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
 
                       <div className="absolute inset-y-0 left-0 w-1 bg-blue-600" />
@@ -1309,7 +1333,7 @@ export default function ExamPage() {
                         </div>
 
                         <div className="whitespace-pre-wrap text-[16px] font-medium leading-8 text-slate-700 sm:text-[17px]">
-                          {question.context_text}
+                          {questionContext}
                         </div>
 
                       </div>
@@ -1341,10 +1365,10 @@ export default function ExamPage() {
                       {question.question}
                     </div>
 
-                    {question.image_url && (
+                    {questionImage && (
                       <div className="mt-6 flex justify-center">
                         <Image
-                          src={question.image_url}
+                          src={questionImage}
                           alt={`Recurso visual de la pregunta ${currentQuestion + 1}`}
                           width={1200}
                           height={900}
@@ -1378,12 +1402,7 @@ export default function ExamPage() {
 
                   <div className="space-y-3">
 
-                    {[
-                      question.option_a,
-                      question.option_b,
-                      question.option_c,
-                      question.option_d,
-                    ].map(
+                    {questionOptions.map(
                       (
                         option,
                         index
@@ -1400,9 +1419,7 @@ export default function ExamPage() {
 
                         return (
                           <button
-                            key={
-                              optionNumber
-                            }
+                            key={option.key}
                             type="button"
                             onClick={() => {
 
@@ -1444,7 +1461,7 @@ export default function ExamPage() {
                             </span>
 
                             <span className="flex-1 pt-1 text-sm font-medium leading-6 text-slate-700 sm:text-[15px]">
-                              {option}
+                              {option.text}
                             </span>
 
                             <span

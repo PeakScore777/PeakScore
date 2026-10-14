@@ -41,6 +41,7 @@ export interface Question {
   question_format?: string;
   english_part?: number | null;
   stimulus_id?: string | null;
+  stimulus_position?: number | null;
   options_json?: QuestionOption[] | null;
   stimulus_content?: string | null;
   stimulus_options_json?: QuestionOption[] | null;

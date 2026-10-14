@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 const PUBLIC_QUESTION_FIELDS =
-  "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at";
+  "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at, question_format, english_part, stimulus_id, options_json";
 
 export async function GET(
   _request: Request,
@@ -207,11 +207,61 @@ export async function GET(
       );
     }
 
+    const stimulusIds = [
+      ...new Set(
+        questions
+          .map((question) => question.stimulus_id)
+          .filter((id): id is string => typeof id === "string")
+      ),
+    ];
+
+    let stimulusMap = new Map<string, {
+      content: string;
+      options_json: Array<{ key: string; text: string }> | null;
+      image_url: string | null;
+      image_alt: string | null;
+      stimulus_type: string;
+    }>();
+
+    if (stimulusIds.length > 0) {
+      const { data: stimuli, error: stimuliError } = await adminSupabase
+        .from("question_stimuli")
+        .select("id, content, options_json, image_url, image_alt, stimulus_type")
+        .in("id", stimulusIds);
+
+      if (stimuliError || !stimuli) {
+        console.error("[PeakScore] Error obteniendo estímulos de preguntas.", {
+          errorCode: stimuliError?.code ?? "UNKNOWN",
+        });
+        return NextResponse.json(
+          { success: false, error: "No fue posible obtener el contenido de las preguntas." },
+          { status: 500 }
+        );
+      }
+
+      stimulusMap = new Map(
+        stimuli.map((stimulus) => [stimulus.id, stimulus])
+      );
+    }
+
     const questionMap = new Map(
-      questions.map((question) => [
-        question.id,
-        question,
-      ])
+      questions.map((question) => {
+        const stimulus = question.stimulus_id
+          ? stimulusMap.get(question.stimulus_id) ?? null
+          : null;
+
+        return [
+          question.id,
+          {
+            ...question,
+            stimulus_content: stimulus?.content ?? null,
+            stimulus_options_json: stimulus?.options_json ?? null,
+            stimulus_image_url: stimulus?.image_url ?? null,
+            stimulus_image_alt: stimulus?.image_alt ?? null,
+            stimulus_type: stimulus?.stimulus_type ?? null,
+          },
+        ];
+      })
     );
 
     const orderedQuestions = relations

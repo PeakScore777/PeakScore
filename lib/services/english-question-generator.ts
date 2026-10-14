@@ -117,7 +117,7 @@ REGLAS PEDAGÓGICAS:
 - Las opciones incorrectas deben ser verosímiles, no absurdas, y no revelar la respuesta por longitud o gramática accidental.
 - No inventes datos que contradigan el estímulo.
 - Evita duplicar ideas, frases o respuestas entre ítems del mismo conjunto.
-- No generes URLs, enlaces ni imágenes falsas. "image_url" e "image_alt" deben ser null en esta fase.
+- No generes URLs, enlaces ni imágenes falsas. "image_url" e "image_alt" deben ser null en esta fase textual. En una fase posterior, un flujo separado generará y revisará imágenes originales para avisos/señales de la Parte 2 y, cuando aporten valor pedagógico, escenas de apoyo para conversaciones; nunca inventes rutas de archivos ni asignes imágenes que aún no existan.
 - Incluye la habilidad concreta evaluada en "skill".
 - Incluye explicación suficiente para justificar la respuesta correcta.
 - Las posiciones empiezan en 1 y son consecutivas dentro de cada estímulo.

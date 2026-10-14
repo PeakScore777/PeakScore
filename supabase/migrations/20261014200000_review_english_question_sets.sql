@@ -165,7 +165,7 @@ begin
           select 1
           from regexp_matches(
             v_stimulus.content,
-                    from regexp_matches(v_stimulus.content, '\[\[' || q.stimulus_position::text || '\]\]', 'g') as marker;
+            '\\[\\[' || q.stimulus_position::text || '\\]\\]',
             'g'
           ) as marker
         )

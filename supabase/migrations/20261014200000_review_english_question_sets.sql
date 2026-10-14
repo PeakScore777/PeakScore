@@ -115,7 +115,12 @@ begin
     if v_answer_count <> 5
        or exists (
          select 1
-         from jsonb_array_elements(v_stimulus.options_json) with ordinality item(opt, ord)
+          from jsonb_array_elements(
+            case
+              when jsonb_typeof(v_stimulus.options_json) = 'array' then v_stimulus.options_json
+              else '[]'::jsonb
+            end
+          ) with ordinality item(opt, ord)
          where jsonb_typeof(item.opt) is distinct from 'object'
             or upper(item.opt->>'key') is distinct from chr(64 + item.ord::integer)
             or char_length(trim(coalesce(item.opt->>'text', ''))) = 0
@@ -126,7 +131,12 @@ begin
          where q.stimulus_id = p_stimulus_id
            and not exists (
              select 1
-             from jsonb_array_elements(v_stimulus.options_json) item(opt)
+              from jsonb_array_elements(
+                case
+                  when jsonb_typeof(v_stimulus.options_json) = 'array' then v_stimulus.options_json
+                  else '[]'::jsonb
+                end
+              ) item(opt)
              where upper(item.opt->>'key') = q.correct_answer
            )
        ) then

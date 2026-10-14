@@ -790,29 +790,29 @@ export default function QuestionBankPage() {
 
                         <div className="mt-5 grid gap-3 md:grid-cols-2">
 
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <span className="font-semibold">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800">
+                            <span className="font-semibold text-slate-900">
                               A.
                             </span>{" "}
                             {question.option_a}
                           </div>
 
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <span className="font-semibold">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800">
+                            <span className="font-semibold text-slate-900">
                               B.
                             </span>{" "}
                             {question.option_b}
                           </div>
 
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <span className="font-semibold">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800">
+                            <span className="font-semibold text-slate-900">
                               C.
                             </span>{" "}
                             {question.option_c}
                           </div>
 
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <span className="font-semibold">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800">
+                            <span className="font-semibold text-slate-900">
                               D.
                             </span>{" "}
                             {question.option_d}

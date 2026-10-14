@@ -142,6 +142,8 @@ export function validateEnglishQuestion(
 
   if (!question.prompt.trim()) {
     errors.push("El enunciado no puede estar vacío.");
+  } else if (question.prompt.length > 10000) {
+    errors.push("El enunciado supera el límite de 10.000 caracteres.");
   }
 
   if (!question.stimulusId.trim()) {
@@ -154,10 +156,14 @@ export function validateEnglishQuestion(
 
   if (!question.skill.trim()) {
     errors.push("Debe especificarse la habilidad evaluada.");
+  } else if (question.skill.length > 200) {
+    errors.push("La habilidad evaluada no puede superar 200 caracteres.");
   }
 
   if (!question.explanation.trim()) {
     errors.push("Debe incluirse una explicación de la respuesta.");
+  } else if (question.explanation.length > 20000) {
+    errors.push("La explicación supera el límite de 20.000 caracteres.");
   }
 
   const expectedKeys = getEnglishOptionKeys(question.partNumber);
@@ -192,6 +198,10 @@ export function validateEnglishQuestion(
 
       if (question.options.some((option) => !option.text.trim())) {
         errors.push("Las opciones no pueden estar vacías.");
+      }
+
+      if (question.options.some((option) => option.text.length > 5000)) {
+        errors.push("Cada opción debe tener como máximo 5.000 caracteres.");
       }
     }
   }
@@ -300,6 +310,8 @@ export function validateEnglishStimulus(
 
   if (!stimulus.content.trim()) {
     errors.push("El contenido del estímulo no puede estar vacío.");
+  } else if (stimulus.content.length > 20000) {
+    errors.push("El estímulo supera el límite de 20.000 caracteres.");
   }
 
   if (part === 1) {
@@ -321,6 +333,10 @@ export function validateEnglishStimulus(
 
     if (options.some((option) => !option.text.trim())) {
       errors.push("Las palabras del banco no pueden estar vacías.");
+    }
+
+    if (options.some((option) => option.text.length > 1000)) {
+      errors.push("Cada palabra/opción del banco debe tener como máximo 1.000 caracteres.");
     }
   }
 

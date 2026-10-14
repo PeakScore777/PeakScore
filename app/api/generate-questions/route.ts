@@ -7195,6 +7195,19 @@ export async function POST(
             amount
           );
 
+          if (
+            parsedGeneration.result &&
+            difficulty !== "Mixta" &&
+            parsedGeneration.result.sets.some((set) =>
+              set.questions.some((question) => question.difficulty !== difficulty)
+            )
+          ) {
+            parsedGeneration = {
+              result: null,
+              errors: ["Todas las preguntas deben respetar la dificultad solicitada."],
+            };
+          }
+
           if (parsedGeneration.result) break;
           generationErrorMessages = parsedGeneration.errors;
         } catch (error) {

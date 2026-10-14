@@ -237,8 +237,20 @@ export function validateEnglishQuestionSet(
     errors.push("Las posiciones de las preguntas dentro del estímulo no pueden repetirse.");
   }
 
+  const orderedPositions = [...positions].sort((a, b) => a - b);
+  if (orderedPositions.some((position, index) => position !== index + 1)) {
+    errors.push("Las posiciones de los ítems deben ser consecutivas desde 1.");
+  }
+
   if (part === 1 && questions.length !== 5) {
     errors.push("La Parte 1 debe tener cinco descripciones para el banco de siete palabras.");
+  }
+
+  if (part === 1) {
+    const usedWords = new Set(questions.map((question) => question.correctAnswer));
+    if (usedWords.size !== 5) {
+      errors.push("En la Parte 1 cada una de las cinco descripciones debe usar una palabra distinta del banco.");
+    }
   }
 
   if (part === 2 || part === 3) {

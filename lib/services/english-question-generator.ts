@@ -20,14 +20,32 @@ export interface EnglishGenerationResult {
 
 type RequestedDifficulty = "Fácil" | "Media" | "Difícil" | "Mixta";
 
-function expectedSetCount(part: EnglishPart, amount: number): number {
+function expectedSetCount(part: EnglishPart, amount: number): number | null {
+  if (part === 1) return amount / 5;
   if (part === 2 || part === 3) return amount;
-  return amount / 5;
+  // For reading and cloze parts, stimulus lengths vary by text.
+  return null;
 }
 
-function expectedQuestionCountPerSet(part: EnglishPart): number {
+function expectedQuestionCountPerSet(part: EnglishPart): number | null {
+  if (part === 1) return 5;
   if (part === 2 || part === 3) return 1;
-  return 5;
+  return null;
+}
+
+function getQuestionRangePerSet(part: EnglishPart): { min: number; max: number } | null {
+  switch (part) {
+    case 4:
+      return { min: 4, max: 8 };
+    case 5:
+      return { min: 4, max: 7 };
+    case 6:
+      return { min: 2, max: 4 };
+    case 7:
+      return { min: 4, max: 8 };
+    default:
+      return null;
+  }
 }
 
 export function validateEnglishGenerationRequest(
@@ -38,13 +56,13 @@ export function validateEnglishGenerationRequest(
     return "La cantidad debe ser un entero entre 1 y 100.";
   }
 
-  if ([1, 4, 5, 6, 7].includes(part) && amount % 5 !== 0) {
-    const groupName = part === 1
-      ? "cinco descripciones y un banco A–G"
-      : part === 4 || part === 7
-        ? "cinco espacios por texto cloze"
-        : "cinco preguntas por texto de lectura";
-    return `La Parte ${part} se genera en conjuntos completos de ${groupName}. Usa 5, 10, 15… preguntas.`;
+  if (part === 1 && amount % 5 !== 0) {
+    return "La Parte 1 requiere múltiplos de cinco para conservar cada banco A–G con sus cinco descripciones. Usa 5, 10, 15… preguntas.";
+  }
+
+  const groupRange = getQuestionRangePerSet(part);
+  if (groupRange && amount < groupRange.min) {
+    return `La Parte ${part} requiere al menos ${groupRange.min} preguntas para formar un conjunto de lectura/cloze completo.`;
   }
 
   return null;
@@ -59,6 +77,10 @@ export function buildEnglishGenerationPrompt(
   const stimulusType = getEnglishStimulusType(part);
   const setCount = expectedSetCount(part, amount);
   const itemCount = expectedQuestionCountPerSet(part);
+  const questionRange = getQuestionRangePerSet(part);
+  const setInstructions = setCount === null
+    ? `La cantidad de conjuntos es flexible. Crea tantos estímulos completos como necesites; cada conjunto debe tener entre ${questionRange?.min} y ${questionRange?.max} preguntas y la suma de todos debe ser exactamente ${amount}.`
+    : `Devuelve exactamente ${setCount} conjuntos, con ${itemCount} ítem(s) por conjunto.`;
 
   const structure = {
     1: "Cada conjunto debe tener un banco compartido de exactamente siete palabras/opciones A-G y exactamente cinco descripciones en inglés. Cada descripción es un ítem puntuable independiente. Dos palabras del banco no se usan. No incluyas opciones individuales en las preguntas.",
@@ -82,7 +104,8 @@ Formato interno obligatorio: ${format}
 Tipo de estímulo: ${stimulusType}
 Cantidad total solicitada: ${amount} ítems puntuables.
 Conjuntos de estímulo que debes devolver: ${setCount}.
-Ítems por conjunto: ${itemCount}.
+Regla de agrupación: ${setInstructions}
+Ítems por conjunto fijo: ${itemCount ?? "variable según el texto, con rangos editoriales por parte"}.
 Dificultad solicitada: ${difficulty}. Si es Mixta, distribuye Fácil, Media y Difícil de manera razonable. Si es Fácil, Media o Difícil, todas las preguntas deben usar exactamente esa dificultad.
 
 TAREA DE ESTA PARTE:
@@ -132,7 +155,7 @@ ESQUEMA EXACTO:
   ]
 }
 
-Devuelve exactamente ${setCount} conjuntos y exactamente ${amount} ítems puntuables en total. No reduzcas cantidades.
+${setCount === null ? "Devuelve tantos conjuntos como sean necesarios, respetando la cantidad de preguntas por estímulo indicada arriba." : `Devuelve exactamente ${setCount} conjuntos.`} Devuelve exactamente ${amount} ítems puntuables en total. No reduzcas cantidades.
 `.trim();
 }
 
@@ -176,11 +199,12 @@ export function parseAndValidateEnglishGeneration(
   const rawSets = (parsed as { sets: unknown[] }).sets;
   const expectedSets = expectedSetCount(part, amount);
   const expectedPerSet = expectedQuestionCountPerSet(part);
+  const questionRange = getQuestionRangePerSet(part);
   const errors: string[] = [];
   const sets: EnglishGeneratedSet[] = [];
   let totalQuestions = 0;
 
-  if (rawSets.length !== expectedSets) {
+  if (expectedSets !== null && rawSets.length !== expectedSets) {
     errors.push(`Se esperaban ${expectedSets} conjuntos y se recibieron ${rawSets.length}.`);
   }
 
@@ -200,8 +224,19 @@ export function parseAndValidateEnglishGeneration(
       return;
     }
 
-    if (item.questions.length !== expectedPerSet) {
+    if (expectedPerSet !== null && item.questions.length !== expectedPerSet) {
       errors.push(`El conjunto ${setIndex + 1} debe contener ${expectedPerSet} ítems.`);
+      return;
+    }
+
+    if (
+      expectedPerSet === null &&
+      questionRange &&
+      (item.questions.length < questionRange.min || item.questions.length > questionRange.max)
+    ) {
+      errors.push(
+        `El conjunto ${setIndex + 1} de la Parte ${part} debe contener entre ${questionRange.min} y ${questionRange.max} ítems para mantener un estímulo completo.`,
+      );
       return;
     }
 

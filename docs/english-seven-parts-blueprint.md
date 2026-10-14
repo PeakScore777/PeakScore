@@ -66,7 +66,7 @@ La generación de Inglés debe producir conjuntos completos, no preguntas aislad
 - Parte 6: un texto de lectura y preguntas inferenciales, cada una con cuatro opciones.
 - Parte 7: un texto cloze y un ítem por espacio, cada uno con cuatro opciones.
 
-- La generación editorial en PeakScore agrupa las Partes 1, 4, 5, 6 y 7 en lotes de cinco ítems por estímulo. Esta es una decisión interna para mantener textos y bancos completos, no un conteo oficial por parte del ICFES. Las Partes 2 y 3 usan un ítem por aviso/conversación y permiten pedir varios estímulos en una generación.
+- La Parte 1 se genera en grupos fijos de cinco descripciones y siete palabras compartidas A–G. Las Partes 2 y 3 usan un ítem por aviso/conversación. En las Partes 4–7 la cantidad de preguntas por estímulo puede variar según el texto, y el generador valida que la suma coincida con la cantidad solicitada. Los rangos por conjunto que usa el generador son límites editoriales internos para evitar textos incompletos; no se presentan como cantidades oficiales del ICFES.
 - Cada estímulo almacena `expected_question_count`; el ensamblador de simulacros compara ese valor con los ítems activos realmente disponibles antes de incluir el grupo. Así no se selecciona un cloze, lectura o matching parcialmente desactivado.
 
 Un conjunto se guarda de manera consistente: primero se crea el estímulo y después todos los ítems que lo referencian; si falla la escritura de algún ítem, el conjunto no debe quedar parcialmente publicado. Los conjuntos generados se guardan inicialmente inactivos. Solo después de una revisión editorial explícita, un RPC valida de nuevo el conjunto y activa todos sus ítems en una sola operación.
@@ -86,7 +86,7 @@ Un conjunto se guarda de manera consistente: primero se crea el estímulo y desp
 - El banco debe identificar claramente la parte, el tipo de estímulo, el contenido compartido y los ítems que pertenecen al conjunto.
 - En el simulacro de una pregunta por pantalla, mostrar el estímulo completo en cada ítem asociado, para que el estudiante no pierda el contexto al navegar. Para cloze, resaltar el marcador del espacio correspondiente.
 - Parte 1 muestra las siete palabras etiquetadas A–G junto a la descripción actual; no se deben convertir esas palabras en cuatro opciones tradicionales.
-- Parte 2 debe admitir un aviso en texto o imagen accesible con texto alternativo.
+- Parte 2 debe admitir un aviso en texto o imagen accesible con texto alternativo. Después de estabilizar y revisar los primeros conjuntos textuales, crear imágenes originales para avisos/señales (y, si realmente mejora la comprensión, ilustraciones de apoyo para conversaciones). Cada imagen debe tener revisión editorial, texto alternativo, ubicación de archivo verificada y vínculo explícito al estímulo; no se deben usar URLs inventadas ni pedir al generador de preguntas que finja que una imagen existe.
 - Parte 3 presenta los turnos de conversación de forma legible.
 - Partes 4 y 7 mantienen el texto con el espacio actual destacado y muestran las opciones propias de ese espacio.
 - Partes 5 y 6 muestran el texto de lectura y la pregunta concreta con su número de opciones correcto.
@@ -98,7 +98,7 @@ La futura función de IA que explique preguntas falladas se implementará en una
 
 ## 8. Orden seguro de implementación
 
-1. Revisar el diff de la rama y conservar el respaldo sin modificarlo. La guía vigente 2026-2 del ICFES describe los siete formatos y sus porcentajes, pero no fija en la tabla un número entero de preguntas para cada parte; el agrupamiento de cinco ítems en PeakScore es una regla editorial interna. Fuente: https://www.icfes.gov.co/wp-content/uploads/2026/03/17-marzo-guia-de-orientacion-saber-11-2026-2.pdf
+1. Revisar el diff de la rama y conservar el respaldo sin modificarlo. La guía oficial Saber 11 2026-2 confirma 55 preguntas de Inglés en el cuadernillo estándar, siete partes y estos porcentajes aproximados: 11 %, 11 %, 11 %, 18 %, 16 %, 11 % y 22 %. También confirma que la Parte 1 usa siete palabras A–G para cinco descripciones; Partes 2–5 tienen tres opciones y Partes 6–7 cuatro. La tabla oficial no asigna cantidades enteras exactas por parte. Fuente: https://www.icfes.gov.co/wp-content/uploads/2026/03/17-marzo-guia-de-orientacion-saber-11-2026-2.pdf
 2. Corregir y simplificar el contrato de datos antes de aplicar cualquier migración: una sola clave de respuesta, agrupación explícita y restricciones coherentes.
 3. Implementar validación de conjuntos de estímulos e ítems.
 4. Adaptar el generador existente solo en la ruta de Inglés, preservando la generación legacy de las otras materias.
@@ -107,6 +107,16 @@ La futura función de IA que explique preguntas falladas se implementará en una
 7. Ejecutar pruebas en entorno de desarrollo: preguntas legacy A–D, Parte 1 A–G, Partes 2–5 A–C, Partes 6–7 A–D, persistencia, recuperación, finalización, calificación, estímulos compartidos y selección de grupos.
 8. Solo después de pruebas satisfactorias, crear preguntas originales revisadas y activar Inglés en una rama de integración.
 
-## 9. Límites actuales
+## 9. Investigación oficial y decisiones de contenido (octubre de 2026)
+
+- Fuente principal: [Guía de orientación Saber 11 2026-2 del ICFES](https://www.icfes.gov.co/wp-content/uploads/2026/03/17-marzo-guia-de-orientacion-saber-11-2026-2.pdf), sección E. Inglés, páginas impresas 63–65.
+- El cuadernillo estándar contiene 55 preguntas de Inglés. La guía vigente define siete partes y porcentajes aproximados: P1 11 %, P2 11 %, P3 11 %, P4 18 %, P5 16 %, P6 11 % y P7 22 %. No publica una cantidad entera exacta por parte, así que PeakScore no debe vender una distribución redondeada como oficial.
+- Parte 1: siete palabras A–G y cinco descripciones; dos palabras sobran. Partes 2, 3, 4 y 5 usan A–C. Partes 6 y 7 usan A–D.
+- Parte 2 evalúa propósito comunicativo del aviso y el lugar en el que puede aparecer. Parte 3 evalúa la intervención adecuada en una conversación. Parte 4 exige elegir la palabra gramaticalmente correcta para cada espacio. Parte 5 pide paráfrasis de información literal. Parte 6 pregunta por intención del autor e inferencias sobre aspectos generales o particulares. Parte 7 combina gramática y léxico en contexto.
+- La guía señala que la prueba se alinea con los Estándares Básicos de Competencias en Lenguas Extranjeras del MEN y con el MCER; incluye desempeño Pre-A1 para estudiantes por debajo de A1. La generación debe variar vocabulario, situaciones, funciones comunicativas y dificultad, no asumir que toda pregunta es B1.
+- El generador debe producir primero estímulos y preguntas originales en texto. Tras revisar el funcionamiento del banco, se creará una fase de imágenes originales: especialmente avisos/señales de Parte 2, con texto alternativo y vínculo a estímulo; escenas ilustradas para conversaciones solo cuando aporten valor real. No copiar imágenes, avisos ni preguntas de cuadernillos oficiales.
+- Los tamaños de grupos de lectura/cloze definidos en el generador son restricciones editoriales internas, no cantidades oficiales. Se deben ajustar con pruebas de usabilidad y con la revisión del contenido fuente vigente.
+
+## 10. Límites actuales
 
 Este documento es la especificación de trabajo. No significa que el generador, el banco, la selección de simulacros o la interfaz estén completos. Las migraciones no deben aplicarse a producción antes de revisar su SQL y probarlas en una base separada. La tutoría por IA está expresamente fuera de alcance en esta fase.

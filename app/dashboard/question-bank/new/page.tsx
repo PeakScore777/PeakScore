@@ -233,8 +233,18 @@ function NewQuestionPageContent() {
       return;
     }
 
-    if (aiForm.subject === "Inglés" && aiForm.english_part === "1" && amount % 5 !== 0) {
-      alert("La Parte 1 se genera en conjuntos completos de cinco descripciones. Usa 5, 10, 15… preguntas.");
+    if (
+      aiForm.subject === "Inglés" &&
+      ["1", "4", "5", "6", "7"].includes(aiForm.english_part) &&
+      amount % 5 !== 0
+    ) {
+      alert(
+        aiForm.english_part === "1"
+          ? "La Parte 1 se genera en conjuntos de cinco descripciones y un banco A–G."
+          : aiForm.english_part === "4" || aiForm.english_part === "7"
+            ? "Esta parte se genera en textos cloze completos de cinco espacios."
+            : "Esta parte se genera en conjuntos de cinco preguntas por texto de lectura."
+      );
       return;
     }
 

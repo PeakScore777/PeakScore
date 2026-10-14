@@ -58,8 +58,8 @@ begin
     v_stimulus := v_set->'stimulus';
     v_questions := v_set->'questions';
 
-    if jsonb_typeof(v_stimulus) <> 'object'
-       or jsonb_typeof(v_questions) <> 'array'
+    if jsonb_typeof(v_stimulus) is distinct from 'object'
+       or jsonb_typeof(v_questions) is distinct from 'array'
        or jsonb_array_length(v_questions) < 1 then
       raise exception 'INVALID_ENGLISH_STIMULUS_SET';
     end if;
@@ -68,7 +68,7 @@ begin
     v_content := v_stimulus->>'content';
     v_question_count := jsonb_array_length(v_questions);
 
-    if v_part not between 1 and 7
+    if v_part is null or v_part not between 1 and 7
        or v_content is null
        or char_length(trim(v_content)) < 1
        or char_length(v_content) > 20000 then
@@ -93,7 +93,7 @@ begin
       else 'reading_text'
     end;
 
-    if v_stimulus->>'stimulus_type' <> v_expected_stimulus_type then
+    if v_stimulus->>'stimulus_type' is distinct from v_expected_stimulus_type then
       raise exception 'INVALID_ENGLISH_STIMULUS_TYPE';
     end if;
 
@@ -101,7 +101,7 @@ begin
 
     if v_part = 1 then
       v_expected_options := 7;
-      if jsonb_typeof(v_options) <> 'array'
+      if jsonb_typeof(v_options) is distinct from 'array'
          or jsonb_array_length(v_options) <> 7
          or v_question_count <> 5 then
         raise exception 'INVALID_ENGLISH_PART_1_SET';
@@ -163,7 +163,7 @@ begin
       v_options := v_question->'options_json';
 
       if (v_question->>'english_part')::integer <> v_part
-         or v_question->>'question_format' <> v_expected_format
+         or v_question->>'question_format' is distinct from v_expected_format
          or v_position is null
          or v_position < 1
          or char_length(trim(coalesce(v_question->>'question', ''))) < 1
@@ -187,7 +187,7 @@ begin
           raise exception 'INVALID_ENGLISH_CORRECT_ANSWER';
         end if;
       else
-        if jsonb_typeof(v_options) <> 'array'
+        if jsonb_typeof(v_options) is distinct from 'array'
            or jsonb_array_length(v_options) <> v_expected_options then
           raise exception 'INVALID_ENGLISH_OPTIONS_COUNT';
         end if;

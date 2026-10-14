@@ -83,7 +83,7 @@ Tipo de estímulo: ${stimulusType}
 Cantidad total solicitada: ${amount} ítems puntuables.
 Conjuntos de estímulo que debes devolver: ${setCount}.
 Ítems por conjunto: ${itemCount}.
-Dificultad solicitada: ${difficulty}. Si es Mixta, distribuye Fácil, Media y Difícil de manera razonable.
+Dificultad solicitada: ${difficulty}. Si es Mixta, distribuye Fácil, Media y Difícil de manera razonable. Si es Fácil, Media o Difícil, todas las preguntas deben usar exactamente esa dificultad.
 
 TAREA DE ESTA PARTE:
 ${structure}

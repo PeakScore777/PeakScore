@@ -142,7 +142,7 @@ alter table public.questions
   add constraint questions_stimulus_id_fkey
   foreign key (stimulus_id)
   references public.question_stimuli(id)
-  on delete set null;
+  on delete restrict;
 
 create index if not exists questions_stimulus_id_idx
   on public.questions(stimulus_id)

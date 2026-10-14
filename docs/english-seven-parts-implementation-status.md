@@ -11,7 +11,7 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 
 - `lib/types/english-assessment.ts`: tipos compartidos para partes 1–7, formatos, opciones A–G, estímulos y validación del conjunto completo (incluye cinco descripciones únicas para el banco A–G y marcadores cloze).
 - `lib/services/english-question-generator.ts`: prompt y parser estructurado para generar conjuntos por parte y rechazar cantidades, opciones, claves o estímulos que no cumplan el contrato.
-- `supabase/migrations/20261014180000_add_english_assessment_contract.sql`: tabla `question_stimuli` y columnas aditivas en `questions` (`question_format`, `english_part`, `stimulus_id`, `stimulus_position`, `options_json`, `question_metadata`). Conserva las columnas legacy y permite opciones estructuradas sin fingir cuatro opciones para formatos de tres opciones o Parte 1.
+- `supabase/migrations/20261014180000_add_english_assessment_contract.sql`: tabla `question_stimuli` con `expected_question_count` y columnas aditivas en `questions` (`question_format`, `english_part`, `stimulus_id`, `stimulus_position`, `options_json`, `question_metadata`). Conserva las columnas legacy y permite opciones estructuradas sin fingir cuatro opciones para formatos de tres opciones o Parte 1.
 - `supabase/migrations/20261014190000_validate_format_aware_answers.sql`: valida respuestas contra las opciones del ítem o banco compartido, preservando las comprobaciones existentes de propiedad, intento, pertenencia al simulacro y calificación.
 - `supabase/migrations/20261014193000_save_english_question_sets_atomic.sql`: publica estímulos y todos sus ítems dentro de una única transacción; solo `service_role` puede ejecutar el RPC.
 - `app/api/simulations/[id]/progress/route.ts` y `app/api/simulations/[id]/finish/route.ts`: aceptan letras A–G en la validación superficial; la validación autoritativa corresponde a PostgreSQL.
@@ -36,7 +36,7 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 
 ## Validaciones pendientes antes de integrar
 
-1. Revisar el diff completo de las dos migraciones y ejecutar ambas primero en una base de prueba.
+1. Revisar el diff completo de las tres migraciones y ejecutar ambas primero en una base de prueba.
 2. Ejecutar ESLint y TypeScript/build con el entorno local del proyecto.
 3. Probar preguntas legacy A–D: cargar, guardar progreso, recuperar, finalizar y calificar.
 4. Probar pregunta estructurada con 3 opciones, con 4 opciones y un banco compartido A–G.
@@ -50,7 +50,7 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 
 ## Advertencias de auditoría
 
-- El generador sigue siendo una tarea pendiente: estos cambios no producen preguntas nuevas por sí solos.
+- La rama ya incluye una ruta de generación estructurada para Inglés, pero todavía no se ha ejecutado ni probado contra las migraciones; no afirmar que funciona en producción.
 - La migración de funciones SQL conserva el algoritmo de calificación previo; se debe revisar y probar en base de prueba antes de aplicarla a producción.
 - La lista de opciones de la interfaz supone que las opciones estructuradas están ordenadas por clave A, B, C…; la validación de generación debe exigir ese orden.
 - No afirmar que Inglés está listo para producción hasta completar las pruebas anteriores.

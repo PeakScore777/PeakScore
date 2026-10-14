@@ -118,7 +118,7 @@ function selectCompleteEnglishQuestionGroups(
 
       if (part === 4 || part === 7) {
         const content = first.stimulus_content ?? "";
-        const markers = [...content.matchAll(/\\[\\[(\\d+)\\]\\]/g)]
+        const markers = [...content.matchAll(/\[\[(\d+)\]\]/g)]
           .map((match) => Number(match[1]))
           .sort((a, b) => a - b);
 

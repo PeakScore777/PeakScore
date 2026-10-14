@@ -215,7 +215,7 @@ begin
 
       if v_part in (4, 7) and not exists (
         select 1
-        from regexp_matches(v_content, '\\[\\[' || v_position::text || '\\]\\]', 'g') as marker
+        from regexp_matches(v_content, '\[\[' || v_position::text || '\]\]', 'g') as marker;
       ) then
         raise exception 'INVALID_ENGLISH_CLOZE_POSITION';
       end if;

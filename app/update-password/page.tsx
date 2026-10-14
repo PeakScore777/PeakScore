@@ -1,16 +1,18 @@
+
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowLeft,
   Check,
   Eye,
   EyeOff,
   LockKeyhole,
+  LoaderCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
-import PeakScoreLogo from "@/components/PeakScoreLogo";
 
 const MIN_PASSWORD_LENGTH = 15;
 
@@ -19,11 +21,7 @@ function getRecoveryErrorMessage(error: unknown) {
     return "El enlace de recuperación no es válido o ya no está disponible.";
   }
 
-  const value = error as {
-    code?: string;
-    message?: string;
-  };
-
+  const value = error as { code?: string; message?: string };
   const code = value.code ?? "";
   const message = (value.message ?? "").toLowerCase();
 
@@ -38,6 +36,67 @@ function getRecoveryErrorMessage(error: unknown) {
   return "No pudimos validar el enlace de recuperación. Solicita un nuevo enlace e inténtalo nuevamente.";
 }
 
+function PasswordRequirements({
+  password,
+  confirmation,
+}: {
+  password: string;
+  confirmation: string;
+}) {
+  const requirements = [
+    {
+      label: "15 caracteres como mínimo",
+      passed: password.length >= MIN_PASSWORD_LENGTH,
+    },
+    { label: "Una letra mayúscula", passed: /[A-Z]/.test(password) },
+    { label: "Una letra minúscula", passed: /[a-z]/.test(password) },
+    { label: "Un número", passed: /\d/.test(password) },
+    {
+      label: "Un símbolo",
+      passed: /[^A-Za-z0-9]/.test(password),
+    },
+    {
+      label: "Las contraseñas coinciden",
+      passed: password.length > 0 && password === confirmation,
+    },
+  ];
+
+  const strength = requirements.slice(0, 5).filter((item) => item.passed).length;
+
+  return (
+    <div className="rounded-lg border border-white/[0.09] bg-white/[0.025] p-3">
+      <div className="mb-2 flex gap-1">
+        {requirements.slice(0, 5).map((item, index) => (
+          <span
+            key={item.label}
+            className={`h-[3px] flex-1 rounded-full ${
+              strength > index ? "bg-[#C5F467]" : "bg-white/10"
+            }`}
+          />
+        ))}
+      </div>
+
+      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-white/45">
+        Requisitos de contraseña
+      </p>
+
+      <div className="grid grid-cols-2 gap-x-2 gap-y-1.5">
+        {requirements.map((item) => (
+          <p
+            key={item.label}
+            className={`flex items-center gap-1.5 text-[10px] leading-4 ${
+              item.passed ? "text-[#C5F467]" : "text-white/45"
+            }`}
+          >
+            <Check size={11} className="shrink-0" />
+            {item.label}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function UpdatePasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
@@ -47,7 +106,6 @@ export default function UpdatePasswordPage() {
   const [ready, setReady] = useState(false);
   const [checkingRecovery, setCheckingRecovery] = useState(true);
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -71,30 +129,18 @@ export default function UpdatePasswordPage() {
           return;
         }
 
-        /*
-         * @supabase/ssr utiliza PKCE. Cuando Supabase devuelve
-         * un auth code después de abrir el enlace de recuperación,
-         * debemos intercambiarlo por una sesión antes de permitir
-         * el cambio de contraseña.
-         */
         if (code) {
           const { error: exchangeError } =
             await supabase.auth.exchangeCodeForSession(code);
 
           if (exchangeError) {
             if (mounted) {
-              setError(
-                getRecoveryErrorMessage(exchangeError)
-              );
+              setError(getRecoveryErrorMessage(exchangeError));
               setCheckingRecovery(false);
             }
             return;
           }
 
-          /*
-           * Nunca dejamos el código de recuperación en la barra
-           * de direcciones después del intercambio.
-           */
           window.history.replaceState(
             {},
             document.title,
@@ -102,18 +148,11 @@ export default function UpdatePasswordPage() {
           );
         }
 
-        /*
-         * Comprobamos que exista una sesión válida después del
-         * intercambio. El cambio de contraseña solo se permite
-         * cuando Supabase Auth tiene una sesión recuperada.
-         */
         const {
           data: { session },
         } = await supabase.auth.getSession();
 
-        if (!mounted) {
-          return;
-        }
+        if (!mounted) return;
 
         if (!session) {
           setError(
@@ -145,18 +184,11 @@ export default function UpdatePasswordPage() {
       }
     }
 
-    const {
-      data: listener,
-    } = supabase.auth.onAuthStateChange(
+    const { data: listener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        if (!mounted) {
-          return;
-        }
+        if (!mounted) return;
 
-        if (
-          event === "PASSWORD_RECOVERY" ||
-          Boolean(session)
-        ) {
+        if (event === "PASSWORD_RECOVERY" || Boolean(session)) {
           setReady(true);
           setCheckingRecovery(false);
           setError("");
@@ -172,9 +204,7 @@ export default function UpdatePasswordPage() {
     };
   }, []);
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
 
@@ -207,45 +237,28 @@ export default function UpdatePasswordPage() {
     setSaving(true);
 
     try {
-      const { error: updateError } =
-        await supabase.auth.updateUser({
-          password,
-        });
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
 
       if (updateError) {
-        console.error(
-          "[PeakScore] Error actualizando contraseña.",
-          {
-            errorCode:
-              updateError.code ?? "UNKNOWN",
-            status:
-              updateError.status ?? "UNKNOWN",
-          }
-        );
+        console.error("[PeakScore] Error actualizando contraseña.", {
+          errorCode: updateError.code ?? "UNKNOWN",
+          status: updateError.status ?? "UNKNOWN",
+        });
 
-        setError(
-          getRecoveryErrorMessage(updateError)
-        );
+        setError(getRecoveryErrorMessage(updateError));
         return;
       }
 
-      /*
-       * El cambio de contraseña es una operación sensible.
-       * Revocamos las sesiones existentes para obligar a iniciar
-       * sesión nuevamente con la nueva contraseña.
-       */
-      const { error: signOutError } =
-        await supabase.auth.signOut({
-          scope: "global",
-        });
+      const { error: signOutError } = await supabase.auth.signOut({
+        scope: "global",
+      });
 
       if (signOutError) {
         console.warn(
           "[PeakScore] La contraseña se actualizó, pero no fue posible revocar todas las sesiones.",
-          {
-            errorCode:
-              signOutError.code ?? "UNKNOWN",
-          }
+          { errorCode: signOutError.code ?? "UNKNOWN" }
         );
       }
 
@@ -273,105 +286,116 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-md items-center justify-center">
-        <section className="w-full rounded-[28px] border border-slate-200 bg-white p-7 shadow-[0_30px_90px_rgba(15,23,42,0.12)] sm:p-9">
-          <PeakScoreLogo
-            variant="dark"
-            showTagline={false}
-            compact
-          />
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050607] px-4 py-6 text-white sm:px-6">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(197,244,103,0.07),transparent_55%)]"
+      />
+
+      <section className="relative z-10 w-full max-w-[420px] overflow-hidden rounded-2xl border border-white/10 bg-[#090B0D] shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+        <div className="h-[3px] bg-gradient-to-r from-[#C5F467] via-[#C5F467]/30 to-transparent" />
+
+        <div className="p-5 sm:p-7">
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 text-xs text-white/45 transition hover:text-[#C5F467]"
+          >
+            <ArrowLeft size={14} />
+            Volver al inicio de sesión
+          </Link>
 
           {success ? (
-            <div className="mt-8">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
-                <Check size={22} />
+            <div className="pt-6">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#C5F467]/20 bg-[#C5F467]/10 text-[#C5F467]">
+                <Check size={21} />
               </div>
 
-              <h1 className="mt-5 text-3xl font-black text-slate-950">
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight">
                 Contraseña actualizada
               </h1>
 
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                Tu contraseña fue cambiada correctamente y
-                las sesiones activas fueron revocadas.
-                Inicia sesión nuevamente.
+              <p className="mt-2 text-sm leading-6 text-white/55">
+                Tu contraseña se cambió correctamente. Inicia sesión nuevamente
+                con tus nuevas credenciales.
               </p>
 
               <Link
                 href="/login"
-                className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700"
+                className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#C5F467] text-sm font-semibold text-[#10130A] transition hover:bg-[#D6FF87]"
               >
                 Iniciar sesión
                 <ArrowRight size={15} />
               </Link>
             </div>
           ) : checkingRecovery ? (
-            <div className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 p-5">
-              <div className="flex items-center gap-3">
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
-                <p className="text-sm font-bold text-blue-950">
-                  Validando enlace...
-                </p>
+            <div className="pt-7">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#C5F467]/20 bg-[#C5F467]/10 text-[#C5F467]">
+                <LoaderCircle size={19} className="animate-spin" />
               </div>
 
-              <p className="mt-3 text-xs leading-5 text-blue-800">
-                Estamos verificando de forma segura tu enlace
-                de recuperación.
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+                Validando enlace
+              </h1>
+
+              <p className="mt-2 text-sm leading-5 text-white/50">
+                Estamos verificando de forma segura tu enlace de recuperación.
               </p>
             </div>
           ) : !ready ? (
-            <div className="mt-8 rounded-2xl border border-amber-100 bg-amber-50 p-5">
-              <h1 className="text-lg font-black text-amber-950">
+            <div className="pt-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-400/20 bg-amber-400/10 text-amber-300">
+                <LockKeyhole size={19} />
+              </div>
+
+              <h1 className="mt-4 text-2xl font-semibold tracking-tight">
                 Enlace no disponible
               </h1>
 
-              <p className="mt-2 text-sm leading-6 text-amber-900">
+              <p className="mt-2 text-sm leading-6 text-white/55">
                 {error ||
                   "El enlace de recuperación puede haber expirado o ya haber sido utilizado."}
               </p>
 
               <Link
                 href="/forgot-password"
-                className="mt-4 inline-flex text-xs font-bold text-amber-900 underline"
+                className="mt-5 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#C5F467] text-sm font-semibold text-[#10130A] transition hover:bg-[#D6FF87]"
               >
                 Solicitar otro enlace
+                <ArrowRight size={15} />
               </Link>
             </div>
           ) : (
             <>
-              <div className="mt-8">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                  <LockKeyhole size={22} />
+              <div className="mt-6">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#C5F467]/20 bg-[#C5F467]/10 text-[#C5F467]">
+                  <LockKeyhole size={19} />
                 </div>
 
-                <h1 className="mt-5 text-3xl font-black text-slate-950">
+                <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#C5F467]">
+                  Seguridad de tu cuenta
+                </p>
+
+                <h1 className="mt-1.5 text-[27px] font-semibold leading-tight tracking-[-0.04em]">
                   Nueva contraseña
                 </h1>
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Usa una contraseña larga y única. No
-                  reutilices contraseñas de otros servicios.
+                <p className="mt-2 text-sm leading-5 text-white/50">
+                  Usa una contraseña larga y única. No reutilices contraseñas
+                  de otros servicios.
                 </p>
               </div>
 
-              <form
-                onSubmit={handleSubmit}
-                className="mt-7 space-y-5"
-              >
+              <form onSubmit={handleSubmit} className="mt-5 space-y-3">
                 <PasswordField
                   id="password"
                   label="Nueva contraseña"
                   value={password}
                   show={showPassword}
-                  onToggle={() =>
-                    setShowPassword((value) => !value)
-                  }
+                  onToggle={() => setShowPassword((value) => !value)}
                   onChange={(value) => {
                     setPassword(value);
                     setError("");
                   }}
-                  autoComplete="new-password"
                 />
 
                 <PasswordField
@@ -386,81 +410,18 @@ export default function UpdatePasswordPage() {
                     setConfirmation(value);
                     setError("");
                   }}
-                  autoComplete="new-password"
                 />
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600">
-                  <p className="font-bold text-slate-800">
-                    Requisitos
-                  </p>
-
-                  <ul className="mt-2 space-y-1">
-                    <li
-                      className={
-                        password.length >=
-                        MIN_PASSWORD_LENGTH
-                          ? "text-emerald-600"
-                          : ""
-                      }
-                    >
-                      • Mínimo 15 caracteres
-                    </li>
-
-                    <li
-                      className={
-                        /[A-Z]/.test(password)
-                          ? "text-emerald-600"
-                          : ""
-                      }
-                    >
-                      • Una mayúscula
-                    </li>
-
-                    <li
-                      className={
-                        /[a-z]/.test(password)
-                          ? "text-emerald-600"
-                          : ""
-                      }
-                    >
-                      • Una minúscula
-                    </li>
-
-                    <li
-                      className={
-                        /\d/.test(password)
-                          ? "text-emerald-600"
-                          : ""
-                      }
-                    >
-                      • Un número
-                    </li>
-
-                    <li
-                      className={
-                        /[^A-Za-z0-9]/.test(password)
-                          ? "text-emerald-600"
-                          : ""
-                      }
-                    >
-                      • Un símbolo
-                    </li>
-
-                    <li
-                      className={
-                        password.length > 0 &&
-                        password === confirmation
-                          ? "text-emerald-600"
-                          : ""
-                      }
-                    >
-                      • Las dos contraseñas deben coincidir
-                    </li>
-                  </ul>
-                </div>
+                <PasswordRequirements
+                  password={password}
+                  confirmation={confirmation}
+                />
 
                 {error && (
-                  <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-xs font-semibold leading-5 text-red-600">
+                  <div
+                    role="alert"
+                    className="rounded-lg border border-red-400/20 bg-red-400/[0.08] px-3 py-2.5 text-xs leading-5 text-red-200"
+                  >
                     {error}
                   </div>
                 )}
@@ -469,21 +430,32 @@ export default function UpdatePasswordPage() {
                   type="submit"
                   disabled={
                     saving ||
-                    password.length <
-                      MIN_PASSWORD_LENGTH ||
+                    password.length < MIN_PASSWORD_LENGTH ||
                     password !== confirmation
                   }
-                  className="flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#C5F467] text-sm font-semibold text-[#10130A] transition hover:bg-[#D6FF87] disabled:cursor-not-allowed disabled:opacity-45"
                 >
-                  {saving
-                    ? "Actualizando..."
-                    : "Actualizar contraseña"}
+                  {saving ? (
+                    <>
+                      <LoaderCircle size={15} className="animate-spin" />
+                      Actualizando...
+                    </>
+                  ) : (
+                    <>
+                      Actualizar contraseña
+                      <ArrowRight size={15} />
+                    </>
+                  )}
                 </button>
               </form>
             </>
           )}
-        </section>
-      </div>
+        </div>
+      </section>
+
+      <p className="pointer-events-none absolute bottom-3 text-center text-[9px] font-medium uppercase tracking-[0.16em] text-white/25">
+        PeakScore · Preparación ICFES
+      </p>
     </main>
   );
 }
@@ -495,7 +467,6 @@ function PasswordField({
   show,
   onToggle,
   onChange,
-  autoComplete,
 }: {
   id: string;
   label: string;
@@ -503,32 +474,27 @@ function PasswordField({
   show: boolean;
   onToggle: () => void;
   onChange: (value: string) => void;
-  autoComplete: string;
 }) {
   return (
     <div>
       <label
         htmlFor={id}
-        className="mb-2 block text-xs font-bold text-slate-800"
+        className="mb-1.5 block text-xs font-medium text-white/75"
       >
         {label}
       </label>
 
-      <div className="flex h-12 items-center rounded-xl border border-slate-200 bg-white px-3 focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10">
-        <LockKeyhole
-          size={17}
-          className="text-slate-400"
-        />
+      <div className="flex h-10 items-center rounded-lg border border-white/10 bg-[#050607] px-3 transition focus-within:border-[#C5F467]/60 focus-within:ring-2 focus-within:ring-[#C5F467]/10">
+        <LockKeyhole size={16} className="shrink-0 text-white/35" />
 
         <input
           id={id}
           type={show ? "text" : "password"}
-          autoComplete={autoComplete}
+          autoComplete="new-password"
           value={value}
-          onChange={(event) =>
-            onChange(event.target.value)
-          }
-          className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm outline-none"
+          onChange={(event) => onChange(event.target.value)}
+          className="h-full min-w-0 flex-1 bg-transparent px-3 text-sm text-white outline-none placeholder:text-white/25"
+          placeholder={label}
           required
           minLength={MIN_PASSWORD_LENGTH}
         />
@@ -536,18 +502,10 @@ function PasswordField({
         <button
           type="button"
           onClick={onToggle}
-          aria-label={
-            show
-              ? "Ocultar contraseña"
-              : "Mostrar contraseña"
-          }
-          className="text-slate-400 hover:text-blue-600"
+          aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
+          className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center text-white/40 transition hover:text-[#C5F467]"
         >
-          {show ? (
-            <EyeOff size={17} />
-          ) : (
-            <Eye size={17} />
-          )}
+          {show ? <EyeOff size={15} /> : <Eye size={15} />}
         </button>
       </div>
     </div>

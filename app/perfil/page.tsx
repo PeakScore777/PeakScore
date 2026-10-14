@@ -1,6 +1,18 @@
 
 import { redirect } from "next/navigation";
 
-export default function PerfilPage() {
+import { createClient } from "@/lib/supabase/server";
+
+export default async function PerfilPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   redirect("/perfil/personaje");
 }

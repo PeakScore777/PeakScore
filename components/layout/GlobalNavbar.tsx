@@ -300,16 +300,27 @@ export default function GlobalNavbar({
      CARGAR PERFIL MEDIANTE LA API EXISTENTE
      ============================================================ */
 
+  
   useEffect(() => {
     let mounted = true;
+    let authRevision = 0;
 
-    async function loadProfile() {
+    async function loadProfile(revision: number) {
       try {
         const {
           data: { session },
+          error: sessionError,
         } = await supabase.auth.getSession();
 
-        if (!mounted) return;
+        if (!mounted || revision !== authRevision) return;
+
+        if (sessionError) {
+          console.error(
+            "[GlobalNavbar] Error verificando la sesión:",
+            sessionError,
+          );
+          return;
+        }
 
         if (!session?.user) {
           setProfile(null);
@@ -321,23 +332,34 @@ export default function GlobalNavbar({
           cache: "no-store",
         });
 
-        if (!response.ok) return;
+        if (!mounted || revision !== authRevision) return;
+
+        if (!response.ok) {
+          console.error(
+            "[GlobalNavbar] Error cargando el perfil:",
+            response.status,
+          );
+          return;
+        }
 
         const data = await response.json();
 
-        if (!mounted || !data?.profile) return;
+        if (!mounted || revision !== authRevision) return;
+
+        if (!data?.profile) {
+          setProfile(null);
+          return;
+        }
 
         const nextProfile: ProfileData = {
           id: data.profile.id,
           fullName: data.profile.fullName ?? null,
-          email:
-            data.profile.email ?? session.user.email ?? null,
+          email: data.profile.email ?? session.user.email ?? null,
           avatarUrl: data.profile.avatarUrl ?? null,
           streak: Number(data.profile.streak ?? 0),
           coins: Number(data.profile.coins ?? 0),
           selectedCharacter:
             data.profile.selectedCharacter ?? null,
-          // Debe venir de una comprobación confiable del servidor.
           isAdmin: data.profile.isAdmin === true,
         };
 
@@ -349,17 +371,46 @@ export default function GlobalNavbar({
           publishCharacterChange(character);
         }
       } catch (error) {
-        console.error(
-          "[GlobalNavbar] Error cargando el perfil:",
-          error,
-        );
+        if (mounted && revision === authRevision) {
+          console.error(
+            "[GlobalNavbar] Error cargando el perfil:",
+            error,
+          );
+        }
       }
     }
 
-    void loadProfile();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      authRevision += 1;
+      const revision = authRevision;
+
+      if (!session?.user) {
+        setProfile(null);
+        setProfileOpen(false);
+        return;
+      }
+
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "USER_UPDATED"
+      ) {
+        window.setTimeout(() => {
+          if (mounted && revision === authRevision) {
+            void loadProfile(revision);
+          }
+        }, 0);
+      }
+    });
+
+    void loadProfile(authRevision);
 
     return () => {
       mounted = false;
+      subscription.unsubscribe();
     };
   }, []);
 

@@ -217,6 +217,7 @@ export async function GET(
 
     let stimulusMap = new Map<string, {
       content: string;
+      expected_question_count: number;
       options_json: Array<{ key: string; text: string }> | null;
       image_url: string | null;
       image_alt: string | null;
@@ -226,7 +227,7 @@ export async function GET(
     if (stimulusIds.length > 0) {
       const { data: stimuli, error: stimuliError } = await adminSupabase
         .from("question_stimuli")
-        .select("id, content, options_json, image_url, image_alt, stimulus_type")
+        .select("id, content, expected_question_count, options_json, image_url, image_alt, stimulus_type")
         .in("id", stimulusIds);
 
       if (stimuliError || !stimuli) {
@@ -255,6 +256,7 @@ export async function GET(
           {
             ...question,
             stimulus_content: stimulus?.content ?? null,
+            stimulus_expected_question_count: stimulus?.expected_question_count ?? null,
             stimulus_options_json: stimulus?.options_json ?? null,
             stimulus_image_url: stimulus?.image_url ?? null,
             stimulus_image_alt: stimulus?.image_alt ?? null,

@@ -240,6 +240,9 @@ export function parseAndValidateEnglishGeneration(
           : "Media",
         explanation: typeof question.explanation === "string" ? question.explanation : "",
         skill: typeof question.skill === "string" ? question.skill : "",
+        questionMetadata: question.question_metadata && typeof question.question_metadata === "object"
+          ? question.question_metadata as Record<string, unknown>
+          : {},
       };
     });
 

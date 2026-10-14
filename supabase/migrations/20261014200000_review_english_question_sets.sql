@@ -92,6 +92,10 @@ begin
     raise exception 'INVALID_ENGLISH_SET_FORMAT';
   end if;
 
+  if v_part in (2, 3) and v_count <> 1 then
+    raise exception 'INVALID_ENGLISH_SINGLE_ITEM_SET';
+  end if;
+
   if v_part = 1 then
     if v_count <> 5
        or jsonb_typeof(v_stimulus.options_json) is distinct from 'array'
@@ -161,7 +165,7 @@ begin
           select 1
           from regexp_matches(
             v_stimulus.content,
-            '\\[\\[' || q.stimulus_position::text || '\\]\\]',
+                    from regexp_matches(v_stimulus.content, '\[\[' || q.stimulus_position::text || '\]\]', 'g') as marker;
             'g'
           ) as marker
         )

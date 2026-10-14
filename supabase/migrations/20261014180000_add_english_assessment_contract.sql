@@ -131,6 +131,11 @@ create policy question_stimuli_service_role_all
   using (true)
   with check (true);
 
+-- Explicit privileges: RLS is not a substitute for SQL grants.
+revoke all on table public.question_stimuli from anon, authenticated;
+grant select on table public.question_stimuli to authenticated;
+grant all on table public.question_stimuli to service_role;
+
 comment on table public.question_stimuli is
   'Shared passages, notices, conversations, and word banks used by grouped questions.';
 

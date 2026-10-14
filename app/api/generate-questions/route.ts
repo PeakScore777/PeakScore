@@ -17,6 +17,12 @@ import type {
 } from "@/lib/visuals/types";
 
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import {
+  buildEnglishGenerationPrompt,
+  parseAndValidateEnglishGeneration,
+  validateEnglishGenerationRequest,
+} from "@/lib/services/english-question-generator";
+import { isEnglishPart } from "@/lib/types/english-assessment";
 
 export const runtime = "nodejs";
 
@@ -32,6 +38,7 @@ interface GenerateRequest {
   session: number;
   amount: number;
   difficulty?: Difficulty;
+  english_part?: number;
 }
 
 interface ReferenceProfile {
@@ -7060,6 +7067,37 @@ export async function POST(
       );
     }
 
+    const englishPartValue =
+      body.english_part === undefined || body.english_part === null
+        ? null
+        : Number(body.english_part);
+
+    if (normalize(subject) === "ingles") {
+      if (!isEnglishPart(englishPartValue)) {
+        return NextResponse.json(
+          { success: false, error: "Debes seleccionar una parte válida de Inglés (1 a 7)." },
+          { status: 400 }
+        );
+      }
+
+      const englishRequestError = validateEnglishGenerationRequest(
+        englishPartValue,
+        amount
+      );
+
+      if (englishRequestError) {
+        return NextResponse.json(
+          { success: false, error: englishRequestError },
+          { status: 400 }
+        );
+      }
+    } else if (body.english_part !== undefined && body.english_part !== null) {
+      return NextResponse.json(
+        { success: false, error: "La selección de parte solo aplica a Inglés." },
+        { status: 400 }
+      );
+    }
+
     console.log(
       "======================================"
     );
@@ -7128,6 +7166,179 @@ export async function POST(
     }
 
     const subjectId = matchedSubject.id;
+
+    /*
+     * Inglés utiliza conjuntos estructurados de estímulo + ítems.
+     * El resto de materias conserva intacto el generador legacy.
+     */
+    if (normalize(subject) === "ingles") {
+      const part = englishPartValue;
+      if (!isEnglishPart(part)) {
+        throw new Error("La parte de Inglés no pasó la validación.");
+      }
+
+      let parsedGeneration: ReturnType<typeof parseAndValidateEnglishGeneration> | null = null;
+      let generationErrorMessages: string[] = [];
+
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const response = await generateAI({
+            provider: "groq",
+            prompt: buildEnglishGenerationPrompt(part, amount, difficulty),
+            task: "question_generation",
+            useFallback: attempt === 2,
+          });
+
+          parsedGeneration = parseAndValidateEnglishGeneration(
+            response.text?.trim() ?? "",
+            part,
+            amount
+          );
+
+          if (parsedGeneration.result) break;
+          generationErrorMessages = parsedGeneration.errors;
+        } catch (error) {
+          generationErrorMessages = [getSafeAIErrorMessage(error)];
+        }
+      }
+
+      if (!parsedGeneration?.result) {
+        console.error("[PeakScore] El generador de Inglés no superó la validación estructural.", {
+          part,
+          errors: generationErrorMessages,
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: "La generación no produjo un conjunto válido. No se guardó ninguna pregunta.",
+            details: generationErrorMessages.slice(0, 8),
+          },
+          { status: 422 }
+        );
+      }
+
+      const existingEnglishQuestions = await getExistingQuestionsForSimilarity(
+        supabase,
+        subject,
+        session
+      );
+      const similarityCandidates: GeneratedQuestion[] = [];
+
+      for (const set of parsedGeneration.result.sets) {
+        for (const question of set.questions) {
+          const options = question.options?.map((option) => option.text) ?? [];
+          const candidate: GeneratedQuestion = {
+            subject,
+            session,
+            component: `Inglés - Parte ${part}`,
+            competence: question.skill,
+            skill: question.skill,
+            difficulty: question.difficulty,
+            structure_type: question.format,
+            context_type: set.stimulus.type,
+            question: question.prompt,
+            option_a: options[0] ?? "",
+            option_b: options[1] ?? "",
+            option_c: options[2] ?? "",
+            option_d: options[3] ?? "",
+            correct_answer: ["A", "B", "C", "D"].includes(question.correctAnswer)
+              ? question.correctAnswer as Answer
+              : "A",
+            explanation: question.explanation,
+            context_text: null,
+            requires_visual: false,
+            visual_type: null,
+            visual_description: null,
+            visual_data: null,
+          };
+
+          const similarity = findSimilarQuestion(
+            candidate,
+            existingEnglishQuestions,
+            similarityCandidates
+          );
+
+          if (similarity.isDuplicate) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: "Una pregunta generada es demasiado similar a otra del banco. No se guardó el conjunto.",
+                similarity: Number(similarity.similarity.toFixed(3)),
+              },
+              { status: 409 }
+            );
+          }
+
+          similarityCandidates.push(candidate);
+        }
+      }
+
+      const setsPayload = parsedGeneration.result.sets.map((set) => ({
+        stimulus: {
+          stimulus_type: set.stimulus.type,
+          content: set.stimulus.content,
+          options_json: set.stimulus.options ?? null,
+          image_url: null,
+          image_alt: null,
+          metadata: set.stimulus.metadata ?? {},
+        },
+        questions: set.questions.map((question) => ({
+          english_part: question.partNumber,
+          question_format: question.format,
+          stimulus_position: question.stimulusPosition,
+          question: question.prompt,
+          options_json: question.options ?? null,
+          correct_answer: question.correctAnswer,
+          difficulty: question.difficulty,
+          explanation: question.explanation,
+          skill: question.skill,
+          question_metadata: question.questionMetadata ?? {},
+        })),
+      }));
+
+      const { data: saveResult, error: saveError } = await supabase.rpc(
+        "save_english_question_sets_atomic",
+        {
+          p_subject_id: subjectId,
+          p_session: session,
+          p_sets: setsPayload,
+        }
+      );
+
+      if (saveError || !saveResult?.success) {
+        console.error("[PeakScore] No se pudo publicar el conjunto de Inglés.", {
+          part,
+          code: saveError?.code ?? "UNKNOWN",
+          message: saveError?.message ?? "UNKNOWN",
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: "No se pudo guardar el conjunto completo. No se publicaron preguntas parciales.",
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Conjuntos de Inglés generados, validados y guardados.",
+          data: {
+            provider: "groq",
+            subject,
+            session,
+            english_part: part,
+            requested: amount,
+            saved: Number(saveResult.question_count ?? amount),
+            sets: saveResult.sets,
+          },
+        },
+        { status: 201 }
+      );
+    }
 
     /* =====================================================
        REFERENCIAS

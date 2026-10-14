@@ -137,11 +137,12 @@ begin
     end if;
 
     insert into public.question_stimuli (
-      stimulus_type, content, options_json, image_url, image_alt, metadata
+      stimulus_type, content, expected_question_count, options_json, image_url, image_alt, metadata
     )
     values (
       v_expected_stimulus_type,
       v_content,
+      v_question_count,
       case when v_part = 1 then v_options else null end,
       nullif(v_stimulus->>'image_url', ''),
       nullif(v_stimulus->>'image_alt', ''),

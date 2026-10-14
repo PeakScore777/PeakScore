@@ -176,7 +176,8 @@ begin
       end if;
 
       if v_part = 1 then
-        if v_options is not null then
+        if v_options is not null
+           and jsonb_typeof(v_options) is distinct from 'null' then
           raise exception 'PART_1_USES_SHARED_WORD_BANK';
         end if;
 

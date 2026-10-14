@@ -80,6 +80,7 @@ export default function QuestionBankPage() {
   const [loading, setLoading] = useState(true);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [reviewingStimulusId, setReviewingStimulusId] = useState<string | null>(null);
 
   /* -----------------------------
      FILTROS
@@ -108,6 +109,39 @@ export default function QuestionBankPage() {
       setLoading(false);
     }
   };
+
+  async function reviewEnglishSet(stimulusId: string) {
+    const confirmed = window.confirm(
+      "¿Ya revisaste todas las preguntas de este estímulo: enunciados, opciones, respuestas correctas y explicaciones? Solo se activará el conjunto completo."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setReviewingStimulusId(stimulusId);
+      const response = await fetch(
+        `/api/admin/question-bank/english-stimuli/${stimulusId}/review`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ active: true }),
+        }
+      );
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "No se pudo aprobar el conjunto.");
+      }
+
+      await loadQuestions();
+      alert(`Conjunto aprobado. ${result.question_count} preguntas quedaron activas.`);
+    } catch (error) {
+      console.error("[PeakScore] Error aprobando conjunto de Inglés.", error);
+      alert(error instanceof Error ? error.message : "No se pudo aprobar el conjunto.");
+    } finally {
+      setReviewingStimulusId(null);
+    }
+  }
 
   /* =========================================================
      VERIFICAR ADMIN
@@ -711,6 +745,14 @@ export default function QuestionBankPage() {
                             </span>
                           )}
 
+                          {question.english_part && (
+                            <span className={question.is_active
+                              ? "rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700"
+                              : "rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800"}>
+                              {question.is_active ? "Activa" : "Pendiente de revisión"}
+                            </span>
+                          )}
+
                           {question.year && (
                             <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
                               {question.year}
@@ -863,7 +905,22 @@ export default function QuestionBankPage() {
                           ACCIONES
                       ================================================= */}
 
-                      <div className="flex shrink-0 gap-3">
+                      <div className="flex shrink-0 flex-wrap gap-3">
+                        {question.english_part && question.stimulus_id && !question.is_active && (
+                          <button
+                            type="button"
+                            onClick={() => reviewEnglishSet(question.stimulus_id as string)}
+                            disabled={reviewingStimulusId === question.stimulus_id}
+                            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {reviewingStimulusId === question.stimulus_id ? (
+                              <Loader2 size={18} className="animate-spin" />
+                            ) : (
+                              <CheckCircle2 size={18} />
+                            )}
+                            Aprobar conjunto
+                          </button>
+                        )}
 
                         {/* EDITAR */}
 

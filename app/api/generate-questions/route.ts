@@ -1456,7 +1456,8 @@ function sleep(ms: number): Promise<void> {
 async function getExistingQuestionsForSimilarity(
   supabase: SupabaseClient,
   subject: string,
-  session: number
+  session: number,
+  includeInactive = false
 ): Promise<ExistingQuestionForSimilarity[]> {
   const pageSize = 1000;
 
@@ -1469,10 +1470,7 @@ async function getExistingQuestionsForSimilarity(
     const to =
       from + pageSize - 1;
 
-    const {
-      data,
-      error,
-    } = await supabase
+    let query = supabase
       .from("questions")
       .select(`
         id,
@@ -1480,9 +1478,13 @@ async function getExistingQuestionsForSimilarity(
         context_text
       `)
       .eq("subject", subject)
-      .eq("session", session)
-      .eq("is_active", true)
-      .range(from, to);
+      .eq("session", session);
+
+    if (!includeInactive) {
+      query = query.eq("is_active", true);
+    }
+
+    const { data, error } = await query.range(from, to);
 
     if (error) {
       console.error(
@@ -7234,7 +7236,8 @@ export async function POST(
       const existingEnglishQuestions = await getExistingQuestionsForSimilarity(
         supabase,
         subject,
-        session
+        session,
+        true
       );
       const similarityCandidates: GeneratedQuestion[] = [];
 

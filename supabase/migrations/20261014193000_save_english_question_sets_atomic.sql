@@ -240,14 +240,16 @@ begin
         trim(v_question->>'explanation'),
         null,
         false, null, null, null, null,
-        'AI_GENERATED', true,
+        'AI_GENERATED', false,
         v_expected_format, v_part, v_stimulus_id, v_position,
         case when v_part = 1 then null else v_options end,
-        case
-          when jsonb_typeof(v_question->'question_metadata') = 'object'
-            then v_question->'question_metadata'
-          else '{}'::jsonb
-        end
+        (
+          case
+            when jsonb_typeof(v_question->'question_metadata') = 'object'
+              then v_question->'question_metadata'
+            else '{}'::jsonb
+          end
+        ) || jsonb_build_object('review_status', 'pending')
       )
       returning id into v_question_id;
 

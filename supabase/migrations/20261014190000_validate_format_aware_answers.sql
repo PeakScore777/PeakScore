@@ -318,6 +318,26 @@ begin
     raise exception 'INVALID_ANSWERS';
   end if;
 
+  -- Part 1 is a matching task: a word from the shared A-G bank cannot be
+  -- assigned to more than one description in the same stimulus set.
+  if exists (
+    select 1
+    from jsonb_to_recordset(p_answers)
+      as a(question_id uuid, selected_answer text)
+    join public.simulation_questions sq
+      on sq.simulation_id = p_simulation_id
+     and sq.question_id = a.question_id
+    join public.questions q
+      on q.id = a.question_id
+    where q.english_part = 1
+      and q.stimulus_id is not null
+      and a.selected_answer is not null
+    group by q.stimulus_id, upper(trim(a.selected_answer))
+    having count(*) > 1
+  ) then
+    raise exception 'DUPLICATE_ENGLISH_MATCHING_ANSWER';
+  end if;
+
   select
     count(*) filter (
       where a.selected_answer is not null

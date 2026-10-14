@@ -108,6 +108,7 @@ begin
               else true
             end
          or v_question_count <> 5 then
+        raise exception 'INVALID_ENGLISH_WORD_BANK_OR_QUESTION_COUNT';
       end if;
     else
       v_expected_options := case when v_part in (2, 3, 4, 5) then 3 else 4 end;
@@ -198,6 +199,7 @@ begin
                   then jsonb_array_length(v_options) <> v_expected_options
                 else true
               end then
+          raise exception 'INVALID_ENGLISH_OPTIONS';
         end if;
 
         select count(*), count(distinct upper(item.opt->>'key'))

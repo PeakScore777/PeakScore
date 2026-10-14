@@ -19,6 +19,7 @@ import {
 
 import QuestionPalette from "@/components/simulacros/QuestionPalette";
 import ExamResults from "@/components/simulacros/ExamResults";
+import EnglishStimulusRenderer from "@/components/questions/EnglishStimulusRenderer";
 
 import { type Simulation } from "@/lib/services/simulation.service";
 
@@ -1334,7 +1335,14 @@ export default function ExamPage() {
                         </div>
 
                         <div className="whitespace-pre-wrap text-[16px] font-medium leading-8 text-slate-700 sm:text-[17px]">
-                          {questionContext}
+                          {questionContext && (question.english_part === 4 || question.english_part === 7)
+                            ? (
+                              <EnglishStimulusRenderer
+                                content={questionContext}
+                                activePosition={question.stimulus_position ?? currentQuestion + 1}
+                              />
+                            )
+                            : questionContext}
                         </div>
 
                       </div>

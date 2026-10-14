@@ -136,12 +136,18 @@ begin
         and (
           jsonb_typeof(q.options_json) is distinct from 'array'
           or jsonb_array_length(q.options_json) <> case when v_part in (2, 3, 4, 5) then 3 else 4 end
-          or not exists (
+          or exists (
             select 1
             from jsonb_array_elements(q.options_json) with ordinality item(opt, ord)
+            where jsonb_typeof(item.opt) is distinct from 'object'
+              or upper(item.opt->>'key') is distinct from chr(64 + item.ord::integer)
+              or char_length(trim(coalesce(item.opt->>'text', ''))) = 0
+              or char_length(item.opt->>'text') > 5000
+          )
+          or not exists (
+            select 1
+            from jsonb_array_elements(q.options_json) item(opt)
             where upper(item.opt->>'key') = q.correct_answer
-              and upper(item.opt->>'key') = chr(64 + item.ord::integer)
-              and char_length(trim(coalesce(item.opt->>'text', ''))) > 0
           )
         )
     ) then

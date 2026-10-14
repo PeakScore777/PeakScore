@@ -50,6 +50,14 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 10. Solo después de pasar las pruebas, generar preguntas originales, revisar sus respuestas y explicaciones, y conectar Inglés al simulacro completo.
 11. La función de IA que explica respuestas incorrectas queda expresamente para una fase posterior, manual y separada.
 
+## Hallazgos y correcciones de esta ronda
+
+- Se detectaron dos bloques de validación SQL del guardado de conjuntos que tenían un `IF` sin excepción: uno para el banco de siete palabras/cinco descripciones y otro para el número de opciones individuales. Se añadieron las excepciones explícitas; antes de esto, esos casos inválidos podían continuar más allá de la validación prevista.
+- La restricción de longitud de `options_json` ahora usa `CASE` para no llamar a `jsonb_array_length` cuando el valor no es un arreglo.
+- La finalización de simulacros ahora rechaza respuestas repetidas para dos descripciones de la misma Parte 1/estímulo, además de la protección visual de la interfaz.
+- La migración de respuestas ya admite A–G en las rutas de progreso/finalización; aun así, falta ejecutar pruebas integrales de guardado, recuperación y calificación.
+- No se encontraron ejecuciones de GitHub Actions para la rama de trabajo. Vercel no ha confirmado build satisfactorio y las migraciones siguen sin aplicarse a Supabase.
+
 ## Correcciones adicionales de auditoría
 
 - Se protegieron las validaciones JSON de opciones para no llamar a `jsonb_array_length` o `jsonb_array_elements` sobre valores que no sean arreglos, tanto al guardar conjuntos como al aprobarlos.

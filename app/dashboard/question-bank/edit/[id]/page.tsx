@@ -63,6 +63,7 @@ export default function EditQuestionPage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [structuredEnglish, setStructuredEnglish] = useState(false);
 
   const [form, setForm] = useState({
     subject: "",
@@ -111,6 +112,12 @@ export default function EditQuestionPage() {
           setError("No se encontró la pregunta.");
           return;
         }
+
+        setStructuredEnglish(
+          question.question_format !== undefined &&
+          question.question_format !== null &&
+          question.question_format !== "legacy_multiple_choice"
+        );
 
         setForm({
           subject: question.subject ?? "",
@@ -409,6 +416,28 @@ export default function EditQuestionPage() {
           >
             <ArrowLeft className="h-4 w-4" />
             Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (structuredEnglish) {
+    return (
+      <div className="mx-auto max-w-3xl px-6 py-12">
+        <div className="rounded-2xl border border-indigo-200 bg-indigo-50 p-6">
+          <h2 className="text-xl font-bold text-indigo-950">
+            Pregunta estructurada de Inglés
+          </h2>
+          <p className="mt-2 leading-7 text-indigo-900">
+            Esta pregunta pertenece a un estímulo compartido y utiliza el formato de una de las siete partes. El editor antiguo de cuatro opciones no puede modificarla con seguridad, así que no permitimos guardar desde aquí para evitar dañar su estructura.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/dashboard/question-bank")}
+            className="mt-5 rounded-xl bg-indigo-950 px-5 py-3 font-semibold text-white transition hover:bg-indigo-900"
+          >
+            Volver al banco de preguntas
           </button>
         </div>
       </div>

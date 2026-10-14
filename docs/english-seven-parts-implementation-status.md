@@ -82,3 +82,11 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 - Se corrigió el formulario del banco para que no rechace cantidades que no sean múltiplos de cinco en lectura/cloze.
 - Imágenes: fase posterior al texto estructurado y su revisión. Prioridad: avisos/señales originales para Parte 2; ilustraciones para conversaciones solo si mejoran la comprensión. Cada recurso debe tener texto alternativo, ruta/URL real verificada y estar enlazado al estímulo. Aún no se han generado ni almacenado imágenes.
 - Sigue sin confirmarse build/TypeScript/ESLint ni prueba real de las migraciones. No se aplicaron migraciones a producción ni se guardaron preguntas nuevas en Supabase.
+
+
+## Estado de comprobaciones de GitHub — revisión más reciente
+
+- El commit `21161b5b127db20e224b30a9e236cc90f13b4893` no tiene ejecuciones de GitHub Actions asociadas.
+- El estado combinado de GitHub reporta Vercel como `failure`, con destino que indica `build-rate-limit`. Esto no demuestra que el código falle al compilar; significa que no se dispone de un build de Vercel confirmado para esta revisión.
+- Se corrigió en la ruta de generación un mapeo que reemplazaba las claves E–G por A en el objeto auxiliar usado para detectar similitud. Ahora conserva la clave original durante esa comparación. El guardado real ya usa la respuesta estructurada validada.
+- La corrección aún necesita verificación con TypeScript/build y una prueba real de generación. No declarar la rama validada por CI.

@@ -45,7 +45,7 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 5. Confirmar que una letra que no exista en las opciones de la pregunta sea rechazada por ambos RPC.
 6. Confirmar que el usuario no pueda acceder a estímulos de preguntas fuera de su simulacro, y que las escrituras de estímulos no se permitan al cliente.
 7. La ruta de generación ya tiene una rama específica para Inglés, con selección de parte, validación estructural, control de similitud y guardado atómico. Falta ejecutarla en un entorno de prueba contra las migraciones.
-8. Confirmar el formato y las cantidades exactas de cada parte con la guía oficial vigente antes de generar el banco de preguntas.
+8. La guía oficial Saber 11 2026-2 ya se revisó: confirma 55 preguntas de Inglés, siete partes, los porcentajes aproximados y las estructuras/opciones. No publica un número entero exacto por parte; no fijar una distribución interna como si fuera oficial.
 9. Implementar el ensamblaje del simulacro completo desde el banco con una blueprint versionada y selección por conjuntos; la página de simulacro completo todavía es un aviso/placeholder.
 10. Solo después de pasar las pruebas, generar preguntas originales, revisar sus respuestas y explicaciones, y conectar Inglés al simulacro completo.
 11. La función de IA que explica respuestas incorrectas queda expresamente para una fase posterior, manual y separada.
@@ -73,3 +73,12 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 - La lista de opciones de la interfaz supone que las opciones estructuradas están ordenadas por clave A, B, C…; la validación de generación debe exigir ese orden.
 - En la interfaz del simulacro se añadió una protección para Parte 1: una palabra del banco A–G no puede seleccionarse en otra descripción del mismo estímulo si ya está asignada. Falta probar el comportamiento con progreso guardado y recuperación de intento.
 - No afirmar que Inglés está listo para producción hasta completar las pruebas anteriores.
+
+
+## Continuación de auditoría — 14 de octubre de 2026
+
+- Investigación de fuente primaria: se revisó la [Guía de orientación Saber 11 2026-2 del ICFES](https://www.icfes.gov.co/wp-content/uploads/2026/03/17-marzo-guia-de-orientacion-saber-11-2026-2.pdf), sección Inglés, pp. 63–65. Confirma 55 preguntas en el cuadernillo estándar, siete partes, pesos aproximados 11/11/11/18/16/11/22, Parte 1 con siete palabras A–G y cinco descripciones, Partes 2–5 con tres opciones y Partes 6–7 con cuatro.
+- Se corrigió la regla del generador: únicamente Parte 1 exige múltiplos de cinco. Partes 4–7 admiten cantidades variables repartidas entre estímulos completos; se aplican límites editoriales por estímulo, no presentados como conteo oficial del ICFES.
+- Se corrigió el formulario del banco para que no rechace cantidades que no sean múltiplos de cinco en lectura/cloze.
+- Imágenes: fase posterior al texto estructurado y su revisión. Prioridad: avisos/señales originales para Parte 2; ilustraciones para conversaciones solo si mejoran la comprensión. Cada recurso debe tener texto alternativo, ruta/URL real verificada y estar enlazado al estímulo. Aún no se han generado ni almacenado imágenes.
+- Sigue sin confirmarse build/TypeScript/ESLint ni prueba real de las migraciones. No se aplicaron migraciones a producción ni se guardaron preguntas nuevas en Supabase.

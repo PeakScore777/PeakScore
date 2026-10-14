@@ -202,6 +202,79 @@ export function validateEnglishQuestion(
   return errors;
 }
 
+/**
+ * Valida un conjunto completo antes de publicarlo en el banco.
+ * Se valida el grupo, no solo cada pregunta individual, para evitar
+ * ítems sin contexto o espacios cloze sin pregunta asociada.
+ */
+export function validateEnglishQuestionSet(
+  stimulus: EnglishStimulus,
+  questions: EnglishQuestionDefinition[],
+  part: EnglishPart,
+): string[] {
+  const errors = validateEnglishStimulus(stimulus, part);
+
+  if (questions.length === 0) {
+    errors.push("El estímulo debe tener al menos una pregunta asociada.");
+    return errors;
+  }
+
+  if (questions.some((question) => question.partNumber !== part)) {
+    errors.push("Todas las preguntas del conjunto deben pertenecer a la misma parte.");
+  }
+
+  if (questions.some((question) => question.stimulusId !== stimulus.id)) {
+    errors.push("Todas las preguntas deben referenciar el estímulo de este conjunto.");
+  }
+
+  for (const question of questions) {
+    errors.push(...validateEnglishQuestion(question));
+  }
+
+  const positions = questions.map((question) => question.stimulusPosition);
+  if (new Set(positions).size !== positions.length) {
+    errors.push("Las posiciones de las preguntas dentro del estímulo no pueden repetirse.");
+  }
+
+  if (part === 1 && questions.length !== 5) {
+    errors.push("La Parte 1 debe tener cinco descripciones para el banco de siete palabras.");
+  }
+
+  if (part === 2 || part === 3) {
+    if (questions.length !== 1) {
+      errors.push(`La Parte ${part} debe asociar un solo ítem puntuable a cada aviso o conversación.`);
+    }
+  }
+
+  if (part === 4 || part === 7) {
+    const markerMatches = [...stimulus.content.matchAll(/\\[\\[(\\d+)\\]\\]/g)];
+    const markers = markerMatches.map((match) => Number(match[1])).sort((a, b) => a - b);
+    const expected = Array.from({ length: markers.length }, (_, index) => index + 1);
+
+    if (markers.length === 0) {
+      errors.push("El texto cloze debe incluir marcadores explícitos como [[1]] y [[2]].");
+    }
+
+    if (markers.some((marker, index) => marker !== expected[index])) {
+      errors.push("Los marcadores cloze deben ser consecutivos desde [[1]], sin duplicados.");
+    }
+
+    if (markers.length !== questions.length) {
+      errors.push("Debe existir exactamente una pregunta puntuable por cada espacio cloze.");
+    }
+
+    const questionPositions = [...positions].sort((a, b) => a - b);
+    if (
+      questionPositions.length !== expected.length ||
+      questionPositions.some((position, index) => position !== expected[index])
+    ) {
+      errors.push("Las posiciones de los ítems deben coincidir con los espacios del texto cloze.");
+    }
+  }
+
+  return [...new Set(errors)];
+}
+
 export function validateEnglishStimulus(
   stimulus: EnglishStimulus,
   part: EnglishPart,

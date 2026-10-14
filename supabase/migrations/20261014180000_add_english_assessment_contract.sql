@@ -158,8 +158,9 @@ create unique index if not exists questions_stimulus_position_unique_idx
 
 alter table public.question_stimuli enable row level security;
 
--- A stimulus is readable only when attached to an active question visible
--- through the existing questions RLS policies. Writes remain server-side.
+-- Only users who can read the associated question rows (currently admins)
+-- can read these stimuli directly. Server routes use service_role after their
+-- own authorization and return only the stimuli attached to that simulation.
 create policy question_stimuli_select_for_visible_questions
   on public.question_stimuli
   for select
@@ -169,7 +170,6 @@ create policy question_stimuli_select_for_visible_questions
       select 1
       from public.questions q
       where q.stimulus_id = question_stimuli.id
-        and q.is_active = true
     )
   );
 

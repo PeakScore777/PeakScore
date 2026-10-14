@@ -146,7 +146,12 @@ begin
              end
           or exists (
             select 1
-            from jsonb_array_elements(q.options_json) with ordinality item(opt, ord)
+            from jsonb_array_elements(
+              case
+                when jsonb_typeof(q.options_json) = 'array' then q.options_json
+                else '[]'::jsonb
+              end
+            ) with ordinality item(opt, ord)
             where jsonb_typeof(item.opt) is distinct from 'object'
               or upper(item.opt->>'key') is distinct from chr(64 + item.ord::integer)
               or char_length(trim(coalesce(item.opt->>'text', ''))) = 0
@@ -154,7 +159,12 @@ begin
           )
           or not exists (
             select 1
-            from jsonb_array_elements(q.options_json) item(opt)
+            from jsonb_array_elements(
+              case
+                when jsonb_typeof(q.options_json) = 'array' then q.options_json
+                else '[]'::jsonb
+              end
+            ) item(opt)
             where upper(item.opt->>'key') = q.correct_answer
           )
         )

@@ -65,6 +65,9 @@ La generación de Inglés debe producir conjuntos completos, no preguntas aislad
 - Parte 6: un texto de lectura y preguntas inferenciales, cada una con cuatro opciones.
 - Parte 7: un texto cloze y un ítem por espacio, cada uno con cuatro opciones.
 
+- La generación editorial en PeakScore agrupa las Partes 1, 4, 5, 6 y 7 en lotes de cinco ítems por estímulo. Esta es una decisión interna para mantener textos y bancos completos, no un conteo oficial por parte del ICFES. Las Partes 2 y 3 usan un ítem por aviso/conversación y permiten pedir varios estímulos en una generación.
+- Cada estímulo almacena `expected_question_count`; el ensamblador de simulacros compara ese valor con los ítems activos realmente disponibles antes de incluir el grupo. Así no se selecciona un cloze, lectura o matching parcialmente desactivado.
+
 Un conjunto se guarda de manera consistente: primero se crea el estímulo y después todos los ítems que lo referencian; si falla la escritura de algún ítem, el conjunto no debe quedar parcialmente publicado. La creación/edición del banco debe validar el conjunto completo antes de marcar sus preguntas como activas.
 
 ## 5. Cómo deben usarlo los simulacros
@@ -94,7 +97,7 @@ La futura función de IA que explique preguntas falladas se implementará en una
 
 ## 8. Orden seguro de implementación
 
-1. Revisar el diff de la rama y conservar el respaldo sin modificarlo.
+1. Revisar el diff de la rama y conservar el respaldo sin modificarlo. La guía vigente 2026-2 del ICFES describe los siete formatos y sus porcentajes, pero no fija en la tabla un número entero de preguntas para cada parte; el agrupamiento de cinco ítems en PeakScore es una regla editorial interna. Fuente: https://www.icfes.gov.co/wp-content/uploads/2026/03/17-marzo-guia-de-orientacion-saber-11-2026-2.pdf
 2. Corregir y simplificar el contrato de datos antes de aplicar cualquier migración: una sola clave de respuesta, agrupación explícita y restricciones coherentes.
 3. Implementar validación de conjuntos de estímulos e ítems.
 4. Adaptar el generador existente solo en la ruta de Inglés, preservando la generación legacy de las otras materias.

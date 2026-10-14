@@ -463,8 +463,8 @@ function NewQuestionPageContent() {
                   />
 
                   <p className="mt-1 text-sm text-slate-500">
-                    {aiForm.subject === "Inglés" && aiForm.english_part === "1"
-                      ? "Máximo 100 preguntas por generación; la Parte 1 requiere múltiplos de cinco."
+                    {aiForm.subject === "Inglés" && ["1", "4", "5", "6", "7"].includes(aiForm.english_part)
+                      ? "Máximo 100 preguntas. Esta parte requiere múltiplos de cinco para conservar los estímulos completos."
                       : "Máximo 100 preguntas por generación."}
                   </p>
                 </div>
@@ -550,6 +550,11 @@ function NewQuestionPageContent() {
                       </strong>{" "}
                       preguntas.
                     </p>
+                    {aiForm.subject === "Inglés" && (
+                      <p className="mt-2 text-sm font-medium text-amber-800">
+                        Se guardaron como pendientes de revisión editorial. No se usarán en simulacros hasta que apruebes el conjunto completo desde el banco de preguntas.
+                      </p>
+                    )}
                   </div>
                 </div>
               </section>

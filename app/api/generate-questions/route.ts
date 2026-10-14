@@ -7258,9 +7258,9 @@ export async function POST(
             option_b: options[1] ?? "",
             option_c: options[2] ?? "",
             option_d: options[3] ?? "",
-            correct_answer: ["A", "B", "C", "D"].includes(question.correctAnswer)
-              ? question.correctAnswer as Answer
-              : "A",
+            // Similarity fingerprints use the question text/context only. Preserve
+            // the actual A–G key here instead of silently rewriting E–G as A.
+            correct_answer: question.correctAnswer as Answer,
             explanation: question.explanation,
             context_text: null,
             requires_visual: false,

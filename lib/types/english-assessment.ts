@@ -60,6 +60,7 @@ export interface EnglishQuestionDefinition {
   /** Letra de la opción correcta; la Parte 1 puede utilizar A-G. */
   correctAnswer: AnswerLetter;
   stimulusId: string;
+  stimulusPosition: number;
   difficulty: "Fácil" | "Media" | "Difícil";
   explanation: string;
   skill: string;
@@ -144,6 +145,10 @@ export function validateEnglishQuestion(
 
   if (!question.stimulusId.trim()) {
     errors.push("La pregunta debe referenciar un estímulo.");
+  }
+
+  if (!Number.isInteger(question.stimulusPosition) || question.stimulusPosition < 1) {
+    errors.push("La posición del ítem dentro del estímulo debe ser un entero positivo.");
   }
 
   if (!question.skill.trim()) {

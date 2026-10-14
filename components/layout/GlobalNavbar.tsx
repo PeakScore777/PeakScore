@@ -5,8 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Brain,
   Bug,
+  Building2,
   ChevronDown,
+  Database,
+  FileUp,
   LogOut,
   Menu,
   Moon,
@@ -17,6 +21,7 @@ import {
   Users,
   UserRound,
   X,
+  Zap,
 } from "lucide-react";
 import {
   useEffect,
@@ -1058,15 +1063,57 @@ export default function GlobalNavbar({
                       onClick={closeMenus}
                     />
 
-                    {/* Solo aparece si la API confirma el rol de administrador. */}
+                    {/* Herramientas exclusivas para administradores.
+                        La API determina isAdmin y las rutas mantienen su propia autorización. */}
                     {profile?.isAdmin === true && (
-                      <ProfileMenuLink
-                        href="/dashboard/admin"
-                        label="Panel de administración"
-                        icon={<ShieldCheck className="h-4 w-4" />}
-                        dark={isDark}
-                        onClick={closeMenus}
-                      />
+                      <>
+                        <ProfileMenuLink
+                          href="/dashboard/admin"
+                          label="Panel de administración"
+                          icon={<ShieldCheck className="h-4 w-4" />}
+                          dark={isDark}
+                          onClick={closeMenus}
+                        />
+                        <div
+                          className={`mx-3 my-2 border-t ${isDark ? "border-white/10" : "border-slate-200"}`}
+                          aria-hidden="true"
+                        />
+                        <ProfileMenuLink
+                          href="/dashboard/question-bank"
+                          label="Banco de preguntas"
+                          icon={<Database className="h-4 w-4" />}
+                          dark={isDark}
+                          onClick={closeMenus}
+                        />
+                        <ProfileMenuLink
+                          href="/dashboard/question-bank/generate"
+                          label="Generar preguntas con IA"
+                          icon={<Brain className="h-4 w-4" />}
+                          dark={isDark}
+                          onClick={closeMenus}
+                        />
+                        <ProfileMenuLink
+                          href="/dashboard/question-bank/batch"
+                          label="Generación masiva"
+                          icon={<Zap className="h-4 w-4" />}
+                          dark={isDark}
+                          onClick={closeMenus}
+                        />
+                        <ProfileMenuLink
+                          href="/dashboard/import-pdf"
+                          label="Importar PDF"
+                          icon={<FileUp className="h-4 w-4" />}
+                          dark={isDark}
+                          onClick={closeMenus}
+                        />
+                        <ProfileMenuLink
+                          href="/dashboard/admin/institutions"
+                          label="Solicitudes institucionales"
+                          icon={<Building2 className="h-4 w-4" />}
+                          dark={isDark}
+                          onClick={closeMenus}
+                        />
+                      </>
                     )}
                   </div>
 

@@ -28,7 +28,7 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 
 ## Estado de aplicación
 
-**Estos cambios están en GitHub en la rama indicada. No se han aplicado las migraciones a Supabase de producción, no se han creado preguntas de Inglés y no se ha desplegado a Vercel.** No mezclar ni desplegar el código nuevo antes de aplicar las migraciones en un entorno de prueba y verificar compatibilidad.
+**Estos cambios están en GitHub en la rama indicada. No se han aplicado las migraciones a Supabase de producción, no se han creado preguntas de Inglés y no se ha integrado a producción.** Vercel reporta un estado de preview pendiente para un commit de la rama; no se ha confirmado un despliegue completado. No mezclar ni desplegar el código nuevo antes de aplicar las migraciones en un entorno de prueba y verificar compatibilidad.
 
 ## Validaciones pendientes antes de integrar
 

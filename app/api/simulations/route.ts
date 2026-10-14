@@ -18,6 +18,10 @@ interface Question {
   english_part?: number | null;
   stimulus_id?: string | null;
   stimulus_position?: number | null;
+  stimulus_content?: string | null;
+  stimulus_type?: string | null;
+  stimulus_options_json?: Array<{ key: string; text: string }> | null;
+  stimulus_expected_question_count?: number | null;
 }
 
 const SUBJECTS = [
@@ -86,6 +90,44 @@ function selectCompleteEnglishQuestionGroups(
 
       if (group.some((item, index) => item.stimulus_position !== index + 1)) {
         return false;
+      }
+
+      const expectedCount = first.stimulus_expected_question_count;
+      if (!expectedCount || group.length !== expectedCount) return false;
+
+      const expectedStimulusType =
+        part === 1 ? "word_bank" :
+        part === 2 ? "notice" :
+        part === 3 ? "conversation" :
+        part === 4 || part === 7 ? "cloze_text" :
+        "reading_text";
+
+      if (first.stimulus_type !== expectedStimulusType) return false;
+
+      if (part === 1) {
+        const bank = first.stimulus_options_json ?? [];
+        const keys = bank.map((option) => option.key);
+        if (
+          bank.length !== 7 ||
+          keys.some((key, index) => key !== String.fromCharCode(65 + index)) ||
+          bank.some((option) => !option.text.trim())
+        ) {
+          return false;
+        }
+      }
+
+      if (part === 4 || part === 7) {
+        const content = first.stimulus_content ?? "";
+        const markers = [...content.matchAll(/\\[\\[(\\d+)\\]\\]/g)]
+          .map((match) => Number(match[1]))
+          .sort((a, b) => a - b);
+
+        if (
+          markers.length !== expectedCount ||
+          markers.some((marker, index) => marker !== index + 1)
+        ) {
+          return false;
+        }
       }
 
       if (part === 1 && group.length !== 5) return false;
@@ -320,7 +362,49 @@ export async function POST(request: Request) {
         );
       }
 
-      availableQuestions = (englishQuestions ?? []) as Question[];
+      const rawEnglishQuestions = (englishQuestions ?? []) as Question[];
+      const stimulusIds = [...new Set(
+        rawEnglishQuestions
+          .map((question) => question.stimulus_id)
+          .filter((id): id is string => typeof id === "string")
+      )];
+
+      if (stimulusIds.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "Todavía no hay conjuntos estructurados de Inglés disponibles en el banco." },
+          { status: 400 }
+        );
+      }
+
+      const { data: stimuli, error: stimuliError } = await adminSupabase
+        .from("question_stimuli")
+        .select("id, content, stimulus_type, options_json, expected_question_count")
+        .in("id", stimulusIds);
+
+      if (stimuliError || !stimuli) {
+        console.error("[PeakScore] Falló la consulta de estímulos de Inglés.", {
+          code: stimuliError?.code ?? "UNKNOWN",
+        });
+        return NextResponse.json(
+          { success: false, error: "No fue posible verificar los conjuntos completos de Inglés." },
+          { status: 500 }
+        );
+      }
+
+      const stimulusMap = new Map(stimuli.map((stimulus) => [stimulus.id, stimulus]));
+      availableQuestions = rawEnglishQuestions.map((question) => {
+        const stimulus = question.stimulus_id
+          ? stimulusMap.get(question.stimulus_id)
+          : null;
+        return {
+          ...question,
+          stimulus_content: stimulus?.content ?? null,
+          stimulus_type: stimulus?.stimulus_type ?? null,
+          stimulus_options_json: stimulus?.options_json ?? null,
+          stimulus_expected_question_count: stimulus?.expected_question_count ?? null,
+        };
+      });
+
       const completeSelection = selectCompleteEnglishQuestionGroups(
         availableQuestions,
         questionAmount,

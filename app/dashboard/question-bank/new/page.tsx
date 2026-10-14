@@ -235,15 +235,24 @@ function NewQuestionPageContent() {
 
     if (
       aiForm.subject === "Inglés" &&
-      ["1", "4", "5", "6", "7"].includes(aiForm.english_part) &&
+      aiForm.english_part === "1" &&
       amount % 5 !== 0
     ) {
       alert(
-        aiForm.english_part === "1"
-          ? "La Parte 1 se genera en conjuntos de cinco descripciones y un banco A–G."
-          : aiForm.english_part === "4" || aiForm.english_part === "7"
-            ? "Esta parte se genera en textos cloze completos de cinco espacios."
-            : "Esta parte se genera en conjuntos de cinco preguntas por texto de lectura."
+        "La Parte 1 se genera en conjuntos de cinco descripciones y un banco compartido de siete palabras A–G."
+      );
+      return;
+    }
+
+    if (
+      aiForm.subject === "Inglés" &&
+      ["4", "5", "6", "7"].includes(aiForm.english_part) &&
+      amount < (aiForm.english_part === "6" ? 2 : 4)
+    ) {
+      alert(
+        aiForm.english_part === "6"
+          ? "La Parte 6 requiere al menos dos preguntas para formar un conjunto de lectura inferencial."
+          : "Esta parte requiere al menos cuatro preguntas para formar un texto de lectura o cloze completo."
       );
       return;
     }
@@ -439,7 +448,7 @@ function NewQuestionPageContent() {
                       <option value="7">Parte 7 · Gramática y léxico en contexto (cloze A–D)</option>
                     </select>
                     <p className="mt-2 text-sm text-blue-800">
-                      PeakScore guardará cada estímulo con sus ítems vinculados. En la Parte 1 la cantidad debe ser múltiplo de cinco.
+                      PeakScore guarda cada estímulo con sus preguntas vinculadas. La Parte 1 usa bancos A–G con cinco descripciones; en las Partes 4–7 el número de preguntas depende de la longitud del texto.
                     </p>
                   </div>
                 )}
@@ -463,9 +472,11 @@ function NewQuestionPageContent() {
                   />
 
                   <p className="mt-1 text-sm text-slate-500">
-                    {aiForm.subject === "Inglés" && ["1", "4", "5", "6", "7"].includes(aiForm.english_part)
-                      ? "Máximo 100 preguntas. Esta parte requiere múltiplos de cinco para conservar los estímulos completos."
-                      : "Máximo 100 preguntas por generación."}
+                    {aiForm.subject === "Inglés" && aiForm.english_part === "1"
+                      ? "Máximo 100 preguntas. Usa múltiplos de cinco para conservar cada banco A–G completo."
+                      : aiForm.subject === "Inglés" && ["4", "5", "6", "7"].includes(aiForm.english_part)
+                        ? "Máximo 100 preguntas. La IA debe repartirlas entre textos completos, sin cortar estímulos."
+                        : "Máximo 100 preguntas por generación."}
                   </p>
                 </div>
 

@@ -1330,7 +1330,17 @@ export default function ExamPage() {
                             size={14}
                           />
 
-                          Contexto
+                          {question.english_part === 1
+                            ? "Banco de palabras"
+                            : question.english_part === 2
+                              ? "Aviso o señal"
+                              : question.english_part === 3
+                                ? "Conversación"
+                                : question.english_part === 4 || question.english_part === 7
+                                  ? "Texto con espacios"
+                                  : question.english_part === 5 || question.english_part === 6
+                                    ? "Texto de lectura"
+                                    : "Contexto"}
 
                         </div>
 

@@ -103,7 +103,7 @@ Parte ICFES: ${part}
 Formato interno obligatorio: ${format}
 Tipo de estímulo: ${stimulusType}
 Cantidad total solicitada: ${amount} ítems puntuables.
-Conjuntos de estímulo que debes devolver: ${setCount}.
+Conjuntos de estímulo que debes devolver: ${setCount === null ? "cantidad flexible según los grupos completos" : setCount}.
 Regla de agrupación: ${setInstructions}
 Ítems por conjunto fijo: ${itemCount ?? "variable según el texto, con rangos editoriales por parte"}.
 Dificultad solicitada: ${difficulty}. Si es Mixta, distribuye Fácil, Media y Difícil de manera razonable. Si es Fácil, Media o Difícil, todas las preguntas deben usar exactamente esa dificultad.
@@ -143,7 +143,7 @@ ESQUEMA EXACTO:
         {
           "stimulus_position": 1,
           "question": "Descripción/pregunta/instrucción específica del ítem",
-          "options_json": ${part === 1 ? "null" : '[{"key":"A","text":"..."},{"key":"B","text":"..."},{"key":"C","text":"..."}]'},
+          "options_json": ${part === 1 ? "null" : part >= 6 ? '[{"key":"A","text":"..."},{"key":"B","text":"..."},{"key":"C","text":"..."},{"key":"D","text":"..."}]' : '[{"key":"A","text":"..."},{"key":"B","text":"..."},{"key":"C","text":"..."}]'},
           "correct_answer": "A",
           "difficulty": "Media",
           "explanation": "Explicación clara en español",

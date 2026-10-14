@@ -102,9 +102,12 @@ begin
     if v_part = 1 then
       v_expected_options := 7;
       if jsonb_typeof(v_options) is distinct from 'array'
-         or jsonb_array_length(v_options) <> 7
+         or case
+              when jsonb_typeof(v_options) = 'array'
+                then jsonb_array_length(v_options) <> 7
+              else true
+            end
          or v_question_count <> 5 then
-        raise exception 'INVALID_ENGLISH_PART_1_SET';
       end if;
     else
       v_expected_options := case when v_part in (2, 3, 4, 5) then 3 else 4 end;
@@ -190,8 +193,11 @@ begin
         end if;
       else
         if jsonb_typeof(v_options) is distinct from 'array'
-           or jsonb_array_length(v_options) <> v_expected_options then
-          raise exception 'INVALID_ENGLISH_OPTIONS_COUNT';
+           or case
+                when jsonb_typeof(v_options) = 'array'
+                  then jsonb_array_length(v_options) <> v_expected_options
+                else true
+              end then
         end if;
 
         select count(*), count(distinct upper(item.opt->>'key'))

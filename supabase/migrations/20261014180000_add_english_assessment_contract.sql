@@ -15,6 +15,8 @@ create table if not exists public.question_stimuli (
     )),
   content text not null
     check (char_length(btrim(content)) between 1 and 20000),
+  expected_question_count smallint not null
+    check (expected_question_count between 1 and 100),
   options_json jsonb,
   image_url text,
   image_alt text,

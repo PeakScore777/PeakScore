@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 const PUBLIC_QUESTION_FIELDS =
-  "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at, question_format, english_part, stimulus_id, options_json";
+  "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at, question_format, english_part, stimulus_id, stimulus_position, options_json";
 
 export async function GET(
   _request: Request,

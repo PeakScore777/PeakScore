@@ -31,6 +31,7 @@ import {
 } from "@/lib/services/question.service";
 
 import QuestionVisualRenderer from "@/components/questions/QuestionVisualRenderer";
+import EnglishStimulusRenderer from "@/components/questions/EnglishStimulusRenderer";
 
 /* =========================================================
    MATERIAS
@@ -736,7 +737,15 @@ export default function QuestionBankPage() {
                             </div>
 
                             <div className="whitespace-pre-line px-5 py-5 text-[15px] leading-7 text-slate-700">
-                              {question.context_text || question.stimulus_content}
+                              {(question.english_part === 4 || question.english_part === 7) &&
+                              (question.context_text || question.stimulus_content)
+                                ? (
+                                  <EnglishStimulusRenderer
+                                    content={question.context_text || question.stimulus_content || ""}
+                                    activePosition={question.stimulus_position}
+                                  />
+                                )
+                                : (question.context_text || question.stimulus_content)}
                             </div>
                           </div>
                         )}

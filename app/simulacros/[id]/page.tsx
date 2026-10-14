@@ -1436,10 +1436,39 @@ export default function ExamPage() {
                           ] ===
                           optionNumber;
 
+                        const isMatchingPartOne =
+                          question.english_part === 1 &&
+                          Boolean(question.stimulus_id);
+
+                        const usedByAnotherDescription =
+                          isMatchingPartOne &&
+                          questions.some((candidate, candidateIndex) => {
+                            if (
+                              candidateIndex === currentQuestion ||
+                              candidate.english_part !== 1 ||
+                              candidate.stimulus_id !== question.stimulus_id
+                            ) {
+                              return false;
+                            }
+
+                            const candidateAnswer = answers[candidateIndex];
+                            return (
+                              candidateAnswer !== undefined &&
+                              String.fromCharCode(64 + candidateAnswer) === option.key
+                            );
+                          });
+
                         return (
                           <button
                             key={option.key}
                             type="button"
+                            disabled={usedByAnotherDescription && !selected}
+                            aria-disabled={usedByAnotherDescription && !selected}
+                            title={
+                              usedByAnotherDescription && !selected
+                                ? "Esta palabra ya está asignada a otra descripción de este conjunto."
+                                : undefined
+                            }
                             onClick={() => {
 
                               const nextAnswers =
@@ -1459,10 +1488,12 @@ export default function ExamPage() {
                                 timeLeft
                               );
                             }}
-                            className={`group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all duration-200 sm:p-5 ${
+                            className={`group flex w-full items-start gap-4 rounded-2xl border p-4 text-left transition-all duration-200 sm:p-5 disabled:cursor-not-allowed disabled:opacity-40 ${ 
                               selected
                                 ? "border-blue-500 bg-blue-50/70 shadow-[0_8px_25px_rgba(37,99,235,0.10)] ring-2 ring-blue-100"
-                                : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm"
+                                : usedByAnotherDescription
+                                  ? "border-slate-100 bg-slate-100"
+                                  : "border-slate-200 bg-white hover:-translate-y-0.5 hover:border-slate-300 hover:bg-slate-50 hover:shadow-sm"
                             }`}
                           >
 

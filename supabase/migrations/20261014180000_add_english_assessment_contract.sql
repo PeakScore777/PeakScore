@@ -31,9 +31,8 @@ alter table public.questions
     default 'legacy_multiple_choice',
   add column if not exists english_part smallint,
   add column if not exists stimulus_id uuid,
+  add column if not exists stimulus_position smallint,
   add column if not exists options_json jsonb,
-  add column if not exists answer_schema jsonb,
-  add column if not exists correct_answer_data jsonb,
   add column if not exists question_metadata jsonb not null
     default '{}'::jsonb;
 
@@ -71,15 +70,23 @@ alter table public.questions
     ),
   add constraint questions_options_json_array
     check (options_json is null or jsonb_typeof(options_json) = 'array'),
-  add constraint questions_answer_schema_object
-    check (answer_schema is null or jsonb_typeof(answer_schema) = 'object'),
-  add constraint questions_correct_answer_data_object
-    check (
-      correct_answer_data is null
-      or jsonb_typeof(correct_answer_data) in ('object', 'string')
-    ),
   add constraint questions_question_metadata_object
-    check (jsonb_typeof(question_metadata) = 'object');
+    check (jsonb_typeof(question_metadata) = 'object'),
+  add constraint questions_english_requires_stimulus
+    check (
+      question_format = 'legacy_multiple_choice'
+      or stimulus_id is not null
+    ),
+  add constraint questions_stimulus_position_valid
+    check (
+      (question_format = 'legacy_multiple_choice' and stimulus_position is null)
+      or
+      (
+        question_format <> 'legacy_multiple_choice'
+        and stimulus_position is not null
+        and stimulus_position >= 1
+      )
+    );
 
 -- Preserve A-D for every legacy/non-Part-1 question. The seven-option
 -- matching bank in English Part 1 may use A-G.
@@ -106,6 +113,10 @@ create index if not exists questions_stimulus_id_idx
 create index if not exists questions_english_part_format_idx
   on public.questions(english_part, question_format)
   where english_part is not null;
+
+create unique index if not exists questions_stimulus_position_unique_idx
+  on public.questions(stimulus_id, stimulus_position)
+  where stimulus_id is not null and stimulus_position is not null;
 
 alter table public.question_stimuli enable row level security;
 
@@ -148,8 +159,5 @@ comment on column public.questions.english_part is
 comment on column public.questions.options_json is
   'Optional ordered options for formats that do not fit the legacy option_a-option_d columns.';
 
-comment on column public.questions.answer_schema is
-  'Versionable schema for validating the student response for this question format.';
-
-comment on column public.questions.correct_answer_data is
-  'Structured answer key used by the server after format-aware grading is deployed.';
+comment on column public.questions.stimulus_position is
+  'One-based order of the item inside its shared stimulus group.';

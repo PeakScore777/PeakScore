@@ -99,7 +99,11 @@ begin
   if v_part = 1 then
     if v_count <> 5
        or jsonb_typeof(v_stimulus.options_json) is distinct from 'array'
-       or jsonb_array_length(v_stimulus.options_json) <> 7 then
+       or case
+            when jsonb_typeof(v_stimulus.options_json) = 'array'
+              then jsonb_array_length(v_stimulus.options_json) <> 7
+            else true
+          end then
       raise exception 'INVALID_ENGLISH_PART_1_SET';
     end if;
 
@@ -135,7 +139,11 @@ begin
       where q.stimulus_id = p_stimulus_id
         and (
           jsonb_typeof(q.options_json) is distinct from 'array'
-          or jsonb_array_length(q.options_json) <> case when v_part in (2, 3, 4, 5) then 3 else 4 end
+          or case
+               when jsonb_typeof(q.options_json) = 'array'
+                 then jsonb_array_length(q.options_json) <> case when v_part in (2, 3, 4, 5) then 3 else 4 end
+               else true
+             end
           or exists (
             select 1
             from jsonb_array_elements(q.options_json) with ordinality item(opt, ord)

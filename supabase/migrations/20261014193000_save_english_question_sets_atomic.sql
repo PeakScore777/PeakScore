@@ -113,7 +113,7 @@ begin
       end if;
       if v_part in (4, 7) then
         select count(*) into v_marker_count
-        from regexp_matches(v_content, '\\[\\[[0-9]+\\]\\]', 'g') as marker;
+        from regexp_matches(v_content, '\[\[[0-9]+\]\]', 'g') as marker;
 
         if v_marker_count = 0 or v_marker_count <> v_question_count then
           raise exception 'INVALID_ENGLISH_CLOZE_MARKERS';

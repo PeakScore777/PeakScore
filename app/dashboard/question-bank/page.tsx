@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Calculator,
+  CheckCircle2,
   Globe,
   Languages,
   Loader2,

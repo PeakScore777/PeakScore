@@ -35,6 +35,7 @@ Los porcentajes y descripciones se derivan de la guía oficial. La cantidad de �
 - `content`: instrucciones y/o contenido textual del estímulo. En cloze, contiene marcadores explícitos de espacios, por ejemplo `[[1]]`, `[[2]]`.
 - `options_json`: banco compartido de siete palabras A–G para Parte 1; nulo en los demás formatos salvo una necesidad validada.
 - `image_url`, `image_alt`: recurso visual opcional. No se debe inventar una imagen ni confiar en que un generador de texto produzca el visual final.
+- `expected_question_count`: número esperado de ítems del grupo; el selector de simulacros compara esta cantidad con los ítems activos disponibles.
 - `metadata`: metadatos acotados, no la clave de respuesta.
 
 ### Ítem puntuable
@@ -68,7 +69,7 @@ La generación de Inglés debe producir conjuntos completos, no preguntas aislad
 - La generación editorial en PeakScore agrupa las Partes 1, 4, 5, 6 y 7 en lotes de cinco ítems por estímulo. Esta es una decisión interna para mantener textos y bancos completos, no un conteo oficial por parte del ICFES. Las Partes 2 y 3 usan un ítem por aviso/conversación y permiten pedir varios estímulos en una generación.
 - Cada estímulo almacena `expected_question_count`; el ensamblador de simulacros compara ese valor con los ítems activos realmente disponibles antes de incluir el grupo. Así no se selecciona un cloze, lectura o matching parcialmente desactivado.
 
-Un conjunto se guarda de manera consistente: primero se crea el estímulo y después todos los ítems que lo referencian; si falla la escritura de algún ítem, el conjunto no debe quedar parcialmente publicado. La creación/edición del banco debe validar el conjunto completo antes de marcar sus preguntas como activas.
+Un conjunto se guarda de manera consistente: primero se crea el estímulo y después todos los ítems que lo referencian; si falla la escritura de algún ítem, el conjunto no debe quedar parcialmente publicado. Los conjuntos generados se guardan inicialmente inactivos. Solo después de una revisión editorial explícita, un RPC valida de nuevo el conjunto y activa todos sus ítems en una sola operación.
 
 ## 5. Cómo deben usarlo los simulacros
 

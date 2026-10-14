@@ -927,7 +927,8 @@ export default function ExamPage() {
           ].map((text, index) => ({
             key: String.fromCharCode(65 + index),
             text,
-          }));
+          }))
+    : [];
 
   const questionContext =
     question?.context_text?.trim()

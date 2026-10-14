@@ -31,7 +31,11 @@ interface GeneratedQuestionPreview {
   option_b?: string | null;
   option_c?: string | null;
   option_d?: string | null;
+  options_json?: Array<{ key: string; text: string }> | null;
   correct_answer?: string | null;
+  english_part?: number | null;
+  stimulus_position?: number | null;
+  stimulus_type?: string | null;
 }
 
 interface FormState {
@@ -88,6 +92,7 @@ function NewQuestionPageContent() {
     session: "",
     amount: "5",
     difficulty: "Mixta",
+    english_part: "1",
   });
 
   const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestionPreview[]>([]);
@@ -189,6 +194,11 @@ function NewQuestionPageContent() {
     setAiForm((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === "subject"
+        ? value === "Inglés"
+          ? { session: "2" }
+          : { session: prev.session === "2" ? "" : prev.session }
+        : {}),
     }));
   };
 
@@ -218,6 +228,11 @@ function NewQuestionPageContent() {
       return;
     }
 
+    if (aiForm.subject === "Inglés" && aiForm.english_part === "1" && amount % 5 !== 0) {
+      alert("La Parte 1 se genera en conjuntos completos de cinco descripciones. Usa 5, 10, 15… preguntas.");
+      return;
+    }
+
     try {
       setLoading(true);
       setGenerationComplete(false);
@@ -241,6 +256,9 @@ function NewQuestionPageContent() {
           session: Number(aiForm.session),
           amount,
           difficulty: aiForm.difficulty,
+          ...(aiForm.subject === "Inglés"
+            ? { english_part: Number(aiForm.english_part) }
+            : {}),
         }),
       });
 
@@ -379,10 +397,37 @@ function NewQuestionPageContent() {
                     required
                     min="1"
                     max="2"
+                    readOnly={aiForm.subject === "Inglés"}
                     placeholder="Ej: 2"
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-purple-500"
                   />
                 </div>
+
+                {aiForm.subject === "Inglés" && (
+                  <div className="md:col-span-2 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                    <label className="mb-2 block font-semibold text-blue-950">
+                      Parte del examen de Inglés *
+                    </label>
+                    <select
+                      name="english_part"
+                      value={aiForm.english_part}
+                      onChange={handleAiChange}
+                      required
+                      className="w-full rounded-xl border border-blue-200 bg-white px-4 py-3 outline-none focus:border-blue-500"
+                    >
+                      <option value="1">Parte 1 · Conocimiento lexical (banco A–G)</option>
+                      <option value="2">Parte 2 · Conocimiento pragmático (avisos)</option>
+                      <option value="3">Parte 3 · Conocimiento comunicativo (conversación)</option>
+                      <option value="4">Parte 4 · Gramática en contexto (cloze A–C)</option>
+                      <option value="5">Parte 5 · Comprensión literal (A–C)</option>
+                      <option value="6">Parte 6 · Comprensión inferencial (A–D)</option>
+                      <option value="7">Parte 7 · Gramática y léxico en contexto (cloze A–D)</option>
+                    </select>
+                    <p className="mt-2 text-sm text-blue-800">
+                      PeakScore guardará cada estímulo con sus ítems vinculados. En la Parte 1 la cantidad debe ser múltiplo de cinco.
+                    </p>
+                  </div>
+                )}
 
                 {/* CANTIDAD */}
 
@@ -403,7 +448,9 @@ function NewQuestionPageContent() {
                   />
 
                   <p className="mt-1 text-sm text-slate-500">
-                    Máximo 100 preguntas por generación.
+                    {aiForm.subject === "Inglés" && aiForm.english_part === "1"
+                      ? "Máximo 100 preguntas por generación; la Parte 1 requiere múltiplos de cinco."
+                      : "Máximo 100 preguntas por generación."}
                   </p>
                 </div>
 
@@ -543,7 +590,9 @@ function NewQuestionPageContent() {
                   >
                     <div className="mb-4 flex items-center justify-between">
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                        Pregunta #{index + 1}
+                        {question?.english_part
+                          ? `Parte ${question.english_part} · Ítem ${question.stimulus_position ?? index + 1}`
+                          : `Pregunta #${index + 1}`}
                       </span>
 
                       {question?.difficulty && (
@@ -570,15 +619,21 @@ function NewQuestionPageContent() {
                     </p>
 
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
-                      {(["a", "b", "c", "d"] as const).map((letter) => (
+                      {(question?.options_json?.length
+                        ? question.options_json
+                        : (["a", "b", "c", "d"] as const)
+                            .map((letter) => ({
+                              key: letter.toUpperCase(),
+                              text: String(question?.[`option_${letter}` as keyof GeneratedQuestionPreview] ?? ""),
+                            }))
+                            .filter((option) => option.text.trim().length > 0)
+                      ).map((option) => (
                         <div
-                          key={letter}
+                          key={option.key}
                           className="rounded-xl border border-slate-200 p-3"
                         >
-                          <span className="font-bold">
-                            {letter.toUpperCase()}.
-                          </span>{" "}
-                          {question?.[`option_${letter}` as keyof GeneratedQuestionPreview]}
+                          <span className="font-bold">{option.key}.</span>{" "}
+                          {option.text}
                         </div>
                       ))}
                     </div>

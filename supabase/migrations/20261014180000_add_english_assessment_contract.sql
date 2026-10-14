@@ -69,8 +69,11 @@ alter table public.questions
         'english_lexical_cloze'
       )
       and options_json is not null
-      and jsonb_typeof(options_json) = 'array'
-      and jsonb_array_length(options_json) between 3 and 4
+      and case
+            when jsonb_typeof(options_json) = 'array'
+              then jsonb_array_length(options_json) between 3 and 4
+            else false
+          end
     )
   );
 

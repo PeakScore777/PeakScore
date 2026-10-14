@@ -183,9 +183,14 @@ export default function QuestionBankPage() {
 
     return questions.filter((question) => {
       const contextText =
-        question.context_text
-          ?.toLowerCase()
-          .trim() ?? "";
+        (question.context_text || question.stimulus_content || "")
+          .toLowerCase()
+          .trim();
+
+      const dynamicOptions = [
+        ...(question.options_json ?? []),
+        ...(question.english_part === 1 ? question.stimulus_options_json ?? [] : []),
+      ];
 
       const matchesSearch =
         !searchValue ||
@@ -193,18 +198,11 @@ export default function QuestionBankPage() {
           .toLowerCase()
           .includes(searchValue) ||
         contextText.includes(searchValue) ||
-        question.option_a
-          .toLowerCase()
-          .includes(searchValue) ||
-        question.option_b
-          .toLowerCase()
-          .includes(searchValue) ||
-        question.option_c
-          .toLowerCase()
-          .includes(searchValue) ||
-        question.option_d
-          .toLowerCase()
-          .includes(searchValue);
+        dynamicOptions.some((option) => option.text.toLowerCase().includes(searchValue)) ||
+        question.option_a.toLowerCase().includes(searchValue) ||
+        question.option_b.toLowerCase().includes(searchValue) ||
+        question.option_c.toLowerCase().includes(searchValue) ||
+        question.option_d.toLowerCase().includes(searchValue);
 
       const matchesSubject =
         !subjectFilter ||

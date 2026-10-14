@@ -128,6 +128,11 @@ function NewQuestionPageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (form.subject === "Inglés") {
+      alert("Para conservar la estructura oficial de Inglés, crea esas preguntas desde el generador por partes. La creación manual estructurada se habilitará después.");
+      return;
+    }
+
     try {
       setLoading(true);
 

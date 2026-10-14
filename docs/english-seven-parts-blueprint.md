@@ -51,7 +51,7 @@ Cada pregunta es un registro individual en `questions`, para mantener compatible
 - `explanation`: explicación editorial de la respuesta, independiente de la función futura de tutoría por IA.
 - `question_metadata`: habilidad, tipo de tarea, nivel MCER estimado si fue revisado, número de espacio, revisión editorial y otros metadatos no sensibles.
 
-Se conservan `option_a`–`option_d` para no romper preguntas y materias actuales. Las preguntas legacy siguen usando el camino A–D. No se debe leer `correct_answer_data` ni `answer_schema` como claves paralelas si el formato sigue siendo selección múltiple de única respuesta; mantener una sola fuente de verdad para la calificación.
+Se conservan `option_a`–`option_d` para no romper preguntas y materias actuales. Las preguntas legacy siguen usando el camino A–D. La columna `correct_answer` sigue siendo la única fuente de verdad para la calificación de selección múltiple de única respuesta.
 
 ## 4. Reglas de agrupación y generación
 

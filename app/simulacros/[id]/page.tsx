@@ -298,7 +298,7 @@ export default function ExamPage() {
 
               if (
                 questionIndex >= 0 &&
-                ["A", "B", "C", "D"].includes(
+                ["A", "B", "C", "D", "E", "F", "G"].includes(
                   answer.selected_answer
                 )
               ) {

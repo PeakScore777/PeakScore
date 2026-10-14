@@ -63,4 +63,5 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 - La rama ya incluye una ruta de generación estructurada para Inglés, pero todavía no se ha ejecutado ni probado contra las migraciones; no afirmar que funciona en producción.
 - La migración de funciones SQL conserva el algoritmo de calificación previo; se debe revisar y probar en base de prueba antes de aplicarla a producción.
 - La lista de opciones de la interfaz supone que las opciones estructuradas están ordenadas por clave A, B, C…; la validación de generación debe exigir ese orden.
+- En la interfaz del simulacro se añadió una protección para Parte 1: una palabra del banco A–G no puede seleccionarse en otra descripción del mismo estímulo si ya está asignada. Falta probar el comportamiento con progreso guardado y recuperación de intento.
 - No afirmar que Inglés está listo para producción hasta completar las pruebas anteriores.

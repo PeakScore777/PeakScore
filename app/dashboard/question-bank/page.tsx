@@ -705,6 +705,13 @@ export default function QuestionBankPage() {
                             Sesión {question.session}
                           </span>
 
+                          {question.english_part && (
+                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700">
+                              Inglés · Parte {question.english_part}
+                              {question.stimulus_position ? ` · Ítem ${question.stimulus_position}` : ""}
+                            </span>
+                          )}
+
                           {question.year && (
                             <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
                               {question.year}
@@ -716,7 +723,7 @@ export default function QuestionBankPage() {
                             TEXTO DE CONTEXTO
                         ================================================= */}
 
-                        {question.context_text && (
+                        {(question.context_text || question.stimulus_content) && (
                           <div className="mb-6 overflow-hidden rounded-2xl border border-purple-200 bg-purple-50">
 
                             <div className="flex items-center gap-2 border-b border-purple-200 bg-purple-100 px-5 py-3">
@@ -731,7 +738,7 @@ export default function QuestionBankPage() {
                             </div>
 
                             <div className="whitespace-pre-line px-5 py-5 text-[15px] leading-7 text-slate-700">
-                              {question.context_text}
+                              {question.context_text || question.stimulus_content}
                             </div>
                           </div>
                         )}
@@ -740,7 +747,7 @@ export default function QuestionBankPage() {
                             IMAGEN
                         ================================================= */}
 
-                        {question.image_url && (
+                        {(question.image_url || question.stimulus_image_url) && (
                           <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
 
                             <div className="mb-3 flex items-center gap-2">
@@ -755,8 +762,8 @@ export default function QuestionBankPage() {
                             </div>
 
                             <Image
-                              src={question.image_url}
-                              alt="Imagen de apoyo de la pregunta"
+                              src={question.image_url || question.stimulus_image_url || ""}
+                              alt={question.stimulus_image_alt || "Imagen de apoyo de la pregunta"}
                               width={480}
                               height={320}
                               unoptimized
@@ -789,34 +796,27 @@ export default function QuestionBankPage() {
                         ================================================= */}
 
                         <div className="mt-5 grid gap-3 md:grid-cols-2">
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800">
-                            <span className="font-semibold text-slate-900">
-                              A.
-                            </span>{" "}
-                            {question.option_a}
-                          </div>
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800">
-                            <span className="font-semibold text-slate-900">
-                              B.
-                            </span>{" "}
-                            {question.option_b}
-                          </div>
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800">
-                            <span className="font-semibold text-slate-900">
-                              C.
-                            </span>{" "}
-                            {question.option_c}
-                          </div>
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800">
-                            <span className="font-semibold text-slate-900">
-                              D.
-                            </span>{" "}
-                            {question.option_d}
-                          </div>
+                          {(question.options_json?.length
+                            ? question.options_json
+                            : question.english_part === 1 && question.stimulus_options_json?.length
+                              ? question.stimulus_options_json
+                              : [
+                                  { key: "A", text: question.option_a },
+                                  { key: "B", text: question.option_b },
+                                  { key: "C", text: question.option_c },
+                                  { key: "D", text: question.option_d },
+                                ].filter((option) => option.text.trim().length > 0)
+                          ).map((option) => (
+                            <div
+                              key={option.key}
+                              className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800"
+                            >
+                              <span className="font-semibold text-slate-900">
+                                {option.key}.
+                              </span>{" "}
+                              {option.text}
+                            </div>
+                          ))}
                         </div>
 
                         {/* =================================================

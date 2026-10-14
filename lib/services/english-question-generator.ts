@@ -21,18 +21,13 @@ export interface EnglishGenerationResult {
 type RequestedDifficulty = "Fácil" | "Media" | "Difícil" | "Mixta";
 
 function expectedSetCount(part: EnglishPart, amount: number): number {
-  if (part === 1) return amount / 5;
   if (part === 2 || part === 3) return amount;
-  return 1;
+  return amount / 5;
 }
 
-function expectedQuestionCountPerSet(
-  part: EnglishPart,
-  amount: number,
-): number {
-  if (part === 1) return 5;
+function expectedQuestionCountPerSet(part: EnglishPart): number {
   if (part === 2 || part === 3) return 1;
-  return amount;
+  return 5;
 }
 
 export function validateEnglishGenerationRequest(
@@ -43,8 +38,13 @@ export function validateEnglishGenerationRequest(
     return "La cantidad debe ser un entero entre 1 y 100.";
   }
 
-  if (part === 1 && amount % 5 !== 0) {
-    return "La Parte 1 se genera en conjuntos completos de cinco descripciones. Usa 5, 10, 15… preguntas.";
+  if ([1, 4, 5, 6, 7].includes(part) && amount % 5 !== 0) {
+    const groupName = part === 1
+      ? "cinco descripciones y un banco A–G"
+      : part === 4 || part === 7
+        ? "cinco espacios por texto cloze"
+        : "cinco preguntas por texto de lectura";
+    return `La Parte ${part} se genera en conjuntos completos de ${groupName}. Usa 5, 10, 15… preguntas.`;
   }
 
   return null;
@@ -58,7 +58,7 @@ export function buildEnglishGenerationPrompt(
   const format = getEnglishFormat(part);
   const stimulusType = getEnglishStimulusType(part);
   const setCount = expectedSetCount(part, amount);
-  const itemCount = expectedQuestionCountPerSet(part, amount);
+  const itemCount = expectedQuestionCountPerSet(part);
 
   const structure = {
     1: "Cada conjunto debe tener un banco compartido de exactamente siete palabras/opciones A-G y exactamente cinco descripciones en inglés. Cada descripción es un ítem puntuable independiente. Dos palabras del banco no se usan. No incluyas opciones individuales en las preguntas.",
@@ -175,7 +175,7 @@ export function parseAndValidateEnglishGeneration(
 
   const rawSets = (parsed as { sets: unknown[] }).sets;
   const expectedSets = expectedSetCount(part, amount);
-  const expectedPerSet = expectedQuestionCountPerSet(part, amount);
+  const expectedPerSet = expectedQuestionCountPerSet(part);
   const errors: string[] = [];
   const sets: EnglishGeneratedSet[] = [];
   let totalQuestions = 0;

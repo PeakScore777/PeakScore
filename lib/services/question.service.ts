@@ -42,6 +42,7 @@ export interface Question {
   english_part?: number | null;
   stimulus_id?: string | null;
   stimulus_position?: number | null;
+  stimulus_expected_question_count?: number | null;
   options_json?: QuestionOption[] | null;
   stimulus_content?: string | null;
   stimulus_options_json?: QuestionOption[] | null;
@@ -115,7 +116,7 @@ export async function getQuestions(): Promise<Question[]> {
 
   const { data: stimuli, error: stimuliError } = await supabase
     .from("question_stimuli")
-    .select("id, content, options_json, image_url, image_alt, stimulus_type")
+    .select("id, content, expected_question_count, options_json, image_url, image_alt, stimulus_type")
     .in("id", stimulusIds);
 
   if (stimuliError || !stimuli) {
@@ -138,6 +139,7 @@ export async function getQuestions(): Promise<Question[]> {
     return {
       ...question,
       stimulus_content: stimulus?.content ?? null,
+      stimulus_expected_question_count: stimulus?.expected_question_count ?? null,
       stimulus_options_json: stimulus?.options_json ?? null,
       stimulus_image_url: stimulus?.image_url ?? null,
       stimulus_image_alt: stimulus?.image_alt ?? null,

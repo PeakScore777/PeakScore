@@ -42,6 +42,7 @@ export async function GET() {
       .from("profiles")
       .select(`
         id,
+        role,
         full_name,
         email,
         avatar_url,
@@ -289,6 +290,7 @@ export async function GET() {
     return NextResponse.json({
       profile: {
         id: profile.id,
+        isAdmin: profile.role === "admin",
         fullName: profile.full_name,
         email: profile.email,
         avatarUrl: profile.avatar_url,

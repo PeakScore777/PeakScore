@@ -50,6 +50,14 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 10. Solo después de pasar las pruebas, generar preguntas originales, revisar sus respuestas y explicaciones, y conectar Inglés al simulacro completo.
 11. La función de IA que explica respuestas incorrectas queda expresamente para una fase posterior, manual y separada.
 
+## Correcciones adicionales de auditoría
+
+- Se protegieron las validaciones JSON de opciones para no llamar a `jsonb_array_length` o `jsonb_array_elements` sobre valores que no sean arreglos, tanto al guardar conjuntos como al aprobarlos.
+- La revisión editorial sigue limitada a `service_role`; el endpoint comprueba la sesión y el rol `admin` antes de invocarla.
+- La selección del simulacro filtra preguntas activas y exige conjuntos completos según `expected_question_count`. Todavía debe probarse con grupos reales y con las RPC de progreso/finalización.
+- Se confirmó mediante lectura del esquema de producción que la restricción actual de `questions.correct_answer` es A–D. La migración de la rama la amplía únicamente para admitir E–G en la Parte 1; esto no se ha aplicado a Supabase.
+- No se ha ejecutado un build local desde esta sesión; el estado de Vercel consultado continúa pendiente.
+
 ## Advertencias de auditoría
 
 - La rama ya incluye una ruta de generación estructurada para Inglés, pero todavía no se ha ejecutado ni probado contra las migraciones; no afirmar que funciona en producción.

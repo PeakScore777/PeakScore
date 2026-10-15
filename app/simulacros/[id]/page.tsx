@@ -294,11 +294,14 @@ export default function ExamPage() {
                     answer.question_id
                 );
 
+              const restoredQuestion = questionIndex >= 0 ? questionData[questionIndex] : null;
+              const allowedLetters = restoredQuestion?.english_part === 2
+                ? ["A", "B", "C", "D", "E", "F", "G"]
+                : ["A", "B", "C", "D"];
+
               if (
                 questionIndex >= 0 &&
-                ["A", "B", "C", "D"].includes(
-                  answer.selected_answer
-                )
+                allowedLetters.includes(answer.selected_answer)
               ) {
                 serverAnswers[
                   questionIndex
@@ -1275,6 +1278,12 @@ export default function ExamPage() {
                     CONTEXTO
                 ================================================== */}
 
+                {question.english_set?.instructions && (
+                  <div className="mb-5 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold leading-6 text-blue-900">
+                    {question.english_set.instructions}
+                  </div>
+                )}
+
                 {question.context_text &&
                   question.context_text.trim() && (
                     <div className="relative mb-7 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
@@ -1360,16 +1369,19 @@ export default function ExamPage() {
 
                   <div className="space-y-3">
 
-                    {[
-                      question.option_a,
-                      question.option_b,
-                      question.option_c,
-                      question.option_d,
-                    ].map(
-                      (
-                        option,
-                        index
-                      ) => {
+                    {(() => {
+                      const englishChoices = question.english_part === 2
+                        ? (question.english_set?.word_bank ?? []).slice(0, 7).map((text, index) => ({
+                            key: String.fromCharCode(65 + index),
+                            text,
+                          }))
+                        : question.english_options?.length
+                          ? question.english_options
+                          : null;
+                      const choices = englishChoices
+                        ? englishChoices.map((choice) => choice.text)
+                        : [question.option_a, question.option_b, question.option_c, question.option_d];
+                      return choices.map((option, index) => {
 
                         const optionNumber =
                           index + 1;
@@ -1445,7 +1457,8 @@ export default function ExamPage() {
                           </button>
                         );
                       }
-                    )}
+                    );
+                    })()}
 
                   </div>
 

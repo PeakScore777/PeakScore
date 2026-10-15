@@ -25,7 +25,7 @@ const PARTS: { value: Part; title: string; description: string; type: string }[]
   { value: 7, title: "Parte 7 · Gramática y léxico en contexto", description: "Texto cloze con espacios numerados y cuatro opciones por pregunta.", type: "cloze_text" },
 ];
 
-function createItem(part: Part, position: number): Item {
+function createItem(part: Part): Item {
   const count = part === 1 ? 0 : part === 6 || part === 7 ? 4 : 3;
   return {
     question: "",
@@ -44,7 +44,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   const [wordBank, setWordBank] = useState<Option[]>(
     Array.from({ length: 7 }, (_, i) => ({ key: String.fromCharCode(65 + i), text: "" })),
   );
-  const [items, setItems] = useState<Item[]>(() => Array.from({ length: 5 }, (_, i) => createItem(1, i + 1)));
+  const [items, setItems] = useState<Item[]>(() => Array.from({ length: 5 }, (_, i) => createItem(1)));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [savedCount, setSavedCount] = useState<number | null>(null);
@@ -57,7 +57,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   function changePart(next: Part) {
     setPart(next);
     setStimulus("");
-    setItems(Array.from({ length: next === 1 ? 5 : next === 2 || next === 3 ? 1 : 3 }, (_, i) => createItem(next, i + 1)));
+    setItems(Array.from({ length: next === 1 ? 5 : next === 2 || next === 3 ? 1 : 3 }, (_, i) => createItem(next)));
     setWordBank(Array.from({ length: 7 }, (_, i) => ({ key: String.fromCharCode(65 + i), text: "" })));
     setError("");
     setSavedCount(null);
@@ -77,7 +77,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   function addItem() {
     if (items.length >= maxItems) return;
     const next = items.length + 1;
-    setItems((current) => [...current, createItem(part, next)]);
+    setItems((current) => [...current, createItem(part)]);
     if (part === 4 || part === 7) {
       setStimulus((current) => current.includes(`[[${next}]]`) ? current : `${current.trimEnd()} [[${next}]]`.trim());
     }

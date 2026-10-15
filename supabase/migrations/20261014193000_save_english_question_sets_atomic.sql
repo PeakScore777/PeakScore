@@ -135,7 +135,12 @@ begin
         and char_length(trim(coalesce(item.opt->>'text', ''))) > 0
         and char_length(item.opt->>'text') <= 1000;
 
-      if v_option_count <> 7 or v_key_count <> 7 then
+      if v_option_count <> 7
+         or v_key_count <> 7
+         or (
+           select count(distinct lower(trim(item.opt->>'text')))
+           from jsonb_array_elements(v_options) item(opt)
+         ) <> 7 then
         raise exception 'INVALID_ENGLISH_WORD_BANK';
       end if;
     end if;

@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(questions) || questions.length < 1 || questions.length > MAX_QUESTIONS) {
       return NextResponse.json({ error: "El conjunto debe contener entre 1 y 30 preguntas." }, { status: 400 });
     }
-    if ([4, 6, 7].includes(part) && sharedText.length < 20) {
+    if ([4, 5, 6, 7].includes(part) && sharedText.length < 20) {
       return NextResponse.json({ error: "Esta parte necesita un texto compartido de al menos 20 caracteres." }, { status: 400 });
     }
     if (part === 2 && (wordBank.length < 7 || wordBank.length > 8)) {
@@ -108,10 +108,10 @@ export async function POST(request: NextRequest) {
       difficulty: clean(body?.difficulty, 20) || "Media",
       context_text: sharedText || null,
       question: clean(question.prompt, 10000),
-      option_a: question.options[0]?.text ?? "",
-      option_b: question.options[1]?.text ?? "",
-      option_c: question.options[2]?.text ?? "",
-      option_d: question.options[3]?.text ?? "",
+      option_a: question.options[0]?.text ?? "—",
+      option_b: question.options[1]?.text ?? "—",
+      option_c: question.options[2]?.text ?? "—",
+      option_d: question.options[3]?.text ?? "—",
       correct_answer: question.answer.toUpperCase(),
       explanation: clean(question.explanation, 5000) || null,
       image_url: clean(question.imageUrl, 2048) || null,

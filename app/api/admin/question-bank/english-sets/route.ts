@@ -184,3 +184,59 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
   }
 }
+
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const origin = request.headers.get("origin");
+    if (origin && origin !== new URL(request.url).origin) {
+      return NextResponse.json({ error: "Origen no autorizado." }, { status: 403 });
+    }
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
+    const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    if (profileError) return NextResponse.json({ error: "No fue posible verificar tus permisos." }, { status: 500 });
+    if (profile?.role !== "admin" || user.email?.toLowerCase() !== ADMIN_EMAIL) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+
+    const body = await request.json();
+    const setId = clean(body?.setId, 64);
+    const status = body?.status;
+    if (!/^[0-9a-f-]{36}$/i.test(setId) || !["review", "approved", "rejected", "draft"].includes(status)) {
+      return NextResponse.json({ error: "Conjunto o estado inválido." }, { status: 400 });
+    }
+    const { data: set, error: setError } = await supabaseAdmin.from("english_question_sets")
+      .select("id, part, status").eq("id", setId).maybeSingle();
+    if (setError) return NextResponse.json({ error: "No fue posible consultar el conjunto." }, { status: 500 });
+    if (!set) return NextResponse.json({ error: "El conjunto no existe." }, { status: 404 });
+
+    const { data: questions, error: questionError } = await supabaseAdmin.from("questions")
+      .select("id, question, correct_answer, option_a, option_b, option_c, option_d, image_url, english_options")
+      .eq("english_set_id", setId).order("english_position", { ascending: true });
+    if (questionError) return NextResponse.json({ error: "No fue posible revisar las preguntas." }, { status: 500 });
+    if (!questions?.length) return NextResponse.json({ error: "No se puede revisar un conjunto vacío." }, { status: 400 });
+
+    if (status === "approved") {
+      const incomplete = questions.some(q => !q.question?.trim() || !q.correct_answer ||
+        (set.part === 1 && !q.image_url) ||
+        (set.part === 2 ? !["A","B","C","D","E","F","G"].includes(q.correct_answer) :
+          ![q.option_a, q.option_b, q.option_c].every(v => typeof v === "string" && v.trim()) ||
+          (set.part === 7 && !q.option_d?.trim())));
+      if (incomplete) return NextResponse.json({ error: "Hay preguntas incompletas. Corrige el conjunto antes de aprobarlo." }, { status: 400 });
+    }
+
+    const { error: updateError } = await supabaseAdmin.from("english_question_sets").update({
+      status, reviewed_by: user.id, reviewed_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    }).eq("id", setId);
+    if (updateError) return NextResponse.json({ error: "No se pudo actualizar el estado del conjunto." }, { status: 500 });
+
+    const { error: activateError } = await supabaseAdmin.from("questions").update({ is_active: status === "approved" }).eq("english_set_id", setId);
+    if (activateError) {
+      await supabaseAdmin.from("english_question_sets").update({ status: set.status }).eq("id", setId);
+      return NextResponse.json({ error: "No se pudo sincronizar la activación de las preguntas." }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, setId, status });
+  } catch {
+    return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
+  }
+}

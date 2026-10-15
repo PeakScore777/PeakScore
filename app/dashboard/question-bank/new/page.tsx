@@ -399,7 +399,7 @@ function NewQuestionPageContent() {
                       Selecciona una materia
                     </option>
 
-                    {subjects.map((subject) => (
+                    {subjects.filter((subject) => subject !== "Inglés").map((subject) => (
                       <option key={subject} value={subject}>
                         {subject}
                       </option>

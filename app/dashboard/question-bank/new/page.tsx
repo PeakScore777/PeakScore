@@ -703,7 +703,7 @@ function NewQuestionPageContent() {
    * Las demás materias conservan el formulario manual legacy.
    */
   if (!aiMode && form.subject === "Inglés") {
-    return <EnglishManualEditor onBack={() => router.push("/dashboard/question-bank/new")} />;
+    return <EnglishManualEditor onBack={() => router.push("/dashboard/question-bank")} />;
   }
 
   /*

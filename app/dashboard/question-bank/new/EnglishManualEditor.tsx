@@ -161,9 +161,18 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
             <strong>Formato de esta parte:</strong> {instructions[part]}
           </div>
 
-          {part === 2 && <label className="mt-5 block text-sm font-semibold">Banco de palabras compartido (una palabra por línea; A–G y opcionalmente H)
-            <textarea value={wordBankText} onChange={e => changeWordBank(e.target.value)} rows={8} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={"beach\nbed\ncamera\nmountain\nsquare\nsuitcase\npool\ntowel"}/>
-          </label>}
+          {part === 2 && <div className="mt-5 space-y-3">
+            <label className="block text-sm font-semibold">Banco de palabras compartido (una palabra por línea; A–G y opcionalmente H como ejemplo)
+              <textarea value={wordBankText} onChange={e => changeWordBank(e.target.value)} rows={8} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={"beach\nbed\ncamera\nmountain\nsquare\nsuitcase\npool\ntowel"}/>
+            </label>
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 p-4">
+              <p className="mb-2 text-sm font-bold text-indigo-950">Vista previa de las opciones compartidas</p>
+              {wordBank.length === 0 ? <p className="text-sm text-indigo-900">Escribe una palabra por línea para ver el banco A–G. La opción H, si la incluyes, queda como ejemplo y no se puede marcar como respuesta.</p> :
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {wordBank.map((word, index) => <div key={index} className="flex items-start gap-3 rounded-lg bg-white px-3 py-2 text-sm"><span className="font-bold text-indigo-700">{String.fromCharCode(65 + index)}.</span><span className="break-words text-slate-800">{word}{index === 7 ? " (ejemplo)" : ""}</span></div>)}
+                </div>}
+            </div>
+          </div>}
 
           {[4, 5, 6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido
             <textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={part === 5 ? "Escribe aquí el texto de lectura..." : "Escribe aquí el texto y marca los espacios como (1), (2), (3)..."} />

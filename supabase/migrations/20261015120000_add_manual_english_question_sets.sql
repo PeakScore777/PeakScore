@@ -1,6 +1,6 @@
 -- Structured manual authoring for the seven ICFES English parts.
--- Safe to apply more than once. This migration is committed to a feature branch only;
--- it is not applied to any Supabase project by this change.
+-- Safe to apply more than once. The schema has been applied to the connected Supabase project;
+-- keep this migration committed on the feature branch for reproducibility.
 
 create table if not exists public.english_question_sets (
   id uuid primary key default gen_random_uuid(),

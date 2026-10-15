@@ -609,13 +609,15 @@ export default function NewQuestionPage() {
     );
   }
 
-  /*
-   * ================================
-   *   if (form.subject === "Inglés") {
+  // Inglés utiliza su editor estructurado de siete partes.
+  // El formulario genérico se conserva intacto para las demás materias.
+  if (!aiMode && form.subject === "Inglés") {
     return <EnglishManualEditor onBack={() => router.push("/dashboard/question-bank")} />;
   }
 
-MODO MANUAL
+  /*
+   * ================================
+   * MODO MANUAL PARA LAS DEMÁS MATERIAS
    * ================================
    */
 

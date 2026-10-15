@@ -45,6 +45,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   const [questions, setQuestions] = useState<ManualQuestion[]>(Array.from({ length: 5 }, () => makeQuestion(1, [])));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [savedSetId, setSavedSetId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const wordBank = useMemo(() => wordBankText.split("\n").map(x => x.trim()).filter(Boolean), [wordBankText]);
@@ -55,6 +56,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
     setSharedText("");
     setError("");
     setMessage("");
+    setSavedSetId(null);
   }
 
   function updateQuestion(index: number, patch: Partial<ManualQuestion>) {
@@ -87,6 +89,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
     setLoading(true);
     setError("");
     setMessage("");
+    setSavedSetId(null);
     try {
       const response = await fetch("/api/admin/question-bank/english-sets", {
         method: "POST",
@@ -98,12 +101,27 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result?.error || "No se pudo guardar el conjunto.");
+      setSavedSetId(typeof result.setId === "string" ? result.setId : null);
       setMessage(`Conjunto guardado como borrador: ${result.count} pregunta(s). Aún no está activo en simulacros.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al guardar.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function resetForAnotherSet() {
+    setPart(1);
+    setSession("2");
+    setTitle("");
+    setDifficulty("Media");
+    setSharedText("");
+    setWordBankText("");
+    setQuestions(Array.from({ length: 5 }, () => makeQuestion(1, [])));
+    setSavedSetId(null);
+    setMessage("");
+    setError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return (
@@ -190,7 +208,13 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
 
         {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
         {message && <p role="status" className="rounded-xl bg-green-50 p-4 text-green-900">{message}</p>}
-        <div className="flex justify-end"><button type="button" onClick={save} disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-6 py-3 font-semibold text-white disabled:opacity-50"><Save size={18}/>{loading ? "Guardando..." : "Guardar conjunto como borrador"}</button></div>
+        <div className="flex flex-wrap justify-end gap-3">
+          {savedSetId && <>
+            <button type="button" onClick={() => window.location.assign("/dashboard/question-bank/english")} className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-800">Ver banco de Inglés</button>
+            <button type="button" onClick={resetForAnotherSet} className="rounded-xl bg-slate-900 px-5 py-3 font-semibold text-white">Crear otro conjunto</button>
+          </>}
+          <button type="button" onClick={save} disabled={loading} className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-6 py-3 font-semibold text-white disabled:opacity-50"><Save size={18}/>{loading ? "Guardando..." : "Guardar conjunto como borrador"}</button>
+        </div>
       </div>
     </main>
   );

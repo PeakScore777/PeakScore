@@ -20,8 +20,8 @@ function clean(value: unknown, max: number): string {
 
 function validOptions(value: unknown, part: number): value is Choice[] {
   if (!Array.isArray(value)) return false;
-  const expected = [part === 7 ? 4 : part === 2 ? 0 : 3];
-  return (Array.isArray(expected) ? expected.includes(value.length) : value.length === expected) && value.every((item, index) =>
+  const expectedCount = part === 7 ? 4 : part === 2 ? 0 : 3;
+  return value.length === expectedCount && value.every((item, index) =>
     item && item.key === String.fromCharCode(65 + index) &&
     typeof item.text === "string" && item.text.trim().length > 0 && item.text.length <= 5000
   );
@@ -59,10 +59,14 @@ export async function POST(request: NextRequest) {
     const wordBank = Array.isArray(body?.wordBank)
       ? body.wordBank.map((word: unknown) => clean(word, 200)).filter(Boolean).slice(0, 20)
       : [];
+    const difficulty = clean(body?.difficulty, 20);
     const questions: ManualQuestion[] = body?.questions;
 
     if (!Number.isInteger(part) || part < 1 || part > 7 || ![1, 2].includes(session) || !title) {
       return NextResponse.json({ error: "Parte, sesión o título inválido." }, { status: 400 });
+    }
+    if (!["Fácil", "Media", "Difícil"].includes(difficulty)) {
+      return NextResponse.json({ error: "La dificultad seleccionada no es válida." }, { status: 400 });
     }
     if (!Array.isArray(questions) || questions.length < 1 || questions.length > MAX_QUESTIONS) {
       return NextResponse.json({ error: "El conjunto debe contener entre 1 y 30 preguntas." }, { status: 400 });
@@ -73,6 +77,9 @@ export async function POST(request: NextRequest) {
     if (part === 2 && (wordBank.length < 7 || wordBank.length > 8)) {
       return NextResponse.json({ error: "La Parte 2 necesita siete palabras A–G y, opcionalmente, una octava palabra H de ejemplo." }, { status: 400 });
     }
+    if (part === 2 && new Set(wordBank.map((word: string) => word.toLocaleLowerCase("en"))).size !== wordBank.length) {
+      return NextResponse.json({ error: "El banco de palabras no puede contener palabras duplicadas." }, { status: 400 });
+    }
 
     for (const [index, question] of questions.entries()) {
       const prompt = clean(question?.prompt, 10000);
@@ -80,8 +87,18 @@ export async function POST(request: NextRequest) {
       if (!prompt || !validOptions(question?.options, part) || (part === 2 ? !wordBank.slice(0, 7).some((_, i) => String.fromCharCode(65 + i) === answer) : !question.options.some(option => option.key === answer))) {
         return NextResponse.json({ error: `Revisa la pregunta ${index + 1}: enunciado, opciones o respuesta correcta inválidos.` }, { status: 400 });
       }
-      if (part === 1 && !clean(question.imageUrl, 2048)) {
-        return NextResponse.json({ error: `La pregunta ${index + 1} de la Parte 1 necesita una imagen o aviso.` }, { status: 400 });
+      if (part === 1) {
+        const imageUrl = clean(question.imageUrl, 2048);
+        let validImageUrl = false;
+        try {
+          const parsed = new URL(imageUrl);
+          validImageUrl = ["http:", "https:"].includes(parsed.protocol);
+        } catch {
+          validImageUrl = false;
+        }
+        if (!validImageUrl) {
+          return NextResponse.json({ error: `La pregunta ${index + 1} de la Parte 1 necesita una URL de imagen o aviso válida (http/https).` }, { status: 400 });
+        }
       }
     }
 
@@ -105,7 +122,7 @@ export async function POST(request: NextRequest) {
       session,
       component: `Parte ${part}`,
       competence: "Uso y comprensión del inglés",
-      difficulty: clean(body?.difficulty, 20) || "Media",
+      difficulty,
       context_text: sharedText || null,
       question: clean(question.prompt, 10000),
       option_a: question.options[0]?.text ?? "—",

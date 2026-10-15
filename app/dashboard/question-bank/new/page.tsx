@@ -84,6 +84,7 @@ export default function NewQuestionPage() {
   const [generationComplete, setGenerationComplete] = useState(false);
 
   const [form, setForm] = useState<FormState>(initialForm);
+  const [englishInitialPart, setEnglishInitialPart] = useState(1);
 
   /*
    * Detectar ?mode=ai
@@ -93,6 +94,10 @@ export default function NewQuestionPage() {
     setAiMode(params.get("mode") === "ai");
     if (params.get("subject") === "Inglés") {
       setForm((current) => ({ ...current, subject: "Inglés" }));
+    }
+    const requestedPart = Number(params.get("part"));
+    if (Number.isInteger(requestedPart) && requestedPart >= 1 && requestedPart <= 7) {
+      setEnglishInitialPart(requestedPart);
     }
   }, []);
 
@@ -615,7 +620,7 @@ export default function NewQuestionPage() {
   // Inglés utiliza su editor estructurado de siete partes.
   // El formulario genérico se conserva intacto para las demás materias.
   if (!aiMode && form.subject === "Inglés") {
-    return <EnglishManualEditor onBack={() => router.push("/dashboard/question-bank")} />;
+    return <EnglishManualEditor initialPart={englishInitialPart} onBack={() => router.push("/dashboard/question-bank/english")} />;
   }
 
   /*

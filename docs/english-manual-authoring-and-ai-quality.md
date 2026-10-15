@@ -29,15 +29,16 @@ Rama de trabajo: `feat/english-seven-parts-foundation`
    - Inglés ya no aparece en el selector del generador IA ni en la generación masiva.
 4. `app/api/generate-questions/route.ts`
    - Rechaza solicitudes IA de Inglés y dirige al flujo manual.
-6. `app/dashboard/question-bank/batch/page.tsx` y `app/api/generate-question-batch/route.ts`
+5. `app/dashboard/question-bank/batch/page.tsx` y `app/api/generate-question-batch/route.ts`
    - Excluyen Inglés de la generación masiva tanto en la interfaz como en el servidor.
-   - Añade comprobaciones pedagógicas al prompt para las cuatro materias que siguen usando IA: diversidad real, distractores plausibles, evidencia textual, control de sesgos y verificación matemática/científica.
-5. `supabase/migrations/20261014210000_restrict_direct_simulation_reward_grants.sql`
-   - Corrección de permisos preparada en la rama; todavía no aplicada a producción.
+   - Refuerzan la revisión pedagógica en el prompt de generación individual y masiva para las cuatro materias que siguen usando IA: diversidad, distractores plausibles, respaldo textual, control de sesgos y comprobaciones matemáticas/científicas.
+6. `app/dashboard/question-bank/new/EnglishManualEditor.tsx`
+   - Aplica rangos editoriales por parte: Parte 4 (4–8), Parte 5 (4–7), Parte 6 (2–4) y Parte 7 (4–8).
+   - Al quitar un ítem cloze, elimina su marcador y renumera los posteriores.
 
 ## Dependencia de base de datos
 
-El editor estructurado necesita las cuatro migraciones de Inglés ya presentes en esta rama:
+El editor estructurado necesita las cuatro migraciones de Inglés presentes en esta rama (todavía no aplicadas a producción):
 - `20261014180000_add_english_assessment_contract.sql`
 - `20261014190000_validate_format_aware_answers.sql`
 - `20261014193000_save_english_question_sets_atomic.sql`

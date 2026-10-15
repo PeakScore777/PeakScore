@@ -14,6 +14,14 @@ interface Question {
   subject: string;
   difficulty: string;
   is_active: boolean;
+  question_format?: string;
+  english_part?: number | null;
+  stimulus_id?: string | null;
+  stimulus_position?: number | null;
+  stimulus_content?: string | null;
+  stimulus_type?: string | null;
+  stimulus_options_json?: Array<{ key: string; text: string }> | null;
+  stimulus_expected_question_count?: number | null;
 }
 
 const SUBJECTS = [
@@ -39,6 +47,117 @@ function shuffle<T>(items: T[]): T[] {
   }
 
   return result;
+}
+
+function selectCompleteEnglishQuestionGroups(
+  questions: Question[],
+  amount: number,
+  difficulty: string,
+): Question[] | null {
+  const grouped = new Map<string, Question[]>();
+
+  for (const question of questions) {
+    if (
+      !question.stimulus_id ||
+      !question.question_format ||
+      question.question_format === "legacy_multiple_choice" ||
+      !question.english_part
+    ) {
+      continue;
+    }
+
+    const group = grouped.get(question.stimulus_id) ?? [];
+    group.push(question);
+    grouped.set(question.stimulus_id, group);
+  }
+
+  const completeGroups = [...grouped.values()]
+    .map((group) => [...group].sort(
+      (a, b) => (a.stimulus_position ?? 0) - (b.stimulus_position ?? 0)
+    ))
+    .filter((group) => {
+      const first = group[0];
+      const part = first.english_part;
+      const format = first.question_format;
+
+      if (group.some((item) =>
+        item.english_part !== part ||
+        item.question_format !== format ||
+        item.stimulus_id !== first.stimulus_id
+      )) {
+        return false;
+      }
+
+      if (group.some((item, index) => item.stimulus_position !== index + 1)) {
+        return false;
+      }
+
+      const expectedCount = first.stimulus_expected_question_count;
+      if (!expectedCount || group.length !== expectedCount) return false;
+
+      const expectedStimulusType =
+        part === 1 ? "word_bank" :
+        part === 2 ? "notice" :
+        part === 3 ? "conversation" :
+        part === 4 || part === 7 ? "cloze_text" :
+        "reading_text";
+
+      if (first.stimulus_type !== expectedStimulusType) return false;
+
+      if (part === 1) {
+        const bank = first.stimulus_options_json ?? [];
+        const keys = bank.map((option) => option.key);
+        if (
+          bank.length !== 7 ||
+          keys.some((key, index) => key !== String.fromCharCode(65 + index)) ||
+          bank.some((option) => !option.text.trim())
+        ) {
+          return false;
+        }
+      }
+
+      if (part === 4 || part === 7) {
+        const content = first.stimulus_content ?? "";
+        const markers = [...content.matchAll(/\[\[(\d+)\]\]/g)]
+          .map((match) => Number(match[1]))
+          .sort((a, b) => a - b);
+
+        if (
+          markers.length !== expectedCount ||
+          markers.some((marker, index) => marker !== index + 1)
+        ) {
+          return false;
+        }
+      }
+
+      if (part === 1 && group.length !== 5) return false;
+      if ((part === 2 || part === 3) && group.length !== 1) return false;
+      if (difficulty !== "Mixta" && group.some((item) => item.difficulty !== difficulty)) {
+        return false;
+      }
+
+      return true;
+    });
+
+  const randomizedGroups = shuffle(completeGroups);
+  const selections = new Map<number, Question[][]>([[0, []]]);
+
+  for (const group of randomizedGroups) {
+    const existing = [...selections.entries()]
+      .sort((a, b) => b[0] - a[0]);
+
+    for (const [sum, chosen] of existing) {
+      const nextSum = sum + group.length;
+      if (nextSum <= amount && !selections.has(nextSum)) {
+        selections.set(nextSum, [...chosen, group]);
+      }
+    }
+  }
+
+  const chosenGroups = selections.get(amount);
+  if (!chosenGroups) return null;
+
+  return shuffle(chosenGroups).flatMap((group) => group);
 }
 
 export async function POST(request: Request) {
@@ -220,73 +339,126 @@ export async function POST(request: Request) {
        BUSCAR PREGUNTAS
     ====================================================== */
 
-    let query = adminSupabase
-      .from("questions")
-      .select(
-        "id, subject, difficulty, is_active"
-      )
-      .eq("subject", subject)
-      .eq("is_active", true);
+    let availableQuestions: Question[] = [];
+    let selectedQuestions: Question[] = [];
 
-    /*
-     * Mixta = no filtramos dificultad.
-     */
+    if (subject === "Inglés") {
+      const { data: englishQuestions, error: englishQuestionsError } =
+        await adminSupabase
+          .from("questions")
+          .select("id, subject, difficulty, is_active, question_format, english_part, stimulus_id, stimulus_position")
+          .eq("subject", subject)
+          .eq("is_active", true)
+          .not("english_part", "is", null)
+          .not("stimulus_id", "is", null);
 
-    if (difficulty !== "Mixta") {
-      query = query.eq(
-        "difficulty",
+      if (englishQuestionsError) {
+        console.error("[PeakScore] Falló la consulta de conjuntos de Inglés.", {
+          code: englishQuestionsError.code ?? "UNKNOWN",
+        });
+        return NextResponse.json(
+          { success: false, error: "No fue posible consultar los conjuntos de Inglés." },
+          { status: 500 }
+        );
+      }
+
+      const rawEnglishQuestions = (englishQuestions ?? []) as Question[];
+      const stimulusIds = [...new Set(
+        rawEnglishQuestions
+          .map((question) => question.stimulus_id)
+          .filter((id): id is string => typeof id === "string")
+      )];
+
+      if (stimulusIds.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "Todavía no hay conjuntos estructurados de Inglés disponibles en el banco." },
+          { status: 400 }
+        );
+      }
+
+      const { data: stimuli, error: stimuliError } = await adminSupabase
+        .from("question_stimuli")
+        .select("id, content, stimulus_type, options_json, expected_question_count")
+        .in("id", stimulusIds);
+
+      if (stimuliError || !stimuli) {
+        console.error("[PeakScore] Falló la consulta de estímulos de Inglés.", {
+          code: stimuliError?.code ?? "UNKNOWN",
+        });
+        return NextResponse.json(
+          { success: false, error: "No fue posible verificar los conjuntos completos de Inglés." },
+          { status: 500 }
+        );
+      }
+
+      const stimulusMap = new Map(stimuli.map((stimulus) => [stimulus.id, stimulus]));
+      availableQuestions = rawEnglishQuestions.map((question) => {
+        const stimulus = question.stimulus_id
+          ? stimulusMap.get(question.stimulus_id)
+          : null;
+        return {
+          ...question,
+          stimulus_content: stimulus?.content ?? null,
+          stimulus_type: stimulus?.stimulus_type ?? null,
+          stimulus_options_json: stimulus?.options_json ?? null,
+          stimulus_expected_question_count: stimulus?.expected_question_count ?? null,
+        };
+      });
+
+      const completeSelection = selectCompleteEnglishQuestionGroups(
+        availableQuestions,
+        questionAmount,
         difficulty
       );
+
+      if (!completeSelection) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `No hay suficientes preguntas de Inglés agrupadas correctamente para crear un simulacro de ${questionAmount} preguntas sin cortar estímulos. Disponible: ${availableQuestions.length} preguntas asociadas a conjuntos.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      selectedQuestions = completeSelection;
+    } else {
+      let query = adminSupabase
+        .from("questions")
+        .select("id, subject, difficulty, is_active")
+        .eq("subject", subject)
+        .eq("is_active", true);
+
+      if (difficulty !== "Mixta") {
+        query = query.eq("difficulty", difficulty);
+      }
+
+      const { data: questions, error: questionsError } = await query;
+
+      if (questionsError) {
+        console.error("[PeakScore] Falló la consulta interna de preguntas.", {
+          code: questionsError.code ?? "UNKNOWN",
+        });
+        return NextResponse.json(
+          { success: false, error: "No fue posible obtener las preguntas disponibles." },
+          { status: 500 }
+        );
+      }
+
+      availableQuestions = (questions ?? []) as Question[];
+
+      if (availableQuestions.length < questionAmount) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `No hay suficientes preguntas disponibles para ${subject}. Disponibles: ${availableQuestions.length}. Necesarias: ${questionAmount}.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      selectedQuestions = shuffle(availableQuestions).slice(0, questionAmount);
     }
-
-    const {
-      data: questions,
-      error: questionsError,
-    } = await query;
-
-    if (questionsError) {
-      console.error(
-        "[PeakScore] Falló la consulta interna de preguntas.",
-        { code: questionsError.code ?? "UNKNOWN" }
-      );
-
-      return NextResponse.json(
-        {
-          success: false,
-          error:
-            "No fue posible obtener las preguntas disponibles.",
-        },
-        { status: 500 }
-      );
-    }
-
-    const availableQuestions =
-      (questions ?? []) as Question[];
-
-    /* =====================================================
-       COMPROBAR CANTIDAD
-    ====================================================== */
-
-    if (
-      availableQuestions.length <
-      questionAmount
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `No hay suficientes preguntas disponibles para ${subject}. Disponibles: ${availableQuestions.length}. Necesarias: ${questionAmount}.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    /* =====================================================
-       SELECCIONAR PREGUNTAS ALEATORIAS
-    ====================================================== */
-
-    const selectedQuestions = shuffle(
-      availableQuestions
-    ).slice(0, questionAmount);
 
     /* =====================================================
        DURACIÓN

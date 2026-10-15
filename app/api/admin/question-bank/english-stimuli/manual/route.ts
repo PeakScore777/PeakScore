@@ -62,6 +62,14 @@ export async function POST(request: Request) {
     if ((part === 1 && questions.length !== 5) || ((part === 2 || part === 3) && questions.length !== 1)) {
       return fail(part === 1 ? "La Parte 1 requiere exactamente cinco descripciones." : "Las Partes 2 y 3 requieren exactamente una pregunta por estímulo.");
     }
+    const editorialRange = part === 4 ? { min: 4, max: 8 }
+      : part === 5 ? { min: 4, max: 7 }
+      : part === 6 ? { min: 2, max: 4 }
+      : part === 7 ? { min: 4, max: 8 }
+      : null;
+    if (editorialRange && (questions.length < editorialRange.min || questions.length > editorialRange.max)) {
+      return fail(`La Parte ${part} requiere entre ${editorialRange.min} y ${editorialRange.max} preguntas por estímulo.`);
+    }
 
     const wordBank = body.word_bank;
     if (part === 1 && !validOptions(wordBank, 7)) return fail("La Parte 1 requiere siete opciones A–G completas.");
@@ -84,6 +92,8 @@ export async function POST(request: Request) {
         if (!(wordBank as Option[]).some((option) => option.key === answer)) return fail(`La respuesta del ítem ${index + 1} no pertenece al banco A–G.`);
       } else {
         if (!validOptions(item?.options, config.options)) return fail(`El ítem ${index + 1} requiere ${config.options} opciones ordenadas y completas.`);
+        const optionTexts = (item.options as Option[]).map((option) => option.text.trim().toLocaleLowerCase("en"));
+        if (new Set(optionTexts).size !== optionTexts.length) return fail(`Las opciones del ítem ${index + 1} deben tener textos distintos.`);
         if (!(item.options as Option[]).some((option) => option.key === answer)) return fail(`La respuesta del ítem ${index + 1} no coincide con sus opciones.`);
       }
       normalizedQuestions.push({

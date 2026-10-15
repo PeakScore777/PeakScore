@@ -8,6 +8,7 @@ create table if not exists public.english_question_sets (
   title text not null check (char_length(btrim(title)) between 1 and 200),
   shared_text text,
   instructions text,
+  word_bank jsonb,
   status text not null default 'draft' check (status in ('draft', 'review', 'approved', 'rejected')),
   session smallint not null check (session in (1, 2)),
   created_by uuid not null references auth.users(id) on delete restrict,
@@ -16,7 +17,8 @@ create table if not exists public.english_question_sets (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (shared_text is null or char_length(shared_text) <= 30000),
-  check (instructions is null or char_length(instructions) <= 5000)
+  check (instructions is null or char_length(instructions) <= 5000),
+  check (word_bank is null or (jsonb_typeof(word_bank) = 'array' and jsonb_array_length(word_bank) between 3 and 20))
 );
 
 alter table public.questions
@@ -116,3 +118,14 @@ create policy english_question_sets_admin_delete
   );
 
 grant select, insert, update, delete on public.english_question_sets to authenticated;
+
+-- Part 2 uses a shared A-G word bank (and may include H as an example).
+-- Other existing question types keep their A-D answer contract.
+alter table public.questions
+  drop constraint if exists questions_correct_answer_valid;
+alter table public.questions
+  add constraint questions_correct_answer_valid
+    check (
+      (english_part = 2 and correct_answer in ('A','B','C','D','E','F','G','H'))
+      or (coalesce(english_part, 0) <> 2 and correct_answer in ('A','B','C','D'))
+    );

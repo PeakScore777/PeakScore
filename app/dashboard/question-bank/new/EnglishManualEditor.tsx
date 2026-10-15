@@ -71,7 +71,6 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   function changeWordBank(value: string) {
     setWordBankText(value);
     if (part === 2) {
-      const words = value.split("\n").map(x => x.trim());
       setQuestions(current => current.map(question => ({
         ...question,
         options: [],

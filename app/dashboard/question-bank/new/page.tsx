@@ -91,6 +91,9 @@ export default function NewQuestionPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setAiMode(params.get("mode") === "ai");
+    if (params.get("subject") === "Inglés") {
+      setForm((current) => ({ ...current, subject: "Inglés" }));
+    }
   }, []);
 
   /*

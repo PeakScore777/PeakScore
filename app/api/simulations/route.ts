@@ -14,6 +14,9 @@ interface Question {
   subject: string;
   difficulty: string;
   is_active: boolean;
+  english_set_id?: string | null;
+  english_part?: number | null;
+  english_position?: number | null;
 }
 
 const SUBJECTS = [
@@ -39,6 +42,22 @@ function shuffle<T>(items: T[]): T[] {
   }
 
   return result;
+}
+
+function chooseCompleteSetCombination<T extends { question_count: number }>(sets: T[], target: number): T[] | null {
+  // Dynamic programming keeps every set intact; a text/context block is never split.
+  const reachable = new Map<number, T[]>();
+  reachable.set(0, []);
+  for (const set of shuffle(sets)) {
+    for (let total = target - set.question_count; total >= 0; total--) {
+      const previous = reachable.get(total);
+      const nextTotal = total + set.question_count;
+      if (previous && !reachable.has(nextTotal)) {
+        reachable.set(nextTotal, [...previous, set]);
+      }
+    }
+  }
+  return reachable.get(target) ?? null;
 }
 
 export async function POST(request: Request) {
@@ -220,80 +239,82 @@ export async function POST(request: Request) {
        BUSCAR PREGUNTAS
     ====================================================== */
 
-    let query = adminSupabase
-      .from("questions")
-      .select(
-        "id, subject, difficulty, is_active"
-      )
-      .eq("subject", subject)
-      .eq("is_active", true);
+    let selectedQuestions: Question[] = [];
+    let structuredEnglishSelected = false;
 
-    // Los conjuntos de Inglés estructurado requieren un renderizador y
-    // una calificación compatibles con Partes 2 (A–G) y textos compartidos.
-    // No mezclarlos todavía con el selector genérico A–D evita simulacros rotos.
     if (subject === "Inglés") {
-      query = query.is("english_set_id", null);
+      const { data: approvedSets, error: setsError } = await adminSupabase
+        .from("english_question_sets")
+        .select("id, part, title")
+        .eq("status", "approved");
+      if (setsError) {
+        console.error("[PeakScore] Error consultando conjuntos aprobados de Inglés.", { code: setsError.code });
+        return NextResponse.json({ success: false, error: "No fue posible consultar los conjuntos de Inglés." }, { status: 500 });
+      }
+
+      if (approvedSets?.length) {
+        const { data: structuredQuestions, error: structuredError } = await adminSupabase
+          .from("questions")
+          .select("id, subject, difficulty, is_active, english_set_id, english_part, english_position")
+          .eq("subject", subject)
+          .eq("is_active", true)
+          .in("english_set_id", approvedSets.map((set: { id: string }) => set.id));
+        if (structuredError) {
+          console.error("[PeakScore] Error consultando preguntas de Inglés.", { code: structuredError.code });
+          return NextResponse.json({ success: false, error: "No fue posible obtener las preguntas de Inglés." }, { status: 500 });
+        }
+
+        const bySet = new Map<string, Question[]>();
+        for (const question of (structuredQuestions ?? []) as Question[]) {
+          if (difficulty !== "Mixta" && question.difficulty !== difficulty) continue;
+          if (!question.english_set_id) continue;
+          const group = bySet.get(question.english_set_id) ?? [];
+          group.push(question);
+          bySet.set(question.english_set_id, group);
+        }
+
+        const completeSets = (approvedSets as Array<{id:string; part:number; title:string}>)
+          .map(set => ({ ...set, question_count: bySet.get(set.id)?.length ?? 0 }))
+          .filter(set => set.question_count > 0);
+        const chosenSets = chooseCompleteSetCombination(completeSets, questionAmount);
+        if (chosenSets) {
+          const orderedGroups = shuffle(chosenSets);
+          selectedQuestions = orderedGroups.flatMap(set =>
+            (bySet.get(set.id) ?? []).sort((a, b) => (a.english_position ?? 0) - (b.english_position ?? 0))
+          );
+          structuredEnglishSelected = selectedQuestions.length === questionAmount;
+        }
+      }
     }
 
-    /*
-     * Mixta = no filtramos dificultad.
-     */
+    // If there is no exact combination of complete approved English sets,
+    // retain compatibility with the legacy A-D question bank without splitting a set.
+    if (!structuredEnglishSelected) {
+      let query = adminSupabase
+        .from("questions")
+        .select("id, subject, difficulty, is_active")
+        .eq("subject", subject)
+        .eq("is_active", true)
+        .is("english_set_id", null);
 
-    if (difficulty !== "Mixta") {
-      query = query.eq(
-        "difficulty",
-        difficulty
-      );
-    }
+      if (difficulty !== "Mixta") query = query.eq("difficulty", difficulty);
 
-    const {
-      data: questions,
-      error: questionsError,
-    } = await query;
-
-    if (questionsError) {
-      console.error(
-        "[PeakScore] Falló la consulta interna de preguntas.",
-        { code: questionsError.code ?? "UNKNOWN" }
-      );
-
-      return NextResponse.json(
-        {
+      const { data: questions, error: questionsError } = await query;
+      if (questionsError) {
+        console.error("[PeakScore] Falló la consulta interna de preguntas.", { code: questionsError.code ?? "UNKNOWN" });
+        return NextResponse.json({ success: false, error: "No fue posible obtener las preguntas disponibles." }, { status: 500 });
+      }
+      const availableQuestions = (questions ?? []) as Question[];
+      if (availableQuestions.length < questionAmount) {
+        return NextResponse.json({
           success: false,
-          error:
-            "No fue posible obtener las preguntas disponibles.",
-        },
-        { status: 500 }
-      );
+          error: subject === "Inglés"
+            ? `No hay una combinación de conjuntos completos de Inglés para ${questionAmount} preguntas y tampoco hay suficientes preguntas del banco anterior. No se dividirán textos compartidos.`
+            : `No hay suficientes preguntas disponibles para ${subject}. Disponibles: ${availableQuestions.length}. Necesarias: ${questionAmount}.`,
+        }, { status: 400 });
+      }
+      selectedQuestions = shuffle(availableQuestions).slice(0, questionAmount);
     }
-
-    const availableQuestions =
-      (questions ?? []) as Question[];
-
-    /* =====================================================
-       COMPROBAR CANTIDAD
-    ====================================================== */
-
-    if (
-      availableQuestions.length <
-      questionAmount
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `No hay suficientes preguntas disponibles para ${subject}. Disponibles: ${availableQuestions.length}. Necesarias: ${questionAmount}.`,
-        },
-        { status: 400 }
-      );
-    }
-
-    /* =====================================================
-       SELECCIONAR PREGUNTAS ALEATORIAS
-    ====================================================== */
-
-    const selectedQuestions = shuffle(
-      availableQuestions
-    ).slice(0, questionAmount);
 
     /* =====================================================
        DURACIÓN

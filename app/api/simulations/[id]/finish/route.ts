@@ -34,6 +34,7 @@ function getRpcErrorResponse(message: string) {
       );
     case "INVALID_ANSWERS":
     case "QUESTIONS_NOT_AVAILABLE":
+    case "DUPLICATE_ENGLISH_MATCHING_ANSWER":
       return NextResponse.json(
         { success: false, error: "Las respuestas enviadas no son válidas." },
         { status: 400 }

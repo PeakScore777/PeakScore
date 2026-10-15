@@ -99,6 +99,13 @@ begin
     raise exception 'INVALID_ENGLISH_SINGLE_ITEM_SET';
   end if;
 
+  if (v_part = 4 and v_count not between 4 and 8)
+     or (v_part = 5 and v_count not between 4 and 7)
+     or (v_part = 6 and v_count not between 2 and 4)
+     or (v_part = 7 and v_count not between 4 and 8) then
+    raise exception 'INVALID_ENGLISH_EDITORIAL_QUESTION_COUNT';
+  end if;
+
   if v_part = 1 then
     if v_count <> 5
        or jsonb_typeof(v_stimulus.options_json) is distinct from 'array'

@@ -35,8 +35,8 @@ function makeQuestion(part: number, wordBank: string[]): ManualQuestion {
   return { prompt: "", options, answer: "A", explanation: "", imageUrl: "" };
 }
 
-export default function EnglishManualEditor({ onBack }: { onBack: () => void }) {
-  const [part, setPart] = useState(1);
+export default function EnglishManualEditor({ onBack, initialPart = 1 }: { onBack: () => void; initialPart?: number }) {
+  const [part, setPart] = useState(initialPart);
   const [session, setSession] = useState("2");
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState("Media");

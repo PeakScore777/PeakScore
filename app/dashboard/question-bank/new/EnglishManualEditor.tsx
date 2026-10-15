@@ -87,7 +87,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
     if (items.length <= minItems) return;
     setItems((current) => current.filter((_, i) => i !== index));
     if (part === 4 || part === 7) {
-      setStimulus((current) => current.replace(/\\[\\[(\\d+)\\]\\]/g, (_match, raw) => {
+      setStimulus((current) => current.replace(/\[\[(\d+)\]\]/g, (_match, raw) => {
         const marker = Number(raw);
         if (marker === index + 1) return "";
         return `[[${marker > index + 1 ? marker - 1 : marker}]]`;

@@ -17,6 +17,12 @@ import type {
 } from "@/lib/visuals/types";
 
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import {
+  buildEnglishGenerationPrompt,
+  parseAndValidateEnglishGeneration,
+  validateEnglishGenerationRequest,
+} from "@/lib/services/english-question-generator";
+import { isEnglishPart } from "@/lib/types/english-assessment";
 
 export const runtime = "nodejs";
 
@@ -32,6 +38,7 @@ interface GenerateRequest {
   session: number;
   amount: number;
   difficulty?: Difficulty;
+  english_part?: number;
 }
 
 interface ReferenceProfile {
@@ -116,257 +123,6 @@ interface GenerationPlanItem {
 interface GenerationBlockResult {
   questions: GeneratedQuestion[];
   consumedPlanSlots: number;
-}
-
-/* =========================================================
-   OPERACIÓN COGNITIVA
-========================================================= */
-
-function getCognitiveOperations(
-  subject: string
-): CognitiveOperation[] {
-  const normalizedSubject = normalize(subject);
-
-  if (normalizedSubject === "matematicas") {
-    return [
-      "interpretar",
-      "comparar",
-      "relacionar",
-      "calcular",
-      "analizar",
-      "justificar",
-    ];
-  }
-
-  if (normalizedSubject === "lectura critica") {
-    return [
-      "interpretar",
-      "inferir",
-      "relacionar",
-      "comparar",
-      "analizar",
-      "evaluar",
-    ];
-  }
-
-  if (normalizedSubject === "sociales y ciudadanas") {
-    return [
-      "interpretar",
-      "relacionar",
-      "comparar",
-      "analizar",
-      "evaluar",
-      "justificar",
-    ];
-  }
-
-  if (normalizedSubject === "ciencias naturales") {
-    return [
-      "interpretar",
-      "relacionar",
-      "analizar",
-      "comparar",
-      "predecir",
-      "justificar",
-    ];
-  }
-
-  if (normalizedSubject === "ingles") {
-    return [
-      "interpretar",
-      "inferir",
-      "relacionar",
-      "comparar",
-      "analizar",
-      "aplicar",
-    ];
-  }
-
-  return [
-    "interpretar",
-    "inferir",
-    "comparar",
-    "relacionar",
-    "analizar",
-    "aplicar",
-  ];
-}
-
-/* =========================================================
-   PLANIFICADOR VISUAL
-========================================================= */
-
-function getPlannedVisualType(
-  subject: string,
-  operation: CognitiveOperation | null,
-  requiresVisual: boolean | null,
-  structureType: string | null,
-  topic: string | null
-): VisualType | null {
-  if (requiresVisual !== true) {
-    return null;
-  }
-
-  const normalizedSubject = normalize(subject);
-
-  const normalizedStructure = normalize(
-    structureType ?? ""
-  );
-
-  const normalizedTopic = normalize(
-    topic ?? ""
-  );
-
-    // Inferencia visual basada en la estructura de referencia.
-  // Esto evita caer automáticamente en "table" cuando
-  // todavía no existe una operación cognitiva planificada.
-
-  if (
-    normalizedStructure.includes("chart") ||
-    normalizedStructure.includes("grafica") ||
-    normalizedStructure.includes("gráfica") ||
-    normalizedStructure.includes("grafico") ||
-    normalizedStructure.includes("gráfico") ||
-    normalizedStructure.includes("linea") ||
-    normalizedStructure.includes("línea")
-  ) {
-    return "chart";
-  }
-
-  if (
-    normalizedStructure.includes("table") ||
-    normalizedStructure.includes("tabla")
-  ) {
-    return "table";
-  }
-
-  if (
-    normalizedStructure.includes("math_graph") ||
-    normalizedStructure.includes("math graph") ||
-    normalizedStructure.includes("plano cartesiano") ||
-    normalizedStructure.includes("funcion") ||
-    normalizedStructure.includes("función")
-  ) {
-    return "math_graph";
-  }
-
-  if (
-    normalizedStructure.includes("diagram") ||
-    normalizedStructure.includes("diagrama") ||
-    normalizedStructure.includes("proceso") ||
-    normalizedStructure.includes("flujo")
-  ) {
-    return "diagram";
-  }
-
-  if (
-    normalizedStructure.includes("geometr") ||
-    normalizedTopic.includes("geometr") ||
-    normalizedTopic.includes("area") ||
-    normalizedTopic.includes("perimetro") ||
-    normalizedTopic.includes("volumen")
-  ) {
-    return "geometry";
-  }
-
-  if (normalizedSubject === "matematicas") {
-    if (
-      operation === "calcular" ||
-      operation === "relacionar"
-    ) {
-      return "math_graph";
-    }
-
-    if (
-      operation === "interpretar" ||
-      operation === "comparar" ||
-      operation === "analizar"
-    ) {
-      return "chart";
-    }
-
-    if (
-      operation === "aplicar" ||
-      operation === "justificar"
-    ) {
-      return "geometry";
-    }
-
-    return "table";
-  }
-
-  if (normalizedSubject === "ciencias naturales") {
-    if (
-      operation === "interpretar" ||
-      operation === "comparar" ||
-      operation === "analizar"
-    ) {
-      return "chart";
-    }
-
-    if (operation === "predecir") {
-      return "diagram";
-    }
-
-    if (
-      operation === "relacionar" ||
-      operation === "justificar"
-    ) {
-      return "diagram";
-    }
-
-    return "table";
-  }
-
-  if (normalizedSubject === "sociales y ciudadanas") {
-    if (
-      operation === "interpretar" ||
-      operation === "comparar" ||
-      operation === "analizar"
-    ) {
-      return "chart";
-    }
-
-    if (
-      operation === "relacionar" ||
-      operation === "evaluar"
-    ) {
-      return "table";
-    }
-
-    return "diagram";
-  }
-
-  if (normalizedSubject === "lectura critica") {
-    if (
-      operation === "interpretar" ||
-      operation === "comparar"
-    ) {
-      return "table";
-    }
-
-    if (
-      operation === "analizar" ||
-      operation === "relacionar"
-    ) {
-      return "diagram";
-    }
-
-    return null;
-  }
-
-  if (normalizedSubject === "ingles") {
-    if (
-      operation === "interpretar" ||
-      operation === "comparar"
-    ) {
-      return "table";
-    }
-
-    return null;
-  }
-
-  return "table";
 }
 
 /* =========================================================
@@ -698,7 +454,7 @@ function allocateBlueprintTargets(
     }
   );
 
-  let assigned =
+  const assigned =
     allocations.reduce(
       (sum, item) =>
         sum + item.base,
@@ -1700,7 +1456,8 @@ function sleep(ms: number): Promise<void> {
 async function getExistingQuestionsForSimilarity(
   supabase: SupabaseClient,
   subject: string,
-  session: number
+  session: number,
+  includeInactive = false
 ): Promise<ExistingQuestionForSimilarity[]> {
   const pageSize = 1000;
 
@@ -1713,10 +1470,7 @@ async function getExistingQuestionsForSimilarity(
     const to =
       from + pageSize - 1;
 
-    const {
-      data,
-      error,
-    } = await supabase
+    let query = supabase
       .from("questions")
       .select(`
         id,
@@ -1724,9 +1478,13 @@ async function getExistingQuestionsForSimilarity(
         context_text
       `)
       .eq("subject", subject)
-      .eq("session", session)
-      .eq("is_active", true)
-      .range(from, to);
+      .eq("session", session);
+
+    if (!includeInactive) {
+      query = query.eq("is_active", true);
+    }
+
+    const { data, error } = await query.range(from, to);
 
     if (error) {
       console.error(
@@ -1994,14 +1752,7 @@ function getSupabase(): SupabaseClient {
    CONTROL DE DIFICULTAD
 ========================================================= */
 
-const GENERATED_DIFFICULTIES = [
-  "Fácil",
-  "Media",
-  "Difícil",
-] as const;
-
-type GeneratedDifficulty =
-  (typeof GENERATED_DIFFICULTIES)[number];
+type GeneratedDifficulty = "Fácil" | "Media" | "Difícil";
 
 function normalizeDifficulty(
   value: unknown
@@ -2142,18 +1893,6 @@ function getDifficultyCounts(
 /* =========================================================
    VALIDAR PREGUNTA
 ========================================================= */
-
-function explicitlyReferencesVisual(
-  item: GeneratedQuestion
-): boolean {
-  const text = normalize(
-    `${item.context_text ?? ""} ${item.question}`
-  );
-
-  return /\b(tabla|tablas|grafico|grafica|graficos|graficas|diagrama|diagramas|figura|figuras|se muestra|mostrado|mostrada|representado|representada|representacion)\b/.test(
-    text
-  );
-}
 
 function isQuestionVisualCoherent(
   item: GeneratedQuestion
@@ -3447,9 +3186,6 @@ function validateFunctionComparisonAnswer(
    * "a t=7"
    * "para t=7"
    */
-
-  const comparisonPattern =
-    /\b(?:en|a|para)\s*t\s*=\s*(\d+(?:[.,]\d+)?)\b[\s\S]{0,180}?\b(supera|mayor|menor|inferior|superior)\b/i;
 
   const matches = [
     ...text.matchAll(
@@ -6250,8 +5986,6 @@ Nunca devuelvas visual_data distinto de null.
      INSTRUCCIONES ADAPTATIVAS
      ========================================================= */
 
-  const isFirstBlock = profiles.length > 0;
-
   const calibration = `
 CALIBRACIÓN:
 
@@ -6312,6 +6046,19 @@ Sesión: ${session}
 ${blueprint}
 
 ${calibration}
+
+CONTROL DE CALIDAD DEL LOTE (OBLIGATORIO PARA TODAS LAS MATERIAS):
+
+- Cada pregunta debe evaluar una tarea distinta; no reutilices la misma plantilla cambiando nombres, números o unidades.
+- Alterna contextos y formas de razonamiento sin sacrificar la competencia ni la habilidad asignadas en el plan.
+- Verifica que cada distractor corresponda a un error o interpretación plausible y que no haya dos opciones equivalentes.
+- No uses "todas las anteriores", "ninguna de las anteriores", pistas gramaticales, diferencias evidentes de longitud ni opciones absurdas.
+- Distribuye las respuestas correctas entre A, B, C y D de manera natural; evita secuencias repetitivas y no cambies la clave si eso vuelve incorrecta la respuesta.
+- Matemáticas: vuelve a resolver el problema de forma independiente antes de asignar la clave; revisa cálculos, unidades, redondeos y magnitud solicitada.
+- Lectura Crítica: cada respuesta debe estar sustentada por el texto incluido; los distractores deben representar inferencias exageradas, contradicciones o interpretaciones parciales plausibles.
+- Sociales y Ciudadanas: presenta perspectivas y evidencias relevantes; evita que la respuesta dependa de una preferencia política, una opinión moral o un dato externo no proporcionado.
+- Ciencias Naturales: distingue observación, hipótesis, variable y conclusión; no afirmes causalidad si los datos solo muestran asociación, y comprueba unidades y consistencia de los resultados.
+- Si una pregunta no supera cualquiera de estas comprobaciones, descártala y genera otra; no rellenes la cantidad solicitada con preguntas de menor calidad.
 
 PLAN DE ARQUITECTURA OBLIGATORIO:
 ${JSON.stringify(compactGenerationPlan)}
@@ -7266,6 +7013,17 @@ export async function POST(
       );
     }
 
+    if (normalize(subject) === "ingles") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Inglés se crea manualmente desde Banco de preguntas → Nueva pregunta. Usa el editor estructurado de las siete partes.",
+          code: "ENGLISH_MANUAL_ONLY",
+        },
+        { status: 400 }
+      );
+    }
+
     /* =====================================================
        VALIDAR SESIÓN
     ====================================================== */
@@ -7332,6 +7090,37 @@ export async function POST(
         {
           status: 400,
         }
+      );
+    }
+
+    const englishPartValue =
+      body.english_part === undefined || body.english_part === null
+        ? null
+        : Number(body.english_part);
+
+    if (normalize(subject) === "ingles") {
+      if (!isEnglishPart(englishPartValue)) {
+        return NextResponse.json(
+          { success: false, error: "Debes seleccionar una parte válida de Inglés (1 a 7)." },
+          { status: 400 }
+        );
+      }
+
+      const englishRequestError = validateEnglishGenerationRequest(
+        englishPartValue,
+        amount
+      );
+
+      if (englishRequestError) {
+        return NextResponse.json(
+          { success: false, error: englishRequestError },
+          { status: 400 }
+        );
+      }
+    } else if (body.english_part !== undefined && body.english_part !== null) {
+      return NextResponse.json(
+        { success: false, error: "La selección de parte solo aplica a Inglés." },
+        { status: 400 }
       );
     }
 
@@ -7403,6 +7192,206 @@ export async function POST(
     }
 
     const subjectId = matchedSubject.id;
+
+    /*
+     * Inglés utiliza conjuntos estructurados de estímulo + ítems.
+     * El resto de materias conserva intacto el generador legacy.
+     */
+    if (normalize(subject) === "ingles") {
+      const part = englishPartValue;
+      if (!isEnglishPart(part)) {
+        throw new Error("La parte de Inglés no pasó la validación.");
+      }
+
+      let parsedGeneration: ReturnType<typeof parseAndValidateEnglishGeneration> | null = null;
+      let generationErrorMessages: string[] = [];
+
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const response = await generateAI({
+            provider: "groq",
+            prompt: buildEnglishGenerationPrompt(part, amount, difficulty),
+            task: "question_generation",
+            useFallback: attempt === 2,
+          });
+
+          parsedGeneration = parseAndValidateEnglishGeneration(
+            response.text?.trim() ?? "",
+            part,
+            amount
+          );
+
+          if (
+            parsedGeneration.result &&
+            difficulty !== "Mixta" &&
+            parsedGeneration.result.sets.some((set) =>
+              set.questions.some((question) => question.difficulty !== difficulty)
+            )
+          ) {
+            parsedGeneration = {
+              result: null,
+              errors: ["Todas las preguntas deben respetar la dificultad solicitada."],
+            };
+          }
+
+          if (parsedGeneration.result) break;
+          generationErrorMessages = parsedGeneration.errors;
+        } catch (error) {
+          generationErrorMessages = [getSafeAIErrorMessage(error)];
+        }
+      }
+
+      if (!parsedGeneration?.result) {
+        console.error("[PeakScore] El generador de Inglés no superó la validación estructural.", {
+          part,
+          errors: generationErrorMessages,
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: "La generación no produjo un conjunto válido. No se guardó ninguna pregunta.",
+            details: generationErrorMessages.slice(0, 8),
+          },
+          { status: 422 }
+        );
+      }
+
+      const existingEnglishQuestions = await getExistingQuestionsForSimilarity(
+        supabase,
+        subject,
+        session,
+        true
+      );
+      const similarityCandidates: GeneratedQuestion[] = [];
+
+      for (const set of parsedGeneration.result.sets) {
+        for (const question of set.questions) {
+          const options = question.options?.map((option) => option.text) ?? [];
+          const candidate: GeneratedQuestion = {
+            subject,
+            session,
+            component: `Inglés - Parte ${part}`,
+            competence: question.skill,
+            skill: question.skill,
+            difficulty: question.difficulty,
+            structure_type: question.format,
+            context_type: set.stimulus.type,
+            question: question.prompt,
+            option_a: options[0] ?? "",
+            option_b: options[1] ?? "",
+            option_c: options[2] ?? "",
+            option_d: options[3] ?? "",
+            // Similarity fingerprints use the question text/context only. Preserve
+            // the actual A–G key here instead of silently rewriting E–G as A.
+            correct_answer: question.correctAnswer as Answer,
+            explanation: question.explanation,
+            context_text: null,
+            requires_visual: false,
+            visual_type: null,
+            visual_description: null,
+            visual_data: null,
+          };
+
+          const similarity = findSimilarQuestion(
+            candidate,
+            existingEnglishQuestions,
+            similarityCandidates
+          );
+
+          if (similarity.isDuplicate) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: "Una pregunta generada es demasiado similar a otra del banco. No se guardó el conjunto.",
+                similarity: Number(similarity.similarity.toFixed(3)),
+              },
+              { status: 409 }
+            );
+          }
+
+          similarityCandidates.push(candidate);
+        }
+      }
+
+      const setsPayload = parsedGeneration.result.sets.map((set) => ({
+        stimulus: {
+          stimulus_type: set.stimulus.type,
+          content: set.stimulus.content,
+          options_json: set.stimulus.options ?? null,
+          image_url: null,
+          image_alt: null,
+          metadata: set.stimulus.metadata ?? {},
+        },
+        questions: set.questions.map((question) => ({
+          english_part: question.partNumber,
+          question_format: question.format,
+          stimulus_position: question.stimulusPosition,
+          question: question.prompt,
+          options_json: question.options ?? null,
+          correct_answer: question.correctAnswer,
+          difficulty: question.difficulty,
+          explanation: question.explanation,
+          skill: question.skill,
+          question_metadata: question.questionMetadata ?? {},
+        })),
+      }));
+
+      const { data: saveResult, error: saveError } = await supabase.rpc(
+        "save_english_question_sets_atomic",
+        {
+          p_subject_id: subjectId,
+          p_session: session,
+          p_sets: setsPayload,
+        }
+      );
+
+      if (saveError || !saveResult?.success) {
+        console.error("[PeakScore] No se pudo publicar el conjunto de Inglés.", {
+          part,
+          code: saveError?.code ?? "UNKNOWN",
+          message: saveError?.message ?? "UNKNOWN",
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: "No se pudo guardar el conjunto completo. No se publicaron preguntas parciales.",
+          },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Conjuntos de Inglés generados y guardados como pendientes de revisión editorial.",
+          data: {
+            provider: "groq",
+            subject,
+            session,
+            english_part: part,
+            requested: amount,
+            saved: Number(saveResult.question_count ?? amount),
+            sets: saveResult.sets,
+            questions: parsedGeneration.result.sets.flatMap((set) =>
+              set.questions.map((question) => ({
+                difficulty: question.difficulty,
+                context_text: set.stimulus.content,
+                question: question.prompt,
+                options_json: question.options ?? set.stimulus.options ?? [],
+                correct_answer: question.correctAnswer,
+                english_part: part,
+                stimulus_position: question.stimulusPosition,
+                stimulus_type: set.stimulus.type,
+                explanation: question.explanation,
+              }))
+            ),
+          },
+        },
+        { status: 201 }
+      );
+    }
 
     /* =====================================================
        REFERENCIAS

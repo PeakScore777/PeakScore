@@ -6047,6 +6047,19 @@ ${blueprint}
 
 ${calibration}
 
+CONTROL DE CALIDAD DEL LOTE (OBLIGATORIO PARA TODAS LAS MATERIAS):
+
+- Cada pregunta debe evaluar una tarea distinta; no reutilices la misma plantilla cambiando nombres, números o unidades.
+- Alterna contextos y formas de razonamiento sin sacrificar la competencia ni la habilidad asignadas en el plan.
+- Verifica que cada distractor corresponda a un error o interpretación plausible y que no haya dos opciones equivalentes.
+- No uses "todas las anteriores", "ninguna de las anteriores", pistas gramaticales, diferencias evidentes de longitud ni opciones absurdas.
+- Distribuye las respuestas correctas entre A, B, C y D de manera natural; evita secuencias repetitivas y no cambies la clave si eso vuelve incorrecta la respuesta.
+- Matemáticas: vuelve a resolver el problema de forma independiente antes de asignar la clave; revisa cálculos, unidades, redondeos y magnitud solicitada.
+- Lectura Crítica: cada respuesta debe estar sustentada por el texto incluido; los distractores deben representar inferencias exageradas, contradicciones o interpretaciones parciales plausibles.
+- Sociales y Ciudadanas: presenta perspectivas y evidencias relevantes; evita que la respuesta dependa de una preferencia política, una opinión moral o un dato externo no proporcionado.
+- Ciencias Naturales: distingue observación, hipótesis, variable y conclusión; no afirmes causalidad si los datos solo muestran asociación, y comprueba unidades y consistencia de los resultados.
+- Si una pregunta no supera cualquiera de estas comprobaciones, descártala y genera otra; no rellenes la cantidad solicitada con preguntas de menor calidad.
+
 PLAN DE ARQUITECTURA OBLIGATORIO:
 ${JSON.stringify(compactGenerationPlan)}
 

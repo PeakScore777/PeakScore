@@ -744,6 +744,17 @@ export async function POST(
       );
     }
 
+    if (normalize(subject) === "ingles") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Inglés se crea manualmente desde Banco de preguntas → Nueva pregunta. La generación masiva está disponible para las otras materias.",
+          code: "ENGLISH_MANUAL_ONLY",
+        },
+        { status: 400 }
+      );
+    }
+
     /* =====================================================
        VALIDAR SESIÓN
     ===================================================== */

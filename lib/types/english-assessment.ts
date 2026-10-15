@@ -335,6 +335,13 @@ export function validateEnglishStimulus(
       errors.push("Las palabras del banco no pueden estar vacías.");
     }
 
+    const normalizedWords = options.map((option) =>
+      option.text.trim().toLocaleLowerCase("en"),
+    );
+    if (new Set(normalizedWords).size !== normalizedWords.length) {
+      errors.push("Las siete palabras del banco deben ser distintas, sin duplicados por mayúsculas o espacios.");
+    }
+
     if (options.some((option) => option.text.length > 1000)) {
       errors.push("Cada palabra/opción del banco debe tener como máximo 1.000 caracteres.");
     }

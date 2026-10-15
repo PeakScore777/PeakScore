@@ -206,7 +206,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Conjunto o estado inválido." }, { status: 400 });
     }
     const { data: set, error: setError } = await supabaseAdmin.from("english_question_sets")
-      .select("id, part, status").eq("id", setId).maybeSingle();
+      .select("id, part, status, shared_text, word_bank, instructions").eq("id", setId).maybeSingle();
     if (setError) return NextResponse.json({ error: "No fue posible consultar el conjunto." }, { status: 500 });
     if (!set) return NextResponse.json({ error: "El conjunto no existe." }, { status: 404 });
 
@@ -217,12 +217,30 @@ export async function PATCH(request: NextRequest) {
     if (!questions?.length) return NextResponse.json({ error: "No se puede revisar un conjunto vacío." }, { status: 400 });
 
     if (status === "approved") {
-      const incomplete = questions.some(q => !q.question?.trim() || !q.correct_answer ||
-        (set.part === 1 && !q.image_url) ||
-        (set.part === 2 ? !["A","B","C","D","E","F","G"].includes(q.correct_answer) :
-          ![q.option_a, q.option_b, q.option_c].every(v => typeof v === "string" && v.trim()) ||
-          (set.part === 7 && !q.option_d?.trim())));
-      if (incomplete) return NextResponse.json({ error: "Hay preguntas incompletas. Corrige el conjunto antes de aprobarlo." }, { status: 400 });
+      const wordBank = Array.isArray(set.word_bank) ? set.word_bank : [];
+      const hasSharedText = typeof set.shared_text === "string" && set.shared_text.trim().length >= 20;
+      const validWordBank = wordBank.length >= 7 && wordBank.length <= 8 &&
+        wordBank.every((word: unknown) => typeof word === "string" && word.trim().length > 0);
+      const invalidSharedContext = [4, 5, 6, 7].includes(set.part) && !hasSharedText;
+      const invalidWordBank = set.part === 2 && !validWordBank;
+      const incomplete = questions.some(q => {
+        const options = Array.isArray(q.english_options) ? q.english_options as Array<{ key?: unknown; text?: unknown }> : [];
+        const expectedOptionCount = set.part === 7 ? 4 : set.part === 2 ? 0 : 3;
+        const optionsValid = options.length === expectedOptionCount && options.every((option, index) =>
+          option && option.key === String.fromCharCode(65 + index) &&
+          typeof option.text === "string" && option.text.trim().length > 0
+        );
+        const answerValid = set.part === 2
+          ? ["A", "B", "C", "D", "E", "F", "G"].includes(q.correct_answer)
+          : ["A", "B", "C", "D"].includes(q.correct_answer);
+        return !q.question?.trim() || !answerValid || !optionsValid ||
+          (set.part === 1 && !q.image_url?.trim()) ||
+          (set.part !== 2 && ![q.option_a, q.option_b, q.option_c].every(v => typeof v === "string" && v.trim())) ||
+          (set.part === 7 && !q.option_d?.trim());
+      });
+      if (invalidSharedContext) return NextResponse.json({ error: "Este conjunto necesita un texto compartido válido antes de aprobarse." }, { status: 400 });
+      if (invalidWordBank) return NextResponse.json({ error: "La Parte 2 necesita siete palabras A–G y, opcionalmente, una palabra H de ejemplo." }, { status: 400 });
+      if (incomplete) return NextResponse.json({ error: "Hay preguntas incompletas o con opciones incorrectas. Corrige el conjunto antes de aprobarlo." }, { status: 400 });
     }
 
     const { error: updateError } = await supabaseAdmin.from("english_question_sets").update({

@@ -91,7 +91,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
         const marker = Number(raw);
         if (marker === index + 1) return "";
         return `[[${marker > index + 1 ? marker - 1 : marker}]]`;
-      }).replace(/[ \\t]{2,}/g, " "));
+      }).replace(/[ \t]{2,}/g, " "));
     }
   }
 

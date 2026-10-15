@@ -306,6 +306,18 @@ REGLAS DE ORIGINALIDAD:
 - No hagas preguntas resolubles únicamente por descarte superficial.
 - No dependas de información que no esté incluida.
 
+REVISIÓN DE CALIDAD ANTES DE DEVOLVER EL LOTE:
+
+- Comprueba individualmente que solo haya una respuesta correcta y que la explicación la justifique; no marques una respuesta por intuición.
+- Verifica que las cuatro opciones sean distintas, compatibles con el enunciado y similares en nivel de detalle; evita pistas por longitud, gramática, absolutos o patrones de letra.
+- Los distractores deben representar errores o interpretaciones razonables, no opciones absurdas ni equivalentes entre sí.
+- Evita repetir el mismo molde de pregunta, contexto, operación, argumento o distractor dentro del lote. Cambia el razonamiento evaluado, no solo nombres y números.
+- Matemáticas: resuelve de forma independiente, comprueba operaciones, unidades y que la clave coincida exactamente con el resultado.
+- Lectura Crítica: si hay contexto, la clave debe estar sustentada por el texto; no exijas información externa y evita distractores que contradigan datos explícitos de forma obvia.
+- Sociales y Ciudadanas: presenta perspectivas con rigor, separa hechos de opiniones y evita caricaturizar grupos o introducir sesgos partidistas.
+- Ciencias Naturales: diferencia observaciones, hipótesis, variables y conclusiones; no afirmes causalidad si los datos solo muestran asociación.
+- Si un ítem no pasa una comprobación, reemplázalo antes de responder. No sacrifiques calidad para completar la cantidad.
+
 CONTEXTO:
 
 Si la pregunta necesita una lectura, texto, diálogo, tabla, situación o información adicional, incluye TODO dentro de "context_text".

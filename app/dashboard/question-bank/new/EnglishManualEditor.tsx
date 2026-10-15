@@ -50,14 +50,14 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   const [savedCount, setSavedCount] = useState<number | null>(null);
 
   const partInfo = useMemo(() => PARTS.find((p) => p.value === part)!, [part]);
-  const minItems = part === 1 ? 5 : part === 2 || part === 3 ? 1 : 1;
-  const maxItems = part === 1 ? 5 : part === 2 || part === 3 ? 1 : 30;
+  const minItems = part === 1 ? 5 : part === 2 || part === 3 ? 1 : part === 6 ? 2 : 4;
+  const maxItems = part === 1 ? 5 : part === 2 || part === 3 ? 1 : part === 5 ? 7 : part === 6 ? 4 : 8;
   const optionCount = part === 1 ? 0 : part === 6 || part === 7 ? 4 : 3;
 
   function changePart(next: Part) {
     setPart(next);
     setStimulus("");
-    setItems(Array.from({ length: next === 1 ? 5 : next === 2 || next === 3 ? 1 : 3 }, (_, i) => createItem(next)));
+    setItems(Array.from({ length: next === 1 ? 5 : next === 2 || next === 3 ? 1 : next === 6 ? 2 : 4 }, (_, i) => createItem(next)));
     setWordBank(Array.from({ length: 7 }, (_, i) => ({ key: String.fromCharCode(65 + i), text: "" })));
     setError("");
     setSavedCount(null);
@@ -86,6 +86,13 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   function removeItem(index: number) {
     if (items.length <= minItems) return;
     setItems((current) => current.filter((_, i) => i !== index));
+    if (part === 4 || part === 7) {
+      setStimulus((current) => current.replace(/\\[\\[(\\d+)\\]\\]/g, (_match, raw) => {
+        const marker = Number(raw);
+        if (marker === index + 1) return "";
+        return `[[${marker > index + 1 ? marker - 1 : marker}]]`;
+      }).replace(/[ \\t]{2,}/g, " "));
+    }
   }
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
@@ -182,7 +189,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
             <div className="mt-4 rounded-xl border border-cyan-900 bg-cyan-950/40 p-4 text-sm text-cyan-100">
               {part === 1 ? "5 descripciones · 7 opciones compartidas A–G · cada respuesta correcta debe ser distinta." :
                 part === 2 || part === 3 ? "1 estímulo · 1 pregunta · 3 opciones A–C." :
-                  `${items.length} preguntas vinculadas · ${optionCount} opciones por pregunta (${optionCount === 3 ? "A–C" : "A–D"}).`}
+                  `${items.length} preguntas vinculadas · ${optionCount} opciones por pregunta (${optionCount === 3 ? "A–C" : "A–D"}). ${part === 4 || part === 7 ? "Cada texto debe tener entre 4 y 8 espacios." : part === 5 ? "Cada lectura debe tener entre 4 y 7 preguntas." : part === 6 ? "Cada lectura debe tener entre 2 y 4 preguntas." : ""}`}
               {(part === 4 || part === 7) && " Usa marcadores [[1]], [[2]], etc. en el texto; cada marcador debe corresponder a una pregunta."}
             </div>
           </section>

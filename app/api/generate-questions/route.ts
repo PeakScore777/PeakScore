@@ -7204,7 +7204,7 @@ export async function POST(
       }
 
       const minimumBatchSize = part === 1 ? 5 : part === 2 || part === 3 ? 1 : part === 6 ? 2 : 4;
-      const maximumBatchSize = part === 1 ? 25 : 20;
+      const maximumBatchSize = part === 1 ? 15 : part === 2 || part === 3 ? 10 : 12;
       const batchAmounts: number[] = [];
       let remainingToGenerate = amount;
 

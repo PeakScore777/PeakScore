@@ -119,7 +119,7 @@ export async function POST(request: Request) {
     });
 
     const { data: subjectRows, error: subjectError } = await admin
-      .from("subjects").select("id,name").ilike("name", "Inglés").limit(5);
+      .from("subjects").select("id,name").limit(100);
     if (subjectError) return fail("No se pudo comprobar la materia Inglés en la base de datos.", 500);
     const subject = (subjectRows ?? []).find((row) => String(row.name).trim().toLocaleLowerCase("es") === "inglés" || String(row.name).trim().toLocaleLowerCase("es") === "ingles");
     if (!subject) return fail("No se encontró la materia Inglés en la tabla de materias.", 400);

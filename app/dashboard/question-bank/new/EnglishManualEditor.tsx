@@ -16,6 +16,8 @@ const partNames: Record<number, string> = {
   7: "Texto cloze con cuatro opciones",
 };
 
+const defaultQuestionCounts: Record<number, number> = { 1: 5, 2: 5, 3: 7, 4: 8, 5: 7, 6: 5, 7: 10 };
+
 const instructions: Record<number, string> = {
   1: "Crea un aviso o una imagen y tres lugares/situaciones posibles. La respuesta indica dónde se puede ver el aviso.",
   2: "Escribe descripciones breves y un banco compartido de palabras A–G. Puedes incluir H como ejemplo.",
@@ -42,7 +44,7 @@ export default function EnglishManualEditor({ onBack, initialPart = 1 }: { onBac
   const [difficulty, setDifficulty] = useState("Media");
   const [sharedText, setSharedText] = useState("");
   const [wordBankText, setWordBankText] = useState("");
-  const [questions, setQuestions] = useState<ManualQuestion[]>(Array.from({ length: 5 }, () => makeQuestion(1, [])));
+  const [questions, setQuestions] = useState<ManualQuestion[]>(Array.from({ length: defaultQuestionCounts[initialPart] ?? 5 }, () => makeQuestion(initialPart, [])));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [savedSetId, setSavedSetId] = useState<string | null>(null);
@@ -52,7 +54,7 @@ export default function EnglishManualEditor({ onBack, initialPart = 1 }: { onBac
 
   function changePart(value: number) {
     setPart(value);
-    setQuestions(Array.from({ length: ({1:5,2:5,3:7,4:8,5:7,6:5,7:10} as Record<number, number>)[value] }, () => makeQuestion(value, wordBank)));
+    setQuestions(Array.from({ length: defaultQuestionCounts[value] }, () => makeQuestion(value, wordBank)));
     setSharedText("");
     setError("");
     setMessage("");

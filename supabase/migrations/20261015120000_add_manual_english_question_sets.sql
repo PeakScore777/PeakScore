@@ -40,10 +40,11 @@ alter table public.questions
   add constraint questions_english_options_valid
     check (
       english_options is null
-      or (
-        jsonb_typeof(english_options) = 'array'
-        and jsonb_array_length(english_options) between 2 and 8
-      )
+      or case
+        when jsonb_typeof(english_options) <> 'array' then false
+        when english_part = 2 then jsonb_array_length(english_options) = 0
+        else jsonb_array_length(english_options) between 3 and 4
+      end
     );
 
 create index if not exists questions_english_set_idx

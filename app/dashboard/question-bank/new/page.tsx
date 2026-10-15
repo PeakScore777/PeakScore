@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Save,
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 import { createQuestion } from "@/lib/services/question.service";
-import { supabase } from "@/lib/supabase/browser";
+import EnglishManualEditor from "./EnglishManualEditor";
 
 const subjects = [
   "Matemáticas",
@@ -22,6 +22,22 @@ const subjects = [
 ];
 
 const difficulties = ["Fácil", "Media", "Difícil"];
+
+interface GeneratedQuestionPreview {
+  id?: string | number;
+  difficulty?: string | null;
+  context_text?: string | null;
+  question?: string | null;
+  option_a?: string | null;
+  option_b?: string | null;
+  option_c?: string | null;
+  option_d?: string | null;
+  options_json?: Array<{ key: string; text: string }> | null;
+  correct_answer?: string | null;
+  english_part?: number | null;
+  stimulus_position?: number | null;
+  stimulus_type?: string | null;
+}
 
 interface FormState {
   subject: string;
@@ -65,10 +81,10 @@ const initialForm: FormState = {
   is_active: true,
 };
 
-export default function NewQuestionPage() {
+function NewQuestionPageContent() {
   const router = useRouter();
-
-  const [aiMode, setAiMode] = useState(false);
+  const searchParams = useSearchParams();
+  const aiMode = searchParams.get("mode") === "ai";
 
   const [loading, setLoading] = useState(false);
 
@@ -77,20 +93,13 @@ export default function NewQuestionPage() {
     session: "",
     amount: "5",
     difficulty: "Mixta",
+    english_part: "1",
   });
 
-  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestionPreview[]>([]);
   const [generationComplete, setGenerationComplete] = useState(false);
 
   const [form, setForm] = useState<FormState>(initialForm);
-
-  /*
-   * Detectar ?mode=ai
-   */
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setAiMode(params.get("mode") === "ai");
-  }, []);
 
   /*
    * ================================
@@ -119,6 +128,11 @@ export default function NewQuestionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (form.subject === "Inglés") {
+      alert("Para conservar la estructura oficial de Inglés, crea esas preguntas desde el generador por partes. La creación manual estructurada se habilitará después.");
+      return;
+    }
 
     try {
       setLoading(true);
@@ -186,6 +200,11 @@ export default function NewQuestionPage() {
     setAiForm((prev) => ({
       ...prev,
       [name]: value,
+      ...(name === "subject"
+        ? value === "Inglés"
+          ? { session: "2" }
+          : { session: prev.session === "2" ? "" : prev.session }
+        : {}),
     }));
   };
 
@@ -215,6 +234,30 @@ export default function NewQuestionPage() {
       return;
     }
 
+    if (
+      aiForm.subject === "Inglés" &&
+      aiForm.english_part === "1" &&
+      amount % 5 !== 0
+    ) {
+      alert(
+        "La Parte 1 se genera en conjuntos de cinco descripciones y un banco compartido de siete palabras A–G."
+      );
+      return;
+    }
+
+    if (
+      aiForm.subject === "Inglés" &&
+      ["4", "5", "6", "7"].includes(aiForm.english_part) &&
+      amount < (aiForm.english_part === "6" ? 2 : 4)
+    ) {
+      alert(
+        aiForm.english_part === "6"
+          ? "La Parte 6 requiere al menos dos preguntas para formar un conjunto de lectura inferencial."
+          : "Esta parte requiere al menos cuatro preguntas para formar un texto de lectura o cloze completo."
+      );
+      return;
+    }
+
     try {
       setLoading(true);
       setGenerationComplete(false);
@@ -238,6 +281,9 @@ export default function NewQuestionPage() {
           session: Number(aiForm.session),
           amount,
           difficulty: aiForm.difficulty,
+          ...(aiForm.subject === "Inglés"
+            ? { english_part: Number(aiForm.english_part) }
+            : {}),
         }),
       });
 
@@ -353,7 +399,7 @@ export default function NewQuestionPage() {
                       Selecciona una materia
                     </option>
 
-                    {subjects.map((subject) => (
+                    {subjects.filter((subject) => subject !== "Inglés").map((subject) => (
                       <option key={subject} value={subject}>
                         {subject}
                       </option>
@@ -376,10 +422,37 @@ export default function NewQuestionPage() {
                     required
                     min="1"
                     max="2"
+                    readOnly={aiForm.subject === "Inglés"}
                     placeholder="Ej: 2"
                     className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-purple-500"
                   />
                 </div>
+
+                {aiForm.subject === "Inglés" && (
+                  <div className="md:col-span-2 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                    <label className="mb-2 block font-semibold text-blue-950">
+                      Parte del examen de Inglés *
+                    </label>
+                    <select
+                      name="english_part"
+                      value={aiForm.english_part}
+                      onChange={handleAiChange}
+                      required
+                      className="w-full rounded-xl border border-blue-200 bg-white px-4 py-3 outline-none focus:border-blue-500"
+                    >
+                      <option value="1">Parte 1 · Conocimiento lexical (banco A–G)</option>
+                      <option value="2">Parte 2 · Conocimiento pragmático (avisos)</option>
+                      <option value="3">Parte 3 · Conocimiento comunicativo (conversación)</option>
+                      <option value="4">Parte 4 · Gramática en contexto (cloze A–C)</option>
+                      <option value="5">Parte 5 · Comprensión literal (A–C)</option>
+                      <option value="6">Parte 6 · Comprensión inferencial (A–D)</option>
+                      <option value="7">Parte 7 · Gramática y léxico en contexto (cloze A–D)</option>
+                    </select>
+                    <p className="mt-2 text-sm text-blue-800">
+                      PeakScore guarda cada estímulo con sus preguntas vinculadas. La Parte 1 usa bancos A–G con cinco descripciones; en las Partes 4–7 el número de preguntas depende de la longitud del texto.
+                    </p>
+                  </div>
+                )}
 
                 {/* CANTIDAD */}
 
@@ -400,7 +473,11 @@ export default function NewQuestionPage() {
                   />
 
                   <p className="mt-1 text-sm text-slate-500">
-                    Máximo 100 preguntas por generación.
+                    {aiForm.subject === "Inglés" && aiForm.english_part === "1"
+                      ? "Máximo 100 preguntas. Usa múltiplos de cinco para conservar cada banco A–G completo."
+                      : aiForm.subject === "Inglés" && ["4", "5", "6", "7"].includes(aiForm.english_part)
+                        ? "Máximo 100 preguntas. La IA debe repartirlas entre textos completos, sin cortar estímulos."
+                        : "Máximo 100 preguntas por generación."}
                   </p>
                 </div>
 
@@ -485,6 +562,11 @@ export default function NewQuestionPage() {
                       </strong>{" "}
                       preguntas.
                     </p>
+                    {aiForm.subject === "Inglés" && (
+                      <p className="mt-2 text-sm font-medium text-amber-800">
+                        Se guardaron como pendientes de revisión editorial. No se usarán en simulacros hasta que apruebes el conjunto completo desde el banco de preguntas.
+                      </p>
+                    )}
                   </div>
                 </div>
               </section>
@@ -540,7 +622,9 @@ export default function NewQuestionPage() {
                   >
                     <div className="mb-4 flex items-center justify-between">
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-                        Pregunta #{index + 1}
+                        {question?.english_part
+                          ? `Parte ${question.english_part} · Ítem ${question.stimulus_position ?? index + 1}`
+                          : `Pregunta #${index + 1}`}
                       </span>
 
                       {question?.difficulty && (
@@ -567,15 +651,21 @@ export default function NewQuestionPage() {
                     </p>
 
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
-                      {["a", "b", "c", "d"].map((letter) => (
+                      {(question?.options_json?.length
+                        ? question.options_json
+                        : (["a", "b", "c", "d"] as const)
+                            .map((letter) => ({
+                              key: letter.toUpperCase(),
+                              text: String(question?.[`option_${letter}` as keyof GeneratedQuestionPreview] ?? ""),
+                            }))
+                            .filter((option) => option.text.trim().length > 0)
+                      ).map((option) => (
                         <div
-                          key={letter}
+                          key={option.key}
                           className="rounded-xl border border-slate-200 p-3"
                         >
-                          <span className="font-bold">
-                            {letter.toUpperCase()}.
-                          </span>{" "}
-                          {question?.[`option_${letter}`]}
+                          <span className="font-bold">{option.key}.</span>{" "}
+                          {option.text}
                         </div>
                       ))}
                     </div>
@@ -606,6 +696,14 @@ export default function NewQuestionPage() {
         </div>
       </main>
     );
+  }
+
+  /*
+   * Inglés usa un editor estructurado independiente para respetar los siete formatos.
+   * Las demás materias conservan el formulario manual legacy.
+   */
+  if (!aiMode && form.subject === "Inglés") {
+    return <EnglishManualEditor onBack={() => router.push("/dashboard/question-bank")} />;
   }
 
   /*
@@ -938,5 +1036,19 @@ export default function NewQuestionPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+export default function NewQuestionPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50 p-6 text-sm text-slate-600">
+          Cargando formulario de preguntas...
+        </main>
+      }
+    >
+      <NewQuestionPageContent />
+    </Suspense>
   );
 }

@@ -10,9 +10,9 @@ const partNames: Record<number, string> = {
   1: "Avisos e imágenes",
   2: "Descripciones y banco de palabras",
   3: "Completar conversaciones",
-  4: "Texto cloze: gramática y vocabulario",
+  4: "Texto cloze (dos conjuntos en el simulacro oficial)",
   5: "Comprensión de lectura",
-  6: "Lectura y comprensión inferencial",
+  6: "Comprensión de lectura",
   7: "Texto cloze con cuatro opciones",
 };
 
@@ -22,12 +22,12 @@ const instructions: Record<number, string> = {
   3: "Escribe una intervención de conversación y tres respuestas posibles.",
   4: "Añade un texto compartido con espacios numerados y tres opciones para cada espacio.",
   5: "Añade un texto de lectura y preguntas de comprensión con tres opciones.",
-  6: "Añade un texto compartido y preguntas de comprensión/inferencia con tres opciones.",
+  6: "Añade un texto de lectura y preguntas de comprensión con tres opciones. En el cuadernillo oficial esta parte contiene cinco preguntas.",
   7: "Añade un texto compartido con espacios numerados y cuatro opciones por espacio.",
 };
 
 function makeQuestion(part: number, wordBank: string[]): ManualQuestion {
-  const count = part === 2 ? Math.max(7, Math.min(8, wordBank.length || 7)) : part === 7 ? 4 : 3;
+  const count = part === 7 ? 4 : part === 2 ? 0 : 3;
   const options = Array.from({ length: count }, (_, i) => ({
     key: String.fromCharCode(65 + i),
     text: part === 2 ? (wordBank[i] ?? "") : "",
@@ -42,7 +42,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   const [difficulty, setDifficulty] = useState("Media");
   const [sharedText, setSharedText] = useState("");
   const [wordBankText, setWordBankText] = useState("");
-  const [questions, setQuestions] = useState<ManualQuestion[]>([makeQuestion(1, [])]);
+  const [questions, setQuestions] = useState<ManualQuestion[]>(Array.from({ length: 5 }, () => makeQuestion(1, [])));
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -51,7 +51,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
 
   function changePart(value: number) {
     setPart(value);
-    setQuestions([makeQuestion(value, wordBank)]);
+    setQuestions(Array.from({ length: ({1:5,2:5,3:7,4:8,5:7,6:5,7:10} as Record<number, number>)[value] }, () => makeQuestion(value, wordBank)));
     setSharedText("");
     setError("");
     setMessage("");
@@ -74,7 +74,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
       const words = value.split("\n").map(x => x.trim());
       setQuestions(current => current.map(question => ({
         ...question,
-        options: Array.from({ length: Math.max(7, Math.min(8, words.filter(Boolean).length || 7)) }, (_, index) => ({ key: String.fromCharCode(65 + index), text: words[index] ?? "" })),
+        options: [],
       })));
     }
   }
@@ -115,7 +115,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-indigo-700">Banco de preguntas · Inglés</p>
             <h1 className="text-3xl font-bold text-slate-900">Editor manual de las 7 partes</h1>
-            <p className="mt-2 max-w-3xl text-slate-600">Crea contenido original y conserva juntos los textos, avisos, bancos de palabras y preguntas que comparten contexto.</p>
+            <p className="mt-2 max-w-3xl text-slate-600">Crea conjuntos completos por parte. La cantidad inicial sigue la estructura del cuadernillo oficial: P1 5, P2 5, P3 7, P4 8 por texto, P5 7, P6 5 y P7 10. Puedes ajustar la cantidad según el conjunto que estés creando.</p>
           </div>
         </header>
 
@@ -170,15 +170,15 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
                 <textarea value={question.prompt} onChange={e => updateQuestion(index, { prompt: e.target.value })} rows={3} maxLength={10000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={part === 2 ? "People take photos with this." : part === 3 ? "Can you hold the camera?" : [4,7].includes(part) ? "Ej. (1) _____" : "Escribe el enunciado en inglés..."}/>
               </label>
               <div className="grid gap-3 md:grid-cols-2">
-                {question.options.map((option, optionIndex) => <label key={option.key} className="block text-sm font-semibold">
-                  Opción {option.key}{part === 2 ? " (palabra del banco)" : ""}
-                  <input value={option.text} onChange={e => updateOption(index, optionIndex, e.target.value)} disabled={part === 2} maxLength={5000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={part === 2 ? "Se toma del banco de palabras" : `Texto de la opción ${option.key}`}/>
+                {part !== 2 && question.options.map((option, optionIndex) => <label key={option.key} className="block text-sm font-semibold">
+                  Opción {option.key}
+                  <input value={option.text} onChange={e => updateOption(index, optionIndex, e.target.value)} maxLength={5000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={part === 2 ? "Se toma del banco de palabras" : `Texto de la opción ${option.key}`}/>
                 </label>)}
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <label className="block text-sm font-semibold">Respuesta correcta
                   <select value={question.answer} onChange={e => updateQuestion(index, { answer: e.target.value })} className="mt-2 w-full rounded-xl border p-3">
-                    {(part === 2 ? wordBank.map((_, i) => String.fromCharCode(65 + i)) : question.options.map(option => option.key)).map(key => <option key={key} value={key}>{key}</option>)}
+                    {(part === 2 ? wordBank.slice(0, 7).map((_, i) => String.fromCharCode(65 + i)) : question.options.map(option => option.key)).map(key => <option key={key} value={key}>{key}</option>)}
                   </select>
                 </label>
                 <label className="block text-sm font-semibold">Explicación (opcional)

@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
     if ([4, 6, 7].includes(part) && sharedText.length < 20) {
       return NextResponse.json({ error: "Esta parte necesita un texto compartido de al menos 20 caracteres." }, { status: 400 });
     }
-    if (part === 2 && wordBank.length < 3) {
-      return NextResponse.json({ error: "La Parte 2 necesita un banco de palabras." }, { status: 400 });
+    if (part === 2 && (wordBank.length < 7 || wordBank.length > 8)) {
+      return NextResponse.json({ error: "La Parte 2 necesita siete palabras A–G y, opcionalmente, una octava palabra H de ejemplo." }, { status: 400 });
     }
 
     for (const [index, question] of questions.entries()) {

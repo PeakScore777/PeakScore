@@ -938,8 +938,15 @@ export default function ExamPage() {
         ? question.stimulus_content
         : null;
 
-  const questionImage =
-    question?.image_url ?? question?.stimulus_image_url ?? null;
+  // Keep stimulus imagery with its shared context (e.g. a Part 2 notice),
+  // while question-specific visuals remain beside the individual question.
+  const questionImage = question?.image_url ?? null;
+  const stimulusImage = question?.stimulus_image_url ?? null;
+  const stimulusImageAlt =
+    question?.stimulus_image_alt?.trim() ||
+    (question?.english_part === 2
+      ? "Aviso o señal del ejercicio"
+      : "Imagen de contexto del ejercicio");
 
   const answeredQuestions =
     Object.keys(
@@ -1354,6 +1361,19 @@ export default function ExamPage() {
                             )
                             : questionContext}
                         </div>
+
+                        {stimulusImage && (
+                          <div className="mt-5 flex justify-center">
+                            <Image
+                              src={stimulusImage}
+                              alt={stimulusImageAlt}
+                              width={1200}
+                              height={900}
+                              unoptimized
+                              className="max-h-[500px] h-auto w-auto max-w-full rounded-2xl border border-slate-200 object-contain"
+                            />
+                          </div>
+                        )}
 
                       </div>
 

@@ -29,6 +29,9 @@ declare
   v_option_count integer;
   v_key_count integer;
   v_marker_count integer;
+  v_marker_distinct_count integer;
+  v_marker_min integer;
+  v_marker_max integer;
   v_question_count integer;
   v_correct text;
   v_option_text text;
@@ -116,10 +119,22 @@ begin
         raise exception 'INVALID_ENGLISH_SINGLE_ITEM_STIMULUS';
       end if;
       if v_part in (4, 7) then
-        select count(*) into v_marker_count
-        from regexp_matches(v_content, '\[\[[0-9]+\]\]', 'g') as marker;
+        select
+          count(*),
+          count(distinct (marker.matches)[1]::integer),
+          min((marker.matches)[1]::integer),
+          max((marker.matches)[1]::integer)
+        into
+          v_marker_count,
+          v_marker_distinct_count,
+          v_marker_min,
+          v_marker_max
+        from regexp_matches(v_content, '\[\[([0-9]+)\]\]', 'g') as marker(matches);
 
-        if v_marker_count = 0 or v_marker_count <> v_question_count then
+        if v_marker_count <> v_question_count
+           or v_marker_distinct_count <> v_question_count
+           or v_marker_min <> 1
+           or v_marker_max <> v_question_count then
           raise exception 'INVALID_ENGLISH_CLOZE_MARKERS';
         end if;
       end if;

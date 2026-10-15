@@ -47,6 +47,24 @@ export default function EnglishQuestionBankPage() {
 
   useEffect(() => { void load(); }, [load]);
 
+  async function changeStatus(setId: string, status: EnglishSet["status"]) {
+    const action = status === "approved" ? "aprobar y activar" : status === "rejected" ? "rechazar" : status === "review" ? "enviar a revisión" : "devolver a borrador";
+    if (!window.confirm(`¿Confirmas ${action} este conjunto?`)) return;
+    setError("");
+    try {
+      const response = await fetch("/api/admin/question-bank/english-sets", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setId, status }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload?.error || "No se pudo actualizar el estado.");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo actualizar el estado.");
+    }
+  }
+
   const visibleSets = useMemo(() => sets.filter(set =>
     (partFilter === "all" || set.part === Number(partFilter)) &&
     (sessionFilter === "all" || set.session === Number(sessionFilter))
@@ -95,7 +113,7 @@ export default function EnglishQuestionBankPage() {
           const partSets = visibleSets.filter(set => set.part === Number(key));
           if (!partSets.length) return null;
           return <div key={key} className="space-y-3"><div className="flex flex-wrap items-end justify-between gap-2"><div><h2 className="text-xl font-bold text-slate-900">Parte {key} · {name}</h2><p className="text-sm text-slate-500">{partSets.length} conjunto(s) · referencia oficial: {officialCounts[Number(key)]} preguntas por bloque</p></div><span className="rounded-full bg-slate-200 px-3 py-1 text-sm font-semibold text-slate-700">{partSets.reduce((sum, set) => sum + set.question_count, 0)} preguntas guardadas</span></div>
-            <div className="grid gap-3 lg:grid-cols-2">{partSets.map(set => <article key={set.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start gap-3"><div className="rounded-xl bg-indigo-50 p-3 text-indigo-700"><BookOpen size={20}/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="break-words font-bold text-slate-900">{set.title}</h3><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${set.status === "approved" ? "bg-green-100 text-green-800" : set.status === "rejected" ? "bg-red-100 text-red-800" : set.status === "review" ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"}`}>{statusLabel[set.status]}</span></div><p className="mt-2 text-sm text-slate-600">Sesión {set.session} · {set.question_count} pregunta(s)</p>{set.shared_text && <p className="mt-3 line-clamp-2 text-sm text-slate-500">Texto compartido: {set.shared_text}</p>}{set.word_bank?.length ? <p className="mt-3 text-sm text-slate-500">Banco de palabras: {set.word_bank.length} entradas</p> : null}<p className="mt-3 text-xs text-slate-400">Creado: {new Date(set.created_at).toLocaleDateString("es-CO")}</p></div></div></article>)}</div>
+            <div className="grid gap-3 lg:grid-cols-2">{partSets.map(set => <article key={set.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex items-start gap-3"><div className="rounded-xl bg-indigo-50 p-3 text-indigo-700"><BookOpen size={20}/></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="break-words font-bold text-slate-900">{set.title}</h3><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${set.status === "approved" ? "bg-green-100 text-green-800" : set.status === "rejected" ? "bg-red-100 text-red-800" : set.status === "review" ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"}`}>{statusLabel[set.status]}</span></div><p className="mt-2 text-sm text-slate-600">Sesión {set.session} · {set.question_count} pregunta(s)</p>{set.shared_text && <p className="mt-3 line-clamp-2 text-sm text-slate-500">Texto compartido: {set.shared_text}</p>}{set.word_bank?.length ? <p className="mt-3 text-sm text-slate-500">Banco de palabras: {set.word_bank.length} entradas</p> : null}<p className="mt-3 text-xs text-slate-400">Creado: {new Date(set.created_at).toLocaleDateString("es-CO")}</p><div className="mt-4 flex flex-wrap gap-2">{set.status !== "approved" && <button onClick={() => void changeStatus(set.id, "approved")} className="rounded-lg bg-green-700 px-3 py-2 text-sm font-semibold text-white">Aprobar y activar</button>}{set.status !== "review" && <button onClick={() => void changeStatus(set.id, "review")} className="rounded-lg border px-3 py-2 text-sm font-semibold text-slate-700">Enviar a revisión</button>}{set.status !== "rejected" && <button onClick={() => void changeStatus(set.id, "rejected")} className="rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-700">Rechazar</button>}{set.status !== "draft" && <button onClick={() => void changeStatus(set.id, "draft")} className="rounded-lg border px-3 py-2 text-sm font-semibold text-slate-700">Borrador</button>}</div></div></div></article>)}</div>
           </div>;
         })}</section>
       }

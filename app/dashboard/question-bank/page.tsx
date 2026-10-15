@@ -343,6 +343,8 @@ export default function QuestionBankPage() {
           </div>
 
           <div className="flex flex-wrap gap-4">
+            <Link href="/dashboard/question-bank/english" className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white transition hover:bg-red-700"><Languages size={20} /> Banco de Inglés por partes</Link>
+
 
             {/* IMPORTAR PDF */}
 

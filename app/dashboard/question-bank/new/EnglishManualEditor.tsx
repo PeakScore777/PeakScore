@@ -27,7 +27,7 @@ const instructions: Record<number, string> = {
 };
 
 function makeQuestion(part: number, wordBank: string[]): ManualQuestion {
-  const count = part === 7 ? 4 : 3;
+  const count = part === 2 ? Math.max(7, Math.min(8, wordBank.length || 7)) : part === 7 ? 4 : 3;
   const options = Array.from({ length: count }, (_, i) => ({
     key: String.fromCharCode(65 + i),
     text: part === 2 ? (wordBank[i] ?? "") : "",
@@ -41,7 +41,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
   const [title, setTitle] = useState("");
   const [difficulty, setDifficulty] = useState("Media");
   const [sharedText, setSharedText] = useState("");
-  const [wordBankText, setWordBankText] = useState("","","");
+  const [wordBankText, setWordBankText] = useState("");
   const [questions, setQuestions] = useState<ManualQuestion[]>([makeQuestion(1, [])]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -74,7 +74,7 @@ export default function EnglishManualEditor({ onBack }: { onBack: () => void }) 
       const words = value.split("\n").map(x => x.trim());
       setQuestions(current => current.map(question => ({
         ...question,
-        options: question.options.map((option, index) => ({ ...option, text: words[index] ?? "" })),
+        options: Array.from({ length: Math.max(7, Math.min(8, words.filter(Boolean).length || 7)) }, (_, index) => ({ key: String.fromCharCode(65 + index), text: words[index] ?? "" })),
       })));
     }
   }

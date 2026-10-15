@@ -125,6 +125,15 @@ begin
             or upper(item.opt->>'key') is distinct from chr(64 + item.ord::integer)
             or char_length(trim(coalesce(item.opt->>'text', ''))) = 0
        )
+       or (
+         select count(distinct lower(trim(item.opt->>'text')))
+         from jsonb_array_elements(
+           case
+             when jsonb_typeof(v_stimulus.options_json) = 'array' then v_stimulus.options_json
+             else '[]'::jsonb
+           end
+         ) item(opt)
+       ) <> 7
        or exists (
          select 1
          from public.questions q

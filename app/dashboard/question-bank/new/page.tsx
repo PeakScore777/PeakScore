@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { createQuestion } from "@/lib/services/question.service";
+import EnglishManualEditor from "./EnglishManualEditor";
 
 const subjects = [
   "Matemáticas",
@@ -695,6 +696,14 @@ function NewQuestionPageContent() {
         </div>
       </main>
     );
+  }
+
+  /*
+   * Inglés usa un editor estructurado independiente para respetar los siete formatos.
+   * Las demás materias conservan el formulario manual legacy.
+   */
+  if (!aiMode && form.subject === "Inglés") {
+    return <EnglishManualEditor onBack={() => router.push("/dashboard/question-bank/new")} />;
   }
 
   /*

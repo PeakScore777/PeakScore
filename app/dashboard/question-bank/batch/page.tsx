@@ -14,7 +14,6 @@ const SUBJECTS_BY_SESSION: Record<string, string[]> = {
     "Matemáticas",
     "Sociales y Ciudadanas",
     "Ciencias Naturales",
-    "Inglés",
   ],
 };
 

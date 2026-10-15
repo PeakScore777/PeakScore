@@ -118,6 +118,12 @@ begin
       if v_part in (2, 3) and v_question_count <> 1 then
         raise exception 'INVALID_ENGLISH_SINGLE_ITEM_STIMULUS';
       end if;
+      if (v_part = 4 and v_question_count not between 4 and 8)
+         or (v_part = 5 and v_question_count not between 4 and 7)
+         or (v_part = 6 and v_question_count not between 2 and 4)
+         or (v_part = 7 and v_question_count not between 4 and 8) then
+        raise exception 'INVALID_ENGLISH_EDITORIAL_QUESTION_COUNT';
+      end if;
       if v_part in (4, 7) then
         select
           count(*),

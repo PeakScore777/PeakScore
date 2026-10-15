@@ -26,9 +26,11 @@ Rama de trabajo: `feat/english-seven-parts-foundation`
 3. `app/dashboard/question-bank/new/page.tsx`
    - Si el administrador selecciona Inglés en el formulario manual, abre el editor estructurado.
    - El formulario manual legacy de otras materias se conserva.
-   - Inglés ya no aparece en el selector del generador IA.
+   - Inglés ya no aparece en el selector del generador IA ni en la generación masiva.
 4. `app/api/generate-questions/route.ts`
    - Rechaza solicitudes IA de Inglés y dirige al flujo manual.
+6. `app/dashboard/question-bank/batch/page.tsx` y `app/api/generate-question-batch/route.ts`
+   - Excluyen Inglés de la generación masiva tanto en la interfaz como en el servidor.
    - Añade comprobaciones pedagógicas al prompt para las cuatro materias que siguen usando IA: diversidad real, distractores plausibles, evidencia textual, control de sesgos y verificación matemática/científica.
 5. `supabase/migrations/20261014210000_restrict_direct_simulation_reward_grants.sql`
    - Corrección de permisos preparada en la rama; todavía no aplicada a producción.

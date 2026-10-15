@@ -7000,6 +7000,17 @@ export async function POST(
       );
     }
 
+    if (normalize(subject) === "ingles") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Inglés se crea manualmente desde Banco de preguntas → Nueva pregunta. Usa el editor estructurado de las siete partes.",
+          code: "ENGLISH_MANUAL_ONLY",
+        },
+        { status: 400 }
+      );
+    }
+
     /* =====================================================
        VALIDAR SESIÓN
     ====================================================== */

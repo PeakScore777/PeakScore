@@ -12,6 +12,7 @@ import {
 
 import { createQuestion } from "@/lib/services/question.service";
 import { supabase } from "@/lib/supabase/browser";
+import EnglishManualEditor from "./EnglishManualEditor";
 
 const subjects = [
   "Matemáticas",
@@ -610,7 +611,11 @@ export default function NewQuestionPage() {
 
   /*
    * ================================
-   * MODO MANUAL
+   *   if (form.subject === "Inglés") {
+    return <EnglishManualEditor onBack={() => router.push("/dashboard/question-bank")} />;
+  }
+
+MODO MANUAL
    * ================================
    */
 

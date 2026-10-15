@@ -85,7 +85,7 @@ export default function EnglishQuestionBankPage() {
         </div>
         <div className="flex flex-wrap gap-3">
           <button onClick={() => void load()} className="inline-flex items-center gap-2 rounded-xl border bg-white px-4 py-3 font-semibold text-slate-800"><RefreshCw size={17}/> Actualizar</button>
-          <Link href="/dashboard/question-bank/new" className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 font-semibold text-white"><Plus size={18}/> Crear conjunto</Link>
+          <Link href="/dashboard/question-bank/new?subject=Inglés" className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-5 py-3 font-semibold text-white"><Plus size={18}/> Crear conjunto</Link>
         </div>
       </header>
 

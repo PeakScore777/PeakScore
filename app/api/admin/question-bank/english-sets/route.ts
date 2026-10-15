@@ -20,7 +20,7 @@ function clean(value: unknown, max: number): string {
 
 function validOptions(value: unknown, part: number): value is Choice[] {
   if (!Array.isArray(value)) return false;
-  const expected = part === 2 ? [7, 8] : [part === 7 ? 4 : 3];
+  const expected = [part === 7 ? 4 : part === 2 ? 0 : 3];
   return (Array.isArray(expected) ? expected.includes(value.length) : value.length === expected) && value.every((item, index) =>
     item && item.key === String.fromCharCode(65 + index) &&
     typeof item.text === "string" && item.text.trim().length > 0 && item.text.length <= 5000
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     for (const [index, question] of questions.entries()) {
       const prompt = clean(question?.prompt, 10000);
       const answer = clean(question?.answer, 1).toUpperCase();
-      if (!prompt || !validOptions(question?.options, part) || !question.options.some(option => option.key === answer)) {
+      if (!prompt || !validOptions(question?.options, part) || (part === 2 ? !wordBank.slice(0, 7).some((_, i) => String.fromCharCode(65 + i) === answer) : !question.options.some(option => option.key === answer))) {
         return NextResponse.json({ error: `Revisa la pregunta ${index + 1}: enunciado, opciones o respuesta correcta inválidos.` }, { status: 400 });
       }
       if (part === 1 && !clean(question.imageUrl, 2048)) {

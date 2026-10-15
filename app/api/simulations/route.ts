@@ -228,6 +228,13 @@ export async function POST(request: Request) {
       .eq("subject", subject)
       .eq("is_active", true);
 
+    // Los conjuntos de Inglés estructurado requieren un renderizador y
+    // una calificación compatibles con Partes 2 (A–G) y textos compartidos.
+    // No mezclarlos todavía con el selector genérico A–D evita simulacros rotos.
+    if (subject === "Inglés") {
+      query = query.is("english_set_id", null);
+    }
+
     /*
      * Mixta = no filtramos dificultad.
      */

@@ -135,3 +135,52 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Solicitud inválida al guardar el conjunto." }, { status: 400 });
   }
 }
+
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles").select("role").eq("id", user.id).maybeSingle();
+    if (profileError) return NextResponse.json({ error: "No fue posible verificar tus permisos." }, { status: 500 });
+    if (profile?.role !== "admin" || user.email?.toLowerCase() !== ADMIN_EMAIL) {
+      return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const sessionValue = searchParams.get("session");
+    const partValue = searchParams.get("part");
+    let query = supabaseAdmin.from("english_question_sets")
+      .select("id, part, title, session, status, created_at, updated_at, word_bank, shared_text, instructions")
+      .order("created_at", { ascending: false });
+    if (sessionValue && ["1", "2"].includes(sessionValue)) query = query.eq("session", Number(sessionValue));
+    if (partValue && /^[1-7]$/.test(partValue)) query = query.eq("part", Number(partValue));
+
+    const { data: sets, error: setsError } = await query;
+    if (setsError) {
+      console.error("[PeakScore] Error consultando conjuntos de Inglés.", { code: setsError.code });
+      return NextResponse.json({ error: "No fue posible cargar los conjuntos. Verifica la migración del entorno de desarrollo." }, { status: 500 });
+    }
+    const ids = (sets ?? []).map(set => set.id);
+    const { data: rows, error: rowsError } = ids.length
+      ? await supabaseAdmin.from("questions").select("id, english_set_id, english_position").in("english_set_id", ids).order("english_position", { ascending: true })
+      : { data: [], error: null };
+    if (rowsError) return NextResponse.json({ error: "No fue posible contar las preguntas de los conjuntos." }, { status: 500 });
+
+    const counts = new Map<string, number>();
+    for (const row of rows ?? []) counts.set(row.english_set_id, (counts.get(row.english_set_id) ?? 0) + 1);
+    return NextResponse.json({
+      success: true,
+      sets: (sets ?? []).map(set => ({ ...set, question_count: counts.get(set.id) ?? 0 })),
+      totals: {
+        sets: (sets ?? []).length,
+        questions: (rows ?? []).length,
+      },
+    });
+  } catch {
+    return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
+  }
+}

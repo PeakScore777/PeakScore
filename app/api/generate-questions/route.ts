@@ -7203,55 +7203,125 @@ export async function POST(
         throw new Error("La parte de Inglés no pasó la validación.");
       }
 
-      let parsedGeneration: ReturnType<typeof parseAndValidateEnglishGeneration> | null = null;
-      let generationErrorMessages: string[] = [];
+      const minimumBatchSize = part === 1 ? 5 : part === 2 || part === 3 ? 1 : part === 6 ? 2 : 4;
+      const maximumBatchSize = part === 1 ? 25 : 20;
+      const batchAmounts: number[] = [];
+      let remainingToGenerate = amount;
 
-      for (let attempt = 1; attempt <= 2; attempt++) {
-        try {
-          const response = await generateAI({
-            provider: "groq",
-            prompt: buildEnglishGenerationPrompt(part, amount, difficulty),
-            task: "question_generation",
-            useFallback: attempt === 2,
-          });
+      // Keep each AI response bounded. Preserve complete Part 1 groups and
+      // leave enough items in the final reading/cloze batch to form a full set.
+      while (remainingToGenerate > maximumBatchSize) {
+        let batchAmount = maximumBatchSize;
+        const remainder = remainingToGenerate - batchAmount;
 
-          parsedGeneration = parseAndValidateEnglishGeneration(
-            response.text?.trim() ?? "",
-            part,
-            amount
-          );
-
-          if (
-            parsedGeneration.result &&
-            difficulty !== "Mixta" &&
-            parsedGeneration.result.sets.some((set) =>
-              set.questions.some((question) => question.difficulty !== difficulty)
-            )
-          ) {
-            parsedGeneration = {
-              result: null,
-              errors: ["Todas las preguntas deben respetar la dificultad solicitada."],
-            };
-          }
-
-          if (parsedGeneration.result) break;
-          generationErrorMessages = parsedGeneration.errors;
-        } catch (error) {
-          generationErrorMessages = [getSafeAIErrorMessage(error)];
+        if (remainder > 0 && remainder < minimumBatchSize) {
+          batchAmount -= minimumBatchSize - remainder;
         }
+
+        if (part === 1) {
+          batchAmount -= batchAmount % 5;
+        }
+
+        if (batchAmount < minimumBatchSize || batchAmount >= remainingToGenerate) {
+          throw new Error("No fue posible dividir la cantidad en lotes completos para esta parte de Inglés.");
+        }
+
+        batchAmounts.push(batchAmount);
+        remainingToGenerate -= batchAmount;
       }
 
-      if (!parsedGeneration?.result) {
-        console.error("[PeakScore] El generador de Inglés no superó la validación estructural.", {
-          part,
-          errors: generationErrorMessages,
-        });
+      if (remainingToGenerate > 0) {
+        batchAmounts.push(remainingToGenerate);
+      }
 
+      const generatedSets: NonNullable<
+        ReturnType<typeof parseAndValidateEnglishGeneration>["result"]
+      >["sets"] = [];
+      const generationErrorMessages: string[] = [];
+      let generatedCount = 0;
+
+      for (const [batchIndex, batchAmount] of batchAmounts.entries()) {
+        let batchResult: ReturnType<typeof parseAndValidateEnglishGeneration> | null = null;
+        let batchErrors: string[] = [];
+
+        for (let attempt = 1; attempt <= 2; attempt++) {
+          try {
+            console.log(
+              `[PeakScore] Inglés parte ${part}: lote ${batchIndex + 1}/${batchAmounts.length}, ${batchAmount} preguntas; intento ${attempt}/2.`
+            );
+
+            const response = await generateAI({
+              provider: "groq",
+              prompt: buildEnglishGenerationPrompt(part, batchAmount, difficulty),
+              task: "question_generation",
+              useFallback: attempt === 2,
+            });
+
+            batchResult = parseAndValidateEnglishGeneration(
+              response.text?.trim() ?? "",
+              part,
+              batchAmount
+            );
+
+            if (
+              batchResult.result &&
+              difficulty !== "Mixta" &&
+              batchResult.result.sets.some((set) =>
+                set.questions.some((question) => question.difficulty !== difficulty)
+              )
+            ) {
+              batchResult = {
+                result: null,
+                errors: ["Todas las preguntas deben respetar la dificultad solicitada."],
+              };
+            }
+
+            if (batchResult.result) break;
+            batchErrors = batchResult.errors;
+          } catch (error) {
+            batchErrors = [getSafeAIErrorMessage(error)];
+          }
+        }
+
+        if (!batchResult?.result) {
+          generationErrorMessages.push(
+            `Lote ${batchIndex + 1} (${batchAmount} preguntas): ${batchErrors.join(" ")}`
+          );
+
+          console.error("[PeakScore] Falló un lote estructurado de Inglés.", {
+            part,
+            batch: batchIndex + 1,
+            requested: batchAmount,
+            errors: batchErrors,
+          });
+
+          return NextResponse.json(
+            {
+              success: false,
+              error: `La IA no pudo completar el lote ${batchIndex + 1} de Inglés. No se guardó ninguna pregunta.`,
+              details: generationErrorMessages.slice(0, 8),
+            },
+            { status: 422 }
+          );
+        }
+
+        generatedSets.push(...batchResult.result.sets);
+        generatedCount += batchResult.result.questionCount;
+      }
+
+      const parsedGeneration = {
+        result: {
+          sets: generatedSets,
+          questionCount: generatedCount,
+        },
+        errors: [] as string[],
+      };
+
+      if (generatedCount !== amount) {
         return NextResponse.json(
           {
             success: false,
-            error: "La generación no produjo un conjunto válido. No se guardó ninguna pregunta.",
-            details: generationErrorMessages.slice(0, 8),
+            error: `La generación quedó incompleta: se solicitaron ${amount} preguntas y se validaron ${generatedCount}. No se guardó ninguna pregunta.`,
           },
           { status: 422 }
         );

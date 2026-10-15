@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
   BookOpen,
   Calculator,
+  CheckCircle2,
   Globe,
   Languages,
   Loader2,
@@ -30,6 +32,7 @@ import {
 } from "@/lib/services/question.service";
 
 import QuestionVisualRenderer from "@/components/questions/QuestionVisualRenderer";
+import EnglishStimulusRenderer from "@/components/questions/EnglishStimulusRenderer";
 
 /* =========================================================
    MATERIAS
@@ -78,6 +81,7 @@ export default function QuestionBankPage() {
   const [loading, setLoading] = useState(true);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [reviewingStimulusId, setReviewingStimulusId] = useState<string | null>(null);
 
   /* -----------------------------
      FILTROS
@@ -106,6 +110,39 @@ export default function QuestionBankPage() {
       setLoading(false);
     }
   };
+
+  async function reviewEnglishSet(stimulusId: string) {
+    const confirmed = window.confirm(
+      "¿Ya revisaste todas las preguntas de este estímulo: enunciados, opciones, respuestas correctas y explicaciones? Solo se activará el conjunto completo."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setReviewingStimulusId(stimulusId);
+      const response = await fetch(
+        `/api/admin/question-bank/english-stimuli/${stimulusId}/review`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ active: true }),
+        }
+      );
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "No se pudo aprobar el conjunto.");
+      }
+
+      await loadQuestions();
+      alert(`Conjunto aprobado. ${result.question_count} preguntas quedaron activas.`);
+    } catch (error) {
+      console.error("[PeakScore] Error aprobando conjunto de Inglés.", error);
+      alert(error instanceof Error ? error.message : "No se pudo aprobar el conjunto.");
+    } finally {
+      setReviewingStimulusId(null);
+    }
+  }
 
   /* =========================================================
      VERIFICAR ADMIN
@@ -182,9 +219,14 @@ export default function QuestionBankPage() {
 
     return questions.filter((question) => {
       const contextText =
-        question.context_text
-          ?.toLowerCase()
-          .trim() ?? "";
+        (question.context_text || question.stimulus_content || "")
+          .toLowerCase()
+          .trim();
+
+      const dynamicOptions = [
+        ...(question.options_json ?? []),
+        ...(question.english_part === 1 ? question.stimulus_options_json ?? [] : []),
+      ];
 
       const matchesSearch =
         !searchValue ||
@@ -192,18 +234,11 @@ export default function QuestionBankPage() {
           .toLowerCase()
           .includes(searchValue) ||
         contextText.includes(searchValue) ||
-        question.option_a
-          .toLowerCase()
-          .includes(searchValue) ||
-        question.option_b
-          .toLowerCase()
-          .includes(searchValue) ||
-        question.option_c
-          .toLowerCase()
-          .includes(searchValue) ||
-        question.option_d
-          .toLowerCase()
-          .includes(searchValue);
+        dynamicOptions.some((option) => option.text.toLowerCase().includes(searchValue)) ||
+        question.option_a.toLowerCase().includes(searchValue) ||
+        question.option_b.toLowerCase().includes(searchValue) ||
+        question.option_c.toLowerCase().includes(searchValue) ||
+        question.option_d.toLowerCase().includes(searchValue);
 
       const matchesSubject =
         !subjectFilter ||
@@ -704,6 +739,21 @@ export default function QuestionBankPage() {
                             Sesión {question.session}
                           </span>
 
+                          {question.english_part && (
+                            <span className="rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-700">
+                              Inglés · Parte {question.english_part}
+                              {question.stimulus_position ? ` · Ítem ${question.stimulus_position}` : ""}
+                            </span>
+                          )}
+
+                          {question.english_part && (
+                            <span className={question.is_active
+                              ? "rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700"
+                              : "rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800"}>
+                              {question.is_active ? "Activa" : "Pendiente de revisión"}
+                            </span>
+                          )}
+
                           {question.year && (
                             <span className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600">
                               {question.year}
@@ -715,7 +765,7 @@ export default function QuestionBankPage() {
                             TEXTO DE CONTEXTO
                         ================================================= */}
 
-                        {question.context_text && (
+                        {(question.context_text || question.stimulus_content) && (
                           <div className="mb-6 overflow-hidden rounded-2xl border border-purple-200 bg-purple-50">
 
                             <div className="flex items-center gap-2 border-b border-purple-200 bg-purple-100 px-5 py-3">
@@ -725,12 +775,30 @@ export default function QuestionBankPage() {
                               />
 
                               <span className="font-bold text-purple-800">
-                                Texto de contexto
+                                {question.english_part === 1
+                                  ? "Banco de palabras"
+                                  : question.english_part === 2
+                                    ? "Aviso o señal"
+                                    : question.english_part === 3
+                                      ? "Conversación"
+                                      : question.english_part === 4 || question.english_part === 7
+                                        ? "Texto con espacios"
+                                        : question.english_part === 5 || question.english_part === 6
+                                          ? "Texto de lectura"
+                                          : "Texto de contexto"}
                               </span>
                             </div>
 
                             <div className="whitespace-pre-line px-5 py-5 text-[15px] leading-7 text-slate-700">
-                              {question.context_text}
+                              {(question.english_part === 4 || question.english_part === 7) &&
+                              (question.context_text || question.stimulus_content)
+                                ? (
+                                  <EnglishStimulusRenderer
+                                    content={question.context_text || question.stimulus_content || ""}
+                                    activePosition={question.stimulus_position}
+                                  />
+                                )
+                                : (question.context_text || question.stimulus_content)}
                             </div>
                           </div>
                         )}
@@ -739,7 +807,7 @@ export default function QuestionBankPage() {
                             IMAGEN
                         ================================================= */}
 
-                        {question.image_url && (
+                        {(question.image_url || question.stimulus_image_url) && (
                           <div className="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4">
 
                             <div className="mb-3 flex items-center gap-2">
@@ -753,9 +821,12 @@ export default function QuestionBankPage() {
                               </span>
                             </div>
 
-                            <img
-                              src={question.image_url}
-                              alt="Imagen de apoyo de la pregunta"
+                            <Image
+                              src={question.image_url || question.stimulus_image_url || ""}
+                              alt={question.stimulus_image_alt || "Imagen de apoyo de la pregunta"}
+                              width={480}
+                              height={320}
+                              unoptimized
                               className="max-h-[500px] w-full rounded-xl object-contain"
                             />
                           </div>
@@ -785,34 +856,27 @@ export default function QuestionBankPage() {
                         ================================================= */}
 
                         <div className="mt-5 grid gap-3 md:grid-cols-2">
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <span className="font-semibold">
-                              A.
-                            </span>{" "}
-                            {question.option_a}
-                          </div>
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <span className="font-semibold">
-                              B.
-                            </span>{" "}
-                            {question.option_b}
-                          </div>
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <span className="font-semibold">
-                              C.
-                            </span>{" "}
-                            {question.option_c}
-                          </div>
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <span className="font-semibold">
-                              D.
-                            </span>{" "}
-                            {question.option_d}
-                          </div>
+                          {(question.options_json?.length
+                            ? question.options_json
+                            : question.english_part === 1 && question.stimulus_options_json?.length
+                              ? question.stimulus_options_json
+                              : [
+                                  { key: "A", text: question.option_a },
+                                  { key: "B", text: question.option_b },
+                                  { key: "C", text: question.option_c },
+                                  { key: "D", text: question.option_d },
+                                ].filter((option) => option.text.trim().length > 0)
+                          ).map((option) => (
+                            <div
+                              key={option.key}
+                              className="rounded-xl border border-slate-200 bg-white p-3 text-slate-800"
+                            >
+                              <span className="font-semibold text-slate-900">
+                                {option.key}.
+                              </span>{" "}
+                              {option.text}
+                            </div>
+                          ))}
                         </div>
 
                         {/* =================================================
@@ -852,7 +916,22 @@ export default function QuestionBankPage() {
                           ACCIONES
                       ================================================= */}
 
-                      <div className="flex shrink-0 gap-3">
+                      <div className="flex shrink-0 flex-wrap gap-3">
+                        {question.english_part && question.stimulus_id && !question.is_active && (
+                          <button
+                            type="button"
+                            onClick={() => reviewEnglishSet(question.stimulus_id as string)}
+                            disabled={reviewingStimulusId === question.stimulus_id}
+                            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {reviewingStimulusId === question.stimulus_id ? (
+                              <Loader2 size={18} className="animate-spin" />
+                            ) : (
+                              <CheckCircle2 size={18} />
+                            )}
+                            Aprobar conjunto
+                          </button>
+                        )}
 
                         {/* EDITAR */}
 

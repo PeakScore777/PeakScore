@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 const PUBLIC_QUESTION_FIELDS =
-  "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at";
+  "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at, english_part, english_set_id, english_position, english_options";
 
 export async function GET(
   _request: Request,
@@ -234,6 +234,26 @@ export async function GET(
       );
     }
 
+    const englishSetIds = [...new Set(orderedQuestions
+      .filter((question: any) => question?.english_set_id)
+      .map((question: any) => question.english_set_id))];
+    let englishSetsById = new Map<string, any>();
+    if (englishSetIds.length > 0) {
+      const { data: englishSets, error: englishSetsError } = await adminSupabase
+        .from("english_question_sets")
+        .select("id, part, title, instructions, shared_text, word_bank, session, status")
+        .in("id", englishSetIds);
+      if (englishSetsError) {
+        console.error("[PeakScore] Error obteniendo contexto de Inglés.", { code: englishSetsError.code });
+        return NextResponse.json({ success: false, error: "No fue posible obtener el contexto de las preguntas de Inglés." }, { status: 500 });
+      }
+      englishSetsById = new Map((englishSets ?? []).map((set: any) => [set.id, set]));
+    }
+    const questionsWithEnglishContext = orderedQuestions.map((question: any) => ({
+      ...question,
+      english_set: question.english_set_id ? englishSetsById.get(question.english_set_id) ?? null : null,
+    }));
+
     return NextResponse.json({
       success: true,
       simulation: {
@@ -249,7 +269,7 @@ export async function GET(
         difficulty: simulation.difficulty,
         color: simulation.color,
       },
-      questions: orderedQuestions,
+      questions: questionsWithEnglishContext,
     });
   } catch (error) {
     console.error(

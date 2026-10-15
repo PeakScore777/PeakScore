@@ -109,7 +109,7 @@ export async function POST(
         !(
           answer.selected_answer === null ||
           (typeof answer.selected_answer === "string" &&
-            ["A", "B", "C", "D"].includes(
+            ["A", "B", "C", "D", "E", "F", "G"].includes(
               answer.selected_answer.trim().toUpperCase()
             ))
         )

@@ -20,8 +20,8 @@ function clean(value: unknown, max: number): string {
 
 function validOptions(value: unknown, part: number): value is Choice[] {
   if (!Array.isArray(value)) return false;
-  const expected = part === 7 ? 4 : 3;
-  return value.length === expected && value.every((item, index) =>
+  const expected = part === 2 ? [7, 8] : [part === 7 ? 4 : 3];
+  return (Array.isArray(expected) ? expected.includes(value.length) : value.length === expected) && value.every((item, index) =>
     item && item.key === String.fromCharCode(65 + index) &&
     typeof item.text === "string" && item.text.trim().length > 0 && item.text.length <= 5000
   );
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       return NextResponse.json({ error: "No fue posible verificar tus permisos." }, { status: 500 });
     }
-    if (profile?.role !== "admin" || (profile.email && profile.email.toLowerCase() !== ADMIN_EMAIL)) {
+    if (profile?.role !== "admin" || user.email?.toLowerCase() !== ADMIN_EMAIL) {
       return NextResponse.json({ error: "Solo el administrador autorizado puede crear conjuntos de Inglés." }, { status: 403 });
     }
 
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       option_a: question.options[0].text,
       option_b: question.options[1].text,
       option_c: question.options[2].text,
-      option_d: part === 7 ? question.options[3].text : "No aplica",
+      option_d: question.options[3]?.text ?? "No aplica",
       correct_answer: question.answer.toUpperCase(),
       explanation: clean(question.explanation, 5000) || null,
       image_url: clean(question.imageUrl, 2048) || null,

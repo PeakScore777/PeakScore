@@ -19,6 +19,9 @@ declare
   v_distinct_positions integer;
   v_distinct_parts integer;
   v_marker_count integer;
+  v_marker_distinct_count integer;
+  v_marker_min integer;
+  v_marker_max integer;
   v_answer_count integer;
 begin
   if p_stimulus_id is null or p_activate is null then
@@ -193,10 +196,22 @@ begin
   end if;
 
   if v_part in (4, 7) then
-    select count(*) into v_marker_count
-        from regexp_matches(v_stimulus.content, '\[\[[0-9]+\]\]', 'g') as marker;
+    select
+      count(*),
+      count(distinct (marker.matches)[1]::integer),
+      min((marker.matches)[1]::integer),
+      max((marker.matches)[1]::integer)
+    into
+      v_marker_count,
+      v_marker_distinct_count,
+      v_marker_min,
+      v_marker_max
+    from regexp_matches(v_stimulus.content, '\[\[([0-9]+)\]\]', 'g') as marker(matches);
 
-    if v_marker_count <> v_count then
+    if v_marker_count <> v_count
+       or v_marker_distinct_count <> v_count
+       or v_marker_min <> 1
+       or v_marker_max <> v_count then
       raise exception 'INVALID_ENGLISH_CLOZE_MARKERS';
     end if;
 

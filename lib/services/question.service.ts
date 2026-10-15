@@ -58,6 +58,22 @@ export interface Question {
 
   question_number: number | null;
 
+  /** Estructura específica para los siete formatos de Inglés. */
+  english_part?: number | null;
+  english_set_id?: string | null;
+  english_position?: number | null;
+  english_options?: Array<{ key: string; text: string }> | null;
+  english_set?: {
+    id: string;
+    part: number;
+    title: string;
+    instructions: string | null;
+    shared_text: string | null;
+    word_bank: string[] | null;
+    session: number;
+    status: string;
+  } | null;
+
   is_active: boolean;
 
   created_at: string;

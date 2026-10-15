@@ -90,3 +90,12 @@ Preparar PeakScore para representar las siete partes de Inglés sin reemplazar l
 - El estado combinado de GitHub reporta Vercel como `failure`, con destino que indica `build-rate-limit`. Esto no demuestra que el código falle al compilar; significa que no se dispone de un build de Vercel confirmado para esta revisión.
 - Se corrigió en la ruta de generación un mapeo que reemplazaba las claves E–G por A en el objeto auxiliar usado para detectar similitud. Ahora conserva la clave original durante esa comparación. El guardado real ya usa la respuesta estructurada validada.
 - La corrección aún necesita verificación con TypeScript/build y una prueba real de generación. No declarar la rama validada por CI.
+
+
+## Auditoría adicional de estructura — continuación
+
+- La validación del banco A–G ahora rechaza palabras repetidas ignorando diferencias de mayúsculas y espacios, tanto en el contrato TypeScript como al guardar y aprobar conjuntos mediante SQL.
+- El simulacro muestra ahora la imagen del estímulo dentro del bloque de contexto compartido (por ejemplo, un aviso de Parte 2) y utiliza el texto alternativo del estímulo cuando existe. Las imágenes específicas de pregunta siguen junto a su enunciado.
+- Revisión de acceso: el endpoint de aprobación comprueba sesión y rol `admin`; la función RPC de aprobación queda reservada a `service_role`. Las rutas de simulacro verifican autenticación y propiedad del simulacro antes de devolver preguntas y estímulos.
+- La base de producción consultada sigue sin tener `question_stimuli`, las nuevas columnas ni los dos RPC de Inglés. Esto confirma que la migración no se ha aplicado; no se modificó la base de producción.
+- Sigue pendiente ejecutar build/TypeScript/ESLint y probar las migraciones en una base aislada. La verificación de CI/Vercel no sustituye esas pruebas.

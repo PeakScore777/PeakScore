@@ -45,6 +45,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [wordBankText, setWordBankText] = useState("");
   const [examplePrompt, setExamplePrompt] = useState("");
   const [exampleAnswer, setExampleAnswer] = useState("H");
+  const [exampleImageFile, setExampleImageFile] = useState<File | null>(null);
   const [exampleOptions, setExampleOptions] = useState<Choice[]>(() => ["A", "B", "C"].map(key => ({ key, text: "" })));
   const [questions, setQuestions] = useState<DraftQuestion[]>(() => Array.from({ length: 5 }, () => makeQuestion(1)));
   const [loading, setLoading] = useState(false);
@@ -62,6 +63,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setWordBankText("");
     setExamplePrompt("");
     setExampleAnswer(next === 1 ? "H" : "A");
+    setExampleImageFile(null);
     setExampleOptions(LETTERS.slice(0, PARTS[next].choices || 3).map(key => ({ key, text: "" })));
     setInstructions("");
     setTitle("");
@@ -108,6 +110,16 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       if (profile?.role !== "admin" && profile?.email?.toLowerCase() !== "aragonyostynsena07@gmail.com") {
         throw new Error("Solo el administrador autorizado puede crear conjuntos de Inglés.");
       }
+      let uploadedExampleImageUrl: string | null = null;
+      if (part !== 1 && exampleImageFile) {
+        if (exampleImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del ejemplo supera el máximo de 8 MB.");
+        if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(exampleImageFile.type)) throw new Error("La imagen del ejemplo debe ser PNG, JPG, WEBP o GIF.");
+        const safeExampleName = exampleImageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
+        const examplePath = `english/${user.id}/examples/${Date.now()}-${safeExampleName}`;
+        const { error: exampleUploadError } = await supabase.storage.from("question-images").upload(examplePath, exampleImageFile, { upsert: false, contentType: exampleImageFile.type });
+        if (exampleUploadError) throw new Error(`No se pudo subir la imagen del ejemplo: ${exampleUploadError.message}`);
+        uploadedExampleImageUrl = supabase.storage.from("question-images").getPublicUrl(examplePath).data.publicUrl;
+      }
       const { data: setRow, error: setError } = await supabase.from("english_question_sets").insert({
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
         shared_text: sharedText.trim() || null,
@@ -115,6 +127,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         example_prompt: part === 1 ? null : examplePrompt.trim(),
         example_options: part === 1 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
         example_answer: part === 1 ? null : exampleAnswer,
+        example_image_url: part === 1 ? null : uploadedExampleImageUrl,
         word_bank: part === 1 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
         status: "draft", created_by: user.id,
       }).select("id").single();
@@ -179,6 +192,11 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           {[4, 5, 6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 5 || part === 6 ? "Pega aquí el texto de lectura..." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
           {part !== 1 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
             <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo.</p></div>
+            <label className="block text-sm font-semibold">Imagen del ejemplo (opcional)
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setExampleImageFile(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" />
+              <span className="mt-1 block text-xs font-normal text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</span>
+            </label>
+            {exampleImageFile && <div className="space-y-2"><p className="text-xs text-slate-600">Imagen seleccionada: {exampleImageFile.name}</p><img src={URL.createObjectURL(exampleImageFile)} alt="Vista previa del aviso de ejemplo" className="max-h-48 rounded-lg border border-slate-200 bg-white object-contain" /></div>}
             <label className="block text-sm font-semibold">Enunciado del ejemplo<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} maxLength={10000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder="Escribe aquí el enunciado de ejemplo..." /></label>
             <div className="grid gap-3 md:grid-cols-2">{exampleOptions.map((option, index) => <label key={option.key} className="block text-sm font-semibold">Opción de ejemplo {option.key}<input value={option.text} onChange={e => setExampleOptions(current => current.map((item, i) => i === index ? { ...item, text: e.target.value } : item))} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder={"Texto de la opción " + option.key} /></label>)}</div>
             <label className="block text-sm font-semibold">Respuesta del ejemplo<select value={exampleAnswer} onChange={e => setExampleAnswer(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3">{exampleOptions.map(option => <option key={option.key} value={option.key}>{option.key}</option>)}</select></label>

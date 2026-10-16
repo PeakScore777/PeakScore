@@ -59,6 +59,10 @@ export default function ExamPage() {
   const [answers, setAnswers] =
     useState<Record<number, number>>({});
 
+  const [annotationMode, setAnnotationMode] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState<{ text: string; block: string } | null>(null);
+  const [annotations, setAnnotations] = useState<Record<string, string[]>>({});
+
   const [timeLeft, setTimeLeft] =
     useState(0);
 
@@ -85,6 +89,52 @@ export default function ExamPage() {
 
   const storageKey =
     `peakscore:simulation:${simulationId}`;
+  const annotationStorageKey = `peakscore:annotations:${simulationId}`;
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(annotationStorageKey);
+      if (saved) setAnnotations(JSON.parse(saved) as Record<string, string[]>);
+    } catch {
+      console.error("[PeakScore] No se pudieron recuperar los subrayados.");
+    }
+  }, [annotationStorageKey]);
+
+  const captureTextSelection = (block: string) => {
+    if (!annotationMode) return;
+    const text = window.getSelection()?.toString().trim() ?? "";
+    if (text) setPendingSelection({ text, block });
+  };
+
+  const saveUnderline = () => {
+    if (!pendingSelection || !question) return;
+    const key = `${question.id}:${pendingSelection.block}`;
+    const next = { ...annotations, [key]: [...new Set([...(annotations[key] ?? []), pendingSelection.text])] };
+    setAnnotations(next);
+    try { localStorage.setItem(annotationStorageKey, JSON.stringify(next)); } catch {}
+    window.getSelection()?.removeAllRanges();
+    setPendingSelection(null);
+  };
+
+  const renderAnnotatedText = (text: string, block: string) => {
+    const phrases = annotations[`${question?.id}:${block}`] ?? [];
+    let segments: Array<{ text: string; marked: boolean }> = [{ text, marked: false }];
+    for (const phrase of phrases) {
+      if (!phrase) continue;
+      segments = segments.flatMap((segment) => {
+        if (segment.marked || !segment.text.includes(phrase)) return [segment];
+        return segment.text.split(phrase).flatMap((part, index, parts) => {
+          const result: Array<{ text: string; marked: boolean }> = [];
+          if (part) result.push({ text: part, marked: false });
+          if (index < parts.length - 1) result.push({ text: phrase, marked: true });
+          return result;
+        });
+      });
+    }
+    return segments.map((segment, index) => segment.marked
+      ? <mark key={`${block}-${index}`} className="rounded-sm bg-yellow-200 text-slate-900 underline decoration-2 decoration-yellow-600 underline-offset-4">{segment.text}</mark>
+      : segment.text);
+  };
 
   /* =====================================================
      GUARDAR PROGRESO LOCAL
@@ -1202,7 +1252,7 @@ export default function ExamPage() {
 
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+          <div className="flex flex-wrap items-center gap-2">\n          <button type="button" onClick={() => { setAnnotationMode((value) => !value); setPendingSelection(null); }} className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold ${annotationMode ? "border-amber-400 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-700"}`} aria-pressed={annotationMode}>\n            <Pencil size={16} /> {annotationMode ? "Lápiz activado" : "Lápiz"}\n          </button>\n          {annotationMode && <span className="text-xs text-slate-500">Selecciona texto y subráyalo.</span>}\n          {pendingSelection && <button type="button" onClick={saveUnderline} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white"><Highlighter size={16}/> Subrayar selección</button>}\n          {pendingSelection && <button type="button" onClick={() => setPendingSelection(null)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600" aria-label="Cancelar subrayado"><X size={16}/></button>}\n        </div>\n\n        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
 
             <ShieldCheck
               size={17}

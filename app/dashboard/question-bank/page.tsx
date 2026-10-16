@@ -487,7 +487,7 @@ export default function QuestionBankPage() {
                     setSearch(event.target.value)
                   }
                   placeholder="Buscar pregunta o texto..."
-                  className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
@@ -500,7 +500,7 @@ export default function QuestionBankPage() {
                     event.target.value
                   )
                 }
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
               >
                 <option value="">
                   Todas las materias
@@ -525,7 +525,7 @@ export default function QuestionBankPage() {
                     event.target.value
                   )
                 }
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
               >
                 <option value="">
                   Todas las sesiones
@@ -549,7 +549,7 @@ export default function QuestionBankPage() {
                     event.target.value
                   )
                 }
-                className="rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500"
+                className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
               >
                 <option value="">
                   Todas las dificultades
@@ -587,7 +587,7 @@ export default function QuestionBankPage() {
                     )
                   }
                   placeholder="Ej. 2025"
-                  className="w-32 rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none transition focus:border-blue-500"
+                  className="w-32 rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500"
                 />
               </div>
 
@@ -796,28 +796,28 @@ export default function QuestionBankPage() {
 
                         <div className="mt-5 grid gap-3 md:grid-cols-2">
 
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-900">
                             <span className="font-semibold">
                               A.
                             </span>{" "}
                             {question.option_a}
                           </div>
 
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-900">
                             <span className="font-semibold">
                               B.
                             </span>{" "}
                             {question.option_b}
                           </div>
 
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-900">
                             <span className="font-semibold">
                               C.
                             </span>{" "}
                             {question.option_c}
                           </div>
 
-                          <div className="rounded-xl border border-slate-200 bg-white p-3">
+                          <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-900">
                             <span className="font-semibold">
                               D.
                             </span>{" "}

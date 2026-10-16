@@ -58,6 +58,48 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [existingSharedImageUrl, setExistingSharedImageUrl] = useState("");
   const wordBank = useMemo(() => wordBankText.split("\n").map(x => x.trim()).filter(Boolean), [wordBankText]);
 
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("id");
+    if (!id) return;
+    let alive = true;
+    setEditSetId(id);
+    (async () => {
+      setLoading(true);
+      const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
+        .select("id,part,title,session,shared_image_url,instructions,example_prompt,example_options,example_answer")
+        .eq("id", id).single();
+      if (setLoadError || !setRow || setRow.part !== 4) {
+        if (alive) { setError("No se pudo abrir este conjunto de Parte 4 para editar."); setLoading(false); }
+        return;
+      }
+      const { data: rows, error: questionLoadError } = await supabase.from("questions")
+        .select("id,question,option_a,option_b,option_c,correct_answer,explanation,image_url,english_options,english_position,difficulty")
+        .eq("english_set_id", id).order("english_position", { ascending: true });
+      if (questionLoadError || !rows || !rows.length) {
+        if (alive) { setError("No se pudieron cargar las preguntas del conjunto."); setLoading(false); }
+        return;
+      }
+      if (!alive) return;
+      setPart(4);
+      setPart4Group(/^4B\\s*[·—-]/i.test(setRow.title) ? "4B" : "4A");
+      setTitle(setRow.title.replace(/^4[AB]\\s*[·—-]\\s*/i, ""));
+      setSession(String(setRow.session ?? 2));
+      setInstructions(setRow.instructions ?? "");
+      setExistingSharedImageUrl(setRow.shared_image_url ?? "");
+      setExamplePrompt(setRow.example_prompt ?? "");
+      setExampleOptions((setRow.example_options as Choice[] | null) ?? ["A","B","C"].map(key => ({key,text:""})));
+      setExampleAnswer(setRow.example_answer ?? "A");
+      setEditingQuestionIds(rows.map((q: any) => q.id));
+      setQuestions(rows.map((q: any) => ({
+        prompt: q.question ?? "",
+        options: (q.english_options as Choice[] | null)?.length ? q.english_options as Choice[] : [{key:"A",text:q.option_a},{key:"B",text:q.option_b},{key:"C",text:q.option_c}],
+        answer: q.correct_answer ?? "A", explanation: q.explanation ?? "", imageUrl: q.image_url ?? "", imageFile: null,
+      })));
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, []);
+
   function changePart(next: number) {
     setPart(next);
     if (next === 4) setPart4Group("4A");
@@ -100,7 +142,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part !== 1 && part !== 3 && part !== 4 && !exampleOptions.some(option => option.key === exampleAnswer)) return setError("Selecciona una respuesta válida para el ejemplo.");
     if (part === 2 && questions.some(q => !q.imageFile && !q.imageUrl.trim())) return setError("Sube la imagen del aviso para cada pregunta de la Parte 2.");
     
-    if (part === 4 && !sharedImageFile) return setError("Sube la imagen del texto compartido de la Parte 4.");
+    if (part === 4 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen del texto compartido de la Parte 4.");
     if (part === 4 && questions.some(q => !q.explanation.trim())) return setError("Escribe una explicación en español para cada espacio de la Parte 4.");
     if ([5, 6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
     for (let i = 0; i < questions.length; i++) {
@@ -119,7 +161,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         throw new Error("Solo el administrador autorizado puede crear conjuntos de Inglés.");
       }
       let uploadedExampleImageUrl: string | null = null;
-      let uploadedSharedImageUrl: string | null = null;
+      let uploadedSharedImageUrl: string | null = existingSharedImageUrl || null;
       if (part !== 1 && exampleImageFile) {
         if (exampleImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del ejemplo supera el máximo de 8 MB.");
         if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(exampleImageFile.type)) throw new Error("La imagen del ejemplo debe ser PNG, JPG, WEBP o GIF.");

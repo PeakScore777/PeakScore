@@ -428,7 +428,7 @@ export async function POST(
         !answer ||
         typeof answer.question_id !== "string" ||
         !(answer.selected_answer === null ||
-          ["A", "B", "C", "D"].includes(
+          ["A", "B", "C", "D", "E", "F", "G"].includes(
             String(answer.selected_answer).trim().toUpperCase()
           ))
     );

@@ -41,6 +41,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [difficulty, setDifficulty] = useState("Media");
   const [title, setTitle] = useState("");
   const [sharedText, setSharedText] = useState("");
+  const [sharedImageFile, setSharedImageFile] = useState<File | null>(null);
   const [instructions, setInstructions] = useState("");
   const [wordBankText, setWordBankText] = useState("");
   const [examplePrompt, setExamplePrompt] = useState("");
@@ -60,6 +61,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (next === 7) setPart7Group("7A");
     setQuestions(Array.from({ length: PARTS[next].count }, () => makeQuestion(next)));
     setSharedText("");
+    setSharedImageFile(null);
     setWordBankText("");
     setExamplePrompt("");
     setExampleAnswer(next === 1 ? "H" : "A");
@@ -95,7 +97,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part !== 1 && part !== 3 && !exampleOptions.some(option => option.key === exampleAnswer)) return setError("Selecciona una respuesta válida para el ejemplo.");
     if (part === 2 && questions.some(q => !q.imageFile && !q.imageUrl.trim())) return setError("Sube la imagen del aviso para cada pregunta de la Parte 2.");
     
-    if ([4, 5, 6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
+    if (part === 4 && !sharedImageFile) return setError("Sube la imagen del texto compartido de la Parte 4.");
+    if ([5, 6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (part !== 1 && q.options.some(o => !o.text.trim())) return setError(`Completa todas las opciones de la pregunta ${i + 1}.`);
@@ -112,6 +115,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         throw new Error("Solo el administrador autorizado puede crear conjuntos de Inglés.");
       }
       let uploadedExampleImageUrl: string | null = null;
+      let uploadedSharedImageUrl: string | null = null;
       if (part !== 1 && exampleImageFile) {
         if (exampleImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del ejemplo supera el máximo de 8 MB.");
         if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(exampleImageFile.type)) throw new Error("La imagen del ejemplo debe ser PNG, JPG, WEBP o GIF.");
@@ -121,9 +125,19 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         if (exampleUploadError) throw new Error(`No se pudo subir la imagen del ejemplo: ${exampleUploadError.message}`);
         uploadedExampleImageUrl = supabase.storage.from("question-images").getPublicUrl(examplePath).data.publicUrl;
       }
+      if (part === 4 && sharedImageFile) {
+        if (sharedImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del texto supera el máximo de 8 MB.");
+        if (!["image/png", "image/jpeg", "image/webp"].includes(sharedImageFile.type)) throw new Error("La imagen del texto debe ser PNG, JPG o WEBP.");
+        const safeSharedName = sharedImageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
+        const sharedPath = "english/" + user.id + "/shared/" + Date.now() + "-" + safeSharedName;
+        const { error: sharedUploadError } = await supabase.storage.from("question-images").upload(sharedPath, sharedImageFile, { upsert: false, contentType: sharedImageFile.type });
+        if (sharedUploadError) throw new Error("No se pudo subir la imagen del texto: " + sharedUploadError.message);
+        uploadedSharedImageUrl = supabase.storage.from("question-images").getPublicUrl(sharedPath).data.publicUrl;
+      }
       const { data: setRow, error: setError } = await supabase.from("english_question_sets").insert({
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
-        shared_text: sharedText.trim() || null,
+        shared_text: part === 4 ? null : sharedText.trim() || null,
+        shared_image_url: part === 4 ? uploadedSharedImageUrl : null,
         instructions: (instructions.trim() || PARTS[part].guidance),
         example_prompt: part === 1 || part === 3 ? null : examplePrompt.trim(),
         example_options: part === 1 || part === 3 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
@@ -190,7 +204,14 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           </div>
           <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950"><strong>Formato:</strong> {PARTS[part].guidance}</div>
           {part === 1 && <div className="mt-5 space-y-4"><div className="grid gap-3 md:grid-cols-[1fr_12rem]"><label className="block text-sm font-semibold">Enunciado de ejemplo (no se califica)<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" placeholder="Example: This is a place to go shopping for vegetables, meat, among other things."/></label><label className="block text-sm font-semibold">Letra de ejemplo<select value={exampleAnswer} onChange={e => setExampleAnswer(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">{LETTERS.map(key => <option key={key} value={key}>{key}</option>)}</select></label></div><label className="block text-sm font-semibold">Banco de palabras compartido (A–H; selecciona cuál es el ejemplo)<textarea value={wordBankText} onChange={e => setWordBankText(e.target.value)} rows={8} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={"basement\nbathroom\nbookstore\ncafé\ncinema\nelevator\nplayground\nsupermarket"}/></label><div className="mt-3 grid gap-2 sm:grid-cols-2">{wordBank.map((word, i) => <div key={i} className={`rounded-lg p-3 text-sm ${LETTERS[i] === exampleAnswer ? "border-2 border-slate-900 bg-slate-100 font-bold underline" : "bg-slate-50"}`}><b>{LETTERS[i]}.</b> {word}{LETTERS[i] === exampleAnswer ? " (ejemplo)" : ""}</div>)}</div><p className="text-xs text-slate-500">El ejemplo se muestra antes de las cinco preguntas calificadas y no se guarda como pregunta puntuable. La letra elegida para el ejemplo queda excluida de las respuestas de las cinco preguntas.</p></div>}
-          {[4, 5, 6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 5 || part === 6 ? "Pega aquí el texto de lectura..." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
+          {part === 4 && <div className="mt-5 space-y-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+            <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del texto compartido (obligatoria)</span>
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen no puede superar 8 MB."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" />
+              <span className="mt-1 block text-xs font-normal text-slate-500">Sube una sola imagen que contenga el texto con los ocho espacios numerados. PNG, JPG o WEBP · máximo 8 MB. Las ocho preguntas y sus opciones se ingresan por separado.</span>
+            </label>
+            {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-white p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa del texto compartido de la Parte 4" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen</button></div>}
+          </div>}
+          {[5, 6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 5 || part === 6 ? "Pega aquí el texto de lectura..." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
           {part !== 1 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
             <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo.</p></div>
             <label className="block text-sm font-semibold">Imagen del ejemplo (opcional)

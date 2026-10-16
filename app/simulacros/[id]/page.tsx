@@ -1343,8 +1343,8 @@ export default function ExamPage() {
 
                         </div>
 
-                        <div className="whitespace-pre-wrap text-[16px] font-medium leading-8 text-slate-700 sm:text-[17px]">
-                          {question.context_text}
+                        <div onMouseUp={() => captureTextSelection("context")} className={`whitespace-pre-wrap text-[16px] font-medium leading-8 text-slate-700 sm:text-[17px] ${annotationMode ? "cursor-text select-text" : ""}`}>
+                          {renderAnnotatedText(question.context_text, "context")}
                         </div>
 
                       </div>
@@ -1372,8 +1372,8 @@ export default function ExamPage() {
 
                     </div>
 
-                    <div className="whitespace-pre-wrap text-[17px] font-medium leading-8 text-slate-800 sm:text-[18px]">
-                      {question.question}
+                    <div onMouseUp={() => captureTextSelection("question")} className={`whitespace-pre-wrap text-[17px] font-medium leading-8 text-slate-800 sm:text-[18px] ${annotationMode ? "cursor-text select-text" : ""}`}>
+                      {renderAnnotatedText(question.question, "question")}
                     </div>
 
                     {question.image_url && (

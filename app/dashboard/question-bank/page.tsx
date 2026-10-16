@@ -364,6 +364,16 @@ export default function QuestionBankPage() {
               Generar con IA
             </Link>
 
+            {/* EDITOR MANUAL DE INGLÉS */}
+
+            <Link
+              href="/dashboard/question-bank/english/new"
+              className="flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700"
+            >
+              <Languages size={20} />
+              Crear Inglés
+            </Link>
+
             {/* NUEVA PREGUNTA */}
 
             <Link

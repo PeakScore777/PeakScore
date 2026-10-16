@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 
 import {
   AlertTriangle,
+  Pencil,
+  Highlighter,
+  X,
   Check,
   CheckCircle2,
   ChevronLeft,

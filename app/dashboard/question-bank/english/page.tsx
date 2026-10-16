@@ -65,15 +65,15 @@ export default function EnglishQuestionBankPage() {
         if (alive) { setError("No se pudieron cargar los conjuntos de Inglés."); setLoading(false); }
         return;
       }
-      const loadedSets = (setData ?? []) as EnglishSet[];
-      if (!loadedSets.length) {
+      const allSets = (setData ?? []) as EnglishSet[];
+      if (!allSets.length) {
         if (alive) { setSets([]); setQuestionsBySet({}); setLoading(false); }
         return;
       }
       const { data: questionData, error: questionError } = await supabase
         .from("questions")
         .select("id,question,option_a,option_b,option_c,option_d,correct_answer,explanation,image_url,english_part,english_position,english_options,component,difficulty,english_set_id")
-        .in("english_set_id", loadedSets.map((item) => item.id))
+        .in("english_set_id", allSets.map((item) => item.id))
         .order("english_position", { ascending: true });
       if (questionError) {
         if (alive) { setError("Los conjuntos cargaron, pero no se pudieron cargar sus preguntas."); setLoading(false); }
@@ -83,8 +83,11 @@ export default function EnglishQuestionBankPage() {
       for (const question of (questionData ?? []) as (EnglishQuestion & { english_set_id: string })[]) {
         (grouped[question.english_set_id] ??= []).push(question);
       }
+      const completeSets = allSets.filter((item) => (grouped[item.id]?.length ?? 0) > 0);
+      const normalizedSets = completeSets.map((item) => ({ ...item, part: item.word_bank?.length ? 2 : item.part }))
+        .sort((a, b) => a.part - b.part || a.created_at.localeCompare(b.created_at));
       if (alive) {
-        setSets(loadedSets);
+        setSets(normalizedSets);
         setQuestionsBySet(grouped);
         setLoading(false);
       }
@@ -117,13 +120,16 @@ export default function EnglishQuestionBankPage() {
             const qs = questionsBySet[set.id] ?? [];
             const words = set.word_bank ?? [];
             const group = set.title.match(/^((?:4|7)[AB])\s*[·—-]/)?.[1];
+            const isWordBankSet = words.length > 0;
+            const displayPart = isWordBankSet ? 2 : set.part;
+            const displayPartName = isWordBankSet ? "Descripciones y banco de palabras" : (PART_NAMES[displayPart] ?? "Inglés");
             return (
               <article key={set.id} className="overflow-hidden rounded-sm border border-slate-300 bg-white shadow-sm">
                 <div className="border-b border-slate-200 px-6 py-5 sm:px-10">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {set.session}</p>
-                      <h2 className="mt-1 text-xl font-black">{group ? `Parte ${group}` : `Parte ${set.part}`} · {PART_NAMES[set.part] ?? "Inglés"}</h2>
+                      <h2 className="mt-1 text-xl font-black">{group ? `Parte ${group}` : `Parte ${displayPart}`} · {displayPartName}</h2>
                       <p className="mt-1 text-sm text-slate-600">{set.title}</p>
                     </div>
                     <div className="flex items-center gap-2">
@@ -137,7 +143,7 @@ export default function EnglishQuestionBankPage() {
                   {set.shared_text && <div className="mb-7 whitespace-pre-wrap border border-slate-300 px-5 py-5 font-serif text-[15px] leading-7 text-slate-900">{set.shared_text}</div>}
                   {words.length > 0 && <div className="mb-7 grid gap-6 md:grid-cols-[1fr_0.9fr]">
                     <div><h3 className="mb-3 border-b border-slate-300 pb-2 text-center text-sm font-black uppercase tracking-wide">Descripciones</h3>
-                      <div className="space-y-3">{qs.map((q, i) => <div key={q.id} className="grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 pb-3"><strong>{80 + i}.</strong><p className="whitespace-pre-wrap leading-6">{q.question}</p></div>)}</div>
+                      <div className="space-y-3">{qs.map((q, i) => <div key={q.id} className="grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 pb-3"><strong>{(displayPart === 2 ? 85 : 80) + i}.</strong><p className="whitespace-pre-wrap leading-6">{q.question}</p></div>)}</div>
                     </div>
                     <div><h3 className="mb-3 border-b border-slate-300 pb-2 text-center text-sm font-black uppercase tracking-wide">Palabras</h3>
                       <div className="space-y-3">{words.map((word) => <div key={word.key} className={`flex gap-3 rounded-sm px-2 py-1 ${word.example ? "font-bold underline decoration-2" : ""}`}><strong>{word.key}.</strong><span>{word.text}{word.example ? " (ejemplo)" : ""}</span></div>)}</div>
@@ -156,7 +162,7 @@ export default function EnglishQuestionBankPage() {
                       </div>
                     </div>;
                   })}</div>}
-                  {qs.length === 0 && <p className="text-sm italic text-slate-500">Este conjunto aún no tiene preguntas guardadas.</p>}
+                  
                   <div className="mt-5 border-t border-slate-300 pt-3 text-xs text-slate-400">PeakScore · Material de práctica · Las respuestas correctas no se muestran en esta vista.</div>
                 </div>
               </article>

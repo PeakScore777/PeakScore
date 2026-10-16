@@ -58,6 +58,11 @@ export interface Question {
 
   question_number: number | null;
 
+  english_part?: number | null;
+  english_set_id?: string | null;
+  english_position?: number | null;
+  english_options?: Array<{ key: string; text: string }> | null;
+
   is_active: boolean;
 
   created_at: string;

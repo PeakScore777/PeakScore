@@ -137,3 +137,11 @@ Construir una experiencia de simulacro fiel a Saber 11: cuadernillo digital cont
 - **Supabase migration aplicada:** `fix_english_answer_validation_by_part` — la RPC `finish_simulation_atomic` valida ahora las letras permitidas según la parte de Inglés (Parte 1 A–G; Partes 2–5 A–C; Partes 6–7 A–D; no-Inglés A–D).
 - **Supabase migration aplicada:** `align_english_answer_constraint_by_part` — la constraint `questions_correct_answer_valid` quedó alineada con esa misma estructura. Antes, Parte 1 aceptaba H como respuesta puntuable y otras partes aceptaban D aun cuando el cuadernillo solo ofrece A–C. La consulta previa encontró respuestas existentes de Parte 1 solo entre A–E, por lo que no se detectó respuesta H que pudiera quedar inválida.
 - **Verificación pendiente:** revisar que ambas migraciones aparezcan en el historial y ejecutar pruebas reales de guardado/finalización por cada parte de Inglés. La función SQL y la constraint se actualizaron en Supabase; no se ha ejecutado el build del frontend.
+
+## Estado de implementación — 16 de octubre de 2026
+
+- Se añadió `components/simulacros/BookletView.tsx`, una vista de cuadernillo continuo que muestra las preguntas en secuencia, contexto, imágenes y opciones sin obligar a avanzar una pregunta por pantalla.
+- Se integró como vista predeterminada en `app/simulacros/[id]/page.tsx`, con alternancia a la vista individual existente.
+- Las respuestas en cuadernillo actualizan el mismo estado `answers` por índice y se guardan localmente; el envío definitivo sigue usando la ruta existente `/api/simulations/[id]/finish`. No se agregó guardado concurrente por pregunta para evitar crear intentos duplicados antes de recibir el identificador del servidor.
+- La vista de cuadernillo todavía no incluye el mapa lateral de preguntas ni la herramienta de subrayado/anotaciones. Esas funciones siguen disponibles en la vista individual; deben integrarse y probarse antes de considerar terminada la experiencia.
+- No se ha ejecutado build, lint ni una prueba end-to-end del simulacro en esta sesión. La integración está subida a `main`, pero no debe considerarse verificada hasta correr esas comprobaciones localmente.

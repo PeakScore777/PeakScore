@@ -184,6 +184,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 4 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen del texto compartido de la Parte 4.");
     if (part === 4 && questions.some(q => !q.explanation.trim())) return setError("Escribe una explicación en español para cada espacio de la Parte 4.");
     if ([5, 6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
+    if (part === 5 && !sharedTitle.trim()) return setError("Escribe el título del texto de lectura para la Parte 5.");
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (part !== 1 && q.options.some(o => !o.text.trim())) return setError(`Completa todas las opciones de la pregunta ${i + 1}.`);
@@ -361,7 +362,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
               <textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={9} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder="Pega aquí el texto completo de lectura..." />
             </label>
             <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen ilustrativa del pasaje (opcional)</span>
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen del pasaje no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) { setError("La imagen del pasaje debe ser PNG, JPG, WEBP o GIF."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" />
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen del pasaje no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setError("La imagen del pasaje debe ser PNG, JPG o WEBP."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" />
               <span className="mt-1 block text-xs font-normal text-slate-500">Se mostrará a la derecha del texto, como apoyo visual del cuadernillo. Máximo 8 MB.</span>
             </label>
             {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen del pasaje guardada actualmente.</p><img src={existingSharedImageUrl} alt="Imagen del pasaje de lectura guardada" className="max-h-64 max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}

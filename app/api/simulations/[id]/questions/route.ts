@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 const PUBLIC_QUESTION_FIELDS =
-  "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at";
+  "id, subject, subject_id, session, component, competence, difficulty, context_text, question, option_a, option_b, option_c, option_d, image_url, requires_visual, visual_type, visual_description, visual_data, chart_data, year, source, question_number, is_active, created_at, updated_at, english_part, english_set_id, english_position, english_options";
 
 export async function GET(
   _request: Request,
@@ -234,6 +234,30 @@ export async function GET(
       );
     }
 
+    const englishSetIds = [...new Set(
+      orderedQuestions
+        .map((question) => (question as { english_set_id?: string | null }).english_set_id)
+        .filter((id): id is string => Boolean(id))
+    )];
+    let englishSets: Record<string, { title: string; part: number; shared_text: string | null; instructions: string | null; word_bank: unknown[] | null }> = {};
+    if (englishSetIds.length > 0) {
+      const { data: setRows, error: setRowsError } = await adminSupabase
+        .from("english_question_sets")
+        .select("id,title,part,shared_text,instructions,word_bank")
+        .in("id", englishSetIds);
+      if (setRowsError) {
+        console.error("[PeakScore] No se pudieron cargar los conjuntos de Inglés.", { errorCode: setRowsError.code ?? "UNKNOWN" });
+        return NextResponse.json({ success: false, error: "No fue posible cargar el formato de Inglés." }, { status: 500 });
+      }
+      englishSets = Object.fromEntries((setRows ?? []).map((set) => [set.id, {
+        title: set.title,
+        part: set.part,
+        shared_text: set.shared_text,
+        instructions: set.instructions,
+        word_bank: set.word_bank,
+      }]));
+    }
+
     return NextResponse.json({
       success: true,
       simulation: {
@@ -250,6 +274,7 @@ export async function GET(
         color: simulation.color,
       },
       questions: orderedQuestions,
+      englishSets,
     });
   } catch (error) {
     console.error(

@@ -57,6 +57,17 @@ export default function ExamPage() {
   const [questions, setQuestions] =
     useState<Question[]>([]);
 
+  const [englishSets, setEnglishSets] = useState<Record<string, {
+    title: string;
+    part: number;
+    shared_text: string | null;
+    instructions: string | null;
+    word_bank: Array<{ key: string; text: string; example?: boolean }> | null;
+    example_prompt: string | null;
+    example_options: Array<{ key: string; text: string }> | null;
+    example_image_url: string | null;
+  }>>({});
+
   const [loading, setLoading] =
     useState(true);
 
@@ -293,9 +304,11 @@ export default function ExamPage() {
 
         const simulationData = examData.simulation as Simulation;
         const questionData = examData.questions as Question[];
+        const englishSetData = (examData.englishSets ?? {}) as typeof englishSets;
 
         setSimulation(simulationData);
         setQuestions(questionData);
+        setEnglishSets(englishSetData);
 
         /* =================================================
            TIEMPO INICIAL
@@ -1281,6 +1294,7 @@ export default function ExamPage() {
           <BookletView
             questions={questions}
             answers={answers}
+            englishSets={englishSets}
             saving={savingAttempt}
             answeredCount={answeredQuestions}
             onAnswer={(index, optionNumber) => {

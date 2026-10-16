@@ -66,6 +66,7 @@ export default function ExamPage() {
     example_prompt: string | null;
     example_options: Array<{ key: string; text: string }> | null;
     example_image_url: string | null;
+    example_answer: string | null;
   }>>({});
 
   const [loading, setLoading] =

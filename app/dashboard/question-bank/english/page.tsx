@@ -36,8 +36,8 @@ type EnglishQuestion = {
 };
 
 const PART_NAMES: Record<number, string> = {
-  1: "Avisos y lugares",
-  2: "Descripciones y banco de palabras",
+  1: "Descripciones y banco de palabras",
+  2: "Avisos y lugares",
   3: "Completar conversaciones",
   4: "Texto cloze",
   5: "Comprensión de lectura",
@@ -84,7 +84,7 @@ export default function EnglishQuestionBankPage() {
         (grouped[question.english_set_id] ??= []).push(question);
       }
       const completeSets = allSets.filter((item) => (grouped[item.id]?.length ?? 0) > 0);
-      const normalizedSets = completeSets.map((item) => ({ ...item, part: item.word_bank?.length ? 2 : item.part }))
+      const normalizedSets = completeSets.map((item) => ({ ...item, part: item.word_bank?.length ? 1 : item.part }))
         .sort((a, b) => a.part - b.part || a.created_at.localeCompare(b.created_at));
       if (alive) {
         setSets(normalizedSets);
@@ -121,7 +121,7 @@ export default function EnglishQuestionBankPage() {
             const words = set.word_bank ?? [];
             const group = set.title.match(/^((?:4|7)[AB])\s*[·—-]/)?.[1];
             const isWordBankSet = words.length > 0;
-            const displayPart = isWordBankSet ? 2 : set.part;
+            const displayPart = isWordBankSet ? 1 : set.part;
             const displayPartName = isWordBankSet ? "Descripciones y banco de palabras" : (PART_NAMES[displayPart] ?? "Inglés");
             return (
               <article key={set.id} className="overflow-hidden rounded-sm border border-slate-300 bg-white shadow-sm">
@@ -145,7 +145,7 @@ export default function EnglishQuestionBankPage() {
                     {(() => { const exampleWord = words.find((word) => word.example); const exampleDescription = exampleWord?.example_description; const exampleAnswer = exampleWord?.example_answer ?? exampleWord?.key; return exampleDescription ? <div className="mb-6 border-b-2 border-slate-900 pb-5"><p className="text-center text-sm font-black uppercase tracking-wide">Ejemplo</p><div className="mt-3 grid gap-4 md:grid-cols-[1fr_0.9fr]"><div className="flex gap-3"><strong>0.</strong><p className="whitespace-pre-wrap leading-6">{exampleDescription}</p></div><div className="flex flex-wrap items-center gap-2 rounded-sm border border-slate-300 p-3"><strong className="mr-2">Respuesta 0.</strong>{words.map((word) => <span key={word.key} className={word.key === exampleAnswer ? "flex h-7 w-7 items-center justify-center rounded-full border border-slate-900 bg-slate-900 text-xs font-bold text-white ring-2 ring-slate-300" : "flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-slate-600"}>{word.key}</span>)}</div></div></div> : null; })()}
                     <div className="grid gap-6 md:grid-cols-[1fr_0.9fr]">
                     <div><h3 className="mb-3 border-b border-slate-300 pb-2 text-center text-sm font-black uppercase tracking-wide">Descripciones</h3>
-                      <div className="space-y-3">{qs.map((q, i) => <div key={q.id} className="grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 pb-3"><strong>{(displayPart === 2 ? 85 : 80) + i}.</strong><p className="whitespace-pre-wrap leading-6">{q.question}</p></div>)}</div>
+                      <div className="space-y-3">{qs.map((q, i) => <div key={q.id} className="grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 pb-3"><strong>{(displayPart === 1 ? 85 : 80) + i}.</strong><p className="whitespace-pre-wrap leading-6">{q.question}</p></div>)}</div>
                     </div>
                     <div><h3 className="mb-3 border-b border-slate-300 pb-2 text-center text-sm font-black uppercase tracking-wide">Palabras</h3>
                       <div className="space-y-3">{words.map((word) => <div key={word.key} className={`flex gap-3 rounded-sm px-2 py-1 ${word.example ? "font-bold underline decoration-2" : ""}`}><strong>{word.key}.</strong><span>{word.text}{word.example ? " (ejemplo)" : ""}</span></div>)}</div>

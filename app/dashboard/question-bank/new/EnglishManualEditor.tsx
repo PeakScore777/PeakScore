@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase/browser";
 type Choice = { key: string; text: string };
 type DraftQuestion = {
   id?: string;
+  isActive?: boolean;
   prompt: string;
   options: Choice[];
   answer: string;

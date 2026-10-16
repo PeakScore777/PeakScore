@@ -57,6 +57,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [editSetId, setEditSetId] = useState<string | null>(null);
   const [editingQuestionIds, setEditingQuestionIds] = useState<string[]>([]);
   const [existingSharedImageUrl, setExistingSharedImageUrl] = useState("");
+  const [existingExampleImageUrl, setExistingExampleImageUrl] = useState("");
   const wordBank = useMemo(() => wordBankText.split("\n").map(x => x.trim()).filter(Boolean), [wordBankText]);
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     (async () => {
       setLoading(true);
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
-        .select("id,part,title,session,shared_image_url,instructions,example_prompt,example_options,example_answer")
+        .select("id,part,title,session,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer")
         .eq("id", id).single();
       if (setLoadError || !setRow || setRow.part !== 4) {
         if (alive) { setError("No se pudo abrir este conjunto de Parte 4 para editar."); setLoading(false); }
@@ -87,6 +88,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setSession(String(setRow.session ?? 2));
       setInstructions(setRow.instructions ?? "");
       setExistingSharedImageUrl(setRow.shared_image_url ?? "");
+      setExistingExampleImageUrl(setRow.example_image_url ?? "");
       setExamplePrompt(setRow.example_prompt ?? "");
       setExampleOptions((setRow.example_options as Choice[] | null) ?? ["A","B","C"].map(key => ({key,text:""})));
       setExampleAnswer(setRow.example_answer ?? "A");
@@ -164,7 +166,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       if (profile?.role !== "admin" && profile?.email?.toLowerCase() !== "aragonyostynsena07@gmail.com") {
         throw new Error("Solo el administrador autorizado puede crear conjuntos de Inglés.");
       }
-      let uploadedExampleImageUrl: string | null = null;
+      let uploadedExampleImageUrl: string | null = existingExampleImageUrl || null;
       let uploadedSharedImageUrl: string | null = existingSharedImageUrl || null;
       if (part !== 1 && exampleImageFile) {
         if (exampleImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del ejemplo supera el máximo de 8 MB.");

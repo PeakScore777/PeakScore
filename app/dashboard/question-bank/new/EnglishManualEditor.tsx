@@ -33,6 +33,7 @@ const makeQuestion = (part: number): DraftQuestion => ({
 export default function EnglishManualEditor({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
   const [part, setPart] = useState(1);
+  const [part4Group, setPart4Group] = useState<"4A" | "4B">("4A");
   const [session, setSession] = useState("2");
   const [title, setTitle] = useState("");
   const [sharedText, setSharedText] = useState("");
@@ -47,6 +48,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
 
   function changePart(next: number) {
     setPart(next);
+    if (next === 4) setPart4Group("4A");
     setQuestions(Array.from({ length: PARTS[next].count }, () => makeQuestion(next)));
     setSharedText("");
     setWordBankText("");
@@ -90,7 +92,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         throw new Error("Solo el administrador autorizado puede crear conjuntos de Inglés.");
       }
       const { data: setRow, error: setError } = await supabase.from("english_question_sets").insert({
-        part, session: Number(session), title: title.trim(),
+        part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : title.trim(),
         shared_text: sharedText.trim() || null,
         instructions: (instructions.trim() || PARTS[part].guidance),
         word_bank: part === 2 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: index === 7 })) : null,
@@ -104,7 +106,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         const options = part === 2 ? wordBank.slice(0, 7).map((text, i) => ({ key: LETTERS[i], text })) : q.options.map(o => ({ key: o.key, text: o.text.trim() }));
         return {
           subject: "Inglés", subject_id: null, session: Number(session),
-          component: `Parte ${part} · ${PARTS[part].name}`, competence: null, difficulty: "Media",
+          component: `Parte ${part === 4 ? part4Group : part} · ${PARTS[part].name}`, competence: null, difficulty: "Media",
           context_text: sharedText.trim() || null, question: q.prompt.trim(),
           option_a: optionMap.A ?? "", option_b: optionMap.B ?? "", option_c: optionMap.C ?? "", option_d: optionMap.D ?? "",
           correct_answer: q.answer, explanation: q.explanation.trim() || null,
@@ -136,8 +138,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         <section className="rounded-2xl bg-white p-5 shadow-sm md:p-7">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-semibold">Parte del examen<select value={part} onChange={e => changePart(Number(e.target.value))} className="mt-2 w-full rounded-xl border p-3">{Object.entries(PARTS).map(([key, value]) => <option key={key} value={key}>Parte {key} · {value.name} ({value.count})</option>)}</select></label>
+            {part === 4 && <label className="text-sm font-semibold">Subparte<select value={part4Group} onChange={e => setPart4Group(e.target.value as "4A" | "4B")} className="mt-2 w-full rounded-xl border p-3"><option value="4A">Parte 4A · Preguntas 97–104</option><option value="4B">Parte 4B · Preguntas 105–112</option></select></label>}
             <label className="text-sm font-semibold">Sesión ICFES<select value={session} onChange={e => setSession(e.target.value)} className="mt-2 w-full rounded-xl border p-3"><option value="1">Sesión 1</option><option value="2">Sesión 2</option></select></label>
-            <label className="text-sm font-semibold md:col-span-2">Nombre del conjunto<input value={title} onChange={e => setTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border p-3" placeholder="Ej. Parte 1 — Avisos cotidianos — conjunto 01"/></label>
+            <label className="text-sm font-semibold md:col-span-2">Nombre del conjunto<input value={title} onChange={e => setTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border p-3" placeholder={part === 4 ? `Ej. ${part4Group} — conjunto 01` : `Ej. Parte ${part} — conjunto 01`}/></label>
             <label className="text-sm font-semibold md:col-span-2">Instrucciones (opcional)<textarea value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} maxLength={5000} className="mt-2 w-full rounded-xl border p-3" placeholder={PARTS[part].guidance}/></label>
           </div>
           <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950"><strong>Formato:</strong> {PARTS[part].guidance}</div>

@@ -164,7 +164,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     }));
   }
   function addQuestion() {
-    const maxQuestions = part === 1 ? 5 : part === 4 ? PARTS[4].count : 30;
+    const maxQuestions = part === 1 ? 5 : [4, 5].includes(part) ? PARTS[part].count : 30;
     if (questions.length >= maxQuestions) return;
     setQuestions(current => [...current, makeQuestion(part)]);
   }
@@ -172,6 +172,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setError(""); setMessage(""); setSavedSetId(null);
     if (!title.trim()) return setError("Escribe un nombre para el conjunto.");
     if (part === 4 && questions.length !== PARTS[4].count) return setError(`La Parte ${part4Group} debe tener exactamente ${PARTS[4].count} preguntas.`);
+    if (part === 5 && questions.length !== PARTS[5].count) return setError("La Parte 5 debe tener exactamente 7 preguntas (113–119).");
     if (part !== 4 && questions.some(q => !q.prompt.trim())) return setError("Completa el enunciado de todas las preguntas.");
     if (part === 1 && wordBank.length !== 8) return setError("La Parte 1 necesita exactamente ocho palabras, de A a H.");
     if (part === 1 && !examplePrompt.trim()) return setError("Escribe el enunciado de ejemplo, como en el cuadernillo ICFES.");
@@ -449,7 +450,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           </div>
         </section>}
         <section className="space-y-5">
-          <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Preguntas del conjunto</h2><p className="text-sm text-slate-600">{questions.length} pregunta(s) · {part === 1 ? "máximo 5 según el formato ICFES" : part === 4 ? "exactamente 8 por subparte" : "máximo 30"}</p></div><button type="button" onClick={addQuestion} disabled={questions.length >= (part === 1 ? 5 : part === 4 ? PARTS[4].count : 30)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-40"><Plus size={18}/> Añadir pregunta</button></div>
+          <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Preguntas del conjunto</h2><p className="text-sm text-slate-600">{questions.length} pregunta(s) · {part === 1 ? "máximo 5 según el formato ICFES" : part === 4 ? "exactamente 8 por subparte" : part === 5 ? "exactamente 7 (113–119)" : "máximo 30"}</p></div><button type="button" onClick={addQuestion} disabled={questions.length >= (part === 1 ? 5 : [4, 5].includes(part) ? PARTS[part].count : 30)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-40"><Plus size={18}/> Añadir pregunta</button></div>
           {questions.map((q, i) => <article key={i} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm md:p-7">
             <div className="flex items-center justify-between"><h3 className="font-bold">Pregunta {i + 1}</h3>{questions.length > 1 && <button type="button" onClick={() => setQuestions(current => current.filter((_, index) => index !== i))} className="inline-flex items-center gap-1 text-sm text-red-700"><Trash2 size={16}/> Eliminar</button>}</div>
             {part === 2 && <div className="space-y-3"><label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del aviso (desde tu carpeta)</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen no puede superar 8 MB."); e.currentTarget.value = ""; return; } setError(""); patchQuestion(i, { imageFile: file, imageUrl: file ? URL.createObjectURL(file) : "" }); }} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-700" /></label>{q.imageUrl && <div className="rounded-xl border bg-slate-50 p-3"><img src={q.imageUrl} alt={`Vista previa de imagen de pregunta ${i + 1}`} className="max-h-64 max-w-full rounded-lg object-contain" /><button type="button" onClick={() => patchQuestion(i, { imageFile: null, imageUrl: "" })} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen</button></div>}<p className="text-xs text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</p></div>}

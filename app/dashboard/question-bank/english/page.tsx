@@ -139,7 +139,7 @@ export default function EnglishQuestionBankPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`rounded-full px-3 py-1 text-xs font-bold ${set.status === "approved" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>{set.status === "approved" ? "Aprobado" : set.status === "review" ? "En revisión" : set.status === "rejected" ? "Rechazado" : "Borrador"}</span>
-                      <Link href={set.part === 4 ? `/dashboard/question-bank/english/new?id=${set.id}` : "/dashboard/question-bank/english/new"} title={set.part === 4 ? "Editar conjunto" : "Crear otro conjunto"} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"><Pencil size={16}/></Link>
+                      <Link href={`/dashboard/question-bank/english/new?id=${set.id}`} title="Editar página completa" aria-label={`Editar página completa: ${set.title}`} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"><Pencil size={16}/></Link>
                     </div>
                   </div>
                   {set.instructions && <p className="mt-5 text-sm font-medium leading-6 text-slate-700">{set.instructions}</p>}

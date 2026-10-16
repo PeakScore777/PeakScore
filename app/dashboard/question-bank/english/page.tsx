@@ -12,6 +12,7 @@ type EnglishSet = {
   part: number;
   title: string;
   shared_text: string | null;
+  shared_image_url: string | null;
   instructions: string | null;
   example_prompt: string | null;
   example_options: Option[] | null;
@@ -62,7 +63,7 @@ export default function EnglishQuestionBankPage() {
       setError("");
       const { data: setData, error: setLoadSetsError } = await supabase
         .from("english_question_sets")
-        .select("id,part,title,shared_text,instructions,example_prompt,example_options,example_answer,example_image_url,word_bank,status,session,created_at")
+        .select("id,part,title,shared_text,shared_image_url,instructions,example_prompt,example_options,example_answer,example_image_url,word_bank,status,session,created_at")
         .order("part", { ascending: true })
         .order("created_at", { ascending: false });
       if (setLoadSetsError) {
@@ -144,7 +145,7 @@ export default function EnglishQuestionBankPage() {
                   {set.instructions && <p className="mt-5 text-sm font-medium leading-6 text-slate-700">{set.instructions}</p>}
                 </div>
                 <div className="px-6 py-6 sm:px-10 sm:py-8">
-                  {set.shared_text && <div className="mb-7 whitespace-pre-wrap border border-slate-300 px-5 py-5 font-serif text-[15px] leading-7 text-slate-900">{set.shared_text}</div>}
+                  {set.shared_image_url ? <div className="mb-7 flex justify-center border border-slate-900 p-3"><img src={set.shared_image_url} alt="Texto compartido de la Parte 4" className="h-auto max-h-[560px] max-w-full object-contain" /></div> : set.shared_text && <div className="mb-7 whitespace-pre-wrap border border-slate-300 px-5 py-5 font-serif text-[15px] leading-7 text-slate-900">{set.shared_text}</div>}
                   {words.length > 0 && <div className="mb-7">
                     {(() => { const exampleWord = words.find((word) => word.example); const exampleDescription = exampleWord?.example_description; const exampleAnswer = exampleWord?.example_answer ?? exampleWord?.key; return exampleDescription ? <div className="mb-6 border-b-2 border-slate-900 pb-5"><p className="text-center text-sm font-black uppercase tracking-wide">Ejemplo</p><div className="mt-3 grid gap-4 md:grid-cols-[1fr_0.9fr]"><div className="flex gap-3"><strong>0.</strong><p className="whitespace-pre-wrap leading-6">{exampleDescription}</p></div><div className="flex flex-wrap items-center gap-2 rounded-sm border border-slate-300 p-3"><strong className="mr-2">Respuesta 0.</strong>{words.map((word) => <span key={word.key} className={word.key === exampleAnswer ? "flex h-7 w-7 items-center justify-center rounded-full border border-slate-900 bg-slate-900 text-xs font-bold text-white ring-2 ring-slate-300" : "flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-slate-600"}>{word.key}</span>)}</div></div></div> : null; })()}
                     <div className={`grid gap-8 md:grid-cols-[1fr_0.9fr] ${isWordBankSet ? "mt-8" : ""}`}>

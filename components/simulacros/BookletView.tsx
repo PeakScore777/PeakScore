@@ -89,7 +89,7 @@ export default function BookletView({
         const wordBank = firstInSet ? setInfo?.word_bank ?? [] : [];
 
         return (
-          <article key={question.id} id={`booklet-question-${index}`} className={`scroll-mt-28 border border-slate-300 bg-white px-5 py-5 shadow-sm sm:px-8 ${isEnglish ? "sm:py-6" : "sm:py-8"}`}>
+          <article key={question.id} id={`booklet-question-${index}`} className={`mx-auto min-h-[297mm] w-full max-w-[210mm] scroll-mt-28 border border-slate-300 bg-white px-5 py-5 shadow-sm print:break-after-page sm:px-8 ${isEnglish ? "sm:py-6" : "sm:py-8"}`}>
             {firstInSet && setInfo && (
               <header className="mb-5 border-b border-slate-300 pb-4">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {question.session}</p>
@@ -97,7 +97,6 @@ export default function BookletView({
                 {setInfo.instructions && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{setInfo.instructions}</p>}
                 {showPart3Example && (
                   <div className="mt-4">
-                    <p className="mb-2 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
                     <div className="flex justify-center">
                       <img src={setInfo.example_image_url!} alt="Ejemplo ilustrado de conversación" className="max-h-64 max-w-full object-contain" />
                     </div>
@@ -161,12 +160,12 @@ export default function BookletView({
                     <img src={question.image_url} alt={`Recurso de la pregunta ${officialNumber}`} className="max-h-[480px] max-w-full object-contain" />
                   </div>
                 )}
-                <div className={`mt-3 grid gap-x-6 ${stacked ? "grid-cols-1 gap-y-2" : "sm:grid-cols-2 gap-y-3"}`}>
+                <div className={`mt-3 grid gap-x-6 ${part === 3 ? "sm:grid-cols-2 gap-y-2" : stacked ? "grid-cols-1 gap-y-2" : "sm:grid-cols-2 gap-y-3"}`}>
                   {options.map(({ text, optionIndex }) => {
                     const optionNumber = optionIndex + 1;
                     const active = selected === optionNumber;
                     return (
-                      <button key={optionIndex} type="button" onClick={() => onAnswer(index, optionNumber)} aria-pressed={active} className={`flex items-start gap-2 border px-3 py-2.5 text-left transition ${stacked ? "min-h-10" : "p-4"} ${active ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100" : "border-slate-300 hover:border-slate-500 hover:bg-slate-50"}`}>
+                      <button key={optionIndex} type="button" onClick={() => onAnswer(index, optionNumber)} aria-pressed={active} className={`flex items-start gap-2 border px-3 py-2.5 text-left transition ${stacked && part !== 3 ? "min-h-10" : "p-3"} ${active ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100" : "border-slate-300 hover:border-slate-500 hover:bg-slate-50"}`}>
                         <span className={`shrink-0 font-black ${active ? "text-blue-700" : "text-slate-800"}`}>{String.fromCharCode(65 + optionIndex)}.</span>
                         <span className="text-sm leading-6 text-slate-800">{text}</span>
                       </button>

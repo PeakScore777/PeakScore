@@ -43,6 +43,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [difficulty, setDifficulty] = useState("Media");
   const [title, setTitle] = useState("");
   const [sharedText, setSharedText] = useState("");
+  const [sharedTitle, setSharedTitle] = useState("");
   const [sharedImageFile, setSharedImageFile] = useState<File | null>(null);
   const [instructions, setInstructions] = useState("");
   const [wordBankText, setWordBankText] = useState("");
@@ -71,7 +72,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setLoading(true);
       setError("");
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
-        .select("id,part,title,session,status,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
+        .select("id,part,title,session,status,shared_title,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
         .eq("id", id).single();
       if (setLoadError || !setRow || !PARTS[setRow.part]) {
         if (alive) { setError("No se pudo abrir el conjunto seleccionado para editar."); setLoading(false); }
@@ -101,6 +102,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setExistingSetStatus(setRow.status ?? "draft");
       setInstructions(setRow.instructions ?? "");
       setSharedText(setRow.shared_text ?? "");
+      setSharedTitle(setRow.shared_title ?? "");
       setWordBankText(loadedWordBank.map(word => word.text).join("\n"));
       setExistingSharedImageUrl(setRow.shared_image_url ?? "");
       setExistingExampleImageUrl(setRow.example_image_url ?? "");
@@ -140,6 +142,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (next === 7) setPart7Group("7A");
     setQuestions(Array.from({ length: PARTS[next].count }, () => makeQuestion(next)));
     setSharedText("");
+    setSharedTitle("");
     setSharedImageFile(null);
     setWordBankText("");
     setExamplePrompt("");
@@ -207,7 +210,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         if (exampleUploadError) throw new Error(`No se pudo subir la imagen del ejemplo: ${exampleUploadError.message}`);
         uploadedExampleImageUrl = supabase.storage.from("question-images").getPublicUrl(examplePath).data.publicUrl;
       }
-      if (part === 4 && sharedImageFile) {
+      if ([4, 5].includes(part) && sharedImageFile) {
         if (sharedImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del texto supera el máximo de 8 MB.");
         if (!["image/png", "image/jpeg", "image/webp"].includes(sharedImageFile.type)) throw new Error("La imagen del texto debe ser PNG, JPG o WEBP.");
         const safeSharedName = sharedImageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -218,6 +221,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       }
       const setPayload = {
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
+        shared_title: part === 5 ? sharedTitle.trim() || null : null,
         shared_text: sharedText.trim() || null,
         shared_image_url: uploadedSharedImageUrl,
         instructions: (instructions.trim() || PARTS[part].guidance),
@@ -349,7 +353,21 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-white p-3"><p className="mb-2 text-xs font-medium text-slate-600">Imagen guardada actualmente. Se conservará si no seleccionas otra.</p><img src={existingSharedImageUrl} alt="Imagen actual del texto compartido de la Parte 4" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-white p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa del texto compartido de la Parte 4" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
           </div>}
-          {[5, 6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 5 || part === 6 ? "Pega aquí el texto de lectura..." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
+          {part === 5 && <div className="mt-5 space-y-4 rounded-xl border border-slate-300 bg-white p-4">
+            <label className="block text-sm font-semibold">Título del texto de lectura
+              <input value={sharedTitle} onChange={e => setSharedTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder="Ej. I’ll Be a Nurse" />
+            </label>
+            <label className="block text-sm font-semibold">Texto de lectura compartido
+              <textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={9} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder="Pega aquí el texto completo de lectura..." />
+            </label>
+            <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen ilustrativa del pasaje (opcional)</span>
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen del pasaje no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) { setError("La imagen del pasaje debe ser PNG, JPG, WEBP o GIF."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" />
+              <span className="mt-1 block text-xs font-normal text-slate-500">Se mostrará a la derecha del texto, como apoyo visual del cuadernillo. Máximo 8 MB.</span>
+            </label>
+            {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen del pasaje guardada actualmente.</p><img src={existingSharedImageUrl} alt="Imagen del pasaje de lectura guardada" className="max-h-64 max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
+            {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa de la imagen del pasaje" className="max-h-64 max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
+          </div>}
+          {[6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 6 ? "Pega aquí el texto de lectura..." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
           {part !== 1 && part !== 4 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
             <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo.</p></div>
             <label className="block text-sm font-semibold">Imagen del ejemplo (opcional)

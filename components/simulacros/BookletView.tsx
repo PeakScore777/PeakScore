@@ -31,13 +31,13 @@ function getEnglishNumber(question: Question, fallback: number, setTitle?: strin
   if (part === 2) return 84 + position;
   if (part === 3) return 89 + position;
   if (part === 4) {
-    const isB = /^4B\\b/i.test(setTitle ?? question.component ?? "");
+    const isB = /^4B\b/i.test(setTitle ?? question.component ?? "");
     return (isB ? 104 : 96) + position;
   }
   if (part === 5) return 112 + position;
   if (part === 6) return 119 + position;
   if (part === 7) {
-    const isB = /^7B\\b/i.test(setTitle ?? question.component ?? "");
+    const isB = /^7B\b/i.test(setTitle ?? question.component ?? "");
     return (isB ? 129 : 124) + position;
   }
   return fallback;

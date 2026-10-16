@@ -180,19 +180,28 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         if (sharedUploadError) throw new Error("No se pudo subir la imagen del texto: " + sharedUploadError.message);
         uploadedSharedImageUrl = supabase.storage.from("question-images").getPublicUrl(sharedPath).data.publicUrl;
       }
-      const { data: setRow, error: setError } = await supabase.from("english_question_sets").insert({
+      const setPayload = {
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
         shared_text: part === 4 ? null : sharedText.trim() || null,
         shared_image_url: part === 4 ? uploadedSharedImageUrl : null,
         instructions: (instructions.trim() || PARTS[part].guidance),
-        example_prompt: part === 1 || part === 3 ? null : examplePrompt.trim(),
+        example_prompt: part === 1 || part === 3 ? null : examplePrompt.trim() || null,
         example_options: part === 1 || part === 3 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
         example_answer: part === 1 || part === 3 ? null : exampleAnswer,
         example_image_url: part === 1 ? null : uploadedExampleImageUrl,
         word_bank: part === 1 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
-        status: "draft", created_by: user.id,
-      }).select("id").single();
-      if (setError || !setRow) throw new Error(setError?.message || "No se pudo crear el conjunto.");
+        status: "draft",
+      };
+      let setRow: { id: string } | null = null;
+      let setError: { message: string } | null = null;
+      if (editSetId) {
+        const result = await supabase.from("english_question_sets").update(setPayload).eq("id", editSetId).select("id").single();
+        setRow = result.data; setError = result.error;
+      } else {
+        const result = await supabase.from("english_question_sets").insert({ ...setPayload, created_by: user.id }).select("id").single();
+        setRow = result.data; setError = result.error;
+      }
+      if (setError || !setRow) throw new Error(setError?.message || "No se pudo guardar el conjunto.");
       const uploadedImageUrls = await Promise.all(questions.map(async (q, index) => {
         if (!q.imageFile) return q.imageUrl.trim() || null;
         const safeName = q.imageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -220,12 +229,19 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           english_options: options,
         };
       });
-      const { error: questionsError } = await supabase.from("questions").insert(rows);
-      if (questionsError) {
-        throw new Error(`El conjunto se creó como borrador, pero falló el guardado de preguntas: ${questionsError.message}. ID del conjunto: ${setRow.id}`);
+      let questionsError: { message: string } | null = null;
+      if (editSetId) {
+        for (let index = 0; index < rows.length; index++) {
+          const result = await supabase.from("questions").update(rows[index]).eq("id", editingQuestionIds[index]).eq("english_set_id", editSetId);
+          if (result.error) { questionsError = result.error; break; }
+        }
+      } else {
+        const result = await supabase.from("questions").insert(rows);
+        questionsError = result.error;
       }
+      if (questionsError) throw new Error(`El conjunto se guardó, pero falló la actualización de preguntas: ${questionsError.message}. ID: ${setRow.id}`);
       setSavedSetId(setRow.id);
-      setMessage(`Borrador guardado: ${rows.length} preguntas. Queda inactivo hasta su revisión.`);
+      setMessage(`${editSetId ? "Cambios guardados" : "Borrador guardado"}: ${rows.length} preguntas. Queda inactivo hasta su revisión.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo guardar el conjunto.");
     } finally { setLoading(false); }

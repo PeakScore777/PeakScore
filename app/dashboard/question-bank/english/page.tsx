@@ -198,8 +198,11 @@ export default function EnglishQuestionBankPage() {
                     return <div key={q.id} className={`grid gap-2 border-b border-slate-300 last:border-0 ${set.part === 4 ? "grid-cols-[2rem_minmax(0,1fr)] items-center py-2" : `pb-3 pt-2 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[2rem_minmax(0,1fr)]"} ${set.part === 3 ? "min-h-[72px] pb-3 pt-3" : ""}`}`}>
                       <strong className="pt-1 text-[11px]">{questionNumber}.</strong>
                       {set.part === 4 ? (
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm leading-5">
-                          {opts.map((o) => <span key={o.key} className="inline-flex gap-1"><strong>{o.key}.</strong><span>{o.text}</span></span>)}
+                        <div className="grid grid-cols-3 items-start gap-x-3 text-sm leading-5">
+                          {["A", "B", "C"].map((key) => {
+                            const option = opts.find((item) => item.key.toUpperCase() === key);
+                            return <div key={key} className="flex min-w-0 items-start gap-1"><strong className="shrink-0">{key}.</strong><span className="break-words">{option?.text ?? ""}</span></div>;
+                          })}
                         </div>
                       ) : (
                         <div className={set.part === 2 || set.part === 3 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>

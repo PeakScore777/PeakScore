@@ -12,6 +12,7 @@ type DraftQuestion = {
   answer: string;
   explanation: string;
   imageUrl: string;
+  imageFile: File | null;
 };
 const PARTS: Record<number, { name: string; count: number; guidance: string; choices: number }> = {
   1: { name: "Avisos e imágenes", count: 5, guidance: "Relaciona cada aviso o imagen con el lugar o situación correspondiente.", choices: 3 },
@@ -29,6 +30,7 @@ const makeQuestion = (part: number): DraftQuestion => ({
   answer: "A",
   explanation: "",
   imageUrl: "",
+  imageFile: null,
 });
 export default function EnglishManualEditor({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
@@ -99,6 +101,15 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         status: "draft", created_by: user.id,
       }).select("id").single();
       if (setError || !setRow) throw new Error(setError?.message || "No se pudo crear el conjunto.");
+      const uploadedImageUrls = await Promise.all(questions.map(async (q, index) => {
+        if (!q.imageFile) return q.imageUrl.trim() || null;
+        const safeName = q.imageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
+        const path = `english/${user.id}/${setRow.id}/${index + 1}-${Date.now()}-${safeName}`;
+        const { error: uploadError } = await supabase.storage.from("question-images").upload(path, q.imageFile, { upsert: false, contentType: q.imageFile.type });
+        if (uploadError) throw new Error(`No se pudo subir la imagen de la pregunta ${index + 1}: ${uploadError.message}`);
+        const { data: publicUrl } = supabase.storage.from("question-images").getPublicUrl(path);
+        return publicUrl.publicUrl;
+      }));
       const rows = questions.map((q, index) => {
         const optionMap = part === 2
           ? Object.fromEntries(wordBank.slice(0, 7).map((text, i) => [LETTERS[i], text]))
@@ -110,8 +121,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           context_text: sharedText.trim() || null, question: q.prompt.trim(),
           option_a: optionMap.A ?? "", option_b: optionMap.B ?? "", option_c: optionMap.C ?? "", option_d: optionMap.D ?? "",
           correct_answer: q.answer, explanation: q.explanation.trim() || null,
-          image_url: q.imageUrl.trim() || null, year: null, source: "PeakScore · creación manual",
-          question_number: null, is_active: false, requires_visual: Boolean(q.imageUrl.trim()),
+          image_url: uploadedImageUrls[index], year: null, source: "PeakScore · creación manual",
+          question_number: null, is_active: false, requires_visual: Boolean(uploadedImageUrls[index]),
           visual_type: null, visual_description: null, visual_data: null, chart_data: null,
           english_part: part, english_set_id: setRow.id, english_position: index + 1,
           english_options: options,
@@ -151,7 +162,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Preguntas del conjunto</h2><p className="text-sm text-slate-600">{questions.length} pregunta(s) · máximo 30</p></div><button type="button" onClick={addQuestion} disabled={questions.length >= 30} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-40"><Plus size={18}/> Añadir pregunta</button></div>
           {questions.map((q, i) => <article key={i} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm md:p-7">
             <div className="flex items-center justify-between"><h3 className="font-bold">Pregunta {i + 1}</h3>{questions.length > 1 && <button type="button" onClick={() => setQuestions(current => current.filter((_, index) => index !== i))} className="inline-flex items-center gap-1 text-sm text-red-700"><Trash2 size={16}/> Eliminar</button>}</div>
-            {part === 1 && <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> URL de imagen/aviso</span><input value={q.imageUrl} onChange={e => patchQuestion(i, { imageUrl: e.target.value })} maxLength={2048} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder="https://..."/></label>}
+            {part === 1 && <div className="space-y-3"><label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del aviso (desde tu carpeta)</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen no puede superar 8 MB."); e.currentTarget.value = ""; return; } setError(""); patchQuestion(i, { imageFile: file, imageUrl: file ? URL.createObjectURL(file) : "" }); }} className="mt-2 w-full rounded-xl border p-3 font-normal file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-700" /></label>{q.imageUrl && <div className="rounded-xl border bg-slate-50 p-3"><img src={q.imageUrl} alt={`Vista previa de imagen de pregunta ${i + 1}`} className="max-h-64 max-w-full rounded-lg object-contain" /><button type="button" onClick={() => patchQuestion(i, { imageFile: null, imageUrl: "" })} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen</button></div>}<p className="text-xs text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</p></div>}
             <label className="block text-sm font-semibold">{part === 2 ? "Descripción en inglés" : part === 3 ? "Intervención de la conversación" : [4, 7].includes(part) ? "Número del espacio / enunciado" : "Pregunta o situación en inglés"}<textarea value={q.prompt} onChange={e => patchQuestion(i, { prompt: e.target.value })} rows={3} maxLength={10000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={part === 2 ? "People take photos with this." : [4, 7].includes(part) ? "Ej. (1) _____" : "Escribe el enunciado en inglés..."}/></label>
             {part !== 2 && <div className="grid gap-3 md:grid-cols-2">{q.options.map((option, j) => <label key={option.key} className="block text-sm font-semibold">Opción {option.key}<input value={option.text} onChange={e => patchOption(i, j, e.target.value)} maxLength={5000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={`Texto de la opción ${option.key}`}/></label>)}</div>}
             <div className="grid gap-4 md:grid-cols-2">

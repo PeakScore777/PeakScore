@@ -92,9 +92,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 1 && wordBank.length !== 8) return setError("La Parte 1 necesita exactamente ocho palabras, de A a H.");
     if (part === 1 && !examplePrompt.trim()) return setError("Escribe el enunciado de ejemplo, como en el cuadernillo ICFES.");
     if (part === 3 && !exampleImageFile) return setError("Sube la imagen del ejemplo de conversación (Nova y Zyra, por ejemplo).");
-    if (part !== 1 && part !== 3 && !examplePrompt.trim()) return setError("Completa el ejemplo inicial del conjunto, como en el cuadernillo ICFES.");
-    if (part !== 1 && part !== 3 && exampleOptions.some(option => !option.text.trim())) return setError("Completa todas las opciones del ejemplo inicial.");
-    if (part !== 1 && part !== 3 && !exampleOptions.some(option => option.key === exampleAnswer)) return setError("Selecciona una respuesta válida para el ejemplo.");
+    if (part !== 1 && part !== 3 && part !== 4 && !examplePrompt.trim()) return setError("Completa el ejemplo inicial del conjunto, como en el cuadernillo ICFES.");
+    if (part !== 1 && part !== 3 && part !== 4 && exampleOptions.some(option => !option.text.trim())) return setError("Completa todas las opciones del ejemplo inicial.");
+    if (part !== 1 && part !== 3 && part !== 4 && !exampleOptions.some(option => option.key === exampleAnswer)) return setError("Selecciona una respuesta válida para el ejemplo.");
     if (part === 2 && questions.some(q => !q.imageFile && !q.imageUrl.trim())) return setError("Sube la imagen del aviso para cada pregunta de la Parte 2.");
     
     if (part === 4 && !sharedImageFile) return setError("Sube la imagen del texto compartido de la Parte 4.");
@@ -139,9 +139,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         shared_text: part === 4 ? null : sharedText.trim() || null,
         shared_image_url: part === 4 ? uploadedSharedImageUrl : null,
         instructions: (instructions.trim() || PARTS[part].guidance),
-        example_prompt: part === 1 || part === 3 ? null : examplePrompt.trim(),
-        example_options: part === 1 || part === 3 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
-        example_answer: part === 1 || part === 3 ? null : exampleAnswer,
+        example_prompt: part === 1 || part === 3 || part === 4 ? null : examplePrompt.trim(),
+        example_options: part === 1 || part === 3 || part === 4 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
+        example_answer: part === 1 || part === 3 || part === 4 ? null : exampleAnswer,
         example_image_url: part === 1 ? null : uploadedExampleImageUrl,
         word_bank: part === 1 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
         status: "draft", created_by: user.id,

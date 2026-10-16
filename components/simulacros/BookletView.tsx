@@ -7,10 +7,11 @@ type EnglishSetDisplay = {
   part: number;
   shared_text: string | null;
   instructions: string | null;
-  word_bank: Array<{ key: string; text: string; example?: boolean }> | null;
+  word_bank: Array<{ key: string; text: string; example?: boolean; example_description?: string; example_answer?: string }> | null;
   example_prompt: string | null;
   example_options: Array<{ key: string; text: string }> | null;
   example_image_url: string | null;
+  example_answer: string | null;
 };
 
 type Props = {
@@ -102,12 +103,32 @@ export default function BookletView({
                     </div>
                   </div>
                 )}
-                {setInfo.example_image_url && part !== 3 && (
-                  <div className="mt-4 flex justify-center">
-                    <img src={setInfo.example_image_url} alt="Imagen del ejemplo" className="max-h-64 max-w-full object-contain" />
-                  </div>
-                )}
+
               </header>
+            )}
+            {firstInSet && setInfo && part === 1 && wordBank.length > 0 && (() => {
+              const exampleWord = wordBank.find(word => word.example);
+              return exampleWord?.example_description ? (
+                <div className="mb-5 border-b-2 border-slate-900 pb-4">
+                  <p className="mb-3 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
+                  <div className="grid gap-4 sm:grid-cols-[1fr_0.9fr]">
+                    <p className="font-serif text-sm leading-6"><strong>0.</strong> {exampleWord.example_description}</p>
+                    <div className="flex flex-wrap items-center gap-1 border border-slate-300 p-2 text-xs">
+                      <strong className="mr-2">Respuesta 0.</strong>
+                      {wordBank.map(word => <span key={word.key} className={`flex h-6 w-6 items-center justify-center rounded-full border ${word.key === (exampleWord.example_answer ?? exampleWord.key) ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300"}`}>{word.key}</span>)}
+                    </div>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+            {firstInSet && setInfo && part !== 1 && part !== 3 && (setInfo.example_prompt || setInfo.example_image_url) && (
+              <div className="mb-5 border-b border-slate-900 pb-5">
+                <p className="mb-3 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
+                {setInfo.example_image_url && <div className="mb-3 flex justify-center"><img src={setInfo.example_image_url} alt="Imagen del ejemplo" className="max-h-56 max-w-full object-contain" /></div>}
+                {setInfo.example_prompt && <p className="mb-3 whitespace-pre-wrap font-serif text-sm leading-6"><strong>0.</strong> {setInfo.example_prompt}</p>}
+                {!!setInfo.example_options?.length && <div className="grid grid-cols-1 gap-y-1 text-sm leading-6">{setInfo.example_options.map(option => <div key={option.key} className="flex gap-2"><strong>{option.key}.</strong><span>{option.text}</span></div>)}</div>}
+                {!!setInfo.example_options?.length && setInfo.example_answer && <div className="mt-3 inline-flex flex-wrap items-center gap-1 border border-slate-400 px-2 py-1 text-xs"><strong className="mr-2">Respuesta 0.</strong>{setInfo.example_options.map(option => <span key={option.key} className={`flex h-6 w-6 items-center justify-center rounded-full border ${setInfo.example_answer === option.key ? "border-slate-950 bg-slate-950 text-white" : "border-slate-400"}`}>{option.key}</span>)}</div>}
+              </div>
             )}
             {showSharedText && (
               <div className="mb-5 whitespace-pre-wrap border border-slate-300 px-4 py-4 font-serif text-[15px] leading-7 text-slate-900">

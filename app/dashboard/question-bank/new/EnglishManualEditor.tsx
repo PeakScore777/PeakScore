@@ -58,6 +58,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [editingQuestionIds, setEditingQuestionIds] = useState<string[]>([]);
   const [existingSharedImageUrl, setExistingSharedImageUrl] = useState("");
   const [existingExampleImageUrl, setExistingExampleImageUrl] = useState("");
+  const [existingSetStatus, setExistingSetStatus] = useState("draft");
   const wordBank = useMemo(() => wordBankText.split("\n").map(x => x.trim()).filter(Boolean), [wordBankText]);
 
   useEffect(() => {
@@ -68,14 +69,14 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     (async () => {
       setLoading(true);
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
-        .select("id,part,title,session,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer")
+        .select("id,part,title,session,status,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer")
         .eq("id", id).single();
       if (setLoadError || !setRow || setRow.part !== 4) {
         if (alive) { setError("No se pudo abrir este conjunto de Parte 4 para editar."); setLoading(false); }
         return;
       }
       const { data: rows, error: questionLoadError } = await supabase.from("questions")
-        .select("id,question,option_a,option_b,option_c,correct_answer,explanation,image_url,english_options,english_position,difficulty")
+        .select("id,question,option_a,option_b,option_c,correct_answer,explanation,image_url,english_options,english_position,difficulty,is_active")
         .eq("english_set_id", id).order("english_position", { ascending: true });
       if (questionLoadError || !rows || !rows.length) {
         if (alive) { setError("No se pudieron cargar las preguntas del conjunto."); setLoading(false); }
@@ -86,6 +87,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setPart4Group(/^4B\s*[·—-]/i.test(setRow.title) ? "4B" : "4A");
       setTitle(setRow.title.replace(/^4[AB]\s*[·—-]\s*/i, ""));
       setSession(String(setRow.session ?? 2));
+      setExistingSetStatus(setRow.status ?? "draft");
       setInstructions(setRow.instructions ?? "");
       setExistingSharedImageUrl(setRow.shared_image_url ?? "");
       setExistingExampleImageUrl(setRow.example_image_url ?? "");
@@ -95,6 +97,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setEditingQuestionIds(rows.map((q: any) => q.id));
       setQuestions(rows.map((q: any) => ({
         id: q.id,
+        isActive: q.is_active ?? false,
         prompt: q.question ?? "",
         options: (q.english_options as Choice[] | null)?.length ? q.english_options as Choice[] : [{key:"A",text:q.option_a},{key:"B",text:q.option_b},{key:"C",text:q.option_c}],
         answer: q.correct_answer ?? "A", explanation: q.explanation ?? "", imageUrl: q.image_url ?? "", imageFile: null,
@@ -196,7 +199,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         example_answer: part === 1 || part === 3 ? null : exampleAnswer,
         example_image_url: part === 1 ? null : uploadedExampleImageUrl,
         word_bank: part === 1 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
-        status: "draft",
+        status: editSetId ? existingSetStatus : "draft",
       };
       let setRow: { id: string } | null = null;
       let setError: { message: string } | null = null;
@@ -229,7 +232,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           option_a: optionMap.A ?? "N/A", option_b: optionMap.B ?? "N/A", option_c: optionMap.C ?? "N/A", option_d: optionMap.D ?? "N/A",
           correct_answer: q.answer, explanation: q.explanation.trim() || null,
           image_url: uploadedImageUrls[index], year: null, source: "PeakScore · creación manual",
-          question_number: part === 4 ? (part4Group === "4A" ? 97 : 105) + index : null, is_active: false, requires_visual: Boolean(uploadedImageUrls[index]),
+          question_number: part === 4 ? (part4Group === "4A" ? 97 : 105) + index : null, is_active: editSetId ? q.isActive ?? false : false, requires_visual: Boolean(uploadedImageUrls[index]),
           visual_type: null, visual_description: null, visual_data: null, chart_data: null,
           english_part: part, english_set_id: setRow.id, english_position: index + 1,
           english_options: options,
@@ -281,7 +284,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       }
       if (questionsError) throw new Error(`El conjunto se guardó, pero no se pudieron guardar todas las preguntas: ${questionsError.message}. ID: ${setRow.id}`);
       setSavedSetId(setRow.id);
-      setMessage(`${editSetId ? "Cambios guardados" : "Borrador guardado"}: ${rows.length} preguntas. Queda inactivo hasta su revisión.`);
+      setMessage(editSetId
+        ? `Cambios guardados: ${rows.length} preguntas. Estado del conjunto conservado: ${existingSetStatus}.`
+        : `Borrador guardado: ${rows.length} preguntas. Queda inactivo hasta su revisión.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo guardar el conjunto.");
     } finally { setLoading(false); }
@@ -371,7 +376,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         </section>
         {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
         {message && <p role="status" className="rounded-xl bg-green-50 p-4 text-green-900">{message}</p>}
-        <div className="flex flex-wrap justify-end gap-3">{savedSetId && <button type="button" onClick={() => router.push("/dashboard/question-bank")} className="rounded-xl border bg-white px-5 py-3 font-semibold">Volver al banco</button>}<button type="button" onClick={save} disabled={loading || Boolean(savedSetId)} className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-6 py-3 font-semibold text-white disabled:opacity-50"><Save size={18}/>{loading ? "Guardando..." : "Guardar conjunto como borrador"}</button></div>
+        <div className="flex flex-wrap justify-end gap-3">{savedSetId && <button type="button" onClick={() => router.push("/dashboard/question-bank")} className="rounded-xl border bg-white px-5 py-3 font-semibold">Volver al banco</button>}<button type="button" onClick={save} disabled={loading || Boolean(savedSetId)} className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-6 py-3 font-semibold text-white disabled:opacity-50"><Save size={18}/>{loading ? "Guardando..." : editSetId ? "Guardar cambios" : "Guardar conjunto como borrador"}</button></div>
       </div>
     </main>
   );

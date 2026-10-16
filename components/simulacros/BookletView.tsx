@@ -6,6 +6,7 @@ type EnglishSetDisplay = {
   title: string;
   part: number;
   shared_text: string | null;
+  shared_image_url?: string | null;
   instructions: string | null;
   word_bank: Array<{ key: string; text: string; example?: boolean; example_description?: string; example_answer?: string }> | null;
   example_prompt: string | null;
@@ -85,7 +86,7 @@ export default function BookletView({
           .filter(option => typeof option.text === "string" && option.text.trim());
         const stacked = isEnglish;
         const showPart3Example = firstInSet && part === 3 && Boolean(setInfo?.example_image_url);
-        const showSharedText = firstInSet && Boolean(setInfo?.shared_text || question.context_text);
+        const showSharedText = firstInSet && Boolean(setInfo?.shared_image_url || setInfo?.shared_text || question.context_text);
         const wordBank = firstInSet ? setInfo?.word_bank ?? [] : [];
 
         return (
@@ -130,9 +131,15 @@ export default function BookletView({
               </div>
             )}
             {showSharedText && (
-              <div className="mb-5 whitespace-pre-wrap border border-slate-300 px-4 py-4 font-serif text-[15px] leading-7 text-slate-900">
-                {setInfo?.shared_text ?? question.context_text}
-              </div>
+              setInfo?.shared_image_url ? (
+                <div className="mb-5 flex justify-center border border-slate-900 p-3">
+                  <img src={setInfo.shared_image_url} alt="Texto compartido de la Parte 4" className="h-auto max-h-[560px] max-w-full object-contain" />
+                </div>
+              ) : (
+                <div className="mb-5 whitespace-pre-wrap border border-slate-300 px-4 py-4 font-serif text-[15px] leading-7 text-slate-900">
+                  {setInfo?.shared_text ?? question.context_text}
+                </div>
+              )
             )}
             {wordBank.length > 0 && firstInSet && (
               <div className="mb-5 grid gap-2 border-b border-slate-300 pb-4 sm:grid-cols-2">

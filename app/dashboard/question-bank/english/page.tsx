@@ -183,7 +183,7 @@ export default function EnglishQuestionBankPage() {
                     <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
                     <div className={`grid gap-2 ${set.part === 2 ? "grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
                       <strong className="pt-1">0.</strong>
-                      <div className={set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
+                      <div className={set.part === 5 ? "grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] sm:gap-5" : set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
                         <div>
                           {set.example_image_url && <img src={set.example_image_url} alt="Imagen del ejemplo" className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-64 max-w-full object-contain"} />}
                           <p className="whitespace-pre-wrap font-serif text-[11px] leading-4">{set.example_prompt}</p>

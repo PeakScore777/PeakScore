@@ -43,7 +43,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [difficulty, setDifficulty] = useState("Media");
   const [title, setTitle] = useState("");
   const [sharedText, setSharedText] = useState("");
-  const [sharedTitle, setSharedTitle] = useState("");
   const [sharedImageFile, setSharedImageFile] = useState<File | null>(null);
   const [instructions, setInstructions] = useState("");
   const [wordBankText, setWordBankText] = useState("");
@@ -72,7 +71,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setLoading(true);
       setError("");
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
-        .select("id,part,title,session,status,shared_title,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
+        .select("id,part,title,session,status,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
         .eq("id", id).single();
       if (setLoadError || !setRow || !PARTS[setRow.part]) {
         if (alive) { setError("No se pudo abrir el conjunto seleccionado para editar."); setLoading(false); }
@@ -102,7 +101,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setExistingSetStatus(setRow.status ?? "draft");
       setInstructions(setRow.instructions ?? "");
       setSharedText(setRow.shared_text ?? "");
-      setSharedTitle(setRow.shared_title ?? "");
       setWordBankText(loadedWordBank.map(word => word.text).join("\n"));
       setExistingSharedImageUrl(setRow.shared_image_url ?? "");
       setExistingExampleImageUrl(setRow.example_image_url ?? "");
@@ -142,7 +140,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (next === 7) setPart7Group("7A");
     setQuestions(Array.from({ length: PARTS[next].count }, () => makeQuestion(next)));
     setSharedText("");
-    setSharedTitle("");
     setSharedImageFile(null);
     setWordBankText("");
     setExamplePrompt("");
@@ -184,8 +181,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     
     if (part === 4 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen del texto compartido de la Parte 4.");
     if (part === 4 && questions.some(q => !q.explanation.trim())) return setError("Escribe una explicación en español para cada espacio de la Parte 4.");
-    if ([5, 6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
-    if (part === 5 && !sharedTitle.trim()) return setError("Escribe el título del texto de lectura para la Parte 5.");
+    if (part === 5 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen completa del texto de lectura de la Parte 5.");
+    if ([6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (part !== 1 && q.options.some(o => !o.text.trim())) return setError(`Completa todas las opciones de la pregunta ${i + 1}.`);
@@ -223,14 +220,14 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       }
       const setPayload = {
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
-        shared_title: part === 5 ? sharedTitle.trim() || null : null,
-        shared_text: sharedText.trim() || null,
+        shared_title: null,
+        shared_text: part === 5 ? null : sharedText.trim() || null,
         shared_image_url: uploadedSharedImageUrl,
         instructions: (instructions.trim() || PARTS[part].guidance),
         example_prompt: part === 1 || part === 3 || part === 4 ? null : examplePrompt.trim() || null,
         example_options: part === 1 || part === 3 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
         example_answer: part === 1 || part === 3 ? null : exampleAnswer,
-        example_image_url: uploadedExampleImageUrl,
+        example_image_url: part === 5 ? null : uploadedExampleImageUrl,
         word_bank: part === 1 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
         status: editSetId ? existingSetStatus : "draft",
       };
@@ -355,29 +352,25 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-white p-3"><p className="mb-2 text-xs font-medium text-slate-600">Imagen guardada actualmente. Se conservará si no seleccionas otra.</p><img src={existingSharedImageUrl} alt="Imagen actual del texto compartido de la Parte 4" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-white p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa del texto compartido de la Parte 4" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
           </div>}
-          {part === 5 && <div className="mt-5 space-y-4 rounded-xl border border-slate-300 bg-white p-4">
-            <label className="block text-sm font-semibold">Título del texto de lectura
-              <input value={sharedTitle} onChange={e => setSharedTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder="Ej. I’ll Be a Nurse" />
+          {part === 5 && <div className="mt-5 space-y-3 rounded-xl border border-slate-300 bg-white p-4">
+            <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen completa del texto de lectura (obligatoria)</span>
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen del texto no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setError("La imagen del texto debe ser PNG, JPG o WEBP."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" />
+              <span className="mt-1 block text-xs font-normal text-slate-500">Sube una sola imagen con el título, el texto completo y cualquier ilustración del pasaje. PNG, JPG o WEBP · máximo 8 MB.</span>
             </label>
-            <label className="block text-sm font-semibold">Texto de lectura compartido
-              <textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={9} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder="Pega aquí el texto completo de lectura..." />
-            </label>
-            <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen ilustrativa del pasaje (opcional)</span>
-              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen del pasaje no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setError("La imagen del pasaje debe ser PNG, JPG o WEBP."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" />
-              <span className="mt-1 block text-xs font-normal text-slate-500">Se mostrará a la derecha del texto, como apoyo visual del cuadernillo. Máximo 8 MB.</span>
-            </label>
-            {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen del pasaje guardada actualmente.</p><img src={existingSharedImageUrl} alt="Imagen del pasaje de lectura guardada" className="max-h-64 max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
-            {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa de la imagen del pasaje" className="max-h-64 max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
+            {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen completa guardada actualmente.</p><img src={existingSharedImageUrl} alt="Imagen completa del texto de lectura" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
+            {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa del texto completo de lectura" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
           </div>}
           {[6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 6 ? "Pega aquí el texto de lectura..." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
           {part !== 1 && part !== 4 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
             <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo.</p></div>
-            <label className="block text-sm font-semibold">Imagen del ejemplo (opcional)
-              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setExampleImageFile(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" />
-              <span className="mt-1 block text-xs font-normal text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</span>
-            </label>
-            {!exampleImageFile && existingExampleImageUrl && <div className="space-y-2"><p className="text-xs text-slate-600">Imagen de ejemplo guardada. Se conservará si no seleccionas otra.</p><img src={existingExampleImageUrl} alt="Imagen de ejemplo guardada" className={part === 3 ? "max-h-80 max-w-full rounded-lg border border-slate-200 bg-white object-contain" : "max-h-48 rounded-lg border border-slate-200 bg-white object-contain"} /><button type="button" onClick={() => setExistingExampleImageUrl("")} className="text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
-            {exampleImageFile && <div className="space-y-2"><p className="text-xs text-slate-600">Imagen seleccionada: {exampleImageFile.name}</p><img src={URL.createObjectURL(exampleImageFile)} alt="Vista previa de la conversación de ejemplo" className={part === 3 ? "max-h-80 max-w-full rounded-lg border border-slate-200 bg-white object-contain" : "max-h-48 rounded-lg border border-slate-200 bg-white object-contain"} /><button type="button" onClick={() => setExampleImageFile(null)} className="text-sm font-semibold text-red-700">{existingExampleImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
+            {part !== 5 && <>
+              <label className="block text-sm font-semibold">Imagen del ejemplo (opcional)
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setExampleImageFile(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" />
+                <span className="mt-1 block text-xs font-normal text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</span>
+              </label>
+              {!exampleImageFile && existingExampleImageUrl && <div className="space-y-2"><p className="text-xs text-slate-600">Imagen de ejemplo guardada. Se conservará si no seleccionas otra.</p><img src={existingExampleImageUrl} alt="Imagen de ejemplo guardada" className={part === 3 ? "max-h-80 max-w-full rounded-lg border border-slate-200 bg-white object-contain" : "max-h-48 rounded-lg border border-slate-200 bg-white object-contain"} /><button type="button" onClick={() => setExistingExampleImageUrl("")} className="text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
+              {exampleImageFile && <div className="space-y-2"><p className="text-xs text-slate-600">Imagen seleccionada: {exampleImageFile.name}</p><img src={URL.createObjectURL(exampleImageFile)} alt="Vista previa de la conversación de ejemplo" className={part === 3 ? "max-h-80 max-w-full rounded-lg border border-slate-200 bg-white object-contain" : "max-h-48 rounded-lg border border-slate-200 bg-white object-contain"} /><button type="button" onClick={() => setExampleImageFile(null)} className="text-sm font-semibold text-red-700">{existingExampleImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
+            </>}
             {part !== 3 && <>
               <label className="block text-sm font-semibold">Enunciado del ejemplo<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} maxLength={10000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder="Escribe aquí el enunciado de ejemplo..." /></label>
               <div className="grid gap-3 md:grid-cols-2">{exampleOptions.map((option, index) => <label key={option.key} className="block text-sm font-semibold">Opción de ejemplo {option.key}<input value={option.text} onChange={e => setExampleOptions(current => current.map((item, i) => i === index ? { ...item, text: e.target.value } : item))} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder={"Texto de la opción " + option.key} /></label>)}</div>
@@ -414,19 +407,14 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <p className="mt-2 text-sm leading-6 text-slate-700">{instructions.trim() || PARTS[5].guidance}</p>
           </header>
           <div className="p-5 sm:p-7">
-            <article className="rounded-xl border-2 border-slate-900 px-5 py-5">
-              <h3 className="mb-4 text-center text-base font-black uppercase tracking-wide">{sharedTitle.trim() || "Título del texto de lectura"}</h3>
-              <div className={sharedImageFile || existingSharedImageUrl ? "grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(130px,0.38fr)]" : ""}>
-                <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{sharedText.trim() || "Aquí aparecerá el texto compartido de lectura."}</p>
-                {(sharedImageFile || existingSharedImageUrl) && <div className="flex justify-center md:justify-end"><img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt="Vista previa de la ilustración del pasaje" className="h-auto max-h-56 max-w-full object-contain"/></div>}
-              </div>
+            <article className="rounded-xl border-2 border-slate-900 p-3">
+              {(sharedImageFile || existingSharedImageUrl) ? <img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt="Vista previa de la imagen completa del texto de lectura" className="mx-auto h-auto max-h-[560px] max-w-full object-contain"/> : <p className="py-16 text-center text-sm text-slate-400">Aquí aparecerá la imagen completa del texto de lectura.</p>}
             </article>
             <div className="mt-5 grid grid-cols-[2rem_minmax(0,1fr)] gap-3 border-b-2 border-slate-900 pb-4">
               <strong className="pt-1 text-sm">0.</strong>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
                 <div>
                   <p className="whitespace-pre-wrap text-sm leading-6">{examplePrompt.trim() || "Aquí aparecerá el enunciado del ejemplo."}</p>
-                  {exampleImageFile && <img src={URL.createObjectURL(exampleImageFile)} alt="Imagen del ejemplo" className="mt-2 max-h-32 max-w-full object-contain"/>}
                 </div>
                 <div className="space-y-2">
                   <div className="space-y-1">{exampleOptions.map(option => <p key={option.key} className="text-xs leading-5"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>

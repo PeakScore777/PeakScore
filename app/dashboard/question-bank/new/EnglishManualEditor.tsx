@@ -43,6 +43,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [sharedText, setSharedText] = useState("");
   const [instructions, setInstructions] = useState("");
   const [wordBankText, setWordBankText] = useState("");
+  const [examplePrompt, setExamplePrompt] = useState("");
+  const [exampleAnswer, setExampleAnswer] = useState("H");
   const [questions, setQuestions] = useState<DraftQuestion[]>(() => Array.from({ length: 5 }, () => makeQuestion(1)));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -57,6 +59,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setQuestions(Array.from({ length: PARTS[next].count }, () => makeQuestion(next)));
     setSharedText("");
     setWordBankText("");
+    setExamplePrompt("");
+    setExampleAnswer("H");
     setInstructions("");
     setTitle("");
     setError("");
@@ -79,7 +83,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setError(""); setMessage(""); setSavedSetId(null);
     if (!title.trim()) return setError("Escribe un nombre para el conjunto.");
     if (questions.some(q => !q.prompt.trim())) return setError("Completa el enunciado de todas las preguntas.");
-    if (part === 2 && (wordBank.length < 8 || wordBank.length > 8)) return setError("La Parte 2 necesita las ocho palabras A–H; H es el ejemplo.");
+    if (part === 2 && wordBank.length !== 8) return setError("La Parte 2 necesita exactamente ocho palabras, de A a H.");
+    if (part === 2 && !examplePrompt.trim()) return setError("Escribe el enunciado de ejemplo, como en el cuadernillo ICFES.");
     if (part === 1 && questions.some(q => !q.imageFile && !q.imageUrl.trim())) return setError("Sube la imagen del aviso para cada pregunta de la Parte 1.");
     
     if ([4, 5, 6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
@@ -102,7 +107,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
         shared_text: sharedText.trim() || null,
         instructions: (instructions.trim() || PARTS[part].guidance),
-        word_bank: part === 2 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: index === 7 })) : null,
+        word_bank: part === 2 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
         status: "draft", created_by: user.id,
       }).select("id").single();
       if (setError || !setRow) throw new Error(setError?.message || "No se pudo crear el conjunto.");
@@ -162,7 +167,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <label className="text-sm font-semibold md:col-span-2">Instrucciones (opcional)<textarea value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400" placeholder={PARTS[part].guidance}/></label>
           </div>
           <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950"><strong>Formato:</strong> {PARTS[part].guidance}</div>
-          {part === 2 && <div className="mt-5"><label className="block text-sm font-semibold">Banco de palabras compartido (A–H; H es el ejemplo)<textarea value={wordBankText} onChange={e => setWordBankText(e.target.value)} rows={8} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={"beach\nbed\ncamera\nmountain\nsquare\nsuitcase\npool\ntowel"}/></label><div className="mt-3 grid gap-2 sm:grid-cols-2">{wordBank.map((word, i) => <div key={i} className="rounded-lg bg-slate-50 p-3 text-sm"><b>{LETTERS[i]}.</b> {word}{i === 7 ? " (ejemplo)" : ""}</div>)}</div></div>}
+          {part === 2 && <div className="mt-5 space-y-4"><div className="grid gap-3 md:grid-cols-[1fr_12rem]"><label className="block text-sm font-semibold">Enunciado de ejemplo (no se califica)<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" placeholder="Example: This is a place to go shopping for vegetables, meat, among other things."/></label><label className="block text-sm font-semibold">Letra de ejemplo<select value={exampleAnswer} onChange={e => setExampleAnswer(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">{LETTERS.map(key => <option key={key} value={key}>{key}</option>)}</select></label></div><label className="block text-sm font-semibold">Banco de palabras compartido (A–H; selecciona cuál es el ejemplo)<textarea value={wordBankText} onChange={e => setWordBankText(e.target.value)} rows={8} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={"basement\nbathroom\nbookstore\ncafé\ncinema\nelevator\nplayground\nsupermarket"}/></label><div className="mt-3 grid gap-2 sm:grid-cols-2">{wordBank.map((word, i) => <div key={i} className={`rounded-lg p-3 text-sm ${LETTERS[i] === exampleAnswer ? "border-2 border-slate-900 bg-slate-100 font-bold underline" : "bg-slate-50"}`}><b>{LETTERS[i]}.</b> {word}{LETTERS[i] === exampleAnswer ? " (ejemplo)" : ""}</div>)}</div><p className="text-xs text-slate-500">El ejemplo se muestra antes de las cinco preguntas calificadas y no se guarda como pregunta puntuable.</p></div>}
           {[4, 5, 6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 5 || part === 6 ? "Pega aquí el texto de lectura..." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
         </section>
         <section className="space-y-5">

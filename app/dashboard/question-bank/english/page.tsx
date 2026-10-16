@@ -13,6 +13,9 @@ type EnglishSet = {
   title: string;
   shared_text: string | null;
   instructions: string | null;
+  example_prompt: string | null;
+  example_options: Option[] | null;
+  example_answer: string | null;
   word_bank: Word[] | null;
   status: string;
   session: number;
@@ -58,7 +61,7 @@ export default function EnglishQuestionBankPage() {
       setError("");
       const { data: setData, error: setLoadSetsError } = await supabase
         .from("english_question_sets")
-        .select("id,part,title,shared_text,instructions,word_bank,status,session,created_at")
+        .select("id,part,title,shared_text,instructions,example_prompt,example_options,example_answer,word_bank,status,session,created_at")
         .order("part", { ascending: true })
         .order("created_at", { ascending: false });
       if (setLoadSetsError) {
@@ -150,6 +153,19 @@ export default function EnglishQuestionBankPage() {
                     <div><h3 className="mb-3 border-b border-slate-300 pb-2 text-center text-sm font-black uppercase tracking-wide">Palabras</h3>
                       <div className="space-y-3">{words.map((word) => <div key={word.key} className={`flex gap-3 rounded-sm px-2 py-1 ${word.example ? "font-bold underline decoration-2" : ""}`}><strong>{word.key}.</strong><span>{word.text}{word.example ? " (ejemplo)" : ""}</span></div>)}</div>
                     </div>
+                    </div>
+                  </div>}
+                  {!words.length && set.example_prompt && <div className="mb-7 border-b-2 border-slate-900 pb-5">
+                    <p className="text-center text-sm font-black uppercase tracking-wide">Ejemplo</p>
+                    <div className="mt-3 grid gap-4 md:grid-cols-[3.5rem_1fr]">
+                      <strong className="pt-1">0.</strong>
+                      <div>
+                        <p className="whitespace-pre-wrap font-serif text-[15px] leading-7">{set.example_prompt}</p>
+                        {!!set.example_options?.length && <div className={`mt-4 grid gap-x-6 gap-y-2 ${set.example_options.length > 2 ? "sm:grid-cols-2" : ""}`}>
+                          {set.example_options.map(option => <div key={option.key} className="flex gap-2 text-sm leading-6"><strong>{option.key}.</strong><span>{option.text}</span></div>)}
+                        </div>}
+                        {set.example_answer && <p className="mt-3 text-xs text-slate-500">Ejemplo ilustrativo · Respuesta {set.example_answer}</p>}
+                      </div>
                     </div>
                   </div>}
                   {!words.length && <div className="space-y-7">{qs.map((q, i) => {

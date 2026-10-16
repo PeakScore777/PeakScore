@@ -69,40 +69,66 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setEditSetId(id);
     (async () => {
       setLoading(true);
+      setError("");
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
-        .select("id,part,title,session,status,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer")
+        .select("id,part,title,session,status,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
         .eq("id", id).single();
-      if (setLoadError || !setRow || setRow.part !== 4) {
-        if (alive) { setError("No se pudo abrir este conjunto de Parte 4 para editar."); setLoading(false); }
+      if (setLoadError || !setRow || !PARTS[setRow.part]) {
+        if (alive) { setError("No se pudo abrir el conjunto seleccionado para editar."); setLoading(false); }
         return;
       }
       const { data: rows, error: questionLoadError } = await supabase.from("questions")
-        .select("id,question,option_a,option_b,option_c,correct_answer,explanation,image_url,english_options,english_position,difficulty,is_active")
+        .select("id,question,option_a,option_b,option_c,option_d,correct_answer,explanation,image_url,english_options,english_position,difficulty,is_active")
         .eq("english_set_id", id).order("english_position", { ascending: true });
       if (questionLoadError || !rows || !rows.length) {
         if (alive) { setError("No se pudieron cargar las preguntas del conjunto."); setLoading(false); }
         return;
       }
       if (!alive) return;
-      setPart(4);
-      setPart4Group(/^4B\s*[·—-]/i.test(setRow.title) ? "4B" : "4A");
-      setTitle(setRow.title.replace(/^4[AB]\s*[·—-]\s*/i, ""));
+
+      const loadedWordBank = Array.isArray(setRow.word_bank)
+        ? setRow.word_bank as { key: string; text: string; example?: boolean; example_description?: string; example_answer?: string }[]
+        : [];
+      const exampleWord = loadedWordBank.find(word => word.example);
+      const loadedTitle = setRow.title ?? "";
+
+      setPart(setRow.part);
+      setPart4Group(/^4B\s*[·—-]/i.test(loadedTitle) ? "4B" : "4A");
+      setPart7Group(/^7B\s*[·—-]/i.test(loadedTitle) ? "7B" : "7A");
+      setTitle(loadedTitle.replace(/^(?:4[AB]|7[AB])\s*[·—-]\s*/i, ""));
       setSession(String(setRow.session ?? 2));
+      setDifficulty(rows[0]?.difficulty ?? "Media");
       setExistingSetStatus(setRow.status ?? "draft");
       setInstructions(setRow.instructions ?? "");
+      setSharedText(setRow.shared_text ?? "");
+      setWordBankText(loadedWordBank.map(word => word.text).join("\n"));
       setExistingSharedImageUrl(setRow.shared_image_url ?? "");
       setExistingExampleImageUrl(setRow.example_image_url ?? "");
-      setExamplePrompt(setRow.example_prompt ?? "");
+      setExamplePrompt(setRow.part === 1 ? exampleWord?.example_description ?? "" : setRow.example_prompt ?? "");
       setExampleOptions((setRow.example_options as Choice[] | null) ?? ["A","B","C"].map(key => ({key,text:""})));
-      setExampleAnswer(setRow.example_answer ?? "A");
+      setExampleAnswer(setRow.part === 1 ? exampleWord?.example_answer ?? exampleWord?.key ?? "H" : setRow.example_answer ?? "A");
+      setSharedImageFile(null);
+      setExampleImageFile(null);
       setEditingQuestionIds(rows.map((q: any) => q.id));
-      setQuestions(rows.map((q: any) => ({
-        id: q.id,
-        isActive: q.is_active ?? false,
-        prompt: q.question ?? "",
-        options: (q.english_options as Choice[] | null)?.length ? q.english_options as Choice[] : [{key:"A",text:q.option_a},{key:"B",text:q.option_b},{key:"C",text:q.option_c}],
-        answer: q.correct_answer ?? "A", explanation: q.explanation ?? "", imageUrl: q.image_url ?? "", imageFile: null,
-      })));
+      setQuestions(rows.map((q: any) => {
+        const loadedOptions = (q.english_options as Choice[] | null) ?? [];
+        const fallbackOptions = [
+          { key: "A", text: q.option_a },
+          { key: "B", text: q.option_b },
+          { key: "C", text: q.option_c },
+          { key: "D", text: q.option_d },
+        ].filter(option => Boolean(option.text?.trim()) && option.text !== "N/A");
+        return {
+          id: q.id,
+          isActive: q.is_active ?? false,
+          prompt: q.question ?? "",
+          options: setRow.part === 1 ? [] : loadedOptions.length ? loadedOptions : fallbackOptions.length ? fallbackOptions : LETTERS.slice(0, PARTS[setRow.part].choices).map(key => ({ key, text: "" })),
+          answer: q.correct_answer ?? "A",
+          explanation: q.explanation ?? "",
+          imageUrl: q.image_url ?? "",
+          imageFile: null,
+        };
+      }));
       setLoading(false);
     })();
     return () => { alive = false; };

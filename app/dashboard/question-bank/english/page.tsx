@@ -173,7 +173,7 @@ export default function EnglishQuestionBankPage() {
                           {!!set.example_options?.length && <div className={`grid gap-x-3 gap-y-1 ${set.part === 2 ? "grid-cols-1" : set.example_options.length > 2 ? "sm:grid-cols-2" : ""}`}>
                             {set.example_options.map(option => <div key={option.key} className="flex gap-1 text-[10px] leading-4"><strong>{option.key}.</strong><span>{option.text}</span></div>)}
                           </div>}
-                          {[2, 3].includes(set.part) && <div className="mt-2 inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={`Hoja de respuestas del ejemplo: ${set.example_answer ?? "sin respuesta marcada"}`}>
+                          {[2, 3, 4].includes(set.part) && <div className="mt-2 inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={`Hoja de respuestas del ejemplo: ${set.example_answer ?? "sin respuesta marcada"}`}>
                             <span className="mr-1 font-semibold">0.</span>
                             {["A", "B", "C"].map((key) => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${set.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
                           </div>}

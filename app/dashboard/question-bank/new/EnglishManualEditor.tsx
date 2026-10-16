@@ -17,9 +17,9 @@ const PARTS: Record<number, { name: string; count: number; guidance: string; cho
   1: { name: "Avisos e imágenes", count: 5, guidance: "Relaciona cada aviso o imagen con el lugar o situación correspondiente.", choices: 3 },
   2: { name: "Descripciones y banco de palabras", count: 5, guidance: "Cada descripción se completa con una opción del banco compartido A–G. H puede usarse como ejemplo.", choices: 0 },
   3: { name: "Completar conversaciones", count: 7, guidance: "Selecciona la respuesta que completa naturalmente la conversación.", choices: 3 },
-  4: { name: "Texto cloze", count: 8, guidance: "Un texto compartido con espacios numerados y tres opciones por espacio. En el simulacro completo son dos conjuntos separados.", choices: 3 },
+  4: { name: "Texto cloze (4A o 4B)", count: 8, guidance: "Debes crear dos conjuntos independientes: Parte 4A (preguntas 97–104) y Parte 4B (105–112), cada uno con su propio texto.", choices: 3 },
   5: { name: "Comprensión de lectura", count: 7, guidance: "Texto de lectura compartido y preguntas de comprensión.", choices: 3 },
-  6: { name: "Comprensión de lectura", count: 5, guidance: "Texto de lectura compartido y preguntas de comprensión.", choices: 3 },
+  6: { name: "Comprensión de lectura", count: 5, guidance: "Texto de lectura compartido y preguntas de comprensión.", choices: 4 },
   7: { name: "Texto cloze", count: 10, guidance: "Texto compartido con espacios numerados y cuatro opciones por espacio.", choices: 4 },
 };
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];

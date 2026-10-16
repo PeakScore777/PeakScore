@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Save, Trash2, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";

@@ -56,12 +56,12 @@ export default function EnglishQuestionBankPage() {
     async function load() {
       setLoading(true);
       setError("");
-      const { data: setData, error: setError } = await supabase
+      const { data: setData, error: setLoadSetsError } = await supabase
         .from("english_question_sets")
         .select("id,part,title,shared_text,instructions,word_bank,status,session,created_at")
         .order("part", { ascending: true })
         .order("created_at", { ascending: false });
-      if (setError) {
+      if (setLoadSetsError) {
         if (alive) { setError("No se pudieron cargar los conjuntos de Inglés."); setLoading(false); }
         return;
       }

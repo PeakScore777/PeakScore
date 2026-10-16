@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase/browser";
 
 type Choice = { key: string; text: string };
 type DraftQuestion = {
+  id?: string;
   prompt: string;
   options: Choice[];
   answer: string;
@@ -91,6 +92,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setExampleAnswer(setRow.example_answer ?? "A");
       setEditingQuestionIds(rows.map((q: any) => q.id));
       setQuestions(rows.map((q: any) => ({
+        id: q.id,
         prompt: q.question ?? "",
         options: (q.english_options as Choice[] | null)?.length ? q.english_options as Choice[] : [{key:"A",text:q.option_a},{key:"B",text:q.option_b},{key:"C",text:q.option_c}],
         answer: q.correct_answer ?? "A", explanation: q.explanation ?? "", imageUrl: q.image_url ?? "", imageFile: null,
@@ -231,15 +233,49 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       });
       let questionsError: { message: string } | null = null;
       if (editSetId) {
+        const retainedQuestionIds = new Set(questions.flatMap((question) => question.id ? [question.id] : []));
         for (let index = 0; index < rows.length; index++) {
-          const result = await supabase.from("questions").update(rows[index]).eq("id", editingQuestionIds[index]).eq("english_set_id", editSetId);
-          if (result.error) { questionsError = result.error; break; }
+          const questionId = questions[index].id;
+          if (questionId) {
+            const result = await supabase.from("questions")
+              .update(rows[index])
+              .eq("id", questionId)
+              .eq("english_set_id", editSetId)
+              .select("id")
+              .single();
+            if (result.error || !result.data) {
+              questionsError = result.error ?? { message: `No se encontró la pregunta existente en la posición ${index + 1}.` };
+              break;
+            }
+          } else {
+            const result = await supabase.from("questions")
+              .insert(rows[index])
+              .select("id")
+              .single();
+            if (result.error || !result.data) {
+              questionsError = result.error ?? { message: `No se pudo crear la pregunta nueva en la posición ${index + 1}.` };
+              break;
+            }
+            const insertedId = result.data.id as string;
+            setQuestions((current) => current.map((question, currentIndex) => currentIndex === index ? { ...question, id: insertedId } : question));
+            setEditingQuestionIds((current) => current.includes(insertedId) ? current : [...current, insertedId]);
+          }
+        }
+        if (!questionsError) {
+          const removedQuestionIds = editingQuestionIds.filter((id) => !retainedQuestionIds.has(id));
+          if (removedQuestionIds.length) {
+            const result = await supabase.from("questions")
+              .delete()
+              .eq("english_set_id", editSetId)
+              .in("id", removedQuestionIds);
+            if (result.error) questionsError = result.error;
+          }
         }
       } else {
         const result = await supabase.from("questions").insert(rows);
         questionsError = result.error;
       }
-      if (questionsError) throw new Error(`El conjunto se guardó, pero falló la actualización de preguntas: ${questionsError.message}. ID: ${setRow.id}`);
+      if (questionsError) throw new Error(`El conjunto se guardó, pero no se pudieron guardar todas las preguntas: ${questionsError.message}. ID: ${setRow.id}`);
       setSavedSetId(setRow.id);
       setMessage(`${editSetId ? "Cambios guardados" : "Borrador guardado"}: ${rows.length} preguntas. Queda inactivo hasta su revisión.`);
     } catch (e) {

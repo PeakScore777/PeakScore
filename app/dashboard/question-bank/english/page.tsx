@@ -156,7 +156,11 @@ export default function EnglishQuestionBankPage() {
                     </div>
                     </div>
                   </div>}
-                  {!words.length && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
+                  {!words.length && set.part === 3 && set.example_image_url && <div className="mb-5 border-b border-slate-900 pb-5">
+                    <p className="mb-3 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
+                    <div className="flex justify-center"><img src={set.example_image_url} alt="Ejemplo ilustrado de conversación" className="max-h-64 max-w-full object-contain" /></div>
+                  </div>}
+                  {!words.length && set.part !== 3 && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
                     <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
                     <div className={`grid gap-2 ${set.part === 2 ? "grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
                       <strong className="pt-1">0.</strong>

@@ -218,13 +218,13 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       }
       const setPayload = {
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
-        shared_text: part === 4 ? null : sharedText.trim() || null,
+        shared_text: sharedText.trim() || null,
         shared_image_url: uploadedSharedImageUrl,
         instructions: (instructions.trim() || PARTS[part].guidance),
         example_prompt: part === 1 || part === 3 ? null : examplePrompt.trim() || null,
         example_options: part === 1 || part === 3 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
         example_answer: part === 1 || part === 3 ? null : exampleAnswer,
-        example_image_url: part === 1 ? null : uploadedExampleImageUrl,
+        example_image_url: uploadedExampleImageUrl,
         word_bank: part === 1 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
         status: editSetId ? existingSetStatus : "draft",
       };
@@ -403,7 +403,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         </section>
         {error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
         {message && <p role="status" className="rounded-xl bg-green-50 p-4 text-green-900">{message}</p>}
-        <div className="flex flex-wrap justify-end gap-3">{savedSetId && <button type="button" onClick={() => router.push("/dashboard/question-bank")} className="rounded-xl border bg-white px-5 py-3 font-semibold">Volver al banco</button>}<button type="button" onClick={save} disabled={loading || Boolean(savedSetId)} className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-6 py-3 font-semibold text-white disabled:opacity-50"><Save size={18}/>{loading ? "Guardando..." : editSetId ? "Guardar cambios" : "Guardar conjunto como borrador"}</button></div>
+        <div className="flex flex-wrap justify-end gap-3">{savedSetId && <button type="button" onClick={() => router.push(editSetId ? "/dashboard/question-bank/english" : "/dashboard/question-bank")} className="rounded-xl border bg-white px-5 py-3 font-semibold">Volver al banco</button>}<button type="button" onClick={save} disabled={loading || Boolean(savedSetId)} className="inline-flex items-center gap-2 rounded-xl bg-indigo-700 px-6 py-3 font-semibold text-white disabled:opacity-50"><Save size={18}/>{loading ? "Guardando..." : editSetId ? "Guardar cambios" : "Guardar conjunto como borrador"}</button></div>
       </div>
     </main>
   );

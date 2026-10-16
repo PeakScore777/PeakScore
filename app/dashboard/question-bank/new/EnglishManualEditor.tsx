@@ -150,7 +150,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           subject: "Inglés", subject_id: null, session: Number(session),
           component: `Parte ${part === 4 ? part4Group : part === 7 ? part7Group : part} · ${PARTS[part].name}`, competence: null, difficulty,
           context_text: sharedText.trim() || null, question: q.prompt.trim(),
-          option_a: optionMap.A ?? "", option_b: optionMap.B ?? "", option_c: optionMap.C ?? "", option_d: optionMap.D ?? "",
+          option_a: optionMap.A ?? "N/A", option_b: optionMap.B ?? "N/A", option_c: optionMap.C ?? "N/A", option_d: optionMap.D ?? "N/A",
           correct_answer: q.answer, explanation: q.explanation.trim() || null,
           image_url: uploadedImageUrls[index], year: null, source: "PeakScore · creación manual",
           question_number: null, is_active: false, requires_visual: Boolean(uploadedImageUrls[index]),

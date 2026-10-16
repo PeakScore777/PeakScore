@@ -160,7 +160,19 @@ export default function EnglishQuestionBankPage() {
                   {!words.length && set.part === 3 && set.example_image_url && <div className="mb-5 border-b border-slate-900 pb-5">
                     <div className="flex justify-center"><img src={set.example_image_url} alt="Ejemplo ilustrado de conversación" className="max-h-64 max-w-full object-contain" /></div>
                   </div>}
-                  {!words.length && set.part !== 3 && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
+                  {!words.length && set.part === 4 && <div className="mb-3 border-b border-slate-900 pb-3">
+                    <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-3 text-[10px] leading-4">
+                      <strong>0.</strong>
+                      <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-3">
+                        {(set.example_options ?? []).map(option => <div key={option.key} className="flex gap-1"><strong>{option.key}.</strong><span>{option.text}</span></div>)}
+                      </div>
+                      <div className="inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={`Hoja de respuestas del ejemplo: ${set.example_answer ?? "sin respuesta marcada"}`}>
+                        <span className="mr-1 font-semibold">Respuesta 0.</span>
+                        {["A", "B", "C"].map(key => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${set.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
+                      </div>
+                    </div>
+                  </div>}
+                  {!words.length && set.part !== 3 && set.part !== 4 && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
                     <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
                     <div className={`grid gap-2 ${set.part === 2 ? "grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
                       <strong className="pt-1">0.</strong>

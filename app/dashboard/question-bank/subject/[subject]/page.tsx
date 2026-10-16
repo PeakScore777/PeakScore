@@ -8,7 +8,7 @@ import {
   Pencil,
   Plus,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import {
   getQuestions,
@@ -17,6 +17,7 @@ import {
 
 export default function SubjectQuestionsPage() {
   const params = useParams();
+  const router = useRouter();
 
   const subject = decodeURIComponent(
     params.subject as string
@@ -26,6 +27,10 @@ export default function SubjectQuestionsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (subject === "Inglés") {
+      router.replace("/dashboard/question-bank/english");
+      return;
+    }
     const loadQuestions = async () => {
       try {
         setLoading(true);
@@ -50,7 +55,7 @@ export default function SubjectQuestionsPage() {
     if (subject) {
       loadQuestions();
     }
-  }, [subject]);
+  }, [subject, router]);
 
   return (
     <main className="min-h-screen bg-slate-100 p-8">

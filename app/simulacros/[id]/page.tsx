@@ -62,7 +62,7 @@ export default function ExamPage() {
     part: number;
     shared_text: string | null;
     instructions: string | null;
-    word_bank: Array<{ key: string; text: string; example?: boolean }> | null;
+    word_bank: Array<{ key: string; text: string; example?: boolean; example_description?: string; example_answer?: string }> | null;
     example_prompt: string | null;
     example_options: Array<{ key: string; text: string }> | null;
     example_image_url: string | null;

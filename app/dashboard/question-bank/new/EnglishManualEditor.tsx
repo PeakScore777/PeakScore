@@ -219,7 +219,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       const setPayload = {
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
         shared_text: part === 4 ? null : sharedText.trim() || null,
-        shared_image_url: part === 4 ? uploadedSharedImageUrl : null,
+        shared_image_url: uploadedSharedImageUrl,
         instructions: (instructions.trim() || PARTS[part].guidance),
         example_prompt: part === 1 || part === 3 ? null : examplePrompt.trim() || null,
         example_options: part === 1 || part === 3 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),

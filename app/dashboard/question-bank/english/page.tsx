@@ -156,30 +156,36 @@ export default function EnglishQuestionBankPage() {
                     </div>
                     </div>
                   </div>}
-                  {!words.length && set.example_prompt && <div className="mb-7 border-b-2 border-slate-900 pb-5">
-                    <p className="text-center text-sm font-black uppercase tracking-wide">Ejemplo</p>
-                    <div className="mt-3 grid gap-4 md:grid-cols-[3.5rem_1fr]">
+                  {!words.length && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
+                    <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
+                    <div className={`grid gap-2 ${set.part === 2 ? "grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
                       <strong className="pt-1">0.</strong>
-                      <div>
-                        {set.example_image_url && <img src={set.example_image_url} alt="Imagen del ejemplo" className="mb-4 max-h-64 w-full rounded-lg border border-slate-200 object-contain" />}
-                        <p className="whitespace-pre-wrap font-serif text-[15px] leading-7">{set.example_prompt}</p>
-                        {!!set.example_options?.length && <div className={`mt-4 grid gap-x-6 gap-y-2 ${set.example_options.length > 2 ? "sm:grid-cols-2" : ""}`}>
-                          {set.example_options.map(option => <div key={option.key} className="flex gap-2 text-sm leading-6"><strong>{option.key}.</strong><span>{option.text}</span></div>)}
-                        </div>}
-                        {set.example_answer && <p className="mt-3 text-xs text-slate-500">Ejemplo ilustrativo · Respuesta {set.example_answer}</p>}
+                      <div className={set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
+                        <div>
+                          {set.example_image_url && <img src={set.example_image_url} alt="Imagen del ejemplo" className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-64 max-w-full object-contain"} />}
+                          <p className="whitespace-pre-wrap font-serif text-[11px] leading-4">{set.example_prompt}</p>
+                        </div>
+                        <div>
+                          {!!set.example_options?.length && <div className={`grid gap-x-3 gap-y-1 ${set.part === 2 ? "grid-cols-1 sm:grid-cols-2" : set.example_options.length > 2 ? "sm:grid-cols-2" : ""}`}>
+                            {set.example_options.map(option => <div key={option.key} className="flex gap-1 text-[10px] leading-4"><strong>{option.key}.</strong><span>{option.text}</span></div>)}
+                          </div>}
+                          {set.example_answer && <p className="mt-1 text-[9px] text-slate-500">Ejemplo ilustrativo · Respuesta {set.example_answer}</p>}
+                        </div>
                       </div>
                     </div>
                   </div>}
-                  {!words.length && <div className="space-y-7">{qs.map((q, i) => {
+                  {!words.length && <div className={set.part === 2 ? "space-y-0" : "space-y-7"}>{qs.map((q, i) => {
                     const opts = q.english_options?.length ? q.english_options : [
                       { key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d },
                     ].filter((o) => o.text?.trim());
-                    return <div key={q.id} className="grid gap-4 border-b border-slate-200 pb-6 last:border-0 md:grid-cols-[3.5rem_1fr]">
-                      <strong className="pt-1 text-base">{q.english_position ?? i + 1}.</strong>
-                      <div>
-                        {q.image_url && <img src={q.image_url} alt={`Imagen de la pregunta ${i + 1}`} className="mb-4 max-h-72 max-w-full object-contain"/>}
-                        <p className="whitespace-pre-wrap font-serif text-[15px] leading-7">{q.question}</p>
-                        {opts.length > 0 && <div className={`mt-4 grid gap-x-6 gap-y-2 ${opts.length > 2 ? "sm:grid-cols-2" : ""}`}>{opts.map((o) => <div key={o.key} className="flex gap-2 text-sm leading-6"><strong>{o.key}.</strong><span>{o.text}</span></div>)}</div>}
+                    return <div key={q.id} className={`grid gap-2 border-b border-slate-300 pb-3 pt-2 last:border-0 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
+                      <strong className="pt-1 text-[11px]">{q.english_position ?? i + 1}.</strong>
+                      <div className={set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
+                        <div>
+                          {q.image_url && <img src={q.image_url} alt={`Imagen de la pregunta ${i + 1}`} className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
+                          <p className={`whitespace-pre-wrap font-serif ${set.part === 2 ? "text-[10px] leading-4" : "text-[15px] leading-7"}`}>{q.question}</p>
+                        </div>
+                        <div>{opts.length > 0 && <div className={`grid gap-x-3 gap-y-1 ${set.part === 2 ? "grid-cols-1 sm:grid-cols-2" : opts.length > 2 ? "sm:grid-cols-2" : ""}`}>{opts.map((o) => <div key={o.key} className={`flex gap-1 ${set.part === 2 ? "text-[10px] leading-4" : "text-sm leading-6"}`}><strong>{o.key}.</strong><span>{o.text}</span></div>)}</div>}</div>
                       </div>
                     </div>;
                   })}</div>}

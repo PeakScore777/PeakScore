@@ -74,9 +74,11 @@ export default function BookletView({
         const firstInSet = Boolean(setId && !renderedSetIntro.has(setId));
         if (firstInSet) renderedSetIntro.add(setId);
         const officialNumber = getEnglishNumber(question, index + 1, setInfo?.title);
-        const rawOptions = question.english_options?.length
-          ? question.english_options.map(option => option.text)
-          : [question.option_a, question.option_b, question.option_c, question.option_d];
+        const rawOptions = part === 1
+          ? []
+          : question.english_options?.length
+            ? question.english_options.map(option => option.text)
+            : [question.option_a, question.option_b, question.option_c, question.option_d];
         const options = rawOptions
           .map((text, optionIndex) => ({ text, optionIndex }))
           .filter(option => typeof option.text === "string" && option.text.trim());
@@ -127,10 +129,15 @@ export default function BookletView({
                 <span className={`rounded-full px-2 py-1 text-[10px] font-bold sm:mt-2 sm:inline-block ${selected ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>{selected ? "Respondida" : "Sin responder"}</span>
               </div>
               <div>
+                {question.image_url && part === 2 && (
+                  <div className="mb-2 flex justify-start">
+                    <img src={question.image_url} alt={`Aviso de la pregunta ${officialNumber}`} className="max-h-28 max-w-[280px] object-contain" />
+                  </div>
+                )}
                 <p className={`whitespace-pre-wrap font-serif text-slate-900 ${isEnglish ? "text-[15px] leading-7" : "text-base leading-8"}`}>{question.question}</p>
-                {question.image_url && (
-                  <div className={`mt-3 ${part === 2 ? "flex justify-start" : "flex justify-center"}`}>
-                    <img src={question.image_url} alt={`Recurso de la pregunta ${officialNumber}`} className={part === 2 ? "max-h-28 max-w-[280px] object-contain" : "max-h-[480px] max-w-full object-contain"} />
+                {question.image_url && part !== 2 && (
+                  <div className="mt-3 flex justify-center">
+                    <img src={question.image_url} alt={`Recurso de la pregunta ${officialNumber}`} className="max-h-[480px] max-w-full object-contain" />
                   </div>
                 )}
                 <div className={`mt-3 grid gap-x-6 ${stacked ? "grid-cols-1 gap-y-2" : "sm:grid-cols-2 gap-y-3"}`}>

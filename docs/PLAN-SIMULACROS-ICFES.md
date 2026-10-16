@@ -127,3 +127,9 @@ Construir una experiencia de simulacro fiel a Saber 11: cuadernillo digital cont
 4. Empezar por Fase 0, informar hallazgos concretos y después aplicar cambios pequeños.
 5. No rehacer arquitectura, no inventar rutas/tablas, no borrar preguntas/datos, no afirmar pruebas no ejecutadas.
 6. Después de cada cambio, verificar diff y ejecutar las pruebas que permita el entorno. Actualizar este documento con hashes, cambios, pruebas y pendientes.
+
+## Bitácora de implementación
+- **Commit de documentación:** `3e98f5e3a5ab4787a82e5e4feecb6f174270c1fa` — creado `docs/PLAN-SIMULACROS-ICFES.md`.
+- **Commit de código:** `ea55826cdae7b117adda50d8590788d93d69af39` — corrigió la numeración del banco de Inglés: los conjuntos con banco de palabras (Parte 1) ahora empiezan en la pregunta 80 en vez de 85.
+- **Verificación pendiente:** aún no se ha ejecutado `npm run build` ni `npm run lint` en un entorno local tras este cambio. No considerar validado hasta ejecutar esas pruebas.
+- **Siguiente paso:** auditoría completa de la estructura de preguntas en el simulacro y de la RPC SQL `finish_simulation_atomic`; luego diseñar y añadir la vista de cuadernillo continuo y hoja de respuestas sin eliminar progreso ni anotaciones existentes.

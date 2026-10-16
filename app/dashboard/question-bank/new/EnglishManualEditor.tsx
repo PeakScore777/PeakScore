@@ -406,6 +406,48 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <p className="mt-6 border-t border-slate-300 pt-3 text-[10px] text-slate-500">PeakScore · Vista previa del cuadernillo. Las respuestas correctas no se muestran.</p>
           </div>
         </section>}
+        {part === 5 && <section className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+          <header className="border-b border-slate-300 px-6 py-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {session}</p>
+            <h2 className="mt-1 text-lg font-extrabold text-slate-950">{title.trim() || "Parte 5 · Comprensión de lectura"}</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-700">{instructions.trim() || PARTS[5].guidance}</p>
+          </header>
+          <div className="p-5 sm:p-7">
+            <article className="rounded-xl border-2 border-slate-900 px-5 py-5">
+              <h3 className="mb-4 text-center text-base font-black uppercase tracking-wide">{sharedTitle.trim() || "Título del texto de lectura"}</h3>
+              <div className={sharedImageFile || existingSharedImageUrl ? "grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(130px,0.38fr)]" : ""}>
+                <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{sharedText.trim() || "Aquí aparecerá el texto compartido de lectura."}</p>
+                {(sharedImageFile || existingSharedImageUrl) && <div className="flex justify-center md:justify-end"><img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt="Vista previa de la ilustración del pasaje" className="h-auto max-h-56 max-w-full object-contain"/></div>}
+              </div>
+            </article>
+            <div className="mt-5 grid grid-cols-[2rem_minmax(0,1fr)] gap-3 border-b-2 border-slate-900 pb-4">
+              <strong className="pt-1 text-sm">0.</strong>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                <div>
+                  <p className="whitespace-pre-wrap text-sm leading-6">{examplePrompt.trim() || "Aquí aparecerá el enunciado del ejemplo."}</p>
+                  {exampleImageFile && <img src={URL.createObjectURL(exampleImageFile)} alt="Imagen del ejemplo" className="mt-2 max-h-32 max-w-full object-contain"/>}
+                </div>
+                <div className="space-y-2">
+                  <div className="space-y-1">{exampleOptions.map(option => <p key={option.key} className="text-xs leading-5"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
+                  <div className="inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[10px] leading-none">
+                    <span className="mr-1 font-semibold">Respuesta 0.</span>
+                    {["A", "B", "C"].map(key => <span key={key} className={`flex h-5 w-5 items-center justify-center rounded-full border ${exampleAnswer === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-2 divide-y divide-slate-300">
+              {questions.map((question, index) => <div key={question.id ?? index} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 py-4">
+                <strong className="pt-1 text-sm">{113 + index}.</strong>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)]">
+                  <p className="whitespace-pre-wrap text-sm leading-6">{question.prompt || "Enunciado de comprensión de lectura…"}</p>
+                  <div className="space-y-2">{question.options.map(option => <p key={option.key} className="text-xs leading-5"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
+                </div>
+              </div>)}
+            </div>
+            <p className="mt-4 border-t border-slate-300 pt-3 text-[10px] text-slate-500">PeakScore · Vista previa del cuadernillo. Las respuestas correctas no se muestran.</p>
+          </div>
+        </section>}
         <section className="space-y-5">
           <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Preguntas del conjunto</h2><p className="text-sm text-slate-600">{questions.length} pregunta(s) · {part === 1 ? "máximo 5 según el formato ICFES" : part === 4 ? "exactamente 8 por subparte" : "máximo 30"}</p></div><button type="button" onClick={addQuestion} disabled={questions.length >= (part === 1 ? 5 : part === 4 ? PARTS[4].count : 30)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-40"><Plus size={18}/> Añadir pregunta</button></div>
           {questions.map((q, i) => <article key={i} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm md:p-7">

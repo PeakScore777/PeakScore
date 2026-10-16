@@ -224,7 +224,7 @@ export default function EnglishQuestionBankPage() {
                           })}
                         </div>
                       ) : (
-                        <div className={set.part === 5 ? "grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]" : set.part === 2 || set.part === 3 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
+                        <div className={set.part === 5 ? "grid grid-cols-1 gap-8 md:gap-10 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]" : set.part === 2 || set.part === 3 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
                           <div>
                             {q.image_url && <img src={q.image_url} alt={`Imagen de la pregunta ${i + 1}`} className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
                             <p className={`whitespace-pre-wrap font-serif ${set.part === 2 ? "text-[10px] leading-4" : set.part === 5 ? "text-[13px] leading-5" : "text-[15px] leading-7"}`}>{q.question}</p>

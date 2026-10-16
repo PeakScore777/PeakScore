@@ -185,7 +185,16 @@ export default function EnglishQuestionBankPage() {
                     const opts = q.english_options?.length ? q.english_options : [
                       { key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d },
                     ].filter((o) => o.text?.trim());
-                    const questionNumber = set.part === 2 ? 85 + i : set.part === 3 ? 90 + i : (q.english_position ?? i + 1);
+                    const partPosition = q.english_position ?? i + 1;
+                    const isSubpartB = /^(?:4B|7B)\\b/i.test(set.title);
+                    const questionNumber = set.part === 1 ? 79 + partPosition
+                      : set.part === 2 ? 84 + partPosition
+                      : set.part === 3 ? 89 + partPosition
+                      : set.part === 4 ? (isSubpartB ? 104 : 96) + partPosition
+                      : set.part === 5 ? 112 + partPosition
+                      : set.part === 6 ? 119 + partPosition
+                      : set.part === 7 ? (isSubpartB ? 129 : 124) + partPosition
+                      : partPosition;
                     return <div key={q.id} className={`grid gap-2 border-b border-slate-300 pb-3 pt-2 last:border-0 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"} ${set.part === 3 ? "min-h-[112px] pb-5 pt-4" : ""}`}>
                       <strong className="pt-1 text-[11px]">{questionNumber}.</strong>
                       <div className={set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : set.part === 3 ? "grid grid-cols-1 gap-3" : ""}>
@@ -193,7 +202,7 @@ export default function EnglishQuestionBankPage() {
                           {q.image_url && <img src={q.image_url} alt={`Imagen de la pregunta ${i + 1}`} className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
                           <p className={`whitespace-pre-wrap font-serif ${set.part === 2 ? "text-[10px] leading-4" : "text-[15px] leading-7"}`}>{q.question}</p>
                         </div>
-                        <div>{opts.length > 0 && <div className={`grid gap-x-3 ${set.part === 2 || set.part === 3 ? "grid-cols-1 gap-y-2" : opts.length > 2 ? "sm:grid-cols-2 gap-y-1" : "gap-y-1"}`}>{opts.map((o) => <div key={o.key} className={`flex gap-2 ${set.part === 2 ? "text-[10px] leading-4" : "text-sm leading-6"}`}><strong>{o.key}.</strong><span>{o.text}</span></div>)}</div>}</div>
+                        <div>{opts.length > 0 && <div className="grid grid-cols-1 gap-y-2">{opts.map((o) => <div key={o.key} className={`flex gap-2 ${set.part === 2 ? "text-[10px] leading-4" : "text-sm leading-6"}`}><strong>{o.key}.</strong><span>{o.text}</span></div>)}</div>}</div>
                       </div>
                     </div>;
                   })}</div>}

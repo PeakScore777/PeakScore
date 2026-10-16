@@ -128,7 +128,7 @@ export default function EnglishQuestionBankPage() {
             const displayPart = isWordBankSet ? 1 : set.part;
             const displayPartName = isWordBankSet ? "Descripciones y banco de palabras" : (PART_NAMES[displayPart] ?? "Inglés");
             return (
-              <article key={set.id} className="overflow-hidden rounded-sm border border-slate-300 bg-white shadow-sm">
+              <article key={set.id} className="mx-auto min-h-[297mm] w-full max-w-[210mm] overflow-hidden border border-slate-300 bg-white shadow-sm print:break-after-page">
                 <div className="border-b border-slate-200 px-6 py-5 sm:px-10">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -157,7 +157,6 @@ export default function EnglishQuestionBankPage() {
                     </div>
                   </div>}
                   {!words.length && set.part === 3 && set.example_image_url && <div className="mb-5 border-b border-slate-900 pb-5">
-                    <p className="mb-3 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
                     <div className="flex justify-center"><img src={set.example_image_url} alt="Ejemplo ilustrado de conversación" className="max-h-64 max-w-full object-contain" /></div>
                   </div>}
                   {!words.length && set.part !== 3 && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
@@ -195,9 +194,9 @@ export default function EnglishQuestionBankPage() {
                       : set.part === 6 ? 119 + partPosition
                       : set.part === 7 ? (isSubpartB ? 129 : 124) + partPosition
                       : partPosition;
-                    return <div key={q.id} className={`grid gap-2 border-b border-slate-300 pb-3 pt-2 last:border-0 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"} ${set.part === 3 ? "min-h-[112px] pb-5 pt-4" : ""}`}>
+                    return <div key={q.id} className={`grid gap-2 border-b border-slate-300 pb-3 pt-2 last:border-0 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[2rem_minmax(0,1fr)]"} ${set.part === 3 ? "min-h-[72px] pb-3 pt-3" : ""}`}>
                       <strong className="pt-1 text-[11px]">{questionNumber}.</strong>
-                      <div className={set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : set.part === 3 ? "grid grid-cols-1 gap-3" : ""}>
+                      <div className={set.part === 2 || set.part === 3 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
                         <div>
                           {q.image_url && <img src={q.image_url} alt={`Imagen de la pregunta ${i + 1}`} className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
                           <p className={`whitespace-pre-wrap font-serif ${set.part === 2 ? "text-[10px] leading-4" : "text-[15px] leading-7"}`}>{q.question}</p>

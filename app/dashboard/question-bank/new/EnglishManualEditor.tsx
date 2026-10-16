@@ -324,7 +324,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       <div className="mx-auto max-w-5xl space-y-6">
         <header className="flex items-start gap-4">
           <button type="button" onClick={onBack ?? (() => router.back())} className="rounded-xl bg-white p-3 shadow" aria-label="Volver"><ArrowLeft size={20}/></button>
-          <div><p className="text-sm font-semibold uppercase tracking-wide text-indigo-700">Banco de preguntas · Inglés</p><h1 className="text-3xl font-bold text-slate-900">Editor manual de las 7 partes</h1><p className="mt-2 text-slate-600">Crea conjuntos por parte, con textos compartidos, imágenes y opciones según el formato.</p></div>
+          <div><p className="text-sm font-semibold uppercase tracking-wide text-indigo-700">Banco de preguntas · Inglés</p><h1 className="text-3xl font-bold text-slate-900">{editSetId ? loading ? "Cargando página para editar..." : "Editar página completa" : "Editor manual de las 7 partes"}</h1><p className="mt-2 text-slate-600">{editSetId ? "Edita el conjunto existente. Los cambios se guardarán sobre esta misma página." : "Crea conjuntos por parte, con textos compartidos, imágenes y opciones según el formato."}</p></div>
         </header>
         <section className="rounded-2xl bg-white p-5 shadow-sm md:p-7">
           <div className="grid gap-4 md:grid-cols-2">

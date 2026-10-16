@@ -81,8 +81,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       }
       if (!alive) return;
       setPart(4);
-      setPart4Group(/^4B\\s*[·—-]/i.test(setRow.title) ? "4B" : "4A");
-      setTitle(setRow.title.replace(/^4[AB]\\s*[·—-]\\s*/i, ""));
+      setPart4Group(/^4B\s*[·—-]/i.test(setRow.title) ? "4B" : "4A");
+      setTitle(setRow.title.replace(/^4[AB]\s*[·—-]\s*/i, ""));
       setSession(String(setRow.session ?? 2));
       setInstructions(setRow.instructions ?? "");
       setExistingSharedImageUrl(setRow.shared_image_url ?? "");

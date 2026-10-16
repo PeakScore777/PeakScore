@@ -243,6 +243,7 @@ export async function GET(
       title: string;
       part: number;
       shared_text: string | null;
+      shared_image_url: string | null;
       instructions: string | null;
       word_bank: unknown[] | null;
       example_prompt: string | null;
@@ -253,7 +254,7 @@ export async function GET(
     if (englishSetIds.length > 0) {
       const { data: setRows, error: setRowsError } = await adminSupabase
         .from("english_question_sets")
-        .select("id,title,part,shared_text,instructions,word_bank,example_prompt,example_options,example_image_url,example_answer")
+        .select("id,title,part,shared_text,shared_image_url,instructions,word_bank,example_prompt,example_options,example_image_url,example_answer")
         .in("id", englishSetIds);
       if (setRowsError) {
         console.error("[PeakScore] No se pudieron cargar los conjuntos de Inglés.", { errorCode: setRowsError.code ?? "UNKNOWN" });
@@ -263,6 +264,7 @@ export async function GET(
         title: set.title,
         part: set.part,
         shared_text: set.shared_text,
+        shared_image_url: set.shared_image_url,
         instructions: set.instructions,
         word_bank: set.word_bank,
         example_prompt: set.example_prompt,

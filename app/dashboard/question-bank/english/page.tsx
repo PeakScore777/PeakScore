@@ -16,6 +16,7 @@ type EnglishSet = {
   example_prompt: string | null;
   example_options: Option[] | null;
   example_answer: string | null;
+  example_image_url: string | null;
   word_bank: Word[] | null;
   status: string;
   session: number;
@@ -61,7 +62,7 @@ export default function EnglishQuestionBankPage() {
       setError("");
       const { data: setData, error: setLoadSetsError } = await supabase
         .from("english_question_sets")
-        .select("id,part,title,shared_text,instructions,example_prompt,example_options,example_answer,word_bank,status,session,created_at")
+        .select("id,part,title,shared_text,instructions,example_prompt,example_options,example_answer,example_image_url,word_bank,status,session,created_at")
         .order("part", { ascending: true })
         .order("created_at", { ascending: false });
       if (setLoadSetsError) {
@@ -160,6 +161,7 @@ export default function EnglishQuestionBankPage() {
                     <div className="mt-3 grid gap-4 md:grid-cols-[3.5rem_1fr]">
                       <strong className="pt-1">0.</strong>
                       <div>
+                        {set.example_image_url && <img src={set.example_image_url} alt="Imagen del ejemplo" className="mb-4 max-h-64 w-full rounded-lg border border-slate-200 object-contain" />}
                         <p className="whitespace-pre-wrap font-serif text-[15px] leading-7">{set.example_prompt}</p>
                         {!!set.example_options?.length && <div className={`mt-4 grid gap-x-6 gap-y-2 ${set.example_options.length > 2 ? "sm:grid-cols-2" : ""}`}>
                           {set.example_options.map(option => <div key={option.key} className="flex gap-2 text-sm leading-6"><strong>{option.key}.</strong><span>{option.text}</span></div>)}

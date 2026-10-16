@@ -239,11 +239,20 @@ export async function GET(
         .map((question) => (question as { english_set_id?: string | null }).english_set_id)
         .filter((id): id is string => Boolean(id))
     )];
-    let englishSets: Record<string, { title: string; part: number; shared_text: string | null; instructions: string | null; word_bank: unknown[] | null }> = {};
+    let englishSets: Record<string, {
+      title: string;
+      part: number;
+      shared_text: string | null;
+      instructions: string | null;
+      word_bank: unknown[] | null;
+      example_prompt: string | null;
+      example_options: Array<{ key: string; text: string }> | null;
+      example_image_url: string | null;
+    }> = {};
     if (englishSetIds.length > 0) {
       const { data: setRows, error: setRowsError } = await adminSupabase
         .from("english_question_sets")
-        .select("id,title,part,shared_text,instructions,word_bank")
+        .select("id,title,part,shared_text,instructions,word_bank,example_prompt,example_options,example_image_url")
         .in("id", englishSetIds);
       if (setRowsError) {
         console.error("[PeakScore] No se pudieron cargar los conjuntos de Inglés.", { errorCode: setRowsError.code ?? "UNKNOWN" });
@@ -255,6 +264,9 @@ export async function GET(
         shared_text: set.shared_text,
         instructions: set.instructions,
         word_bank: set.word_bank,
+        example_prompt: set.example_prompt,
+        example_options: set.example_options,
+        example_image_url: set.example_image_url,
       }]));
     }
 

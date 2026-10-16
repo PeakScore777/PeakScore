@@ -53,6 +53,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [savedSetId, setSavedSetId] = useState<string | null>(null);
+  const [editSetId, setEditSetId] = useState<string | null>(null);
+  const [editingQuestionIds, setEditingQuestionIds] = useState<string[]>([]);
+  const [existingSharedImageUrl, setExistingSharedImageUrl] = useState("");
   const wordBank = useMemo(() => wordBankText.split("\n").map(x => x.trim()).filter(Boolean), [wordBankText]);
 
   function changePart(next: number) {

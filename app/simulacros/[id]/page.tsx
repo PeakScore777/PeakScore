@@ -1291,6 +1291,7 @@ export default function ExamPage() {
         )}
 
         {!bookletView && (
+        <div>
         {/* =================================================
             GRID PRINCIPAL
         ================================================== */}
@@ -1906,6 +1907,7 @@ export default function ExamPage() {
             }}
           />
 
+        </div>
         </div>
         )}
 

@@ -98,6 +98,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 2 && questions.some(q => !q.imageFile && !q.imageUrl.trim())) return setError("Sube la imagen del aviso para cada pregunta de la Parte 2.");
     
     if (part === 4 && !sharedImageFile) return setError("Sube la imagen del texto compartido de la Parte 4.");
+    if (part === 4 && questions.some(q => !q.explanation.trim())) return setError("Escribe una explicación en español para cada espacio de la Parte 4.");
     if ([5, 6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -257,7 +258,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <div className="grid gap-3 md:grid-cols-2">{q.options.map((option, j) => <label key={option.key} className="block text-sm font-semibold">Opción {option.key}<input value={option.text} onChange={e => patchOption(i, j, e.target.value)} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={`Texto de la opción ${option.key}`}/></label>)}</div>
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm font-semibold">Respuesta correcta<select value={q.answer} onChange={e => patchQuestion(i, { answer: e.target.value })} className="mt-2 w-full rounded-xl border p-3">{(part === 1 ? LETTERS.filter(key => key !== exampleAnswer).map(key => ({ key, text: key })) : q.options).map(o => <option key={o.key} value={o.key}>{o.key}</option>)}</select></label>
-              <label className="text-sm font-semibold">Explicación (opcional)<input value={q.explanation} onChange={e => patchQuestion(i, { explanation: e.target.value })} maxLength={5000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder="Por qué es correcta"/></label>
+              <label className="text-sm font-semibold">Explicación {part === 4 ? "(obligatoria, en español)" : "(opcional)"}<input value={q.explanation} onChange={e => patchQuestion(i, { explanation: e.target.value })} maxLength={5000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder={part === 4 ? "Explica en español la regla gramatical y por qué encaja aquí" : "Por qué es correcta"}/></label>
             </div>
           </article>)}
         </section>

@@ -45,6 +45,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [wordBankText, setWordBankText] = useState("");
   const [examplePrompt, setExamplePrompt] = useState("");
   const [exampleAnswer, setExampleAnswer] = useState("H");
+  const [exampleOptions, setExampleOptions] = useState<Choice[]>(() => ["A", "B", "C"].map(key => ({ key, text: "" })));
   const [questions, setQuestions] = useState<DraftQuestion[]>(() => Array.from({ length: 5 }, () => makeQuestion(1)));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -60,7 +61,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setSharedText("");
     setWordBankText("");
     setExamplePrompt("");
-    setExampleAnswer("H");
+    setExampleAnswer(next === 1 ? "H" : "A");
+    setExampleOptions(LETTERS.slice(0, PARTS[next].choices || 3).map(key => ({ key, text: "" })));
     setInstructions("");
     setTitle("");
     setError("");
@@ -85,6 +87,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (questions.some(q => !q.prompt.trim())) return setError("Completa el enunciado de todas las preguntas.");
     if (part === 1 && wordBank.length !== 8) return setError("La Parte 1 necesita exactamente ocho palabras, de A a H.");
     if (part === 1 && !examplePrompt.trim()) return setError("Escribe el enunciado de ejemplo, como en el cuadernillo ICFES.");
+    if (part !== 1 && !examplePrompt.trim()) return setError("Completa el ejemplo inicial del conjunto, como en el cuadernillo ICFES.");
+    if (part !== 1 && exampleOptions.some(option => !option.text.trim())) return setError("Completa todas las opciones del ejemplo inicial.");
+    if (part !== 1 && !exampleOptions.some(option => option.key === exampleAnswer)) return setError("Selecciona una respuesta válida para el ejemplo.");
     if (part === 2 && questions.some(q => !q.imageFile && !q.imageUrl.trim())) return setError("Sube la imagen del aviso para cada pregunta de la Parte 2.");
     
     if ([4, 5, 6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
@@ -107,6 +112,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
         shared_text: sharedText.trim() || null,
         instructions: (instructions.trim() || PARTS[part].guidance),
+        example_prompt: part === 1 ? null : examplePrompt.trim(),
+        example_options: part === 1 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
+        example_answer: part === 1 ? null : exampleAnswer,
         word_bank: part === 1 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
         status: "draft", created_by: user.id,
       }).select("id").single();
@@ -169,6 +177,12 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950"><strong>Formato:</strong> {PARTS[part].guidance}</div>
           {part === 1 && <div className="mt-5 space-y-4"><div className="grid gap-3 md:grid-cols-[1fr_12rem]"><label className="block text-sm font-semibold">Enunciado de ejemplo (no se califica)<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" placeholder="Example: This is a place to go shopping for vegetables, meat, among other things."/></label><label className="block text-sm font-semibold">Letra de ejemplo<select value={exampleAnswer} onChange={e => setExampleAnswer(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">{LETTERS.map(key => <option key={key} value={key}>{key}</option>)}</select></label></div><label className="block text-sm font-semibold">Banco de palabras compartido (A–H; selecciona cuál es el ejemplo)<textarea value={wordBankText} onChange={e => setWordBankText(e.target.value)} rows={8} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={"basement\nbathroom\nbookstore\ncafé\ncinema\nelevator\nplayground\nsupermarket"}/></label><div className="mt-3 grid gap-2 sm:grid-cols-2">{wordBank.map((word, i) => <div key={i} className={`rounded-lg p-3 text-sm ${LETTERS[i] === exampleAnswer ? "border-2 border-slate-900 bg-slate-100 font-bold underline" : "bg-slate-50"}`}><b>{LETTERS[i]}.</b> {word}{LETTERS[i] === exampleAnswer ? " (ejemplo)" : ""}</div>)}</div><p className="text-xs text-slate-500">El ejemplo se muestra antes de las cinco preguntas calificadas y no se guarda como pregunta puntuable. La letra elegida para el ejemplo queda excluida de las respuestas de las cinco preguntas.</p></div>}
           {[4, 5, 6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">Texto compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 5 || part === 6 ? "Pega aquí el texto de lectura..." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
+          {part !== 1 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+            <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo.</p></div>
+            <label className="block text-sm font-semibold">Enunciado del ejemplo<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} maxLength={10000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder="Escribe aquí el enunciado de ejemplo..." /></label>
+            <div className="grid gap-3 md:grid-cols-2">{exampleOptions.map((option, index) => <label key={option.key} className="block text-sm font-semibold">Opción de ejemplo {option.key}<input value={option.text} onChange={e => setExampleOptions(current => current.map((item, i) => i === index ? { ...item, text: e.target.value } : item))} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder={"Texto de la opción " + option.key} /></label>)}</div>
+            <label className="block text-sm font-semibold">Respuesta del ejemplo<select value={exampleAnswer} onChange={e => setExampleAnswer(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3">{exampleOptions.map(option => <option key={option.key} value={option.key}>{option.key}</option>)}</select></label>
+          </div>}
         </section>
         {part === 1 && <section className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
           <header className="border-b border-slate-300 px-6 py-5">
@@ -197,7 +211,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <div className="flex items-center justify-between"><h3 className="font-bold">Pregunta {i + 1}</h3>{questions.length > 1 && <button type="button" onClick={() => setQuestions(current => current.filter((_, index) => index !== i))} className="inline-flex items-center gap-1 text-sm text-red-700"><Trash2 size={16}/> Eliminar</button>}</div>
             {part === 2 && <div className="space-y-3"><label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del aviso (desde tu carpeta)</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen no puede superar 8 MB."); e.currentTarget.value = ""; return; } setError(""); patchQuestion(i, { imageFile: file, imageUrl: file ? URL.createObjectURL(file) : "" }); }} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-700" /></label>{q.imageUrl && <div className="rounded-xl border bg-slate-50 p-3"><img src={q.imageUrl} alt={`Vista previa de imagen de pregunta ${i + 1}`} className="max-h-64 max-w-full rounded-lg object-contain" /><button type="button" onClick={() => patchQuestion(i, { imageFile: null, imageUrl: "" })} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen</button></div>}<p className="text-xs text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</p></div>}
             <label className="block text-sm font-semibold">{part === 2 ? "Texto del aviso o pregunta asociada" : part === 1 ? "Descripción en inglés" : part === 3 ? "Intervención de la conversación" : [4, 7].includes(part) ? "Número del espacio / enunciado" : "Pregunta o situación en inglés"}<textarea value={q.prompt} onChange={e => patchQuestion(i, { prompt: e.target.value })} rows={3} maxLength={10000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 2 ? "Where can you see this notice?" : part === 1 ? "Example: You wear these on your feet." : [4, 7].includes(part) ? "Ej. (1) _____" : "Escribe el enunciado en inglés..."}/></label>
-            {part !== 2 && <div className="grid gap-3 md:grid-cols-2">{q.options.map((option, j) => <label key={option.key} className="block text-sm font-semibold">Opción {option.key}<input value={option.text} onChange={e => patchOption(i, j, e.target.value)} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={`Texto de la opción ${option.key}`}/></label>)}</div>}
+            <div className="grid gap-3 md:grid-cols-2">{q.options.map((option, j) => <label key={option.key} className="block text-sm font-semibold">Opción {option.key}<input value={option.text} onChange={e => patchOption(i, j, e.target.value)} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={`Texto de la opción ${option.key}`}/></label>)}</div>
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm font-semibold">Respuesta correcta<select value={q.answer} onChange={e => patchQuestion(i, { answer: e.target.value })} className="mt-2 w-full rounded-xl border p-3">{(part === 1 ? LETTERS.filter(key => key !== exampleAnswer).map(key => ({ key, text: key })) : q.options).map(o => <option key={o.key} value={o.key}>{o.key}</option>)}</select></label>
               <label className="text-sm font-semibold">Explicación (opcional)<input value={q.explanation} onChange={e => patchQuestion(i, { explanation: e.target.value })} maxLength={5000} className="mt-2 w-full rounded-xl border p-3 font-normal" placeholder="Por qué es correcta"/></label>

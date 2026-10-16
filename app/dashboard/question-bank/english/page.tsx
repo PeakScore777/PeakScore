@@ -128,7 +128,7 @@ export default function EnglishQuestionBankPage() {
             const displayPart = isWordBankSet ? 1 : set.part;
             const displayPartName = isWordBankSet ? "Descripciones y banco de palabras" : (PART_NAMES[displayPart] ?? "Inglés");
             return (
-              <article key={set.id} className="overflow-hidden rounded-sm border border-slate-300 bg-white shadow-sm">
+              <article key={set.id} className={`overflow-hidden rounded-sm border border-slate-300 bg-white shadow-sm ${isWordBankSet ? "min-h-[1120px]" : ""}`}>
                 <div className="border-b border-slate-200 px-6 py-5 sm:px-10">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -147,12 +147,12 @@ export default function EnglishQuestionBankPage() {
                   {set.shared_text && <div className="mb-7 whitespace-pre-wrap border border-slate-300 px-5 py-5 font-serif text-[15px] leading-7 text-slate-900">{set.shared_text}</div>}
                   {words.length > 0 && <div className="mb-7">
                     {(() => { const exampleWord = words.find((word) => word.example); const exampleDescription = exampleWord?.example_description; const exampleAnswer = exampleWord?.example_answer ?? exampleWord?.key; return exampleDescription ? <div className="mb-6 border-b-2 border-slate-900 pb-5"><p className="text-center text-sm font-black uppercase tracking-wide">Ejemplo</p><div className="mt-3 grid gap-4 md:grid-cols-[1fr_0.9fr]"><div className="flex gap-3"><strong>0.</strong><p className="whitespace-pre-wrap leading-6">{exampleDescription}</p></div><div className="flex flex-wrap items-center gap-2 rounded-sm border border-slate-300 p-3"><strong className="mr-2">Respuesta 0.</strong>{words.map((word) => <span key={word.key} className={word.key === exampleAnswer ? "flex h-7 w-7 items-center justify-center rounded-full border border-slate-900 bg-slate-900 text-xs font-bold text-white ring-2 ring-slate-300" : "flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-slate-600"}>{word.key}</span>)}</div></div></div> : null; })()}
-                    <div className="grid gap-6 md:grid-cols-[1fr_0.9fr]">
-                    <div><h3 className="mb-3 border-b border-slate-300 pb-2 text-center text-sm font-black uppercase tracking-wide">Descripciones</h3>
-                      <div className="space-y-3">{qs.map((q, i) => <div key={q.id} className="grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 pb-3"><strong>{(displayPart === 1 ? 80 : 85) + i}.</strong><p className="whitespace-pre-wrap leading-6">{q.question}</p></div>)}</div>
+                    <div className={`grid gap-8 md:grid-cols-[1fr_0.9fr] ${isWordBankSet ? "mt-8 min-h-[650px]" : ""}`}>
+                    <div><h3 className="mb-4 border-b border-slate-300 pb-3 text-center text-sm font-black uppercase tracking-wide">Descripciones</h3>
+                      <div className={isWordBankSet ? "space-y-6" : "space-y-3"}>{qs.map((q, i) => <div key={q.id} className={`grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 ${isWordBankSet ? "pb-5" : "pb-3"}`}><strong>{(displayPart === 1 ? 80 : 85) + i}.</strong><p className={`whitespace-pre-wrap ${isWordBankSet ? "text-sm leading-7" : "leading-6"}`}>{q.question}</p></div>)}</div>
                     </div>
-                    <div><h3 className="mb-3 border-b border-slate-300 pb-2 text-center text-sm font-black uppercase tracking-wide">Palabras</h3>
-                      <div className="space-y-3">{words.map((word) => <div key={word.key} className={`flex gap-3 rounded-sm px-2 py-1 ${word.example ? "font-bold underline decoration-2" : ""}`}><strong>{word.key}.</strong><span>{word.text}{word.example ? " (ejemplo)" : ""}</span></div>)}</div>
+                    <div><h3 className="mb-4 border-b border-slate-300 pb-3 text-center text-sm font-black uppercase tracking-wide">Palabras</h3>
+                      <div className={isWordBankSet ? "space-y-5" : "space-y-3"}>{words.map((word) => <div key={word.key} className={`flex gap-3 rounded-sm px-2 py-1 ${isWordBankSet ? "text-sm leading-6" : ""} ${word.example ? "font-bold underline decoration-2" : ""}`}><strong>{word.key}.</strong><span>{word.text}{word.example ? " (ejemplo)" : ""}</span></div>)}</div>
                     </div>
                     </div>
                   </div>}

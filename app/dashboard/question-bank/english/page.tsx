@@ -186,7 +186,7 @@ export default function EnglishQuestionBankPage() {
                       { key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d },
                     ].filter((o) => o.text?.trim());
                     const partPosition = q.english_position ?? i + 1;
-                    const isSubpartB = /^(?:4B|7B)\\b/i.test(set.title);
+                    const isSubpartB = /^(?:4B|7B)\b/i.test(set.title);
                     const questionNumber = set.part === 1 ? 79 + partPosition
                       : set.part === 2 ? 84 + partPosition
                       : set.part === 3 ? 89 + partPosition

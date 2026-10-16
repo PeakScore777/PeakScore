@@ -1285,9 +1285,6 @@ export default function ExamPage() {
               setAnswers(nextAnswers);
               setCurrentQuestion(index);
               saveLocalProgress(nextAnswers, index, timeLeft);
-              void saveServerProgress(nextAnswers, index, timeLeft).catch((error) => {
-                console.error("[PeakScore] No se pudo sincronizar la respuesta:", error);
-              });
             }}
             onFinish={() => void handleFinishExam()}
           />

@@ -166,10 +166,13 @@ export default function EnglishQuestionBankPage() {
                           <p className="whitespace-pre-wrap font-serif text-[11px] leading-4">{set.example_prompt}</p>
                         </div>
                         <div>
-                          {!!set.example_options?.length && <div className={`grid gap-x-3 gap-y-1 ${set.part === 2 ? "grid-cols-1 sm:grid-cols-2" : set.example_options.length > 2 ? "sm:grid-cols-2" : ""}`}>
+                          {!!set.example_options?.length && <div className={`grid gap-x-3 gap-y-1 ${set.part === 2 ? "grid-cols-1" : set.example_options.length > 2 ? "sm:grid-cols-2" : ""}`}>
                             {set.example_options.map(option => <div key={option.key} className="flex gap-1 text-[10px] leading-4"><strong>{option.key}.</strong><span>{option.text}</span></div>)}
                           </div>}
-                          {set.example_answer && <p className="mt-1 text-[9px] text-slate-500">Ejemplo ilustrativo · Respuesta {set.example_answer}</p>}
+                          {set.part === 2 && <div className="mt-2 inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={`Hoja de respuestas del ejemplo: ${set.example_answer ?? "sin respuesta marcada"}`}>
+                            <span className="mr-1 font-semibold">0.</span>
+                            {["A", "B", "C"].map((key) => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${set.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
+                          </div>}
                         </div>
                       </div>
                     </div>
@@ -178,14 +181,15 @@ export default function EnglishQuestionBankPage() {
                     const opts = q.english_options?.length ? q.english_options : [
                       { key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d },
                     ].filter((o) => o.text?.trim());
+                    const questionNumber = set.part === 2 ? 85 + i : (q.english_position ?? i + 1);
                     return <div key={q.id} className={`grid gap-2 border-b border-slate-300 pb-3 pt-2 last:border-0 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
-                      <strong className="pt-1 text-[11px]">{q.english_position ?? i + 1}.</strong>
+                      <strong className="pt-1 text-[11px]">{questionNumber}.</strong>
                       <div className={set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
                         <div>
                           {q.image_url && <img src={q.image_url} alt={`Imagen de la pregunta ${i + 1}`} className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
                           <p className={`whitespace-pre-wrap font-serif ${set.part === 2 ? "text-[10px] leading-4" : "text-[15px] leading-7"}`}>{q.question}</p>
                         </div>
-                        <div>{opts.length > 0 && <div className={`grid gap-x-3 gap-y-1 ${set.part === 2 ? "grid-cols-1 sm:grid-cols-2" : opts.length > 2 ? "sm:grid-cols-2" : ""}`}>{opts.map((o) => <div key={o.key} className={`flex gap-1 ${set.part === 2 ? "text-[10px] leading-4" : "text-sm leading-6"}`}><strong>{o.key}.</strong><span>{o.text}</span></div>)}</div>}</div>
+                        <div>{opts.length > 0 && <div className={`grid gap-x-3 gap-y-1 ${set.part === 2 ? "grid-cols-1" : opts.length > 2 ? "sm:grid-cols-2" : ""}`}>{opts.map((o) => <div key={o.key} className={`flex gap-1 ${set.part === 2 ? "text-[10px] leading-4" : "text-sm leading-6"}`}><strong>{o.key}.</strong><span>{o.text}</span></div>)}</div>}</div>
                       </div>
                     </div>;
                   })}</div>}

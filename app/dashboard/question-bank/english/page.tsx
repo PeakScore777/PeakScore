@@ -69,10 +69,9 @@ function isVisibleInProfile(set: EnglishSet, filter: FormatFilter): boolean {
     return set.booklet_format === "saber11_2026" || set.booklet_format === "historical";
   }
 
-  // Historical has one Part 7A (125–134); 2026 has 7A (115–124) and 7B (125–134).
-  return set.part === 7 && set.booklet_format === "historical"
-    ? true
-    : set.booklet_format === "saber11_2026";
+  // The 2026 filter returned above includes 2026 7A/7B.
+  // Historical view includes only its own single 7A (125–134).
+  return set.booklet_format === "historical";
 }
 
 function getBankQuestionNumber(

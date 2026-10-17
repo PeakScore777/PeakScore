@@ -135,6 +135,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setBookletFormat(loadedFormat);
       setNeedsFormatReview(setRow.booklet_format === "custom_review");
       setConfirmFormatReview(setRow.booklet_format === "custom_review");
+      setConfirmFormatReview(setRow.booklet_format === "custom_review");
       setPart4Group(/^4B\s*[·—-]/i.test(loadedTitle) ? "4B" : "4A");
       setPart7Group(/^7B\s*[·—-]/i.test(loadedTitle) ? "7B" : "7A");
       setTitle(loadedTitle.replace(/^(?:4[AB]|7[AB])\s*[·—-]\s*/i, ""));
@@ -181,6 +182,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (next === 4) setPart4Group("4A");
     if (next === 7) setPart7Group("7A");
     setNeedsFormatReview(false);
+    setConfirmFormatReview(false);
     setQuestions(Array.from({ length: getQuestionCount(next, bookletFormat, "7A") }, () => makeQuestion(next)));
     setSharedText("");
     setSharedImageFile(null);
@@ -198,6 +200,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   function changeBookletFormat(next: BookletFormat) {
     setBookletFormat(next);
     setNeedsFormatReview(false);
+    setConfirmFormatReview(true);
     const nextPart7Group = next === "historical" && part === 7 ? "7A" : part7Group;
     if (part === 7) setPart7Group(nextPart7Group);
     if (next === "saber11_2026" && part === 4) setPart4Group("4A");

@@ -28,36 +28,62 @@ const PARTS: Record<number, { name: string; count: number; guidance: string; cho
 type BookletFormat = "saber11_2026" | "historical";
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
-function getQuestionCount(part: number, format: BookletFormat, part7Group: "7A" | "7B") {
-  if (part === 7) return format === "saber11_2026" && part7Group === "7A" ? 8 : 10;
-  return PARTS[part]?.count ?? 30;
+type QuestionRange = { start: number; count: number };
+
+// Ranges based on the numbered booklet profiles PeakScore is supporting.
+// The official ICFES guide defines seven parts and their skills/weighting;
+// the printed item numbers vary by booklet edition.
+const BOOKLET_RANGES: Record<BookletFormat, Record<string, QuestionRange>> = {
+  saber11_2026: {
+    "1": { start: 80, count: 5 },
+    "2": { start: 85, count: 5 },
+    "3": { start: 90, count: 7 },
+    "4": { start: 97, count: 8 },
+    "5": { start: 105, count: 7 },
+    "6": { start: 112, count: 5 },
+    "7A": { start: 117, count: 8 },
+    "7B": { start: 125, count: 10 },
+  },
+  historical: {
+    "1": { start: 80, count: 5 },
+    "2": { start: 85, count: 5 },
+    "3": { start: 90, count: 7 },
+    "4A": { start: 97, count: 8 },
+    "4B": { start: 105, count: 8 },
+    "5": { start: 113, count: 7 },
+    "6": { start: 120, count: 5 },
+    "7A": { start: 125, count: 10 },
+  },
+};
+
+function getQuestionRange(part: number, format: BookletFormat, part4Group: "4A" | "4B", part7Group: "7A" | "7B"): QuestionRange {
+  let key = String(part);
+  if (part === 4 && format === "historical") key = part4Group;
+  if (part === 7) key = format === "historical" ? "7A" : part7Group;
+  return BOOKLET_RANGES[format][key] ?? { start: 1, count: PARTS[part]?.count ?? 30 };
+}
+function getQuestionCount(part: number, format: BookletFormat, part7Group: "7A" | "7B", part4Group: "4A" | "4B" = "4A") {
+  return getQuestionRange(part, format, part4Group, part7Group).count;
 }
 function getQuestionStart(part: number, format: BookletFormat, part4Group: "4A" | "4B", part7Group: "7A" | "7B") {
-  if (part === 1) return 80;
-  if (part === 2) return 85;
-  if (part === 3) return 90;
-  if (part === 4) return format === "historical" && part4Group === "4B" ? 105 : 97;
-  if (part === 5) return format === "historical" ? 113 : 105;
-  if (part === 6) return format === "historical" ? 120 : 112;
-  if (part === 7) return format === "saber11_2026" && part7Group === "7A" ? 117 : 125;
-  return 1;
+  return getQuestionRange(part, format, part4Group, part7Group).start;
 }
 function getPartGuidance(part: number, format: BookletFormat, part4Group: "4A" | "4B", part7Group: "7A" | "7B") {
   if (part === 4) return format === "saber11_2026"
-    ? "Un solo conjunto de texto cloze para la Parte 4, con ocho espacios (97–104)."
+    ? "Formato 2026: un solo conjunto de texto cloze, preguntas 97–104 (8 espacios)."
     : part4Group === "4A"
-      ? "Parte 4A: ocho espacios (97–104). La Parte 4B es un conjunto independiente del formato anterior."
-      : "Parte 4B del formato anterior: ocho espacios (105–112).";
+      ? "Formato histórico: Parte 4A, preguntas 97–104 (8 espacios). La Parte 4B es un conjunto independiente."
+      : "Formato histórico: Parte 4B, preguntas 105–112 (8 espacios).";
   if (part === 5) return format === "saber11_2026"
-    ? "Texto de lectura compartido y siete preguntas (105–111)."
-    : "Texto de lectura compartido y siete preguntas (113–119) del formato anterior.";
+    ? "Comprensión de lectura: preguntas 105–111 (7 preguntas)."
+    : "Formato histórico: comprensión de lectura, preguntas 113–119 (7 preguntas).";
   if (part === 6) return format === "saber11_2026"
-    ? "Texto de interés general y cinco preguntas inferenciales (112–116), con cuatro opciones A–D y sin ejemplo inicial."
-    : "Texto de interés general y cinco preguntas inferenciales (120–124), con cuatro opciones A–D y sin ejemplo inicial.";
+    ? "Comprensión inferencial: preguntas 112–116 (5 preguntas), con cuatro opciones A–D y sin ejemplo inicial."
+    : "Formato histórico: comprensión inferencial, preguntas 120–124 (5 preguntas), con cuatro opciones A–D y sin ejemplo inicial.";
   if (part === 7) {
-    const start = getQuestionStart(7, format, part4Group, part7Group);
-    const end = start + getQuestionCount(7, format, part7Group) - 1;
-    return `Texto cloze ${part7Group}: imagen con el ejemplo (0) y los espacios numerados ${start}–${end}. Cada espacio tiene opciones A–D.`;
+    const range = getQuestionRange(7, format, part4Group, part7Group);
+    const label = format === "historical" ? "7A (formato histórico)" : part7Group;
+    return `${label}: imagen con el ejemplo (0) y los espacios ${range.start}–${range.start + range.count - 1} (${range.count} preguntas). Cada espacio tiene opciones A–D.`;
   }
   return PARTS[part]?.guidance ?? "";
 }

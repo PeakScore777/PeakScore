@@ -1614,12 +1614,6 @@ function getQuestionMethodSignatures(item: GeneratedQuestion): string[] {
   );
   const signatures = new Set<string>();
 
-  const structure = normalizeForSimilarity(item.structure_type ?? "");
-  const skill = normalizeForSimilarity(item.skill ?? "");
-  if (structure.length >= 5 && skill.length >= 5) {
-    signatures.add(`metadata:${structure}::${skill}`);
-  }
-
   if (normalize(item.subject) === "matematicas") {
     const hasFixedCharge =
       /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|costo de inscripcion|coste de inscripcion|precio base)\b/.test(text);
@@ -8039,7 +8033,7 @@ export async function POST(
     const internalMessage =
       error instanceof Error ? error.message : "";
     const qualityExhausted =
-      /No fue posible completar las \d+ preguntas|No fue posible generar más preguntas nuevas|El plan de generación se agotó|La distribución de dificultad no coincide|preguntas y se esperaban|originalidad antes del INSERT/i.test(
+      /No fue posible completar las \d+ preguntas|No fue posible generar más preguntas nuevas|El plan de generación se agotó|La distribución de dificultad no coincide|preguntas y se esperaban|originalidad antes del INSERT|auditoría de variedad|método .* aparece .* veces/i.test(
         internalMessage
       );
 

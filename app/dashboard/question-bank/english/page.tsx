@@ -57,15 +57,47 @@ const PART_NAMES: Record<number, string> = {
 function isVisibleInProfile(set: EnglishSet, filter: FormatFilter): boolean {
   if (filter === "all") return true;
   if (filter === "custom_review") return set.booklet_format === "custom_review";
-  // Parts 1–3 are shared by both profiles and are displayed once.
-  if ([1, 2, 3].includes(set.part)) return true;
+  // Parts 1–3 are common to both booklet profiles and appear once.
+  if ([1, 2, 3].includes(set.part)) return set.booklet_format !== "custom_review";
+
   if (filter === "saber11_2026") return set.booklet_format === "saber11_2026";
-  // The current Part 4 is historical 4A; historical 4B remains a separate set.
-  // Parts 5 and 6 share content between profiles; only their numbering changes.
-  if ([4, 5, 6].includes(set.part)) return true;
+
+  // Historical profile reuses one Part 4 as 4A, adds its separate 4B,
+  // and reuses one copy of Parts 5/6 with the older printed numbering.
+  if ([4, 5, 6].includes(set.part)) {
+    return set.booklet_format === "saber11_2026" || set.booklet_format === "historical";
+  }
+
+  // Historical: one 7A (125–134). 2026: 7A (117–124) and 7B (125–134).
   return set.booklet_format === "historical";
 }
 
+function getBankQuestionNumber(
+  set: EnglishSet,
+  question: EnglishQuestion,
+  index: number,
+  filter: FormatFilter
+): number {
+  const position = question.english_position ?? index + 1;
+  if (set.booklet_format === "custom_review") {
+    return question.question_number ?? 114 + position;
+  }
+
+  const historicalView = filter === "historical" ||
+    (filter === "all" && set.booklet_format === "historical");
+  switch (set.part) {
+    case 1: return 79 + position;
+    case 2: return 84 + position;
+    case 3: return 89 + position;
+    case 4: return set.title.startsWith("4B") ? 104 + position : 96 + position;
+    case 5: return (historicalView ? 112 : 104) + position;
+    case 6: return (historicalView ? 119 : 111) + position;
+    case 7:
+      if (historicalView || set.title.startsWith("7B")) return 124 + position;
+      return 116 + position;
+    default: return question.question_number ?? position;
+  }
+}
 export default function EnglishQuestionBankPage() {
   const [sets, setSets] = useState<EnglishSet[]>([]);
   const [questionsBySet, setQuestionsBySet] = useState<Record<string, EnglishQuestion[]>>({});
@@ -280,11 +312,7 @@ export default function EnglishQuestionBankPage() {
                     <div className="space-y-0">
                       {qs.map((q, i) => {
                         const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                         const isSubpartB = /^7B\b/i.test(set.title);
-                         const position = q.english_position ?? i + 1;
-                         const number = set.booklet_format === "custom_review"
-                           ? q.question_number ?? 114 + position
-                           : (set.booklet_format === "historical" || isSubpartB ? 124 : 116) + position;
+                          const number = getBankQuestionNumber(set, q, i, formatFilter);
                         return <div key={q.id} className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-2 border-b border-slate-400 py-2 last:border-0">
                           <strong className="pt-0.5 text-[10px]">{number}.</strong>
                           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] leading-4 sm:grid-cols-4">
@@ -303,7 +331,7 @@ export default function EnglishQuestionBankPage() {
                           const q = qs[questionIndex];
                           if (!q) return null;
                           const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                          const number = ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical")) ? 119 : 111) + (q.english_position ?? questionIndex + 1);
+                          const number = getBankQuestionNumber(set, q, questionIndex, formatFilter);
                           return <div key={q.id} className="grid min-w-0 grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] items-start gap-2">
                             <p className="text-[10px] leading-[1.35]"><strong>{number}.</strong> {q.question}</p>
                             <div className="space-y-0.5">{opts.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text}</p>)}</div>
@@ -314,7 +342,7 @@ export default function EnglishQuestionBankPage() {
                     {qs[4] && (() => {
                       const q = qs[4];
                       const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                      const number = ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical")) ? 119 : 111) + (q.english_position ?? 5);
+                      const number = getBankQuestionNumber(set, q, 4, formatFilter);
                       return <article className="mt-2 border-t-2 border-slate-900 pt-2">
                         <p className="text-[11px] leading-4"><strong>{number}.</strong> {q.question}</p>
                         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -326,16 +354,7 @@ export default function EnglishQuestionBankPage() {
                     const opts = q.english_options?.length ? q.english_options : [
                       { key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d },
                     ].filter((o) => o.text?.trim());
-                    const partPosition = q.english_position ?? i + 1;
-                    const isSubpartB = /^(?:4B|7B)\b/i.test(set.title);
-                    const questionNumber = set.part === 1 ? 79 + partPosition
-                      : set.part === 2 ? 84 + partPosition
-                      : set.part === 3 ? 89 + partPosition
-                      : set.part === 4 ? (isSubpartB ? 104 : 96) + partPosition
-                      : set.part === 5 ? ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical")) ? 112 : 104) + partPosition
-                      : set.part === 6 ? ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical")) ? 119 : 111) + partPosition
-                      : set.part === 7 ? (set.booklet_format === "custom_review" ? 114 + partPosition : ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical") || isSubpartB) ? 124 : 116) + partPosition)
-                      : partPosition;
+                    const questionNumber = getBankQuestionNumber(set, q, i, formatFilter);
                     return <div key={q.id} className={`grid gap-2 border-b border-slate-300 last:border-0 ${set.part === 4 ? "grid-cols-[2rem_minmax(0,1fr)] items-center py-2" : set.part === 5 ? "grid-cols-[1.5rem_minmax(0,1fr)] py-2" : `pb-3 pt-2 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[2rem_minmax(0,1fr)]"} ${set.part === 3 ? "min-h-[72px] pb-3 pt-3" : ""}`}`}>
                       <strong className="pt-1 text-[11px]">{questionNumber}.</strong>
                       {set.part === 4 ? (

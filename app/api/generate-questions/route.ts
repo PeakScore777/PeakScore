@@ -1594,6 +1594,104 @@ function buildQuestionFingerprint(
   );
 }
 
+/**
+ * Rejects redundant wording when the entire long context is pasted again
+ * into the question field. Short natural references are left alone.
+ */
+function questionRepeatsFullContext(item: GeneratedQuestion): boolean {
+  const context = normalizeForSimilarity(item.context_text ?? "");
+  const question = normalizeForSimilarity(item.question ?? "");
+  return context.length >= 90 && question.includes(context);
+}
+
+/**
+ * High-confidence signatures of the underlying solution method.
+ * Changing a story or numbers does not make the same method a new question.
+ */
+function getQuestionMethodSignatures(item: GeneratedQuestion): string[] {
+  const text = normalizeForSimilarity(
+    `${item.context_text ?? ""} ${item.question ?? ""}`
+  );
+  const signatures = new Set<string>();
+
+  const structure = normalizeForSimilarity(item.structure_type ?? "");
+  const skill = normalizeForSimilarity(item.skill ?? "");
+  if (structure.length >= 5 && skill.length >= 5) {
+    signatures.add(`metadata:${structure}::${skill}`);
+  }
+
+  if (normalize(item.subject) === "matematicas") {
+    const hasFixedCharge =
+      /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|costo de inscripcion|coste de inscripcion|precio base)\b/.test(text);
+    const hasPerUnitCharge =
+      /\bpor cada\b|\bpor unidad\b|\bvalor adicional\b|\btasa por\b/.test(text);
+
+    if (hasFixedCharge && hasPerUnitCharge) {
+      signatures.add("matematicas:costo-fijo-mas-tasa-unitaria");
+    }
+
+    const hasSurface =
+      /\b(area|superficie)\b/.test(text) &&
+      /\b(pared|fachada|muro)\b/.test(text);
+    const hasOpening =
+      /\b(ventana|ventanas|puerta|puertas|abertura|aberturas)\b/.test(text);
+    const subtractsOpening =
+      /\b(excluyendo|restando|descontando|no sera pintada|no seran pintadas|no se pintara|no se pintaran|debe pintarse|debe pintar|pintar)\b/.test(text);
+
+    if (hasSurface && hasOpening && subtractsOpening) {
+      signatures.add("matematicas:area-rectangular-menos-aberturas");
+    }
+  }
+
+  return [...signatures];
+}
+
+function findRepeatedQuestionMethod(
+  candidate: GeneratedQuestion,
+  previousQuestions: GeneratedQuestion[],
+  totalRequested: number
+): { signature: string; count: number } | null {
+  const signatures = getQuestionMethodSignatures(candidate);
+  if (signatures.length === 0 || previousQuestions.length === 0) return null;
+
+  const maxPerMethod = totalRequested <= 10
+    ? 1
+    : Math.max(1, Math.ceil(totalRequested / 15));
+
+  for (const signature of signatures) {
+    const count = previousQuestions.filter((question) =>
+      getQuestionMethodSignatures(question).includes(signature)
+    ).length;
+
+    if (count >= maxPerMethod) return { signature, count };
+  }
+
+  return null;
+}
+
+function getBatchMethodDiversityIssues(
+  questions: GeneratedQuestion[],
+  totalRequested: number
+): string[] {
+  const issues: string[] = [];
+  const counts = new Map<string, number>();
+  const maxPerMethod = totalRequested <= 10
+    ? 1
+    : Math.max(1, Math.ceil(totalRequested / 15));
+
+  for (const question of questions) {
+    for (const signature of getQuestionMethodSignatures(question)) {
+      const count = (counts.get(signature) ?? 0) + 1;
+      counts.set(signature, count);
+      if (count > maxPerMethod) {
+        issues.push(`el método "${signature}" aparece ${count} veces (máximo ${maxPerMethod})`);
+      }
+    }
+  }
+
+  return [...new Set(issues)];
+}
+
 function cleanJson(text: string): string {
   let cleaned = text
     .replace(/^\uFEFF/, "")
@@ -4627,6 +4725,12 @@ function diagnoseQuestionValidation(
   const questionText =
     normalizeForSimilarity(item.question);
 
+  if (questionRepeatsFullContext(item)) {
+    failures.push(
+      "el enunciado repite casi literalmente todo el texto de contexto"
+    );
+  }
+
   const cognitiveOperationPatterns: Record<
     CognitiveOperation,
     RegExp[]
@@ -5860,8 +5964,22 @@ Evalúa conocimientos y habilidades de grado 11 mediante situaciones que exijan 
   - Evita ambigüedades, datos contradictorios, supuestos ocultos y
     información insuficiente.
   - El contexto debe aportar información útil para resolver la pregunta.
+  - Si el contexto está en context_text, no lo copies de nuevo en question:
+    question debe contener la tarea concreta que resolverá el estudiante.
   - Evita contenido decorativo o texto innecesariamente largo.
   - La pregunta debe evaluar razonamiento y no depender de pistas formales.
+
+  AUDITORÍA DE VARIEDAD DEL LOTE:
+
+  - Compara todas las preguntas entre sí antes de entregar el JSON.
+  - Cambiar nombres, cantidades, precios o escenarios no basta para hacer
+    que una pregunta sea metodológicamente distinta.
+  - En lotes de hasta 10 preguntas, evita repetir un mismo procedimiento.
+  - En Matemáticas, no generes dos ejercicios de costo fijo más tarifa por unidad
+    ni dos de área de pared/fachada restando ventanas o puertas en el mismo lote.
+  - Busca variedad real de habilidades, representaciones, decisiones y razonamientos,
+    manteniendo la materia, competencia y componente solicitados.
+  - Si detectas dos preguntas con el mismo método, reemplaza una antes de responder.
   - La respuesta correcta debe estar respaldada por el estímulo, los datos
     o el procedimiento planteado.
   - La explicación debe justificar por qué la respuesta correcta es correcta
@@ -6849,15 +6967,35 @@ async function generateBlock(
               return false;
             }
 
+            const previousInThisRequest = [
+              ...existingGeneratedQuestions,
+              ...acceptedQuestions,
+              ...similarityAcceptedQuestions,
+            ];
+
+            const repeatedMethod = findRepeatedQuestionMethod(
+              item,
+              previousInThisRequest,
+              totalRequested
+            );
+
+            if (repeatedMethod) {
+              console.warn(
+                "[PeakScore] Candidato rechazado por repetir el método de resolución.",
+                {
+                  signature: repeatedMethod.signature,
+                  existingCount: repeatedMethod.count,
+                  question: item.question?.slice(0, 180),
+                }
+              );
+              return false;
+            }
+
             const similarityResult =
               findSimilarQuestion(
                 item,
                 existingBankQuestions,
-                [
-                  ...existingGeneratedQuestions,
-                  ...acceptedQuestions,
-                  ...similarityAcceptedQuestions,
-                ]
+                previousInThisRequest
               );
 
             if (similarityResult.isDuplicate) {
@@ -7713,6 +7851,21 @@ export async function POST(
     /* =====================================================
        ÚLTIMA VERIFICACIÓN CONTRA EL BANCO
     ===================================================== */
+
+    const batchMethodIssues = getBatchMethodDiversityIssues(
+      generatedQuestions,
+      amount
+    );
+
+    if (batchMethodIssues.length > 0) {
+      console.error(
+        "[PeakScore] La auditoría final de variedad rechazó el lote:",
+        batchMethodIssues
+      );
+      throw new Error(
+        `El lote no superó la auditoría de variedad: ${batchMethodIssues.join("; ")}.`
+      );
+    }
 
     const latestBankQuestions =
       await getExistingQuestionsForSimilarity(

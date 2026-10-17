@@ -7667,11 +7667,24 @@ export async function POST(
         ? body.subject.trim()
         : "";
 
+    const sessionInput = body.session;
+    const amountInput = body.amount;
+
+    // Accept JSON numbers and non-empty numeric strings for compatibility
+    // with existing clients, but reject booleans, arrays, objects and null.
     const session =
-      Number(body.session);
+      (typeof sessionInput === "number" ||
+        (typeof sessionInput === "string" &&
+          sessionInput.trim() !== ""))
+        ? Number(sessionInput)
+        : Number.NaN;
 
     const amount =
-      Number(body.amount);
+      (typeof amountInput === "number" ||
+        (typeof amountInput === "string" &&
+          amountInput.trim() !== ""))
+        ? Number(amountInput)
+        : Number.NaN;
 
     const validDifficulties = [
       "Fácil",

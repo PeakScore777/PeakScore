@@ -5656,8 +5656,8 @@ No hay preguntas previas en este lote. Todas las candidatas deben ser diferentes
     .filter((_, index) => index % bankSampleStep === 0)
     .slice(-bankSampleSize)
     .map((item, index) => {
-      const question = String(item.question ?? "").replace(/\\s+/g, " ").trim();
-      const context = String(item.context_text ?? "").replace(/\\s+/g, " ").trim();
+      const question = String(item.question ?? "").replace(/\s+/g, " ").trim();
+      const context = String(item.context_text ?? "").replace(/\s+/g, " ").trim();
       return `${index + 1}. ${question.slice(0, 135)}${context ? ` | Contexto: ${context.slice(0, 60)}` : ""}`;
     });
 
@@ -6502,6 +6502,7 @@ async function generateBlock(
           profiles,
           [
             ...existingQuestions,
+            ...attemptedCandidateQuestions,
             ...acceptedQuestions.map(
               (question) => question.question
             ),
@@ -7882,8 +7883,16 @@ export async function POST(
     /*
      * Mensaje seguro para el frontend.
      */
-    const safeMessage =
-      getSafeAIErrorMessage(error);
+    const internalMessage =
+      error instanceof Error ? error.message : "";
+    const qualityExhausted =
+      /No fue posible completar las \d+ preguntas|No fue posible generar más preguntas nuevas|El plan de generación se agotó|La distribución de dificultad no coincide|preguntas y se esperaban|originalidad antes del INSERT/i.test(
+        internalMessage
+      );
+
+    const safeMessage = qualityExhausted
+      ? "No se logró completar un lote de preguntas nuevas y válidas. No se guardó el lote; inténtalo otra vez para generar variantes diferentes."
+      : getSafeAIErrorMessage(error);
 
     /*
      * =====================================================
@@ -7903,10 +7912,10 @@ export async function POST(
 
         error: safeMessage,
 
-        code: "AI_UNAVAILABLE",
+        code: qualityExhausted ? "GENERATION_QUALITY" : "AI_UNAVAILABLE",
       },
       {
-        status: 503,
+        status: qualityExhausted ? 422 : 503,
       }
     );
   }

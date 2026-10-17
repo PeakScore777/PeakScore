@@ -136,7 +136,7 @@ export default function EnglishQuestionBankPage() {
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {set.session}</p>
                       <h2 className="mt-1 text-xl font-black">{group ? `Parte ${group}` : `Parte ${displayPart}`} · {displayPartName}</h2>
-                      {set.part !== 6 && <p className="mt-1 text-sm text-slate-600">{set.title}</p>}
+                      {![6, 7].includes(set.part) && <p className="mt-1 text-sm text-slate-600">{set.title}</p>}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`rounded-full px-3 py-1 text-xs font-bold ${set.status === "approved" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>{set.status === "approved" ? "Aprobado" : set.status === "review" ? "En revisión" : set.status === "rejected" ? "Rechazado" : "Borrador"}</span>
@@ -196,7 +196,7 @@ export default function EnglishQuestionBankPage() {
                           </div>}
                           {[2, 3, 4, 5, 7].includes(set.part) && <div className="mt-2 inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={`Hoja de respuestas del ejemplo: ${set.example_answer ?? "sin respuesta marcada"}`}>
                             <span className="mr-1 font-semibold">0.</span>
-                            {["A", "B", "C"].map((key) => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${set.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
+                            {(set.part === 7 ? ["A", "B", "C", "D"] : ["A", "B", "C"]).map((key) => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${set.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
                           </div>}
                         </div>
                       </div>

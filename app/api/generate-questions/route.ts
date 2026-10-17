@@ -3359,11 +3359,11 @@ function isAnswerExplanationCoherent(
 
     const patterns = [
       new RegExp(
-        `\\bopcion\\s+${letter.toLowerCase()}\\b.*\\bcorrect`,
+        `\\bopcion\\s+${letter.toLowerCase()}\\s+(?:es|resulta)\\s+(?:la\\s+)?correcta\\b`,
         "i"
       ),
       new RegExp(
-        `\\brespuesta\\s+${letter.toLowerCase()}\\b.*\\bcorrect`,
+        `\\brespuesta\\s+${letter.toLowerCase()}\\s+(?:es|resulta)\\s+(?:la\\s+)?correcta\\b`,
         "i"
       ),
       new RegExp(
@@ -3371,7 +3371,6 @@ function isAnswerExplanationCoherent(
         "i"
       ),
     ];
-
     if (
       patterns.some((pattern) =>
         pattern.test(explanation)

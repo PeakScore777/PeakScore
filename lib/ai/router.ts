@@ -1449,44 +1449,36 @@ async function generateWithGroq(
             resetRequestsHeader
           );
 
-        const providerWaitMs = Math.min(
-          Math.max(
-            retryAfterMs ?? 0,
-            resetTokensMs ?? 0,
-            resetRequestsMs ?? 0,
-            3000
-          ),
-          15000
+        const providerWaitMs = Math.max(
+          retryAfterMs ?? 0,
+          resetTokensMs ?? 0,
+          resetRequestsMs ?? 0
         );
 
-        const jitterMs =
-          Math.floor(
-            Math.random() * 500
+        // Si el proveedor indica una espera larga, no quemamos tiempo/reintentos
+        // contra el mismo límite: generateAI activa inmediatamente el fallback.
+        if (providerWaitMs > 5000) {
+          console.warn(
+            `[PeakScore AI] Groq limitó la solicitud y requiere ${providerWaitMs}ms. Se activa el fallback sin esperar.`
           );
+          throw new AIServiceError("AI_UNAVAILABLE");
+        }
 
-        const waitMs =
-          providerWaitMs +
-          jitterMs;
+        const jitterMs = Math.floor(Math.random() * 300);
+        const waitMs = Math.max(providerWaitMs, 900) + jitterMs;
 
         if (attempt < MAX_RETRIES) {
           console.warn(
-            `[PeakScore AI] Groq devolvió 429. Esperando ${waitMs}ms según los headers de rate limit antes de reintentar.`
+            `[PeakScore AI] Groq devolvió 429. Reintento corto en ${waitMs}ms.`
           );
-
-          await sleep(
-            waitMs
-          );
-
+          await sleep(waitMs);
           continue;
         }
 
         console.warn(
-          "[PeakScore AI] Groq continúa limitado después del reintento. Se activa el fallback."
+          "[PeakScore AI] Groq continúa limitado. Se activa el fallback."
         );
-
-        throw new AIServiceError(
-          "AI_UNAVAILABLE"
-        );
+        throw new AIServiceError("AI_UNAVAILABLE");
       }
 
       /* =================================================

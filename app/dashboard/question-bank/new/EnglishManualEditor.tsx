@@ -20,10 +20,10 @@ const PARTS: Record<number, { name: string; count: number; guidance: string; cho
   1: { name: "Descripciones y banco de palabras", count: 5, guidance: "Relaciona cada descripción con una palabra del banco A–G. H es el ejemplo; sobran dos palabras.", choices: 0 },
   2: { name: "Avisos y lugares", count: 5, guidance: "Observa cada aviso y elige dónde puede encontrarse. Selecciona A, B o C.", choices: 3 },
   3: { name: "Completar conversaciones", count: 7, guidance: "Selecciona la respuesta que completa naturalmente la conversación.", choices: 3 },
-  4: { name: "Texto cloze", count: 8, guidance: "Texto cloze compartido con ocho espacios numerados y tres opciones A–C por espacio.", choices: 3 },
+  4: { name: "Completar espacios", count: 8, guidance: "Conjunto de ocho espacios numerados y tres opciones A–C por espacio.", choices: 3 },
   5: { name: "Comprensión de lectura", count: 7, guidance: "Texto de lectura compartido y preguntas de comprensión.", choices: 3 },
   6: { name: "Comprensión inferencial", count: 5, guidance: "Texto de interés general y cinco preguntas inferenciales sobre la intención del autor, ideas generales y detalles relevantes. Cuatro opciones (A–D), sin ejemplo inicial. Nivel de referencia Saber 11: B1.", choices: 4 },
-  7: { name: "Texto cloze", count: 10, guidance: "Texto cloze compartido: subparte y numeración dependen del perfil de cuadernillo seleccionado. Cada espacio tiene cuatro opciones A–D.", choices: 4 },
+  7: { name: "Completar espacios", count: 10, guidance: "La numeración depende del formato de cuadernillo seleccionado. Cada espacio tiene cuatro opciones A–D.", choices: 4 },
 };
 type BookletFormat = "saber11_2026" | "historical";
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -89,8 +89,8 @@ function getPartGuidance(part: number, format: BookletFormat, part4Group: "4A" |
     : "Formato histórico: comprensión de lectura, preguntas 120–124 (5 preguntas), cuatro opciones A–D, sin ejemplo inicial.";
   if (part === 7) {
     const range = getQuestionRange(7, format, part4Group, part7Group);
-    const label = format === "historical" ? "7A histórica" : part7Group;
-    return `${label}: imagen con el ejemplo (0) y los espacios ${range.start}–${range.start + range.count - 1} (${range.count} preguntas). Cada espacio tiene opciones A–D.`;
+    const label = format === "historical" ? "Parte 7" : `Parte ${part7Group}`;
+    return `${label}: imagen con la pregunta 0 y los espacios ${range.start}–${range.start + range.count - 1} (${range.count} preguntas). Cada espacio tiene opciones A–D.`;
   }
   return PARTS[part]?.guidance ?? "";
 }
@@ -454,7 +454,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <label className="text-sm font-semibold md:col-span-2">Formato de cuadernillo
               <select value={bookletFormat} onChange={e => changeBookletFormat(e.target.value as BookletFormat)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">
                 <option value="saber11_2026">Saber 11 · 2026 Calendario A: 55 preguntas; Partes 7A y 7B</option>
-                <option value="historical">Formato histórico de referencia: 55 preguntas; 4A/4B y una sola Parte 7A</option>
+                <option value="historical">Formato histórico de referencia: 55 preguntas; 4A/4B y una sola Parte 7</option>
               </select>
             </label>
             {(needsFormatReview || confirmFormatReview) && <div className="md:col-span-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
@@ -464,7 +464,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             </div>}
             <label className="text-sm font-semibold">Parte del examen<select value={part} onChange={e => changePart(Number(e.target.value))} disabled={Boolean(editSetId)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100">{Object.entries(PARTS).map(([key, value]) => <option key={key} value={key}>Parte {key} · {value.name} ({Number(key) === 3 ? (bookletFormat === "saber11_2026" ? 5 : 7) : Number(key) === 7 ? 10 : value.count})</option>)}</select></label>
             {part === 4 && bookletFormat === "historical" && <label className="text-sm font-semibold">Subparte<select value={part4Group} onChange={e => setPart4Group(e.target.value as "4A" | "4B")} className="mt-2 w-full rounded-xl border p-3"><option value="4A">Parte 4A · Preguntas 97–104</option><option value="4B">Parte 4B · Preguntas 105–112</option></select></label>}
-            {part === 7 && <label className="text-sm font-semibold">Subparte<select value={part7Group} disabled={bookletFormat === "historical"} onChange={e => changePart7Group(e.target.value as "7A" | "7B")} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="7A">{bookletFormat === "historical" ? "Parte 7A · Preguntas 125–134 (10)" : "Parte 7A · Preguntas 115–124 (10)"}</option>{bookletFormat === "saber11_2026" && <option value="7B">Parte 7B · Preguntas 125–134 (10)</option>}</select></label>}
+            {part === 7 && <label className="text-sm font-semibold">Subparte<select value={part7Group} disabled={bookletFormat === "historical"} onChange={e => changePart7Group(e.target.value as "7A" | "7B")} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="7A">{bookletFormat === "historical" ? "Parte 7 · Preguntas 125–134 (10)" : "Parte 7A · Preguntas 115–124 (10)"}</option>{bookletFormat === "saber11_2026" && <option value="7B">Parte 7B · Preguntas 125–134 (10)</option>}</select></label>}
             <label className="text-sm font-semibold">Sesión ICFES<select value={session} onChange={e => setSession(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="1">Sesión 1</option><option value="2">Sesión 2</option></select></label>
             <label className="text-sm font-semibold">Dificultad del conjunto<select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="Fácil">Fácil</option><option value="Media">Media</option><option value="Difícil">Difícil</option></select></label>
             <label className="text-sm font-semibold md:col-span-2">Nombre del conjunto<input value={title} onChange={e => setTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400" placeholder={part === 4 ? `Ej. ${part4Group} — conjunto 01` : `Ej. Parte ${part} — conjunto 01`}/></label>
@@ -497,7 +497,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
               <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen del texto no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setError("La imagen del texto debe ser PNG, JPG o WEBP."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900"/>
                <span className="mt-1 block text-xs font-normal text-slate-500">Sube una sola imagen con el ejemplo (0) y los espacios {getQuestionStart(part, bookletFormat, part4Group, part7Group)}–{getQuestionStart(part, bookletFormat, part4Group, part7Group) + getQuestionCount(part, bookletFormat, part7Group) - 1}. El ejemplo se completa abajo con opciones A–D; no necesita imagen aparte. PNG, JPG o WEBP · máximo 8 MB.</span>
             </label>
-            {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen del pasaje guardada actualmente.</p><img src={existingSharedImageUrl} alt={`Texto cloze guardado de la Parte ${part7Group}`} className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
+            {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen del pasaje guardada actualmente.</p><img src={existingSharedImageUrl} alt={`Imagen guardada de la Parte ${bookletFormat === "historical" ? "7" : part7Group}`} className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt={`Vista previa del texto cloze de la Parte ${part7Group}`} className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
           </div>}
           {part !== 1 && part !== 4 && part !== 6 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
@@ -526,7 +526,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           </header>
           <div className="p-6">
             <div className="mb-6 rounded-md border border-slate-300 p-4">
-              <p className="mb-3 text-center text-xs font-black uppercase tracking-widest text-slate-700">Ejemplo</p>
+              
               <div className="grid gap-5 md:grid-cols-[1fr_0.9fr]">
                 <p className="text-sm leading-6 text-slate-800"><strong>0.</strong> {examplePrompt.trim() || "Aquí aparecerá el enunciado de ejemplo."}</p>
                 <div className="flex flex-wrap items-center gap-2"><strong className="mr-1 text-xs">Respuesta 0.</strong>{LETTERS.map(key => <span key={key} className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs font-bold ${key === exampleAnswer ? "border-slate-950 bg-slate-950 text-white ring-2 ring-slate-300" : "border-slate-300 text-slate-600"}`}>{key}</span>)}</div>
@@ -610,7 +610,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         {part === 7 && <section className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
           <header className="border-b border-slate-300 px-5 py-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {session}</p>
-            <h2 className="mt-1 text-base font-extrabold text-slate-950">Parte {part7Group} · Texto cloze</h2>
+            <h2 className="mt-1 text-base font-extrabold text-slate-950">{bookletFormat === "historical" ? "Parte 7" : `Parte ${part7Group}`}</h2>
             <p className="mt-1 text-xs leading-5 text-slate-700">{instructions.trim() || "Lee el texto y selecciona la palabra adecuada para completar cada espacio. Marca A, B, C o D en tu hoja de respuestas."}</p>
           </header>
           <div className="p-4">
@@ -618,7 +618,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
               {(sharedImageFile || existingSharedImageUrl) ? <img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt={`Vista previa del pasaje de la Parte ${part7Group}`} className="h-auto max-h-[520px] max-w-full object-contain"/> : <p className="py-10 text-center text-sm text-slate-400">Sube la imagen del pasaje con el ejemplo 0 y los {getQuestionCount(part, bookletFormat, part7Group)} espacios numerados.</p>}
             </div>
             <div className="border-b-2 border-slate-900 pb-3">
-              <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
+              
               <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-3 text-[11px] leading-4">
                 <strong>0.</strong>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">

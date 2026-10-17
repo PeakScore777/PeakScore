@@ -448,23 +448,17 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <article className="mb-3 border-2 border-slate-900 px-3 py-3 sm:px-4">
               <p className="whitespace-pre-wrap font-serif text-[10px] leading-[1.35] text-slate-900">{sharedText.trim() || "Aquí aparecerá el texto de lectura."}</p>
             </article>
-            <div className="grid grid-cols-1 gap-x-5 gap-y-2 md:grid-cols-2">
-              <div className="space-y-2">
-                {questions.slice(0, 2).map((question, index) => <article key={question.id ?? index} className="border-b border-slate-300 pb-2">
-                  <div className="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-2">
-                    <p className="text-[10px] leading-[1.35]"><strong>{120 + index}.</strong> {question.prompt || "Pregunta de comprensión inferencial…"}</p>
+            <div className="space-y-0">
+              {[[0, 2], [1, 3]].map((pair, rowIndex) => <div key={rowIndex} className="grid grid-cols-1 gap-x-6 gap-y-2 border-b border-slate-400 py-2 md:grid-cols-2">
+                {pair.map(questionIndex => {
+                  const question = questions[questionIndex];
+                  if (!question) return null;
+                  return <div key={question.id ?? questionIndex} className="grid min-w-0 grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] items-start gap-2">
+                    <p className="text-[10px] leading-[1.35]"><strong>{120 + questionIndex}.</strong> {question.prompt || "Pregunta de comprensión inferencial…"}</p>
                     <div className="space-y-0.5">{question.options.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
-                  </div>
-                </article>)}
-              </div>
-              <div className="space-y-2">
-                {questions.slice(2, 4).map((question, index) => <article key={question.id ?? index + 2} className="border-b border-slate-300 pb-2">
-                  <div className="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-2">
-                    <p className="text-[10px] leading-[1.35]"><strong>{122 + index}.</strong> {question.prompt || "Pregunta de comprensión inferencial…"}</p>
-                    <div className="space-y-0.5">{question.options.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
-                  </div>
-                </article>)}
-              </div>
+                  </div>;
+                })}
+              </div>)}
               {questions[4] && <article className="border-t-2 border-slate-900 pt-2 md:col-span-2">
                 <p className="text-[11px] leading-4"><strong>124.</strong> {questions[4].prompt || "Pregunta inferencial con opciones de respuesta extensas…"}</p>
                 <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">

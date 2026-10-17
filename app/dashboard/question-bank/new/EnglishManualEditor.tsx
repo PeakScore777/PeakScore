@@ -20,10 +20,10 @@ const PARTS: Record<number, { name: string; count: number; guidance: string; cho
   1: { name: "Descripciones y banco de palabras", count: 5, guidance: "Relaciona cada descripción con una palabra del banco A–G. H es el ejemplo; sobran dos palabras.", choices: 0 },
   2: { name: "Avisos y lugares", count: 5, guidance: "Observa cada aviso y elige dónde puede encontrarse. Selecciona A, B o C.", choices: 3 },
   3: { name: "Completar conversaciones", count: 7, guidance: "Selecciona la respuesta que completa naturalmente la conversación.", choices: 3 },
-  4: { name: "Texto cloze (4A o 4B)", count: 8, guidance: "Debes crear dos conjuntos independientes: Parte 4A (preguntas 97–104) y Parte 4B (105–112), cada uno con su propio texto.", choices: 3 },
+  4: { name: "Texto cloze", count: 8, guidance: "Texto cloze compartido con ocho espacios numerados y tres opciones A–C por espacio.", choices: 3 },
   5: { name: "Comprensión de lectura", count: 7, guidance: "Texto de lectura compartido y preguntas de comprensión.", choices: 3 },
   6: { name: "Comprensión inferencial", count: 5, guidance: "Texto de interés general y cinco preguntas inferenciales sobre la intención del autor, ideas generales y detalles relevantes. Cuatro opciones (A–D), sin ejemplo inicial. Nivel de referencia Saber 11: B1.", choices: 4 },
-  7: { name: "Texto cloze (7A o 7B)", count: 10, guidance: "Subparte 7A: preguntas 115–124; subparte 7B: 125–134. Sube una imagen del pasaje con los espacios (0) y numerados. El ejemplo 0 se completa en los campos del generador; cada espacio puntuable tiene cuatro opciones A–D.", choices: 4 },
+  7: { name: "Texto cloze", count: 10, guidance: "Texto cloze compartido: subparte y numeración dependen del perfil de cuadernillo seleccionado. Cada espacio tiene cuatro opciones A–D.", choices: 4 },
 };
 type BookletFormat = "saber11_2026" | "historical";
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -445,7 +445,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <label className="block text-sm font-semibold">Respuesta del ejemplo<select value={exampleAnswer} onChange={e => setExampleAnswer(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3">{exampleOptions.map(option => <option key={option.key} value={option.key}>{option.key}</option>)}</select></label>
             <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del texto compartido (obligatoria)</span>
               <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen no puede superar 8 MB."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" />
-              <span className="mt-1 block text-xs font-normal text-slate-500">Sube una sola imagen con el ejemplo (0) y los ocho espacios numerados (97–104 o 105–112). PNG, JPG o WEBP · máximo 8 MB. Las ocho preguntas y sus opciones se ingresan por separado.</span>
+               <span className="mt-1 block text-xs font-normal text-slate-500">Sube una sola imagen con el ejemplo (0) y los espacios {getQuestionStart(part, bookletFormat, part4Group, part7Group)}–{getQuestionStart(part, bookletFormat, part4Group, part7Group) + getQuestionCount(part, bookletFormat, part7Group) - 1}. En el formato 2026 solo existe el conjunto único de la Parte 4; la subparte 4B se ofrece únicamente en el perfil histórico. PNG, JPG o WEBP · máximo 8 MB.</span>
             </label>
             {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-white p-3"><p className="mb-2 text-xs font-medium text-slate-600">Imagen guardada actualmente. Se conservará si no seleccionas otra.</p><img src={existingSharedImageUrl} alt="Imagen actual del texto compartido de la Parte 4" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-white p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa del texto compartido de la Parte 4" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
@@ -582,7 +582,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           </header>
           <div className="p-4">
             <div className="mb-3 flex justify-center">
-              {(sharedImageFile || existingSharedImageUrl) ? <img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt={`Vista previa del pasaje de la Parte ${part7Group}`} className="h-auto max-h-[520px] max-w-full object-contain"/> : <p className="py-10 text-center text-sm text-slate-400">Sube la imagen del pasaje con el ejemplo 0 y los diez espacios.</p>}
+              {(sharedImageFile || existingSharedImageUrl) ? <img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt={`Vista previa del pasaje de la Parte ${part7Group}`} className="h-auto max-h-[520px] max-w-full object-contain"/> : <p className="py-10 text-center text-sm text-slate-400">Sube la imagen del pasaje con el ejemplo 0 y los {getQuestionCount(part, bookletFormat, part7Group)} espacios numerados.</p>}
             </div>
             <div className="border-b-2 border-slate-900 pb-3">
               <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>

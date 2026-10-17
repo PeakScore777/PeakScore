@@ -175,7 +175,7 @@ export default function EnglishQuestionBankPage() {
             const displayPart = isWordBankSet ? 1 : set.part;
             const displayPartName = isWordBankSet ? "Descripciones y banco de palabras" : (PART_NAMES[displayPart] ?? "Inglés");
             const displayFormatLabel = formatFilter === "historical"
-              ? "Formato histórico · contenido compartido"
+              ? set.booklet_format === "historical" ? "Formato histórico" : "Formato histórico · contenido compartido"
               : formatFilter === "saber11_2026"
                 ? "Formato Saber 11 · 2026"
                 : set.booklet_format === "historical"

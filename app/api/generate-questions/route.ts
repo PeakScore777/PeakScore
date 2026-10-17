@@ -1646,7 +1646,7 @@ function getQuestionMethodSignatures(item: GeneratedQuestion): string[] {
 
   if (normalize(item.subject) === "matematicas") {
     const hasFixedCharge =
-      /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|costo de inscripcion|coste de inscripcion|precio base)\b/.test(text);
+      /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota(?:\s+[a-z]+){0,2}\s+fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|costo de inscripcion|coste de inscripcion|precio base)\b/.test(text);
     const hasPerUnitCharge =
       /\bpor cada\b|\bpor unidad\b|\bvalor adicional\b|\btasa por\b/.test(text);
 
@@ -1659,7 +1659,7 @@ function getQuestionMethodSignatures(item: GeneratedQuestion): string[] {
       /\b(pared|fachada|muro|piso|suelo|habitacion|terreno|techo|salon|jardin|oficina)\b/.test(text) &&
       /\b(rectangular|rectangulo|pared|fachada|muro|piso|suelo|habitacion|terreno|techo|salon|jardin)\b/.test(text);
     const hasOccupiedArea =
-      /\b(ventana|ventanas|puerta|puertas|abertura|aberturas|pilar|pilares|columna|columnas|obstaculo|obstaculos)\b/.test(text);
+      /\b(ventana|ventanas|puerta|puertas|abertura|aberturas|pilar|pilares|columna|columnas|obstaculo|obstaculos|ducto|ductos|ventilacion|lampara|lamparas|luminaria|luminarias|tuberia|tuberias|canalizacion|conducto|conductos)\b/.test(text);
     const subtractsOccupiedArea =
       /\b(excluyendo|restando|descontando|descontar|restar|se debe descontar|no se instalara|no se pintara|no seran pintadas|no sera pintada|ocupa|ocupada|ocupado)\b/.test(text);
 
@@ -2496,11 +2496,11 @@ function validateLinearCostModel(item: GeneratedQuestion): boolean {
   if (normalize(item.subject) !== "matematicas") return true;
 
   const source = String(item.context_text ?? "") + " " + String(item.question ?? "");
-  const fixedPhrase = /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|inscripci[oó]n)\b/i;
+  const fixedPhrase = /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota(?:\s+[a-z]+){0,2}\s+fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|inscripci[oó]n)\b/i;
   const unitPhrase = /\bpor cada\b|\bpor unidad\b/i;
   if (!fixedPhrase.test(source) || !unitPhrase.test(source)) return true;
 
-  const fixedMatch = source.match(/\b(?:tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|inscripci[oó]n)\b[\s\S]{0,45}?(\$?\s*\d{1,3}(?:\.\d{3})+(?:,\d+)?|\$?\s*\d+(?:,\d+)?)/i);
+  const fixedMatch = source.match(/\b(?:tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota(?:\s+[a-z]+){0,2}\s+fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|inscripci[oó]n)\b[\s\S]{0,45}?(\$?\s*\d{1,3}(?:\.\d{3})+(?:,\d+)?|\$?\s*\d+(?:,\d+)?)/i);
   if (!fixedMatch?.[1]) return true;
 
   const expectedFixed = parseSpanishNumber(fixedMatch[1]);
@@ -4925,6 +4925,25 @@ function diagnoseQuestionValidation(
   const questionText =
     normalizeForSimilarity(item.question);
 
+  const mathTextToCheck = [
+    item.question,
+    item.option_a,
+    item.option_b,
+    item.option_c,
+    item.option_d,
+  ].filter((value): value is string => typeof value === "string").join("\n");
+  const unsupportedInlineMathDelimiter =
+    /\$[A-Za-z][A-Za-z0-9_]*(?:\([^$\n]{0,30}\))?\$/;
+
+  if (
+    normalize(item.subject) === "matematicas" &&
+    unsupportedInlineMathDelimiter.test(mathTextToCheck)
+  ) {
+    failures.push(
+      "la notación matemática usa delimitadores $...$ que el banco muestra como texto literal; usa notación plana como C(n) = 15.000 + 2.000n"
+    );
+  }
+
   if (questionRepeatsFullContext(item)) {
     failures.push(
       "el enunciado repite casi literalmente todo el texto de contexto"
@@ -4941,10 +4960,14 @@ function diagnoseQuestionValidation(
   const hasHigherOrderReasoning =
     /\b(compara|comparar|comprobacion|justifica|justificar|argumenta|argumentar|evalua|evaluar|valida|validar|infiere|inferir|deduce|deducir|interpreta|interpretar|concluye|concluir|decide|decision|estrategia|cual afirmacion|cual procedimiento|mejor explicacion|por que es valida)\b/.test(questionText);
 
+  const hasCompoundGeometry =
+    /\b(triangular|triangulo|triangulos|base|altura|seccion superior|dos secciones|combinar areas|suma de areas)\b/.test(questionText);
+
   if (
     normalizeDifficulty(item.difficulty) === "Difícil" &&
     methodSignatures.includes("matematicas:area-rectangular-menos-areas-ocupadas") &&
-    !hasHigherOrderReasoning
+    !hasHigherOrderReasoning &&
+    !hasCompoundGeometry
   ) {
     failures.push(
       "la dificultad Difícil no está justificada: el ítem solo requiere calcular un área rectangular y restar áreas ocupadas"
@@ -6231,6 +6254,16 @@ Evalúa conocimientos y habilidades de grado 11 mediante situaciones que exijan 
   - Los distractores deben representar errores de razonamiento plausibles,
     no afirmaciones aritméticas obviamente falsas (por ejemplo, decir que 50
     es menor que 40). Evita opciones descartables sin resolver el concepto.
+  - En problemas de proporciones por categorías, comprueba que cada porcentaje
+    use el denominador de su propio grupo. Construye distractores a partir de
+    errores típicos: comparar cantidades absolutas en vez de tasas, usar el total
+    general como denominador, invertir una comparación o confundir subconjuntos.
+    Cada distractor debe ser internamente coherente y plausible, sin inventar
+    porcentajes que contradigan directamente los datos.
+  - En preguntas de Matemáticas, escribe fórmulas con notación de texto plano
+    compatible con el banco (por ejemplo, C(n) = 15.000 + 2.000n). No rodees
+    variables o fórmulas con delimitadores $...$ ni uses delimitadores LaTeX
+    si la interfaz los presenta literalmente.
   - Comprueba que los datos que describen categorías, subgrupos y totales sean
     compatibles entre sí; los subtotales deben sumar los totales declarados.
   - No introduzcas errores conceptuales, matemáticos, científicos,

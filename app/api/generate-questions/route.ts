@@ -1661,7 +1661,7 @@ function getQuestionMethodSignatures(item: GeneratedQuestion): string[] {
     const hasOccupiedArea =
       /\b(ventana|ventanas|puerta|puertas|abertura|aberturas|pilar|pilares|columna|columnas|obstaculo|obstaculos|ducto|ductos|ventilacion|lampara|lamparas|luminaria|luminarias|tuberia|tuberias|canalizacion|conducto|conductos)\b/.test(text);
     const subtractsOccupiedArea =
-      /\b(excluyendo|restando|descontando|descontar|restar|se debe descontar|no se instalara|no se pintara|no seran pintadas|no sera pintada|ocupa|ocupada|ocupado)\b/.test(text);
+      /\b(excluyendo|restando|descontando|descontar|restar|se debe descontar|no se instalara|no se pintara|no seran pintadas|no sera pintada|no se colocara|no se cubrira|no tendra revestimiento|sin revestimiento|sin cubrir|no recibe revestimiento|ocupa|ocupada|ocupado)\b/.test(text);
 
     if (
       hasAreaTerm &&
@@ -4962,12 +4962,15 @@ function diagnoseQuestionValidation(
 
   const hasCompoundGeometry =
     /\b(triangular|triangulo|triangulos|base|altura|seccion superior|dos secciones|combinar areas|suma de areas)\b/.test(questionText);
+  const isDirectAreaAggregation =
+    /\b(superficie total|area total|cuantos metros cuadrados|cuanta superficie)\b/.test(questionText) &&
+    /\b(descontar|descuento|restar|restando|excluir|superficie total)\b/.test(questionText);
 
   if (
     normalizeDifficulty(item.difficulty) === "Difícil" &&
     methodSignatures.includes("matematicas:area-rectangular-menos-areas-ocupadas") &&
     !hasHigherOrderReasoning &&
-    !hasCompoundGeometry
+    (!hasCompoundGeometry || isDirectAreaAggregation)
   ) {
     failures.push(
       "la dificultad Difícil no está justificada: el ítem solo requiere calcular un área rectangular y restar áreas ocupadas"
@@ -5852,9 +5855,10 @@ function buildPrompt(
   decisiones de razonamiento no inmediatas. Puede exigir inferir, comparar,
   analizar, evaluar o justificar una conclusión.
   No etiquetes como difícil una tarea rutinaria solo porque contiene varias
-  operaciones mecánicas: calcular el área de un rectángulo y restar una o dos
-  superficies sencillas suele corresponder a Fácil o Media, salvo que la pregunta
-  exija una decisión, inferencia o estrategia adicional.
+  operaciones mecánicas: calcular el área de un rectángulo (o sumar un rectángulo
+  y un triángulo sencillos) y restar áreas ocupadas suele corresponder a Fácil
+  o Media, salvo que la pregunta exija una decisión, inferencia o estrategia
+  adicional.
   Debe seguir siendo completamente resoluble con los datos proporcionados.
 
   REGLAS:

@@ -21,6 +21,7 @@ import {
   buildIndependentReviewPrompt,
   chooseTaskFamily,
   parseIndependentReviewResponse,
+  getSubjectQualityRules,
   type QualityPlanSlot,
 } from "@/lib/ai/question-quality";
 
@@ -5801,6 +5802,7 @@ function buildPrompt(
   existingBankQuestions: ExistingQuestionForSimilarity[] = []
 ): string {
   const normalizedSubject = normalize(subject);
+  const subjectQualityRules = getSubjectQualityRules(subject);
 
   /* =========================================================
      DIFICULTAD
@@ -6744,6 +6746,7 @@ Si alguna condición falla, descarta la pregunta y genera otra.
      ========================================================= */
   console.log("[PeakScore] 📊 Tamaño de secciones del prompt:", {
     difficultyRule: difficultyRule.length,
+    subjectQualityRules: subjectQualityRules.length,
     generationPlan: JSON.stringify(compactGenerationPlan).length,
     referenceSection: referenceSection.length,
     excludedSection: excludedSection.length,
@@ -6767,6 +6770,8 @@ Materia: ${subject}
 Sesión: ${session}
 
 ${blueprint}
+
+${subjectQualityRules}
 
 ${calibration}
 

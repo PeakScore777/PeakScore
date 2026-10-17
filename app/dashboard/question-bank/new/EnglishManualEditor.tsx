@@ -441,10 +441,10 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         {part === 6 && <section className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
           <header className="border-b border-slate-300 px-6 py-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {session}</p>
-            <h2 className="mt-1 text-lg font-extrabold text-slate-950">{title.trim() || "Parte 6 · Comprensión inferencial"}</h2>
+            <h2 className="mt-1 text-lg font-extrabold text-slate-950">Parte 6 · Comprensión de lectura</h2>
             <p className="mt-2 text-sm leading-6 text-slate-700">{instructions.trim() || PARTS[6].guidance}</p>
           </header>
-          <div className="p-5 sm:p-7">
+          <div className="p-3 sm:p-4">
             <article className="mb-3 border-2 border-slate-900 px-3 py-3 sm:px-4">
               <p className="whitespace-pre-wrap font-serif text-[10px] leading-[1.35] text-slate-900">{sharedText.trim() || "Aquí aparecerá el texto de lectura."}</p>
             </article>
@@ -457,22 +457,22 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
                   </div>
                 </article>)}
               </div>
-              <div className="space-y-4">
-                {questions.slice(2, 4).map((question, index) => <article key={question.id ?? index + 2} className="border-b border-slate-300 pb-3">
-                  <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-3">
+              <div className="space-y-2">
+                {questions.slice(2, 4).map((question, index) => <article key={question.id ?? index + 2} className="border-b border-slate-300 pb-2">
+                  <div className="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-2">
                     <p className="text-[10px] leading-[1.35]"><strong>{122 + index}.</strong> {question.prompt || "Pregunta de comprensión inferencial…"}</p>
-                    <div className="space-y-1">{question.options.map(option => <p key={option.key} className="text-[11px] leading-4"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
+                    <div className="space-y-0.5">{question.options.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
                   </div>
                 </article>)}
               </div>
-              {questions[4] && <article className="border-t-2 border-slate-900 pt-4 md:col-span-2">
-                <p className="text-sm leading-6"><strong>124.</strong> {questions[4].prompt || "Pregunta inferencial con opciones de respuesta extensas…"}</p>
+              {questions[4] && <article className="border-t-2 border-slate-900 pt-2 md:col-span-2">
+                <p className="text-[11px] leading-4"><strong>124.</strong> {questions[4].prompt || "Pregunta inferencial con opciones de respuesta extensas…"}</p>
                 <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {questions[4].options.map(option => <div key={option.key} className="min-h-12 border border-slate-500 px-2 py-2 text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text || "Texto de opción extensa…"}</div>)}
                 </div>
               </article>}
             </div>
-            <p className="mt-4 border-t border-slate-300 pt-3 text-[10px] text-slate-500">PeakScore · Vista previa del cuadernillo. Las respuestas correctas no se muestran.</p>
+            <p className="mt-3 border-t border-slate-300 pt-2 text-[9px] text-slate-500">PeakScore · Vista previa del cuadernillo. Las respuestas correctas no se muestran.</p>
           </div>
         </section>}
         <section className="space-y-5">

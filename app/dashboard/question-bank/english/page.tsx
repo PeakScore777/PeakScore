@@ -8,6 +8,57 @@ import { supabase } from "@/lib/supabase/browser";
 type Word = { key: string; text: string; example?: boolean; example_description?: string; example_answer?: string };
 type Option = { key: string; text: string };
 type FormatFilter = "saber11_2026" | "historical" | "custom_review" | "all";
+type PartFilter = "all" | "1" | "2" | "3" | "4" | "4A" | "4B" | "5" | "6" | "7" | "7A" | "7B";
+type PartFilterOption = { value: PartFilter; label: string };
+
+const PART_FILTER_OPTIONS: Record<FormatFilter, PartFilterOption[]> = {
+  saber11_2026: [
+    { value: "all", label: "Todas las partes" },
+    { value: "1", label: "Parte 1 · Descripciones y palabras" },
+    { value: "2", label: "Parte 2 · Avisos y lugares" },
+    { value: "3", label: "Parte 3 · Conversaciones" },
+    { value: "4", label: "Parte 4 · Completar espacios" },
+    { value: "5", label: "Parte 5 · Comprensión de lectura" },
+    { value: "6", label: "Parte 6 · Comprensión de lectura" },
+    { value: "7A", label: "Parte 7A · Preguntas 115–124" },
+    { value: "7B", label: "Parte 7B · Preguntas 125–134" },
+  ],
+  historical: [
+    { value: "all", label: "Todas las partes" },
+    { value: "1", label: "Parte 1 · Descripciones y palabras" },
+    { value: "2", label: "Parte 2 · Avisos y lugares" },
+    { value: "3", label: "Parte 3 · Conversaciones" },
+    { value: "4A", label: "Parte 4A · Preguntas 97–104" },
+    { value: "4B", label: "Parte 4B · Preguntas 105–112" },
+    { value: "5", label: "Parte 5 · Comprensión de lectura" },
+    { value: "6", label: "Parte 6 · Comprensión de lectura" },
+    { value: "7", label: "Parte 7 · Preguntas 125–134" },
+  ],
+  custom_review: [
+    { value: "all", label: "Todas las partes" },
+    { value: "1", label: "Parte 1" },
+    { value: "2", label: "Parte 2" },
+    { value: "3", label: "Parte 3" },
+    { value: "4", label: "Parte 4" },
+    { value: "5", label: "Parte 5" },
+    { value: "6", label: "Parte 6" },
+    { value: "7", label: "Parte 7" },
+  ],
+  all: [
+    { value: "all", label: "Todas las partes" },
+    { value: "1", label: "Parte 1 · Descripciones y palabras" },
+    { value: "2", label: "Parte 2 · Avisos y lugares" },
+    { value: "3", label: "Parte 3 · Conversaciones" },
+    { value: "4", label: "Parte 4 · Perfil 2026" },
+    { value: "4A", label: "Parte 4A · Perfil histórico" },
+    { value: "4B", label: "Parte 4B · Perfil histórico" },
+    { value: "5", label: "Parte 5 · Comprensión de lectura" },
+    { value: "6", label: "Parte 6 · Comprensión de lectura" },
+    { value: "7", label: "Parte 7 · Perfil histórico" },
+    { value: "7A", label: "Parte 7A · Perfil 2026" },
+    { value: "7B", label: "Parte 7B · Perfil 2026" },
+  ],
+};
 type EnglishSet = {
   id: string;
   part: number;
@@ -74,6 +125,27 @@ function isVisibleInProfile(set: EnglishSet, filter: FormatFilter): boolean {
   return set.booklet_format === "historical";
 }
 
+function getSetPartKey(set: EnglishSet, filter: FormatFilter): PartFilter {
+  if (set.part <= 3) return String(set.part) as PartFilter;
+
+  if (set.part === 4) {
+    if (set.title.startsWith("4B")) return "4B";
+    if (filter === "historical" || (filter === "all" && set.booklet_format === "historical")) return "4A";
+    return "4";
+  }
+
+  if (set.part === 5) return "5";
+  if (set.part === 6) return "6";
+
+  if (set.part === 7) {
+    if (filter === "historical" || filter === "custom_review" ||
+      (filter === "all" && set.booklet_format === "historical")) return "7";
+    return set.title.startsWith("7B") ? "7B" : "7A";
+  }
+
+  return "all";
+}
+
 function getBankQuestionNumber(
   set: EnglishSet,
   question: EnglishQuestion,
@@ -108,6 +180,7 @@ export default function EnglishQuestionBankPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [formatFilter, setFormatFilter] = useState<FormatFilter>("saber11_2026");
+  const [partFilter, setPartFilter] = useState<PartFilter>("all");
 
   useEffect(() => {
     let alive = true;
@@ -154,7 +227,10 @@ export default function EnglishQuestionBankPage() {
     return () => { alive = false; };
   }, []);
 
-  const visibleSets = sets.filter(set => isVisibleInProfile(set, formatFilter));
+  const visibleSets = sets.filter(set =>
+    isVisibleInProfile(set, formatFilter) &&
+    (partFilter === "all" || getSetPartKey(set, formatFilter) === partFilter)
+  );
   const countSetQuestions = (set: EnglishSet, filter: FormatFilter) => {
     const total = questionsBySet[set.id]?.length ?? 0;
     return set.part === 3 && filter === "saber11_2026" ? Math.min(total, 5) : total;
@@ -189,23 +265,29 @@ export default function EnglishQuestionBankPage() {
           <p className="mt-1"><strong>Formato histórico de referencia:</strong> 55 preguntas. Partes 1 (80–84), 2 (85–89), 3 (90–96), 4A (97–104), 4B (105–112), 5 (113–119), 6 (120–124) y una sola 7A (125–134).</p>
           <p className="mt-1 text-amber-800">Los borradores de perfiles distintos no se suman para calcular un simulacro. Los conjuntos marcados «Revisión requerida» deben corregirse antes de utilizarlos.</p>
         </section>
-        <section className="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-xl border border-slate-300 bg-white p-4">
-          <label className="block min-w-[240px] flex-1 text-sm font-semibold">Mostrar conjuntos de
-            <select value={formatFilter} onChange={e => setFormatFilter(e.target.value as FormatFilter)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">
+        <section className="mb-6 grid gap-4 rounded-xl border border-slate-300 bg-white p-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+          <label className="block min-w-0 text-sm font-semibold">Mostrar conjuntos de
+            <select value={formatFilter} onChange={e => { setFormatFilter(e.target.value as FormatFilter); setPartFilter("all"); }} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">
               <option value="saber11_2026">Saber 11 · 2026</option>
               <option value="historical">Formato histórico</option>
               <option value="custom_review">Revisión requerida</option>
               <option value="all">Todos los formatos (no sumar como un solo examen)</option>
             </select>
           </label>
-          <div className="text-sm text-slate-700">
-            <p className="font-bold">{visibleQuestionCount} preguntas en {visibleSets.length} conjunto(s) mostrados</p>
-            <p className="mt-1 text-xs text-slate-500">2026: {current2026Count}/55 disponibles · Histórico: {historicalCount}/55 disponibles · Revisión: {reviewCount} aisladas</p>
+          <label className="block min-w-0 text-sm font-semibold">Filtrar por parte
+            <select value={partFilter} onChange={e => setPartFilter(e.target.value as PartFilter)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">
+              {PART_FILTER_OPTIONS[formatFilter].map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </label>
+          <div className="text-sm text-slate-700 md:min-w-[190px]">
+            <p className="font-bold">{visibleQuestionCount} preguntas</p>
+            <p className="mt-1 text-xs text-slate-500">{visibleSets.length} conjunto(s) mostrado(s)</p>
+            <p className="mt-1 text-xs text-slate-500">2026: {current2026Count}/55 · Histórico: {historicalCount}/55</p>
           </div>
         </section>
         {formatFilter === "saber11_2026" && current2026Count < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El perfil 2026 todavía no completa las 55 preguntas: faltan {55 - current2026Count}. Las partes comunes se cuentan una sola vez, la Parte 3 usa 90–94 y la 7A debe usar 115–124.</p>}
         {formatFilter === "historical" && historicalCount < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El perfil histórico todavía no completa las 55 preguntas: faltan {55 - historicalCount}. Hace falta una Parte 7A histórica propia, con diez espacios numerados del 125 al 134. No reutilices la 7A de 2026 como si fuera histórica porque su rango es 115–124.</p>}
-        {!loading && visibleSets.length === 0 && sets.length > 0 && !error && <p className="mb-6 rounded-xl border border-slate-300 bg-white p-6 text-sm text-slate-600">No hay conjuntos guardados con la etiqueta de este formato todavía.</p>}
+        {!loading && visibleSets.length === 0 && sets.length > 0 && !error && <p className="mb-6 rounded-xl border border-slate-300 bg-white p-6 text-sm text-slate-600">No hay conjuntos para este filtro. Selecciona «Todas las partes» o cambia el formato de cuadernillo.</p>}
         {loading && <div className="flex items-center justify-center rounded-2xl bg-white p-12 text-slate-500"><Loader2 className="mr-3 animate-spin" /> Cargando conjuntos...</div>}
         {!loading && error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
         {!loading && !error && sets.length === 0 && <div className="rounded-2xl bg-white p-10 text-center shadow-sm"><h2 className="text-xl font-bold">Todavía no hay conjuntos de Inglés</h2><p className="mt-2 text-slate-600">Crea un conjunto para que aparezca aquí como una página del cuadernillo.</p></div>}

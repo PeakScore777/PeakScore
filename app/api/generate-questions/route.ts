@@ -2376,7 +2376,7 @@ function parseSimpleLinearOption(
     .replace(/[×·]/g, "*")
     .replace(/\*/g, "")
     .replace(/\s+/g, "")
-    .replace(/[$]/g, "");
+    .replace(/\$/g, "");
 
   if (!expression || /[^0-9a-z.,+-]/i.test(expression)) return null;
 
@@ -2399,7 +2399,6 @@ function parseSimpleLinearOption(
 
     const numericText = body.replace(new RegExp(variable, "ig"), "");
     const coefficient = numericText ? parseSpanishNumber(numericText) : 1;
-
     if (coefficient === null) return null;
 
     if (hasVariable) slope += sign * coefficient;
@@ -2410,33 +2409,31 @@ function parseSimpleLinearOption(
 }
 
 /**
- * Independently checks the correct option for the common model
- * total cost = fixed charge + unit rate * quantity.
- * If the prompt or option format is ambiguous, it deliberately abstains.
+ * Independently checks a clearly identifiable fixed-charge plus per-unit model.
+ * If the statement or options cannot be interpreted unambiguously, abstains.
  */
 function validateLinearCostModel(item: GeneratedQuestion): boolean {
   if (normalize(item.subject) !== "matematicas") return true;
 
-  const source = \`\${item.context_text ?? ""} \${item.question ?? ""}\`;
-  const fixedPhrase = /\\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|inscripci[oó]n)\\b/i;
-  const unitPhrase = /\\bpor cada\\b|\\bpor unidad\\b/i;
-
+  const source = String(item.context_text ?? "") + " " + String(item.question ?? "");
+  const fixedPhrase = /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|inscripci[oó]n)\b/i;
+  const unitPhrase = /\bpor cada\b|\bpor unidad\b/i;
   if (!fixedPhrase.test(source) || !unitPhrase.test(source)) return true;
 
-  const amountPattern = /\\$?\\s*(\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?|\\d+(?:,\\d+)?)/g;
-  const fixedMatch = source.match(/\\b(?:tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|inscripci[oó]n)\\b[\\s\\S]{0,45}?(\\$?\\s*\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?|\\$?\\s*\\d+(?:,\\d+)?)/i);
-
+  const fixedMatch = source.match(/\b(?:tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|inscripci[oó]n)\b[\s\S]{0,45}?(\$?\s*\d{1,3}(?:\.\d{3})+(?:,\d+)?|\$?\s*\d+(?:,\d+)?)/i);
   if (!fixedMatch?.[1]) return true;
+
   const expectedFixed = parseSpanishNumber(fixedMatch[1]);
   if (expectedFixed === null) return true;
 
   const unitIndex = source.search(unitPhrase);
   if (unitIndex < 0) return true;
+
   const unitPrefix = source.slice(Math.max(0, unitIndex - 110), unitIndex);
+  const amountPattern = /\$?\s*(\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:,\d+)?)/g;
   const unitAmounts = [...unitPrefix.matchAll(amountPattern)];
   const lastUnitAmount = unitAmounts[unitAmounts.length - 1]?.[1];
   const expectedRate = lastUnitAmount ? parseSpanishNumber(lastUnitAmount) : null;
-
   if (expectedRate === null) return true;
 
   const options: Record<Answer, string> = {
@@ -2446,13 +2443,14 @@ function validateLinearCostModel(item: GeneratedQuestion): boolean {
     D: item.option_d ?? "",
   };
 
-  // Infer the single variable from RHS expressions, not from the left-hand C.
+  // Identify the variable only on the right side of each equation.
   const variables = new Set<string>();
   for (const option of Object.values(options)) {
     const equalsIndex = option.indexOf("=");
     if (equalsIndex < 0) return true;
-    const rhs = option.slice(equalsIndex + 1).replace(/\\s+/g, "");
-    const matches = rhs.match(/(?<=\\d)[a-z]\\b|\\b[a-z]\\b/gi) ?? [];
+
+    const rhs = option.slice(equalsIndex + 1).replace(/\s+/g, "");
+    const matches = rhs.match(/(?<=\d)[a-z]\b|\b[a-z]\b/gi) ?? [];
     for (const value of matches) variables.add(value.toLowerCase());
   }
 
@@ -2464,8 +2462,8 @@ function validateLinearCostModel(item: GeneratedQuestion): boolean {
       expression: parseSimpleLinearOption(option, variable),
     }));
 
-  // Do not apply this specialized check to prose or formulas it cannot parse.
-  if (parsedOptions.some((item) => item.expression === null)) return true;
+  // Abstain if any option contains a format this small parser cannot verify.
+  if (parsedOptions.some((entry) => entry.expression === null)) return true;
 
   const matchingOptions = parsedOptions.filter(({ expression }) =>
     expression !== null &&

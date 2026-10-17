@@ -6567,18 +6567,10 @@ async function generateBlock(
         );
       });
       
-      const planBaseCursor =
-        planAssignmentCursor;
-
-      let lastContiguousCandidateIndex =
-        -1;
       
       const valid =
         generated.filter(
-          (
-            item: GeneratedQuestion,
-            generatedIndex
-          ) => {
+          (item: GeneratedQuestion) => {
             if (acceptedQuestions.length >= amount) {
               return false;
             }
@@ -6600,8 +6592,9 @@ async function generateBlock(
               return false;
             }
 
-            const candidatePlanIndex =
-              planBaseCursor + generatedIndex;
+            // Solo consume el siguiente slot cuando una candidata
+            // supera todas las validaciones.
+            const candidatePlanIndex = planAssignmentCursor;
 
             const plannedDifficulty =
               generationPlan[
@@ -6849,19 +6842,6 @@ async function generateBlock(
               return false;
             }
 
-            if (
-              generatedIndex !==
-              lastContiguousCandidateIndex + 1
-            ) {
-              console.warn(
-                `[PeakScore] ⚠️ Candidato ${generatedIndex + 1} fue validado para el slot ${candidatePlanIndex + 1}, pero no se consumirá porque existe un slot anterior pendiente.`
-              );
-
-              return false;
-            }
-
-            lastContiguousCandidateIndex =
-              generatedIndex;
             
             similarityAcceptedQuestions.push(item);
             unique.add(key);

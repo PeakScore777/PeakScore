@@ -11,6 +11,7 @@ type EnglishSet = {
   id: string;
   part: number;
   title: string;
+  booklet_format: "saber11_2026" | "historical" | "custom_review";
   shared_text: string | null;
   shared_title: string | null;
   shared_image_url: string | null;
@@ -36,6 +37,7 @@ type EnglishQuestion = {
   image_url: string | null;
   english_part: number | null;
   english_position: number | null;
+  question_number: number | null;
   english_options: Option[] | null;
   component: string | null;
   difficulty: string | null;
@@ -64,7 +66,7 @@ export default function EnglishQuestionBankPage() {
       setError("");
       const { data: setData, error: setLoadSetsError } = await supabase
         .from("english_question_sets")
-        .select("id,part,title,shared_title,shared_text,shared_image_url,instructions,example_prompt,example_options,example_answer,example_image_url,word_bank,status,session,created_at")
+        .select("id,part,title,booklet_format,shared_title,shared_text,shared_image_url,instructions,example_prompt,example_options,example_answer,example_image_url,word_bank,status,session,created_at")
         .order("part", { ascending: true })
         .order("created_at", { ascending: false });
       if (setLoadSetsError) {
@@ -78,7 +80,7 @@ export default function EnglishQuestionBankPage() {
       }
       const { data: questionData, error: questionError } = await supabase
         .from("questions")
-        .select("id,question,option_a,option_b,option_c,option_d,correct_answer,explanation,image_url,english_part,english_position,english_options,component,difficulty,english_set_id")
+        .select("id,question,option_a,option_b,option_c,option_d,correct_answer,explanation,image_url,english_part,english_position,question_number,english_options,component,difficulty,english_set_id")
         .in("english_set_id", allSets.map((item) => item.id))
         .order("english_position", { ascending: true });
       if (questionError) {
@@ -143,6 +145,9 @@ export default function EnglishQuestionBankPage() {
                       <Link href={`/dashboard/question-bank/english/new?id=${set.id}`} title="Editar página completa" aria-label={`Editar página completa: ${set.title}`} className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50"><Pencil size={16}/></Link>
                     </div>
                   </div>
+                  {set.booklet_format === "custom_review" && <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">Revisión requerida: este texto tiene 10 espacios numerados 115–124 y no corresponde a un formato completo 2026 ni al histórico. No incluir en simulacros hasta corregirlo.</div>}
+                  {set.booklet_format === "historical" && <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Formato histórico · 55 preguntas por cuadernillo</p>}
+                  {set.booklet_format === "saber11_2026" && <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Formato Saber 11 · 2026</p>}
                   {set.instructions && <p className="mt-5 text-sm font-medium leading-6 text-slate-700">{set.instructions}</p>}
                 </div>
                 <div className={set.part === 6 ? "px-4 py-4 sm:px-5 sm:py-5" : "px-6 py-6 sm:px-10 sm:py-8"}>
@@ -219,7 +224,11 @@ export default function EnglishQuestionBankPage() {
                     <div className="space-y-0">
                       {qs.map((q, i) => {
                         const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                        const number = (/^7B\b/i.test(set.title) ? 124 : 114) + (q.english_position ?? i + 1);
+                         const isSubpartB = /^7B\\b/i.test(set.title);
+                         const position = q.english_position ?? i + 1;
+                         const number = set.booklet_format === "custom_review"
+                           ? q.question_number ?? 114 + position
+                           : (set.booklet_format === "historical" || isSubpartB ? 124 : 116) + position;
                         return <div key={q.id} className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-2 border-b border-slate-400 py-2 last:border-0">
                           <strong className="pt-0.5 text-[10px]">{number}.</strong>
                           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] leading-4 sm:grid-cols-4">
@@ -238,7 +247,7 @@ export default function EnglishQuestionBankPage() {
                           const q = qs[questionIndex];
                           if (!q) return null;
                           const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                          const number = 119 + (q.english_position ?? questionIndex + 1);
+                          const number = (set.booklet_format === "historical" ? 119 : 111) + (q.english_position ?? questionIndex + 1);
                           return <div key={q.id} className="grid min-w-0 grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] items-start gap-2">
                             <p className="text-[10px] leading-[1.35]"><strong>{number}.</strong> {q.question}</p>
                             <div className="space-y-0.5">{opts.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text}</p>)}</div>
@@ -249,7 +258,7 @@ export default function EnglishQuestionBankPage() {
                     {qs[4] && (() => {
                       const q = qs[4];
                       const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                      const number = 119 + (q.english_position ?? 5);
+                      const number = (set.booklet_format === "historical" ? 119 : 111) + (q.english_position ?? 5);
                       return <article className="mt-2 border-t-2 border-slate-900 pt-2">
                         <p className="text-[11px] leading-4"><strong>{number}.</strong> {q.question}</p>
                         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -267,9 +276,9 @@ export default function EnglishQuestionBankPage() {
                       : set.part === 2 ? 84 + partPosition
                       : set.part === 3 ? 89 + partPosition
                       : set.part === 4 ? (isSubpartB ? 104 : 96) + partPosition
-                      : set.part === 5 ? 112 + partPosition
-                      : set.part === 6 ? 119 + partPosition
-                      : set.part === 7 ? (isSubpartB ? 124 : 114) + partPosition
+                      : set.part === 5 ? (set.booklet_format === "historical" ? 112 : 104) + partPosition
+                      : set.part === 6 ? (set.booklet_format === "historical" ? 119 : 111) + partPosition
+                      : set.part === 7 ? (set.booklet_format === "custom_review" ? 114 + partPosition : (set.booklet_format === "historical" || isSubpartB ? 124 : 116) + partPosition)
                       : partPosition;
                     return <div key={q.id} className={`grid gap-2 border-b border-slate-300 last:border-0 ${set.part === 4 ? "grid-cols-[2rem_minmax(0,1fr)] items-center py-2" : set.part === 5 ? "grid-cols-[1.5rem_minmax(0,1fr)] py-2" : `pb-3 pt-2 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[2rem_minmax(0,1fr)]"} ${set.part === 3 ? "min-h-[72px] pb-3 pt-3" : ""}`}`}>
                       <strong className="pt-1 text-[11px]">{questionNumber}.</strong>

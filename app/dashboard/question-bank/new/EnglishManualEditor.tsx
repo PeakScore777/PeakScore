@@ -23,7 +23,7 @@ const PARTS: Record<number, { name: string; count: number; guidance: string; cho
   4: { name: "Texto cloze (4A o 4B)", count: 8, guidance: "Debes crear dos conjuntos independientes: Parte 4A (preguntas 97–104) y Parte 4B (105–112), cada uno con su propio texto.", choices: 3 },
   5: { name: "Comprensión de lectura", count: 7, guidance: "Texto de lectura compartido y preguntas de comprensión.", choices: 3 },
   6: { name: "Comprensión inferencial", count: 5, guidance: "Texto de interés general y cinco preguntas inferenciales sobre la intención del autor, ideas generales y detalles relevantes. Cuatro opciones (A–D), sin ejemplo inicial. Nivel de referencia Saber 11: B1.", choices: 4 },
-  7: { name: "Texto cloze (7A o 7B)", count: 5, guidance: "Texto compartido con espacios numerados y cuatro opciones por espacio. Crea 7A y 7B como conjuntos separados.", choices: 4 },
+  7: { name: "Texto cloze (7A o 7B)", count: 10, guidance: "Subparte 7A: preguntas 115–124; subparte 7B: 125–134. Sube una imagen del pasaje con los espacios (0) y numerados. El ejemplo 0 se completa en los campos del generador; cada espacio puntuable tiene cuatro opciones A–D.", choices: 4 },
 };
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const makeQuestion = (part: number): DraftQuestion => ({
@@ -161,7 +161,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     }));
   }
   function addQuestion() {
-    const maxQuestions = part === 1 ? 5 : [4, 5, 6].includes(part) ? PARTS[part].count : 30;
+    const maxQuestions = part === 1 ? 5 : [4, 5, 6, 7].includes(part) ? PARTS[part].count : 30;
     if (questions.length >= maxQuestions) return;
     setQuestions(current => [...current, makeQuestion(part)]);
   }
@@ -171,7 +171,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 4 && questions.length !== PARTS[4].count) return setError(`La Parte ${part4Group} debe tener exactamente ${PARTS[4].count} preguntas.`);
     if (part === 5 && questions.length !== PARTS[5].count) return setError("La Parte 5 debe tener exactamente 7 preguntas (113–119).");
     if (part === 6 && questions.length !== PARTS[6].count) return setError("La Parte 6 debe tener exactamente 5 preguntas (120–124).");
-    if (part !== 4 && questions.some(q => !q.prompt.trim())) return setError("Completa el enunciado de todas las preguntas.");
+    if (part === 7 && questions.length !== PARTS[7].count) return setError(`La Parte ${part7Group} debe tener exactamente 10 preguntas (${part7Group === "7A" ? "115–124" : "125–134"}).`);
+    if (![4, 7].includes(part) && questions.some(q => !q.prompt.trim())) return setError("Completa el enunciado de todas las preguntas.");
     if (part === 1 && wordBank.length !== 8) return setError("La Parte 1 necesita exactamente ocho palabras, de A a H.");
     if (part === 1 && !examplePrompt.trim()) return setError("Escribe el enunciado de ejemplo, como en el cuadernillo ICFES.");
     if (part === 3 && !exampleImageFile) return setError("Sube la imagen del ejemplo de conversación (Nova y Zyra, por ejemplo).");
@@ -183,7 +184,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 4 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen del texto compartido de la Parte 4.");
     if (part === 4 && questions.some(q => !q.explanation.trim())) return setError("Escribe una explicación en español para cada espacio de la Parte 4.");
     if (part === 5 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen completa del texto de lectura de la Parte 5.");
-    if ([6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
+    if (part === 7 && !sharedImageFile && !existingSharedImageUrl) return setError(`Sube la imagen del texto de la Parte ${part7Group}, con el ejemplo (0) y los diez espacios numerados.`);
+    if (part === 6 && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (part !== 1 && q.options.some(o => !o.text.trim())) return setError(`Completa todas las opciones de la pregunta ${i + 1}.`);
@@ -199,9 +201,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       if (profile?.role !== "admin" && profile?.email?.toLowerCase() !== "aragonyostynsena07@gmail.com") {
         throw new Error("Solo el administrador autorizado puede crear conjuntos de Inglés.");
       }
-      let uploadedExampleImageUrl: string | null = existingExampleImageUrl || null;
+      let uploadedExampleImageUrl: string | null = part === 7 ? null : existingExampleImageUrl || null;
       let uploadedSharedImageUrl: string | null = existingSharedImageUrl || null;
-      if (part !== 1 && exampleImageFile) {
+      if (part !== 1 && part !== 7 && exampleImageFile) {
         if (exampleImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del ejemplo supera el máximo de 8 MB.");
         if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(exampleImageFile.type)) throw new Error("La imagen del ejemplo debe ser PNG, JPG, WEBP o GIF.");
         const safeExampleName = exampleImageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -210,7 +212,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         if (exampleUploadError) throw new Error(`No se pudo subir la imagen del ejemplo: ${exampleUploadError.message}`);
         uploadedExampleImageUrl = supabase.storage.from("question-images").getPublicUrl(examplePath).data.publicUrl;
       }
-      if ([4, 5].includes(part) && sharedImageFile) {
+      if ([4, 5, 7].includes(part) && sharedImageFile) {
         if (sharedImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del texto supera el máximo de 8 MB.");
         if (!["image/png", "image/jpeg", "image/webp"].includes(sharedImageFile.type)) throw new Error("La imagen del texto debe ser PNG, JPG o WEBP.");
         const safeSharedName = sharedImageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -222,13 +224,13 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       const setPayload = {
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
         shared_title: null,
-        shared_text: part === 5 ? null : sharedText.trim() || null,
+        shared_text: [5, 7].includes(part) ? null : sharedText.trim() || null,
         shared_image_url: part === 6 ? null : uploadedSharedImageUrl,
-        instructions: (instructions.trim() || PARTS[part].guidance),
+        instructions: instructions.trim() || (part === 7 ? part7Group === "7A" ? "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 115–124, marque A, B, C o D en su hoja de respuestas." : "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 125–134, marque A, B, C o D en su hoja de respuestas." : PARTS[part].guidance),
         example_prompt: part === 1 || part === 3 || part === 4 || part === 6 ? null : examplePrompt.trim() || null,
         example_options: part === 1 || part === 3 || part === 6 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
         example_answer: part === 1 || part === 3 || part === 6 ? null : exampleAnswer,
-        example_image_url: part === 5 || part === 6 ? null : uploadedExampleImageUrl,
+        example_image_url: [5, 6, 7].includes(part) ? null : uploadedExampleImageUrl,
         word_bank: part === 1 ? wordBank.map((text, index) => ({ key: LETTERS[index], text, example: LETTERS[index] === exampleAnswer, ...(LETTERS[index] === exampleAnswer ? { example_description: examplePrompt.trim(), example_answer: exampleAnswer } : {}) })) : null,
         status: editSetId ? existingSetStatus : "draft",
       };
@@ -259,11 +261,11 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         return {
           subject: "Inglés", subject_id: null, session: Number(session),
           component: `Parte ${part === 4 ? part4Group : part === 7 ? part7Group : part} · ${PARTS[part].name}`, competence: null, difficulty,
-          context_text: part === 4 ? null : sharedText.trim() || null, question: part === 4 ? `Completa el espacio ${(part4Group === "4A" ? 97 : 105) + index} del texto compartido.` : q.prompt.trim(),
+          context_text: [4, 7].includes(part) ? null : sharedText.trim() || null, question: part === 4 ? `Completa el espacio ${(part4Group === "4A" ? 97 : 105) + index} del texto compartido.` : part === 7 ? `Completa el espacio ${(part7Group === "7A" ? 115 : 125) + index} del texto compartido.` : q.prompt.trim(),
           option_a: optionMap.A ?? "N/A", option_b: optionMap.B ?? "N/A", option_c: optionMap.C ?? "N/A", option_d: optionMap.D ?? "N/A",
           correct_answer: q.answer, explanation: q.explanation.trim() || null,
           image_url: uploadedImageUrls[index], year: null, source: "PeakScore · creación manual",
-          question_number: part === 4 ? (part4Group === "4A" ? 97 : 105) + index : part === 6 ? 120 + index : null, is_active: editSetId ? q.isActive ?? false : false, requires_visual: Boolean(uploadedImageUrls[index]),
+          question_number: part === 4 ? (part4Group === "4A" ? 97 : 105) + index : part === 6 ? 120 + index : part === 7 ? (part7Group === "7A" ? 115 : 125) + index : null, is_active: editSetId ? q.isActive ?? false : false, requires_visual: Boolean(uploadedImageUrls[index]),
           visual_type: null, visual_description: null, visual_data: null, chart_data: null,
           english_part: part, english_set_id: setRow.id, english_position: index + 1,
           english_options: options,
@@ -361,10 +363,18 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen completa guardada actualmente.</p><img src={existingSharedImageUrl} alt="Imagen completa del texto de lectura" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa del texto completo de lectura" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
           </div>}
-          {[6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">{part === 6 ? "Texto de lectura compartido" : "Texto compartido"}<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={part === 6 ? 7 : 8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 6 ? "Pega aquí el texto original de interés general. Las preguntas evaluarán inferencias sobre el texto." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
+          {part === 6 && <label className="mt-5 block text-sm font-semibold">Texto de lectura compartido<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={7} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder="Pega aquí el texto original de interés general. Las preguntas evaluarán inferencias sobre el texto." /></label>}
+          {part === 7 && <div className="mt-5 space-y-3 rounded-xl border border-slate-300 bg-white p-4">
+            <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del texto cloze — Parte {part7Group} (obligatoria)</span>
+              <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen del texto no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setError("La imagen del texto debe ser PNG, JPG o WEBP."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900"/>
+              <span className="mt-1 block text-xs font-normal text-slate-500">Sube una sola imagen del pasaje original que incluya el espacio (0) y los diez espacios numerados ({part7Group === "7A" ? "115–124" : "125–134"}). El ejemplo se completa abajo con sus opciones A–D; no necesita imagen aparte. PNG, JPG o WEBP · máximo 8 MB.</span>
+            </label>
+            {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen del pasaje guardada actualmente.</p><img src={existingSharedImageUrl} alt={`Texto cloze guardado de la Parte ${part7Group}`} className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
+            {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt={`Vista previa del texto cloze de la Parte ${part7Group}`} className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
+          </div>}
           {part !== 1 && part !== 4 && part !== 6 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
             <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo.</p></div>
-            {part !== 5 && <>
+            {![5, 7].includes(part) && <>
               <label className="block text-sm font-semibold">Imagen del ejemplo (opcional)
                 <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setExampleImageFile(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" />
                 <span className="mt-1 block text-xs font-normal text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</span>
@@ -469,12 +479,46 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <p className="mt-3 border-t border-slate-300 pt-2 text-[9px] text-slate-500">PeakScore · Vista previa del cuadernillo. Las respuestas correctas no se muestran.</p>
           </div>
         </section>}
+        {part === 7 && <section className="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+          <header className="border-b border-slate-300 px-5 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {session}</p>
+            <h2 className="mt-1 text-base font-extrabold text-slate-950">Parte {part7Group} · Texto cloze</h2>
+            <p className="mt-1 text-xs leading-5 text-slate-700">{instructions.trim() || (part7Group === "7A" ? "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 115–124, marque A, B, C o D en su hoja de respuestas." : "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 125–134, marque A, B, C o D en su hoja de respuestas.")}</p>
+          </header>
+          <div className="p-4">
+            <div className="mb-3 flex justify-center">
+              {(sharedImageFile || existingSharedImageUrl) ? <img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt={`Vista previa del pasaje de la Parte ${part7Group}`} className="h-auto max-h-[520px] max-w-full object-contain"/> : <p className="py-10 text-center text-sm text-slate-400">Sube la imagen del pasaje con el ejemplo 0 y los diez espacios.</p>}
+            </div>
+            <div className="border-b-2 border-slate-900 pb-3">
+              <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
+              <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-3 text-[11px] leading-4">
+                <strong>0.</strong>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <div>
+                    <p>{examplePrompt.trim() || "Aquí aparece el enunciado del ejemplo 0."}</p>
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-4">{exampleOptions.map(option => <p key={option.key}><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
+                  </div>
+                  <div className="inline-flex h-fit items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none">
+                    <strong className="mr-1">Respuesta 0.</strong>
+                    {["A","B","C","D"].map(key => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${exampleAnswer === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-1">
+              {questions.map((question, index) => <div key={question.id ?? index} className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-2 border-b border-slate-300 py-2 last:border-0">
+                <strong className="pt-0.5 text-[10px]">{(part7Group === "7A" ? 115 : 125) + index}.</strong>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] leading-4 sm:grid-cols-4">{question.options.map(option => <p key={option.key}><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
+              </div>)}
+            </div>
+          </div>
+        </section>}
         <section className="space-y-5">
-          <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Preguntas del conjunto</h2><p className="text-sm text-slate-600">{questions.length} pregunta(s) · {part === 1 ? "máximo 5 según el formato ICFES" : part === 4 ? "exactamente 8 por subparte" : part === 5 ? "exactamente 7 (113–119)" : part === 6 ? "exactamente 5 (120–124)" : "máximo 30"}</p></div><button type="button" onClick={addQuestion} disabled={questions.length >= (part === 1 ? 5 : [4, 5, 6].includes(part) ? PARTS[part].count : 30)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-40"><Plus size={18}/> Añadir pregunta</button></div>
+          <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Preguntas del conjunto</h2><p className="text-sm text-slate-600">{questions.length} pregunta(s) · {part === 1 ? "máximo 5 según el formato ICFES" : part === 4 ? "exactamente 8 por subparte" : part === 5 ? "exactamente 7 (113–119)" : part === 6 ? "exactamente 5 (120–124)" : part === 7 ? `exactamente 10 (${part7Group === "7A" ? "115–124" : "125–134"})` : "máximo 30"}</p></div><button type="button" onClick={addQuestion} disabled={questions.length >= (part === 1 ? 5 : [4, 5, 6, 7].includes(part) ? PARTS[part].count : 30)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-40"><Plus size={18}/> Añadir pregunta</button></div>
           {questions.map((q, i) => <article key={i} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm md:p-7">
             <div className="flex items-center justify-between"><h3 className="font-bold">Pregunta {i + 1}</h3>{questions.length > 1 && <button type="button" onClick={() => setQuestions(current => current.filter((_, index) => index !== i))} className="inline-flex items-center gap-1 text-sm text-red-700"><Trash2 size={16}/> Eliminar</button>}</div>
             {part === 2 && <div className="space-y-3"><label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del aviso (desde tu carpeta)</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen no puede superar 8 MB."); e.currentTarget.value = ""; return; } setError(""); patchQuestion(i, { imageFile: file, imageUrl: file ? URL.createObjectURL(file) : "" }); }} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-700" /></label>{q.imageUrl && <div className="rounded-xl border bg-slate-50 p-3"><img src={q.imageUrl} alt={`Vista previa de imagen de pregunta ${i + 1}`} className="max-h-64 max-w-full rounded-lg object-contain" /><button type="button" onClick={() => patchQuestion(i, { imageFile: null, imageUrl: "" })} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen</button></div>}<p className="text-xs text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</p></div>}
-            {part === 4 ? <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 text-sm"><strong>Espacio {(part4Group === "4A" ? 97 : 105) + i}.</strong> El número se asigna automáticamente según la subparte. El texto compartido se carga una sola vez como imagen.</div> : <label className="block text-sm font-semibold">{part === 2 ? "Texto del aviso o pregunta asociada" : part === 1 ? "Descripción en inglés" : part === 3 ? "Intervención de la conversación" : part === 6 ? (i === 4 ? "Pregunta inferencial 124 (opciones en tarjetas)" : "Pregunta de comprensión inferencial") : part === 7 ? "Número del espacio / enunciado" : "Pregunta o situación en inglés"}<textarea value={q.prompt} onChange={e => patchQuestion(i, { prompt: e.target.value })} rows={3} maxLength={10000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 2 ? "Where can you see this notice?" : part === 1 ? "Example: You wear these on your feet." : part === 7 ? "Ej. (1) _____" : "Escribe el enunciado en inglés..."}/></label>}
+            {[4, 7].includes(part) ? <div className="rounded-lg border border-indigo-100 bg-indigo-50/60 p-3 text-sm"><strong>Espacio {part === 4 ? (part4Group === "4A" ? 97 : 105) + i : (part7Group === "7A" ? 115 : 125) + i}.</strong> El número se asigna automáticamente. Las cuatro opciones A–D se ingresan por separado y el pasaje está en la imagen compartida.</div> : <label className="block text-sm font-semibold">{part === 2 ? "Texto del aviso o pregunta asociada" : part === 1 ? "Descripción en inglés" : part === 3 ? "Intervención de la conversación" : part === 6 ? (i === 4 ? "Pregunta inferencial 124 (opciones en tarjetas)" : "Pregunta de comprensión inferencial") : part === 7 ? "Número del espacio / enunciado" : "Pregunta o situación en inglés"}<textarea value={q.prompt} onChange={e => patchQuestion(i, { prompt: e.target.value })} rows={3} maxLength={10000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 2 ? "Where can you see this notice?" : part === 1 ? "Example: You wear these on your feet." : part === 7 ? "Ej. (1) _____" : "Escribe el enunciado en inglés..."}/></label>}
             <div className="grid gap-3 md:grid-cols-2">{q.options.map((option, j) => <label key={option.key} className="block text-sm font-semibold">Opción {option.key}<input value={option.text} onChange={e => patchOption(i, j, e.target.value)} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 6 && i === 4 ? `Texto completo de la opción ${option.key} (se mostrará en tarjeta)` : `Texto de la opción ${option.key}`}/></label>)}</div>
             <div className="grid gap-4 md:grid-cols-2">
               <label className="text-sm font-semibold">Respuesta correcta<select value={q.answer} onChange={e => patchQuestion(i, { answer: e.target.value })} className="mt-2 w-full rounded-xl border p-3">{(part === 1 ? LETTERS.filter(key => key !== exampleAnswer).map(key => ({ key, text: key })) : q.options).map(o => <option key={o.key} value={o.key}>{o.key}</option>)}</select></label>

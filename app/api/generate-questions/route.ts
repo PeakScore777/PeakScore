@@ -7689,8 +7689,10 @@ export async function POST(
         ? body.subject.trim()
         : "";
 
-    const sessionInput = body.session;
-    const amountInput = body.amount;
+    // Keep runtime JSON values as unknown so TypeScript validates each
+    // possible input type instead of treating string branches as `never`.
+    const sessionInput: unknown = body.session;
+    const amountInput: unknown = body.amount;
 
     // Accept JSON numbers and non-empty numeric strings for compatibility
     // with existing clients, but reject booleans, arrays, objects and null.

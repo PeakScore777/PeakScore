@@ -5412,7 +5412,8 @@ function buildPrompt(
   existingQuestions: string[],
   existingDifficulties: GeneratedDifficulty[] = [],
   totalRequested: number = amount,
-  generationPlan: GenerationPlanItem[]
+  generationPlan: GenerationPlanItem[],
+  existingBankQuestions: ExistingQuestionForSimilarity[] = []
 ): string {
   const normalizedSubject = normalize(subject);
 
@@ -5638,14 +5639,39 @@ No hay perfiles específicos. Usa el blueprint de la materia.
   const excludedSection =
     existingQuestions.length > 0
       ? `
-PREGUNTAS YA GENERADAS:
+PREGUNTAS YA GENERADAS O INTENTADAS:
 ${compactExistingQuestions.join("\n")}
 
-No las repitas ni las parafrasees. Cambia razonamiento, contexto, datos y distractores.
+No las repitas ni las parafrasees. Si una candidata anterior fue rechazada,
+cambia el razonamiento y la estructura evaluativa; no cambies solo números o nombres.
 `
       : `
 PREGUNTAS PREVIAS:
-No hay. Aun así, todas las preguntas del bloque deben ser genuinamente diferentes.
+No hay preguntas previas en este lote. Todas las candidatas deben ser diferentes.
+`;
+
+  const bankSampleSize = 16;
+  const bankSampleStep = Math.max(1, Math.floor(existingBankQuestions.length / bankSampleSize));
+  const compactBankQuestions = existingBankQuestions
+    .filter((_, index) => index % bankSampleStep === 0)
+    .slice(-bankSampleSize)
+    .map((item, index) => {
+      const question = String(item.question ?? "").replace(/\\s+/g, " ").trim();
+      const context = String(item.context_text ?? "").replace(/\\s+/g, " ").trim();
+      return `${index + 1}. ${question.slice(0, 135)}${context ? ` | Contexto: ${context.slice(0, 60)}` : ""}`;
+    });
+
+  const existingBankSection = compactBankQuestions.length > 0
+    ? `
+PREGUNTAS YA REGISTRADAS EN EL BANCO (muestra de control):
+${compactBankQuestions.join("\n")}
+
+No copies ni parafrasees estos ítems. El servidor compara cada candidata contra
+el banco completo; esta muestra sirve para reducir repeticiones antes de validar.
+`
+    : `
+BANCO PREVIO:
+No hay preguntas activas del mismo tema disponibles como muestra.
 `;
 
   /* =========================================================
@@ -6291,6 +6317,7 @@ Si alguna condición falla, descarta la pregunta y genera otra.
     generationPlan: JSON.stringify(compactGenerationPlan).length,
     referenceSection: referenceSection.length,
     excludedSection: excludedSection.length,
+    existingBankSection: existingBankSection.length,
     structureRules: structureRules.length,
     optionRules: optionRules.length,
     qualityRules: qualityRules.length,
@@ -6357,6 +6384,8 @@ ${qualityRules}
 ${visualRules}
 
 ${referenceSection}
+
+${existingBankSection}
 
 ${excludedSection}
 
@@ -6499,7 +6528,8 @@ async function generateBlock(
                 remainingAmount,
               generationPlan.length
             )
-          )
+          ),
+          existingBankQuestions
         ),
 
         task: "question_generation",

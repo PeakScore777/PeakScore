@@ -6425,6 +6425,7 @@ async function generateBlock(
   difficulty: Difficulty,
   profiles: ReferenceProfile[],
   existingQuestions: string[],
+  attemptedQuestions: string[],
   existingBankQuestions: ExistingQuestionForSimilarity[],
   existingGeneratedQuestions: GeneratedQuestion[],
   existingDifficulties: GeneratedDifficulty[],
@@ -6434,6 +6435,8 @@ async function generateBlock(
   let lastError: unknown = null;
 
   const acceptedQuestions: GeneratedQuestion[] = [];
+  // Shared with POST so rejected candidates are excluded from later batches.
+  const attemptedCandidateQuestions = attemptedQuestions;
   let planAssignmentCursor = 0;
 
   for (
@@ -6501,8 +6504,7 @@ async function generateBlock(
 
         task: "question_generation",
 
-        useFallback: 
-          attempt === MAX_BLOCK_ATTEMPTS,
+        useFallback: true,
       });
 
       const raw =
@@ -6543,9 +6545,8 @@ async function generateBlock(
 
       const excluded =
         new Set(
-          existingQuestions.map(
-            (question) =>
-              normalize(question)
+          [...existingQuestions, ...attemptedCandidateQuestions].map(
+            (question) => normalize(question)
           )
         );
 
@@ -7412,6 +7413,9 @@ export async function POST(
     const generatedKeys =
       new Set<string>();
 
+    // Candidatas rechazadas se conservan entre bloques para evitar repeticiones.
+    const attemptedQuestions: string[] = [];
+
     const generationPlan =
       buildGenerationPlan(
         subject,
@@ -7475,11 +7479,10 @@ export async function POST(
         `[PeakScore] Solicitando bloque de ${generationRequestAmount} candidatas a Groq para obtener ${remaining} preguntas válidas.`
       );
 
-      const existingQuestions =
-        generatedQuestions.map(
-          (question) =>
-            question.question
-        );
+      const existingQuestions = [
+        ...generatedQuestions.map((question) => question.question),
+        ...attemptedQuestions,
+      ];
 
       const blockResult =
         await generateBlock(
@@ -7489,6 +7492,7 @@ export async function POST(
           difficulty,
           profiles,
           existingQuestions,
+          attemptedQuestions,
           existingBankQuestions,
           generatedQuestions,
           generatedQuestions

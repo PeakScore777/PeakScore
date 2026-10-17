@@ -1546,8 +1546,10 @@ async function generateWithGroq(
        */
       if (
         error instanceof AIServiceError &&
-        error.code === "AI_CONFIGURATION"
+        (error.code === "AI_CONFIGURATION" || error.code === "AI_UNAVAILABLE")
       ) {
+        // Un 429 con ventana larga ya pide activar el proveedor alternativo;
+        // no volvemos a esperar/reintentar el mismo proveedor desde este catch.
         throw error;
       }
 

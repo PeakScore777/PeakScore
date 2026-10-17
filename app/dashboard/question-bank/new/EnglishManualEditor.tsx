@@ -34,16 +34,19 @@ type QuestionRange = { start: number; count: number };
 // The official ICFES guide defines seven parts and their skills/weighting;
 // the printed item numbers vary by booklet edition.
 const BOOKLET_RANGES: Record<BookletFormat, Record<string, QuestionRange>> = {
+  // DOC-20260724-WA0017… PDF, printed English pages 33–40:
+  // Part 3 has 5 questions; Parts 7A and 7B both appear.
   saber11_2026: {
     "1": { start: 80, count: 5 },
     "2": { start: 85, count: 5 },
-    "3": { start: 90, count: 7 },
-    "4": { start: 97, count: 8 },
-    "5": { start: 105, count: 7 },
-    "6": { start: 112, count: 5 },
-    "7A": { start: 117, count: 8 },
+    "3": { start: 90, count: 5 },
+    "4": { start: 95, count: 8 },
+    "5": { start: 103, count: 7 },
+    "6": { start: 110, count: 5 },
+    "7A": { start: 115, count: 10 },
     "7B": { start: 125, count: 10 },
   },
+  // The historical reference PDF has 45 English questions and ends at Part 6.
   historical: {
     "1": { start: 80, count: 5 },
     "2": { start: 85, count: 5 },
@@ -52,14 +55,16 @@ const BOOKLET_RANGES: Record<BookletFormat, Record<string, QuestionRange>> = {
     "4B": { start: 105, count: 8 },
     "5": { start: 113, count: 7 },
     "6": { start: 120, count: 5 },
-    "7A": { start: 125, count: 10 },
   },
 };
 
 function getQuestionRange(part: number, format: BookletFormat, part4Group: "4A" | "4B", part7Group: "7A" | "7B"): QuestionRange {
   let key = String(part);
   if (part === 4 && format === "historical") key = part4Group;
-  if (part === 7) key = format === "historical" ? "7A" : part7Group;
+  if (part === 7) {
+    if (format === "historical") return { start: 125, count: 0 };
+    key = part7Group;
+  }
   return BOOKLET_RANGES[format][key] ?? { start: 1, count: PARTS[part]?.count ?? 30 };
 }
 function getQuestionCount(part: number, format: BookletFormat, part7Group: "7A" | "7B", part4Group: "4A" | "4B" = "4A") {
@@ -69,21 +74,24 @@ function getQuestionStart(part: number, format: BookletFormat, part4Group: "4A" 
   return getQuestionRange(part, format, part4Group, part7Group).start;
 }
 function getPartGuidance(part: number, format: BookletFormat, part4Group: "4A" | "4B", part7Group: "7A" | "7B") {
+  if (part === 3) return format === "saber11_2026"
+    ? "Formato 2026: completa las cinco conversaciones, preguntas 90–94."
+    : "Formato histórico: completa las siete conversaciones, preguntas 90–96.";
   if (part === 4) return format === "saber11_2026"
-    ? "Formato 2026: un solo conjunto de texto cloze, preguntas 97–104 (8 espacios)."
+    ? "Formato 2026: Parte 4 única, preguntas 95–102 (8 espacios)."
     : part4Group === "4A"
       ? "Formato histórico: Parte 4A, preguntas 97–104 (8 espacios). La Parte 4B es un conjunto independiente."
       : "Formato histórico: Parte 4B, preguntas 105–112 (8 espacios).";
   if (part === 5) return format === "saber11_2026"
-    ? "Comprensión de lectura: preguntas 105–111 (7 preguntas)."
+    ? "Comprensión de lectura: preguntas 103–109 (7 preguntas)."
     : "Formato histórico: comprensión de lectura, preguntas 113–119 (7 preguntas).";
   if (part === 6) return format === "saber11_2026"
-    ? "Comprensión inferencial: preguntas 112–116 (5 preguntas), con cuatro opciones A–D y sin ejemplo inicial."
-    : "Formato histórico: comprensión inferencial, preguntas 120–124 (5 preguntas), con cuatro opciones A–D y sin ejemplo inicial.";
+    ? "Comprensión de lectura: preguntas 110–114 (5 preguntas), cuatro opciones A–D, sin ejemplo inicial."
+    : "Formato histórico: comprensión de lectura, preguntas 120–124 (5 preguntas), cuatro opciones A–D, sin ejemplo inicial.";
   if (part === 7) {
+    if (format === "historical") return "El cuadernillo histórico de referencia termina en la Parte 6; no incluye Parte 7.";
     const range = getQuestionRange(7, format, part4Group, part7Group);
-    const label = format === "historical" ? "7A (formato histórico)" : part7Group;
-    return `${label}: imagen con el ejemplo (0) y los espacios ${range.start}–${range.start + range.count - 1} (${range.count} preguntas). Cada espacio tiene opciones A–D.`;
+    return `${part7Group}: imagen con el ejemplo (0) y los espacios ${range.start}–${range.start + range.count - 1} (${range.count} preguntas). Cada espacio tiene opciones A–D.`;
   }
   return PARTS[part]?.guidance ?? "";
 }
@@ -203,6 +211,10 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   }, []);
 
   function changePart(next: number) {
+    if (next === 7 && bookletFormat === "historical") {
+      setError("El cuadernillo histórico de referencia termina en la Parte 6; no incluye Parte 7.");
+      return;
+    }
     setPart(next);
     if (next === 4) setPart4Group("4A");
     if (next === 7) setPart7Group("7A");
@@ -223,6 +235,10 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setSavedSetId(null);
   }
   function changeBookletFormat(next: BookletFormat) {
+    if (next === "historical" && part === 7) {
+      setError("El formato histórico termina en la Parte 6 y no incluye Parte 7. Conserva este conjunto en Saber 11 · 2026.");
+      return;
+    }
     setBookletFormat(next);
     setNeedsFormatReview(false);
     setConfirmFormatReview(true);
@@ -269,6 +285,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   async function save() {
     setError(""); setMessage(""); setSavedSetId(null);
     if (needsFormatReview) return setError("Este conjunto antiguo mezcla numeraciones. Elige explícitamente el formato 2026 o el histórico y corrige la imagen y los espacios antes de guardar.");
+    if (part === 7 && bookletFormat === "historical") return setError("El perfil histórico de referencia no contiene Parte 7; no se puede guardar este conjunto en ese perfil.");
     if (confirmFormatReview) return setError("Confirma que corregiste el PNG y la numeración para el formato seleccionado.");
     if (!title.trim()) return setError("Escribe un nombre para el conjunto.");
     const expectedCount = getQuestionCount(part, bookletFormat, part7Group);
@@ -445,8 +462,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-semibold md:col-span-2">Formato de cuadernillo
               <select value={bookletFormat} onChange={e => changeBookletFormat(e.target.value as BookletFormat)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">
-                <option value="saber11_2026">Saber 11 · 2026: Parte 4 única; 7A (8) + 7B (10), total 55</option>
-                <option value="historical">Formato anterior: 4A/4B; una Parte 7A (10), total 55</option>
+                <option value="saber11_2026">Saber 11 · 2026 Calendario A: 55 preguntas; Partes 7A (10) y 7B (10)</option>
+                <option value="historical">Formato histórico de referencia: 45 preguntas; 4A/4B; termina en Parte 6</option>
               </select>
             </label>
             {(needsFormatReview || confirmFormatReview) && <div className="md:col-span-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
@@ -454,9 +471,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
               <p className="mt-1">Revisa que el PNG, los espacios y las preguntas coincidan con el formato seleccionado. No se ha borrado contenido.</p>
               <label className="mt-2 flex items-start gap-2 font-medium"><input type="checkbox" checked={!confirmFormatReview && !needsFormatReview} onChange={e => { if (e.target.checked) { setNeedsFormatReview(false); setConfirmFormatReview(false); } else { setNeedsFormatReview(true); setConfirmFormatReview(true); } }} className="mt-1"/> Ya corregí la imagen y los números del texto.</label>
             </div>}
-            <label className="text-sm font-semibold">Parte del examen<select value={part} onChange={e => changePart(Number(e.target.value))} disabled={Boolean(editSetId)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100">{Object.entries(PARTS).map(([key, value]) => <option key={key} value={key}>Parte {key} · {value.name} ({Number(key) === 7 ? "8/10 según subparte" : value.count})</option>)}</select></label>
+            <label className="text-sm font-semibold">Parte del examen<select value={part} onChange={e => changePart(Number(e.target.value))} disabled={Boolean(editSetId)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100">{Object.entries(PARTS).map(([key, value]) => <option key={key} value={key} disabled={Number(key) === 7 && bookletFormat === "historical"}>Parte {key} · {value.name} ({Number(key) === 3 ? (bookletFormat === "saber11_2026" ? 5 : 7) : Number(key) === 7 ? 10 : value.count})</option>) }</select></label>
             {part === 4 && bookletFormat === "historical" && <label className="text-sm font-semibold">Subparte<select value={part4Group} onChange={e => setPart4Group(e.target.value as "4A" | "4B")} className="mt-2 w-full rounded-xl border p-3"><option value="4A">Parte 4A · Preguntas 97–104</option><option value="4B">Parte 4B · Preguntas 105–112</option></select></label>}
-            {part === 7 && <label className="text-sm font-semibold">Subparte<select value={part7Group} onChange={e => changePart7Group(e.target.value as "7A" | "7B")} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="7A">{bookletFormat === "saber11_2026" ? "Parte 7A · Preguntas 117–124 (8)" : "Parte 7A · Preguntas 125–134 (10)"}</option>{bookletFormat === "saber11_2026" && <option value="7B">Parte 7B · Preguntas 125–134 (10)</option>}</select></label>}
+            {part === 7 && bookletFormat === "saber11_2026" && <label className="text-sm font-semibold">Subparte<select value={part7Group} onChange={e => changePart7Group(e.target.value as "7A" | "7B")} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="7A">Parte 7A · Preguntas 115–124 (10)</option><option value="7B">Parte 7B · Preguntas 125–134 (10)</option></select></label>}
             <label className="text-sm font-semibold">Sesión ICFES<select value={session} onChange={e => setSession(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="1">Sesión 1</option><option value="2">Sesión 2</option></select></label>
             <label className="text-sm font-semibold">Dificultad del conjunto<select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="Fácil">Fácil</option><option value="Media">Media</option><option value="Difícil">Difícil</option></select></label>
             <label className="text-sm font-semibold md:col-span-2">Nombre del conjunto<input value={title} onChange={e => setTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400" placeholder={part === 4 ? `Ej. ${part4Group} — conjunto 01` : `Ej. Parte ${part} — conjunto 01`}/></label>

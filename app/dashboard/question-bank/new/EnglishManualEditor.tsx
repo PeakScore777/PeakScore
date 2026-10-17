@@ -74,6 +74,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [part, setPart] = useState(1);
   const [bookletFormat, setBookletFormat] = useState<BookletFormat>("saber11_2026");
   const [needsFormatReview, setNeedsFormatReview] = useState(false);
+  const [confirmFormatReview, setConfirmFormatReview] = useState(false);
   const [part4Group, setPart4Group] = useState<"4A" | "4B">("4A");
   const [part7Group, setPart7Group] = useState<"7A" | "7B">("7A");
   const [session, setSession] = useState("2");
@@ -133,6 +134,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       const loadedFormat: BookletFormat = setRow.booklet_format === "historical" ? "historical" : "saber11_2026";
       setBookletFormat(loadedFormat);
       setNeedsFormatReview(setRow.booklet_format === "custom_review");
+      setConfirmFormatReview(setRow.booklet_format === "custom_review");
       setPart4Group(/^4B\s*[·—-]/i.test(loadedTitle) ? "4B" : "4A");
       setPart7Group(/^7B\s*[·—-]/i.test(loadedTitle) ? "7B" : "7A");
       setTitle(loadedTitle.replace(/^(?:4[AB]|7[AB])\s*[·—-]\s*/i, ""));
@@ -205,6 +207,24 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       : current);
     setError("Revisa la numeración de la imagen después de cambiar el formato. No se eliminó ninguna pregunta automáticamente.");
   }
+  function changePart7Group(next: "7A" | "7B") {
+    if (bookletFormat === "historical" && next === "7B") return;
+    const desired = getQuestionCount(7, bookletFormat, next);
+    if (desired < questions.length) {
+      const excessHasContent = questions.slice(desired).some(q =>
+        Boolean(q.prompt.trim() || q.explanation.trim() || q.imageUrl || q.imageFile || q.options.some(o => o.text.trim()))
+      );
+      if (excessHasContent) {
+        setError("Esta subparte necesita " + desired + " preguntas. Copia o limpia el contenido de las preguntas sobrantes antes de cambiar.");
+        return;
+      }
+    }
+    setPart7Group(next);
+    setQuestions(current => current.length < desired
+      ? [...current, ...Array.from({ length: desired - current.length }, () => makeQuestion(7))]
+      : current.slice(0, desired));
+    setError("");
+  }
   function patchQuestion(index: number, patch: Partial<DraftQuestion>) {
     setQuestions(current => current.map((q, i) => i === index ? { ...q, ...patch } : q));
   }
@@ -221,6 +241,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   async function save() {
     setError(""); setMessage(""); setSavedSetId(null);
     if (needsFormatReview) return setError("Este conjunto antiguo mezcla numeraciones. Elige explícitamente el formato 2026 o el histórico y corrige la imagen y los espacios antes de guardar.");
+    if (confirmFormatReview) return setError("Confirma que corregiste el PNG y la numeración para el formato seleccionado.");
     if (!title.trim()) return setError("Escribe un nombre para el conjunto.");
     const expectedCount = getQuestionCount(part, bookletFormat, part7Group);
     if (questions.length !== expectedCount) {
@@ -394,15 +415,26 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         </header>
         <section className="rounded-2xl bg-white p-5 shadow-sm md:p-7">
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-semibold">Parte del examen<select value={part} onChange={e => changePart(Number(e.target.value))} disabled={Boolean(editSetId)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100">{Object.entries(PARTS).map(([key, value]) => <option key={key} value={key}>Parte {key} · {value.name} ({value.count})</option>)}</select></label>
-            {part === 4 && <label className="text-sm font-semibold">Subparte<select value={part4Group} onChange={e => setPart4Group(e.target.value as "4A" | "4B")} className="mt-2 w-full rounded-xl border p-3"><option value="4A">Parte 4A · Preguntas 97–104</option><option value="4B">Parte 4B · Preguntas 105–112</option></select></label>}
-            {part === 7 && <label className="text-sm font-semibold">Subparte<select value={part7Group} onChange={e => setPart7Group(e.target.value as "7A" | "7B")} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="7A">Parte 7A</option><option value="7B">Parte 7B</option></select></label>}
+            <label className="text-sm font-semibold md:col-span-2">Formato de cuadernillo
+              <select value={bookletFormat} onChange={e => changeBookletFormat(e.target.value as BookletFormat)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">
+                <option value="saber11_2026">Saber 11 · 2026: Parte 4 única; 7A (8) + 7B (10), total 55</option>
+                <option value="historical">Formato anterior: 4A/4B; una Parte 7A (10), total 55</option>
+              </select>
+            </label>
+            {(needsFormatReview || confirmFormatReview) && <div className="md:col-span-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+              <strong>Revisión de numeración requerida.</strong>
+              <p className="mt-1">Revisa que el PNG, los espacios y las preguntas coincidan con el formato seleccionado. No se ha borrado contenido.</p>
+              <label className="mt-2 flex items-start gap-2 font-medium"><input type="checkbox" checked={!confirmFormatReview && !needsFormatReview} onChange={e => { if (e.target.checked) { setNeedsFormatReview(false); setConfirmFormatReview(false); } else { setNeedsFormatReview(true); setConfirmFormatReview(true); } }} className="mt-1"/> Ya corregí la imagen y los números del texto.</label>
+            </div>
+            <label className="text-sm font-semibold">Parte del examen<select value={part} onChange={e => changePart(Number(e.target.value))} disabled={Boolean(editSetId)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-100">{Object.entries(PARTS).map(([key, value]) => <option key={key} value={key}>Parte {key} · {value.name} ({Number(key) === 7 ? "8/10 según subparte" : value.count})</option>)}</select></label>
+            {part === 4 && bookletFormat === "historical" && <label className="text-sm font-semibold">Subparte<select value={part4Group} onChange={e => setPart4Group(e.target.value as "4A" | "4B")} className="mt-2 w-full rounded-xl border p-3"><option value="4A">Parte 4A · Preguntas 97–104</option><option value="4B">Parte 4B · Preguntas 105–112</option></select></label>}
+            {part === 7 && <label className="text-sm font-semibold">Subparte<select value={part7Group} onChange={e => changePart7Group(e.target.value as "7A" | "7B")} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="7A">{bookletFormat === "saber11_2026" ? "Parte 7A · Preguntas 117–124 (8)" : "Parte 7A · Preguntas 125–134 (10)"}</option>{bookletFormat === "saber11_2026" && <option value="7B">Parte 7B · Preguntas 125–134 (10)</option>}</select></label>
             <label className="text-sm font-semibold">Sesión ICFES<select value={session} onChange={e => setSession(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="1">Sesión 1</option><option value="2">Sesión 2</option></select></label>
             <label className="text-sm font-semibold">Dificultad del conjunto<select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900"><option value="Fácil">Fácil</option><option value="Media">Media</option><option value="Difícil">Difícil</option></select></label>
             <label className="text-sm font-semibold md:col-span-2">Nombre del conjunto<input value={title} onChange={e => setTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400" placeholder={part === 4 ? `Ej. ${part4Group} — conjunto 01` : `Ej. Parte ${part} — conjunto 01`}/></label>
-            <label className="text-sm font-semibold md:col-span-2">Instrucciones (opcional)<textarea value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400" placeholder={PARTS[part].guidance}/></label>
+            <label className="text-sm font-semibold md:col-span-2">Instrucciones (opcional)<textarea value={instructions} onChange={e => setInstructions(e.target.value)} rows={2} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900 placeholder:text-slate-400" placeholder={getPartGuidance(part, bookletFormat, part4Group, part7Group)}/></label>
           </div>
-          <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950"><strong>Formato:</strong> {PARTS[part].guidance}</div>
+          <div className="mt-5 rounded-xl border border-indigo-100 bg-indigo-50 p-4 text-sm text-indigo-950"><strong>Formato:</strong> {getPartGuidance(part, bookletFormat, part4Group, part7Group)} <span className="mt-1 block text-xs">Numeración {getQuestionStart(part, bookletFormat, part4Group, part7Group)}–{getQuestionStart(part, bookletFormat, part4Group, part7Group) + getQuestionCount(part, bookletFormat, part7Group) - 1} · {getQuestionCount(part, bookletFormat, part7Group)} preguntas.</span></div>
           {part === 1 && <div className="mt-5 space-y-4"><div className="grid gap-3 md:grid-cols-[1fr_12rem]"><label className="block text-sm font-semibold">Enunciado de ejemplo (no se califica)<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900" placeholder="Example: This is a place to go shopping for vegetables, meat, among other things."/></label><label className="block text-sm font-semibold">Letra de ejemplo<select value={exampleAnswer} onChange={e => setExampleAnswer(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">{LETTERS.map(key => <option key={key} value={key}>{key}</option>)}</select></label></div><label className="block text-sm font-semibold">Banco de palabras compartido (A–H; selecciona cuál es el ejemplo)<textarea value={wordBankText} onChange={e => setWordBankText(e.target.value)} rows={8} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={"basement\nbathroom\nbookstore\ncafé\ncinema\nelevator\nplayground\nsupermarket"}/></label><div className="mt-3 grid gap-2 sm:grid-cols-2">{wordBank.map((word, i) => <div key={i} className={`rounded-lg p-3 text-sm ${LETTERS[i] === exampleAnswer ? "border-2 border-slate-900 bg-slate-100 font-bold underline" : "bg-slate-50"}`}><b>{LETTERS[i]}.</b> {word}{LETTERS[i] === exampleAnswer ? " (ejemplo)" : ""}</div>)}</div><p className="text-xs text-slate-500">El ejemplo se muestra antes de las cinco preguntas calificadas y no se guarda como pregunta puntuable. La letra elegida para el ejemplo queda excluida de las respuestas de las cinco preguntas.</p></div>}
           {part === 4 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
             <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará como pregunta 0, antes de las preguntas de la subparte.</p></div>
@@ -427,7 +459,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           {part === 7 && <div className="mt-5 space-y-3 rounded-xl border border-slate-300 bg-white p-4">
             <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del texto cloze — Parte {part7Group} (obligatoria)</span>
               <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen del texto no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setError("La imagen del texto debe ser PNG, JPG o WEBP."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900"/>
-              <span className="mt-1 block text-xs font-normal text-slate-500">Sube una sola imagen del pasaje original que incluya el espacio (0) y los diez espacios numerados ({part7Group === "7A" ? "115–124" : "125–134"}). El ejemplo se completa abajo con sus opciones A–D; no necesita imagen aparte. PNG, JPG o WEBP · máximo 8 MB.</span>
+               <span className="mt-1 block text-xs font-normal text-slate-500">Sube una sola imagen con el ejemplo (0) y los espacios {getQuestionStart(part, bookletFormat, part4Group, part7Group)}–{getQuestionStart(part, bookletFormat, part4Group, part7Group) + getQuestionCount(part, bookletFormat, part7Group) - 1}. El ejemplo se completa abajo con opciones A–D; no necesita imagen aparte. PNG, JPG o WEBP · máximo 8 MB.</span>
             </label>
             {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen del pasaje guardada actualmente.</p><img src={existingSharedImageUrl} alt={`Texto cloze guardado de la Parte ${part7Group}`} className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt={`Vista previa del texto cloze de la Parte ${part7Group}`} className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
@@ -543,7 +575,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           <header className="border-b border-slate-300 px-5 py-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {session}</p>
             <h2 className="mt-1 text-base font-extrabold text-slate-950">Parte {part7Group} · Texto cloze</h2>
-            <p className="mt-1 text-xs leading-5 text-slate-700">{instructions.trim() || (part7Group === "7A" ? "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 115–124, marque A, B, C o D en su hoja de respuestas." : "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 125–134, marque A, B, C o D en su hoja de respuestas.")}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-700">{instructions.trim() || "Lee el texto y selecciona la palabra adecuada para completar cada espacio. Marca A, B, C o D en tu hoja de respuestas."}</p>
           </header>
           <div className="p-4">
             <div className="mb-3 flex justify-center">
@@ -567,14 +599,14 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             </div>
             <div className="mt-1">
               {questions.map((question, index) => <div key={question.id ?? index} className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-2 border-b border-slate-300 py-2 last:border-0">
-                <strong className="pt-0.5 text-[10px]">{(part7Group === "7A" ? 115 : 125) + index}.</strong>
+                <strong className="pt-0.5 text-[10px]">{getQuestionStart(part, bookletFormat, part4Group, part7Group) + index}.</strong>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] leading-4 sm:grid-cols-4">{question.options.map(option => <p key={option.key}><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
               </div>)}
             </div>
           </div>
         </section>}
         <section className="space-y-5">
-          <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Preguntas del conjunto</h2><p className="text-sm text-slate-600">{questions.length} pregunta(s) · {part === 1 ? "máximo 5 según el formato ICFES" : part === 4 ? "exactamente 8 por subparte" : part === 5 ? "exactamente 7 (113–119)" : part === 6 ? "exactamente 5 (120–124)" : part === 7 ? `exactamente 10 (${part7Group === "7A" ? "115–124" : "125–134"})` : "máximo 30"}</p></div><button type="button" onClick={addQuestion} disabled={questions.length >= (part === 1 ? 5 : [4, 5, 6, 7].includes(part) ? PARTS[part].count : 30)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-40"><Plus size={18}/> Añadir pregunta</button></div>
+          <div className="flex items-center justify-between gap-3"><div><h2 className="text-xl font-bold">Preguntas del conjunto</h2><p className="text-sm text-slate-600">{questions.length} pregunta(s) · esperado: {getQuestionCount(part, bookletFormat, part7Group)} ({getQuestionStart(part, bookletFormat, part4Group, part7Group)}–{getQuestionStart(part, bookletFormat, part4Group, part7Group) + getQuestionCount(part, bookletFormat, part7Group) - 1})</p></div><button type="button" onClick={addQuestion} disabled={questions.length >= getQuestionCount(part, bookletFormat, part7Group)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-3 font-semibold text-white disabled:opacity-40"><Plus size={18}/> Añadir pregunta</button></div>
           {questions.map((q, i) => <article key={i} className="space-y-4 rounded-2xl bg-white p-5 shadow-sm md:p-7">
             <div className="flex items-center justify-between"><h3 className="font-bold">Pregunta {i + 1}</h3>{questions.length > 1 && <button type="button" onClick={() => setQuestions(current => current.filter((_, index) => index !== i))} className="inline-flex items-center gap-1 text-sm text-red-700"><Trash2 size={16}/> Eliminar</button>}</div>
             {part === 2 && <div className="space-y-3"><label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Imagen del aviso (desde tu carpeta)</span><input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen no puede superar 8 MB."); e.currentTarget.value = ""; return; } setError(""); patchQuestion(i, { imageFile: file, imageUrl: file ? URL.createObjectURL(file) : "" }); }} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-3 file:py-2 file:font-semibold file:text-indigo-700" /></label>{q.imageUrl && <div className="rounded-xl border bg-slate-50 p-3"><img src={q.imageUrl} alt={`Vista previa de imagen de pregunta ${i + 1}`} className="max-h-64 max-w-full rounded-lg object-contain" /><button type="button" onClick={() => patchQuestion(i, { imageFile: null, imageUrl: "" })} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen</button></div>}<p className="text-xs text-slate-500">PNG, JPG, WEBP o GIF · máximo 8 MB. Se sube al guardar.</p></div>}

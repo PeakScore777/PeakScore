@@ -2349,6 +2349,134 @@ function isQuestionVisualCoherent(
   return true;
 }
 
+function parseSpanishNumber(value: string): number | null {
+  let text = value.replace(/\$/g, "").replace(/\s+/g, "");
+
+  if (/^\d{1,3}(?:\.\d{3})+(?:,\d+)?$/.test(text)) {
+    text = text.replace(/\./g, "").replace(",", ".");
+  } else if (/^\d{1,3}(?:,\d{3})+(?:\.\d+)?$/.test(text)) {
+    text = text.replace(/,/g, "");
+  } else {
+    text = text.replace(",", ".");
+  }
+
+  const parsed = Number(text);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseSimpleLinearOption(
+  option: string,
+  variable: string
+): { slope: number; intercept: number } | null {
+  const equalsIndex = option.indexOf("=");
+  if (equalsIndex < 0) return null;
+
+  const expression = option
+    .slice(equalsIndex + 1)
+    .replace(/[×·]/g, "*")
+    .replace(/\*/g, "")
+    .replace(/\s+/g, "")
+    .replace(/[$]/g, "");
+
+  if (!expression || /[^0-9a-z.,+-]/i.test(expression)) return null;
+
+  const terms = expression.match(/[+-]?[^+-]+/g);
+  if (!terms || terms.length === 0) return null;
+
+  let slope = 0;
+  let intercept = 0;
+  const variablePattern = new RegExp(variable, "i");
+
+  for (const rawTerm of terms) {
+    const term = rawTerm.trim();
+    const sign = term.startsWith("-") ? -1 : 1;
+    const body = term.replace(/^[+-]/, "");
+    const hasVariable = variablePattern.test(body);
+
+    if (hasVariable && (body.match(new RegExp(variable, "ig")) ?? []).length !== 1) {
+      return null;
+    }
+
+    const numericText = body.replace(new RegExp(variable, "ig"), "");
+    const coefficient = numericText ? parseSpanishNumber(numericText) : 1;
+
+    if (coefficient === null) return null;
+
+    if (hasVariable) slope += sign * coefficient;
+    else intercept += sign * coefficient;
+  }
+
+  return { slope, intercept };
+}
+
+/**
+ * Independently checks the correct option for the common model
+ * total cost = fixed charge + unit rate * quantity.
+ * If the prompt or option format is ambiguous, it deliberately abstains.
+ */
+function validateLinearCostModel(item: GeneratedQuestion): boolean {
+  if (normalize(item.subject) !== "matematicas") return true;
+
+  const source = \`\${item.context_text ?? ""} \${item.question ?? ""}\`;
+  const fixedPhrase = /\\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|inscripci[oó]n)\\b/i;
+  const unitPhrase = /\\bpor cada\\b|\\bpor unidad\\b/i;
+
+  if (!fixedPhrase.test(source) || !unitPhrase.test(source)) return true;
+
+  const amountPattern = /\\$?\\s*(\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?|\\d+(?:,\\d+)?)/g;
+  const fixedMatch = source.match(/\\b(?:tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|inscripci[oó]n)\\b[\\s\\S]{0,45}?(\\$?\\s*\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?|\\$?\\s*\\d+(?:,\\d+)?)/i);
+
+  if (!fixedMatch?.[1]) return true;
+  const expectedFixed = parseSpanishNumber(fixedMatch[1]);
+  if (expectedFixed === null) return true;
+
+  const unitIndex = source.search(unitPhrase);
+  if (unitIndex < 0) return true;
+  const unitPrefix = source.slice(Math.max(0, unitIndex - 110), unitIndex);
+  const unitAmounts = [...unitPrefix.matchAll(amountPattern)];
+  const lastUnitAmount = unitAmounts[unitAmounts.length - 1]?.[1];
+  const expectedRate = lastUnitAmount ? parseSpanishNumber(lastUnitAmount) : null;
+
+  if (expectedRate === null) return true;
+
+  const options: Record<Answer, string> = {
+    A: item.option_a ?? "",
+    B: item.option_b ?? "",
+    C: item.option_c ?? "",
+    D: item.option_d ?? "",
+  };
+
+  // Infer the single variable from RHS expressions, not from the left-hand C.
+  const variables = new Set<string>();
+  for (const option of Object.values(options)) {
+    const equalsIndex = option.indexOf("=");
+    if (equalsIndex < 0) return true;
+    const rhs = option.slice(equalsIndex + 1).replace(/\\s+/g, "");
+    const matches = rhs.match(/(?<=\\d)[a-z]\\b|\\b[a-z]\\b/gi) ?? [];
+    for (const value of matches) variables.add(value.toLowerCase());
+  }
+
+  if (variables.size !== 1) return true;
+  const variable = [...variables][0];
+  const parsedOptions = (Object.entries(options) as [Answer, string][])
+    .map(([letter, option]) => ({
+      letter,
+      expression: parseSimpleLinearOption(option, variable),
+    }));
+
+  // Do not apply this specialized check to prose or formulas it cannot parse.
+  if (parsedOptions.some((item) => item.expression === null)) return true;
+
+  const matchingOptions = parsedOptions.filter(({ expression }) =>
+    expression !== null &&
+    Math.abs(expression.intercept - expectedFixed) < 0.001 &&
+    Math.abs(expression.slope - expectedRate) < 0.001
+  );
+
+  return matchingOptions.length === 1 &&
+    matchingOptions[0].letter === item.correct_answer;
+}
+
 function validateExplicitNumericAnswer(
   item: GeneratedQuestion
 ): boolean {
@@ -5134,6 +5262,12 @@ function diagnoseQuestionValidation(
   if (!validateExplicitNumericAnswer(item)) {
     failures.push(
       "respuesta numérica inconsistente"
+    );
+  }
+
+  if (!validateLinearCostModel(item)) {
+    failures.push(
+      "la expresión de costo fijo más tarifa unitaria no coincide con los valores del enunciado o no tiene una única opción correcta"
     );
   }
 

@@ -374,6 +374,16 @@ export default function QuestionBankPage() {
               Crear Inglés
             </Link>
 
+            {/* CREADOR MANUAL MASIVO */}
+
+            <Link
+              href="/dashboard/question-bank/manual-batch"
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-700"
+            >
+              <FileText size={20} />
+              Creador manual masivo
+            </Link>
+
             {/* NUEVA PREGUNTA */}
 
             <Link

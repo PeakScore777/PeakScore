@@ -199,7 +199,7 @@ export function chooseTaskFamily(
 ): string {
   const s = normalizeQualitySubject(subject);
   const group = getFamilyGroup(s, targetId);
-  const catalog = TASK_FAMILIES[s] ?? {};
+  const catalog: Record<string, string[]> = TASK_FAMILIES[s] ?? {};
   const candidates = catalog[group] ?? [
     "Resolver una tarea interpretativa nueva, autosuficiente y justificable con los datos proporcionados."
   ];

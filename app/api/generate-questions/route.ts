@@ -7430,6 +7430,34 @@ async function generateBlock(
             );
 
             valid = valid.slice(0, firstRejectedIndex);
+
+            // Keep retry-local deduplication state aligned with the approved
+            // prefix only. Rejected candidates must not poison similarity
+            // checks for their replacements on the next attempt.
+            const approvedKeys = new Set(
+              valid.map((question) => normalize(question.question))
+            );
+
+            for (const key of unique) {
+              if (!approvedKeys.has(key)) {
+                unique.delete(key);
+              }
+            }
+
+            for (
+              let index = similarityAcceptedQuestions.length - 1;
+              index >= 0;
+              index--
+            ) {
+              const previous = similarityAcceptedQuestions[index];
+              if (
+                !previous ||
+                !approvedKeys.has(normalize(previous.question))
+              ) {
+                similarityAcceptedQuestions.splice(index, 1);
+              }
+            }
+
             planAssignmentCursor =
               candidatePlanStart + valid.length;
           } else {

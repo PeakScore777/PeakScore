@@ -7475,6 +7475,8 @@ async function generateBlock(
           );
 
           valid = [];
+          unique.clear();
+          similarityAcceptedQuestions.length = 0;
           planAssignmentCursor = candidatePlanStart;
           lastError = new Error(
             "La auditoría de calidad independiente no pudo validar el bloque."

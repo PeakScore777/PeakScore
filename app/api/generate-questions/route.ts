@@ -2496,11 +2496,11 @@ function validateLinearCostModel(item: GeneratedQuestion): boolean {
   if (normalize(item.subject) !== "matematicas") return true;
 
   const source = String(item.context_text ?? "") + " " + String(item.question ?? "");
-  const fixedPhrase = /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|inscripci[oó]n)\b/i;
+  const fixedPhrase = /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|inscripci[oó]n)\b/i;
   const unitPhrase = /\bpor cada\b|\bpor unidad\b/i;
   if (!fixedPhrase.test(source) || !unitPhrase.test(source)) return true;
 
-  const fixedMatch = source.match(/\b(?:tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|inscripci[oó]n)\b[\s\S]{0,45}?(\$?\s*\d{1,3}(?:\.\d{3})+(?:,\d+)?|\$?\s*\d+(?:,\d+)?)/i);
+  const fixedMatch = source.match(/\b(?:tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|inscripci[oó]n)\b[\s\S]{0,45}?(\$?\s*\d{1,3}(?:\.\d{3})+(?:,\d+)?|\$?\s*\d+(?:,\d+)?)/i);
   if (!fixedMatch?.[1]) return true;
 
   const expectedFixed = parseSpanishNumber(fixedMatch[1]);

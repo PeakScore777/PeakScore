@@ -1353,7 +1353,6 @@ const SUBJECT_SESSION_MAP: Record<string, number[]> = {
   "lectura critica": [1],
   "sociales y ciudadanas": [1, 2],
   "ciencias naturales": [1, 2],
-  ingles: [2],
 };
 
 /* =========================================================
@@ -3319,7 +3318,7 @@ function isAnswerExplanationCoherent(
   item: GeneratedQuestion
 ): boolean {
   if (!item.explanation?.trim()) {
-    return true;
+    return false;
   }
 
   const options: Record<Answer, string> = {
@@ -3336,7 +3335,7 @@ function isAnswerExplanationCoherent(
     normalizeForSimilarity(item.explanation);
 
   if (!correctOption || !explanation) {
-    return true;
+    return false;
   }
 
   /*
@@ -7622,27 +7621,6 @@ export async function POST(
       );
     }
 
-    const { data: rateAllowed, error: rateError } = await authSupabase.rpc("consume_api_rate_limit", {
-      p_bucket: "generate-questions",
-      p_limit: 10,
-      p_window_seconds: 3600,
-    });
-
-    if (rateError) {
-      console.error("[PeakScore] Error verificando límite de generación:", rateError);
-      return NextResponse.json(
-        { success: false, error: "No fue posible validar el límite de generación." },
-        { status: 503 }
-      );
-    }
-
-    if (rateAllowed !== true) {
-      return NextResponse.json(
-        { success: false, error: "Has alcanzado el límite temporal de generación. Inténtalo más tarde." },
-        { status: 429 }
-      );
-    }
-
     /* =====================================================
        LEER REQUEST
     ====================================================== */
@@ -7788,6 +7766,28 @@ export async function POST(
         }
       );
     }
+
+    const { data: rateAllowed, error: rateError } = await authSupabase.rpc("consume_api_rate_limit", {
+      p_bucket: "generate-questions",
+      p_limit: 10,
+      p_window_seconds: 3600,
+    });
+
+    if (rateError) {
+      console.error("[PeakScore] Error verificando límite de generación:", rateError);
+      return NextResponse.json(
+        { success: false, error: "No fue posible validar el límite de generación." },
+        { status: 503 }
+      );
+    }
+
+    if (rateAllowed !== true) {
+      return NextResponse.json(
+        { success: false, error: "Has alcanzado el límite temporal de generación. Inténtalo más tarde." },
+        { status: 429 }
+      );
+    }
+
 
     console.log(
       "======================================"
@@ -8161,13 +8161,16 @@ export async function POST(
       );
 
     for (
-      const question of generatedQuestions
+      let index = 0;
+      index < generatedQuestions.length;
+      index++
     ) {
+      const question = generatedQuestions[index];
       const similarityResult =
         findSimilarQuestion(
           question,
           latestBankQuestions,
-          []
+          generatedQuestions.slice(0, index)
         );
 
       if (
@@ -8180,6 +8183,7 @@ export async function POST(
               similarityResult.similarity,
             matchedQuestionId:
               similarityResult.matchedQuestionId,
+            batchIndex: index,
           }
         );
 

@@ -161,6 +161,7 @@ export default function EnglishQuestionBankPage() {
           </div>
         </section>
         {formatFilter === "saber11_2026" && current2026Count < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El perfil 2026 todavía no completa las 55 preguntas: faltan {55 - current2026Count}. La Parte 7A antigua con 10 espacios (115–124) está separada en «Revisión requerida»; este perfil necesita 8 espacios, del 117 al 124.</p>}
+        {formatFilter === "historical" && historicalCount < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El formato histórico todavía no completa las 55 preguntas: faltan {55 - historicalCount}. La Parte 7A histórica debe tener 10 espacios numerados del 125 al 134; el borrador «Book Exchange» sigue aislado porque su imagen está numerada del 115 al 124.</p>}
         {!loading && visibleSets.length === 0 && sets.length > 0 && !error && <p className="mb-6 rounded-xl border border-slate-300 bg-white p-6 text-sm text-slate-600">No hay conjuntos guardados con la etiqueta de este formato todavía.</p>}
         {loading && <div className="flex items-center justify-center rounded-2xl bg-white p-12 text-slate-500"><Loader2 className="mr-3 animate-spin" /> Cargando conjuntos...</div>}
         {!loading && error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}

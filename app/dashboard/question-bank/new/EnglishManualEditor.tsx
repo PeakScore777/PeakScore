@@ -43,6 +43,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [difficulty, setDifficulty] = useState("Media");
   const [title, setTitle] = useState("");
   const [sharedText, setSharedText] = useState("");
+  const [sharedTitle, setSharedTitle] = useState("");
   const [sharedImageFile, setSharedImageFile] = useState<File | null>(null);
   const [instructions, setInstructions] = useState("");
   const [wordBankText, setWordBankText] = useState("");
@@ -71,7 +72,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setLoading(true);
       setError("");
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
-        .select("id,part,title,session,status,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
+        .select("id,part,title,session,status,shared_title,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
         .eq("id", id).single();
       if (setLoadError || !setRow || !PARTS[setRow.part]) {
         if (alive) { setError("No se pudo abrir el conjunto seleccionado para editar."); setLoading(false); }
@@ -101,6 +102,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setExistingSetStatus(setRow.status ?? "draft");
       setInstructions(setRow.instructions ?? "");
       setSharedText(setRow.shared_text ?? "");
+      setSharedTitle(setRow.part === 6 ? setRow.shared_title ?? "" : "");
       setWordBankText(loadedWordBank.map(word => word.text).join("\n"));
       setExistingSharedImageUrl(setRow.shared_image_url ?? "");
       setExistingExampleImageUrl(setRow.example_image_url ?? "");
@@ -140,6 +142,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (next === 7) setPart7Group("7A");
     setQuestions(Array.from({ length: PARTS[next].count }, () => makeQuestion(next)));
     setSharedText("");
+    setSharedTitle("");
     setSharedImageFile(null);
     setWordBankText("");
     setExamplePrompt("");
@@ -184,6 +187,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 4 && questions.some(q => !q.explanation.trim())) return setError("Escribe una explicación en español para cada espacio de la Parte 4.");
     if (part === 5 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen completa del texto de lectura de la Parte 5.");
     if ([6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
+    if (part === 6 && !sharedTitle.trim()) return setError("Escribe el título del texto de lectura de la Parte 6.");
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (part !== 1 && q.options.some(o => !o.text.trim())) return setError(`Completa todas las opciones de la pregunta ${i + 1}.`);
@@ -221,7 +225,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       }
       const setPayload = {
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
-        shared_title: null,
+        shared_title: part === 6 ? sharedTitle.trim() || null : null,
         shared_text: part === 5 ? null : sharedText.trim() || null,
         shared_image_url: uploadedSharedImageUrl,
         instructions: (instructions.trim() || PARTS[part].guidance),
@@ -362,6 +366,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa del texto completo de lectura" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
           </div>}
           {[6, 7].includes(part) && <div className="mt-5 space-y-4">
+            {part === 6 && <label className="block text-sm font-semibold">Título del texto de lectura
+              <input value={sharedTitle} onChange={e => setSharedTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder="Título original del artículo en inglés" />
+            </label>}
             <label className="block text-sm font-semibold">{part === 6 ? "Texto de lectura compartido (se mostrará en un recuadro)" : "Texto compartido"}<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 6 ? "Pega aquí un artículo original de interés general. Las preguntas deben exigir inferir, no solo localizar una frase." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>
             {part === 6 && <div className="rounded-xl border border-slate-300 bg-white p-4">
               <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Ilustración del texto (opcional)</span>
@@ -456,6 +463,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
           </header>
           <div className="p-5 sm:p-7">
             <article className="mb-5 border-2 border-slate-900 px-4 py-4 sm:px-5">
+              <h3 className="mb-3 text-center text-sm font-black uppercase tracking-wide">{sharedTitle.trim() || "Título del texto de lectura"}</h3>
               <div className={sharedImageFile || existingSharedImageUrl ? "grid grid-cols-1 items-start gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(110px,0.34fr)]" : ""}>
                 <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{sharedText.trim() || "Aquí aparecerá el texto original de interés general."}</p>
                 {(sharedImageFile || existingSharedImageUrl) && <div className="flex justify-center sm:justify-end"><img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt="Ilustración del texto de lectura" className="h-auto max-h-48 max-w-full object-contain"/></div>}

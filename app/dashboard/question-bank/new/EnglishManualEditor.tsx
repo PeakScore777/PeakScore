@@ -135,7 +135,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setBookletFormat(loadedFormat);
       setNeedsFormatReview(setRow.booklet_format === "custom_review");
       setConfirmFormatReview(setRow.booklet_format === "custom_review");
-      setConfirmFormatReview(setRow.booklet_format === "custom_review");
       setPart4Group(/^4B\s*[·—-]/i.test(loadedTitle) ? "4B" : "4A");
       setPart7Group(/^7B\s*[·—-]/i.test(loadedTitle) ? "7B" : "7A");
       setTitle(loadedTitle.replace(/^(?:4[AB]|7[AB])\s*[·—-]\s*/i, ""));

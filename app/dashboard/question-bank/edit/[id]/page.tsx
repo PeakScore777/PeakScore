@@ -619,9 +619,10 @@ export default function EditQuestionPage() {
                   className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 >
                   <option value="">Seleccionar dificultad</option>
-                  <option value="easy">Fácil</option>
-                  <option value="medium">Media</option>
-                  <option value="hard">Difícil</option>
+                  {/* Estos valores deben coincidir con questions_difficulty_valid en Supabase. */}
+                  <option value="Fácil">Fácil</option>
+                  <option value="Media">Media</option>
+                  <option value="Difícil">Difícil</option>
                 </select>
               </div>
 

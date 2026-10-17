@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase/browser";
 
 type Word = { key: string; text: string; example?: boolean; example_description?: string; example_answer?: string };
 type Option = { key: string; text: string };
+type FormatFilter = "saber11_2026" | "historical" | "custom_review" | "all";
 type EnglishSet = {
   id: string;
   part: number;
@@ -58,6 +59,7 @@ export default function EnglishQuestionBankPage() {
   const [questionsBySet, setQuestionsBySet] = useState<Record<string, EnglishQuestion[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [formatFilter, setFormatFilter] = useState<FormatFilter>("saber11_2026");
 
   useEffect(() => {
     let alive = true;
@@ -104,6 +106,12 @@ export default function EnglishQuestionBankPage() {
     return () => { alive = false; };
   }, []);
 
+  const visibleSets = sets.filter(set => formatFilter === "all" || set.booklet_format === formatFilter);
+  const current2026Count = sets.filter(set => set.booklet_format === "saber11_2026").reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
+  const historicalCount = sets.filter(set => set.booklet_format === "historical").reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
+  const reviewCount = sets.filter(set => set.booklet_format === "custom_review").reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
+  const visibleQuestionCount = visibleSets.reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
+
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
@@ -126,11 +134,27 @@ export default function EnglishQuestionBankPage() {
           <p className="mt-1"><strong>Formato histórico:</strong> 55 preguntas. Partes 4A (97–104) y 4B (105–112); Parte 5 (113–119); Parte 6 (120–124); una sola Parte 7A (125–134).</p>
           <p className="mt-1 text-amber-800">Los borradores de perfiles distintos no se suman para calcular un simulacro. Los conjuntos marcados «Revisión requerida» deben corregirse antes de utilizarlos.</p>
         </section>
+        <section className="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-xl border border-slate-300 bg-white p-4">
+          <label className="block min-w-[240px] flex-1 text-sm font-semibold">Mostrar conjuntos de
+            <select value={formatFilter} onChange={e => setFormatFilter(e.target.value as FormatFilter)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-900">
+              <option value="saber11_2026">Saber 11 · 2026</option>
+              <option value="historical">Formato histórico</option>
+              <option value="custom_review">Revisión requerida</option>
+              <option value="all">Todos los formatos (no sumar como un solo examen)</option>
+            </select>
+          </label>
+          <div className="text-sm text-slate-700">
+            <p className="font-bold">{visibleQuestionCount} preguntas en {visibleSets.length} conjunto(s) mostrados</p>
+            <p className="mt-1 text-xs text-slate-500">2026: {current2026Count}/55 · Histórico: {historicalCount}/55 etiquetadas · Revisión: {reviewCount}</p>
+          </div>
+        </section>
+        {formatFilter === "saber11_2026" && current2026Count < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El perfil 2026 todavía no completa las 55 preguntas: faltan {55 - current2026Count}. La Parte 7A antigua con 10 espacios (115–124) está separada en «Revisión requerida»; este perfil necesita 8 espacios, del 117 al 124.</p>}
+        {!loading && visibleSets.length === 0 && sets.length > 0 && !error && <p className="mb-6 rounded-xl border border-slate-300 bg-white p-6 text-sm text-slate-600">No hay conjuntos guardados con la etiqueta de este formato todavía.</p>}
         {loading && <div className="flex items-center justify-center rounded-2xl bg-white p-12 text-slate-500"><Loader2 className="mr-3 animate-spin" /> Cargando conjuntos...</div>}
         {!loading && error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
         {!loading && !error && sets.length === 0 && <div className="rounded-2xl bg-white p-10 text-center shadow-sm"><h2 className="text-xl font-bold">Todavía no hay conjuntos de Inglés</h2><p className="mt-2 text-slate-600">Crea un conjunto para que aparezca aquí como una página del cuadernillo.</p></div>}
         <div className="space-y-8">
-          {sets.map((set) => {
+          {visibleSets.map((set) => {
             const qs = questionsBySet[set.id] ?? [];
             const words = set.word_bank ?? [];
             const group = set.title.match(/^((?:4|7)[AB])\s*[·—-]/)?.[1];

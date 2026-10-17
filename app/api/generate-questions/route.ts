@@ -17,6 +17,13 @@ import type {
 } from "@/lib/visuals/types";
 
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import {
+  buildIndependentReviewPrompt,
+  chooseTaskFamily,
+  parseIndependentReviewResponse,
+  getSubjectQualityRules,
+  type QualityPlanSlot,
+} from "@/lib/ai/question-quality";
 
 export const runtime = "nodejs";
 
@@ -97,6 +104,7 @@ type CognitiveOperation =
   | "predecir";
 
 interface GenerationPlanItem {
+  task_family?: string | null;
   component: string | null;
   competence: string | null;
   skill: string | null;
@@ -1295,6 +1303,19 @@ function buildGenerationPlan(
       }
     );
 
+  const usedTaskFamilies = new Set<string>();
+  const planWithTaskFamilies: GenerationPlanItem[] = plan.map(
+    (item, index) => ({
+      ...item,
+      task_family: chooseTaskFamily(
+        subject,
+        item.assessment_target ?? item.competence ?? "",
+        usedTaskFamilies,
+        index
+      ),
+    })
+  );
+
   /*
    * =====================================================
    * DIAGNÓSTICO FINAL DEL PLAN
@@ -1305,13 +1326,16 @@ function buildGenerationPlan(
     "[PeakScore] Plan de generación construido:"
   );
 
-  plan.forEach(
+  planWithTaskFamilies.forEach(
     (item, index) => {
       console.log(
         `[PeakScore] Slot ${index + 1}:`,
         {
           assessment_target:
             item.assessment_target,
+
+          task_family:
+            item.task_family,
 
           component:
             item.component,
@@ -1335,7 +1359,7 @@ function buildGenerationPlan(
     }
   );
 
-  return plan;
+  return planWithTaskFamilies;
 }
 
 interface ExistingQuestionForSimilarity {
@@ -5778,6 +5802,7 @@ function buildPrompt(
   existingBankQuestions: ExistingQuestionForSimilarity[] = []
 ): string {
   const normalizedSubject = normalize(subject);
+  const subjectQualityRules = getSubjectQualityRules(subject);
 
   /* =========================================================
      DIFICULTAD
@@ -5918,6 +5943,9 @@ function buildPrompt(
 
       assessment_target:
         item.assessment_target,
+
+      task_family:
+        item.task_family ?? null,
       
       claim:
         item.claim,
@@ -6718,6 +6746,7 @@ Si alguna condición falla, descarta la pregunta y genera otra.
      ========================================================= */
   console.log("[PeakScore] 📊 Tamaño de secciones del prompt:", {
     difficultyRule: difficultyRule.length,
+    subjectQualityRules: subjectQualityRules.length,
     generationPlan: JSON.stringify(compactGenerationPlan).length,
     referenceSection: referenceSection.length,
     excludedSection: excludedSection.length,
@@ -6742,6 +6771,8 @@ Sesión: ${session}
 
 ${blueprint}
 
+${subjectQualityRules}
+
 ${calibration}
 
 PLAN DE ARQUITECTURA OBLIGATORIO:
@@ -6750,9 +6781,11 @@ ${JSON.stringify(compactGenerationPlan)}
 CORRESPONDENCIA OBLIGATORIA ENTRE EL PLAN Y LA SALIDA:
 
 - assessment_target es un objetivo evaluativo interno del slot.
-- La pregunta DEBE construirse para medir específicamente ese objetivo.
+- task_family es la familia metodológica que debe guiar cómo se resuelve la pregunta.
+- La pregunta DEBE construirse para medir específicamente assessment_target y usar la familia metodológica task_family.
+- Si task_family cambia respecto a las preguntas previas, cambia realmente el procedimiento o la habilidad operacional; no cambies solo escenario, nombres o cifras.
 - Usa assessment_target para orientar la tarea, el estímulo y el razonamiento requerido.
-- NO devuelvas assessment_target en el JSON final.
+- NO devuelvas assessment_target ni task_family en el JSON final.
 - NO inventes ni sustituyas un objetivo evaluativo diferente para completar el slot.
 
 - claim representa la afirmación evaluativa que debe sustentar la pregunta.
@@ -7004,7 +7037,9 @@ async function generateBlock(
       });
       
       
-      const valid =
+      const candidatePlanStart = planAssignmentCursor;
+
+      let valid =
         generated.filter(
           (item: GeneratedQuestion) => {
             if (acceptedQuestions.length >= amount) {
@@ -7322,8 +7357,135 @@ async function generateBlock(
         }
       }
 
+      /*
+       * SEGUNDA REVISIÓN INDEPENDIENTE:
+       * El modelo revisor debe resolver cada candidato por su cuenta.
+       * Si rechaza un ítem en medio del bloque, se acepta solo el prefijo
+       * anterior y se reintenta desde el primer slot rechazado. Así ningún
+       * candidato rechazado consume el objetivo curricular de ese slot.
+       */
+      if (valid.length > 0) {
+        const reviewSlots: QualityPlanSlot[] = valid.map(
+          (_, index) =>
+            generationPlan[candidatePlanStart + index] ?? {}
+        );
+
+        try {
+          const reviewResponse = await generateAI({
+            provider: "gemini",
+            task: "analysis",
+            useFallback: true,
+            prompt: buildIndependentReviewPrompt(
+              subject,
+              session,
+              valid,
+              reviewSlots,
+              [...existingGeneratedQuestions, ...acceptedQuestions]
+            ),
+          });
+
+          const rawReview = reviewResponse.text?.trim() ?? "";
+          const independentReview = rawReview
+            ? parseIndependentReviewResponse(
+                cleanJson(rawReview),
+                valid.length
+              )
+            : null;
+
+          if (!independentReview) {
+            throw new Error("Respuesta de auditoría independiente inválida.");
+          }
+
+          const firstRejectedIndex = independentReview.reviews.findIndex(
+            (review, index) => {
+              const question = valid[index];
+              return (
+                !question ||
+                review.verdict !== "approve" ||
+                review.independent_answer !== question.correct_answer ||
+                !review.key_matches ||
+                !review.one_correct_answer ||
+                !review.information_sufficient ||
+                !review.subject_aligned ||
+                !review.explanation_consistent ||
+                !review.difficulty_appropriate ||
+                review.critical_issues.length > 0
+              );
+            }
+          );
+
+          if (firstRejectedIndex >= 0) {
+            const rejectedReview =
+              independentReview.reviews[firstRejectedIndex];
+
+            console.warn(
+              "[PeakScore] Auditoría independiente rechazó un candidato; se reintentará desde ese slot.",
+              {
+                candidate: firstRejectedIndex + 1,
+                issues: rejectedReview.critical_issues,
+                warnings: rejectedReview.warnings,
+                independentAnswer: rejectedReview.independent_answer,
+                statedAnswer: valid[firstRejectedIndex]?.correct_answer,
+              }
+            );
+
+            valid = valid.slice(0, firstRejectedIndex);
+
+            // Keep retry-local deduplication state aligned with the approved
+            // prefix only. Rejected candidates must not poison similarity
+            // checks for their replacements on the next attempt.
+            const approvedKeys = new Set(
+              valid.map((question) => normalize(question.question))
+            );
+
+            for (const key of unique) {
+              if (!approvedKeys.has(key)) {
+                unique.delete(key);
+              }
+            }
+
+            for (
+              let index = similarityAcceptedQuestions.length - 1;
+              index >= 0;
+              index--
+            ) {
+              const previous = similarityAcceptedQuestions[index];
+              if (
+                !previous ||
+                !approvedKeys.has(normalize(previous.question))
+              ) {
+                similarityAcceptedQuestions.splice(index, 1);
+              }
+            }
+
+            planAssignmentCursor =
+              candidatePlanStart + valid.length;
+          } else {
+            console.log(
+              `[PeakScore] Auditoría independiente aprobó ${valid.length} candidatos.`
+            );
+          }
+        } catch (reviewError) {
+          // Fail closed: un lote sin revisión válida no entra al banco.
+          console.error(
+            "[PeakScore] La auditoría independiente no pudo completar la revisión; se reintentará sin guardar estos candidatos.",
+            reviewError instanceof Error
+              ? reviewError.message
+              : "Error desconocido"
+          );
+
+          valid = [];
+          unique.clear();
+          similarityAcceptedQuestions.length = 0;
+          planAssignmentCursor = candidatePlanStart;
+          lastError = new Error(
+            "La auditoría de calidad independiente no pudo validar el bloque."
+          );
+        }
+      }
+
       console.log(
-        `[PeakScore] Groq devolvió ${valid.length}/${amount} preguntas válidas.`
+        `[PeakScore] Groq devolvió ${valid.length}/${amount} preguntas válidas tras la auditoría independiente.`
       );
 
       /*

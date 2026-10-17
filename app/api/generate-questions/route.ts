@@ -7673,6 +7673,33 @@ export async function POST(
     const amount =
       Number(body.amount);
 
+    const validDifficulties = [
+      "Fácil",
+      "Media",
+      "Difícil",
+      "Mixta",
+    ] as const;
+
+    if (
+      body.difficulty !== undefined &&
+      body.difficulty !== null &&
+      body.difficulty !== "" &&
+      !validDifficulties.includes(
+        body.difficulty as (typeof validDifficulties)[number]
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "La dificultad debe ser Fácil, Media, Difícil o Mixta.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
     const difficulty: Difficulty =
       body.difficulty === "Fácil" ||
       body.difficulty === "Media" ||

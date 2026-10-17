@@ -7717,13 +7717,18 @@ export async function POST(
       "Mixta",
     ] as const;
 
+    // Treat the incoming value as unknown because JSON can contain values
+    // outside the static GenerateRequest type.
+    const difficultyInput: unknown = body.difficulty;
+
     if (
-      body.difficulty !== undefined &&
-      body.difficulty !== null &&
-      body.difficulty !== "" &&
-      !validDifficulties.includes(
-        body.difficulty as (typeof validDifficulties)[number]
-      )
+      difficultyInput !== undefined &&
+      difficultyInput !== null &&
+      difficultyInput !== "" &&
+      (typeof difficultyInput !== "string" ||
+        !validDifficulties.includes(
+          difficultyInput as (typeof validDifficulties)[number]
+        ))
     ) {
       return NextResponse.json(
         {
@@ -7738,11 +7743,11 @@ export async function POST(
     }
 
     const difficulty: Difficulty =
-      body.difficulty === "Fácil" ||
-      body.difficulty === "Media" ||
-      body.difficulty === "Difícil" ||
-      body.difficulty === "Mixta"
-        ? body.difficulty
+      difficultyInput === "Fácil" ||
+      difficultyInput === "Media" ||
+      difficultyInput === "Difícil" ||
+      difficultyInput === "Mixta"
+        ? difficultyInput
         : "Mixta";
 
     /* =====================================================

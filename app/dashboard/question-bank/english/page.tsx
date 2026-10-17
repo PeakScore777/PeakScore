@@ -120,6 +120,12 @@ export default function EnglishQuestionBankPage() {
           <h1 className="mt-1 text-3xl font-black">Inglés</h1>
           <p className="mt-2 max-w-3xl text-slate-600">Conjuntos organizados por parte y presentados en formato de cuadernillo: instrucciones, material compartido y preguntas en un mismo bloque.</p>
         </div>
+        <section className="mb-6 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700">
+          <h2 className="font-bold text-slate-900">No mezcles perfiles de cuadernillo</h2>
+          <p className="mt-1"><strong>Saber 11 · 2026:</strong> 55 preguntas. Parte 4 única (97–104); Parte 5 (105–111); Parte 6 (112–116); Parte 7A (117–124, 8 preguntas) y 7B (125–134, 10 preguntas).</p>
+          <p className="mt-1"><strong>Formato histórico:</strong> 55 preguntas. Partes 4A (97–104) y 4B (105–112); Parte 5 (113–119); Parte 6 (120–124); una sola Parte 7A (125–134).</p>
+          <p className="mt-1 text-amber-800">Los borradores de perfiles distintos no se suman para calcular un simulacro. Los conjuntos marcados «Revisión requerida» deben corregirse antes de utilizarlos.</p>
+        </section>
         {loading && <div className="flex items-center justify-center rounded-2xl bg-white p-12 text-slate-500"><Loader2 className="mr-3 animate-spin" /> Cargando conjuntos...</div>}
         {!loading && error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
         {!loading && !error && sets.length === 0 && <div className="rounded-2xl bg-white p-10 text-center shadow-sm"><h2 className="text-xl font-bold">Todavía no hay conjuntos de Inglés</h2><p className="mt-2 text-slate-600">Crea un conjunto para que aparezca aquí como una página del cuadernillo.</p></div>}
@@ -224,7 +230,7 @@ export default function EnglishQuestionBankPage() {
                     <div className="space-y-0">
                       {qs.map((q, i) => {
                         const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                         const isSubpartB = /^7B\\b/i.test(set.title);
+                         const isSubpartB = /^7B\b/i.test(set.title);
                          const position = q.english_position ?? i + 1;
                          const number = set.booklet_format === "custom_review"
                            ? q.question_number ?? 114 + position

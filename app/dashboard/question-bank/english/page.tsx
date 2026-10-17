@@ -147,6 +147,7 @@ export default function EnglishQuestionBankPage() {
                 </div>
                 <div className="px-6 py-6 sm:px-10 sm:py-8">
                   {set.part === 6 && set.shared_text ? <section className="mb-5 rounded-xl border-2 border-slate-900 px-4 py-4 sm:px-5">
+                    {set.shared_title && <h3 className="mb-3 text-center text-sm font-black uppercase tracking-wide">{set.shared_title}</h3>}
                     <div className={set.shared_image_url ? "grid grid-cols-1 items-start gap-4 md:grid-cols-[minmax(0,1fr)_minmax(125px,0.34fr)]" : ""}>
                       <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{set.shared_text}</p>
                       {set.shared_image_url && <div className="flex justify-center md:justify-end"><img src={set.shared_image_url} alt="Ilustración del texto de comprensión inferencial" className="h-auto max-h-56 max-w-full object-contain"/></div>}

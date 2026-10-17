@@ -130,7 +130,7 @@ export default function EnglishQuestionBankPage() {
             const displayPart = isWordBankSet ? 1 : set.part;
             const displayPartName = isWordBankSet ? "Descripciones y banco de palabras" : (PART_NAMES[displayPart] ?? "Inglés");
             return (
-              <article key={set.id} className="mx-auto min-h-[297mm] w-full max-w-[210mm] overflow-hidden border border-slate-300 bg-white shadow-sm print:break-after-page">
+              <article key={set.id} className={`mx-auto ${set.part === 6 ? "" : "min-h-[297mm]"} w-full max-w-[210mm] overflow-hidden border border-slate-300 bg-white shadow-sm ${set.part === 6 ? "" : "print:break-after-page"}`}>
                 <div className="border-b border-slate-200 px-6 py-5 sm:px-10">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -202,26 +202,27 @@ export default function EnglishQuestionBankPage() {
                       </div>
                     </div>
                   </div>}
-                  {!words.length && set.part === 6 ? <section className="mt-3">
-                    <div className="grid grid-cols-1 gap-x-6 gap-y-2 md:grid-cols-2">
-                      {[qs.slice(0, 2), qs.slice(2, 4)].map((columnQuestions, columnIndex) => <div key={columnIndex} className="space-y-2">
-                        {columnQuestions.map((q, rowIndex) => {
+                  {!words.length && set.part === 6 ? <section className="mt-2">
+                    <div className="space-y-0">
+                      {[[0, 2], [1, 3]].map((pair, rowIndex) => <div key={rowIndex} className="grid grid-cols-1 gap-x-6 gap-y-2 border-b border-slate-400 py-2 md:grid-cols-2">
+                        {pair.map(questionIndex => {
+                          const q = qs[questionIndex];
+                          if (!q) return null;
                           const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                          const number = 119 + (q.english_position ?? columnIndex * 2 + rowIndex + 1);
-                          return <article key={q.id} className="border-b border-slate-400 pb-2">
-                            <div className="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2">
-                              <p className="text-[10px] leading-[1.35]"><strong>{number}.</strong> {q.question}</p>
-                              <div className="space-y-0.5">{opts.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text}</p>)}</div>
-                            </div>
-                          </article>;
+                          const number = 119 + (q.english_position ?? questionIndex + 1);
+                          return <div key={q.id} className="grid min-w-0 grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] items-start gap-2">
+                            <p className="text-[10px] leading-[1.35]"><strong>{number}.</strong> {q.question}</p>
+                            <div className="space-y-0.5">{opts.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text}</p>)}</div>
+                          </div>;
                         })}
                       </div>)}
                     </div>
                     {qs[4] && (() => {
                       const q = qs[4];
                       const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                      return <article className="mt-3 border-t-2 border-slate-900 pt-2">
-                        <p className="text-[11px] leading-4"><strong>124.</strong> {q.question}</p>
+                      const number = 119 + (q.english_position ?? 5);
+                      return <article className="mt-2 border-t-2 border-slate-900 pt-2">
+                        <p className="text-[11px] leading-4"><strong>{number}.</strong> {q.question}</p>
                         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                           {opts.map(option => <div key={option.key} className="min-h-12 border border-slate-500 px-2 py-2 text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text}</div>)}
                         </div>

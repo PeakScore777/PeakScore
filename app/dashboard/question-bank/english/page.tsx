@@ -57,19 +57,22 @@ const PART_NAMES: Record<number, string> = {
 function isVisibleInProfile(set: EnglishSet, filter: FormatFilter): boolean {
   if (filter === "all") return true;
   if (filter === "custom_review") return set.booklet_format === "custom_review";
-  // Parts 1–3 are common to both booklet profiles and appear once.
+
+  // Parts 1–3 share content; Part 3 is sliced to five questions in the 2026 view.
   if ([1, 2, 3].includes(set.part)) return set.booklet_format !== "custom_review";
 
   if (filter === "saber11_2026") return set.booklet_format === "saber11_2026";
 
-  // Historical profile reuses one Part 4 as 4A, adds its separate 4B,
-  // and reuses one copy of Parts 5/6 with the older printed numbering.
+  // Historical profile reuses the Part 4 set as 4A and has a separate 4B.
+  // Parts 5/6 share content but get historical numbering in the historical view.
   if ([4, 5, 6].includes(set.part)) {
     return set.booklet_format === "saber11_2026" || set.booklet_format === "historical";
   }
 
-  // Historical: one 7A (125–134). 2026: 7A (117–124) and 7B (125–134).
-  return set.booklet_format === "historical";
+  // Historical has one Part 7A (125–134); 2026 has 7A (115–124) and 7B (125–134).
+  return set.part === 7 && set.booklet_format === "historical"
+    ? true
+    : set.booklet_format === "saber11_2026";
 }
 
 function getBankQuestionNumber(
@@ -86,15 +89,17 @@ function getBankQuestionNumber(
   const historicalView = filter === "historical" ||
     (filter === "all" && set.booklet_format === "historical");
   switch (set.part) {
-    case 1: return 79 + position;
-    case 2: return 84 + position;
-    case 3: return 89 + position;
-    case 4: return set.title.startsWith("4B") ? 104 + position : 96 + position;
-    case 5: return (historicalView ? 112 : 104) + position;
-    case 6: return (historicalView ? 119 : 111) + position;
+    case 1: return 79 + position; // 80–84
+    case 2: return 84 + position; // 85–89
+    case 3: return 89 + position; // 90–94 in 2026; 90–96 historical
+    case 4:
+      if (set.title.startsWith("4B")) return 104 + position; // historical 4B: 105–112
+      return (historicalView ? 96 : 94) + position; // historical 4A: 97–104; 2026: 95–102
+    case 5: return (historicalView ? 112 : 102) + position; // 113–119 / 103–109
+    case 6: return (historicalView ? 119 : 109) + position; // 120–124 / 110–114
     case 7:
-      if (historicalView || set.title.startsWith("7B")) return 124 + position;
-      return 116 + position;
+      if (historicalView || set.title.startsWith("7B")) return 124 + position; // 125–134
+      return 114 + position; // 2026 7A: 115–124
     default: return question.question_number ?? position;
   }
 }
@@ -151,10 +156,17 @@ export default function EnglishQuestionBankPage() {
   }, []);
 
   const visibleSets = sets.filter(set => isVisibleInProfile(set, formatFilter));
-  const current2026Count = sets.filter(set => isVisibleInProfile(set, "saber11_2026")).reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
-  const historicalCount = sets.filter(set => isVisibleInProfile(set, "historical")).reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
+  const countSetQuestions = (set: EnglishSet, filter: FormatFilter) => {
+    const total = questionsBySet[set.id]?.length ?? 0;
+    return set.part === 3 && filter === "saber11_2026" ? Math.min(total, 5) : total;
+  };
+  const countForProfile = (filter: FormatFilter) => sets
+    .filter(set => isVisibleInProfile(set, filter))
+    .reduce((sum, set) => sum + countSetQuestions(set, filter), 0);
+  const current2026Count = countForProfile("saber11_2026");
+  const historicalCount = countForProfile("historical");
   const reviewCount = sets.filter(set => set.booklet_format === "custom_review").reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
-  const visibleQuestionCount = visibleSets.reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
+  const visibleQuestionCount = visibleSets.reduce((sum, set) => sum + countSetQuestions(set, formatFilter), 0);
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
@@ -174,8 +186,8 @@ export default function EnglishQuestionBankPage() {
         </div>
         <section className="mb-6 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700">
           <h2 className="font-bold text-slate-900">No mezcles perfiles de cuadernillo</h2>
-          <p className="mt-1"><strong>Saber 11 · 2026:</strong> 55 preguntas. Parte 4 única (97–104); Parte 5 (105–111); Parte 6 (112–116); Parte 7A (117–124, 8 preguntas) y 7B (125–134, 10 preguntas).</p>
-          <p className="mt-1"><strong>Formato histórico:</strong> 55 preguntas. Partes 4A (97–104) y 4B (105–112); Parte 5 (113–119); Parte 6 (120–124); una sola Parte 7A (125–134).</p>
+          <p className="mt-1"><strong>Saber 11 · 2026 Calendario A:</strong> 55 preguntas. Partes 1 (80–84), 2 (85–89), 3 (90–94), 4 (95–102), 5 (103–109), 6 (110–114), 7A (115–124) y 7B (125–134).</p>
+          <p className="mt-1"><strong>Formato histórico de referencia:</strong> 55 preguntas. Partes 1 (80–84), 2 (85–89), 3 (90–96), 4A (97–104), 4B (105–112), 5 (113–119), 6 (120–124) y una sola 7A (125–134).</p>
           <p className="mt-1 text-amber-800">Los borradores de perfiles distintos no se suman para calcular un simulacro. Los conjuntos marcados «Revisión requerida» deben corregirse antes de utilizarlos.</p>
         </section>
         <section className="mb-6 flex flex-wrap items-end justify-between gap-4 rounded-xl border border-slate-300 bg-white p-4">
@@ -192,15 +204,16 @@ export default function EnglishQuestionBankPage() {
             <p className="mt-1 text-xs text-slate-500">2026: {current2026Count}/55 disponibles · Histórico: {historicalCount}/55 disponibles · Revisión: {reviewCount} aisladas</p>
           </div>
         </section>
-        {formatFilter === "saber11_2026" && current2026Count < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El perfil 2026 todavía no completa las 55 preguntas: faltan {55 - current2026Count}. La Parte 7A antigua con 10 espacios (115–124) está separada en «Revisión requerida»; este perfil necesita 8 espacios, del 117 al 124.</p>}
-        {formatFilter === "historical" && historicalCount < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El formato histórico todavía no completa las 55 preguntas: faltan {55 - historicalCount}. La Parte 7A histórica debe tener 10 espacios numerados del 125 al 134; el borrador «Book Exchange» sigue aislado porque su imagen está numerada del 115 al 124.</p>}
+        {formatFilter === "saber11_2026" && current2026Count < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El perfil 2026 todavía no completa las 55 preguntas: faltan {55 - current2026Count}. Las partes comunes se cuentan una sola vez, la Parte 3 usa 90–94 y la 7A debe usar 115–124.</p>}
+        {formatFilter === "historical" && historicalCount < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El perfil histórico todavía no completa las 55 preguntas: faltan {55 - historicalCount}. Hace falta una Parte 7A histórica propia, con diez espacios numerados del 125 al 134. No reutilices la 7A de 2026 como si fuera histórica porque su rango es 115–124.</p>}
         {!loading && visibleSets.length === 0 && sets.length > 0 && !error && <p className="mb-6 rounded-xl border border-slate-300 bg-white p-6 text-sm text-slate-600">No hay conjuntos guardados con la etiqueta de este formato todavía.</p>}
         {loading && <div className="flex items-center justify-center rounded-2xl bg-white p-12 text-slate-500"><Loader2 className="mr-3 animate-spin" /> Cargando conjuntos...</div>}
         {!loading && error && <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-800">{error}</p>}
         {!loading && !error && sets.length === 0 && <div className="rounded-2xl bg-white p-10 text-center shadow-sm"><h2 className="text-xl font-bold">Todavía no hay conjuntos de Inglés</h2><p className="mt-2 text-slate-600">Crea un conjunto para que aparezca aquí como una página del cuadernillo.</p></div>}
         <div className="space-y-8">
           {visibleSets.map((set) => {
-            const qs = questionsBySet[set.id] ?? [];
+            const allQuestions = questionsBySet[set.id] ?? [];
+            const qs = set.part === 3 && formatFilter === "saber11_2026" ? allQuestions.slice(0, 5) : allQuestions;
             const words = set.word_bank ?? [];
             const group = set.title.match(/^((?:4|7)[AB])\s*[·—-]/)?.[1] ?? (formatFilter === "historical" && set.part === 4 ? "4A" : undefined);
             const isWordBankSet = words.length > 0;
@@ -215,10 +228,30 @@ export default function EnglishQuestionBankPage() {
                   : set.booklet_format === "custom_review"
                     ? "Revisión requerida"
                     : "Formato Saber 11 · 2026";
-            const displayInstructions = formatFilter === "historical" && set.part === 5
-              ? "Lee el texto y responde las preguntas. En las preguntas 113–119, marca A, B o C en tu hoja de respuestas."
-              : formatFilter === "historical" && set.part === 6
-                ? "Lee el texto y responde las preguntas. En las preguntas 120–124, marca A, B, C o D en tu hoja de respuestas."
+            const displayInstructions = set.part === 3
+              ? formatFilter === "historical"
+                ? "Completa las siete conversaciones. En las preguntas 90–96, marca A, B o C en tu hoja de respuestas."
+                : "Completa las cinco conversaciones. En las preguntas 90–94, marca A, B o C en tu hoja de respuestas."
+              : set.part === 4
+                ? set.title.startsWith("4B")
+                  ? "Lee el texto y selecciona la palabra que mejor completa cada espacio. En las preguntas 105–112, marca A, B o C."
+                  : formatFilter === "historical"
+                    ? "Lee el texto y selecciona la palabra que mejor completa cada espacio. En las preguntas 97–104, marca A, B o C."
+                    : "Lee el texto y selecciona la palabra que mejor completa cada espacio. En las preguntas 95–102, marca A, B o C."
+              : set.part === 5
+                ? formatFilter === "historical"
+                  ? "Lee el texto y responde las preguntas. En las preguntas 113–119, marca A, B o C en tu hoja de respuestas."
+                  : "Lee el texto y responde las preguntas. En las preguntas 103–109, marca A, B o C en tu hoja de respuestas."
+              : set.part === 6
+                ? formatFilter === "historical"
+                  ? "Lee el texto y responde las preguntas. En las preguntas 120–124, marca A, B, C o D en tu hoja de respuestas."
+                  : "Lee el texto y responde las preguntas. En las preguntas 110–114, marca A, B, C o D en tu hoja de respuestas."
+              : set.part === 7
+                ? formatFilter === "historical"
+                  ? "Lee el texto y selecciona la palabra que completa cada espacio. En las preguntas 125–134, marca A, B, C o D."
+                  : set.title.startsWith("7B")
+                    ? "Lee el texto y selecciona la palabra que completa cada espacio. En las preguntas 125–134, marca A, B, C o D."
+                    : "Lee el texto y selecciona la palabra que completa cada espacio. En las preguntas 115–124, marca A, B, C o D."
                 : set.instructions;
             return (
               <article key={set.id} className={`mx-auto ${set.part === 6 ? "" : "min-h-[297mm]"} w-full max-w-[210mm] overflow-hidden border border-slate-300 bg-white shadow-sm ${set.part === 6 ? "" : "print:break-after-page"}`}>

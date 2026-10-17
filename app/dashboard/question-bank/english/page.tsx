@@ -54,6 +54,18 @@ const PART_NAMES: Record<number, string> = {
   7: "Texto cloze",
 };
 
+function isVisibleInProfile(set: EnglishSet, filter: FormatFilter): boolean {
+  if (filter === "all") return true;
+  if (filter === "custom_review") return set.booklet_format === "custom_review";
+  // Parts 1–3 are shared by both profiles and are displayed once.
+  if ([1, 2, 3].includes(set.part)) return true;
+  if (filter === "saber11_2026") return set.booklet_format === "saber11_2026";
+  // The current Part 4 is historical 4A; historical 4B remains a separate set.
+  // Parts 5 and 6 share content between profiles; only their numbering changes.
+  if ([4, 5, 6].includes(set.part)) return true;
+  return set.booklet_format === "historical";
+}
+
 export default function EnglishQuestionBankPage() {
   const [sets, setSets] = useState<EnglishSet[]>([]);
   const [questionsBySet, setQuestionsBySet] = useState<Record<string, EnglishQuestion[]>>({});
@@ -106,9 +118,9 @@ export default function EnglishQuestionBankPage() {
     return () => { alive = false; };
   }, []);
 
-  const visibleSets = sets.filter(set => formatFilter === "all" || set.booklet_format === formatFilter);
-  const current2026Count = sets.filter(set => set.booklet_format === "saber11_2026").reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
-  const historicalCount = sets.filter(set => set.booklet_format === "historical").reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
+  const visibleSets = sets.filter(set => isVisibleInProfile(set, formatFilter));
+  const current2026Count = sets.filter(set => isVisibleInProfile(set, "saber11_2026")).reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
+  const historicalCount = sets.filter(set => isVisibleInProfile(set, "historical")).reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
   const reviewCount = sets.filter(set => set.booklet_format === "custom_review").reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
   const visibleQuestionCount = visibleSets.reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
 
@@ -145,7 +157,7 @@ export default function EnglishQuestionBankPage() {
           </label>
           <div className="text-sm text-slate-700">
             <p className="font-bold">{visibleQuestionCount} preguntas en {visibleSets.length} conjunto(s) mostrados</p>
-            <p className="mt-1 text-xs text-slate-500">2026: {current2026Count}/55 · Histórico: {historicalCount}/55 etiquetadas · Revisión: {reviewCount}</p>
+            <p className="mt-1 text-xs text-slate-500">2026: {current2026Count}/55 disponibles · Histórico: {historicalCount}/55 disponibles · Revisión: {reviewCount} aisladas</p>
           </div>
         </section>
         {formatFilter === "saber11_2026" && current2026Count < 55 && <p className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">El perfil 2026 todavía no completa las 55 preguntas: faltan {55 - current2026Count}. La Parte 7A antigua con 10 espacios (115–124) está separada en «Revisión requerida»; este perfil necesita 8 espacios, del 117 al 124.</p>}
@@ -157,10 +169,24 @@ export default function EnglishQuestionBankPage() {
           {visibleSets.map((set) => {
             const qs = questionsBySet[set.id] ?? [];
             const words = set.word_bank ?? [];
-            const group = set.title.match(/^((?:4|7)[AB])\s*[·—-]/)?.[1];
+            const group = set.title.match(/^((?:4|7)[AB])\s*[·—-]/)?.[1] ?? (formatFilter === "historical" && set.part === 4 ? "4A" : undefined);
             const isWordBankSet = words.length > 0;
             const displayPart = isWordBankSet ? 1 : set.part;
             const displayPartName = isWordBankSet ? "Descripciones y banco de palabras" : (PART_NAMES[displayPart] ?? "Inglés");
+            const displayFormatLabel = formatFilter === "historical"
+              ? "Formato histórico · contenido compartido"
+              : formatFilter === "saber11_2026"
+                ? "Formato Saber 11 · 2026"
+                : set.booklet_format === "historical"
+                  ? "Formato histórico"
+                  : set.booklet_format === "custom_review"
+                    ? "Revisión requerida"
+                    : "Formato Saber 11 · 2026";
+            const displayInstructions = formatFilter === "historical" && set.part === 5
+              ? "Lee el texto y responde las preguntas. En las preguntas 113–119, marca A, B o C en tu hoja de respuestas."
+              : formatFilter === "historical" && set.part === 6
+                ? "Lee el texto y responde las preguntas. En las preguntas 120–124, marca A, B, C o D en tu hoja de respuestas."
+                : set.instructions;
             return (
               <article key={set.id} className={`mx-auto ${set.part === 6 ? "" : "min-h-[297mm]"} w-full max-w-[210mm] overflow-hidden border border-slate-300 bg-white shadow-sm ${set.part === 6 ? "" : "print:break-after-page"}`}>
                 <div className="border-b border-slate-200 px-6 py-5 sm:px-10">
@@ -176,9 +202,8 @@ export default function EnglishQuestionBankPage() {
                     </div>
                   </div>
                   {set.booklet_format === "custom_review" && <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">Revisión requerida: este texto tiene 10 espacios numerados 115–124 y no corresponde a un formato completo 2026 ni al histórico. No incluir en simulacros hasta corregirlo.</div>}
-                  {set.booklet_format === "historical" && <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Formato histórico · 55 preguntas por cuadernillo</p>}
-                  {set.booklet_format === "saber11_2026" && <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Formato Saber 11 · 2026</p>}
-                  {set.instructions && <p className="mt-5 text-sm font-medium leading-6 text-slate-700">{set.instructions}</p>}
+                  <p className="mt-2 text-[10px] font-semibold uppercase tracking-wide text-slate-500">{displayFormatLabel}</p>
+                  {displayInstructions && <p className="mt-5 text-sm font-medium leading-6 text-slate-700">{displayInstructions}</p>}
                 </div>
                 <div className={set.part === 6 ? "px-4 py-4 sm:px-5 sm:py-5" : "px-6 py-6 sm:px-10 sm:py-8"}>
                   {set.part === 6 && set.shared_text ? <section className="mb-3 rounded-xl border-2 border-slate-900 px-3 py-3 sm:px-4">
@@ -277,7 +302,7 @@ export default function EnglishQuestionBankPage() {
                           const q = qs[questionIndex];
                           if (!q) return null;
                           const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                          const number = (set.booklet_format === "historical" ? 119 : 111) + (q.english_position ?? questionIndex + 1);
+                          const number = ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical")) ? 119 : 111) + (q.english_position ?? questionIndex + 1);
                           return <div key={q.id} className="grid min-w-0 grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] items-start gap-2">
                             <p className="text-[10px] leading-[1.35]"><strong>{number}.</strong> {q.question}</p>
                             <div className="space-y-0.5">{opts.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text}</p>)}</div>
@@ -288,7 +313,7 @@ export default function EnglishQuestionBankPage() {
                     {qs[4] && (() => {
                       const q = qs[4];
                       const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                      const number = (set.booklet_format === "historical" ? 119 : 111) + (q.english_position ?? 5);
+                      const number = ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical")) ? 119 : 111) + (q.english_position ?? 5);
                       return <article className="mt-2 border-t-2 border-slate-900 pt-2">
                         <p className="text-[11px] leading-4"><strong>{number}.</strong> {q.question}</p>
                         <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -306,9 +331,9 @@ export default function EnglishQuestionBankPage() {
                       : set.part === 2 ? 84 + partPosition
                       : set.part === 3 ? 89 + partPosition
                       : set.part === 4 ? (isSubpartB ? 104 : 96) + partPosition
-                      : set.part === 5 ? (set.booklet_format === "historical" ? 112 : 104) + partPosition
-                      : set.part === 6 ? (set.booklet_format === "historical" ? 119 : 111) + partPosition
-                      : set.part === 7 ? (set.booklet_format === "custom_review" ? 114 + partPosition : (set.booklet_format === "historical" || isSubpartB ? 124 : 116) + partPosition)
+                      : set.part === 5 ? ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical")) ? 112 : 104) + partPosition
+                      : set.part === 6 ? ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical")) ? 119 : 111) + partPosition
+                      : set.part === 7 ? (set.booklet_format === "custom_review" ? 114 + partPosition : ((formatFilter === "historical" || (formatFilter === "all" && set.booklet_format === "historical") || isSubpartB) ? 124 : 116) + partPosition)
                       : partPosition;
                     return <div key={q.id} className={`grid gap-2 border-b border-slate-300 last:border-0 ${set.part === 4 ? "grid-cols-[2rem_minmax(0,1fr)] items-center py-2" : set.part === 5 ? "grid-cols-[1.5rem_minmax(0,1fr)] py-2" : `pb-3 pt-2 ${set.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[2rem_minmax(0,1fr)]"} ${set.part === 3 ? "min-h-[72px] pb-3 pt-3" : ""}`}`}>
                       <strong className="pt-1 text-[11px]">{questionNumber}.</strong>

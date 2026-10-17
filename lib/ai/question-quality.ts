@@ -184,7 +184,7 @@ function getFamilyGroup(subject: string, targetId: string): string {
     return "use";
   }
   if (s === "ingles") {
-    const match = id.match(/part\s*([1-7])/);
+    const match = id.match(/part(?:e)?\s*([1-7])/);
     return match ? "part" + match[1] : "part5";
   }
   return "general";
@@ -282,7 +282,8 @@ export function buildIndependentReviewPrompt(
   subject: string,
   session: number,
   questions: QualityQuestion[],
-  slots: QualityPlanSlot[]
+  slots: QualityPlanSlot[],
+  previousQuestions: QualityQuestion[] = []
 ): string {
   const s = normalizeQualitySubject(subject);
   const compactItems = questions.map((q, index) => {
@@ -317,6 +318,17 @@ export function buildIndependentReviewPrompt(
     };
   });
 
+  const previousItems = previousQuestions.slice(-8).map((q, index) => ({
+    previous_index: index + 1,
+    component: q.component ?? null,
+    competence: q.competence ?? null,
+    skill: q.skill ?? null,
+    structure_type: q.structure_type ?? null,
+    context_type: q.context_type ?? null,
+    context_text: String(q.context_text ?? "").slice(0, 140),
+    question: String(q.question ?? "").slice(0, 220)
+  }));
+
   const subjectReviewRules = getSubjectQualityRules(s);
   return [
     "Actúas como auditor disciplinar independiente de preguntas originales de PeakScore para el examen Saber 11.",
@@ -337,6 +349,8 @@ export function buildIndependentReviewPrompt(
     "",
     subjectReviewRules,
     "",
+    "PREGUNTAS ANTERIORES DE ESTE LOTE (solo para detectar repetición metodológica):",
+    JSON.stringify(previousItems),
     "REVISIÓN INDEPENDIENTE:",
     "1. Resuelve/lee cada pregunta por tu cuenta antes de comparar con stated_correct_answer.",
     "2. Comprueba las cuatro opciones y considera si otra también podría ser correcta.",

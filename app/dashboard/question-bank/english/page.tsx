@@ -219,7 +219,7 @@ export default function EnglishQuestionBankPage() {
                     <div className="space-y-0">
                       {qs.map((q, i) => {
                         const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                        const number = (isSubpartB ? 124 : 114) + (q.english_position ?? i + 1);
+                        const number = (/^7B\b/i.test(set.title) ? 124 : 114) + (q.english_position ?? i + 1);
                         return <div key={q.id} className="grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-2 border-b border-slate-400 py-2 last:border-0">
                           <strong className="pt-0.5 text-[10px]">{number}.</strong>
                           <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[10px] leading-4 sm:grid-cols-4">
@@ -231,7 +231,7 @@ export default function EnglishQuestionBankPage() {
                         </div>;
                       })}
                     </div>
-                  </section> : {!words.length && set.part === 6 ? <section className="mt-2">
+                  </section> : !words.length && set.part === 6 ? <section className="mt-2">
                     <div className="space-y-0">
                       {[[0, 2], [1, 3]].map((pair, rowIndex) => <div key={rowIndex} className="grid grid-cols-1 gap-x-6 gap-y-2 border-b border-slate-400 py-2 md:grid-cols-2">
                         {pair.map(questionIndex => {

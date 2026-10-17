@@ -176,7 +176,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 1 && wordBank.length !== 8) return setError("La Parte 1 necesita exactamente ocho palabras, de A a H.");
     if (part === 1 && !examplePrompt.trim()) return setError("Escribe el enunciado de ejemplo, como en el cuadernillo ICFES.");
     if (part === 3 && !exampleImageFile) return setError("Sube la imagen del ejemplo de conversación (Nova y Zyra, por ejemplo).");
-    if (part !== 1 && part !== 3 && part !== 4 && part !== 6 && !examplePrompt.trim()) return setError("Completa el ejemplo inicial del conjunto, como en el cuadernillo ICFES.");
+    if (![1, 3, 4, 6, 7].includes(part) && !examplePrompt.trim()) return setError("Completa el ejemplo inicial del conjunto, como en el cuadernillo ICFES.");
     if (part !== 1 && part !== 3 && part !== 6 && exampleOptions.some(option => !option.text.trim())) return setError("Completa todas las opciones del ejemplo inicial.");
     if (part !== 1 && part !== 3 && part !== 6 && !exampleOptions.some(option => option.key === exampleAnswer)) return setError("Selecciona una respuesta válida para el ejemplo.");
     if (part === 2 && questions.some(q => !q.imageFile && !q.imageUrl.trim())) return setError("Sube la imagen del aviso para cada pregunta de la Parte 2.");
@@ -227,7 +227,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         shared_text: [5, 7].includes(part) ? null : sharedText.trim() || null,
         shared_image_url: part === 6 ? null : uploadedSharedImageUrl,
         instructions: instructions.trim() || (part === 7 ? part7Group === "7A" ? "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 115–124, marque A, B, C o D en su hoja de respuestas." : "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 125–134, marque A, B, C o D en su hoja de respuestas." : PARTS[part].guidance),
-        example_prompt: part === 1 || part === 3 || part === 4 || part === 6 ? null : examplePrompt.trim() || null,
+        example_prompt: [1, 3, 4, 6, 7].includes(part) ? null : examplePrompt.trim() || null,
         example_options: part === 1 || part === 3 || part === 6 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
         example_answer: part === 1 || part === 3 || part === 6 ? null : exampleAnswer,
         example_image_url: [5, 6, 7].includes(part) ? null : uploadedExampleImageUrl,
@@ -373,7 +373,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt={`Vista previa del texto cloze de la Parte ${part7Group}`} className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
           </div>}
           {part !== 1 && part !== 4 && part !== 6 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
-            <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo.</p></div>
+            <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">{part === 7 ? "El enunciado del ejemplo (0) ya está dentro de la imagen del pasaje. Completa únicamente las opciones A–D y la respuesta." : "Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo."}</p></div>
             {![5, 7].includes(part) && <>
               <label className="block text-sm font-semibold">Imagen del ejemplo (opcional)
                 <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={e => setExampleImageFile(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" />
@@ -383,7 +383,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
               {exampleImageFile && <div className="space-y-2"><p className="text-xs text-slate-600">Imagen seleccionada: {exampleImageFile.name}</p><img src={URL.createObjectURL(exampleImageFile)} alt="Vista previa de la conversación de ejemplo" className={part === 3 ? "max-h-80 max-w-full rounded-lg border border-slate-200 bg-white object-contain" : "max-h-48 rounded-lg border border-slate-200 bg-white object-contain"} /><button type="button" onClick={() => setExampleImageFile(null)} className="text-sm font-semibold text-red-700">{existingExampleImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
             </>}
             {part !== 3 && <>
-              <label className="block text-sm font-semibold">Enunciado del ejemplo<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} maxLength={10000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder="Escribe aquí el enunciado de ejemplo..." /></label>
+              {part !== 7 && <label className="block text-sm font-semibold">Enunciado del ejemplo<textarea value={examplePrompt} onChange={e => setExamplePrompt(e.target.value)} rows={2} maxLength={10000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder="Escribe aquí el enunciado de ejemplo..." /></label>}
               <div className="grid gap-3 md:grid-cols-2">{exampleOptions.map((option, index) => <label key={option.key} className="block text-sm font-semibold">Opción de ejemplo {option.key}<input value={option.text} onChange={e => setExampleOptions(current => current.map((item, i) => i === index ? { ...item, text: e.target.value } : item))} maxLength={5000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal" placeholder={"Texto de la opción " + option.key} /></label>)}</div>
               <label className="block text-sm font-semibold">Respuesta del ejemplo<select value={exampleAnswer} onChange={e => setExampleAnswer(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3">{exampleOptions.map(option => <option key={option.key} value={option.key}>{option.key}</option>)}</select></label>
             </>}
@@ -495,8 +495,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
                 <strong>0.</strong>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
                   <div>
-                    <p>{examplePrompt.trim() || "Aquí aparece el enunciado del ejemplo 0."}</p>
-                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-4">{exampleOptions.map(option => <p key={option.key}><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
+                    {part !== 7 && <p>{examplePrompt.trim() || "Aquí aparece el enunciado del ejemplo 0."}</p>}
+                    <div className={`grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-4 ${part === 7 ? "" : "mt-2"}`}>{exampleOptions.map(option => <p key={option.key}><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
                   </div>
                   <div className="inline-flex h-fit items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none">
                     <strong className="mr-1">Respuesta 0.</strong>

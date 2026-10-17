@@ -43,7 +43,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
   const [difficulty, setDifficulty] = useState("Media");
   const [title, setTitle] = useState("");
   const [sharedText, setSharedText] = useState("");
-  const [sharedTitle, setSharedTitle] = useState("");
   const [sharedImageFile, setSharedImageFile] = useState<File | null>(null);
   const [instructions, setInstructions] = useState("");
   const [wordBankText, setWordBankText] = useState("");
@@ -72,7 +71,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setLoading(true);
       setError("");
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
-        .select("id,part,title,session,status,shared_title,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
+        .select("id,part,title,session,status,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
         .eq("id", id).single();
       if (setLoadError || !setRow || !PARTS[setRow.part]) {
         if (alive) { setError("No se pudo abrir el conjunto seleccionado para editar."); setLoading(false); }
@@ -102,7 +101,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setExistingSetStatus(setRow.status ?? "draft");
       setInstructions(setRow.instructions ?? "");
       setSharedText(setRow.shared_text ?? "");
-      setSharedTitle(setRow.part === 6 ? setRow.shared_title ?? "" : "");
       setWordBankText(loadedWordBank.map(word => word.text).join("\n"));
       setExistingSharedImageUrl(setRow.shared_image_url ?? "");
       setExistingExampleImageUrl(setRow.example_image_url ?? "");
@@ -142,7 +140,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (next === 7) setPart7Group("7A");
     setQuestions(Array.from({ length: PARTS[next].count }, () => makeQuestion(next)));
     setSharedText("");
-    setSharedTitle("");
     setSharedImageFile(null);
     setWordBankText("");
     setExamplePrompt("");
@@ -164,7 +161,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     }));
   }
   function addQuestion() {
-    const maxQuestions = part === 1 ? 5 : [4, 5].includes(part) ? PARTS[part].count : 30;
+    const maxQuestions = part === 1 ? 5 : [4, 5, 6].includes(part) ? PARTS[part].count : 30;
     if (questions.length >= maxQuestions) return;
     setQuestions(current => [...current, makeQuestion(part)]);
   }
@@ -187,7 +184,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 4 && questions.some(q => !q.explanation.trim())) return setError("Escribe una explicación en español para cada espacio de la Parte 4.");
     if (part === 5 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen completa del texto de lectura de la Parte 5.");
     if ([6, 7].includes(part) && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
-    if (part === 6 && !sharedTitle.trim()) return setError("Escribe el título del texto de lectura de la Parte 6.");
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (part !== 1 && q.options.some(o => !o.text.trim())) return setError(`Completa todas las opciones de la pregunta ${i + 1}.`);
@@ -214,7 +210,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         if (exampleUploadError) throw new Error(`No se pudo subir la imagen del ejemplo: ${exampleUploadError.message}`);
         uploadedExampleImageUrl = supabase.storage.from("question-images").getPublicUrl(examplePath).data.publicUrl;
       }
-      if ([4, 5, 6].includes(part) && sharedImageFile) {
+      if ([4, 5].includes(part) && sharedImageFile) {
         if (sharedImageFile.size > 8 * 1024 * 1024) throw new Error("La imagen del texto supera el máximo de 8 MB.");
         if (!["image/png", "image/jpeg", "image/webp"].includes(sharedImageFile.type)) throw new Error("La imagen del texto debe ser PNG, JPG o WEBP.");
         const safeSharedName = sharedImageFile.name.normalize("NFKD").replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -225,9 +221,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       }
       const setPayload = {
         part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
-        shared_title: part === 6 ? sharedTitle.trim() || null : null,
+        shared_title: null,
         shared_text: part === 5 ? null : sharedText.trim() || null,
-        shared_image_url: uploadedSharedImageUrl,
+        shared_image_url: part === 6 ? null : uploadedSharedImageUrl,
         instructions: (instructions.trim() || PARTS[part].guidance),
         example_prompt: part === 1 || part === 3 || part === 4 || part === 6 ? null : examplePrompt.trim() || null,
         example_options: part === 1 || part === 3 || part === 6 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
@@ -365,20 +361,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             {!sharedImageFile && existingSharedImageUrl && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><p className="mb-2 text-xs text-slate-600">Imagen completa guardada actualmente.</p><img src={existingSharedImageUrl} alt="Imagen completa del texto de lectura" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
             {sharedImageFile && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa del texto completo de lectura" className="max-h-[480px] max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
           </div>}
-          {[6, 7].includes(part) && <div className="mt-5 space-y-4">
-            {part === 6 && <label className="block text-sm font-semibold">Título del texto de lectura
-              <input value={sharedTitle} onChange={e => setSharedTitle(e.target.value)} maxLength={200} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder="Título original del artículo en inglés" />
-            </label>}
-            <label className="block text-sm font-semibold">{part === 6 ? "Texto de lectura compartido (se mostrará en un recuadro)" : "Texto compartido"}<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 6 ? "Pega aquí un artículo original de interés general. Las preguntas deben exigir inferir, no solo localizar una frase." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>
-            {part === 6 && <div className="rounded-xl border border-slate-300 bg-white p-4">
-              <label className="block text-sm font-semibold"><span className="inline-flex items-center gap-2"><ImageIcon size={16}/> Ilustración del texto (opcional)</span>
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={e => { const file = e.target.files?.[0] ?? null; if (file && file.size > 8 * 1024 * 1024) { setError("La imagen no puede superar 8 MB."); e.currentTarget.value = ""; return; } if (file && !["image/png", "image/jpeg", "image/webp"].includes(file.type)) { setError("La imagen debe ser PNG, JPG o WEBP."); e.currentTarget.value = ""; return; } setError(""); setSharedImageFile(file); }} className="mt-2 block w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900"/>
-                <span className="mt-1 block text-xs font-normal text-slate-500">Se mostrará dentro del recuadro del pasaje, al lado del texto. PNG, JPG o WEBP · máximo 8 MB.</span>
-              </label>
-              {!sharedImageFile && existingSharedImageUrl && <div className="mt-3"><img src={existingSharedImageUrl} alt="Ilustración actual del texto de lectura" className="max-h-52 max-w-full object-contain"/><button type="button" onClick={() => setExistingSharedImageUrl("")} className="mt-2 text-sm font-semibold text-red-700">Quitar imagen guardada</button></div>}
-              {sharedImageFile && <div className="mt-3"><img src={URL.createObjectURL(sharedImageFile)} alt="Vista previa de la ilustración del texto" className="max-h-52 max-w-full object-contain"/><button type="button" onClick={() => setSharedImageFile(null)} className="mt-2 text-sm font-semibold text-red-700">{existingSharedImageUrl ? "Cancelar reemplazo" : "Quitar imagen"}</button></div>}
-            </div>}
-          </div>}
+          {[6, 7].includes(part) && <label className="mt-5 block text-sm font-semibold">{part === 6 ? "Texto de lectura compartido" : "Texto compartido"}<textarea value={sharedText} onChange={e => setSharedText(e.target.value)} rows={part === 6 ? 7 : 8} maxLength={30000} className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 font-normal text-slate-900 placeholder:text-slate-400" placeholder={part === 6 ? "Pega aquí el texto original de interés general. Las preguntas evaluarán inferencias sobre el texto." : "Pega aquí el texto e indica los espacios como (1), (2), (3)..."} /></label>}
           {part !== 1 && part !== 4 && part !== 6 && <div className="mt-5 space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
             <div><h3 className="font-bold text-slate-900">Ejemplo inicial (no puntuable)</h3><p className="mt-1 text-sm text-slate-600">Se mostrará antes de las preguntas del conjunto, siguiendo la estructura del cuadernillo.</p></div>
             {part !== 5 && <>
@@ -462,34 +445,30 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
             <p className="mt-2 text-sm leading-6 text-slate-700">{instructions.trim() || PARTS[6].guidance}</p>
           </header>
           <div className="p-5 sm:p-7">
-            <article className="mb-5 border-2 border-slate-900 px-4 py-4 sm:px-5">
-              <h3 className="mb-3 text-center text-sm font-black uppercase tracking-wide">{sharedTitle.trim() || "Título del texto de lectura"}</h3>
-              <div className={sharedImageFile || existingSharedImageUrl ? "grid grid-cols-1 items-start gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(110px,0.34fr)]" : ""}>
-                <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{sharedText.trim() || "Aquí aparecerá el texto original de interés general."}</p>
-                {(sharedImageFile || existingSharedImageUrl) && <div className="flex justify-center sm:justify-end"><img src={sharedImageFile ? URL.createObjectURL(sharedImageFile) : existingSharedImageUrl} alt="Ilustración del texto de lectura" className="h-auto max-h-48 max-w-full object-contain"/></div>}
-              </div>
+            <article className="mb-3 border-2 border-slate-900 px-3 py-3 sm:px-4">
+              <p className="whitespace-pre-wrap font-serif text-[10px] leading-[1.35] text-slate-900">{sharedText.trim() || "Aquí aparecerá el texto de lectura."}</p>
             </article>
-            <div className="grid grid-cols-1 gap-x-8 gap-y-4 md:grid-cols-2">
-              <div className="space-y-4">
-                {questions.slice(0, 2).map((question, index) => <article key={question.id ?? index} className="border-b border-slate-300 pb-3">
-                  <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-3">
-                    <p className="text-xs leading-5"><strong>{120 + index}.</strong> {question.prompt || "Pregunta de comprensión inferencial…"}</p>
-                    <div className="space-y-1">{question.options.map(option => <p key={option.key} className="text-[11px] leading-4"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
+            <div className="grid grid-cols-1 gap-x-5 gap-y-2 md:grid-cols-2">
+              <div className="space-y-2">
+                {questions.slice(0, 2).map((question, index) => <article key={question.id ?? index} className="border-b border-slate-300 pb-2">
+                  <div className="grid grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] gap-2">
+                    <p className="text-[10px] leading-[1.35]"><strong>{120 + index}.</strong> {question.prompt || "Pregunta de comprensión inferencial…"}</p>
+                    <div className="space-y-0.5">{question.options.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
                   </div>
                 </article>)}
               </div>
               <div className="space-y-4">
                 {questions.slice(2, 4).map((question, index) => <article key={question.id ?? index + 2} className="border-b border-slate-300 pb-3">
                   <div className="grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-3">
-                    <p className="text-xs leading-5"><strong>{122 + index}.</strong> {question.prompt || "Pregunta de comprensión inferencial…"}</p>
+                    <p className="text-[10px] leading-[1.35]"><strong>{122 + index}.</strong> {question.prompt || "Pregunta de comprensión inferencial…"}</p>
                     <div className="space-y-1">{question.options.map(option => <p key={option.key} className="text-[11px] leading-4"><strong>{option.key}.</strong> {option.text || "Opción sin completar"}</p>)}</div>
                   </div>
                 </article>)}
               </div>
               {questions[4] && <article className="border-t-2 border-slate-900 pt-4 md:col-span-2">
                 <p className="text-sm leading-6"><strong>124.</strong> {questions[4].prompt || "Pregunta inferencial con opciones de respuesta extensas…"}</p>
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {questions[4].options.map(option => <div key={option.key} className="min-h-16 border border-slate-500 px-3 py-3 text-xs leading-5"><strong>{option.key}.</strong> {option.text || "Texto de opción extensa…"}</div>)}
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {questions[4].options.map(option => <div key={option.key} className="min-h-12 border border-slate-500 px-2 py-2 text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text || "Texto de opción extensa…"}</div>)}
                 </div>
               </article>}
             </div>

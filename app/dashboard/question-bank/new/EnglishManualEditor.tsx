@@ -25,7 +25,42 @@ const PARTS: Record<number, { name: string; count: number; guidance: string; cho
   6: { name: "Comprensión inferencial", count: 5, guidance: "Texto de interés general y cinco preguntas inferenciales sobre la intención del autor, ideas generales y detalles relevantes. Cuatro opciones (A–D), sin ejemplo inicial. Nivel de referencia Saber 11: B1.", choices: 4 },
   7: { name: "Texto cloze (7A o 7B)", count: 10, guidance: "Subparte 7A: preguntas 115–124; subparte 7B: 125–134. Sube una imagen del pasaje con los espacios (0) y numerados. El ejemplo 0 se completa en los campos del generador; cada espacio puntuable tiene cuatro opciones A–D.", choices: 4 },
 };
+type BookletFormat = "saber11_2026" | "historical";
 const LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+function getQuestionCount(part: number, format: BookletFormat, part7Group: "7A" | "7B") {
+  if (part === 7) return format === "saber11_2026" && part7Group === "7A" ? 8 : 10;
+  return PARTS[part]?.count ?? 30;
+}
+function getQuestionStart(part: number, format: BookletFormat, part4Group: "4A" | "4B", part7Group: "7A" | "7B") {
+  if (part === 1) return 80;
+  if (part === 2) return 85;
+  if (part === 3) return 90;
+  if (part === 4) return format === "historical" && part4Group === "4B" ? 105 : 97;
+  if (part === 5) return format === "historical" ? 113 : 105;
+  if (part === 6) return format === "historical" ? 120 : 112;
+  if (part === 7) return format === "saber11_2026" && part7Group === "7A" ? 117 : 125;
+  return 1;
+}
+function getPartGuidance(part: number, format: BookletFormat, part4Group: "4A" | "4B", part7Group: "7A" | "7B") {
+  if (part === 4) return format === "saber11_2026"
+    ? "Un solo conjunto de texto cloze para la Parte 4, con ocho espacios (97–104)."
+    : part4Group === "4A"
+      ? "Parte 4A: ocho espacios (97–104). La Parte 4B es un conjunto independiente del formato anterior."
+      : "Parte 4B del formato anterior: ocho espacios (105–112).";
+  if (part === 5) return format === "saber11_2026"
+    ? "Texto de lectura compartido y siete preguntas (105–111)."
+    : "Texto de lectura compartido y siete preguntas (113–119) del formato anterior.";
+  if (part === 6) return format === "saber11_2026"
+    ? "Texto de interés general y cinco preguntas inferenciales (112–116), con cuatro opciones A–D y sin ejemplo inicial."
+    : "Texto de interés general y cinco preguntas inferenciales (120–124), con cuatro opciones A–D y sin ejemplo inicial.";
+  if (part === 7) {
+    const start = getQuestionStart(7, format, part4Group, part7Group);
+    const end = start + getQuestionCount(7, format, part7Group) - 1;
+    return `Texto cloze ${part7Group}: imagen con el ejemplo (0) y los espacios numerados ${start}–${end}. Cada espacio tiene opciones A–D.`;
+  }
+  return PARTS[part]?.guidance ?? "";
+}
 const makeQuestion = (part: number): DraftQuestion => ({
   prompt: "",
   options: LETTERS.slice(0, PARTS[part].choices).map(key => ({ key, text: "" })),
@@ -37,6 +72,8 @@ const makeQuestion = (part: number): DraftQuestion => ({
 export default function EnglishManualEditor({ onBack }: { onBack?: () => void }) {
   const router = useRouter();
   const [part, setPart] = useState(1);
+  const [bookletFormat, setBookletFormat] = useState<BookletFormat>("saber11_2026");
+  const [needsFormatReview, setNeedsFormatReview] = useState(false);
   const [part4Group, setPart4Group] = useState<"4A" | "4B">("4A");
   const [part7Group, setPart7Group] = useState<"7A" | "7B">("7A");
   const [session, setSession] = useState("2");
@@ -71,7 +108,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setLoading(true);
       setError("");
       const { data: setRow, error: setLoadError } = await supabase.from("english_question_sets")
-        .select("id,part,title,session,status,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
+        .select("id,part,title,session,status,booklet_format,shared_text,shared_image_url,example_image_url,instructions,example_prompt,example_options,example_answer,word_bank")
         .eq("id", id).single();
       if (setLoadError || !setRow || !PARTS[setRow.part]) {
         if (alive) { setError("No se pudo abrir el conjunto seleccionado para editar."); setLoading(false); }
@@ -93,6 +130,9 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       const loadedTitle = setRow.title ?? "";
 
       setPart(setRow.part);
+      const loadedFormat: BookletFormat = setRow.booklet_format === "historical" ? "historical" : "saber11_2026";
+      setBookletFormat(loadedFormat);
+      setNeedsFormatReview(setRow.booklet_format === "custom_review");
       setPart4Group(/^4B\s*[·—-]/i.test(loadedTitle) ? "4B" : "4A");
       setPart7Group(/^7B\s*[·—-]/i.test(loadedTitle) ? "7B" : "7A");
       setTitle(loadedTitle.replace(/^(?:4[AB]|7[AB])\s*[·—-]\s*/i, ""));
@@ -138,7 +178,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setPart(next);
     if (next === 4) setPart4Group("4A");
     if (next === 7) setPart7Group("7A");
-    setQuestions(Array.from({ length: PARTS[next].count }, () => makeQuestion(next)));
+    setNeedsFormatReview(false);
+    setQuestions(Array.from({ length: getQuestionCount(next, bookletFormat, "7A") }, () => makeQuestion(next)));
     setSharedText("");
     setSharedImageFile(null);
     setWordBankText("");
@@ -152,6 +193,18 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     setMessage("");
     setSavedSetId(null);
   }
+  function changeBookletFormat(next: BookletFormat) {
+    setBookletFormat(next);
+    setNeedsFormatReview(false);
+    const nextPart7Group = next === "historical" && part === 7 ? "7A" : part7Group;
+    if (part === 7) setPart7Group(nextPart7Group);
+    if (next === "saber11_2026" && part === 4) setPart4Group("4A");
+    const desired = getQuestionCount(part, next, nextPart7Group);
+    setQuestions(current => current.length < desired
+      ? [...current, ...Array.from({ length: desired - current.length }, () => makeQuestion(part))]
+      : current);
+    setError("Revisa la numeración de la imagen después de cambiar el formato. No se eliminó ninguna pregunta automáticamente.");
+  }
   function patchQuestion(index: number, patch: Partial<DraftQuestion>) {
     setQuestions(current => current.map((q, i) => i === index ? { ...q, ...patch } : q));
   }
@@ -161,17 +214,19 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     }));
   }
   function addQuestion() {
-    const maxQuestions = part === 1 ? 5 : [4, 5, 6, 7].includes(part) ? PARTS[part].count : 30;
+    const maxQuestions = getQuestionCount(part, bookletFormat, part7Group);
     if (questions.length >= maxQuestions) return;
     setQuestions(current => [...current, makeQuestion(part)]);
   }
   async function save() {
     setError(""); setMessage(""); setSavedSetId(null);
+    if (needsFormatReview) return setError("Este conjunto antiguo mezcla numeraciones. Elige explícitamente el formato 2026 o el histórico y corrige la imagen y los espacios antes de guardar.");
     if (!title.trim()) return setError("Escribe un nombre para el conjunto.");
-    if (part === 4 && questions.length !== PARTS[4].count) return setError(`La Parte ${part4Group} debe tener exactamente ${PARTS[4].count} preguntas.`);
-    if (part === 5 && questions.length !== PARTS[5].count) return setError("La Parte 5 debe tener exactamente 7 preguntas (113–119).");
-    if (part === 6 && questions.length !== PARTS[6].count) return setError("La Parte 6 debe tener exactamente 5 preguntas (120–124).");
-    if (part === 7 && questions.length !== PARTS[7].count) return setError(`La Parte ${part7Group} debe tener exactamente 10 preguntas (${part7Group === "7A" ? "115–124" : "125–134"}).`);
+    const expectedCount = getQuestionCount(part, bookletFormat, part7Group);
+    if (questions.length !== expectedCount) {
+      const start = getQuestionStart(part, bookletFormat, part4Group, part7Group);
+      return setError(`Este conjunto debe tener exactamente ${expectedCount} preguntas (${start}–${start + expectedCount - 1}) para el formato seleccionado.`);
+    }
     if (![4, 7].includes(part) && questions.some(q => !q.prompt.trim())) return setError("Completa el enunciado de todas las preguntas.");
     if (part === 1 && wordBank.length !== 8) return setError("La Parte 1 necesita exactamente ocho palabras, de A a H.");
     if (part === 1 && !examplePrompt.trim()) return setError("Escribe el enunciado de ejemplo, como en el cuadernillo ICFES.");
@@ -184,7 +239,11 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     if (part === 4 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen del texto compartido de la Parte 4.");
     if (part === 4 && questions.some(q => !q.explanation.trim())) return setError("Escribe una explicación en español para cada espacio de la Parte 4.");
     if (part === 5 && !sharedImageFile && !existingSharedImageUrl) return setError("Sube la imagen completa del texto de lectura de la Parte 5.");
-    if (part === 7 && !sharedImageFile && !existingSharedImageUrl) return setError(`Sube la imagen del texto de la Parte ${part7Group}, con el ejemplo (0) y los diez espacios numerados.`);
+    if (part === 7 && !sharedImageFile && !existingSharedImageUrl) {
+      const start = getQuestionStart(part, bookletFormat, part4Group, part7Group);
+      const end = start + expectedCount - 1;
+      return setError(`Sube la imagen del texto de la Parte ${part7Group}, con el ejemplo (0) y los espacios ${start}–${end}.`);
+    }
     if (part === 6 && !sharedText.trim()) return setError("Añade el texto compartido de esta parte.");
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
@@ -222,11 +281,12 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         uploadedSharedImageUrl = supabase.storage.from("question-images").getPublicUrl(sharedPath).data.publicUrl;
       }
       const setPayload = {
-        part, session: Number(session), title: part === 4 ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
+        part, session: Number(session), booklet_format: bookletFormat,
+        title: part === 4 && bookletFormat === "historical" ? `${part4Group} · ${title.trim()}` : part === 7 ? `${part7Group} · ${title.trim()}` : title.trim(),
         shared_title: null,
         shared_text: [5, 7].includes(part) ? null : sharedText.trim() || null,
         shared_image_url: part === 6 ? null : uploadedSharedImageUrl,
-        instructions: instructions.trim() || (part === 7 ? part7Group === "7A" ? "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 115–124, marque A, B, C o D en su hoja de respuestas." : "Lea el texto y seleccione la palabra adecuada para cada espacio. En las preguntas 125–134, marque A, B, C o D en su hoja de respuestas." : PARTS[part].guidance),
+        instructions: instructions.trim() || getPartGuidance(part, bookletFormat, part4Group, part7Group),
         example_prompt: [1, 3, 4, 6, 7].includes(part) ? null : examplePrompt.trim() || null,
         example_options: part === 1 || part === 3 || part === 6 ? null : exampleOptions.map(option => ({ key: option.key, text: option.text.trim() })),
         example_answer: part === 1 || part === 3 || part === 6 ? null : exampleAnswer,
@@ -260,12 +320,12 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         const options = part === 1 ? [] : q.options.map(o => ({ key: o.key, text: o.text.trim() }));
         return {
           subject: "Inglés", subject_id: null, session: Number(session),
-          component: `Parte ${part === 4 ? part4Group : part === 7 ? part7Group : part} · ${PARTS[part].name}`, competence: null, difficulty,
-          context_text: [4, 7].includes(part) ? null : sharedText.trim() || null, question: part === 4 ? `Completa el espacio ${(part4Group === "4A" ? 97 : 105) + index} del texto compartido.` : part === 7 ? `Completa el espacio ${(part7Group === "7A" ? 115 : 125) + index} del texto compartido.` : q.prompt.trim(),
+          component: `Parte ${part === 4 && bookletFormat === "historical" ? part4Group : part === 7 ? part7Group : part} · ${PARTS[part].name}`, competence: null, difficulty,
+          context_text: [4, 7].includes(part) ? null : sharedText.trim() || null, question: [4, 7].includes(part) ? `Completa el espacio ${getQuestionStart(part, bookletFormat, part4Group, part7Group) + index} del texto compartido.` : q.prompt.trim(),
           option_a: optionMap.A ?? "N/A", option_b: optionMap.B ?? "N/A", option_c: optionMap.C ?? "N/A", option_d: optionMap.D ?? "N/A",
           correct_answer: q.answer, explanation: q.explanation.trim() || null,
           image_url: uploadedImageUrls[index], year: null, source: "PeakScore · creación manual",
-          question_number: part === 4 ? (part4Group === "4A" ? 97 : 105) + index : part === 6 ? 120 + index : part === 7 ? (part7Group === "7A" ? 115 : 125) + index : null, is_active: editSetId ? q.isActive ?? false : false, requires_visual: Boolean(uploadedImageUrls[index]),
+          question_number: getQuestionStart(part, bookletFormat, part4Group, part7Group) + index, is_active: editSetId ? q.isActive ?? false : false, requires_visual: Boolean(uploadedImageUrls[index]),
           visual_type: null, visual_description: null, visual_data: null, chart_data: null,
           english_part: part, english_set_id: setRow.id, english_position: index + 1,
           english_options: options,

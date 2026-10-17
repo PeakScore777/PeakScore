@@ -48,10 +48,10 @@ const PART_NAMES: Record<number, string> = {
   1: "Descripciones y banco de palabras",
   2: "Avisos y lugares",
   3: "Completar conversaciones",
-  4: "Texto cloze",
+  4: "Completar espacios",
   5: "Comprensión de lectura",
   6: "Comprensión de lectura",
-  7: "Texto cloze",
+  7: "Completar espacios",
 };
 
 function isVisibleInProfile(set: EnglishSet, filter: FormatFilter): boolean {
@@ -214,10 +214,15 @@ export default function EnglishQuestionBankPage() {
             const allQuestions = questionsBySet[set.id] ?? [];
             const qs = set.part === 3 && formatFilter === "saber11_2026" ? allQuestions.slice(0, 5) : allQuestions;
             const words = set.word_bank ?? [];
-            const group = set.title.match(/^((?:4|7)[AB])\s*[·—-]/)?.[1] ?? (formatFilter === "historical" && set.part === 4 ? "4A" : undefined);
+            const group = formatFilter === "historical" && set.part === 7
+              ? undefined
+              : set.title.match(/^((?:4|7)[AB])\s*[·—-]/)?.[1] ?? (formatFilter === "historical" && set.part === 4 ? "4A" : undefined);
             const isWordBankSet = words.length > 0;
             const displayPart = isWordBankSet ? 1 : set.part;
             const displayPartName = isWordBankSet ? "Descripciones y banco de palabras" : (PART_NAMES[displayPart] ?? "Inglés");
+            const displayPartTitle = set.part === 7
+              ? (formatFilter === "historical" ? "Parte 7" : `Parte ${group ?? (set.title.startsWith("7B") ? "7B" : "7A")}`)
+              : `${group ? `Parte ${group}` : `Parte ${displayPart}`} · ${displayPartName}`;
             const displayFormatLabel = formatFilter === "historical"
               ? set.booklet_format === "historical" ? "Formato histórico" : "Formato histórico · contenido compartido"
               : formatFilter === "saber11_2026"
@@ -258,7 +263,7 @@ export default function EnglishQuestionBankPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {set.session}</p>
-                      <h2 className="mt-1 text-xl font-black">{group ? `Parte ${group}` : `Parte ${displayPart}`} · {displayPartName}</h2>
+                      <h2 className="mt-1 text-xl font-black">{displayPartTitle}</h2>
                       {![6, 7].includes(set.part) && <p className="mt-1 text-sm text-slate-600">{set.title}</p>}
                     </div>
                     <div className="flex items-center gap-2">
@@ -281,7 +286,7 @@ export default function EnglishQuestionBankPage() {
                     </div>
                   </section> : set.shared_image_url ? <div className={`mb-5 flex justify-center ${[4, 5, 7].includes(set.part) ? "" : "border border-slate-900 p-3"}`}><img src={set.shared_image_url} alt={set.part === 4 ? "Texto compartido de la Parte 4" : set.part === 5 ? "Imagen completa del texto de lectura" : "Imagen compartida del conjunto"} className="h-auto max-h-[560px] max-w-full object-contain" /></div> : set.shared_text && <div className={`mb-5 whitespace-pre-wrap font-serif text-[15px] leading-7 text-slate-900 ${set.part === 4 ? "" : "border border-slate-300 px-5 py-5"}`}>{set.shared_text}</div>}
                   {words.length > 0 && <div className="mb-7">
-                    {(() => { const exampleWord = words.find((word) => word.example); const exampleDescription = exampleWord?.example_description; const exampleAnswer = exampleWord?.example_answer ?? exampleWord?.key; return exampleDescription ? <div className="mb-6 border-b-2 border-slate-900 pb-5"><p className="text-center text-sm font-black uppercase tracking-wide">Ejemplo</p><div className="mt-3 grid gap-4 md:grid-cols-[1fr_0.9fr]"><div className="flex gap-3"><strong>0.</strong><p className="whitespace-pre-wrap leading-6">{exampleDescription}</p></div><div className="flex flex-wrap items-center gap-2 rounded-sm border border-slate-300 p-3"><strong className="mr-2">Respuesta 0.</strong>{words.map((word) => <span key={word.key} className={word.key === exampleAnswer ? "flex h-7 w-7 items-center justify-center rounded-full border border-slate-900 bg-slate-900 text-xs font-bold text-white ring-2 ring-slate-300" : "flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-slate-600"}>{word.key}</span>)}</div></div></div> : null; })()}
+                    {(() => { const exampleWord = words.find((word) => word.example); const exampleDescription = exampleWord?.example_description; const exampleAnswer = exampleWord?.example_answer ?? exampleWord?.key; return exampleDescription ? <div className="mb-6 border-b-2 border-slate-900 pb-5"><div className="mt-3 grid gap-4 md:grid-cols-[1fr_0.9fr]"><div className="flex gap-3"><strong>0.</strong><p className="whitespace-pre-wrap leading-6">{exampleDescription}</p></div><div className="flex flex-wrap items-center gap-2 rounded-sm border border-slate-300 p-3"><strong className="mr-2">Respuesta 0.</strong>{words.map((word) => <span key={word.key} className={word.key === exampleAnswer ? "flex h-7 w-7 items-center justify-center rounded-full border border-slate-900 bg-slate-900 text-xs font-bold text-white ring-2 ring-slate-300" : "flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-slate-600"}>{word.key}</span>)}</div></div></div> : null; })()}
                     <div className={`grid gap-8 md:grid-cols-[1fr_0.9fr] ${isWordBankSet ? "mt-8" : ""}`}>
                     <div><h3 className="mb-4 border-b border-slate-300 pb-3 text-center text-sm font-black uppercase tracking-wide">Descripciones</h3>
                       <div className={isWordBankSet ? "space-y-8" : "space-y-3"}>{qs.map((q, i) => <div key={q.id} className={`grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 ${isWordBankSet ? "min-h-[90px] pb-5 pt-2" : "pb-3"}`}><strong>{(displayPart === 1 ? 80 : 85) + i}.</strong><p className={`whitespace-pre-wrap ${isWordBankSet ? "text-sm leading-7" : "leading-6"}`}>{q.question}</p></div>)}</div>
@@ -307,7 +312,7 @@ export default function EnglishQuestionBankPage() {
                     </div>
                   </div>}
                   {!words.length && set.part !== 3 && set.part !== 4 && set.part !== 6 && set.part !== 7 && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
-                    <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
+                    
                     <div className={`grid gap-2 ${set.part === 2 ? "grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
                       <strong className="pt-1">0.</strong>
                       <div className={set.part === 5 ? "grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] sm:gap-5" : set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
@@ -329,7 +334,7 @@ export default function EnglishQuestionBankPage() {
                   </div>}
                   {!words.length && set.part === 7 ? <section className="mt-2">
                     <div className="mb-2 border-b-2 border-slate-900 pb-3">
-                      <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
+                      
                       <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] items-start gap-3 text-[10px] leading-4">
                         <strong>0.</strong>
                         <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">

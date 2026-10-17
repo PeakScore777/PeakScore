@@ -6853,6 +6853,20 @@ async function generateBlock(
           
         );
 
+      // Guardar todas las candidatas de esta respuesta para no repetirlas
+      // en la siguiente ronda, incluso si fallaron validación o similitud.
+      for (const candidate of generated) {
+        const attemptedText = candidate?.question?.trim();
+        if (
+          attemptedText &&
+          !attemptedCandidateQuestions.some(
+            (previous) => normalize(previous) === normalize(attemptedText)
+          )
+        ) {
+          attemptedCandidateQuestions.push(attemptedText);
+        }
+      }
+
       console.log(
         `[PeakScore] Groq devolvió ${valid.length}/${amount} preguntas válidas.`
       );
@@ -6903,21 +6917,25 @@ async function generateBlock(
       }
 
       lastError = new Error(
-        `Groq no devolvió preguntas válidas.`
+        "La IA no devolvió preguntas válidas en este intento."
       );
 
       console.warn(
         `[PeakScore] Bloque sin preguntas válidas. Intento ${attempt}/${MAX_BLOCK_ATTEMPTS}.`
       );
 
-      /*
-       * No repetir inmediatamente el mismo bloque cuando
-       * Groq sí respondió pero todas las candidatas fueron
-       * rechazadas por nuestra validación.
-       *
-       * El generador principal será quien decida si necesita
-       * solicitar otro bloque.
-       */
+      if (attempt === MAX_BLOCK_ATTEMPTS) {
+        // El bucle exterior intentará otro bloque, con las preguntas rechazadas
+        // excluidas del prompt. Si sigue sin progresar, aplicará su límite actual.
+        return {
+          questions: acceptedQuestions.slice(0, amount),
+          consumedPlanSlots: Math.min(
+            planAssignmentCursor,
+            generationPlan.length
+          ),
+        };
+      }
+
       continue;
     } catch (error) {
       lastError = error;

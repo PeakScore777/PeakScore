@@ -176,10 +176,18 @@ export async function updateQuestion(
     .single();
 
   if (error) {
-    console.error(
-      "Error actualizando pregunta.",
-      { errorCode: error.code ?? "UNKNOWN" }
-    );
+    // Supabase/PostgREST error fields are not always enumerable. Log each
+    // property explicitly so the real database/RLS error is not reduced to {}.
+    console.error("[question.service] update questions failed", {
+      code: error.code ?? null,
+      message: error.message ?? null,
+      details: error.details ?? null,
+      hint: error.hint ?? null,
+      status: (error as typeof error & { status?: number }).status ?? null,
+      questionId: id,
+      updatedFields: Object.keys(values),
+    });
+
     throw error;
   }
 

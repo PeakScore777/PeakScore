@@ -3317,7 +3317,30 @@ function validateGeometryNumericAnswer(
 function isAnswerExplanationCoherent(
   item: GeneratedQuestion
 ): boolean {
-  if (!item.explanation?.trim()) {
+  if (
+    !item ||
+    typeof item !== "object" ||
+    typeof item.explanation !== "string" ||
+    !item.explanation.trim() ||
+    !["A", "B", "C", "D"].includes(item.correct_answer)
+  ) {
+    return false;
+  }
+
+  const rawOptions = [
+    item.option_a,
+    item.option_b,
+    item.option_c,
+    item.option_d,
+  ];
+
+  if (
+    rawOptions.some(
+      (option) =>
+        typeof option !== "string" ||
+        !option.trim()
+    )
+  ) {
     return false;
   }
 

@@ -355,8 +355,41 @@ export default function EditQuestionPage() {
         router.push("/dashboard/question-bank");
       }, 900);
     } catch (err) {
-      console.error("Error actualizando pregunta:", err);
-      setError("No fue posible guardar los cambios.");
+      const saveError = err as {
+        code?: string;
+        message?: string;
+        details?: string;
+        hint?: string;
+      };
+
+      // El mensaje genérico ocultaba si Supabase rechazaba los datos,
+      // la sesión o los permisos. Mostramos una explicación útil sin
+      // exponer detalles SQL internos en la interfaz.
+      console.error("Error actualizando pregunta:", {
+        code: saveError?.code ?? "UNKNOWN",
+        message: saveError?.message ?? "Sin mensaje",
+        details: saveError?.details ?? null,
+        hint: saveError?.hint ?? null,
+      });
+
+      const code = saveError?.code;
+      let message = "No fue posible guardar los cambios. Revisa los campos e inténtalo de nuevo.";
+
+      if (code === "42501") {
+        message = "No tienes permisos para modificar esta pregunta. Verifica tu sesión y los permisos de administrador.";
+      } else if (code === "23514") {
+        message = "Uno de los valores no cumple las reglas del banco (por ejemplo, sesión, dificultad o respuesta correcta). Revisa los campos e inténtalo de nuevo.";
+      } else if (code === "23502") {
+        message = "Falta un campo obligatorio para guardar la pregunta.";
+      } else if (code === "23503") {
+        message = "La materia seleccionada no existe o ya no está disponible. Vuelve a seleccionar la materia.";
+      } else if (code === "22P02") {
+        message = "Uno de los campos tiene un formato inválido. Revisa especialmente los números y el ID de materia.";
+      } else if (code === "PGRST116") {
+        message = "La pregunta no se pudo actualizar o ya no está disponible. Recarga el editor e inténtalo de nuevo.";
+      }
+
+      setError(message);
     } finally {
       setSaving(false);
     }
@@ -525,6 +558,7 @@ export default function EditQuestionPage() {
                   name="session"
                   type="number"
                   min={1}
+                  max={2}
                   value={form.session}
                   onChange={handleChange}
                   required

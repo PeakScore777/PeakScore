@@ -136,7 +136,7 @@ export default function EnglishQuestionBankPage() {
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {set.session}</p>
                       <h2 className="mt-1 text-xl font-black">{group ? `Parte ${group}` : `Parte ${displayPart}`} · {displayPartName}</h2>
-                      <p className="mt-1 text-sm text-slate-600">{set.title}</p>
+                      {set.part !== 6 && <p className="mt-1 text-sm text-slate-600">{set.title}</p>}
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`rounded-full px-3 py-1 text-xs font-bold ${set.status === "approved" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>{set.status === "approved" ? "Aprobado" : set.status === "review" ? "En revisión" : set.status === "rejected" ? "Rechazado" : "Borrador"}</span>
@@ -145,13 +145,9 @@ export default function EnglishQuestionBankPage() {
                   </div>
                   {set.instructions && <p className="mt-5 text-sm font-medium leading-6 text-slate-700">{set.instructions}</p>}
                 </div>
-                <div className="px-6 py-6 sm:px-10 sm:py-8">
-                  {set.part === 6 && set.shared_text ? <section className="mb-5 rounded-xl border-2 border-slate-900 px-4 py-4 sm:px-5">
-                    {set.shared_title && <h3 className="mb-3 text-center text-sm font-black uppercase tracking-wide">{set.shared_title}</h3>}
-                    <div className={set.shared_image_url ? "grid grid-cols-1 items-start gap-4 md:grid-cols-[minmax(0,1fr)_minmax(125px,0.34fr)]" : ""}>
-                      <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{set.shared_text}</p>
-                      {set.shared_image_url && <div className="flex justify-center md:justify-end"><img src={set.shared_image_url} alt="Ilustración del texto de comprensión inferencial" className="h-auto max-h-56 max-w-full object-contain"/></div>}
-                    </div>
+                <div className={set.part === 6 ? "px-4 py-4 sm:px-5 sm:py-5" : "px-6 py-6 sm:px-10 sm:py-8"}>
+                  {set.part === 6 && set.shared_text ? <section className="mb-3 rounded-xl border-2 border-slate-900 px-3 py-3 sm:px-4">
+                    <p className="whitespace-pre-wrap font-serif text-[10px] leading-[1.35] text-slate-900">{set.shared_text}</p>
                   </section> : set.part === 5 && set.shared_text ? <section className="mb-5 rounded-xl border-2 border-slate-900 px-5 py-5">
                     {set.shared_title && <h3 className="mb-4 text-center text-lg font-black uppercase tracking-wide">{set.shared_title}</h3>}
                     <div className={set.shared_image_url ? "grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(150px,0.42fr)]" : ""}>
@@ -206,16 +202,16 @@ export default function EnglishQuestionBankPage() {
                       </div>
                     </div>
                   </div>}
-                  {!words.length && set.part === 6 ? <section className="mt-5">
-                    <div className="grid grid-cols-1 gap-x-7 gap-y-4 md:grid-cols-2">
-                      {[qs.slice(0, 2), qs.slice(2, 4)].map((columnQuestions, columnIndex) => <div key={columnIndex} className="space-y-3">
+                  {!words.length && set.part === 6 ? <section className="mt-3">
+                    <div className="grid grid-cols-1 gap-x-6 gap-y-2 md:grid-cols-2">
+                      {[qs.slice(0, 2), qs.slice(2, 4)].map((columnQuestions, columnIndex) => <div key={columnIndex} className="space-y-2">
                         {columnQuestions.map((q, rowIndex) => {
                           const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
                           const number = 119 + (q.english_position ?? columnIndex * 2 + rowIndex + 1);
-                          return <article key={q.id} className="border-b border-slate-400 pb-3">
-                            <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3">
-                              <p className="text-[11px] leading-4"><strong>{number}.</strong> {q.question}</p>
-                              <div className="space-y-1">{opts.map(option => <p key={option.key} className="text-[10px] leading-4"><strong>{option.key}.</strong> {option.text}</p>)}</div>
+                          return <article key={q.id} className="border-b border-slate-400 pb-2">
+                            <div className="grid grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-2">
+                              <p className="text-[10px] leading-[1.35]"><strong>{number}.</strong> {q.question}</p>
+                              <div className="space-y-0.5">{opts.map(option => <p key={option.key} className="text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text}</p>)}</div>
                             </div>
                           </article>;
                         })}
@@ -224,10 +220,10 @@ export default function EnglishQuestionBankPage() {
                     {qs[4] && (() => {
                       const q = qs[4];
                       const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
-                      return <article className="mt-4 border-t-2 border-slate-900 pt-4">
-                        <p className="text-sm leading-5"><strong>124.</strong> {q.question}</p>
-                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          {opts.map(option => <div key={option.key} className="min-h-16 border border-slate-500 px-3 py-2 text-[11px] leading-4"><strong>{option.key}.</strong> {option.text}</div>)}
+                      return <article className="mt-3 border-t-2 border-slate-900 pt-2">
+                        <p className="text-[11px] leading-4"><strong>124.</strong> {q.question}</p>
+                        <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          {opts.map(option => <div key={option.key} className="min-h-12 border border-slate-500 px-2 py-2 text-[10px] leading-[1.35]"><strong>{option.key}.</strong> {option.text}</div>)}
                         </div>
                       </article>;
                     })()}
@@ -266,7 +262,7 @@ export default function EnglishQuestionBankPage() {
                     </div>;
                   })}</div>}
                   
-                  <div className="mt-5 border-t border-slate-300 pt-3 text-xs text-slate-400">PeakScore · Material de práctica · Las respuestas correctas no se muestran en esta vista.</div>
+                  <div className={set.part === 6 ? "mt-3 border-t border-slate-300 pt-2 text-[9px] text-slate-400" : "mt-5 border-t border-slate-300 pt-3 text-xs text-slate-400"}>PeakScore · Material de práctica · Las respuestas correctas no se muestran en esta vista.</div>
                 </div>
               </article>
             );

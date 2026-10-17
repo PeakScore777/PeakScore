@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, ClipboardList, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ClipboardList, Image as ImageIcon, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/browser";
 
 const SUBJECTS_BY_SESSION: Record<string, string[]> = {
@@ -20,6 +20,7 @@ type DraftQuestion = {
   competence: string;
   difficulty: string;
   context_text: string;
+  image_url: string;
   question: string;
   option_a: string;
   option_b: string;
@@ -37,6 +38,7 @@ function createDraft(): DraftQuestion {
     competence: "",
     difficulty: "Media",
     context_text: "",
+    image_url: "",
     question: "",
     option_a: "",
     option_b: "",
@@ -61,6 +63,7 @@ export default function ManualBulkQuestionsPage() {
   const [drafts, setDrafts] = useState<DraftQuestion[]>(() => Array.from({ length: 10 }, createDraft));
   const [checkingAdmin, setCheckingAdmin] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingImageIndex, setUploadingImageIndex] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const availableSubjects = SUBJECTS_BY_SESSION[session] ?? [];
@@ -113,6 +116,52 @@ export default function ManualBulkQuestionsPage() {
 
   function updateDraft(index: number, field: keyof DraftQuestion, value: string) {
     setDrafts((current) => current.map((draft, i) => i === index ? { ...draft, [field]: value } : draft));
+  }
+
+  async function handleImageUpload(index: number, event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setError("");
+    setNotice("");
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Formato no permitido. Usa PNG, JPG o WEBP.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError("La imagen supera el límite de 10 MB.");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setUploadingImageIndex(index);
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("La sesión expiró. Inicia sesión de nuevo.");
+
+      const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const filePath = `questions/manual-batch/${user.id}/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from("question-images")
+        .upload(filePath, file, { contentType: file.type, upsert: false });
+
+      if (uploadError) {
+        console.error("Error subiendo imagen de pregunta:", uploadError);
+        throw new Error("No se pudo subir la imagen. Comprueba los permisos del almacenamiento e inténtalo de nuevo.");
+      }
+
+      const { data } = supabase.storage.from("question-images").getPublicUrl(filePath);
+      if (!data?.publicUrl) throw new Error("La imagen se subió, pero no se pudo obtener su URL pública.");
+      updateDraft(index, "image_url", data.publicUrl);
+      setNotice(`Imagen añadida a la pregunta ${index + 1}. Guarda el lote para asociarla a la pregunta.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo subir la imagen.");
+    } finally {
+      setUploadingImageIndex(null);
+      event.target.value = "";
+    }
   }
 
   async function handleSave() {
@@ -186,7 +235,7 @@ export default function ManualBulkQuestionsPage() {
         option_d: q.option_d.trim(),
         correct_answer: q.correct_answer,
         explanation: q.explanation.trim() || null,
-        image_url: null,
+        image_url: q.image_url.trim() || null,
         year: q.year.trim() ? Number(q.year) : null,
         source: q.source.trim() || "MANUAL",
         question_number: null,
@@ -299,6 +348,27 @@ export default function ManualBulkQuestionsPage() {
               <label className="mt-4 block text-sm font-semibold text-slate-700">Texto de contexto (opcional)
                 <textarea value={draft.context_text} onChange={(e) => updateDraft(index, "context_text", e.target.value)} disabled={saving} rows={3} maxLength={12000} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5" placeholder="Lectura, situación, tabla descrita o datos necesarios..." />
               </label>
+              <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-xl bg-white p-2 text-indigo-600 shadow-sm"><ImageIcon size={20} /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-800">Imagen o recurso visual (opcional)</p>
+                    <p className="mt-1 text-sm leading-6 text-slate-600">Adjunta diagramas, gráficas, mapas, figuras geométricas o imágenes necesarias para resolver la pregunta. PNG, JPG o WEBP; máximo 10 MB por imagen.</p>
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 font-semibold text-slate-700 hover:bg-slate-100">
+                        {uploadingImageIndex === index ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+                        {uploadingImageIndex === index ? "Subiendo imagen..." : draft.image_url ? "Cambiar imagen" : "Adjuntar imagen"}
+                        <input type="file" accept="image/png,image/jpeg,image/webp" disabled={saving || uploadingImageIndex !== null} onChange={(e) => void handleImageUpload(index, e)} className="sr-only" />
+                      </label>
+                      {draft.image_url && <button type="button" disabled={saving || uploadingImageIndex !== null} onClick={() => updateDraft(index, "image_url", "")} className="rounded-xl px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">Quitar imagen</button>}
+                    </div>
+                    {draft.image_url && <div className="mt-4">
+                      <img src={draft.image_url} alt={`Vista previa de la imagen de la pregunta ${index + 1}`} className="max-h-64 max-w-full rounded-xl border border-slate-200 bg-white object-contain" />
+                      <p className="mt-2 break-all text-xs text-slate-500">Imagen cargada y lista para guardar con esta pregunta.</p>
+                    </div>}
+                  </div>
+                </div>
+              </div>
               <label className="mt-4 block text-sm font-semibold text-slate-700">Enunciado de la pregunta *
                 <textarea value={draft.question} onChange={(e) => updateDraft(index, "question", e.target.value)} disabled={saving} required rows={3} maxLength={6000} className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5" placeholder="Escribe la pregunta completa..." />
               </label>

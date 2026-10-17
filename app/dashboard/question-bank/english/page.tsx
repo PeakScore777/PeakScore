@@ -146,7 +146,12 @@ export default function EnglishQuestionBankPage() {
                   {set.instructions && <p className="mt-5 text-sm font-medium leading-6 text-slate-700">{set.instructions}</p>}
                 </div>
                 <div className="px-6 py-6 sm:px-10 sm:py-8">
-                  {set.part === 5 && set.shared_text ? <section className="mb-5 rounded-xl border-2 border-slate-900 px-5 py-5">
+                  {set.part === 6 && set.shared_text ? <section className="mb-5 rounded-xl border-2 border-slate-900 px-4 py-4 sm:px-5">
+                    <div className={set.shared_image_url ? "grid grid-cols-1 items-start gap-4 md:grid-cols-[minmax(0,1fr)_minmax(125px,0.34fr)]" : ""}>
+                      <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{set.shared_text}</p>
+                      {set.shared_image_url && <div className="flex justify-center md:justify-end"><img src={set.shared_image_url} alt="Ilustración del texto de comprensión inferencial" className="h-auto max-h-56 max-w-full object-contain"/></div>}
+                    </div>
+                  </section> : set.part === 5 && set.shared_text ? <section className="mb-5 rounded-xl border-2 border-slate-900 px-5 py-5">
                     {set.shared_title && <h3 className="mb-4 text-center text-lg font-black uppercase tracking-wide">{set.shared_title}</h3>}
                     <div className={set.shared_image_url ? "grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(150px,0.42fr)]" : ""}>
                       <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{set.shared_text}</p>
@@ -179,7 +184,7 @@ export default function EnglishQuestionBankPage() {
                       </div>
                     </div>
                   </div>}
-                  {!words.length && set.part !== 3 && set.part !== 4 && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
+                  {!words.length && set.part !== 3 && set.part !== 4 && set.part !== 6 && set.example_prompt && <div className={`mb-3 border-b border-slate-900 pb-3 ${set.part === 2 ? "text-[10px] leading-4" : ""}`}>
                     <p className="mb-2 text-center text-[10px] font-black uppercase tracking-wide">Ejemplo</p>
                     <div className={`grid gap-2 ${set.part === 2 ? "grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
                       <strong className="pt-1">0.</strong>
@@ -200,7 +205,32 @@ export default function EnglishQuestionBankPage() {
                       </div>
                     </div>
                   </div>}
-                  {!words.length && <div className={set.part === 2 ? "space-y-0" : set.part === 3 ? "space-y-0" : "space-y-7"}>{qs.map((q, i) => {
+                  {!words.length && set.part === 6 ? <section className="mt-5">
+                    <div className="grid grid-cols-1 gap-x-7 gap-y-4 md:grid-cols-2">
+                      {[qs.slice(0, 2), qs.slice(2, 4)].map((columnQuestions, columnIndex) => <div key={columnIndex} className="space-y-3">
+                        {columnQuestions.map((q, rowIndex) => {
+                          const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
+                          const number = 119 + (q.english_position ?? columnIndex * 2 + rowIndex + 1);
+                          return <article key={q.id} className="border-b border-slate-400 pb-3">
+                            <div className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] gap-3">
+                              <p className="text-[11px] leading-4"><strong>{number}.</strong> {q.question}</p>
+                              <div className="space-y-1">{opts.map(option => <p key={option.key} className="text-[10px] leading-4"><strong>{option.key}.</strong> {option.text}</p>)}</div>
+                            </div>
+                          </article>;
+                        })}
+                      </div>)}
+                    </div>
+                    {qs[4] && (() => {
+                      const q = qs[4];
+                      const opts = q.english_options?.length ? q.english_options : [{ key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d }].filter(option => option.text?.trim() && option.text !== "N/A");
+                      return <article className="mt-4 border-t-2 border-slate-900 pt-4">
+                        <p className="text-sm leading-5"><strong>124.</strong> {q.question}</p>
+                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          {opts.map(option => <div key={option.key} className="min-h-16 border border-slate-500 px-3 py-2 text-[11px] leading-4"><strong>{option.key}.</strong> {option.text}</div>)}
+                        </div>
+                      </article>;
+                    })()}
+                  </section> : !words.length && <div className={set.part === 2 ? "space-y-0" : set.part === 3 ? "space-y-0" : "space-y-7"}>{qs.map((q, i) => {
                     const opts = q.english_options?.length ? q.english_options : [
                       { key: "A", text: q.option_a }, { key: "B", text: q.option_b }, { key: "C", text: q.option_c }, { key: "D", text: q.option_d },
                     ].filter((o) => o.text?.trim());

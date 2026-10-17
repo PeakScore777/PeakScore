@@ -1605,6 +1605,36 @@ function questionRepeatsFullContext(item: GeneratedQuestion): boolean {
 }
 
 /**
+ * Detects generic decorative context in math items when all usable numerical
+ * information is already in a self-contained question.
+ */
+function hasGenericMathContext(item: GeneratedQuestion): boolean {
+  if (normalize(item.subject) !== "matematicas") return false;
+
+  const context = normalizeForSimilarity(item.context_text ?? "");
+  const question = normalizeForSimilarity(item.question ?? "");
+  if (!context || !question || /\d/.test(context) || !/\d/.test(question)) {
+    return false;
+  }
+
+  const dependsOnContext =
+    /\b(segun el contexto|segun el texto|de acuerdo con el contexto|a partir de la informacion|con base en los datos|usando la informacion anterior)\b/.test(question);
+
+  if (dependsOnContext) return false;
+
+  const genericPatterns = [
+    /\b(calculo preciso de .* es fundamental|es fundamental en proyectos|para evitar el desperdicio|optimizar los costos de obra)\b/,
+    /\b(servicios digitales suelen estructurarse|modelo de costos base|predecir sus gastos mensuales|basados en el uso real)\b/,
+    /^se requiere calcular\b/,
+    /^se necesita calcular\b/,
+    /^el objetivo es calcular\b/,
+    /^para calcular .* es importante\b/,
+  ];
+
+  return genericPatterns.some((pattern) => pattern.test(context));
+}
+
+/**
  * High-confidence signatures of the underlying solution method.
  * Changing a story or numbers does not make the same method a new question.
  */
@@ -1616,7 +1646,7 @@ function getQuestionMethodSignatures(item: GeneratedQuestion): string[] {
 
   if (normalize(item.subject) === "matematicas") {
     const hasFixedCharge =
-      /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|costo de inscripcion|coste de inscripcion|precio base)\b/.test(text);
+      /\b(tarifa base|tarifa fija|costo fijo|coste fijo|cargo fijo|cuota fija|cuota de mantenimiento|cuota mensual|cuota de servicio|costo mensual|coste mensual|costo de inscripcion|coste de inscripcion|precio base)\b/.test(text);
     const hasPerUnitCharge =
       /\bpor cada\b|\bpor unidad\b|\bvalor adicional\b|\btasa por\b/.test(text);
 
@@ -1624,16 +1654,22 @@ function getQuestionMethodSignatures(item: GeneratedQuestion): string[] {
       signatures.add("matematicas:costo-fijo-mas-tasa-unitaria");
     }
 
-    const hasSurface =
-      /\b(area|superficie)\b/.test(text) &&
-      /\b(pared|fachada|muro)\b/.test(text);
-    const hasOpening =
-      /\b(ventana|ventanas|puerta|puertas|abertura|aberturas)\b/.test(text);
-    const subtractsOpening =
-      /\b(excluyendo|restando|descontando|no sera pintada|no seran pintadas|no se pintara|no se pintaran|debe pintarse|debe pintar|pintar)\b/.test(text);
+    const hasAreaTerm = /\b(area|superficie|metros cuadrados)\b/.test(text);
+    const hasRectangularSurface =
+      /\b(pared|fachada|muro|piso|suelo|habitacion|terreno|techo|salon|jardin|oficina)\b/.test(text) &&
+      /\b(rectangular|rectangulo|pared|fachada|muro|piso|suelo|habitacion|terreno|techo|salon|jardin)\b/.test(text);
+    const hasOccupiedArea =
+      /\b(ventana|ventanas|puerta|puertas|abertura|aberturas|pilar|pilares|columna|columnas|obstaculo|obstaculos)\b/.test(text);
+    const subtractsOccupiedArea =
+      /\b(excluyendo|restando|descontando|descontar|restar|se debe descontar|no se instalara|no se pintara|no seran pintadas|no sera pintada|ocupa|ocupada|ocupado)\b/.test(text);
 
-    if (hasSurface && hasOpening && subtractsOpening) {
-      signatures.add("matematicas:area-rectangular-menos-aberturas");
+    if (
+      hasAreaTerm &&
+      hasRectangularSurface &&
+      hasOccupiedArea &&
+      subtractsOccupiedArea
+    ) {
+      signatures.add("matematicas:area-rectangular-menos-areas-ocupadas");
     }
   }
 
@@ -2412,6 +2448,50 @@ function parseSimpleLinearOption(
  * Independently checks a clearly identifiable fixed-charge plus per-unit model.
  * If the statement or options cannot be interpreted unambiguously, abstains.
  */
+function hasTrivialFalseNumericComparison(item: GeneratedQuestion): boolean {
+  if (normalize(item.subject) !== "matematicas") return false;
+
+  const question = normalizeForSimilarity(item.question ?? "");
+  // In an item explicitly asking which statement is false, the false statement
+  // may be the target; leave that format to its own validation.
+  if (/\b(cual afirmacion es falsa|cual enunciado es falso|identifica la afirmacion incorrecta|cual comparacion es incorrecta)\b/.test(question)) {
+    return false;
+  }
+
+  const options = [
+    item.option_a ?? "",
+    item.option_b ?? "",
+    item.option_c ?? "",
+    item.option_d ?? "",
+  ];
+
+  const comparisonPattern =
+    /\(\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)\s*\)[\s\S]{0,100}?\b(menor que|mayor que|inferior a|superior a|less than|greater than)\b[\s\S]{0,100}?\(\s*(\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?)\s*\)/gi;
+
+  for (const option of options) {
+    for (const match of option.matchAll(comparisonPattern)) {
+      const left = parseSpanishNumber(match[1]);
+      const right = parseSpanishNumber(match[3]);
+      if (left === null || right === null) continue;
+
+      const relation = normalize(match[2]);
+      const negated = /\bno\s+(?:es|resulta|seria)\b/.test(
+        option.slice(Math.max(0, (match.index ?? 0) - 18), match.index)
+      );
+      if (negated) continue;
+
+      const comparisonIsTrue =
+        relation === "menor que" || relation === "inferior a" || relation === "less than"
+          ? left < right
+          : left > right;
+
+      if (!comparisonIsTrue) return true;
+    }
+  }
+
+  return false;
+}
+
 function validateLinearCostModel(item: GeneratedQuestion): boolean {
   if (normalize(item.subject) !== "matematicas") return true;
 
@@ -4851,6 +4931,26 @@ function diagnoseQuestionValidation(
     );
   }
 
+  if (hasGenericMathContext(item)) {
+    failures.push(
+      "el contexto matemático es genérico o decorativo y no aporta datos necesarios para resolver la pregunta"
+    );
+  }
+
+  const methodSignatures = getQuestionMethodSignatures(item);
+  const hasHigherOrderReasoning =
+    /\b(compara|comparar|comprobacion|justifica|justificar|argumenta|argumentar|evalua|evaluar|valida|validar|infiere|inferir|deduce|deducir|interpreta|interpretar|concluye|concluir|decide|decision|estrategia|cual afirmacion|cual procedimiento|mejor explicacion|por que es valida)\b/.test(questionText);
+
+  if (
+    normalizeDifficulty(item.difficulty) === "Difícil" &&
+    methodSignatures.includes("matematicas:area-rectangular-menos-areas-ocupadas") &&
+    !hasHigherOrderReasoning
+  ) {
+    failures.push(
+      "la dificultad Difícil no está justificada: el ítem solo requiere calcular un área rectangular y restar áreas ocupadas"
+    );
+  }
+
   const cognitiveOperationPatterns: Record<
     CognitiveOperation,
     RegExp[]
@@ -5260,6 +5360,12 @@ function diagnoseQuestionValidation(
   if (!validateExplicitNumericAnswer(item)) {
     failures.push(
       "respuesta numérica inconsistente"
+    );
+  }
+
+  if (hasTrivialFalseNumericComparison(item)) {
+    failures.push(
+      "un distractor contiene una comparación numérica explícita y aritméticamente falsa, lo que permite descartarlo sin evaluar el concepto"
     );
   }
 
@@ -5719,10 +5825,14 @@ function buildPrompt(
   La relación necesaria no debe ser inmediata.
 
   DIFÍCIL:
-  Requiere integrar varias condiciones, evidencias, representaciones
-  o pasos de razonamiento. Puede exigir inferir, comparar, analizar,
-  evaluar o combinar información. Debe seguir siendo completamente
-  resoluble con los datos proporcionados.
+  Requiere integrar varias condiciones, evidencias o representaciones y tomar
+  decisiones de razonamiento no inmediatas. Puede exigir inferir, comparar,
+  analizar, evaluar o justificar una conclusión.
+  No etiquetes como difícil una tarea rutinaria solo porque contiene varias
+  operaciones mecánicas: calcular el área de un rectángulo y restar una o dos
+  superficies sencillas suele corresponder a Fácil o Media, salvo que la pregunta
+  exija una decisión, inferencia o estrategia adicional.
+  Debe seguir siendo completamente resoluble con los datos proporcionados.
 
   REGLAS:
   - La dificultad depende del razonamiento, no de la longitud del texto.
@@ -6090,6 +6200,11 @@ Evalúa conocimientos y habilidades de grado 11 mediante situaciones que exijan 
   - Evita ambigüedades, datos contradictorios, supuestos ocultos y
     información insuficiente.
   - El contexto debe aportar información útil para resolver la pregunta.
+  - En Matemáticas, si todos los datos y condiciones están en question, usa
+    context_text = null salvo que el contexto agregue información necesaria.
+  - No uses introducciones genéricas como "el cálculo preciso es fundamental",
+    "los servicios digitales suelen estructurarse" o "se requiere calcular"
+    cuando no aporten datos, restricciones, una representación o una decisión.
   - Si el contexto está en context_text, no lo copies de nuevo en question:
     question debe contener la tarea concreta que resolverá el estudiante.
   - Evita contenido decorativo o texto innecesariamente largo.
@@ -6101,8 +6216,11 @@ Evalúa conocimientos y habilidades de grado 11 mediante situaciones que exijan 
   - Cambiar nombres, cantidades, precios o escenarios no basta para hacer
     que una pregunta sea metodológicamente distinta.
   - En lotes de hasta 10 preguntas, evita repetir un mismo procedimiento.
-  - En Matemáticas, no generes dos ejercicios de costo fijo más tarifa por unidad
-    ni dos de área de pared/fachada restando ventanas o puertas en el mismo lote.
+  - Considera equivalentes los problemas que calculan áreas rectangulares y restan
+    superficies ocupadas por ventanas, puertas, pilares o columnas, aunque cambie
+    el lugar (piso, pared, habitación) y cambien los números.
+  - Considera equivalentes los modelos algebraicos de costo fijo/cuota fija más
+    tarifa por unidad, incluyendo cuotas de mantenimiento o planes mensuales.
   - Busca variedad real de habilidades, representaciones, decisiones y razonamientos,
     manteniendo la materia, competencia y componente solicitados.
   - Si detectas dos preguntas con el mismo método, reemplaza una antes de responder.
@@ -6110,6 +6228,11 @@ Evalúa conocimientos y habilidades de grado 11 mediante situaciones que exijan 
     o el procedimiento planteado.
   - La explicación debe justificar por qué la respuesta correcta es correcta
     y, cuando sea pertinente, mostrar el razonamiento necesario.
+  - Los distractores deben representar errores de razonamiento plausibles,
+    no afirmaciones aritméticas obviamente falsas (por ejemplo, decir que 50
+    es menor que 40). Evita opciones descartables sin resolver el concepto.
+  - Comprueba que los datos que describen categorías, subgrupos y totales sean
+    compatibles entre sí; los subtotales deben sumar los totales declarados.
   - No introduzcas errores conceptuales, matemáticos, científicos,
     lingüísticos o de interpretación.
 

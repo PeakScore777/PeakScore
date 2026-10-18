@@ -286,9 +286,13 @@ export async function GET() {
     // 9. RESPUESTA
     // ============================================================
 
+    const normalizedEmail = (user.email ?? "").trim().toLowerCase();
+    const isAdmin = normalizedEmail === "aragonyostynsena07@gmail.com";
+
     return NextResponse.json({
       profile: {
         id: profile.id,
+        isAdmin,
         fullName: profile.full_name,
         email: profile.email,
         avatarUrl: profile.avatar_url,

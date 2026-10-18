@@ -64,12 +64,12 @@ export default function BookletView({
   const visibleQuestions = questions.slice(startIndex, startIndex + questionsPerPage);
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-4">
-      <section className="border border-slate-300 bg-white px-6 py-6 shadow-sm sm:px-10">
+    <div className="mx-auto w-full max-w-6xl space-y-2">
+      <section className="border border-slate-300 bg-white px-5 py-3 shadow-sm sm:px-7 sm:py-4">
         <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-500">PeakScore · Cuadernillo de práctica</p>
-        <h2 className="mt-2 text-center text-2xl font-black text-slate-950">Cuadernillo del simulacro</h2>
-        <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-slate-600">Lee cada sección y marca una sola respuesta por pregunta. Puedes cambiarla antes de entregar.</p>
-        <div className="mt-5 flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-3 text-sm font-bold text-slate-600">
+        <h2 className="mt-1 text-center text-xl font-black text-slate-950">Cuadernillo del simulacro</h2>
+        <p className="mx-auto mt-1 max-w-2xl text-xs leading-4 text-slate-600">Lee cada sección y marca una sola respuesta por pregunta. Puedes cambiarla antes de entregar.</p>
+        <div className="mt-2 flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-2 text-xs font-bold text-slate-600">
           <span>{answeredCount} de {questions.length} respondidas</span>
           <span>{questions.length - answeredCount} pendientes</span>
         </div>
@@ -81,8 +81,8 @@ export default function BookletView({
           <button type="button" onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages} className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40">Siguiente <ChevronRight size={16} /></button>
         </div>
       </div>
-      <section className="mx-auto w-full max-w-[210mm] border border-slate-300 bg-white px-5 py-5 shadow-sm sm:px-8 sm:py-7">
-      <div className="grid grid-cols-1 gap-x-7 md:grid-cols-2">
+      <section className="mx-auto w-full max-w-[210mm] border border-slate-300 bg-white px-4 py-3 shadow-sm sm:px-6 sm:py-4">
+      <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
       {visibleQuestions.map((question, pageIndex) => {
         const index = startIndex + pageIndex;
         const selected = answers[index] ?? 0;
@@ -107,9 +107,9 @@ export default function BookletView({
         const wordBank = firstInSet ? setInfo?.word_bank ?? [] : [];
 
         return (
-          <article key={question.id} id={`booklet-question-${index}`} className="mb-6 min-w-0 scroll-mt-28 break-inside-avoid">
+          <article key={question.id} id={`booklet-question-${index}`} className="mb-3 min-w-0 scroll-mt-28 break-inside-avoid">
             {firstInSet && setInfo && (
-              <header className="mb-5 border-b border-slate-300 pb-4">
+              <header className="mb-2 border-b border-slate-300 pb-2">
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {question.session}</p>
                 <h3 className="mt-1 text-lg font-black text-slate-950">{setInfo.title}</h3>
                 {setInfo.instructions && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{setInfo.instructions}</p>}
@@ -126,7 +126,7 @@ export default function BookletView({
             {firstInSet && setInfo && part === 1 && wordBank.length > 0 && (() => {
               const exampleWord = wordBank.find(word => word.example);
               return exampleWord?.example_description ? (
-                <div className="mb-5 border-b-2 border-slate-900 pb-4">
+                <div className="mb-2 border-b-2 border-slate-900 pb-2">
                   <p className="mb-3 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
                   <div className="grid gap-4 sm:grid-cols-[1fr_0.9fr]">
                     <p className="font-serif text-sm leading-6"><strong>0.</strong> {exampleWord.example_description}</p>
@@ -139,7 +139,7 @@ export default function BookletView({
               ) : null;
             })()}
             {firstInSet && setInfo && part !== 1 && part !== 3 && (setInfo.example_prompt || setInfo.example_image_url) && (
-              <div className="mb-5 border-b border-slate-900 pb-5">
+              <div className="mb-2 border-b border-slate-900 pb-2">
                 <p className="mb-3 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
                 {setInfo.example_image_url && <div className="mb-3 flex justify-center"><img src={setInfo.example_image_url} alt="Imagen del ejemplo" className="max-h-56 max-w-full object-contain" /></div>}
                 {setInfo.example_prompt && <p className="mb-3 whitespace-pre-wrap font-serif text-sm leading-6"><strong>0.</strong> {setInfo.example_prompt}</p>}
@@ -149,17 +149,17 @@ export default function BookletView({
             )}
             {showSharedText && (
               setInfo?.shared_image_url ? (
-                <div className="mb-5 flex justify-center border border-slate-900 p-3">
+                <div className="mb-2 flex justify-center border border-slate-900 p-2">
                   <img src={setInfo.shared_image_url} alt="Texto compartido de la Parte 4" className="h-auto max-h-[560px] max-w-full object-contain" />
                 </div>
               ) : (
-                <div className="mb-5 whitespace-pre-wrap border border-slate-300 px-4 py-4 font-serif text-[15px] leading-7 text-slate-900">
+                <div className="mb-2 whitespace-pre-wrap font-serif text-[13px] leading-[1.4] text-slate-900">
                   {setInfo?.shared_text ?? question.context_text}
                 </div>
               )
             )}
             {wordBank.length > 0 && firstInSet && (
-              <div className="mb-5 grid gap-2 border-b border-slate-300 pb-4 sm:grid-cols-2">
+              <div className="mb-2 grid gap-1 border-b border-slate-300 pb-2 sm:grid-cols-2">
                 {wordBank.map(word => (
                   <div key={word.key} className="flex gap-2 py-1 text-sm leading-6">
                     <strong>{word.key}.</strong><span>{word.text}{word.example ? " (ejemplo)" : ""}</span>
@@ -167,10 +167,10 @@ export default function BookletView({
                 ))}
               </div>
             )}
-            <div className={`grid gap-3 ${isEnglish ? "sm:grid-cols-[2.5rem_minmax(0,1fr)]" : "sm:grid-cols-[3.5rem_minmax(0,1fr)]"}`}>
-              <div className="flex items-start justify-between gap-3 sm:block">
+            <div className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-2">
+              <div className="flex items-start gap-1">
                 <h3 className="text-sm font-black text-slate-950">{isEnglish ? `${officialNumber}.` : `Pregunta ${index + 1}`}</h3>
-                <span className={`rounded-full px-2 py-1 text-[10px] font-bold sm:mt-2 sm:inline-block ${selected ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}`}>{selected ? "Respondida" : "Sin responder"}</span>
+                <span className="hidden">{selected ? "Respondida" : "Sin responder"}</span>
               </div>
               <div>
                 {question.image_url && part === 2 && (
@@ -178,20 +178,20 @@ export default function BookletView({
                     <img src={question.image_url} alt={`Aviso de la pregunta ${officialNumber}`} className="max-h-28 max-w-[280px] object-contain" />
                   </div>
                 )}
-                <p className={`whitespace-pre-wrap font-serif text-slate-900 ${isEnglish ? "text-[15px] leading-7" : "text-base leading-8"}`}>{question.question}</p>
+                <p className="whitespace-pre-wrap font-serif text-[13px] leading-[1.4] text-slate-900">{question.question}</p>
                 {question.image_url && part !== 2 && (
-                  <div className="mt-3 flex justify-center">
+                  <div className="mt-2 flex justify-center">
                     <img src={question.image_url} alt={`Recurso de la pregunta ${officialNumber}`} className="max-h-[480px] max-w-full object-contain" />
                   </div>
                 )}
-                <div className={`mt-3 grid gap-x-6 ${part === 3 ? "sm:grid-cols-2 gap-y-2" : stacked ? "grid-cols-1 gap-y-2" : "sm:grid-cols-2 gap-y-3"}`}>
+                <div className="mt-2 grid grid-cols-1 gap-y-1">
                   {options.map(({ text, optionIndex }) => {
                     const optionNumber = optionIndex + 1;
                     const active = selected === optionNumber;
                     return (
-                      <button key={optionIndex} type="button" onClick={() => onAnswer(index, optionNumber)} aria-pressed={active} className={`flex items-start gap-2 border px-3 py-2.5 text-left transition ${stacked && part !== 3 ? "min-h-10" : "p-3"} ${active ? "border-blue-600 bg-blue-50 ring-2 ring-blue-100" : "border-slate-300 hover:border-slate-500 hover:bg-slate-50"}`}>
+                      <button key={optionIndex} type="button" onClick={() => onAnswer(index, optionNumber)} aria-pressed={active} className={`flex items-start gap-2 border-0 px-0 py-0.5 text-left transition ${active ? "bg-blue-50" : "hover:bg-slate-50"}`}>
                         <span className={`shrink-0 font-black ${active ? "text-blue-700" : "text-slate-800"}`}>{String.fromCharCode(65 + optionIndex)}.</span>
-                        <span className="text-sm leading-6 text-slate-800">{text}</span>
+                        <span className="text-[12px] leading-[1.35] text-slate-900">{text}</span>
                       </button>
                     );
                   })}
@@ -202,7 +202,7 @@ export default function BookletView({
         );
       })}
       </div>
-      <footer className="mt-5 flex items-center justify-between border-t border-slate-300 pt-3 text-[10px] text-slate-500"><span>PeakScore · Cuadernillo de práctica</span><span>Página {currentPage} de {totalPages}</span></footer>
+      <footer className="mt-2 flex items-center justify-between border-t border-slate-300 pt-2 text-[9px] text-slate-500"><span>PeakScore · Cuadernillo de práctica</span><span>Página {currentPage} de {totalPages}</span></footer>
       </section>
       <div className="flex flex-col gap-3 border border-slate-300 bg-white p-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-600">Revisa tus respuestas antes de finalizar. Las preguntas sin marcar quedarán como omitidas.</p>

@@ -52,6 +52,9 @@ export default async function RootLayout({
         coins: Number(profile.coins ?? 0),
         selectedCharacter:
           profile.selected_character ?? null,
+        isAdmin:
+          (user.email ?? "").trim().toLowerCase() ===
+          "aragonyostynsena07@gmail.com",
       };
     }
   }

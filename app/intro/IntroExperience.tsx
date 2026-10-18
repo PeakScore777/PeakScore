@@ -190,7 +190,7 @@ export default function IntroExperience() {
     : "/characters/intro/founder-static.gif";
 
   return (
-    <main className="relative flex min-h-[100svh] items-center justify-center overflow-hidden bg-[#050505] px-4 py-6 text-white sm:px-6">
+    <main className="fixed inset-0 z-[100] flex min-h-[100svh] items-center justify-center overflow-y-auto bg-[#050505] px-4 py-6 text-white sm:px-6">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-30"

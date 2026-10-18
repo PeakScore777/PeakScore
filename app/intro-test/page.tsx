@@ -72,9 +72,20 @@ export default function IntroTestPage() {
 
   const isStory = sceneIndex < SCENES.length;
   const story = isStory ? SCENES[sceneIndex] : null;
+  const stage = answers[0] ?? "";
+  const activeQuestion = questionIndex === 1
+    ? {
+        title: "¿QUÉ EXPERIENCIA TIENES CON EL ICFES?",
+        options: stage === "GRADO 10"
+          ? ["ESTOY EMPEZANDO", "HE PRACTICADO CON SIMULACROS"]
+          : stage === "GRADO 11"
+            ? ["ESTOY EMPEZANDO", "HE PRACTICADO CON SIMULACROS", "YA PRESENTÉ EL EXAMEN"]
+            : ["ESTOY EMPEZANDO", "HE PRACTICADO CON SIMULACROS", "YA PRESENTÉ EL EXAMEN", "LO HE PRESENTADO VARIAS VECES"],
+      }
+    : QUESTIONS[questionIndex];
   const text = story?.text ?? (finished
     ? "¡Listo! Esta fue una prueba visual. Tus respuestas no se han guardado."
-    : QUESTIONS[questionIndex]?.title ?? "");
+    : activeQuestion?.title ?? "");
   const isTyping = visibleChars < text.length;
 
   useEffect(() => {
@@ -174,7 +185,7 @@ export default function IntroTestPage() {
         inset: 0,
         zIndex: 99999,
         overflow: "auto",
-        background: "#050505",
+        background: "#000000",
         color: "#f5f1e8",
         fontFamily: "var(--font-press-start), monospace",
       }}
@@ -183,13 +194,6 @@ export default function IntroTestPage() {
         .intro-test-shell * { box-sizing: border-box; }
         .intro-test-shell button { font: inherit; cursor: pointer; }
         .intro-test-pixel { font-family: var(--font-press-start), monospace; }
-        .intro-test-scanlines {
-          background-image: linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px);
-          background-size: 100% 4px;
-          pointer-events: none;
-        }
-        .intro-test-choice { border: 1px solid #343434; background: #101010; color: #e8e4db; text-align:left; padding: 15px; line-height: 1.8; transition: border-color .15s, background .15s; }
-        .intro-test-choice:hover, .intro-test-choice[aria-pressed="true"] { border-color: #e4b95e; background: #211b10; }
         .intro-test-action { border: 1px solid #d9ad52; color:#f2c76b; background:transparent; padding:12px 16px; font-size:10px; letter-spacing:.06em; }
         .intro-test-action:hover { background:#e4b95e; color:#080808; }
         @media(max-width:640px) {
@@ -202,25 +206,19 @@ export default function IntroTestPage() {
       <audio ref={musicRef} src="/audio/intro/peakscore-intro.wav" loop preload="none" />
       <audio ref={typingRef} src="/audio/intro/peakscore-typing.wav" preload="none" />
 
-      <div style={{ position: "absolute", inset: 0, opacity: 0.18, background: "radial-gradient(ellipse at 50% 38%, #342714 0%, transparent 58%)", pointerEvents: "none" }} />
-      <div className="intro-test-scanlines" style={{ position: "absolute", inset: 0, opacity: 0.35 }} />
-
-      <header style={{ position: "relative", zIndex: 2, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, padding: "18px clamp(16px, 4vw, 48px)", borderBottom: "1px solid #222" }}>
-        <span style={{ color: "#e4b95e", fontSize: 10, letterSpacing: ".16em" }}>PEAKSCORE</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ color: "#686868", fontSize: 8 }}>ESCENA DE PRUEBA</span>
-          <button className="intro-test-action" onClick={() => setMusicOn((v) => !v)}>{musicOn ? "♫ MÚSICA: ON" : "♫ MÚSICA: OFF"}</button>
-          <button className="intro-test-action" onClick={() => setTypingOn((v) => !v)}>{typingOn ? "⌨ TECLAS: ON" : "⌨ TECLAS: OFF"}</button>
-        </div>
-      </header>
+      {/* Fondo deliberadamente negro puro: evita halos o partículas detrás de los GIF. */}
 
       {!started ? (
         <section style={{ position: "relative", zIndex: 1, minHeight: "calc(100dvh - 76px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: 24 }}>
           <p style={{ color: "#e4b95e", fontSize: 9, letterSpacing: ".2em", marginBottom: 24 }}>UNA NUEVA AVENTURA COMIENZA</p>
           <h1 className="intro-test-pixel" style={{ fontSize: "clamp(20px, 4vw, 36px)", lineHeight: 1.8, maxWidth: 760, margin: "0 auto 18px" }}>BIENVENIDO A PEAKSCORE</h1>
-          <p style={{ color: "#a7a39a", fontSize: 10, lineHeight: 2.2, maxWidth: 520, marginBottom: 32 }}>Prueba de escena narrativa · Founder recibe a Nova, la aventurera que acaba de llegar.</p>
-          <button className="intro-test-action" style={{ padding: "17px 24px" }} onClick={() => setStarted(true)}>▶ COMENZAR PRUEBA</button>
-          <p style={{ color: "#5c5a55", fontSize: 8, lineHeight: 2, marginTop: 18 }}>La música comienza después de pulsar el botón. Las respuestas no se guardan.</p>
+          <p style={{ color: "#a7a39a", fontSize: 10, lineHeight: 2.2, maxWidth: 520, marginBottom: 32 }}>Founder recibe a Nova, la aventurera que acaba de llegar.</p>
+          <button className="intro-test-action" style={{ padding: "17px 24px" }} onClick={() => setStarted(true)}>▶ COMENZAR</button>
+          <div style={{ display: "flex", gap: 18, justifyContent: "center", marginTop: 24, flexWrap: "wrap" }}>
+            <button onClick={() => setMusicOn((v) => !v)} style={{ border: 0, background: "transparent", color: "#777", fontSize: 8 }}>{musicOn ? "♫ Música activada" : "♫ Música desactivada"}</button>
+            <button onClick={() => setTypingOn((v) => !v)} style={{ border: 0, background: "transparent", color: "#777", fontSize: 8 }}>{typingOn ? "⌨ Teclado activado" : "⌨ Teclado desactivado"}</button>
+          </div>
+          <p style={{ color: "#5c5a55", fontSize: 8, lineHeight: 2, marginTop: 12 }}>Prueba local: las respuestas no se guardan.</p>
         </section>
       ) : (
         <section style={{ position: "relative", zIndex: 1, minHeight: "calc(100dvh - 76px)", width: "min(100%, 1040px)", margin: "0 auto", padding: "clamp(18px, 4vh, 42px) clamp(16px, 4vw, 36px) 28px", display: "flex", flexDirection: "column", justifyContent: "center", gap: "clamp(14px, 3vh, 28px)" }}>
@@ -231,7 +229,7 @@ export default function IntroTestPage() {
 
           <div style={{ minHeight: "clamp(210px, 38vh, 390px)", display: "flex", alignItems: "end", justifyContent: "center", gap: "clamp(22px, 9vw, 120px)", paddingTop: 10 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-              <img className="intro-test-character" src="/characters/intro/nova-static-intro.gif" alt="Nova, la aventurera, mirando hacia Founder" style={{ width: "clamp(120px, 18vw, 205px)", maxHeight: "34vh", objectFit: "contain", imageRendering: "pixelated", filter: "drop-shadow(0 0 18px rgba(215,174,82,.08))" }} />
+              <img className="intro-test-character" src="/characters/intro/nova-static-intro.gif" alt="Nova, la aventurera, mirando hacia Founder" style={{ width: "clamp(120px, 18vw, 205px)", maxHeight: "34vh", objectFit: "contain", imageRendering: "pixelated", filter: "none" }} />
               <span style={{ color: "#a6a29a", fontSize: 8, letterSpacing: ".14em" }}>NOVA</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
@@ -240,7 +238,7 @@ export default function IntroTestPage() {
             </div>
           </div>
 
-          <div style={{ borderTop: "1px solid #383126", borderBottom: "1px solid #383126", padding: "clamp(18px, 3vw, 30px) 0", minHeight: 155 }}>
+          <div style={{ padding: "clamp(18px, 3vw, 30px) 0", minHeight: 155 }}>
             {isStory ? (
               <p className="intro-test-dialogue" style={{ color: "#f5f1e8", fontSize: "clamp(10px, 1.15vw, 13px)", lineHeight: 2.3, maxWidth: 850, margin: "0 auto", textAlign: "center", minHeight: 70 }}>
                 {text.slice(0, visibleChars)}{isTyping && <span style={{ color: "#e4b95e", animation: "intro-test-blink 1s steps(2,start) infinite" }}>▌</span>}
@@ -251,9 +249,26 @@ export default function IntroTestPage() {
                   {text.slice(0, visibleChars)}{isTyping && <span style={{ color: "#e4b95e" }}>▌</span>}
                 </p>
                 {!finished && !isTyping && (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 245px), 1fr))", gap: 9 }}>
-                    {QUESTIONS[questionIndex].options.map((option) => (
-                      <button key={option} className="intro-test-choice" aria-pressed={selected === option} onClick={() => setSelected(option)}>{selected === option ? "▶ " : "　"}{option}</button>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, marginTop: 22 }}>
+                    {activeQuestion.options.map((option) => (
+                      <button
+                        key={option}
+                        aria-pressed={selected === option}
+                        onClick={() => setSelected(option)}
+                        style={{
+                          border: 0,
+                          background: "transparent",
+                          color: selected === option ? "#f1c85c" : "#eee9df",
+                          padding: "5px 8px",
+                          fontSize: "clamp(9px, 1vw, 11px)",
+                          lineHeight: 1.9,
+                          textAlign: "center",
+                          maxWidth: "100%",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        <span style={{ display: "inline-block", width: 18, color: "#f1c85c" }}>{selected === option ? "▶" : ""}</span>{option}
+                      </button>
                     ))}
                   </div>
                 )}
@@ -261,10 +276,21 @@ export default function IntroTestPage() {
             )}
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <button className="intro-test-action" onClick={() => { setStarted(false); setSceneIndex(0); setQuestionIndex(0); setAnswers([]); setSelected(""); setFinished(false); }}>SALIR DE LA PRUEBA</button>
-            <button className="intro-test-action" onClick={advance} disabled={!isStory && !finished && !isTyping && !selected} style={{ opacity: !isStory && !finished && !isTyping && !selected ? .35 : 1 }}>
-              {isTyping ? "▶ MOSTRAR TEXTO" : isStory ? "CONTINUAR ▼" : finished ? "REPETIR PRUEBA ↻" : questionIndex === QUESTIONS.length - 1 ? "TERMINAR ▶" : "SIGUIENTE ▶"}
+          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: 38 }}>
+            <button
+              onClick={advance}
+              disabled={!isStory && !finished && !isTyping && !selected}
+              style={{
+                border: 0,
+                background: "transparent",
+                color: !isStory && !finished && !isTyping && !selected ? "#4b4639" : "#f1c85c",
+                padding: "8px 12px",
+                fontSize: "clamp(9px, 1vw, 11px)",
+                lineHeight: 1.8,
+                letterSpacing: ".02em",
+              }}
+            >
+              {isTyping ? "▶ MOSTRAR TEXTO" : isStory ? "▶ Continuar" : finished ? "▶ Repetir prueba" : questionIndex === QUESTIONS.length - 1 ? "▶ Terminar" : "▶ Siguiente"}
             </button>
           </div>
         </section>

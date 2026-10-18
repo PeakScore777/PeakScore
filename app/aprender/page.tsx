@@ -128,7 +128,7 @@ export default async function AprenderPage() {
                   <source src="/challenges/archivo-enigmas/portal-nova.mp4" type="video/mp4" />
                 </video>
                 <div className="absolute inset-0 bg-gradient-to-t from-[#090d17]/95 via-transparent to-black/15" />
-                <div className="absolute left-2 top-2 flex gap-1.5">
+                <div className="absolute left-2 top-1 flex gap-1.5">
                   <span className="pixel-font rounded-sm border border-[#a8e69c]/40 bg-[#13291b]/90 px-2 py-1 text-[6px] text-[#a8e69c]">DISPONIBLE</span>
                   <span className="pixel-font rounded-sm bg-black/65 px-2 py-1 text-[6px] text-white/80">01</span>
                 </div>

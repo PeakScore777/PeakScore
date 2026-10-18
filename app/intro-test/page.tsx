@@ -104,7 +104,7 @@ export default function IntroTestPage() {
 
   useEffect(() => {
     const audio = typingRef.current;
-    if (!audio || !started || !typingOn || !isTyping || !text.length) {
+    if (!audio || !started || !typingOn || !text.length) {
       if (audio) audio.pause();
       return;
     }
@@ -115,7 +115,11 @@ export default function IntroTestPage() {
       audio.pause();
       audio.currentTime = 0;
     };
-  }, [started, typingOn, sceneIndex, questionIndex, finished, text, isTyping]);
+  }, [started, typingOn, sceneIndex, questionIndex, finished, text]);
+
+  useEffect(() => {
+    if (!isTyping && typingRef.current) typingRef.current.pause();
+  }, [isTyping]);
 
   const advance = useCallback(() => {
     if (isTyping) {

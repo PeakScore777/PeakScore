@@ -110,7 +110,13 @@ export default function EditQuestionPage() {
       }
 
       setForm({
-        subject: question.subject ?? "",
+        // Normalize legacy labels to the exact subject names used by bank filters.
+        subject:
+          question.subject === "Sociales"
+            ? "Sociales y Ciudadanas"
+            : question.subject === "Lectura critica"
+              ? "Lectura Crítica"
+              : question.subject ?? "",
         session: question.session ?? 1,
         component: question.component ?? "",
         competence: question.competence ?? "",
@@ -534,14 +540,21 @@ export default function EditQuestionPage() {
                   Materia
                 </label>
 
-                <input
+                <select
                   id="subject"
                   name="subject"
                   value={form.subject}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                />
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                >
+                  <option value="">Seleccionar materia</option>
+                  <option value="Matemáticas">Matemáticas</option>
+                  <option value="Lectura Crítica">Lectura Crítica</option>
+                  <option value="Sociales y Ciudadanas">Sociales y Ciudadanas</option>
+                  <option value="Ciencias Naturales">Ciencias Naturales</option>
+                  <option value="Inglés">Inglés</option>
+                </select>
               </div>
 
               {/* Session */}

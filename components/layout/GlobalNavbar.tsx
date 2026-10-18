@@ -302,17 +302,18 @@ export default function GlobalNavbar({
 
   useEffect(() => {
     let mounted = true;
+    let requestId = 0;
 
     async function loadProfile() {
+      const currentRequest = ++requestId;
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (!mounted) return;
+        if (!mounted || currentRequest !== requestId) return;
 
         if (!session?.user) {
           setProfile(null);
+          setProfileOpen(false);
           return;
         }
 
@@ -321,45 +322,70 @@ export default function GlobalNavbar({
           cache: "no-store",
         });
 
-        if (!response.ok) return;
+        if (!response.ok) {
+          if (response.status === 401 && mounted) setProfile(null);
+          return;
+        }
 
         const data = await response.json();
-
-        if (!mounted || !data?.profile) return;
+        if (!mounted || currentRequest !== requestId || !data?.profile) return;
 
         const nextProfile: ProfileData = {
           id: data.profile.id,
           fullName: data.profile.fullName ?? null,
-          email:
-            data.profile.email ?? session.user.email ?? null,
+          email: data.profile.email ?? session.user.email ?? null,
           avatarUrl: data.profile.avatarUrl ?? null,
           streak: Number(data.profile.streak ?? 0),
           coins: Number(data.profile.coins ?? 0),
-          selectedCharacter:
-            data.profile.selectedCharacter ?? null,
-          // Debe venir de una comprobación confiable del servidor.
+          selectedCharacter: data.profile.selectedCharacter ?? null,
           isAdmin: data.profile.isAdmin === true,
         };
 
         setProfile(nextProfile);
 
         const character = nextProfile.selectedCharacter;
-
         if (character && CHARACTER_AVATARS[character]) {
           publishCharacterChange(character);
         }
       } catch (error) {
-        console.error(
-          "[GlobalNavbar] Error cargando el perfil:",
-          error,
-        );
+        console.error("[GlobalNavbar] Error cargando el perfil:", error);
       }
     }
 
     void loadProfile();
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        requestId += 1;
+        setProfile(null);
+        setProfileOpen(false);
+        setOpenDropdown(null);
+        setMobileOpen(false);
+        return;
+      }
+
+      if (
+        event === "INITIAL_SESSION" ||
+        event === "SIGNED_IN" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "USER_UPDATED"
+      ) {
+        queueMicrotask(() => {
+          if (mounted) void loadProfile();
+        });
+      }
+    });
+
+    const handleFocus = () => {
+      if (mounted) void loadProfile();
+    };
+    window.addEventListener("focus", handleFocus);
+
     return () => {
       mounted = false;
+      requestId += 1;
+      subscription.unsubscribe();
+      window.removeEventListener("focus", handleFocus);
     };
   }, []);
 

@@ -244,64 +244,55 @@ export default function SubjectQuestionsPage() {
                 </div>
               </header>
 
-              <div className="grid grid-cols-1 gap-x-8 px-6 py-6 sm:px-9 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-x-7 px-6 py-5 sm:px-8 md:grid-cols-2 print:grid-cols-2">
                 {pageQuestions.map((question, index) => {
                   const questionNumber = question.question_number ?? ((currentPage - 1) * questionsPerPage + index + 1);
                   const previous = pageQuestions[index - 1];
                   const showContext = Boolean(question.context_text?.trim()) &&
                     (!previous || previous.context_text?.trim() !== question.context_text?.trim());
                   return (
-                    <section key={question.id} className="mb-7 min-w-0 break-inside-avoid border-b border-slate-300 pb-5 last:border-0">
-                      {showContext && (
-                        <div className="mb-4 rounded-sm bg-slate-50 px-3 py-3 text-[13px] leading-6 text-slate-800">
-                          <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">Contexto</p>
-                          <p className="whitespace-pre-wrap">{question.context_text}</p>
+                    <section key={question.id} className="mb-5 min-w-0 break-inside-avoid pb-2">
+                      <div className="mb-3 flex items-start gap-2">
+                        <strong className="shrink-0 pt-0.5 text-[13px] font-bold text-slate-900">{questionNumber}.</strong>
+                        <div className="min-w-0 flex-1">
+                          {showContext && question.context_text?.trim() && (
+                            <p className="mb-3 whitespace-pre-wrap font-serif text-[13px] leading-[1.45] text-slate-900">{question.context_text}</p>
+                          )}
+                          {question.image_url && (
+                            <div className="mb-3 flex justify-center">
+                              <img src={question.image_url} alt={`Material visual de la pregunta ${questionNumber}`} loading="lazy" className="h-auto max-h-56 max-w-full object-contain" />
+                            </div>
+                          )}
+                          <p className="whitespace-pre-wrap font-serif text-[13px] leading-[1.45] text-slate-900">{question.question}</p>
                         </div>
-                      )}
-                      {question.image_url && (
-                        <div className="mb-4 flex justify-center">
-                          <img src={question.image_url} alt={`Material visual de la pregunta ${questionNumber}`} loading="lazy" className="h-auto max-h-64 max-w-full object-contain" />
-                        </div>
-                      )}
-                      <div className="grid grid-cols-[1.75rem_minmax(0,1fr)] gap-2">
-                        <strong className="pt-0.5 text-sm text-slate-900">{questionNumber}.</strong>
-                        <div className="min-w-0">
-                          <p className="whitespace-pre-wrap font-serif text-[14px] leading-6 text-slate-900">{question.question}</p>
-                          <div className="mt-4 space-y-2">
-                            {([
-                              ["A", question.option_a],
-                              ["B", question.option_b],
-                              ["C", question.option_c],
-                              ["D", question.option_d],
-                            ] as const).map(([letter, option]) => (
-                              <div key={letter} className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-2 text-[13px] leading-5 text-slate-800">
-                                <strong>{letter}.</strong>
-                                <span className="whitespace-pre-wrap">{option}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="mt-4 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
-                        <span className="rounded border border-slate-200 px-2 py-1">Sesión {question.session}</span>
-                        {question.component && <span className="rounded border border-slate-200 px-2 py-1">{question.component}</span>}
-                        <Link href={`/dashboard/question-bank/edit/${question.id}`} className="ml-auto inline-flex items-center gap-1 rounded border border-slate-300 px-2 py-1 font-semibold text-slate-700 hover:bg-slate-100">
-                          <Pencil size={12} /> Editar
+                        <Link
+                          href={`/dashboard/question-bank/edit/${question.id}`}
+                          title={`Editar pregunta ${questionNumber}`}
+                          aria-label={`Editar pregunta ${questionNumber}`}
+                          className="print:hidden inline-flex shrink-0 items-center justify-center rounded border border-slate-300 p-1.5 text-slate-500 hover:bg-slate-100"
+                        >
+                          <Pencil size={12} />
                         </Link>
                       </div>
-                      {question.explanation && (
-                        <details className="mt-3 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                          <summary className="cursor-pointer font-semibold">Ver respuesta y explicación (admin)</summary>
-                          <p className="mt-2"><strong>Respuesta:</strong> {question.correct_answer}</p>
-                          <p className="mt-1 whitespace-pre-wrap"><strong>Explicación:</strong> {question.explanation}</p>
-                        </details>
-                      )}
+                      <div className="ml-5 space-y-1.5">
+                        {([
+                          ["A", question.option_a],
+                          ["B", question.option_b],
+                          ["C", question.option_c],
+                          ["D", question.option_d],
+                        ] as const).map(([letter, option]) => (
+                          <div key={letter} className="grid grid-cols-[1rem_minmax(0,1fr)] gap-2 font-serif text-[12px] leading-[1.4] text-slate-900">
+                            <strong>{letter}.</strong>
+                            <span className="whitespace-pre-wrap">{option}</span>
+                          </div>
+                        ))}
+                      </div>
                     </section>
                   );
                 })}
               </div>
-              <footer className="flex items-center justify-between border-t border-slate-300 px-6 py-4 text-[10px] text-slate-500 sm:px-9">
-                <span>PeakScore · Banco de preguntas · Uso administrativo</span>
+              <footer className="print:hidden flex items-center justify-between border-t border-slate-300 px-6 py-3 text-[10px] text-slate-500 sm:px-9">
+                <span>PeakScore · Banco de preguntas</span>
                 <span>{pageQuestions.length} preguntas en esta página</span>
               </footer>
             </article>

@@ -56,28 +56,28 @@ export default async function AprenderPage() {
       <div aria-hidden="true" className="levels-backdrop" />
       <div aria-hidden="true" className="levels-shade" />
 
-      <div className="levels-content relative z-10 mx-auto w-full max-w-[1440px] px-4 pb-12 pt-6 sm:px-7 sm:pt-8">
+      <div className="levels-content relative z-10 mx-auto w-full max-w-[1600px] px-5 pb-14 pt-7 sm:px-9 sm:pt-9">
         <header className="levels-header flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="pixel-font text-[7px] leading-5 tracking-[.08em] text-[#a8c5ad] sm:text-[8px]">
+            <p className="pixel-font text-[8px] leading-6 tracking-[.08em] text-[#a8c5ad] sm:text-[10px]">
               {seasonName}
             </p>
-            <h1 className="pixel-font mt-3 text-[14px] leading-[1.8] text-[#f4f1df] sm:text-[17px]">
+            <h1 className="pixel-font mt-3 text-[17px] leading-[1.9] text-[#f4f1df] sm:text-[22px]">
               Continuar mi progreso
             </h1>
-            <p className="pixel-font mt-2 text-[7px] leading-5 text-white/55 sm:text-[8px]">
+            <p className="pixel-font mt-2 text-[8px] leading-6 text-white/65 sm:text-[10px]">
               HOLA, {firstName.toLocaleUpperCase("es-CO")} · TU SIGUIENTE DESAFÍO TE ESPERA
             </p>
           </div>
 
           <div className="levels-stats flex flex-wrap items-center gap-2">
             <div className="levels-stat">
-              <span className="pixel-font text-[6px] text-white/45">EXP TEMPORADA</span>
-              <span className="pixel-font text-[8px] text-[#e6e9db]">{seasonXp.toLocaleString("es-CO")}</span>
+              <span className="pixel-font text-[8px] text-white/55">EXP TEMPORADA</span>
+              <span className="pixel-font text-[10px] text-[#e6e9db]">{seasonXp.toLocaleString("es-CO")}</span>
             </div>
             <div className="levels-stat">
-              <Image src="/images/currency/peakcoin.webp" alt="PeakCoin" width={25} height={25} className="h-6 w-6 object-contain" />
-              <span className="pixel-font text-[8px] text-[#e9d99d]">{coins.toLocaleString("es-CO")}</span>
+              <Image src="/images/currency/peakcoin.webp" alt="PeakCoin" width={30} height={30} className="h-7 w-7 object-contain" />
+              <span className="pixel-font text-[10px] text-[#e9d99d]">{coins.toLocaleString("es-CO")}</span>
             </div>
             <div className="levels-stat levels-rank-stat">
               <Image
@@ -87,23 +87,23 @@ export default async function AprenderPage() {
                 height={32}
                 className="h-8 w-8 object-contain"
               />
-              <span className="pixel-font text-[6px] leading-4 text-white/65">{rankName.toLocaleUpperCase("es-CO")}</span>
+              <span className="pixel-font text-[8px] leading-5 text-white/70">{rankName.toLocaleUpperCase("es-CO")}</span>
             </div>
           </div>
         </header>
 
-        <section className="mt-6">
+        <section className="mt-7">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="pixel-font text-[7px] leading-5 text-[#b6c5a5]">RUTA 01 · MATEMÁTICAS</p>
-              <h2 className="pixel-font mt-2 text-[10px] leading-[1.9] text-[#f2edda] sm:text-[12px]">
+              <p className="pixel-font text-[9px] leading-6 text-[#b6c5a5]">RUTA 01 · MATEMÁTICAS</p>
+              <h2 className="pixel-font mt-2 text-[13px] leading-[1.9] text-[#f2edda] sm:text-[16px]">
                 El Sendero del Conocimiento
               </h2>
-              <p className="pixel-font mt-2 max-w-2xl text-[7px] leading-[2] text-white/55">
+              <p className="pixel-font mt-2 max-w-2xl text-[9px] leading-[2] text-white/60">
                 Aprende la regla. Supera la prueba. Desbloquea el siguiente desafío.
               </p>
             </div>
-            <div className="pixel-font rounded border border-[#c9d5b4]/20 bg-[#0b1020]/75 px-3 py-2 text-[6px] leading-5 text-white/55">
+            <div className="pixel-font rounded border border-[#c9d5b4]/20 bg-[#0b1020]/75 px-3 py-2 text-[8px] leading-6 text-white/65">
               01 / 04 DESAFÍOS
             </div>
           </div>
@@ -214,27 +214,27 @@ export default async function AprenderPage() {
       <style>{`
         .levels-page { isolation: isolate; }
         .levels-backdrop {
-          position: absolute; inset: 0 0 auto; height: 250px;
-          background-image: linear-gradient(180deg, rgba(7,12,22,.12) 0%, rgba(7,12,22,.22) 38%, rgba(8,11,18,.78) 76%, #080b12 100%), url("/images/challenges/levels-background.png");
+          position: absolute; inset: 0 0 auto; height: 155px;
+          background-image: linear-gradient(180deg, rgba(7,12,22,.08) 0%, rgba(7,12,22,.12) 40%, rgba(8,11,18,.7) 78%, #080b12 100%), url("/images/challenges/levels-background.png");
           background-size: cover; background-position: center 44%; background-repeat: no-repeat;
           opacity: .94; pointer-events: none;
         }
         .levels-shade {
-          position: absolute; inset: 0 0 auto; height: 190px; pointer-events: none;
+          position: absolute; inset: 0 0 auto; height: 155px; pointer-events: none;
           background: linear-gradient(180deg, rgba(5,8,16,.05) 0%, rgba(5,8,16,.06) 42%, rgba(8,11,18,.55) 78%, #080b12 100%);
         }
         .levels-page, .levels-page * { font-family: var(--font-press-start), monospace; }
-        .levels-content { font-size: 8px; }
+        .levels-content { font-size: 10px; }
         .levels-stats { justify-content: flex-end; }
         .levels-stat {
-          display: flex; min-height: 44px; align-items: center; gap: 8px;
+          display: flex; min-height: 50px; align-items: center; gap: 9px;
           border: 1px solid rgba(255,255,255,.12); background: rgba(8,13,24,.78);
-          padding: 8px 10px; border-radius: 4px;
+          padding: 9px 12px; border-radius: 4px;
         }
         .levels-stat:first-child { flex-direction: column; align-items: flex-start; justify-content: center; gap: 5px; }
         .levels-grid {
-          display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 270px));
-          align-items: start; gap: 17px;
+          display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 310px));
+          align-items: start; gap: 20px;
         }
         .level-card {
           display: block; width: 100%; overflow: hidden; border-radius: 9px;
@@ -243,14 +243,14 @@ export default async function AprenderPage() {
           transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
         }
         .level-card-open:hover { transform: translateY(-3px); border-color: rgba(177,218,154,.52); box-shadow: 0 12px 28px rgba(0,0,0,.3); }
-        .level-art { height: 166px; overflow: hidden; background: #101521; }
-        .level-art video { object-fit: contain; object-position: center center; background: #101521; }
+        .level-art { height: 210px; overflow: hidden; background: #101521; }
+        .level-art video { object-fit: cover; object-position: center center; background: #101521; }
         .level-art-locked {
           background-image: linear-gradient(rgba(7,12,22,.45), rgba(7,12,22,.8)), url("/images/challenges/levels-background.png");
           background-size: cover; background-position: center;
           filter: saturate(.58);
         }
-        .level-card-body { padding: 12px; }
+        .level-card-body { padding: 15px; }
         .level-card-locked { opacity: .82; }
         .level-card-locked-cta { min-height: 31px; border-radius: 3px; }
         .level-card-cta { min-height: 34px; border-radius: 3px; }
@@ -262,13 +262,13 @@ export default async function AprenderPage() {
           .levels-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
           .level-art { height: auto; aspect-ratio: 16 / 10; min-height: 108px; }
           .level-art video { object-fit: contain; }
-          .level-card-body { padding: 9px; }
-          .level-card-body h3 { font-size: 7px; }
+          .level-card-body { padding: 11px; }
+          .level-card-body h3 { font-size: 9px; }
           .level-card-body p { overflow-wrap: anywhere; }
           .level-reward { gap: 5px; }
-          .level-reward > span:last-child { font-size: 5px; }
+          .level-reward > span:last-child { font-size: 6px; }
           .level-card-cta { min-height: 38px; padding-inline: 6px; }
-          .level-card-cta span { font-size: 5px; line-height: 1.8; text-align: center; }
+          .level-card-cta span { font-size: 6px; line-height: 1.9; text-align: center; }
         }
         @media (prefers-reduced-motion: reduce) {
           .level-card { transition: none; }

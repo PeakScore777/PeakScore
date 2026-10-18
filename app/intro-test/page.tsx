@@ -171,7 +171,7 @@ export default function IntroTestPage() {
       setVisibleChars(count);
       soundCounter += 1;
       // Un toque corto cada pocos caracteres: evita convertir el diálogo en ruido continuo.
-      if (soundCounter >= 3 && count < text.length && musicOn && typingRef.current) {
+      if (soundCounter >= 3 && count < text.length && typingRef.current) {
         const audio = typingRef.current;
         audio.volume = 0.12;
         audio.currentTime = 0;
@@ -181,7 +181,7 @@ export default function IntroTestPage() {
       if (count >= text.length) window.clearInterval(timer);
     }, 34);
     return () => window.clearInterval(timer);
-  }, [started, sceneIndex, questionIndex, showRecommendation, text, musicOn]);
+  }, [started, sceneIndex, questionIndex, showRecommendation, text]);
 
   const currentOptions = showRecommendation
     ? []
@@ -243,8 +243,6 @@ export default function IntroTestPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [started, advance]);
-
-  const questionNumber = questionIndex + 1;
 
   return (
     <main
@@ -359,7 +357,7 @@ export default function IntroTestPage() {
                 <p style={{ color: "#e4b95e", fontSize: 9, lineHeight: 2, marginBottom: 12 }}>TU PRIMER DESTINO</p>
                 <h2 style={{ color: "#f5f1e8", fontSize: "clamp(14px, 2vw, 20px)", lineHeight: 1.8, margin: "0 0 8px" }}>{route.title}</h2>
                 <p style={{ color: "#e4b95e", fontSize: 9, lineHeight: 2, marginBottom: 12 }}>{route.subtitle}</p>
-                <p style={{ color: "#aaa69d", fontFamily: "Arial, sans-serif", fontSize: 14, lineHeight: 1.7, marginBottom: 12 }}>{route.description}</p>
+                <p style={{ color: "#aaa69d", fontFamily: "var(--font-press-start), monospace", fontSize: 8, lineHeight: 2.4, marginBottom: 14 }}>{route.description}</p>
                 <p style={{ color: "#f1c85c", fontSize: 9, lineHeight: 2 }}>▶ {route.firstStep}</p>
               </div>
             )}

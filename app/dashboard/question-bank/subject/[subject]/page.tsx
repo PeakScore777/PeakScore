@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Pencil,
   Plus,
@@ -25,6 +27,14 @@ export default function SubjectQuestionsPage() {
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const questionsPerPage = 10;
+  const isSociales = subject === "Sociales y Ciudadanas";
+  const totalPages = Math.max(1, Math.ceil(questions.length / questionsPerPage));
+  const pageQuestions = questions.slice(
+    (currentPage - 1) * questionsPerPage,
+    currentPage * questionsPerPage
+  );
 
   useEffect(() => {
     if (subject === "Inglés") {
@@ -42,6 +52,7 @@ export default function SubjectQuestionsPage() {
         );
 
         setQuestions(filteredQuestions);
+        setCurrentPage(1);
       } catch (error) {
         console.error(
           "Error cargando preguntas:",
@@ -189,10 +200,125 @@ export default function SubjectQuestionsPage() {
         )}
 
         {/* =========================
+            CUADERNILLO DE SOCIALES
+        ========================= */}
+
+        {!loading && isSociales && questions.length > 0 && (
+          <section className="space-y-5">
+            <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-wider text-slate-500">Vista tipo cuadernillo</p>
+                <p className="mt-1 text-sm text-slate-600">
+                  Página {currentPage} de {totalPages} · Preguntas {(currentPage - 1) * questionsPerPage + 1}–{Math.min(currentPage * questionsPerPage, questions.length)} de {questions.length}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ChevronLeft size={16} /> Anterior
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Siguiente <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            <article className="mx-auto w-full max-w-[210mm] border border-slate-300 bg-white shadow-md print:max-w-none print:border-0 print:shadow-none">
+              <header className="border-b-4 border-slate-800 px-6 py-5 sm:px-9">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">PeakScore · Ciencias Sociales</p>
+                    <h2 className="mt-1 text-2xl font-black text-slate-900">Sociales y Ciudadanas</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">Lee cuidadosamente los contextos y responde cada pregunta seleccionando una sola opción.</p>
+                  </div>
+                  <span className="shrink-0 rounded-md border border-slate-300 px-3 py-2 text-xs font-bold text-slate-600">PÁG. {currentPage}</span>
+                </div>
+              </header>
+
+              <div className="grid grid-cols-1 gap-x-8 px-6 py-6 sm:px-9 md:grid-cols-2">
+                {pageQuestions.map((question, index) => {
+                  const questionNumber = question.question_number ?? ((currentPage - 1) * questionsPerPage + index + 1);
+                  const previous = pageQuestions[index - 1];
+                  const showContext = Boolean(question.context_text?.trim()) &&
+                    (!previous || previous.context_text?.trim() !== question.context_text?.trim());
+                  return (
+                    <section key={question.id} className="mb-7 min-w-0 break-inside-avoid border-b border-slate-300 pb-5 last:border-0">
+                      {showContext && (
+                        <div className="mb-4 rounded-sm bg-slate-50 px-3 py-3 text-[13px] leading-6 text-slate-800">
+                          <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">Contexto</p>
+                          <p className="whitespace-pre-wrap">{question.context_text}</p>
+                        </div>
+                      )}
+                      {question.image_url && (
+                        <div className="mb-4 flex justify-center">
+                          <img src={question.image_url} alt={`Material visual de la pregunta ${questionNumber}`} loading="lazy" className="h-auto max-h-64 max-w-full object-contain" />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-[1.75rem_minmax(0,1fr)] gap-2">
+                        <strong className="pt-0.5 text-sm text-slate-900">{questionNumber}.</strong>
+                        <div className="min-w-0">
+                          <p className="whitespace-pre-wrap font-serif text-[14px] leading-6 text-slate-900">{question.question}</p>
+                          <div className="mt-4 space-y-2">
+                            {([
+                              ["A", question.option_a],
+                              ["B", question.option_b],
+                              ["C", question.option_c],
+                              ["D", question.option_d],
+                            ] as const).map(([letter, option]) => (
+                              <div key={letter} className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-2 text-[13px] leading-5 text-slate-800">
+                                <strong>{letter}.</strong>
+                                <span className="whitespace-pre-wrap">{option}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                        <span className="rounded border border-slate-200 px-2 py-1">Sesión {question.session}</span>
+                        {question.component && <span className="rounded border border-slate-200 px-2 py-1">{question.component}</span>}
+                        <Link href={`/dashboard/question-bank/edit/${question.id}`} className="ml-auto inline-flex items-center gap-1 rounded border border-slate-300 px-2 py-1 font-semibold text-slate-700 hover:bg-slate-100">
+                          <Pencil size={12} /> Editar
+                        </Link>
+                      </div>
+                      {question.explanation && (
+                        <details className="mt-3 rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                          <summary className="cursor-pointer font-semibold">Ver respuesta y explicación (admin)</summary>
+                          <p className="mt-2"><strong>Respuesta:</strong> {question.correct_answer}</p>
+                          <p className="mt-1 whitespace-pre-wrap"><strong>Explicación:</strong> {question.explanation}</p>
+                        </details>
+                      )}
+                    </section>
+                  );
+                })}
+              </div>
+              <footer className="flex items-center justify-between border-t border-slate-300 px-6 py-4 text-[10px] text-slate-500 sm:px-9">
+                <span>PeakScore · Banco de preguntas · Uso administrativo</span>
+                <span>{pageQuestions.length} preguntas en esta página</span>
+              </footer>
+            </article>
+
+            <div className="flex items-center justify-center gap-2">
+              <button type="button" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-40">Anterior</button>
+              <span className="px-3 text-sm font-semibold text-slate-600">{currentPage} / {totalPages}</span>
+              <button type="button" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-40">Siguiente</button>
+            </div>
+          </section>
+        )}
+
+        {/* =========================
             LISTA DE PREGUNTAS
         ========================= */}
 
-        {!loading && questions.length > 0 && (
+        {!loading && !isSociales && questions.length > 0 && (
           <div className="space-y-5">
 
             {questions.map((question, index) => (

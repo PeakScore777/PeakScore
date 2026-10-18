@@ -227,36 +227,36 @@ export default function LoginPage() {
       />
 
       {/* PANEL IZQUIERDO: más ancho y contenido desplazado hacia la derecha */}
-      <section className="relative z-10 flex min-h-screen w-full items-center border-r border-white/[0.08] bg-[#08090b]/96 px-6 py-12 sm:px-10 lg:w-[44%] lg:min-w-[650px] lg:max-w-[800px] lg:justify-end lg:pl-[5vw] lg:pr-[3.5vw] xl:min-w-[700px] xl:pl-[6vw] xl:pr-[4vw]">
-        <div className="mx-auto w-full max-w-[560px]">
+      <section className="relative z-10 flex min-h-screen w-full items-center border-r border-white/[0.08] bg-[#08090b]/96 px-5 py-8 sm:px-8 lg:w-[39%] lg:min-w-[470px] lg:max-w-[610px] lg:justify-end lg:pl-[3.5vw] lg:pr-[2.5vw] xl:min-w-0 xl:pl-[4vw] xl:pr-[2.5vw]">
+        <div className="mx-auto w-full max-w-[450px]">
           {/* Logo, sin círculo, borde ni tarjeta */}
           <Link
             href="/"
             aria-label="Volver al inicio de PeakScore"
-            className="mb-10 inline-flex items-center gap-4 transition-opacity hover:opacity-75 sm:mb-12"
+            className="mb-7 inline-flex items-center gap-3 transition-opacity hover:opacity-75 sm:mb-8"
           >
             <img
               src="/images/branding/peaky-monochrome.png"
               alt="Símbolo de PeakScore"
-              className="h-14 w-14 object-contain sm:h-16 sm:w-16"
+              className="h-11 w-11 object-contain sm:h-12 sm:w-12"
             />
 
-            <span className="text-[28px] font-semibold tracking-[-0.06em] text-white sm:text-[30px]">
+            <span className="text-[24px] font-semibold tracking-[-0.06em] text-white sm:text-[26px]">
               PeakScore
             </span>
           </Link>
 
           {/* Encabezado */}
-          <header className="mb-8 sm:mb-9">
+          <header className="mb-6 sm:mb-7">
             <p className="mb-3 text-[12px] font-medium uppercase tracking-[0.2em] text-zinc-400">
               Acceso a tu cuenta
             </p>
 
-            <h1 className="text-[40px] font-semibold leading-[1.08] tracking-[-0.06em] text-white sm:text-[48px]">
+            <h1 className="text-[34px] font-semibold leading-[1.08] tracking-[-0.06em] text-white sm:text-[38px]">
               Bienvenido de nuevo.
             </h1>
 
-            <p className="mt-4 max-w-[470px] text-[15px] leading-7 text-zinc-400 sm:text-base">
+            <p className="mt-3 max-w-[390px] text-[14px] leading-6 text-zinc-400 sm:text-[15px]">
               Inicia sesión para continuar con tu preparación y consultar tu
               progreso.
             </p>
@@ -267,7 +267,7 @@ export default function LoginPage() {
             type="button"
             onClick={handleGoogleLogin}
             disabled={googleLoading || loading}
-            className="group relative flex min-h-[62px] w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white px-5 py-4 text-[14px] font-semibold text-zinc-900 shadow-[0_8px_28px_rgba(0,0,0,0.2)] transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-zinc-100 hover:shadow-xl active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+            className="group relative flex min-h-[52px] w-full items-center justify-center gap-3 overflow-hidden rounded-xl border border-white/15 bg-white px-5 py-3 text-[14px] font-semibold text-zinc-900 shadow-[0_6px_20px_rgba(0,0,0,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:border-white hover:bg-zinc-100 hover:shadow-xl active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
           >
             {googleLoading ? (
               <LoaderCircle className="h-5 w-5 animate-spin" />
@@ -298,24 +298,24 @@ export default function LoginPage() {
             <span className="h-px flex-1 bg-white/[0.12]" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Correo */}
             <div>
               <label
                 htmlFor="email"
-                className="mb-2.5 block text-[13px] font-medium text-zinc-300"
+                className="mb-2 block text-[12px] font-medium text-zinc-300"
               >
                 Correo electrónico
               </label>
 
               <div
-                className={`flex h-[62px] w-full items-center overflow-hidden rounded-xl border bg-[#101114] transition ${
+                className={`flex h-[54px] w-full items-center overflow-hidden rounded-xl border bg-[#101114] transition ${
                   emailFocused
                     ? "border-white/45 ring-2 ring-white/[0.06]"
                     : "border-white/[0.13] hover:border-white/25"
                 }`}
               >
-                <span className="flex h-full w-14 shrink-0 items-center justify-center text-zinc-500">
+                <span className="flex h-full w-12 shrink-0 items-center justify-center text-zinc-500">
                   <Mail size={19} strokeWidth={1.7} />
                 </span>
 
@@ -341,7 +341,7 @@ export default function LoginPage() {
 
             {/* Contraseña */}
             <div>
-              <div className="mb-2.5 flex items-center justify-between gap-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
                 <label
                   htmlFor="password"
                   className="text-[13px] font-medium text-zinc-300"
@@ -358,13 +358,13 @@ export default function LoginPage() {
               </div>
 
               <div
-                className={`flex h-[62px] w-full items-center overflow-hidden rounded-xl border bg-[#101114] transition ${
+                className={`flex h-[54px] w-full items-center overflow-hidden rounded-xl border bg-[#101114] transition ${
                   passwordFocused
                     ? "border-white/45 ring-2 ring-white/[0.06]"
                     : "border-white/[0.13] hover:border-white/25"
                 }`}
               >
-                <span className="flex h-full w-14 shrink-0 items-center justify-center text-zinc-500">
+                <span className="flex h-full w-12 shrink-0 items-center justify-center text-zinc-500">
                   <KeyRound size={19} strokeWidth={1.7} />
                 </span>
 
@@ -391,7 +391,7 @@ export default function LoginPage() {
                       : "Mostrar contraseña"
                   }
                   aria-pressed={showPassword}
-                  className="flex h-full w-14 shrink-0 items-center justify-center text-zinc-500 transition hover:text-white"
+                  className="flex h-full w-12 shrink-0 items-center justify-center text-zinc-500 transition hover:text-white"
                 >
                   {showPassword ? (
                     <EyeOff size={19} />
@@ -403,7 +403,7 @@ export default function LoginPage() {
             </div>
 
             {/* Cloudflare Turnstile real */}
-            <div className="rounded-xl border border-white/[0.10] bg-[#101114] p-4 sm:p-5">
+            <div className="rounded-xl border border-white/[0.10] bg-[#101114] p-3 sm:p-4">
               <div className="mb-3 flex items-center gap-2">
                 <ShieldCheck size={16} className="text-zinc-300" />
                 <span className="text-[12px] font-medium text-zinc-300">
@@ -414,7 +414,7 @@ export default function LoginPage() {
                 </span>
               </div>
 
-              <div className="flex min-h-[65px] items-center justify-center overflow-hidden">
+              <div className="flex min-h-[58px] items-center justify-center overflow-hidden">
                 <Turnstile
                   key={`login-captcha-${captchaKey}`}
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
@@ -455,7 +455,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || googleLoading}
-              className="group flex min-h-[62px] w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-4 text-[14px] font-semibold text-zinc-950 transition hover:bg-zinc-200 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+              className="group flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-[14px] font-semibold text-zinc-950 transition hover:bg-zinc-200 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
@@ -475,7 +475,7 @@ export default function LoginPage() {
           </form>
 
           {/* Crear cuenta */}
-          <p className="mt-7 text-center text-[13px] text-zinc-400">
+          <p className="mt-5 text-center text-[12px] text-zinc-400">
             ¿Todavía no tienes una cuenta?{" "}
             <Link
               href="/register"

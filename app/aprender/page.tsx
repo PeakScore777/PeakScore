@@ -1,12 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   ArrowDown,
   ArrowRight,
   BookOpen,
-  Check,
   Coins,
-  Crown,
   LockKeyhole,
   Shield,
   Sparkles,
@@ -271,7 +270,7 @@ function StatTile({
   label,
   value,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   value: string;
 }) {

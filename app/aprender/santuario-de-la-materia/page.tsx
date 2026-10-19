@@ -133,7 +133,7 @@ export default function SantuarioDeLaMateriaPage() {
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <span className="inline-flex items-center gap-2 rounded-xl border border-cyan-200/20 bg-[#06101d]/75 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur"><BookOpen className="h-4 w-4 text-cyan-200" /> {totalLessons} lecciones</span>
-                <span className="inline-flex items-center gap-2 rounded-xl border border-violet-200/20 bg-[#06101d]/75 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur"><Clock3 className="h-4 w-4 text-violet-200" /> 1 h 45 min aprox.</span>
+                <span className="inline-flex items-center gap-2 rounded-xl border border-violet-200/20 bg-[#06101d]/75 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur"><Clock3 className="h-4 w-4 text-violet-200" /> 2 h 20 min aprox.</span>
                 <span className="inline-flex items-center gap-2 rounded-xl border border-amber-200/20 bg-[#06101d]/75 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur"><Zap className="h-4 w-4 text-amber-300" /> EXP por completar</span>
               </div>
             </div>

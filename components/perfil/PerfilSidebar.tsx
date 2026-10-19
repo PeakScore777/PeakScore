@@ -26,7 +26,7 @@ const ITEMS = [
   {
     label: "Mi cuaderno",
     href: "/perfil/cuaderno",
-    icon: true,
+    image: undefined,
   },
 ];
 
@@ -326,7 +326,7 @@ export default function PerfilSidebar({
             aria-hidden="true"
             className="mx-auto flex max-w-lg items-stretch justify-around gap-2"
           >
-            {[0, 1, 2].map((item) => (
+            {[0, 1, 2, 3].map((item) => (
               <div
                 key={item}
                 className="flex min-w-0 flex-1 flex-col items-center gap-1.5 rounded-xl px-1 py-2"

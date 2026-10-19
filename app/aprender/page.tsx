@@ -110,7 +110,7 @@ export default async function AprenderPage() {
 
           <div className="levels-grid">
             <Link
-              href="/aprender/archivo-de-los-enigmas"
+              href="/aprender/santuario-de-la-materia"
               className="level-card level-card-open group"
               aria-label="Abrir desafío 1: El Santuario de la Materia"
             >
@@ -145,7 +145,7 @@ export default async function AprenderPage() {
                 <p className="pixel-font text-[6px] leading-4 tracking-[.14em] text-[#8fa7b9]">CIENCIAS NATURALES · HISTORIA INTERACTIVA</p>
                 <h3 className="pixel-font mt-2 text-[9px] leading-[1.9] text-white">El Santuario de la Materia</h3>
                 <p className="pixel-font mt-2 text-[7px] leading-[2] text-white/60">
-                  Investiga cristales misteriosos y aprende a reconocer las propiedades de la materia junto a Nova y Orby.
+                  Investiga los cristales misteriosos y descubre las propiedades de la materia junto a Nova.
                 </p>
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2">

@@ -90,6 +90,16 @@ export default function CristalesMisteriososPage() {
   const question = questions[questionIndex];
   const isCorrect = selected === question.answer;
 
+  // Efectos retro locales: no requieren API ni dependencias adicionales.
+  function playSound(file: "navigation.mp3" | "level-win.mp3", volume = 0.22) {
+    if (typeof window === "undefined") return;
+    const audio = new Audio(`/sounds/${file}`);
+    audio.volume = volume;
+    void audio.play().catch(() => {
+      // El navegador puede bloquear audio hasta que exista interacción del usuario.
+    });
+  }
+
   function checkAnswer() {
     if (!selected || checked) return;
     setChecked(true);
@@ -98,11 +108,13 @@ export default function CristalesMisteriososPage() {
 
   function nextQuestion() {
     if (questionIndex < questions.length - 1) {
+      playSound("navigation.mp3", 0.16);
       setQuestionIndex((index) => index + 1);
       setSelected(null);
       setChecked(false);
       return;
     }
+    playSound("level-win.mp3", 0.28);
     setFinished(true);
   }
 
@@ -302,12 +314,12 @@ export default function CristalesMisteriososPage() {
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {stage === "theory" ? (
               <>
-                <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</Link>
-                <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[10px] font-extrabold text-[#09200a] shadow-[0_2px_0_#3a9a2b] transition hover:bg-[#8ced6d] active:translate-y-px active:shadow-none sm:min-h-10 sm:px-5 sm:text-xs">Siguiente <ArrowRight className="h-3.5 w-3.5" /></button>
+                <Link href="/aprender/santuario-de-la-materia" onClick={() => playSound("navigation.mp3", 0.16)} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</Link>
+                <button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setStage("practice"); }} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[10px] font-extrabold text-[#09200a] shadow-[0_2px_0_#3a9a2b] transition hover:bg-[#8ced6d] active:translate-y-px active:shadow-none sm:min-h-10 sm:px-5 sm:text-xs">Siguiente <ArrowRight className="h-3.5 w-3.5" /></button>
               </>
             ) : (
               <>
-                <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</button>
+                <button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setStage("theory"); }} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</button>
                 {!finished && <span className="hidden items-center gap-1 text-[10px] text-slate-500 sm:inline-flex"><FlaskConical className="h-3.5 w-3.5" /> Razonamiento científico</span>}
               </>
             )}

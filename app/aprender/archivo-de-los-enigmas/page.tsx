@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -5,390 +6,762 @@ import { useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  Atom,
   BookOpen,
+  ChartColumnIncreasing,
   CheckCircle2,
-  FlaskConical,
-  Leaf,
+  CircleHelp,
+  LockKeyhole,
   RotateCcw,
   Sparkles,
+  Table2,
   Trophy,
+  XCircle,
   Zap,
 } from "lucide-react";
 
-type Lesson = {
-  eyebrow: string;
-  title: string;
-  character: string;
-  dialogue: string;
-  paragraphs: string[];
-  takeaway: string;
+type Option = {
+  label: string;
+  value: string;
 };
 
-const LESSONS: Lesson[] = [
+type Question = {
+  prompt: string;
+  context: string;
+  options: Option[];
+  answer: string;
+  explanation: string;
+};
+
+const PRACTICE_QUESTIONS: Question[] = [
   {
-    eyebrow: "CAPÍTULO 01 · LA SEÑAL",
-    title: "¿De qué está hecho el mundo?",
-    character: "NOVA",
-    dialogue:
-      "El cristal está brillando, pero no sabemos qué es. Antes de sacar conclusiones, tenemos que observarlo y describirlo.",
-    paragraphs: [
-      "Nova encontró un cristal verde en las raíces del Santuario. A su alrededor había agua, aire, rocas y hojas. Orby encendió su escáner: todos esos objetos tenían algo en común. Estaban hechos de materia.",
-      "La materia es todo aquello que tiene masa y ocupa un lugar en el espacio. El agua, el aire, una roca y nuestro cuerpo son ejemplos de materia. La luz que emite el cristal, en cambio, es energía: no debemos confundir el objeto que la produce con la luz que vemos.",
-      "Orby explicó que la masa indica cuánta materia tiene un objeto, mientras que el volumen indica cuánto espacio ocupa. Son propiedades distintas: dos objetos pueden tener el mismo volumen y masas diferentes, o la misma masa y volúmenes distintos.",
+    prompt: "¿En qué mes se vendieron más bananos?",
+    context:
+      "Una tienda registró las ventas de tres frutas durante el primer trimestre.",
+    options: [
+      { label: "A", value: "Enero" },
+      { label: "B", value: "Febrero" },
+      { label: "C", value: "Marzo" },
+      { label: "D", value: "Se vendieron lo mismo" },
     ],
-    takeaway:
-      "Materia: tiene masa y ocupa espacio. Masa y volumen describen aspectos diferentes de un objeto.",
+    answer: "Marzo",
+    explanation:
+      "La columna de bananos registra 80 unidades en enero, 90 en febrero y 110 en marzo. El valor mayor es 110, por eso la respuesta es marzo.",
   },
   {
-    eyebrow: "CAPÍTULO 02 · EL ESCÁNER",
-    title: "Las pistas que deja cada sustancia",
-    character: "ORBY",
-    dialogue:
-      "¡No basta con decir que el cristal es verde! Necesitamos varias pistas y pruebas para describirlo de forma confiable.",
-    paragraphs: [
-      "Orby proyectó una lista de propiedades que los investigadores podían observar o medir. Algunas se reconocen sin transformar la sustancia: el color, el estado físico, la masa, el volumen y la densidad son ejemplos de propiedades físicas.",
-      "La densidad relaciona la masa con el volumen. Se calcula dividiendo la masa entre el volumen: densidad = masa / volumen. Si dos muestras ocupan el mismo volumen, la que tenga mayor masa tendrá mayor densidad. Las unidades deben ser compatibles, por ejemplo gramos por centímetro cúbico (g/cm³).",
-      "Otras propiedades describen cómo una sustancia puede transformarse químicamente. La capacidad de oxidarse o de reaccionar con otra sustancia son propiedades químicas. Para reconocerlas se considera qué sustancias había antes y cuáles se forman después de la reacción.",
-      "Zyra encontró una hoja húmeda y una hoja seca. Aunque su aspecto había cambiado, eso por sí solo no demostraba que se hubiera formado una sustancia nueva. Observar un cambio no siempre basta: hay que examinar qué ocurrió.",
+    prompt: "¿Cuál grupo obtuvo el mayor resultado en Matemáticas?",
+    context:
+      "En una evaluación, tres grupos obtuvieron estos resultados: grupo A, 72 puntos; grupo B, 85 puntos; grupo C, 90 puntos.",
+    options: [
+      { label: "A", value: "Grupo A" },
+      { label: "B", value: "Grupo B" },
+      { label: "C", value: "Grupo C" },
+      { label: "D", value: "Todos obtuvieron lo mismo" },
     ],
-    takeaway:
-      "Las propiedades físicas se observan o miden sin cambiar la identidad química; las químicas describen la capacidad de formar sustancias nuevas.",
+    answer: "Grupo C",
+    explanation:
+      "Comparamos los tres resultados: 72, 85 y 90. Como 90 es el mayor valor, el grupo C obtuvo el resultado más alto.",
   },
   {
-    eyebrow: "CAPÍTULO 03 · LA PRUEBA DE NOX",
-    title: "Cambiar no siempre significa transformar",
-    character: "ZYRA",
-    dialogue:
-      "Nox ha alterado la cámara: el hielo se derrite en una esquina y un metal muestra una capa rojiza en otra. ¿Son el mismo tipo de cambio?",
-    paragraphs: [
-      "Zyra observó el hielo. Al derretirse, pasa de sólido a líquido, pero sigue siendo agua. Es un cambio físico: cambia el estado o la forma, no la identidad de la sustancia. La fusión, la evaporación, la condensación y la solidificación son cambios de estado.",
-      "Después examinó el metal rojizo. Si el metal reaccionó con el oxígeno y se formó óxido, ocurrió un cambio químico: aparecieron sustancias con propiedades diferentes a las iniciales. La formación de gas, un cambio persistente de color o la aparición de un sólido pueden ser indicios de reacción, aunque ningún indicio aislado demuestra siempre que hubo una reacción.",
-      "—Entonces no debo decidir solo por lo que veo —dijo Nova—. Debo usar las evidencias para explicar qué cambió. Orby confirmó la idea: una deformación o un cambio de estado suele ser físico; la formación de sustancias nuevas es la señal central de un cambio químico.",
+    prompt: "¿Cuántos libros más se leyeron el viernes que el lunes?",
+    context:
+      "Un registro semanal muestra estos libros leídos: lunes, 4; martes, 6; miércoles, 8; jueves, 5; viernes, 9.",
+    options: [
+      { label: "A", value: "3 libros" },
+      { label: "B", value: "4 libros" },
+      { label: "C", value: "5 libros" },
+      { label: "D", value: "13 libros" },
     ],
-    takeaway:
-      "Cambio físico: no se forma una sustancia nueva. Cambio químico: se forman una o más sustancias nuevas.",
+    answer: "5 libros",
+    explanation:
+      "El viernes se leyeron 9 libros y el lunes 4. Para calcular la diferencia, restamos 9 − 4 = 5 libros.",
   },
 ];
 
-const QUESTIONS = [
-  {
-    label: "PRUEBA 01 · IDENTIFICA",
-    prompt: "¿Cuál de estos ejemplos es materia?",
-    context: "Nova debe clasificar las señales detectadas por el escáner.",
-    options: [
-      { label: "A", value: "La luz que emite el cristal" },
-      { label: "B", value: "El aire dentro de la cámara" },
-      { label: "C", value: "El brillo observado" },
-      { label: "D", value: "La energía luminosa" },
-    ],
-    answer: "El aire dentro de la cámara",
-    explanation:
-      "El aire tiene masa y ocupa espacio, por eso es materia. La luz es energía, no materia.",
-  },
-  {
-    label: "PRUEBA 02 · INTERPRETA",
-    prompt: "Dos muestras ocupan el mismo volumen. La muestra X tiene más masa que la muestra Y. ¿Qué conclusión es correcta?",
-    context: "Orby compara dos minerales hallados en el santuario.",
-    options: [
-      { label: "A", value: "X tiene menor densidad" },
-      { label: "B", value: "Las dos tienen la misma densidad" },
-      { label: "C", value: "X tiene mayor densidad" },
-      { label: "D", value: "No se puede comparar la densidad" },
-    ],
-    answer: "X tiene mayor densidad",
-    explanation:
-      "La densidad es masa dividida entre volumen. Si el volumen es igual, la muestra con mayor masa tiene mayor densidad.",
-  },
-  {
-    label: "PRUEBA 03 · DISTINGUE",
-    prompt: "El hielo se derrite y se convierte en agua líquida. ¿Qué tipo de cambio ocurre?",
-    context: "Zyra necesita restaurar el sistema de enfriamiento.",
-    options: [
-      { label: "A", value: "Un cambio químico porque aparece otra sustancia" },
-      { label: "B", value: "Un cambio físico porque sigue siendo agua" },
-      { label: "C", value: "Una combustión" },
-      { label: "D", value: "Una reacción que siempre libera gas" },
-    ],
-    answer: "Un cambio físico porque sigue siendo agua",
-    explanation:
-      "En la fusión cambia el estado físico, pero la sustancia sigue siendo agua. No se forma una sustancia nueva.",
-  },
-  {
-    label: "DESAFÍO FINAL · EVALÚA LAS EVIDENCIAS",
-    prompt: "Nox deja dos muestras: en la primera, el agua se evapora; en la segunda, un metal reacciona y forma una capa de óxido. ¿Cuál interpretación es correcta?",
-    context: "Resuelve el último enigma para estabilizar el Santuario.",
-    options: [
-      { label: "A", value: "Ambos son cambios físicos" },
-      { label: "B", value: "Ambos son cambios químicos" },
-      { label: "C", value: "Evaporación física; formación de óxido química" },
-      { label: "D", value: "Evaporación química; formación de óxido física" },
-    ],
-    answer: "Evaporación física; formación de óxido química",
-    explanation:
-      "La evaporación cambia el estado del agua sin cambiar su identidad química. La oxidación forma óxido, una sustancia nueva, así que es un cambio químico.",
-  },
+const FINAL_QUESTION: Question = {
+  prompt:
+    "¿Cuál fue el porcentaje de aumento del consumo entre enero y marzo?",
+  context:
+    "Una vivienda registró el siguiente consumo de agua: enero, 120 litros; febrero, 150 litros; marzo, 180 litros.",
+  options: [
+    { label: "A", value: "25 %" },
+    { label: "B", value: "40 %" },
+    { label: "C", value: "50 %" },
+    { label: "D", value: "60 %" },
+  ],
+  answer: "50 %",
+  explanation:
+    "Primero calculamos el aumento: 180 − 120 = 60 litros. Después dividimos el aumento entre el valor inicial: 60 ÷ 120 = 0,5. Finalmente multiplicamos por 100: 0,5 × 100 = 50 %.",
+};
+
+const STEPS = [
+  "Introducción",
+  "Teoría",
+  "Ejemplo guiado",
+  "Práctica",
+  "Desafío final",
+  "Resultados",
 ];
 
-export default function SantuarioDeLaMateriaPage() {
-  const [stage, setStage] = useState<"intro" | "lesson" | "practice" | "results">("intro");
-  const [lessonIndex, setLessonIndex] = useState(0);
-  const [questionIndex, setQuestionIndex] = useState(0);
+function PixelLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-violet-200">
+      {children}
+    </span>
+  );
+}
+
+function Panel({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <section
+      className={`rounded-2xl border border-white/10 bg-[#0c1224]/95 p-5 shadow-xl shadow-black/20 sm:p-7 ${className}`}
+    >
+      {children}
+    </section>
+  );
+}
+
+function DataTable({
+  rows,
+}: {
+  rows: { name: string; values: string[] }[];
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/10">
+      <table className="w-full border-collapse text-left text-sm">
+        <thead className="bg-violet-400/10 text-violet-100">
+          <tr>
+            <th className="border-b border-white/10 px-3 py-3">Mes</th>
+            <th className="border-b border-white/10 px-3 py-3">Manzanas</th>
+            <th className="border-b border-white/10 px-3 py-3">Bananos</th>
+            <th className="border-b border-white/10 px-3 py-3">Naranjas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.name} className="even:bg-white/[0.025]">
+              <th className="border-t border-white/10 px-3 py-3 font-semibold text-white/80">
+                {row.name}
+              </th>
+              {row.values.map((value, index) => (
+                <td
+                  key={`${row.name}-${index}`}
+                  className="border-t border-white/10 px-3 py-3 text-white/70"
+                >
+                  {value}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function QuestionCard({
+  question,
+  questionNumber,
+  total,
+  selected,
+  revealed,
+  onSelect,
+  onCheck,
+  onNext,
+  isLast,
+}: {
+  question: Question;
+  questionNumber: number;
+  total: number;
+  selected: string | null;
+  revealed: boolean;
+  onSelect: (value: string) => void;
+  onCheck: () => void;
+  onNext: () => void;
+  isLast: boolean;
+}) {
+  const correct = selected === question.answer;
+
+  return (
+    <Panel>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <PixelLabel>
+          Pregunta {questionNumber} de {total}
+        </PixelLabel>
+        <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-bold text-emerald-200">
+          Entrenamiento
+        </span>
+      </div>
+
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full bg-violet-400 transition-all"
+          style={{ width: `${(questionNumber / total) * 100}%` }}
+        />
+      </div>
+
+      <p className="mt-6 text-sm leading-7 text-white/60">
+        {question.context}
+      </p>
+      <h2 className="mt-3 text-xl font-extrabold leading-relaxed text-white sm:text-2xl">
+        {question.prompt}
+      </h2>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        {question.options.map((option) => {
+          const active = selected === option.value;
+          const isAnswer = revealed && option.value === question.answer;
+          const isWrong = revealed && active && !correct;
+
+          let style =
+            "border-white/10 bg-white/[0.025] hover:border-violet-300/50 hover:bg-violet-300/5";
+
+          if (active && !revealed) {
+            style = "border-violet-300 bg-violet-400/15";
+          } else if (isAnswer) {
+            style = "border-emerald-300/60 bg-emerald-300/10";
+          } else if (isWrong) {
+            style = "border-rose-300/60 bg-rose-300/10";
+          }
+
+          return (
+            <button
+              key={option.label}
+              type="button"
+              disabled={revealed}
+              onClick={() => onSelect(option.value)}
+              className={`flex min-h-16 items-center gap-3 rounded-xl border p-4 text-left transition disabled:cursor-default ${style}`}
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20 text-sm font-black text-violet-200">
+                {option.label}
+              </span>
+              <span className="text-sm font-semibold text-white/90">
+                {option.value}
+              </span>
+              {isAnswer && (
+                <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-emerald-300" />
+              )}
+              {isWrong && (
+                <XCircle className="ml-auto h-5 w-5 shrink-0 text-rose-300" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {revealed && (
+        <div
+          aria-live="polite"
+          className={`mt-5 rounded-xl border p-4 ${
+            correct
+              ? "border-emerald-300/25 bg-emerald-300/[0.07]"
+              : "border-amber-300/25 bg-amber-300/[0.07]"
+          }`}
+        >
+          <p className="flex items-center gap-2 font-bold text-white">
+            {correct ? (
+              <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+            ) : (
+              <CircleHelp className="h-5 w-5 text-amber-200" />
+            )}
+            {correct ? "¡Respuesta correcta!" : "Vamos a entenderlo"}
+          </p>
+          <p className="mt-2 text-sm leading-7 text-white/70">
+            {question.explanation}
+          </p>
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs leading-6 text-white/40">
+          {revealed
+            ? "Lee la explicación antes de continuar."
+            : "Selecciona una opción y comprueba tu respuesta."}
+        </p>
+
+        {!revealed ? (
+          <button
+            type="button"
+            disabled={!selected}
+            onClick={onCheck}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-violet-400 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Comprobar <ArrowRight className="h-4 w-4" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onNext}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-extrabold text-white transition hover:bg-violet-400"
+          >
+            {isLast ? "Ver resultados" : "Siguiente pregunta"}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+export default function ArchivoDeLosEnigmasPage() {
+  const [step, setStep] = useState(0);
+  const [practiceIndex, setPracticeIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const [answers, setAnswers] = useState<boolean[]>([]);
+  const [practiceCorrect, setPracticeCorrect] = useState(0);
+  const [finalCorrect, setFinalCorrect] = useState(false);
+  const [finalAnswered, setFinalAnswered] = useState(false);
+  const [finalSelected, setFinalSelected] = useState<string | null>(null);
 
-  const lesson = LESSONS[lessonIndex];
-  const question = QUESTIONS[questionIndex];
-  const isCorrect = selected === question.answer;
-  const correctCount = answers.filter(Boolean).length;
-  const progress =
-    stage === "intro"
-      ? 0
-      : stage === "lesson"
-        ? 8 + ((lessonIndex + 1) / LESSONS.length) * 42
-        : stage === "practice"
-          ? 50 + ((questionIndex + (revealed ? 1 : 0)) / QUESTIONS.length) * 50
-          : 100;
+  const currentQuestion = PRACTICE_QUESTIONS[practiceIndex];
 
-  function startPractice() {
-    setStage("practice");
-    setQuestionIndex(0);
-    setSelected(null);
-    setRevealed(false);
-    setAnswers([]);
-  }
-
-  function checkAnswer() {
+  function checkPractice() {
     if (!selected || revealed) return;
     setRevealed(true);
-    setAnswers((previous) => [...previous, selected === question.answer]);
+
+    if (selected === currentQuestion.answer) {
+      setPracticeCorrect((count) => count + 1);
+    }
   }
 
-  function nextQuestion() {
-    if (questionIndex === QUESTIONS.length - 1) {
-      setStage("results");
+  function nextPractice() {
+    if (practiceIndex < PRACTICE_QUESTIONS.length - 1) {
+      setPracticeIndex((index) => index + 1);
+      setSelected(null);
+      setRevealed(false);
       return;
     }
-    setQuestionIndex((index) => index + 1);
+
+    setStep(4);
     setSelected(null);
     setRevealed(false);
+  }
+
+  function checkFinal() {
+    if (!finalSelected || finalAnswered) return;
+    setFinalCorrect(finalSelected === FINAL_QUESTION.answer);
+    setFinalAnswered(true);
   }
 
   function restart() {
-    setStage("intro");
-    setLessonIndex(0);
-    setQuestionIndex(0);
+    setStep(0);
+    setPracticeIndex(0);
     setSelected(null);
     setRevealed(false);
-    setAnswers([]);
+    setPracticeCorrect(0);
+    setFinalCorrect(false);
+    setFinalAnswered(false);
+    setFinalSelected(null);
   }
 
   return (
-    <main className="science-mission relative min-h-[calc(100vh-72px)] overflow-hidden bg-[#080b17] px-4 py-6 text-white sm:px-7 sm:py-9">
+    <main className="relative min-h-[calc(100vh-72px)] overflow-hidden bg-[#070b16] px-4 py-6 text-white sm:px-7 sm:py-10">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-50"
+        className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
-            'linear-gradient(180deg, rgba(6,8,18,.3), #080b17 88%), url("/images/challenges/levels-background.png")',
-          backgroundSize: "cover",
-          backgroundPosition: "center top",
+            "radial-gradient(ellipse at top, rgba(91,55,180,.28), transparent 58%), linear-gradient(180deg, transparent, #070b16 90%)",
         }}
       />
+
       <div className="relative mx-auto max-w-5xl">
         <Link
           href="/aprender"
-          className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[#0b1020]/85 px-3 py-2.5 text-xs font-bold text-white/70 transition hover:border-emerald-200/30 hover:text-white"
+          className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-[#0c1224] px-3 py-2.5 text-xs font-bold text-white/65 transition hover:text-white"
         >
-          <ArrowLeft className="h-4 w-4" /> Volver a la ruta
+          <ArrowLeft className="h-4 w-4" />
+          Volver a niveles
         </Link>
 
-        <header className="mission-hero mt-5 overflow-hidden rounded-2xl border border-emerald-100/15 bg-[#0b1020]/95">
-          <div className="grid md:grid-cols-[1.15fr_.85fr]">
-            <div className="p-5 sm:p-8">
-              <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[.16em] text-emerald-200">
-                <FlaskConical className="h-4 w-4" /> Ciencias Naturales · Ruta 01
-              </div>
-              <h1 className="pixel-font mt-4 text-xl leading-[1.8] text-white sm:text-2xl">
-                El Santuario de la Materia
-              </h1>
-              <p className="mt-4 max-w-xl text-sm leading-7 text-white/65">
-                Un cristal imposible ha despertado en un santuario olvidado. Acompaña a Nova, Orby y Zyra para investigar sus propiedades y descubrir qué secretos esconde la materia.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.04] px-3 py-2 text-xs font-bold text-white/70">
-                  <BookOpen className="h-4 w-4 text-emerald-200" /> Historia + teoría
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-lg border border-amber-200/20 bg-amber-200/[.06] px-3 py-2 text-xs font-bold text-amber-100">
-                  <Zap className="h-4 w-4" /> +25 EXP prevista
-                </span>
-              </div>
-            </div>
-            <div className="mission-art relative flex min-h-[190px] items-center justify-center overflow-hidden border-t border-white/10 bg-[radial-gradient(ellipse_at_center,_rgba(52,211,153,.18),_rgba(11,16,32,.1)_55%,_rgba(5,8,18,.2))] p-6 md:border-l md:border-t-0">
-              <div aria-hidden="true" className="absolute h-44 w-44 rounded-full border border-emerald-200/15" />
-              <div aria-hidden="true" className="absolute h-32 w-32 rotate-45 rounded-2xl border border-cyan-200/20" />
-              <div className="relative flex h-24 w-24 items-center justify-center rounded-2xl border border-emerald-100/30 bg-emerald-200/[.08] shadow-[0_0_65px_rgba(52,211,153,.14)]">
-                <Atom className="h-14 w-14 text-emerald-100" strokeWidth={1.3} />
-              </div>
-              <div className="absolute bottom-4 left-4 flex items-center gap-2 rounded-lg border border-white/10 bg-[#080b17]/80 px-3 py-2">
-                <Sparkles className="h-4 w-4 text-emerald-200" />
-                <span className="text-[10px] font-bold text-white/70">EXPEDIENTE 001 · ANOMALÍA VERDE</span>
-              </div>
-            </div>
+        <header className="mt-6 overflow-hidden rounded-2xl border border-violet-300/20 bg-gradient-to-br from-[#171331] via-[#10152a] to-[#0c1224] p-5 sm:p-8">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-md border border-violet-200/20 bg-violet-300/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-violet-200">
+              Ruta 01 · Matemáticas
+            </span>
+            <span className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold text-white/60">
+              Misión 1 de 5
+            </span>
           </div>
-          <div className="border-t border-white/10 px-5 py-4 sm:px-8">
-            <div className="mb-2 flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-wider text-white/45">
-              <span>Progreso de la misión</span>
-              <span>{Math.round(progress)}%</span>
+
+          <h1 className="mt-5 text-2xl font-black leading-relaxed sm:text-4xl">
+            El Archivo de los Enigmas
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm leading-7 text-white/60">
+            Aprende a interpretar tablas, comparar datos y descubrir qué
+            información puedes obtener de ellos. Cada paso te prepara para
+            resolver problemas con mayor confianza.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-xs text-white/70">
+              <Zap className="h-4 w-4 text-amber-200" />
+              Recompensa prevista: +25 EXP
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-gradient-to-r from-emerald-300 to-cyan-300 transition-all duration-300" style={{ width: `${progress}%` }} />
+            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/20 px-3 py-2.5 text-xs text-white/70">
+              <BookOpen className="h-4 w-4 text-violet-200" />
+              Teoría y práctica
             </div>
           </div>
         </header>
 
-        {stage === "intro" && (
-          <section className="mt-5 grid gap-4 md:grid-cols-[.85fr_1.15fr]">
-            <div className="rounded-2xl border border-emerald-100/15 bg-[#0b1020]/95 p-5 sm:p-7">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-emerald-200/20 bg-emerald-200/[.08]">
-                <Leaf className="h-6 w-6 text-emerald-100" />
-              </div>
-              <p className="pixel-font mt-5 text-[9px] leading-6 text-emerald-200">PRÓLOGO</p>
-              <h2 className="mt-2 text-xl font-black leading-relaxed">La señal bajo las raíces</h2>
-              <p className="mt-3 text-sm leading-7 text-white/60">
-                Una luz desconocida acaba de despertar bajo el santuario. Los registros no coinciden y Nox quiere impedir que Nova descubra su origen. Tu misión es investigar antes de sacar conclusiones.
+        <nav
+          aria-label="Etapas de la misión"
+          className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6"
+        >
+          {STEPS.map((label, index) => (
+            <div
+              key={label}
+              className={`rounded-xl border p-3 ${
+                index === step
+                  ? "border-violet-300/50 bg-violet-400/10"
+                  : index < step
+                    ? "border-emerald-300/20 bg-emerald-300/[0.04]"
+                    : "border-white/10 bg-[#0c1224]/70"
+              }`}
+            >
+              <span className="text-xs font-black text-white/45">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <p className="mt-2 text-[10px] font-bold leading-5 text-white/80">
+                {label}
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-[#0b1020]/95 p-5 sm:p-7">
-              <p className="text-xs font-black uppercase tracking-[.14em] text-white/45">Tu expediente de explorador</p>
-              <div className="mt-4 space-y-3">
+          ))}
+        </nav>
+
+        <div className="mt-5">
+          {step === 0 && (
+            <Panel>
+              <div className="grid gap-6 md:grid-cols-[1fr_1.2fr] md:items-center">
+                <div className="flex min-h-48 flex-col items-center justify-center rounded-2xl border border-violet-300/15 bg-gradient-to-br from-violet-400/10 to-cyan-300/5 p-6 text-center">
+                  <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-violet-300/25 bg-violet-400/10">
+                    <Sparkles className="h-10 w-10 text-violet-200" />
+                  </div>
+                  <p className="mt-4 text-sm font-extrabold">¡Bienvenido al archivo!</p>
+                  <p className="mt-2 text-xs leading-6 text-white/45">
+                    Una nueva misión te espera.
+                  </p>
+                </div>
+
+                <div>
+                  <PixelLabel>Tu misión</PixelLabel>
+                  <h2 className="mt-3 text-xl font-black leading-relaxed sm:text-2xl">
+                    Descifra la información oculta
+                  </h2>
+                  <p className="mt-4 text-sm leading-7 text-white/65">
+                    Las tablas y las gráficas organizan información de manera
+                    visual. Tu objetivo es aprender a leerlas, identificar los
+                    valores importantes y justificar tus conclusiones.
+                  </p>
+
+                  <ul className="mt-5 space-y-3 text-sm text-white/75">
+                    <li className="flex gap-3">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                      Identificar filas, columnas y unidades.
+                    </li>
+                    <li className="flex gap-3">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                      Comparar cantidades y encontrar diferencias.
+                    </li>
+                    <li className="flex gap-3">
+                      <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-300" />
+                      Resolver una pregunta contextualizada.
+                    </li>
+                  </ul>
+
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-extrabold transition hover:bg-violet-400 sm:w-auto"
+                  >
+                    Comenzar misión <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </Panel>
+          )}
+
+          {step === 1 && (
+            <Panel>
+              <PixelLabel>Parte 01 · Aprende</PixelLabel>
+              <h2 className="mt-3 text-2xl font-black">
+                ¿Cómo se interpreta una tabla?
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-white/60">
+                Una tabla organiza datos en filas y columnas. Para interpretarla
+                correctamente, identifica qué representa cada encabezado, qué
+                valor necesitas y en qué unidad se expresa.
+              </p>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <article className="rounded-xl border border-cyan-300/20 bg-cyan-300/[0.05] p-4">
+                  <Table2 className="h-6 w-6 text-cyan-200" />
+                  <h3 className="mt-3 font-extrabold">Filas</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/60">
+                    Organizan los registros que quieres comparar, como los
+                    diferentes meses.
+                  </p>
+                </article>
+                <article className="rounded-xl border border-violet-300/20 bg-violet-300/[0.05] p-4">
+                  <ChartColumnIncreasing className="h-6 w-6 text-violet-200" />
+                  <h3 className="mt-3 font-extrabold">Columnas</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/60">
+                    Identifican las categorías o variables, como los tipos de
+                    fruta.
+                  </p>
+                </article>
+                <article className="rounded-xl border border-emerald-300/20 bg-emerald-300/[0.05] p-4">
+                  <CircleHelp className="h-6 w-6 text-emerald-200" />
+                  <h3 className="mt-3 font-extrabold">Datos y unidades</h3>
+                  <p className="mt-2 text-sm leading-6 text-white/60">
+                    Indican el valor registrado y cómo debe interpretarse:
+                    personas, litros, pesos u otras unidades.
+                  </p>
+                </article>
+              </div>
+
+              <div className="mt-6">
+                <p className="mb-3 text-sm font-bold text-white/80">
+                  Ejemplo: ventas de una tienda, en unidades
+                </p>
+                <DataTable
+                  rows={[
+                    { name: "Enero", values: ["120", "80", "60"] },
+                    { name: "Febrero", values: ["150", "90", "70"] },
+                    { name: "Marzo", values: ["180", "110", "90"] },
+                  ]}
+                />
+              </div>
+
+              <div className="mt-5 rounded-xl border border-amber-200/20 bg-amber-200/[0.05] p-4">
+                <p className="font-bold text-amber-100">
+                  Consejo de Peaky
+                </p>
+                <p className="mt-2 text-sm leading-7 text-white/65">
+                  Antes de responder, lee la pregunta y localiza únicamente
+                  los datos que necesitas. No confundas el valor mayor de una
+                  fila con el valor mayor de una columna.
+                </p>
+              </div>
+
+              <div className="mt-6 flex justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStep(0)}
+                  className="rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-white/65 hover:bg-white/5"
+                >
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-extrabold hover:bg-violet-400"
+                >
+                  Ver ejemplo <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </Panel>
+          )}
+
+          {step === 2 && (
+            <Panel>
+              <PixelLabel>Parte 02 · Ejemplo guiado</PixelLabel>
+              <h2 className="mt-3 text-2xl font-black leading-relaxed">
+                Vamos a resolverlo paso a paso
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-white/60">
+                Utiliza la tabla de ventas para responder: ¿en qué mes se
+                vendieron más bananos?
+              </p>
+
+              <div className="mt-6">
+                <DataTable
+                  rows={[
+                    { name: "Enero", values: ["120", "80", "60"] },
+                    { name: "Febrero", values: ["150", "90", "70"] },
+                    { name: "Marzo", values: ["180", "110", "90"] },
+                  ]}
+                />
+              </div>
+
+              <div className="mt-6 space-y-4">
                 {[
-                  ["01", "Reconocer la materia", "Masa, volumen y ejemplos cotidianos."],
-                  ["02", "Leer las pistas", "Propiedades físicas, químicas y densidad."],
-                  ["03", "Distinguir transformaciones", "Cambios físicos frente a cambios químicos."],
-                ].map(([number, title, description]) => (
-                  <div key={number} className="flex gap-3 rounded-xl border border-white/[.07] bg-white/[.025] p-3">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-emerald-200/20 bg-emerald-200/[.07] text-xs font-black text-emerald-100">{number}</span>
+                  {
+                    number: "01",
+                    title: "Localiza la columna correcta",
+                    text: "Buscamos bananos. No necesitamos comparar las ventas de manzanas ni las de naranjas.",
+                  },
+                  {
+                    number: "02",
+                    title: "Compara los valores",
+                    text: "Los valores de bananos son 80, 90 y 110 unidades.",
+                  },
+                  {
+                    number: "03",
+                    title: "Justifica la conclusión",
+                    text: "110 es el mayor valor. Corresponde a marzo, así que marzo es la respuesta.",
+                  },
+                ].map((item) => (
+                  <div
+                    key={item.number}
+                    className="flex gap-4 rounded-xl border border-white/10 bg-white/[0.025] p-4"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-400/10 text-sm font-black text-violet-200">
+                      {item.number}
+                    </span>
                     <div>
-                      <p className="text-sm font-bold">{title}</p>
-                      <p className="mt-1 text-xs leading-5 text-white/45">{description}</p>
+                      <h3 className="font-bold">{item.title}</h3>
+                      <p className="mt-2 text-sm leading-7 text-white/60">
+                        {item.text}
+                      </p>
                     </div>
                   </div>
                 ))}
               </div>
-              <button onClick={() => setStage("lesson")} className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-300 px-5 py-3 text-sm font-black text-[#071510] transition hover:bg-emerald-200">
-                Entrar al santuario <ArrowRight className="h-4 w-4" />
-              </button>
-            </div>
-          </section>
-        )}
 
-        {stage === "lesson" && (
-          <section className="mt-5 overflow-hidden rounded-2xl border border-emerald-100/15 bg-[#0b1020]/95">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4 sm:px-8">
-              <p className="pixel-font text-[8px] leading-6 text-emerald-200">{lesson.eyebrow}</p>
-              <p className="text-xs font-bold text-white/45">Lección {lessonIndex + 1} de {LESSONS.length}</p>
-            </div>
-            <div className="grid md:grid-cols-[220px_1fr]">
-              <aside className="border-b border-white/10 bg-emerald-200/[.035] p-5 md:border-b-0 md:border-r">
-                <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-emerald-200/20 bg-emerald-200/[.08]">
-                  {lessonIndex === 0 ? <Sparkles className="h-10 w-10 text-emerald-100" /> : lessonIndex === 1 ? <Atom className="h-10 w-10 text-emerald-100" /> : <Leaf className="h-10 w-10 text-emerald-100" />}
+              <div className="mt-5 rounded-xl border border-emerald-300/25 bg-emerald-300/[0.06] p-4">
+                <p className="flex items-center gap-2 font-bold text-emerald-200">
+                  <CheckCircle2 className="h-5 w-5" />
+                  Conclusión: marzo, con 110 bananos.
+                </p>
+              </div>
+
+              <div className="mt-6 flex justify-between gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-white/65 hover:bg-white/5"
+                >
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(3)}
+                  className="inline-flex items-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-extrabold hover:bg-violet-400"
+                >
+                  Practicar <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </Panel>
+          )}
+
+          {step === 3 && (
+            <QuestionCard
+              question={currentQuestion}
+              questionNumber={practiceIndex + 1}
+              total={PRACTICE_QUESTIONS.length}
+              selected={selected}
+              revealed={revealed}
+              onSelect={setSelected}
+              onCheck={checkPractice}
+              onNext={nextPractice}
+              isLast={practiceIndex === PRACTICE_QUESTIONS.length - 1}
+            />
+          )}
+
+          {step === 4 && (
+            <QuestionCard
+              question={FINAL_QUESTION}
+              questionNumber={1}
+              total={1}
+              selected={finalSelected}
+              revealed={finalAnswered}
+              onSelect={setFinalSelected}
+              onCheck={checkFinal}
+              onNext={() => setStep(5)}
+              isLast
+            />
+          )}
+
+          {step === 5 && (
+            <Panel className="text-center">
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl border border-amber-200/25 bg-amber-200/10">
+                <Trophy className="h-10 w-10 text-amber-200" />
+              </div>
+
+              <PixelLabel>Misión finalizada</PixelLabel>
+              <h2 className="mt-4 text-2xl font-black leading-relaxed sm:text-3xl">
+                {practiceCorrect === PRACTICE_QUESTIONS.length &&
+                finalCorrect
+                  ? "¡Excelente, descifrador!"
+                  : "¡Buen trabajo, explorador!"}
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-white/60">
+                Terminaste la experiencia de demostración. Revisa tus
+                resultados y vuelve a practicar cuando quieras.
+              </p>
+
+              <div className="mx-auto mt-6 grid max-w-lg grid-cols-2 gap-3">
+                <div className="rounded-xl border border-white/10 bg-white/[0.025] p-5">
+                  <p className="text-xs text-white/45">Práctica</p>
+                  <p className="mt-2 text-2xl font-black text-violet-200">
+                    {practiceCorrect}/{PRACTICE_QUESTIONS.length}
+                  </p>
+                  <p className="mt-1 text-xs text-white/45">
+                    Respuestas correctas
+                  </p>
                 </div>
-                <p className="pixel-font mt-4 text-center text-[8px] leading-6 text-emerald-200">{lesson.character}</p>
-                <p className="mt-3 text-center text-sm font-bold leading-6">“{lesson.dialogue}”</p>
-                <div className="mt-5 space-y-2">
-                  {LESSONS.map((item, index) => (
-                    <div key={item.eyebrow} className={`rounded-lg border px-3 py-2 text-[10px] font-bold ${index === lessonIndex ? "border-emerald-200/30 bg-emerald-200/[.08] text-emerald-100" : index < lessonIndex ? "border-white/10 text-white/45" : "border-white/[.06] text-white/25"}`}>
-                      {index < lessonIndex ? "✓ " : `${String(index + 1).padStart(2, "0")} · `}{item.title}
-                    </div>
-                  ))}
-                </div>
-              </aside>
-              <div className="p-5 sm:p-8">
-                <h2 className="text-xl font-black leading-relaxed sm:text-2xl">{lesson.title}</h2>
-                <div className="mt-5 space-y-4">
-                  {lesson.paragraphs.map((paragraph, index) => (
-                    <p key={index} className="text-sm leading-7 text-white/70">{paragraph}</p>
-                  ))}
-                </div>
-                <div className="mt-6 rounded-xl border border-emerald-200/20 bg-emerald-200/[.055] p-4">
-                  <p className="text-[10px] font-black uppercase tracking-[.15em] text-emerald-200">Dato que debes recordar</p>
-                  <p className="mt-2 text-sm font-semibold leading-7 text-white/80">{lesson.takeaway}</p>
-                </div>
-                <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <button onClick={() => lessonIndex === 0 ? setStage("intro") : setLessonIndex((index) => index - 1)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-white/60 transition hover:bg-white/[.04]">
-                    <ArrowLeft className="h-4 w-4" /> Anterior
-                  </button>
-                  <button onClick={() => lessonIndex === LESSONS.length - 1 ? startPractice() : setLessonIndex((index) => index + 1)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-300 px-5 py-3 text-sm font-black text-[#071510] transition hover:bg-emerald-200">
-                    {lessonIndex === LESSONS.length - 1 ? "Poner a prueba lo aprendido" : "Continuar historia"} <ArrowRight className="h-4 w-4" />
-                  </button>
+                <div className="rounded-xl border border-white/10 bg-white/[0.025] p-5">
+                  <p className="text-xs text-white/45">Desafío final</p>
+                  <p
+                    className={`mt-2 text-2xl font-black ${
+                      finalCorrect ? "text-emerald-200" : "text-amber-200"
+                    }`}
+                  >
+                    {finalCorrect ? "Correcto" : "Por mejorar"}
+                  </p>
+                  <p className="mt-1 text-xs text-white/45">
+                    {finalCorrect ? "50 % de aumento" : "Repasa el cálculo"}
+                  </p>
                 </div>
               </div>
-            </div>
-          </section>
-        )}
 
-        {stage === "practice" && (
-          <section className="mt-5 rounded-2xl border border-emerald-100/15 bg-[#0b1020]/95 p-5 sm:p-8">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="pixel-font text-[8px] leading-6 text-emerald-200">{question.label}</p>
-              <p className="text-xs font-black text-white/45">{questionIndex + 1} / {QUESTIONS.length}</p>
-            </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-              <div className="h-full rounded-full bg-gradient-to-r from-emerald-300 to-cyan-300 transition-all" style={{ width: `${((questionIndex + (revealed ? 1 : 0)) / QUESTIONS.length) * 100}%` }} />
-            </div>
-            <p className="mt-6 text-xs font-bold uppercase tracking-wider text-white/40">{question.context}</p>
-            <h2 className="mt-3 text-xl font-black leading-relaxed sm:text-2xl">{question.prompt}</h2>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              {question.options.map((option) => {
-                const active = selected === option.value;
-                const correctOption = revealed && option.value === question.answer;
-                const wrongSelected = revealed && active && !isCorrect;
-                return (
-                  <button key={option.value} type="button" onClick={() => !revealed && setSelected(option.value)} disabled={revealed} className={`flex min-h-[66px] items-center gap-3 rounded-xl border p-4 text-left transition ${correctOption ? "border-emerald-300/60 bg-emerald-300/10" : wrongSelected ? "border-rose-300/50 bg-rose-300/10" : active ? "border-emerald-200/70 bg-emerald-200/10" : "border-white/10 bg-white/[.025] hover:border-white/25 hover:bg-white/[.05]"}`}>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20 text-xs font-black text-emerald-100">{option.label}</span>
-                    <span className="text-sm font-bold leading-6">{option.value}</span>
-                    {correctOption && <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-emerald-200" />}
-                  </button>
-                );
-              })}
-            </div>
-            {revealed && (
-              <div className={`mt-5 rounded-xl border p-4 ${isCorrect ? "border-emerald-200/20 bg-emerald-200/[.06]" : "border-amber-200/20 bg-amber-200/[.06]"}`}>
-                <p className="text-sm font-black">{isCorrect ? "¡Buena observación, explorador!" : "El santuario todavía te da otra pista."}</p>
-                <p className="mt-2 text-sm leading-6 text-white/65">{question.explanation}</p>
+              <div className="mt-6 rounded-xl border border-amber-200/20 bg-amber-200/[0.05] p-4 text-left">
+                <p className="flex items-center gap-2 font-bold text-amber-100">
+                  <LockKeyhole className="h-4 w-4" />
+                  Recompensa prevista: +25 EXP
+                </p>
+                <p className="mt-2 text-xs leading-6 text-white/55">
+                  Esta versión es una experiencia funcional de demostración.
+                  Todavía no guarda el progreso en Supabase ni concede EXP o
+                  monedas. Eso se conectará después mediante una operación
+                  segura en el servidor para evitar recompensas duplicadas.
+                </p>
               </div>
-            )}
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-xs leading-5 text-white/40">Lee la situación y usa las evidencias de la historia para elegir.</p>
-              {!revealed ? (
-                <button type="button" disabled={!selected} onClick={checkAnswer} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-300 px-5 py-3 text-sm font-black text-[#071510] transition hover:bg-emerald-200 disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
-              ) : (
-                <button type="button" onClick={nextQuestion} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-emerald-300 px-5 py-3 text-sm font-black text-[#071510] transition hover:bg-emerald-200">{questionIndex === QUESTIONS.length - 1 ? "Cerrar expediente" : "Siguiente pista"} <ArrowRight className="h-4 w-4" /></button>
-              )}
-            </div>
-          </section>
-        )}
 
-        {stage === "results" && (
-          <section className="mt-5 rounded-2xl border border-emerald-200/20 bg-[#0b1020]/95 p-6 text-center sm:p-10">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-200/25 bg-emerald-200/10 text-emerald-100">
-              {correctCount >= 3 ? <Trophy className="h-8 w-8" /> : <Sparkles className="h-8 w-8" />}
-            </div>
-            <p className="pixel-font mt-6 text-[9px] leading-6 text-emerald-200">EXPEDIENTE CERRADO</p>
-            <h2 className="mt-3 text-2xl font-black sm:text-3xl">{correctCount >= 3 ? "¡El santuario está a salvo!" : "La investigación continúa"}</h2>
-            <p className="mt-3 text-sm leading-7 text-white/60">Respuestas correctas: {correctCount} de {QUESTIONS.length}. {correctCount >= 3 ? "Nova y su equipo pueden continuar con la siguiente expedición." : "Repasa las pistas y vuelve a intentarlo para consolidar lo aprendido."}</p>
-            <div className="mx-auto mt-6 max-w-md rounded-xl border border-amber-200/20 bg-amber-200/[.06] p-4 text-left">
-              <p className="flex items-center gap-2 text-sm font-black text-amber-100"><Zap className="h-4 w-4" /> Recompensa prevista: +25 EXP</p>
-              <p className="mt-2 text-xs leading-5 text-white/50">Esta misión aún no guarda progreso ni acredita EXP en la cuenta. La recompensa solo debe activarse cuando la finalización esté conectada al sistema seguro de progreso de PeakScore.</p>
-            </div>
-            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-              <button type="button" onClick={restart} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/15 px-4 py-3 text-sm font-bold text-white/75 transition hover:bg-white/5"><RotateCcw className="h-4 w-4" /> Repetir misión</button>
-              <Link href="/aprender" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 text-sm font-black text-[#071510] transition hover:bg-emerald-200">Volver a la ruta <ArrowRight className="h-4 w-4" /></Link>
-            </div>
-          </section>
-        )}
+              <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={restart}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/15 px-5 py-3 text-sm font-bold text-white/80 hover:bg-white/5"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Repetir misión
+                </button>
+                <Link
+                  href="/aprender"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-violet-500 px-5 py-3 text-sm font-extrabold hover:bg-violet-400"
+                >
+                  Volver a los niveles <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </Panel>
+          )}
+        </div>
+
+        <footer className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 py-5 text-xs text-white/35">
+          <span>PEAKSCORE · RUTA DE APRENDIZAJE</span>
+          <span className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            Aprende. Practica. Supera el desafío.
+          </span>
+        </footer>
       </div>
     </main>
   );

@@ -137,7 +137,6 @@ export default function SantuarioDeLaMateriaPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [answers, setAnswers] = useState<boolean[]>([]);
-  const [finalized, setFinalized] = useState(false);
 
   const lesson = LESSONS[lessonIndex];
   const question = QUESTIONS[questionIndex];
@@ -183,7 +182,6 @@ export default function SantuarioDeLaMateriaPage() {
     setSelected(null);
     setRevealed(false);
     setAnswers([]);
-    setFinalized(false);
   }
 
   return (

@@ -135,10 +135,9 @@ export default function CristalesMisteriososPage() {
       </header>
 
       {stage === "theory" ? (
-        <div className="lesson-reading mx-auto max-w-[900px] px-5 pb-28 pt-7 sm:px-8 sm:pt-10">
+        <div className="lesson-reading mx-auto max-w-[680px] px-5 pb-28 pt-7 sm:px-8 sm:pt-10">
           <div className="mb-6">
-            <p className="pixel-font text-[8px] leading-5 tracking-[0.16em] text-cyan-200/80">RUTA 01 <span className="mx-1 text-slate-600">·</span> CIENCIAS NATURALES</p>
-            <h1 className="pixel-font mt-5 text-[clamp(1.05rem,2.2vw,1.65rem)] leading-[1.8] text-white">Los cristales<br className="sm:hidden" /> misteriosos</h1>
+            <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[28px]">Los cristales misteriosos</h1>
             <p className="mt-3 text-sm leading-7 text-slate-400">Primero observa. Después compara. Solo entonces saca una conclusión.</p>
           </div>
 
@@ -162,9 +161,8 @@ export default function CristalesMisteriososPage() {
 
           <article className="space-y-6">
             <section>
-              <p className="pixel-font text-[8px] leading-5 text-cyan-200">01 · CONCEPTO FUNDAMENTAL</p>
-              <h2 className="mt-2 text-lg font-bold text-white sm:text-xl">¿Qué es la materia?</h2>
-              <p className="mt-3 text-sm leading-7 text-slate-300"><strong className="text-cyan-100">La materia es todo aquello que tiene masa y ocupa un lugar en el espacio.</strong> Una piedra, el agua de una botella y el aire dentro de un balón son ejemplos de materia. Aunque el aire no siempre se vea, tiene masa y ocupa espacio.</p>
+              <h2 className="text-lg font-bold text-cyan-200 sm:text-xl">¿Qué es la materia?</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300"><strong className="rounded-sm bg-amber-300/[.09] px-1 font-semibold text-amber-200">La materia es todo aquello que tiene masa y ocupa un lugar en el espacio.</strong> Una piedra, el agua de una botella y el aire dentro de un balón son ejemplos de materia. Aunque el aire no siempre se vea, tiene masa y ocupa espacio.</p>
               <p className="mt-3 text-sm leading-7 text-slate-300">Para estudiar una muestra, no basta con decir «se ve bonita» o «parece pesada». En ciencias describimos características mediante observaciones y mediciones, y usamos esos datos para comparar muestras.</p>
             </section>
 
@@ -214,7 +212,7 @@ export default function CristalesMisteriososPage() {
           </article>
 
           <section className="mt-10 border-t border-white/10 pt-6">
-            <label htmlFor="lesson-notes" className="pixel-font block text-[8px] leading-5 text-slate-300">Mis notas</label>
+            <label htmlFor="lesson-notes" className="block text-sm font-semibold text-slate-200">Mis notas</label>
             <p className="mt-2 text-xs leading-6 text-slate-500">Guarda aquí tus ideas, definiciones o dudas para repasarlas después.</p>
             <textarea
               id="lesson-notes"
@@ -230,8 +228,7 @@ export default function CristalesMisteriososPage() {
       ) : (
         <div className="mx-auto max-w-[1440px] px-4 pb-28 pt-6 sm:px-7 sm:pt-8">
           <div className="mb-6">
-            <span className="pixel-font text-[8px] leading-5 text-cyan-200">RUTA 01 · CIENCIAS NATURALES</span>
-            <h1 className="pixel-font mt-3 text-[clamp(1rem,2vw,1.5rem)] leading-[1.8] text-white">Misión 1: analiza las muestras</h1>
+            <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[28px]">Misión 1: analiza las muestras</h1>
             <p className="mt-2 text-sm leading-6 text-slate-400">Consulta la teoría a la izquierda cuando la necesites. Usa las evidencias para justificar tu respuesta.</p>
           </div>
 
@@ -330,11 +327,11 @@ export default function CristalesMisteriososPage() {
       </footer>
 
       <style jsx global>{`
-        .lesson-shell { font-family: var(--font-press-start), "Press Start 2P", monospace; }
+        .lesson-shell { font-family: Arial, Helvetica, sans-serif; }
         .lesson-shell .pixel-font { font-family: var(--font-press-start), "Press Start 2P", monospace; }
-        .lesson-shell .lesson-reading p, .lesson-shell .lesson-reading li { font-family: var(--font-press-start), "Press Start 2P", monospace; font-size: 9px; line-height: 2.25; }
-        .lesson-shell .lesson-reading h2, .lesson-shell .lesson-reading h3 { font-family: var(--font-press-start), "Press Start 2P", monospace; font-size: 11px; line-height: 2; }
-        .lesson-shell textarea { font-family: var(--font-press-start), "Press Start 2P", monospace; font-size: 9px; line-height: 2.1; }
+        .lesson-shell .lesson-reading p, .lesson-shell .lesson-reading li { font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.8; }
+        .lesson-shell .lesson-reading h2, .lesson-shell .lesson-reading h3 { font-family: Arial, Helvetica, sans-serif; font-size: 18px; line-height: 1.45; }
+        .lesson-shell textarea { font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.7; }
         .lesson-pixel-mark { display: inline-flex; width: 29px; height: 29px; align-items: center; justify-content: center; border: 1px solid rgba(103,232,249,.6); color: #a5f3fc; font-family: var(--font-press-start), monospace; font-size: 11px; box-shadow: 3px 3px 0 #103345; }
         .lesson-reading { padding-bottom: 112px; }
         @media (max-width: 640px) {

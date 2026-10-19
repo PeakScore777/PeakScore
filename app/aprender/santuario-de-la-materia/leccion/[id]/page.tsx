@@ -85,6 +85,7 @@ export default function CristalesMisteriososPage() {
   const [checked, setChecked] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [lessonNotes, setLessonNotes] = useState("");
 
   const question = questions[questionIndex];
   const isCorrect = selected === question.answer;
@@ -211,6 +212,20 @@ export default function CristalesMisteriososPage() {
               </div>
             </section>
           </article>
+
+          <section className="mt-10 border-t border-white/10 pt-6">
+            <label htmlFor="lesson-notes" className="pixel-font block text-[8px] leading-5 text-slate-300">Mis notas</label>
+            <p className="mt-2 text-xs leading-6 text-slate-500">Guarda aquí tus ideas, definiciones o dudas para repasarlas después.</p>
+            <textarea
+              id="lesson-notes"
+              value={lessonNotes}
+              onChange={(event) => setLessonNotes(event.target.value)}
+              placeholder="Resalta una idea de la lección para guardar tus notas..."
+              rows={4}
+              className="mt-3 w-full resize-y border border-dashed border-cyan-200/20 bg-[#0b101b] px-4 py-3 text-sm leading-6 text-slate-200 outline-none transition placeholder:text-slate-600 focus:border-cyan-200/50 focus:ring-1 focus:ring-cyan-200/20"
+            />
+            <p className="mt-2 text-[10px] text-slate-500">Las notas se mantienen en esta sesión. El guardado permanente se conectará más adelante.</p>
+          </section>
         </div>
       ) : (
         <div className="mx-auto max-w-[1440px] px-4 pb-28 pt-6 sm:px-7 sm:pt-8">
@@ -290,24 +305,23 @@ export default function CristalesMisteriososPage() {
         </div>
       )}
 
-      <footer className="lesson-footer fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-[#101728]/95 backdrop-blur">
-        <div className="mx-auto flex min-h-[62px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">
+      <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#101728]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
+        <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center border border-cyan-200/20 bg-cyan-200/[.06]"><BookOpen className="h-4 w-4 text-cyan-200" /></span>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-white">{stage === "theory" ? "Lección 1 · Teoría" : finished ? "Lección 1 · Resultado" : `Lección 1 · Práctica ${questionIndex + 1}/${questions.length}`}</p>
-              <p className="mt-1 text-[10px] text-slate-400">Recompensa prevista: +10 XP</p>
+              <p className="pixel-font text-[8px] leading-5 text-slate-100">{stage === "theory" ? "LECCIÓN 1 / 13" : finished ? "LECCIÓN 1 / 13 · COMPLETADA" : `LECCIÓN 1 / 13 · PRÁCTICA ${questionIndex + 1}/${questions.length}`}</p>
+              <span className="mt-1 inline-flex border border-emerald-300/20 bg-emerald-300/[.08] px-2 py-0.5 text-[9px] font-bold text-emerald-200">50 XP</span>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {stage === "theory" ? (
               <>
-                <Link href="/aprender/santuario-de-la-materia" className="hidden min-h-10 items-center gap-2 border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white sm:inline-flex"><ArrowLeft className="h-4 w-4" /> Capítulo</Link>
-                <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-10 items-center gap-2 bg-cyan-300 px-4 py-2 text-xs font-extrabold text-[#07111b] transition hover:bg-cyan-200 sm:px-5">Siguiente <ArrowRight className="h-4 w-4" /></button>
+                <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</Link>
+                <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[10px] font-extrabold text-[#09200a] shadow-[0_2px_0_#3a9a2b] transition hover:bg-[#8ced6d] active:translate-y-px active:shadow-none sm:min-h-10 sm:px-5 sm:text-xs">Siguiente <ArrowRight className="h-3.5 w-3.5" /></button>
               </>
             ) : (
               <>
-                <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-10 items-center gap-2 border border-white/10 px-3 py-2 text-xs font-semibold text-slate-300 hover:text-white"><ArrowLeft className="h-4 w-4" /> Atrás</button>
+                <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</button>
                 {!finished && <span className="hidden items-center gap-1 text-[10px] text-slate-500 sm:inline-flex"><FlaskConical className="h-3.5 w-3.5" /> Razonamiento científico</span>}
               </>
             )}
@@ -316,8 +330,11 @@ export default function CristalesMisteriososPage() {
       </footer>
 
       <style jsx global>{`
-        .lesson-shell { font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif; }
+        .lesson-shell { font-family: var(--font-press-start), "Press Start 2P", monospace; }
         .lesson-shell .pixel-font { font-family: var(--font-press-start), "Press Start 2P", monospace; }
+        .lesson-shell .lesson-reading p, .lesson-shell .lesson-reading li { font-family: var(--font-press-start), "Press Start 2P", monospace; font-size: 9px; line-height: 2.25; }
+        .lesson-shell .lesson-reading h2, .lesson-shell .lesson-reading h3 { font-family: var(--font-press-start), "Press Start 2P", monospace; font-size: 11px; line-height: 2; }
+        .lesson-shell textarea { font-family: var(--font-press-start), "Press Start 2P", monospace; font-size: 9px; line-height: 2.1; }
         .lesson-pixel-mark { display: inline-flex; width: 29px; height: 29px; align-items: center; justify-content: center; border: 1px solid rgba(103,232,249,.6); color: #a5f3fc; font-family: var(--font-press-start), monospace; font-size: 11px; box-shadow: 3px 3px 0 #103345; }
         .lesson-reading { padding-bottom: 112px; }
         @media (max-width: 640px) {

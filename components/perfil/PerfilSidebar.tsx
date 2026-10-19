@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS = [
   {
@@ -22,6 +22,11 @@ const ITEMS = [
     label: "Insignias",
     href: "/perfil/insignias",
     image: "/images/profile/sidebar/insignias.png",
+  },
+  {
+    label: "Mi cuaderno",
+    href: "/perfil/cuaderno",
+    icon: true,
   },
 ];
 
@@ -50,7 +55,7 @@ function SidebarItemsSkeleton() {
       aria-hidden="true"
       className="flex flex-col gap-3 px-3"
     >
-      {[0, 1, 2].map((item) => (
+      {[0, 1, 2, 3].map((item) => (
         <div
           key={item}
           className="flex min-h-[82px] items-center gap-4 rounded-xl border border-[#49305f]/40 px-3"
@@ -209,14 +214,18 @@ export default function PerfilSidebar({
                       }
                     `}
                   >
-                    <Image
-                      src={item.image}
-                      alt=""
-                      aria-hidden="true"
-                      width={60}
-                      height={60}
-                      className="size-[58px] object-contain transition-transform duration-200 group-hover:scale-105"
-                    />
+                    {item.image ? (
+                      <Image
+                        src={item.image}
+                        alt=""
+                        aria-hidden="true"
+                        width={60}
+                        height={60}
+                        className="size-[58px] object-contain transition-transform duration-200 group-hover:scale-105"
+                      />
+                    ) : (
+                      <BookOpen size={30} aria-hidden="true" className="text-[#c09aff] transition-transform duration-200 group-hover:scale-105" />
+                    )}
                   </span>
 
                   <span className="min-w-0 flex-1 text-[15px] font-semibold">
@@ -350,14 +359,18 @@ export default function PerfilSidebar({
                     }
                   `}
                 >
-                  <Image
-                    src={item.image}
-                    alt=""
-                    aria-hidden="true"
-                    width={44}
-                    height={44}
-                    className="size-[44px] object-contain"
-                  />
+                  {item.image ? (
+                    <Image
+                      src={item.image}
+                      alt=""
+                      aria-hidden="true"
+                      width={44}
+                      height={44}
+                      className="size-[44px] object-contain"
+                    />
+                  ) : (
+                    <BookOpen size={27} aria-hidden="true" className="text-[#c09aff]" />
+                  )}
 
                   <span className="max-w-full truncate text-[11px] font-semibold">
                     {item.label}

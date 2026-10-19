@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   ArrowLeft, ArrowRight, BookOpen, ChevronDown, ChevronRight,
-  Clock3, Grid2X2, LockKeyhole, Play, Sparkles, Zap,
+  Grid2X2, LockKeyhole, Play,
 } from "lucide-react";
 
 type Lesson = {
@@ -94,7 +94,7 @@ export default function SantuarioDeLaMateriaPage() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#050914] px-4 pb-16 pt-5 text-white sm:px-7 sm:pt-7">
+    <main className="pixel-font min-h-[calc(100vh-72px)] overflow-hidden bg-[#050914] px-4 pb-16 pt-5 text-white sm:px-7 sm:pt-7">
       <div className="mx-auto max-w-[1440px]">
         <Link
           href="/aprender"
@@ -120,24 +120,23 @@ export default function SantuarioDeLaMateriaPage() {
 
           <div className="relative grid min-h-[350px] items-end px-5 pb-8 pt-8 sm:min-h-[390px] sm:px-8 sm:pb-9 lg:min-h-[420px] lg:px-10">
             <div className="max-w-[610px]">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/25 bg-[#07131f]/75 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[.2em] text-cyan-200 backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5" /> Ruta 01 <span className="text-white/30">·</span> Ciencias Naturales
+              <div className="inline-flex items-center gap-2 border-2 border-cyan-300/50 bg-[#07131f]/90 px-3 py-2 text-[9px] font-normal uppercase tracking-[.08em] text-cyan-200 [box-shadow:3px_3px_0_#12364a]">
+                Ruta 01 <span className="text-white/30">·</span> Ciencias Naturales
               </div>
-              <h1 className="mt-5 text-4xl font-black leading-[1.02] tracking-[-.04em] sm:text-5xl lg:text-[3.8rem]">
+              <h1 className="mt-5 pixel-font text-[clamp(1.25rem,2.5vw,2.5rem)] font-normal leading-[1.55] tracking-normal">
                 El Santuario
                 <br />
                 de la <span className="bg-gradient-to-r from-cyan-200 via-teal-300 to-emerald-300 bg-clip-text text-transparent">Materia</span>
               </h1>
-              <p className="mt-4 max-w-[530px] text-sm leading-6 text-slate-100/80 sm:text-base sm:leading-7">
+              <p className="mt-4 max-w-[530px] text-[9px] leading-[2.2] text-slate-100/80 sm:text-[10px]">
                 Nova ha encontrado unos cristales extraños dentro de un santuario antiguo. Observa sus propiedades, reúne evidencias y descubre qué nos cuenta la materia sobre el mundo.
               </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-2 rounded-xl border border-cyan-200/20 bg-[#06101d]/75 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur"><BookOpen className="h-4 w-4 text-cyan-200" /> {totalLessons} lecciones</span>
-                <span className="inline-flex items-center gap-2 rounded-xl border border-violet-200/20 bg-[#06101d]/75 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur"><Clock3 className="h-4 w-4 text-violet-200" /> 2 h 20 min aprox.</span>
-                <span className="inline-flex items-center gap-2 rounded-xl border border-amber-200/20 bg-[#06101d]/75 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur"><Zap className="h-4 w-4 text-amber-300" /> EXP por completar</span>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <span className="border border-cyan-200/35 bg-[#06101d]/90 px-3 py-2 text-[8px] leading-5 text-cyan-100 [box-shadow:3px_3px_0_#12364a]">{totalLessons} LECCIONES</span>
+                <span className="border border-amber-200/35 bg-[#06101d]/90 px-3 py-2 text-[8px] leading-5 text-amber-100 [box-shadow:3px_3px_0_#493716]">EXP POR COMPLETAR</span>
               </div>
             </div>
-            <span className="absolute right-5 top-5 rounded-lg border border-emerald-300/30 bg-[#062b29]/85 px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-emerald-200 backdrop-blur sm:right-8 sm:top-7">
+            <span className="absolute right-5 top-5 border-2 border-emerald-300/50 bg-[#062b29]/95 px-3 py-2 text-[8px] font-normal uppercase tracking-normal text-emerald-200 [box-shadow:3px_3px_0_#12453c] sm:right-8 sm:top-7">
               Nivel básico
             </span>
           </div>
@@ -156,9 +155,9 @@ export default function SantuarioDeLaMateriaPage() {
               </div>
               <Link
                 href="/aprender/santuario-de-la-materia/leccion/1"
-                className="group inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-400 px-6 py-3 text-sm font-black text-[#07101c] shadow-[0_8px_28px_rgba(70,190,255,.16)] transition hover:-translate-y-0.5 hover:brightness-110"
+                className="group inline-flex min-h-[54px] items-center justify-center gap-3 border-2 border-cyan-200 bg-[#0b2936] px-6 py-3 text-[9px] font-normal uppercase tracking-[.04em] text-cyan-100 [box-shadow:5px_5px_0_#03121d] transition-[transform,box-shadow,background-color] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-[#104153] hover:shadow-[3px_3px_0_#03121d] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
               >
-                <Play className="h-4 w-4 fill-current" /> Comenzar ruta
+                <span className="inline-block h-2.5 w-2.5 bg-cyan-200 [clip-path:polygon(0_0,100%_50%,0_100%)]" /> INICIAR RUTA
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </Link>
             </div>
@@ -168,9 +167,9 @@ export default function SantuarioDeLaMateriaPage() {
         <section className="mt-9 sm:mt-11">
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-[.22em] text-violet-200"><Sparkles className="h-3.5 w-3.5" /> Tu recorrido</p>
-              <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">Capítulos y lecciones</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300/75">Avanza paso a paso: primero observa, luego comprende y finalmente demuestra lo que aprendiste con retos de razonamiento tipo ICFES.</p>
+              <p className="text-[9px] font-normal uppercase tracking-[.12em] text-violet-200">Tu recorrido</p>
+              <h2 className="mt-2 text-[clamp(1rem,1.7vw,1.5rem)] font-normal leading-[1.8] tracking-normal">Capítulos y lecciones</h2>
+              <p className="mt-2 max-w-3xl text-[9px] leading-[2.1] text-slate-300/75">Avanza paso a paso: primero observa, luego comprende y finalmente demuestra lo que aprendiste con retos de razonamiento tipo ICFES.</p>
             </div>
             <button
               type="button"
@@ -258,8 +257,7 @@ export default function SantuarioDeLaMateriaPage() {
           </div>
         </section>
 
-        <div className="mt-6 flex items-start gap-3 rounded-xl border border-violet-300/15 bg-violet-300/[.04] p-4 text-sm leading-6 text-slate-300/75">
-          <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-violet-200" />
+        <div className="mt-6 border border-violet-300/25 bg-[#090d1b] p-4 text-[8px] leading-[2.2] text-slate-300/75 [box-shadow:4px_4px_0_#17152e]">
           <p>La ruta combina observación, explicación de fenómenos e investigación científica. Los capítulos se desbloquearán a medida que construyamos sus lecciones y retos originales de preparación para el ICFES.</p>
         </div>
       </div>

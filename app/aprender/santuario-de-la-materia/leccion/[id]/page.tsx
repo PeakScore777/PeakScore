@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -141,6 +142,7 @@ export default function CristalesMisteriososPage() {
             <p className="mt-3 text-sm leading-7 text-slate-400">Primero observa. Después compara. Solo entonces saca una conclusión.</p>
           </div>
 
+          <LessonNotesSelection sourceTitle="Los cristales misteriosos" sourcePath="/aprender/santuario-de-la-materia/leccion/1">
           <section className="mb-7">
             <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((open) => !open)} className="flex w-full items-center justify-between border border-white/[.09] bg-[#131824] px-4 py-3 text-left transition hover:border-cyan-200/25">
               <span className="flex items-center gap-3 text-sm font-semibold text-slate-200"><span aria-hidden="true" className="text-base leading-none">📖</span> Historia</span>
@@ -210,20 +212,8 @@ export default function CristalesMisteriososPage() {
               </div>
             </section>
           </article>
+          </LessonNotesSelection>
 
-          <section className="mt-10 border-t border-white/10 pt-6">
-            <label htmlFor="lesson-notes" className="block text-sm font-semibold text-slate-200">Mis notas</label>
-            <p className="mt-2 text-xs leading-6 text-slate-500">Guarda aquí tus ideas, definiciones o dudas para repasarlas después.</p>
-            <textarea
-              id="lesson-notes"
-              value={lessonNotes}
-              onChange={(event) => setLessonNotes(event.target.value)}
-              placeholder="Resalta una idea de la lección para guardar tus notas..."
-              rows={4}
-              className="mt-3 w-full resize-y border border-dashed border-cyan-200/20 bg-[#0b101b] px-4 py-3 text-sm leading-6 text-slate-200 outline-none transition placeholder:text-slate-600 focus:border-cyan-200/50 focus:ring-1 focus:ring-cyan-200/20"
-            />
-            <p className="mt-2 text-[10px] text-slate-500">Las notas se mantienen en esta sesión. El guardado permanente se conectará más adelante.</p>
-          </section>
         </div>
       ) : (
         <div className="mx-auto max-w-[1440px] px-4 pb-28 pt-6 sm:px-7 sm:pt-8">

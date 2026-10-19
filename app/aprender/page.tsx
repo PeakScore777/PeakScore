@@ -16,9 +16,9 @@ function safeNumber(value: unknown) {
 }
 
 const LOCKED_LEVELS = [
-  { number: "02", title: "La Forja de las Secuencias", subject: "MATEMÁTICAS", detail: "Reglas y cambios numéricos" },
-  { number: "03", title: "El Laberinto de las Variables", subject: "MATEMÁTICAS", detail: "Relaciones entre cantidades" },
-  { number: "04", title: "El Guardián del Archivo", subject: "JEFE DE RUTA", detail: "Demuestra lo que aprendiste" },
+  { number: "02", title: "El Laboratorio de las Mezclas", subject: "CIENCIAS NATURALES", detail: "Sustancias y mezclas" },
+  { number: "03", title: "El Código del Átomo", subject: "CIENCIAS NATURALES", detail: "Partículas y estructura atómica" },
+  { number: "04", title: "El Guardián de los Elementos", subject: "JEFE DE RUTA", detail: "Demuestra lo que aprendiste" },
 ];
 
 export default async function AprenderPage() {
@@ -95,12 +95,12 @@ export default async function AprenderPage() {
         <section className="mt-7">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="pixel-font text-[9px] leading-6 text-[#b6c5a5]">RUTA 01 · MATEMÁTICAS</p>
+              <p className="pixel-font text-[9px] leading-6 text-[#b6c5a5]">RUTA 01 · CIENCIAS NATURALES</p>
               <h2 className="pixel-font mt-2 text-[13px] leading-[1.9] text-[#f2edda] sm:text-[16px]">
-                El Sendero del Conocimiento
+                El Santuario de la Materia
               </h2>
               <p className="pixel-font mt-2 max-w-2xl text-[9px] leading-[2] text-white/60">
-                Aprende la regla. Supera la prueba. Desbloquea el siguiente desafío.
+                Explora la materia, resuelve sus misterios y descubre de qué está hecho el mundo.
               </p>
             </div>
             <div className="pixel-font rounded border border-[#c9d5b4]/20 bg-[#0b1020]/75 px-3 py-2 text-[8px] leading-6 text-white/65">
@@ -112,7 +112,7 @@ export default async function AprenderPage() {
             <Link
               href="/aprender/archivo-de-los-enigmas"
               className="level-card level-card-open group"
-              aria-label="Abrir desafío 1: El Archivo de los Enigmas"
+              aria-label="Abrir desafío 1: El Santuario de la Materia"
             >
               <div className="level-art relative">
                 <video
@@ -142,26 +142,26 @@ export default async function AprenderPage() {
               </div>
 
               <div className="level-card-body">
-                <p className="pixel-font text-[6px] leading-4 tracking-[.14em] text-[#8fa7b9]">MATEMÁTICAS · PRÁCTICO</p>
-                <h3 className="pixel-font mt-2 text-[9px] leading-[1.9] text-white">El Archivo de los Enigmas</h3>
+                <p className="pixel-font text-[6px] leading-4 tracking-[.14em] text-[#8fa7b9]">CIENCIAS NATURALES · HISTORIA INTERACTIVA</p>
+                <h3 className="pixel-font mt-2 text-[9px] leading-[1.9] text-white">El Santuario de la Materia</h3>
                 <p className="pixel-font mt-2 text-[7px] leading-[2] text-white/60">
-                  Descifra patrones numéricos y descubre la regla que conecta cada secuencia.
+                  Investiga cristales misteriosos y aprende a reconocer las propiedades de la materia junto a Nova y Orby.
                 </p>
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                   <span className="pixel-font rounded-full border border-[#9ecb8a]/15 bg-[#263b2c] px-2.5 py-1.5 text-[6px] text-[#c4ef9d]">
-                    PRINCIPIANTE
+                    NIVEL INICIAL
                   </span>
-                  <span className="pixel-font text-[6px] text-white/40">8–12 MIN</span>
+                  <span className="pixel-font text-[6px] text-white/40">10–15 MIN</span>
                 </div>
 
                 <div className="level-reward mt-3 flex items-center gap-2 border-t border-white/[.08] pt-3">
                   <span className="pixel-font flex h-7 w-7 items-center justify-center border border-[#d4bd72]/25 bg-[#4a3a20] text-[7px] text-[#f0d68a]">XP</span>
                   <span className="pixel-font text-[7px] leading-5 text-[#f0d68a]">+25 EXP</span>
-                  <span className="pixel-font ml-auto text-[6px] text-white/40">PRIMERA VICTORIA</span>
+                  <span className="pixel-font ml-auto text-[6px] text-white/40">PRIMER DESCUBRIMIENTO</span>
                 </div>
                 <div className="level-card-cta mt-3 flex items-center justify-center border border-[#a6d18f]/30 bg-[#293e2d] px-3 py-2.5 transition group-hover:bg-[#354f38]">
-                  <span className="pixel-font text-[7px] text-[#d7f3c7]">ENTRAR AL DESAFÍO</span>
+                  <span className="pixel-font text-[7px] text-[#d7f3c7]">EXPLORAR EL SANTUARIO</span>
                 </div>
               </div>
             </Link>

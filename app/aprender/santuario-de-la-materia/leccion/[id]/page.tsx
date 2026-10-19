@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -117,10 +116,6 @@ export default function CristalesMisteriososPage() {
     <main className="lesson-shell min-h-[calc(100vh-72px)] bg-[#080b14] text-[#e8edf7]">
       <header className="lesson-topbar sticky top-0 z-30 border-b border-white/10 bg-[#070a11]/95 backdrop-blur">
         <div className="mx-auto flex min-h-[58px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-7">
-          <Link href="/aprender/santuario-de-la-materia" className="inline-flex shrink-0 items-center gap-2 text-xs font-bold text-white/80 transition hover:text-cyan-200">
-            <span className="lesson-pixel-mark">P</span>
-            <span className="hidden sm:inline">PeakScore</span>
-          </Link>
           <div className="hidden min-w-0 items-center gap-2 text-xs text-slate-400 sm:flex">
             <span>Ciencias Naturales</span><span>›</span>
             <span>El Santuario de la Materia</span><span>›</span>
@@ -140,14 +135,14 @@ export default function CristalesMisteriososPage() {
       {stage === "theory" ? (
         <div className="lesson-reading mx-auto max-w-[900px] px-5 pb-28 pt-7 sm:px-8 sm:pt-10">
           <div className="mb-6">
-            <span className="pixel-font inline-flex border border-cyan-300/35 bg-cyan-300/[.06] px-3 py-2 text-[8px] leading-5 text-cyan-200">RUTA 01 · CIENCIAS NATURALES</span>
+            <p className="pixel-font text-[8px] leading-5 tracking-[0.16em] text-cyan-200/80">RUTA 01 <span className="mx-1 text-slate-600">·</span> CIENCIAS NATURALES</p>
             <h1 className="pixel-font mt-5 text-[clamp(1.05rem,2.2vw,1.65rem)] leading-[1.8] text-white">Los cristales<br className="sm:hidden" /> misteriosos</h1>
             <p className="mt-3 text-sm leading-7 text-slate-400">Primero observa. Después compara. Solo entonces saca una conclusión.</p>
           </div>
 
           <section className="mb-7">
             <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((open) => !open)} className="flex w-full items-center justify-between border border-white/[.09] bg-[#131824] px-4 py-3 text-left transition hover:border-cyan-200/25">
-              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200"><BookOpen className="h-4 w-4 text-cyan-200" /> Historia</span>
+              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200"><span aria-hidden="true" className="text-base leading-none">📖</span> Historia</span>
               <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
             </button>
             {historyOpen && (

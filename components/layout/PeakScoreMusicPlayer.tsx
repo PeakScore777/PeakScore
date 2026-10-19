@@ -279,8 +279,8 @@ export default function PeakScoreMusicPlayer({
     audio.load();
   }, [currentTrack.src]);
 
-  // Reproducción automática en landing, niveles y simulacros.
-  // En otras rutas, el usuario decide cuándo reproducir.
+  // Música de fondo desactivada en toda la plataforma.
+  // Los efectos puntuales de interfaz (clic/victoria) son independientes.
   useEffect(() => {
     const audio = audioRef.current;
 
@@ -288,11 +288,15 @@ export default function PeakScoreMusicPlayer({
       return;
     }
 
-    const shouldAutoplay = requiresAutomaticMusic;
+    const shouldAutoplay = false;
 
     const shouldPlay =
-      shouldAutoplay ||
-      (isAuthenticated && enabled && mode !== "off");
+      isAuthenticated &&
+      enabled &&
+      mode !== "off" &&
+      !isLandingPath &&
+      !isSimulationPath &&
+      !isLevelsPath;
 
     if (!shouldPlay) {
       audio.pause();

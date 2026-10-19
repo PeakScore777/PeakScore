@@ -86,7 +86,6 @@ export default function CristalesMisteriososPage() {
   const [checked, setChecked] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [lessonNotes, setLessonNotes] = useState("");
 
   const question = questions[questionIndex];
   const isCorrect = selected === question.answer;

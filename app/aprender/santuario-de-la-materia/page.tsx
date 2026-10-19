@@ -107,12 +107,13 @@ export default function SantuarioDeLaMateriaPage() {
         <section className="relative mt-3 overflow-hidden rounded-[22px] border border-cyan-100/10 bg-[#091322] shadow-[0_22px_70px_rgba(0,0,0,.28)]">
           <div className="absolute inset-0">
             <Image
-              src="/images/aprender/santuario/santuario-encabezado.png"
-              alt=""
+              src="/images/aprender/santuario/santuario-encabezado.png?v=2"
+              alt="Nova frente al portal del Santuario de la Materia"
               fill
               priority
+              quality={100}
               sizes="(max-width: 768px) 100vw, 1440px"
-              className="object-cover object-center"
+              className="object-cover object-[center_52%]"
             />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,#06101ff5_0%,rgba(6,16,31,.96)_24%,rgba(6,16,31,.72)_47%,rgba(6,16,31,.16)_76%,rgba(6,16,31,.1)_100%)]" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#07101d] via-transparent to-black/10" />

@@ -5,6 +5,7 @@ import Image from "next/image";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -83,6 +84,7 @@ const matterNotes = [
 ];
 
 export default function CristalesMisteriososPage() {
+  const router = useRouter();
   const [stage, setStage] = useState<"theory" | "practice">("theory");
   const [historyOpen, setHistoryOpen] = useState(true);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -308,27 +310,7 @@ export default function CristalesMisteriososPage() {
             <p className="mt-2 text-sm leading-6 text-slate-400">Consulta la teoría a la izquierda cuando la necesites. Usa las evidencias para justificar tu respuesta.</p>
           </div>
 
-          {finished && !lost ? (
-            <section className="completion-panel relative mx-auto w-full max-w-2xl overflow-hidden border border-emerald-300/30 bg-[#05070b] p-6 text-white shadow-[0_20px_60px_rgba(0,0,0,.35)] sm:p-9">
-              <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-cyan-300 to-violet-400" />
-              <div className="relative z-10 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
-                <div>
-                  <p className="pixel-font text-[8px] tracking-[.16em] text-emerald-300">SANTUARIO DE LA MATERIA · NIVEL 01</p>
-                  <h2 className="pixel-font mt-5 text-sm leading-8 text-white sm:text-base">¡NIVEL SUPERADO!</h2>
-                  <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">Completaste el análisis de las muestras y respondiste correctamente <strong className="text-white">{correctCount} de {questions.length}</strong> preguntas. La evidencia científica te acercó a dominar este desafío.</p>
-                  <div className="mt-5 inline-flex items-center gap-3 border border-emerald-300/30 bg-emerald-300/[.07] px-4 py-3"><Image src="/peaky/homepage/xp.webp" alt="Experiencia XP" width={42} height={42} className="object-contain" /><div><p className="pixel-font text-[8px] text-emerald-200">RECOMPENSA</p><p className="mt-2 text-lg font-extrabold text-white">+50 XP</p></div></div>
-                </div>
-                <div className="completion-score mx-auto flex h-28 w-28 flex-col items-center justify-center border border-emerald-300/35 bg-[#101a20] sm:mx-0">
-                  <span className="pixel-font text-2xl text-emerald-300">{Math.round((correctCount / questions.length) * 100)}%</span>
-                  <span className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Precisión</span>
-                </div>
-              </div>
-              <div className="relative z-10 mt-6 flex flex-wrap gap-3 border-t border-white/10 pt-5">
-                <button type="button" onClick={restartPractice} className="inline-flex min-h-11 items-center gap-2 border border-white/20 bg-[#151b24] px-4 py-2.5 text-xs font-bold text-slate-100 transition hover:border-emerald-300/50 hover:bg-[#1d2931]"><RotateCcw className="h-4 w-4" /> Repetir práctica</button>
-                <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-11 items-center gap-2 bg-emerald-400 px-4 py-2.5 text-xs font-bold text-[#07130d] transition hover:bg-emerald-300"><BookOpen className="h-4 w-4" /> Repasar teoría</button>
-              </div>
-            </section>
-          ) : (
+          {finished && !lost ? null : (
             <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,370px)_minmax(0,1fr)]">
               <aside className="border border-white/10 bg-[#152235] p-5 lg:sticky lg:top-[82px]">
                 <p className="flex items-center gap-2 text-xs font-bold text-cyan-200"><BookOpen className="h-4 w-4" /> Repaso rápido</p>
@@ -388,18 +370,20 @@ export default function CristalesMisteriososPage() {
       )}
 
       {finished && lost && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/45 px-3 py-5 backdrop-blur-md sm:px-6" role="dialog" aria-modal="true" aria-label="Práctica no superada">
-          <div className="relative my-auto w-full max-w-[900px] overflow-hidden bg-black shadow-[0_0_90px_rgba(255,25,65,.18)]">
-            <Image src="/images/game-over/nova-derrotado.png" alt="Nova derrotado: inténtalo de nuevo" width={1600} height={900} priority sizes="(max-width: 768px) 100vw, 900px" className="block h-auto w-full" />
-            <div className="absolute bottom-[2.5%] left-[34%] right-[4%] flex gap-2 sm:bottom-[4%] sm:left-[35%] sm:right-[5%] sm:gap-3">
-              <button type="button" onClick={restartPractice} className="flex min-h-8 flex-1 items-center justify-center gap-1 border border-rose-300/70 bg-[#19080d]/95 px-1 py-2 text-[8px] font-extrabold text-white shadow-[0_0_18px_rgba(255,20,70,.16)] transition hover:bg-[#4b1020] sm:min-h-11 sm:gap-2 sm:px-3 sm:text-xs"><RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" /> REPETIR PRÁCTICA</button>
-              <button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); }} className="flex min-h-8 flex-1 items-center justify-center gap-1 border border-white/35 bg-[#080d16]/95 px-1 py-2 text-[8px] font-extrabold text-white transition hover:bg-[#202a3a] sm:min-h-11 sm:gap-2 sm:px-3 sm:text-xs"><BookOpen className="h-3 w-3 sm:h-4 sm:w-4" /> REPASAR TEORÍA</button>
+        <div className="game-over-overlay fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto px-3 py-5 sm:px-6" role="dialog" aria-modal="true" aria-label="Práctica no superada">
+          <div className="game-over-scene relative my-auto w-full max-w-[900px] overflow-hidden bg-[#030309]">
+            <div aria-hidden="true" className="game-over-vignette pointer-events-none absolute inset-0 z-[1]" />
+            <div aria-hidden="true" className="game-over-sparks pointer-events-none absolute inset-0 z-[2]" />
+            <Image src="/images/game-over/nova-derrotado.png" alt="Nova derrotado en las ruinas del Santuario de la Materia" width={1600} height={900} priority sizes="(max-width: 768px) 100vw, 900px" className="game-over-art relative z-0 block h-auto w-full" />
+            <div className="game-over-actions absolute z-10 flex gap-2 sm:gap-3">
+              <button type="button" onClick={restartPractice} className="flex min-h-7 flex-1 items-center justify-center gap-1 border border-rose-300/80 bg-[#250811]/90 px-1 py-1.5 text-[7px] font-extrabold text-white shadow-[0_0_18px_rgba(255,20,70,.35)] transition hover:bg-[#651329] sm:min-h-9 sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[10px]"><RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" /> REPETIR PRÁCTICA</button>
+              <button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); }} className="flex min-h-7 flex-1 items-center justify-center gap-1 border border-white/50 bg-[#080d16]/90 px-1 py-1.5 text-[7px] font-extrabold text-white transition hover:bg-[#202a3a] sm:min-h-9 sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[10px]"><BookOpen className="h-3 w-3 sm:h-4 sm:w-4" /> REPASAR TEORÍA</button>
             </div>
           </div>
         </div>
       )}
 
-      <XpRewardAnimation open={rewardOpen && finished && !lost} xp={50} onContinue={() => setRewardOpen(false)} onRepeat={() => { setRewardOpen(false); restartPractice(); }} onReview={() => { setRewardOpen(false); setStage("theory"); setFinished(false); }} />
+      <XpRewardAnimation open={rewardOpen && finished && !lost} xp={50} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); router.push("/aprender/santuario-de-la-materia/leccion/2"); }} />
 
       <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
         <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">
@@ -426,6 +410,17 @@ export default function CristalesMisteriososPage() {
       </footer>
 
       <style jsx global>{`
+        .game-over-overlay { background: radial-gradient(ellipse at 50% 48%, rgba(30, 0, 8, .35), rgba(0, 0, 0, .78) 76%); backdrop-filter: blur(9px) saturate(.65); }
+        .game-over-scene { isolation: isolate; box-shadow: 0 0 45px rgba(255, 15, 55, .16), 0 0 140px rgba(150, 0, 28, .14); animation: game-over-arrive 360ms cubic-bezier(.2,.8,.2,1) both; }
+        .game-over-art { animation: game-over-breathe 7s ease-in-out infinite alternate; filter: contrast(1.08) saturate(1.12); }
+        .game-over-vignette { background: radial-gradient(ellipse at 40% 42%, transparent 28%, rgba(0,0,0,.12) 58%, rgba(0,0,0,.6) 100%), linear-gradient(90deg, rgba(35,0,8,.05), transparent 40%, rgba(10,0,4,.18)); box-shadow: inset 0 0 80px rgba(0,0,0,.25); }
+        .game-over-sparks { opacity: .55; background-image: radial-gradient(circle at 14% 24%, rgba(255,40,67,.85) 0 1px, transparent 2px), radial-gradient(circle at 76% 19%, rgba(255,30,60,.75) 0 1px, transparent 2px), radial-gradient(circle at 63% 72%, rgba(255,60,80,.7) 0 1.5px, transparent 3px), radial-gradient(circle at 29% 81%, rgba(255,30,50,.7) 0 1px, transparent 2px); background-size: 170px 150px, 220px 190px, 190px 210px, 240px 180px; animation: game-over-embers 4s linear infinite alternate; }
+        .game-over-actions { left: 52.5%; right: 5.2%; top: 57.5%; }
+        @keyframes game-over-arrive { from { opacity: 0; transform: scale(.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes game-over-breathe { from { transform: scale(1); } to { transform: scale(1.018); } }
+        @keyframes game-over-embers { from { opacity: .2; transform: translateY(0); } to { opacity: .72; transform: translateY(-5px); } }
+        @media (max-width: 640px) { .game-over-actions { left: 51.5%; right: 5%; top: 57%; } }
+        @media (prefers-reduced-motion: reduce) { .game-over-scene, .game-over-art, .game-over-sparks { animation: none !important; } }
         .lesson-shell { font-family: Arial, Helvetica, sans-serif; }
         .lesson-shell .pixel-font { font-family: var(--font-press-start), "Press Start 2P", monospace; }
         .lesson-shell .lesson-reading p, .lesson-shell .lesson-reading li { font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.8; }

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
-import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -13,8 +13,6 @@ import {
   FlaskConical,
   Lightbulb,
   RotateCcw,
-  Sparkles,
-  Zap,
 } from "lucide-react";
 
 type Question = {
@@ -91,13 +89,13 @@ export default function CristalesMisteriososPage() {
   const [checked, setChecked] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
-  const [rewardOpen, setRewardOpen] = useState(false);
+  const [lost, setLost] = useState(false);
 
   const question = questions[questionIndex];
   const isCorrect = selected === question.answer;
 
   // Efectos retro locales: no requieren API ni dependencias adicionales.
-  function playSound(file: "navigation.mp3" | "level-win.mp3", volume = 0.22) {
+  function playSound(file: "navigation.mp3" | "level-win.mp3" | "game-over.wav" | "xp-gain.mp3", volume = 0.22) {
     if (typeof window === "undefined") return;
     const audio = new Audio(`/sounds/${file}`);
     audio.volume = volume;
@@ -120,9 +118,15 @@ export default function CristalesMisteriososPage() {
       setChecked(false);
       return;
     }
-    playSound("level-win.mp3", 0.28);
     setFinished(true);
-    setRewardOpen(true);
+    if (correctCount === questions.length) {
+      setLost(false);
+      playSound("level-win.mp3", 0.25);
+      window.setTimeout(() => playSound("xp-gain.mp3", 0.22), 220);
+    } else {
+      setLost(true);
+      playSound("game-over.wav", 0.3);
+    }
   }
 
   function restartPractice() {
@@ -131,7 +135,7 @@ export default function CristalesMisteriososPage() {
     setChecked(false);
     setCorrectCount(0);
     setFinished(false);
-    setRewardOpen(false);
+    setLost(false);
   }
 
   return (
@@ -164,7 +168,7 @@ export default function CristalesMisteriososPage() {
           <LessonNotesSelection sourceTitle="Los cristales misteriosos" sourcePath="/aprender/santuario-de-la-materia/leccion/1">
           <section className="mb-7">
             <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((open) => !open)} className="flex w-full items-center justify-between border border-white/[.09] bg-[#131824] px-4 py-3 text-left transition hover:border-cyan-200/25">
-              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200"><BookOpen className="h-4 w-4 text-amber-200" /> Historia</span>
+              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200"><span aria-hidden="true">📖</span> Historia</span>
               <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
             </button>
             {historyOpen && (
@@ -301,14 +305,25 @@ export default function CristalesMisteriososPage() {
             <p className="mt-2 text-sm leading-6 text-slate-400">Consulta la teoría a la izquierda cuando la necesites. Usa las evidencias para justificar tu respuesta.</p>
           </div>
 
-          {finished ? (
+          {finished ? (lost ? (
+            <section className="mx-auto w-full max-w-4xl overflow-hidden border border-rose-300/30 bg-[#05070b] text-white shadow-[0_20px_60px_rgba(0,0,0,.35)]">
+              <div className="relative aspect-video w-full bg-black">
+                <Image src="/images/game-over/nova-derrotado.png" alt="Nova derrotado en el Santuario de la Materia" fill priority sizes="(max-width: 768px) 100vw, 896px" className="object-contain" />
+              </div>
+              <div className="flex flex-col gap-4 border-t border-rose-300/20 p-5 sm:flex-row sm:items-center sm:justify-center sm:p-6">
+                <button type="button" onClick={restartPractice} className="inline-flex min-h-11 items-center justify-center gap-2 border border-rose-200/40 bg-[#24141a] px-5 py-3 text-xs font-bold text-rose-100 transition hover:bg-[#3a1c25]"><RotateCcw className="h-4 w-4" /> REPETIR PRÁCTICA</button>
+                <button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); }} className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 bg-[#151b24] px-5 py-3 text-xs font-bold text-slate-100 transition hover:border-cyan-200/50 hover:bg-[#1d2931]"><BookOpen className="h-4 w-4" /> REPASAR TEORÍA</button>
+              </div>
+            </section>
+          ) : (
             <section className="completion-panel relative mx-auto w-full max-w-2xl overflow-hidden border border-emerald-300/30 bg-[#05070b] p-6 text-white shadow-[0_20px_60px_rgba(0,0,0,.35)] sm:p-9">
               <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-cyan-300 to-violet-400" />
               <div className="relative z-10 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
                 <div>
                   <p className="pixel-font text-[8px] tracking-[.16em] text-emerald-300">SANTUARIO DE LA MATERIA · NIVEL 01</p>
-                  <h2 className="pixel-font mt-5 text-sm leading-8 text-white sm:text-base">MISIÓN COMPLETADA</h2>
-                  <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">Terminaste el análisis de muestras. Respondiste correctamente <strong className="text-white">{correctCount} de {questions.length}</strong> preguntas. Repasa los razonamientos para reconocer qué conclusiones se desprenden de la evidencia y cuáles exceden los datos.</p>
+                  <h2 className="pixel-font mt-5 text-sm leading-8 text-white sm:text-base">¡NIVEL SUPERADO!</h2>
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">Completaste el análisis de las muestras y respondiste correctamente <strong className="text-white">{correctCount} de {questions.length}</strong> preguntas. La evidencia científica te acercó a dominar este desafío.</p>
+                  <div className="mt-5 inline-flex items-center gap-3 border border-emerald-300/30 bg-emerald-300/[.07] px-4 py-3"><Image src="/peaky/homepage/xp.webp" alt="Experiencia XP" width={42} height={42} className="object-contain" /><div><p className="pixel-font text-[8px] text-emerald-200">RECOMPENSA</p><p className="mt-2 text-lg font-extrabold text-white">+50 XP</p></div></div>
                 </div>
                 <div className="completion-score mx-auto flex h-28 w-28 flex-col items-center justify-center border border-emerald-300/35 bg-[#101a20] sm:mx-0">
                   <span className="pixel-font text-2xl text-emerald-300">{Math.round((correctCount / questions.length) * 100)}%</span>
@@ -320,7 +335,7 @@ export default function CristalesMisteriososPage() {
                 <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-11 items-center gap-2 bg-emerald-400 px-4 py-2.5 text-xs font-bold text-[#07130d] transition hover:bg-emerald-300"><BookOpen className="h-4 w-4" /> Repasar teoría</button>
               </div>
             </section>
-          ) : (
+          )) : (
             <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,370px)_minmax(0,1fr)]">
               <aside className="border border-white/10 bg-[#152235] p-5 lg:sticky lg:top-[82px]">
                 <p className="flex items-center gap-2 text-xs font-bold text-cyan-200"><BookOpen className="h-4 w-4" /> Repaso rápido</p>
@@ -339,7 +354,7 @@ export default function CristalesMisteriososPage() {
               <section className="practice-panel border border-slate-300 bg-[#f4f6f8] p-5 text-slate-900 shadow-[0_12px_32px_rgba(0,0,0,.16)] sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="pixel-font text-[8px] leading-5 text-slate-600">PREGUNTA {questionIndex + 1} DE {questions.length}</p>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900"><Zap className="h-3.5 w-3.5" /> Práctica</span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900">Práctica</span>
                 </div>
                 <div className="mt-4 h-1.5 overflow-hidden bg-slate-200"><div className="h-full bg-emerald-500 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
                 <p className="mt-6 rounded-md border-l-4 border-slate-400 bg-white px-4 py-3 text-sm leading-7 text-slate-700">{question.context}</p>
@@ -379,14 +394,12 @@ export default function CristalesMisteriososPage() {
         </div>
       )}
 
-      <XpRewardAnimation open={rewardOpen} xp={50} onContinue={() => setRewardOpen(false)} />
-
       <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
         <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <div className="min-w-0">
               <p className="pixel-font text-[8px] leading-5 text-slate-100">{stage === "theory" ? "LECCIÓN 1 / 13" : finished ? "LECCIÓN 1 / 13 · COMPLETADA" : `LECCIÓN 1 / 13 · PRÁCTICA ${questionIndex + 1}/${questions.length}`}</p>
-              <span className="mt-1 inline-flex border border-emerald-300/20 bg-emerald-300/[.08] px-2 py-0.5 text-[9px] font-bold text-emerald-200">50 XP</span>
+              <span className="mt-1 inline-flex items-center gap-1.5 border border-emerald-300/20 bg-emerald-300/[.08] px-2 py-0.5 text-[9px] font-bold text-emerald-200"><Image src="/peaky/homepage/xp.webp" alt="" width={17} height={17} className="object-contain" /> 50 XP</span>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
+import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -306,6 +307,12 @@ export default function CristalesMisteriososPage() {
           </article>
           </LessonNotesSelection>
 
+          <LessonAITutor
+            subject="Ciencias Naturales"
+            topic="Los cristales misteriosos: materia, propiedades y densidad"
+            stage="theory"
+            context="La lección enseña clasificación de la materia, propiedades generales y específicas, propiedades extensivas e intensivas, cambios físicos y químicos, densidad, mediciones y evaluación de evidencia científica."
+          />
         </div>
       ) : (
         <div className="mx-auto max-w-[1440px] px-4 pb-28 pt-6 sm:px-7 sm:pt-8">
@@ -374,6 +381,13 @@ export default function CristalesMisteriososPage() {
                 </div>
                 </div>
               </section>
+              <LessonAITutor
+                subject="Ciencias Naturales"
+                topic={`Los cristales misteriosos: pregunta ${questionIndex + 1} de ${questions.length}`}
+                stage="practice"
+                question={question.prompt}
+                context={`Situación: ${question.context}\nOpciones: ${question.options.map((option) => `${option.label}) ${option.text}`).join("\\n")}\nExplicación de la lección: ${question.explanation}`}
+              />
             </div>
           )}
         </div>

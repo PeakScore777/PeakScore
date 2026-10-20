@@ -439,7 +439,7 @@ export default function CristalesMisteriososPage() {
       )}
       <XpRewardAnimation open={rewardOpen && finished && !lost} xp={50} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); router.push("/aprender/santuario-de-la-materia/leccion/2"); }} />
 
-      <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
+      {! (finished && lost) && <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
         <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <div className="min-w-0">
@@ -461,7 +461,7 @@ export default function CristalesMisteriososPage() {
             )}
           </div>
         </div>
-      </footer>
+      </footer>}
 
       <style jsx global>{`
         .game-over-overlay {

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
+import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -26,40 +27,40 @@ type Question = {
 
 const questions: Question[] = [
   {
-    context: "En el Santuario, Nova registra tres datos de una muestra: tiene una masa de 18 g, ocupa 6 cm³ y su superficie es plateada.",
-    prompt: "¿Cuál de los datos corresponde a una propiedad general de la materia?",
+    context: "Nova mide tres muestras sólidas compactas a la misma temperatura. Registra estos resultados: muestra P: masa 24 g y volumen 8 cm³; muestra Q: masa 36 g y volumen 12 cm³; muestra R: masa 30 g y volumen 10 cm³. Supón que las mediciones no tienen errores relevantes.",
+    prompt: "¿Cuál conclusión está mejor respaldada por los datos experimentales?",
     options: [
-      { label: "A", text: "Su superficie plateada." },
-      { label: "B", text: "Su masa de 18 g." },
-      { label: "C", text: "Su apariencia brillante." },
-      { label: "D", text: "Su color plateado." },
+      { label: "A", text: "La muestra Q tiene mayor densidad porque su masa total es la mayor." },
+      { label: "B", text: "Las tres muestras tienen la misma densidad, de 3 g/cm³." },
+      { label: "C", text: "La muestra P es más densa porque ocupa el menor volumen." },
+      { label: "D", text: "No se puede calcular densidad sin conocer el color y la composición de cada muestra." },
     ],
     answer: "B",
-    explanation: "La masa es una propiedad general: la materia la posee sin importar de qué sustancia esté hecha. El color y el brillo describen características que pueden ayudar a distinguir materiales, pero por sí solos no identifican de manera segura una sustancia.",
+    explanation: "La densidad relaciona masa y volumen: ρ = m/V. Para P: 24 g ÷ 8 cm³ = 3 g/cm³; para Q: 36 g ÷ 12 cm³ = 3 g/cm³; para R: 30 g ÷ 10 cm³ = 3 g/cm³. Aunque la masa y el volumen totales son diferentes, la razón entre ambas magnitudes es igual. La opción A confunde masa total con densidad: un objeto puede tener más masa solo porque contiene más material.",
   },
   {
-    context: "Dos muestras tienen el mismo volumen, pero masas diferentes. Las dos se encuentran en las mismas condiciones.",
-    prompt: "¿Qué propiedad permite comparar cuánta masa hay en un mismo volumen?",
+    context: "En el laboratorio, una estudiante calienta una pequeña cantidad de una sustancia pura. La muestra pasa de sólido a líquido y, al enfriarse, vuelve a solidificarse. No se detectan cambios en su composición.",
+    prompt: "¿Qué interpretación explica mejor el fenómeno observado?",
     options: [
-      { label: "A", text: "La densidad." },
-      { label: "B", text: "La forma." },
-      { label: "C", text: "El color." },
-      { label: "D", text: "La longitud." },
-    ],
-    answer: "A",
-    explanation: "La densidad relaciona la masa con el volumen: densidad = masa ÷ volumen. Si dos muestras ocupan el mismo volumen y tienen masas distintas, sus densidades también son distintas.",
-  },
-  {
-    context: "Una estudiante afirma: «El cristal es hierro porque se ve gris y brillante». No realizó otras pruebas.",
-    prompt: "¿Cuál es la mejor evaluación de esa afirmación?",
-    options: [
-      { label: "A", text: "Es correcta: el color demuestra que es hierro." },
-      { label: "B", text: "Es correcta: todos los sólidos brillantes son metales." },
-      { label: "C", text: "No está justificada; debe comparar más propiedades y reunir evidencias." },
-      { label: "D", text: "Es imposible estudiar las propiedades de un cristal." },
+      { label: "A", text: "Ocurrió una reacción química porque la sustancia cambió de apariencia." },
+      { label: "B", text: "La sustancia perdió masa necesariamente al convertirse en líquido." },
+      { label: "C", text: "Es un cambio físico: varía el estado, pero no se evidencia la formación de otra sustancia." },
+      { label: "D", text: "La muestra dejó de ser materia durante el calentamiento." },
     ],
     answer: "C",
-    explanation: "El color y el brillo son observaciones útiles, pero muchos materiales pueden parecerse. Para identificar una sustancia se comparan varias propiedades y, cuando sea necesario, se realizan pruebas adecuadas. Esta diferencia entre dato y conclusión es clave en preguntas de ciencias.",
+    explanation: "Un cambio de estado es físico cuando la sustancia conserva su identidad química. En la fusión y la solidificación, las partículas cambian su organización y movilidad, pero eso no implica por sí mismo que se formen sustancias nuevas. La apariencia no basta para afirmar que hubo una reacción. Además, no puede concluirse que la masa se perdió: en un sistema cerrado, la masa total se conserva en los procesos físicos y químicos.",
+  },
+  {
+    context: "Un equipo debe identificar una muestra metálica desconocida. Una integrante propone concluir que es cobre porque tiene color rojizo. Otra propone medir su masa y volumen, comparar su densidad con valores de referencia y repetir la medición para verificar la consistencia de los resultados.",
+    prompt: "¿Por qué el segundo procedimiento permite construir una conclusión científica más sólida?",
+    options: [
+      { label: "A", text: "Porque una sola propiedad medida siempre identifica de forma absoluta cualquier material." },
+      { label: "B", text: "Porque sustituye una impresión visual por mediciones comparables y permite evaluar la incertidumbre." },
+      { label: "C", text: "Porque repetir una medición garantiza que no existan errores experimentales." },
+      { label: "D", text: "Porque la densidad es una propiedad extensiva que aumenta con la cantidad de muestra." },
+    ],
+    answer: "B",
+    explanation: "El color puede orientar una hipótesis, pero distintos materiales pueden presentar apariencias similares. Calcular la densidad a partir de masa y volumen aporta evidencia cuantitativa; comparar con referencias y repetir las mediciones ayuda a detectar resultados inconsistentes. Esto no elimina toda incertidumbre ni garantiza por sí solo una identificación definitiva: conviene contrastar varias propiedades. La opción D es incorrecta porque la densidad es intensiva en condiciones equivalentes, mientras que masa y volumen son extensivas.",
   },
 ];
 
@@ -90,6 +91,7 @@ export default function CristalesMisteriososPage() {
   const [checked, setChecked] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [rewardOpen, setRewardOpen] = useState(false);
 
   const question = questions[questionIndex];
   const isCorrect = selected === question.answer;
@@ -120,6 +122,7 @@ export default function CristalesMisteriososPage() {
     }
     playSound("level-win.mp3", 0.28);
     setFinished(true);
+    setRewardOpen(true);
   }
 
   function restartPractice() {
@@ -128,23 +131,24 @@ export default function CristalesMisteriososPage() {
     setChecked(false);
     setCorrectCount(0);
     setFinished(false);
+    setRewardOpen(false);
   }
 
   return (
-    <main className="lesson-shell min-h-[calc(100vh-72px)] bg-[#080b14] text-[#e8edf7]">
-      <header className="lesson-topbar sticky top-0 z-30 border-b border-white/10 bg-[#070a11]/95 backdrop-blur">
+    <main className="lesson-shell min-h-[calc(100vh-72px)] bg-[#0b111b] text-[#f0f4fa]">
+      <header className="lesson-topbar sticky top-0 z-30 border-b border-white/10 bg-[#101725]/95 backdrop-blur">
         <div className="mx-auto flex min-h-[58px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-7">
           <div className="hidden min-w-0 items-center gap-2 text-xs text-slate-400 sm:flex">
             <span>Ciencias Naturales</span><span>›</span>
             <span>El Santuario de la Materia</span><span>›</span>
-            <span className="truncate text-cyan-100">{stage === "theory" ? "Los cristales misteriosos" : "Misión: analiza las muestras"}</span>
+            <span className="truncate text-emerald-100">{stage === "theory" ? "Los cristales misteriosos" : "Misión: analiza las muestras"}</span>
           </div>
           <div className="flex shrink-0 items-center gap-3">
             <span className="pixel-font text-[8px] text-white/70">LECCIÓN 1 / 13</span>
             <div className="hidden h-2 w-24 overflow-hidden rounded-full bg-white/10 sm:block">
-              <div className={`h-full rounded-full bg-cyan-300 transition-all ${stage === "practice" ? "w-[65%]" : "w-[30%]"}`} />
+              <div className={`h-full rounded-full bg-emerald-300 transition-all ${stage === "practice" ? "w-[65%]" : "w-[30%]"}`} />
             </div>
-            <span className="pixel-font text-[8px] text-cyan-200">{stage === "theory" ? "30%" : finished ? "100%" : "65%"}</span>
+            <span className="pixel-font text-[8px] text-emerald-200">{stage === "theory" ? "30%" : finished ? "100%" : "65%"}</span>
           </div>
         </div>
         <div className="h-[2px] bg-white/[.04]"><div className={`h-full bg-cyan-300 transition-all duration-300 ${stage === "theory" ? "w-[30%]" : finished ? "w-full" : "w-[65%]"}`} /></div>
@@ -160,12 +164,12 @@ export default function CristalesMisteriososPage() {
           <LessonNotesSelection sourceTitle="Los cristales misteriosos" sourcePath="/aprender/santuario-de-la-materia/leccion/1">
           <section className="mb-7">
             <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((open) => !open)} className="flex w-full items-center justify-between border border-white/[.09] bg-[#131824] px-4 py-3 text-left transition hover:border-cyan-200/25">
-              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200"><span aria-hidden="true" className="text-base leading-none">📖</span> Historia</span>
+              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200"><BookOpen className="h-4 w-4 text-amber-200" /> Historia</span>
               <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
             </button>
             {historyOpen && (
               <div className="border-x border-b border-white/[.08] bg-[#0b101b] px-4 py-5 sm:px-5">
-                <p className="text-sm leading-7 text-slate-300">Al caer la tarde, Nova llega por primera vez a un antiguo santuario escondido entre ruinas. El lugar está en silencio, salvo por el sonido del agua que cae entre las piedras. Sobre una mesa encuentra tres muestras: una roca oscura, un cristal transparente y una pieza azul que refleja la luz.</p>
+                <p className="text-sm leading-7 text-slate-200">Al caer la tarde, Nova llega por primera vez a un antiguo santuario escondido entre ruinas. El lugar está en silencio, salvo por el sonido del agua que cae entre las piedras. Sobre una mesa encuentra tres muestras: una roca oscura, un cristal transparente y una pieza azul que refleja la luz.</p>
                 <p className="mt-4 text-sm leading-7 text-slate-300">Nova no sabe de qué materiales están hechas ni por qué son diferentes. En vez de adivinar, abre su cuaderno y anota lo que puede observar: color, brillo, forma y tamaño. También se pregunta qué podría medir para comparar las muestras de manera justa.</p>
                 <p className="mt-4 text-sm leading-7 text-slate-300">Una pequeña inscripción aparece en la mesa: <em className="text-cyan-100">«Quien observa con cuidado encuentra mejores respuestas».</em> Nova decide comenzar por lo esencial: entender qué es la materia y cuáles propiedades permiten describirla. Su investigación apenas comienza.</p>
                 <div className="mt-5 border-l-2 border-cyan-300/70 bg-cyan-300/[.045] px-4 py-3">
@@ -187,7 +191,7 @@ export default function CristalesMisteriososPage() {
               <h2 className="text-lg font-bold text-cyan-200">Propiedades generales y específicas</h2>
               <p className="mt-3 text-sm leading-7 text-slate-300">Las propiedades de la materia nos ayudan a describirla. Se suelen estudiar en dos grupos:</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="border border-white/10 bg-[#101725] p-4">
+                <div className="border border-white/10 bg-[#1c3045] p-4">
                   <h3 className="font-bold text-white">Propiedades generales</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-300">Son comunes a la materia y no suelen identificar por sí solas una sustancia.</p>
                   <ul className="mt-3 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-300">
@@ -233,7 +237,7 @@ export default function CristalesMisteriososPage() {
               <p className="mt-3 text-sm leading-7 text-slate-300">Otra clasificación depende de si la propiedad cambia al aumentar o disminuir la cantidad de muestra. Las <strong className="text-cyan-100">propiedades extensivas</strong> dependen de la cantidad de materia: por ejemplo, la masa y el volumen de una misma sustancia aumentan si reunimos más muestra. Las <strong className="text-cyan-100">propiedades intensivas</strong> no dependen directamente de la cantidad: por ejemplo, la densidad y el punto de fusión de una sustancia pura, siempre que se comparen en condiciones equivalentes.</p>
               <div className="mt-4 overflow-hidden border border-white/10">
                 <div className="grid grid-cols-[1fr_1fr] bg-[#182235] text-xs font-bold text-slate-100"><div className="p-3">Extensivas</div><div className="border-l border-white/10 p-3">Intensivas</div></div>
-                <div className="grid grid-cols-[1fr_1fr] bg-[#101725] text-sm text-slate-300"><div className="p-3">Masa, volumen, longitud de una muestra.</div><div className="border-l border-white/10 p-3">Densidad, temperatura de fusión, conductividad característica.</div></div>
+                <div className="grid grid-cols-[1fr_1fr] bg-[#1c3045] text-sm text-slate-300"><div className="p-3">Masa, volumen, longitud de una muestra.</div><div className="border-l border-white/10 p-3">Densidad, temperatura de fusión, conductividad característica.</div></div>
               </div>
               <p className="mt-3 text-sm leading-7 text-slate-300">Ejemplo: si cortas un bloque de cobre en dos partes, cada parte tendrá menos masa y volumen que el bloque original, pero ambas pueden conservar aproximadamente la misma densidad. Por eso la densidad es más útil que la masa aislada para comparar la identidad de materiales.</p>
             </section>
@@ -242,7 +246,7 @@ export default function CristalesMisteriososPage() {
               <h2 className="text-lg font-bold text-cyan-200">Propiedades físicas y químicas</h2>
               <p className="mt-3 text-sm leading-7 text-slate-300">Una <strong className="text-cyan-100">propiedad física</strong> se puede observar o medir sin transformar la sustancia en otra: densidad, color, dureza, conductividad, solubilidad y temperatura de fusión son ejemplos. Una <strong className="text-cyan-100">propiedad química</strong> describe la capacidad de una sustancia para participar en una transformación que cambia su composición, como la inflamabilidad o la tendencia del hierro a oxidarse.</p>
               <p className="mt-3 text-sm leading-7 text-slate-300">No confundas propiedad con cambio. La inflamabilidad es una propiedad química; la combustión es un proceso químico. El punto de ebullición es una propiedad física; hervir agua es un cambio físico porque las moléculas siguen siendo H₂O, aunque cambie el estado.</p>
-              <div className="mt-4 border border-cyan-200/20 bg-cyan-200/[.04] p-4">
+              <div className="mt-4 border border-emerald-200/25 bg-cyan-200/[.04] p-4">
                 <p className="text-sm font-bold text-cyan-100">Cómo razonar en una pregunta</p>
                 <p className="mt-2 text-sm leading-7 text-slate-300">Pregúntate: ¿la identidad química de la sustancia cambia? Si no cambia y solo varían el estado, la forma o el tamaño, el proceso es físico. Si aparecen sustancias con composición diferente, el proceso es químico. La evidencia debe sostener la conclusión; burbujas o cambio de color, por sí solos, pueden tener más de una explicación.</p>
               </div>
@@ -298,19 +302,18 @@ export default function CristalesMisteriososPage() {
           </div>
 
           {finished ? (
-            <section className="mx-auto max-w-2xl border border-cyan-200/20 bg-[#0d1522] p-6 sm:p-9">
+            <section className="mx-auto max-w-2xl border border-cyan-200/20 bg-[#17283b] p-6 sm:p-9">
               <div className="flex h-14 w-14 items-center justify-center border border-cyan-200/25 bg-cyan-200/[.08]"><CheckCircle2 className="h-7 w-7 text-cyan-200" /></div>
               <h2 className="pixel-font mt-5 text-sm leading-7 text-white">Misión completada</h2>
-              <p className="mt-3 text-sm leading-7 text-slate-300">Respondiste correctamente {correctCount} de {questions.length} preguntas. Revisa las explicaciones y vuelve a intentarlo si quieres reforzar tus conceptos.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Respondiste correctamente {correctCount} de {questions.length} preguntas. Revisa la evidencia y las explicaciones: el objetivo no es memorizar una opción, sino justificar por qué los datos sostienen una conclusión.</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button type="button" onClick={restartPractice} className="inline-flex min-h-11 items-center gap-2 border border-white/15 px-4 py-3 text-sm font-bold hover:bg-white/[.05]"><RotateCcw className="h-4 w-4" /> Repetir práctica</button>
-                <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-11 items-center gap-2 bg-cyan-300 px-4 py-3 text-sm font-bold text-[#07111b] hover:bg-cyan-200"><BookOpen className="h-4 w-4" /> Repasar teoría</button>
+                <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-11 items-center gap-2 bg-cyan-300 px-4 py-3 text-sm font-bold text-[#07111b] hover:bg-emerald-200"><BookOpen className="h-4 w-4" /> Repasar teoría</button>
               </div>
-              <p className="mt-4 text-xs leading-5 text-slate-500">La práctica es una demostración visual; el guardado de progreso y la asignación de XP requieren integración con el sistema de progreso.</p>
             </section>
           ) : (
             <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,370px)_minmax(0,1fr)]">
-              <aside className="border border-white/10 bg-[#0d1320] p-5 lg:sticky lg:top-[82px]">
+              <aside className="border border-white/10 bg-[#152235] p-5 lg:sticky lg:top-[82px]">
                 <p className="flex items-center gap-2 text-xs font-bold text-cyan-200"><BookOpen className="h-4 w-4" /> Repaso rápido</p>
                 {matterNotes.map((note) => (
                   <section key={note.title} className="mt-5 border-t border-white/[.08] pt-4 first:border-0 first:pt-0">
@@ -324,7 +327,7 @@ export default function CristalesMisteriososPage() {
                 </div>
               </aside>
 
-              <section className="border border-cyan-200/20 bg-[#0d1522] p-5 sm:p-7">
+              <section className="border border-cyan-200/20 bg-[#17283b] p-5 sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="pixel-font text-[8px] leading-5 text-cyan-200">PREGUNTA {questionIndex + 1} DE {questions.length}</p>
                   <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/20 bg-amber-200/[.05] px-3 py-1.5 text-xs font-bold text-amber-100"><Zap className="h-3.5 w-3.5" /> Práctica</span>
@@ -337,7 +340,7 @@ export default function CristalesMisteriososPage() {
                     const active = selected === option.label;
                     const correctOption = checked && option.label === question.answer;
                     const wrongOption = checked && active && !isCorrect;
-                    const style = correctOption ? "border-emerald-300/50 bg-emerald-300/[.08]" : wrongOption ? "border-rose-300/50 bg-rose-300/[.07]" : active ? "border-cyan-200/60 bg-cyan-200/[.07]" : "border-white/10 bg-white/[.02] hover:border-cyan-200/30";
+                    const style = correctOption ? "border-emerald-300/50 bg-emerald-300/[.08]" : wrongOption ? "border-rose-300/50 bg-rose-300/[.07]" : active ? "border-cyan-200/60 bg-cyan-200/[.07]" : "border-white/10 bg-[#20334a] hover:border-emerald-200/45";
                     return (
                       <button key={option.label} type="button" disabled={checked} onClick={() => setSelected(option.label)} className={`flex w-full items-start gap-3 border p-4 text-left transition ${style}`}>
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-white/15 text-xs font-bold text-cyan-100">{option.label}</span>
@@ -367,7 +370,9 @@ export default function CristalesMisteriososPage() {
         </div>
       )}
 
-      <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#101728]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
+      <XpRewardAnimation open={rewardOpen} xp={50} onContinue={() => setRewardOpen(false)} />
+
+      <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
         <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <div className="min-w-0">
@@ -378,7 +383,7 @@ export default function CristalesMisteriososPage() {
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {stage === "theory" ? (
               <>
-                <Link href="/aprender/santuario-de-la-materia" onClick={() => playSound("navigation.mp3", 0.16)} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</Link>
+                <Link href="/aprender/santuario-de-la-materia" onClick={() => playSound("navigation.mp3", 0.16)} className="inline-flex min-h-9 items-center gap-2 border border-white/15 bg-[#26364a] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</Link>
                 <button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setStage("practice"); }} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[10px] font-extrabold text-[#09200a] shadow-[0_2px_0_#3a9a2b] transition hover:bg-[#8ced6d] active:translate-y-px active:shadow-none sm:min-h-10 sm:px-5 sm:text-xs">Siguiente <ArrowRight className="h-3.5 w-3.5" /></button>
               </>
             ) : (

@@ -78,7 +78,8 @@ export default function XpRewardAnimation({
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" || event.key === "Enter") onContinue();
+      if (event.key === "Enter") onContinue();
+      if (event.key === "Escape") event.preventDefault();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -88,18 +89,11 @@ export default function XpRewardAnimation({
 
   return (
     <div
-      className="xp-reward-overlay fixed inset-0 z-[100] flex items-center justify-center overflow-hidden px-5 py-8"
+      className="xp-reward-overlay fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-black px-5 py-8"
       role="dialog"
       aria-modal="true"
       aria-labelledby="xp-reward-title"
     >
-      <button
-        type="button"
-        className="absolute inset-0 h-full w-full cursor-default bg-[#020611]/85 backdrop-blur-[3px]"
-        aria-label="Cerrar celebración"
-        onClick={onContinue}
-      />
-
       <div className="xp-confetti pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         {particles.map((particle) => (
           <span
@@ -119,7 +113,7 @@ export default function XpRewardAnimation({
         ))}
       </div>
 
-      <section className="xp-reward-card relative z-10 flex w-full max-w-md flex-col items-center border border-cyan-200/35 bg-[radial-gradient(ellipse_at_top,rgba(17,91,154,.36),transparent_55%),linear-gradient(180deg,#101a30,#070d1b)] px-6 py-8 text-center shadow-[0_0_70px_rgba(34,211,238,.18)] sm:px-10 sm:py-10">
+      <section className="xp-reward-card relative z-10 flex w-full max-w-md flex-col items-center bg-transparent px-6 py-8 text-center sm:px-10 sm:py-10">
         <div className="xp-badge-entry relative h-44 w-44 sm:h-52 sm:w-52">
           <div className="absolute inset-4 rounded-full bg-cyan-300/20 blur-2xl" />
           <Image
@@ -168,6 +162,8 @@ export default function XpRewardAnimation({
         .xp-confetti-piece { animation-name: xp-confetti-fall; animation-timing-function: cubic-bezier(.2,.65,.35,1); animation-fill-mode: both; }
         .xp-badge-entry { animation: xp-badge-pop 680ms cubic-bezier(.2,.85,.25,1.25) both; }
         .xp-reward-card { animation: xp-card-rise 280ms ease-out both; }
+        .xp-reward-overlay { background: #000 !important; }
+        .xp-reward-card { border: 0 !important; outline: 0 !important; box-shadow: none !important; }
         @media (prefers-reduced-motion: reduce) {
           .xp-confetti-piece { animation-duration: 1ms !important; }
           .xp-badge-entry, .xp-reward-card { animation: none !important; }

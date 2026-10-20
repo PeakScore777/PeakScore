@@ -5,6 +5,7 @@ import Image from "next/image";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import AdminPracticeQuestionEditor from "@/components/admin/AdminPracticeQuestionEditor";
+import LessonAITutor from "@/components/aprender/LessonAITutor";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -96,6 +97,7 @@ const matterNotes = [
 export default function CristalesMisteriososPage() {
   const router = useRouter();
   const [stage, setStage] = useState<"theory" | "practice">("theory");
+  const [tutorOpen, setTutorOpen] = useState(false);
   const [questions, setQuestions] = useState<Question[]>(fallbackQuestions);
   useEffect(() => {
     let active = true;
@@ -515,6 +517,17 @@ export default function CristalesMisteriososPage() {
           </div>
         </div>
       )}
+      {stage === "practice" && !finished && (
+        <LessonAITutor
+          open={tutorOpen}
+          onOpenChange={setTutorOpen}
+          subject="Ciencias Naturales"
+          topic={`Los cristales misteriosos: pregunta ${questionIndex + 1} de ${questions.length}`}
+          stage="practice"
+          question={question.prompt}
+          context={`Situación: ${question.context}\nOpciones: ${question.options.map((option) => `${option.label}) ${option.text}`).join("\\n")}\nExplicación de la lección: ${question.explanation}`}
+        />
+      )}
       <XpRewardAnimation open={rewardOpen && finished && !lost} xp={50} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); router.push("/aprender/santuario-de-la-materia/leccion/2"); }} />
 
       {! (finished && lost) && <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
@@ -525,6 +538,9 @@ export default function CristalesMisteriososPage() {
               <span className="mt-1 inline-flex items-center gap-1.5 border border-emerald-300/20 bg-emerald-300/[.08] px-2 py-0.5 text-[9px] font-bold text-emerald-200"><Image src="/peaky/homepage/xp.webp" alt="" width={17} height={17} className="object-contain" /> 50 XP</span>
             </div>
           </div>
+          {stage === "practice" && !finished && (
+            <button type="button" onClick={() => setTutorOpen((open) => !open)} aria-expanded={tutorOpen} aria-controls="orby-tutor-panel" className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:min-h-10 sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>
+          )}
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {stage === "theory" ? (
               <>

@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 
 type Question = {
+  difficulty: "Fácil" | "Media" | "Difícil";
+  competency: string;
   prompt: string;
   context: string;
   options: { label: string; text: string }[];
@@ -28,40 +30,46 @@ type Question = {
 
 const questions: Question[] = [
   {
-    context: "Nova mide tres muestras sólidas compactas a la misma temperatura. Registra estos resultados: muestra P: masa 24 g y volumen 8 cm³; muestra Q: masa 36 g y volumen 12 cm³; muestra R: masa 30 g y volumen 10 cm³. Supón que las mediciones no tienen errores relevantes.",
-    prompt: "¿Cuál conclusión está mejor respaldada por los datos experimentales?",
+    difficulty: "Fácil",
+    competency: "Uso comprensivo del conocimiento científico",
+    context: "En el Santuario de la Materia, Nova encuentra tres bloques compactos con el mismo volumen: 5 cm³. Al medir sus masas obtiene estos datos: bloque P, 10 g; bloque Q, 15 g; bloque R, 20 g. Las mediciones se realizaron con la misma balanza y en las mismas condiciones.",
+    prompt: "Si Nova quiere identificar cuál bloque tiene mayor densidad, ¿qué conclusión se apoya en los datos?",
     options: [
-      { label: "A", text: "La muestra Q tiene mayor densidad porque su masa total es la mayor." },
-      { label: "B", text: "Las tres muestras tienen la misma densidad, de 3 g/cm³." },
-      { label: "C", text: "La muestra P es más densa porque ocupa el menor volumen." },
-      { label: "D", text: "No se puede calcular densidad sin conocer el color y la composición de cada muestra." },
-    ],
-    answer: "B",
-    explanation: "La densidad relaciona masa y volumen: ρ = m/V. Para P: 24 g ÷ 8 cm³ = 3 g/cm³; para Q: 36 g ÷ 12 cm³ = 3 g/cm³; para R: 30 g ÷ 10 cm³ = 3 g/cm³. Aunque la masa y el volumen totales son diferentes, la razón entre ambas magnitudes es igual. La opción A confunde masa total con densidad: un objeto puede tener más masa solo porque contiene más material.",
-  },
-  {
-    context: "En el laboratorio, una estudiante calienta una pequeña cantidad de una sustancia pura. La muestra pasa de sólido a líquido y, al enfriarse, vuelve a solidificarse. No se detectan cambios en su composición.",
-    prompt: "¿Qué interpretación explica mejor el fenómeno observado?",
-    options: [
-      { label: "A", text: "Ocurrió una reacción química porque la sustancia cambió de apariencia." },
-      { label: "B", text: "La sustancia perdió masa necesariamente al convertirse en líquido." },
-      { label: "C", text: "Es un cambio físico: varía el estado, pero no se evidencia la formación de otra sustancia." },
-      { label: "D", text: "La muestra dejó de ser materia durante el calentamiento." },
+      { label: "A", text: "El bloque P, porque una masa menor ocupa menos espacio." },
+      { label: "B", text: "Los tres bloques, porque tienen el mismo volumen." },
+      { label: "C", text: "El bloque R, porque tiene mayor masa para el mismo volumen." },
+      { label: "D", text: "No es posible compararlos sin conocer sus colores." },
     ],
     answer: "C",
-    explanation: "Un cambio de estado es físico cuando la sustancia conserva su identidad química. En la fusión y la solidificación, las partículas cambian su organización y movilidad, pero eso no implica por sí mismo que se formen sustancias nuevas. La apariencia no basta para afirmar que hubo una reacción. Además, no puede concluirse que la masa se perdió: en un sistema cerrado, la masa total se conserva en los procesos físicos y químicos.",
+    explanation: "La densidad relaciona la masa con el volumen: ρ = m/V. Como los tres bloques tienen 5 cm³, el que tiene más masa también tiene mayor densidad. P: 10/5 = 2 g/cm³; Q: 15/5 = 3 g/cm³; R: 20/5 = 4 g/cm³. La opción B confunde tener igual volumen con tener igual densidad. En una pregunta Saber 11, identifica qué magnitudes son iguales y cuál cambia antes de elegir una conclusión.",
   },
   {
-    context: "Un equipo debe identificar una muestra metálica desconocida. Una integrante propone concluir que es cobre porque tiene color rojizo. Otra propone medir su masa y volumen, comparar su densidad con valores de referencia y repetir la medición para verificar la consistencia de los resultados.",
-    prompt: "¿Por qué el segundo procedimiento permite construir una conclusión científica más sólida?",
+    difficulty: "Media",
+    competency: "Explicación de fenómenos",
+    context: "Nova divide una muestra homogénea de un sólido puro en dos fragmentos. El fragmento 1 tiene una masa de 12 g y un volumen de 4 cm³. El fragmento 2 tiene una masa de 6 g y un volumen de 2 cm³. Ambos se mantienen a la misma temperatura y presión.",
+    prompt: "¿Cuál afirmación explica mejor por qué los dos fragmentos pueden corresponder al mismo material?",
     options: [
-      { label: "A", text: "Porque una sola propiedad medida siempre identifica de forma absoluta cualquier material." },
-      { label: "B", text: "Porque sustituye una impresión visual por mediciones comparables y permite evaluar la incertidumbre." },
-      { label: "C", text: "Porque repetir una medición garantiza que no existan errores experimentales." },
-      { label: "D", text: "Porque la densidad es una propiedad extensiva que aumenta con la cantidad de muestra." },
+      { label: "A", text: "Tienen distinta masa, por lo que necesariamente son sustancias diferentes." },
+      { label: "B", text: "Tienen la misma densidad, una propiedad intensiva que no depende directamente de la cantidad de muestra." },
+      { label: "C", text: "El fragmento 1 debe ser más denso porque su masa es mayor." },
+      { label: "D", text: "El volumen es una propiedad intensiva y por eso permanece igual al dividir la muestra." },
     ],
     answer: "B",
-    explanation: "El color puede orientar una hipótesis, pero distintos materiales pueden presentar apariencias similares. Calcular la densidad a partir de masa y volumen aporta evidencia cuantitativa; comparar con referencias y repetir las mediciones ayuda a detectar resultados inconsistentes. Esto no elimina toda incertidumbre ni garantiza por sí solo una identificación definitiva: conviene contrastar varias propiedades. La opción D es incorrecta porque la densidad es intensiva en condiciones equivalentes, mientras que masa y volumen son extensivas.",
+    explanation: "Calcula la densidad de cada fragmento: 12 g ÷ 4 cm³ = 3 g/cm³ y 6 g ÷ 2 cm³ = 3 g/cm³. La masa y el volumen se redujeron a la mitad, pero su razón permaneció igual. Esto es consistente con una misma sustancia homogénea bajo condiciones equivalentes. La masa y el volumen son propiedades extensivas; la densidad es intensiva. La opción C considera la masa sin relacionarla con el volumen.",
+  },
+  {
+    difficulty: "Difícil",
+    competency: "Indagación y evaluación de evidencia",
+    context: "Un equipo propone que una pieza metálica desconocida está hecha de un metal puro cuya densidad de referencia es 8,0 g/cm³. Para comprobarlo, mide una pieza de masa 80 g y volumen 10 cm³. Después repite la medición con otra pieza del mismo lote y obtiene 80 g y 10 cm³. Sin embargo, el equipo descubre que la probeta usada para medir el volumen tiene una escala desplazada y registra sistemáticamente 2 cm³ menos que el volumen real.",
+    prompt: "¿Qué decisión científica es la más adecuada antes de aceptar la identificación del metal?",
+    options: [
+      { label: "A", text: "Aceptar la identificación, porque dos mediciones iguales demuestran que el resultado es exacto." },
+      { label: "B", text: "Rechazarla definitivamente, porque cualquier error de medición demuestra que la muestra no es pura." },
+      { label: "C", text: "Repetir el cálculo con los mismos datos, porque el error de la probeta no afecta la densidad." },
+      { label: "D", text: "Corregir o reemplazar el instrumento y volver a medir, porque un error sistemático puede sesgar ambas mediciones." },
+    ],
+    answer: "D",
+    explanation: "La densidad calculada con los datos registrados sería 80/10 = 8,0 g/cm³, aparentemente igual al valor de referencia. Pero el enunciado revela que el instrumento subestima sistemáticamente el volumen: repetir la medición con la misma probeta puede reproducir el mismo sesgo. Por eso, la repetibilidad por sí sola no garantiza exactitud. Se debe corregir o reemplazar el instrumento, medir de nuevo y luego comparar el resultado con la referencia. No hay evidencia suficiente para aceptar ni descartar definitivamente la composición antes de corregir el procedimiento.",
   },
 ];
 
@@ -291,14 +299,19 @@ export default function CristalesMisteriososPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-cyan-200">Estrategia Saber 11: datos, modelo y conclusión</h2>
+              <h2 className="text-lg font-bold text-cyan-200">Cómo leer una pregunta tipo Saber 11</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">En Ciencias Naturales no basta con recordar una definición: debes usar el concepto para interpretar una situación, analizar datos o evaluar un procedimiento. Nova te propone esta rutina cada vez que abras una pregunta.</p>
               <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
-                <li><strong className="text-white">Identifica la pregunta:</strong> ¿pide clasificar una propiedad, calcular densidad, interpretar un cambio o evaluar una afirmación?</li>
-                <li><strong className="text-white">Selecciona la evidencia pertinente:</strong> masa y volumen sirven para calcular densidad; color por sí solo no confirma la identidad.</li>
-                <li><strong className="text-white">Aplica el modelo correcto:</strong> usa ρ = m/V y conserva las unidades durante el procedimiento.</li>
-                <li><strong className="text-white">Descarta conclusiones exageradas:</strong> elige la afirmación que se deriva de los datos, no la que suena más científica.</li>
-                <li><strong className="text-white">Evalúa el procedimiento:</strong> considera controles, repeticiones, instrumentos y condiciones de la muestra.</li>
+                <li><strong className="text-white">Lee primero qué te preguntan:</strong> busca la tarea exacta: calcular, comparar, explicar, predecir o evaluar una conclusión.</li>
+                <li><strong className="text-white">Subraya mentalmente los datos útiles:</strong> registra magnitudes, unidades, condiciones y qué variables se mantienen constantes. No todos los detalles tienen el mismo peso.</li>
+                <li><strong className="text-white">Relaciona los datos con un modelo científico:</strong> si comparas densidades, usa ρ = m/V; si evalúas una identificación, contrasta las mediciones con evidencia y condiciones equivalentes.</li>
+                <li><strong className="text-white">Examina cada opción:</strong> pregúntate si se deduce de los datos. Desconfía de palabras absolutas como «siempre» o «necesariamente» cuando el experimento no las demuestra.</li>
+                <li><strong className="text-white">Descarta distractores por su error:</strong> puede que una opción use un dato real, pero lo interprete mal, ignore una variable o afirme más de lo que permite concluir la evidencia.</li>
               </ol>
+              <div className="mt-4 border border-cyan-200/25 bg-cyan-200/[.045] p-4">
+                <p className="text-sm font-bold text-cyan-100">Mini ejemplo de lectura</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">Si dos muestras tienen masas diferentes, no concluyas de inmediato que sus densidades son distintas. Busca también sus volúmenes, calcula la razón masa/volumen y compara los resultados. Ese paso —usar la evidencia en vez de adivinar por una sola característica— es el corazón del razonamiento científico.</p>
+              </div>
               <div className="mt-4 border border-amber-200/30 bg-amber-200/[.045] p-4">
                 <p className="flex items-center gap-2 text-sm font-bold text-amber-100"><Lightbulb className="h-4 w-4" /> Error frecuente</p>
                 <p className="mt-2 text-sm leading-7 text-slate-300">«Tiene más masa, por tanto es más densa» no siempre es válido. Para comparar densidades necesitas considerar también el volumen. Una muestra puede tener más masa simplemente porque contiene más material.</p>
@@ -307,12 +320,6 @@ export default function CristalesMisteriososPage() {
           </article>
           </LessonNotesSelection>
 
-          <LessonAITutor
-            subject="Ciencias Naturales"
-            topic="Los cristales misteriosos: materia, propiedades y densidad"
-            stage="theory"
-            context="La lección enseña clasificación de la materia, propiedades generales y específicas, propiedades extensivas e intensivas, cambios físicos y químicos, densidad, mediciones y evaluación de evidencia científica."
-          />
         </div>
       ) : (
         <div className="mx-auto max-w-[1440px] px-4 pb-28 pt-6 sm:px-7 sm:pt-8">
@@ -337,46 +344,50 @@ export default function CristalesMisteriososPage() {
                 </div>
               </aside>
 
-              <section className="practice-panel overflow-hidden border border-slate-300 bg-white text-slate-900 shadow-[0_16px_40px_rgba(0,0,0,.22)] sm:p-0">
-                <div className="border-b border-slate-200 bg-[#f3f6fa] px-5 py-4 sm:px-7">
+              <section className="practice-panel overflow-hidden border border-[#35506d] bg-[#0d1422] text-[#edf5ff] shadow-[0_16px_40px_rgba(0,0,0,.4)] sm:p-0">
+                <div className="border-b border-[#293d56] bg-[#121d30] px-5 py-4 sm:px-7">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-xs font-extrabold uppercase tracking-[.14em] text-slate-600">Ciencias Naturales <span className="mx-1 text-slate-400">/</span> Pregunta {questionIndex + 1} de {questions.length}</p>
-                    <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600"><span aria-hidden="true">📘</span> Selección múltiple · Única respuesta</span>
+                    <p className="pixel-font text-[9px] uppercase tracking-[.12em] text-slate-200">CIENCIAS NATURALES <span className="mx-1 text-cyan-300">/</span> PREGUNTA {questionIndex + 1} DE {questions.length}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`border px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${question.difficulty === "Fácil" ? "border-emerald-300/40 bg-emerald-300/10 text-emerald-200" : question.difficulty === "Media" ? "border-amber-300/40 bg-amber-300/10 text-amber-200" : "border-rose-300/40 bg-rose-300/10 text-rose-200"}`}>{question.difficulty}</span>
+                      <span className="border border-cyan-300/30 bg-cyan-300/[.06] px-2 py-1 text-[10px] font-semibold text-cyan-100">Única respuesta</span>
+                    </div>
                   </div>
-                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-[#147d64] transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
+                  <p className="mt-2 text-xs leading-5 text-slate-400">{question.competency}</p>
+                  <div className="mt-4 h-2 overflow-hidden border border-white/10 bg-[#080d17]"><div className="h-full bg-gradient-to-r from-cyan-300 via-emerald-300 to-lime-300 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
                 </div>
                 <div className="p-5 sm:p-7">
-                <p className="text-xs font-bold uppercase tracking-[.12em] text-slate-500">Situación problema</p>
-                <p className="mt-2 border-l-[3px] border-slate-300 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-700">{question.context}</p>
-                <h2 className="mt-6 text-lg font-bold leading-8 text-slate-950 sm:text-xl">{question.prompt}</h2>
-                <p className="mt-2 text-xs leading-5 text-slate-500">Selecciona la opción que responde mejor a la situación planteada.</p>
+                <p className="pixel-font text-[9px] font-bold uppercase tracking-[.12em] text-cyan-200">Situación problema</p>
+                <p className="mt-3 border-l-[3px] border-cyan-300 bg-[#15243a] px-4 py-4 text-sm leading-7 text-slate-100 shadow-inner shadow-black/20">{question.context}</p>
+                <h2 className="mt-6 text-lg font-bold leading-8 text-white sm:text-xl">{question.prompt}</h2>
+                <p className="mt-2 text-xs leading-5 text-slate-400">Selecciona la opción mejor respaldada por los datos del enunciado.</p>
                 <div className="mt-5 space-y-3">
                   {question.options.map((option) => {
                     const active = selected === option.label;
                     const correctOption = checked && option.label === question.answer;
                     const wrongOption = checked && active && !isCorrect;
-                    const style = correctOption ? "border-emerald-600 bg-emerald-50 ring-1 ring-emerald-500" : wrongOption ? "border-rose-500 bg-rose-50 ring-1 ring-rose-300" : active ? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-300" : "border-slate-300 bg-white hover:border-indigo-400 hover:bg-indigo-50/60";
+                    const style = correctOption ? "border-emerald-300 bg-emerald-300/10 ring-1 ring-emerald-300/50" : wrongOption ? "border-rose-400 bg-rose-400/10 ring-1 ring-rose-400/40" : active ? "border-cyan-300 bg-cyan-300/10 ring-1 ring-cyan-300/40" : "border-[#344a66] bg-[#111c2d] hover:border-cyan-300/60 hover:bg-[#17273c]";
                     return (
-                      <button key={option.label} type="button" disabled={checked} onClick={() => setSelected(option.label)} className={`flex w-full items-start gap-3 rounded-md border p-4 text-left transition ${style}`}>
-                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border text-xs font-bold ${correctOption ? "border-emerald-600 bg-emerald-600 text-white" : wrongOption ? "border-rose-500 bg-rose-500 text-white" : active ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-300 bg-slate-50 text-slate-700"}`}>{option.label}</span>
-                        <span className="pt-1 text-sm leading-6 text-slate-800">{option.text}</span>
-                        {correctOption && <CheckCircle2 className="ml-auto mt-1 h-5 w-5 shrink-0 text-emerald-700" />}
+                      <button key={option.label} type="button" disabled={checked} onClick={() => setSelected(option.label)} className={`flex w-full items-start gap-3 border p-4 text-left transition ${style}`}>
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center border text-xs font-bold ${correctOption ? "border-emerald-300 bg-emerald-300 text-[#06131b]" : wrongOption ? "border-rose-300 bg-rose-300 text-[#21070b]" : active ? "border-cyan-300 bg-cyan-300 text-[#06131b]" : "border-[#425977] bg-[#0a1220] text-slate-200"}`}>{option.label}</span>
+                        <span className="pt-1 text-sm leading-6 text-slate-100">{option.text}</span>
+                        {correctOption && <CheckCircle2 className="ml-auto mt-1 h-5 w-5 shrink-0 text-emerald-300" />}
                       </button>
                     );
                   })}
                 </div>
                 {checked && (
-                  <div aria-live="polite" className={`mt-5 rounded-md border p-4 ${isCorrect ? "border-emerald-300 bg-emerald-50" : "border-amber-300 bg-amber-50"}`}>
-                    <p className="font-bold text-slate-900">{isCorrect ? "Respuesta correcta: interpretación adecuada de la evidencia." : "Analicemos el razonamiento y el error conceptual."}</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-700">{question.explanation}</p>
+                  <div aria-live="polite" className={`mt-5 border p-4 ${isCorrect ? "border-emerald-300/50 bg-emerald-300/[.08]" : "border-amber-300/50 bg-amber-300/[.07]"}`}>
+                    <p className={`font-bold ${isCorrect ? "text-emerald-200" : "text-amber-100"}`}>{isCorrect ? "Respuesta correcta: interpretación adecuada de la evidencia." : "Revisemos el razonamiento y el error conceptual."}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-200">{question.explanation}</p>
                   </div>
                 )}
-                <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-xs leading-5 text-slate-600">Selecciona una opción y justifica tu decisión con los datos del enunciado.</p>
+                <div className="mt-6 flex flex-col gap-3 border-t border-[#293d56] pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-slate-400">Justifica tu decisión con los datos del enunciado.</p>
                   {!checked ? (
-                    <button type="button" disabled={!selected} onClick={checkAnswer} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
+                    <button type="button" disabled={!selected} onClick={checkAnswer} className="inline-flex min-h-11 items-center justify-center gap-2 border border-emerald-300 bg-[#65edb1] px-5 py-3 text-sm font-extrabold text-[#062218] shadow-[3px_3px_0_#1b7659] transition hover:bg-[#8af7c6] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
                   ) : (
-                    <button type="button" onClick={nextQuestion} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700">{questionIndex === questions.length - 1 ? "Ver resultado" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>
+                    <button type="button" onClick={nextQuestion} className="inline-flex min-h-11 items-center justify-center gap-2 border border-cyan-300/50 bg-[#172c43] px-5 py-3 text-sm font-bold text-cyan-100 shadow-[3px_3px_0_#07111d] transition hover:bg-[#203b57]">{questionIndex === questions.length - 1 ? "Ver resultado" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>
                   )}
                 </div>
                 </div>

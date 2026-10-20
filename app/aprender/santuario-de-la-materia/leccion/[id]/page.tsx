@@ -122,8 +122,11 @@ export default function CristalesMisteriososPage() {
       setChecked(false);
       return;
     }
+
+    // Incluye la respuesta de la última pregunta, cuyo setState aún no se ha aplicado.
+    const finalCorrectCount = correctCount + (isCorrect ? 1 : 0);
     setFinished(true);
-    if (correctCount === questions.length) {
+    if (finalCorrectCount === questions.length) {
       setLost(false);
       setRewardOpen(true);
       playSound("level-win.mp3", 0.25);
@@ -382,46 +385,54 @@ export default function CristalesMisteriososPage() {
           aria-modal="true"
           aria-labelledby="game-over-title"
         >
-          <div className="game-over-content relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
+          <div className="game-over-content relative z-10 flex w-full max-w-xl flex-col items-center text-center">
             <div aria-hidden="true" className="game-over-pixels pointer-events-none absolute inset-0" />
-            <div className="game-over-heading relative flex flex-wrap items-center justify-center gap-x-3">
-              <h2 id="game-over-title" className="pixel-font game-over-title">GAME OVER</h2>
+            <div className="game-over-heading relative flex flex-wrap items-center justify-center gap-x-1 sm:gap-x-2">
+              <h2 id="game-over-title" className="pixel-font game-over-title">GAME</h2>
               <Image
                 src="/images/game-over/nova-dead-pixel.png"
-                alt="Nova con los ojos en X en pixel art"
-                width={112}
-                height={112}
+                alt="Cara pixel-art de Nova con los ojos en X"
+                width={72}
+                height={72}
                 priority
-                className="game-over-nova h-[76px] w-[76px] object-contain sm:h-[100px] sm:w-[100px]"
+                className="game-over-nova h-12 w-12 object-contain sm:h-16 sm:w-16"
               />
+              <span className="pixel-font game-over-title">OVER</span>
             </div>
-            <p className="pixel-font mt-5 text-[9px] leading-6 tracking-[.12em] text-[#a5f3fc] sm:text-[11px]">
-              NO TE RINDAS, PLAYER
+
+            <p className="pixel-font mt-7 text-[10px] tracking-[.08em] text-white/90 sm:text-xs">PLAY AGAIN?</p>
+            <p className="mt-5 max-w-md text-sm leading-7 text-slate-200">
+              Acertaste <strong className="text-cyan-200">{correctCount} de {questions.length}</strong> preguntas. La misión terminó porque no lograste acertarlas todas.
             </p>
-            <p className="mt-3 max-w-md text-sm leading-7 text-slate-300">
-              Esta partida terminó, pero todavía puedes aprender de tus respuestas y volver más fuerte.
+            <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
+              Repasa las explicaciones de las respuestas y vuelve a intentarlo: cada error te muestra qué puedes dominar mejor.
             </p>
-            <div className="mt-8 flex w-full max-w-md flex-col justify-center gap-3 sm:flex-row">
+
+            <div className="mt-7 flex w-full max-w-xs flex-col items-center gap-4">
               <button
                 type="button"
                 onClick={restartPractice}
-                className="game-over-button game-over-button-primary min-h-12 flex-1 px-5 py-3 text-xs font-extrabold tracking-wide transition"
+                autoFocus
+                className="game-over-choice game-over-choice-yes"
               >
-                <span aria-hidden="true" className="mr-2">↻</span> INTENTAR DE NUEVO
+                <span aria-hidden="true" className="game-over-cursor">▶</span>
+                <span>YES</span>
+                <span className="game-over-choice-detail">REPETIR PRÁCTICA</span>
               </button>
               <button
                 type="button"
-                onClick={() => { setStage("theory"); setFinished(false); setLost(false); }}
-                className="game-over-button game-over-button-secondary min-h-12 flex-1 px-5 py-3 text-xs font-extrabold tracking-wide transition"
+                onClick={() => { setStage("theory"); setFinished(false); setLost(false); setRewardOpen(false); }}
+                className="game-over-choice game-over-choice-no"
               >
-                <span aria-hidden="true" className="mr-2">←</span> REPASAR Y SALIR
+                <span className="game-over-cursor game-over-cursor-hidden" aria-hidden="true">▶</span>
+                <span>NO</span>
+                <span className="game-over-choice-detail">REPASAR TEORÍA</span>
               </button>
             </div>
-            <p className="pixel-font mt-7 text-[7px] tracking-[.1em] text-white/35">PEAKSCORE · CONTINÚA LA AVENTURA</p>
+            <p className="pixel-font mt-8 text-[7px] tracking-[.1em] text-white/35">PEAKSCORE · CONTINÚA LA AVENTURA</p>
           </div>
         </div>
       )}
-
       <XpRewardAnimation open={rewardOpen && finished && !lost} xp={50} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); router.push("/aprender/santuario-de-la-materia/leccion/2"); }} />
 
       <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
@@ -449,44 +460,63 @@ export default function CristalesMisteriososPage() {
       </footer>
 
       <style jsx global>{`
-        .game-over-overlay { background: #020308 !important; isolation: isolate; }
+        .game-over-overlay { background: #000 !important; isolation: isolate; }
         .game-over-content { animation: game-over-enter 420ms cubic-bezier(.2,.8,.2,1) both; }
         .game-over-pixels {
           z-index: -1;
-          opacity: .7;
+          opacity: .65;
           background-image:
-            radial-gradient(circle, rgba(51,225,255,.8) 0 2px, transparent 2.5px),
-            radial-gradient(circle, rgba(142,91,255,.75) 0 1.5px, transparent 2px),
-            linear-gradient(90deg, transparent 49.8%, rgba(48,74,120,.13) 50%, transparent 50.2%);
-          background-size: 83px 91px, 127px 113px, 100% 100%;
-          background-position: 8px 12px, 42px 57px, center;
+            radial-gradient(circle, rgba(51,225,255,.85) 0 2px, transparent 2.5px),
+            radial-gradient(circle, rgba(132,204,22,.8) 0 1.5px, transparent 2px);
+          background-size: 83px 91px, 127px 113px;
+          background-position: 8px 12px, 42px 57px;
           mask-image: radial-gradient(ellipse at center, black 0%, rgba(0,0,0,.55) 58%, transparent 88%);
           animation: game-over-pixel-drift 8s linear infinite;
         }
-        .game-over-heading { filter: drop-shadow(0 0 20px rgba(20,210,255,.14)); }
+        .game-over-heading { display: flex; align-items: center; gap: .3rem; filter: drop-shadow(0 0 18px rgba(20,210,255,.13)); }
         .game-over-title {
           color: #f8fafc;
-          font-size: clamp(1.55rem, 5vw, 3.15rem);
-          line-height: 1.45;
-          letter-spacing: -.04em;
-          text-shadow: 4px 4px 0 #155e75, 7px 7px 0 #0b1220, 0 0 24px rgba(34,211,238,.22);
+          font-size: clamp(1.55rem, 6vw, 3.4rem);
+          line-height: 1.4;
+          letter-spacing: -.055em;
+          text-shadow: 4px 4px 0 #155e75, 7px 7px 0 #0b1220, 0 0 24px rgba(34,211,238,.2);
         }
         .game-over-nova {
           image-rendering: pixelated;
-          filter: drop-shadow(0 0 12px rgba(132,204,22,.28));
+          filter: drop-shadow(0 0 12px rgba(132,204,22,.32));
           animation: game-over-nova-idle 2.2s steps(2, end) infinite;
         }
-        .game-over-button { font-family: var(--font-press-start), "Press Start 2P", monospace; font-size: 8px; image-rendering: pixelated; }
-        .game-over-button-primary { color: #07111b; background: #67e8f9; border: 2px solid #cffafe; box-shadow: 4px 4px 0 #155e75; }
-        .game-over-button-primary:hover { background: #a5f3fc; transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #155e75; }
-        .game-over-button-secondary { color: #e2e8f0; background: #111827; border: 2px solid #475569; box-shadow: 4px 4px 0 #020617; }
-        .game-over-button-secondary:hover { color: white; background: #1e293b; border-color: #94a3b8; transform: translate(-1px,-1px); }
+        .game-over-choice {
+          position: relative;
+          display: flex;
+          width: 100%;
+          min-height: 42px;
+          align-items: center;
+          justify-content: center;
+          gap: .65rem;
+          padding: .7rem .9rem;
+          color: #e2e8f0;
+          background: transparent;
+          border: 0;
+          font-family: var(--font-press-start), "Press Start 2P", monospace;
+          font-size: 10px;
+          letter-spacing: .04em;
+          text-align: center;
+          transition: color 140ms ease, transform 140ms ease, text-shadow 140ms ease;
+        }
+        .game-over-choice:hover, .game-over-choice:focus-visible { color: #a5f3fc; transform: translateX(3px); outline: none; text-shadow: 0 0 14px rgba(34,211,238,.4); }
+        .game-over-choice-yes { color: #a5f3fc; }
+        .game-over-cursor { color: #22d3ee; font-size: 11px; }
+        .game-over-cursor-hidden { opacity: 0; }
+        .game-over-choice-detail { margin-left: .2rem; color: #94a3b8; font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0; }
+        .game-over-choice:hover .game-over-choice-detail, .game-over-choice:focus-visible .game-over-choice-detail { color: #e2e8f0; }
         @keyframes game-over-enter { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes game-over-pixel-drift { from { background-position: 8px 12px, 42px 57px, center; } to { background-position: 91px 103px, -85px 170px, center; } }
-        @keyframes game-over-nova-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        @keyframes game-over-pixel-drift { from { background-position: 8px 12px, 42px 57px; } to { background-position: 91px 103px, -85px 170px; } }
+        @keyframes game-over-nova-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
         @media (max-width: 640px) {
-          .game-over-title { letter-spacing: -.06em; }
-          .game-over-button { font-size: 7px; }
+          .game-over-title { letter-spacing: -.07em; }
+          .game-over-choice { font-size: 9px; flex-wrap: wrap; }
+          .game-over-choice-detail { flex-basis: 100%; margin-left: 0; }
         }
         @media (prefers-reduced-motion: reduce) { .game-over-content, .game-over-pixels, .game-over-nova { animation: none !important; } }
         .lesson-shell { font-family: Arial, Helvetica, sans-serif; }

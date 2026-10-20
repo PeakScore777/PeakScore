@@ -92,9 +92,9 @@ export async function POST(request: Request) {
             && ((item as TutorMessage).role === "user" || (item as TutorMessage).role === "assistant")
             && typeof (item as TutorMessage).content === "string")
           .slice(-8)
-          .map((item) => ({ role: item.role, content: item.content.slice(0, 1200) }))
+          .map((item: TutorMessage): TutorMessage => ({ role: item.role, content: item.content.slice(0, 1200) }))
       : [];
-    const conversation = history.map((item) => (
+    const conversation = history.map((item: TutorMessage) => (
       item.role === "user"
         ? `<untrusted_student_message>\n${item.content}\n</untrusted_student_message>`
         : `<untrusted_previous_tutor_reply>\n${item.content}\n</untrusted_previous_tutor_reply>`

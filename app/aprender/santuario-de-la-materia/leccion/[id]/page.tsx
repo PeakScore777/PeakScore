@@ -65,16 +65,20 @@ const questions: Question[] = [
 
 const matterNotes = [
   {
-    title: "¿Qué es la materia?",
-    body: "La materia es todo aquello que tiene masa y ocupa un lugar en el espacio. El agua, el aire, una roca y tu cuerpo son materia, aunque no todos estos ejemplos se puedan observar de la misma manera.",
+    title: "Materia y composición",
+    body: "La materia tiene masa y ocupa espacio. Puede ser una sustancia pura (elemento o compuesto) o una mezcla homogénea/heterogénea; la apariencia no basta para clasificarla.",
   },
   {
-    title: "Propiedades generales",
-    body: "Son propiedades que presenta la materia en general. Entre ellas están la masa —cantidad de materia de una muestra— y el volumen —espacio que ocupa—. Sirven para describir una muestra, pero normalmente no bastan para saber de qué sustancia está hecha.",
+    title: "Extensivas e intensivas",
+    body: "Masa y volumen dependen de la cantidad de muestra (extensivas). Densidad y punto de fusión, bajo condiciones definidas, no dependen directamente de cuánto material se toma (intensivas).",
   },
   {
-    title: "Propiedades específicas",
-    body: "Ayudan a diferenciar materiales. Algunos ejemplos son la densidad, la solubilidad y las temperaturas de fusión o ebullición. Sus valores deben compararse en condiciones adecuadas; una sola observación visual no suele ser suficiente para identificar una sustancia.",
+    title: "Densidad y evidencia",
+    body: "La densidad es ρ = m/V. Compara la masa por unidad de volumen. Revisa unidades, convierte antes de operar y no confundas densidad con peso ni con tamaño.",
+  },
+  {
+    title: "Cambio físico o químico",
+    body: "Un cambio físico altera estado, forma o distribución sin cambiar la identidad química; un cambio químico implica formación de sustancias diferentes. Una sola señal visual no siempre demuestra reacción.",
   },
 ];
 
@@ -220,6 +224,66 @@ export default function CristalesMisteriososPage() {
               <div className="mt-4 border border-amber-200/30 bg-amber-200/[.045] p-4">
                 <p className="flex items-center gap-2 text-sm font-bold text-amber-100"><Lightbulb className="h-4 w-4" /> Idea clave para Saber 11</p>
                 <p className="mt-2 text-sm leading-7 text-slate-300">Lee qué datos entrega el enunciado, identifica qué propiedad describen y elige solo la conclusión respaldada por la evidencia. No agregues información que el problema no proporciona.</p>
+              </div>
+            </section>
+
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Propiedades extensivas e intensivas: una distinción que sí importa</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Otra clasificación depende de si la propiedad cambia al aumentar o disminuir la cantidad de muestra. Las <strong className="text-cyan-100">propiedades extensivas</strong> dependen de la cantidad de materia: por ejemplo, la masa y el volumen de una misma sustancia aumentan si reunimos más muestra. Las <strong className="text-cyan-100">propiedades intensivas</strong> no dependen directamente de la cantidad: por ejemplo, la densidad y el punto de fusión de una sustancia pura, siempre que se comparen en condiciones equivalentes.</p>
+              <div className="mt-4 overflow-hidden border border-white/10">
+                <div className="grid grid-cols-[1fr_1fr] bg-[#182235] text-xs font-bold text-slate-100"><div className="p-3">Extensivas</div><div className="border-l border-white/10 p-3">Intensivas</div></div>
+                <div className="grid grid-cols-[1fr_1fr] bg-[#101725] text-sm text-slate-300"><div className="p-3">Masa, volumen, longitud de una muestra.</div><div className="border-l border-white/10 p-3">Densidad, temperatura de fusión, conductividad característica.</div></div>
+              </div>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Ejemplo: si cortas un bloque de cobre en dos partes, cada parte tendrá menos masa y volumen que el bloque original, pero ambas pueden conservar aproximadamente la misma densidad. Por eso la densidad es más útil que la masa aislada para comparar la identidad de materiales.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Propiedades físicas y químicas</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Una <strong className="text-cyan-100">propiedad física</strong> se puede observar o medir sin transformar la sustancia en otra: densidad, color, dureza, conductividad, solubilidad y temperatura de fusión son ejemplos. Una <strong className="text-cyan-100">propiedad química</strong> describe la capacidad de una sustancia para participar en una transformación que cambia su composición, como la inflamabilidad o la tendencia del hierro a oxidarse.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">No confundas propiedad con cambio. La inflamabilidad es una propiedad química; la combustión es un proceso químico. El punto de ebullición es una propiedad física; hervir agua es un cambio físico porque las moléculas siguen siendo H₂O, aunque cambie el estado.</p>
+              <div className="mt-4 border border-cyan-200/20 bg-cyan-200/[.04] p-4">
+                <p className="text-sm font-bold text-cyan-100">Cómo razonar en una pregunta</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">Pregúntate: ¿la identidad química de la sustancia cambia? Si no cambia y solo varían el estado, la forma o el tamaño, el proceso es físico. Si aparecen sustancias con composición diferente, el proceso es químico. La evidencia debe sostener la conclusión; burbujas o cambio de color, por sí solos, pueden tener más de una explicación.</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Densidad: fórmula, unidades e interpretación</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">La densidad media de una muestra homogénea se calcula como <strong className="text-white">ρ = m/V</strong>, donde ρ representa la densidad, m la masa y V el volumen. En el sistema internacional se expresa en kg/m³; en laboratorio escolar también es común usar g/cm³ o g/mL. Recuerda que 1 mL equivale a 1 cm³, por lo que 1 g/mL y 1 g/cm³ son unidades numéricamente equivalentes.</p>
+              <div className="my-4 border border-slate-600 bg-[#101725] p-4">
+                <p className="pixel-font text-[8px] leading-5 text-slate-400">EJEMPLO CON DATOS EXPERIMENTALES</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">Una muestra tiene masa de 54 g y volumen de 20 cm³. ¿Cuál es su densidad?</p>
+                <div className="my-3 border border-cyan-200/15 bg-[#080e19] px-4 py-3 font-mono text-sm leading-7 text-cyan-100">ρ = m/V<br />ρ = 54 g ÷ 20 cm³<br />ρ = 2,7 g/cm³</div>
+                <p className="text-sm leading-7 text-slate-300">Interpretación: cada centímetro cúbico de esa muestra corresponde, en promedio, a 2,7 gramos. No significa que el objeto tenga 2,7 gramos en total. Para comparar con una tabla de referencia, verifica que las unidades y las condiciones sean compatibles.</p>
+              </div>
+              <p className="mt-3 text-sm leading-7 text-slate-300">La densidad también puede ayudar a evaluar hipótesis. Si una muestra compacta y homogénea tiene una densidad muy distinta a la de una sustancia de referencia, esa evidencia cuestiona la identificación propuesta. Sin embargo, poros, impurezas, temperatura y errores de medición pueden alterar el resultado; la ciencia compara varias evidencias, no una cifra sin contexto.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Medir bien también es hacer ciencia</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Una medición combina un valor numérico con una unidad. Escribir «la masa es 12» es incompleto si no se indica si son gramos, kilogramos u otra unidad. Antes de calcular, comprueba que las magnitudes estén expresadas en unidades compatibles. Por ejemplo, no dividas directamente gramos entre metros cúbicos y reportes el resultado como g/cm³ sin convertir el volumen.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300"><strong className="text-white">Precisión</strong> describe qué tan cercanas son entre sí mediciones repetidas; <strong className="text-white">exactitud</strong> describe qué tan cerca está una medición del valor aceptado o de referencia. Un instrumento puede producir resultados muy parecidos entre sí y, aun así, estar descalibrado. En una investigación, repetir medidas, registrar unidades y reconocer incertidumbres mejora la calidad de la evidencia.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Materia: sustancia pura o mezcla</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Aunque esta lección se centra en propiedades, la composición ayuda a interpretar los datos. Una <strong className="text-cyan-100">sustancia pura</strong> tiene composición definida: puede ser un elemento (como cobre) o un compuesto (como agua pura). Una <strong className="text-cyan-100">mezcla</strong> combina sustancias en proporciones variables. Es homogénea si su composición es uniforme a la escala de observación —por ejemplo, sal disuelta en agua— y heterogénea si presenta regiones o fases distinguibles —por ejemplo, agua y aceite—.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">No confundas «se ve uniforme» con «es sustancia pura»: el aire y el agua salada pueden parecer uniformes, pero son mezclas. Tampoco confundas una mezcla con un compuesto: en una mezcla, los componentes conservan sus identidades y pueden separarse mediante métodos físicos adecuados; en un compuesto, los elementos están unidos químicamente en proporciones definidas.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Estrategia Saber 11: datos, modelo y conclusión</h2>
+              <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
+                <li><strong className="text-white">Identifica la pregunta:</strong> ¿pide clasificar una propiedad, calcular densidad, interpretar un cambio o evaluar una afirmación?</li>
+                <li><strong className="text-white">Selecciona la evidencia pertinente:</strong> masa y volumen sirven para calcular densidad; color por sí solo no confirma la identidad.</li>
+                <li><strong className="text-white">Aplica el modelo correcto:</strong> usa ρ = m/V y conserva las unidades durante el procedimiento.</li>
+                <li><strong className="text-white">Descarta conclusiones exageradas:</strong> elige la afirmación que se deriva de los datos, no la que suena más científica.</li>
+                <li><strong className="text-white">Evalúa el procedimiento:</strong> considera controles, repeticiones, instrumentos y condiciones de la muestra.</li>
+              </ol>
+              <div className="mt-4 border border-amber-200/30 bg-amber-200/[.045] p-4">
+                <p className="flex items-center gap-2 text-sm font-bold text-amber-100"><Lightbulb className="h-4 w-4" /> Error frecuente</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">«Tiene más masa, por tanto es más densa» no siempre es válido. Para comparar densidades necesitas considerar también el volumen. Una muestra puede tener más masa simplemente porque contiene más material.</p>
               </div>
             </section>
           </article>

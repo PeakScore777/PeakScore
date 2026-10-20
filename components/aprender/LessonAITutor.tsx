@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { Bot, BookOpen, LoaderCircle, Send, Sparkles, X } from "lucide-react";
+import { FormEvent, useEffect, useRef, useState } from "react";
+import { LoaderCircle, Send, X, Paperclip } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string };
 
@@ -11,48 +11,50 @@ type Props = {
   stage?: "theory" | "practice";
   question?: string;
   context?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 };
 
 const starters = [
-  "Explícamelo desde cero",
-  "Dame un ejemplo paso a paso",
-  "¿Cómo lo preguntan en Saber 11?",
-  "¿Cuáles son los errores más comunes?",
+  "Explícame la diferencia entre masa y densidad",
+  "¿Cómo analizo una tabla de datos?",
+  "Dame un ejemplo similar para practicar",
+  "No entiendo por qué una opción es incorrecta",
 ];
 
-export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "" }: Props) {
-  const [open, setOpen] = useState(false);
+export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange }: Props) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, loading]);
 
   async function sendMessage(text: string) {
     const message = text.trim();
-    if (!message || loading) return;
+    if (!message || loading || message.length > 1200) return;
     const nextMessages: Message[] = [...messages, { role: "user", content: message }];
     setMessages(nextMessages);
     setInput("");
     setError("");
     setLoading(true);
-
     try {
       const response = await fetch("/api/lesson-tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
-          subject,
-          topic,
-          stage,
-          question,
-          context,
-          message,
+          subject, topic, stage, question, context, message,
           history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
         }),
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "No pudimos contactar al profesor.");
-      setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: data.checkQuestion }]);
+      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Orby no está disponible por ahora.");
+      if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
+      setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.");
     } finally {
@@ -65,63 +67,59 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     void sendMessage(input);
   }
 
+  if (!open) return null;
+
   return (
-    <section className="my-8 overflow-hidden border border-cyan-300/25 bg-[#0b1320] shadow-[0_12px_35px_rgba(0,0,0,.22)]">
-      <div className="flex items-center justify-between gap-3 border-b border-cyan-200/15 bg-gradient-to-r from-[#112b3b] to-[#111827] px-4 py-4 sm:px-5">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center border border-cyan-200/30 bg-cyan-300/10 text-cyan-200">
-            <Bot className="h-6 w-6" />
+    <aside id="orby-tutor-panel" aria-label="Tutor de inteligencia artificial Orby" className="fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]">
+      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-sky-300 bg-white shadow-[0_0_0_3px_rgba(14,165,233,.12)]">
+            <img src="/images/orby/orby-avatar.png" alt="Avatar de Orby" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} />
+            <span className="text-2xl" aria-hidden="true">🤖</span>
           </div>
-          <div>
-            <p className="text-sm font-bold text-white">Profesor PeakScore</p>
-            <p className="mt-1 text-xs text-cyan-100/70">Tutor de la lección · Saber 11</p>
+          <div className="min-w-0">
+            <p className="font-extrabold text-slate-950">Orby <span className="text-sky-600">●</span></p>
+            <p className="truncate text-xs text-slate-500">Tutor de ciencias · Saber 11</p>
           </div>
         </div>
-        <button type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open} className="inline-flex min-h-9 items-center gap-2 border border-cyan-200/25 px-3 text-xs font-bold text-cyan-100 transition hover:bg-cyan-200/10">
-          {open ? <X className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
-          {open ? "Cerrar" : "Preguntar"}
-        </button>
-      </div>
+        <button type="button" onClick={() => onOpenChange(false)} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>
+      </header>
 
-      {!open ? (
-        <button type="button" onClick={() => setOpen(true)} className="flex w-full items-start gap-3 px-4 py-4 text-left transition hover:bg-white/[.025] sm:px-5">
-          <BookOpen className="mt-1 h-5 w-5 shrink-0 text-cyan-200" />
-          <span className="text-sm leading-6 text-slate-300">¿Algo no te quedó claro? Pídele que lo explique de otra manera, resuelva un ejemplo contigo o te enseñe a reconocer la estrategia que evalúa Saber 11.</span>
-        </button>
-      ) : (
-        <div className="p-4 sm:p-5">
-          {messages.length === 0 && (
-            <div className="mb-4">
-              <p className="mb-3 text-sm leading-6 text-slate-300">Estoy aquí para ayudarte a entender <strong className="text-white">{topic}</strong>. No se trata de memorizar: vamos a comprender el concepto y practicar cómo razonarlo.</p>
-              <div className="flex flex-wrap gap-2">
-                {starters.map((starter) => (
-                  <button key={starter} type="button" disabled={loading} onClick={() => void sendMessage(starter)} className="border border-cyan-200/20 bg-cyan-200/[.04] px-3 py-2 text-xs text-cyan-100 transition hover:bg-cyan-200/10 disabled:opacity-50">{starter}</button>
-                ))}
-              </div>
+      <div className="min-h-0 flex-1 overflow-y-auto bg-[#f7f9fc] px-4 py-4" ref={scrollRef} aria-live="polite">
+        {messages.length === 0 ? (
+          <div className="flex min-h-full flex-col items-center justify-center">
+            <img src="/images/orby/orby-avatar.png" alt="" className="mb-2 h-28 w-28 object-contain" />
+            <div className="w-full rounded-2xl rounded-tl-sm border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-base font-extrabold text-slate-950">¡Hola! Soy Orby 👋</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Te ayudo a comprender la teoría, analizar los datos y razonar tu respuesta. ¿Qué parte revisamos juntos?</p>
             </div>
-          )}
-
-          <div className="max-h-[380px] space-y-4 overflow-y-auto pr-1" aria-live="polite">
+            <div className="mt-4 grid w-full gap-2">
+              {starters.map((starter) => (
+                <button key={starter} type="button" disabled={loading} onClick={() => void sendMessage(starter)} className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-left text-sm font-medium text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 disabled:opacity-50"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">✦</span>{starter}</button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
             {messages.map((message, index) => (
-              <article key={index} className={message.role === "user" ? "ml-auto max-w-[92%] border border-cyan-200/15 bg-[#14283a] p-3" : "mr-auto max-w-[96%] border border-white/10 bg-[#101725] p-4"}>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[.12em] text-cyan-200/75">{message.role === "user" ? "Tu pregunta" : "Profesor PeakScore"}</p>
-                <div className="whitespace-pre-wrap text-sm leading-7 text-slate-200">{message.content}</div>
-                {message.checkQuestion && <div className="mt-3 border-l-2 border-amber-300/70 bg-amber-200/[.05] px-3 py-2 text-sm leading-6 text-amber-100"><strong>Comprueba lo aprendido:</strong> {message.checkQuestion}</div>}
+              <article key={index} className={message.role === "user" ? "ml-auto max-w-[92%] rounded-2xl rounded-br-sm bg-sky-600 px-3 py-3 text-white" : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
+                <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-100" : "mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-700"}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
+                <div className="whitespace-pre-wrap break-words text-sm leading-6">{message.content}</div>
+                {message.checkQuestion && <div className="mt-3 rounded-lg border-l-2 border-amber-400 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-950"><strong>Comprueba lo aprendido:</strong> {message.checkQuestion}</div>}
               </article>
             ))}
-            {loading && <div className="flex items-center gap-2 text-sm text-cyan-100" role="status"><LoaderCircle className="h-4 w-4 animate-spin" /> El profesor está preparando una explicación...</div>}
+            {loading && <div role="status" className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Orby está preparando una explicación…</div>}
           </div>
+        )}
+        {error && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+      </div>
 
-          {error && <p role="alert" className="mt-3 border border-rose-300/20 bg-rose-300/[.06] px-3 py-2 text-sm text-rose-200">{error}</p>}
-
-          <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-2 border-t border-white/10 pt-4 sm:flex-row">
-            <label className="sr-only" htmlFor="peakscore-tutor-message">Pregunta al profesor</label>
-            <textarea id="peakscore-tutor-message" value={input} onChange={(event) => setInput(event.target.value)} maxLength={1200} rows={2} placeholder="Ej. No entiendo por qué se divide la masa entre el volumen..." className="min-h-12 flex-1 resize-y border border-white/15 bg-[#080e19] px-3 py-3 text-sm leading-6 text-white outline-none placeholder:text-slate-500 focus:border-cyan-200/60" />
-            <button type="submit" disabled={!input.trim() || loading} className="inline-flex min-h-12 items-center justify-center gap-2 bg-cyan-300 px-4 py-3 text-sm font-extrabold text-[#06121a] transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-40"><Send className="h-4 w-4" /> Enviar</button>
-          </form>
-          <p className="mt-3 text-[11px] leading-5 text-slate-500">El tutor puede equivocarse. Contrasta los procedimientos con la explicación de la lección y los datos del enunciado.</p>
-        </div>
-      )}
-    </section>
+      <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
+        <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
+        <textarea id="orby-tutor-message" value={input} onChange={(event) => setInput(event.target.value)} maxLength={1200} rows={2} placeholder="Escribe tu pregunta aquí…" className="min-h-12 max-h-28 flex-1 resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-5 text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100" />
+        <button type="submit" disabled={!input.trim() || loading} aria-label="Enviar mensaje a Orby" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"><Send className="h-5 w-5" /></button>
+      </form>
+      <p className="shrink-0 bg-white px-4 pb-3 text-[10px] leading-4 text-slate-400">Orby es un apoyo de estudio; verifica siempre los datos y procedimientos de la lección.</p>
+    </aside>
   );
 }

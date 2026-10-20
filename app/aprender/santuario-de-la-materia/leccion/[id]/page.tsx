@@ -5,7 +5,7 @@ import Image from "next/image";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -26,9 +26,10 @@ type Question = {
   options: { label: string; text: string }[];
   answer: string;
   explanation: string;
+  context_blocks?: ({ type: "table"; title: string; headers: string[]; rows: string[][] } | { type: "paragraph"; text: string })[];
 };
 
-const questions: Question[] = [
+const fallbackQuestions: Question[] = [
   {
     difficulty: "Fácil",
     competency: "Uso comprensivo del conocimiento científico",
@@ -95,6 +96,32 @@ const matterNotes = [
 export default function CristalesMisteriososPage() {
   const router = useRouter();
   const [stage, setStage] = useState<"theory" | "practice">("theory");
+  const [questions, setQuestions] = useState<Question[]>(fallbackQuestions);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin/lesson-questions", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const data = await response.json();
+        return Array.isArray(data.questions) ? data.questions : null;
+      })
+      .then((rows) => {
+        if (!active || !rows || rows.length !== 3) return;
+        const normalized = rows.map((row: any) => ({
+          difficulty: row.difficulty,
+          competency: row.competency ?? "",
+          context: row.context_text ?? "",
+          context_blocks: Array.isArray(row.context_blocks) ? row.context_blocks : [],
+          prompt: row.prompt,
+          options: Array.isArray(row.options) ? row.options : [],
+          answer: row.correct_answer,
+          explanation: row.explanation ?? "",
+        }));
+        setQuestions(normalized);
+      })
+      .catch(() => { /* La práctica conserva preguntas de respaldo si la API no está disponible. */ });
+    return () => { active = false; };
+  }, []);
   const [historyOpen, setHistoryOpen] = useState(true);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
@@ -359,6 +386,15 @@ export default function CristalesMisteriososPage() {
                 <div className="p-5 sm:p-7">
                 <p className="pixel-font text-[9px] font-bold uppercase tracking-[.12em] text-cyan-200">Situación problema</p>
                 <p className="mt-3 border-l-[3px] border-cyan-300 bg-[#15243a] px-4 py-4 text-sm leading-7 text-slate-100 shadow-inner shadow-black/20">{question.context}</p>
+                {question.context_blocks?.map((block, blockIndex) => block.type === "table" ? (
+                  <div key={blockIndex} className="my-5 overflow-x-auto border border-[#344a66] bg-[#0b1320] p-3 sm:p-4">
+                    {block.title && <p className="mb-3 pixel-font text-[9px] uppercase tracking-wider text-cyan-200">{block.title}</p>}
+                    <table className="w-full min-w-[360px] border-collapse text-left text-sm">
+                      <thead><tr>{block.headers.map((header, index) => <th key={index} className="border border-[#405873] bg-[#1a2b40] px-3 py-3 font-bold text-cyan-100">{header}</th>)}</tr></thead>
+                      <tbody>{block.rows.map((row, rowIndex) => <tr key={rowIndex} className={rowIndex % 2 ? "bg-[#101c2c]" : "bg-[#0c1624]"}>{row.map((cell, cellIndex) => <td key={cellIndex} className="border border-[#293d56] px-3 py-3 text-slate-100">{cell}</td>)}</tr>)}</tbody>
+                    </table>
+                  </div>
+                ) : <p key={blockIndex} className="my-3 text-sm leading-7 text-slate-200">{block.text}</p>)}
                 <h2 className="mt-6 text-lg font-bold leading-8 text-white sm:text-xl">{question.prompt}</h2>
                 <p className="mt-2 text-xs leading-5 text-slate-400">Selecciona la opción mejor respaldada por los datos del enunciado.</p>
                 <div className="mt-5 space-y-3">

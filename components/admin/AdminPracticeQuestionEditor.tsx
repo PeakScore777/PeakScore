@@ -23,13 +23,18 @@ export default function AdminPracticeQuestionEditor({ position }: { position: nu
   useEffect(() => {
     let live = true;
     fetch("/api/admin/lesson-questions", { cache: "no-store" })
-      .then(async (r) => { const data = await r.json(); if (!r.ok) throw new Error(data.error); return data; })
-      .then((data) => {
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
         if (!live) return;
+        // La respuesta puede informar el rol aunque falle la consulta a la tabla.
         setAdmin(data.isAdmin === true);
-        if (Array.isArray(data.questions) && data.questions.length === 3) setQuestions(data.questions);
+        if (r.ok && Array.isArray(data.questions) && data.questions.length === 3) {
+          setQuestions(data.questions);
+        } else if (data.error) {
+          setStatus(data.error);
+        }
       })
-      .catch(() => { if (live) setAdmin(false); });
+      .catch(() => { if (live) setStatus("No se pudo consultar la API de preguntas. Revisa la sesión y el servidor."); });
     return () => { live = false; };
   }, []);
 

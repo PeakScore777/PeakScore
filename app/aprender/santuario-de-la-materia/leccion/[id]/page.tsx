@@ -376,15 +376,48 @@ export default function CristalesMisteriososPage() {
       )}
 
       {finished && lost && (
-        <div className="game-over-overlay fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black px-3 py-5 sm:px-6" role="dialog" aria-modal="true" aria-label="Práctica no superada">
-          <div className="game-over-scene relative my-auto w-full max-w-[900px] overflow-hidden bg-[#030309]">
-            <div aria-hidden="true" className="game-over-vignette pointer-events-none absolute inset-0 z-[1]" />
-            <div aria-hidden="true" className="game-over-sparks pointer-events-none absolute inset-0 z-[2]" />
-            <Image src="/images/game-over/nova-derrotado.png" alt="Nova derrotado en las ruinas del Santuario de la Materia" width={1600} height={900} priority sizes="(max-width: 768px) 100vw, 900px" className="game-over-art relative z-0 block h-auto w-full" />
-            <div className="game-over-actions absolute z-10 flex gap-2 sm:gap-3">
-              <button type="button" onClick={restartPractice} className="flex min-h-7 flex-1 items-center justify-center gap-1 border border-rose-300/80 bg-[#250811]/90 px-1 py-1.5 text-[7px] font-extrabold text-white shadow-[0_0_18px_rgba(255,20,70,.35)] transition hover:bg-[#651329] sm:min-h-9 sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[10px]"><RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" /> REPETIR PRÁCTICA</button>
-              <button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); }} className="flex min-h-7 flex-1 items-center justify-center gap-1 border border-white/50 bg-[#080d16]/90 px-1 py-1.5 text-[7px] font-extrabold text-white transition hover:bg-[#202a3a] sm:min-h-9 sm:gap-1.5 sm:px-2 sm:py-2 sm:text-[10px]"><BookOpen className="h-3 w-3 sm:h-4 sm:w-4" /> REPASAR TEORÍA</button>
+        <div
+          className="game-over-overlay fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto px-4 py-8"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="game-over-title"
+        >
+          <div className="game-over-content relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
+            <div aria-hidden="true" className="game-over-pixels pointer-events-none absolute inset-0" />
+            <div className="game-over-heading relative flex flex-wrap items-center justify-center gap-x-3">
+              <h2 id="game-over-title" className="pixel-font game-over-title">GAME OVER</h2>
+              <Image
+                src="/images/game-over/nova-dead-pixel.png"
+                alt="Nova con los ojos en X en pixel art"
+                width={112}
+                height={112}
+                priority
+                className="game-over-nova h-[76px] w-[76px] object-contain sm:h-[100px] sm:w-[100px]"
+              />
             </div>
+            <p className="pixel-font mt-5 text-[9px] leading-6 tracking-[.12em] text-[#a5f3fc] sm:text-[11px]">
+              NO TE RINDAS, PLAYER
+            </p>
+            <p className="mt-3 max-w-md text-sm leading-7 text-slate-300">
+              Esta partida terminó, pero todavía puedes aprender de tus respuestas y volver más fuerte.
+            </p>
+            <div className="mt-8 flex w-full max-w-md flex-col justify-center gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={restartPractice}
+                className="game-over-button game-over-button-primary min-h-12 flex-1 px-5 py-3 text-xs font-extrabold tracking-wide transition"
+              >
+                <span aria-hidden="true" className="mr-2">↻</span> INTENTAR DE NUEVO
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStage("theory"); setFinished(false); setLost(false); }}
+                className="game-over-button game-over-button-secondary min-h-12 flex-1 px-5 py-3 text-xs font-extrabold tracking-wide transition"
+              >
+                <span aria-hidden="true" className="mr-2">←</span> REPASAR Y SALIR
+              </button>
+            </div>
+            <p className="pixel-font mt-7 text-[7px] tracking-[.1em] text-white/35">PEAKSCORE · CONTINÚA LA AVENTURA</p>
           </div>
         </div>
       )}
@@ -416,17 +449,46 @@ export default function CristalesMisteriososPage() {
       </footer>
 
       <style jsx global>{`
-        .game-over-overlay { background: #000 !important; backdrop-filter: blur(9px) saturate(.65); }
-        .game-over-scene { isolation: isolate; box-shadow: 0 0 45px rgba(255, 15, 55, .16), 0 0 140px rgba(150, 0, 28, .14); animation: game-over-arrive 360ms cubic-bezier(.2,.8,.2,1) both; }
-        .game-over-art { animation: game-over-breathe 7s ease-in-out infinite alternate; filter: contrast(1.08) saturate(1.12); }
-        .game-over-vignette { background: radial-gradient(ellipse at 40% 42%, transparent 28%, rgba(0,0,0,.12) 58%, rgba(0,0,0,.6) 100%), linear-gradient(90deg, rgba(35,0,8,.05), transparent 40%, rgba(10,0,4,.18)); box-shadow: inset 0 0 80px rgba(0,0,0,.25); }
-        .game-over-sparks { opacity: .55; background-image: radial-gradient(circle at 14% 24%, rgba(255,40,67,.85) 0 1px, transparent 2px), radial-gradient(circle at 76% 19%, rgba(255,30,60,.75) 0 1px, transparent 2px), radial-gradient(circle at 63% 72%, rgba(255,60,80,.7) 0 1.5px, transparent 3px), radial-gradient(circle at 29% 81%, rgba(255,30,50,.7) 0 1px, transparent 2px); background-size: 170px 150px, 220px 190px, 190px 210px, 240px 180px; animation: game-over-embers 4s linear infinite alternate; }
-        .game-over-actions { left: 52.5%; right: 5.2%; top: 57.5%; }
-        @keyframes game-over-arrive { from { opacity: 0; transform: scale(.97) translateY(8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-        @keyframes game-over-breathe { from { transform: scale(1); } to { transform: scale(1.018); } }
-        @keyframes game-over-embers { from { opacity: .2; transform: translateY(0); } to { opacity: .72; transform: translateY(-5px); } }
-        @media (max-width: 640px) { .game-over-actions { left: 51.5%; right: 5%; top: 57%; } }
-        @media (prefers-reduced-motion: reduce) { .game-over-scene, .game-over-art, .game-over-sparks { animation: none !important; } }
+        .game-over-overlay { background: #020308 !important; isolation: isolate; }
+        .game-over-content { animation: game-over-enter 420ms cubic-bezier(.2,.8,.2,1) both; }
+        .game-over-pixels {
+          z-index: -1;
+          opacity: .7;
+          background-image:
+            radial-gradient(circle, rgba(51,225,255,.8) 0 2px, transparent 2.5px),
+            radial-gradient(circle, rgba(142,91,255,.75) 0 1.5px, transparent 2px),
+            linear-gradient(90deg, transparent 49.8%, rgba(48,74,120,.13) 50%, transparent 50.2%);
+          background-size: 83px 91px, 127px 113px, 100% 100%;
+          background-position: 8px 12px, 42px 57px, center;
+          mask-image: radial-gradient(ellipse at center, black 0%, rgba(0,0,0,.55) 58%, transparent 88%);
+          animation: game-over-pixel-drift 8s linear infinite;
+        }
+        .game-over-heading { filter: drop-shadow(0 0 20px rgba(20,210,255,.14)); }
+        .game-over-title {
+          color: #f8fafc;
+          font-size: clamp(1.55rem, 5vw, 3.15rem);
+          line-height: 1.45;
+          letter-spacing: -.04em;
+          text-shadow: 4px 4px 0 #155e75, 7px 7px 0 #0b1220, 0 0 24px rgba(34,211,238,.22);
+        }
+        .game-over-nova {
+          image-rendering: pixelated;
+          filter: drop-shadow(0 0 12px rgba(132,204,22,.28));
+          animation: game-over-nova-idle 2.2s steps(2, end) infinite;
+        }
+        .game-over-button { font-family: var(--font-press-start), "Press Start 2P", monospace; font-size: 8px; image-rendering: pixelated; }
+        .game-over-button-primary { color: #07111b; background: #67e8f9; border: 2px solid #cffafe; box-shadow: 4px 4px 0 #155e75; }
+        .game-over-button-primary:hover { background: #a5f3fc; transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #155e75; }
+        .game-over-button-secondary { color: #e2e8f0; background: #111827; border: 2px solid #475569; box-shadow: 4px 4px 0 #020617; }
+        .game-over-button-secondary:hover { color: white; background: #1e293b; border-color: #94a3b8; transform: translate(-1px,-1px); }
+        @keyframes game-over-enter { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes game-over-pixel-drift { from { background-position: 8px 12px, 42px 57px, center; } to { background-position: 91px 103px, -85px 170px, center; } }
+        @keyframes game-over-nova-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+        @media (max-width: 640px) {
+          .game-over-title { letter-spacing: -.06em; }
+          .game-over-button { font-size: 7px; }
+        }
+        @media (prefers-reduced-motion: reduce) { .game-over-content, .game-over-pixels, .game-over-nova { animation: none !important; } }
         .lesson-shell { font-family: Arial, Helvetica, sans-serif; }
         .lesson-shell .pixel-font { font-family: var(--font-press-start), "Press Start 2P", monospace; }
         .lesson-shell .lesson-reading p, .lesson-shell .lesson-reading li { font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.8; }

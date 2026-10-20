@@ -313,7 +313,7 @@ export default function CristalesMisteriososPage() {
           {finished && !lost ? null : (
             <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,370px)_minmax(0,1fr)]">
               <aside className="border border-white/10 bg-[#152235] p-5 lg:sticky lg:top-[82px]">
-                <p className="flex items-center gap-2 text-xs font-bold text-cyan-200"><BookOpen className="h-4 w-4" /> Repaso rápido</p>
+                <p className="flex items-center gap-2 text-xs font-bold text-cyan-200"><span aria-hidden="true" className="text-base">📖</span> Repaso rápido</p>
                 {matterNotes.map((note) => (
                   <section key={note.title} className="mt-5 border-t border-white/[.08] pt-4 first:border-0 first:pt-0">
                     <h2 className="text-sm font-bold text-white">{note.title}</h2>
@@ -326,15 +326,20 @@ export default function CristalesMisteriososPage() {
                 </div>
               </aside>
 
-              <section className="practice-panel border border-slate-300 bg-[#f4f6f8] p-5 text-slate-900 shadow-[0_12px_32px_rgba(0,0,0,.16)] sm:p-7">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="pixel-font text-[8px] leading-5 text-slate-600">PREGUNTA {questionIndex + 1} DE {questions.length}</p>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900"><span aria-hidden="true">📖</span> Práctica</span>
+              <section className="practice-panel overflow-hidden border border-slate-300 bg-white text-slate-900 shadow-[0_16px_40px_rgba(0,0,0,.22)] sm:p-0">
+                <div className="border-b border-slate-200 bg-[#f3f6fa] px-5 py-4 sm:px-7">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-xs font-extrabold uppercase tracking-[.14em] text-slate-600">Ciencias Naturales <span className="mx-1 text-slate-400">/</span> Pregunta {questionIndex + 1} de {questions.length}</p>
+                    <span className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600"><span aria-hidden="true">📘</span> Selección múltiple · Única respuesta</span>
+                  </div>
+                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-200"><div className="h-full bg-[#147d64] transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
                 </div>
-                <div className="mt-4 h-1.5 overflow-hidden bg-slate-200"><div className="h-full bg-emerald-500 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
-                <p className="mt-6 rounded-md border-l-4 border-slate-400 bg-white px-4 py-3 text-sm leading-7 text-slate-700">{question.context}</p>
-                <h2 className="mt-4 text-lg font-bold leading-8 text-slate-950 sm:text-xl">{question.prompt}</h2>
-                <div className="mt-6 space-y-3">
+                <div className="p-5 sm:p-7">
+                <p className="text-xs font-bold uppercase tracking-[.12em] text-slate-500">Situación problema</p>
+                <p className="mt-2 border-l-[3px] border-slate-300 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-700">{question.context}</p>
+                <h2 className="mt-6 text-lg font-bold leading-8 text-slate-950 sm:text-xl">{question.prompt}</h2>
+                <p className="mt-2 text-xs leading-5 text-slate-500">Selecciona la opción que responde mejor a la situación planteada.</p>
+                <div className="mt-5 space-y-3">
                   {question.options.map((option) => {
                     const active = selected === option.label;
                     const correctOption = checked && option.label === question.answer;
@@ -363,6 +368,7 @@ export default function CristalesMisteriososPage() {
                     <button type="button" onClick={nextQuestion} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700">{questionIndex === questions.length - 1 ? "Ver resultado" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>
                   )}
                 </div>
+                </div>
               </section>
             </div>
           )}
@@ -370,7 +376,7 @@ export default function CristalesMisteriososPage() {
       )}
 
       {finished && lost && (
-        <div className="game-over-overlay fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto px-3 py-5 sm:px-6" role="dialog" aria-modal="true" aria-label="Práctica no superada">
+        <div className="game-over-overlay fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black px-3 py-5 sm:px-6" role="dialog" aria-modal="true" aria-label="Práctica no superada">
           <div className="game-over-scene relative my-auto w-full max-w-[900px] overflow-hidden bg-[#030309]">
             <div aria-hidden="true" className="game-over-vignette pointer-events-none absolute inset-0 z-[1]" />
             <div aria-hidden="true" className="game-over-sparks pointer-events-none absolute inset-0 z-[2]" />
@@ -410,7 +416,7 @@ export default function CristalesMisteriososPage() {
       </footer>
 
       <style jsx global>{`
-        .game-over-overlay { background: radial-gradient(ellipse at 50% 48%, rgba(30, 0, 8, .35), rgba(0, 0, 0, .78) 76%); backdrop-filter: blur(9px) saturate(.65); }
+        .game-over-overlay { background: #000 !important; backdrop-filter: blur(9px) saturate(.65); }
         .game-over-scene { isolation: isolate; box-shadow: 0 0 45px rgba(255, 15, 55, .16), 0 0 140px rgba(150, 0, 28, .14); animation: game-over-arrive 360ms cubic-bezier(.2,.8,.2,1) both; }
         .game-over-art { animation: game-over-breathe 7s ease-in-out infinite alternate; filter: contrast(1.08) saturate(1.12); }
         .game-over-vignette { background: radial-gradient(ellipse at 40% 42%, transparent 28%, rgba(0,0,0,.12) 58%, rgba(0,0,0,.6) 100%), linear-gradient(90deg, rgba(35,0,8,.05), transparent 40%, rgba(10,0,4,.18)); box-shadow: inset 0 0 80px rgba(0,0,0,.25); }

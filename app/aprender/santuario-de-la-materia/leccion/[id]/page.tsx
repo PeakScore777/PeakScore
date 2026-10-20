@@ -385,30 +385,34 @@ export default function CristalesMisteriososPage() {
           aria-modal="true"
           aria-labelledby="game-over-title"
         >
-          <div className="game-over-content relative z-10 flex w-full max-w-xl flex-col items-center text-center">
+          <div className="game-over-content relative z-10 flex w-full max-w-5xl flex-col items-center text-center">
             <div aria-hidden="true" className="game-over-pixels pointer-events-none absolute inset-0" />
-            <div className="game-over-heading relative flex flex-wrap items-center justify-center gap-x-1 sm:gap-x-2">
+            <div aria-hidden="true" className="game-over-crystal-glow pointer-events-none absolute inset-0" />
+            <div className="game-over-heading relative flex w-full flex-wrap items-center justify-center gap-x-1 sm:gap-x-3">
               <h2 id="game-over-title" className="pixel-font game-over-title">GAME</h2>
               <Image
                 src="/images/game-over/nova-dead-pixel.png"
                 alt="Cara pixel-art de Nova con los ojos en X"
-                width={72}
-                height={72}
+                width={160}
+                height={160}
                 priority
-                className="game-over-nova h-12 w-12 object-contain sm:h-16 sm:w-16"
+                className="game-over-nova h-24 w-24 object-contain sm:h-36 sm:w-36 lg:h-40 lg:w-40"
               />
               <span className="pixel-font game-over-title">OVER</span>
             </div>
 
-            <p className="pixel-font mt-7 text-[10px] tracking-[.08em] text-white/90 sm:text-xs">PLAY AGAIN?</p>
-            <p className="mt-5 max-w-md text-sm leading-7 text-slate-200">
-              Acertaste <strong className="text-cyan-200">{correctCount} de {questions.length}</strong> preguntas. La misión terminó porque no lograste acertarlas todas.
+            <p className="pixel-font mt-3 text-[10px] tracking-[.08em] text-white/90 sm:mt-5 sm:text-sm">PLAY AGAIN?</p>
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-100 sm:text-base">
+              No lograste responder correctamente todas las preguntas.
             </p>
-            <p className="mt-2 max-w-md text-sm leading-7 text-slate-400">
-              Repasa las explicaciones de las respuestas y vuelve a intentarlo: cada error te muestra qué puedes dominar mejor.
+            <p className="mt-2 text-sm font-medium text-slate-200 sm:text-base">
+              Acertaste <strong className="text-cyan-300">{correctCount} de {questions.length}</strong> preguntas.
+            </p>
+            <p className="mt-2 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm sm:leading-7">
+              Repasa las explicaciones y vuelve a intentarlo: cada error te muestra qué puedes dominar mejor.
             </p>
 
-            <div className="mt-7 flex w-full max-w-xs flex-col items-center gap-4">
+            <div className="mt-5 flex w-full max-w-sm flex-col items-center gap-2 sm:mt-7 sm:gap-3">
               <button
                 type="button"
                 onClick={restartPractice}
@@ -460,30 +464,48 @@ export default function CristalesMisteriososPage() {
       </footer>
 
       <style jsx global>{`
-        .game-over-overlay { background: #000 !important; isolation: isolate; }
-        .game-over-content { animation: game-over-enter 420ms cubic-bezier(.2,.8,.2,1) both; }
+        .game-over-overlay {
+          background:
+            radial-gradient(ellipse at 50% 42%, rgba(105, 8, 31, .28) 0%, rgba(20, 5, 15, .24) 34%, rgba(0, 0, 0, .94) 78%),
+            linear-gradient(180deg, #030610 0%, #070812 52%, #020308 100%) !important;
+          isolation: isolate;
+        }
+        .game-over-content { animation: game-over-enter 520ms cubic-bezier(.2,.8,.2,1) both; }
         .game-over-pixels {
-          z-index: -1;
-          opacity: .65;
+          z-index: -2;
+          opacity: .58;
           background-image:
-            radial-gradient(circle, rgba(51,225,255,.85) 0 2px, transparent 2.5px),
-            radial-gradient(circle, rgba(132,204,22,.8) 0 1.5px, transparent 2px);
-          background-size: 83px 91px, 127px 113px;
-          background-position: 8px 12px, 42px 57px;
-          mask-image: radial-gradient(ellipse at center, black 0%, rgba(0,0,0,.55) 58%, transparent 88%);
+            radial-gradient(circle, rgba(255, 40, 74, .95) 0 2px, transparent 2.8px),
+            radial-gradient(circle, rgba(44, 187, 255, .8) 0 1.5px, transparent 2.4px),
+            linear-gradient(155deg, transparent 0 42%, rgba(125, 16, 43, .13) 42.2% 42.7%, transparent 43% 100%),
+            linear-gradient(25deg, transparent 0 56%, rgba(23, 83, 145, .14) 56.2% 56.7%, transparent 57% 100%);
+          background-size: 83px 91px, 127px 113px, 100% 100%, 100% 100%;
+          background-position: 8px 12px, 42px 57px, center, center;
+          mask-image: radial-gradient(ellipse at center, black 0%, rgba(0,0,0,.8) 58%, rgba(0,0,0,.18) 100%);
           animation: game-over-pixel-drift 8s linear infinite;
         }
-        .game-over-heading { display: flex; align-items: center; gap: .3rem; filter: drop-shadow(0 0 18px rgba(20,210,255,.13)); }
+        .game-over-crystal-glow {
+          z-index: -1;
+          background:
+            linear-gradient(135deg, transparent 0 17%, rgba(255, 35, 70, .13) 17.2% 17.6%, transparent 18% 100%),
+            linear-gradient(45deg, transparent 0 78%, rgba(255, 35, 70, .15) 78.2% 78.6%, transparent 79% 100%),
+            radial-gradient(ellipse at 12% 72%, rgba(255, 20, 58, .23), transparent 28%),
+            radial-gradient(ellipse at 88% 72%, rgba(255, 20, 58, .24), transparent 29%),
+            radial-gradient(ellipse at 50% 12%, rgba(18, 113, 196, .14), transparent 35%);
+          filter: saturate(1.25);
+          animation: game-over-crystal-pulse 3.6s ease-in-out infinite;
+        }
+        .game-over-heading { display: flex; align-items: center; gap: .3rem; filter: drop-shadow(0 0 22px rgba(20,210,255,.2)); }
         .game-over-title {
           color: #f8fafc;
-          font-size: clamp(1.55rem, 6vw, 3.4rem);
-          line-height: 1.4;
-          letter-spacing: -.055em;
-          text-shadow: 4px 4px 0 #155e75, 7px 7px 0 #0b1220, 0 0 24px rgba(34,211,238,.2);
+          font-size: clamp(2.3rem, 8.8vw, 6.4rem);
+          line-height: 1.12;
+          letter-spacing: -.065em;
+          text-shadow: 5px 5px 0 #155e75, 9px 9px 0 #0b1220, 0 0 30px rgba(34,211,238,.32);
         }
         .game-over-nova {
           image-rendering: pixelated;
-          filter: drop-shadow(0 0 12px rgba(132,204,22,.32));
+          filter: drop-shadow(0 0 20px rgba(132,204,22,.42));
           animation: game-over-nova-idle 2.2s steps(2, end) infinite;
         }
         .game-over-choice {
@@ -511,10 +533,13 @@ export default function CristalesMisteriososPage() {
         .game-over-choice-detail { margin-left: .2rem; color: #94a3b8; font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0; }
         .game-over-choice:hover .game-over-choice-detail, .game-over-choice:focus-visible .game-over-choice-detail { color: #e2e8f0; }
         @keyframes game-over-enter { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes game-over-pixel-drift { from { background-position: 8px 12px, 42px 57px; } to { background-position: 91px 103px, -85px 170px; } }
+        @keyframes game-over-pixel-drift { from { background-position: 8px 12px, 42px 57px, center, center; } to { background-position: 91px 103px, -85px 170px, center, center; } }
+        @keyframes game-over-crystal-pulse { 0%, 100% { opacity: .72; transform: scale(1); } 50% { opacity: 1; transform: scale(1.025); } }
         @keyframes game-over-nova-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
         @media (max-width: 640px) {
-          .game-over-title { letter-spacing: -.07em; }
+          .game-over-title { letter-spacing: -.075em; }
+          .game-over-content { padding-top: 1rem; padding-bottom: 1rem; }
+          .game-over-heading { gap: .05rem; }
           .game-over-choice { font-size: 9px; flex-wrap: wrap; }
           .game-over-choice-detail { flex-basis: 100%; margin-left: 0; }
         }

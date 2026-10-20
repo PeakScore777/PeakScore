@@ -123,8 +123,9 @@ export default function CristalesMisteriososPage() {
       return;
     }
 
-    // Incluye la respuesta de la última pregunta, cuyo setState aún no se ha aplicado.
-    const finalCorrectCount = correctCount + (isCorrect ? 1 : 0);
+    // La respuesta se contabiliza en checkAnswer antes de habilitar el avance.
+    // No sumar isCorrect otra vez: eso convertía 3/3 en 4/3 y mostraba GAME OVER.
+    const finalCorrectCount = correctCount;
     setFinished(true);
     if (finalCorrectCount === questions.length) {
       setLost(false);

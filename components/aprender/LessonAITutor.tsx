@@ -88,7 +88,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <div className="min-h-0 flex-1 overflow-y-auto bg-[#f7f9fc] px-4 py-4" ref={scrollRef} aria-live="polite">
         {messages.length === 0 ? (
           <div className="flex min-h-full flex-col items-center justify-center">
-            <img src="/avatars/photo_perfil/orbyp.png" alt="Orby, tutor de PeakScore" className="mb-2 h-28 w-28 rounded-full border-2 border-sky-200 bg-white object-cover object-center shadow-[0_4px_18px_rgba(14,165,233,.16)]" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
+            <img src="/avatars/photo_perfil/orbyp.png" alt="Orby, tutor de PeakScore" className="mb-2 h-28 w-28 rounded-full border-2 border-sky-200 bg-white object-contain object-center shadow-[0_4px_18px_rgba(14,165,233,.16)]" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
             <div className="w-full rounded-2xl rounded-tl-sm border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-base font-extrabold text-slate-950">¡Hola! Soy Orby 👋</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">Te ayudo a comprender la teoría, analizar los datos y razonar tu respuesta. ¿Qué parte revisamos juntos?</p>

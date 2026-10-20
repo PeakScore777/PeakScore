@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 type XpRewardAnimationProps = {
   open: boolean;
@@ -58,6 +58,19 @@ export default function XpRewardAnimation({
 
   useEffect(() => {
     if (!open) return;
+    const audio = new Audio("/sounds/xp-gain.mp3");
+    audio.volume = 0.32;
+    void audio.play().catch(() => {
+      // El navegador puede bloquear audio si no hubo interacción previa.
+    });
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" || event.key === "Enter") onContinue();
     };
@@ -95,7 +108,7 @@ export default function XpRewardAnimation({
               animationDuration: particle.duration,
               ["--xp-drift" as string]: particle.drift,
               ["--xp-rotation" as string]: particle.rotation,
-            } as React.CSSProperties}
+            } as CSSProperties}
           />
         ))}
       </div>

@@ -135,7 +135,7 @@ export default function CristalesMisteriososPage() {
   }
 
   return (
-    <main className="lesson-shell min-h-[calc(100vh-72px)] bg-[#0b111b] text-[#f0f4fa]">
+    <main className="lesson-shell min-h-[calc(100vh-72px)] bg-[#05070b] text-[#f0f4fa]">
       <header className="lesson-topbar sticky top-0 z-30 border-b border-white/10 bg-[#101725]/95 backdrop-blur">
         <div className="mx-auto flex min-h-[58px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-7">
           <div className="hidden min-w-0 items-center gap-2 text-xs text-slate-400 sm:flex">
@@ -302,13 +302,22 @@ export default function CristalesMisteriososPage() {
           </div>
 
           {finished ? (
-            <section className="mx-auto max-w-2xl border border-cyan-200/20 bg-[#17283b] p-6 sm:p-9">
-              <div className="flex h-14 w-14 items-center justify-center border border-cyan-200/25 bg-cyan-200/[.08]"><CheckCircle2 className="h-7 w-7 text-cyan-200" /></div>
-              <h2 className="pixel-font mt-5 text-sm leading-7 text-white">Misión completada</h2>
-              <p className="mt-3 text-sm leading-7 text-slate-300">Respondiste correctamente {correctCount} de {questions.length} preguntas. Revisa la evidencia y las explicaciones: el objetivo no es memorizar una opción, sino justificar por qué los datos sostienen una conclusión.</p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <button type="button" onClick={restartPractice} className="inline-flex min-h-11 items-center gap-2 border border-white/15 px-4 py-3 text-sm font-bold hover:bg-white/[.05]"><RotateCcw className="h-4 w-4" /> Repetir práctica</button>
-                <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-11 items-center gap-2 bg-cyan-300 px-4 py-3 text-sm font-bold text-[#07111b] hover:bg-emerald-200"><BookOpen className="h-4 w-4" /> Repasar teoría</button>
+            <section className="completion-panel relative mx-auto w-full max-w-2xl overflow-hidden border border-emerald-300/30 bg-[#05070b] p-6 text-white shadow-[0_20px_60px_rgba(0,0,0,.35)] sm:p-9">
+              <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-cyan-300 to-violet-400" />
+              <div className="relative z-10 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
+                <div>
+                  <p className="pixel-font text-[8px] tracking-[.16em] text-emerald-300">SANTUARIO DE LA MATERIA · NIVEL 01</p>
+                  <h2 className="pixel-font mt-5 text-sm leading-8 text-white sm:text-base">MISIÓN COMPLETADA</h2>
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-slate-300">Terminaste el análisis de muestras. Respondiste correctamente <strong className="text-white">{correctCount} de {questions.length}</strong> preguntas. Repasa los razonamientos para reconocer qué conclusiones se desprenden de la evidencia y cuáles exceden los datos.</p>
+                </div>
+                <div className="completion-score mx-auto flex h-28 w-28 flex-col items-center justify-center border border-emerald-300/35 bg-[#101a20] sm:mx-0">
+                  <span className="pixel-font text-2xl text-emerald-300">{Math.round((correctCount / questions.length) * 100)}%</span>
+                  <span className="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Precisión</span>
+                </div>
+              </div>
+              <div className="relative z-10 mt-6 flex flex-wrap gap-3 border-t border-white/10 pt-5">
+                <button type="button" onClick={restartPractice} className="inline-flex min-h-11 items-center gap-2 border border-white/20 bg-[#151b24] px-4 py-2.5 text-xs font-bold text-slate-100 transition hover:border-emerald-300/50 hover:bg-[#1d2931]"><RotateCcw className="h-4 w-4" /> Repetir práctica</button>
+                <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-11 items-center gap-2 bg-emerald-400 px-4 py-2.5 text-xs font-bold text-[#07130d] transition hover:bg-emerald-300"><BookOpen className="h-4 w-4" /> Repasar teoría</button>
               </div>
             </section>
           ) : (
@@ -327,41 +336,41 @@ export default function CristalesMisteriososPage() {
                 </div>
               </aside>
 
-              <section className="border border-cyan-200/20 bg-[#17283b] p-5 sm:p-7">
+              <section className="practice-panel border border-slate-300 bg-[#f4f6f8] p-5 text-slate-900 shadow-[0_12px_32px_rgba(0,0,0,.16)] sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="pixel-font text-[8px] leading-5 text-cyan-200">PREGUNTA {questionIndex + 1} DE {questions.length}</p>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-200/20 bg-amber-200/[.05] px-3 py-1.5 text-xs font-bold text-amber-100"><Zap className="h-3.5 w-3.5" /> Práctica</span>
+                  <p className="pixel-font text-[8px] leading-5 text-slate-600">PREGUNTA {questionIndex + 1} DE {questions.length}</p>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900"><Zap className="h-3.5 w-3.5" /> Práctica</span>
                 </div>
-                <div className="mt-4 h-1.5 overflow-hidden bg-white/10"><div className="h-full bg-cyan-300 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
-                <p className="mt-6 text-sm leading-6 text-slate-400">{question.context}</p>
-                <h2 className="mt-3 text-lg font-bold leading-8 text-white sm:text-xl">{question.prompt}</h2>
+                <div className="mt-4 h-1.5 overflow-hidden bg-slate-200"><div className="h-full bg-emerald-500 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
+                <p className="mt-6 rounded-md border-l-4 border-slate-400 bg-white px-4 py-3 text-sm leading-7 text-slate-700">{question.context}</p>
+                <h2 className="mt-4 text-lg font-bold leading-8 text-slate-950 sm:text-xl">{question.prompt}</h2>
                 <div className="mt-6 space-y-3">
                   {question.options.map((option) => {
                     const active = selected === option.label;
                     const correctOption = checked && option.label === question.answer;
                     const wrongOption = checked && active && !isCorrect;
-                    const style = correctOption ? "border-emerald-300/50 bg-emerald-300/[.08]" : wrongOption ? "border-rose-300/50 bg-rose-300/[.07]" : active ? "border-cyan-200/60 bg-cyan-200/[.07]" : "border-white/10 bg-[#20334a] hover:border-emerald-200/45";
+                    const style = correctOption ? "border-emerald-600 bg-emerald-50 ring-1 ring-emerald-500" : wrongOption ? "border-rose-500 bg-rose-50 ring-1 ring-rose-300" : active ? "border-indigo-500 bg-indigo-50 ring-1 ring-indigo-300" : "border-slate-300 bg-white hover:border-indigo-400 hover:bg-indigo-50/60";
                     return (
-                      <button key={option.label} type="button" disabled={checked} onClick={() => setSelected(option.label)} className={`flex w-full items-start gap-3 border p-4 text-left transition ${style}`}>
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-white/15 text-xs font-bold text-cyan-100">{option.label}</span>
-                        <span className="pt-1 text-sm leading-6 text-slate-200">{option.text}</span>
-                        {correctOption && <CheckCircle2 className="ml-auto mt-1 h-5 w-5 shrink-0 text-emerald-200" />}
+                      <button key={option.label} type="button" disabled={checked} onClick={() => setSelected(option.label)} className={`flex w-full items-start gap-3 rounded-md border p-4 text-left transition ${style}`}>
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-sm border text-xs font-bold ${correctOption ? "border-emerald-600 bg-emerald-600 text-white" : wrongOption ? "border-rose-500 bg-rose-500 text-white" : active ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-300 bg-slate-50 text-slate-700"}`}>{option.label}</span>
+                        <span className="pt-1 text-sm leading-6 text-slate-800">{option.text}</span>
+                        {correctOption && <CheckCircle2 className="ml-auto mt-1 h-5 w-5 shrink-0 text-emerald-700" />}
                       </button>
                     );
                   })}
                 </div>
                 {checked && (
-                  <div aria-live="polite" className={`mt-5 border p-4 ${isCorrect ? "border-emerald-300/25 bg-emerald-300/[.05]" : "border-amber-200/25 bg-amber-200/[.05]"}`}>
-                    <p className="font-bold text-white">{isCorrect ? "¡Correcto! Buena lectura de la evidencia." : "Vamos a revisar el razonamiento."}</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-300">{question.explanation}</p>
+                  <div aria-live="polite" className={`mt-5 rounded-md border p-4 ${isCorrect ? "border-emerald-300 bg-emerald-50" : "border-amber-300 bg-amber-50"}`}>
+                    <p className="font-bold text-slate-900">{isCorrect ? "Respuesta correcta: interpretación adecuada de la evidencia." : "Analicemos el razonamiento y el error conceptual."}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-700">{question.explanation}</p>
                   </div>
                 )}
-                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <p className="text-xs leading-5 text-slate-500">Selecciona una opción y comprueba tu razonamiento.</p>
+                <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-slate-600">Selecciona una opción y justifica tu decisión con los datos del enunciado.</p>
                   {!checked ? (
-                    <button type="button" disabled={!selected} onClick={checkAnswer} className="inline-flex min-h-11 items-center justify-center gap-2 bg-cyan-300 px-5 py-3 text-sm font-bold text-[#07111b] hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
+                    <button type="button" disabled={!selected} onClick={checkAnswer} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
                   ) : (
-                    <button type="button" onClick={nextQuestion} className="inline-flex min-h-11 items-center justify-center gap-2 bg-cyan-300 px-5 py-3 text-sm font-bold text-[#07111b] hover:bg-cyan-200">{questionIndex === questions.length - 1 ? "Ver resultado" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>
+                    <button type="button" onClick={nextQuestion} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-700">{questionIndex === questions.length - 1 ? "Ver resultado" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>
                   )}
                 </div>
               </section>

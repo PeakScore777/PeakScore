@@ -3,7 +3,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
-import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import AdminPracticeQuestionEditor from "@/components/admin/AdminPracticeQuestionEditor";
 import { useEffect, useState } from "react";
@@ -315,6 +314,29 @@ export default function CristalesMisteriososPage() {
             </section>
 
             <section>
+              <h2 className="text-lg font-bold text-cyan-200">Comparar materiales con una tabla de datos</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">En el santuario, Nova encuentra registros de laboratorio con varias propiedades de cada muestra. Una tabla permite comparar datos de forma ordenada, pero cada columna responde una pregunta distinta: la masa indica cuánta materia se midió, el volumen indica cuánto espacio ocupa y la densidad relaciona ambas magnitudes. El punto de fusión informa la temperatura a la que un sólido pasa al estado líquido bajo una presión determinada.</p>
+              <div className="my-4 overflow-x-auto border border-[#344a66] bg-[#0b1320] p-3 sm:p-4">
+                <p className="mb-3 pixel-font text-[8px] uppercase tracking-wider text-cyan-200">Ejemplo de registro del santuario</p>
+                <table className="w-full min-w-[390px] border-collapse text-left text-sm">
+                  <thead><tr><th className="border border-[#405873] bg-[#1a2b40] px-3 py-3 text-cyan-100">Muestra</th><th className="border border-[#405873] bg-[#1a2b40] px-3 py-3 text-cyan-100">Masa (g)</th><th className="border border-[#405873] bg-[#1a2b40] px-3 py-3 text-cyan-100">Volumen (cm³)</th><th className="border border-[#405873] bg-[#1a2b40] px-3 py-3 text-cyan-100">Densidad (g/cm³)</th></tr></thead>
+                  <tbody><tr className="bg-[#0c1624]"><td className="border border-[#293d56] px-3 py-3">A</td><td className="border border-[#293d56] px-3 py-3">36</td><td className="border border-[#293d56] px-3 py-3">12</td><td className="border border-[#293d56] px-3 py-3">3</td></tr><tr className="bg-[#101c2c]"><td className="border border-[#293d56] px-3 py-3">B</td><td className="border border-[#293d56] px-3 py-3">60</td><td className="border border-[#293d56] px-3 py-3">20</td><td className="border border-[#293d56] px-3 py-3">3</td></tr></tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Aunque la muestra B tiene más masa, también ocupa más volumen. Al calcular la densidad, A = 36 ÷ 12 = 3 g/cm³ y B = 60 ÷ 20 = 3 g/cm³. Por tanto, los datos no respaldan afirmar que B sea más densa. Esta es la razón por la que Nova no debe comparar solo una columna: necesita relacionar las magnitudes.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Si la pregunta incluye un punto de fusión, primero identifica la condición que debe cumplir el material y descarta las muestras que no la satisfacen. Después compara la propiedad solicitada entre las que quedan. Por ejemplo, si un objeto debe soportar más de 700 °C, una muestra con punto de fusión de 640 °C no cumple, aunque tenga una densidad baja. No mezcles criterios diferentes ni elijas una opción solo porque contiene un dato verdadero.</p>
+              <div className="mt-4 border border-cyan-200/25 bg-cyan-200/[.045] p-4">
+                <p className="text-sm font-bold text-cyan-100">La ruta de Nova</p>
+                <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
+                  <li>Lee los encabezados y comprueba las unidades.</li>
+                  <li>Identifica la condición que debe cumplir la muestra.</li>
+                  <li>Calcula la propiedad necesaria y compara los resultados.</li>
+                  <li>Elige la conclusión que los datos permiten sostener, sin inventar información.</li>
+                </ol>
+              </div>
+            </section>
+
+            <section>
               <h2 className="text-lg font-bold text-cyan-200">Medir bien también es hacer ciencia</h2>
               <p className="mt-3 text-sm leading-7 text-slate-300">Una medición combina un valor numérico con una unidad. Escribir «la masa es 12» es incompleto si no se indica si son gramos, kilogramos u otra unidad. Antes de calcular, comprueba que las magnitudes estén expresadas en unidades compatibles. Por ejemplo, no dividas directamente gramos entre metros cúbicos y reportes el resultado como g/cm³ sin convertir el volumen.</p>
               <p className="mt-3 text-sm leading-7 text-slate-300"><strong className="text-white">Precisión</strong> describe qué tan cercanas son entre sí mediciones repetidas; <strong className="text-white">exactitud</strong> describe qué tan cerca está una medición del valor aceptado o de referencia. Un instrumento puede producir resultados muy parecidos entre sí y, aun así, estar descalibrado. En una investigación, repetir medidas, registrar unidades y reconocer incertidumbres mejora la calidad de la evidencia.</p>
@@ -377,7 +399,6 @@ export default function CristalesMisteriososPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <p className="pixel-font text-[9px] uppercase tracking-[.12em] text-slate-200">CIENCIAS NATURALES <span className="mx-1 text-cyan-300">/</span> PREGUNTA {questionIndex + 1} DE {questions.length}</p>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`border px-2 py-1 text-[10px] font-bold uppercase tracking-wide ${question.difficulty === "Fácil" ? "border-emerald-300/40 bg-emerald-300/10 text-emerald-200" : question.difficulty === "Media" ? "border-amber-300/40 bg-amber-300/10 text-amber-200" : "border-rose-300/40 bg-rose-300/10 text-rose-200"}`}>{question.difficulty}</span>
                       <span className="border border-cyan-300/30 bg-cyan-300/[.06] px-2 py-1 text-[10px] font-semibold text-cyan-100">Única respuesta</span>
                     </div>
                   </div>
@@ -430,13 +451,6 @@ export default function CristalesMisteriososPage() {
                 </div>
                 </div>
               </section>
-              <LessonAITutor
-                subject="Ciencias Naturales"
-                topic={`Los cristales misteriosos: pregunta ${questionIndex + 1} de ${questions.length}`}
-                stage="practice"
-                question={question.prompt}
-                context={`Situación: ${question.context}\nOpciones: ${question.options.map((option) => `${option.label}) ${option.text}`).join("\\n")}\nExplicación de la lección: ${question.explanation}`}
-              />
             </div>
           )}
         </div>

@@ -7,6 +7,8 @@ type XpRewardAnimationProps = {
   open: boolean;
   xp: number;
   onContinue: () => void;
+  onRepeat?: () => void;
+  onReview?: () => void;
 };
 
 /**
@@ -18,6 +20,8 @@ export default function XpRewardAnimation({
   open,
   xp,
   onContinue,
+  onRepeat,
+  onReview,
 }: XpRewardAnimationProps) {
   const [count, setCount] = useState(0);
 
@@ -133,14 +137,14 @@ export default function XpRewardAnimation({
         <p className="mt-4 text-sm font-semibold text-slate-200">¡EXPERIENCIA GANADA!</p>
         <p className="mt-2 max-w-xs text-xs leading-6 text-slate-400">Cada desafío te acerca a tu próxima conquista.</p>
 
-        <button
-          type="button"
-          autoFocus
-          onClick={onContinue}
-          className="pixel-font mt-8 inline-flex min-h-12 w-full items-center justify-center border-2 border-cyan-200 bg-cyan-300 px-5 py-4 text-[10px] text-[#07111b] shadow-[4px_4px_0_#155e75] transition hover:-translate-y-0.5 hover:bg-cyan-100 hover:shadow-[5px_5px_0_#155e75] active:translate-y-0 active:shadow-none"
-        >
-          CONTINUAR
-        </button>
+        {onRepeat && onReview ? (
+          <div className="mt-7 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+            <button type="button" onClick={onRepeat} className="inline-flex min-h-12 items-center justify-center gap-2 border border-cyan-100/35 bg-[#111b2b] px-4 py-3 text-xs font-extrabold text-white transition hover:border-cyan-100 hover:bg-[#1c2b42]"><span aria-hidden="true">↻</span> REPETIR PRÁCTICA</button>
+            <button type="button" onClick={onReview} className="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-cyan-200 bg-cyan-300 px-4 py-3 text-xs font-extrabold text-[#07111b] transition hover:bg-cyan-100">REPASAR TEORÍA</button>
+          </div>
+        ) : (
+          <button type="button" autoFocus onClick={onContinue} className="pixel-font mt-8 inline-flex min-h-12 w-full items-center justify-center border-2 border-cyan-200 bg-cyan-300 px-5 py-4 text-[10px] text-[#07111b] shadow-[4px_4px_0_#155e75] transition hover:-translate-y-0.5 hover:bg-cyan-100 hover:shadow-[5px_5px_0_#155e75] active:translate-y-0 active:shadow-none">CONTINUAR</button>
+        )}
       </section>
 
       <style jsx global>{`

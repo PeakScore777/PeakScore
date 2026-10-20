@@ -11,10 +11,10 @@ type Q = {
   explanation: string; is_published: boolean;
 };
 
-export default function AdminPracticeQuestionEditor({ position }: { position: number }) {
+export default function AdminPracticeQuestionEditor({ position, initialQuestions }: { position: number; initialQuestions: Q[] }) {
   const [admin, setAdmin] = useState(false);
   const [open, setOpen] = useState(false);
-  const [questions, setQuestions] = useState<Q[]>([]);
+  const [questions, setQuestions] = useState<Q[]>(initialQuestions);
   const [draft, setDraft] = useState<Q | null>(null);
   const [blocksText, setBlocksText] = useState("[]");
   const [status, setStatus] = useState("");
@@ -41,7 +41,7 @@ export default function AdminPracticeQuestionEditor({ position }: { position: nu
   function startEdit() {
     const current = questions.find((q) => q.position === position);
     if (!current || questions.length !== 3) {
-      setStatus("No se encontraron las tres preguntas guardadas en Supabase. Guarda primero la misión desde el editor administrativo.");
+      setStatus("No se encontraron las tres preguntas de esta misión. Recarga la página e inténtalo de nuevo.");
       setOpen(true);
       return;
     }

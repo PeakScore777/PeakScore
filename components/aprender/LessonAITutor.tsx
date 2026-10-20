@@ -74,8 +74,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-sky-300 bg-white shadow-[0_0_0_3px_rgba(14,165,233,.12)]">
-            <img src="/images/orby/orby-avatar.png" alt="Avatar de Orby" className="h-full w-full object-contain" onError={(event) => { event.currentTarget.style.display = "none"; }} />
-            <span className="text-2xl" aria-hidden="true">🤖</span>
+            <img src="/avatars/photo_perfil/orbyp.png" alt="Avatar de Orby" className="h-full w-full object-contain object-center" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
           </div>
           <div className="min-w-0">
             <p className="font-extrabold text-slate-950">Orby <span className="text-sky-600">●</span></p>

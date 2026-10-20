@@ -6,6 +6,7 @@ import {
   Zap,
   ShieldCheck,
   Building2,
+  ClipboardList,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -152,6 +153,19 @@ export default async function AdminPage() {
               <div className="mt-5 text-sm font-semibold text-emerald-600">
                 Ver solicitudes →
               </div>
+            </Link>
+
+            {/* EDITOR DE PREGUNTAS DE LECCIÓN */}
+            <Link
+              href="/dashboard/admin/lesson-questions"
+              className="group rounded-2xl border border-emerald-200/30 bg-slate-950 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-300/15 text-emerald-300">
+                <ClipboardList size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-white">Editor de preguntas de misión</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-400">Edita las tres preguntas, crea tablas estructuradas y revisa la vista previa antes de publicar.</p>
+              <div className="mt-5 text-sm font-semibold text-emerald-300">Abrir editor →</div>
             </Link>
 
             {/* BANCO */}

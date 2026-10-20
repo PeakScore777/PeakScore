@@ -380,7 +380,7 @@ export default function CristalesMisteriososPage() {
 
       {finished && lost && (
         <div
-          className="game-over-overlay fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto"
+          className="game-over-overlay fixed inset-x-0 bottom-0 top-[72px] z-40 flex items-center justify-center overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="game-over-title"
@@ -466,9 +466,12 @@ export default function CristalesMisteriososPage() {
       <style jsx global>{`
         .game-over-overlay {
           position: fixed;
-          inset: 0;
-          z-index: 9999;
-          min-height: 100dvh;
+          top: 72px;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 40;
+          min-height: calc(100dvh - 72px);
           padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 4vw, 3rem);
           background:
             linear-gradient(180deg, rgba(2, 5, 13, .32) 0%, rgba(2, 5, 13, .50) 48%, rgba(0, 0, 0, .78) 100%),

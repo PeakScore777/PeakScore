@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
+import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -90,6 +91,7 @@ export default function CristalesMisteriososPage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const [lost, setLost] = useState(false);
+  const [rewardOpen, setRewardOpen] = useState(false);
 
   const question = questions[questionIndex];
   const isCorrect = selected === question.answer;
@@ -121,8 +123,8 @@ export default function CristalesMisteriososPage() {
     setFinished(true);
     if (correctCount === questions.length) {
       setLost(false);
+      setRewardOpen(true);
       playSound("level-win.mp3", 0.25);
-      window.setTimeout(() => playSound("xp-gain.mp3", 0.22), 220);
     } else {
       setLost(true);
       playSound("game-over.wav", 0.3);
@@ -136,6 +138,7 @@ export default function CristalesMisteriososPage() {
     setCorrectCount(0);
     setFinished(false);
     setLost(false);
+    setRewardOpen(false);
   }
 
   return (
@@ -305,17 +308,7 @@ export default function CristalesMisteriososPage() {
             <p className="mt-2 text-sm leading-6 text-slate-400">Consulta la teoría a la izquierda cuando la necesites. Usa las evidencias para justificar tu respuesta.</p>
           </div>
 
-          {finished ? (lost ? (
-            <section className="mx-auto w-full max-w-4xl overflow-hidden border border-rose-300/30 bg-[#05070b] text-white shadow-[0_20px_60px_rgba(0,0,0,.35)]">
-              <div className="relative aspect-video w-full bg-black">
-                <Image src="/images/game-over/nova-derrotado.png" alt="Nova derrotado en el Santuario de la Materia" fill priority sizes="(max-width: 768px) 100vw, 896px" className="object-contain" />
-              </div>
-              <div className="flex flex-col gap-4 border-t border-rose-300/20 p-5 sm:flex-row sm:items-center sm:justify-center sm:p-6">
-                <button type="button" onClick={restartPractice} className="inline-flex min-h-11 items-center justify-center gap-2 border border-rose-200/40 bg-[#24141a] px-5 py-3 text-xs font-bold text-rose-100 transition hover:bg-[#3a1c25]"><RotateCcw className="h-4 w-4" /> REPETIR PRÁCTICA</button>
-                <button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); }} className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/20 bg-[#151b24] px-5 py-3 text-xs font-bold text-slate-100 transition hover:border-cyan-200/50 hover:bg-[#1d2931]"><BookOpen className="h-4 w-4" /> REPASAR TEORÍA</button>
-              </div>
-            </section>
-          ) : (
+          {finished && !lost ? (
             <section className="completion-panel relative mx-auto w-full max-w-2xl overflow-hidden border border-emerald-300/30 bg-[#05070b] p-6 text-white shadow-[0_20px_60px_rgba(0,0,0,.35)] sm:p-9">
               <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-cyan-300 to-violet-400" />
               <div className="relative z-10 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
@@ -335,7 +328,7 @@ export default function CristalesMisteriososPage() {
                 <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-11 items-center gap-2 bg-emerald-400 px-4 py-2.5 text-xs font-bold text-[#07130d] transition hover:bg-emerald-300"><BookOpen className="h-4 w-4" /> Repasar teoría</button>
               </div>
             </section>
-          )) : (
+          ) : (
             <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,370px)_minmax(0,1fr)]">
               <aside className="border border-white/10 bg-[#152235] p-5 lg:sticky lg:top-[82px]">
                 <p className="flex items-center gap-2 text-xs font-bold text-cyan-200"><BookOpen className="h-4 w-4" /> Repaso rápido</p>
@@ -393,6 +386,20 @@ export default function CristalesMisteriososPage() {
           )}
         </div>
       )}
+
+      {finished && lost && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/45 px-3 py-5 backdrop-blur-md sm:px-6" role="dialog" aria-modal="true" aria-label="Práctica no superada">
+          <div className="relative my-auto w-full max-w-[900px] overflow-hidden bg-black shadow-[0_0_90px_rgba(255,25,65,.18)]">
+            <Image src="/images/game-over/nova-derrotado.png" alt="Nova derrotado: inténtalo de nuevo" width={1600} height={900} priority sizes="(max-width: 768px) 100vw, 900px" className="block h-auto w-full" />
+            <div className="absolute bottom-[2.5%] left-[34%] right-[4%] flex gap-2 sm:bottom-[4%] sm:left-[35%] sm:right-[5%] sm:gap-3">
+              <button type="button" onClick={restartPractice} className="flex min-h-8 flex-1 items-center justify-center gap-1 border border-rose-300/70 bg-[#19080d]/95 px-1 py-2 text-[8px] font-extrabold text-white shadow-[0_0_18px_rgba(255,20,70,.16)] transition hover:bg-[#4b1020] sm:min-h-11 sm:gap-2 sm:px-3 sm:text-xs"><RotateCcw className="h-3 w-3 sm:h-4 sm:w-4" /> REPETIR PRÁCTICA</button>
+              <button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); }} className="flex min-h-8 flex-1 items-center justify-center gap-1 border border-white/35 bg-[#080d16]/95 px-1 py-2 text-[8px] font-extrabold text-white transition hover:bg-[#202a3a] sm:min-h-11 sm:gap-2 sm:px-3 sm:text-xs"><BookOpen className="h-3 w-3 sm:h-4 sm:w-4" /> REPASAR TEORÍA</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <XpRewardAnimation open={rewardOpen && finished && !lost} xp={50} onContinue={() => setRewardOpen(false)} onRepeat={() => { setRewardOpen(false); restartPractice(); }} onReview={() => { setRewardOpen(false); setStage("theory"); setFinished(false); }} />
 
       <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
         <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">

@@ -5,6 +5,7 @@ import Image from "next/image";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
+import AdminPracticeQuestionEditor from "@/components/admin/AdminPracticeQuestionEditor";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -106,7 +107,7 @@ export default function CristalesMisteriososPage() {
         return Array.isArray(data.questions) ? data.questions : null;
       })
       .then((rows) => {
-        if (!active || !rows || rows.length !== 3) return;
+        if (!active || !rows || rows.length === 0) return;
         const normalized = rows.map((row: any) => ({
           difficulty: row.difficulty,
           competency: row.competency ?? "",
@@ -384,6 +385,7 @@ export default function CristalesMisteriososPage() {
                   <div className="mt-4 h-2 overflow-hidden border border-white/10 bg-[#080d17]"><div className="h-full bg-gradient-to-r from-cyan-300 via-emerald-300 to-lime-300 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
                 </div>
                 <div className="p-5 sm:p-7">
+                <AdminPracticeQuestionEditor position={questionIndex + 1} />
                 <p className="pixel-font text-[9px] font-bold uppercase tracking-[.12em] text-cyan-200">Situación problema</p>
                 <p className="mt-3 border-l-[3px] border-cyan-300 bg-[#15243a] px-4 py-4 text-sm leading-7 text-slate-100 shadow-inner shadow-black/20">{question.context}</p>
                 {question.context_blocks?.map((block, blockIndex) => block.type === "table" ? (

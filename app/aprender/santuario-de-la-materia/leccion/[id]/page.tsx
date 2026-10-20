@@ -380,12 +380,12 @@ export default function CristalesMisteriososPage() {
 
       {finished && lost && (
         <div
-          className="game-over-overlay fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto px-4 py-8"
+          className="game-over-overlay fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-labelledby="game-over-title"
         >
-          <div className="game-over-content relative z-10 flex w-full max-w-5xl flex-col items-center text-center">
+          <div className="game-over-content relative z-10 flex w-full max-w-6xl flex-col items-center text-center">
             <div aria-hidden="true" className="game-over-pixels pointer-events-none absolute inset-0" />
             <div aria-hidden="true" className="game-over-crystal-glow pointer-events-none absolute inset-0" />
             <div className="game-over-heading relative flex w-full flex-wrap items-center justify-center gap-x-1 sm:gap-x-3">
@@ -401,18 +401,18 @@ export default function CristalesMisteriososPage() {
               <span className="pixel-font game-over-title">OVER</span>
             </div>
 
-            <p className="pixel-font mt-3 text-[10px] tracking-[.08em] text-white/90 sm:mt-5 sm:text-sm">PLAY AGAIN?</p>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-100 sm:text-base">
+            <p className="pixel-font mt-3 text-xs tracking-[.08em] text-white sm:mt-5 sm:text-base">PLAY AGAIN?</p>
+            <p className="game-over-copy mt-4 max-w-3xl text-sm leading-8 text-white sm:text-lg">
               No lograste responder correctamente todas las preguntas.
             </p>
-            <p className="mt-2 text-sm font-medium text-slate-200 sm:text-base">
+            <p className="game-over-copy mt-2 text-sm font-medium text-white sm:text-lg">
               Acertaste <strong className="text-cyan-300">{correctCount} de {questions.length}</strong> preguntas.
             </p>
-            <p className="mt-2 max-w-2xl text-xs leading-6 text-slate-300 sm:text-sm sm:leading-7">
+            <p className="game-over-copy mt-3 max-w-3xl text-sm leading-7 text-slate-100 sm:text-base sm:leading-8">
               Repasa las explicaciones y vuelve a intentarlo: cada error te muestra qué puedes dominar mejor.
             </p>
 
-            <div className="mt-5 flex w-full max-w-sm flex-col items-center gap-2 sm:mt-7 sm:gap-3">
+            <div className="mt-6 flex w-full max-w-xl flex-col items-center gap-2 sm:mt-8 sm:gap-3">
               <button
                 type="button"
                 onClick={restartPractice}
@@ -433,7 +433,7 @@ export default function CristalesMisteriososPage() {
                 <span className="game-over-choice-detail">REPASAR TEORÍA</span>
               </button>
             </div>
-            <p className="pixel-font mt-8 text-[7px] tracking-[.1em] text-white/35">PEAKSCORE · CONTINÚA LA AVENTURA</p>
+            <p className="pixel-font mt-7 text-[9px] tracking-[.1em] text-white/75 sm:mt-9 sm:text-[11px]">PEAKSCORE · CONTINÚA LA AVENTURA</p>
           </div>
         </div>
       )}
@@ -465,15 +465,21 @@ export default function CristalesMisteriososPage() {
 
       <style jsx global>{`
         .game-over-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          min-height: 100dvh;
+          padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 4vw, 3rem);
           background:
-            radial-gradient(ellipse at 50% 42%, rgba(105, 8, 31, .28) 0%, rgba(20, 5, 15, .24) 34%, rgba(0, 0, 0, .94) 78%),
-            linear-gradient(180deg, #030610 0%, #070812 52%, #020308 100%) !important;
+            linear-gradient(180deg, rgba(2, 5, 13, .32) 0%, rgba(2, 5, 13, .50) 48%, rgba(0, 0, 0, .78) 100%),
+            url("/images/game-over-bg.png") center center / cover no-repeat,
+            #020308 !important;
           isolation: isolate;
         }
         .game-over-content { animation: game-over-enter 520ms cubic-bezier(.2,.8,.2,1) both; }
         .game-over-pixels {
           z-index: -2;
-          opacity: .58;
+          opacity: .28;
           background-image:
             radial-gradient(circle, rgba(255, 40, 74, .95) 0 2px, transparent 2.8px),
             radial-gradient(circle, rgba(44, 187, 255, .8) 0 1.5px, transparent 2.4px),
@@ -498,7 +504,7 @@ export default function CristalesMisteriososPage() {
         .game-over-heading { display: flex; align-items: center; gap: .3rem; filter: drop-shadow(0 0 22px rgba(20,210,255,.2)); }
         .game-over-title {
           color: #f8fafc;
-          font-size: clamp(2.3rem, 8.8vw, 6.4rem);
+          font-size: clamp(2.7rem, 9.8vw, 8rem);
           line-height: 1.12;
           letter-spacing: -.065em;
           text-shadow: 5px 5px 0 #155e75, 9px 9px 0 #0b1220, 0 0 30px rgba(34,211,238,.32);
@@ -530,18 +536,20 @@ export default function CristalesMisteriososPage() {
         .game-over-choice-yes { color: #a5f3fc; }
         .game-over-cursor { color: #22d3ee; font-size: 11px; }
         .game-over-cursor-hidden { opacity: 0; }
-        .game-over-choice-detail { margin-left: .2rem; color: #94a3b8; font-family: Arial, Helvetica, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 0; }
+        .game-over-choice-detail { margin-left: .2rem; color: #94a3b8; font-family: Arial, Helvetica, sans-serif; font-size: clamp(13px, 1.1vw, 16px); font-weight: 700; letter-spacing: .02em; }
         .game-over-choice:hover .game-over-choice-detail, .game-over-choice:focus-visible .game-over-choice-detail { color: #e2e8f0; }
+        .game-over-copy { font-family: var(--font-press-start), "Press Start 2P", monospace !important; font-size: clamp(9px, 1vw, 13px) !important; line-height: 2.15 !important; text-shadow: 0 2px 8px rgba(0,0,0,.95); }
+        .game-over-choice-detail { text-shadow: 0 2px 6px rgba(0,0,0,.95); }
         @keyframes game-over-enter { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
         @keyframes game-over-pixel-drift { from { background-position: 8px 12px, 42px 57px, center, center; } to { background-position: 91px 103px, -85px 170px, center, center; } }
         @keyframes game-over-crystal-pulse { 0%, 100% { opacity: .72; transform: scale(1); } 50% { opacity: 1; transform: scale(1.025); } }
         @keyframes game-over-nova-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
         @media (max-width: 640px) {
-          .game-over-title { letter-spacing: -.075em; }
+          .game-over-title { letter-spacing: -.075em; font-size: clamp(2.2rem, 10.5vw, 4.8rem); }
           .game-over-content { padding-top: 1rem; padding-bottom: 1rem; }
           .game-over-heading { gap: .05rem; }
-          .game-over-choice { font-size: 9px; flex-wrap: wrap; }
-          .game-over-choice-detail { flex-basis: 100%; margin-left: 0; }
+          .game-over-choice { min-height: 62px; font-size: 12px; flex-wrap: wrap; }
+          .game-over-choice-detail { flex-basis: 100%; margin-left: 0; font-size: 13px; }
         }
         @media (prefers-reduced-motion: reduce) { .game-over-content, .game-over-pixels, .game-over-nova { animation: none !important; } }
         .lesson-shell { font-family: Arial, Helvetica, sans-serif; }

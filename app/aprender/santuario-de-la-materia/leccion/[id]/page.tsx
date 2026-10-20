@@ -150,12 +150,12 @@ export default function CristalesMisteriososPage() {
           <div className="flex shrink-0 items-center gap-3">
             <span className="pixel-font text-[8px] text-white/70">LECCIÓN 1 / 13</span>
             <div className="hidden h-2 w-24 overflow-hidden rounded-full bg-white/10 sm:block">
-              <div className={`h-full rounded-full bg-emerald-300 transition-all ${stage === "practice" ? "w-[65%]" : "w-[30%]"}`} />
+              <div className="h-full rounded-full bg-emerald-300 transition-all" style={{ width: `${stage === "theory" ? 30 : finished ? 100 : 30 + ((questionIndex + (checked ? 1 : 0)) / questions.length) * 70}%` }} />
             </div>
-            <span className="pixel-font text-[8px] text-emerald-200">{stage === "theory" ? "30%" : finished ? "100%" : "65%"}</span>
+            <span className="pixel-font text-[8px] text-emerald-200">{stage === "theory" ? "30%" : `${Math.round(finished ? 100 : 30 + ((questionIndex + (checked ? 1 : 0)) / questions.length) * 70)}%`}</span>
           </div>
         </div>
-        <div className="h-[2px] bg-white/[.04]"><div className={`h-full bg-cyan-300 transition-all duration-300 ${stage === "theory" ? "w-[30%]" : finished ? "w-full" : "w-[65%]"}`} /></div>
+        <div className="h-[2px] bg-white/[.04]"><div className="h-full bg-cyan-300 transition-all duration-300" style={{ width: `${stage === "theory" ? 30 : finished ? 100 : 30 + ((questionIndex + (checked ? 1 : 0)) / questions.length) * 70}%` }} /></div>
       </header>
 
       {stage === "theory" ? (
@@ -354,7 +354,7 @@ export default function CristalesMisteriososPage() {
               <section className="practice-panel border border-slate-300 bg-[#f4f6f8] p-5 text-slate-900 shadow-[0_12px_32px_rgba(0,0,0,.16)] sm:p-7">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="pixel-font text-[8px] leading-5 text-slate-600">PREGUNTA {questionIndex + 1} DE {questions.length}</p>
-                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900">Práctica</span>
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900"><span aria-hidden="true">📖</span> Práctica</span>
                 </div>
                 <div className="mt-4 h-1.5 overflow-hidden bg-slate-200"><div className="h-full bg-emerald-500 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
                 <p className="mt-6 rounded-md border-l-4 border-slate-400 bg-white px-4 py-3 text-sm leading-7 text-slate-700">{question.context}</p>

@@ -385,7 +385,7 @@ export default function CristalesMisteriososPage() {
                   <div className="mt-4 h-2 overflow-hidden border border-white/10 bg-[#080d17]"><div className="h-full bg-gradient-to-r from-cyan-300 via-emerald-300 to-lime-300 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
                 </div>
                 <div className="p-5 sm:p-7">
-                <AdminPracticeQuestionEditor position={questionIndex + 1} />
+                <AdminPracticeQuestionEditor position={questionIndex + 1} initialQuestions={questions.map((q, index) => ({ position: index + 1, difficulty: q.difficulty, competency: q.competency, context_text: q.context, context_blocks: q.context_blocks ?? [], prompt: q.prompt, options: q.options, correct_answer: q.answer as "A" | "B" | "C" | "D", explanation: q.explanation, is_published: true }))} />
                 <p className="pixel-font text-[9px] font-bold uppercase tracking-[.12em] text-cyan-200">Situación problema</p>
                 <p className="mt-3 border-l-[3px] border-cyan-300 bg-[#15243a] px-4 py-4 text-sm leading-7 text-slate-100 shadow-inner shadow-black/20">{question.context}</p>
                 {question.context_blocks?.map((block, blockIndex) => block.type === "table" ? (

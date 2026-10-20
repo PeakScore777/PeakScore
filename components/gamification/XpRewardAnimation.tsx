@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 type XpRewardAnimationProps = {
   open: boolean;
   xp: number;
+  nextLabel?: string;
   onContinue: () => void;
   onRepeat?: () => void;
   onReview?: () => void;
@@ -19,6 +20,7 @@ type XpRewardAnimationProps = {
 export default function XpRewardAnimation({
   open,
   xp,
+  nextLabel = "CONTINUAR",
   onContinue,
   onRepeat,
   onReview,
@@ -143,7 +145,7 @@ export default function XpRewardAnimation({
             <button type="button" onClick={onReview} className="inline-flex min-h-12 items-center justify-center gap-2 border-2 border-cyan-200 bg-cyan-300 px-4 py-3 text-xs font-extrabold text-[#07111b] transition hover:bg-cyan-100">REPASAR TEORÍA</button>
           </div>
         ) : (
-          <button type="button" autoFocus onClick={onContinue} className="pixel-font mt-8 inline-flex min-h-12 w-full items-center justify-center border-2 border-cyan-200 bg-cyan-300 px-5 py-4 text-[10px] text-[#07111b] shadow-[4px_4px_0_#155e75] transition hover:-translate-y-0.5 hover:bg-cyan-100 hover:shadow-[5px_5px_0_#155e75] active:translate-y-0 active:shadow-none">CONTINUAR</button>
+          <button type="button" autoFocus onClick={onContinue} className="pixel-font mt-8 inline-flex min-h-12 w-full items-center justify-center border-2 border-cyan-200 bg-cyan-300 px-5 py-4 text-[10px] text-[#07111b] shadow-[4px_4px_0_#155e75] transition hover:-translate-y-0.5 hover:bg-cyan-100 hover:shadow-[5px_5px_0_#155e75] active:translate-y-0 active:shadow-none">{nextLabel}</button>
         )}
       </section>
 

@@ -74,6 +74,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/orby-credits", { method: "GET", credentials: "same-origin", cache: "no-store" })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (active && response.ok && typeof data.credits === "number" && Number.isFinite(data.credits)) {
+          setCredits(data.credits);
+        }
+      })
+      .catch(() => {
+        // El saldo también se actualizará después de una consulta exitosa al tutor.
+      });
+    return () => { active = false; };
+  }, []);
+
 
   useEffect(() => {
     return () => {
@@ -178,7 +193,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="min-w-0">
             <p className="font-extrabold text-slate-950">Orby <span className="text-sky-600">●</span></p>
             <p className="truncate text-xs text-slate-500">Tutor de ciencias · Saber 11</p>
-            <p className="mt-1 text-[11px] font-semibold text-sky-700">{credits === null ? "Créditos: se consultan al iniciar" : `Créditos disponibles: ${credits}`}</p>
+            <p className="mt-1 text-[11px] font-semibold text-sky-700">{credits === null ? "Consultando créditos…" : `Créditos disponibles: ${credits}`}</p>
           </div>
         </div>
         <button type="button" onClick={() => onOpenChange(false)} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>

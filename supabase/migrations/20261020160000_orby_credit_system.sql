@@ -135,6 +135,70 @@ begin
 end;
 $$;
 
+
+create or replace function public.orby_get_credits(p_user_id uuid)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $
+declare
+  v_confirmed_at timestamptz;
+  v_today date := timezone('America/Bogota', now())::date;
+  v_inserted integer := 0;
+  v_account public.orby_credit_accounts%rowtype;
+begin
+  if p_user_id is null then
+    return jsonb_build_object('ok', false, 'code', 'invalid_request');
+  end if;
+
+  select u.email_confirmed_at into v_confirmed_at
+  from auth.users u where u.id = p_user_id;
+
+  if not found or v_confirmed_at is null then
+    return jsonb_build_object('ok', false, 'code', 'email_unverified');
+  end if;
+
+  insert into public.orby_credit_accounts (user_id, balance, daily_date)
+  values (p_user_id, 30, v_today)
+  on conflict (user_id) do nothing;
+  get diagnostics v_inserted = row_count;
+
+  if v_inserted = 1 then
+    insert into public.orby_credit_ledger (user_id, request_id, delta, reason)
+    values (p_user_id, gen_random_uuid(), 30, 'initial_grant');
+  end if;
+
+  select * into v_account
+  from public.orby_credit_accounts
+  where user_id = p_user_id for update;
+
+  if v_account.promo_status = 'blocked' then
+    return jsonb_build_object('ok', true, 'balance', 0, 'promoStatus', 'blocked');
+  end if;
+
+  if v_account.daily_date <> v_today then
+    update public.orby_credit_accounts
+    set balance = least(30, balance + 5),
+        daily_date = v_today,
+        messages_today = 0,
+        images_today = 0,
+        updated_at = now()
+    where user_id = p_user_id
+    returning * into v_account;
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'balance', v_account.balance,
+    'promoStatus', v_account.promo_status,
+    'messagesToday', v_account.messages_today,
+    'imagesToday', v_account.images_today
+  );
+end;
+$;
+
+revoke all on function public.orby_get_credits(uuid) from public, anon, authenticated;
+grant execute on function public.orby_get_credits(uuid) to service_role;
+
 revoke all on function public.orby_reserve_credits(uuid, uuid, integer, boolean) from public, anon, authenticated;
 revoke all on function public.orby_refund_credits(uuid, uuid) from public, anon, authenticated;
 grant execute on function public.orby_reserve_credits(uuid, uuid, integer, boolean) to service_role;

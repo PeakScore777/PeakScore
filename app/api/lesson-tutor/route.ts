@@ -175,9 +175,13 @@ Devuelve exclusivamente JSON válido con esta forma:
 No uses bloques Markdown ni texto fuera del JSON.
 `.trim();
 
-    const raw = tutorImage
-      ? await generateTutorVision(prompt, tutorImage.mimeType, tutorImage.base64)
-      : (await generateAI({ task: "tutor", prompt, useFallback: true })).text.trim();
+    let raw = "";
+    if (tutorImage) {
+      raw = await generateTutorVision(prompt, tutorImage.mimeType, tutorImage.base64);
+    } else {
+      const result = await generateAI({ task: "tutor", prompt, useFallback: true });
+      raw = typeof result.text === "string" ? result.text.trim() : "";
+    }
     if (!raw) {
       return NextResponse.json({ error: "Orby no generó una respuesta. Inténtalo de nuevo." }, { status: 503 });
     }

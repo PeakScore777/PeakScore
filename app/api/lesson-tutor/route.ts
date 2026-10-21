@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI } from "@/lib/ai/router";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 
@@ -10,32 +11,13 @@ type TutorMessage = { role: "user" | "assistant"; content: string };
 
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 12;
-const MAX_MESSAGES_PER_UTC_DAY = 60;
-const MAX_IMAGES_PER_UTC_DAY = 3;
-// Best-effort per-process limits for the pilot. Multi-instance production needs a shared atomic limiter.
+const MAX_REQUESTS_PER_WINDOW = 12;
+// Secondary per-process burst limiter. Credits and daily quotas are atomic in Postgres.
 const requestWindows = new Map<string, { count: number; resetAt: number }>();
-const dailyUsage = new Map<string, { day: string; messages: number; images: number }>();
 
-function takeDailyLimits(userId: string, hasImage: boolean): { allowed: boolean; error?: string } {
-  const dateParts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
-  const day = `${dateParts.find((part) => part.type === "year")?.value}-${dateParts.find((part) => part.type === "month")?.value}-${dateParts.find((part) => part.type === "day")?.value}`;
-  const current = dailyUsage.get(userId);
-  const usage = !current || current.day !== day ? { day, messages: 0, images: 0 } : current;
-  if (usage.messages >= MAX_MESSAGES_PER_UTC_DAY) {
-    dailyUsage.set(userId, usage);
-    return { allowed: false, error: "Alcanzaste el límite gratuito de 60 mensajes de Orby por hoy. Vuelve mañana para seguir estudiando." };
-  }
-  if (hasImage && usage.images >= MAX_IMAGES_PER_UTC_DAY) {
-    dailyUsage.set(userId, usage);
-    return { allowed: false, error: "Ya usaste las 3 imágenes gratuitas de hoy. Podrás enviar otra mañana." };
-  }
-  usage.messages += 1;
-  if (hasImage) usage.images += 1;
-  dailyUsage.set(userId, usage);
-  if (dailyUsage.size > 5000) {
-    for (const [id, entry] of dailyUsage) if (entry.day !== day) dailyUsage.delete(id);
-  }
-  return { allowed: true };
+async function refundCredits(userId: string, requestId: string): Promise<void> {
+  const { error } = await supabaseAdmin.rpc("orby_refund_credits", { p_user_id: userId, p_request_id: requestId });
+  if (error) console.error("[Orby Tutor] No se pudo devolver el crédito reservado.", { code: error.code });
 }
 
 function cleanText(value: unknown, maxLength: number): string {
@@ -74,6 +56,7 @@ function isSafeTutorOutput(text: string): boolean {
 }
 
 export async function POST(request: Request) {
+  let reservation: { userId: string; requestId: string } | null = null;
   try {
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (Number.isFinite(contentLength) && contentLength > 4_500_000) {
@@ -123,10 +106,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Soy Orby, el tutor de PeakScore. Solo puedo ayudarte con la teoría y el razonamiento de esta lección. ¿Qué concepto de ciencias quieres repasar?" }, { status: 400 });
     }
 
-    const dailyLimit = takeDailyLimits(user.id, Boolean(tutorImage));
-    if (!dailyLimit.allowed) {
-      return NextResponse.json({ error: dailyLimit.error }, { status: 429 });
+    const requestId = crypto.randomUUID();
+    const creditCost = tutorImage ? 3 : 2;
+    const { data: creditResult, error: creditError } = await supabaseAdmin.rpc("orby_reserve_credits", {
+      p_user_id: user.id,
+      p_request_id: requestId,
+      p_cost: creditCost,
+      p_has_image: Boolean(tutorImage),
+    });
+    if (creditError || !creditResult || typeof creditResult !== "object") {
+      console.error("[Orby Tutor] Falló la reserva de créditos.", { code: creditError?.code });
+      return NextResponse.json({ error: "No pudimos comprobar tus créditos. Inténtalo de nuevo." }, { status: 503 });
     }
+    const credit = creditResult as { ok?: boolean; code?: string; balance?: number; cost?: number };
+    if (!credit.ok) {
+      const messages: Record<string, string> = {
+        email_unverified: "Verifica tu correo electrónico para activar los créditos gratuitos de Orby.",
+        promotional_access_blocked: "Los créditos promocionales de esta cuenta están desactivados por una revisión de uso. Si crees que es un error, contacta al equipo de PeakScore.",
+        account_review: "Estamos revisando el acceso a los créditos promocionales de esta cuenta. Contacta al equipo de PeakScore si necesitas ayuda.",
+        daily_message_limit: "Alcanzaste el límite de 20 consultas de Orby por hoy. Vuelve mañana para seguir estudiando.",
+        daily_image_limit: "Ya usaste las 3 imágenes permitidas hoy. Podrás adjuntar otra mañana.",
+        insufficient_credits: "Te quedaste sin créditos de Orby. Recibirás una recarga diaria de 5 créditos, hasta un saldo máximo de 30.",
+        invalid_request: "La solicitud de créditos no es válida.",
+      };
+      const status = credit.code === "email_unverified" || credit.code === "promotional_access_blocked" || credit.code === "account_review" ? 403 : credit.code === "insufficient_credits" || credit.code === "daily_message_limit" || credit.code === "daily_image_limit" ? 429 : 400;
+      return NextResponse.json({ error: messages[credit.code ?? ""] ?? "No pudimos reservar los créditos de Orby.", credits: typeof credit.balance === "number" ? credit.balance : undefined }, { status });
+    }
+    reservation = { userId: user.id, requestId };
 
     const history: TutorMessage[] = Array.isArray(body.history)
       ? body.history
@@ -219,7 +225,9 @@ No uses bloques Markdown ni texto fuera del JSON.
       raw = typeof result.text === "string" ? result.text.trim() : "";
     }
     if (!raw) {
-      return NextResponse.json({ error: "Orby no generó una respuesta. Inténtalo de nuevo." }, { status: 503 });
+      await refundCredits(user.id, requestId);
+      reservation = null;
+      return NextResponse.json({ error: "Orby no generó una respuesta; no se te cobraron créditos." }, { status: 503 });
     }
 
     let parsed: { reply?: unknown; checkQuestion?: unknown };
@@ -227,16 +235,22 @@ No uses bloques Markdown ni texto fuera del JSON.
       parsed = JSON.parse(raw.replace(/^\s*```json\s*/i, "").replace(/^\s*```\s*/i, "").replace(/\s*```\s*$/i, "").trim());
     } catch {
       // No devolver texto sin validar: podría ser contenido ajeno al formato esperado.
-      return NextResponse.json({ error: "La respuesta no llegó en un formato seguro. Inténtalo otra vez." }, { status: 502 });
+      await refundCredits(user.id, requestId);
+      reservation = null;
+      return NextResponse.json({ error: "La respuesta no llegó en un formato seguro; no se te cobraron créditos." }, { status: 502 });
     }
 
     const reply = cleanText(parsed.reply, 7000);
     const checkQuestion = cleanText(parsed.checkQuestion, 500);
     if (!reply || !isSafeTutorOutput(reply)) {
-      return NextResponse.json({ error: "La respuesta no superó la comprobación de seguridad. Inténtalo de nuevo." }, { status: 502 });
+      await refundCredits(user.id, requestId);
+      reservation = null;
+      return NextResponse.json({ error: "La respuesta no superó la comprobación de seguridad; no se te cobraron créditos." }, { status: 502 });
     }
-    return NextResponse.json({ reply, checkQuestion });
+    reservation = null;
+    return NextResponse.json({ reply, checkQuestion, credits: typeof credit.balance === "number" ? credit.balance : null, creditsUsed: creditCost });
   } catch (error) {
+    if (reservation) await refundCredits(reservation.userId, reservation.requestId);
     console.error("[Orby Tutor] No se pudo responder.", { errorName: error instanceof Error ? error.name : "UnknownError" });
     return NextResponse.json({ error: "Orby no está disponible por ahora. Inténtalo de nuevo en unos segundos." }, { status: 503 });
   }

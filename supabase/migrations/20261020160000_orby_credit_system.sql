@@ -145,7 +145,7 @@ $$;
 create or replace function public.orby_get_credits(p_user_id uuid)
 returns jsonb
 language plpgsql security definer set search_path = ''
-as $
+as $$
 declare
   v_confirmed_at timestamptz;
   v_today date := timezone('America/Bogota', now())::date;
@@ -205,7 +205,7 @@ begin
     'imagesToday', v_account.images_today
   );
 end;
-$;
+$$;
 
 revoke all on function public.orby_get_credits(uuid) from public, anon, authenticated;
 grant execute on function public.orby_get_credits(uuid) to service_role;

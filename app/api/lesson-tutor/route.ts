@@ -89,10 +89,6 @@ export async function POST(request: Request) {
         headers: { "Retry-After": String(limit.retryAfter) },
       });
     }
-    if (!takeDailyLimit(user.id, "messages", MAX_MESSAGES_PER_UTC_DAY)) {
-      return NextResponse.json({ error: "Alcanzaste el límite gratuito de 60 mensajes de Orby por hoy. Vuelve mañana para seguir estudiando." }, { status: 429 });
-    }
-
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) {
       return NextResponse.json({ error: "La solicitud no es válida." }, { status: 400 });
@@ -107,9 +103,6 @@ export async function POST(request: Request) {
     const hasImagePayload = body.image !== undefined && body.image !== null;
     let tutorImage: { mimeType: string; base64: string } | null = null;
     if (hasImagePayload) {
-      if (!takeDailyLimit(user.id, "images", MAX_IMAGES_PER_UTC_DAY)) {
-        return NextResponse.json({ error: "Ya usaste las 3 imágenes gratuitas de hoy. Podrás enviar otra mañana." }, { status: 429 });
-      }
       if (!body.image || typeof body.image !== "object" || Array.isArray(body.image)) {
         return NextResponse.json({ error: "El archivo adjunto no es válido." }, { status: 400 });
       }
@@ -118,12 +111,18 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: checkedImage.error }, { status: 400 });
       }
       tutorImage = { mimeType: checkedImage.mimeType, base64: checkedImage.base64 };
+      if (!takeDailyLimit(user.id, "images", MAX_IMAGES_PER_UTC_DAY)) {
+        return NextResponse.json({ error: "Ya usaste las 3 imágenes gratuitas de hoy. Podrás enviar otra mañana." }, { status: 429 });
+      }
     }
     if (!userMessage && !tutorImage) {
       return NextResponse.json({ error: "Escribe tu duda para que Orby pueda ayudarte." }, { status: 400 });
     }
     if (userMessage && isClearlyOutOfScopeOrInjection(userMessage)) {
       return NextResponse.json({ error: "Soy Orby, el tutor de PeakScore. Solo puedo ayudarte con la teoría y el razonamiento de esta lección. ¿Qué concepto de ciencias quieres repasar?" }, { status: 400 });
+    }
+    if (!takeDailyLimit(user.id, "messages", MAX_MESSAGES_PER_UTC_DAY)) {
+      return NextResponse.json({ error: "Alcanzaste el límite gratuito de 60 mensajes de Orby por hoy. Vuelve mañana para seguir estudiando." }, { status: 429 });
     }
 
     const history: TutorMessage[] = Array.isArray(body.history)

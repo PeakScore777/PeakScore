@@ -10,8 +10,29 @@ type TutorMessage = { role: "user" | "assistant"; content: string };
 
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 12;
-// Best-effort per-process throttle. Production should also use a shared limiter/WAF.
+const MAX_MESSAGES_PER_UTC_DAY = 60;
+const MAX_IMAGES_PER_UTC_DAY = 3;
+// Best-effort per-process limits for the pilot. Multi-instance production needs a shared atomic limiter.
 const requestWindows = new Map<string, { count: number; resetAt: number }>();
+const dailyUsage = new Map<string, { day: string; messages: number; images: number }>();
+
+function takeDailyLimit(userId: string, kind: "messages" | "images", max: number): boolean {
+  const day = new Date().toISOString().slice(0, 10);
+  const current = dailyUsage.get(userId);
+  const usage = !current || current.day !== day
+    ? { day, messages: 0, images: 0 }
+    : current;
+  if (usage[kind] >= max) {
+    dailyUsage.set(userId, usage);
+    return false;
+  }
+  usage[kind] += 1;
+  dailyUsage.set(userId, usage);
+  if (dailyUsage.size > 5000) {
+    for (const [id, entry] of dailyUsage) if (entry.day !== day) dailyUsage.delete(id);
+  }
+  return true;
+}
 
 function cleanText(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -68,6 +89,9 @@ export async function POST(request: Request) {
         headers: { "Retry-After": String(limit.retryAfter) },
       });
     }
+    if (!takeDailyLimit(user.id, "messages", MAX_MESSAGES_PER_UTC_DAY)) {
+      return NextResponse.json({ error: "Alcanzaste el límite gratuito de 60 mensajes de Orby por hoy. Vuelve mañana para seguir estudiando." }, { status: 429 });
+    }
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) {
@@ -83,6 +107,9 @@ export async function POST(request: Request) {
     const hasImagePayload = body.image !== undefined && body.image !== null;
     let tutorImage: { mimeType: string; base64: string } | null = null;
     if (hasImagePayload) {
+      if (!takeDailyLimit(user.id, "images", MAX_IMAGES_PER_UTC_DAY)) {
+        return NextResponse.json({ error: "Ya usaste las 3 imágenes gratuitas de hoy. Podrás enviar otra mañana." }, { status: 429 });
+      }
       if (!body.image || typeof body.image !== "object" || Array.isArray(body.image)) {
         return NextResponse.json({ error: "El archivo adjunto no es válido." }, { status: 400 });
       }

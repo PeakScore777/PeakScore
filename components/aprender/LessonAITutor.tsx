@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { LoaderCircle, Paperclip, Send, X, FileImage } from "lucide-react";
+import { LoaderCircle, Paperclip, Send, X } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
 
@@ -128,7 +128,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setAttachmentError(caught instanceof Error ? caught.message : "No se pudo leer la imagen.");
       return;
     }
-    const nextMessages: Message[] = [...messages, { role: "user", content: message || "Analiza la imagen adjunta.", ...(selectedFile ? { attachmentName: selectedFile.name, attachmentPreview } : {}) }];
+    const nextMessages: Message[] = [...messages, { role: "user", content: message || "Analiza la imagen adjunta.", ...(selectedFile && imagePayload ? { attachmentName: selectedFile.name, attachmentPreview: `data:${selectedFile.type};base64,${imagePayload.base64}` } : {}) }];
     setMessages(nextMessages);
     setInput("");
     if (inputRef.current) inputRef.current.style.height = "48px";

@@ -4,14 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import {
-  ArrowLeft, ArrowRight, BookOpen, ChevronDown, ChevronRight,
-  Grid2X2, LockKeyhole, Play,
+  ArrowLeft, ArrowRight, ChevronDown, ChevronRight,
+  Grid2X2, LockKeyhole,
 } from "lucide-react";
 
 type Lesson = {
   id: string;
   title: string;
-  duration: string;
   available?: boolean;
 };
 
@@ -32,14 +31,14 @@ const chapters: Chapter[] = [
     image: "/images/aprender/santuario/misterio-cristales.png",
     available: true,
     lessons: [
-      { id: "1", title: "Los cristales misteriosos", duration: "2 min", available: true },
-      { id: "2", title: "¿Qué es la materia?", duration: "3 min", available: true },
-      { id: "3", title: "Las huellas de cada material", duration: "4 min", available: true },
-      { id: "4", title: "El secreto de la densidad", duration: "5 min", available: true },
-      { id: "5", title: "Lo que observamos y lo que demostramos", duration: "4 min", available: true },
-      { id: "6", title: "¿Una sustancia o una mezcla?", duration: "4 min", available: true },
-      { id: "7", title: "Leer las pruebas del laboratorio", duration: "3 min", available: true },
-      { id: "8", title: "Desafío: el primer cristal", duration: "5 min", available: true },
+      { id: "1", title: "Los cristales misteriosos", available: true },
+      { id: "2", title: "¿Qué es la materia?", available: true },
+      { id: "3", title: "Las huellas de cada material", available: true },
+      { id: "4", title: "El secreto de la densidad", available: true },
+      { id: "5", title: "Lo que observamos y lo que demostramos", available: true },
+      { id: "6", title: "¿Una sustancia o una mezcla?", available: true },
+      { id: "7", title: "Leer las pruebas del laboratorio", available: true },
+      { id: "8", title: "Desafío: el primer cristal", available: true },
     ],
   },
   {
@@ -48,8 +47,8 @@ const chapters: Chapter[] = [
     description: "Distingue los estados de la materia y sus transformaciones.",
     image: "/images/aprender/santuario/cuando-la-materia-cambia.png",
     lessons: [
-      { id: "7", title: "Sólido, líquido y gas", duration: "9 min" },
-      { id: "8", title: "Cambios físicos y químicos", duration: "10 min" },
+      { id: "7", title: "Sólido, líquido y gas" },
+      { id: "8", title: "Cambios físicos y químicos" },
     ],
   },
   {
@@ -58,8 +57,8 @@ const chapters: Chapter[] = [
     description: "Identifica sustancias, mezclas y métodos de separación.",
     image: "/images/aprender/santuario/laboratorio-mezclas.png",
     lessons: [
-      { id: "9", title: "Sustancias puras y mezclas", duration: "10 min" },
-      { id: "10", title: "Separa la muestra", duration: "12 min" },
+      { id: "9", title: "Sustancias puras y mezclas" },
+      { id: "10", title: "Separa la muestra" },
     ],
   },
   {
@@ -68,8 +67,8 @@ const chapters: Chapter[] = [
     description: "Descubre la estructura de la materia y cómo se organizan los elementos.",
     image: "/images/aprender/santuario/codigo-atomo.png",
     lessons: [
-      { id: "11", title: "Dentro del átomo", duration: "10 min" },
-      { id: "12", title: "Las pistas de los elementos", duration: "12 min" },
+      { id: "11", title: "Dentro del átomo" },
+      { id: "12", title: "Las pistas de los elementos" },
     ],
   },
   {
@@ -78,7 +77,7 @@ const chapters: Chapter[] = [
     description: "Demuestra todo lo que aprendiste en un desafío final.",
     image: "/images/aprender/santuario/guardian-elementos.png",
     lessons: [
-      { id: "13", title: "Desafío final del santuario", duration: "15 min" },
+      { id: "13", title: "Desafío final del santuario" },
     ],
   },
 ];
@@ -233,15 +232,10 @@ export default function SantuarioDeLaMateriaPage() {
                             const available = Boolean(lesson.available);
                             const row = (
                               <div className={`group flex min-h-[51px] items-center gap-3 px-3 py-2.5 transition sm:px-4 ${available ? "hover:bg-cyan-200/[.045]" : "opacity-60"}`}>
-                                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${available ? "border-cyan-300/70 bg-cyan-300/[.07] text-cyan-200" : "border-white/10 bg-white/[.035] text-slate-400"}`}>
-                                  {available ? (lesson.id === "1" || lesson.id === "8" ? <Play className="h-3.5 w-3.5" /> : <BookOpen className="h-3.5 w-3.5" />) : <LockKeyhole className="h-3.5 w-3.5" />}
-                                </span>
+                                {!available && <LockKeyhole className="h-4 w-4 shrink-0 text-slate-500" aria-label="Bloqueado" />}
                                 <span className="min-w-0 flex-1 text-sm">
                                   <span className={`block leading-5 ${available ? "font-bold text-white" : "font-medium text-slate-300"}`}>{lesson.id}. {lesson.title}</span>
-                                  {!detailedView && <span className="mt-0.5 block text-[11px] text-slate-400">{lesson.duration}</span>}
                                 </span>
-                                <span className="hidden shrink-0 text-xs text-slate-400 sm:block">{lesson.duration}</span>
-                                {available ? <ArrowRight className="h-4 w-4 shrink-0 text-cyan-200 transition group-hover:translate-x-0.5" /> : <span className="w-4 shrink-0" />}
                               </div>
                             );
                             // Las secciones del capítulo 1 forman parte de una única lección integrada.

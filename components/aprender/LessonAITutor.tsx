@@ -31,6 +31,8 @@ function renderTutorContent(content: string) {
       {lines.map((rawLine, index) => {
         const line = rawLine.trim();
         if (!line) return <div key={index} className="h-1" aria-hidden="true" />;
+        // Hide a bullet glyph emitted alone by the model instead of rendering it as content.
+        if (/^(?:\*\*)?[•·](?:\*\*)?$/.test(line)) return null;
         const heading = line.match(/^\*\*(.+?)\*\*:?$/);
         if (heading) {
           return <h4 key={index} className="pt-1 text-sm font-extrabold tracking-tight text-slate-950">{heading[1].replace(/:$/, "")}</h4>;

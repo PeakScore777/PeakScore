@@ -16,22 +16,25 @@ const MAX_IMAGES_PER_UTC_DAY = 3;
 const requestWindows = new Map<string, { count: number; resetAt: number }>();
 const dailyUsage = new Map<string, { day: string; messages: number; images: number }>();
 
-function takeDailyLimit(userId: string, kind: "messages" | "images", max: number): boolean {
+function takeDailyLimits(userId: string, hasImage: boolean): { allowed: boolean; error?: string } {
   const day = new Date().toISOString().slice(0, 10);
   const current = dailyUsage.get(userId);
-  const usage = !current || current.day !== day
-    ? { day, messages: 0, images: 0 }
-    : current;
-  if (usage[kind] >= max) {
+  const usage = !current || current.day !== day ? { day, messages: 0, images: 0 } : current;
+  if (usage.messages >= MAX_MESSAGES_PER_UTC_DAY) {
     dailyUsage.set(userId, usage);
-    return false;
+    return { allowed: false, error: "Alcanzaste el límite gratuito de 60 mensajes de Orby por hoy. Vuelve mañana para seguir estudiando." };
   }
-  usage[kind] += 1;
+  if (hasImage && usage.images >= MAX_IMAGES_PER_UTC_DAY) {
+    dailyUsage.set(userId, usage);
+    return { allowed: false, error: "Ya usaste las 3 imágenes gratuitas de hoy. Podrás enviar otra mañana." };
+  }
+  usage.messages += 1;
+  if (hasImage) usage.images += 1;
   dailyUsage.set(userId, usage);
   if (dailyUsage.size > 5000) {
     for (const [id, entry] of dailyUsage) if (entry.day !== day) dailyUsage.delete(id);
   }
-  return true;
+  return { allowed: true };
 }
 
 function cleanText(value: unknown, maxLength: number): string {
@@ -111,9 +114,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: checkedImage.error }, { status: 400 });
       }
       tutorImage = { mimeType: checkedImage.mimeType, base64: checkedImage.base64 };
-      if (!takeDailyLimit(user.id, "images", MAX_IMAGES_PER_UTC_DAY)) {
-        return NextResponse.json({ error: "Ya usaste las 3 imágenes gratuitas de hoy. Podrás enviar otra mañana." }, { status: 429 });
-      }
     }
     if (!userMessage && !tutorImage) {
       return NextResponse.json({ error: "Escribe tu duda para que Orby pueda ayudarte." }, { status: 400 });
@@ -121,8 +121,10 @@ export async function POST(request: Request) {
     if (userMessage && isClearlyOutOfScopeOrInjection(userMessage)) {
       return NextResponse.json({ error: "Soy Orby, el tutor de PeakScore. Solo puedo ayudarte con la teoría y el razonamiento de esta lección. ¿Qué concepto de ciencias quieres repasar?" }, { status: 400 });
     }
-    if (!takeDailyLimit(user.id, "messages", MAX_MESSAGES_PER_UTC_DAY)) {
-      return NextResponse.json({ error: "Alcanzaste el límite gratuito de 60 mensajes de Orby por hoy. Vuelve mañana para seguir estudiando." }, { status: 429 });
+
+    const dailyLimit = takeDailyLimits(user.id, Boolean(tutorImage));
+    if (!dailyLimit.allowed) {
+      return NextResponse.json({ error: dailyLimit.error }, { status: 429 });
     }
 
     const history: TutorMessage[] = Array.isArray(body.history)

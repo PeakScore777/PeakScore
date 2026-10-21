@@ -15,6 +15,40 @@ type Props = {
   onOpenChange: (open: boolean) => void;
 };
 
+
+function renderInline(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
+    part.startsWith("**") && part.endsWith("**")
+      ? <strong key={index} className="font-bold text-slate-950">{part.slice(2, -2)}</strong>
+      : <span key={index}>{part}</span>
+  );
+}
+
+function renderTutorContent(content: string) {
+  const lines = content.replace(/\r/g, "").split("\n");
+  return (
+    <div className="space-y-2.5">
+      {lines.map((rawLine, index) => {
+        const line = rawLine.trim();
+        if (!line) return <div key={index} className="h-1" aria-hidden="true" />;
+        const heading = line.match(/^\*\*(.+?)\*\*:?$/);
+        if (heading) {
+          return <h4 key={index} className="pt-1 text-sm font-extrabold tracking-tight text-slate-950">{heading[1].replace(/:$/, "")}</h4>;
+        }
+        const bullet = line.match(/^(?:[-•])\s+(.+)$/);
+        if (bullet) {
+          return <div key={index} className="flex gap-2 pl-1"><span className="mt-[2px] font-bold text-sky-600">•</span><p className="min-w-0 flex-1">{renderInline(bullet[1])}</p></div>;
+        }
+        const numbered = line.match(/^(\d+)[.)]\s+(.+)$/);
+        if (numbered) {
+          return <div key={index} className="flex gap-2 pl-1"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-sky-50 text-[11px] font-extrabold text-sky-700">{numbered[1]}</span><p className="min-w-0 flex-1">{renderInline(numbered[2])}</p></div>;
+        }
+        return <p key={index}>{renderInline(line.replace(/^\*\*(.+?)\*\*$/, "$1"))}</p>;
+      })}
+    </div>
+  );
+}
+
 const starters = [
   "Explícame la diferencia entre masa y densidad",
   "¿Cómo analizo una tabla de datos?",
@@ -105,7 +139,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {messages.map((message, index) => (
               <article key={index} className={message.role === "user" ? "ml-auto max-w-[92%] rounded-2xl rounded-br-sm bg-sky-600 px-3 py-3 text-white" : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-100" : "mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-700"}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
-                <div className="whitespace-pre-wrap break-words text-sm leading-6">{message.content}</div>
+                <div className="break-words text-[13px] leading-[1.75] sm:text-sm">{renderTutorContent(message.content)}</div>
                 {message.checkQuestion && <div className="mt-3 rounded-lg border-l-2 border-amber-400 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-950"><strong>Comprueba lo aprendido:</strong> {message.checkQuestion}</div>}
               </article>
             ))}

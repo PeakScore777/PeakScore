@@ -1236,7 +1236,8 @@ const GROQ_QUESTION_SCHEMA = {
 };
 
 async function generateWithGroq(
-  prompt: string
+  prompt: string,
+  task?: AITask
 ): Promise<string> {
   const apiKey =
     process.env.GROQ_API_KEY;
@@ -1324,14 +1325,19 @@ async function generateWithGroq(
               // La validación detallada de la estructura
               // continúa en /api/generate-questions.          
 
-              response_format: {
-                type: "json_schema",
-                json_schema: {
-                  name: "peakscore_questions",
-                  strict: true,
-                  schema: GROQ_QUESTION_SCHEMA,
-                },
-              },
+              // Solo la generación individual de preguntas utiliza este esquema.
+              // Aplicarlo al tutor provocaba que el fallback devolviera un objeto
+              // de preguntas en vez de { reply, checkQuestion }.
+              response_format: task === "question_generation"
+                ? {
+                    type: "json_schema",
+                    json_schema: {
+                      name: "peakscore_questions",
+                      strict: true,
+                      schema: GROQ_QUESTION_SCHEMA,
+                    },
+                  }
+                : { type: "json_object" },
             }),
           }
         );
@@ -1845,7 +1851,8 @@ async function generateWithGroq(
  */
 async function generateWithProvider(
   provider: AIProvider,
-  prompt: string
+  prompt: string,
+  task?: AITask
 ) {
   switch (provider) {
     /* ===============================================
@@ -1865,7 +1872,8 @@ async function generateWithProvider(
     case "groq": {
       const content =
         await generateWithGroq(
-          prompt
+          prompt,
+          task
         );
 
       return {
@@ -2129,7 +2137,8 @@ export async function generateAI({
       const result =
         await generateWithProvider(
           currentProvider,
-          prompt
+          prompt,
+          task
         );
 
       console.log(

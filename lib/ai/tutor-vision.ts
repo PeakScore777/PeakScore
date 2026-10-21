@@ -1,7 +1,6 @@
 import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
-import { AIServiceError } from "@/lib/ai/router";
 
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
@@ -28,7 +27,7 @@ export function validateTutorImage(mimeType: unknown, base64: unknown):
  */
 export async function generateTutorVision(prompt: string, mimeType: string, base64: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new AIServiceError("AI_CONFIGURATION");
+  if (!apiKey) throw new Error("GEMINI_TUTOR_VISION_NOT_CONFIGURED");
 
   try {
     const ai = new GoogleGenAI({ apiKey });
@@ -47,13 +46,13 @@ export async function generateTutorVision(prompt: string, mimeType: string, base
       },
     });
     const text = typeof result.text === "string" ? result.text.trim() : "";
-    if (!text) throw new AIServiceError("AI_INVALID_RESPONSE");
+    if (!text) throw new Error("GEMINI_TUTOR_VISION_EMPTY_RESPONSE");
     return text;
   } catch (error) {
-    if (error instanceof AIServiceError) throw error;
+    if (error instanceof Error && error.message === "GEMINI_TUTOR_VISION_NOT_CONFIGURED") throw error;
     console.error("[Orby Tutor] Falló el análisis visual de Gemini.", {
       errorName: error instanceof Error ? error.name : "UnknownError",
     });
-    throw new AIServiceError("AI_UNAVAILABLE");
+    throw new Error("GEMINI_TUTOR_VISION_UNAVAILABLE");
   }
 }

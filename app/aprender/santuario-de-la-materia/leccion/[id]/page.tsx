@@ -34,16 +34,16 @@ const fallbackQuestions: Question[] = [
   {
     difficulty: "Fácil",
     competency: "Uso comprensivo del conocimiento científico",
-    context: "En el Santuario, Nova necesita escoger un material para reparar una pieza que estará cerca de una fuente de calor. El registro del laboratorio presenta estos datos: Material P: punto de fusión 640 °C; densidad 2,7 g/cm³. Material Q: punto de fusión 820 °C; densidad 1,8 g/cm³. Material R: punto de fusión 710 °C; densidad 7,9 g/cm³. La pieza debe soportar temperaturas superiores a 700 °C.",
-    prompt: "Según los datos, ¿cuál material cumple la condición de tener un punto de fusión superior a 700 °C y la menor densidad entre los que cumplen esa condición?",
+    context: "Nova divide un cristal homogéneo en dos fragmentos para estudiarlo. El fragmento A tiene una masa de 12 g y un volumen de 4 cm³. El fragmento B tiene una masa de 24 g y un volumen de 8 cm³. Ambos se mantienen a la misma temperatura y presión.",
+    prompt: "¿Cuál interpretación clasifica correctamente las propiedades que aparecen en el registro?",
     options: [
-      { label: "A", text: "El material P, porque tiene la menor densidad de los tres." },
-      { label: "B", text: "El material Q, porque cumple la condición de temperatura y tiene densidad de 1,8 g/cm³." },
-      { label: "C", text: "El material R, porque su densidad es la mayor." },
-      { label: "D", text: "P y Q, porque sus densidades son menores que 3 g/cm³." },
+      { label: "A", text: "La masa y el volumen son intensivos porque se pueden medir en el laboratorio." },
+      { label: "B", text: "La masa y el volumen son extensivos; la densidad calculada es intensiva si las muestras conservan la misma composición y se comparan en las mismas condiciones." },
+      { label: "C", text: "La densidad es extensiva porque aumenta cuando se duplica la masa." },
+      { label: "D", text: "Todas las propiedades son extensivas porque los fragmentos tienen tamaños diferentes." },
     ],
     answer: "B",
-    explanation: "Primero aplica la condición de temperatura: el material P se descarta porque su punto de fusión es 640 °C. Q y R superan 700 °C; luego compara sus densidades: Q tiene 1,8 g/cm³ y R 7,9 g/cm³. Por eso Q cumple las dos condiciones. En preguntas Saber 11 con tablas, filtra primero por el criterio obligatorio y después compara los datos restantes; no elijas solo por una característica.",
+    explanation: "La masa y el volumen dependen de la cantidad de muestra, por eso son propiedades extensivas. Para A, la densidad es 12/4 = 3 g/cm³; para B, 24/8 = 3 g/cm³. La cantidad se duplica, pero la densidad permanece igual bajo las condiciones descritas. Una propiedad no es intensiva simplemente porque se mida: lo importante es si depende de la cantidad de materia.",
   },
   {
     difficulty: "Media",
@@ -210,6 +210,7 @@ export default function CristalesMisteriososPage() {
           <div className="mb-6">
             <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[28px]">Los cristales misteriosos</h1>
             <p className="mt-3 text-sm leading-7 text-slate-400">Primero observa. Después compara. Solo entonces saca una conclusión.</p>
+            <p className="mt-2 text-xs font-semibold uppercase tracking-[.12em] text-emerald-200/80">Nivel 1 · Tiempo estimado: 30 minutos</p>
           </div>
 
           <LessonNotesSelection sourceTitle="Los cristales misteriosos" sourcePath="/aprender/santuario-de-la-materia/leccion/1">

@@ -229,9 +229,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           const pastedImage = imageItem.getAsFile();
           if (!pastedImage) return;
           event.preventDefault();
-          const safeType = ["image/jpeg", "image/png", "image/webp"].includes(pastedImage.type) ? pastedImage.type : "image/png";
-          const extension = safeType === "image/jpeg" ? "jpg" : safeType === "image/webp" ? "webp" : "png";
-          handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: safeType }));
+          const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
+          handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
         }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className="min-h-12 max-h-28 flex-1 overflow-y-auto resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-5 text-slate-900 outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100" />
         <button type="submit" disabled={(!input.trim() && !attachment) || loading} aria-label="Enviar mensaje a Orby" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"><Send className="h-5 w-5" /></button>
       </form>

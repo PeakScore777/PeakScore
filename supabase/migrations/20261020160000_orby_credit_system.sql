@@ -214,3 +214,17 @@ revoke all on function public.orby_reserve_credits(uuid, uuid, integer, boolean)
 revoke all on function public.orby_refund_credits(uuid, uuid) from public, anon, authenticated;
 grant execute on function public.orby_reserve_credits(uuid, uuid, integer, boolean) to service_role;
 grant execute on function public.orby_refund_credits(uuid, uuid) to service_role;
+
+
+create table if not exists public.orby_credit_admin_audit (
+  id bigint generated always as identity primary key,
+  target_user_id uuid not null references auth.users(id) on delete cascade,
+  admin_user_id uuid not null references auth.users(id) on delete restrict,
+  old_status text not null check (old_status in ('eligible', 'blocked', 'review')),
+  new_status text not null check (new_status in ('eligible', 'blocked', 'review')),
+  reason text not null check (char_length(reason) between 10 and 500),
+  created_at timestamptz not null default now()
+);
+
+alter table public.orby_credit_admin_audit enable row level security;
+revoke all on public.orby_credit_admin_audit from anon, authenticated;

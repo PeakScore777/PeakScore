@@ -11,7 +11,6 @@ type TutorMessage = { role: "user" | "assistant"; content: string };
 
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 12;
-const MAX_REQUESTS_PER_WINDOW = 12;
 // Secondary per-process burst limiter. Credits and daily quotas are atomic in Postgres.
 const requestWindows = new Map<string, { count: number; resetAt: number }>();
 

@@ -226,7 +226,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     if (!raw) {
       await refundCredits(user.id, requestId);
       reservation = null;
-      return NextResponse.json({ error: "Orby no generó una respuesta; no se te cobraron créditos." }, { status: 503 });
+      return NextResponse.json({ error: "Orby no generó una respuesta; inténtalo de nuevo." }, { status: 503 });
     }
 
     let parsed: { reply?: unknown; checkQuestion?: unknown };
@@ -236,7 +236,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       // No devolver texto sin validar: podría ser contenido ajeno al formato esperado.
       await refundCredits(user.id, requestId);
       reservation = null;
-      return NextResponse.json({ error: "La respuesta no llegó en un formato seguro; no se te cobraron créditos." }, { status: 502 });
+      return NextResponse.json({ error: "La respuesta no llegó en un formato seguro; inténtalo de nuevo." }, { status: 502 });
     }
 
     const reply = cleanText(parsed.reply, 7000);
@@ -244,7 +244,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     if (!reply || !isSafeTutorOutput(reply)) {
       await refundCredits(user.id, requestId);
       reservation = null;
-      return NextResponse.json({ error: "La respuesta no superó la comprobación de seguridad; no se te cobraron créditos." }, { status: 502 });
+      return NextResponse.json({ error: "La respuesta no superó la comprobación de seguridad; inténtalo de nuevo." }, { status: 502 });
     }
     reservation = null;
     return NextResponse.json({ reply, checkQuestion, credits: typeof credit.balance === "number" ? credit.balance : null, creditsUsed: creditCost });

@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   CheckCircle2,
   ChevronDown,
   FlaskConical,
@@ -210,13 +209,12 @@ export default function CristalesMisteriososPage() {
           <div className="mb-6">
             <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[28px]">Los cristales misteriosos</h1>
             <p className="mt-3 text-sm leading-7 text-slate-400">Primero observa. Después compara. Solo entonces saca una conclusión.</p>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-[.12em] text-emerald-200/80">Nivel 1 · Tiempo estimado: 30 minutos</p>
           </div>
 
           <LessonNotesSelection sourceTitle="Los cristales misteriosos" sourcePath="/aprender/santuario-de-la-materia/leccion/1">
           <section className="mb-7">
             <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((open) => !open)} className="flex w-full items-center justify-between border border-white/[.09] bg-[#131824] px-4 py-3 text-left transition hover:border-cyan-200/25">
-              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200"><span aria-hidden="true">📖</span> Historia</span>
+              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200">Historia</span>
               <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
             </button>
             {historyOpen && (
@@ -384,7 +382,7 @@ export default function CristalesMisteriososPage() {
           {finished && !lost ? null : (
             <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,370px)_minmax(0,1fr)]">
               <aside className="border border-white/10 bg-[#152235] p-5 lg:sticky lg:top-[82px]">
-                <p className="flex items-center gap-2 text-xs font-bold text-cyan-200"><span aria-hidden="true" className="text-base">📖</span> Repaso rápido</p>
+                <p className="text-xs font-bold text-cyan-200">Repaso rápido</p>
                 {matterNotes.map((note) => (
                   <section key={note.title} className="mt-5 border-t border-white/[.08] pt-4 first:border-0 first:pt-0">
                     <h2 className="text-sm font-bold text-white">{note.title}</h2>

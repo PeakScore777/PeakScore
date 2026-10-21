@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { LoaderCircle, Paperclip, Send, X } from "lucide-react";
+import { FileText, LoaderCircle, Paperclip, Send, X } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
 
@@ -81,9 +81,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function handleAttachment(file?: File) {
     setAttachmentError("");
     if (!file) return;
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
     if (!allowedTypes.includes(file.type)) {
-      setAttachmentError("Adjunta una imagen JPG, PNG o WebP.");
+      setAttachmentError("Adjunta una imagen JPG, PNG, WebP o un PDF.");
       return;
     }
     if (file.size > 3 * 1024 * 1024) {
@@ -91,7 +91,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     setAttachment(file);
-    setAttachmentPreview(URL.createObjectURL(file));
+    setAttachmentPreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : "");
   }
 
   function clearAttachment() {
@@ -128,7 +128,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setAttachmentError(caught instanceof Error ? caught.message : "No se pudo leer la imagen.");
       return;
     }
-    const nextMessages: Message[] = [...messages, { role: "user", content: message || "Analiza la imagen adjunta.", ...(selectedFile && imagePayload ? { attachmentName: selectedFile.name, attachmentPreview: `data:${selectedFile.type};base64,${imagePayload.base64}` } : {}) }];
+    const nextMessages: Message[] = [...messages, { role: "user", content: message || "Analiza la imagen adjunta.", ...(selectedFile && imagePayload ? { attachmentName: selectedFile.name, attachmentPreview: selectedFile.type.startsWith("image/") ? `data:${selectedFile.type};base64,${imagePayload.base64}` : "" } : {}) }];
     setMessages(nextMessages);
     setInput("");
     if (inputRef.current) inputRef.current.style.height = "48px";
@@ -199,7 +199,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <article key={index} className={message.role === "user" ? "ml-auto max-w-[92%] rounded-2xl rounded-br-sm bg-sky-600 px-3 py-3 text-white" : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-100" : "mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-700"}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[13px] leading-[1.75] sm:text-sm">{renderTutorContent(message.content)}</div>
-                {message.attachmentName && <div className="mb-2 overflow-hidden rounded-lg border border-white/25 p-1"><img src={message.attachmentPreview} alt={`Adjunto: ${message.attachmentName}`} className="max-h-36 max-w-full rounded-md object-contain" /><p className="px-1 pt-1 text-[10px] opacity-80">{message.attachmentName}</p></div>}
+                {message.attachmentName && <div className="mb-2 flex items-center gap-2 rounded-lg border border-white/25 p-2">{message.attachmentPreview ? <img src={message.attachmentPreview} alt={`Adjunto: ${message.attachmentName}`} className="max-h-28 max-w-full rounded-md object-contain" /> : <FileText className="h-6 w-6 shrink-0" />}<p className="min-w-0 break-all text-[10px] opacity-80">{message.attachmentName}</p></div>}
                 {message.checkQuestion && <div className="mt-3 rounded-lg border-l-2 border-amber-400 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-950"><strong>Comprueba lo aprendido:</strong> {message.checkQuestion}</div>}
               </article>
             ))}
@@ -211,15 +211,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       {attachment && <div className="shrink-0 border-t border-slate-100 bg-white px-3 pt-3">
         <div className="flex items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 p-2">
-          <img src={attachmentPreview} alt="Vista previa de la imagen adjunta" className="h-12 w-12 shrink-0 rounded-lg border border-sky-100 bg-white object-cover" />
-          <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Lista para analizar · {(attachment.size / 1024).toFixed(0)} KB</p></div>
+          {attachmentPreview ? <img src={attachmentPreview} alt="Vista previa de la imagen adjunta" className="h-12 w-12 shrink-0 rounded-lg border border-sky-100 bg-white object-cover" /> : <FileText className="ml-2 h-8 w-8 shrink-0 text-sky-700" />}
+          <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Listo para analizar · {(attachment.size / 1024).toFixed(0)} KB</p></div>
           <button type="button" onClick={clearAttachment} aria-label="Quitar imagen adjunta" className="rounded-full p-2 text-slate-500 hover:bg-white"><X className="h-4 w-4" /></button>
         </div>
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
-        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen o gráfico (JPG, PNG, WebP; máximo 3 MB)" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:border-sky-300 hover:bg-sky-50 disabled:opacity-40"><Paperclip className="h-5 w-5" /></button>
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen o PDF (JPG, PNG, WebP, PDF; máximo 3 MB)" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:border-sky-300 hover:bg-sky-50 disabled:opacity-40"><Paperclip className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta aquí…" style={{ scrollbarWidth: "none" }} className="min-h-12 max-h-28 flex-1 overflow-y-auto resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-5 text-slate-900 outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100" />
         <button type="submit" disabled={(!input.trim() && !attachment) || loading} aria-label="Enviar mensaje a Orby" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"><Send className="h-5 w-5" /></button>

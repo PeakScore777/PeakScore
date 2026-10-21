@@ -83,13 +83,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function handleAttachment(file?: File) {
     setAttachmentError("");
     if (!file) return;
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      setAttachmentError("Adjunta una imagen JPG, PNG, WebP o un PDF.");
+      setAttachmentError("Solo se permiten imágenes JPG, PNG o WebP. Los PDF no están permitidos.");
       return;
     }
-    if (file.size > 3 * 1024 * 1024) {
-      setAttachmentError("La imagen debe pesar máximo 3 MB.");
+    if (file.size > 1 * 1024 * 1024) {
+      setAttachmentError("La imagen debe pesar máximo 1 MB.");
       return;
     }
     setAttachment(file);
@@ -220,10 +220,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
-        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen o PDF (JPG, PNG, WebP, PDF; máximo 3 MB)" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:border-sky-300 hover:bg-sky-50 disabled:opacity-40"><Paperclip className="h-5 w-5" /></button>
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:border-sky-300 hover:bg-sky-50 disabled:opacity-40"><Paperclip className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
-        <textarea ref={inputRef} id="orby-tutor-message" value={input} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta aquí…" style={{ scrollbarWidth: "none" }} className="min-h-12 max-h-28 flex-1 overflow-y-auto resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-5 text-slate-900 outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100" />
+        <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
+          const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
+          if (!imageItem) return;
+          const pastedImage = imageItem.getAsFile();
+          if (!pastedImage) return;
+          event.preventDefault();
+          const safeType = ["image/jpeg", "image/png", "image/webp"].includes(pastedImage.type) ? pastedImage.type : "image/png";
+          const extension = safeType === "image/jpeg" ? "jpg" : safeType === "image/webp" ? "webp" : "png";
+          handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: safeType }));
+        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className="min-h-12 max-h-28 flex-1 overflow-y-auto resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-5 text-slate-900 outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100" />
         <button type="submit" disabled={(!input.trim() && !attachment) || loading} aria-label="Enviar mensaje a Orby" className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"><Send className="h-5 w-5" /></button>
       </form>
       <p className="shrink-0 bg-white px-4 pb-3 text-[10px] leading-4 text-slate-400">Orby es un apoyo de estudio; verifica siempre los datos y procedimientos de la lección.</p>

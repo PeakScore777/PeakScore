@@ -108,6 +108,13 @@ declare
   v_has_image boolean;
   v_account public.orby_credit_accounts%rowtype;
 begin
+  select * into v_account
+  from public.orby_credit_accounts
+  where user_id = p_user_id
+  for update;
+
+  if not found then return jsonb_build_object('ok', false, 'code', 'account_not_found'); end if;
+
   select -l.delta, l.has_image into v_charge, v_has_image
   from public.orby_credit_ledger l
   where l.user_id = p_user_id and l.request_id = p_request_id
@@ -117,7 +124,6 @@ begin
 
   if exists (select 1 from public.orby_credit_ledger l
     where l.user_id = p_user_id and l.request_id = p_request_id and l.reason = 'tutor_refund') then
-    select * into v_account from public.orby_credit_accounts where user_id = p_user_id;
     return jsonb_build_object('ok', true, 'already_refunded', true, 'balance', v_account.balance);
   end if;
 
@@ -144,6 +150,7 @@ declare
   v_confirmed_at timestamptz;
   v_today date := timezone('America/Bogota', now())::date;
   v_inserted integer := 0;
+  v_old_balance integer;
   v_account public.orby_credit_accounts%rowtype;
 begin
   if p_user_id is null then
@@ -176,6 +183,7 @@ begin
   end if;
 
   if v_account.daily_date <> v_today then
+    v_old_balance := v_account.balance;
     update public.orby_credit_accounts
     set balance = least(30, balance + 5),
         daily_date = v_today,
@@ -184,6 +192,9 @@ begin
         updated_at = now()
     where user_id = p_user_id
     returning * into v_account;
+
+    insert into public.orby_credit_ledger (user_id, request_id, delta, reason)
+    values (p_user_id, gen_random_uuid(), v_account.balance - v_old_balance, 'daily_refill');
   end if;
 
   return jsonb_build_object(

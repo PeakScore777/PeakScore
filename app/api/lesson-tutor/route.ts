@@ -17,7 +17,8 @@ const requestWindows = new Map<string, { count: number; resetAt: number }>();
 const dailyUsage = new Map<string, { day: string; messages: number; images: number }>();
 
 function takeDailyLimits(userId: string, hasImage: boolean): { allowed: boolean; error?: string } {
-  const day = new Date().toISOString().slice(0, 10);
+  const dateParts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Bogota", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date());
+  const day = `${dateParts.find((part) => part.type === "year")?.value}-${dateParts.find((part) => part.type === "month")?.value}-${dateParts.find((part) => part.type === "day")?.value}`;
   const current = dailyUsage.get(userId);
   const usage = !current || current.day !== day ? { day, messages: 0, images: 0 } : current;
   if (usage.messages >= MAX_MESSAGES_PER_UTC_DAY) {

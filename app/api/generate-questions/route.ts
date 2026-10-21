@@ -6917,6 +6917,7 @@ async function generateBlock(
       );
 
       const response = await generateAI({
+        task: "question_generation",
         provider: "groq",
         
         prompt: buildPrompt(

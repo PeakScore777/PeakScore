@@ -228,3 +228,51 @@ create table if not exists public.orby_credit_admin_audit (
 
 alter table public.orby_credit_admin_audit enable row level security;
 revoke all on public.orby_credit_admin_audit from anon, authenticated;
+
+
+create or replace function public.orby_set_promo_status(
+  p_target_user_id uuid,
+  p_admin_user_id uuid,
+  p_new_status text,
+  p_reason text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_old_status text;
+begin
+  if p_target_user_id is null or p_admin_user_id is null
+     or p_new_status not in ('eligible', 'blocked', 'review')
+     or p_reason is null or char_length(btrim(p_reason)) < 10
+     or char_length(btrim(p_reason)) > 500 then
+    return jsonb_build_object('ok', false, 'code', 'invalid_input');
+  end if;
+
+  select promo_status into v_old_status
+  from public.orby_credit_accounts
+  where user_id = p_target_user_id
+  for update;
+
+  if not found then
+    return jsonb_build_object('ok', false, 'code', 'account_not_found');
+  end if;
+
+  update public.orby_credit_accounts
+  set promo_status = p_new_status,
+      balance = case when p_new_status = 'blocked' then 0 else balance end,
+      updated_at = now()
+  where user_id = p_target_user_id;
+
+  insert into public.orby_credit_admin_audit
+    (target_user_id, admin_user_id, old_status, new_status, reason)
+  values
+    (p_target_user_id, p_admin_user_id, v_old_status, p_new_status, btrim(p_reason));
+
+  return jsonb_build_object('ok', true, 'oldStatus', v_old_status, 'newStatus', p_new_status);
+end;
+$$;
+
+revoke all on function public.orby_set_promo_status(uuid, uuid, text, text) from public, anon, authenticated;
+grant execute on function public.orby_set_promo_status(uuid, uuid, text, text) to service_role;

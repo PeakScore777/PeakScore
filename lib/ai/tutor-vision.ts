@@ -3,14 +3,14 @@ import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { AIServiceError } from "@/lib/ai/router";
 
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
 const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
 
 export function validateTutorImage(mimeType: unknown, base64: unknown):
   | { ok: true; mimeType: string; base64: string }
   | { ok: false; error: string } {
   if (typeof mimeType !== "string" || !ALLOWED_IMAGE_TYPES.has(mimeType)) {
-    return { ok: false, error: "Adjunta una imagen JPG, PNG o WebP." };
+    return { ok: false, error: "Adjunta una imagen JPG, PNG, WebP o un PDF." };
   }
   if (typeof base64 !== "string" || !base64 || !/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) {
     return { ok: false, error: "La imagen adjunta no tiene un formato válido." };

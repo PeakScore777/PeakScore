@@ -2,21 +2,21 @@ import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
 
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "application/pdf"]);
-const MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
 
 export function validateTutorImage(mimeType: unknown, base64: unknown):
   | { ok: true; mimeType: string; base64: string }
   | { ok: false; error: string } {
   if (typeof mimeType !== "string" || !ALLOWED_IMAGE_TYPES.has(mimeType)) {
-    return { ok: false, error: "Adjunta una imagen JPG, PNG, WebP o un PDF." };
+    return { ok: false, error: "Adjunta una imagen JPG, PNG o WebP. Los PDF no están permitidos." };
   }
   if (typeof base64 !== "string" || !base64 || !/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) {
     return { ok: false, error: "La imagen adjunta no tiene un formato válido." };
   }
   const estimatedBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0);
   if (estimatedBytes <= 0 || estimatedBytes > MAX_IMAGE_BYTES) {
-    return { ok: false, error: "La imagen debe pesar máximo 3 MB." };
+    return { ok: false, error: "La imagen debe pesar máximo 1 MB." };
   }
   return { ok: true, mimeType, base64 };
 }

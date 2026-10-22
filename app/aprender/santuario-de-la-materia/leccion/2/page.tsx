@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Lightbulb } from "lucide-react";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
@@ -115,6 +115,18 @@ export default function CuandoLaMateriaCambiaPage() {
   const [lost, setLost] = useState(false);
   const [rewardOpen, setRewardOpen] = useState(false);
   const [tutorOpen, setTutorOpen] = useState(false);
+
+  function playSound(file: "navigation.mp3" | "level-win.mp3" | "game-over.wav", volume = 0.22) {
+    if (typeof window === "undefined") return;
+    const audio = new Audio(`/sounds/${file}`);
+    audio.volume = volume;
+    void audio.play().catch(() => {});
+  }
+
+  useEffect(() => {
+    if (finished && lost) playSound("game-over.wav", 0.3);
+    if (finished && !lost && rewardOpen) playSound("level-win.mp3", 0.25);
+  }, [finished, lost, rewardOpen]);
   const question = activeQuestions[index];
   const isCorrect = selected === question.answer;
 
@@ -126,6 +138,7 @@ export default function CuandoLaMateriaCambiaPage() {
 
   function nextQuestion() {
     if (index < activeQuestions.length - 1) {
+      playSound("navigation.mp3", 0.16);
       setIndex((n) => n + 1);
       setSelected(null);
       setChecked(false);
@@ -138,6 +151,7 @@ export default function CuandoLaMateriaCambiaPage() {
   }
 
   function restart() {
+    playSound("navigation.mp3", 0.16);
     setAttempt((n) => n + 1);
     setIndex(0);
     setSelected(null);
@@ -302,7 +316,7 @@ export default function CuandoLaMateriaCambiaPage() {
         <div className="game-over-content relative z-10 flex w-full max-w-6xl flex-col items-center text-center"><div aria-hidden="true" className="game-over-pixels pointer-events-none absolute inset-0" /><div aria-hidden="true" className="game-over-crystal-glow pointer-events-none absolute inset-0" />
           <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-3"><h2 id="level2-gameover-title" className="pixel-font game-over-title">GAME</h2><Image src="/images/game-over/nova-dead-pixel.png" alt="Nova derrotado en pixel art" width={112} height={112} className="game-over-nova h-24 w-24 object-contain sm:h-36 sm:w-36 lg:h-40 lg:w-40"/><span className="pixel-font game-over-title">OVER</span></div>
           <p className="pixel-font mt-5 text-xs text-white sm:text-sm">PLAY AGAIN?</p><p className="game-over-copy mt-4 max-w-3xl text-sm leading-8 text-white sm:text-lg">No lograste acertar las tres preguntas de este desafío.</p><p className="game-over-copy mt-2 text-sm font-medium text-white sm:text-lg">Acertaste <strong className="text-cyan-300">{correct} de {activeQuestions.length}</strong> preguntas.</p><p className="game-over-copy mt-3 max-w-3xl text-sm leading-7 text-slate-100 sm:text-base sm:leading-8">Revisa los puntos clave de la teoría y vuelve a intentarlo. Cada distractor representa una idea que vale la pena comprender.</p>
-          <div className="mt-6 flex w-full max-w-xl flex-col gap-2"><button type="button" onClick={restart} className="game-over-choice game-over-choice-yes"><span aria-hidden="true" className="game-over-cursor">▶</span><span>YES</span><span className="game-over-choice-detail">REPETIR CON PREGUNTAS NUEVAS</span></button><button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); setRewardOpen(false); }} className="game-over-choice game-over-choice-no"><span className="game-over-cursor game-over-cursor-hidden" aria-hidden="true">▶</span><span>NO</span><span className="game-over-choice-detail">REPASAR TEORÍA</span></button></div>
+          <div className="mt-6 flex w-full max-w-xl flex-col gap-2"><button type="button" onClick={restart} className="game-over-choice game-over-choice-yes"><span aria-hidden="true" className="game-over-cursor">▶</span><span>YES</span><span className="game-over-choice-detail">REPETIR CON PREGUNTAS NUEVAS</span></button><button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setStage("theory"); setFinished(false); setLost(false); setRewardOpen(false); }} className="game-over-choice game-over-choice-no"><span className="game-over-cursor game-over-cursor-hidden" aria-hidden="true">▶</span><span>NO</span><span className="game-over-choice-detail">REPASAR TEORÍA</span></button></div>
           <p className="pixel-font mt-7 text-[9px] tracking-[.1em] text-white/75 sm:mt-9 sm:text-[11px]">PEAKSCORE · CONTINÚA LA AVENTURA</p>
         </div>
       </div>}
@@ -310,10 +324,30 @@ export default function CuandoLaMateriaCambiaPage() {
       <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] backdrop-blur">
         <div className="mx-auto flex min-h-[62px] max-w-[1100px] items-center justify-between gap-3 px-4 sm:px-7">
           <div><p className="pixel-font text-[8px] text-slate-100">NIVEL 2</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : finished ? "Práctica finalizada" : `Pregunta ${index + 1} / ${questions.length}`}</p></div>
-          <div className="flex flex-1 justify-center">{stage === "practice" && !finished && <button type="button" onClick={() => setTutorOpen((v) => !v)} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:min-h-10 sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>}</div>
+          <div className="flex flex-1 justify-center">{stage === "practice" && !finished && <button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setTutorOpen((v) => !v); }} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:min-h-10 sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>}</div>
           {stage === "theory" ? <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-4 py-2 text-xs font-extrabold text-[#09200a]">Ir a la práctica <ArrowRight className="h-4 w-4" /></button> : <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-4 py-2 text-xs font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver a teoría</button>}
         </div>
       </footer>
+      <style jsx global>{`
+        .game-over-overlay { position: fixed; top: 68px; right: 0; bottom: 0; left: 0; z-index: 40; min-height: calc(100dvh - 68px); padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 4vw, 3rem); background: linear-gradient(180deg, rgba(2,5,13,.32) 0%, rgba(2,5,13,.50) 48%, rgba(0,0,0,.78) 100%), url("/images/game-over-bg.png") center center / cover no-repeat, #020308 !important; isolation: isolate; }
+        .game-over-content { animation: game-over-enter 520ms cubic-bezier(.2,.8,.2,1) both; }
+        .game-over-pixels { z-index:-2; opacity:.28; background-image: radial-gradient(circle, rgba(255,40,74,.95) 0 2px, transparent 2.8px), radial-gradient(circle, rgba(44,187,255,.8) 0 1.5px, transparent 2.4px), linear-gradient(155deg, transparent 0 42%, rgba(125,16,43,.13) 42.2% 42.7%, transparent 43% 100%); background-size:83px 91px,127px 113px,100% 100%; animation:game-over-pixel-drift 8s linear infinite; }
+        .game-over-crystal-glow { z-index:-1; background:radial-gradient(ellipse at 12% 72%,rgba(255,20,58,.23),transparent 28%),radial-gradient(ellipse at 88% 72%,rgba(255,20,58,.24),transparent 29%),radial-gradient(ellipse at 50% 12%,rgba(18,113,196,.14),transparent 35%); animation:game-over-crystal-pulse 3.6s ease-in-out infinite; }
+        .game-over-heading { display:flex; align-items:center; gap:.3rem; filter:drop-shadow(0 0 22px rgba(20,210,255,.2)); }
+        .game-over-title { color:#f8fafc; font-size:clamp(2.7rem,9.8vw,8rem); line-height:1.12; letter-spacing:-.065em; text-shadow:5px 5px 0 #155e75,9px 9px 0 #0b1220,0 0 30px rgba(34,211,238,.32); }
+        .game-over-nova { image-rendering:pixelated; filter:drop-shadow(0 0 20px rgba(132,204,22,.42)); animation:game-over-nova-idle 2.2s steps(2,end) infinite; }
+        .game-over-choice { position:relative; display:flex; width:100%; min-height:42px; align-items:center; justify-content:center; gap:.65rem; padding:.7rem .9rem; color:#e2e8f0; background:transparent; border:0; font-family:var(--font-press-start),"Press Start 2P",monospace; font-size:10px; letter-spacing:.04em; text-align:center; transition:color 140ms ease,transform 140ms ease,text-shadow 140ms ease; }
+        .game-over-choice:hover,.game-over-choice:focus-visible { color:#a5f3fc; transform:translateX(3px); outline:none; text-shadow:0 0 14px rgba(34,211,238,.4); }
+        .game-over-choice-yes { color:#a5f3fc; } .game-over-cursor { color:#22d3ee; font-size:11px; } .game-over-cursor-hidden { opacity:0; }
+        .game-over-choice-detail { margin-left:.2rem; color:#94a3b8; font-family:Arial,Helvetica,sans-serif; font-size:clamp(13px,1.1vw,16px); font-weight:700; letter-spacing:.02em; }
+        .game-over-copy { font-family:var(--font-press-start),"Press Start 2P",monospace !important; font-size:clamp(9px,1vw,13px) !important; line-height:2.15 !important; text-shadow:0 2px 8px rgba(0,0,0,.95); }
+        @keyframes game-over-enter { from {opacity:0;transform:translateY(10px) scale(.97)} to {opacity:1;transform:translateY(0) scale(1)} }
+        @keyframes game-over-pixel-drift { from {background-position:8px 12px,42px 57px,center} to {background-position:91px 103px,-85px 170px,center} }
+        @keyframes game-over-crystal-pulse { 0%,100% {opacity:.72;transform:scale(1)} 50% {opacity:1;transform:scale(1.025)} }
+        @keyframes game-over-nova-idle { 0%,100% {transform:translateY(0)} 50% {transform:translateY(-3px)} }
+        @media(max-width:640px) { .game-over-title {letter-spacing:-.075em;font-size:clamp(2.2rem,10.5vw,4.8rem)} .game-over-content {padding-top:1rem;padding-bottom:1rem} .game-over-choice {min-height:62px;font-size:12px;flex-wrap:wrap} .game-over-choice-detail {flex-basis:100%;margin-left:0;font-size:13px} }
+        @media(prefers-reduced-motion:reduce) { .game-over-content,.game-over-pixels,.game-over-nova {animation:none!important} }
+      `}</style>
     </main>
   );
 }

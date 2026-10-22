@@ -210,13 +210,13 @@ function ImageUploadSlot({ assetKey, title, description, compact=false, large=fa
 
  const picker = <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e=>{void uploadSelectedFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}} />;
 
- return <div className={"relative flex " + (large ? "min-h-[400px] sm:min-h-[460px]" : compact ? "min-h-[144px]" : "min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
+ return <div className={"relative flex " + (large ? "min-h-[500px] sm:min-h-[580px]" : compact ? "min-h-[144px]" : "min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
   {picker}
   {imageUrl ? (
    isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
-    <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[680px] sm:max-h-[760px]" : compact ? "max-h-36" : "max-h-[520px]")}/>
+    <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[820px] sm:max-h-[900px]" : compact ? "max-h-36" : "max-h-[520px]")}/>
     {saving && <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100">Guardando imagen…</span>}
-   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[620px] sm:max-h-[700px]" : compact ? "max-h-32" : "max-h-[340px]")}/>
+   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[760px] sm:max-h-[840px]" : compact ? "max-h-32" : "max-h-[340px]")}/>
   ) : isAdmin ? (
    <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4 text-cyan-100 transition hover:bg-cyan-400/[0.03] disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
     {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}
@@ -385,17 +385,15 @@ export default function CuandoLaMateriaCambiaPage() {
 
               <section id="energia-cambios" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5 lg:col-span-2">
                 <h2 className="text-xl font-bold text-cyan-200">6. Temperatura, energía y cambios de estado</h2>
-                <div className="mt-3 grid items-stretch gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                <div className="mt-3 grid items-stretch gap-5 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
                   <div className="space-y-3 text-sm leading-7 text-slate-300">
                     <p>La temperatura no es lo mismo que el calor. La temperatura caracteriza el estado térmico de un sistema; el calor es energía transferida debido a una diferencia de temperatura. Cuando una muestra recibe energía, puede aumentar su temperatura o cambiar de estado, según la sustancia y las condiciones.</p>
                     <p>Durante la fusión de una sustancia pura a presión constante, la temperatura puede permanecer aproximadamente estable mientras coexisten sólido y líquido. La energía transferida permite reorganizar las interacciones entre partículas, en vez de elevar de inmediato su energía cinética media.</p>
                     <p>La curva de calentamiento permite distinguir estos procesos: los tramos inclinados representan aumento de temperatura dentro de una fase; las mesetas indican un cambio de estado en condiciones adecuadas. La duración y la temperatura de cada tramo dependen de la sustancia, la cantidad de muestra y las condiciones experimentales.</p>
                     <p>Los cambios opuestos son fusión/solidificación, vaporización/condensación y sublimación/deposición. En un cambio físico se conserva la identidad química, aunque cambien el estado y las propiedades macroscópicas.</p>
                   </div>
-                  <div className="min-w-0 self-center rounded-lg border border-[#21405e] bg-[#06101d] p-3 sm:p-4">
-                    <p className="mb-2 text-center text-sm font-bold text-cyan-100">Curva de calentamiento</p>
+                  <div className="min-w-0 flex items-center justify-center self-stretch bg-transparent p-0">
                     <ImageUploadSlot assetKey="lesson-2-energy-heating-curve" title="curva de calentamiento" description="Curva de calentamiento con tramos de sólido, fusión, líquido, vaporización y gas" large />
-                    <p className="mt-2 text-center text-[10px] leading-4 text-slate-400">Eje vertical: temperatura · Eje horizontal: energía transferida o tiempo, bajo condiciones constantes.</p>
                   </div>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">

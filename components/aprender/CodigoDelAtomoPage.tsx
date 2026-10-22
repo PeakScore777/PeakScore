@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Plus } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 
@@ -40,33 +40,22 @@ export default function CodigoDelAtomoPage() {
  {!practice ? <article className="mx-auto max-w-[820px] px-5 pb-28 pt-9 sm:px-8">
  <p className="pixel-font text-[9px] tracking-[.12em] text-cyan-200">CAPÍTULO 04 · EL CÓDIGO DEL ÁTOMO</p><h1 className="mt-4 text-3xl font-extrabold text-white sm:text-4xl">El corazón invisible de la materia</h1>
  <p className="mt-4 text-sm leading-7 text-slate-300">Después del accidente, Nova encuentra una proyección escondida entre los instrumentos. La imagen no muestra una mezcla ni un cristal: revela un núcleo brillante rodeado por una región electrónica. En la pantalla aparece un mensaje: <strong className="text-cyan-100">«Para comprender los elementos, descifra lo que ocurre dentro de sus átomos».</strong></p>
- <section aria-label="Material visual de la lección" className="mt-7 grid gap-4 sm:grid-cols-2">
-   <figure className="group overflow-hidden border border-cyan-300/25 bg-[#071321] p-3 shadow-[0_0_24px_rgba(34,211,238,.06)]">
-    <div className="relative flex min-h-[190px] items-center justify-center overflow-hidden border border-dashed border-cyan-300/35 bg-[radial-gradient(ellipse_at_center,rgba(8,145,178,.12),transparent_68%)]">
-     <div className="absolute inset-0 opacity-30" aria-hidden="true" style={{backgroundImage:"linear-gradient(rgba(56,189,248,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.08) 1px,transparent 1px)",backgroundSize:"22px 22px"}}/>
-     <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-fuchsia-300/60 bg-fuchsia-500/15 shadow-[0_0_28px_rgba(217,70,239,.25)]">
-      <span className="h-5 w-5 rounded-full bg-fuchsia-300 shadow-[0_0_15px_rgba(232,121,249,.9)]"/>
-     </div>
-     <span className="absolute left-[22%] top-[28%] h-3 w-3 rounded-full border border-cyan-100 bg-cyan-300 shadow-[0_0_14px_#22d3ee]"/>
-     <span className="absolute right-[23%] top-[36%] h-3 w-3 rounded-full border border-cyan-100 bg-cyan-300 shadow-[0_0_14px_#22d3ee]"/>
-     <span className="absolute bottom-[20%] left-[47%] h-3 w-3 rounded-full border border-cyan-100 bg-cyan-300 shadow-[0_0_14px_#22d3ee]"/>
-     <span className="absolute bottom-3 right-3 border border-cyan-300/25 bg-[#06101d]/90 px-2 py-1 font-mono text-[9px] text-cyan-100">+ IMAGEN 01</span>
+ <section aria-label="Galería de imágenes de la lección" className="mt-7 grid gap-4 sm:grid-cols-2">
+   <figure className="overflow-hidden rounded-xl border border-cyan-300/25 bg-[#071321] p-3">
+    <div className="flex min-h-[190px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-cyan-300/45 bg-[radial-gradient(ellipse_at_center,rgba(8,145,178,.10),transparent_70%)] px-5 text-center">
+     <span className="flex h-12 w-12 items-center justify-center rounded-full border border-cyan-300/40 bg-cyan-400/10 text-cyan-200"><Plus className="h-6 w-6"/></span>
+     <p className="font-mono text-xs font-bold tracking-wider text-cyan-100">+ AÑADIR IMAGEN 01</p>
+     <p className="max-w-xs text-xs leading-5 text-slate-400">Ilustración transparente del átomo con núcleo, electrones y etiquetas de protón, neutrón y electrón.</p>
     </div>
-    <figcaption className="pt-3"><p className="text-xs font-bold text-cyan-100">Esquema principal del átomo</p><p className="mt-1 text-xs leading-5 text-slate-400">Reemplazar este marcador por la ilustración transparente con núcleo, electrones y etiquetas explicativas.</p></figcaption>
+    <figcaption className="pt-3"><p className="text-xs font-bold text-cyan-100">¿Qué es un átomo?</p><p className="mt-1 text-xs leading-5 text-slate-400">Imagen principal de la lección · formato PNG transparente recomendado.</p></figcaption>
    </figure>
-   <figure className="group overflow-hidden border border-violet-300/25 bg-[#071321] p-3 shadow-[0_0_24px_rgba(168,85,247,.06)]">
-    <div className="relative flex min-h-[190px] items-center justify-center overflow-hidden border border-dashed border-violet-300/35 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,.13),transparent_68%)]">
-     <div className="absolute inset-0 opacity-25" aria-hidden="true" style={{backgroundImage:"radial-gradient(circle,rgba(196,181,253,.55) 1px,transparent 1px)",backgroundSize:"18px 18px"}}/>
-     <div className="relative flex items-center gap-2 sm:gap-3">
-      <span className="flex h-10 w-10 items-center justify-center rounded-full border border-blue-300/70 bg-blue-500/20 text-lg text-blue-100">●</span>
-      <span className="text-violet-200">›</span>
-      <span className="flex h-10 w-10 items-center justify-center rounded-full border border-fuchsia-300/70 bg-fuchsia-500/20 text-lg text-fuchsia-100">✣</span>
-      <span className="text-violet-200">›</span>
-      <span className="flex h-10 w-10 items-center justify-center rounded-full border border-cyan-300/70 bg-cyan-500/20 text-lg text-cyan-100">◎</span>
-     </div>
-     <span className="absolute bottom-3 right-3 border border-violet-300/25 bg-[#06101d]/90 px-2 py-1 font-mono text-[9px] text-violet-100">+ IMAGEN 02</span>
+   <figure className="overflow-hidden rounded-xl border border-violet-300/25 bg-[#071321] p-3">
+    <div className="flex min-h-[190px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-violet-300/45 bg-[radial-gradient(ellipse_at_center,rgba(124,58,237,.10),transparent_70%)] px-5 text-center">
+     <span className="flex h-12 w-12 items-center justify-center rounded-full border border-violet-300/40 bg-violet-400/10 text-violet-200"><Plus className="h-6 w-6"/></span>
+     <p className="font-mono text-xs font-bold tracking-wider text-violet-100">+ AÑADIR IMAGEN 02</p>
+     <p className="max-w-xs text-xs leading-5 text-slate-400">Comparativa de cinco modelos: Dalton, Thomson, Rutherford, Bohr y modelo cuántico.</p>
     </div>
-    <figcaption className="pt-3"><p className="text-xs font-bold text-violet-100">Evolución de los modelos atómicos</p><p className="mt-1 text-xs leading-5 text-slate-400">Reemplazar por una tira comparativa: Dalton, Thomson, Rutherford, Bohr y modelo cuántico.</p></figcaption>
+    <figcaption className="pt-3"><p className="text-xs font-bold text-violet-100">Evolución de los modelos atómicos</p><p className="mt-1 text-xs leading-5 text-slate-400">Franja comparativa horizontal · PNG transparente recomendado.</p></figcaption>
    </figure>
   </section>
   <section className="mt-7 space-y-4"><h2 className="text-xl font-bold text-cyan-200">1. ¿Qué es un átomo?</h2><p className="text-sm leading-7 text-slate-300">Un átomo es una unidad de un elemento que conserva su identidad química. Está constituido por un núcleo, con protones y normalmente neutrones, y una región electrónica con electrones. El núcleo concentra casi toda la masa del átomo, aunque su tamaño es muchísimo menor que el tamaño total de este.</p><p className="text-sm leading-7 text-slate-300">El dibujo de electrones girando como planetas puede ayudar a imaginar el átomo, pero no representa literalmente el modelo moderno. La mecánica cuántica describe electrones mediante estados y orbitales: regiones asociadas a la probabilidad de encontrarlos.</p></section>

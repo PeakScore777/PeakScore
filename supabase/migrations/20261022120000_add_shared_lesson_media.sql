@@ -24,21 +24,31 @@ drop policy if exists "Admins manage lesson media assets" on public.lesson_media
 drop policy if exists "lesson_media_assets_admin_insert" on public.lesson_media_assets;
 drop policy if exists "lesson_media_assets_admin_update" on public.lesson_media_assets;
 drop policy if exists "lesson_media_assets_admin_delete" on public.lesson_media_assets;
+
 create policy "lesson_media_assets_admin_insert"
-  on public.lesson_media_assets for insert
-  to authenticated
-  using (
-    exists (
-      select 1 from public.profiles p
-      where p.id = (select auth.uid()) and p.role = 'admin'
-    )
-  )
-  with check (
-    exists (
-      select 1 from public.profiles p
-      where p.id = (select auth.uid()) and p.role = 'admin'
-    )
-  );
+  on public.lesson_media_assets for insert to authenticated
+  with check (exists (
+    select 1 from public.profiles p
+    where p.id = (select auth.uid()) and p.role = 'admin'
+  ));
+
+create policy "lesson_media_assets_admin_update"
+  on public.lesson_media_assets for update to authenticated
+  using (exists (
+    select 1 from public.profiles p
+    where p.id = (select auth.uid()) and p.role = 'admin'
+  ))
+  with check (exists (
+    select 1 from public.profiles p
+    where p.id = (select auth.uid()) and p.role = 'admin'
+  ));
+
+create policy "lesson_media_assets_admin_delete"
+  on public.lesson_media_assets for delete to authenticated
+  using (exists (
+    select 1 from public.profiles p
+    where p.id = (select auth.uid()) and p.role = 'admin'
+  ));
 
 grant select on public.lesson_media_assets to anon, authenticated;
 grant insert, update, delete on public.lesson_media_assets to authenticated;

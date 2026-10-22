@@ -425,8 +425,6 @@ export default function CuandoLaMateriaCambiaPage() {
               <section id="puntos-clave" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321] p-4"><h2 className="pixel-font text-[9px] text-amber-300">PUNTOS CLAVE</h2><ul className="mt-3 space-y-3 text-xs leading-5 text-slate-200"><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>El estado depende del movimiento, la organización y las interacciones de las partículas.</span></li><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>Sólido: forma y volumen definidos; líquido: volumen definido y forma variable; gas: se expande y se comprime.</span></li><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>Temperatura y calor no son lo mismo: el calor es energía transferida.</span></li><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>Un cambio de estado suele ser físico: no prueba que se haya formado otra sustancia.</span></li><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>Para un gas ideal a temperatura constante: P₁V₁ = P₂V₂.</span></li></ul></section>
             </aside>
           </div>
-
-          </div>
         </div>
       ) : (
         <div className="mx-auto max-w-[980px] px-4 pb-24 pt-7 sm:px-7">

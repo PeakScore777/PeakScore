@@ -234,7 +234,7 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
 }
 
 export default function CuandoLaMateriaCambiaPage() {
-  const [stage, setStage] = useState<"theory" | "practice">("theory");
+  const [stage, setStage] = useState<"theory" | "examples" | "practice">("theory");
   const [historyOpen, setHistoryOpen] = useState(true);
   const [index, setIndex] = useState(0);
   const [attempt, setAttempt] = useState(0);
@@ -302,7 +302,7 @@ export default function CuandoLaMateriaCambiaPage() {
         </div>
       </header>
 
-      {stage === "theory" ? (
+      {stage !== "practice" ? (
         <div className="mx-auto max-w-[1600px] px-3 pt-4 sm:px-5 sm:pt-5">
           <section className="relative flex min-h-[180px] items-center overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:min-h-[210px] sm:p-7" style={{backgroundImage:"linear-gradient(90deg,rgba(3,9,20,.96),rgba(3,9,20,.72) 55%,rgba(3,9,20,.12)),url('/images/aprender/santuario/cuando-la-materia-cambia.png')",backgroundSize:"cover",backgroundPosition:"center"}}>
             <div className="max-w-[720px]"><span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 02 · QUÍMICA</span><h1 className="pixel-font mt-4 text-2xl leading-tight text-white sm:text-3xl lg:text-4xl">Cuando la materia cambia</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100 sm:text-base sm:leading-7">Explora cómo la organización y el movimiento de las partículas explican los estados sólido, líquido y gaseoso; interpreta los cambios de estado con evidencia sobre energía, temperatura y presión.</p></div>
@@ -386,9 +386,24 @@ export default function CuandoLaMateriaCambiaPage() {
 
               <section id="energia-cambios" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
                 <h2 className="text-xl font-bold text-cyan-200">6. Temperatura, energía y cambios de estado</h2>
-                <p className="mt-3 text-sm leading-7 text-slate-300">La temperatura no es lo mismo que el calor. La temperatura caracteriza el estado térmico; el calor es energía transferida entre sistemas por una diferencia de temperatura. Cuando una muestra recibe energía, puede aumentar su temperatura o experimentar un cambio de estado, según las condiciones.</p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">Durante la fusión de una sustancia pura a presión constante, la temperatura puede permanecer aproximadamente estable mientras coexisten sólido y líquido. La energía transferida se utiliza en el cambio de estado y en la reorganización de las partículas, no simplemente en aumentar su energía cinética media. Más adelante, la curva de calentamiento permitirá estudiar este fenómeno cuantitativamente.</p>
-                <p className="mt-3 text-sm leading-7 text-slate-300">La fusión y la solidificación, la vaporización y la condensación, y la sublimación y la deposición son pares de transformaciones opuestas. En estos procesos físicos la composición química de la sustancia se conserva, aunque cambien el estado y las propiedades macroscópicas.</p>
+                <div className="mt-3 grid items-center gap-5 lg:grid-cols-[1.08fr_.92fr]">
+                  <div className="space-y-3 text-sm leading-7 text-slate-300">
+                    <p>La temperatura no es lo mismo que el calor. La temperatura caracteriza el estado térmico de un sistema; el calor es energía transferida debido a una diferencia de temperatura. Cuando una muestra recibe energía, puede aumentar su temperatura o cambiar de estado, según la sustancia y las condiciones.</p>
+                    <p>Durante la fusión de una sustancia pura a presión constante, la temperatura puede permanecer aproximadamente estable mientras coexisten sólido y líquido. La energía transferida permite reorganizar las interacciones entre partículas, en vez de elevar de inmediato su energía cinética media.</p>
+                    <p>La curva de calentamiento permite distinguir estos procesos: los tramos inclinados representan aumento de temperatura dentro de una fase; las mesetas indican un cambio de estado en condiciones adecuadas. La duración y la temperatura de cada tramo dependen de la sustancia, la cantidad de muestra y las condiciones experimentales.</p>
+                    <p>Los cambios opuestos son fusión/solidificación, vaporización/condensación y sublimación/deposición. En un cambio físico se conserva la identidad química, aunque cambien el estado y las propiedades macroscópicas.</p>
+                  </div>
+                  <div className="min-w-0 rounded-lg border border-[#21405e] bg-[#06101d] p-3">
+                    <p className="mb-2 text-center text-xs font-bold text-cyan-100">Curva de calentamiento</p>
+                    <ImageUploadSlot assetKey="lesson-2-energy-heating-curve" title="curva de calentamiento" description="Curva de calentamiento con tramos de sólido, fusión, líquido, vaporización y gas" />
+                    <p className="mt-2 text-center text-[10px] leading-4 text-slate-400">Eje vertical: temperatura · Eje horizontal: energía transferida o tiempo, bajo condiciones constantes.</p>
+                  </div>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="border border-[#21405e] bg-[#0a1929] p-3"><p className="text-xs font-bold text-cyan-100">Tramo inclinado</p><p className="mt-1 text-xs leading-5 text-slate-300">La muestra se calienta dentro de una misma fase; la temperatura aumenta.</p></div>
+                  <div className="border border-[#21405e] bg-[#0a1929] p-3"><p className="text-xs font-bold text-cyan-100">Meseta</p><p className="mt-1 text-xs leading-5 text-slate-300">Coexisten dos fases y la energía transferida contribuye al cambio de estado.</p></div>
+                  <div className="border border-[#21405e] bg-[#0a1929] p-3"><p className="text-xs font-bold text-cyan-100">Lectura científica</p><p className="mt-1 text-xs leading-5 text-slate-300">Una meseta es compatible con un cambio de fase; también deben considerarse presión, pureza e incertidumbre de medición.</p></div>
+                </div>
               </section>
 
               <section id="ejemplos-resueltos" className="scroll-mt-24 rounded-xl border border-cyan-200/25 bg-[#0a1929] p-4 sm:p-5 lg:col-span-2"><h2 className="pixel-font text-sm leading-6 text-white">Ejemplos resueltos</h2><div className="mt-3 grid gap-3 md:grid-cols-2"><div className="rounded-lg border border-[#14517a] bg-[#071321] p-4"><p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Ejemplo 1 · Cambio de estado</p><p className="mt-2 text-sm leading-6 text-slate-200">Una muestra de hielo se calienta hasta convertirse en agua líquida. No se detecta otra sustancia.</p><p className="mt-3 text-sm font-bold text-white">Razonamiento</p><p className="mt-1 text-sm leading-6 text-slate-300">La fusión es un cambio físico: las moléculas siguen siendo H₂O. La energía transferida permite reorganizar las partículas; no implica que se destruyan y vuelvan a formarse.</p></div><div className="rounded-lg border border-[#14517a] bg-[#071321] p-4"><p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Ejemplo 2 · Presión y volumen</p><p className="mt-2 text-sm leading-6 text-slate-200">Un gas ideal ocupa 4 L a 100 kPa. A temperatura constante se comprime hasta 2 L. ¿Cuál es la presión final?</p><p className="mt-3 text-sm font-bold text-white">Solución</p><p className="mt-1 text-sm leading-6 text-slate-300">P₁V₁ = P₂V₂; entonces P₂ = (100 kPa × 4 L) / 2 L = <strong className="text-cyan-100">200 kPa</strong>. Al reducir el volumen a la mitad, la presión se duplica aproximadamente, bajo las condiciones del modelo.</p></div></div></section><section id="evidencia-cientifica" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5 lg:col-span-2">
@@ -401,11 +416,7 @@ export default function CuandoLaMateriaCambiaPage() {
                 </div>
               </section>
 
-              <section className="border border-cyan-200/20 bg-cyan-200/[.035] p-5">
-                <h2 className="text-lg font-bold text-cyan-100">Antes de entrar al desafío</h2>
-                <p className="mt-2 text-sm leading-7 text-slate-300">Debes poder explicar por qué un sólido conserva su forma, por qué un líquido fluye, por qué un gas se comprime y cómo la energía se relaciona con los cambios de estado. No memorices únicamente la tabla: relaciona cada propiedad con el movimiento y las interacciones de las partículas.</p>
-              </section>
-            </article>
+</article>
           </LessonNotesSelection>
             </div>
             <aside className="space-y-3 xl:sticky xl:top-[76px] xl:self-start">
@@ -415,9 +426,6 @@ export default function CuandoLaMateriaCambiaPage() {
             </aside>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-            <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/15 bg-[#26364a] px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-[#33465e]"><ArrowLeft className="h-4 w-4" /> Volver al capítulo</Link>
-            <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-11 items-center justify-center gap-2 border border-emerald-300/60 bg-[#75df55] px-5 py-3 text-sm font-extrabold text-[#09200a] shadow-[0_2px_0_#3a9a2b] hover:bg-[#8ced6d]">Iniciar desafío · 3 preguntas <ArrowRight className="h-4 w-4" /></button>
           </div>
         </div>
       ) : (
@@ -479,9 +487,9 @@ export default function CuandoLaMateriaCambiaPage() {
       <XpRewardAnimation open={rewardOpen && finished && !lost} xp={60} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); window.location.href = "/aprender/santuario-de-la-materia"; }} />
       <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] backdrop-blur">
         <div className="mx-auto flex min-h-[62px] max-w-[1100px] items-center justify-between gap-3 px-4 sm:px-7">
-          <div><p className="pixel-font text-[8px] text-slate-100">NIVEL 2</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : finished ? "Práctica finalizada" : `Pregunta ${index + 1} / ${questions.length}`}</p></div>
+          <div><p className="pixel-font text-[8px] text-slate-100">NIVEL 2</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : stage === "examples" ? "Ejemplos" : finished ? "Práctica finalizada" : `Pregunta ${index + 1} / ${questions.length}`}</p></div>
           <div className="flex flex-1 justify-center">{stage === "practice" && !finished && <button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setTutorOpen((v) => !v); }} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:min-h-10 sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>}</div>
-          {stage === "theory" ? <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-4 py-2 text-xs font-extrabold text-[#09200a]">Ir a la práctica <ArrowRight className="h-4 w-4" /></button> : <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-4 py-2 text-xs font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver a teoría</button>}
+          {stage === "theory" ? <div className="flex justify-end"><Link href="/aprender/santuario-de-la-materia" className="mr-2 inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-xs font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver al capítulo</Link><button type="button" onClick={() => { setStage("examples"); document.getElementById("ejemplos-resueltos")?.scrollIntoView({behavior:"smooth",block:"start"}); }} className="inline-flex min-h-9 items-center gap-2 border border-cyan-300/60 bg-[#12344a] px-4 py-2 text-xs font-extrabold text-cyan-100">Ejemplos <ArrowRight className="h-4 w-4" /></button></div> : stage === "examples" ? <div className="flex justify-end"><button type="button" onClick={() => { setStage("theory"); window.scrollTo({top:0,behavior:"smooth"}); }} className="mr-2 inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-xs font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Teoría</button><button type="button" onClick={() => { setStage("practice"); window.scrollTo({top:0,behavior:"smooth"}); }} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-4 py-2 text-xs font-extrabold text-[#09200a]">Ejercicios <ArrowRight className="h-4 w-4" /></button></div> : <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-9 items-center gap-2 border border-[#ffb347] bg-[#ff9f1c] px-4 py-2 text-xs font-extrabold text-[#251300]"><ArrowLeft className="h-4 w-4" /> Salir</Link>}
         </div>
       </footer>
       <style jsx global>{`

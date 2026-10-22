@@ -81,7 +81,7 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
   if (preview && pendingFile) URL.revokeObjectURL(preview);
   setPendingFile(file);
   setPreview(URL.createObjectURL(file));
-  setNotice("Imagen seleccionada. Pulsa «Guardar imagen» para publicarla a todos.");
+  setNotice("Vista previa lista. Pulsa el chulo verde para guardar y publicar.");
  }
 
  async function saveImage() {
@@ -158,12 +158,13 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
 
  return <div className={"relative flex " + (compact?"min-h-[144px]":"min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border " + (isAdmin?"border-dashed border-cyan-300/45":"border-solid border-[#21405e]") + " bg-[#06111e] p-3 text-center transition"}>
   {preview ? <img src={preview} alt={description} className={"w-full object-contain " + (compact?"max-h-32":"max-h-[340px]")} /> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] text-cyan-100">{isAdmin?"AÑADIR IMAGEN":"IMAGEN EN PREPARACIÓN"}</span><span className="text-xs text-slate-400">{description}</span></>}
-  {isAdmin && <label className="relative z-20 cursor-pointer rounded border border-cyan-300/50 bg-cyan-400/10 px-2 py-1.5 text-[10px] font-bold text-cyan-100 hover:bg-cyan-400/20">
-   {pendingFile ? "Cambiar selección" : preview ? "Cambiar imagen" : "Seleccionar imagen"}
-   <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen: " + title} className="sr-only" disabled={saving||removing} onChange={e=>{selectFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}}/>
-  </label>}
-  {isAdmin && pendingFile && <button type="button" onClick={()=>void saveImage()} disabled={saving||removing} className="relative z-20 rounded border border-emerald-300 bg-emerald-400 px-2 py-1.5 text-[10px] font-extrabold text-emerald-950 disabled:opacity-50">{saving?"Guardando…":"Guardar imagen"}</button>}
-  {isAdmin && preview && <button type="button" onClick={()=>void removeImage()} disabled={saving||removing} className="relative z-20 rounded border border-rose-300/60 bg-rose-500/10 px-2 py-1 text-[10px] font-bold text-rose-200 disabled:opacity-50">{removing?"Quitando…":pendingFile?"Descartar selección":"Quitar imagen"}</button>}
+  {isAdmin && <div className="relative z-20 flex items-center justify-center gap-2">
+   <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||removing} title={preview?"Cambiar imagen":"Subir imagen"} aria-label={preview?"Cambiar imagen":"Subir imagen"} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-cyan-300/70 bg-cyan-400/10 text-cyan-100 transition hover:bg-cyan-400/25 disabled:opacity-50"><Plus className="h-6 w-6"/></button>
+   <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen: " + title} className="hidden" disabled={saving||removing} onChange={e=>{selectFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}}/>
+   <button type="button" onClick={()=>void saveImage()} disabled={!pendingFile||saving||removing} title="Guardar imagen" aria-label="Guardar imagen" className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-400 text-emerald-950 shadow-[0_0_12px_rgba(74,222,128,0.25)] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-35"><Check className="h-6 w-6 stroke-[3]"/></button>
+   {preview && <button type="button" onClick={()=>void removeImage()} disabled={saving||removing} title={pendingFile?"Descartar selección":"Quitar imagen publicada"} aria-label={pendingFile?"Descartar selección":"Quitar imagen publicada"} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-rose-300/60 bg-rose-500/10 text-rose-200 transition hover:bg-rose-500/20 disabled:opacity-50">{removing?<span className="text-xs">…</span>:<span className="text-lg leading-none">×</span>}</button>}
+  </div>}
+  {isAdmin && pendingFile && <span className="text-[10px] font-bold text-emerald-300">Lista para guardar</span>}
   <span className="text-[10px] text-cyan-200">{saving?"Guardando en Supabase…":removing?"Quitando imagen…":loading?"Cargando…":pendingFile?"Pendiente de guardar":preview?title:(isAdmin?"Solo admin puede subir":"Visible para todos")}</span>
   {notice&&<p className="relative z-20 text-[10px] text-emerald-300">{notice}</p>}
   {error&&<p role="alert" className="relative z-20 break-words text-[10px] text-rose-300">{error}</p>}

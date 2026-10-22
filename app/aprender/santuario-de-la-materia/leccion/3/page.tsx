@@ -305,21 +305,34 @@ export default function LaboratorioDeLasMezclasPage() {
     setLost(false);
     setRewardOpen(false);
   }
+  
+  function startPractice() {
+    playSound("navigation.mp3", 0.16);
+    setAttempt(0);
+    setIndex(0);
+    setSelected(null);
+    setChecked(false);
+    setCorrect(0);
+    setFinished(false);
+    setLost(false);
+    setRewardOpen(false);
+    setTutorOpen(false);
+    setStage("practice");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   return (
     <main className="min-h-[calc(100vh-72px)] bg-[#05070b] pb-28 text-[#f0f4fa]">
       <header className="sticky top-0 z-30 border-b border-white/10 bg-[#101725]/95 backdrop-blur">
-        <div className="mx-auto flex min-h-[58px] max-w-[1100px] items-center justify-between gap-4 px-4 sm:px-7">
-          <Link href="/aprender/santuario-de-la-materia" className="inline-flex items-center gap-2 text-sm text-slate-300 transition hover:text-white"><ArrowLeft className="h-4 w-4" /> Santuario de la Materia</Link>
+        <div className="mx-auto flex min-h-[58px] max-w-[1600px] items-center justify-end gap-4 px-4 sm:px-7">
           <span className="pixel-font text-[8px] text-cyan-200">NIVEL 3 · QUÍMICA</span>
         </div>
       </header>
 
       {stage === "theory" ? (
         <div className="mx-auto max-w-[1600px] px-3 pt-4 sm:px-5 sm:pt-5">
-          <section className="relative grid min-h-[220px] items-center gap-4 overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:min-h-[260px] sm:grid-cols-[minmax(0,1.2fr)_minmax(280px,.8fr)] sm:p-7" style={{backgroundImage:"linear-gradient(90deg,rgba(3,9,20,.96),rgba(3,9,20,.84)),radial-gradient(circle at 85% 20%,rgba(34,211,238,.22),transparent 30%)",backgroundSize:"cover",backgroundPosition:"center"}}>
-            <div className="relative z-10 max-w-[780px]"><span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 03 · QUÍMICA</span><h1 className="pixel-font mt-4 text-2xl leading-tight text-white sm:text-3xl lg:text-4xl">El laboratorio de las mezclas</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100 sm:text-base sm:leading-7">Acompaña a Nova a identificar qué contiene cada muestra y a separar sus componentes usando propiedades físicas, procedimientos de laboratorio y evidencia verificable.</p><p className="mt-3 text-xs leading-5 text-cyan-100/80">La imagen del capítulo se administra aquí: solo la cuenta administradora puede cargarla o cambiarla y queda publicada desde Supabase para todos los usuarios.</p></div>
-            <div className="relative min-w-0 rounded-lg border border-cyan-300/20 bg-[#050d18]/55 p-2"><ImageUploadSlot assetKey="laboratorio-mezclas/encabezado" title="imagen del encabezado del capítulo 3" description="Ilustración principal del capítulo El laboratorio de las mezclas, con frascos y Nova separando componentes" large /></div>
+          <section className="relative flex min-h-[180px] items-center overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:min-h-[220px] sm:p-7" style={{backgroundImage:"linear-gradient(90deg,rgba(3,9,20,.96),rgba(3,9,20,.72) 55%,rgba(3,9,20,.12)),url('/images/aprender/santuario/laboratorio-mezclas.png')",backgroundSize:"cover",backgroundPosition:"center"}}>
+            <div className="relative z-10 max-w-[760px]"><span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 03 · QUÍMICA</span><h1 className="pixel-font mt-4 text-2xl leading-tight text-white sm:text-3xl lg:text-4xl">El laboratorio de las mezclas</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100 sm:text-base sm:leading-7">Acompaña a Nova a identificar qué contiene cada muestra y a separar sus componentes usando propiedades físicas, procedimientos de laboratorio y evidencia verificable.</p></div>
           </section>
           
           <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
@@ -344,7 +357,7 @@ export default function LaboratorioDeLasMezclasPage() {
                 </article>
                 <section id="puntos-clave" className="mt-3 scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321] p-4 sm:p-5"><h2 className="pixel-font text-sm text-amber-200">PUNTOS CLAVE</h2><ul className="mt-3 grid gap-2 text-sm leading-6 text-slate-300 sm:grid-cols-2"><li>• Una mezcla contiene varios componentes; puede ser homogénea o heterogénea.</li><li>• Soluto y disolvente forman una disolución homogénea.</li><li>• Cada método aprovecha una propiedad física concreta.</li><li>• Filtrar no separa un soluto disuelto del disolvente.</li><li>• Una mezcla compleja puede requerir una secuencia de métodos.</li><li>• Las conclusiones deben ajustarse a las observaciones y los límites del procedimiento.</li></ul></section>
               </LessonNotesSelection>
-              <div className="mt-5 flex flex-wrap justify-between gap-3 border-t border-white/10 pt-5"><Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-10 items-center gap-2 border border-white/15 bg-[#26364a] px-4 py-2 text-sm font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver al capítulo</Link><button type="button" onClick={() => {setStage("examples");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-10 items-center gap-2 border border-cyan-300/50 bg-cyan-400/15 px-4 py-2 text-sm font-bold text-cyan-100">Ver ejemplos resueltos <ArrowRight className="h-4 w-4" /></button></div>
+
             </div>
             <aside className="hidden space-y-3 xl:block"><section className="sticky top-20 rounded-xl border border-[#21405e] bg-[#071321] p-4"><h2 className="pixel-font text-[9px] text-cyan-200">MISIÓN DE NOVA</h2><p className="mt-2 text-xs leading-5 text-slate-300">Observa, compara y separa usando evidencia.</p><button type="button" onClick={() => setTutorOpen(true)} className="mt-3 w-full rounded-md bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-2 text-xs font-bold text-white">Pregunta a la IA</button><h3 className="pixel-font mt-5 text-[9px] text-cyan-200">EN ESTA LECCIÓN</h3><ol className="mt-3 space-y-2 text-xs text-slate-300">{["Sustancias y mezclas","Tipos de mezcla","Disoluciones","Métodos de separación","Secuencias","Concentración","Evidencia"].map((label,i)=><li key={label}><button type="button" onClick={() => document.getElementById(["sustancias-mezclas","tipos-mezcla","disoluciones","metodos-separacion","elegir-metodo","concentracion","evidencia"][i])?.scrollIntoView({behavior:"smooth",block:"start"})} className="text-left hover:text-cyan-100"><span className="mr-2 inline-flex h-5 w-5 items-center justify-center border border-fuchsia-400/50 text-[9px] text-fuchsia-200">{i+1}</span>{label}</button></li>)}</ol></section></aside>
           </div>
@@ -409,7 +422,7 @@ export default function LaboratorioDeLasMezclasPage() {
             <h2 className="pixel-font text-sm text-cyan-100">CÓMO TRASLADAR EL MÉTODO A LOS EJERCICIOS</h2>
             <p className="mt-3 text-sm leading-7 text-slate-300">Cuando resuelvas el desafío, no memorices únicamente el nombre de cada técnica. Primero determina qué componentes hay, después qué propiedad los diferencia y finalmente si el procedimiento conserva o recupera los materiales solicitados. En preguntas de evidencia, elige la conclusión más prudente: una observación permite apoyar una idea, pero no demostrar algo que no se midió.</p>
           </section>
-          <div className="mt-5 flex flex-wrap justify-between gap-3 border-t border-white/10 pt-5"><button type="button" onClick={() => {setStage("theory");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-10 items-center gap-2 border border-white/15 bg-[#26364a] px-4 py-2 text-sm font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver a teoría</button><button type="button" onClick={() => {setStage("practice");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-10 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-4 py-2 text-sm font-extrabold text-[#09200a]">Ejercicios del desafío <ArrowRight className="h-4 w-4" /></button></div>
+
         </div>
       ) : (
         <div className="mx-auto max-w-[1100px] px-4 pb-24 pt-7 sm:px-7">
@@ -450,7 +463,7 @@ export default function LaboratorioDeLasMezclasPage() {
               <p className="mt-3 text-sm leading-7 text-slate-300">Respondiste correctamente <strong className="text-cyan-100">{correct} de {activeQuestions.length}</strong> preguntas. Repasa las explicaciones y vuelve a intentarlo si quieres fortalecer tu comprensión.</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button type="button" onClick={restart} className="inline-flex min-h-10 items-center gap-2 border border-cyan-300/50 bg-[#172c43] px-4 py-2 text-sm font-bold text-cyan-100">Repetir práctica <ArrowRight className="h-4 w-4" /></button>
-                <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-10 items-center gap-2 border border-white/15 bg-[#26364a] px-4 py-2 text-sm font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver al capítulo</Link>
+                <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-10 items-center gap-2 border border-white/15 bg-[#26364a] px-4 py-2 text-sm font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Salir</Link>
               </div>
             </section>
           )}
@@ -468,24 +481,31 @@ export default function LaboratorioDeLasMezclasPage() {
           ? "Situación: " + question.context + "\nOpciones: " + question.options.map((o) => o.label + ") " + o.text).join("\n") + "\nExplicación: " + question.explanation
           : "Ayuda al estudiante a comprender el capítulo 3 de PeakScore. Explica con rigor y ejemplos originales las técnicas de separación de mezclas (tamizado, imantación, filtración, decantación, sedimentación, centrifugación, evaporación, cristalización, destilación simple y fraccionada, cromatografía y extracción con disolvente). Pídele que identifique primero los componentes y la propiedad física que los diferencia. Si pregunta por una respuesta de un ejercicio, razona paso a paso y explica por qué los distractores no funcionan. No inventes datos que no aparezcan en el enunciado."}
       />
-      {finished && lost && <div className="game-over-overlay fixed inset-x-0 bottom-0 top-[68px] z-40 flex items-center justify-center overflow-y-auto px-5 py-8 text-center" role="dialog" aria-modal="true" aria-labelledby="level3-gameover-title">
-        <div className="game-over-content relative z-10 flex w-full max-w-6xl flex-col items-center text-center"><div aria-hidden="true" className="game-over-pixels pointer-events-none absolute inset-0" /><div aria-hidden="true" className="game-over-crystal-glow pointer-events-none absolute inset-0" />
-          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-3"><h2 id="level3-gameover-title" className="pixel-font game-over-title">GAME</h2><Image src="/images/game-over/nova-dead-pixel.png" alt="Nova derrotado en pixel art" width={112} height={112} className="game-over-nova h-24 w-24 object-contain sm:h-36 sm:w-36 lg:h-40 lg:w-40"/><span className="pixel-font game-over-title">OVER</span></div>
-          <p className="pixel-font mt-5 text-xs text-white sm:text-sm">PLAY AGAIN?</p><p className="game-over-copy mt-4 max-w-3xl text-sm font-extrabold leading-8 text-white sm:text-lg">No completaste el desafío con todas las respuestas correctas.</p><p className="game-over-copy mt-2 text-sm font-extrabold text-white sm:text-lg">Acertaste <strong className="text-cyan-300">{correct} de {activeQuestions.length}</strong> preguntas.</p><p className="game-over-copy mt-3 max-w-3xl text-sm font-bold leading-7 text-white sm:text-base sm:leading-8">Revisa los métodos de separación y vuelve a intentarlo. Cada distractor representa una idea que vale la pena comprender.</p>
-          <div className="mt-6 flex w-full max-w-xl flex-col gap-2"><button type="button" onClick={restart} className="game-over-choice game-over-choice-yes"><span aria-hidden="true" className="game-over-cursor">▶</span><span>YES</span><span className="game-over-choice-detail">REPETIR CON PREGUNTAS NUEVAS</span></button><button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setStage("theory"); setFinished(false); setLost(false); setRewardOpen(false); }} className="game-over-choice game-over-choice-no"><span className="game-over-cursor game-over-cursor-hidden" aria-hidden="true">▶</span><span>NO</span><span className="game-over-choice-detail">REPASAR TEORÍA</span></button></div>
-          <p className="pixel-font mt-7 text-[9px] tracking-[.1em] text-white/75 sm:mt-9 sm:text-[11px]">PEAKSCORE · CONTINÚA LA AVENTURA</p>
+      {finished && lost && <div className="game-over-overlay fixed inset-0 z-40 flex items-center justify-center overflow-y-auto px-3 py-5 text-center sm:px-6 sm:py-8" role="dialog" aria-modal="true" aria-labelledby="level3-gameover-title">
+        <div className="game-over-content relative z-10 my-auto w-full max-w-4xl py-4 text-center">
+          <div className="game-over-title pixel-font flex w-full items-center justify-center gap-1 whitespace-nowrap font-black text-white sm:gap-3" style={{textShadow:"5px 5px 0 #155e75, 9px 9px 0 #0b1220"}}><span>GAME</span><span className="game-over-nova inline-flex shrink-0 items-center justify-center"><Image src="/images/game-over/nova-dead-pixel.png" alt="Nova" width={88} height={88} priority className="h-auto w-full"/></span><span>OVER</span></div>
+          <p className="pixel-font mt-3 text-[10px] font-bold tracking-[.14em] text-rose-300 sm:mt-4 sm:text-sm">EXPERIMENTO FALLIDO</p>
+          <p className="mt-5 font-extrabold text-white [text-shadow:0_2px_6px_#000]">No lograste acertar las tres preguntas de este desafío.</p>
+          <p className="mt-3 font-extrabold text-white [text-shadow:0_2px_6px_#000]">Acertaste <strong className="text-cyan-300">{correct} de {activeQuestions.length}</strong> preguntas.</p>
+          <p className="mt-4 font-bold text-white [text-shadow:0_2px_6px_#000]">Repasa los métodos de separación y vuelve a intentarlo. Cada error te ayuda a comprender mejor.</p>
+          <div className="mt-7 flex flex-col items-center gap-3"><button type="button" onClick={restart} className="game-over-choice game-over-choice-yes">▶ YES <span className="game-over-choice-detail">REPETIR PRÁCTICA</span></button><button type="button" onClick={() => {playSound("navigation.mp3",0.16);setStage("theory");setFinished(false);setLost(false);setRewardOpen(false);setTutorOpen(false);window.scrollTo({top:0,behavior:"smooth"});}} className="game-over-choice game-over-choice-no">NO <span className="game-over-choice-detail">REPASAR TEORÍA</span></button></div>
+          <p className="pixel-font mt-8 text-[10px] text-white">PEAKSCORE · CONTINÚA LA AVENTURA</p>
         </div>
       </div>}
       <XpRewardAnimation open={rewardOpen && finished && !lost} xp={60} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); window.location.href = "/aprender/santuario-de-la-materia"; }} />
-      <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] backdrop-blur">
-        <div className="mx-auto flex min-h-[62px] max-w-[1100px] items-center justify-between gap-3 px-4 sm:px-7">
-          <div><p className="pixel-font text-[8px] text-slate-100">NIVEL 3</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : stage === "examples" ? "Ejemplos resueltos" : finished ? "Práctica finalizada" : `Pregunta ${index + 1} / ${activeQuestions.length}` }</p></div>
-          <div className="flex flex-1 justify-center">{!finished && <button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setTutorOpen((v) => !v); }} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:min-h-10 sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>}</div>
-          {stage === "theory" ? <button type="button" onClick={() => setStage("examples")} className="inline-flex min-h-9 items-center gap-2 border border-cyan-300/50 bg-cyan-400/15 px-4 py-2 text-xs font-bold text-cyan-100">Ejemplos <ArrowRight className="h-4 w-4" /></button> : stage === "examples" ? <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-4 py-2 text-xs font-extrabold text-[#09200a]">Ejercicios <ArrowRight className="h-4 w-4" /></button> : <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-4 py-2 text-xs font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver a teoría</button>}
+      {!finished && <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
+        <div className="mx-auto flex min-h-[62px] max-w-[1440px] items-center justify-between gap-2 px-3 sm:gap-3 sm:px-7">
+          <div className="min-w-[88px]"><p className="pixel-font text-[8px] text-slate-100">NIVEL 3</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : stage === "examples" ? "Ejemplos resueltos" : `Pregunta ${index + 1} / ${activeQuestions.length}`}</p></div>
+          <div className="flex flex-1 items-center justify-center"><button type="button" aria-label={tutorOpen ? "Cerrar tutor de IA" : "Abrir tutor de IA"} onClick={() => {playSound("navigation.mp3",0.16);setTutorOpen((v)=>!v);}} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:min-h-10 sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button></div>
+          <div className="flex shrink-0 items-center justify-end gap-2">
+            {stage === "theory" && <button type="button" onClick={() => {setStage("examples");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-9 items-center gap-1.5 border border-cyan-300/50 bg-cyan-400/15 px-3 py-2 text-[11px] font-bold text-cyan-100 sm:gap-2 sm:px-4 sm:text-xs">Ejemplos <ArrowRight className="h-4 w-4" /></button>}
+            {stage === "examples" && <><button type="button" onClick={() => {setStage("theory");window.scrollTo({top:0,behavior:"smooth"});}} className="inline-flex min-h-9 items-center gap-1 border border-white/15 bg-[#26364a] px-2.5 py-2 text-[11px] font-semibold text-slate-200 sm:gap-2 sm:px-4 sm:text-xs"><ArrowLeft className="h-4 w-4" /> Anterior</button><button type="button" onClick={startPractice} className="inline-flex min-h-9 items-center gap-1 border border-emerald-300/60 bg-[#75df55] px-2.5 py-2 text-[11px] font-extrabold text-[#09200a] sm:gap-2 sm:px-4 sm:text-xs">Ejercicios <ArrowRight className="h-4 w-4" /></button></>}
+            {stage === "practice" && <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-9 items-center gap-1.5 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[11px] font-extrabold text-[#09200a] sm:gap-2 sm:px-4 sm:text-xs"><ArrowLeft className="h-4 w-4" /> Salir</Link>}
+          </div>
         </div>
-      </footer>
+      </footer>}ooter>
       <style jsx global>{`
-        .game-over-overlay { position: fixed; top: 68px; right: 0; bottom: 0; left: 0; z-index: 40; min-height: calc(100dvh - 68px); padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 4vw, 3rem); background: linear-gradient(180deg, rgba(2,5,13,.32) 0%, rgba(2,5,13,.50) 48%, rgba(0,0,0,.78) 100%), url("/images/aprender/santuario/game-over-laboratorio.png") center center / cover no-repeat, #020308 !important; isolation: isolate; }
+        .game-over-overlay { position: fixed; inset: 0; z-index: 40; min-height: 100dvh; padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 4vw, 3rem); background: linear-gradient(180deg,rgba(2,5,13,.28),rgba(2,5,13,.58)),url("/images/aprender/santuario/game-over-laboratorio.png") center center/cover no-repeat,#020308 !important; isolation: isolate; }
         .game-over-content { animation: game-over-enter 520ms cubic-bezier(.2,.8,.2,1) both; }
         .game-over-pixels { z-index:-2; opacity:.28; background-image: radial-gradient(circle, rgba(255,40,74,.95) 0 2px, transparent 2.8px), radial-gradient(circle, rgba(44,187,255,.8) 0 1.5px, transparent 2.4px), linear-gradient(155deg, transparent 0 42%, rgba(125,16,43,.13) 42.2% 42.7%, transparent 43% 100%); background-size:83px 91px,127px 113px,100% 100%; animation:game-over-pixel-drift 8s linear infinite; }
         .game-over-crystal-glow { z-index:-1; background:radial-gradient(ellipse at 12% 72%,rgba(255,20,58,.23),transparent 28%),radial-gradient(ellipse at 88% 72%,rgba(255,20,58,.24),transparent 29%),radial-gradient(ellipse at 50% 12%,rgba(18,113,196,.14),transparent 35%); animation:game-over-crystal-pulse 3.6s ease-in-out infinite; }

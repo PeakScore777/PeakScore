@@ -14,14 +14,18 @@ create table if not exists public.lesson_media_assets (
 alter table public.lesson_media_assets enable row level security;
 
 drop policy if exists "Anyone can read lesson media assets" on public.lesson_media_assets;
-create policy "Anyone can read lesson media assets"
+drop policy if exists "lesson_media_assets_read_all" on public.lesson_media_assets;
+create policy "lesson_media_assets_read_all"
   on public.lesson_media_assets for select
   to anon, authenticated
   using (true);
 
 drop policy if exists "Admins manage lesson media assets" on public.lesson_media_assets;
-create policy "Admins manage lesson media assets"
-  on public.lesson_media_assets for all
+drop policy if exists "lesson_media_assets_admin_insert" on public.lesson_media_assets;
+drop policy if exists "lesson_media_assets_admin_update" on public.lesson_media_assets;
+drop policy if exists "lesson_media_assets_admin_delete" on public.lesson_media_assets;
+create policy "lesson_media_assets_admin_insert"
+  on public.lesson_media_assets for insert
   to authenticated
   using (
     exists (
@@ -56,7 +60,8 @@ create policy "Anyone can view shared lesson atom media"
   using (bucket_id = 'lesson-atom-media');
 
 drop policy if exists "Admins upload shared lesson atom media" on storage.objects;
-create policy "Admins upload shared lesson atom media"
+drop policy if exists "lesson_atom_media_admin_insert" on storage.objects;
+create policy "lesson_atom_media_admin_insert"
   on storage.objects for insert
   to authenticated
   with check (
@@ -68,7 +73,8 @@ create policy "Admins upload shared lesson atom media"
   );
 
 drop policy if exists "Admins update shared lesson atom media" on storage.objects;
-create policy "Admins update shared lesson atom media"
+drop policy if exists "lesson_atom_media_admin_update" on storage.objects;
+create policy "lesson_atom_media_admin_update"
   on storage.objects for update
   to authenticated
   using (
@@ -87,7 +93,8 @@ create policy "Admins update shared lesson atom media"
   );
 
 drop policy if exists "Admins delete shared lesson atom media" on storage.objects;
-create policy "Admins delete shared lesson atom media"
+drop policy if exists "lesson_atom_media_admin_delete" on storage.objects;
+create policy "lesson_atom_media_admin_delete"
   on storage.objects for delete
   to authenticated
   using (

@@ -239,7 +239,6 @@ export default function CuandoLaMateriaCambiaPage() {
               </div>
             </section>
           )}
-          {!finished && <div className="mt-5 flex justify-end"><button type="button" onClick={() => setTutorOpen((v) => !v)} className="inline-flex items-center gap-2 border border-amber-300/50 bg-[#ff9f1c] px-4 py-2 text-sm font-bold text-[#251300]"><span aria-hidden="true">🤖</span> Preguntar a Orby</button></div>}
           {!finished && <LessonAITutor open={tutorOpen} onOpenChange={setTutorOpen} subject="Ciencias Naturales" topic={`Nivel 2: estados de la materia, modelo cinético-molecular y cambios de estado`} stage="practice" question={question.prompt} context={`Situación: ${question.context}\nOpciones: ${question.options.map((o) => `${o.label}) ${o.text}`).join("\n")}\nExplicación: ${question.explanation}`} />}
         </div>
       )}
@@ -247,6 +246,7 @@ export default function CuandoLaMateriaCambiaPage() {
       <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] backdrop-blur">
         <div className="mx-auto flex min-h-[62px] max-w-[1100px] items-center justify-between gap-3 px-4 sm:px-7">
           <div><p className="pixel-font text-[8px] text-slate-100">NIVEL 2 · LECCIÓN 1</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : finished ? "Práctica finalizada" : `Pregunta ${index + 1} / ${questions.length}`}</p></div>
+          <div className="flex flex-1 justify-center">{stage === "practice" && !finished && <button type="button" onClick={() => setTutorOpen((v) => !v)} className="inline-flex min-h-9 items-center gap-2 border border-cyan-300/50 bg-[#172c43] px-4 py-2 text-xs font-extrabold text-cyan-100 hover:bg-[#203a56]"><span aria-hidden="true">🤖</span> AI</button>}</div>
           {stage === "theory" ? <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-4 py-2 text-xs font-extrabold text-[#09200a]">Ir a la práctica <ArrowRight className="h-4 w-4" /></button> : <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-4 py-2 text-xs font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver a teoría</button>}
         </div>
       </footer>

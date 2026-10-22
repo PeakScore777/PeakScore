@@ -7,6 +7,7 @@ import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import AdminPracticeQuestionEditor from "@/components/admin/AdminPracticeQuestionEditor";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import CodigoDelAtomoPage from "@/components/aprender/CodigoDelAtomoPage";
+import CristalesMisteriososPage from "@/components/aprender/CristalesMisteriososPage";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import {

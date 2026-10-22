@@ -181,7 +181,7 @@ export default function DespertarDeLaReaccionPage() {
       </footer>
       <style jsx global>{`
         .game-over-overlay { position: fixed; top: 68px; right: 0; bottom: 0; left: 0; z-index: 40; min-height: calc(100dvh - 68px); padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 4vw, 3rem); background: linear-gradient(180deg, rgba(2,5,13,.32) 0%, rgba(2,5,13,.50) 48%, rgba(0,0,0,.78) 100%), url("/images/aprender/santuario/game-over-laboratorio.png") center center / cover no-repeat, #020308 !important; isolation: isolate; }
-        .game-over-content { animation: game-over-enter 520ms cubic-bezier(.2,.8,.2,1) both; padding:clamp(1rem,2.5vw,2rem); border:1px solid rgba(103,232,249,.25); background:linear-gradient(180deg,rgba(4,10,23,.60),rgba(4,8,18,.78)); box-shadow:0 18px 70px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.06); backdrop-filter:blur(2px); }
+        .game-over-content { animation: game-over-enter 520ms cubic-bezier(.2,.8,.2,1) both; }
         .game-over-pixels { z-index:-2; opacity:.28; background-image: radial-gradient(circle, rgba(255,40,74,.95) 0 2px, transparent 2.8px), radial-gradient(circle, rgba(44,187,255,.8) 0 1.5px, transparent 2.4px), linear-gradient(155deg, transparent 0 42%, rgba(125,16,43,.13) 42.2% 42.7%, transparent 43% 100%); background-size:83px 91px,127px 113px,100% 100%; animation:game-over-pixel-drift 8s linear infinite; }
         .game-over-crystal-glow { z-index:-1; background:radial-gradient(ellipse at 12% 72%,rgba(255,20,58,.23),transparent 28%),radial-gradient(ellipse at 88% 72%,rgba(255,20,58,.24),transparent 29%),radial-gradient(ellipse at 50% 12%,rgba(18,113,196,.14),transparent 35%); animation:game-over-crystal-pulse 3.6s ease-in-out infinite; }
         .game-over-heading { display:flex; align-items:center; gap:.3rem; filter:drop-shadow(0 0 22px rgba(20,210,255,.2)); }
@@ -191,7 +191,7 @@ export default function DespertarDeLaReaccionPage() {
         .game-over-choice:hover,.game-over-choice:focus-visible { color:#a5f3fc; transform:translateX(3px); outline:none; text-shadow:0 0 14px rgba(34,211,238,.4); }
         .game-over-choice-yes { color:#a5f3fc; } .game-over-cursor { color:#22d3ee; font-size:11px; } .game-over-cursor-hidden { opacity:0; }
         .game-over-choice-detail { margin-left:.2rem; color:#94a3b8; font-family:Arial,Helvetica,sans-serif; font-size:clamp(13px,1.1vw,16px); font-weight:700; letter-spacing:.02em; }
-        .game-over-copy { font-family:var(--font-press-start),"Press Start 2P",monospace !important; font-size:clamp(10px,1vw,13px) !important; font-weight:900 !important; line-height:2.15 !important; color:#fff !important; -webkit-text-stroke:.25px rgba(255,255,255,.6); text-shadow:1px 2px 0 #080d18,0 3px 10px rgba(0,0,0,1); paint-order:stroke fill; }
+        .game-over-copy { font-family:var(--font-press-start),"Press Start 2P",monospace !important; font-size:clamp(9px,1vw,13px) !important; font-weight:900 !important; line-height:2.15 !important; color:#fff !important; text-shadow:1px 1px 0 #080d18,2px 2px 0 rgba(0,0,0,.96),0 0 5px rgba(0,0,0,.95); }
         @keyframes game-over-enter { from {opacity:0;transform:translateY(10px) scale(.97)} to {opacity:1;transform:translateY(0) scale(1)} }
         @keyframes game-over-pixel-drift { from {background-position:8px 12px,42px 57px,center} to {background-position:91px 103px,-85px 170px,center} }
         @keyframes game-over-crystal-pulse { 0%,100% {opacity:.72;transform:scale(1)} 50% {opacity:1;transform:scale(1.025)} }

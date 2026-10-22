@@ -50,7 +50,7 @@ const chapters: Chapter[] = [
     available: true,
     lessons: [
       { id: "7", title: "Cuando la materia cambia", available: true, href: "/aprender/santuario-de-la-materia/leccion/2" },
-      { id: "8", title: "Cambios físicos y químicos" },
+      { id: "8", title: "Desafío: la energía de las transformaciones", available: true, href: "/aprender/santuario-de-la-materia/leccion/2" },
     ],
   },
   {
@@ -58,9 +58,10 @@ const chapters: Chapter[] = [
     title: "El laboratorio de las mezclas",
     description: "Identifica sustancias, mezclas y métodos de separación.",
     image: "/images/aprender/santuario/laboratorio-mezclas.png",
+    available: true,
     lessons: [
-      { id: "9", title: "Sustancias puras y mezclas" },
-      { id: "10", title: "Separa la muestra" },
+      { id: "9", title: "Sustancias puras y mezclas", available: true, href: "/aprender/santuario-de-la-materia/leccion/3" },
+      { id: "10", title: "Desafío: separa la muestra", available: true, href: "/aprender/santuario-de-la-materia/leccion/3" },
     ],
   },
   {

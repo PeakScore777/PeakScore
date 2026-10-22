@@ -114,3 +114,7 @@ create policy "lesson_atom_media_admin_delete"
       where p.id = (select auth.uid()) and p.role = 'admin'
     )
   );
+
+-- Explicit table privileges are required in addition to RLS policies.
+grant select on table public.lesson_media_assets to anon, authenticated;
+grant insert, update, delete on table public.lesson_media_assets to authenticated;

@@ -12,6 +12,7 @@ type Lesson = {
   id: string;
   title: string;
   available?: boolean;
+  href?: string;
 };
 
 type Chapter = {
@@ -48,7 +49,7 @@ const chapters: Chapter[] = [
     image: "/images/aprender/santuario/cuando-la-materia-cambia.png",
     available: true,
     lessons: [
-      { id: "7", title: "Cuando la materia cambia", available: true },
+      { id: "7", title: "Cuando la materia cambia", available: true, href: "/aprender/santuario-de-la-materia/leccion/2" },
       { id: "8", title: "Cambios físicos y químicos" },
     ],
   },
@@ -242,7 +243,7 @@ export default function SantuarioDeLaMateriaPage() {
                             // Las secciones del capítulo 1 forman parte de una única lección integrada.
                             // Hasta que tengan páginas independientes, todas abren la teoría existente.
                             return available ? (
-                              <Link key={lesson.id} href={`/aprender/santuario-de-la-materia/leccion/${lesson.id}`} className="block border-b border-white/[.06] last:border-b-0">{row}</Link>
+                              <Link key={lesson.id} href={lesson.href ?? `/aprender/santuario-de-la-materia/leccion/${lesson.id}`} className="block border-b border-white/[.06] last:border-b-0">{row}</Link>
                             ) : (
                               <div key={lesson.id} aria-disabled="true" className="border-b border-white/[.06] last:border-b-0">{row}</div>
                             );

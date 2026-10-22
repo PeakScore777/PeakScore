@@ -9,7 +9,7 @@ import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 
 type Question = {
-  difficulty: "Media" | "Difícil";
+  difficulty: "Fácil" | "Media" | "Difícil";
   competency: string;
   context: string;
   prompt: string;

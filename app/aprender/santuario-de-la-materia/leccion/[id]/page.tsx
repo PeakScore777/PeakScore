@@ -6,8 +6,9 @@ import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import AdminPracticeQuestionEditor from "@/components/admin/AdminPracticeQuestionEditor";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
+import CodigoDelAtomoPage from "@/components/aprender/CodigoDelAtomoPage";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -93,7 +94,7 @@ const matterNotes = [
   },
 ];
 
-export default function CristalesMisteriososPage() {
+function LegacyCristalesMisteriososPage() {
   const router = useRouter();
   const [stage, setStage] = useState<"theory" | "practice">("theory");
   const [tutorOpen, setTutorOpen] = useState(false);
@@ -662,4 +663,11 @@ export default function CristalesMisteriososPage() {
       `}</style>
     </main>
   );
+}
+
+
+export default function LessonRoutePage() {
+  const params = useParams<{ id: string }>();
+  if (params.id === "4") return <CodigoDelAtomoPage />;
+  return <LegacyCristalesMisteriososPage />;
 }

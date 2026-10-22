@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Lightbulb } from "lucide-react";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
+import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 
 type Question = {
   difficulty: "Media" | "Difícil";
@@ -69,6 +71,8 @@ export default function CuandoLaMateriaCambiaPage() {
   const [checked, setChecked] = useState(false);
   const [correct, setCorrect] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [lost, setLost] = useState(false);
+  const [rewardOpen, setRewardOpen] = useState(false);
   const [tutorOpen, setTutorOpen] = useState(false);
   const question = questions[index];
   const isCorrect = selected === question.answer;
@@ -86,6 +90,9 @@ export default function CuandoLaMateriaCambiaPage() {
       setChecked(false);
     } else {
       setFinished(true);
+      const finalCorrect = correct;
+      if (finalCorrect === questions.length) setRewardOpen(true);
+      else setLost(true);
     }
   }
 
@@ -95,6 +102,8 @@ export default function CuandoLaMateriaCambiaPage() {
     setChecked(false);
     setCorrect(0);
     setFinished(false);
+    setLost(false);
+    setRewardOpen(false);
   }
 
   return (
@@ -207,6 +216,10 @@ export default function CuandoLaMateriaCambiaPage() {
               <div className="border-b border-[#293d56] bg-[#121d30] px-5 py-4">
                 <p className="text-xs font-semibold text-cyan-200">{question.competency} · {question.difficulty}</p>
                 <p className="mt-4 border-l-[3px] border-cyan-300 bg-[#15243a] px-4 py-4 text-sm leading-7 text-slate-100">{question.context}</p>
+                <div className="mt-5 border border-cyan-200/20 bg-[#0c1a29] p-4">
+                  <p className="pixel-font text-[8px] leading-5 text-cyan-200">PUNTOS CLAVE DE LA TEORÍA</p>
+                  {index === 0 ? <div className="mt-2 space-y-2 text-sm leading-6 text-slate-200"><p><strong className="text-cyan-100">Modelo de partículas:</strong> en el sólido, las partículas vibran alrededor de posiciones; en el líquido siguen próximas, pero pueden desplazarse unas respecto de otras.</p><p><strong className="text-cyan-100">Cambio físico:</strong> durante la fusión se conserva la identidad de las moléculas de agua. Cambiar de estado no demuestra que haya nacido una sustancia nueva.</p></div> : index === 1 ? <div className="mt-2 space-y-2 text-sm leading-6 text-slate-200"><p><strong className="text-cyan-100">Ley de Boyle:</strong> para una cantidad fija de gas ideal a temperatura constante, P₁V₁ = P₂V₂.</p><p><strong className="text-cyan-100">Interpretación:</strong> al reducir el volumen, aumentan los choques de las partículas contra las paredes y sube la presión; la temperatura constante no implica presión constante.</p></div> : <div className="mt-2 space-y-2 text-sm leading-6 text-slate-200"><p><strong className="text-cyan-100">Temperatura y calor:</strong> la temperatura describe el estado térmico; el calor es energía transferida por una diferencia de temperatura.</p><p><strong className="text-cyan-100">Meseta térmica:</strong> durante el cambio de estado de una sustancia pura a presión constante, la energía transferida puede emplearse en transformar la fase sin elevar la temperatura.</p></div>}
+                </div>
                 <h2 className="mt-5 text-lg font-bold leading-8 text-white sm:text-xl">{question.prompt}</h2>
               </div>
               <div className="space-y-3 p-5 sm:p-7">
@@ -243,6 +256,15 @@ export default function CuandoLaMateriaCambiaPage() {
         </div>
       )}
 
+      {finished && lost && <div className="fixed inset-x-0 bottom-0 top-[68px] z-40 flex items-center justify-center overflow-y-auto bg-[#030712]/95 px-5 py-8 text-center backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="level2-gameover-title">
+        <div className="relative z-10 flex w-full max-w-3xl flex-col items-center">
+          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-3"><h2 id="level2-gameover-title" className="pixel-font text-5xl font-black tracking-tight text-white sm:text-7xl">GAME</h2><Image src="/images/game-over/nova-dead-pixel.png" alt="Nova derrotado en pixel art" width={112} height={112} className="h-20 w-20 object-contain sm:h-28 sm:w-28"/><span className="pixel-font text-5xl font-black tracking-tight text-white sm:text-7xl">OVER</span></div>
+          <p className="pixel-font mt-5 text-xs text-white sm:text-sm">PLAY AGAIN?</p><p className="mt-4 text-sm leading-7 text-slate-200">No lograste acertar las tres preguntas de este desafío.</p><p className="mt-2 text-sm text-white">Acertaste <strong className="text-cyan-300">{correct} de {questions.length}</strong> preguntas.</p><p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">Revisa los puntos clave de la teoría y vuelve a intentarlo. Cada distractor representa una idea que vale la pena comprender.</p>
+          <div className="mt-6 flex w-full max-w-xl flex-col gap-2"><button type="button" onClick={restart} className="flex min-h-12 items-center gap-3 px-4 text-left font-bold text-cyan-200 hover:bg-white/5"><span>▶</span> YES <span className="text-xs text-slate-400">REPETIR PRÁCTICA</span></button><button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); setRewardOpen(false); }} className="flex min-h-12 items-center gap-3 px-4 text-left font-bold text-slate-200 hover:bg-white/5"><span className="text-transparent">▶</span> NO <span className="text-xs text-slate-400">REPASAR TEORÍA</span></button></div>
+          <p className="pixel-font mt-6 text-[8px] leading-5 text-white/60">PEAKSCORE · CONTINÚA LA AVENTURA</p>
+        </div>
+      </div>}
+      <XpRewardAnimation open={rewardOpen && finished && !lost} xp={60} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); window.location.href = "/aprender/santuario-de-la-materia"; }} />
       <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] backdrop-blur">
         <div className="mx-auto flex min-h-[62px] max-w-[1100px] items-center justify-between gap-3 px-4 sm:px-7">
           <div><p className="pixel-font text-[8px] text-slate-100">NIVEL 2 · LECCIÓN 1</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : finished ? "Práctica finalizada" : `Pregunta ${index + 1} / ${questions.length}`}</p></div>

@@ -194,7 +194,7 @@ export default function CristalesMisteriososPage() {
             <span className="truncate text-emerald-100">{stage === "theory" ? "Los cristales misteriosos" : "Misión: analiza las muestras"}</span>
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            <span className="pixel-font text-[8px] text-white/70">LECCIÓN 1 / 13</span>
+            <span className="pixel-font text-[8px] text-white/70">NIVEL 1</span>
             <div className="hidden h-2 w-24 overflow-hidden rounded-full bg-white/10 sm:block">
               <div className="h-full rounded-full bg-emerald-300 transition-all" style={{ width: `${stage === "theory" ? 30 : finished ? 100 : 30 + ((questionIndex + (checked ? 1 : 0)) / questions.length) * 70}%` }} />
             </div>
@@ -533,7 +533,7 @@ export default function CristalesMisteriososPage() {
         <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <div className="min-w-0">
-              <p className="pixel-font text-[8px] leading-5 text-slate-100">{stage === "theory" ? "LECCIÓN 1 / 13" : finished ? "LECCIÓN 1 / 13 · COMPLETADA" : `LECCIÓN 1 / 13 · PRÁCTICA ${questionIndex + 1}/${questions.length}`}</p>
+              <p className="pixel-font text-[8px] leading-5 text-slate-100">{stage === "theory" ? "NIVEL 1" : finished ? "NIVEL 1 · COMPLETADO" : `NIVEL 1 · PRÁCTICA ${questionIndex + 1}/${questions.length}`}</p>
               <span className="mt-1 inline-flex items-center gap-1.5 border border-emerald-300/20 bg-emerald-300/[.08] px-2 py-0.5 text-[9px] font-bold text-emerald-200"><Image src="/peaky/homepage/xp.webp" alt="" width={17} height={17} className="object-contain" /> 50 XP</span>
             </div>
           </div>

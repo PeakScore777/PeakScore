@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Lightbulb } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Lightbulb, Plus } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
@@ -28,6 +29,223 @@ const retryQuestions: Question[] = [
  {difficulty:"Media",competency:"Uso comprensivo del conocimiento científico",context:"Dos líquidos forman una sola fase al mezclarse. Sus temperaturas de ebullición son diferentes y no reaccionan químicamente entre sí.",prompt:"¿Qué método es el más pertinente para separar y recoger sus componentes?",options:[{label:"A",text:"Tamizado por tamaño de partícula."},{label:"B",text:"Destilación, recogiendo el vapor condensado."},{label:"C",text:"Filtración con papel poroso."},{label:"D",text:"Decantación por diferencia de densidad, aunque sean miscibles."}],answer:"B",explanation:"La destilación separa componentes miscibles aprovechando diferencias de volatilidad. El vapor se conduce a un condensador y se recoge como líquido."},
  {difficulty:"Media",competency:"Explicación de fenómenos",context:"Una tinta negra se coloca sobre papel de cromatografía. Al subir el disolvente, aparecen bandas de distintos colores a diferentes alturas.",prompt:"¿Qué explica mejor el resultado?",options:[{label:"A",text:"La tinta se transformó necesariamente en sustancias nuevas."},{label:"B",text:"Todos los pigmentos viajan exactamente igual, pero el papel cambia sus colores."},{label:"C",text:"Los componentes interactúan de forma diferente con el papel y el disolvente, por lo que avanzan distancias distintas."},{label:"D",text:"La cromatografía separa solo materiales magnéticos."}],answer:"C",explanation:"La cromatografía aprovecha diferencias de afinidad entre la fase estacionaria (papel) y la fase móvil (disolvente). Por eso, los componentes de una mezcla pueden desplazarse a distintas velocidades."}
 ];
+const separationMethods = [
+  {
+    "id": "tamizado",
+    "title": "Tamizado",
+    "description": "Separa sólidos con tamaños de partícula diferentes usando una malla: las partículas pequeñas atraviesan los orificios y las grandes quedan retenidas.",
+    "example": "separar grava de arena con un tamiz adecuado.",
+    "limit": "no separa sustancias disueltas ni partículas de tamaño parecido al de la malla."
+  },
+  {
+    "id": "imantacion",
+    "title": "Imantación o separación magnética",
+    "description": "Un imán atrae componentes ferromagnéticos, como hierro, níquel o ciertos aceros, mientras los no magnéticos permanecen en la mezcla.",
+    "example": "retirar limaduras de hierro de arena y sal antes de añadir agua.",
+    "limit": "no todos los metales son atraídos por un imán; aluminio y cobre no se separan así en condiciones escolares comunes."
+  },
+  {
+    "id": "filtracion",
+    "title": "Filtración",
+    "description": "Un medio poroso retiene partículas sólidas insolubles y permite que el líquido pase como filtrado.",
+    "example": "separar arena del agua con papel de filtro.",
+    "limit": "la sal disuelta pasa junto con el agua; para recuperarla se necesita otra técnica."
+  },
+  {
+    "id": "decantacion",
+    "title": "Decantación",
+    "description": "Después de dejar reposar la muestra, se separa una fase de otra por diferencia de densidad, cuando son inmiscibles o un sólido ha sedimentado.",
+    "example": "separar agua y aceite con un embudo de decantación.",
+    "limit": "no funciona bien para líquidos miscibles como agua y alcohol."
+  },
+  {
+    "id": "sedimentacion",
+    "title": "Sedimentación",
+    "description": "Se deja que partículas más densas que el fluido se depositen por gravedad en el fondo del recipiente.",
+    "example": "dejar reposar agua con barro antes de retirar el líquido superior.",
+    "limit": "puede ser lenta y no elimina partículas muy finas o disueltas."
+  },
+  {
+    "id": "centrifugacion",
+    "title": "Centrifugación",
+    "description": "La rotación acelera la separación de componentes con distinta densidad efectiva, concentrando los más densos hacia el exterior o el fondo del tubo.",
+    "example": "separar componentes de una suspensión en un equipo apropiado.",
+    "limit": "requiere equipo adecuado y no separa solutos disueltos como la sal del agua."
+  },
+  {
+    "id": "evaporacion",
+    "title": "Evaporación",
+    "description": "Se evapora el disolvente para recuperar un soluto sólido no volátil que estaba disuelto.",
+    "example": "obtener sal de una disolución de agua salada.",
+    "limit": "el disolvente suele perderse y el calentamiento puede dañar sustancias sensibles al calor."
+  },
+  {
+    "id": "cristalizacion",
+    "title": "Cristalización",
+    "description": "Se forman cristales al enfriar una disolución o retirar parte del disolvente; en condiciones adecuadas permite recuperar y purificar un sólido.",
+    "example": "obtener cristales de una disolución concentrada de una sal.",
+    "limit": "depende de la solubilidad, temperatura, pureza y velocidad de formación de los cristales."
+  },
+  {
+    "id": "destilacion-simple",
+    "title": "Destilación simple",
+    "description": "Se vaporiza un componente y se condensa el vapor para recuperarlo, aprovechando una diferencia suficiente de volatilidad o separando un líquido de solutos no volátiles.",
+    "example": "recuperar agua de una disolución salina mediante condensación del vapor.",
+    "limit": "no es la mejor opción para separar líquidos con puntos de ebullición muy cercanos."
+  },
+  {
+    "id": "destilacion-fraccionada",
+    "title": "Destilación fraccionada",
+    "description": "Una columna produce repetidos procesos de vaporización y condensación para separar líquidos miscibles con puntos de ebullición relativamente cercanos.",
+    "example": "separar componentes de una mezcla de líquidos miscibles en un laboratorio equipado.",
+    "limit": "requiere control de temperatura y un montaje adecuado; una sola pasada no garantiza pureza total."
+  },
+  {
+    "id": "cromatografia",
+    "title": "Cromatografía",
+    "description": "Separa componentes porque interactúan de manera distinta con una fase estacionaria y una fase móvil; por eso avanzan a velocidades diferentes.",
+    "example": "separar los pigmentos de una tinta en papel.",
+    "limit": "las bandas sugieren componentes distintos, pero identificarlos exige compararlos con referencias."
+  },
+  {
+    "id": "extraccion",
+    "title": "Extracción con disolvente",
+    "description": "Transfiere preferentemente un componente a un disolvente en el que es más soluble que en la otra fase; luego se separan las fases.",
+    "example": "extraer un compuesto soluble con un disolvente selectivo apropiado.",
+    "limit": "el disolvente debe elegirse con cuidado; puede requerir separación posterior y medidas de seguridad."
+  }
+] as const;
+
+function ImageUploadSlot({ assetKey, title, description, compact=false, large=false }: { assetKey:string; title:string; description:string; compact?:boolean; large?:boolean }) {
+ const [imageUrl,setImageUrl] = useState<string|null>(null);
+ const [isAdmin,setIsAdmin] = useState(false);
+ const [loading,setLoading] = useState(true);
+ const [saving,setSaving] = useState(false);
+ const [error,setError] = useState<string|null>(null);
+ const [notice,setNotice] = useState<string|null>(null);
+ const fileInputRef = useRef<HTMLInputElement|null>(null);
+
+ useEffect(() => {
+  let active = true;
+  async function loadAsset() {
+   try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    let admin = false;
+    if (user) {
+     const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+     if (profileError) throw profileError;
+     admin = profile?.role === "admin";
+    }
+    if (active) setIsAdmin(admin);
+   } catch (e) {
+    if (active) setError(e instanceof Error ? e.message : "No se pudo verificar la sesión.");
+   }
+   try {
+    const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url").eq("asset_key", assetKey).maybeSingle();
+    if (assetError) throw assetError;
+    if (active && asset?.public_url) setImageUrl(asset.public_url);
+   } catch (e) {
+    if (active) setError(e instanceof Error ? e.message : "No se pudo cargar la imagen compartida.");
+   } finally {
+    if (active) setLoading(false);
+   }
+  }
+  void loadAsset();
+  return () => { active = false; };
+ }, [assetKey]);
+
+ async function uploadSelectedFile(file?: File) {
+  if (!file || saving) return;
+  setError(null);
+  setNotice(null);
+  if (!isAdmin) { setError("Solo el administrador puede cambiar las imágenes."); return; }
+  if (!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)) {
+   setError("Formato no válido. Usa PNG, JPG, WebP o GIF."); return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+   setError("La imagen debe pesar máximo 8 MB."); return;
+  }
+
+  setSaving(true);
+  let uploadedPath: string | null = null;
+  try {
+   const { data: { user }, error: authError } = await supabase.auth.getUser();
+   if (authError) throw authError;
+   if (!user) throw new Error("Inicia sesión con la cuenta administradora.");
+   const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+   if (profileError) throw profileError;
+   if (profile?.role !== "admin") throw new Error("Solo el administrador puede gestionar estas imágenes.");
+
+   const previousUrl = imageUrl;
+   const { data: previousAsset, error: previousAssetError } = await supabase.from("lesson_media_assets").select("storage_path").eq("asset_key", assetKey).maybeSingle();
+   if (previousAssetError) throw previousAssetError;
+
+   const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+   const safeExtension = /^[a-z0-9]{1,8}$/.test(extension) ? extension : "png";
+   const path = assetKey + "/" + crypto.randomUUID() + "." + safeExtension;
+   const { error: uploadError } = await supabase.storage.from("lesson-atom-media").upload(path, file, {
+    upsert:false, contentType:file.type, cacheControl:"3600"
+   });
+   if (uploadError) throw new Error("No se pudo subir a Supabase Storage: " + uploadError.message);
+   uploadedPath = path;
+   const { data: urlData } = supabase.storage.from("lesson-atom-media").getPublicUrl(path);
+
+   const { error: saveError } = await supabase.from("lesson_media_assets").upsert({
+    asset_key:assetKey,
+    public_url:urlData.publicUrl,
+    storage_path:path,
+    updated_by:user.id,
+    updated_at:new Date().toISOString()
+   }, { onConflict:"asset_key" });
+   if (saveError) throw new Error("El archivo se subió, pero no se pudo guardar en la base de datos: " + saveError.message);
+
+   setImageUrl(urlData.publicUrl);
+   setNotice("Imagen guardada automáticamente y publicada para todos los usuarios.");
+   uploadedPath = null;
+
+   const previousPath = previousAsset?.storage_path;
+   if (previousPath && previousPath !== path) {
+    const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([previousPath]);
+    if (cleanupError) console.warn("La imagen anterior requiere limpieza:", cleanupError.message);
+   }
+   void previousUrl;
+  } catch (e) {
+   if (uploadedPath) {
+    const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([uploadedPath]);
+    if (cleanupError) console.warn("No se pudo limpiar la subida incompleta:", cleanupError.message);
+   }
+   setError(e instanceof Error ? e.message : "No se pudo guardar la imagen. Revisa las políticas de Supabase.");
+  } finally {
+   setSaving(false);
+  }
+ }
+
+ const picker = <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e=>{void uploadSelectedFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}} />;
+
+ return <div className={"relative flex " + (large ? (imageUrl ? "min-h-0" : "min-h-[260px]") : compact ? "min-h-[144px]" : "min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
+  {picker}
+  {imageUrl ? (
+   isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
+    <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[1000px] sm:max-h-[1150px] xl:max-h-[1300px]" : compact ? "max-h-36" : "max-h-[520px]")}/>
+    {saving && <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100">Guardando imagen…</span>}
+   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[960px] sm:max-h-[1100px] xl:max-h-[1250px]" : compact ? "max-h-32" : "max-h-[340px]")}/>
+  ) : isAdmin ? (
+   <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4 text-cyan-100 transition hover:bg-cyan-400/[0.03] disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
+    {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}
+    <span className="text-[10px] text-cyan-200">{saving?"Guardando automáticamente en Supabase": "Solo admin · pulsa para subir"}</span>
+   </button>
+  ) : (
+   <div className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4">
+    <span className="pixel-font text-[9px] text-cyan-100">{loading?"CARGANDO IMAGEN":"IMAGEN EN PREPARACIÓN"}</span>
+   </div>
+  )}
+  {saving && imageUrl && <span className="text-[10px] font-bold text-cyan-200">Guardando automáticamente en Supabase…</span>}
+  {notice && <p role="status" className="text-[10px] text-emerald-300">{notice}</p>}
+  {error && <p role="alert" className="max-w-full break-words text-[10px] text-rose-300">{error}</p>}
+ </div>;
+}
+
 export default function LaboratorioDeLasMezclasPage() {
   const [stage, setStage] = useState<"theory" | "examples" | "practice">("theory");
   const [historyOpen, setHistoryOpen] = useState(true);
@@ -99,8 +317,9 @@ export default function LaboratorioDeLasMezclasPage() {
 
       {stage === "theory" ? (
         <div className="mx-auto max-w-[1600px] px-3 pt-4 sm:px-5 sm:pt-5">
-          <section className="relative flex min-h-[180px] items-center overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:min-h-[210px] sm:p-7" style={{backgroundImage:"linear-gradient(90deg,rgba(3,9,20,.97),rgba(3,9,20,.78) 58%,rgba(3,9,20,.35)),radial-gradient(circle at 85% 20%,rgba(34,211,238,.22),transparent 30%)",backgroundSize:"cover",backgroundPosition:"center"}}>
-            <div className="max-w-[780px]"><span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 03 · QUÍMICA</span><h1 className="pixel-font mt-4 text-2xl leading-tight text-white sm:text-3xl lg:text-4xl">El laboratorio de las mezclas</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100 sm:text-base sm:leading-7">Acompaña a Nova a identificar qué contiene cada muestra y a separar sus componentes usando propiedades físicas, procedimientos de laboratorio y evidencia verificable.</p></div>
+          <section className="relative grid min-h-[220px] items-center gap-4 overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:min-h-[260px] sm:grid-cols-[minmax(0,1.2fr)_minmax(280px,.8fr)] sm:p-7" style={{backgroundImage:"linear-gradient(90deg,rgba(3,9,20,.96),rgba(3,9,20,.84)),radial-gradient(circle at 85% 20%,rgba(34,211,238,.22),transparent 30%)",backgroundSize:"cover",backgroundPosition:"center"}}>
+            <div className="relative z-10 max-w-[780px]"><span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 03 · QUÍMICA</span><h1 className="pixel-font mt-4 text-2xl leading-tight text-white sm:text-3xl lg:text-4xl">El laboratorio de las mezclas</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100 sm:text-base sm:leading-7">Acompaña a Nova a identificar qué contiene cada muestra y a separar sus componentes usando propiedades físicas, procedimientos de laboratorio y evidencia verificable.</p><p className="mt-3 text-xs leading-5 text-cyan-100/80">La imagen del capítulo se administra aquí: solo la cuenta administradora puede cargarla o cambiarla y queda publicada desde Supabase para todos los usuarios.</p></div>
+            <div className="relative min-w-0 rounded-lg border border-cyan-300/20 bg-[#050d18]/55 p-2"><ImageUploadSlot assetKey="laboratorio-mezclas/encabezado" title="imagen del encabezado del capítulo 3" description="Ilustración principal del capítulo El laboratorio de las mezclas, con frascos y Nova separando componentes" large /></div>
           </section>
           <nav aria-label="Secciones de la lección" className="mt-2 grid grid-cols-2 gap-1 rounded-xl border border-[#21405e] bg-[#071321] p-1 text-center sm:grid-cols-4">
             <button type="button" onClick={() => {setStage("theory");window.scrollTo({top:0,behavior:"smooth"});}} className={stage==="theory"?"rounded-lg border border-cyan-300 bg-cyan-500/30 px-2 py-3 text-xs font-bold text-white sm:text-sm":"rounded-lg px-2 py-3 text-xs font-semibold text-slate-300 transition hover:bg-white/[.05] hover:text-white sm:text-sm"}>Teoría</button>
@@ -116,19 +335,14 @@ export default function LaboratorioDeLasMezclasPage() {
                   {historyOpen && <div className="space-y-4 px-5 py-5 text-sm leading-7 text-slate-300"><p>En una sala oculta del Santuario, Nova encuentra frascos sin etiqueta: arena con sal, agua turbia, una disolución azul y una tinta que parece tener un solo color. El registro indica que cada muestra contiene pistas, pero ninguna se puede identificar solo por su apariencia.</p><p>Para recuperar los materiales, Nova debe decidir qué propiedad física aprovechar: tamaño de partícula, solubilidad, densidad, magnetismo, volatilidad o afinidad con un disolvente. Cada método tiene límites y debe elegirse según la mezcla real.</p><p className="border-l-2 border-cyan-300/70 bg-cyan-300/[.045] px-4 py-3 text-cyan-100">Tu misión: clasificar las muestras, seleccionar un método de separación y justificar por qué funcionaría sin confundir una mezcla con una sustancia pura.</p></div>}
                 </section>
                 <section className="mt-3 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
-                  <h2 className="pixel-font text-sm leading-6 text-white sm:text-base">La mesa de separación de Nova</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">Los métodos de separación aprovechan diferencias físicas entre los componentes. No existe una técnica universal: primero identifica qué contiene la muestra y qué propiedad permite distinguir sus partes.</p>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <div className="rounded-lg border border-[#14517a] bg-[#071a2d] p-3"><div className="mb-3 flex h-20 items-center justify-center gap-2 rounded-md bg-[#06101d]"><span className="h-10 w-10 rounded-full border-2 border-amber-200/60 bg-amber-100/20" /><span className="h-10 w-10 rounded-full border-2 border-cyan-200/60 bg-cyan-100/20" /></div><h3 className="text-sm font-bold text-cyan-100">Filtración</h3><p className="mt-1 text-xs leading-5 text-slate-300">Retiene un sólido insoluble y deja pasar el fluido, como arena mezclada con agua.</p></div>
-                    <div className="rounded-lg border border-[#14517a] bg-[#071a2d] p-3"><div className="mb-3 flex h-20 items-center justify-center gap-2 rounded-md bg-[#06101d]"><span className="h-12 w-4 rounded bg-cyan-300/60" /><span className="h-8 w-8 rounded-full border-2 border-violet-200/60 bg-violet-200/20" /></div><h3 className="text-sm font-bold text-cyan-100">Decantación</h3><p className="mt-1 text-xs leading-5 text-slate-300">Aprovecha la diferencia de densidad entre fases que se separan, como agua y aceite.</p></div>
-                    <div className="rounded-lg border border-[#14517a] bg-[#071a2d] p-3"><div className="mb-3 flex h-20 items-center justify-center gap-2 rounded-md bg-[#06101d]"><span className="h-8 w-12 rounded border-2 border-rose-200/60 bg-rose-200/20" /><span className="h-8 w-12 rounded border-2 border-cyan-200/60 bg-cyan-200/20" /></div><h3 className="text-sm font-bold text-cyan-100">Destilación</h3><p className="mt-1 text-xs leading-5 text-slate-300">Separa líquidos miscibles mediante diferencias de volatilidad y condensación del vapor.</p></div>
-                  </div>
+                  <div className="flex flex-wrap items-end justify-between gap-3"><div><h2 className="pixel-font text-sm leading-6 text-white sm:text-base">La mesa de separación de Nova</h2><p className="mt-2 max-w-4xl text-sm leading-6 text-slate-300">Cada técnica aprovecha una propiedad física y tiene límites concretos. Todas las tarjetas cuentan con su propio espacio de imagen: pulsa el + para cargar la ilustración correspondiente. Solo la cuenta administradora puede cambiar imágenes; se guardan en Supabase y se muestran a los demás usuarios.</p></div><span className="rounded border border-cyan-300/30 px-2 py-1 text-[10px] font-bold text-cyan-100">12 MÉTODOS</span></div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{separationMethods.map((method) => <article key={method.id} className="min-w-0 overflow-hidden rounded-lg border border-[#14517a] bg-[#071a2d]"><div className="border-b border-cyan-200/10 bg-[#06101d] px-3 pt-2"><ImageUploadSlot assetKey={`laboratorio-mezclas/metodos/${method.id}`} title={`ilustración de ${method.title}`} description={`${method.title}: ${method.description}`} compact /></div><div className="p-3"><h3 className="text-sm font-bold text-cyan-100">{method.title}</h3><p className="mt-1 text-xs leading-5 text-slate-300">{method.description}</p><p className="mt-2 border-l-2 border-cyan-300/50 pl-2 text-xs leading-5 text-slate-400"><strong className="text-slate-200">Ejemplo:</strong> {method.example}</p><p className="mt-2 text-xs leading-5 text-amber-100/90"><strong>Límite:</strong> {method.limit}</p></div></article>)}</div>
                 </section>
                 <article className="mt-3 grid gap-3 lg:grid-cols-2">
                   <section id="sustancias-mezclas" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="text-xl font-bold text-cyan-200">1. Sustancias puras y mezclas</h2><p className="mt-3 text-sm leading-7 text-slate-300">Una sustancia pura tiene composición definida y propiedades características bajo condiciones especificadas. Puede ser un elemento, como cobre, o un compuesto, como agua pura. Una mezcla contiene dos o más sustancias reunidas físicamente; su composición puede variar y sus componentes pueden separarse por métodos físicos adecuados.</p><p className="mt-3 text-sm leading-7 text-slate-300">La apariencia no basta para distinguirlas. El agua con sal puede verse uniforme y seguir siendo una mezcla. Para identificarla, se puede evaporar parte del disolvente y observar la cristalización de la sal. La prueba debe interpretarse junto con otras propiedades y controles.</p></section>
                   <section id="tipos-mezcla" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="text-xl font-bold text-cyan-200">2. Mezclas homogéneas y heterogéneas</h2><p className="mt-3 text-sm leading-7 text-slate-300">En una mezcla homogénea, la composición es uniforme a escala de observación y se distingue una sola fase, como agua con sal disuelta. En una mezcla heterogénea, la composición no es uniforme y pueden distinguirse fases, como agua y aceite o agua con arena sedimentada.</p><p className="mt-3 text-sm leading-7 text-slate-300">No confundas fase con componente: una mezcla puede tener varios componentes y una sola fase. También puede presentar más de una fase aunque algunos componentes no se distingan a simple vista. La clasificación depende de la distribución y las propiedades de la muestra, no solo del color.</p></section>
                   <section id="disoluciones" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="text-xl font-bold text-cyan-200">3. Disoluciones: soluto y disolvente</h2><p className="mt-3 text-sm leading-7 text-slate-300">Una disolución es una mezcla homogénea. El disolvente es el componente que disuelve y suele estar en mayor proporción; el soluto es el que se dispersa en él. Al disolver sal en agua, los iones se distribuyen entre las moléculas de agua: no desaparecen, aunque ya no se vean como cristales.</p><p className="mt-3 text-sm leading-7 text-slate-300">La solubilidad expresa cuánto soluto puede disolverse en una cantidad determinada de disolvente bajo condiciones definidas, especialmente temperatura y, para gases, presión. Añadir más soluto no garantiza que se disuelva: una disolución saturada ha alcanzado el límite de solubilidad en esas condiciones.</p><div className="mt-4 rounded-lg border border-cyan-200/20 bg-[#101725] p-4"><p className="text-sm font-bold text-cyan-100">Idea importante</p><p className="mt-2 text-sm leading-6 text-slate-300">Disolver no significa destruir una sustancia. Si se evapora el disolvente sin descomponer el soluto, este puede recuperarse como sólido.</p></div></section>
-                  <section id="metodos-separacion" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="text-xl font-bold text-cyan-200">4. Métodos de separación</h2><p className="mt-3 text-sm leading-7 text-slate-300"><strong className="text-cyan-100">Tamizado:</strong> diferencia de tamaño de partículas. <strong className="text-cyan-100">Imantación:</strong> respuesta magnética de un componente. <strong className="text-cyan-100">Filtración:</strong> sólido insoluble frente a un fluido. <strong className="text-cyan-100">Decantación:</strong> fases con distinta densidad que se separan. <strong className="text-cyan-100">Evaporación o cristalización:</strong> recuperar un soluto disuelto. <strong className="text-cyan-100">Destilación:</strong> separar sustancias por diferencias de volatilidad. <strong className="text-cyan-100">Cromatografía:</strong> diferencias de afinidad entre una fase móvil y otra estacionaria.</p><p className="mt-3 text-sm leading-7 text-slate-300">Cada método tiene condiciones y limitaciones. La filtración no separa sal disuelta del agua; la decantación simple no separa bien dos líquidos miscibles; un imán no atrae todos los metales. Escoger la técnica correcta exige conocer las propiedades de los componentes.</p></section>
+                  <section id="metodos-separacion" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="text-xl font-bold text-cyan-200">4. Cómo escoger el método de separación</h2><p className="mt-3 text-sm leading-7 text-slate-300">Relaciona la técnica con la propiedad que produce la diferencia observable. Tamaño de partícula: tamizado. Magnetismo: imantación. Sólido insoluble en un fluido: filtración. Fases que se separan por densidad: sedimentación y decantación; si necesitas acelerar la sedimentación, centrifugación. Soluto sólido disuelto: evaporación o cristalización. Diferencia de volatilidad: destilación simple o fraccionada. Afinidad diferencial: cromatografía. Diferente solubilidad entre líquidos inmiscibles: extracción con disolvente.</p><div className="mt-4 grid gap-3 md:grid-cols-2"><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Si hay varios sólidos</h3><p className="mt-1 text-sm leading-6 text-slate-300">Retira primero componentes separables de forma selectiva, como hierro con un imán o sólidos de distinto tamaño con un tamiz. Evita añadir agua antes de recuperar los componentes que podrían perderse o alterarse.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Si hay un sólido disuelto</h3><p className="mt-1 text-sm leading-6 text-slate-300">Filtrar no retiene iones o moléculas disueltos. Para recuperar un sólido no volátil, evapora el disolvente o favorece la cristalización; si también necesitas recuperar el disolvente, considera la destilación.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Si hay dos líquidos</h3><p className="mt-1 text-sm leading-6 text-slate-300">Si son inmiscibles, la decantación puede separarlos. Si son miscibles, se aprovecha la volatilidad mediante destilación; la columna fraccionada ayuda cuando los puntos de ebullición son cercanos.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Si observas bandas</h3><p className="mt-1 text-sm leading-6 text-slate-300">La cromatografía muestra afinidades diferentes entre fases. No concluyas automáticamente la identidad de cada banda sin patrones de referencia o datos adicionales.</p></div></div></section>
                   <section id="elegir-metodo" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="text-xl font-bold text-cyan-200">5. Elegir una secuencia de separación</h2><p className="mt-3 text-sm leading-7 text-slate-300">Cuando una mezcla contiene varios componentes, normalmente se necesita más de una etapa. Conviene retirar primero los componentes que se pueden separar selectivamente y evitar pasos que contaminen o pierdan el material que se desea recuperar.</p><p className="mt-3 text-sm leading-7 text-slate-300">Ejemplo: para separar hierro, arena y sal, usa primero un imán para retirar el hierro. Añade agua al resto para disolver la sal; filtra para retener la arena y evapora el filtrado para recuperar cristales de sal. La secuencia funciona porque cada paso aprovecha una propiedad distinta.</p></section>
                   <section id="concentracion" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="text-xl font-bold text-cyan-200">6. Concentración y solubilidad</h2><p className="mt-3 text-sm leading-7 text-slate-300">La concentración relaciona la cantidad de soluto con una cantidad definida de disolución o disolvente. Si se añade más soluto sin cambiar el volumen de forma importante, la disolución se concentra; si se añade disolvente, se diluye. En cálculos sencillos de concentración masa/volumen se usa <strong className="text-white">C = m/V</strong>, cuidando que las unidades sean compatibles.</p><p className="mt-3 text-sm leading-7 text-slate-300">La solubilidad no es lo mismo que la rapidez de disolución. Triturar un sólido o agitar puede acelerar cuánto tarda en disolverse, pero no necesariamente cambia la cantidad máxima que puede disolverse a una temperatura dada. La temperatura sí modifica la solubilidad de muchas sustancias, aunque no todas responden igual.</p><div className="mt-4 grid gap-3 sm:grid-cols-3"><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="text-sm font-bold text-cyan-100">Más soluto</h3><p className="mt-1 text-xs leading-5 text-slate-300">Aumenta la concentración si las demás condiciones se mantienen.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="text-sm font-bold text-cyan-100">Más disolvente</h3><p className="mt-1 text-xs leading-5 text-slate-300">Diluir reduce la concentración de la disolución.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="text-sm font-bold text-cyan-100">Saturación</h3><p className="mt-1 text-xs leading-5 text-slate-300">El exceso de soluto puede permanecer sin disolverse.</p></div></div></section>
                   <section id="evidencia" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5 lg:col-span-2"><h2 className="text-xl font-bold text-cyan-200">7. Del procedimiento a la evidencia</h2><p className="mt-3 text-sm leading-7 text-slate-300">Una separación bien planeada empieza con una pregunta, define qué componente se desea recuperar y elige la propiedad física que permitirá aislarlo. Durante el procedimiento se registran cantidades, observaciones, pérdidas de material y condiciones como temperatura o tiempo.</p><p className="mt-3 text-sm leading-7 text-slate-300">En preguntas tipo Saber 11, distingue lo observado de lo inferido. Si después de filtrar el agua sigue salada, eso no demuestra que la filtración haya fallado: el filtro retiene partículas sólidas insolubles, no iones disueltos. Una conclusión científica debe ser compatible con el método empleado y con todos los datos disponibles.</p><div className="mt-4 border border-amber-200/30 bg-amber-200/[.045] p-4"><p className="flex items-center gap-2 text-sm font-bold text-amber-100"><Lightbulb className="h-4 w-4" /> Idea clave para Saber 11</p><p className="mt-2 text-sm leading-7 text-slate-300">No elijas el método por costumbre: identifica primero los componentes, sus fases y la propiedad física que los diferencia. Si hay varios componentes, justifica cada etapa de la secuencia.</p></div></section>

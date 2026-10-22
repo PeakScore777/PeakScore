@@ -503,7 +503,7 @@ export default function LaboratorioDeLasMezclasPage() {
             {stage === "practice" && <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-9 items-center gap-1.5 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[11px] font-extrabold text-[#09200a] sm:gap-2 sm:px-4 sm:text-xs"><ArrowLeft className="h-4 w-4" /> Salir</Link>}
           </div>
         </div>
-      </footer>}ooter>
+      </footer>}
       <style jsx global>{`
         .game-over-overlay { position: fixed; inset: 0; z-index: 40; min-height: 100dvh; padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 4vw, 3rem); background: linear-gradient(180deg,rgba(2,5,13,.28),rgba(2,5,13,.58)),url("/images/aprender/santuario/game-over-laboratorio.png") center center/cover no-repeat,#020308 !important; isolation: isolate; }
         .game-over-content { animation: game-over-enter 520ms cubic-bezier(.2,.8,.2,1) both; }

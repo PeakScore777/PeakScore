@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { ArrowLeft, ArrowRight, CheckCircle2, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, Plus } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 

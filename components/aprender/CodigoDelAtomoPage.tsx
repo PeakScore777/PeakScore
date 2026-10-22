@@ -128,26 +128,24 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
 
  const picker = <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e=>{void uploadSelectedFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}} />;
 
- return <div className={"relative flex " + (compact?"min-h-[144px]":"min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border " + (isAdmin?"border-dashed border-cyan-300/45":"border-solid border-[#21405e]") + " bg-[#06111e] p-3 text-center transition"}>
+ return <div className={"relative flex " + (compact?"min-h-[144px]":"min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
   {picker}
   {imageUrl ? (
-   isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa para cambiar la imagen" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center disabled:cursor-wait">
+   isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
     <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-32":"max-h-[340px]")}/>
-    <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100 opacity-0 transition group-hover:opacity-100">{saving?"Guardando imagen…":"Pulsa la imagen para cambiarla"}</span>
+    {saving && <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100">Guardando imagen…</span>}
    </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-32":"max-h-[340px]")}/>
   ) : isAdmin ? (
-   <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-cyan-300/40 bg-cyan-400/[0.03] px-2 py-4 text-cyan-100 transition hover:border-cyan-200 hover:bg-cyan-400/10 disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
+   <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4 text-cyan-100 transition hover:bg-cyan-400/[0.03] disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
     {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}
     <span className="text-[10px] text-cyan-200">{saving?"Guardando automáticamente en Supabase": "Solo admin · pulsa para subir"}</span>
    </button>
   ) : (
-   <div className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 px-2 py-4">
-    <Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200/60"}/>
+   <div className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4">
     <span className="pixel-font text-[9px] text-cyan-100">{loading?"CARGANDO IMAGEN":"IMAGEN EN PREPARACIÓN"}</span>
-    <span className="text-xs text-slate-400">{description}</span>
    </div>
   )}
-  {saving && <span className="text-[10px] font-bold text-cyan-200">Guardando automáticamente en Supabase…</span>}
+  {saving && imageUrl && <span className="text-[10px] font-bold text-cyan-200">Guardando automáticamente en Supabase…</span>}
   {notice && <p role="status" className="text-[10px] text-emerald-300">{notice}</p>}
   {error && <p role="alert" className="max-w-full break-words text-[10px] text-rose-300">{error}</p>}
  </div>;

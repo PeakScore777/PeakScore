@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Plus } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Plus } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 
@@ -22,15 +22,12 @@ const notes = [
 ];
 
 function ImageUploadSlot({ assetKey, title, description, compact=false }: { assetKey:string; title:string; description:string; compact?:boolean }) {
- const [preview,setPreview] = useState<string|null>(null);
- const [pendingFile,setPendingFile] = useState<File|null>(null);
+ const [imageUrl,setImageUrl] = useState<string|null>(null);
  const [isAdmin,setIsAdmin] = useState(false);
  const [loading,setLoading] = useState(true);
  const [saving,setSaving] = useState(false);
- const [removing,setRemoving] = useState(false);
  const [error,setError] = useState<string|null>(null);
  const [notice,setNotice] = useState<string|null>(null);
- const [storagePath,setStoragePath] = useState<string|null>(null);
  const fileInputRef = useRef<HTMLInputElement|null>(null);
 
  useEffect(() => {
@@ -45,20 +42,16 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
      if (profileError) throw profileError;
      admin = profile?.role === "admin";
     }
-    if (!active) return;
-    setIsAdmin(admin);
-    // Load media independently so a missing row or a media-table permission
-    // error cannot suppress the administrator's upload controls.
-    try {
-     const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url,storage_path").eq("asset_key", assetKey).maybeSingle();
-     if (assetError) throw assetError;
-     if (asset?.public_url) setPreview(asset.public_url);
-     if (asset?.storage_path) setStoragePath(asset.storage_path);
-    } catch (mediaError) {
-     if (active) setError(mediaError instanceof Error ? mediaError.message : "No se pudo cargar la imagen compartida.");
-    }
+    if (active) setIsAdmin(admin);
    } catch (e) {
-    if (active) setError(e instanceof Error ? e.message : "No se pudo cargar la imagen guardada. Verifica la configuración de Supabase.");
+    if (active) setError(e instanceof Error ? e.message : "No se pudo verificar la sesión.");
+   }
+   try {
+    const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url").eq("asset_key", assetKey).maybeSingle();
+    if (assetError) throw assetError;
+    if (active && asset?.public_url) setImageUrl(asset.public_url);
+   } catch (e) {
+    if (active) setError(e instanceof Error ? e.message : "No se pudo cargar la imagen compartida.");
    } finally {
     if (active) setLoading(false);
    }
@@ -67,113 +60,96 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
   return () => { active = false; };
  }, [assetKey]);
 
- async function verifyAdmin() {
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError) throw authError;
-  if (!user) throw new Error("Inicia sesión con la cuenta administradora.");
-  const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  if (profileError) throw profileError;
-  if (profile?.role !== "admin") throw new Error("Solo el administrador puede gestionar estas imágenes.");
-  return user;
- }
-
- function selectFile(file?: File) {
-  if (!file) return;
+ async function uploadSelectedFile(file?: File) {
+  if (!file || saving) return;
   setError(null);
   setNotice(null);
-  if (!isAdmin) { setError("Solo el administrador puede cambiar imágenes."); return; }
-  if (!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)) { setError("Usa una imagen PNG, JPG, WebP o GIF."); return; }
-  if (file.size > 8 * 1024 * 1024) { setError("La imagen debe pesar máximo 8 MB."); return; }
-  if (preview && pendingFile) URL.revokeObjectURL(preview);
-  setPendingFile(file);
-  setPreview(URL.createObjectURL(file));
-  setNotice("Vista previa lista. Pulsa el chulo verde para guardar y publicar.");
- }
+  if (!isAdmin) { setError("Solo el administrador puede cambiar las imágenes."); return; }
+  if (!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)) {
+   setError("Formato no válido. Usa PNG, JPG, WebP o GIF."); return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+   setError("La imagen debe pesar máximo 8 MB."); return;
+  }
 
- async function saveImage() {
-  if (!pendingFile || saving || removing) return;
-  setError(null);
-  setNotice(null);
   setSaving(true);
   let uploadedPath: string | null = null;
   try {
-   const user = await verifyAdmin();
-   const extension = pendingFile.name.split(".").pop()?.toLowerCase() || "png";
+   const { data: { user }, error: authError } = await supabase.auth.getUser();
+   if (authError) throw authError;
+   if (!user) throw new Error("Inicia sesión con la cuenta administradora.");
+   const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+   if (profileError) throw profileError;
+   if (profile?.role !== "admin") throw new Error("Solo el administrador puede gestionar estas imágenes.");
+
+   const previousUrl = imageUrl;
+   const { data: previousAsset, error: previousAssetError } = await supabase.from("lesson_media_assets").select("storage_path").eq("asset_key", assetKey).maybeSingle();
+   if (previousAssetError) throw previousAssetError;
+
+   const extension = file.name.split(".").pop()?.toLowerCase() || "png";
    const safeExtension = /^[a-z0-9]{1,8}$/.test(extension) ? extension : "png";
    const path = assetKey + "/" + crypto.randomUUID() + "." + safeExtension;
-   const { error: uploadError } = await supabase.storage.from("lesson-atom-media").upload(path, pendingFile, { upsert:false, contentType:pendingFile.type, cacheControl:"3600" });
-   if (uploadError) throw new Error("No se pudo subir el archivo a Supabase Storage: " + uploadError.message);
+   const { error: uploadError } = await supabase.storage.from("lesson-atom-media").upload(path, file, {
+    upsert:false, contentType:file.type, cacheControl:"3600"
+   });
+   if (uploadError) throw new Error("No se pudo subir a Supabase Storage: " + uploadError.message);
    uploadedPath = path;
    const { data: urlData } = supabase.storage.from("lesson-atom-media").getPublicUrl(path);
+
    const { error: saveError } = await supabase.from("lesson_media_assets").upsert({
-    asset_key:assetKey, public_url:urlData.publicUrl, storage_path:path, updated_by:user.id, updated_at:new Date().toISOString()
+    asset_key:assetKey,
+    public_url:urlData.publicUrl,
+    storage_path:path,
+    updated_by:user.id,
+    updated_at:new Date().toISOString()
    }, { onConflict:"asset_key" });
-   if (saveError) throw new Error("La imagen se subió, pero no se pudo guardar su referencia en la base de datos: " + saveError.message);
-   const previousPath = storagePath;
-   if (preview && pendingFile) URL.revokeObjectURL(preview);
-   setPreview(urlData.publicUrl);
-   setStoragePath(path);
-   setPendingFile(null);
-   setNotice("Imagen guardada y publicada para todos los usuarios.");
+   if (saveError) throw new Error("El archivo se subió, pero no se pudo guardar en la base de datos: " + saveError.message);
+
+   setImageUrl(urlData.publicUrl);
+   setNotice("Imagen guardada automáticamente y publicada para todos los usuarios.");
+   uploadedPath = null;
+
+   const previousPath = previousAsset?.storage_path;
    if (previousPath && previousPath !== path) {
     const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([previousPath]);
-    if (cleanupError) console.warn("Imagen anterior pendiente de limpieza:", cleanupError.message);
+    if (cleanupError) console.warn("La imagen anterior requiere limpieza:", cleanupError.message);
    }
+   void previousUrl;
   } catch (e) {
    if (uploadedPath) {
     const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([uploadedPath]);
     if (cleanupError) console.warn("No se pudo limpiar la subida incompleta:", cleanupError.message);
    }
-   setError(e instanceof Error ? e.message : "No se pudo guardar la imagen. Comprueba las políticas de Supabase.");
+   setError(e instanceof Error ? e.message : "No se pudo guardar la imagen. Revisa las políticas de Supabase.");
   } finally {
    setSaving(false);
   }
  }
 
- async function removeImage() {
-  if (saving || removing || !preview) return;
-  setError(null);
-  setNotice(null);
-  setRemoving(true);
-  try {
-   await verifyAdmin();
-   if (pendingFile) {
-    URL.revokeObjectURL(preview);
-    setPendingFile(null);
-    const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url").eq("asset_key", assetKey).maybeSingle();
-    if (assetError) throw assetError;
-    setPreview(asset?.public_url ?? null);
-    setNotice("Se descartó la selección; la imagen publicada no cambió.");
-    return;
-   }
-   const { error: deleteError } = await supabase.from("lesson_media_assets").delete().eq("asset_key", assetKey);
-   if (deleteError) throw new Error("No se pudo quitar la imagen de la lección: " + deleteError.message);
-   setPreview(null);
-   setStoragePath(null);
-   setNotice("Imagen eliminada para todos los usuarios.");
-   if (storagePath) {
-    const { error: storageError } = await supabase.storage.from("lesson-atom-media").remove([storagePath]);
-    if (storageError) setError("La imagen ya no se muestra a los usuarios, pero el archivo antiguo requiere limpieza en Supabase Storage: " + storageError.message);
-   }
-  } catch (e) {
-   setError(e instanceof Error ? e.message : "No se pudo eliminar la imagen.");
-  } finally {
-   setRemoving(false);
-  }
- }
+ const picker = <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e=>{void uploadSelectedFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}} />;
 
  return <div className={"relative flex " + (compact?"min-h-[144px]":"min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden rounded-lg border " + (isAdmin?"border-dashed border-cyan-300/45":"border-solid border-[#21405e]") + " bg-[#06111e] p-3 text-center transition"}>
-  {preview ? <img src={preview} alt={description} className={"w-full object-contain " + (compact?"max-h-32":"max-h-[340px]")} /> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] text-cyan-100">{isAdmin?"AÑADIR IMAGEN":"IMAGEN EN PREPARACIÓN"}</span><span className="text-xs text-slate-400">{description}</span></>}
-  {isAdmin && <div className="relative z-20 flex items-center justify-center gap-2">
-   <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||removing} title={preview?"Cambiar imagen":"Subir imagen"} aria-label={preview?"Cambiar imagen":"Subir imagen"} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-cyan-300/70 bg-cyan-400/10 text-cyan-100 transition hover:bg-cyan-400/25 disabled:opacity-50"><Plus className="h-6 w-6"/></button>
-   <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen: " + title} className="hidden" disabled={saving||removing} onChange={e=>{selectFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}}/>
-   <button type="button" onClick={()=>void saveImage()} disabled={!pendingFile||saving||removing} title="Guardar imagen" aria-label="Guardar imagen" className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-emerald-300 bg-emerald-400 text-emerald-950 shadow-[0_0_12px_rgba(74,222,128,0.25)] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-35"><Check className="h-6 w-6 stroke-[3]"/></button>
-   {preview && <button type="button" onClick={()=>void removeImage()} disabled={saving||removing} title={pendingFile?"Descartar selección":"Quitar imagen publicada"} aria-label={pendingFile?"Descartar selección":"Quitar imagen publicada"} className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-rose-300/60 bg-rose-500/10 text-rose-200 transition hover:bg-rose-500/20 disabled:opacity-50">{removing?<span className="text-xs">…</span>:<span className="text-lg leading-none">×</span>}</button>}
-  </div>}
-  {isAdmin && pendingFile && <span className="text-[10px] font-bold text-emerald-300">Lista para guardar</span>}
-  <span className="text-[10px] text-cyan-200">{saving?"Guardando en Supabase…":removing?"Quitando imagen…":loading?"Cargando…":pendingFile?"Pendiente de guardar":preview?title:(isAdmin?"Solo admin puede subir":"Visible para todos")}</span>
-  {notice&&<p className="relative z-20 text-[10px] text-emerald-300">{notice}</p>}
-  {error&&<p role="alert" className="relative z-20 break-words text-[10px] text-rose-300">{error}</p>}
+  {picker}
+  {imageUrl ? (
+   isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa para cambiar la imagen" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center disabled:cursor-wait">
+    <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-32":"max-h-[340px]")}/>
+    <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100 opacity-0 transition group-hover:opacity-100">{saving?"Guardando imagen…":"Pulsa la imagen para cambiarla"}</span>
+   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-32":"max-h-[340px]")}/>
+  ) : isAdmin ? (
+   <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-cyan-300/40 bg-cyan-400/[0.03] px-2 py-4 text-cyan-100 transition hover:border-cyan-200 hover:bg-cyan-400/10 disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
+    {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}
+    <span className="text-[10px] text-cyan-200">{saving?"Guardando automáticamente en Supabase": "Solo admin · pulsa para subir"}</span>
+   </button>
+  ) : (
+   <div className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 px-2 py-4">
+    <Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200/60"}/>
+    <span className="pixel-font text-[9px] text-cyan-100">{loading?"CARGANDO IMAGEN":"IMAGEN EN PREPARACIÓN"}</span>
+    <span className="text-xs text-slate-400">{description}</span>
+   </div>
+  )}
+  {saving && <span className="text-[10px] font-bold text-cyan-200">Guardando automáticamente en Supabase…</span>}
+  {notice && <p role="status" className="text-[10px] text-emerald-300">{notice}</p>}
+  {error && <p role="alert" className="max-w-full break-words text-[10px] text-rose-300">{error}</p>}
  </div>;
 }
 export default function CodigoDelAtomoPage() {

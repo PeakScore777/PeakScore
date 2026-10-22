@@ -63,10 +63,51 @@ const questions: Question[] = [
   }
 ];
 
+const retryQuestions: Question[] = [
+  {
+    difficulty: "Media", competency: "Explicación de fenómenos",
+    context: "En el Santuario, una muestra de una sustancia pura pasa de líquido a gas al recibir energía. El equipo mantiene la presión aproximadamente constante y no detecta productos nuevos.",
+    prompt: "¿Cuál interpretación está mejor respaldada por el modelo de partículas?",
+    options: [
+      { label: "A", text: "Las partículas dejan de tener cualquier interacción al convertirse en gas." },
+      { label: "B", text: "La sustancia necesariamente se descompuso porque cambió de estado." },
+      { label: "C", text: "Las partículas ganan movilidad y se separan más, pero la identidad química de la sustancia se conserva." },
+      { label: "D", text: "La masa de la muestra aumenta porque el gas ocupa más espacio." }
+    ], answer: "C",
+    explanation: "La vaporización es un cambio físico. Las partículas tienen mayor libertad de movimiento y suelen estar más separadas, pero eso no implica que desaparezcan todas las interacciones ni que se forme otra sustancia."
+  },
+  {
+    difficulty: "Media", competency: "Uso comprensivo del conocimiento científico",
+    context: "Una jeringa sellada contiene una cantidad fija de gas. A temperatura constante, el volumen disminuye de 6 L a 3 L y no hay fugas.",
+    prompt: "Según el modelo de gas ideal, ¿qué cambio se espera en la presión absoluta?",
+    options: [
+      { label: "A", text: "Se duplica aproximadamente, porque las partículas chocan más frecuentemente con las paredes." },
+      { label: "B", text: "Se reduce a la mitad, porque hay menos espacio para que las partículas se muevan." },
+      { label: "C", text: "Permanece idéntica, ya que la temperatura no cambió." },
+      { label: "D", text: "Se vuelve cero, porque las partículas ya no pueden desplazarse." }
+    ], answer: "A",
+    explanation: "Para una cantidad fija de gas ideal a temperatura constante, P₁V₁ = P₂V₂. Si el volumen se reduce a la mitad, la presión absoluta se duplica aproximadamente."
+  },
+  {
+    difficulty: "Difícil", competency: "Indagación y evaluación de evidencia",
+    context: "Al calentar una sustancia pura a presión constante, un equipo registra que la temperatura aumenta de 18 °C a 48 °C, se mantiene alrededor de 48 °C mientras coexisten dos fases y después vuelve a aumentar.",
+    prompt: "¿Qué conclusión se puede extraer con mayor rigor de estos datos?",
+    options: [
+      { label: "A", text: "El equipo demuestra que el termómetro se dañó justo cuando apareció la segunda fase." },
+      { label: "B", text: "La temperatura constante demuestra que dejó de transferirse energía al sistema." },
+      { label: "C", text: "La sustancia cambió su composición química porque coexistieron dos fases." },
+      { label: "D", text: "La meseta es compatible con energía transferida al cambio de fase, sin un aumento apreciable de temperatura durante ese intervalo." }
+    ], answer: "D",
+    explanation: "Durante un cambio de estado de una sustancia pura a presión constante, la energía transferida puede emplearse en transformar la fase. La meseta por sí sola no demuestra una falla del instrumento ni una reacción química."
+  }
+];
+
 export default function CuandoLaMateriaCambiaPage() {
   const [stage, setStage] = useState<"theory" | "practice">("theory");
   const [historyOpen, setHistoryOpen] = useState(true);
   const [index, setIndex] = useState(0);
+  const [attempt, setAttempt] = useState(0);
+  const activeQuestions = attempt === 0 ? questions : retryQuestions;
   const [selected, setSelected] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [correct, setCorrect] = useState(0);
@@ -74,7 +115,7 @@ export default function CuandoLaMateriaCambiaPage() {
   const [lost, setLost] = useState(false);
   const [rewardOpen, setRewardOpen] = useState(false);
   const [tutorOpen, setTutorOpen] = useState(false);
-  const question = questions[index];
+  const question = activeQuestions[index];
   const isCorrect = selected === question.answer;
 
   function checkAnswer() {
@@ -84,19 +125,20 @@ export default function CuandoLaMateriaCambiaPage() {
   }
 
   function nextQuestion() {
-    if (index < questions.length - 1) {
+    if (index < activeQuestions.length - 1) {
       setIndex((n) => n + 1);
       setSelected(null);
       setChecked(false);
     } else {
       setFinished(true);
       const finalCorrect = correct;
-      if (finalCorrect === questions.length) setRewardOpen(true);
+      if (finalCorrect === activeQuestions.length) setRewardOpen(true);
       else setLost(true);
     }
   }
 
   function restart() {
+    setAttempt((n) => n + 1);
     setIndex(0);
     setSelected(null);
     setChecked(false);
@@ -210,7 +252,7 @@ export default function CuandoLaMateriaCambiaPage() {
         </div>
       ) : (
         <div className="mx-auto max-w-[980px] px-4 pb-24 pt-7 sm:px-7">
-          <p className="pixel-font text-[9px] uppercase tracking-[.12em] text-cyan-200">Desafío del Santuario · Pregunta {index + 1} de {questions.length}</p>
+          <p className="pixel-font text-[9px] uppercase tracking-[.12em] text-cyan-200">Desafío del Santuario · Pregunta {index + 1} de {activeQuestions.length}</p>
           {!finished ? (
             <section className="mt-5 border border-[#35506d] bg-[#0d1422]">
               <div className="border-b border-[#293d56] bg-[#121d30] px-5 py-4">
@@ -238,14 +280,14 @@ export default function CuandoLaMateriaCambiaPage() {
                   <p className="mt-2 text-sm leading-7 text-slate-200">{question.explanation}</p>
                 </div>}
                 <div className="flex justify-end border-t border-[#293d56] pt-5">
-                  {!checked ? <button type="button" disabled={!selected} onClick={checkAnswer} className="inline-flex min-h-11 items-center gap-2 border border-emerald-300 bg-[#65edb1] px-5 py-3 text-sm font-extrabold text-[#062218] disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button> : <button type="button" onClick={nextQuestion} className="inline-flex min-h-11 items-center gap-2 border border-cyan-300/50 bg-[#172c43] px-5 py-3 text-sm font-bold text-cyan-100">{index === questions.length - 1 ? "Ver resultado" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>}
+                  {!checked ? <button type="button" disabled={!selected} onClick={checkAnswer} className="inline-flex min-h-11 items-center gap-2 border border-emerald-300 bg-[#65edb1] px-5 py-3 text-sm font-extrabold text-[#062218] disabled:opacity-40">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button> : <button type="button" onClick={nextQuestion} className="inline-flex min-h-11 items-center gap-2 border border-cyan-300/50 bg-[#172c43] px-5 py-3 text-sm font-bold text-cyan-100">{index === activeQuestions.length - 1 ? "Ver resultado" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>}
                 </div>
               </div>
             </section>
           ) : (
             <section className="mt-5 border border-cyan-200/25 bg-[#101725] p-6 sm:p-8">
               <h1 className="text-2xl font-bold text-white">Desafío completado</h1>
-              <p className="mt-3 text-sm leading-7 text-slate-300">Respondiste correctamente <strong className="text-cyan-100">{correct} de {questions.length}</strong> preguntas. Repasa las explicaciones y vuelve a intentarlo si quieres fortalecer tu comprensión.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Respondiste correctamente <strong className="text-cyan-100">{correct} de {activeQuestions.length}</strong> preguntas. Repasa las explicaciones y vuelve a intentarlo si quieres fortalecer tu comprensión.</p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button type="button" onClick={restart} className="inline-flex min-h-10 items-center gap-2 border border-cyan-300/50 bg-[#172c43] px-4 py-2 text-sm font-bold text-cyan-100">Repetir práctica <ArrowRight className="h-4 w-4" /></button>
                 <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-10 items-center gap-2 border border-white/15 bg-[#26364a] px-4 py-2 text-sm font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver al capítulo</Link>
@@ -256,19 +298,19 @@ export default function CuandoLaMateriaCambiaPage() {
         </div>
       )}
 
-      {finished && lost && <div className="fixed inset-x-0 bottom-0 top-[68px] z-40 flex items-center justify-center overflow-y-auto bg-[#030712]/95 px-5 py-8 text-center backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="level2-gameover-title">
-        <div className="relative z-10 flex w-full max-w-3xl flex-col items-center">
-          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-3"><h2 id="level2-gameover-title" className="pixel-font text-5xl font-black tracking-tight text-white sm:text-7xl">GAME</h2><Image src="/images/game-over/nova-dead-pixel.png" alt="Nova derrotado en pixel art" width={112} height={112} className="h-20 w-20 object-contain sm:h-28 sm:w-28"/><span className="pixel-font text-5xl font-black tracking-tight text-white sm:text-7xl">OVER</span></div>
-          <p className="pixel-font mt-5 text-xs text-white sm:text-sm">PLAY AGAIN?</p><p className="mt-4 text-sm leading-7 text-slate-200">No lograste acertar las tres preguntas de este desafío.</p><p className="mt-2 text-sm text-white">Acertaste <strong className="text-cyan-300">{correct} de {questions.length}</strong> preguntas.</p><p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">Revisa los puntos clave de la teoría y vuelve a intentarlo. Cada distractor representa una idea que vale la pena comprender.</p>
-          <div className="mt-6 flex w-full max-w-xl flex-col gap-2"><button type="button" onClick={restart} className="flex min-h-12 items-center gap-3 px-4 text-left font-bold text-cyan-200 hover:bg-white/5"><span>▶</span> YES <span className="text-xs text-slate-400">REPETIR PRÁCTICA</span></button><button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); setRewardOpen(false); }} className="flex min-h-12 items-center gap-3 px-4 text-left font-bold text-slate-200 hover:bg-white/5"><span className="text-transparent">▶</span> NO <span className="text-xs text-slate-400">REPASAR TEORÍA</span></button></div>
-          <p className="pixel-font mt-6 text-[8px] leading-5 text-white/60">PEAKSCORE · CONTINÚA LA AVENTURA</p>
+      {finished && lost && <div className="game-over-overlay fixed inset-x-0 bottom-0 top-[68px] z-40 flex items-center justify-center overflow-y-auto px-5 py-8 text-center" role="dialog" aria-modal="true" aria-labelledby="level2-gameover-title">
+        <div className="game-over-content relative z-10 flex w-full max-w-6xl flex-col items-center text-center"><div aria-hidden="true" className="game-over-pixels pointer-events-none absolute inset-0" /><div aria-hidden="true" className="game-over-crystal-glow pointer-events-none absolute inset-0" />
+          <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-3"><h2 id="level2-gameover-title" className="pixel-font game-over-title">GAME</h2><Image src="/images/game-over/nova-dead-pixel.png" alt="Nova derrotado en pixel art" width={112} height={112} className="game-over-nova h-24 w-24 object-contain sm:h-36 sm:w-36 lg:h-40 lg:w-40"/><span className="pixel-font game-over-title">OVER</span></div>
+          <p className="pixel-font mt-5 text-xs text-white sm:text-sm">PLAY AGAIN?</p><p className="game-over-copy mt-4 max-w-3xl text-sm leading-8 text-white sm:text-lg">No lograste acertar las tres preguntas de este desafío.</p><p className="game-over-copy mt-2 text-sm font-medium text-white sm:text-lg">Acertaste <strong className="text-cyan-300">{correct} de {activeQuestions.length}</strong> preguntas.</p><p className="game-over-copy mt-3 max-w-3xl text-sm leading-7 text-slate-100 sm:text-base sm:leading-8">Revisa los puntos clave de la teoría y vuelve a intentarlo. Cada distractor representa una idea que vale la pena comprender.</p>
+          <div className="mt-6 flex w-full max-w-xl flex-col gap-2"><button type="button" onClick={restart} className="game-over-choice game-over-choice-yes"><span aria-hidden="true" className="game-over-cursor">▶</span><span>YES</span><span className="game-over-choice-detail">REPETIR CON PREGUNTAS NUEVAS</span></button><button type="button" onClick={() => { setStage("theory"); setFinished(false); setLost(false); setRewardOpen(false); }} className="game-over-choice game-over-choice-no"><span className="game-over-cursor game-over-cursor-hidden" aria-hidden="true">▶</span><span>NO</span><span className="game-over-choice-detail">REPASAR TEORÍA</span></button></div>
+          <p className="pixel-font mt-7 text-[9px] tracking-[.1em] text-white/75 sm:mt-9 sm:text-[11px]">PEAKSCORE · CONTINÚA LA AVENTURA</p>
         </div>
       </div>}
       <XpRewardAnimation open={rewardOpen && finished && !lost} xp={60} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); window.location.href = "/aprender/santuario-de-la-materia"; }} />
       <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] backdrop-blur">
         <div className="mx-auto flex min-h-[62px] max-w-[1100px] items-center justify-between gap-3 px-4 sm:px-7">
-          <div><p className="pixel-font text-[8px] text-slate-100">NIVEL 2 · LECCIÓN 1</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : finished ? "Práctica finalizada" : `Pregunta ${index + 1} / ${questions.length}`}</p></div>
-          <div className="flex flex-1 justify-center">{stage === "practice" && !finished && <button type="button" onClick={() => setTutorOpen((v) => !v)} className="inline-flex min-h-9 items-center gap-2 border border-cyan-300/50 bg-[#172c43] px-4 py-2 text-xs font-extrabold text-cyan-100 hover:bg-[#203a56]"><span aria-hidden="true">🤖</span> AI</button>}</div>
+          <div><p className="pixel-font text-[8px] text-slate-100">NIVEL 2</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : finished ? "Práctica finalizada" : `Pregunta ${index + 1} / ${questions.length}`}</p></div>
+          <div className="flex flex-1 justify-center">{stage === "practice" && !finished && <button type="button" onClick={() => setTutorOpen((v) => !v)} className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:min-h-10 sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>}</div>
           {stage === "theory" ? <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-4 py-2 text-xs font-extrabold text-[#09200a]">Ir a la práctica <ArrowRight className="h-4 w-4" /></button> : <button type="button" onClick={() => setStage("theory")} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-4 py-2 text-xs font-semibold text-slate-200"><ArrowLeft className="h-4 w-4" /> Volver a teoría</button>}
         </div>
       </footer>

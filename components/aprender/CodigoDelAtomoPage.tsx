@@ -141,13 +141,13 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
    }
    const { error: deleteError } = await supabase.from("lesson_media_assets").delete().eq("asset_key", assetKey);
    if (deleteError) throw new Error("No se pudo quitar la imagen de la lección: " + deleteError.message);
-   if (storagePath) {
-    const { error: storageError } = await supabase.storage.from("lesson-atom-media").remove([storagePath]);
-    if (storageError) throw new Error("La referencia se quitó, pero el archivo de Storage requiere limpieza: " + storageError.message);
-   }
    setPreview(null);
    setStoragePath(null);
    setNotice("Imagen eliminada para todos los usuarios.");
+   if (storagePath) {
+    const { error: storageError } = await supabase.storage.from("lesson-atom-media").remove([storagePath]);
+    if (storageError) setError("La imagen ya no se muestra a los usuarios, pero el archivo antiguo requiere limpieza en Supabase Storage: " + storageError.message);
+   }
   } catch (e) {
    setError(e instanceof Error ? e.message : "No se pudo eliminar la imagen.");
   } finally {

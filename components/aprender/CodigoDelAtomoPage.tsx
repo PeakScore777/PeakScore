@@ -31,6 +31,7 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
  const [error,setError] = useState<string|null>(null);
  const [notice,setNotice] = useState<string|null>(null);
  const [storagePath,setStoragePath] = useState<string|null>(null);
+ const fileInputRef = useRef<HTMLInputElement|null>(null);
 
  useEffect(() => {
   let active = true;

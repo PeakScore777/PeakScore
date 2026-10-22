@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Lightbulb } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Lightbulb, Plus } from "lucide-react";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
+import { supabase } from "@/lib/supabase/client";
 
 type Question = {
   difficulty: "Media" | "Difícil";
@@ -102,6 +103,136 @@ const retryQuestions: Question[] = [
   }
 ];
 
+function ImageUploadSlot({ assetKey, title, description, compact=false }: { assetKey:string; title:string; description:string; compact?:boolean }) {
+ const [imageUrl,setImageUrl] = useState<string|null>(null);
+ const [isAdmin,setIsAdmin] = useState(false);
+ const [loading,setLoading] = useState(true);
+ const [saving,setSaving] = useState(false);
+ const [error,setError] = useState<string|null>(null);
+ const [notice,setNotice] = useState<string|null>(null);
+ const fileInputRef = useRef<HTMLInputElement|null>(null);
+
+ useEffect(() => {
+  let active = true;
+  async function loadAsset() {
+   try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    let admin = false;
+    if (user) {
+     const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+     if (profileError) throw profileError;
+     admin = profile?.role === "admin";
+    }
+    if (active) setIsAdmin(admin);
+   } catch (e) {
+    if (active) setError(e instanceof Error ? e.message : "No se pudo verificar la sesión.");
+   }
+   try {
+    const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url").eq("asset_key", assetKey).maybeSingle();
+    if (assetError) throw assetError;
+    if (active && asset?.public_url) setImageUrl(asset.public_url);
+   } catch (e) {
+    if (active) setError(e instanceof Error ? e.message : "No se pudo cargar la imagen compartida.");
+   } finally {
+    if (active) setLoading(false);
+   }
+  }
+  void loadAsset();
+  return () => { active = false; };
+ }, [assetKey]);
+
+ async function uploadSelectedFile(file?: File) {
+  if (!file || saving) return;
+  setError(null);
+  setNotice(null);
+  if (!isAdmin) { setError("Solo el administrador puede cambiar las imágenes."); return; }
+  if (!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)) {
+   setError("Formato no válido. Usa PNG, JPG, WebP o GIF."); return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+   setError("La imagen debe pesar máximo 8 MB."); return;
+  }
+
+  setSaving(true);
+  let uploadedPath: string | null = null;
+  try {
+   const { data: { user }, error: authError } = await supabase.auth.getUser();
+   if (authError) throw authError;
+   if (!user) throw new Error("Inicia sesión con la cuenta administradora.");
+   const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+   if (profileError) throw profileError;
+   if (profile?.role !== "admin") throw new Error("Solo el administrador puede gestionar estas imágenes.");
+
+   const previousUrl = imageUrl;
+   const { data: previousAsset, error: previousAssetError } = await supabase.from("lesson_media_assets").select("storage_path").eq("asset_key", assetKey).maybeSingle();
+   if (previousAssetError) throw previousAssetError;
+
+   const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+   const safeExtension = /^[a-z0-9]{1,8}$/.test(extension) ? extension : "png";
+   const path = assetKey + "/" + crypto.randomUUID() + "." + safeExtension;
+   const { error: uploadError } = await supabase.storage.from("lesson-atom-media").upload(path, file, {
+    upsert:false, contentType:file.type, cacheControl:"3600"
+   });
+   if (uploadError) throw new Error("No se pudo subir a Supabase Storage: " + uploadError.message);
+   uploadedPath = path;
+   const { data: urlData } = supabase.storage.from("lesson-atom-media").getPublicUrl(path);
+
+   const { error: saveError } = await supabase.from("lesson_media_assets").upsert({
+    asset_key:assetKey,
+    public_url:urlData.publicUrl,
+    storage_path:path,
+    updated_by:user.id,
+    updated_at:new Date().toISOString()
+   }, { onConflict:"asset_key" });
+   if (saveError) throw new Error("El archivo se subió, pero no se pudo guardar en la base de datos: " + saveError.message);
+
+   setImageUrl(urlData.publicUrl);
+   setNotice("Imagen guardada automáticamente y publicada para todos los usuarios.");
+   uploadedPath = null;
+
+   const previousPath = previousAsset?.storage_path;
+   if (previousPath && previousPath !== path) {
+    const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([previousPath]);
+    if (cleanupError) console.warn("La imagen anterior requiere limpieza:", cleanupError.message);
+   }
+   void previousUrl;
+  } catch (e) {
+   if (uploadedPath) {
+    const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([uploadedPath]);
+    if (cleanupError) console.warn("No se pudo limpiar la subida incompleta:", cleanupError.message);
+   }
+   setError(e instanceof Error ? e.message : "No se pudo guardar la imagen. Revisa las políticas de Supabase.");
+  } finally {
+   setSaving(false);
+  }
+ }
+
+ const picker = <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e=>{void uploadSelectedFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}} />;
+
+ return <div className={"relative flex " + (compact?"min-h-[144px]":"min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
+  {picker}
+  {imageUrl ? (
+   isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
+    <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-36":"max-h-[520px]")}/>
+    {saving && <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100">Guardando imagen…</span>}
+   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-32":"max-h-[340px]")}/>
+  ) : isAdmin ? (
+   <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4 text-cyan-100 transition hover:bg-cyan-400/[0.03] disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
+    {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}
+    <span className="text-[10px] text-cyan-200">{saving?"Guardando automáticamente en Supabase": "Solo admin · pulsa para subir"}</span>
+   </button>
+  ) : (
+   <div className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4">
+    <span className="pixel-font text-[9px] text-cyan-100">{loading?"CARGANDO IMAGEN":"IMAGEN EN PREPARACIÓN"}</span>
+   </div>
+  )}
+  {saving && imageUrl && <span className="text-[10px] font-bold text-cyan-200">Guardando automáticamente en Supabase…</span>}
+  {notice && <p role="status" className="text-[10px] text-emerald-300">{notice}</p>}
+  {error && <p role="alert" className="max-w-full break-words text-[10px] text-rose-300">{error}</p>}
+ </div>;
+}
+
 export default function CuandoLaMateriaCambiaPage() {
   const [stage, setStage] = useState<"theory" | "practice">("theory");
   const [historyOpen, setHistoryOpen] = useState(true);
@@ -172,11 +303,18 @@ export default function CuandoLaMateriaCambiaPage() {
       </header>
 
       {stage === "theory" ? (
-        <div className="mx-auto max-w-[760px] px-5 pt-8 sm:px-8 sm:pt-10">
-          <p className="pixel-font text-[9px] uppercase tracking-[.12em] text-cyan-200">Capítulo 02 · Cuando la materia cambia</p>
-          <h1 className="mt-4 text-3xl font-bold leading-tight text-white sm:text-4xl">La señal de los cristales</h1>
-          <p className="mt-4 text-base leading-8 text-slate-300">Los cristales azules del Santuario están cambiando. Uno conserva su forma; otro deja gotas sobre la piedra; un tercero parece convertirse en una neblina. Nova necesita descubrir si la materia desaparece, se transforma o simplemente adopta otro estado.</p>
-
+        <div className="mx-auto max-w-[1600px] px-3 pt-4 sm:px-5 sm:pt-5">
+          <section className="relative flex min-h-[180px] items-center overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:min-h-[210px] sm:p-7" style={{backgroundImage:"linear-gradient(90deg,rgba(3,9,20,.96),rgba(3,9,20,.72) 55%,rgba(3,9,20,.12)),url('/images/aprender/santuario/cuando-la-materia-cambia.png')",backgroundSize:"cover",backgroundPosition:"center"}}>
+            <div className="max-w-[720px]"><span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 02 · QUÍMICA</span><h1 className="pixel-font mt-4 text-2xl leading-tight text-white sm:text-3xl lg:text-4xl">La señal de los cristales</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-100 sm:text-base sm:leading-7">Investiga cómo se organizan y se mueven las partículas, por qué existen distintos estados y cómo la energía puede transformar una sustancia sin cambiar su identidad química.</p></div>
+          </section>
+          <nav aria-label="Secciones de la lección" className="mt-2 grid grid-cols-2 gap-1 rounded-xl border border-[#21405e] bg-[#071321] p-1 text-center sm:grid-cols-4">
+            <button type="button" onClick={() => window.scrollTo({top:0,behavior:"smooth"})} className="rounded-lg border border-cyan-300 bg-cyan-500/30 px-2 py-3 text-xs font-bold text-white sm:text-sm">Teoría</button>
+            <button type="button" onClick={() => document.getElementById("ejemplos-resueltos")?.scrollIntoView({behavior:"smooth",block:"start"})} className="rounded-lg px-2 py-3 text-xs font-semibold text-slate-300 transition hover:bg-white/[.05] hover:text-white sm:text-sm">Ejemplos</button>
+            <button type="button" onClick={() => document.getElementById("puntos-clave")?.scrollIntoView({behavior:"smooth",block:"start"})} className="rounded-lg px-2 py-3 text-xs font-semibold text-slate-300 transition hover:bg-white/[.05] hover:text-white sm:text-sm">Puntos clave</button>
+            <button type="button" onClick={() => { setTutorOpen(false); setStage("practice"); }} className="rounded-lg px-2 py-3 text-xs font-semibold text-slate-300 transition hover:bg-cyan-400/10 hover:text-cyan-100 sm:text-sm">Ejercicios</button>
+          </nav>
+          <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_316px]">
+            <div className="min-w-0">
           <LessonNotesSelection sourceTitle="Nivel 2: La señal de los cristales" sourcePath="/aprender/santuario-de-la-materia/leccion/2">
             <section className="mt-8 overflow-hidden border border-white/[.09] bg-[#0b101b]">
               <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((v) => !v)} className="flex w-full items-center justify-between bg-[#131824] px-4 py-3 text-left text-sm font-semibold text-slate-200 hover:bg-white/[.04]">
@@ -190,26 +328,37 @@ export default function CuandoLaMateriaCambiaPage() {
               </div>}
             </section>
 
-            <article className="mt-8 space-y-8">
-              <section>
+            <section id="modelos-particulas" className="mt-3 scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
+              <h2 className="pixel-font text-sm leading-6 text-white sm:text-base">El laboratorio de los estados</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-300">Compara los tres modelos. La imagen ayuda a visualizar el comportamiento, pero la explicación científica depende también de las propiedades observadas y de las condiciones del sistema.</p>
+              <div className="mt-3 grid gap-3 md:grid-cols-3">
+                <div className="rounded-lg border border-[#14517a] bg-[#071a2d] p-3"><h3 className="text-sm font-bold text-cyan-100">Sólido</h3><ImageUploadSlot assetKey="cuando-la-materia-cambia/estado-solido" title="Estado sólido" description="Modelo de partículas en un sólido: próximas y organizadas, vibrando alrededor de posiciones."/><p className="text-xs leading-5 text-slate-300">Conserva forma y volumen definidos; sus partículas vibran, pero no se desplazan libremente unas entre otras.</p></div>
+                <div className="rounded-lg border border-[#14517a] bg-[#071a2d] p-3"><h3 className="text-sm font-bold text-cyan-100">Líquido</h3><ImageUploadSlot assetKey="cuando-la-materia-cambia/estado-liquido" title="Estado líquido" description="Modelo de partículas de un líquido, próximas pero capaces de reorganizarse y deslizarse."/><p className="text-xs leading-5 text-slate-300">Mantiene un volumen aproximadamente definido y adopta la forma del recipiente.</p></div>
+                <div className="rounded-lg border border-[#14517a] bg-[#071a2d] p-3"><h3 className="text-sm font-bold text-cyan-100">Gas</h3><ImageUploadSlot assetKey="cuando-la-materia-cambia/estado-gaseoso" title="Estado gaseoso" description="Modelo de partículas de un gas, muy separadas y con movimiento libre y desordenado."/><p className="text-xs leading-5 text-slate-300">Se expande para ocupar el recipiente y puede comprimirse con facilidad.</p></div>
+              </div>
+              <p className="mt-3 border-l-2 border-cyan-300 bg-cyan-300/[.045] px-3 py-2 text-xs leading-5 text-cyan-100">Solo el administrador puede subir o reemplazar las ilustraciones. Al guardarlas en Supabase, se publican para todos los usuarios.</p>
+            </section>
+
+            <article className="mt-3 grid gap-3 lg:grid-cols-2">
+              <section id="estado-general" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
                 <h2 className="text-xl font-bold text-cyan-200">1. ¿Qué significa que la materia tenga distintos estados?</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300">La materia está constituida por partículas —átomos, moléculas o iones— que interactúan entre sí. El estado físico que observamos depende de las condiciones del sistema, como la temperatura y la presión, y de la naturaleza de las partículas y de sus interacciones. En condiciones habituales estudiamos los estados sólido, líquido y gaseoso.</p>
                 <p className="mt-3 text-sm leading-7 text-slate-300">No basta con decir que un sólido es «duro» o que un gas «no se ve». Estas descripciones no explican por qué se comportan de manera diferente. Para comprenderlo, debemos relacionar las propiedades macroscópicas —forma, volumen y compresibilidad— con la organización y el movimiento microscópico de sus partículas.</p>
               </section>
 
-              <section>
+              <section id="solidos" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
                 <h2 className="text-xl font-bold text-cyan-200">2. Sólidos: estructura y estabilidad</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300">En un sólido, las partículas suelen permanecer próximas y sus interacciones limitan su desplazamiento. Vibran alrededor de posiciones de equilibrio y, por eso, el material conserva normalmente su forma y volumen. En sólidos cristalinos existe un patrón de organización que se repite; en sólidos amorfos, como ciertos vidrios, no hay el mismo orden de largo alcance.</p>
                 <p className="mt-3 text-sm leading-7 text-slate-300">La estabilidad de un sólido no significa que sus partículas estén inmóviles. Si aumenta la temperatura, suele aumentar la amplitud de sus vibraciones. Cuando las condiciones permiten la fusión, la estructura deja de mantener el orden rígido característico del sólido y las partículas pueden reorganizarse con mayor libertad.</p>
               </section>
 
-              <section>
+              <section id="liquidos" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
                 <h2 className="text-xl font-bold text-cyan-200">3. Líquidos: proximidad con movilidad</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300">En un líquido, las partículas continúan estando próximas, pero pueden cambiar de vecinas y desplazarse unas respecto de otras. Las interacciones siguen siendo importantes: por eso los líquidos mantienen un volumen aproximadamente definido y muestran poca compresibilidad en comparación con los gases. Sin embargo, no conservan una forma propia y adoptan la del recipiente.</p>
                 <p className="mt-3 text-sm leading-7 text-slate-300">La fluidez no significa que las partículas estén separadas como en un gas. La diferencia clave es que, en el líquido, la distancia entre partículas continúa siendo relativamente pequeña y las interacciones permiten tanto cohesión como movimiento.</p>
               </section>
 
-              <section>
+              <section id="gases" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
                 <h2 className="text-xl font-bold text-cyan-200">4. Gases: movimiento y compresibilidad</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300">En un gas, las partículas están mucho más separadas que en un sólido o un líquido y se desplazan de forma continua y desordenada. Chocan entre sí y contra las paredes del recipiente. La presión se relaciona con esos choques; la temperatura, en el modelo cinético, con la energía cinética media de las partículas.</p>
                 <p className="mt-3 text-sm leading-7 text-slate-300">Como hay mucho espacio disponible entre las partículas, un gas puede comprimirse de manera considerable. Si la cantidad de gas y la temperatura se mantienen constantes, reducir el volumen aumenta la frecuencia de los choques contra las paredes y, por tanto, la presión. Esta relación se conoce como ley de Boyle para un gas ideal o para sistemas que se aproximan a ese comportamiento.</p>
@@ -219,7 +368,7 @@ export default function CuandoLaMateriaCambiaPage() {
                 </div>
               </section>
 
-              <section>
+              <section id="comparacion-estados" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5 lg:col-span-2">
                 <h2 className="text-xl font-bold text-cyan-200">5. Comparación de los tres estados</h2>
                 <div className="mt-4 overflow-x-auto border border-[#344a66] bg-[#0b1320] p-3 sm:p-4">
                   <table className="w-full min-w-[540px] border-collapse text-left text-sm">
@@ -235,14 +384,14 @@ export default function CuandoLaMateriaCambiaPage() {
                 <p className="mt-3 text-sm leading-7 text-slate-300">Es un modelo general: las propiedades reales dependen de la sustancia y de las condiciones. Por ejemplo, un sólido amorfo no tiene la misma estructura microscópica que un cristal, aunque ambos conserven su forma.</p>
               </section>
 
-              <section>
+              <section id="energia-cambios" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
                 <h2 className="text-xl font-bold text-cyan-200">6. Temperatura, energía y cambios de estado</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300">La temperatura no es lo mismo que el calor. La temperatura caracteriza el estado térmico; el calor es energía transferida entre sistemas por una diferencia de temperatura. Cuando una muestra recibe energía, puede aumentar su temperatura o experimentar un cambio de estado, según las condiciones.</p>
                 <p className="mt-3 text-sm leading-7 text-slate-300">Durante la fusión de una sustancia pura a presión constante, la temperatura puede permanecer aproximadamente estable mientras coexisten sólido y líquido. La energía transferida se utiliza en el cambio de estado y en la reorganización de las partículas, no simplemente en aumentar su energía cinética media. Más adelante, la curva de calentamiento permitirá estudiar este fenómeno cuantitativamente.</p>
                 <p className="mt-3 text-sm leading-7 text-slate-300">La fusión y la solidificación, la vaporización y la condensación, y la sublimación y la deposición son pares de transformaciones opuestas. En estos procesos físicos la composición química de la sustancia se conserva, aunque cambien el estado y las propiedades macroscópicas.</p>
               </section>
 
-              <section>
+              <section id="ejemplos-resueltos" className="scroll-mt-24 rounded-xl border border-cyan-200/25 bg-[#0a1929] p-4 sm:p-5 lg:col-span-2"><h2 className="pixel-font text-sm leading-6 text-white">Ejemplos resueltos</h2><div className="mt-3 grid gap-3 md:grid-cols-2"><div className="rounded-lg border border-[#14517a] bg-[#071321] p-4"><p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Ejemplo 1 · Cambio de estado</p><p className="mt-2 text-sm leading-6 text-slate-200">Una muestra de hielo se calienta hasta convertirse en agua líquida. No se detecta otra sustancia.</p><p className="mt-3 text-sm font-bold text-white">Razonamiento</p><p className="mt-1 text-sm leading-6 text-slate-300">La fusión es un cambio físico: las moléculas siguen siendo H₂O. La energía transferida permite reorganizar las partículas; no implica que se destruyan y vuelvan a formarse.</p></div><div className="rounded-lg border border-[#14517a] bg-[#071321] p-4"><p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Ejemplo 2 · Presión y volumen</p><p className="mt-2 text-sm leading-6 text-slate-200">Un gas ideal ocupa 4 L a 100 kPa. A temperatura constante se comprime hasta 2 L. ¿Cuál es la presión final?</p><p className="mt-3 text-sm font-bold text-white">Solución</p><p className="mt-1 text-sm leading-6 text-slate-300">P₁V₁ = P₂V₂; entonces P₂ = (100 kPa × 4 L) / 2 L = <strong className="text-cyan-100">200 kPa</strong>. Al reducir el volumen a la mitad, la presión se duplica aproximadamente, bajo las condiciones del modelo.</p></div></div></section><section id="evidencia-cientifica" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5 lg:col-span-2">
                 <h2 className="text-xl font-bold text-cyan-200">7. Del modelo a la evidencia experimental</h2>
                 <p className="mt-3 text-sm leading-7 text-slate-300">Una explicación científica debe conectar un modelo con observaciones. Si un gas se comprime y su temperatura se mantiene aproximadamente constante, el aumento de presión concuerda con el modelo cinético y con la ley de Boyle. Si un sólido se funde y se obtiene el mismo compuesto en estado líquido, la observación es compatible con un cambio físico. Ninguna de estas conclusiones debe ampliarse más allá de los datos disponibles.</p>
                 <p className="mt-3 text-sm leading-7 text-slate-300">En Saber 11 pueden pedirte identificar variables, predecir qué ocurriría al modificar una condición, interpretar una tabla o evaluar cuál conclusión está respaldada. Antes de responder, determina qué se mantuvo constante, qué variable cambió y si la evidencia distingue realmente entre las explicaciones posibles.</p>
@@ -258,8 +407,15 @@ export default function CuandoLaMateriaCambiaPage() {
               </section>
             </article>
           </LessonNotesSelection>
+            </div>
+            <aside className="space-y-3 xl:sticky xl:top-[76px] xl:self-start">
+              <section className="overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-4"><div className="flex items-center gap-3"><div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-cyan-300/30 bg-cyan-300/10 text-2xl">🔬</div><div><p className="pixel-font text-[9px] text-cyan-200">MISIÓN DE NOVA</p><p className="mt-1 text-xs leading-5 text-slate-200">Observa, compara y explica usando evidencia.</p></div></div><button type="button" onClick={() => setTutorOpen((v) => !v)} className="mt-3 w-full rounded-lg border border-fuchsia-400/60 bg-gradient-to-r from-fuchsia-600 to-violet-600 px-3 py-3 text-xs font-extrabold text-white transition hover:brightness-110">Pregunta a la IA</button>{tutorOpen && <div className="mt-3"><LessonAITutor subject="Ciencias Naturales" topic="Nivel 2: estados de la materia, modelo cinético-molecular y cambios de estado" stage="theory" open={tutorOpen} onOpenChange={setTutorOpen} /></div>}</section>
+              <section className="rounded-xl border border-[#21405e] bg-[#071321] p-4"><h2 className="pixel-font text-[9px] text-cyan-200">EN ESTA LECCIÓN</h2><div className="mt-3 space-y-2 text-xs">{[["1","Estados de la materia","estado-general"],["2","Sólidos","solidos"],["3","Líquidos","liquidos"],["4","Gases","gases"],["5","Comparación","comparacion-estados"],["6","Temperatura y cambios","energia-cambios"],["7","Ejemplos resueltos","ejemplos-resueltos"],["8","Evidencia científica","evidencia-cientifica"]].map(([number,label,id]) => <button key={id} type="button" onClick={() => document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"})} className="flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left text-slate-200 transition hover:bg-cyan-300/[.07] hover:text-cyan-100"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-fuchsia-400/50 bg-fuchsia-500/10 text-[10px] font-bold text-white">{number}</span><span>{label}</span></button>)}</div></section>
+              <section id="puntos-clave" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321] p-4"><h2 className="pixel-font text-[9px] text-amber-300">PUNTOS CLAVE</h2><ul className="mt-3 space-y-3 text-xs leading-5 text-slate-200"><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>El estado depende del movimiento, la organización y las interacciones de las partículas.</span></li><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>Sólido: forma y volumen definidos; líquido: volumen definido y forma variable; gas: se expande y se comprime.</span></li><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>Temperatura y calor no son lo mismo: el calor es energía transferida.</span></li><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>Un cambio de estado suele ser físico: no prueba que se haya formado otra sustancia.</span></li><li className="flex gap-2"><span className="text-cyan-300">◉</span><span>Para un gas ideal a temperatura constante: P₁V₁ = P₂V₂.</span></li></ul></section>
+            </aside>
+          </div>
 
-          <div className="mt-9 flex flex-col gap-3 border-t border-white/10 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <Link href="/aprender/santuario-de-la-materia" className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/15 bg-[#26364a] px-4 py-3 text-sm font-semibold text-slate-200 hover:bg-[#33465e]"><ArrowLeft className="h-4 w-4" /> Volver al capítulo</Link>
             <button type="button" onClick={() => setStage("practice")} className="inline-flex min-h-11 items-center justify-center gap-2 border border-emerald-300/60 bg-[#75df55] px-5 py-3 text-sm font-extrabold text-[#09200a] shadow-[0_2px_0_#3a9a2b] hover:bg-[#8ced6d]">Iniciar desafío · 3 preguntas <ArrowRight className="h-4 w-4" /></button>
           </div>

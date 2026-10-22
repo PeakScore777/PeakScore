@@ -69,9 +69,10 @@ const chapters: Chapter[] = [
     title: "El código del átomo",
     description: "Descubre la estructura de la materia y cómo se organizan los elementos.",
     image: "/images/aprender/santuario/codigo-atomo.png",
+    available: true,
     lessons: [
-      { id: "11", title: "Dentro del átomo" },
-      { id: "12", title: "Las pistas de los elementos" },
+      { id: "11", title: "Dentro del átomo", available: true, href: "/aprender/santuario-de-la-materia/leccion/4" },
+      { id: "12", title: "Las pistas de los elementos", available: true, href: "/aprender/santuario-de-la-materia/leccion/4" },
     ],
   },
   {

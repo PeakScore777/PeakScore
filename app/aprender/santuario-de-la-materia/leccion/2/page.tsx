@@ -315,7 +315,7 @@ export default function CuandoLaMateriaCambiaPage() {
           </nav>
           <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_316px]">
             <div className="min-w-0">
-          <LessonNotesSelection sourceTitle="Nivel 2: La señal de los cristales" sourcePath="/aprender/santuario-de-la-materia/leccion/2">
+          <LessonNotesSelection sourceTitle="Nivel 2: Cuando la materia cambia" sourcePath="/aprender/santuario-de-la-materia/leccion/2">
             <section className="mt-8 overflow-hidden border border-white/[.09] bg-[#0b101b]">
               <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((v) => !v)} className="flex w-full items-center justify-between bg-[#131824] px-4 py-3 text-left text-sm font-semibold text-slate-200 hover:bg-white/[.04]">
                 Historia: el registro de Nova

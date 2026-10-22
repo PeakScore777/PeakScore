@@ -1,0 +1,665 @@
+"use client";
+
+import Link from "next/link";
+import Image from "next/image";
+import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
+import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
+import AdminPracticeQuestionEditor from "@/components/admin/AdminPracticeQuestionEditor";
+import LessonAITutor from "@/components/aprender/LessonAITutor";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  ChevronDown,
+  FlaskConical,
+  Lightbulb,
+  RotateCcw,
+} from "lucide-react";
+
+type Question = {
+  difficulty: "Fácil" | "Media" | "Difícil";
+  competency: string;
+  prompt: string;
+  context: string;
+  options: { label: string; text: string }[];
+  answer: string;
+  explanation: string;
+  context_blocks?: ({ type: "table"; title: string; headers: string[]; rows: string[][] } | { type: "paragraph"; text: string })[];
+};
+
+const fallbackQuestions: Question[] = [
+  {
+    difficulty: "Fácil",
+    competency: "Uso comprensivo del conocimiento científico",
+    context: "Nova divide un cristal homogéneo en dos fragmentos para estudiarlo. El fragmento A tiene una masa de 12 g y un volumen de 4 cm³. El fragmento B tiene una masa de 24 g y un volumen de 8 cm³. Ambos se mantienen a la misma temperatura y presión.",
+    prompt: "¿Cuál interpretación clasifica correctamente las propiedades que aparecen en el registro?",
+    options: [
+      { label: "A", text: "La masa y el volumen son intensivos porque se pueden medir en el laboratorio." },
+      { label: "B", text: "La masa y el volumen son extensivos; la densidad calculada es intensiva si las muestras conservan la misma composición y se comparan en las mismas condiciones." },
+      { label: "C", text: "La densidad es extensiva porque aumenta cuando se duplica la masa." },
+      { label: "D", text: "Todas las propiedades son extensivas porque los fragmentos tienen tamaños diferentes." },
+    ],
+    answer: "B",
+    explanation: "La masa y el volumen dependen de la cantidad de muestra, por eso son propiedades extensivas. Para A, la densidad es 12/4 = 3 g/cm³; para B, 24/8 = 3 g/cm³. La cantidad se duplica, pero la densidad permanece igual bajo las condiciones descritas. Una propiedad no es intensiva simplemente porque se mida: lo importante es si depende de la cantidad de materia.",
+  },
+  {
+    difficulty: "Media",
+    competency: "Explicación de fenómenos",
+    context: "Nova mide tres muestras sólidas compactas a la misma temperatura. Registra los siguientes resultados: muestra P, masa 24 g y volumen 8 cm³; muestra Q, masa 36 g y volumen 12 cm³; muestra R, masa 30 g y volumen 10 cm³. Supón que las mediciones no tienen errores relevantes.",
+    prompt: "¿Cuál conclusión está mejor respaldada por los datos experimentales?",
+    options: [
+      { label: "A", text: "La muestra Q tiene mayor densidad porque su masa total es la mayor." },
+      { label: "B", text: "Las tres muestras tienen la misma densidad, de 3 g/cm³." },
+      { label: "C", text: "La muestra P es más densa porque ocupa el menor volumen." },
+      { label: "D", text: "No se puede calcular densidad sin conocer el color y la composición de cada muestra." },
+    ],
+    answer: "B",
+    explanation: "Calcula la razón entre masa y volumen para cada muestra: P = 24/8 = 3 g/cm³; Q = 36/12 = 3 g/cm³; R = 30/10 = 3 g/cm³. Aunque las masas y los volúmenes son diferentes, la razón es la misma. La opción A confunde masa total con densidad; la C se fija únicamente en el volumen. En una pregunta de análisis de datos, calcula la magnitud que relaciona las variables en lugar de comparar una sola columna.",
+  },
+  {
+    difficulty: "Difícil",
+    competency: "Indagación y evaluación de evidencia",
+    context: "El equipo de Nova quiere identificar un sólido comparando su densidad con un valor de referencia de 8,0 g/cm³. Mide una pieza de masa 80 g y registra un volumen de 10 cm³. Repite el procedimiento con otra pieza del mismo lote y obtiene los mismos valores. Después descubre que la probeta utilizada tiene una escala defectuosa y registra sistemáticamente 2 cm³ menos que el volumen real. Para este análisis, la densidad se calcula como masa dividida entre volumen.",
+    prompt: "¿Qué procedimiento permitiría evaluar de manera más confiable si el sólido coincide con el material de referencia?",
+    options: [
+      { label: "A", text: "Aceptar la identificación, porque obtener los mismos datos dos veces demuestra que las mediciones son exactas." },
+      { label: "B", text: "Promediar las dos mediciones registradas, porque así se elimina cualquier error del instrumento." },
+      { label: "C", text: "Reemplazar o calibrar la probeta, repetir las mediciones y calcular de nuevo la densidad antes de compararla con el valor de referencia." },
+      { label: "D", text: "Descartar la muestra sin repetir el procedimiento, porque un instrumento defectuoso demuestra que el sólido es una mezcla." },
+    ],
+    answer: "C",
+    explanation: "La probeta introduce un error sistemático: subestima el volumen de forma consistente. Repetir con el mismo instrumento puede producir resultados parecidos sin que sean exactos; calcular un promedio tampoco corrige un sesgo sistemático. La decisión más sólida es corregir o reemplazar el instrumento, medir de nuevo y calcular la densidad con datos confiables. El error del instrumento no demuestra que el material sea una mezcla ni permite identificarlo por sí solo. En preguntas de indagación, distingue entre repetibilidad (resultados parecidos) y exactitud (cercanía al valor real).",
+  },
+];
+
+const matterNotes = [
+  {
+    title: "Materia y composición",
+    body: "La materia tiene masa y ocupa espacio. Puede ser una sustancia pura (elemento o compuesto) o una mezcla homogénea/heterogénea; la apariencia no basta para clasificarla.",
+  },
+  {
+    title: "Extensivas e intensivas",
+    body: "Masa y volumen dependen de la cantidad de muestra (extensivas). Densidad y punto de fusión, bajo condiciones definidas, no dependen directamente de cuánto material se toma (intensivas).",
+  },
+  {
+    title: "Densidad y evidencia",
+    body: "La densidad es ρ = m/V. Compara la masa por unidad de volumen. Revisa unidades, convierte antes de operar y no confundas densidad con peso ni con tamaño.",
+  },
+  {
+    title: "Cambio físico o químico",
+    body: "Un cambio físico altera estado, forma o distribución sin cambiar la identidad química; un cambio químico implica formación de sustancias diferentes. Una sola señal visual no siempre demuestra reacción.",
+  },
+];
+
+export default function CristalesMisteriososPage() {
+  const router = useRouter();
+  const [stage, setStage] = useState<"theory" | "practice">("theory");
+  const [tutorOpen, setTutorOpen] = useState(false);
+  const [questions, setQuestions] = useState<Question[]>(fallbackQuestions);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/admin/lesson-questions", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const data = await response.json();
+        return Array.isArray(data.questions) ? data.questions : null;
+      })
+      .then((rows) => {
+        if (!active || !rows || rows.length === 0) return;
+        const normalized = rows.map((row: any) => ({
+          difficulty: row.difficulty,
+          competency: row.competency ?? "",
+          context: row.context_text ?? "",
+          context_blocks: Array.isArray(row.context_blocks) ? row.context_blocks : [],
+          prompt: row.prompt,
+          options: Array.isArray(row.options) ? row.options : [],
+          answer: row.correct_answer,
+          explanation: row.explanation ?? "",
+        }));
+        setQuestions(normalized);
+      })
+      .catch(() => { /* La práctica conserva preguntas de respaldo si la API no está disponible. */ });
+    return () => { active = false; };
+  }, []);
+  const [historyOpen, setHistoryOpen] = useState(true);
+  const [questionIndex, setQuestionIndex] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const [lost, setLost] = useState(false);
+  const [rewardOpen, setRewardOpen] = useState(false);
+
+  const question = questions[questionIndex];
+  const isCorrect = selected === question.answer;
+
+  // Efectos retro locales: no requieren API ni dependencias adicionales.
+  function playSound(file: "navigation.mp3" | "level-win.mp3" | "game-over.wav" | "xp-gain.mp3", volume = 0.22) {
+    if (typeof window === "undefined") return;
+    const audio = new Audio(`/sounds/${file}`);
+    audio.volume = volume;
+    void audio.play().catch(() => {
+      // El navegador puede bloquear audio hasta que exista interacción del usuario.
+    });
+  }
+
+  function checkAnswer() {
+    if (!selected || checked) return;
+    setChecked(true);
+    if (isCorrect) setCorrectCount((count) => count + 1);
+  }
+
+  function nextQuestion() {
+    if (questionIndex < questions.length - 1) {
+      playSound("navigation.mp3", 0.16);
+      setQuestionIndex((index) => index + 1);
+      setSelected(null);
+      setChecked(false);
+      return;
+    }
+
+    // La respuesta se contabiliza en checkAnswer antes de habilitar el avance.
+    // No sumar isCorrect otra vez: eso convertía 3/3 en 4/3 y mostraba GAME OVER.
+    const finalCorrectCount = correctCount;
+    setFinished(true);
+    if (finalCorrectCount === questions.length) {
+      setLost(false);
+      setRewardOpen(true);
+      playSound("level-win.mp3", 0.25);
+    } else {
+      setLost(true);
+      playSound("game-over.wav", 0.3);
+    }
+  }
+
+  function restartPractice() {
+    setQuestionIndex(0);
+    setSelected(null);
+    setChecked(false);
+    setCorrectCount(0);
+    setFinished(false);
+    setLost(false);
+    setRewardOpen(false);
+  }
+
+  return (
+    <main className="lesson-shell min-h-[calc(100vh-72px)] bg-[#05070b] text-[#f0f4fa]">
+      <header className="lesson-topbar sticky top-0 z-30 border-b border-white/10 bg-[#101725]/95 backdrop-blur">
+        <div className="mx-auto flex min-h-[58px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-7">
+          <div className="hidden min-w-0 items-center gap-2 text-xs text-slate-400 sm:flex">
+            <span>Ciencias Naturales</span><span>›</span>
+            <span>El Santuario de la Materia</span><span>›</span>
+            <span className="truncate text-emerald-100">{stage === "theory" ? "Los cristales misteriosos" : "Misión: analiza las muestras"}</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="pixel-font text-[8px] text-white/70">NIVEL 1</span>
+            <div className="hidden h-2 w-24 overflow-hidden rounded-full bg-white/10 sm:block">
+              <div className="h-full rounded-full bg-emerald-300 transition-all" style={{ width: `${stage === "theory" ? 30 : finished ? 100 : 30 + ((questionIndex + (checked ? 1 : 0)) / questions.length) * 70}%` }} />
+            </div>
+            <span className="pixel-font text-[8px] text-emerald-200">{stage === "theory" ? "30%" : `${Math.round(finished ? 100 : 30 + ((questionIndex + (checked ? 1 : 0)) / questions.length) * 70)}%`}</span>
+          </div>
+        </div>
+        <div className="h-[2px] bg-white/[.04]"><div className="h-full bg-cyan-300 transition-all duration-300" style={{ width: `${stage === "theory" ? 30 : finished ? 100 : 30 + ((questionIndex + (checked ? 1 : 0)) / questions.length) * 70}%` }} /></div>
+      </header>
+
+      {stage === "theory" ? (
+        <div className="lesson-reading mx-auto max-w-[680px] px-5 pb-28 pt-7 sm:px-8 sm:pt-10">
+          <div className="mb-6">
+            <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[28px]">Los cristales misteriosos</h1>
+            <p className="mt-3 text-sm leading-7 text-slate-400">Primero observa. Después compara. Solo entonces saca una conclusión.</p>
+          </div>
+
+          <LessonNotesSelection sourceTitle="Los cristales misteriosos" sourcePath="/aprender/santuario-de-la-materia/leccion/1">
+          <section className="mb-7">
+            <button type="button" aria-expanded={historyOpen} onClick={() => setHistoryOpen((open) => !open)} className="flex w-full items-center justify-between border border-white/[.09] bg-[#131824] px-4 py-3 text-left transition hover:border-cyan-200/25">
+              <span className="flex items-center gap-3 text-sm font-semibold text-slate-200">Historia</span>
+              <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
+            </button>
+            {historyOpen && (
+              <div className="border-x border-b border-white/[.08] bg-[#0b101b] px-4 py-5 sm:px-5">
+                <p className="text-sm leading-7 text-slate-200">Al caer la tarde, Nova llega por primera vez a un antiguo santuario escondido entre ruinas. El lugar está en silencio, salvo por el sonido del agua que cae entre las piedras. Sobre una mesa encuentra tres muestras: una roca oscura, un cristal transparente y una pieza azul que refleja la luz.</p>
+                <p className="mt-4 text-sm leading-7 text-slate-300">Nova no sabe de qué materiales están hechas ni por qué son diferentes. En vez de adivinar, abre su cuaderno y anota lo que puede observar: color, brillo, forma y tamaño. También se pregunta qué podría medir para comparar las muestras de manera justa.</p>
+                <p className="mt-4 text-sm leading-7 text-slate-300">Una pequeña inscripción aparece en la mesa: <em className="text-cyan-100">«Quien observa con cuidado encuentra mejores respuestas».</em> Nova decide comenzar por lo esencial: entender qué es la materia y cuáles propiedades permiten describirla. Su investigación apenas comienza.</p>
+                <div className="mt-5 border-l-2 border-cyan-300/70 bg-cyan-300/[.045] px-4 py-3">
+                  <p className="text-xs font-bold text-cyan-100">Tu papel en esta aventura</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-300">Ayuda a Nova a distinguir una observación de una conclusión y a elegir qué propiedades necesita comparar. Por ahora, ella investiga sola: sus próximos encuentros llegarán cuando la historia avance.</p>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <article className="space-y-6">
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200 sm:text-xl">¿Qué es la materia?</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300"><strong className="rounded-sm bg-amber-300/[.09] px-1 font-semibold text-amber-200">La materia es todo aquello que tiene masa y ocupa un lugar en el espacio.</strong> Una piedra, el agua de una botella y el aire dentro de un balón son ejemplos de materia. Aunque el aire no siempre se vea, tiene masa y ocupa espacio.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Para estudiar una muestra, no basta con decir «se ve bonita» o «parece pesada». En ciencias describimos características mediante observaciones y mediciones, y usamos esos datos para comparar muestras.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Propiedades generales y específicas</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Las propiedades de la materia nos ayudan a describirla. Se suelen estudiar en dos grupos:</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="border border-white/10 bg-[#1c3045] p-4">
+                  <h3 className="font-bold text-white">Propiedades generales</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">Son comunes a la materia y no suelen identificar por sí solas una sustancia.</p>
+                  <ul className="mt-3 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-300">
+                    <li><strong className="text-amber-200">Masa:</strong> cantidad de materia de una muestra.</li>
+                    <li><strong className="text-amber-200">Volumen:</strong> espacio que ocupa.</li>
+                  </ul>
+                </div>
+                <div className="border border-white/10 bg-[#101725] p-4">
+                  <h3 className="font-bold text-white">Propiedades específicas</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">Permiten comparar y, bajo condiciones controladas, ayudar a diferenciar materiales.</p>
+                  <ul className="mt-3 list-disc space-y-1 pl-5 text-sm leading-6 text-slate-300">
+                    <li><strong className="text-amber-200">Densidad:</strong> relación entre masa y volumen.</li>
+                    <li><strong className="text-amber-200">Solubilidad:</strong> capacidad de disolverse en otra sustancia.</li>
+                    <li><strong className="text-amber-200">Punto de fusión:</strong> temperatura a la que un sólido pasa a líquido, bajo una presión determinada.</li>
+                  </ul>
+                </div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">¿Cómo describimos una muestra?</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Imagina que tienes dos cubos del mismo tamaño. Uno tiene más masa que el otro. El tamaño por sí solo no explica la diferencia: comparar la masa y el volumen permite calcular la <strong className="text-cyan-100">densidad</strong>.</p>
+              <div className="my-4 border border-slate-600 bg-[#101725] p-4">
+                <p className="pixel-font text-[8px] leading-5 text-slate-400">EJEMPLO GUIADO</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">Una muestra tiene una masa de 20 g y un volumen de 10 cm³.</p>
+                <div className="my-3 border border-cyan-200/15 bg-[#080e19] px-4 py-3 font-mono text-sm text-cyan-100">Densidad = masa ÷ volumen<br />Densidad = 20 g ÷ 10 cm³<br />Densidad = 2 g/cm³</div>
+                <p className="text-sm leading-7 text-slate-300">La operación permite comparar esta muestra con otras medidas en las mismas condiciones. No basta con observar su color para conocer su densidad.</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Observación no es lo mismo que conclusión</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Si una muestra cambia de color, esa frase describe una observación. Decir que se formó una sustancia nueva ya es una conclusión que necesita más evidencias. Algunos cambios de apariencia no significan necesariamente que haya ocurrido una reacción química.</p>
+              <div className="mt-4 border border-amber-200/30 bg-amber-200/[.045] p-4">
+                <p className="flex items-center gap-2 text-sm font-bold text-amber-100"><Lightbulb className="h-4 w-4" /> Idea clave para Saber 11</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">Lee qué datos entrega el enunciado, identifica qué propiedad describen y elige solo la conclusión respaldada por la evidencia. No agregues información que el problema no proporciona.</p>
+              </div>
+            </section>
+
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Propiedades extensivas e intensivas: una distinción que sí importa</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Otra clasificación depende de si la propiedad cambia al aumentar o disminuir la cantidad de muestra. Las <strong className="text-cyan-100">propiedades extensivas</strong> dependen de la cantidad de materia: por ejemplo, la masa y el volumen de una misma sustancia aumentan si reunimos más muestra. Las <strong className="text-cyan-100">propiedades intensivas</strong> no dependen directamente de la cantidad: por ejemplo, la densidad y el punto de fusión de una sustancia pura, siempre que se comparen en condiciones equivalentes.</p>
+              <div className="mt-4 overflow-hidden border border-white/10">
+                <div className="grid grid-cols-[1fr_1fr] bg-[#182235] text-xs font-bold text-slate-100"><div className="p-3">Extensivas</div><div className="border-l border-white/10 p-3">Intensivas</div></div>
+                <div className="grid grid-cols-[1fr_1fr] bg-[#1c3045] text-sm text-slate-300"><div className="p-3">Masa, volumen, longitud de una muestra.</div><div className="border-l border-white/10 p-3">Densidad, temperatura de fusión, conductividad característica.</div></div>
+              </div>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Ejemplo: si cortas un bloque de cobre en dos partes, cada parte tendrá menos masa y volumen que el bloque original, pero ambas pueden conservar aproximadamente la misma densidad. Por eso la densidad es más útil que la masa aislada para comparar la identidad de materiales.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Propiedades físicas y químicas</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Una <strong className="text-cyan-100">propiedad física</strong> se puede observar o medir sin transformar la sustancia en otra: densidad, color, dureza, conductividad, solubilidad y temperatura de fusión son ejemplos. Una <strong className="text-cyan-100">propiedad química</strong> describe la capacidad de una sustancia para participar en una transformación que cambia su composición, como la inflamabilidad o la tendencia del hierro a oxidarse.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">No confundas propiedad con cambio. La inflamabilidad es una propiedad química; la combustión es un proceso químico. El punto de ebullición es una propiedad física; hervir agua es un cambio físico porque las moléculas siguen siendo H₂O, aunque cambie el estado.</p>
+              <div className="mt-4 border border-emerald-200/25 bg-cyan-200/[.04] p-4">
+                <p className="text-sm font-bold text-cyan-100">Cómo razonar en una pregunta</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">Pregúntate: ¿la identidad química de la sustancia cambia? Si no cambia y solo varían el estado, la forma o el tamaño, el proceso es físico. Si aparecen sustancias con composición diferente, el proceso es químico. La evidencia debe sostener la conclusión; burbujas o cambio de color, por sí solos, pueden tener más de una explicación.</p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Densidad: fórmula, unidades e interpretación</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">La densidad media de una muestra homogénea se calcula como <strong className="text-white">ρ = m/V</strong>, donde ρ representa la densidad, m la masa y V el volumen. En el sistema internacional se expresa en kg/m³; en laboratorio escolar también es común usar g/cm³ o g/mL. Recuerda que 1 mL equivale a 1 cm³, por lo que 1 g/mL y 1 g/cm³ son unidades numéricamente equivalentes.</p>
+              <div className="my-4 border border-slate-600 bg-[#101725] p-4">
+                <p className="pixel-font text-[8px] leading-5 text-slate-400">EJEMPLO CON DATOS EXPERIMENTALES</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">Una muestra tiene masa de 54 g y volumen de 20 cm³. ¿Cuál es su densidad?</p>
+                <div className="my-3 border border-cyan-200/15 bg-[#080e19] px-4 py-3 font-mono text-sm leading-7 text-cyan-100">ρ = m/V<br />ρ = 54 g ÷ 20 cm³<br />ρ = 2,7 g/cm³</div>
+                <p className="text-sm leading-7 text-slate-300">Interpretación: cada centímetro cúbico de esa muestra corresponde, en promedio, a 2,7 gramos. No significa que el objeto tenga 2,7 gramos en total. Para comparar con una tabla de referencia, verifica que las unidades y las condiciones sean compatibles.</p>
+              </div>
+              <p className="mt-3 text-sm leading-7 text-slate-300">La densidad también puede ayudar a evaluar hipótesis. Si una muestra compacta y homogénea tiene una densidad muy distinta a la de una sustancia de referencia, esa evidencia cuestiona la identificación propuesta. Sin embargo, poros, impurezas, temperatura y errores de medición pueden alterar el resultado; la ciencia compara varias evidencias, no una cifra sin contexto.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Comparar materiales con una tabla de datos</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">En el santuario, Nova encuentra registros de laboratorio con varias propiedades de cada muestra. Una tabla permite comparar datos de forma ordenada, pero cada columna responde una pregunta distinta: la masa indica cuánta materia se midió, el volumen indica cuánto espacio ocupa y la densidad relaciona ambas magnitudes. El punto de fusión informa la temperatura a la que un sólido pasa al estado líquido bajo una presión determinada.</p>
+              <div className="my-4 overflow-x-auto border border-[#344a66] bg-[#0b1320] p-3 sm:p-4">
+                <p className="mb-3 pixel-font text-[8px] uppercase tracking-wider text-cyan-200">Ejemplo de registro del santuario</p>
+                <table className="w-full min-w-[390px] border-collapse text-left text-sm">
+                  <thead><tr><th className="border border-[#405873] bg-[#1a2b40] px-3 py-3 text-cyan-100">Muestra</th><th className="border border-[#405873] bg-[#1a2b40] px-3 py-3 text-cyan-100">Masa (g)</th><th className="border border-[#405873] bg-[#1a2b40] px-3 py-3 text-cyan-100">Volumen (cm³)</th><th className="border border-[#405873] bg-[#1a2b40] px-3 py-3 text-cyan-100">Densidad (g/cm³)</th></tr></thead>
+                  <tbody><tr className="bg-[#0c1624]"><td className="border border-[#293d56] px-3 py-3">A</td><td className="border border-[#293d56] px-3 py-3">36</td><td className="border border-[#293d56] px-3 py-3">12</td><td className="border border-[#293d56] px-3 py-3">3</td></tr><tr className="bg-[#101c2c]"><td className="border border-[#293d56] px-3 py-3">B</td><td className="border border-[#293d56] px-3 py-3">60</td><td className="border border-[#293d56] px-3 py-3">20</td><td className="border border-[#293d56] px-3 py-3">3</td></tr></tbody>
+                </table>
+              </div>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Aunque la muestra B tiene más masa, también ocupa más volumen. Al calcular la densidad, A = 36 ÷ 12 = 3 g/cm³ y B = 60 ÷ 20 = 3 g/cm³. Por tanto, los datos no respaldan afirmar que B sea más densa. Esta es la razón por la que Nova no debe comparar solo una columna: necesita relacionar las magnitudes.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Si la pregunta incluye un punto de fusión, primero identifica la condición que debe cumplir el material y descarta las muestras que no la satisfacen. Después compara la propiedad solicitada entre las que quedan. Por ejemplo, si un objeto debe soportar más de 700 °C, una muestra con punto de fusión de 640 °C no cumple, aunque tenga una densidad baja. No mezcles criterios diferentes ni elijas una opción solo porque contiene un dato verdadero.</p>
+              <div className="mt-4 border border-cyan-200/25 bg-cyan-200/[.045] p-4">
+                <p className="text-sm font-bold text-cyan-100">La ruta de Nova</p>
+                <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
+                  <li>Lee los encabezados y comprueba las unidades.</li>
+                  <li>Identifica la condición que debe cumplir la muestra.</li>
+                  <li>Calcula la propiedad necesaria y compara los resultados.</li>
+                  <li>Elige la conclusión que los datos permiten sostener, sin inventar información.</li>
+                </ol>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Medir bien también es hacer ciencia</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Una medición combina un valor numérico con una unidad. Escribir «la masa es 12» es incompleto si no se indica si son gramos, kilogramos u otra unidad. Antes de calcular, comprueba que las magnitudes estén expresadas en unidades compatibles. Por ejemplo, no dividas directamente gramos entre metros cúbicos y reportes el resultado como g/cm³ sin convertir el volumen.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300"><strong className="text-white">Precisión</strong> describe qué tan cercanas son entre sí mediciones repetidas; <strong className="text-white">exactitud</strong> describe qué tan cerca está una medición del valor aceptado o de referencia. Un instrumento puede producir resultados muy parecidos entre sí y, aun así, estar descalibrado. En una investigación, repetir medidas, registrar unidades y reconocer incertidumbres mejora la calidad de la evidencia.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Materia: sustancia pura o mezcla</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">Aunque esta lección se centra en propiedades, la composición ayuda a interpretar los datos. Una <strong className="text-cyan-100">sustancia pura</strong> tiene composición definida: puede ser un elemento (como cobre) o un compuesto (como agua pura). Una <strong className="text-cyan-100">mezcla</strong> combina sustancias en proporciones variables. Es homogénea si su composición es uniforme a la escala de observación —por ejemplo, sal disuelta en agua— y heterogénea si presenta regiones o fases distinguibles —por ejemplo, agua y aceite—.</p>
+              <p className="mt-3 text-sm leading-7 text-slate-300">No confundas «se ve uniforme» con «es sustancia pura»: el aire y el agua salada pueden parecer uniformes, pero son mezclas. Tampoco confundas una mezcla con un compuesto: en una mezcla, los componentes conservan sus identidades y pueden separarse mediante métodos físicos adecuados; en un compuesto, los elementos están unidos químicamente en proporciones definidas.</p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-cyan-200">Cómo leer una pregunta tipo Saber 11</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">En Ciencias Naturales no basta con recordar una definición: debes usar el concepto para interpretar una situación, analizar datos o evaluar un procedimiento. Nova te propone esta rutina cada vez que abras una pregunta.</p>
+              <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
+                <li><strong className="text-white">Lee primero qué te preguntan:</strong> busca la tarea exacta: calcular, comparar, explicar, predecir o evaluar una conclusión.</li>
+                <li><strong className="text-white">Subraya mentalmente los datos útiles:</strong> registra magnitudes, unidades, condiciones y qué variables se mantienen constantes. No todos los detalles tienen el mismo peso.</li>
+                <li><strong className="text-white">Relaciona los datos con un modelo científico:</strong> si comparas densidades, usa ρ = m/V; si evalúas una identificación, contrasta las mediciones con evidencia y condiciones equivalentes.</li>
+                <li><strong className="text-white">Examina cada opción:</strong> pregúntate si se deduce de los datos. Desconfía de palabras absolutas como «siempre» o «necesariamente» cuando el experimento no las demuestra.</li>
+                <li><strong className="text-white">Descarta distractores por su error:</strong> puede que una opción use un dato real, pero lo interprete mal, ignore una variable o afirme más de lo que permite concluir la evidencia.</li>
+              </ol>
+              <div className="mt-4 border border-cyan-200/25 bg-cyan-200/[.045] p-4">
+                <p className="text-sm font-bold text-cyan-100">Mini ejemplo de lectura</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">Si dos muestras tienen masas diferentes, no concluyas de inmediato que sus densidades son distintas. Busca también sus volúmenes, calcula la razón masa/volumen y compara los resultados. Ese paso —usar la evidencia en vez de adivinar por una sola característica— es el corazón del razonamiento científico.</p>
+              </div>
+              <div className="mt-4 border border-amber-200/30 bg-amber-200/[.045] p-4">
+                <p className="flex items-center gap-2 text-sm font-bold text-amber-100"><Lightbulb className="h-4 w-4" /> Error frecuente</p>
+                <p className="mt-2 text-sm leading-7 text-slate-300">«Tiene más masa, por tanto es más densa» no siempre es válido. Para comparar densidades necesitas considerar también el volumen. Una muestra puede tener más masa simplemente porque contiene más material.</p>
+              </div>
+            </section>
+          </article>
+          </LessonNotesSelection>
+
+        </div>
+      ) : (
+        <div className="mx-auto max-w-[1440px] px-4 pb-28 pt-6 sm:px-7 sm:pt-8">
+          <div className="mb-6">
+            <h1 className="mt-1 text-2xl font-bold leading-tight tracking-tight text-white sm:text-[28px]">Misión 1: analiza las muestras</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-400">Consulta la teoría a la izquierda cuando la necesites. Usa las evidencias para justificar tu respuesta.</p>
+          </div>
+
+          {finished && !lost ? null : (
+            <div className="grid items-start gap-5 lg:grid-cols-[minmax(280px,370px)_minmax(0,1fr)]">
+              <aside className="border border-white/10 bg-[#152235] p-5 lg:sticky lg:top-[82px]">
+                <p className="text-xs font-bold text-cyan-200">Repaso rápido</p>
+                {matterNotes.map((note) => (
+                  <section key={note.title} className="mt-5 border-t border-white/[.08] pt-4 first:border-0 first:pt-0">
+                    <h2 className="text-sm font-bold text-white">{note.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">{note.body}</p>
+                  </section>
+                ))}
+                <div className="mt-5 border border-amber-200/25 bg-amber-200/[.04] p-4">
+                  <p className="flex items-center gap-2 text-sm font-bold text-amber-100"><Lightbulb className="h-4 w-4" /> Recuerda</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">Una observación es un dato; una conclusión debe estar respaldada por los datos.</p>
+                </div>
+              </aside>
+
+              <section className="practice-panel overflow-hidden border border-[#35506d] bg-[#0d1422] text-[#edf5ff] shadow-[0_16px_40px_rgba(0,0,0,.4)] sm:p-0">
+                <div className="border-b border-[#293d56] bg-[#121d30] px-5 py-4 sm:px-7">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="pixel-font text-[9px] uppercase tracking-[.12em] text-slate-200">CIENCIAS NATURALES <span className="mx-1 text-cyan-300">/</span> PREGUNTA {questionIndex + 1} DE {questions.length}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="border border-cyan-300/30 bg-cyan-300/[.06] px-2 py-1 text-[10px] font-semibold text-cyan-100">Única respuesta</span>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-400">{question.competency}</p>
+                  <div className="mt-4 h-2 overflow-hidden border border-white/10 bg-[#080d17]"><div className="h-full bg-gradient-to-r from-cyan-300 via-emerald-300 to-lime-300 transition-all" style={{ width: `${((questionIndex + 1) / questions.length) * 100}%` }} /></div>
+                </div>
+                <div className="p-5 sm:p-7">
+                <AdminPracticeQuestionEditor position={questionIndex + 1} initialQuestions={questions.map((q, index) => ({ position: index + 1, difficulty: q.difficulty, competency: q.competency, context_text: q.context, context_blocks: q.context_blocks ?? [], prompt: q.prompt, options: q.options, correct_answer: q.answer as "A" | "B" | "C" | "D", explanation: q.explanation, is_published: true }))} />
+                <p className="pixel-font text-[9px] font-bold uppercase tracking-[.12em] text-cyan-200">Situación problema</p>
+                <p className="mt-3 border-l-[3px] border-cyan-300 bg-[#15243a] px-4 py-4 text-sm leading-7 text-slate-100 shadow-inner shadow-black/20">{question.context}</p>
+                {question.context_blocks?.map((block, blockIndex) => block.type === "table" ? (
+                  <div key={blockIndex} className="my-5 overflow-x-auto border border-[#344a66] bg-[#0b1320] p-3 sm:p-4">
+                    {block.title && <p className="mb-3 pixel-font text-[9px] uppercase tracking-wider text-cyan-200">{block.title}</p>}
+                    <table className="w-full min-w-[360px] border-collapse text-left text-sm">
+                      <thead><tr>{block.headers.map((header, index) => <th key={index} className="border border-[#405873] bg-[#1a2b40] px-3 py-3 font-bold text-cyan-100">{header}</th>)}</tr></thead>
+                      <tbody>{block.rows.map((row, rowIndex) => <tr key={rowIndex} className={rowIndex % 2 ? "bg-[#101c2c]" : "bg-[#0c1624]"}>{row.map((cell, cellIndex) => <td key={cellIndex} className="border border-[#293d56] px-3 py-3 text-slate-100">{cell}</td>)}</tr>)}</tbody>
+                    </table>
+                  </div>
+                ) : <p key={blockIndex} className="my-3 text-sm leading-7 text-slate-200">{block.text}</p>)}
+                <h2 className="mt-6 text-lg font-bold leading-8 text-white sm:text-xl">{question.prompt}</h2>
+                <p className="mt-2 text-xs leading-5 text-slate-400">Selecciona la opción mejor respaldada por los datos del enunciado.</p>
+                <div className="mt-5 space-y-3">
+                  {question.options.map((option) => {
+                    const active = selected === option.label;
+                    const correctOption = checked && option.label === question.answer;
+                    const wrongOption = checked && active && !isCorrect;
+                    const style = correctOption ? "border-emerald-300 bg-emerald-300/10 ring-1 ring-emerald-300/50" : wrongOption ? "border-rose-400 bg-rose-400/10 ring-1 ring-rose-400/40" : active ? "border-cyan-300 bg-cyan-300/10 ring-1 ring-cyan-300/40" : "border-[#344a66] bg-[#111c2d] hover:border-cyan-300/60 hover:bg-[#17273c]";
+                    return (
+                      <button key={option.label} type="button" disabled={checked} onClick={() => setSelected(option.label)} className={`flex w-full items-start gap-3 border p-4 text-left transition ${style}`}>
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center border text-xs font-bold ${correctOption ? "border-emerald-300 bg-emerald-300 text-[#06131b]" : wrongOption ? "border-rose-300 bg-rose-300 text-[#21070b]" : active ? "border-cyan-300 bg-cyan-300 text-[#06131b]" : "border-[#425977] bg-[#0a1220] text-slate-200"}`}>{option.label}</span>
+                        <span className="pt-1 text-sm leading-6 text-slate-100">{option.text}</span>
+                        {correctOption && <CheckCircle2 className="ml-auto mt-1 h-5 w-5 shrink-0 text-emerald-300" />}
+                      </button>
+                    );
+                  })}
+                </div>
+                {checked && (
+                  <div aria-live="polite" className={`mt-5 border p-4 ${isCorrect ? "border-emerald-300/50 bg-emerald-300/[.08]" : "border-amber-300/50 bg-amber-300/[.07]"}`}>
+                    <p className={`font-bold ${isCorrect ? "text-emerald-200" : "text-amber-100"}`}>{isCorrect ? "Respuesta correcta: interpretación adecuada de la evidencia." : "Revisemos el razonamiento y el error conceptual."}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-200">{question.explanation}</p>
+                  </div>
+                )}
+                <div className="mt-6 flex flex-col gap-3 border-t border-[#293d56] pt-5 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-xs leading-5 text-slate-400">Justifica tu decisión con los datos del enunciado.</p>
+                  {!checked ? (
+                    <button type="button" disabled={!selected} onClick={checkAnswer} className="inline-flex min-h-11 items-center justify-center gap-2 border border-emerald-300 bg-[#65edb1] px-5 py-3 text-sm font-extrabold text-[#062218] shadow-[3px_3px_0_#1b7659] transition hover:bg-[#8af7c6] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none">Comprobar respuesta <ArrowRight className="h-4 w-4" /></button>
+                  ) : (
+                    <button type="button" onClick={nextQuestion} className="inline-flex min-h-11 items-center justify-center gap-2 border border-cyan-300/50 bg-[#172c43] px-5 py-3 text-sm font-bold text-cyan-100 shadow-[3px_3px_0_#07111d] transition hover:bg-[#203b57]">{questionIndex === questions.length - 1 ? "Ver resultado" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>
+                  )}
+                </div>
+                </div>
+              </section>
+            </div>
+          )}
+        </div>
+      )}
+
+      {finished && lost && (
+        <div
+          className="game-over-overlay fixed inset-x-0 bottom-0 top-[72px] z-40 flex items-center justify-center overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="game-over-title"
+        >
+          <div className="game-over-content relative z-10 flex w-full max-w-6xl flex-col items-center text-center">
+            <div aria-hidden="true" className="game-over-pixels pointer-events-none absolute inset-0" />
+            <div aria-hidden="true" className="game-over-crystal-glow pointer-events-none absolute inset-0" />
+            <div className="game-over-heading relative flex w-full flex-wrap items-center justify-center gap-x-1 sm:gap-x-3">
+              <h2 id="game-over-title" className="pixel-font game-over-title">GAME</h2>
+              <Image
+                src="/images/game-over/nova-dead-pixel.png"
+                alt="Cara pixel-art de Nova con los ojos en X"
+                width={160}
+                height={160}
+                priority
+                className="game-over-nova h-24 w-24 object-contain sm:h-36 sm:w-36 lg:h-40 lg:w-40"
+              />
+              <span className="pixel-font game-over-title">OVER</span>
+            </div>
+
+            <p className="pixel-font mt-3 text-xs tracking-[.08em] text-white sm:mt-5 sm:text-base">PLAY AGAIN?</p>
+            <p className="game-over-copy mt-4 max-w-3xl text-sm leading-8 text-white sm:text-lg">
+              No lograste responder correctamente todas las preguntas.
+            </p>
+            <p className="game-over-copy mt-2 text-sm font-medium text-white sm:text-lg">
+              Acertaste <strong className="text-cyan-300">{correctCount} de {questions.length}</strong> preguntas.
+            </p>
+            <p className="game-over-copy mt-3 max-w-3xl text-sm leading-7 text-slate-100 sm:text-base sm:leading-8">
+              Repasa las explicaciones y vuelve a intentarlo: cada error te muestra qué puedes dominar mejor.
+            </p>
+
+            <div className="mt-6 flex w-full max-w-xl flex-col items-center gap-2 sm:mt-8 sm:gap-3">
+              <button
+                type="button"
+                onClick={restartPractice}
+                autoFocus
+                className="game-over-choice game-over-choice-yes"
+              >
+                <span aria-hidden="true" className="game-over-cursor">▶</span>
+                <span>YES</span>
+                <span className="game-over-choice-detail">REPETIR PRÁCTICA</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStage("theory"); setFinished(false); setLost(false); setRewardOpen(false); }}
+                className="game-over-choice game-over-choice-no"
+              >
+                <span className="game-over-cursor game-over-cursor-hidden" aria-hidden="true">▶</span>
+                <span>NO</span>
+                <span className="game-over-choice-detail">REPASAR TEORÍA</span>
+              </button>
+            </div>
+            <p className="pixel-font mt-7 text-[9px] tracking-[.1em] text-white/75 sm:mt-9 sm:text-[11px]">PEAKSCORE · CONTINÚA LA AVENTURA</p>
+          </div>
+        </div>
+      )}
+      {stage === "practice" && !finished && (
+        <LessonAITutor
+          open={tutorOpen}
+          onOpenChange={setTutorOpen}
+          subject="Ciencias Naturales"
+          topic={`Los cristales misteriosos: pregunta ${questionIndex + 1} de ${questions.length}`}
+          stage="practice"
+          question={question.prompt}
+          context={`Situación: ${question.context}\nOpciones: ${question.options.map((option) => `${option.label}) ${option.text}`).join("\\n")}\nExplicación de la lección: ${question.explanation}`}
+        />
+      )}
+      <XpRewardAnimation open={rewardOpen && finished && !lost} xp={50} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); router.push("/aprender/santuario-de-la-materia/leccion/2"); }} />
+
+      {! (finished && lost) && <footer className="lesson-footer fixed inset-x-0 bottom-0 z-40 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
+        <div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="min-w-0">
+              <p className="pixel-font text-[8px] leading-5 text-slate-100">{stage === "theory" ? "LECCIÓN 1 / 13" : finished ? "NIVEL 1 · COMPLETADO" : `NIVEL 1 · PRÁCTICA ${questionIndex + 1}/${questions.length}`}</p>
+              <span className="mt-1 inline-flex items-center gap-1.5 border border-emerald-300/20 bg-emerald-300/[.08] px-2 py-0.5 text-[9px] font-bold text-emerald-200"><Image src="/peaky/homepage/xp.webp" alt="" width={17} height={17} className="object-contain" /> 50 XP</span>
+            </div>
+          </div>
+          {stage === "practice" && !finished && (
+            <button type="button" onClick={() => setTutorOpen((open) => !open)} aria-expanded={tutorOpen} aria-controls="orby-tutor-panel" className="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-md border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:min-h-10 sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>
+          )}
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            {stage === "theory" ? (
+              <>
+                <Link href="/aprender/santuario-de-la-materia" onClick={() => playSound("navigation.mp3", 0.16)} className="inline-flex min-h-9 items-center gap-2 border border-white/15 bg-[#26364a] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</Link>
+                <button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setStage("practice"); }} className="inline-flex min-h-9 items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[10px] font-extrabold text-[#09200a] shadow-[0_2px_0_#3a9a2b] transition hover:bg-[#8ced6d] active:translate-y-px active:shadow-none sm:min-h-10 sm:px-5 sm:text-xs">Siguiente <ArrowRight className="h-3.5 w-3.5" /></button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => { playSound("navigation.mp3", 0.16); setStage("theory"); }} className="inline-flex min-h-9 items-center gap-2 border border-white/10 bg-[#1a2235] px-3 py-2 text-[10px] font-semibold text-slate-200 transition hover:bg-[#252f46] sm:min-h-10 sm:px-4 sm:text-xs"><ArrowLeft className="h-3.5 w-3.5" /> Anterior</button>
+                {!finished && <span className="hidden items-center gap-1 text-[10px] text-slate-500 sm:inline-flex"><FlaskConical className="h-3.5 w-3.5" /> Razonamiento científico</span>}
+              </>
+            )}
+          </div>
+        </div>
+      </footer>}
+
+      <style jsx global>{`
+        .game-over-overlay {
+          position: fixed;
+          top: 72px;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 40;
+          min-height: calc(100dvh - 72px);
+          padding: clamp(1rem, 3vh, 2.5rem) clamp(1rem, 4vw, 3rem);
+          background:
+            linear-gradient(180deg, rgba(2, 5, 13, .32) 0%, rgba(2, 5, 13, .50) 48%, rgba(0, 0, 0, .78) 100%),
+            url("/images/game-over-bg.png") center center / cover no-repeat,
+            #020308 !important;
+          isolation: isolate;
+        }
+        .game-over-content { animation: game-over-enter 520ms cubic-bezier(.2,.8,.2,1) both; }
+        .game-over-pixels {
+          z-index: -2;
+          opacity: .28;
+          background-image:
+            radial-gradient(circle, rgba(255, 40, 74, .95) 0 2px, transparent 2.8px),
+            radial-gradient(circle, rgba(44, 187, 255, .8) 0 1.5px, transparent 2.4px),
+            linear-gradient(155deg, transparent 0 42%, rgba(125, 16, 43, .13) 42.2% 42.7%, transparent 43% 100%),
+            linear-gradient(25deg, transparent 0 56%, rgba(23, 83, 145, .14) 56.2% 56.7%, transparent 57% 100%);
+          background-size: 83px 91px, 127px 113px, 100% 100%, 100% 100%;
+          background-position: 8px 12px, 42px 57px, center, center;
+          mask-image: radial-gradient(ellipse at center, black 0%, rgba(0,0,0,.8) 58%, rgba(0,0,0,.18) 100%);
+          animation: game-over-pixel-drift 8s linear infinite;
+        }
+        .game-over-crystal-glow {
+          z-index: -1;
+          background:
+            linear-gradient(135deg, transparent 0 17%, rgba(255, 35, 70, .13) 17.2% 17.6%, transparent 18% 100%),
+            linear-gradient(45deg, transparent 0 78%, rgba(255, 35, 70, .15) 78.2% 78.6%, transparent 79% 100%),
+            radial-gradient(ellipse at 12% 72%, rgba(255, 20, 58, .23), transparent 28%),
+            radial-gradient(ellipse at 88% 72%, rgba(255, 20, 58, .24), transparent 29%),
+            radial-gradient(ellipse at 50% 12%, rgba(18, 113, 196, .14), transparent 35%);
+          filter: saturate(1.25);
+          animation: game-over-crystal-pulse 3.6s ease-in-out infinite;
+        }
+        .game-over-heading { display: flex; align-items: center; gap: .3rem; filter: drop-shadow(0 0 22px rgba(20,210,255,.2)); }
+        .game-over-title {
+          color: #f8fafc;
+          font-size: clamp(2.7rem, 9.8vw, 8rem);
+          line-height: 1.12;
+          letter-spacing: -.065em;
+          text-shadow: 5px 5px 0 #155e75, 9px 9px 0 #0b1220, 0 0 30px rgba(34,211,238,.32);
+        }
+        .game-over-nova {
+          image-rendering: pixelated;
+          filter: drop-shadow(0 0 20px rgba(132,204,22,.42));
+          animation: game-over-nova-idle 2.2s steps(2, end) infinite;
+        }
+        .game-over-choice {
+          position: relative;
+          display: flex;
+          width: 100%;
+          min-height: 42px;
+          align-items: center;
+          justify-content: center;
+          gap: .65rem;
+          padding: .7rem .9rem;
+          color: #e2e8f0;
+          background: transparent;
+          border: 0;
+          font-family: var(--font-press-start), "Press Start 2P", monospace;
+          font-size: 10px;
+          letter-spacing: .04em;
+          text-align: center;
+          transition: color 140ms ease, transform 140ms ease, text-shadow 140ms ease;
+        }
+        .game-over-choice:hover, .game-over-choice:focus-visible { color: #a5f3fc; transform: translateX(3px); outline: none; text-shadow: 0 0 14px rgba(34,211,238,.4); }
+        .game-over-choice-yes { color: #a5f3fc; }
+        .game-over-cursor { color: #22d3ee; font-size: 11px; }
+        .game-over-cursor-hidden { opacity: 0; }
+        .game-over-choice-detail { margin-left: .2rem; color: #94a3b8; font-family: Arial, Helvetica, sans-serif; font-size: clamp(13px, 1.1vw, 16px); font-weight: 700; letter-spacing: .02em; }
+        .game-over-choice:hover .game-over-choice-detail, .game-over-choice:focus-visible .game-over-choice-detail { color: #e2e8f0; }
+        .game-over-copy { font-family: var(--font-press-start), "Press Start 2P", monospace !important; font-size: clamp(9px, 1vw, 13px) !important; line-height: 2.15 !important; text-shadow: 0 2px 8px rgba(0,0,0,.95); }
+        .game-over-choice-detail { text-shadow: 0 2px 6px rgba(0,0,0,.95); }
+        @keyframes game-over-enter { from { opacity: 0; transform: translateY(10px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes game-over-pixel-drift { from { background-position: 8px 12px, 42px 57px, center, center; } to { background-position: 91px 103px, -85px 170px, center, center; } }
+        @keyframes game-over-crystal-pulse { 0%, 100% { opacity: .72; transform: scale(1); } 50% { opacity: 1; transform: scale(1.025); } }
+        @keyframes game-over-nova-idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        @media (max-width: 640px) {
+          .game-over-title { letter-spacing: -.075em; font-size: clamp(2.2rem, 10.5vw, 4.8rem); }
+          .game-over-content { padding-top: 1rem; padding-bottom: 1rem; }
+          .game-over-heading { gap: .05rem; }
+          .game-over-choice { min-height: 62px; font-size: 12px; flex-wrap: wrap; }
+          .game-over-choice-detail { flex-basis: 100%; margin-left: 0; font-size: 13px; }
+        }
+        @media (prefers-reduced-motion: reduce) { .game-over-content, .game-over-pixels, .game-over-nova { animation: none !important; } }
+        .lesson-shell { font-family: Arial, Helvetica, sans-serif; }
+        .lesson-shell .pixel-font { font-family: var(--font-press-start), "Press Start 2P", monospace; }
+        .lesson-shell .lesson-reading p, .lesson-shell .lesson-reading li { font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.8; }
+        .lesson-shell .lesson-reading h2, .lesson-shell .lesson-reading h3 { font-family: Arial, Helvetica, sans-serif; font-size: 18px; line-height: 1.45; }
+        .lesson-shell textarea { font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.7; }
+        .lesson-pixel-mark { display: inline-flex; width: 29px; height: 29px; align-items: center; justify-content: center; border: 1px solid rgba(103,232,249,.6); color: #a5f3fc; font-family: var(--font-press-start), monospace; font-size: 11px; box-shadow: 3px 3px 0 #103345; }
+        .lesson-reading { padding-bottom: 112px; }
+        @media (max-width: 640px) {
+          .lesson-footer .text-xs { font-size: 10px; }
+          .lesson-footer .min-h-10 { min-height: 38px; }
+        }
+      `}</style>
+    </main>
+  );
+}

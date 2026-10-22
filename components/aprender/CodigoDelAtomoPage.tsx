@@ -39,8 +39,6 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
    try {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError) throw authError;
-    const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url,storage_path").eq("asset_key", assetKey).maybeSingle();
-    if (assetError) throw assetError;
     let admin = false;
     if (user) {
      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
@@ -49,8 +47,16 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
     }
     if (!active) return;
     setIsAdmin(admin);
-    if (asset?.public_url) setPreview(asset.public_url);
-    if (asset?.storage_path) setStoragePath(asset.storage_path);
+    // Load media independently so a missing row or a media-table permission
+    // error cannot suppress the administrator's upload controls.
+    try {
+     const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url,storage_path").eq("asset_key", assetKey).maybeSingle();
+     if (assetError) throw assetError;
+     if (asset?.public_url) setPreview(asset.public_url);
+     if (asset?.storage_path) setStoragePath(asset.storage_path);
+    } catch (mediaError) {
+     if (active) setError(mediaError instanceof Error ? mediaError.message : "No se pudo cargar la imagen compartida.");
+    }
    } catch (e) {
     if (active) setError(e instanceof Error ? e.message : "No se pudo cargar la imagen guardada. Verifica la configuración de Supabase.");
    } finally {

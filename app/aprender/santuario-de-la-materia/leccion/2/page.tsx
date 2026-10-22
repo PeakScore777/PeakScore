@@ -210,7 +210,7 @@ function ImageUploadSlot({ assetKey, title, description, compact=false, large=fa
 
  const picker = <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e=>{void uploadSelectedFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}} />;
 
- return <div className={"relative flex " + (large ? "min-h-[680px] sm:min-h-[780px] xl:min-h-[900px]" : compact ? "min-h-[144px]" : "min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
+ return <div className={"relative flex " + (large ? (imageUrl ? "min-h-0" : "min-h-[260px]") : compact ? "min-h-[144px]" : "min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
   {picker}
   {imageUrl ? (
    isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
@@ -385,8 +385,8 @@ export default function CuandoLaMateriaCambiaPage() {
 
               <section id="energia-cambios" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-6 lg:col-span-2">
                 <h2 className="text-xl font-bold text-cyan-200 sm:text-2xl">6. Temperatura, energía y cambios de estado</h2>
-                <div className="mt-5 grid items-start gap-6 lg:grid-cols-[minmax(0,0.78fr)_minmax(0,1.22fr)] xl:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
-                  <div className="space-y-4 text-sm leading-7 text-slate-300 sm:text-base">
+                <div className="mt-5 space-y-6">
+                  <div className="space-y-4 text-sm leading-7 text-slate-300 sm:text-base sm:leading-8">
                     <p><strong className="text-cyan-100">Temperatura y energía térmica no son sinónimos.</strong> La temperatura se relaciona con la energía cinética media de las partículas; el calor es energía que se transfiere entre sistemas por una diferencia de temperatura. Un objeto no «contiene calor»: puede almacenar energía interna y transferir energía como calor.</p>
                     <p><strong className="text-cyan-100">¿Qué ocurre al calentar una sustancia?</strong> Si permanece en una sola fase, la energía transferida suele aumentar la energía cinética media de sus partículas y la temperatura sube. En un cambio de estado, parte importante de esa energía se emplea en modificar la separación y las interacciones entre partículas; por eso, para una sustancia pura a presión constante, la temperatura puede mantenerse casi estable mientras coexisten dos fases.</p>
                     <p><strong className="text-cyan-100">Cómo leer la curva.</strong> Los tramos inclinados indican calentamiento dentro de una fase. Las mesetas suelen indicar fusión o vaporización: durante ese intervalo pueden coexistir sólido y líquido, o líquido y gas. Al terminar el cambio de fase, la temperatura vuelve a aumentar si se sigue suministrando energía. La longitud de cada tramo depende, entre otros factores, de la masa, la potencia de calentamiento y las propiedades de la sustancia.</p>
@@ -395,7 +395,7 @@ export default function CuandoLaMateriaCambiaPage() {
                     <p><strong className="text-cyan-100">Energía en los cálculos.</strong> Si no hay cambio de fase y el calor específico puede considerarse constante, se estima la energía con <span className="whitespace-nowrap text-white">Q = m · c · ΔT</span>. Durante un cambio de fase, se usa <span className="whitespace-nowrap text-white">Q = m · L</span>, donde <em>m</em> es la masa, <em>c</em> el calor específico, ΔT el cambio de temperatura y <em>L</em> el calor latente específico. No deben aplicarse como si describieran el mismo proceso: primero identifica si la temperatura cambia o si la muestra está cambiando de fase.</p>
                     <p><strong className="text-cyan-100">Lectura crítica de evidencia.</strong> Una meseta es evidencia compatible con un cambio de estado, pero no basta por sí sola para demostrarlo: revisa si la presión se mantuvo, si la sustancia era suficientemente pura, si el sensor funcionó correctamente y si hay más observaciones que respalden la conclusión. En una pregunta tipo Saber 11, distingue siempre lo que los datos muestran de lo que solo se está suponiendo.</p>
                   </div>
-                  <div className="min-w-0 w-full self-stretch">
+                  <div className="w-full min-w-0">
                     <ImageUploadSlot assetKey="lesson-2-energy-heating-curve" title="curva de calentamiento" description="Curva de calentamiento con tramos de sólido, fusión, líquido, vaporización y gas" large />
                   </div>
                 </div>

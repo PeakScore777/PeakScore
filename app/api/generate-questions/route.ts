@@ -6959,8 +6959,6 @@ async function generateBlock(
           existingBankQuestions
         ),
 
-        task: "question_generation",
-
         useFallback: true,
       });
 

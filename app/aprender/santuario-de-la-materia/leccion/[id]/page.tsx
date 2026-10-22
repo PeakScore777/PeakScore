@@ -668,6 +668,7 @@ function LegacyCristalesMisteriososPage() {
 
 export default function LessonRoutePage() {
   const params = useParams<{ id: string }>();
+  if (params.id === "1") return <CristalesMisteriososPage />;
   if (params.id === "4") return <CodigoDelAtomoPage />;
   return <LegacyCristalesMisteriososPage />;
 }

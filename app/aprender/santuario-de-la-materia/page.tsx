@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import {
   ArrowLeft, ArrowRight, ChevronDown, ChevronRight,
-  Grid2X2, LockKeyhole,
+  LockKeyhole,
 } from "lucide-react";
 
 type Lesson = {
@@ -168,7 +168,6 @@ const totalLessons = chapters.filter((chapter) => chapter.available).reduce((sum
 
 export default function SantuarioDeLaMateriaPage() {
   const [expanded, setExpanded] = useState<string[]>(["01"]);
-  const [detailedView, setDetailedView] = useState(true);
 
   const toggle = (id: string) => {
     setExpanded((current) =>
@@ -255,14 +254,6 @@ export default function SantuarioDeLaMateriaPage() {
               <h2 className="mt-2 text-[clamp(1rem,1.7vw,1.5rem)] font-normal leading-[1.8] tracking-normal">Capítulos y lecciones</h2>
               <p className="mt-2 max-w-3xl text-[9px] leading-[2.1] text-slate-300/75">Avanza paso a paso: primero observa, luego comprende y finalmente demuestra lo que aprendiste con retos de razonamiento tipo ICFES.</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setDetailedView((value) => !value)}
-              className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-white/10 bg-white/[.025] px-3 py-2 text-xs font-semibold text-slate-300 transition hover:border-violet-200/30 hover:text-white sm:self-auto"
-              aria-pressed={detailedView}
-            >
-              <Grid2X2 className="h-4 w-4" /> {detailedView ? "Vista detallada" : "Vista compacta"}
-            </button>
           </div>
 
           <div className="space-y-3">

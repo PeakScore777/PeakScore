@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+
 type Props = {
   result: boolean | null;
   sequence: number;
@@ -62,6 +64,31 @@ export default function ChapterFiveBattle({
 }: Props) {
   const playing = result !== null;
   const novaAttacks = result === true;
+
+  // La animación dura 1 s a 8 FPS: el golpe se lanza al iniciar el sprite,
+  // se recorta a 250 ms y el sonido de daño entra al llegar al frame de impacto.
+  useEffect(() => {
+    if (result === null) return;
+    let hurtTimer: ReturnType<typeof setTimeout> | undefined;
+    const attackAudio = new Audio("/sounds/chapter-5-attack.mp3");
+    attackAudio.volume = 0.30;
+    void attackAudio.play().catch(() => {});
+    const attackCutoff = window.setTimeout(() => {
+      attackAudio.pause();
+      attackAudio.currentTime = 0;
+    }, 250);
+    hurtTimer = window.setTimeout(() => {
+      const hurtAudio = new Audio("/sounds/chapter-5-hurt.wav");
+      hurtAudio.volume = 0.34;
+      void hurtAudio.play().catch(() => {});
+    }, 250);
+    return () => {
+      window.clearTimeout(attackCutoff);
+      if (hurtTimer !== undefined) window.clearTimeout(hurtTimer);
+      attackAudio.pause();
+      attackAudio.currentTime = 0;
+    };
+  }, [result, sequence]);
   const attempts = Math.min(totalQuestions, questionIndex + (checked ? 1 : 0));
   const novaHealth = Math.max(0, totalQuestions - (attempts - score));
   const guardianHealth = Math.max(0, totalQuestions - score);

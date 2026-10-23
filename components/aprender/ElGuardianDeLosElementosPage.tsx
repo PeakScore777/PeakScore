@@ -223,13 +223,6 @@ export default function ElGuardianDeLosElementosPage() {
   setChecked(true);
   setBattleResult(correct);
   setBattleSequence(value => value + 1);
-  // Ataque y, al terminar, el sonido de impacto/daño recibido.
-  const attackAudio = sound("chapter-5-attack.mp3", 0.34);
-  attackAudio.addEventListener("ended", () => {
-   const hurtAudio = new Audio("/sounds/chapter-5-hurt.wav");
-   hurtAudio.volume = 0.38;
-   void hurtAudio.play().catch(() => {});
-  }, { once: true });
   if (correct) setScore(value => value + 1);
  }
  function nextQuestion() {

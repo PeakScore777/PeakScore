@@ -74,6 +74,11 @@ const LEARN_ITEMS: NavigationItem[] = [
     label: "Niveles",
     description: "Avanza por los mundos de PeakScore.",
   },
+  {
+    href: "/aprender/juegos",
+    label: "Juegos",
+    description: "Aprende jugando y resuelve desafíos.",
+  },
 ];
 
 const COMMUNITY_ITEMS: NavigationItem[] = [
@@ -1126,10 +1131,19 @@ export default function GlobalNavbar({
               <MobileNavLink
                 href="/aprender"
                 dark={isDark}
-                active={isActivePath(pathname, "/aprender")}
+                active={pathname === "/aprender"}
                 onClick={closeMenus}
               >
                 Aprende · Niveles
+              </MobileNavLink>
+
+              <MobileNavLink
+                href="/aprender/juegos"
+                dark={isDark}
+                active={isActivePath(pathname, "/aprender/juegos")}
+                onClick={closeMenus}
+              >
+                Juegos
               </MobileNavLink>
 
               <button

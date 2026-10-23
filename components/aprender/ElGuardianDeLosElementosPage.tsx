@@ -1,0 +1,289 @@
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
+import { ArrowLeft, ArrowRight, CheckCircle2, Plus } from "lucide-react";
+import LessonAITutor from "@/components/aprender/LessonAITutor";
+import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
+
+const questions = [
+ { competency:"Uso comprensivo del conocimiento científico", context:"Una muestra de NaCl no conduce corriente en estado sólido. Después de disolverla en agua, la solución sí conduce. Se verifica que la sustancia no se descompuso durante el procedimiento.", prompt:"¿Cuál modelo explica mejor la diferencia de conductividad?", key:"B", options:[["A","Al disolverse, el NaCl se convierte en una sustancia metálica con electrones libres."],["B","En la solución existen iones con movilidad suficiente para transportar carga; en el sólido, los iones permanecen en posiciones de red."],["C","El agua crea protones nuevos y por eso toda disolución conduce perfectamente."],["D","La solución conduce porque la masa del NaCl aumenta al mezclarlo con agua."]], explanation:"La evidencia compara dos estados de la misma sustancia. En el sólido iónico, los iones están ordenados y no se desplazan libremente. Al disolverse, si se separan en iones móviles, pueden transportar carga. El dato respalda el modelo de movilidad iónica; no implica que el compuesto se transforme en metal." },
+ { competency:"Uso comprensivo del conocimiento científico", context:"Un metal alcalinotérreo M forma el ion M²⁺. El cloro forma iones Cl⁻ en el modelo del compuesto iónico.", prompt:"¿Qué fórmula neutra se espera para el compuesto formado entre M²⁺ y Cl⁻?", key:"D", options:[["A","MCl"],["B","M₂Cl"],["C","MCl₃"],["D","MCl₂"]], explanation:"La carga total debe ser cero. Un ion M²⁺ aporta +2 y cada Cl⁻ aporta −1. Se necesitan dos iones cloruro para compensar +2: (+2) + 2(−1) = 0. La proporción mínima es 1:2, por tanto MCl₂." },
+ { competency:"Explicación de fenómenos", context:"Una sustancia molecular tiene enlaces polares, pero su estructura es lineal y simétrica. Los dipolos de sus enlaces tienen igual magnitud y apuntan en sentidos opuestos.", prompt:"¿Qué conclusión sobre la polaridad molecular es la más adecuada?", key:"A", options:[["A","La molécula puede ser apolar si los dipolos de enlace se cancelan por la geometría."],["B","Toda molécula con enlaces polares debe ser polar."],["C","La molécula es iónica porque los dipolos se cancelan."],["D","La geometría no influye en la polaridad de una molécula."]], explanation:"La polaridad molecular depende tanto de los enlaces como de la geometría tridimensional. En una molécula lineal simétrica, dos dipolos iguales y opuestos se cancelan y el momento dipolar neto puede ser cero. La polaridad de cada enlace no determina por sí sola la polaridad total." }
+] as const;
+
+const retryQuestions = [
+ { competency:"Uso comprensivo del conocimiento científico", context:"El oxígeno tiene Z = 8. En un átomo neutro, su configuración es 1s² 2s² 2p⁴; cada átomo de hidrógeno aporta un electrón de valencia.", prompt:"¿Cuántos electrones de valencia se cuentan en una molécula neutra de H₂O?", key:"C", options:[["A","6, porque solo se cuentan los electrones del oxígeno."],["B","7, porque se suman los dos hidrógenos una sola vez."],["C","8, porque el oxígeno aporta 6 y cada hidrógeno aporta 1."],["D","10, porque los electrones internos del oxígeno también se cuentan como electrones de valencia."]], explanation:"El oxígeno aporta 6 electrones de valencia y los dos hidrógenos aportan 1 cada uno: 6 + 1 + 1 = 8. No se cuentan los electrones internos del oxígeno al construir la estructura de Lewis." },
+ { competency:"Explicación de fenómenos", context:"Una lámina de cobre conduce electricidad y puede deformarse sin romperse con facilidad. Un modelo representa electrones de valencia deslocalizados en la estructura.", prompt:"¿Qué propiedad se explica de manera más directa con la movilidad de esos electrones?", key:"A", options:[["A","La conductividad eléctrica del metal."],["B","La neutralidad de una fórmula formada por cationes y aniones."],["C","La presencia de moléculas discretas de cobre separadas entre sí."],["D","La imposibilidad de que los átomos se reorganicen bajo una fuerza."]], explanation:"En el modelo metálico, electrones deslocalizados pueden responder al campo eléctrico y transportar carga, lo que explica directamente la conductividad. La maleabilidad también se relaciona con la estructura metálica y la reorganización de capas, pero la observación eléctrica corresponde de forma más directa a la movilidad electrónica." },
+ { competency:"Uso comprensivo del conocimiento científico", context:"El aluminio forma Al³⁺ y el oxígeno forma O²⁻. Se busca la fórmula neutra en la proporción entera más simple.", prompt:"¿Cuál fórmula satisface la neutralidad de carga?", key:"B", options:[["A","AlO, porque un átomo de cada elemento es suficiente."],["B","Al₂O₃, porque 2(+3) + 3(−2) = 0."],["C","Al₃O₂, porque tres cargas positivas compensan dos negativas."],["D","AlO₂, porque el subíndice 2 neutraliza la carga +3."]], explanation:"Dos iones Al³⁺ aportan +6 y tres iones O²⁻ aportan −6. La suma es cero y los subíndices 2:3 forman la proporción entera más simple. La fórmula se construye equilibrando las cargas, no copiando el valor absoluto de una sola carga." }
+] as const;
+
+
+function ImageUploadSlot({ assetKey, title, description, compact=false }: { assetKey:string; title:string; description:string; compact?:boolean }) {
+ const [imageUrl,setImageUrl] = useState<string|null>(null);
+ const [isAdmin,setIsAdmin] = useState(false);
+ const [loading,setLoading] = useState(true);
+ const [saving,setSaving] = useState(false);
+ const [error,setError] = useState<string|null>(null);
+ const [notice,setNotice] = useState<string|null>(null);
+ const fileInputRef = useRef<HTMLInputElement|null>(null);
+
+ useEffect(() => {
+  let active = true;
+  async function loadAsset() {
+   try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    let admin = false;
+    if (user) {
+     const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+     if (profileError) throw profileError;
+     admin = profile?.role === "admin";
+    }
+    if (active) setIsAdmin(admin);
+   } catch (e) {
+    if (active) setError(e instanceof Error ? e.message : "No se pudo verificar la sesión.");
+   }
+   try {
+    const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url").eq("asset_key", assetKey).maybeSingle();
+    if (assetError) throw assetError;
+    if (active && asset?.public_url) setImageUrl(asset.public_url);
+   } catch (e) {
+    if (active) setError(e instanceof Error ? e.message : "No se pudo cargar la imagen compartida.");
+   } finally {
+    if (active) setLoading(false);
+   }
+  }
+  void loadAsset();
+  return () => { active = false; };
+ }, [assetKey]);
+
+ async function uploadSelectedFile(file?: File) {
+  if (!file || saving) return;
+  setError(null);
+  setNotice(null);
+  if (!isAdmin) { setError("Solo el administrador puede cambiar las imágenes."); return; }
+  if (!["image/png","image/jpeg","image/webp","image/gif"].includes(file.type)) {
+   setError("Formato no válido. Usa PNG, JPG, WebP o GIF."); return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+   setError("La imagen debe pesar máximo 8 MB."); return;
+  }
+
+  setSaving(true);
+  let uploadedPath: string | null = null;
+  try {
+   const { data: { user }, error: authError } = await supabase.auth.getUser();
+   if (authError) throw authError;
+   if (!user) throw new Error("Inicia sesión con la cuenta administradora.");
+   const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+   if (profileError) throw profileError;
+   if (profile?.role !== "admin") throw new Error("Solo el administrador puede gestionar estas imágenes.");
+
+   const previousUrl = imageUrl;
+   const { data: previousAsset, error: previousAssetError } = await supabase.from("lesson_media_assets").select("storage_path").eq("asset_key", assetKey).maybeSingle();
+   if (previousAssetError) throw previousAssetError;
+
+   const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+   const safeExtension = /^[a-z0-9]{1,8}$/.test(extension) ? extension : "png";
+   const path = assetKey + "/" + crypto.randomUUID() + "." + safeExtension;
+   const { error: uploadError } = await supabase.storage.from("lesson-atom-media").upload(path, file, {
+    upsert:false, contentType:file.type, cacheControl:"3600"
+   });
+   if (uploadError) throw new Error("No se pudo subir a Supabase Storage: " + uploadError.message);
+   uploadedPath = path;
+   const { data: urlData } = supabase.storage.from("lesson-atom-media").getPublicUrl(path);
+
+   const { error: saveError } = await supabase.from("lesson_media_assets").upsert({
+    asset_key:assetKey,
+    public_url:urlData.publicUrl,
+    storage_path:path,
+    updated_by:user.id,
+    updated_at:new Date().toISOString()
+   }, { onConflict:"asset_key" });
+   if (saveError) throw new Error("El archivo se subió, pero no se pudo guardar en la base de datos: " + saveError.message);
+
+   setImageUrl(urlData.publicUrl);
+   setNotice("Imagen guardada automáticamente y publicada para todos los usuarios.");
+   uploadedPath = null;
+
+   const previousPath = previousAsset?.storage_path;
+   if (previousPath && previousPath !== path) {
+    const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([previousPath]);
+    if (cleanupError) console.warn("La imagen anterior requiere limpieza:", cleanupError.message);
+   }
+   void previousUrl;
+  } catch (e) {
+   if (uploadedPath) {
+    const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([uploadedPath]);
+    if (cleanupError) console.warn("No se pudo limpiar la subida incompleta:", cleanupError.message);
+   }
+   setError(e instanceof Error ? e.message : "No se pudo guardar la imagen. Revisa las políticas de Supabase.");
+  } finally {
+   setSaving(false);
+  }
+ }
+
+ const picker = <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e=>{void uploadSelectedFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}} />;
+
+ return <div className={"relative flex " + (compact?"min-h-[144px]":"min-h-[260px]") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
+  {picker}
+  {imageUrl ? (
+   isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
+    <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-36":"max-h-[520px]")}/>
+    {saving && <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100">Guardando imagen…</span>}
+   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-32":"max-h-[340px]")}/>
+  ) : isAdmin ? (
+   <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4 text-cyan-100 transition hover:bg-cyan-400/[0.03] disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
+    {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}
+    <span className="text-[10px] text-cyan-200">{saving?"Guardando automáticamente en Supabase": "Solo admin · pulsa para subir"}</span>
+   </button>
+  ) : (
+   <div className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4">
+    <span className="pixel-font text-[9px] text-cyan-100">{loading?"CARGANDO IMAGEN":"IMAGEN EN PREPARACIÓN"}</span>
+   </div>
+  )}
+  {saving && imageUrl && <span className="text-[10px] font-bold text-cyan-200">Guardando automáticamente en Supabase…</span>}
+  {notice && <p role="status" className="text-[10px] text-emerald-300">{notice}</p>}
+  {error && <p role="alert" className="max-w-full break-words text-[10px] text-rose-300">{error}</p>}
+ </div>;
+}
+
+
+export default function ElGuardianDeLosElementosPage() {
+ const [view,setView] = useState<"theory"|"examples"|"practice">("theory");
+ const [index,setIndex] = useState(0);
+ const [attempt,setAttempt] = useState(0);
+ const activeQuestions = attempt === 0 ? questions : retryQuestions;
+ const [choice,setChoice] = useState<string|null>(null);
+ const [checked,setChecked] = useState(false);
+ const [score,setScore] = useState(0);
+ const [done,setDone] = useState(false);
+ const [tutorOpen,setTutorOpen] = useState(false);
+ const [rewardOpen,setRewardOpen] = useState(false);
+ const q = activeQuestions[index];
+ const correct = choice === q.key;
+
+ useEffect(() => {
+  const hash = window.location.hash.slice(1);
+  if (hash === "ejemplos") setView("examples");
+  if (hash === "desafio") setView("practice");
+  if (hash && hash !== "ejemplos" && hash !== "desafio") window.requestAnimationFrame(() => window.requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({behavior:"smooth",block:"start"})));
+ }, []);
+
+ function sound(file:"navigation.mp3"|"level-win.mp3"|"game-over.wav",volume=0.22) {
+  const audio = new Audio("/sounds/"+file);
+  audio.volume = volume;
+  void audio.play().catch(()=>{});
+ }
+ function showTheory() {
+  setView("theory"); setDone(false); setRewardOpen(false); setTutorOpen(false);
+  window.scrollTo({top:0,behavior:"smooth"});
+ }
+ function startPractice() {
+  setAttempt(0); setIndex(0); setChoice(null); setChecked(false); setScore(0);
+  setDone(false); setRewardOpen(false); setTutorOpen(false); setView("practice");
+  window.scrollTo({top:0,behavior:"smooth"});
+ }
+ function restartPractice() {
+  setAttempt(value => value === 0 ? 1 : 0); setIndex(0); setChoice(null); setChecked(false);
+  setScore(0); setDone(false); setRewardOpen(false); setTutorOpen(false);
+ }
+ function checkAnswer() {
+  if (!choice || checked) return;
+  setChecked(true);
+  if (correct) setScore(value => value + 1);
+ }
+ function nextQuestion() {
+  if (index < activeQuestions.length-1) {
+   sound("navigation.mp3",0.16); setIndex(value=>value+1); setChoice(null); setChecked(false); setTutorOpen(false); return;
+  }
+  setDone(true);
+  if (score === activeQuestions.length) { setRewardOpen(true); sound("level-win.mp3",0.25); }
+  else sound("game-over.wav",0.3);
+ }
+
+ return <main className="min-h-screen bg-[#05070b] text-[#f0f4fa]">
+  {view === "theory" ? (
+   <div className="min-w-0 pb-24">
+    <header className="sticky top-0 z-30 flex min-h-[56px] items-center justify-between gap-3 border-b border-[#20334b] bg-[#070d17]/95 px-4 backdrop-blur sm:px-6">
+     <div className="flex min-w-0 items-center gap-3 text-xs text-slate-300"><Link href="/aprender/santuario-de-la-materia" className="transition hover:text-white">Santuario de la Materia</Link><span>›</span><strong className="text-cyan-200">Capítulo 05</strong></div>
+     <span className="pixel-font text-[8px] text-cyan-200 sm:text-[9px]">NIVEL 5 · QUÍMICA</span>
+    </header>
+    <div className="mx-auto grid max-w-[1600px] gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_316px]">
+     <div className="min-w-0">
+      <section className="relative grid gap-4 overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(250px,.7fr)] lg:items-center" style={{backgroundImage:"linear-gradient(90deg,rgba(3,9,20,.96),rgba(3,9,20,.82) 55%,rgba(3,9,20,.35)),url('/images/aprender/santuario/guardian-elementos.png')",backgroundSize:"cover",backgroundPosition:"center"}}>
+       <div className="relative z-10 max-w-3xl"><span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 05 · QUÍMICA</span><h1 className="pixel-font mt-4 text-2xl leading-relaxed text-white sm:text-3xl">El guardián de los elementos</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-slate-100">Los elementos ya tienen identidad. Ahora descubre cómo se unen, por qué forman compuestos y cómo la estructura del enlace explica propiedades que puedes medir.</p><p className="mt-3 text-xs leading-6 text-cyan-100/85">Ruta de aprendizaje: electrones de valencia → tipo de enlace → estructura → propiedades → evidencia experimental.</p></div>
+       <div className="relative z-10 rounded-lg border border-cyan-300/20 bg-[#06101d]/75 p-3 backdrop-blur-sm"><p className="pixel-font mb-2 text-center text-[8px] text-cyan-100">ILUSTRACIÓN DEL CAPÍTULO</p><ImageUploadSlot assetKey="santuario/guardian-elementos/encabezado" title="encabezado del capítulo 5" description="Ilustración de los enlaces químicos y los elementos del Santuario." compact /></div>
+      </section>
+      <nav aria-label="Secciones del capítulo" className="mt-2 grid grid-cols-4 rounded-xl border border-[#21405e] bg-[#071321] p-1 text-center text-[10px] sm:text-sm">
+       <button type="button" onClick={showTheory} className="rounded-lg border border-cyan-300 bg-cyan-500/30 px-2 py-3 font-bold text-white">Teoría</button>
+       <button type="button" onClick={()=>{setView("examples");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-lg px-2 py-3 text-slate-300 transition hover:bg-white/[.04] hover:text-white">Ejemplos</button>
+       <button type="button" onClick={()=>document.getElementById("puntos-clave")?.scrollIntoView({behavior:"smooth",block:"start"})} className="rounded-lg px-2 py-3 text-slate-300 transition hover:bg-white/[.04] hover:text-white">Puntos clave</button>
+       <button type="button" onClick={startPractice} className="rounded-lg px-2 py-3 text-slate-300 transition hover:bg-white/[.04] hover:text-white">Ejercicios</button>
+      </nav>
+      <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1fr)_300px]">
+       <div className="min-w-0 space-y-3">
+        <section className="overflow-hidden rounded-xl border border-[#21405e] bg-[#0b101b]"><div className="bg-[#131824] px-4 py-3 text-sm font-semibold text-slate-100">Historia: el juramento de los elementos</div><div className="space-y-4 px-5 py-5 text-sm leading-7 text-slate-300"><p>En la cámara central, Nova encuentra tres objetos: una pieza metálica que conduce electricidad, un cristal frágil y una sal que solo conduce cuando está disuelta o fundida. Sus apariencias son distintas, pero los registros muestran que están formados por átomos unidos de maneras diferentes.</p><p>La pista decisiva no es el color ni el tamaño. Nova compara qué electrones participan, qué fuerzas mantienen unidos los átomos o iones y cómo esas interacciones explican la dureza, la conductividad, la fragilidad o la temperatura de fusión.</p><div className="border-l-2 border-cyan-300 bg-cyan-300/[.05] p-4 text-cyan-100"><strong>Tu misión:</strong> explicar el tipo de enlace con un modelo, predecir una propiedad y justificar la predicción con evidencia, sin convertir una tendencia general en una regla absoluta.</div></div></section>
+
+        <section id="enlaces-quimicos" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5">
+         <h2 className="pixel-font text-sm leading-7 text-cyan-100">1. ¿Por qué se unen los átomos?</h2><p className="mt-3 text-sm leading-7 text-slate-300">Un <strong className="text-white">enlace químico</strong> es una interacción que mantiene unidos átomos o iones. En los modelos introductorios, su formación se entiende a partir de las atracciones y repulsiones eléctricas entre núcleos y electrones. La distribución de los electrones de valencia suele ser clave para explicar qué tipo de unión se forma y qué estructura resulta.</p><p className="mt-3 text-sm leading-7 text-slate-300">Formar un enlace no significa que cada átomo siempre complete un octeto. La regla del octeto es una guía útil para muchos elementos representativos, pero existen moléculas con octeto incompleto, electrones impares u octeto expandido en los modelos habituales. La explicación debe ser coherente con la especie y con la evidencia disponible.</p><div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,.65fr)] lg:items-center"><div className="rounded-lg border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Antes de clasificar un enlace</h3><ol className="mt-2 list-decimal space-y-2 pl-5 text-sm leading-6 text-slate-300"><li>Identifica los elementos y sus electrones de valencia.</li><li>Determina si el modelo describe transferencia, electrones compartidos o electrones deslocalizados.</li><li>Relaciona la estructura con propiedades medidas, como conductividad o fragilidad.</li></ol></div><ImageUploadSlot assetKey="santuario/guardian-elementos/enlaces-quimicos" title="enlace químico" description="Modelo visual de átomos unidos por interacciones químicas." compact /></div>
+        </section>
+
+        <section id="enlace-ionico" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="pixel-font text-sm leading-7 text-cyan-100">2. Enlace iónico: atracción entre iones</h2><div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(230px,.55fr)] lg:items-center"><div className="space-y-3 text-sm leading-7 text-slate-300"><p>En el modelo iónico, un átomo transfiere uno o más electrones a otro; se forman cationes positivos y aniones negativos. La atracción electrostática entre cargas opuestas organiza muchos iones en una red cristalina. El compuesto global debe ser eléctricamente neutro.</p><p>El cloruro de sodio se representa como NaCl: Na pierde un electrón y se modela como Na⁺; Cl lo gana y se modela como Cl⁻. En un sólido iónico los iones ocupan posiciones de red y no se desplazan libremente, por lo que el sólido normalmente no conduce corriente. Fundido o disuelto, los iones sí pueden moverse y transportar carga.</p><div className="border-l-2 border-amber-300 bg-amber-300/[.05] p-3 text-amber-100"><strong>Importante:</strong> la fórmula NaCl representa una proporción 1:1 en la red, no una molécula covalente aislada.</div></div><ImageUploadSlot assetKey="santuario/guardian-elementos/enlace-ionico" title="enlace iónico" description="Transferencia electrónica y red de iones." /></div><div className="mt-3 grid gap-3 sm:grid-cols-3"><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Sólido</h3><p className="mt-1 text-xs leading-5 text-slate-300">Los iones tienen movilidad insuficiente para conducir en condiciones comunes.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Fundido</h3><p className="mt-1 text-xs leading-5 text-slate-300">La red se desorganiza y los iones pueden desplazarse.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Disuelto</h3><p className="mt-1 text-xs leading-5 text-slate-300">Si se separa en iones móviles, la solución puede conducir.</p></div></div></section>
+
+        <section id="enlace-covalente" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="pixel-font text-sm leading-7 text-cyan-100">3. Enlace covalente: compartir pares electrónicos</h2><p className="mt-3 text-sm leading-7 text-slate-300">Un enlace covalente se representa cuando dos átomos comparten uno o más pares de electrones. Un enlace sencillo corresponde a un par compartido; uno doble, a dos pares; uno triple, a tres pares en el modelo de Lewis. Puede formar moléculas discretas, como H₂O y CO₂, o redes extensas, como el diamante y el dióxido de silicio.</p><p className="mt-3 text-sm leading-7 text-slate-300">No concluyas que todos los compuestos covalentes son gases o tienen puntos de fusión bajos. Muchas sustancias moleculares tienen fuerzas intermoleculares relativamente débiles, pero las redes covalentes pueden ser muy duras y tener puntos de fusión elevados porque romperlas requiere alterar enlaces dentro de la red.</p><div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(230px,.55fr)] lg:items-center"><div className="rounded-lg border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Leer Lewis</h3><p className="mt-2 text-sm leading-6 text-slate-300">Cuenta primero los electrones de valencia disponibles. Cada línea entre dos átomos representa un par compartido; los puntos restantes son pares libres. Comprueba después la regla apropiada para cada átomo: el hidrógeno suele completar un dueto y muchos elementos del segundo período siguen el octeto.</p></div><ImageUploadSlot assetKey="santuario/guardian-elementos/enlace-covalente" title="enlace covalente" description="Moléculas y pares electrónicos compartidos." /></div></section>
+
+        <section id="enlace-metalico" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="pixel-font text-sm leading-7 text-cyan-100">4. Enlace metálico: electrones deslocalizados</h2><div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(230px,.55fr)] lg:items-center"><div className="space-y-3 text-sm leading-7 text-slate-300"><p>En el modelo metálico, los electrones de valencia están deslocalizados a través de la estructura y no pertenecen únicamente a un enlace entre dos átomos. Esta movilidad explica la conductividad eléctrica y térmica de muchos metales.</p><p>Las capas de átomos pueden desplazarse sin separar de inmediato toda la atracción de la estructura; por eso muchos metales son maleables y dúctiles. Las propiedades reales dependen además del tipo de metal, su estructura cristalina, las impurezas y la temperatura.</p></div><ImageUploadSlot assetKey="santuario/guardian-elementos/enlace-metalico" title="enlace metálico" description="Red metálica con electrones deslocalizados." /></div></section>
+
+        <section id="estructuras-lewis" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="pixel-font text-sm leading-7 text-cyan-100">5. Estructuras de Lewis y electrones de valencia</h2><p className="mt-3 text-sm leading-7 text-slate-300">Una estructura de Lewis representa los electrones de valencia con puntos y los pares compartidos con líneas. Para una molécula sencilla, suma los electrones de valencia de todos los átomos; si la especie tiene carga negativa, añade electrones, y si tiene carga positiva, resta electrones. Después distribuye los pares compartidos y libres respetando las posibilidades de los átomos.</p><div className="mt-4 grid gap-3 md:grid-cols-2"><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Agua (H₂O)</h3><p className="mt-2 text-sm leading-6 text-slate-300">O aporta 6 electrones de valencia y los dos H aportan 1 cada uno: hay 8 en total. Dos pares forman los enlaces O–H; los cuatro electrones restantes quedan como dos pares libres sobre O.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Dióxido de carbono (CO₂)</h3><p className="mt-2 text-sm leading-6 text-slate-300">C aporta 4 electrones y los dos O aportan 12: hay 16 en total. La estructura O=C=O contiene dos enlaces dobles; los pares libres se ubican en los oxígenos.</p></div></div><div className="mt-4"><ImageUploadSlot assetKey="santuario/guardian-elementos/estructuras-lewis" title="estructuras de Lewis" description="Esquemas de Lewis del agua y el dióxido de carbono." /></div><p className="mt-3 text-xs leading-5 text-amber-100">Dibujar Lewis ayuda a razonar, pero no representa literalmente la posición instantánea de cada electrón.</p></section>
+
+        <section id="formulas-quimicas" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="pixel-font text-sm leading-7 text-cyan-100">6. Fórmulas químicas y neutralidad de carga</h2><p className="mt-3 text-sm leading-7 text-slate-300">La fórmula química indica qué elementos están presentes y la proporción en que se relacionan. En un compuesto iónico, los subíndices deben producir carga neta cero con la menor proporción entera posible. Las cargas se usan para deducir la fórmula, aunque no se escriban como cargas iónicas en el compuesto neutro final.</p><div className="mt-4 grid gap-3 md:grid-cols-3"><div className="border border-cyan-300/20 bg-[#0a1928] p-3"><p className="pixel-font text-xs text-cyan-100">NaCl</p><p className="mt-2 text-xs leading-5 text-slate-300">Na⁺ y Cl⁻: +1 − 1 = 0.</p></div><div className="border border-cyan-300/20 bg-[#0a1928] p-3"><p className="pixel-font text-xs text-cyan-100">MgCl₂</p><p className="mt-2 text-xs leading-5 text-slate-300">Mg²⁺ necesita dos Cl⁻: +2 + 2(−1) = 0.</p></div><div className="border border-cyan-300/20 bg-[#0a1928] p-3"><p className="pixel-font text-xs text-cyan-100">Al₂O₃</p><p className="mt-2 text-xs leading-5 text-slate-300">Dos Al³⁺ y tres O²⁻: 2(+3) + 3(−2) = 0.</p></div></div><div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,.6fr)] lg:items-center"><p className="text-sm leading-7 text-slate-300"><strong className="text-white">Método:</strong> escribe las cargas, elige la proporción que las compense y suma la carga total. Si el resultado no da cero, revisa los subíndices antes de continuar.</p><ImageUploadSlot assetKey="santuario/guardian-elementos/formulas-quimicas" title="fórmulas químicas" description="Tarjetas visuales de compuestos iónicos neutros." compact /></div></section>
+
+        <section id="polaridad-propiedades" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="pixel-font text-sm leading-7 text-cyan-100">7. Polaridad, fuerzas intermoleculares y propiedades</h2><p className="mt-3 text-sm leading-7 text-slate-300">Cuando dos átomos comparten electrones, no siempre los atraen con la misma intensidad. La diferencia de electronegatividad puede producir una distribución desigual de carga y un enlace polar. La polaridad molecular depende además de la geometría: los dipolos pueden sumarse o cancelarse por simetría.</p><p className="mt-3 text-sm leading-7 text-slate-300">El agua tiene enlaces O–H polares y una forma angular, por lo que posee un dipolo neto. El CO₂ tiene enlaces C=O polares, pero su estructura lineal y simétrica hace que los dipolos se cancelen; la molécula es apolar en el modelo habitual.</p><p className="mt-3 text-sm leading-7 text-slate-300">Las fuerzas intermoleculares actúan entre moléculas y suelen ser distintas de los enlaces covalentes dentro de ellas. En muchas sustancias moleculares, interacciones intermoleculares más intensas se asocian con mayores temperaturas de ebullición si las demás condiciones son comparables; considera también masa, forma y tipo de interacción.</p><div className="mt-4"><ImageUploadSlot assetKey="santuario/guardian-elementos/polaridad" title="polaridad molecular" description="Comparación de geometría y polaridad de H₂O y CO₂." /></div></section>
+
+        <section id="evidencia-enlaces" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321]/95 p-4 sm:p-5"><h2 className="pixel-font text-sm leading-7 text-cyan-100">8. Del modelo a la evidencia experimental</h2><p className="mt-3 text-sm leading-7 text-slate-300">Una explicación sobre enlaces debe apoyarse en observaciones concretas. Si el NaCl sólido no conduce, pero su disolución acuosa sí, el resultado concuerda con un modelo donde los iones están fijos en el sólido y se mueven en la disolución. La observación apoya el modelo, pero no revela por sí sola todos los detalles microscópicos.</p><div className="mt-4 grid gap-3 md:grid-cols-3"><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Variable</h3><p className="mt-2 text-xs leading-5 text-slate-300">Estado de la muestra: sólido, fundido o disuelto.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Medición</h3><p className="mt-2 text-xs leading-5 text-slate-300">Conductividad, temperatura de fusión o dureza bajo condiciones definidas.</p></div><div className="border border-[#21405e] bg-[#0a1928] p-3"><h3 className="font-bold text-cyan-100">Inferencia</h3><p className="mt-2 text-xs leading-5 text-slate-300">Propón el modelo que explica los datos y reconoce qué no se ha demostrado.</p></div></div><div className="mt-4"><ImageUploadSlot assetKey="santuario/guardian-elementos/evidencia" title="evidencia experimental de los enlaces" description="Montaje de laboratorio para comparar la conductividad de sustancias." compact /></div><div className="mt-4 border-l-2 border-amber-300 bg-amber-300/[.05] p-4 text-sm leading-6 text-amber-100"><strong>Clave Saber 11:</strong> separa dato, conclusión e inferencia. Si una opción dice «siempre», «todos» o «necesariamente», comprueba que los datos permitan una afirmación tan amplia.</div></section>
+
+        <section id="puntos-clave" className="scroll-mt-24 rounded-xl border border-[#21405e] bg-[#071321] p-4 sm:p-5"><h2 className="pixel-font text-sm text-amber-200">PUNTOS CLAVE</h2><ul className="mt-3 grid gap-3 text-sm leading-6 text-slate-300 sm:grid-cols-2">{["El enlace químico se relaciona con interacciones electrostáticas y electrones de valencia.","Iónico: atracción entre iones; la carga total del compuesto debe ser cero.","Covalente: comparte pares electrónicos; puede formar moléculas o redes.","Metálico: electrones deslocalizados explican la conductividad de muchos metales.","La regla del octeto orienta, pero no describe todas las especies.","La fórmula iónica se comprueba sumando cargas con los subíndices.","La polaridad molecular depende de los enlaces y de la geometría.","Usa propiedades medidas como evidencia, no como pruebas aisladas."].map(item=><li key={item} className="flex gap-2"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-teal-300"/>{item}</li>)}</ul></section>
+       </div>
+
+       <aside className="space-y-3">
+        <section className="rounded-xl border border-[#21405e] bg-[#071321] p-4"><p className="pixel-font text-[9px] text-cyan-200">MISIÓN DE NOVA</p><p className="mt-2 text-xs leading-5 text-slate-300">Identifica el enlace, predice una propiedad y defiende tu conclusión con evidencia.</p><button type="button" onClick={()=>setTutorOpen(true)} className="mt-3 w-full rounded-lg border border-[#ffb347] bg-[#ff9f1c] px-3 py-3 text-xs font-extrabold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">🤖 Pregunta a la IA</button></section>
+        <section className="rounded-xl border border-[#21405e] bg-[#071321] p-4"><h2 className="pixel-font text-[9px] text-cyan-200">EN ESTA LECCIÓN</h2><div className="mt-3 space-y-1">{[["1","¿Por qué se unen?","enlaces-quimicos"],["2","Enlace iónico","enlace-ionico"],["3","Enlace covalente","enlace-covalente"],["4","Enlace metálico","enlace-metalico"],["5","Estructuras de Lewis","estructuras-lewis"],["6","Fórmulas químicas","formulas-quimicas"],["7","Polaridad y propiedades","polaridad-propiedades"],["8","Evidencia experimental","evidencia-enlaces"],["★","Puntos clave","puntos-clave"]].map(([number,label,id])=><button type="button" key={id} onClick={()=>document.getElementById(id)?.scrollIntoView({behavior:"smooth",block:"start"})} className="flex w-full items-center gap-2 rounded-md px-1 py-1.5 text-left text-xs text-slate-200 transition hover:bg-cyan-300/[.07] hover:text-cyan-100"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded border border-fuchsia-400/50 bg-fuchsia-500/10 text-[10px] font-bold text-white">{number}</span><span>{label}</span></button>)}</div></section>
+        <section className="rounded-xl border border-[#21405e] bg-[#071321] p-4"><h2 className="pixel-font text-[9px] text-amber-200">COMPROBACIÓN RÁPIDA</h2><p className="mt-2 text-xs leading-5 text-slate-300">Si un sólido conduce electricidad, registra qué sustancia es, en qué estado está y bajo qué condiciones se midió. No clasifiques el enlace por una sola propiedad sin revisar el contexto.</p><button type="button" onClick={()=>{setView("examples");window.scrollTo({top:0,behavior:"smooth"});}} className="mt-3 w-full border border-cyan-300/50 bg-[#0b2936] px-3 py-2 text-xs font-bold text-cyan-100 transition hover:bg-[#104153]">Ver ejemplos resueltos →</button></section>
+       </aside>
+      </div>
+     </div>
+    </div>
+   </div>
+  ) : view === "examples" ? (
+   <div className="mx-auto max-w-[1240px] px-4 pb-28 pt-6 sm:px-7"><p className="pixel-font text-[9px] tracking-[.12em] text-cyan-200">SANTUARIO DE LA MATERIA · EJEMPLOS RESUELTOS</p><h1 className="mt-3 text-2xl font-extrabold text-white sm:text-3xl">Aprende a razonar los enlaces químicos</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">Ejemplos originales de PeakScore, resueltos paso a paso con los datos y el modelo químico pertinente.</p>
+    <div className="mt-6 grid gap-5 lg:grid-cols-2">
+     <section className="border border-[#35506d] bg-[#0d1422] p-5"><p className="text-xs font-bold uppercase tracking-wider text-cyan-200">Ejemplo 1 · Formación de un enlace iónico</p><h2 className="mt-3 text-lg font-bold text-white">El sodio pierde un electrón y el cloro lo gana. ¿Qué mantiene unido al compuesto formado?</h2><div className="mt-4 space-y-3 text-sm leading-6 text-slate-200"><p><strong className="text-cyan-200">Paso 1.</strong> Na forma Na⁺ al perder un electrón; Cl forma Cl⁻ al ganarlo.</p><p><strong className="text-cyan-200">Paso 2.</strong> Los dos iones tienen cargas opuestas, así que existe atracción electrostática.</p><p><strong className="text-cyan-200">Paso 3.</strong> En el sólido se organizan en una red; NaCl representa la proporción 1:1 y la neutralidad global.</p><div className="border border-emerald-300/30 bg-emerald-300/[.07] p-3"><strong className="text-emerald-200">Conclusión:</strong> se modela como atracción entre cationes y aniones, no como una molécula covalente aislada.</div></div></section>
+     <section className="border border-[#35506d] bg-[#0d1422] p-5"><p className="text-xs font-bold uppercase tracking-wider text-cyan-200">Ejemplo 2 · Deducir una fórmula</p><h2 className="mt-3 text-lg font-bold text-white">¿Cuál es la fórmula neutra que se forma con Mg²⁺ y Cl⁻?</h2><div className="mt-4 space-y-3 text-sm leading-6 text-slate-200"><p><strong className="text-cyan-200">Paso 1.</strong> Mg²⁺ aporta +2 y cada Cl⁻ aporta −1.</p><p><strong className="text-cyan-200">Paso 2.</strong> Se necesitan dos cloruros: +2 + 2(−1) = 0.</p><p><strong className="text-cyan-200">Paso 3.</strong> Escribe la proporción mínima con magnesio primero y dos átomos de cloro.</p><div className="border border-emerald-300/30 bg-emerald-300/[.07] p-3"><strong className="text-emerald-200">Conclusión:</strong> la fórmula es MgCl₂.</div></div></section>
+     <section className="border border-[#35506d] bg-[#0d1422] p-5"><p className="text-xs font-bold uppercase tracking-wider text-cyan-200">Ejemplo 3 · Estructura de Lewis</p><h2 className="mt-3 text-lg font-bold text-white">¿Cuántos electrones de valencia se cuentan en H₂O?</h2><div className="mt-4 space-y-3 text-sm leading-6 text-slate-200"><p><strong className="text-cyan-200">Paso 1.</strong> O tiene 6 electrones de valencia; cada H tiene 1.</p><p><strong className="text-cyan-200">Paso 2.</strong> Suma: 6 + 1 + 1 = 8 electrones disponibles.</p><p><strong className="text-cyan-200">Paso 3.</strong> Dos pares forman los enlaces O–H; los cuatro electrones restantes son dos pares libres sobre O.</p><div className="border border-emerald-300/30 bg-emerald-300/[.07] p-3"><strong className="text-emerald-200">Conclusión:</strong> el agua tiene 8 electrones de valencia en total.</div></div></section>
+     <section className="border border-[#35506d] bg-[#0d1422] p-5"><p className="text-xs font-bold uppercase tracking-wider text-cyan-200">Ejemplo 4 · Conductividad eléctrica</p><h2 className="mt-3 text-lg font-bold text-white">Una sal no conduce en estado sólido, pero sí al disolverse en agua. ¿Qué modelo lo explica mejor?</h2><div className="mt-4 space-y-3 text-sm leading-6 text-slate-200"><p><strong className="text-cyan-200">Paso 1.</strong> En el sólido, los iones están en posiciones de red y no se desplazan libremente.</p><p><strong className="text-cyan-200">Paso 2.</strong> En una disolución con iones móviles, estos pueden transportar carga.</p><p><strong className="text-cyan-200">Paso 3.</strong> La comparación apoya el modelo iónico; importa la composición y también la movilidad de las partículas cargadas.</p><div className="border border-emerald-300/30 bg-emerald-300/[.07] p-3"><strong className="text-emerald-200">Conclusión:</strong> la movilidad iónica explica la diferencia de conductividad.</div></div></section>
+     <section className="border border-[#35506d] bg-[#0d1422] p-5 lg:col-span-2"><p className="text-xs font-bold uppercase tracking-wider text-cyan-200">Ejemplo 5 · Polaridad molecular</p><h2 className="mt-3 text-lg font-bold text-white">Los enlaces C=O son polares, pero el CO₂ es apolar. ¿Por qué?</h2><div className="mt-4 grid gap-4 sm:grid-cols-3"><div className="border border-[#344a66] bg-[#0a1928] p-3"><p className="font-bold text-cyan-100">1. Enlaces</p><p className="mt-2 text-sm leading-6 text-slate-300">Cada oxígeno atrae más el par electrónico del enlace C=O.</p></div><div className="border border-[#344a66] bg-[#0a1928] p-3"><p className="font-bold text-cyan-100">2. Geometría</p><p className="mt-2 text-sm leading-6 text-slate-300">La molécula es lineal y los dipolos apuntan en sentidos opuestos.</p></div><div className="border border-[#344a66] bg-[#0a1928] p-3"><p className="font-bold text-cyan-100">3. Resultado</p><p className="mt-2 text-sm leading-6 text-slate-300">Los dipolos se cancelan por simetría; el momento dipolar neto es cero en el modelo ideal.</p></div></div><div className="mt-4 border border-emerald-300/30 bg-emerald-300/[.07] p-3 text-sm leading-6"><strong className="text-emerald-200">Conclusión:</strong> para decidir si una molécula es polar, considera sus enlaces y su geometría, no solo la diferencia de electronegatividad.</div></section>
+    </div>
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5"><button type="button" onClick={showTheory} className="border border-cyan-300/50 bg-[#172c43] px-4 py-3 text-sm font-bold text-cyan-100"><ArrowLeft className="mr-1 inline h-4 w-4" /> Teoría</button><button type="button" onClick={startPractice} className="border border-emerald-300 bg-[#65edb1] px-5 py-3 text-sm font-extrabold text-[#062218]">Ejercicios <ArrowRight className="ml-2 inline h-4 w-4" /></button></div>
+   </div>
+  ) : (
+   <div className="mx-auto max-w-[1120px] px-4 pb-28 pt-6 sm:px-7"><div className="flex flex-wrap items-center justify-between gap-3"><div><p className="pixel-font text-[9px] tracking-[.12em] text-cyan-200">DESAFÍO DEL SANTUARIO · CAPÍTULO 05</p><h1 className="mt-3 text-2xl font-extrabold text-white">Demuestra que comprendes los enlaces</h1><p className="mt-2 text-sm leading-6 text-slate-300">Pregunta {index+1} de {activeQuestions.length} · {q.competency}</p></div><span className="border border-cyan-200/20 bg-[#0d1422] px-3 py-2 text-xs text-cyan-100">3 preguntas · revisión razonada</span></div>
+    <section className="mt-5 overflow-hidden rounded-xl border border-[#21405e] bg-[#0d1422]"><div className="border-b border-[#29445e] bg-[#132137] p-5 sm:p-6"><p className="text-[10px] font-bold uppercase tracking-wider text-cyan-200">Situación</p><p className="mt-3 text-sm leading-7 text-slate-100">{q.context}</p><h2 className="mt-5 text-xl font-bold leading-8 text-white">{q.prompt}</h2><p className="mt-2 text-xs leading-5 text-slate-400">Selecciona la opción que mejor explica los datos.</p></div>
+     <div className="space-y-3 p-4 sm:p-6">{q.options.map(([key,text])=>{const chosen=choice===key;const answer=q.key===key;const stateClass=!checked?(chosen?"border-cyan-300 bg-cyan-300/[.08]":"border-[#35465d] hover:border-cyan-200/50 hover:bg-white/[.025]"):answer?"border-emerald-300 bg-emerald-300/[.07]":chosen?"border-rose-300 bg-rose-300/[.07]":"border-[#35465d] opacity-75";return <button key={key} type="button" disabled={checked} onClick={()=>setChoice(key)} className={"flex w-full items-start gap-3 border p-4 text-left transition "+stateClass}><span className="flex h-8 w-8 shrink-0 items-center justify-center border border-white/20 bg-black/20 text-sm font-extrabold">{key}</span><span className="flex-1 pt-1 text-sm leading-6 text-slate-100">{text}</span>{checked&&answer&&<CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-emerald-300"/>}</button>;})}</div>
+     {checked&&<div className="mx-4 mb-4 rounded-lg border border-cyan-200/20 bg-[#081522] p-4 sm:mx-6 sm:mb-6"><p className="font-extrabold text-cyan-100">{choice===q.key?"Respuesta correcta":"Revisa el razonamiento"}</p><p className="mt-2 text-sm leading-7 text-slate-300">{q.explanation}</p></div>}
+     <div className="flex justify-end border-t border-[#293d56] p-4 sm:p-6">{!checked?<button type="button" disabled={!choice} onClick={checkAnswer} className="border border-emerald-300 bg-[#65edb1] px-5 py-3 text-sm font-extrabold text-[#062218] disabled:cursor-not-allowed disabled:opacity-40">Comprobar respuesta <ArrowRight className="ml-2 inline h-4 w-4"/></button>:<button type="button" onClick={nextQuestion} className="border border-cyan-300/50 bg-[#172c43] px-5 py-3 text-sm font-bold text-cyan-100">{index===activeQuestions.length-1?"Ver resultado":"Siguiente pregunta"} <ArrowRight className="ml-2 inline h-4 w-4"/></button>}</div>
+    </section>
+   </div>
+  )}
+
+  {done&&!rewardOpen&&<div className="game-over-overlay fixed inset-0 z-40 flex items-center justify-center overflow-y-auto px-3 py-5 sm:px-6 sm:py-8"><div className="game-over-content relative z-10 my-auto w-full max-w-4xl py-4 text-center"><div className="game-over-title pixel-font flex w-full items-center justify-center gap-1 whitespace-nowrap font-black text-white sm:gap-3" style={{textShadow:"5px 5px 0 #155e75, 9px 9px 0 #0b1220"}}><span>GAME</span><span className="game-over-nova inline-flex shrink-0 items-center justify-center"><Image src="/images/game-over/nova-dead-pixel.png" alt="Nova" width={88} height={88} priority className="h-auto w-full"/></span><span>OVER</span></div><p className="pixel-font mt-3 text-[10px] font-bold tracking-[.14em] text-rose-300 sm:mt-4 sm:text-sm">EL ENLACE SE ROMPIÓ</p><p className="mt-5 font-extrabold text-white [text-shadow:0_2px_6px_#000]">No completaste el desafío con todas las respuestas correctas.</p><p className="mt-3 font-extrabold text-white [text-shadow:0_2px_6px_#000]">Acertaste <strong className="text-cyan-300">{score} de {activeQuestions.length}</strong> preguntas.</p><p className="mt-4 font-bold text-white [text-shadow:0_2px_6px_#000]">Repasa los enlaces, comprueba las cargas y vuelve a intentarlo.</p><div className="mt-7 flex flex-col items-center gap-3"><button type="button" onClick={restartPractice} className="game-over-choice game-over-choice-yes">▶ YES <span className="game-over-choice-detail">REPETIR CON PREGUNTAS NUEVAS</span></button><button type="button" onClick={showTheory} className="game-over-choice game-over-choice-no">▶ NO <span className="game-over-choice-detail">REPASAR TEORÍA</span></button></div><p className="pixel-font mt-8 text-[10px] text-white">PEAKSCORE · CONTINÚA LA AVENTURA</p></div></div>}
+
+  {view==="practice"&&!done&&<LessonAITutor open={tutorOpen} onOpenChange={setTutorOpen} subject="Química" topic={"El guardián de los elementos: pregunta "+(index+1)+" de "+activeQuestions.length} stage="practice" question={q.prompt} context={"Situación: "+q.context+"\nOpciones: "+q.options.map(option=>option[0]+") "+option[1]).join("\n")+"\nExplicación: "+q.explanation}/>}
+  {view!=="practice"&&<LessonAITutor open={tutorOpen} onOpenChange={setTutorOpen} subject="Química" topic="Capítulo 5: enlaces químicos, Lewis, fórmulas, polaridad y propiedades" stage="theory" context="Explica enlaces químicos al nivel Saber 11: electrones de valencia, enlaces iónicos, covalentes y metálicos, estructuras de Lewis, neutralidad de carga, polaridad y propiedades. Usa pasos claros, distingue tendencias de reglas absolutas y crea ejemplos originales."/>}
+  <XpRewardAnimation open={rewardOpen&&done} xp={70} nextLabel="VOLVER AL SANTUARIO" onContinue={()=>{setRewardOpen(false);window.location.href="/aprender/santuario-de-la-materia";}}/>
+  {!(done&&!rewardOpen)&&<footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur"><div className="mx-auto flex min-h-[64px] max-w-[1440px] items-center justify-between gap-3 px-4 sm:px-7"><div><p className="pixel-font text-[8px] text-slate-100">NIVEL 5{view==="practice"?" · EJERCICIOS "+(index+1)+"/"+activeQuestions.length:view==="examples"?" · EJEMPLOS RESUELTOS":" · EL GUARDIÁN DE LOS ELEMENTOS"}</p><span className="mt-1 inline-flex items-center gap-1.5 border border-emerald-300/20 bg-emerald-300/[.08] px-2 py-0.5 text-[9px] font-bold text-emerald-200"><Image src="/peaky/homepage/xp.webp" alt="" width={17} height={17}/> 70 XP</span></div><div className="flex flex-1 items-center justify-center gap-2 sm:gap-3">{!done&&<button type="button" onClick={()=>setTutorOpen(value=>!value)} aria-label="Abrir asistente de inteligencia artificial" className="inline-flex min-h-10 items-center gap-1.5 border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 font-bold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:bg-[#ffb84d] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>}</div><div className="flex shrink-0 items-center gap-2">{view==="theory"&&<button type="button" onClick={()=>{setView("examples");window.scrollTo({top:0,behavior:"smooth"});}} className="border border-cyan-300 bg-[#0b2936] px-3 py-2 text-xs font-bold text-cyan-100 sm:px-4">Ejemplos <ArrowRight className="ml-1 inline h-4 w-4"/></button>}{view==="examples"&&<><button type="button" onClick={showTheory} className="border border-white/20 bg-[#172c43] px-3 py-2 text-xs font-bold text-slate-100 sm:px-4"><ArrowLeft className="mr-1 inline h-4 w-4"/> Anterior</button><button type="button" onClick={startPractice} className="border border-emerald-300 bg-[#65edb1] px-3 py-2 text-xs font-extrabold text-[#062218] sm:px-4">Ejercicios <ArrowRight className="ml-1 inline h-4 w-4"/></button></>}{view==="practice"&&!done&&<button type="button" onClick={showTheory} className="border border-white/20 bg-[#172c43] px-3 py-2 text-xs font-bold text-slate-100 sm:px-4"><ArrowLeft className="mr-1 inline h-4 w-4"/> Salir</button>}{view!=="practice"&&<Link href="/aprender/santuario-de-la-materia" className="hidden border border-white/20 bg-[#172c43] px-3 py-2 text-xs font-bold text-slate-100 sm:inline-flex">Salir</Link>}</div></div></footer>}
+  <style jsx global>{" .game-over-overlay{isolation:isolate;overflow:hidden;background:linear-gradient(180deg,rgba(2,5,13,.28),rgba(2,5,13,.58)),url('/images/aprender/santuario/guardian-elementos.png') center center/cover no-repeat,#020308!important}.game-over-content{transform:translateY(28px)}.game-over-overlay::before{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(1,5,12,.16),transparent 28%,rgba(1,5,12,.22) 68%,rgba(1,5,12,.68));z-index:0}.game-over-title{font-size:clamp(2.15rem,7.8vw,6.5rem);line-height:.98;letter-spacing:-.045em}.game-over-nova{width:clamp(2.7rem,8vw,6rem);flex:0 0 auto;filter:drop-shadow(3px 4px 0 #0b1220)}.game-over-choice{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:.35rem;border:1px solid transparent;border-radius:6px;font-family:var(--font-press-start),'Press Start 2P',monospace;font-size:10px;font-weight:800;color:#a5f3fc;padding:.8rem 1rem;text-shadow:0 2px 6px #000;cursor:pointer;transition:transform .18s ease,border-color .18s ease,background-color .18s ease,box-shadow .18s ease}.game-over-choice:hover,.game-over-choice:focus-visible{transform:translateY(-5px) scale(1.045);border-color:rgba(103,232,249,.8);background:rgba(8,47,73,.72);box-shadow:0 8px 24px rgba(0,0,0,.28);outline:none}.game-over-choice-detail{font-family:Arial,sans-serif;font-size:14px;font-weight:800;color:#e2e8f0;margin-left:.5rem}.game-over-choice-yes:hover,.game-over-choice-yes:focus-visible{border-color:rgba(134,239,172,.9);background:rgba(20,83,45,.76)}@media(max-width:480px){.game-over-title{font-size:clamp(1.9rem,8.2vw,2.8rem)}.game-over-nova{width:clamp(2.25rem,10vw,3.25rem)}.game-over-choice{font-size:8px;padding:.7rem .6rem}.game-over-choice-detail{font-size:12px}}@media(prefers-reduced-motion:reduce){.game-over-choice{transition:none}.game-over-choice:hover,.game-over-choice:focus-visible,.game-over-choice:active{transform:none}} "}</style>
+ </main>;
+}

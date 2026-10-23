@@ -263,9 +263,9 @@ function ImageUploadSlot({ assetKey, title, description, compact=false, large=fa
   {picker}
   {imageUrl ? (
    isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
-    <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[1000px] sm:max-h-[1150px] xl:max-h-[1300px]" : compact ? "max-h-36" : "max-h-[520px]")}/>
+    <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[920px] sm:max-h-[1040px] xl:max-h-[1180px]" : compact ? "max-h-32" : "max-h-[470px]")}/>
     {saving && <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100">Guardando imagen…</span>}
-   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[960px] sm:max-h-[1100px] xl:max-h-[1250px]" : compact ? "max-h-32" : "max-h-[340px]")}/>
+   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (large ? "max-h-[880px] sm:max-h-[1000px] xl:max-h-[1140px]" : compact ? "max-h-28" : "max-h-[310px]")}/>
   ) : isAdmin ? (
    <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4 text-cyan-100 transition hover:bg-cyan-400/[0.03] disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
     {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}

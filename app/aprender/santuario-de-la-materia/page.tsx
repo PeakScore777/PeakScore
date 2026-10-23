@@ -278,10 +278,6 @@ export default function SantuarioDeLaMateriaPage() {
                     className="flex w-full items-center gap-3 p-3 text-left transition hover:bg-white/[.025] sm:gap-4 sm:px-5 sm:py-3.5"
                   >
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-400/40 bg-violet-400/15 text-sm font-black text-white shadow-inner sm:h-11 sm:w-11">{chapter.id}</span>
-                    <div className="relative h-[62px] w-[112px] shrink-0 overflow-hidden rounded-lg border border-white/10 bg-[#0b1728] sm:h-[70px] sm:w-[160px]">
-                      <Image src={chapter.image} alt={chapter.title} fill quality={100} unoptimized sizes="(max-width: 640px) 112px, 160px" className="object-cover transition duration-500 group-hover:scale-[1.025]" style={{ imageRendering: "pixelated" }} />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent" />
-                    </div>
                     <span className="min-w-0 flex-1 py-1">
                       <span className="block text-sm font-extrabold leading-5 text-white sm:text-base">{chapter.title}</span>
                       <span className="mt-1 block text-xs leading-5 text-slate-300/80">{chapter.description}</span>
@@ -298,19 +294,7 @@ export default function SantuarioDeLaMateriaPage() {
 
                   {isOpen && (
                     <div className="border-t border-white/[.07] bg-[#050b15]/45 p-2 sm:p-3">
-                      <div className={detailedView ? "grid items-start gap-3 lg:grid-cols-[260px_minmax(0,1fr)]" : "grid gap-3"}>
-                        {detailedView && (
-                          <div className="hidden w-full self-start overflow-hidden rounded-xl border border-white/10 bg-[#0a1422] lg:block">
-                            <div className="relative aspect-[4/3] w-full bg-[#081321]">
-                              <Image src={chapter.image} alt={chapter.title} fill quality={100} unoptimized sizes="260px" className="object-contain p-1" style={{ imageRendering: "pixelated" }} />
-                            </div>
-                            <div className="border-t border-white/10 bg-[#07101e] p-3">
-                              <span className="rounded-md border border-white/15 bg-black/40 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white/80">Capítulo {chapter.id}</span>
-                              <p className="mt-2 text-sm font-extrabold leading-5 text-white">{chapter.title}</p>
-                              <p className="mt-1 text-xs leading-5 text-slate-300/80">{chapter.description}</p>
-                            </div>
-                          </div>
-                        )}
+                      <div className="grid gap-3">
                         <div className="min-w-0 overflow-hidden rounded-xl border border-white/[.07]">
                           {chapter.lessons.map((lesson, lessonIndex) => {
                             const available = Boolean(lesson.available);

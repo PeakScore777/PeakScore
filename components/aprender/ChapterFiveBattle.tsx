@@ -1,6 +1,13 @@
 "use client";
 
-type Props = { result: boolean | null; sequence: number };
+type Props = {
+  result: boolean | null;
+  sequence: number;
+  questionIndex: number;
+  score: number;
+  totalQuestions: number;
+  checked: boolean;
+};
 
 const SPRITES = {
   novaAttack: "/images/aprender/battle/nova-attack.png",
@@ -9,65 +16,98 @@ const SPRITES = {
   guardianHurt: "/images/aprender/battle/guardian-hurt.png",
 } as const;
 
-function BattleSprite({
-  name,
-  src,
-  playing,
-  label,
-}: {
-  name: string;
-  src: string;
-  playing: boolean;
-  label: string;
-}) {
+function HealthBar({ value, side }: { value: number; side: "nova" | "guardian" }) {
+  const width = Math.max(0, Math.min(100, (value / 8) * 100));
   return (
-    <div className="flex min-w-0 flex-col items-center gap-2">
+    <div
+      role="progressbar"
+      aria-label={side === "nova" ? "Vida de Nova" : "Vida del Guardián"}
+      aria-valuemin={0}
+      aria-valuemax={8}
+      aria-valuenow={value}
+      className="h-3 w-full overflow-hidden border border-white/25 bg-[#171923] p-[2px] sm:h-4"
+    >
       <div
-        role="img"
-        aria-label={label}
-        className={`battle-sprite ${playing ? "battle-sprite-playing" : ""}`}
-        style={{ backgroundImage: `url("${src}")` }}
+        className={`h-full transition-[width] duration-500 ease-out ${side === "nova" ? "bg-gradient-to-r from-emerald-500 to-lime-300" : "bg-gradient-to-r from-red-600 to-orange-400"}`}
+        style={{ width: `${width}%` }}
       />
-      <span className="pixel-font text-[8px] tracking-wide text-slate-200">{name}</span>
     </div>
   );
 }
 
-export default function ChapterFiveBattle({ result, sequence }: Props) {
+export default function ChapterFiveBattle({
+  result,
+  sequence,
+  questionIndex,
+  score,
+  totalQuestions,
+  checked,
+}: Props) {
   const playing = result !== null;
   const novaAttacks = result === true;
+  const attempts = Math.min(totalQuestions, questionIndex + (checked ? 1 : 0));
+  const novaHealth = Math.max(0, totalQuestions - (attempts - score));
+  const guardianHealth = Math.max(0, totalQuestions - score);
   const novaSprite = !playing || novaAttacks ? SPRITES.novaAttack : SPRITES.novaHurt;
   const guardianSprite = !playing || novaAttacks ? SPRITES.guardianHurt : SPRITES.guardianAttack;
 
   return (
-    <div
-      aria-label="Animación de combate"
-      className="mx-auto flex w-full max-w-[420px] items-center justify-center gap-3 sm:gap-8"
+    <section
+      aria-label="Combate de Nova y el Guardián"
+      className="w-full bg-[#080f1c] px-3 py-3 sm:px-6 sm:py-4"
     >
-      <div
-        key={`nova-${sequence}-${result}`}
-        role="img"
-        aria-label="Nova"
-        className={`battle-sprite ${playing ? "battle-sprite-playing" : ""}`}
-        style={{ backgroundImage: `url("${novaSprite}")` }}
-      />
-      <div
-        key={`guardian-${sequence}-${result}`}
-        role="img"
-        aria-label="Guardián"
-        className={`battle-sprite ${playing ? "battle-sprite-playing" : ""}`}
-        style={{ backgroundImage: `url("${guardianSprite}")` }}
-      />
+      <div className="mx-auto flex w-full max-w-[980px] items-end justify-between gap-5 sm:gap-12">
+        <div className="flex w-[43%] max-w-[300px] flex-col items-start gap-1.5 sm:gap-2">
+          <HealthBar value={novaHealth} side="nova" />
+          <div className="battle-nova" aria-label="Nova">
+            <div
+              key={`nova-${sequence}-${result}`}
+              role="img"
+              aria-label="Nova en combate"
+              className={`battle-sprite ${playing ? "battle-sprite-playing" : ""}`}
+              style={{ backgroundImage: `url("${novaSprite}")` }}
+            />
+          </div>
+        </div>
+        <div className="flex w-[43%] max-w-[360px] flex-col items-end gap-1.5 sm:gap-2">
+          <HealthBar value={guardianHealth} side="guardian" />
+          <div className="battle-guardian" aria-label="Guardián">
+            <div
+              key={`guardian-${sequence}-${result}`}
+              role="img"
+              aria-label="Guardián en combate"
+              className={`battle-sprite ${playing ? "battle-sprite-playing" : ""}`}
+              style={{ backgroundImage: `url("${guardianSprite}")` }}
+            />
+          </div>
+        </div>
+      </div>
       <style jsx>{`
+        .battle-nova {
+          width: 100%;
+          display: flex;
+          justify-content: flex-start;
+          align-items: flex-end;
+          min-height: 112px;
+        }
+        .battle-guardian {
+          width: 100%;
+          display: flex;
+          justify-content: flex-end;
+          align-items: flex-end;
+          min-height: 140px;
+        }
         .battle-sprite {
-          width: min(38vw, 150px);
+          width: min(100%, 156px);
           aspect-ratio: 1 / 1;
-          flex: 0 1 150px;
           background-repeat: no-repeat;
           background-size: 800% 100%;
           background-position: 0% 50%;
           image-rendering: pixelated;
           filter: drop-shadow(0 5px 0 rgba(0,0,0,.38));
+        }
+        .battle-guardian .battle-sprite {
+          width: min(100%, 230px);
         }
         .battle-sprite-playing {
           animation: chapter-five-sprite-frames 1s steps(1, end) 1 both;
@@ -82,10 +122,16 @@ export default function ChapterFiveBattle({ result, sequence }: Props) {
           75% { background-position: 85.7143% 50%; }
           87.5%, 100% { background-position: 100% 50%; }
         }
+        @media (max-width: 480px) {
+          .battle-nova { min-height: 84px; }
+          .battle-guardian { min-height: 108px; }
+          .battle-sprite { width: min(100%, 112px); }
+          .battle-guardian .battle-sprite { width: min(100%, 165px); }
+        }
         @media (prefers-reduced-motion: reduce) {
           .battle-sprite-playing { animation: none; background-position: 100% 50%; }
         }
       `}</style>
-    </div>
+    </section>
   );
 }

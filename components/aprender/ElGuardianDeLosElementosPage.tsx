@@ -211,11 +211,19 @@ export default function ElGuardianDeLosElementosPage() {
      <div className="flex min-w-0 items-center gap-3 text-xs text-slate-300"><Link href="/aprender/santuario-de-la-materia" className="transition hover:text-white">Santuario de la Materia</Link><span>›</span><strong className="text-cyan-200">Capítulo 05</strong></div>
      <span className="pixel-font text-[8px] text-cyan-200 sm:text-[9px]">NIVEL 5 · QUÍMICA</span>
     </header>
-    <div className="mx-auto grid max-w-[1600px] gap-3 p-3 xl:grid-cols-[minmax(0,1fr)_316px]">
+    <div className="mx-auto w-full max-w-[1500px] px-3 py-3 sm:px-5 sm:py-4">
      <div className="min-w-0">
-      <section className="relative grid gap-4 overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-4 sm:p-6 lg:grid-cols-[minmax(0,1fr)_minmax(250px,.7fr)] lg:items-center" style={{backgroundImage:"linear-gradient(90deg,rgba(3,9,20,.96),rgba(3,9,20,.82) 55%,rgba(3,9,20,.35)),url('/images/aprender/santuario/guardian-elementos.png')",backgroundSize:"cover",backgroundPosition:"center"}}>
-       <div className="relative z-10 max-w-3xl"><span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 05 · QUÍMICA</span><h1 className="pixel-font mt-4 text-2xl leading-relaxed text-white sm:text-3xl">El guardián de los elementos</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-slate-100">Los elementos ya tienen identidad. Ahora descubre cómo se unen, por qué forman compuestos y cómo la estructura del enlace explica propiedades que puedes medir.</p><p className="mt-3 text-xs leading-6 text-cyan-100/85">Ruta de aprendizaje: electrones de valencia → tipo de enlace → estructura → propiedades → evidencia experimental.</p></div>
-       <div className="relative z-10 rounded-lg border border-cyan-300/20 bg-[#06101d]/75 p-3 backdrop-blur-sm"><p className="pixel-font mb-2 text-center text-[8px] text-cyan-100">ILUSTRACIÓN DEL CAPÍTULO</p><ImageUploadSlot assetKey="santuario/guardian-elementos/encabezado" title="encabezado del capítulo 5" description="Ilustración de los enlaces químicos y los elementos del Santuario." compact /></div>
+      <section className="grid gap-5 overflow-hidden rounded-xl border border-[#21405e] bg-[#071321] p-4 sm:p-6 lg:grid-cols-[minmax(220px,.38fr)_minmax(0,1fr)] lg:items-center">
+       <div className="relative min-h-[190px] overflow-hidden rounded-lg border border-cyan-300/25 bg-[#06101d] sm:min-h-[235px] lg:min-h-[275px]">
+        <Image src="/images/aprender/santuario/guardian-elementos.png" alt="Ilustración del capítulo 5: El guardián de los elementos" fill priority quality={100} unoptimized sizes="(max-width: 1024px) 100vw, 400px" className="object-cover object-center" style={{ imageRendering: "pixelated" }} />
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#040914]/95 via-[#040914]/45 to-transparent px-3 pb-3 pt-12"><span className="pixel-font rounded border border-cyan-300/40 bg-[#06101d]/85 px-2 py-1 text-[8px] text-cyan-100">CAPÍTULO 05</span></div>
+       </div>
+       <div className="min-w-0 py-1">
+        <span className="pixel-font rounded border border-cyan-400 px-2 py-1 text-[8px] text-cyan-200">CAPÍTULO 05 · QUÍMICA</span>
+        <h1 className="pixel-font mt-4 text-2xl leading-relaxed text-white sm:text-3xl">El guardián de los elementos</h1>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-100">Los elementos ya tienen identidad. Ahora descubre cómo se unen, por qué forman compuestos y cómo la estructura del enlace explica propiedades que puedes medir.</p>
+        <p className="mt-3 text-xs leading-6 text-cyan-100/85">Ruta de aprendizaje: electrones de valencia → tipo de enlace → estructura → propiedades → evidencia experimental.</p>
+       </div>
       </section>
       <nav aria-label="Secciones del capítulo" className="mt-2 grid grid-cols-4 rounded-xl border border-[#21405e] bg-[#071321] p-1 text-center text-[10px] sm:text-sm">
        <button type="button" onClick={showTheory} className="rounded-lg border border-cyan-300 bg-cyan-500/30 px-2 py-3 font-bold text-white">Teoría</button>

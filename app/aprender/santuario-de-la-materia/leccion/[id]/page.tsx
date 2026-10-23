@@ -7,6 +7,7 @@ import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
 import AdminPracticeQuestionEditor from "@/components/admin/AdminPracticeQuestionEditor";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import CodigoDelAtomoPage from "@/components/aprender/CodigoDelAtomoPage";
+import ElGuardianDeLosElementosPage from "@/components/aprender/ElGuardianDeLosElementosPage";
 import CristalesMisteriososPage from "@/components/aprender/CristalesMisteriososPage";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -671,5 +672,6 @@ export default function LessonRoutePage() {
   const params = useParams<{ id: string }>();
   if (params.id === "1") return <CristalesMisteriososPage />;
   if (params.id === "4") return <CodigoDelAtomoPage />;
+  if (params.id === "5") return <ElGuardianDeLosElementosPage />;
   return <LegacyCristalesMisteriososPage />;
 }

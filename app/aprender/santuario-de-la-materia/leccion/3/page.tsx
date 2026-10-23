@@ -539,6 +539,16 @@ export default function LaboratorioDeLasMezclasPage() {
               <ol className="mt-4 space-y-2 text-sm leading-6 text-slate-200"><li><strong className="text-cyan-100">Paso 1.</strong> El dato 36 g/100 g de agua es el máximo que puede disolverse bajo estas condiciones.</li><li><strong className="text-cyan-100">Paso 2.</strong> Se añadieron 42 g, es decir, 6 g más que el límite aproximado.</li><li><strong className="text-cyan-100">Paso 3.</strong> En equilibrio, pueden disolverse cerca de 36 g y quedar unos 6 g como sólido si no varían las condiciones.</li></ol>
               <div className="mt-4 border-l-2 border-emerald-300 bg-emerald-300/[.06] p-4"><p className="font-extrabold text-emerald-200">Conclusión:</p><p className="mt-2 text-sm leading-6 text-slate-200">La disolución queda saturada y sobra soluto sólido. Agitar puede acelerar el proceso, pero no eleva por sí solo el límite de solubilidad de equilibrio.</p></div>
             </article>
+            <article className="rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-200">Ejemplo 9 · Separación secuencial</p><span className="border border-emerald-300/30 px-2 py-1 text-[9px] font-bold text-emerald-200">NIVEL MEDIO</span></div>
+              <h2 className="mt-3 text-lg font-bold leading-7 text-white">Una muestra contiene arena, agua y aceite. ¿Cómo se recuperan los tres componentes sin transformarlos químicamente?</h2>
+              <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
+                <li>Observa las propiedades: la arena es un sólido insoluble; el aceite no se mezcla con el agua y forma una capa separada.</li>
+                <li>Filtra la mezcla para retener la arena. El filtrado contiene agua y aceite.</li>
+                <li>Deja que se formen las dos capas y aplica decantación para separarlas por su inmiscibilidad y diferencia de densidad.</li>
+              </ol>
+              <div className="mt-4 border-l-2 border-emerald-300 bg-emerald-300/[.06] p-4"><p className="font-extrabold text-emerald-200">Conclusión:</p><p className="mt-2 text-sm leading-6 text-slate-200">Filtración → decantación. La secuencia se decide por las propiedades de cada par de componentes, no por una técnica única para toda la mezcla.</p></div>
+            </article>
           </div>
           <section className="mt-5 rounded-xl border border-cyan-200/20 bg-[#071321] p-5 sm:p-6">
             <h2 className="pixel-font text-sm text-cyan-100">CÓMO TRASLADAR EL MÉTODO A LOS EJERCICIOS</h2>

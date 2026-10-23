@@ -47,6 +47,32 @@ const questions = [
     ],
     answer: "C",
     explanation: "El aspecto uniforme no basta: una mezcla homogénea también puede parecer uniforme. Una indagación válida formula un procedimiento reproducible, controla variables, registra mediciones y emplea métodos apropiados y seguros. Por ejemplo, se puede estudiar el comportamiento de fusión o separar componentes mediante una técnica adecuada, sin probar ni tocar sustancias desconocidas."
+  },
+  {
+    competency: "Uso comprensivo del conocimiento científico",
+    context: "Un laboratorio debe elegir un material con densidad menor que 3,0 g/cm³ y punto de fusión superior a 600 °C. La ficha de A indica 2,7 g/cm³ y 660 °C; la de B, 7,9 g/cm³ y 1.538 °C. Las mediciones se hicieron en condiciones comparables.",
+    prompt: "¿Qué decisión satisface simultáneamente los dos criterios?",
+    options: [
+      ["A", "Elegir A, porque cumple ambos límites de la ficha."],
+      ["B", "Elegir B, porque una temperatura de fusión más alta basta aunque falle la densidad."],
+      ["C", "Elegir cualquiera, porque densidad y fusión son propiedades extensivas."],
+      ["D", "No se puede comparar, porque ambas propiedades dependen solo de la masa de la muestra."]
+    ],
+    answer: "A",
+    explanation: "Evalúa cada condición por separado y luego en conjunto. A tiene una densidad inferior a 3,0 g/cm³ y funde por encima de 600 °C. B cumple el criterio térmico, pero su densidad supera el límite. En una pregunta con varias restricciones, la respuesta debe cumplirlas todas."
+  },
+  {
+    competency: "Indagación y evaluación de evidencia",
+    context: "A presión constante, la temperatura de la muestra A permanece cerca de 78 °C durante la ebullición; en la muestra B aumenta gradualmente de 71 °C a 83 °C. El termómetro se verificó y el procedimiento fue igual para ambas.",
+    prompt: "¿Cuál conclusión es más prudente a partir del registro?",
+    options: [
+      ["A", "A muestra un comportamiento más compatible con una sustancia pura durante la ebullición; se requieren pruebas adicionales para confirmar su composición."],
+      ["B", "A es necesariamente un elemento químico porque la temperatura no cambió."],
+      ["C", "B es una sustancia pura porque su temperatura cambia continuamente."],
+      ["D", "Las dos muestras tienen idéntica composición porque ambas hierven."]
+    ],
+    answer: "A",
+    explanation: "Bajo presión constante, una sustancia pura suele hervir a una temperatura característica; una mezcla puede hacerlo en un intervalo. El patrón de A es compatible con ese modelo, pero una sola observación no demuestra por sí sola que sea pura ni identifica sus componentes."
   }
 ];
 

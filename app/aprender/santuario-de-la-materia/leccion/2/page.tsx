@@ -264,6 +264,31 @@ export default function CuandoLaMateriaCambiaPage() {
     if (finished && lost) playSound("game-over.wav", 0.3);
     if (finished && !lost && rewardOpen) playSound("level-win.mp3", 0.25);
   }, [finished, lost, rewardOpen]);
+
+  useEffect(() => {
+    const hash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    if (!hash) return;
+    if (hash === "ejemplos") {
+      setStage("examples");
+      return;
+    }
+    if (hash === "desafio") {
+      setAttempt(0);
+      setIndex(0);
+      setSelected(null);
+      setChecked(false);
+      setCorrect(0);
+      setFinished(false);
+      setLost(false);
+      setRewardOpen(false);
+      setTutorOpen(false);
+      setStage("practice");
+      return;
+    }
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
+  }, []);
   const question = activeQuestions[index];
   const isCorrect = selected === question.answer;
 

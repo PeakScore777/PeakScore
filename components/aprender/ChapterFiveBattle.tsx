@@ -54,10 +54,10 @@ export default function ChapterFiveBattle({
   return (
     <section
       aria-label="Combate de Nova y el Guardián"
-      className="w-full bg-[#080f1c] px-3 py-3 sm:px-6 sm:py-4"
+      className="battle-overlay pointer-events-none fixed inset-x-3 bottom-[72px] z-20 bg-transparent sm:inset-x-6 sm:bottom-5"
     >
-      <div className="mx-auto flex w-full max-w-[980px] items-end justify-between gap-5 sm:gap-12">
-        <div className="flex w-[43%] max-w-[300px] flex-col items-start gap-1.5 sm:gap-2">
+      <div className="flex w-full items-end justify-between gap-4">
+        <div className="flex w-[24vw] max-w-[220px] flex-col items-start gap-1.5 sm:gap-2">
           <HealthBar value={novaHealth} side="nova" />
           <div className="battle-nova" aria-label="Nova">
             <div
@@ -69,7 +69,7 @@ export default function ChapterFiveBattle({
             />
           </div>
         </div>
-        <div className="flex w-[43%] max-w-[360px] flex-col items-end gap-1.5 sm:gap-2">
+        <div className="flex w-[30vw] max-w-[300px] flex-col items-end gap-1.5 sm:gap-2">
           <HealthBar value={guardianHealth} side="guardian" />
           <div className="battle-guardian" aria-label="Guardián">
             <div
@@ -98,7 +98,7 @@ export default function ChapterFiveBattle({
           min-height: 140px;
         }
         .battle-sprite {
-          width: min(100%, 156px);
+          width: min(100%, 150px);
           aspect-ratio: 1 / 1;
           background-repeat: no-repeat;
           background-size: 800% 100%;
@@ -123,6 +123,7 @@ export default function ChapterFiveBattle({
           87.5%, 100% { background-position: 100% 50%; }
         }
         @media (max-width: 480px) {
+          .battle-overlay { bottom: 64px; }
           .battle-nova { min-height: 84px; }
           .battle-guardian { min-height: 108px; }
           .battle-sprite { width: min(100%, 112px); }

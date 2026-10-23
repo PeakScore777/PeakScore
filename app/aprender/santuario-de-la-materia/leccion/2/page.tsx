@@ -465,6 +465,44 @@ export default function CuandoLaMateriaCambiaPage() {
               </ol>
             </section>
           </div>
+          
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <section className="rounded-xl border border-[#21405e] bg-[#0a1929] p-5 sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Ejemplo 3 · Punto de ebullición y volatilidad</p>
+              <p className="mt-3 text-sm leading-7 text-slate-100">A 1 atm, la muestra P hierve a 44 °C y la muestra Q a 82 °C. Si se calientan por separado bajo condiciones comparables, ¿cuál llega primero a la ebullición?</p>
+              <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
+                <li>La presión es la misma, por lo que pueden compararse los puntos de ebullición normales.</li>
+                <li>P necesita alcanzar 44 °C, mientras Q necesita 82 °C.</li>
+                <li>En condiciones comparables, P llega primero a la ebullición. Un punto menor suele asociarse con mayor volatilidad y presión de vapor a una temperatura dada.</li>
+              </ol>
+              <div className="mt-4 border-l-2 border-cyan-300 bg-cyan-300/[.05] p-3 text-sm leading-6 text-cyan-100">Clave Saber 11: verifica la presión antes de comparar puntos de ebullición y no confundas esa temperatura con la rapidez de calentamiento.</div>
+            </section>
+            <section className="rounded-xl border border-[#21405e] bg-[#0a1929] p-5 sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Ejemplo 4 · Presión y temperatura</p>
+              <p className="mt-3 text-sm leading-7 text-slate-100">Un gas ideal ocupa un recipiente rígido a 100 kPa y 300 K. Se calienta hasta 360 K, con volumen y cantidad de gas constantes. ¿Qué presión se espera?</p>
+              <div className="mt-3 rounded-lg border border-[#21405e] bg-[#06101d] p-4 text-center">
+                <p className="text-sm text-slate-300">Relación a volumen constante</p>
+                <p className="pixel-font mt-2 text-base text-cyan-100">P1/T1 = P2/T2</p>
+                <p className="mt-2 text-sm text-slate-300">P2 = P1 x T2/T1</p>
+                <p className="mt-2 text-lg font-extrabold text-white">P2 = 100 x 360/300 = 120 kPa</p>
+              </div>
+              <ol className="mt-4 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
+                <li>Registra P1 = 100 kPa, T1 = 300 K y T2 = 360 K.</li>
+                <li>Como el recipiente es rígido, el volumen es constante; usa temperaturas en kelvin.</li>
+                <li>La presión aumenta un 20 %, igual que la temperatura absoluta en este modelo ideal.</li>
+              </ol>
+            </section>
+            <section className="rounded-xl border border-[#21405e] bg-[#0a1929] p-5 sm:p-6 lg:col-span-2">
+              <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Ejemplo 5 · Interpretar una curva de calentamiento</p>
+              <p className="mt-3 text-sm leading-7 text-slate-100">Un gráfico de temperatura frente a energía tiene tramos ascendentes separados por una meseta a 60 °C. Durante la meseta se observa que coexisten sólido y líquido.</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                <div className="border border-[#35445a] p-3"><p className="font-bold text-cyan-100">Tramo ascendente</p><p className="mt-1 text-sm leading-6 text-slate-300">La temperatura aumenta dentro de una fase; en promedio, aumenta la energía cinética de las partículas.</p></div>
+                <div className="border border-[#35445a] p-3"><p className="font-bold text-amber-100">Meseta</p><p className="mt-1 text-sm leading-6 text-slate-300">La energía transferida se emplea principalmente en el cambio de fase; la temperatura permanece aproximadamente constante bajo las condiciones del modelo.</p></div>
+                <div className="border border-[#35445a] p-3"><p className="font-bold text-cyan-100">Tras la meseta</p><p className="mt-1 text-sm leading-6 text-slate-300">Cuando termina la transición, la temperatura vuelve a subir al añadir energía.</p></div>
+              </div>
+              <p className="mt-3 border-l-2 border-cyan-300 bg-cyan-300/[.05] p-3 text-sm leading-6 text-cyan-100">No concluyas que la sustancia dejó de absorber energía: durante una transición, esa energía puede cambiar las interacciones y la organización de las partículas.</p>
+            </section>
+          </div>
           <section className="mt-4 rounded-xl border border-amber-200/25 bg-[#101923] p-5">
             <h2 className="text-sm font-bold text-amber-100">Cómo abordar un ejemplo tipo Saber 11</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">

@@ -22,7 +22,35 @@ type Question = {
 const questions: Question[] = [
  {difficulty:"Fácil",competency:"Uso comprensivo del conocimiento científico",context:"Nova recibe una muestra transparente formada por agua y sal disuelta. Después de evaporar parte del agua, aparecen cristales de sal.",prompt:"¿Cómo se clasifica mejor la muestra inicial?",options:[{label:"A",text:"Sustancia pura, porque se ve uniforme."},{label:"B",text:"Mezcla homogénea, porque contiene más de una sustancia y presenta una sola fase visible."},{label:"C",text:"Mezcla heterogénea, porque toda mezcla debe mostrar sus componentes."},{label:"D",text:"Elemento químico, porque la sal no se ve."}],answer:"B",explanation:"Una disolución de sal en agua es una mezcla homogénea: contiene varias sustancias distribuidas uniformemente y no se distinguen fases a simple vista. La apariencia uniforme no la convierte en sustancia pura."},
  {difficulty:"Media",competency:"Explicación de fenómenos",context:"En un laboratorio hay una mezcla de limaduras de hierro, arena y sal. Se desea recuperar por separado los tres componentes sin transformar químicamente las sustancias.",prompt:"¿Qué secuencia aprovecha correctamente sus propiedades físicas?",options:[{label:"A",text:"Filtración, luego imantación y finalmente combustión."},{label:"B",text:"Imantación para retirar el hierro, añadir agua para disolver la sal, filtrar la arena y evaporar el agua."},{label:"C",text:"Evaporar primero toda la mezcla y después separar los componentes por color."},{label:"D",text:"Calentar hasta que el hierro y la arena se conviertan en gas."}],answer:"B",explanation:"La imantación separa el hierro por su respuesta al imán. La sal se disuelve en agua y la arena no; la filtración retiene la arena y la evaporación permite recuperar la sal disuelta."},
- {difficulty:"Media",competency:"Indagación y evaluación de evidencia",context:"Un estudiante afirma que una mezcla de agua y alcohol puede separarse mediante filtración porque ambos líquidos atraviesan el papel de filtro.",prompt:"¿Cuál procedimiento sería más adecuado para separar los componentes?",options:[{label:"A",text:"Filtrar varias veces, porque el papel retiene el alcohol."},{label:"B",text:"Usar decantación, porque todos los líquidos forman capas separadas."},{label:"C",text:"Aplicar destilación, aprovechando sus diferentes temperaturas de ebullición y controlando el montaje."},{label:"D",text:"Usar un imán, porque uno de los líquidos debe ser magnético."}],answer:"C",explanation:"El agua y el alcohol son miscibles, así que no se separan por filtración ni por decantación simple. La destilación aprovecha la diferencia de volatilidad/temperatura de ebullición para enriquecer el vapor en uno de los componentes."}
+ {difficulty:"Media",competency:"Indagación y evaluación de evidencia",context:"Un estudiante afirma que una mezcla de agua y alcohol puede separarse mediante filtración porque ambos líquidos atraviesan el papel de filtro.",prompt:"¿Cuál procedimiento sería más adecuado para separar los componentes?",options:[{label:"A",text:"Filtrar varias veces, porque el papel retiene el alcohol."},{label:"B",text:"Usar decantación, porque todos los líquidos forman capas separadas."},{label:"C",text:"Aplicar destilación, aprovechando sus diferentes temperaturas de ebullición y controlando el montaje."},{label:"D",text:"Usar un imán, porque uno de los líquidos debe ser magnético."}],answer:"C",explanation:"El agua y el alcohol son miscibles, así que no se separan por filtración ni por decantación simple. La destilación aprovecha la diferencia de volatilidad/temperatura de ebullición para enriquecer el vapor en uno de los componentes."},
+ {
+    difficulty:"Media",
+    competency:"Uso comprensivo del conocimiento científico",
+    context:"Una disolución contiene 9,0 g de soluto y tiene un volumen final de 225 mL. Todo el soluto se disolvió y se supone que no hay pérdida de muestra.",
+    prompt:"¿Cuál es la concentración masa/volumen expresada en gramos por cada 100 mL de disolución?",
+    options:[
+      {label:"A",text:"0,04 g/100 mL."},
+      {label:"B",text:"4,0 g/100 mL."},
+      {label:"C",text:"25 g/100 mL."},
+      {label:"D",text:"40 g/100 mL."}
+    ],
+    answer:"B",
+    explanation:"Primero divide la masa por el volumen final: 9,0 g ÷ 225 mL = 0,040 g/mL. Para expresarlo por 100 mL, multiplica por 100: 4,0 g/100 mL. Revisa siempre las unidades y utiliza el volumen final de la disolución."
+  },
+ {
+    difficulty:"Difícil",
+    competency:"Uso comprensivo del conocimiento científico",
+    context:"Una mezcla contiene arena, agua y aceite. La arena no se disuelve, y el aceite forma una capa separada del agua después de dejar reposar la mezcla. Se desea recuperar los tres componentes mediante procesos físicos.",
+    prompt:"¿Qué secuencia es más adecuada para separar los componentes?",
+    options:[
+      {label:"A",text:"Destilación para retirar la arena y luego imantación para separar agua y aceite."},
+      {label:"B",text:"Filtración para retener la arena y luego decantación para separar el aceite del agua."},
+      {label:"C",text:"Evaporación de toda la mezcla y luego tamizado para recuperar los tres componentes."},
+      {label:"D",text:"Cromatografía para separar la arena y cristalización para separar los dos líquidos."}
+    ],
+    answer:"B",
+    explanation:"La filtración retiene la arena insoluble y deja pasar la fase líquida. Como el aceite y el agua son inmiscibles y forman capas, la decantación permite separarlos por diferencia de densidad. Elige cada técnica por una propiedad real de la mezcla, no por el nombre del método."
+  }
 ];
 const retryQuestions: Question[] = [
   {

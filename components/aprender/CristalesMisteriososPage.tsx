@@ -90,7 +90,7 @@ const retryQuestions = [
     answer: "C",
     explanation: "Para P, ρ = 45/15 = 3 g/cm³; para Q, ρ = 30/10 = 3 g/cm³. La densidad es una propiedad intensiva: si composición y condiciones son comparables, masa y volumen pueden cambiar en la misma proporción y la razón se conserva. Tener la misma densidad no demuestra por sí solo que dos muestras sean idénticas."
   }
-]; as const;
+] as const;
 
 const notes = [
   ["Materia y sistema", "La materia tiene masa y ocupa espacio. Un sistema material es la porción del universo que se delimita para estudiarla; el entorno es lo que queda fuera."],

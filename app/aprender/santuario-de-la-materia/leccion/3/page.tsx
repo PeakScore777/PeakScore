@@ -64,7 +64,7 @@ const retryQuestions: Question[] = [
     answer:"C",
     explanation:"La solubilidad indica el máximo que puede disolverse bajo condiciones determinadas. De los 42 g añadidos, aproximadamente 36 g se disuelven y 6 g pueden quedar como sólido. Agitar acelera la disolución, pero no aumenta por sí solo el límite de equilibrio."
   }
-];;
+];
 const separationMethods = [
   {
     "id": "tamizado",

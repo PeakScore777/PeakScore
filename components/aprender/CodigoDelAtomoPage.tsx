@@ -170,6 +170,13 @@ export default function CodigoDelAtomoPage() {
  const [reward,setReward] = useState(false);
  const q=activeQuestions[index];
  const correct=choice===q.key;
+ useEffect(()=>{
+  const hash=decodeURIComponent(window.location.hash.replace(/^#/,""));
+  if(!hash)return;
+  if(hash==="ejemplos"){setPractice(false);setExamples(true);return;}
+  if(hash==="desafio"){setPractice(true);setExamples(false);setIndex(0);setAttempt(0);setChoice(null);setChecked(false);setScore(0);setDone(false);setReward(false);return;}
+  window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>document.getElementById(hash)?.scrollIntoView({behavior:"smooth",block:"start"})));
+ },[]);
  function sound(file:string,volume=.2){ if(typeof window!=="undefined"){const a=new Audio("/sounds/"+file);a.volume=volume;void a.play().catch(()=>{});} }
  function check(){if(!choice||checked)return;setChecked(true);if(correct)setScore(s=>s+1);}
  function next(){if(index<activeQuestions.length-1){sound("navigation.mp3",.16);setIndex(i=>i+1);setChoice(null);setChecked(false);return;}setDone(true);if(score===activeQuestions.length){setReward(true);sound("level-win.mp3",.25);}else sound("game-over.wav",.3);}

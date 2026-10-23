@@ -66,40 +66,46 @@ const questions: Question[] = [
 
 const retryQuestions: Question[] = [
   {
-    difficulty: "Media", competency: "Explicación de fenómenos",
-    context: "En el Santuario, una muestra de una sustancia pura pasa de líquido a gas al recibir energía. El equipo mantiene la presión aproximadamente constante y no detecta productos nuevos.",
-    prompt: "¿Cuál interpretación está mejor respaldada por el modelo de partículas?",
+    difficulty: "Media",
+    competency: "Uso comprensivo del conocimiento científico",
+    context: "A 1 atm, dos líquidos puros presentan puntos de ebullición normales de 44 °C (P) y 82 °C (Q). Se calientan por separado con montajes equivalentes.",
+    prompt: "¿Qué predicción está mejor respaldada por los datos?",
     options: [
-      { label: "A", text: "Las partículas dejan de tener cualquier interacción al convertirse en gas." },
-      { label: "B", text: "La sustancia necesariamente se descompuso porque cambió de estado." },
-      { label: "C", text: "Las partículas ganan movilidad y se separan más, pero la identidad química de la sustancia se conserva." },
-      { label: "D", text: "La masa de la muestra aumenta porque el gas ocupa más espacio." }
-    ], answer: "C",
-    explanation: "La vaporización es un cambio físico. Las partículas tienen mayor libertad de movimiento y suelen estar más separadas, pero eso no implica que desaparezcan todas las interacciones ni que se forme otra sustancia."
+      { label: "A", text: "Q hervirá primero porque su punto de ebullición es mayor." },
+      { label: "B", text: "Ambos hervirán a la misma temperatura porque tienen el mismo volumen." },
+      { label: "C", text: "P alcanzará la ebullición antes que Q si la presión se mantiene en 1 atm." },
+      { label: "D", text: "No se pueden comparar porque el punto de ebullición no depende de la presión." }
+    ],
+    answer: "C",
+    explanation: "El punto de ebullición normal se define a 1 atm. P alcanza la transición líquido-gas a 44 °C y Q a 82 °C. La presión sí puede modificar el punto de ebullición; por eso la condición de presión debe mantenerse igual."
   },
   {
-    difficulty: "Media", competency: "Uso comprensivo del conocimiento científico",
-    context: "Una jeringa sellada contiene una cantidad fija de gas. A temperatura constante, el volumen disminuye de 6 L a 3 L y no hay fugas.",
-    prompt: "Según el modelo de gas ideal, ¿qué cambio se espera en la presión absoluta?",
+    difficulty: "Difícil",
+    competency: "Uso comprensivo del conocimiento científico",
+    context: "Un recipiente rígido contiene una cantidad fija de gas ideal a 300 K y 1,20 atm. Se calienta hasta 450 K sin que cambien el volumen ni la cantidad de gas.",
+    prompt: "¿Cuál es la presión final aproximada?",
     options: [
-      { label: "A", text: "Se duplica aproximadamente, porque las partículas chocan más frecuentemente con las paredes." },
-      { label: "B", text: "Se reduce a la mitad, porque hay menos espacio para que las partículas se muevan." },
-      { label: "C", text: "Permanece idéntica, ya que la temperatura no cambió." },
-      { label: "D", text: "Se vuelve cero, porque las partículas ya no pueden desplazarse." }
-    ], answer: "A",
-    explanation: "Para una cantidad fija de gas ideal a temperatura constante, P₁V₁ = P₂V₂. Si el volumen se reduce a la mitad, la presión absoluta se duplica aproximadamente."
+      { label: "A", text: "0,80 atm, porque el gas se expande." },
+      { label: "B", text: "1,20 atm, porque el recipiente tiene el mismo volumen." },
+      { label: "C", text: "2,40 atm, porque la presión se duplica al aumentar cualquier temperatura." },
+      { label: "D", text: "1,80 atm, porque P2 = P1 x T2/T1 a volumen y cantidad constantes." }
+    ],
+    answer: "D",
+    explanation: "A volumen y cantidad de gas constantes, P2 = P1 x (T2/T1) = 1,20 x (450/300) = 1,80 atm. Las temperaturas deben expresarse en kelvin; el aumento de 300 K a 450 K es del 50 %, así que la presión aumenta aproximadamente en la misma proporción."
   },
   {
-    difficulty: "Difícil", competency: "Indagación y evaluación de evidencia",
-    context: "Al calentar una sustancia pura a presión constante, un equipo registra que la temperatura aumenta de 18 °C a 48 °C, se mantiene alrededor de 48 °C mientras coexisten dos fases y después vuelve a aumentar.",
-    prompt: "¿Qué conclusión se puede extraer con mayor rigor de estos datos?",
+    difficulty: "Media",
+    competency: "Explicación de fenómenos",
+    context: "Dos recipientes con pistón contienen, a la misma temperatura, un gas y un líquido. Se aplica presión adicional similar a ambos. El volumen del gas disminuye mucho más.",
+    prompt: "¿Cuál explicación concuerda mejor con el modelo de partículas?",
     options: [
-      { label: "A", text: "El equipo demuestra que el termómetro se dañó justo cuando apareció la segunda fase." },
-      { label: "B", text: "La temperatura constante demuestra que dejó de transferirse energía al sistema." },
-      { label: "C", text: "La sustancia cambió su composición química porque coexistieron dos fases." },
-      { label: "D", text: "La meseta es compatible con energía transferida al cambio de fase, sin un aumento apreciable de temperatura durante ese intervalo." }
-    ], answer: "D",
-    explanation: "Durante un cambio de estado de una sustancia pura a presión constante, la energía transferida puede emplearse en transformar la fase. La meseta por sí sola no demuestra una falla del instrumento ni una reacción química."
+      { label: "A", text: "Las partículas del gas son necesariamente más pequeñas." },
+      { label: "B", text: "Las partículas del gas están más separadas y hay más espacio entre ellas que puede reducirse al comprimirlo." },
+      { label: "C", text: "El líquido no contiene partículas y por eso no se comprime." },
+      { label: "D", text: "La presión convierte de inmediato el gas en una sustancia nueva." }
+    ],
+    answer: "B",
+    explanation: "Las partículas de un gas están mucho más separadas que las de un líquido. La compresión reduce principalmente el espacio entre partículas; como en un líquido ya están muy próximas, su volumen cambia mucho menos. El fenómeno descrito no demuestra una reacción química."
   }
 ];
 

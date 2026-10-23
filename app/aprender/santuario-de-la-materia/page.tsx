@@ -266,7 +266,7 @@ export default function SantuarioDeLaMateriaPage() {
           </div>
 
           <div className="space-y-3">
-            {chapters.map((chapter) => {
+            {chapters.filter((chapter) => chapter.available).map((chapter) => {
               const isOpen = expanded.includes(chapter.id);
               const isAvailable = Boolean(chapter.available);
               return (

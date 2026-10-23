@@ -58,6 +58,8 @@ export default function QueEsEsaVainaGame() {
   const [finished, setFinished] = useState(false);
   const [saved, setSaved] = useState<SavedProgress>({ bestScore: 0, completedIds: [], chests: 0 });
   const [hydrated, setHydrated] = useState(false);
+  const [accountProgress, setAccountProgress] = useState<{ best_score: number; best_correct: number; games_completed: number } | null>(null);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   useEffect(() => {
     try {
@@ -75,6 +77,27 @@ export default function QueEsEsaVainaGame() {
     }
     setRounds(getRounds());
     setHydrated(true);
+
+    let active = true;
+    void fetch("/api/games/progress", { method: "GET", cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        const payload = await response.json();
+        return payload?.progress ?? null;
+      })
+      .then((progress) => {
+        if (!active || !progress) return;
+        setAccountProgress({
+          best_score: Math.max(0, Number(progress.best_score) || 0),
+          best_correct: Math.max(0, Number(progress.best_correct) || 0),
+          games_completed: Math.max(0, Number(progress.games_completed) || 0),
+        });
+      })
+      .catch(() => {
+        // El juego sigue disponible aunque no se pueda consultar el progreso de la cuenta.
+      });
+
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -117,6 +140,26 @@ export default function QueEsEsaVainaGame() {
         bestScore: Math.max(value.bestScore, score),
         chests: Math.max(value.chests, Math.min(5, Math.floor(correctCount / 2))),
       }));
+      setSaveStatus("saving");
+      void fetch("/api/games/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ score, correct: correctCount }),
+      })
+        .then(async (response) => {
+          if (!response.ok) throw new Error("No se pudo guardar el progreso de la cuenta.");
+          const payload = await response.json();
+          const progress = payload?.progress;
+          if (progress) {
+            setAccountProgress({
+              best_score: Math.max(0, Number(progress.best_score) || 0),
+              best_correct: Math.max(0, Number(progress.best_correct) || 0),
+              games_completed: Math.max(0, Number(progress.games_completed) || 0),
+            });
+          }
+          setSaveStatus("saved");
+        })
+        .catch(() => setSaveStatus("error"));
       return;
     }
     setIndex((value) => value + 1);

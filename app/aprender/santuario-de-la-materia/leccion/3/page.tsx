@@ -25,10 +25,46 @@ const questions: Question[] = [
  {difficulty:"Media",competency:"Indagación y evaluación de evidencia",context:"Un estudiante afirma que una mezcla de agua y alcohol puede separarse mediante filtración porque ambos líquidos atraviesan el papel de filtro.",prompt:"¿Cuál procedimiento sería más adecuado para separar los componentes?",options:[{label:"A",text:"Filtrar varias veces, porque el papel retiene el alcohol."},{label:"B",text:"Usar decantación, porque todos los líquidos forman capas separadas."},{label:"C",text:"Aplicar destilación, aprovechando sus diferentes temperaturas de ebullición y controlando el montaje."},{label:"D",text:"Usar un imán, porque uno de los líquidos debe ser magnético."}],answer:"C",explanation:"El agua y el alcohol son miscibles, así que no se separan por filtración ni por decantación simple. La destilación aprovecha la diferencia de volatilidad/temperatura de ebullición para enriquecer el vapor en uno de los componentes."}
 ];
 const retryQuestions: Question[] = [
- {difficulty:"Media",competency:"Indagación y evaluación de evidencia",context:"Una mezcla contiene agua, arena y sal disuelta. Se quiere recuperar la arena seca y también obtener la sal.",prompt:"¿Qué plan permite lograr ambos objetivos?",options:[{label:"A",text:"Filtrar para retener la arena, secarla y evaporar el filtrado para recuperar la sal."},{label:"B",text:"Evaporar toda la mezcla y asumir que la arena desaparecerá."},{label:"C",text:"Usar únicamente un imán, porque la sal y la arena son metales."},{label:"D",text:"Filtrar el agua con sal y afirmar que la sal queda retenida en el papel."}],answer:"A",explanation:"La arena es insoluble y queda retenida en el filtro. La sal disuelta atraviesa el filtro junto con el agua; al evaporar el disolvente, la sal puede cristalizar."},
- {difficulty:"Media",competency:"Uso comprensivo del conocimiento científico",context:"Dos líquidos forman una sola fase al mezclarse. Sus temperaturas de ebullición son diferentes y no reaccionan químicamente entre sí.",prompt:"¿Qué método es el más pertinente para separar y recoger sus componentes?",options:[{label:"A",text:"Tamizado por tamaño de partícula."},{label:"B",text:"Destilación, recogiendo el vapor condensado."},{label:"C",text:"Filtración con papel poroso."},{label:"D",text:"Decantación por diferencia de densidad, aunque sean miscibles."}],answer:"B",explanation:"La destilación separa componentes miscibles aprovechando diferencias de volatilidad. El vapor se conduce a un condensador y se recoge como líquido."},
- {difficulty:"Media",competency:"Explicación de fenómenos",context:"Una tinta negra se coloca sobre papel de cromatografía. Al subir el disolvente, aparecen bandas de distintos colores a diferentes alturas.",prompt:"¿Qué explica mejor el resultado?",options:[{label:"A",text:"La tinta se transformó necesariamente en sustancias nuevas."},{label:"B",text:"Todos los pigmentos viajan exactamente igual, pero el papel cambia sus colores."},{label:"C",text:"Los componentes interactúan de forma diferente con el papel y el disolvente, por lo que avanzan distancias distintas."},{label:"D",text:"La cromatografía separa solo materiales magnéticos."}],answer:"C",explanation:"La cromatografía aprovecha diferencias de afinidad entre la fase estacionaria (papel) y la fase móvil (disolvente). Por eso, los componentes de una mezcla pueden desplazarse a distintas velocidades."}
-];
+  {
+    difficulty:"Media",competency:"Uso comprensivo del conocimiento científico",
+    context:"Una disolución contiene 9,0 g de soluto y su volumen final es 150 mL. Se supone que todo el soluto se disuelve.",
+    prompt:"¿Cuál es la concentración masa/volumen de la disolución?",
+    options:[
+      {label:"A",text:"0,006 g/mL."},
+      {label:"B",text:"6,0 g/mL."},
+      {label:"C",text:"16,7 g/mL."},
+      {label:"D",text:"0,060 g/mL, equivalente a 6,0 g/100 mL."}
+    ],
+    answer:"D",
+    explanation:"La concentración masa/volumen es masa de soluto dividida por volumen final: C = 9,0 g / 150 mL = 0,060 g/mL. Para expresarla por 100 mL, multiplica por 100: 6,0 g/100 mL. No confundas el volumen final de la disolución con el volumen de disolvente añadido."
+  },
+  {
+    difficulty:"Difícil",competency:"Indagación y evaluación de evidencia",
+    context:"A presión constante, la solubilidad de un gas en agua se midió a 0, 20, 40 y 60 °C: 3,5; 2,0; 1,1 y 0,7 g de gas por kg de agua, respectivamente.",
+    prompt:"¿Qué relación está respaldada por las mediciones en el intervalo estudiado?",
+    options:[
+      {label:"A",text:"La solubilidad aumenta con la temperatura porque las partículas se mueven más rápido."},
+      {label:"B",text:"La solubilidad disminuye al aumentar la temperatura, manteniendo la presión constante."},
+      {label:"C",text:"La solubilidad no cambia porque la presión es constante."},
+      {label:"D",text:"Los datos demuestran que todos los gases se vuelven insolubles a 60 °C."}
+    ],
+    answer:"B",
+    explanation:"La serie disminuye en cada medición: 3,5 a 2,0, luego 1,1 y 0,7 g/kg. En este sistema y rango, los datos apoyan una relación inversa entre temperatura y solubilidad del gas. No justifican generalizar que todos los gases tengan exactamente el mismo comportamiento."
+  },
+  {
+    difficulty:"Media",competency:"Explicación de fenómenos",
+    context:"A 20 °C, se estima que una sal puede disolverse hasta 36 g por cada 100 g de agua. Un estudiante agrega 42 g de esa sal a 100 g de agua y agita hasta alcanzar el equilibrio.",
+    prompt:"Si las condiciones no cambian, ¿qué se espera observar?",
+    options:[
+      {label:"A",text:"Los 42 g necesariamente se disolverán porque la agitación elimina el límite de solubilidad."},
+      {label:"B",text:"Se formará una sustancia nueva porque queda sólido en el recipiente."},
+      {label:"C",text:"Se disolverán cerca de 36 g y unos 6 g quedarán sin disolver."},
+      {label:"D",text:"No se disolverá ninguna cantidad porque se superó el límite desde el inicio."}
+    ],
+    answer:"C",
+    explanation:"La solubilidad indica el máximo que puede disolverse bajo condiciones determinadas. De los 42 g añadidos, aproximadamente 36 g se disuelven y 6 g pueden quedar como sólido. Agitar acelera la disolución, pero no aumenta por sí solo el límite de equilibrio."
+  }
+];;
 const separationMethods = [
   {
     "id": "tamizado",
@@ -431,6 +467,24 @@ export default function LaboratorioDeLasMezclasPage() {
               <p className="mt-3 text-sm leading-7 text-slate-300">Una disolución contiene un sólido no volátil disuelto en agua. Se quiere obtener el sólido y no es necesario recuperar el agua. ¿Qué técnica responde directamente al objetivo?</p>
               <ol className="mt-4 space-y-2 text-sm leading-6 text-slate-200"><li><strong className="text-cyan-100">A.</strong> Evaporación controlada del disolvente.</li><li><strong className="text-cyan-100">B.</strong> Filtración de la disolución transparente.</li><li><strong className="text-cyan-100">C.</strong> Sedimentación de las moléculas de soluto disueltas.</li><li><strong className="text-cyan-100">D.</strong> Imantación sin evidencia de propiedades magnéticas.</li></ol>
               <div className="mt-4 border-l-2 border-emerald-300 bg-emerald-300/[.06] p-4"><p className="font-extrabold text-emerald-200">Respuesta correcta: A</p><p className="mt-2 text-sm leading-6 text-slate-200"><strong>Método profesional:</strong> la disolución es homogénea y el soluto está a escala molecular o iónica, por lo que no queda retenido en un filtro común. Como solo se necesita el sólido, se elimina el agua por evaporación; si se buscan cristales más ordenados o una purificación, puede usarse cristalización.</p></div>
+            </article>
+          </div>
+          
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <article className="rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-200">Ejemplo 7 · Solubilidad de un gas</p><span className="border border-rose-300/30 px-2 py-1 text-[9px] font-bold text-rose-200">NIVEL ALTO</span></div>
+              <h2 className="mt-3 text-lg font-bold leading-7 text-white">¿Cómo cambia la solubilidad al calentar?</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">A presión constante, un equipo registra la solubilidad de un gas en agua: a 0 °C, 3,5 g/kg; a 20 °C, 2,0 g/kg; a 40 °C, 1,1 g/kg; y a 60 °C, 0,7 g/kg. ¿Qué tendencia muestran los datos?</p>
+              <div className="mt-3 overflow-x-auto"><table className="w-full min-w-[400px] border-collapse text-left text-xs text-slate-200"><thead><tr className="bg-[#15243a] text-cyan-100"><th className="border border-[#344a66] p-2">Temperatura</th><th className="border border-[#344a66] p-2">Solubilidad del gas</th></tr></thead><tbody><tr><td className="border border-[#344a66] p-2">0 °C</td><td className="border border-[#344a66] p-2">3,5 g/kg</td></tr><tr><td className="border border-[#344a66] p-2">20 °C</td><td className="border border-[#344a66] p-2">2,0 g/kg</td></tr><tr><td className="border border-[#344a66] p-2">40 °C</td><td className="border border-[#344a66] p-2">1,1 g/kg</td></tr><tr><td className="border border-[#344a66] p-2">60 °C</td><td className="border border-[#344a66] p-2">0,7 g/kg</td></tr></tbody></table></div>
+              <ol className="mt-4 space-y-2 text-sm leading-6 text-slate-200"><li><strong className="text-cyan-100">Paso 1.</strong> La presión se mantiene constante; por tanto, es posible relacionar la variación observada con la temperatura en el montaje.</li><li><strong className="text-cyan-100">Paso 2.</strong> Cada vez que aumenta la temperatura, disminuye la solubilidad registrada.</li><li><strong className="text-cyan-100">Paso 3.</strong> En el intervalo estudiado, los datos apoyan una relación inversa entre estas variables.</li></ol>
+              <div className="mt-4 border-l-2 border-emerald-300 bg-emerald-300/[.06] p-4"><p className="font-extrabold text-emerald-200">Conclusión:</p><p className="mt-2 text-sm leading-6 text-slate-200">El gas se disuelve menos al aumentar la temperatura en el intervalo medido. No generalices la misma tendencia a todos los solutos: compara la sustancia y las condiciones del enunciado.</p></div>
+            </article>
+            <article className="rounded-xl border border-[#21405e] bg-[#071321] p-5 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-200">Ejemplo 8 · Disolución saturada</p><span className="border border-amber-300/30 px-2 py-1 text-[9px] font-bold text-amber-200">NIVEL MEDIO-ALTO</span></div>
+              <h2 className="mt-3 text-lg font-bold leading-7 text-white">¿Cuánto soluto queda sin disolver?</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-300">A 20 °C, la solubilidad de una sal se aproxima a 36 g por cada 100 g de agua. Se agregan 42 g de la sal a 100 g de agua y se agita lo suficiente para alcanzar el equilibrio. ¿Qué se espera?</p>
+              <ol className="mt-4 space-y-2 text-sm leading-6 text-slate-200"><li><strong className="text-cyan-100">Paso 1.</strong> El dato 36 g/100 g de agua es el máximo que puede disolverse bajo estas condiciones.</li><li><strong className="text-cyan-100">Paso 2.</strong> Se añadieron 42 g, es decir, 6 g más que el límite aproximado.</li><li><strong className="text-cyan-100">Paso 3.</strong> En equilibrio, pueden disolverse cerca de 36 g y quedar unos 6 g como sólido si no varían las condiciones.</li></ol>
+              <div className="mt-4 border-l-2 border-emerald-300 bg-emerald-300/[.06] p-4"><p className="font-extrabold text-emerald-200">Conclusión:</p><p className="mt-2 text-sm leading-6 text-slate-200">La disolución queda saturada y sobra soluto sólido. Agitar puede acelerar el proceso, pero no eleva por sí solo el límite de solubilidad de equilibrio.</p></div>
             </article>
           </div>
           <section className="mt-5 rounded-xl border border-cyan-200/20 bg-[#071321] p-5 sm:p-6">

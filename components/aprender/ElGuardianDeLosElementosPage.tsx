@@ -127,13 +127,13 @@ function ImageUploadSlot({ assetKey, title, description, compact=false }: { asse
 
  const picker = <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e=>{void uploadSelectedFile(e.currentTarget.files?.[0]);e.currentTarget.value="";}} />;
 
- return <div className={"relative flex " + (compact?"min-h-[200px]":"min-h-0") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
+ return <div className={"relative flex " + (compact?"min-h-[180px]":"min-h-0") + " w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center"}>
   {picker}
   {imageUrl ? (
    isAdmin ? <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
-    <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-52":"max-h-[620px]")}/>
+    <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-44":"max-h-[520px]")}/>
     {saving && <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100">Guardando imagen…</span>}
-   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-48":"max-h-[560px]")}/>
+   </button> : <img src={imageUrl} alt={description} className={"w-full object-contain " + (compact?"max-h-40":"max-h-[480px]")}/>
   ) : isAdmin ? (
    <button type="button" onClick={()=>fileInputRef.current?.click()} disabled={saving||loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4 text-cyan-100 transition hover:bg-cyan-400/[0.03] disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
     {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact?"h-7 w-7":"h-9 w-9") + " text-cyan-200"}/><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}

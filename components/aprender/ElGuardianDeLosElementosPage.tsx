@@ -185,10 +185,25 @@ export default function ElGuardianDeLosElementosPage() {
   if (hash && hash !== "ejemplos" && hash !== "desafio") window.requestAnimationFrame(() => window.requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({behavior:"smooth",block:"start"})));
  }, []);
 
- function sound(file:"navigation.mp3"|"level-win.mp3"|"game-over.wav",volume=0.22) {
+ // La música se reproduce exclusivamente durante los ejercicios y se detiene
+ // automáticamente al salir, terminar el nivel o mostrar Game Over/recompensa.
+ useEffect(() => {
+  if (view !== "practice" || done || rewardOpen) return;
+  const music = new Audio("/sounds/chapter-5-music.mp3");
+  music.loop = true;
+  music.volume = 0.28;
+  void music.play().catch(() => {});
+  return () => {
+   music.pause();
+   music.currentTime = 0;
+  };
+ }, [view, done, rewardOpen]);
+
+ function sound(file:"navigation.mp3"|"level-win.mp3"|"game-over.wav"|"chapter-5-attack.mp3"|"chapter-5-hurt.wav",volume=0.22) {
   const audio = new Audio("/sounds/"+file);
   audio.volume = volume;
   void audio.play().catch(()=>{});
+  return audio;
  }
  function showTheory() {
   setView("theory"); setDone(false); setRewardOpen(false); setTutorOpen(false);
@@ -208,6 +223,13 @@ export default function ElGuardianDeLosElementosPage() {
   setChecked(true);
   setBattleResult(correct);
   setBattleSequence(value => value + 1);
+  // Ataque y, al terminar, el sonido de impacto/daño recibido.
+  const attackAudio = sound("chapter-5-attack.mp3", 0.34);
+  attackAudio.addEventListener("ended", () => {
+   const hurtAudio = new Audio("/sounds/chapter-5-hurt.wav");
+   hurtAudio.volume = 0.38;
+   void hurtAudio.play().catch(() => {});
+  }, { once: true });
   if (correct) setScore(value => value + 1);
  }
  function nextQuestion() {

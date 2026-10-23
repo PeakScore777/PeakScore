@@ -231,6 +231,23 @@ export default function CristalesMisteriososPage() {
   const q = activeQuestions[index];
   const correct = choice === q.answer;
 
+  useEffect(() => {
+    const hash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+    if (!hash) return;
+    if (hash === "ejemplos") {
+      setView("examples");
+      return;
+    }
+    if (hash === "desafio") {
+      setAttempt(0); setIndex(0); setChoice(null); setChecked(false); setScore(0);
+      setDone(false); setReward(false); setView("practice");
+      return;
+    }
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
+  }, []);
+
   function sound(file: string, volume = 0.2) {
     if (typeof window === "undefined") return;
     const audio = new Audio("/sounds/" + file);

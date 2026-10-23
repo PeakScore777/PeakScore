@@ -555,6 +555,17 @@ export default function CuandoLaMateriaCambiaPage() {
               </div>
               <p className="mt-3 border-l-2 border-cyan-300 bg-cyan-300/[.05] p-3 text-sm leading-6 text-cyan-100">No concluyas que la sustancia dejó de absorber energía: durante una transición, esa energía puede cambiar las interacciones y la organización de las partículas.</p>
             </section>
+            <section className="rounded-xl border border-[#21405e] bg-[#0a1929] p-5 sm:p-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-cyan-200">Ejemplo 6 · Presión y ebullición</p>
+              <p className="mt-3 text-sm leading-7 text-slate-100">En una olla a presión, el agua puede superar los 100 °C antes de hervir. ¿Cómo se explica este comportamiento?</p>
+              <h2 className="mt-4 text-sm font-bold text-white">Razonamiento paso a paso</h2>
+              <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm leading-7 text-slate-300">
+                <li>Identifica la variable que cambió: la tapa permite que aumente la presión interna.</li>
+                <li>Recuerda la condición de ebullición: la presión de vapor del líquido debe igualar la presión que actúa sobre su superficie.</li>
+                <li>Con una presión mayor, el agua necesita alcanzar una temperatura mayor para llegar a esa condición.</li>
+              </ol>
+              <div className="mt-4 border-l-2 border-cyan-300 bg-cyan-300/[.05] p-3 text-sm leading-6 text-cyan-100">Clave Saber 11: un cambio en las condiciones externas puede cambiar la temperatura de transición, aunque las moléculas sigan siendo H₂O.</div>
+            </section>
           </div>
           <section className="mt-4 rounded-xl border border-amber-200/25 bg-[#101923] p-5">
             <h2 className="text-sm font-bold text-amber-100">Cómo abordar un ejemplo tipo Saber 11</h2>

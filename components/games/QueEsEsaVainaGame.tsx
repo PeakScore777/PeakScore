@@ -202,9 +202,9 @@ export default function QueEsEsaVainaGame() {
 
   return (
     <main className="relative isolate min-h-[calc(100vh-72px)] overflow-hidden bg-[#07091a] text-white">
-      <div className="absolute inset-0 -z-20 bg-cover bg-center" style={{ backgroundImage: "url('/images/games/backgrounds/que-es-esa-vaina-bg.png')" }} />
-      <div className="absolute inset-0 -z-10 bg-[#050817]/55" />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#050817]/35 via-[#07091a]/30 to-[#050817]/90" />
+      <div className="absolute inset-0 -z-20 bg-cover bg-center" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} />
+      <div className="absolute inset-0 -z-10 bg-[#050817]/[.28]" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#050817]/15 via-[#07091a]/15 to-[#050817]/75" />
 
       <div className="mx-auto w-full max-w-[1380px] px-3 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -220,9 +220,19 @@ export default function QueEsEsaVainaGame() {
                   <p className="text-[10px] font-black uppercase tracking-[.18em] text-cyan-200/75">Ronda {finished ? TOTAL_ROUNDS : index + 1} de {TOTAL_ROUNDS}</p>
                   <h1 className="mt-2 text-xl font-black sm:text-2xl">{finished ? "¡Desafío completado!" : "Descifra la pista"}</h1>
                 </div>
-                <div className="rounded-xl border border-amber-200/20 bg-amber-200/[.07] px-3 py-2 text-right">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-amber-100/65">Puntuación</p>
-                  <p className="mt-1 text-lg font-black tabular-nums text-amber-200">{score.toLocaleString("es-CO")}</p>
+                <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-violet-200/25 bg-[#050a20]/95 shadow-[0_8px_24px_rgba(0,0,0,.35)] sm:min-w-[310px]">
+                  <div className="border-r border-white/10 px-3 py-2 text-center">
+                    <p className="text-[9px] font-bold text-violet-100/65">Puntos</p>
+                    <p className="mt-1 flex items-center justify-center gap-1 text-base font-black tabular-nums text-amber-200 sm:text-lg"><span>★</span>{score.toLocaleString("es-CO")}</p>
+                  </div>
+                  <div className="border-r border-white/10 px-3 py-2 text-center">
+                    <p className="text-[9px] font-bold text-violet-100/65">Peak Coins</p>
+                    <div className="mt-1 flex items-center justify-center gap-1"><Image src="/images/currency/peakcoin.webp" alt="Peak Coins" width={21} height={21} className="h-5 w-5 object-contain" /><span className="text-sm font-black text-cyan-200">—</span></div>
+                  </div>
+                  <div className="px-3 py-2 text-center">
+                    <p className="text-[9px] font-bold text-violet-100/65">Racha</p>
+                    <p className="mt-1 text-base font-black text-orange-300 sm:text-lg">🔥 —</p>
+                  </div>
                 </div>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 transition-all duration-500" style={{ width: `${progress}%` }} /></div>

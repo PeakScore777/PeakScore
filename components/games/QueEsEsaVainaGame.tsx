@@ -44,13 +44,17 @@ const STORAGE_KEY = "peakscore-que-es-esa-vaina-v1";
 
 type SavedProgress = { bestScore: number; completedIds: string[]; chests: number };
 
-function getRounds(): Question[] {
-  const pool = [...QUESTION_BANK];
+function getRoundsFromPool(source: Question[]): Question[] {
+  const pool = [...source];
   for (let i = pool.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   return pool.slice(0, TOTAL_ROUNDS);
+}
+
+function getRounds(): Question[] {
+  return getRoundsFromPool(QUESTION_BANK);
 }
 
 export default function QueEsEsaVainaGame() {
@@ -82,10 +86,34 @@ export default function QueEsEsaVainaGame() {
     } catch {
       // El juego continúa sin progreso guardado si el almacenamiento está bloqueado.
     }
-    setRounds(getRounds());
-    setHydrated(true);
-
     let active = true;
+    void fetch("/api/games/questions", { method: "GET", cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return [];
+        const payload = await response.json();
+        return Array.isArray(payload?.questions) ? payload.questions : [];
+      })
+      .then((published: Array<Partial<Question> & { id: string }>) => {
+        if (!active) return;
+        const valid = published.filter((q) =>
+          typeof q.id === "string" &&
+          typeof q.subject === "string" &&
+          typeof q.topic === "string" &&
+          typeof q.clue === "string" &&
+          Array.isArray(q.options) && q.options.length === 4 &&
+          q.options.every((option) => typeof option === "string") &&
+          Number.isInteger(q.answer) && Number(q.answer) >= 0 && Number(q.answer) <= 3 &&
+          typeof q.explanation === "string" && typeof q.hint === "string"
+        ) as Question[];
+        setRounds(getRoundsFromPool(valid.length >= TOTAL_ROUNDS ? valid : QUESTION_BANK));
+      })
+      .catch(() => {
+        if (active) setRounds(getRounds());
+      })
+      .finally(() => {
+        if (active) setHydrated(true);
+      });
+
     void fetch("/api/games/progress", { method: "GET", cache: "no-store" })
       .then(async (response) => {
         if (!response.ok) return null;

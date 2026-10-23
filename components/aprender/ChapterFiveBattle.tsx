@@ -38,47 +38,31 @@ export default function ChapterFiveBattle({ result, sequence }: Props) {
   const novaAttacks = result === true;
   const novaSprite = !playing || novaAttacks ? SPRITES.novaAttack : SPRITES.novaHurt;
   const guardianSprite = !playing || novaAttacks ? SPRITES.guardianHurt : SPRITES.guardianAttack;
-  const status = !playing
-    ? "RESPONDE PARA ACTIVAR EL COMBATE"
-    : novaAttacks
-      ? "¡CORRECTO! NOVA ATACA · EL GUARDIÁN RECIBE DAÑO"
-      : "¡INTÉNTALO DE NUEVO! EL GUARDIÁN ATACA · NOVA RECIBE DAÑO";
 
   return (
-    <section
-      aria-label="Combate de Nova contra el guardián"
-      className="overflow-hidden rounded-xl border border-[#21405e] bg-[radial-gradient(ellipse_at_top,rgba(24,68,105,.42),rgba(5,12,24,.98)_70%)] p-4 sm:p-5"
+    <div
+      aria-label="Animación de combate"
+      className="mx-auto flex w-full max-w-[420px] items-center justify-center gap-3 sm:gap-8"
     >
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <p className="pixel-font text-[9px] text-cyan-200">DUELO DEL SANTUARIO</p>
-        <span className="border border-cyan-200/20 bg-black/30 px-2 py-1 text-[8px] text-slate-300">
-          8 FPS · 125 MS/FRAME
-        </span>
-      </div>
-      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-6">
-        <BattleSprite
-          key={`nova-${sequence}-${result}`}
-          name="NOVA"
-          src={novaSprite}
-          playing={playing}
-          label={novaAttacks ? "Nova ejecuta su ataque" : playing ? "Nova recibe daño" : "Nova en posición de combate"}
-        />
-        <div className="pixel-font px-1 text-[10px] text-amber-200 sm:px-3 sm:text-xs" aria-hidden="true">VS</div>
-        <BattleSprite
-          key={`guardian-${sequence}-${result}`}
-          name="GUARDIAN"
-          src={guardianSprite}
-          playing={playing}
-          label={novaAttacks ? "El guardián recibe daño" : playing ? "El guardián ejecuta su ataque" : "El guardián en posición de combate"}
-        />
-      </div>
-      <p aria-live="polite" className="mt-3 min-h-8 text-center text-[9px] leading-5 text-cyan-100 sm:text-[10px]">
-        {status}
-      </p>
+      <div
+        key={`nova-${sequence}-${result}`}
+        role="img"
+        aria-label="Nova"
+        className={`battle-sprite ${playing ? "battle-sprite-playing" : ""}`}
+        style={{ backgroundImage: `url("${novaSprite}")` }}
+      />
+      <div
+        key={`guardian-${sequence}-${result}`}
+        role="img"
+        aria-label="Guardián"
+        className={`battle-sprite ${playing ? "battle-sprite-playing" : ""}`}
+        style={{ backgroundImage: `url("${guardianSprite}")` }}
+      />
       <style jsx>{`
         .battle-sprite {
-          width: min(100%, 210px);
-          aspect-ratio: 8 / 1;
+          width: min(38vw, 150px);
+          aspect-ratio: 1 / 1;
+          flex: 0 1 150px;
           background-repeat: no-repeat;
           background-size: 800% 100%;
           background-position: 0% 50%;
@@ -88,7 +72,6 @@ export default function ChapterFiveBattle({ result, sequence }: Props) {
         .battle-sprite-playing {
           animation: chapter-five-sprite-frames 1s steps(1, end) 1 both;
         }
-        .pixel-font { font-family: var(--font-press-start), "Press Start 2P", monospace; }
         @keyframes chapter-five-sprite-frames {
           0% { background-position: 0% 50%; }
           12.5% { background-position: 14.2857% 50%; }
@@ -103,6 +86,6 @@ export default function ChapterFiveBattle({ result, sequence }: Props) {
           .battle-sprite-playing { animation: none; background-position: 100% 50%; }
         }
       `}</style>
-    </section>
+    </div>
   );
 }

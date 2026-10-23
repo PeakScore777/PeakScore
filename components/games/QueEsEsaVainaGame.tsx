@@ -200,128 +200,157 @@ export default function QueEsEsaVainaGame() {
     return <main className="grid min-h-[70vh] place-items-center bg-[#07091a] text-white"><p className="animate-pulse text-sm">Preparando el desafío...</p></main>;
   }
 
-  return (
-    <main className="relative isolate min-h-[calc(100vh-72px)] overflow-hidden bg-[#07091a] text-white">
-      <div className="absolute inset-0 -z-20 bg-cover bg-center" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} />
-      <div className="absolute inset-0 -z-10 bg-[#050817]/[.28]" />
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#050817]/15 via-[#07091a]/15 to-[#050817]/75" />
+  const playButtonSound = () => {
+    try {
+      const audio = new Audio("/sounds/navigation.mp3");
+      audio.volume = 0.35;
+      void audio.play().catch(() => undefined);
+    } catch {
+      // El sonido es decorativo; nunca debe bloquear el juego.
+    }
+  };
 
-      <div className="mx-auto w-full max-w-[1380px] px-3 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <Link href="/aprender/juegos" className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/15 bg-[#080d25]/80 px-3 py-2 text-xs font-bold text-white/80 transition hover:border-cyan-200/50 hover:text-white"><ArrowLeft className="h-4 w-4" /> Todos los juegos</Link>
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-200/20 bg-[#080d25]/80 px-3 py-2 text-[10px] font-black uppercase tracking-[.12em] text-violet-100"><Sparkles className="h-4 w-4 text-fuchsia-300" /> ¿Qué es esa vaina?</div>
+  const handleNext = () => {
+    playButtonSound();
+    next();
+  };
+
+  return (
+    <main className="relative isolate min-h-[calc(100svh-72px)] overflow-hidden bg-[#070b18] text-white">
+      <div className="absolute inset-0 -z-30 bg-cover bg-center" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} />
+      <div className="absolute inset-0 -z-20 bg-[#040817]/35" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#030817]/25 via-[#06102b]/25 to-[#030817]/80" />
+
+      <div className="mx-auto w-full max-w-[1500px] px-3 pb-8 pt-4 sm:px-5 lg:px-8">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <Link href="/aprender/juegos" className="inline-flex min-h-10 items-center gap-2 border-2 border-[#777f9c] bg-[#10172b]/95 px-3 py-2 text-xs font-black text-white shadow-[3px_3px_0_#030713] transition hover:bg-[#1c2942]" onClick={playButtonSound}><ArrowLeft className="h-4 w-4" /> Todos los juegos</Link>
+          <div className="border-2 border-[#68728f] bg-[#0a1026]/95 px-3 py-2 text-[10px] font-black uppercase tracking-[.12em] text-[#f5d8ff] shadow-[3px_3px_0_#030713]"><Sparkles className="mr-1 inline h-4 w-4 text-[#f5c65d]" /> ¿Qué es esa vaina?</div>
         </div>
 
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <section className="min-w-0 overflow-hidden rounded-2xl border border-violet-200/20 bg-[#080d25]/95 shadow-[0_20px_60px_rgba(0,0,0,.38)] backdrop-blur-sm">
-            <div className="border-b border-white/10 p-4 sm:p-6">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_285px]">
+          <section className="min-w-0 border-[3px] border-[#65718e] bg-[#070d22]/[.97] shadow-[0_0_0_3px_#11182d,8px_8px_0_rgba(0,0,0,.45)]">
+            <header className="border-b-2 border-[#303c59] px-4 py-4 sm:px-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[.18em] text-cyan-200/75">Ronda {finished ? TOTAL_ROUNDS : index + 1} de {TOTAL_ROUNDS}</p>
-                  <h1 className="mt-2 text-xl font-black sm:text-2xl">{finished ? "¡Desafío completado!" : "Descifra la pista"}</h1>
+                  <p className="text-[10px] font-black uppercase tracking-[.2em] text-[#f0c86d]">Ronda {finished ? TOTAL_ROUNDS : index + 1} de {TOTAL_ROUNDS}</p>
+                  <h1 className="mt-2 text-xl font-black text-white sm:text-2xl">{finished ? "¡Desafío completado!" : "Descifra la pista"}</h1>
                 </div>
-                <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-violet-200/25 bg-[#050a20]/95 shadow-[0_8px_24px_rgba(0,0,0,.35)] sm:min-w-[310px]">
-                  <div className="border-r border-white/10 px-3 py-2 text-center">
-                    <p className="text-[9px] font-bold text-violet-100/65">Puntos</p>
-                    <p className="mt-1 flex items-center justify-center gap-1 text-base font-black tabular-nums text-amber-200 sm:text-lg"><span>★</span>{score.toLocaleString("es-CO")}</p>
+                <div className="grid grid-cols-2 overflow-hidden border-2 border-[#4c5877] bg-[#050a19] sm:min-w-[260px] sm:grid-cols-2">
+                  <div className="px-4 py-2 text-center">
+                    <p className="text-[9px] font-bold text-[#aab4cf]">Puntos</p>
+                    <p className="mt-1 flex items-center justify-center gap-1 text-lg font-black text-[#ffd65c]"><span>★</span>{score}</p>
                   </div>
-                  <div className="border-r border-white/10 px-3 py-2 text-center">
-                    <p className="text-[9px] font-bold text-violet-100/65">Peak Coins</p>
-                    <div className="mt-1 flex items-center justify-center gap-1"><Image src="/images/currency/peakcoin.webp" alt="Peak Coins" width={21} height={21} className="h-5 w-5 object-contain" /><span className="text-sm font-black text-cyan-200">—</span></div>
-                  </div>
-                  <div className="px-3 py-2 text-center">
-                    <p className="text-[9px] font-bold text-violet-100/65">Racha</p>
-                    <p className="mt-1 text-base font-black text-orange-300 sm:text-lg">🔥 —</p>
+                  <div className="border-l-2 border-[#303b57] px-3 py-2 text-center">
+                    <p className="text-[9px] font-bold text-[#aab4cf]">Peak Coins</p>
+                    <div className="mt-1 flex items-center justify-center gap-1"><Image src="/images/currency/peakcoin.webp" alt="Peak Coins" width={22} height={22} className="h-5 w-5 object-contain" /><span className="text-sm font-black text-[#7feaff]">—</span></div>
                   </div>
                 </div>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-violet-400 to-fuchsia-400 transition-all duration-500" style={{ width: `${progress}%` }} /></div>
-            </div>
+              <div className="mt-4 flex gap-1.5" aria-label={`Progreso: ${progress}%`}>
+                {Array.from({ length: TOTAL_ROUNDS }, (_, i) => <div key={i} className={`h-3 flex-1 border border-[#737c93] transition-colors duration-300 ${i < (finished ? TOTAL_ROUNDS : index) ? "bg-[#f3c94f] shadow-[inset_0_0_0_1px_#fff0a3]" : "bg-[#151c31]"}`} />)}
+              </div>
+            </header>
 
             {finished ? (
-              <div className="px-5 py-9 text-center sm:px-10 sm:py-12">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-amber-200/30 bg-amber-200/10"><Trophy className="h-8 w-8 text-amber-200" /></div>
-                <p className="mt-5 text-[10px] font-black uppercase tracking-[.2em] text-cyan-200">Misión completada</p>
-                <h2 className="mt-2 text-2xl font-black sm:text-3xl">{correctCount} / {TOTAL_ROUNDS} correctas</h2>
-                <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-white/65">{correctCount >= 8 ? "¡Excelente! Tienes una base sólida. Repite el reto para reforzar los temas que te costaron." : "Buen intento. Revisa las explicaciones y vuelve a intentarlo: equivocarse también hace parte de aprender."}</p>
-                <div className="mx-auto mt-6 max-w-sm rounded-2xl border border-amber-200/20 bg-[#130f2a]/90 p-4">
-                  <Image src="/images/games/poco-responda/cofre.png" alt="Cofre de recompensas del juego" width={180} height={140} className="mx-auto h-28 w-36 object-contain drop-shadow-[0_8px_20px_rgba(245,158,11,.2)]" />
-                  <p className="mt-2 text-sm font-black text-amber-100">{earnedChests} / 5 fragmentos del cofre</p>
-                  <p className="mt-1 text-xs leading-5 text-white/50">En esta versión, el progreso del minijuego se guarda en este navegador. No suma todavía Peak Coins ni XP oficiales de tu perfil.</p>
+              <div className="p-5 text-center sm:p-8">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center border-[3px] border-[#eac45a] bg-[#302716] shadow-[4px_4px_0_#030713]"><Trophy className="h-8 w-8 text-[#ffda69]" /></div>
+                <h2 className="mt-4 text-2xl font-black text-[#ffe28b]">¡Ronda terminada!</h2>
+                <p className="mt-2 text-sm text-slate-200">Acertaste {correctCount} de {TOTAL_ROUNDS} preguntas y conseguiste {score} puntos.</p>
+                <p className="mt-2 text-xs text-slate-400">{saveStatus === "saving" ? "Guardando tu progreso…" : saveStatus === "saved" ? "Progreso guardado en tu cuenta." : saveStatus === "error" ? "No se pudo guardar en la cuenta; tu partida local sigue disponible." : "Tu resultado está listo."}</p>
+                <div className="mx-auto mt-5 max-w-sm border-2 border-[#6c7590] bg-[#0b1228] p-4">
+                  <Image src="/images/games/poco-responda/cofre.png" alt="Cofre de recompensas" width={180} height={130} className="mx-auto h-28 w-36 object-contain" />
+                  <div className="mt-3 flex gap-1.5">{Array.from({ length: 5 }, (_, i) => <div key={i} className={`h-3 flex-1 border border-[#6c7590] ${i < earnedChests ? "bg-[#f3c94f]" : "bg-[#151c31]"}`} />)}</div>
+                  <p className="mt-2 text-xs text-[#f5d987]">{earnedChests} / 5 fragmentos del cofre</p>
                 </div>
                 <div className="mt-6 flex flex-wrap justify-center gap-3">
-                  <button type="button" onClick={restart} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 text-xs font-black"><RotateCcw className="h-4 w-4" /> Jugar otra vez</button>
-                  <Link href="/aprender/juegos" className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/15 px-5 text-xs font-bold text-white/75 hover:bg-white/5">Volver a juegos</Link>
+                  <button type="button" onClick={() => { playButtonSound(); restart(); }} className="inline-flex min-h-11 items-center gap-2 border-2 border-[#a8d99a] bg-[#287b42] px-5 text-xs font-black text-white shadow-[3px_3px_0_#102b1c] hover:bg-[#32934f]"><RotateCcw className="h-4 w-4" /> Jugar otra vez</button>
+                  <Link href="/aprender/juegos" onClick={playButtonSound} className="inline-flex min-h-11 items-center gap-2 border-2 border-[#737c93] bg-[#111a31] px-5 text-xs font-bold text-white hover:bg-[#1a2944]">Volver a juegos</Link>
                 </div>
               </div>
-            ) : (
-              <div className="p-4 sm:p-6 lg:p-8">
-                <div className="mb-5 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full border border-cyan-200/20 bg-cyan-200/10 px-3 py-1.5 text-[10px] font-black text-cyan-100">{question.subject}</span>
-                  <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1.5 text-[10px] font-bold text-white/55">{question.topic}</span>
-                </div>
-                <div className="rounded-2xl border border-violet-200/20 bg-gradient-to-br from-[#15133a]/90 to-[#090e25]/95 p-5 sm:p-7">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl border border-fuchsia-200/20 bg-fuchsia-300/10"><CircleHelp className="h-5 w-5 text-fuchsia-200" /></div>
-                  <p className="text-base font-semibold leading-7 text-white sm:text-lg sm:leading-8">{question.clue}</p>
-                  <button type="button" onClick={useHint} disabled={showHint} className="mt-5 inline-flex min-h-9 items-center gap-2 rounded-lg border border-amber-200/20 bg-amber-200/[.07] px-3 text-[11px] font-bold text-amber-100 transition hover:bg-amber-200/10 disabled:opacity-50"><Lightbulb className="h-4 w-4" /> {showHint ? "Pista revelada" : "Dame una pista"}</button>
-                  {showHint && <p className="mt-3 rounded-lg border border-amber-200/15 bg-black/20 p-3 text-sm leading-6 text-amber-50/85">{question.hint}</p>}
+            ) : question ? (
+              <div className="p-4 sm:p-6">
+                <div className="mb-4 flex flex-wrap gap-2">
+                  <span className="border-2 border-[#627d8d] bg-[#172b3a] px-3 py-1.5 text-[10px] font-black text-[#b8f3e7]">{question.subject}</span>
+                  <span className="border-2 border-[#424c68] bg-[#10172c] px-3 py-1.5 text-[10px] font-bold text-[#c4cbe0]">{question.topic}</span>
                 </div>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="relative border-[3px] border-[#7b849c] bg-[#111a31] p-5 shadow-[inset_0_0_0_3px_#29344e,5px_5px_0_#030713] sm:p-7">
+                  <div className="absolute left-3 top-3 h-2 w-2 bg-[#aeb8ce]" />
+                  <div className="absolute right-3 top-3 h-2 w-2 bg-[#aeb8ce]" />
+                  <div className="mb-4 flex h-10 w-10 items-center justify-center border-2 border-[#77829d] bg-[#252e49]"><CircleHelp className="h-5 w-5 text-[#f5d77c]" /></div>
+                  <p className="text-base font-bold leading-7 text-white sm:text-lg sm:leading-8">{question.clue}</p>
+                  <button type="button" onClick={() => { playButtonSound(); useHint(); }} disabled={showHint} className="mt-5 inline-flex min-h-10 items-center gap-2 border-2 border-[#8e8059] bg-[#28243a] px-3 text-xs font-black text-[#ffe7a2] shadow-[3px_3px_0_#050817] transition hover:bg-[#39334a] disabled:opacity-60"><Lightbulb className="h-4 w-4" /> {showHint ? "Pista revelada" : "Dame una pista"}</button>
+                  {showHint && <p className="mt-3 border-2 border-[#89774c] bg-[#242032] p-3 text-sm leading-6 text-[#ffedb8]">{question.hint}</p>}
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {question.options.map((option, optionIndex) => {
-                    const isAnswer = optionIndex === question.answer;
-                    const isSelected = optionIndex === selected;
-                    const stateClass = revealed
-                      ? isAnswer ? "border-emerald-300/65 bg-emerald-400/10 text-emerald-50" : isSelected ? "border-rose-300/50 bg-rose-400/10 text-rose-50" : "border-white/10 bg-white/[.025] text-white/35"
-                      : "border-white/10 bg-white/[.035] text-white/85 hover:border-violet-200/45 hover:bg-violet-300/[.07]";
-                    return <button key={option} type="button" onClick={() => chooseOption(optionIndex)} disabled={revealed} aria-pressed={isSelected} className={`flex min-h-[66px] items-center gap-3 rounded-xl border p-4 text-left text-sm font-semibold leading-6 transition disabled:cursor-default ${stateClass}`}>
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-current/20 bg-black/15 text-xs font-black">{String.fromCharCode(65 + optionIndex)}</span>
-                      <span className="flex-1">{option}</span>
-                      {revealed && isAnswer && <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-300" />}
-                      {revealed && isSelected && !isAnswer && <XCircle className="h-5 w-5 shrink-0 text-rose-300" />}
+                    const isSelected = selected === optionIndex;
+                    const isCorrect = optionIndex === question.answer;
+                    const stateClass = !revealed ? "border-[#606b86] bg-[#111a31] hover:border-[#d8c16b] hover:bg-[#222a40]" : isCorrect ? "border-[#8bc79a] bg-[#193b32]" : isSelected ? "border-[#d58a91] bg-[#3b202d]" : "border-[#3c4762] bg-[#0b1226] opacity-75";
+                    return <button key={option} type="button" onClick={() => { playButtonSound(); chooseOption(optionIndex); }} disabled={revealed} aria-pressed={isSelected} className={`flex min-h-[66px] items-center gap-3 border-2 p-4 text-left text-sm font-bold leading-6 shadow-[3px_3px_0_#030713] transition ${stateClass}`}>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center border-2 border-[#69738c] bg-[#080e20] text-xs font-black text-[#f5d77c]">{String.fromCharCode(65 + optionIndex)}</span>
+                      <span>{option}</span>
+                      {revealed && isCorrect && <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-[#a5e6b1]" />}
+                      {revealed && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 shrink-0 text-[#ff9aa5]" />}
                     </button>;
                   })}
                 </div>
 
-                {revealed && <div role="status" aria-live="polite" className={`mt-5 rounded-xl border p-4 ${answeredCorrectly ? "border-emerald-300/25 bg-emerald-300/[.07]" : "border-rose-300/20 bg-rose-300/[.06]"}`}>
-                  <p className={`flex items-center gap-2 text-sm font-black ${answeredCorrectly ? "text-emerald-200" : "text-rose-200"}`}>{answeredCorrectly ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}{answeredCorrectly ? "¡Correcto! +100 puntos" : "Casi. Vamos a entenderlo"}</p>
-                  <p className="mt-2 text-sm leading-6 text-white/75">{question.explanation}</p>
+                {revealed && <div role="status" aria-live="polite" className={`mt-4 border-2 p-4 ${answeredCorrectly ? "border-[#80bd8d] bg-[#14352c]" : "border-[#ca858d] bg-[#351d2a]"}`}>
+                  <p className="text-sm font-black">{answeredCorrectly ? "¡Correcto, bien hecho!" : "Esta vez no fue. ¡Aprendamos!"}</p>
+                  <p className="mt-2 text-sm leading-6 text-white/85">{question.explanation}</p>
                 </div>}
 
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-                  <p className="inline-flex items-center gap-2 text-[11px] text-white/45"><Clock3 className="h-4 w-4" /> Sin límite de tiempo: piensa con calma</p>
-                  <button type="button" onClick={next} disabled={!revealed} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 text-xs font-black shadow-lg shadow-violet-950/40 transition hover:from-violet-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-40">{index + 1 === TOTAL_ROUNDS ? "Ver resultados" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                  <p className="flex items-center gap-2 text-[10px] font-semibold text-[#b5bfd5]"><Clock3 className="h-4 w-4" /> Sin límite de tiempo: piensa con calma</p>
+                  <button type="button" onClick={handleNext} disabled={!revealed} className="inline-flex min-h-11 items-center gap-2 border-2 border-[#9ad49b] bg-[#267b43] px-5 text-xs font-black text-white shadow-[4px_4px_0_#102b1c] transition hover:bg-[#32984f] active:translate-y-0.5 active:shadow-[2px_2px_0_#102b1c] disabled:cursor-not-allowed disabled:border-[#424b60] disabled:bg-[#222a3b] disabled:text-[#7c8497] disabled:shadow-none">{index + 1 === TOTAL_ROUNDS ? "Ver resultados" : "Siguiente pregunta"} <ArrowRight className="h-4 w-4" /></button>
                 </div>
               </div>
-            )}
+            ) : null}
           </section>
 
-          <aside className="space-y-4">
-            <section className="overflow-hidden rounded-2xl border border-amber-200/20 bg-[#0c0b22]/95 p-4 shadow-[0_15px_40px_rgba(0,0,0,.28)] sm:p-5">
-              <div className="flex items-center justify-between gap-2">
-                <div><p className="text-[10px] font-black uppercase tracking-[.18em] text-amber-100/65">Recompensa de la ronda</p><h2 className="mt-2 text-base font-black">El cofre misterioso</h2></div>
-                <Sparkles className="h-5 w-5 text-amber-200" />
-              </div>
-              <Image src="/images/games/poco-responda/cofre.png" alt="Cofre pixel art" width={260} height={190} className="mx-auto my-3 h-36 w-full object-contain drop-shadow-[0_8px_22px_rgba(245,158,11,.15)]" />
+          {!finished && <aside className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <section className="border-[3px] border-[#746e88] bg-[#0a1026]/[.97] p-4 shadow-[5px_5px_0_rgba(0,0,0,.45)] sm:p-5">
+              <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#f0d28a]">Recompensa de la ronda</p>
+              <h2 className="mt-2 text-base font-black">El cofre misterioso</h2>
+              <Image src="/images/games/poco-responda/cofre.png" alt="Cofre pixel art" width={260} height={190} className="mx-auto my-3 h-36 w-full object-contain drop-shadow-[0_5px_0_rgba(0,0,0,.5)]" />
               <div className="grid grid-cols-5 gap-1.5" aria-label={`${chestLevel} de 5 fragmentos del cofre`}>
-                {Array.from({ length: 5 }, (_, i) => <div key={i} className={`h-2.5 rounded-sm border transition ${i < chestLevel ? "border-amber-200 bg-gradient-to-r from-amber-300 to-orange-400 shadow-[0_0_10px_rgba(251,191,36,.45)]" : "border-white/10 bg-white/[.05]"}`} />)}
+                {Array.from({ length: 5 }, (_, i) => <div key={i} className={`h-3 border-2 ${i < chestLevel ? "border-[#ffdc7a] bg-[#f5bf37] shadow-[inset_0_0_0_1px_#fff0a7]" : "border-[#343c55] bg-[#151b2d]"}`} />)}
               </div>
-              <p className="mt-3 text-xs font-bold leading-5 text-amber-50/85">{chestMessage}</p>
-              <p className="mt-2 text-[10px] leading-5 text-white/40">Cada 2 respuestas correctas llena un fragmento. Completa 10 preguntas para descubrir cuánto has aprendido.</p>
+              <p className="mt-3 text-xs font-black leading-5 text-[#ffe5a0]">{chestMessage}</p>
+              <p className="mt-2 text-[10px] leading-5 text-[#9da8c5]">Cada dos respuestas correctas llena un fragmento. Completa las {TOTAL_ROUNDS} preguntas para descubrir cuánto has aprendido.</p>
             </section>
 
-            <section className="rounded-2xl border border-white/10 bg-[#080d25]/90 p-4 sm:p-5">
-              <p className="text-[10px] font-black uppercase tracking-[.18em] text-violet-200/75">Tu sesión</p>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-white/[.04] p-3"><p className="text-[10px] text-white/45">Aciertos</p><p className="mt-1 text-xl font-black text-emerald-200">{correctCount}<span className="text-xs text-white/35">/{TOTAL_ROUNDS}</span></p></div>
-                <div className="rounded-xl bg-white/[.04] p-3"><p className="text-[10px] text-white/45">Pistas usadas</p><p className="mt-1 text-xl font-black text-cyan-200">{hintsUsed.length}</p></div>
+            <section className="border-[3px] border-[#5e6d8c] bg-[#081027]/[.97] p-4 shadow-[5px_5px_0_rgba(0,0,0,.4)] sm:p-5">
+              <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#b8c8e9]">Pistas</p>
+              <div className="mt-3 grid gap-2">
+                <button type="button" onClick={() => { playButtonSound(); useHint(); }} disabled={showHint} className={`flex items-center gap-3 border-2 p-3 text-left ${showHint ? "border-[#6e6484] bg-[#17172e] opacity-70" : "border-[#b58cdb] bg-[#251c3c] shadow-[0_0_12px_rgba(190,120,255,.12)] hover:bg-[#32234d]"}`}>
+                  <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-[#8b75b5] bg-[#382a52]"><Lightbulb className="h-5 w-5 text-[#ffe36b]" /></span>
+                  <span className="min-w-0"><span className="block text-sm font-black text-[#f4d8ff]">Pista 1</span><span className="block text-xs text-[#d8cce8]">{showHint ? "Ya revelada" : "Revelar una orientación"}</span></span>
+                </button>
+                <div className="flex items-center gap-3 border-2 border-[#35425e] bg-[#10172c] p-3 opacity-65">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-[#405477] bg-[#152542] text-lg">◉</span>
+                  <span><span className="block text-sm font-black text-[#a9dff4]">Pista 2</span><span className="block text-xs text-[#9da8c5]">Próximamente</span></span>
+                </div>
+                <div className="flex items-center gap-3 border-2 border-[#35425e] bg-[#10172c] p-3 opacity-65">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-[#405477] bg-[#152542] text-lg">▤</span>
+                  <span><span className="block text-sm font-black text-[#a9dff4]">Pista 3</span><span className="block text-xs text-[#9da8c5]">Próximamente</span></span>
+                </div>
               </div>
-              <p className="mt-4 text-[11px] leading-5 text-white/45">Temas mezclados de los temarios: matemáticas, química, física, biología, historia e inglés.</p>
             </section>
-            <section className="rounded-xl border border-cyan-200/10 bg-cyan-200/[.04] p-4"><p className="text-[11px] font-black text-cyan-100">Consejo de Nova</p><p className="mt-2 text-xs leading-5 text-white/55">No te quedes solo con la opción correcta. Lee la explicación: entender el razonamiento es lo que te prepara para el ICFES.</p></section>
-          </aside>
+
+            <section className="border-2 border-[#3b4c70] bg-[#071027]/95 p-4 sm:p-5">
+              <p className="text-[10px] font-black uppercase tracking-[.18em] text-[#9abbe9]">Tu sesión</p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <div className="border-2 border-[#263654] bg-[#111a31] p-3"><p className="text-[10px] text-[#9da8c5]">Aciertos</p><p className="mt-1 text-xl font-black text-[#a8f1d9]">{correctCount}<span className="text-xs text-[#9da8c5]">/{TOTAL_ROUNDS}</span></p></div>
+                <div className="border-2 border-[#263654] bg-[#111a31] p-3"><p className="text-[10px] text-[#9da8c5]">Pistas usadas</p><p className="mt-1 text-xl font-black text-[#f3d785]">{hintsUsed.length}</p></div>
+              </div>
+              <p className="mt-4 text-[10px] leading-5 text-[#9da8c5]">Temas de matemáticas, química, física, biología, historia e inglés.</p>
+            </section>
+            <section className="border-2 border-[#39577b] bg-[#071027]/95 p-4"><p className="text-[11px] font-black text-[#bde7ff]">Consejo de Nova</p><p className="mt-2 text-xs leading-5 text-[#aab7d2]">No te quedes solo con la opción correcta. Lee la explicación: entender el razonamiento te prepara para el ICFES.</p></section>
+          </aside>}
         </div>
-        <div className="mt-6 text-center"><Link href="/aprender" className="text-xs font-bold text-white/45 underline-offset-4 hover:text-white hover:underline">Volver a Aprender · Niveles</Link></div>
       </div>
     </main>
   );

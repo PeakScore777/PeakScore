@@ -16,6 +16,45 @@ const SPRITES = {
   guardianHurt: "/images/aprender/battle/guardian-hurt.png",
 } as const;
 
+function PixelHeart({ color }: { color: "green" | "red" }) {
+  const pixels = [
+    "01100110",
+    "11111111",
+    "11111111",
+    "11111111",
+    "01111110",
+    "00111100",
+    "00011000",
+  ];
+  const fill = color === "green" ? "#68f542" : "#ff343e";
+  const shade = color === "green" ? "#237d24" : "#9e1521";
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 8 7"
+      className="pixel-heart"
+      shapeRendering="crispEdges"
+    >
+      {pixels.flatMap((row, y) =>
+        row.split("").map((pixel, x) =>
+          pixel === "1" ? (
+            <rect
+              key={`${x}-${y}`}
+              x={x}
+              y={y}
+              width="1"
+              height="1"
+              fill={y >= 5 ? shade : fill}
+              stroke="#101014"
+              strokeWidth=".12"
+            />
+          ) : null
+        )
+      )}
+    </svg>
+  );
+}
+
 function HealthBar({ value, side }: { value: number; side: "nova" | "guardian" }) {
   const width = Math.max(0, Math.min(100, (value / 8) * 100));
   const segments = Array.from({ length: 8 }, (_, index) => index < value);
@@ -26,9 +65,10 @@ function HealthBar({ value, side }: { value: number; side: "nova" | "guardian" }
       aria-valuemin={0}
       aria-valuemax={8}
       aria-valuenow={value}
-      className="relative w-full px-1 pb-1 pt-1"
+      className="relative flex w-full items-center gap-2 px-1 pb-1 pt-1"
     >
-      <div className="relative h-4 border-2 border-[#101014] bg-[#292a31] p-[2px] shadow-[0_2px_0_#08090d] sm:h-5">
+      <PixelHeart color={side === "nova" ? "green" : "red"} />
+      <div className="relative h-4 flex-1 border-2 border-[#101014] bg-[#292a31] p-[2px] shadow-[0_2px_0_#08090d] sm:h-5">
         <div
           className={`h-full transition-[width] duration-500 ease-out ${side === "nova" ? "bg-gradient-to-b from-[#b8ff65] via-[#58d832] to-[#24851c]" : "bg-gradient-to-b from-[#ff8b82] via-[#ed3939] to-[#9d101c]"}`}
           style={{ width: `${width}%` }}
@@ -39,8 +79,8 @@ function HealthBar({ value, side }: { value: number; side: "nova" | "guardian" }
           ))}
         </div>
       </div>
-      <span className="absolute -left-1 -top-1 h-2 w-2 border border-[#101014] bg-[#ffe5b8]" />
-      <span className="absolute -right-1 -top-1 h-2 w-2 border border-[#101014] bg-[#ffe5b8]" />
+      <span className="absolute left-7 top-0 h-1.5 w-1.5 border border-[#101014] bg-[#ffe5b8]" />
+      <span className="absolute right-0 top-0 h-1.5 w-1.5 border border-[#101014] bg-[#ffe5b8]" />
     </div>
   );
 }
@@ -93,7 +133,9 @@ export default function ChapterFiveBattle({
         </div>
       </div>
       <style jsx>{`
+        .pixel-heart { width: 24px; height: 21px; flex: 0 0 24px; image-rendering: pixelated; filter: drop-shadow(1px 2px 0 #101014); }
         .battle-nova {
+          transform: translateY(-44px);
           width: 100%;
           display: flex;
           justify-content: flex-start;
@@ -101,6 +143,7 @@ export default function ChapterFiveBattle({
           min-height: 124px;
         }
         .battle-guardian {
+          transform: translateY(-44px);
           width: 100%;
           display: flex;
           justify-content: flex-end;
@@ -134,8 +177,9 @@ export default function ChapterFiveBattle({
         }
         @media (max-width: 480px) {
           .battle-overlay { bottom: 64px; }
-          .battle-nova { min-height: 96px; }
-          .battle-guardian { min-height: 122px; }
+          .pixel-heart { width: 20px; height: 18px; flex-basis: 20px; }
+          .battle-nova { min-height: 96px; transform: translateY(-28px); }
+          .battle-guardian { min-height: 122px; transform: translateY(-28px); }
           .battle-sprite { width: min(100%, 132px); }
           .battle-guardian .battle-sprite { width: min(100%, 190px); }
         }

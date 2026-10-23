@@ -91,13 +91,13 @@ export default function ChapterFiveBattle({
         />
       </div>
       <style jsx>{`
-        .battle-overlay { height: 205px; pointer-events: none; }
+        .battle-overlay { height: 225px; pointer-events: none; }
         .battle-fighter { position:absolute; bottom:0; display:flex; flex-direction:column; align-items:stretch; gap:8px; }
-        .battle-fighter-nova { left:clamp(24px,4vw,68px); width:clamp(142px,15vw,188px); }
-        .battle-fighter-guardian { right:clamp(24px,4vw,68px); width:clamp(158px,17vw,210px); }
+        .battle-fighter-nova { left:clamp(24px,4vw,68px); width:clamp(176px,17vw,208px); }
+        .battle-fighter-guardian { right:clamp(24px,4vw,68px); width:clamp(196px,19vw,230px); }
         .battle-sprite { align-self:center; background-repeat:no-repeat; background-size:800% 100%; background-position:0% 50%; image-rendering:pixelated; filter:drop-shadow(0 3px 0 rgba(0,0,0,.38)); }
-        .battle-nova-sprite { width:clamp(88px,8vw,116px); height:clamp(88px,8vw,116px); }
-        .battle-guardian-sprite { width:clamp(130px,12vw,174px); height:clamp(130px,12vw,174px); }
+        .battle-nova-sprite { width:clamp(126px,10vw,148px); height:clamp(126px,10vw,148px); }
+        .battle-guardian-sprite { width:clamp(164px,13vw,190px); height:clamp(164px,13vw,190px); }
         .battle-sprite-playing { animation:chapter-five-sprite-frames 1s steps(1,end) 1 both; }
         @keyframes chapter-five-sprite-frames {
           0% { background-position:0% 50%; }
@@ -110,12 +110,12 @@ export default function ChapterFiveBattle({
           87.5%,100% { background-position:100% 50%; }
         }
         @media (max-width: 700px) {
-          .battle-overlay { height:142px; bottom:64px; }
+          .battle-overlay { height:170px; bottom:64px; }
           .battle-fighter { gap:5px; }
-          .battle-fighter-nova { left:10px; width:clamp(104px,31vw,145px); }
-          .battle-fighter-guardian { right:10px; width:clamp(112px,33vw,155px); }
-          .battle-nova-sprite { width:clamp(68px,19vw,94px); height:clamp(68px,19vw,94px); }
-          .battle-guardian-sprite { width:clamp(88px,25vw,120px); height:clamp(88px,25vw,120px); }
+          .battle-fighter-nova { left:10px; width:clamp(130px,34vw,166px); }
+          .battle-fighter-guardian { right:10px; width:clamp(144px,37vw,180px); }
+          .battle-nova-sprite { width:clamp(100px,25vw,124px); height:clamp(100px,25vw,124px); }
+          .battle-guardian-sprite { width:clamp(126px,30vw,150px); height:clamp(126px,30vw,150px); }
         }
         @media (prefers-reduced-motion: reduce) {
           .battle-sprite-playing { animation:none; background-position:100% 50%; }

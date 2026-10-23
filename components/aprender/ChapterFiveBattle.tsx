@@ -114,9 +114,9 @@ export default function ChapterFiveBattle({
         </div>
       </div>
       <style jsx>{`
-        .pixel-heart { width: 20px; height: 19px; flex: 0 0 20px; image-rendering: pixelated; filter: drop-shadow(1px 2px 0 #101014); }
+        .pixel-heart { display:block; width: 14px; height: 13px; flex: 0 0 14px; image-rendering: pixelated; filter: drop-shadow(1px 1px 0 #101014); }
         .battle-nova {
-          transform: translateY(-44px);
+          transform: translateY(-68px);
           width: 100%;
           display: flex;
           justify-content: flex-start;
@@ -124,7 +124,7 @@ export default function ChapterFiveBattle({
           min-height: 124px;
         }
         .battle-guardian {
-          transform: translateY(-44px);
+          transform: translateY(-68px);
           width: 100%;
           display: flex;
           justify-content: flex-end;
@@ -158,9 +158,9 @@ export default function ChapterFiveBattle({
         }
         @media (max-width: 480px) {
           .battle-overlay { bottom: 64px; }
-          .pixel-heart { width: 18px; height: 17px; flex-basis: 18px; }
-          .battle-nova { min-height: 96px; transform: translateY(-28px); }
-          .battle-guardian { min-height: 122px; transform: translateY(-28px); }
+          .pixel-heart { width: 12px; height: 11px; flex-basis: 12px; }
+          .battle-nova { min-height: 96px; transform: translateY(-40px); }
+          .battle-guardian { min-height: 122px; transform: translateY(-40px); }
           .battle-sprite { width: min(100%, 132px); }
           .battle-guardian .battle-sprite { width: min(100%, 190px); }
         }

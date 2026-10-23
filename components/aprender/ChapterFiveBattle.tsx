@@ -18,6 +18,7 @@ const SPRITES = {
 
 function HealthBar({ value, side }: { value: number; side: "nova" | "guardian" }) {
   const width = Math.max(0, Math.min(100, (value / 8) * 100));
+  const segments = Array.from({ length: 8 }, (_, index) => index < value);
   return (
     <div
       role="progressbar"
@@ -25,12 +26,21 @@ function HealthBar({ value, side }: { value: number; side: "nova" | "guardian" }
       aria-valuemin={0}
       aria-valuemax={8}
       aria-valuenow={value}
-      className="h-3 w-full overflow-hidden border border-white/25 bg-[#171923] p-[2px] sm:h-4"
+      className="relative w-full px-1 pb-1 pt-1"
     >
-      <div
-        className={`h-full transition-[width] duration-500 ease-out ${side === "nova" ? "bg-gradient-to-r from-emerald-500 to-lime-300" : "bg-gradient-to-r from-red-600 to-orange-400"}`}
-        style={{ width: `${width}%` }}
-      />
+      <div className="relative h-4 border-2 border-[#101014] bg-[#292a31] p-[2px] shadow-[0_2px_0_#08090d] sm:h-5">
+        <div
+          className={`h-full transition-[width] duration-500 ease-out ${side === "nova" ? "bg-gradient-to-b from-[#b8ff65] via-[#58d832] to-[#24851c]" : "bg-gradient-to-b from-[#ff8b82] via-[#ed3939] to-[#9d101c]"}`}
+          style={{ width: `${width}%` }}
+        />
+        <div className="pointer-events-none absolute inset-0 flex gap-[2px] px-[2px]">
+          {segments.map((active, index) => (
+            <span key={index} className="h-full flex-1 border-r border-black/50 last:border-r-0" />
+          ))}
+        </div>
+      </div>
+      <span className="absolute -left-1 -top-1 h-2 w-2 border border-[#101014] bg-[#ffe5b8]" />
+      <span className="absolute -right-1 -top-1 h-2 w-2 border border-[#101014] bg-[#ffe5b8]" />
     </div>
   );
 }
@@ -57,7 +67,7 @@ export default function ChapterFiveBattle({
       className="battle-overlay pointer-events-none fixed inset-x-3 bottom-[72px] z-20 bg-transparent sm:inset-x-6 sm:bottom-5"
     >
       <div className="flex w-full items-end justify-between gap-4">
-        <div className="flex w-[24vw] max-w-[220px] flex-col items-start gap-1.5 sm:gap-2">
+        <div className="flex w-[28vw] max-w-[270px] flex-col items-start gap-1.5 sm:gap-2">
           <HealthBar value={novaHealth} side="nova" />
           <div className="battle-nova" aria-label="Nova">
             <div
@@ -69,7 +79,7 @@ export default function ChapterFiveBattle({
             />
           </div>
         </div>
-        <div className="flex w-[30vw] max-w-[300px] flex-col items-end gap-1.5 sm:gap-2">
+        <div className="flex w-[34vw] max-w-[360px] flex-col items-end gap-1.5 sm:gap-2">
           <HealthBar value={guardianHealth} side="guardian" />
           <div className="battle-guardian" aria-label="Guardián">
             <div
@@ -88,17 +98,17 @@ export default function ChapterFiveBattle({
           display: flex;
           justify-content: flex-start;
           align-items: flex-end;
-          min-height: 112px;
+          min-height: 124px;
         }
         .battle-guardian {
           width: 100%;
           display: flex;
           justify-content: flex-end;
           align-items: flex-end;
-          min-height: 140px;
+          min-height: 160px;
         }
         .battle-sprite {
-          width: min(100%, 150px);
+          width: min(100%, 180px);
           aspect-ratio: 1 / 1;
           background-repeat: no-repeat;
           background-size: 800% 100%;
@@ -107,7 +117,7 @@ export default function ChapterFiveBattle({
           filter: drop-shadow(0 5px 0 rgba(0,0,0,.38));
         }
         .battle-guardian .battle-sprite {
-          width: min(100%, 230px);
+          width: min(100%, 290px);
         }
         .battle-sprite-playing {
           animation: chapter-five-sprite-frames 1s steps(1, end) 1 both;
@@ -124,10 +134,10 @@ export default function ChapterFiveBattle({
         }
         @media (max-width: 480px) {
           .battle-overlay { bottom: 64px; }
-          .battle-nova { min-height: 84px; }
-          .battle-guardian { min-height: 108px; }
-          .battle-sprite { width: min(100%, 112px); }
-          .battle-guardian .battle-sprite { width: min(100%, 165px); }
+          .battle-nova { min-height: 96px; }
+          .battle-guardian { min-height: 122px; }
+          .battle-sprite { width: min(100%, 132px); }
+          .battle-guardian .battle-sprite { width: min(100%, 190px); }
         }
         @media (prefers-reduced-motion: reduce) {
           .battle-sprite-playing { animation: none; background-position: 100% 50%; }

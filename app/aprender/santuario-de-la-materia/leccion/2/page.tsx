@@ -61,6 +61,34 @@ const questions: Question[] = [
     ],
     answer: "C",
     explanation: "Durante el cambio de estado de una sustancia pura a presión constante, la energía transferida puede emplearse en modificar la organización y las interacciones entre partículas. Por eso la temperatura permanece aproximadamente constante mientras coexisten las fases. La meseta no demuestra por sí sola una falla del instrumento ni una reacción química."
+  },
+  {
+    difficulty: "Media",
+    competency: "Uso comprensivo del conocimiento científico",
+    context: "A 1 atm, el líquido P tiene un punto de ebullición normal de 44 °C y el líquido Q de 82 °C. Ambos se encuentran a 25 °C y se comparan en condiciones equivalentes.",
+    prompt: "¿Cuál afirmación está mejor respaldada por el modelo de volatilidad?",
+    options: [
+      { label: "A", text: "P suele tener mayor presión de vapor que Q a 25 °C." },
+      { label: "B", text: "Q tiene necesariamente mayor presión de vapor porque su punto de ebullición es más alto." },
+      { label: "C", text: "Los dos tienen igual presión de vapor porque se encuentran a la misma temperatura." },
+      { label: "D", text: "La presión de vapor no se relaciona con la temperatura de ebullición." }
+    ],
+    answer: "A",
+    explanation: "Para líquidos comparables, un punto de ebullición normal menor suele corresponder a mayor volatilidad y mayor presión de vapor a una misma temperatura. P alcanza la condición de ebullición antes que Q; no confundas una temperatura de ebullición mayor con una presión de vapor mayor."
+  },
+  {
+    difficulty: "Difícil",
+    competency: "Explicación de fenómenos",
+    context: "En una olla a presión, el agua líquida puede alcanzar una temperatura superior a 100 °C antes de hervir. La tapa limita la salida de vapor y la presión interna aumenta.",
+    prompt: "¿Qué explicación relaciona correctamente la presión con el cambio de estado?",
+    options: [
+      { label: "A", text: "La presión interna más alta eleva la temperatura a la que la presión de vapor iguala la presión externa." },
+      { label: "B", text: "La presión destruye las moléculas de agua y por eso el líquido resiste más calor." },
+      { label: "C", text: "El agua hierve a menor temperatura porque la presión interna aumenta." },
+      { label: "D", text: "La temperatura de ebullición es fija para una sustancia y no depende de la presión." }
+    ],
+    answer: "A",
+    explanation: "La ebullición ocurre cuando la presión de vapor del líquido iguala la presión que actúa sobre él. Al elevarse la presión dentro de la olla, se necesita una temperatura mayor para alcanzar esa condición. La composición de las moléculas sigue siendo H₂O: es un efecto físico de las condiciones."
   }
 ];
 

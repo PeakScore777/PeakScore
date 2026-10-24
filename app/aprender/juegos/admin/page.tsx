@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Check, LoaderCircle, Plus, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, Download, LoaderCircle, Plus, Save, Sparkles } from "lucide-react";
+import { QUESTION_BANK } from "@/lib/games/que-es-esa-vaina-bank";
 
 type Subject = "Matemáticas" | "Química" | "Física" | "Biología" | "Historia" | "Inglés";
 type Question = { id: string; subject: Subject; topic: string; difficulty: "facil" | "media" | "dificil"; clue: string; options: string[]; answer: number; explanation: string; hint: string; status: "draft" | "published" | "archived" };
@@ -14,6 +15,7 @@ export default function AdminGameQuestionsPage() {
   const [form, setForm] = useState<Omit<Question, "id"> & { id?: string }>(emptyQuestion());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const load = useCallback(async () => {
@@ -27,6 +29,17 @@ export default function AdminGameQuestionsPage() {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { void load(); }, [load]);
+  const importLocalBank = async () => {
+    setImporting(true); setError(""); setNotice("");
+    try {
+      const res = await fetch("/api/admin/game-questions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bulkImport: true, questions: QUESTION_BANK }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudo importar el banco.");
+      setNotice(`Importación completada: ${data.imported} nuevas, ${data.skipped} omitidas por duplicado. Todas quedaron como borradores.`);
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : "Error inesperado al importar."); }
+    finally { setImporting(false); }
+  };
   const setField = (key: string, value: unknown) => setForm((old) => ({ ...old, [key]: value }));
   const save = async (publish = false) => {
     setSaving(true); setError(""); setNotice("");
@@ -67,7 +80,7 @@ export default function AdminGameQuestionsPage() {
           <div className="mt-5 flex flex-wrap gap-3"><button disabled={saving} onClick={()=>void save(false)} className="inline-flex items-center gap-2 rounded-lg border border-slate-500 bg-slate-800 px-4 py-3 font-bold disabled:opacity-50">{saving?<LoaderCircle className="animate-spin" size={16}/>:<Save size={16}/>} Guardar borrador</button><button disabled={saving} onClick={()=>void save(true)} className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-emerald-700 px-4 py-3 font-bold shadow-[3px_3px_0_#052e16] disabled:opacity-50"><Check size={16}/> Publicar pregunta</button></div>
         </section>
         <section className="rounded-2xl border-2 border-slate-600 bg-[#0b1226] p-5 shadow-[5px_5px_0_#030712]">
-          <div className="mb-4 flex items-center justify-between"><h2 className="text-xl font-black">Preguntas guardadas</h2><button onClick={()=>void load()} className="rounded-lg border border-slate-700 px-3 py-2 text-sm">Actualizar</button></div>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">Preguntas guardadas</h2><div className="flex flex-wrap gap-2"><button disabled={importing} onClick={()=>void importLocalBank()} className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-700 px-3 py-2 text-xs font-bold disabled:opacity-50">{importing?<LoaderCircle className="animate-spin" size={14}/>:<Download size={14}/>} Importar banco local ({QUESTION_BANK.length})</button><button onClick={()=>void load()} className="rounded-lg border border-slate-700 px-3 py-2 text-sm">Actualizar</button></div></div>
           {loading?<p className="text-sm text-slate-400">Cargando banco...</p>:questions.length===0?<p className="rounded-lg border border-dashed border-slate-700 p-5 text-sm text-slate-400">No hay preguntas todavía. Crea la primera. Si aparece un error de migración, aplica el SQL de Supabase.</p>:<div className="max-h-[900px] space-y-3 overflow-auto pr-1">{questions.map(q=><article key={q.id} className="rounded-xl border border-slate-700 bg-slate-900 p-4"><div className="mb-2 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider"><span className="rounded bg-slate-800 px-2 py-1 text-cyan-200">{q.subject}</span><span className="rounded bg-slate-800 px-2 py-1 text-amber-200">{q.difficulty}</span><span className={"rounded px-2 py-1 "+(q.status==="published"?"bg-emerald-950 text-emerald-300":"bg-slate-800 text-slate-300")}>{q.status}</span></div><h3 className="font-bold">{q.topic}</h3><p className="mt-2 line-clamp-3 text-sm text-slate-300">{q.clue}</p><button onClick={()=>edit(q)} className="mt-3 rounded-lg border border-slate-600 px-3 py-2 text-xs font-bold hover:border-amber-300">Editar</button></article>)}</div>}
           <div className="mt-5 rounded-xl border border-amber-400/30 bg-amber-950/20 p-4"><p className="flex items-center gap-2 font-bold text-amber-200"><Sparkles size={16}/> Generación con IA</p><p className="mt-2 text-sm text-slate-300">La interfaz ya está preparada para administrar el banco. La generación automática debe conectarse a un proveedor de IA del proyecto y guardar primero como borrador; no publica preguntas sin revisión.</p></div>
         </section>

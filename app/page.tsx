@@ -54,14 +54,6 @@ export default function Home() {
     getServerLandingThemeSnapshot,
   );
 
-  return () => {
-      window.removeEventListener(
-        "peakscore-theme-change",
-        syncTheme,
-      );
-    };
-  }, []);
-
   return (
     <main className="min-h-screen">
       <Hero theme={theme} />

@@ -575,7 +575,7 @@ export default function QueEsEsaVainaGame() {
   }, [answeredCorrectly, index, next, revealed, rounds.length, selected, startRoundTimer]);
 
   const restart = useCallback(() => {
-    const recent = [...new Set([...rounds.map((q) => q.id), ...readRecentIds()])].slice(0, 1000);
+    const recent = [...new Set([...rounds.slice(0, index + 1).map((q) => q.id).reverse(), ...readRecentIds()])].slice(0, 1000);
     try {
       window.localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
     } catch { /* El historial es una mejora opcional. */ }
@@ -650,7 +650,7 @@ export default function QueEsEsaVainaGame() {
   useEffect(() => {
     if (!finished || rounds.length === 0) return;
     try {
-      const ids = [...rounds.map((q) => q.id), ...readRecentIds()].filter((id, i, all) => all.indexOf(id) === i).slice(0, 1000);
+      const ids = [...rounds.map((q) => q.id).reverse(), ...readRecentIds()].filter((id, i, all) => all.indexOf(id) === i).slice(0, 1000);
       window.localStorage.setItem(RECENT_KEY, JSON.stringify(ids));
     } catch { /* La rotación sigue funcionando en memoria. */ }
   }, [finished, rounds]);

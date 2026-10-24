@@ -158,14 +158,18 @@ export default function CharacterCards() {
     CHARACTERS[0];
 
   useEffect(() => {
-    setImageFailed(false);
-    setPointer({
-      x: 50,
-      y: 35,
-      rotateX: 0,
-      rotateY: 0,
-      active: false,
+    const frame = window.requestAnimationFrame(() => {
+      setImageFailed(false);
+      setPointer({
+        x: 50,
+        y: 35,
+        rotateX: 0,
+        rotateY: 0,
+        active: false,
+      });
     });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [selectedId]);
 
   function handlePointerMove(event: PointerEvent<HTMLElement>) {

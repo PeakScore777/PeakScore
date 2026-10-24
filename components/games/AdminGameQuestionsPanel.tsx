@@ -34,7 +34,10 @@ export default function AdminGameQuestionsPage() {
     } catch (e) { setError(e instanceof Error ? e.message : "Error inesperado."); }
     finally { setLoading(false); }
   }, []);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => void load());
+    return () => window.cancelAnimationFrame(frame);
+  }, [load]);
   const importLocalBank = async () => {
     setImporting(true); setError(""); setNotice("");
     try {

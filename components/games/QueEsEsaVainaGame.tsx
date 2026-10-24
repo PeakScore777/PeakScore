@@ -735,7 +735,7 @@ export default function QueEsEsaVainaGame() {
     } finally {
       setClaimingChest(null);
     }
-  }, [claimedChests, claimingChest, cooldownActive, gameSessionId, nextChestToClaim, playSfx, rewardMeterScore]);
+  }, [claimedChests, claimingChest, cooldownActive, gameSessionId, nextChestToClaim, playSfx, rewardMeterScore, sessionOutdated]);
 
   const useHint = async () => {
     if (!question || showHint || hintLoading || answering || revealed || !gameStarted || !gameSessionId) return;

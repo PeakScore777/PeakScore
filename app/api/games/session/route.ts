@@ -21,7 +21,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "La partida debe incluir diez preguntas únicas." }, { status: 400 });
   }
 
-  const local = new Map((gameKey === "caso-cero" ? CASE_ZERO_QUESTIONS : QUESTION_BANK).map((q) => [q.id, q]));
+  const local: Map<string, { answer: number }> = new Map();
+  const localQuestions = gameKey === "caso-cero" ? CASE_ZERO_QUESTIONS : QUESTION_BANK;
+  for (const question of localQuestions) local.set(question.id, { answer: question.answer });
   const uuidIds = (ids as string[]).filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id));
   const dbQuestions = new Map<string, { answer: number }>();
   if (uuidIds.length) {

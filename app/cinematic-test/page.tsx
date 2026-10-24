@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useEffect, useMemo, useState } from "react";
 
 /* =========================================================
@@ -184,9 +186,8 @@ function SpriteFrame({
         overflow-hidden
       "
     >
-      <img
-        src={src}
-        alt=""
+      <Image
+        src={src} width={1200} height={800} unoptimized alt=""
         draggable={false}
         className="
           absolute
@@ -905,9 +906,8 @@ export default function CinematicTestPage() {
             BIOME
             =============================================== */}
 
-        <img
-          src={BIOME_SRC}
-          alt=""
+        <Image
+          src={BIOME_SRC} width={1200} height={800} unoptimized alt=""
           draggable={false}
           className="
             absolute
@@ -983,9 +983,8 @@ export default function CinematicTestPage() {
 
           {phase ===
             "finished" && (
-            <img
-              src={WALK_STATIC}
-              alt=""
+            <Image
+              src={WALK_STATIC} width={1200} height={800} unoptimized alt=""
               draggable={false}
               className="
                 h-full
@@ -1045,11 +1044,10 @@ export default function CinematicTestPage() {
                 -translate-y-[80%]
               "
             >
-              <img
+              <Image
                 src={
                   dialogue.expression
-                }
-                alt=""
+                } width={1200} height={800} unoptimized alt=""
                 draggable={false}
                 className="
                   h-full

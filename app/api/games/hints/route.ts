@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-const HINT_COST = 3;
+const HINT_COST = 5;
 
 export async function POST(request: Request) {
   const supabase = await createClient();

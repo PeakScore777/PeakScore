@@ -15,7 +15,7 @@ type SavedProgress = { bestScore: number; completedIds: string[]; chests: number
 const RECENT_KEY = "peakscore-que-es-esa-vaina-recent-v1";
 const QUESTION_SECONDS = 20;
 const WRONG_ANSWER_PENALTY = 50;
-const HINT_COST = 3;
+const HINT_COST = 5;
 
 function shuffleQuestions<T>(source: T[]): T[] {
   const pool = [...source];

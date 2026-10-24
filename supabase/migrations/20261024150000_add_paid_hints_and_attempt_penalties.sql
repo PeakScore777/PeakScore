@@ -5,7 +5,7 @@ create table if not exists public.game_hint_uses (
   session_id uuid not null references public.game_round_sessions(id) on delete cascade,
   game_key text not null default 'que-es-esa-vaina' check (game_key = 'que-es-esa-vaina'),
   question_id text not null,
-  coins_spent integer not null default 3 check (coins_spent = 3),
+  coins_spent integer not null default 5 check (coins_spent = 5),
   created_at timestamptz not null default now(),
   unique (session_id, question_id)
 );
@@ -27,7 +27,7 @@ declare
   v_hint_id uuid;
   v_coins integer;
   v_coins_total integer;
-  v_cost constant integer := 3;
+  v_cost constant integer := 5;
 begin
   if v_user_id is null then raise exception 'UNAUTHORIZED'; end if;
   if p_question_id is null or p_session_id is null then raise exception 'QUESTION_INVALID'; end if;

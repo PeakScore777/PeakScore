@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Stage = "GRADO 10" | "GRADO 11" | "YA ME GRADUÉ" | "OTRA SITUACIÓN";
@@ -315,11 +317,11 @@ export default function IntroTestPage() {
 
           <div style={{ minHeight: "clamp(210px, 38vh, 390px)", display: "flex", alignItems: "end", justifyContent: "center", gap: "clamp(22px, 9vw, 120px)", paddingTop: 10 }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-              <img className="intro-test-character" src="/characters/intro/nova-static-intro.gif" alt="Nova, la aventurera, mirando hacia Founder" style={{ width: "clamp(120px, 18vw, 205px)", maxHeight: "34vh", objectFit: "contain", imageRendering: "pixelated", filter: "none" }} />
+              <Image className="intro-test-character" src="/characters/intro/nova-static-intro.gif" width={1200} height={800} unoptimized alt="Nova, la aventurera, mirando hacia Founder" style={{ width: "clamp(120px, 18vw, 205px)", maxHeight: "34vh", objectFit: "contain", imageRendering: "pixelated", filter: "none" }} />
               <span style={{ color: "#a6a29a", fontSize: 8, letterSpacing: ".14em" }}>NOVA</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-              <img className="intro-test-character" src={isStory && sceneIndex === 0 ? "/characters/intro/founder-saludo.gif" : "/characters/intro/founder-static.gif"} alt="Founder, recibiendo a Nova" style={{ width: "clamp(120px, 18vw, 205px)", maxHeight: "34vh", objectFit: "contain", imageRendering: "pixelated", filter: "none" }} />
+              <Image className="intro-test-character" src={isStory && sceneIndex === 0 ? "/characters/intro/founder-saludo.gif" : "/characters/intro/founder-static.gif"} width={1200} height={800} unoptimized alt="Founder, recibiendo a Nova" style={{ width: "clamp(120px, 18vw, 205px)", maxHeight: "34vh", objectFit: "contain", imageRendering: "pixelated", filter: "none" }} />
               <span style={{ color: "#e4b95e", fontSize: 8, letterSpacing: ".14em" }}>FOUNDER</span>
             </div>
           </div>

@@ -18,7 +18,6 @@ import {
   ChevronDown,
   FlaskConical,
   Lightbulb,
-  RotateCcw,
 } from "lucide-react";
 
 type Question = {

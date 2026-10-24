@@ -3743,8 +3743,7 @@ export async function POST(
         })
       );
 
-    let insertedReferenceQuestions:
-      any[] = [];
+    let insertedReferenceQuestions: unknown[] = [];
 
     if (
       referenceQuestionRows.length >

@@ -72,13 +72,9 @@ export async function POST(request: Request) {
       const q = value as Record<string, unknown>;
       return { game_key: "que-es-esa-vaina", subject: q.subject, topic: (q.topic as string).trim(), difficulty: q.difficulty, clue: (q.clue as string).trim(), options: q.options, answer: q.answer, explanation: (q.explanation as string).trim(), hint: (q.hint as string).trim(), status: "draft", created_by: user?.id };
     });
-    let imported = 0;
-    for (let i = 0; i < rows.length; i += 25) {
-      const { data, error } = await supabase.from("game_questions").insert(rows.slice(i, i + 25)).select("id");
-      if (error) return NextResponse.json({ error: `La importación se detuvo después de guardar ${imported} preguntas. Revisa el banco antes de reintentar.`, imported, skipped: prepared.length - unique.length }, { status: 500 });
-      imported += data?.length ?? 0;
-    }
-    return NextResponse.json({ imported, skipped: prepared.length - unique.length, message: "Las preguntas se importaron como borradores para revisión." }, { status: 201 });
+    const { data: inserted, error: insertError } = await supabase.from("game_questions").insert(rows).select("id");
+    if (insertError) return NextResponse.json({ error: "No se pudo completar la importación. No se confirmó ningún lote; revisa la migración y vuelve a intentarlo." }, { status: 500 });
+    return NextResponse.json({ imported: inserted?.length ?? 0, skipped: prepared.length - unique.length, message: "Las preguntas se importaron como borradores para revisión." }, { status: 201 });
   }
   const validation = validateQuestion(body);
   if (validation) return NextResponse.json({ error: validation }, { status: 400 });

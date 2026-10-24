@@ -310,6 +310,7 @@ export default function QueEsEsaVainaGame() {
     }).then(async (response) => {
       const payload = await response.json();
       if (!response.ok || typeof payload.sessionId !== "string") throw new Error(payload.error || "No se pudo iniciar una partida segura.");
+      setSessionOutdated(false);
       setGameSessionId(payload.sessionId);
     }).catch((error: unknown) => {
       setGameError(error instanceof Error ? error.message : "No se pudo iniciar la partida.");

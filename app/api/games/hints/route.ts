@@ -69,10 +69,11 @@ export async function POST(request: Request) {
     const message = error.message.includes("COINS_INSUFFICIENT") ? `Necesitas ${hintCost} Peak Coins para revelar esta pista.`
       : error.message.includes("SESSION_INVALID_OR_EXPIRED") ? "La partida expiró. Inicia otra."
       : error.message.includes("QUESTION_ALREADY_ANSWERED") ? "Esta pregunta ya fue respondida; continúa con la siguiente."
+      : error.message.includes("HINT_ALREADY_USED_THIS_SESSION") ? "Ya utilizaste esta pista en esta partida. Las otras pistas siguen disponibles."
       : error.message.includes("QUESTION_INVALID") ? "La pregunta no pertenece a esta partida."
       : error.message.includes("UNAUTHORIZED") ? "Inicia sesión para comprar una pista."
       : "No se pudo comprar la pista. Inténtalo de nuevo.";
-    const status = error.message.includes("COINS_INSUFFICIENT") || error.message.includes("QUESTION_ALREADY_ANSWERED") ? 409 : 400;
+    const status = error.message.includes("COINS_INSUFFICIENT") || error.message.includes("QUESTION_ALREADY_ANSWERED") || error.message.includes("HINT_ALREADY_USED_THIS_SESSION") ? 409 : 400;
     return NextResponse.json({ error: message }, { status });
   }
   const reward = data && typeof data === "object" ? data as Record<string, unknown> : {};

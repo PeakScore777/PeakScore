@@ -85,15 +85,13 @@ function clamp(value: number, min: number, max: number) {
 
 interface EyeProps {
   side: "left" | "right";
-  lookX: number;
-  lookY: number;
+  look: { current: { x: number; y: number } };
   closed: boolean;
 }
 
 function PeakEye({
   side,
-  lookX,
-  lookY,
+  look,
   closed,
 }: EyeProps) {
   const group = useRef<THREE.Group>(null);
@@ -105,8 +103,8 @@ function PeakEye({
   useFrame((_, delta) => {
     if (!group.current || !pupil.current) return;
 
-    const targetX = closed ? 0 : lookX * 0.075;
-    const targetY = closed ? -0.045 : lookY * 0.055;
+    const targetX = closed ? 0 : look.current.x * 0.075;
+    const targetY = closed ? -0.045 : look.current.y * 0.055;
 
     pupil.current.position.x = THREE.MathUtils.damp(
       pupil.current.position.x,
@@ -584,12 +582,10 @@ function PeakHair() {
 ============================================================ */
 
 function PeakHead({
-  lookX,
-  lookY,
+  look,
   eyesClosed,
 }: {
-  lookX: number;
-  lookY: number;
+  look: { current: { x: number; y: number } };
   eyesClosed: boolean;
 }) {
   return (
@@ -637,15 +633,13 @@ function PeakHead({
 
       <PeakEye
         side="left"
-        lookX={lookX}
-        lookY={lookY}
+        look={look}
         closed={eyesClosed}
       />
 
       <PeakEye
         side="right"
-        lookX={lookX}
-        lookY={lookY}
+        look={look}
         closed={eyesClosed}
       />
 
@@ -1397,8 +1391,7 @@ function PeakController({
   return (
     <group ref={root}>
       <PeakHead
-        lookX={look.current.x}
-        lookY={look.current.y}
+        look={look}
         eyesClosed={bothClosed}
       />
 

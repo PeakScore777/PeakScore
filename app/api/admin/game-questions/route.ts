@@ -55,7 +55,8 @@ export async function POST(request: Request) {
     const prompt = `Genera exactamente ${amount} preguntas originales en español para el juego educativo "${gameName}" de PeakScore. Materia: ${subject}. Dificultad: ${difficulty}. Enfoque opcional: ${focus || "variar temas apropiados de la materia"}. Devuelve SOLO JSON válido con esta forma: {"questions":[{"subject":"${subject}","topic":"tema breve","difficulty":"facil|media|dificil","clue":"enunciado o pista clara","options":["A","B","C","D"],"answer":0,"explanation":"explicación correcta paso a paso","hint":"orientación breve"}]}. answer es índice 0 a 3. Cuatro opciones plausibles, una sola correcta. No repitas enunciados ni opciones idénticas. No uses preguntas copiadas de pruebas oficiales; crea contenido original. Sin markdown.`;
     try {
       const generated = await generateAI({ prompt, task: "question_generation", useFallback: true });
-      const raw = typeof generated === "string" ? generated : JSON.stringify(generated);
+      const raw = typeof generated === "string" ? generated : (generated as { text?: string }).text?.trim() ?? "";
+      if (!raw) return NextResponse.json({ error: "La IA no devolvió contenido. Intenta de nuevo." }, { status: 422 });
       const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
       const parsed = JSON.parse(cleaned) as { questions?: unknown };
       if (!Array.isArray(parsed.questions) || parsed.questions.length !== amount) return NextResponse.json({ error: "La IA no devolvió la cantidad exacta. Intenta de nuevo con menos preguntas." }, { status: 422 });

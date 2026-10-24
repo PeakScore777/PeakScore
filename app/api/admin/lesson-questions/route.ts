@@ -237,9 +237,11 @@ export async function PUT(request: Request) {
         );
       }
 
-      const normalizedHeaders = headers.map((header) => header.slice(0, 200));
-      const normalizedRows = rawRows.map((row) =>
-        row.map((cell) => cell.slice(0, 1000)),
+      const normalizedHeaders = (headers as string[]).map((header) =>
+        header.slice(0, 200),
+      );
+      const normalizedRows = (rawRows as unknown[]).map((row) =>
+        (row as string[]).map((cell) => cell.slice(0, 1000)),
       );
 
       contextBlocks.push({
@@ -250,13 +252,13 @@ export async function PUT(request: Request) {
       });
     }
 
-    const normalizedOptions = rawOptions.map((option, optionIndex) => ({
-      label: ANSWERS[optionIndex],
-      text: (option as Record<string, unknown>).text as string,
-    })).map((option) => ({
-      ...option,
-      text: option.text.trim().slice(0, 2000),
-    }));
+    const normalizedOptions = rawOptions.map((option, optionIndex) => {
+      const optionRecord = option as Record<string, unknown>;
+      return {
+        label: ANSWERS[optionIndex],
+        text: (optionRecord.text as string).trim().slice(0, 2000),
+      };
+    });
 
     rows.push({
       lesson_slug: slug,

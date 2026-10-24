@@ -171,6 +171,14 @@ export default function QueEsEsaVainaGame() {
   useEffect(() => {
     if (!hydrated || finished || revealed) return;
     setTimeLeft(QUESTION_SECONDS);
+    let timerAudio: HTMLAudioElement | null = null;
+    try {
+      timerAudio = new Audio("/audio/games/que-es-esa-vaina-timer.wav");
+      timerAudio.volume = 0.32;
+      void timerAudio.play().catch(() => undefined);
+    } catch {
+      // Si el archivo de audio no está disponible, la cuenta regresiva sigue funcionando.
+    }
     const timer = window.setInterval(() => {
       setTimeLeft((remaining) => {
         if (remaining <= 1) {
@@ -180,11 +188,16 @@ export default function QueEsEsaVainaGame() {
           playSfx("wrong");
           return 0;
         }
-        if (remaining <= 6) playSfx("tick");
         return remaining - 1;
       });
     }, 1000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      if (timerAudio) {
+        timerAudio.pause();
+        timerAudio.currentTime = 0;
+      }
+    };
   }, [hydrated, finished, revealed, index, playSfx]);
   // La barra conserva cinco hitos visuales, pero solo hay tres cofres reclamables.
   // Se desbloquean al alcanzar 2, 5 y 8 respuestas correctas.
@@ -336,7 +349,31 @@ export default function QueEsEsaVainaGame() {
                 </div>
               </div>
               <div className="mt-5 border-[3px] border-[#5e6983] bg-[#080e20] p-2 shadow-[inset_0_0_0_2px_#202b44]">
-                <div className="mb-2 flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#f4d57e]">Progreso de la ronda</span><span className="text-[10px] font-black text-[#f4d57e]">{correctCount} / {TOTAL_ROUNDS}</span></div><div className="mb-3 flex items-center gap-3 rounded-xl border border-[#52617f] bg-[#080f23]/90 p-2.5"><div className={"relative grid h-12 w-12 shrink-0 place-items-center rounded-full border-[3px] "+(timeLeft <= 5 ? "border-rose-400 bg-rose-950/70 animate-pulse" : "border-[#d7c26d] bg-[#1a2540]")}><svg viewBox="0 0 48 48" className="absolute inset-0 h-full w-full -rotate-90"><circle cx="24" cy="24" r="19" fill="none" stroke="#34415c" strokeWidth="3"/><circle cx="24" cy="24" r="19" fill="none" stroke={timeLeft <= 5 ? "#fb7185" : "#f5d76e"} strokeWidth="3" strokeLinecap="round" strokeDasharray="119.4" strokeDashoffset={119.4 * (1-timeLeft/QUESTION_SECONDS)} className="transition-[stroke-dashoffset] duration-300"/></svg><span className={"relative text-sm font-black tabular-nums "+(timeLeft <= 5 ? "text-rose-200" : "text-amber-100")}>{timeLeft}</span></div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><span className={"text-[10px] font-black "+(timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡Rápido!" : "20 segundos"}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#252f47]"><div className={"h-full rounded-full transition-[width] duration-300 "+(timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{width: (timeLeft / QUESTION_SECONDS * 100)+"%"}}/></div></div></div>
+                <div className="mb-2 flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#f4d57e]">Progreso de la ronda</span><span className="text-[10px] font-black text-[#f4d57e]">{correctCount} / {TOTAL_ROUNDS}</span></div><div className="mb-3 flex items-center gap-4 rounded-xl border border-[#52617f] bg-[#080f23]/90 p-3">
+                  <div className={"relative h-[76px] w-[76px] shrink-0 transition-transform duration-300 " + (timeLeft <= 5 ? "animate-pulse" : "")} aria-label={`Reloj: quedan ${timeLeft} segundos`}>
+                    <svg viewBox="0 0 100 100" role="img" aria-hidden="true" className="h-full w-full overflow-visible drop-shadow-[0_4px_0_rgba(0,0,0,.45)]">
+                      <path d="M28 17 L21 7 Q19 3 24 3 L40 13 Z" fill="#9f2432" stroke="#5b1722" strokeWidth="3"/>
+                      <path d="M72 17 L79 7 Q81 3 76 3 L60 13 Z" fill="#9f2432" stroke="#5b1722" strokeWidth="3"/>
+                      <path d="M24 28 Q15 23 19 17 Q23 13 31 21" fill="#e64a50" stroke="#741d2a" strokeWidth="3"/>
+                      <path d="M76 28 Q85 23 81 17 Q77 13 69 21" fill="#e64a50" stroke="#741d2a" strokeWidth="3"/>
+                      <circle cx="50" cy="51" r="40" fill="#681b2a" stroke="#3d111c" strokeWidth="5"/>
+                      <circle cx="50" cy="49" r="36" fill={timeLeft <= 5 ? "#ffe5e5" : "#fff9e9"} stroke={timeLeft <= 5 ? "#ff687b" : "#d94a50"} strokeWidth="5"/>
+                      {Array.from({ length: 12 }, (_, i) => <line key={i} x1="50" y1="17" x2="50" y2="22" stroke="#222333" strokeWidth={i % 3 === 0 ? "2.5" : "1.5"} strokeLinecap="round" transform={`rotate(${i * 30} 50 49)`}/>)}
+                      <g transform={`rotate(${(QUESTION_SECONDS - timeLeft) * 18} 50 49)`} className="transition-transform duration-500">
+                        <line x1="50" y1="49" x2="50" y2="22" stroke={timeLeft <= 5 ? "#e11d48" : "#26283a"} strokeWidth="3" strokeLinecap="round"/>
+                      </g>
+                      <line x1="50" y1="49" x2="62" y2="57" stroke="#252638" strokeWidth="4" strokeLinecap="round"/>
+                      <circle cx="50" cy="49" r="4" fill="#d93445" stroke="#681b2a" strokeWidth="2"/>
+                      <path d="M32 78 Q50 88 68 78" fill="none" stroke="#fca5a5" strokeWidth="2" opacity=".8"/>
+                    </svg>
+                    <span className="sr-only">{timeLeft} segundos restantes</span>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span></div>
+                    <p className={"mt-1 text-3xl font-black tabular-nums [font-family:var(--font-pixel),monospace] " + (timeLeft <= 5 ? "text-rose-300" : "text-amber-100")}>{String(timeLeft).padStart(2, "0")}</p>
+                    <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
+                  </div>
+                </div>
                 <div className="relative flex h-8 items-center px-1"><div className="absolute left-1 right-1 top-1/2 h-3 -translate-y-1/2 border-2 border-[#7b8396] bg-[#171d2c]" /><div className="absolute left-1 top-1/2 h-3 -translate-y-1/2 border-y-2 border-[#fff0a6] bg-[#e8b936] transition-[width] duration-300" style={{ width: `calc(${Math.min(100, correctCount / TOTAL_ROUNDS * 100)}% - 8px)` }} /><div className="relative z-10 flex w-full items-center justify-between">{Array.from({ length: 5 }, (_, i) => { const chestIndex = i === 1 ? 0 : i === 2 ? 1 : i === 4 ? 2 : -1; const isChest = chestIndex >= 0; const unlocked = isChest && chestLevel > chestIndex; return <div key={i} className={`relative grid h-7 w-7 place-items-center border-2 ${isChest ? (unlocked ? "border-[#ffe08a] bg-[#4b3211]" : "border-[#566079] bg-[#101629]") : "border-[#8992a8] bg-[#182136]"} shadow-[2px_2px_0_#030713]`} title={isChest ? (unlocked ? "Cofre disponible para reclamar" : `Cofre al alcanzar ${chestThresholds[chestIndex]} aciertos`) : `Hito ${i + 1}`} >{isChest ? <Image src="/images/games/poco-responda/cofre.png" alt="" width={24} height={24} className={`h-6 w-6 object-contain ${unlocked ? "" : "grayscale opacity-45"}`} /> : <span className="text-[10px] font-black text-[#c8d1e5] [font-family:var(--font-pixel),monospace]">{i === 0 || i === 3 ? "•" : ""}</span>}{unlocked && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border border-white bg-red-500" aria-label="Cofre disponible para reclamar" />}</div>; })}</div></div>
               </div>
             </header>

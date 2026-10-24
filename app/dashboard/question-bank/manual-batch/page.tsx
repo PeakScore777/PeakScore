@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -363,7 +365,7 @@ export default function ManualBulkQuestionsPage() {
                       {draft.image_url && <button type="button" disabled={saving || uploadingImageIndex !== null} onClick={() => updateDraft(index, "image_url", "")} className="rounded-xl px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">Quitar imagen</button>}
                     </div>
                     {draft.image_url && <div className="mt-4">
-                      <img src={draft.image_url} alt={`Vista previa de la imagen de la pregunta ${index + 1}`} className="max-h-64 max-w-full rounded-xl border border-slate-200 bg-white object-contain" />
+                      <Image src={draft.image_url} width={1200} height={800} unoptimized alt={`Vista previa de la imagen de la pregunta ${index + 1}`} className="max-h-64 max-w-full rounded-xl border border-slate-200 bg-white object-contain" />
                       <p className="mt-2 break-all text-xs text-slate-500">Imagen cargada y lista para guardar con esta pregunta.</p>
                     </div>}
                   </div>

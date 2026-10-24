@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   Building2,
   ClipboardList,
+  Gamepad2,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -166,6 +167,23 @@ export default async function AdminPage() {
               <h3 className="text-lg font-bold text-white">Editor de preguntas de misión</h3>
               <p className="mt-2 text-sm leading-6 text-slate-400">Edita las tres preguntas, crea tablas estructuradas y revisa la vista previa antes de publicar.</p>
               <div className="mt-5 text-sm font-semibold text-emerald-300">Abrir editor →</div>
+            </Link>
+
+                        {/* JUEGOS */}
+            <Link
+              href="/dashboard/admin/games"
+              className="group rounded-2xl border border-violet-200 bg-slate-950 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-violet-300/15 text-violet-300">
+                <Gamepad2 size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-white">Juegos</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Administra los juegos y genera preguntas con IA siguiendo las reglas de cada juego.
+              </p>
+              <div className="mt-5 text-sm font-semibold text-violet-300">
+                Abrir juegos →
+              </div>
             </Link>
 
             {/* BANCO */}

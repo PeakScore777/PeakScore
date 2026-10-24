@@ -318,7 +318,7 @@ export default function CasoCeroGame() {
                   </div>
                   <p className="mt-4 text-xs leading-5 text-[#aab8c8]">No busques solo la opción correcta. Determina qué evidencias la respaldan y cuáles conclusiones serían demasiado fuertes.</p>
                 </div>
-                <div className="border border-[#7c5b35] bg-[#17140f] p-4"><div className="flex items-center gap-2 text-xs font-black text-[#efc47e]"><BrainCircuit className="h-4 w-4"/> Orby está disponible</div><p className="mt-2 text-xs leading-5 text-[#c7baa3]">Al terminar, puedes elegir cualquier caso fallado en el cuaderno y pedirle a Orby que te explique el razonamiento.</p></div>
+                <div className="border border-[#7c5b35] bg-[#17140f] p-4"><div className="flex items-center gap-2 text-xs font-black text-[#efc47e]"><BrainCircuit className="h-4 w-4"/> Orby está disponible</div><p className="mt-2 text-xs leading-5 text-[#c7baa3]">Pregunta por el concepto o por los datos de este expediente. Al terminar, también podrás elegir errores en su cuaderno para una explicación paso a paso.</p><button type="button" onClick={() => setOrbyOpen(true)} className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 border-2 border-[#e8a653] bg-[#a85b1d] px-3 py-2 text-[10px] font-black text-white shadow-[3px_3px_0_#48240e] transition hover:bg-[#c5732a]"><Image src="/avatars/photo_perfil/orbyp.png" alt="" width={22} height={22} className="h-5 w-5 rounded-full object-contain"/> Preguntar a Orby sobre este caso</button></div>
               </aside>
             </div>
           </section>
@@ -366,10 +366,16 @@ export default function CasoCeroGame() {
         onOpenChange={setOrbyOpen}
         accent="orby"
         stage="practice"
-        subject="Ciencias Naturales"
-        topic="Caso Cero · Archivo de evidencias"
-        question=""
-        context=""
+        subject={phase === "playing" || phase === "feedback" ? currentCase?.subject ?? "Ciencias Naturales" : "Ciencias Naturales"}
+        topic={phase === "playing" || phase === "feedback" ? currentCase?.topic ?? "Caso Cero · Archivo de evidencias" : "Caso Cero · Archivo de evidencias"}
+        question={phase === "playing" || phase === "feedback" ? currentCase?.question ?? "" : ""}
+        context={(phase === "playing" || phase === "feedback") && currentCase ? [
+          currentCase.context,
+          "Datos del expediente: " + currentCase.evidenceRows.map((row) => row.label + ": " + row.displayValue).join("; "),
+          "Pregunta: " + currentCase.question,
+          "Opciones: " + currentCase.options.map((option, optionIndex) => String.fromCharCode(65 + optionIndex) + ") " + option).join("; "),
+          "Pista disponible: " + currentCase.hint,
+        ].join("\n") : ""}
       />
     </main>
   );

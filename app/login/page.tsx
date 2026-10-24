@@ -1,3 +1,4 @@
+import Image from "next/image";
 
 "use client";
 
@@ -235,9 +236,8 @@ export default function LoginPage() {
             aria-label="Volver al inicio de PeakScore"
             className="mb-7 inline-flex items-center gap-3 transition-opacity hover:opacity-75 sm:mb-8"
           >
-            <img
-              src="/images/branding/peaky-monochrome.png"
-              alt="Símbolo de PeakScore"
+            <Image
+              src="/images/branding/peaky-monochrome.png" width={1200} height={800} alt="Símbolo de PeakScore"
               className="h-11 w-11 object-contain sm:h-12 sm:w-12"
             />
 

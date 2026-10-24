@@ -163,7 +163,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const activeReview = activeReviewRef.current;
       const reviewContext = activeReview ? [
         `Pregunta seleccionada: ${activeReview.prompt}`,
-        `Opciones: ${activeReview.options.map((option, index) => `${String.fromCharCode(65 + index)}) ${option}`).join("\\n")}`,
+        `Opciones: ${activeReview.options.map((option, index) => `${String.fromCharCode(65 + index)}) ${option}`).join("\n")}`,
         `Respuesta del estudiante: ${activeReview.userAnswer}`,
         `Respuesta correcta: ${activeReview.correctAnswer}`,
         `Explicación base: ${activeReview.explanation}`,
@@ -201,6 +201,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   useEffect(() => {
     if (!open) {
       lastInitialPromptRef.current = null;
+      activeReviewRef.current = null;
+      setNotebookOpen(false);
       return;
     }
     const prompt = initialPrompt?.trim();

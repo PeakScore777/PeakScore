@@ -106,6 +106,8 @@ export default function ExamPage() {
   const finishHandledRef =
     useRef(false);
 
+  const finishExamRef = useRef<((automatic?: boolean) => Promise<void>) | null>(null);
+
   const storageKey =
     `peakscore:simulation:${simulationId}`;
   const annotationStorageKey = `peakscore:annotations:${simulationId}`;
@@ -769,6 +771,10 @@ export default function ExamPage() {
     }
   };
 
+  useEffect(() => {
+    finishExamRef.current = handleFinishExam;
+  }, [handleFinishExam]);
+
   /* =====================================================
      CONTINUAR LUEGO
   ====================================================== */
@@ -818,11 +824,11 @@ export default function ExamPage() {
     }
 
     if (timeLeft <= 0) {
-      if (
-        simulation.duration != null &&
-        simulation.duration > 0
-      ) {
-        void handleFinishExam(true);
+      if (simulation.duration != null && simulation.duration > 0) {
+        const finishTimer = window.setTimeout(() => {
+          void finishExamRef.current?.(true);
+        }, 0);
+        return () => window.clearTimeout(finishTimer);
       }
 
       return;

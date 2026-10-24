@@ -137,7 +137,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     const id = new URLSearchParams(window.location.search).get("id");
     if (!id) return;
     let alive = true;
-    setEditSetId(id);
     (async () => {
       setLoading(true);
       setError("");
@@ -156,6 +155,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         return;
       }
       if (!alive) return;
+      setEditSetId(id);
 
       const loadedWordBank = Array.isArray(setRow.word_bank)
         ? setRow.word_bank as { key: string; text: string; example?: boolean; example_description?: string; example_answer?: string }[]

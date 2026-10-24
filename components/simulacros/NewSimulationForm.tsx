@@ -1,3 +1,4 @@
+import Image from "next/image";
 
 "use client";
 
@@ -228,9 +229,8 @@ export default function NewSimulationPage() {
 
             <div className="flex items-center gap-4">
               <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center">
-                <img
-                  src="/images/simulacros/objetivo-icfes.webp"
-                  alt="Cristal que representa tu objetivo ICFES"
+                <Image
+                  src="/images/simulacros/objetivo-icfes.webp" width={1200} height={800} alt="Cristal que representa tu objetivo ICFES"
                   className="h-full w-full object-contain"
                 />
               </div>
@@ -322,9 +322,8 @@ export default function NewSimulationPage() {
                         }`}
                       >
                         <div className="flex h-[66px] w-[66px] shrink-0 items-center justify-center">
-                          <img
-                            src={item.image}
-                            alt=""
+                          <Image
+                            src={item.image} width={1200} height={800} alt=""
                             className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
                             loading="lazy"
                           />
@@ -477,9 +476,8 @@ export default function NewSimulationPage() {
                         }`}
                       >
                         <div className="flex h-[78px] w-full items-center justify-center">
-                          <img
-                            src={item.image}
-                            alt=""
+                          <Image
+                            src={item.image} width={1200} height={800} alt=""
                             className="h-full w-full object-contain transition-transform duration-200 group-hover:scale-105"
                             loading="lazy"
                           />
@@ -609,9 +607,8 @@ export default function NewSimulationPage() {
               <div className="flex items-center gap-3 border border-white/10 bg-[#0d1020] p-3">
                 <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center">
                   {selectedSubject && (
-                    <img
-                      src={selectedSubject.image}
-                      alt=""
+                    <Image
+                      src={selectedSubject.image} width={1200} height={800} alt=""
                       className="h-full w-full object-contain"
                     />
                   )}
@@ -654,9 +651,8 @@ export default function NewSimulationPage() {
               <div className="flex items-center gap-4 border border-white/10 bg-[#0d1020] p-4">
                 <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center">
                   {selectedDifficulty && (
-                    <img
-                      src={selectedDifficulty.image}
-                      alt=""
+                    <Image
+                      src={selectedDifficulty.image} width={1200} height={800} alt=""
                       className="h-full w-full object-contain"
                     />
                   )}

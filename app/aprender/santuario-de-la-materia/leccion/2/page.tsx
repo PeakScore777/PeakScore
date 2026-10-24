@@ -294,6 +294,7 @@ export default function CuandoLaMateriaCambiaPage() {
   }, [finished, lost, rewardOpen]);
 
   useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
     const hash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
     if (!hash) return;
     if (hash === "ejemplos") {

@@ -375,6 +375,9 @@ export default function PeakScoreMusicPlayer({
     isAuthenticated,
     enabled,
     mode,
+    isLandingPath,
+    isLevelsPath,
+    isSimulationPath,
   ]);
 
   // Cerrar el menú con Escape o al hacer clic fuera.

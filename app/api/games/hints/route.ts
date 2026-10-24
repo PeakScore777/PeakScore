@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 const HINT_COST = 5;
@@ -14,8 +15,10 @@ export async function POST(request: Request) {
   if (typeof candidate.sessionId !== "string" || typeof candidate.questionId !== "string") {
     return NextResponse.json({ error: "La pista no es válida." }, { status: 400 });
   }
-  const { data, error } = await supabase.rpc("use_que_es_esa_vaina_hint", {
-    p_session_id: candidate.sessionId, p_question_id: candidate.questionId,
+  const { data, error } = await supabaseAdmin.rpc("use_que_es_esa_vaina_hint", {
+    p_user_id: user.id,
+    p_session_id: candidate.sessionId,
+    p_question_id: candidate.questionId,
   });
   if (error) {
     const message = error.message.includes("COINS_INSUFFICIENT") ? `Necesitas ${HINT_COST} Peak Coins para revelar esta pista.`

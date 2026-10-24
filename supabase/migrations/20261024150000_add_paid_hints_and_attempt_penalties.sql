@@ -14,11 +14,11 @@ alter table public.game_hint_uses enable row level security;
 revoke all on public.game_hint_uses from public, anon, authenticated;
 grant select, insert, update, delete on public.game_hint_uses to service_role;
 
-create or replace function public.use_que_es_esa_vaina_hint(p_session_id uuid, p_question_id text)
+create or replace function public.use_que_es_esa_vaina_hint(p_user_id uuid, p_session_id uuid, p_question_id text)
 returns jsonb language plpgsql security definer set search_path = ''
 as $function$
 declare
-  v_user_id uuid := auth.uid();
+  v_user_id uuid := p_user_id;
   v_session public.game_round_sessions%rowtype;
   v_hint_id uuid;
   v_coins integer;
@@ -55,5 +55,5 @@ begin
   return jsonb_build_object('alreadyUsed', false, 'coinsSpent', v_cost, 'coinsTotal', v_coins_total);
 end;
 $function$;
-revoke all on function public.use_que_es_esa_vaina_hint(uuid, text) from public, anon;
-grant execute on function public.use_que_es_esa_vaina_hint(uuid, text) to authenticated;
+revoke all on function public.use_que_es_esa_vaina_hint(uuid, uuid, text) from public, anon, authenticated;
+grant execute on function public.use_que_es_esa_vaina_hint(uuid, uuid, text) to service_role;

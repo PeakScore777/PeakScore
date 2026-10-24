@@ -573,7 +573,7 @@ export default function QueEsEsaVainaGame() {
                     <span className="sr-only">{timeLeft} segundos restantes</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><<span className="text-[9px] font-bold text-[#a8b6d3]">{timerSoundEnabled ? "SONIDO ACTIVO" : "SONIDO AUTOMÁTICO"}</span></div></div>
+                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><span className="text-[9px] font-bold text-[#a8b6d3]">{timerSoundEnabled ? "RELOJ ACTIVO" : "RELOJ AUTOMÁTICO"}</span></div></div>
                     <p className={"mt-1 text-3xl font-black tabular-nums [font-family:var(--font-pixel),monospace] " + (timeLeft <= 5 ? "text-rose-300" : "text-amber-100")}>{String(timeLeft).padStart(2, "0")}</p>
                     <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
                   </div>

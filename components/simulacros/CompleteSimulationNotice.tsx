@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
@@ -10,9 +11,12 @@ export default function SimulacroCompletoPage() {
 
         {/* IMAGEN */}
         <div className="w-full overflow-hidden rounded-[32px] border border-white/10 shadow-2xl shadow-blue-950/30">
-          <img
+          <Image
             src="/images/simulacros-proximamente.png"
             alt="Simulacros próximamente disponibles"
+            width={1920}
+            height={1080}
+            unoptimized
             className="block h-auto w-full"
           />
         </div>

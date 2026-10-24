@@ -166,9 +166,8 @@ function ThemeBackground({
           srcSet={visiblePaths.mobile}
         />
 
-        <img
-          src={visiblePaths.desktop}
-          alt=""
+        <Image
+          src={visiblePaths.desktop} width={1200} height={800} alt=""
           draggable={false}
           decoding="async"
           className="
@@ -203,9 +202,8 @@ function ThemeBackground({
             srcSet={incomingPaths.mobile}
           />
 
-          <img
-            src={incomingPaths.desktop}
-            alt=""
+          <Image
+            src={incomingPaths.desktop} width={1200} height={800} alt=""
             draggable={false}
             decoding="async"
             onLoad={() => { if (incomingTheme) setReadyTheme(incomingTheme); }}
@@ -614,9 +612,8 @@ function HudItem({
             }
           `}
         >
-          <img
-            src={icon}
-            alt=""
+          <Image
+            src={icon} width={1200} height={800} alt=""
             aria-hidden="true"
             draggable={false}
             className="

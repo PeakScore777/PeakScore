@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -265,9 +267,8 @@ export default function MathIntroCinematic({
               ease: "easeInOut",
             }}
           >
-            <img
-              src="/characters/peaky/peaky-study-blink.gif?v=8"
-              alt="Peaky entrando al portal"
+            <Image
+              src="/characters/peaky/peaky-study-blink.gif?v=8" width={1200} height={800} unoptimized alt="Peaky entrando al portal"
               className="w-full drop-shadow-[0_20px_30px_rgba(0,0,0,0.9)]"
             />
           </motion.div>

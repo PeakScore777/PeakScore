@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, Trophy, XCircle } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, Trophy, Volume2, VolumeX, XCircle } from "lucide-react";
 
 import { QUESTION_BANK, type Question } from "@/lib/games/que-es-esa-vaina-bank";
 
@@ -54,6 +54,24 @@ export default function QueEsEsaVainaGame() {
   const [accountProgress, setAccountProgress] = useState<{ best_score: number; best_correct: number; games_completed: number } | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [timeLeft, setTimeLeft] = useState(QUESTION_SECONDS);
+  const [timerSoundEnabled, setTimerSoundEnabled] = useState(false);
+  const timerAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const enableTimerSound = useCallback(() => {
+    try {
+      const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav");
+      timerAudioRef.current = audio;
+      audio.volume = 0.32;
+      audio.currentTime = 0;
+      void audio.play().then(() => {
+        setTimerSoundEnabled(true);
+      }).catch(() => {
+        setTimerSoundEnabled(false);
+      });
+    } catch {
+      setTimerSoundEnabled(false);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -171,13 +189,15 @@ export default function QueEsEsaVainaGame() {
   useEffect(() => {
     if (!hydrated || finished || revealed) return;
     setTimeLeft(QUESTION_SECONDS);
-    let timerAudio: HTMLAudioElement | null = null;
-    try {
-      timerAudio = new Audio("/audio/games/que-es-esa-vaina-timer.wav");
-      timerAudio.volume = 0.32;
-      void timerAudio.play().catch(() => undefined);
-    } catch {
-      // Si el archivo de audio no está disponible, la cuenta regresiva sigue funcionando.
+    const timerAudio = timerAudioRef.current;
+    if (timerSoundEnabled && timerAudio) {
+      try {
+        timerAudio.currentTime = 0;
+        timerAudio.volume = 0.32;
+        void timerAudio.play().catch(() => setTimerSoundEnabled(false));
+      } catch {
+        setTimerSoundEnabled(false);
+      }
     }
     const timer = window.setInterval(() => {
       setTimeLeft((remaining) => {
@@ -198,7 +218,7 @@ export default function QueEsEsaVainaGame() {
         timerAudio.currentTime = 0;
       }
     };
-  }, [hydrated, finished, revealed, index, playSfx]);
+  }, [hydrated, finished, revealed, index, playSfx, timerSoundEnabled]);
   // La barra conserva cinco hitos visuales, pero solo hay tres cofres reclamables.
   // Se desbloquean al alcanzar 2, 5 y 8 respuestas correctas.
   const chestThresholds = [2, 5, 8];
@@ -369,7 +389,7 @@ export default function QueEsEsaVainaGame() {
                     <span className="sr-only">{timeLeft} segundos restantes</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span></div>
+                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><button type="button" onClick={enableTimerSound} aria-label={timerSoundEnabled ? "Reactivar sonido del reloj" : "Activar sonido del reloj"} title={timerSoundEnabled ? "Reactivar sonido del reloj" : "Activar sonido del reloj"} className="inline-flex h-7 items-center gap-1 border border-[#69748d] bg-[#111a31] px-2 text-[9px] font-bold text-[#f5d77c] hover:bg-[#222a40]"><Volume2 className="h-3.5 w-3.5"/>{timerSoundEnabled ? "SONIDO ON" : "ACTIVAR SONIDO"}</button></div></div>
                     <p className={"mt-1 text-3xl font-black tabular-nums [font-family:var(--font-pixel),monospace] " + (timeLeft <= 5 ? "text-rose-300" : "text-amber-100")}>{String(timeLeft).padStart(2, "0")}</p>
                     <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
                   </div>

@@ -27,10 +27,7 @@ export default function CTA({ theme: externalTheme }: CTAProps) {
    */
 
   useEffect(() => {
-    if (externalTheme) {
-      setInternalTheme(externalTheme);
-      return;
-    }
+    if (externalTheme) return;
 
     const syncTheme = () => {
       const currentTheme =

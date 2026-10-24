@@ -162,8 +162,8 @@ function getValidValues(
 export default function AreaChartVisual({
   data,
 }: AreaChartVisualProps) {
-  const series = data.series ?? [];
-  const categories = data.categories ?? [];
+  const series = useMemo(() => data.series ?? [], [data.series]);
+  const categories = useMemo(() => data.categories ?? [], [data.categories]);
 
   /* =======================================================
      NÚMERO DE PUNTOS

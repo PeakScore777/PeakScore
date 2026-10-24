@@ -912,16 +912,16 @@ export default function QueEsEsaVainaGame() {
             <header className="border-b-[3px] border-[#35415e] px-4 py-4 sm:px-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div><p className="text-[10px] font-black uppercase tracking-[.2em] text-[#f0c86d] [font-family:var(--font-pixel),monospace]">Ronda {finished ? TOTAL_ROUNDS : index + 1} de {TOTAL_ROUNDS}</p><h1 className="mt-2 text-xl font-black text-white [font-family:var(--font-pixel),monospace] sm:text-xl">{finished ? "¡Desafío completado!" : "Descifra la pista"}</h1></div>
-                <div className="flex flex-wrap items-stretch gap-0 overflow-hidden border border-[#3c465f] bg-[#080e20]/95">
-                  <div className="flex min-w-[112px] items-center gap-2 border-b-2 border-r border-[#5b4728] bg-gradient-to-b from-[#211a12] to-[#080e20] px-3 py-2">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#b58838] bg-[#33230f] text-[#ffe08a]"><Trophy className="h-5 w-5"/></span>
-                    <span><span className="block text-[9px] font-bold uppercase tracking-wide text-[#cdbd9b]">Puntos</span><span className="mt-1 block text-lg font-black leading-none text-[#ffd65c]">{score} <span className="text-[10px]">PTS</span></span></span>
+                <div className="flex flex-wrap items-stretch overflow-hidden border-y border-[#59462f] bg-gradient-to-r from-[#100f11] via-[#10131a] to-[#16110d]">
+                  <div className="flex min-w-[105px] flex-1 items-center gap-2 border-r border-[#59462f] px-3 py-2.5">
+                    <Image src="/dashboard/premio-pixel.webp" alt="Trofeo · puntos" width={38} height={38} className="h-9 w-9 shrink-0 object-contain"/>
+                    <span><span className="block text-[9px] font-bold uppercase tracking-wide text-[#d0b58c]">Puntos</span><span className="mt-1 block text-lg font-black leading-none text-[#ffd65c]">{score} <span className="text-[10px]">PTS</span></span></span>
                   </div>
-                  <div className="flex min-w-[100px] items-center gap-2 border-b-2 border-r border-[#3c465f] border-b-[#9b8c51] bg-gradient-to-b from-[#171a1a] to-[#080e20] px-3 py-2">
+                  <div className="flex min-w-[96px] flex-1 items-center gap-2 border-r border-[#3b3b3b] px-3 py-2.5">
                     <Image src="/peaky/homepage/xp.webp" alt="XP" width={36} height={36} className="h-9 w-9 shrink-0 object-contain"/>
-                    <span><span className="block text-[9px] font-bold uppercase tracking-wide text-[#b9c7bf]">XP total</span><span className="mt-1 block text-lg font-black leading-none text-[#e9e0a5]">{wallet ? wallet.xp : "—"}</span></span>
+                    <span><span className="block text-[9px] font-bold uppercase tracking-wide text-[#c8c8b5]">XP total</span><span className="mt-1 block text-lg font-black leading-none text-[#eee4a9]">{wallet ? wallet.xp : "—"}</span></span>
                   </div>
-                  <div className="flex min-w-[118px] items-center gap-2 border-b-2 border-b-[#d18a38] bg-gradient-to-b from-[#21170f] to-[#080e20] px-3 py-2">
+                  <div className="flex min-w-[118px] flex-1 items-center gap-2 px-3 py-2.5">
                     <Image src="/images/currency/monedasacopiladas.png" alt="Peak Coins acumuladas" width={42} height={36} className="h-9 w-10 shrink-0 object-contain"/>
                     <span><span className="block text-[9px] font-bold uppercase tracking-wide text-[#d9b68c]">Peak Coins</span><span className="mt-1 block text-lg font-black leading-none text-[#ffbd68]">{wallet ? wallet.coins : "—"}</span></span>
                   </div>

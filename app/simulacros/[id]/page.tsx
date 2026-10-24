@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 import {
@@ -165,7 +165,7 @@ export default function ExamPage() {
      GUARDAR PROGRESO LOCAL
   ====================================================== */
 
-  const saveLocalProgress = (
+  const saveLocalProgress = useCallback((
     nextAnswers = answers,
     nextQuestion = currentQuestion,
     nextTime = timeLeft
@@ -189,13 +189,13 @@ export default function ExamPage() {
         error
       );
     }
-  };
+  }, [answers, currentQuestion, storageKey, timeLeft]);
 
   /* =====================================================
      ELIMINAR PROGRESO LOCAL
   ====================================================== */
 
-  const clearLocalProgress = () => {
+  const clearLocalProgress = useCallback(() => {
     try {
       localStorage.removeItem(storageKey);
       setHasSavedProgress(false);
@@ -205,7 +205,7 @@ export default function ExamPage() {
         error
       );
     }
-  };
+  }, [storageKey]);
 
   /* =====================================================
      GUARDAR PROGRESO EN SERVIDOR
@@ -536,7 +536,7 @@ export default function ExamPage() {
     if (simulationId) {
       void loadExam();
     }
-  }, [simulationId]);
+  }, [clearLocalProgress, simulationId]);
 
   /* =====================================================
      GUARDADO AUTOMÁTICO CADA 5 SEGUNDOS
@@ -566,6 +566,7 @@ export default function ExamPage() {
     currentQuestion,
     timeLeft,
     answers,
+    saveLocalProgress,
   ]);
 
   /* =====================================================
@@ -603,13 +604,14 @@ export default function ExamPage() {
     currentQuestion,
     timeLeft,
     answers,
+    saveLocalProgress,
   ]);
 
   /* =====================================================
      GUARDAR INTENTO DEFINITIVO
   ====================================================== */
 
-  const saveAttempt = async () => {
+  const saveAttempt = useCallback(async () => {
     try {
       setSavingAttempt(true);
 
@@ -711,13 +713,13 @@ export default function ExamPage() {
     } finally {
       setSavingAttempt(false);
     }
-  };
+  }, [answers, questions, serverAttemptId, simulationId]);
 
   /* =====================================================
      FINALIZAR EXAMEN
   ====================================================== */
 
-  const handleFinishExam = async (
+  const handleFinishExam = useCallback(async (
     automatic = false
   ) => {
     if (
@@ -769,7 +771,7 @@ export default function ExamPage() {
           : "No fue posible guardar el simulacro."
       );
     }
-  };
+  }, [clearLocalProgress, saveAttempt]);
 
   useEffect(() => {
     finishExamRef.current = handleFinishExam;

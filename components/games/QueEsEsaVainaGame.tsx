@@ -15,7 +15,7 @@ type SavedProgress = { bestScore: number; completedIds: string[]; chests: number
 const RECENT_KEY = "peakscore-que-es-esa-vaina-recent-v1";
 const QUESTION_SECONDS = 20;
 
-function shuffleQuestions(source: Question[]): Question[] {
+function shuffleQuestions<T>(source: T[]): T[] {
   const pool = [...source];
   for (let i = pool.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -24,18 +24,119 @@ function shuffleQuestions(source: Question[]): Question[] {
   return pool;
 }
 
-function readRecentIds(): string[] {
-  try {
-    const value = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
-    return Array.isArray(value) ? value.filter((id): id is string => typeof id === "string") : [];
-  } catch { return []; }
+function normalizeQuestionKey(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim()
+    .toLowerCase();
 }
 
+function questionTopicKey(question: Pick<Question, "subject" | "topic">): string {
+  return normalizeQuestionKey(question.subject) + "::" + normalizeQuestionKey(question.topic);
+}
+
+function readRecentIds(): string[] {
+  try {
+    const value: unknown = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
+    if (!Array.isArray(value)) return [];
+    return [...new Set(value.filter((id): id is string => typeof id === "string"))].slice(0, 1000);
+  } catch {
+    return [];
+  }
+}
+
+function pickDiverseQuestions(source: Question[], amount: number, reservedTopics: string[] = []): Question[] {
+  const remaining = shuffleQuestions(source);
+  const selected: Question[] = [];
+  const selectedIds = new Set<string>();
+  const selectedTopics = new Set(reservedTopics);
+  const subjectOrder = shuffleQuestions([...new Set(remaining.map((question) => question.subject))]);
+
+  while (selected.length < amount && remaining.length > 0) {
+    let addedInPass = false;
+    for (const subject of subjectOrder) {
+      if (selected.length >= amount) break;
+      const index = remaining.findIndex((question) =>
+        question.subject === subject &&
+        !selectedTopics.has(questionTopicKey(question)) &&
+        !selectedIds.has(question.id)
+      );
+      if (index === -1) continue;
+      const [question] = remaining.splice(index, 1);
+      selected.push(question);
+      selectedIds.add(question.id);
+      selectedTopics.add(questionTopicKey(question));
+      addedInPass = true;
+    }
+
+    if (!addedInPass) {
+      const index = remaining.findIndex((question) => !selectedIds.has(question.id));
+      if (index === -1) break;
+      const [question] = remaining.splice(index, 1);
+      selected.push(question);
+      selectedIds.add(question.id);
+      selectedTopics.add(questionTopicKey(question));
+    }
+  }
+
+  return selected;
+}
+
+/**
+ * The recent-ID list is newest-first. When fewer than ten unseen questions
+ * remain, fill with the least-recently-seen questions instead of ignoring history.
+ */
 function getRoundsFromPool(source: Question[], excludeIds: string[] = []): Question[] {
-  const shuffled = shuffleQuestions(source);
-  const fresh = shuffled.filter((q) => !excludeIds.includes(q.id));
-  const chosen = fresh.length >= TOTAL_ROUNDS ? fresh.slice(0, TOTAL_ROUNDS) : shuffled.slice(0, TOTAL_ROUNDS);
-  return chosen;
+  const uniqueById = new Map<string, Question>();
+  for (const question of source) {
+    if (!uniqueById.has(question.id)) uniqueById.set(question.id, question);
+  }
+
+  const pool = [...uniqueById.values()];
+  if (pool.length < TOTAL_ROUNDS) return [];
+
+  const excluded = new Set(excludeIds);
+  const historyPosition = new Map<string, number>();
+  excludeIds.forEach((id, index) => {
+    if (!historyPosition.has(id)) historyPosition.set(id, index);
+  });
+
+  const unseen = pool.filter((question) => !excluded.has(question.id));
+  const selected = pickDiverseQuestions(unseen, Math.min(TOTAL_ROUNDS, unseen.length));
+
+  if (selected.length < TOTAL_ROUNDS) {
+    const selectedIds = new Set(selected.map((question) => question.id));
+    const olderQuestions = pool
+      .filter((question) => excluded.has(question.id) && !selectedIds.has(question.id))
+      .sort((a, b) =>
+        (historyPosition.get(b.id) ?? -1) - (historyPosition.get(a.id) ?? -1)
+      );
+    selected.push(...pickDiverseQuestions(
+      olderQuestions,
+      TOTAL_ROUNDS - selected.length,
+      selected.map(questionTopicKey)
+    ));
+  }
+
+  return selected.length === TOTAL_ROUNDS ? shuffleQuestions(selected) : [];
+}
+
+/** Published database questions take priority; local questions fill the pool. */
+function mergeQuestionPools(published: Question[], local: Question[]): Question[] {
+  const seenIds = new Set<string>();
+  const seenClues = new Set<string>();
+  const merged: Question[] = [];
+
+  for (const question of [...published, ...local]) {
+    const clueKey = normalizeQuestionKey(question.subject) + "::" + normalizeQuestionKey(question.clue);
+    if (seenIds.has(question.id) || seenClues.has(clueKey)) continue;
+    seenIds.add(question.id);
+    seenClues.add(clueKey);
+    merged.push(question);
+  }
+  return merged;
 }
 
 export default function QueEsEsaVainaGame() {
@@ -129,14 +230,15 @@ export default function QueEsEsaVainaGame() {
           Number.isInteger(q.answer) && Number(q.answer) >= 0 && Number(q.answer) <= 3 &&
           typeof q.explanation === "string" && typeof q.hint === "string"
         ) as Question[];
-        const pool = valid.length >= TOTAL_ROUNDS ? valid : QUESTION_BANK;
+        const pool = mergeQuestionPools(valid, QUESTION_BANK);
         setQuestionPool(pool);
         setRounds(getRoundsFromPool(pool, readRecentIds()));
       })
       .catch(() => {
         if (active) {
-          setQuestionPool(QUESTION_BANK);
-          setRounds(getRoundsFromPool(QUESTION_BANK, readRecentIds()));
+          const pool = QUESTION_BANK;
+          setQuestionPool(pool);
+          setRounds(getRoundsFromPool(pool, readRecentIds()));
         }
       })
       .finally(() => {
@@ -473,7 +575,10 @@ export default function QueEsEsaVainaGame() {
   }, [answeredCorrectly, index, next, revealed, rounds.length, selected, startRoundTimer]);
 
   const restart = useCallback(() => {
-    const recent = [...readRecentIds(), ...rounds.map((q) => q.id)];
+    const recent = [...new Set([...rounds.map((q) => q.id), ...readRecentIds()])].slice(0, 1000);
+    try {
+      window.localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
+    } catch { /* El historial es una mejora opcional. */ }
     setGameStarted(false);
     setStartingGame(false);
     timerDeadlineRef.current = null;
@@ -545,7 +650,7 @@ export default function QueEsEsaVainaGame() {
   useEffect(() => {
     if (!finished || rounds.length === 0) return;
     try {
-      const ids = [...rounds.map((q) => q.id), ...readRecentIds()].filter((id, i, all) => all.indexOf(id) === i).slice(0, 30);
+      const ids = [...rounds.map((q) => q.id), ...readRecentIds()].filter((id, i, all) => all.indexOf(id) === i).slice(0, 1000);
       window.localStorage.setItem(RECENT_KEY, JSON.stringify(ids));
     } catch { /* La rotación sigue funcionando en memoria. */ }
   }, [finished, rounds]);

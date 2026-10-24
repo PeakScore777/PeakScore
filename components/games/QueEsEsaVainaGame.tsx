@@ -380,7 +380,7 @@ export default function QueEsEsaVainaGame() {
   const cooldownActive = Boolean(chestCooldownUntil && Date.parse(chestCooldownUntil) > cooldownNow);
   const allChestsClaimed = claimedChests.length >= 3;
   const rewardCanProgress = !cooldownActive && !allChestsClaimed && !sessionOutdated;
-  const rewardMeterScore = cooldownActive || allChestsClaimed ? frozenRewardScore : rewardScore;
+  const rewardMeterScore = cooldownActive || allChestsClaimed || sessionOutdated ? frozenRewardScore : rewardScore;
   const scoreProgress = Math.max(0, Math.min(100, Math.round((rewardMeterScore / 1000) * 100)));
   const chestLevel = CHEST_THRESHOLDS.filter((threshold) => rewardMeterScore >= threshold).length;
   const nextChestToClaim = ([1, 2, 3] as const).find((number) => !claimedChests.includes(number)) ?? null;

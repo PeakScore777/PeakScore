@@ -172,8 +172,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   });
 
   useEffect(() => {
+    if (!open) {
+      lastInitialPromptRef.current = null;
+      return;
+    }
     const prompt = initialPrompt?.trim();
-    if (!open || !prompt || lastInitialPromptRef.current === prompt) return;
+    if (!prompt || lastInitialPromptRef.current === prompt) return;
     lastInitialPromptRef.current = prompt;
     void sendMessageRef.current(prompt);
   }, [open, initialPrompt]);

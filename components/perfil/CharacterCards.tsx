@@ -126,7 +126,9 @@ export default function CharacterCards() {
   }, []);
 
   useEffect(() => {
-    void loadCharacter();
+    const initialLoadFrame = window.requestAnimationFrame(() => {
+      void loadCharacter();
+    });
 
     const refresh = () => void loadCharacter();
 
@@ -144,6 +146,7 @@ export default function CharacterCards() {
     window.addEventListener("peakscore:character-changed", refresh);
 
     return () => {
+      window.cancelAnimationFrame(initialLoadFrame);
       window.removeEventListener("focus", refresh);
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(

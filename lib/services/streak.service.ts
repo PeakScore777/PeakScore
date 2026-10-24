@@ -10,6 +10,9 @@ import { supabase } from "@/lib/supabase/browser";
 export async function updateUserStreak(
   _userId: string
 ): Promise<number> {
+  // Keep the legacy parameter for existing callers; authorization uses auth.uid() in the RPC.
+  void _userId;
+
   const { data, error } = await supabase.rpc(
     "update_user_streak"
   );

@@ -122,252 +122,11 @@ interface GenerationBlockResult {
    OPERACIÓN COGNITIVA
 ========================================================= */
 
-function getCognitiveOperations(
-  subject: string
-): CognitiveOperation[] {
-  const normalizedSubject = normalize(subject);
-
-  if (normalizedSubject === "matematicas") {
-    return [
-      "interpretar",
-      "comparar",
-      "relacionar",
-      "calcular",
-      "analizar",
-      "justificar",
-    ];
-  }
-
-  if (normalizedSubject === "lectura critica") {
-    return [
-      "interpretar",
-      "inferir",
-      "relacionar",
-      "comparar",
-      "analizar",
-      "evaluar",
-    ];
-  }
-
-  if (normalizedSubject === "sociales y ciudadanas") {
-    return [
-      "interpretar",
-      "relacionar",
-      "comparar",
-      "analizar",
-      "evaluar",
-      "justificar",
-    ];
-  }
-
-  if (normalizedSubject === "ciencias naturales") {
-    return [
-      "interpretar",
-      "relacionar",
-      "analizar",
-      "comparar",
-      "predecir",
-      "justificar",
-    ];
-  }
-
-  if (normalizedSubject === "ingles") {
-    return [
-      "interpretar",
-      "inferir",
-      "relacionar",
-      "comparar",
-      "analizar",
-      "aplicar",
-    ];
-  }
-
-  return [
-    "interpretar",
-    "inferir",
-    "comparar",
-    "relacionar",
-    "analizar",
-    "aplicar",
-  ];
-}
 
 /* =========================================================
    PLANIFICADOR VISUAL
 ========================================================= */
 
-function getPlannedVisualType(
-  subject: string,
-  operation: CognitiveOperation | null,
-  requiresVisual: boolean | null,
-  structureType: string | null,
-  topic: string | null
-): VisualType | null {
-  if (requiresVisual !== true) {
-    return null;
-  }
-
-  const normalizedSubject = normalize(subject);
-
-  const normalizedStructure = normalize(
-    structureType ?? ""
-  );
-
-  const normalizedTopic = normalize(
-    topic ?? ""
-  );
-
-    // Inferencia visual basada en la estructura de referencia.
-  // Esto evita caer automáticamente en "table" cuando
-  // todavía no existe una operación cognitiva planificada.
-
-  if (
-    normalizedStructure.includes("chart") ||
-    normalizedStructure.includes("grafica") ||
-    normalizedStructure.includes("gráfica") ||
-    normalizedStructure.includes("grafico") ||
-    normalizedStructure.includes("gráfico") ||
-    normalizedStructure.includes("linea") ||
-    normalizedStructure.includes("línea")
-  ) {
-    return "chart";
-  }
-
-  if (
-    normalizedStructure.includes("table") ||
-    normalizedStructure.includes("tabla")
-  ) {
-    return "table";
-  }
-
-  if (
-    normalizedStructure.includes("math_graph") ||
-    normalizedStructure.includes("math graph") ||
-    normalizedStructure.includes("plano cartesiano") ||
-    normalizedStructure.includes("funcion") ||
-    normalizedStructure.includes("función")
-  ) {
-    return "math_graph";
-  }
-
-  if (
-    normalizedStructure.includes("diagram") ||
-    normalizedStructure.includes("diagrama") ||
-    normalizedStructure.includes("proceso") ||
-    normalizedStructure.includes("flujo")
-  ) {
-    return "diagram";
-  }
-
-  if (
-    normalizedStructure.includes("geometr") ||
-    normalizedTopic.includes("geometr") ||
-    normalizedTopic.includes("area") ||
-    normalizedTopic.includes("perimetro") ||
-    normalizedTopic.includes("volumen")
-  ) {
-    return "geometry";
-  }
-
-  if (normalizedSubject === "matematicas") {
-    if (
-      operation === "calcular" ||
-      operation === "relacionar"
-    ) {
-      return "math_graph";
-    }
-
-    if (
-      operation === "interpretar" ||
-      operation === "comparar" ||
-      operation === "analizar"
-    ) {
-      return "chart";
-    }
-
-    if (
-      operation === "aplicar" ||
-      operation === "justificar"
-    ) {
-      return "geometry";
-    }
-
-    return "table";
-  }
-
-  if (normalizedSubject === "ciencias naturales") {
-    if (
-      operation === "interpretar" ||
-      operation === "comparar" ||
-      operation === "analizar"
-    ) {
-      return "chart";
-    }
-
-    if (operation === "predecir") {
-      return "diagram";
-    }
-
-    if (
-      operation === "relacionar" ||
-      operation === "justificar"
-    ) {
-      return "diagram";
-    }
-
-    return "table";
-  }
-
-  if (normalizedSubject === "sociales y ciudadanas") {
-    if (
-      operation === "interpretar" ||
-      operation === "comparar" ||
-      operation === "analizar"
-    ) {
-      return "chart";
-    }
-
-    if (
-      operation === "relacionar" ||
-      operation === "evaluar"
-    ) {
-      return "table";
-    }
-
-    return "diagram";
-  }
-
-  if (normalizedSubject === "lectura critica") {
-    if (
-      operation === "interpretar" ||
-      operation === "comparar"
-    ) {
-      return "table";
-    }
-
-    if (
-      operation === "analizar" ||
-      operation === "relacionar"
-    ) {
-      return "diagram";
-    }
-
-    return null;
-  }
-
-  if (normalizedSubject === "ingles") {
-    if (
-      operation === "interpretar" ||
-      operation === "comparar"
-    ) {
-      return "table";
-    }
-
-    return null;
-  }
-
-  return "table";
-}
 
 /* =========================================================
    PLANIFICADOR DE ARQUITECTURA DEL LOTE
@@ -2121,14 +1880,7 @@ function getSupabase(): SupabaseClient {
    CONTROL DE DIFICULTAD
 ========================================================= */
 
-const GENERATED_DIFFICULTIES = [
-  "Fácil",
-  "Media",
-  "Difícil",
-] as const;
-
-type GeneratedDifficulty =
-  (typeof GENERATED_DIFFICULTIES)[number];
+type GeneratedDifficulty = "Fácil" | "Media" | "Difícil";
 
 function normalizeDifficulty(
   value: unknown
@@ -2269,18 +2021,6 @@ function getDifficultyCounts(
 /* =========================================================
    VALIDAR PREGUNTA
 ========================================================= */
-
-function explicitlyReferencesVisual(
-  item: GeneratedQuestion
-): boolean {
-  const text = normalize(
-    `${item.context_text ?? ""} ${item.question}`
-  );
-
-  return /\b(tabla|tablas|grafico|grafica|graficos|graficas|diagrama|diagramas|figura|figuras|se muestra|mostrado|mostrada|representado|representada|representacion)\b/.test(
-    text
-  );
-}
 
 function isQuestionVisualCoherent(
   item: GeneratedQuestion
@@ -3766,9 +3506,6 @@ function validateFunctionComparisonAnswer(
    * "a t=7"
    * "para t=7"
    */
-
-  const comparisonPattern =
-    /\b(?:en|a|para)\s*t\s*=\s*(\d+(?:[.,]\d+)?)\b[\s\S]{0,180}?\b(supera|mayor|menor|inferior|superior)\b/i;
 
   const matches = [
     ...text.matchAll(
@@ -6700,8 +6437,6 @@ Nunca devuelvas visual_data distinto de null.
   /* =========================================================
      INSTRUCCIONES ADAPTATIVAS
      ========================================================= */
-
-  const isFirstBlock = profiles.length > 0;
 
   const calibration = `
 CALIBRACIÓN:

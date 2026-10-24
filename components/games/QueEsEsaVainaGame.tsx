@@ -959,81 +959,22 @@ export default function QueEsEsaVainaGame() {
             </header>
             {gameError && <p role="alert" className="mb-4 border-2 border-rose-400 bg-rose-950/60 p-3 text-xs font-bold text-rose-100">{gameError}</p>}
             {finished ? <div className="p-4 sm:p-7">
-  <div className="mx-auto max-w-3xl overflow-hidden border-[3px] border-[#7584a3] bg-[#091126] shadow-[7px_7px_0_#030713]">
-    <div className="flex flex-wrap items-center gap-4 border-b-[3px] border-[#33415f] bg-gradient-to-r from-[#101b38] to-[#0a1228] p-5 sm:p-7">
-      <div className="grid h-16 w-16 shrink-0 place-items-center border-[3px] border-[#a8873e] bg-[#332715] shadow-[3px_3px_0_#030713]"><Trophy className="h-9 w-9 text-[#ffe08a]"/></div>
-      <div className="min-w-0 flex-1"><p className="text-[10px] font-black uppercase tracking-[.22em] text-[#e7c86f]">PARTIDA FINALIZADA · RONDA 10 DE 10</p><h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">¡Buen trabajo!</h2><p className="mt-2 text-sm leading-6 text-[#cbd7ed]">Respondiste las 10 preguntas. Revisa tu resultado y reclama los cofres disponibles.</p></div>
-    </div>
-    <div className="p-5 sm:p-7">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="border-[2px] border-[#465677] bg-[#101b35] p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#aebdd8]">Puntos netos</p><p className="mt-2 text-3xl font-black text-[#ffe08a]">{score}<span className="ml-2 text-xs">PTS</span></p></div>
-        <div className="border-[2px] border-[#465677] bg-[#101b35] p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#aebdd8]">Respuestas correctas</p><p className="mt-2 text-3xl font-black text-[#9be8b0]">{correctCount}<span className="ml-2 text-xs text-[#cbd7ed]">/ {TOTAL_ROUNDS}</span></p></div>
-        <div className="border-[2px] border-[#465677] bg-[#101b35] p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#aebdd8]">Cofres reclamados</p><p className="mt-2 text-3xl font-black text-[#8ee8ff]">{claimedChests.length}<span className="ml-2 text-xs text-[#cbd7ed]">/ 3</span></p></div>
+  <section className="mx-auto max-w-3xl overflow-hidden border-2 border-[#65513a] bg-[#0b101c] shadow-[0_5px_0_#030713]">
+    <div className="flex items-center gap-4 border-b border-[#51402d] bg-gradient-to-r from-[#231a12] via-[#12131b] to-[#0b101c] p-5 sm:p-7">
+      <div className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-2xl border border-[#c18b43] bg-[#2e2114] shadow-[inset_0_0_0_3px_#17120d]">
+        <Image src="/dashboard/premio-pixel.webp" alt="Trofeo de PeakScore" width={96} height={96} className="h-[62px] w-[62px] object-contain"/>
       </div>
-<section className="mt-5 overflow-hidden border-2 border-[#9a612c] bg-[#100f13] shadow-[0_4px_0_#28170b]">
-        <div className="flex flex-wrap items-center gap-3 border-b border-[#5b3b20] bg-gradient-to-r from-[#38220f] to-[#171117] p-4">
-          <div className="grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-full border-2 border-[#ef9d3b] bg-[#24170d] shadow-[0_0_0_3px_rgba(249,115,22,.12)]">
-            <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby, tutor de inteligencia artificial PeakScore" className="h-full w-full object-contain object-center"/>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-black uppercase tracking-[.2em] text-[#f7b45d]">ORBY · TUTOR CON IA</p>
-            <h3 className="mt-1 text-lg font-black text-white sm:text-xl">Aprendamos de tus errores</h3>
-            <p className="mt-1 text-xs leading-5 text-[#d8c8b7]">Selecciona una pregunta incorrecta y Orby te explicará el razonamiento paso a paso.</p>
-          </div>
-          <span className="border border-[#9a612c] bg-[#21170f] px-3 py-1.5 text-[10px] font-black text-[#ffca83]">{incorrectAnswers.length} {incorrectAnswers.length === 1 ? "PREGUNTA" : "PREGUNTAS"} POR REVISAR</span>
-        </div>
-        {incorrectAnswers.length > 0 ? <>
-          <div className="grid gap-2 p-3 sm:p-4">
-            {incorrectAnswers.map((item) => {
-              const isSelected = selectedReview?.question.id === item.question.id;
-              const selectedText = item.selectedOption === null ? "Tiempo agotado" : item.question.options[item.selectedOption] ?? "Respuesta seleccionada";
-              const correctText = item.question.options[item.correctOption] ?? item.question.options[item.question.answer] ?? "Respuesta correcta";
-              return <button key={item.question.id} type="button" onClick={() => setSelectedReviewQuestionId(item.question.id)} aria-pressed={isSelected}
-                className={`flex w-full items-start gap-3 border p-3 text-left transition ${isSelected ? "border-[#f1a34c] bg-[#352313] shadow-[inset_3px_0_0_#f1a34c]" : "border-[#5e4935] bg-[#18151a] hover:border-[#b87d3d] hover:bg-[#231b16]"}`}>
-                <span className={`grid h-8 w-8 shrink-0 place-items-center border ${isSelected ? "border-[#f1a34c] bg-[#603915] text-[#ffe0aa]" : "border-[#68533d] bg-[#211b16] text-[#d4b48b]"}`}><span className="text-xs font-black">{item.questionNumber}</span></span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[9px] font-black uppercase tracking-[.13em] text-[#dca663]">{item.question.subject} · PREGUNTA {item.questionNumber}</span>
-                  <span className="mt-1 block text-sm font-bold leading-5 text-[#fff3e4]">{item.question.clue}</span>
-                  <span className="mt-2 block text-[10px] leading-4 text-[#d4bfa9]"><span className="font-bold text-[#f0a5a5]">Tu respuesta:</span> {selectedText} <span className="mx-1 text-[#8f7559]">·</span> <span className="font-bold text-[#a8ddb0]">Correcta:</span> {correctText}</span>
-                </span>
-                {isSelected && <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[#ffbd68]"/>}
-              </button>;
-            })}
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#50361f] bg-[#19120e] p-3 sm:px-4">
-            <p className="text-[10px] leading-4 text-[#cfbba5]">La explicación se adapta a la pregunta que selecciones.</p>
-            <button type="button" onClick={() => setOrbyReviewOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 border-2 border-[#ffbd68] bg-gradient-to-b from-[#df842d] to-[#a95218] px-5 py-2 text-xs font-black text-[#fff8ed] shadow-[0_3px_0_#66300f] transition hover:from-[#ee9b43] hover:to-[#bd631f] active:translate-y-0.5 active:shadow-none">
-              <Image src="/avatars/photo_perfil/orbyp.png" alt="" width={24} height={24} className="h-6 w-6 rounded-full border border-[#ffd095] bg-[#38210d] object-contain"/> Explicar pregunta con Orby
-            </button>
-          </div>
-        </> : <div className="flex items-center gap-3 p-4"><CheckCircle2 className="h-6 w-6 shrink-0 text-[#a8ddb0]"/><p className="text-sm leading-5 text-[#e2d7ca]">¡Excelente! No hay respuestas incorrectas en esta partida para revisar con Orby.</p></div>}
-      </section>
-      <LessonAITutor
-        open={orbyReviewOpen}
-        onOpenChange={setOrbyReviewOpen}
-        accent="orby"
-        stage="practice"
-        subject={selectedReview?.question.subject ?? "Saber 11"}
-        topic={selectedReview?.question.topic ?? "Repaso de preguntas"}
-        question={selectedReview?.question.clue ?? ""}
-        context={selectedReview ? [
-          `Pregunta ${selectedReview.questionNumber}: ${selectedReview.question.clue}`,
-          `Opciones: ${selectedReview.question.options.map((option, optionIndex) => `${String.fromCharCode(65 + optionIndex)}) ${option}`).join("\n")}`,
-          `Respuesta del estudiante: ${selectedReview.selectedOption === null ? "No alcanzó a responder; se agotó el tiempo." : selectedReview.question.options[selectedReview.selectedOption] ?? "Respuesta seleccionada"}`,
-          `Respuesta correcta validada: ${selectedReview.question.options[selectedReview.correctOption] ?? selectedReview.question.options[selectedReview.question.answer]}`,
-          `Explicación base: ${selectedReview.question.explanation}`,
-        ].join("\n") : ""}
-        initialPrompt={selectedReview ? `Orby, explícame paso a paso la pregunta ${selectedReview.questionNumber}. Quiero entender por qué mi respuesta fue incorrecta o por qué se agotó el tiempo, cómo se llega a la respuesta correcta y qué idea clave debo recordar para resolver una pregunta parecida. Usa el contexto, distingue claramente mi respuesta de la correcta y no inventes datos.` : undefined}
-      />
-      <div className="mt-5 border-[2px] border-[#465677] bg-[#0d1831] p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-black uppercase tracking-[.15em] text-[#ffe08a]">Progreso de recompensas</p><p className="text-sm font-black text-white">{Math.round(rewardMeterScore)} / 1000 PTS</p></div>
-        <div className="mt-4 h-3 overflow-hidden border border-[#596987] bg-[#202a42]"><div className="h-full bg-gradient-to-r from-[#d99d2b] to-[#ffdf71] transition-[width] duration-300" style={{width: `${scoreProgress}%`}}/></div>
-        <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[10px] font-bold text-[#c5d2e8]"><span>200 pts · Cofre 1</span><span>500 pts · Cofre 2</span><span>800 pts · Cofre 3</span></div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[9px] font-black uppercase tracking-[.2em] text-[#dfa85e]">PARTIDA FINALIZADA · RONDA 10 DE 10</p>
+        <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">{correctCount >= 8 ? "¡Excelente partida!" : correctCount >= 5 ? "¡Vas por buen camino!" : correctCount >= 1 ? "¡Vamos por la revancha!" : "Cada intento te enseña algo"}</h2>
+        <p className="mt-2 max-w-xl text-sm leading-6 text-[#d4c8ba]">{correctCount >= 8 ? "Tu esfuerzo se nota. Sigue así y ve por el siguiente desafío." : correctCount >= 5 ? "Ya tienes una base. Repasa lo que falló con Orby y vuelve a intentarlo." : correctCount >= 1 ? "Esta ronda estuvo difícil. Revisa tus errores con Orby y prueba otra vez." : "No te rindas. Revisa una pregunta con Orby y vuelve a intentarlo cuando estés listo."}</p>
       </div>
-      <div className="mt-4 flex items-start gap-3 border border-[#384a6b] bg-[#101b32] p-4"><CircleHelp className="mt-0.5 h-5 w-5 shrink-0 text-[#8fcaff]"/><div className="text-xs leading-5 text-[#c7d5ed]"><p className="font-bold text-white">Tus recompensas no se reclaman automáticamente.</p><p>Usa los cofres de la barra superior en orden. Después de reclamar los tres, se activa una recarga de una hora; podrás seguir jugando, pero la barra y los premios se mantendrán congelados durante ese tiempo.</p>{cooldownActive && <p role="timer" className="mt-2 font-black text-[#ffe08a]">Recarga restante: {formatCooldown(cooldownRemainingMs)}</p>}</div></div>
-      <div className="mt-6 flex flex-wrap justify-center gap-3"><button type="button" onClick={restart} className="inline-flex min-h-12 items-center gap-2 border-[3px] border-[#8fe9aa] bg-[#137747] px-6 text-xs font-black text-white shadow-[4px_4px_0_#06291d] transition hover:bg-[#198b55]"><RotateCcw className="h-4 w-4"/> Jugar otra partida</button><Link href="/aprender/juegos" className="inline-flex min-h-12 items-center gap-2 border-[3px] border-[#7786a5] bg-[#111c35] px-6 text-xs font-bold text-white transition hover:bg-[#1a2946]"><ArrowLeft className="h-4 w-4"/> Volver a juegos</Link></div>
     </div>
-  </div>
+    <div className="flex flex-wrap items-center justify-center gap-3 p-5 sm:justify-start sm:p-6">
+      <button type="button" onClick={restart} className="inline-flex min-h-12 items-center gap-2 border-2 border-[#9ce5ae] bg-[#207543] px-6 py-3 text-xs font-black text-white shadow-[0_3px_0_#102b1c] transition hover:bg-[#2c8d50] active:translate-y-0.5 active:shadow-none"><RotateCcw className="h-4 w-4"/> Volver a intentar</button>
+      <Link href="/aprender/juegos" className="inline-flex min-h-12 items-center gap-2 border border-[#756b5c] bg-[#151923] px-6 py-3 text-xs font-bold text-[#f0e4d3] transition hover:border-[#d29a55] hover:bg-[#242019]"><ArrowLeft className="h-4 w-4"/> Ver más juegos</Link>
+    </div>
+  </section>
 </div> : question ? <div className="p-4 sm:p-6">
               <div className="mb-4 flex flex-wrap gap-2"><span className="border-2 border-[#627d8d] bg-[#172b3a] px-3 py-1.5 text-[10px] font-black text-[#b8f3e7]">{question.subject}</span></div>
               <div className="relative border-[4px] border-[#7d879e] bg-[#111a31] p-5 shadow-[inset_0_0_0_3px_#29344e,inset_0_0_0_6px_#080e20,6px_6px_0_#030713] sm:p-7"><div className="absolute left-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute right-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute bottom-2 left-2 h-2 w-2 bg-[#68738e]" /><div className="absolute bottom-2 right-2 h-2 w-2 bg-[#68738e]" /><div className="mb-4 flex h-10 w-10 items-center justify-center border-[3px] border-[#77829d] bg-[#252e49]"><CircleHelp className="h-5 w-5 text-[#f5d77c]" /></div><p className="text-base font-bold leading-7 text-white sm:text-lg sm:leading-8">{question.clue}</p><button type="button" onClick={() => void useHint(1)} disabled={usedHints.includes(1) || hintLoading || answering || revealed || !gameStarted || !gameSessionId || (wallet !== null && wallet.coins < HINT_COSTS[0])} className="mt-5 inline-flex min-h-10 items-center gap-2 border-[3px] border-[#a77b35] bg-[#382711] px-3 text-xs font-black text-[#ffe7a2] shadow-[3px_3px_0_#050817] transition hover:bg-[#4a3517] disabled:opacity-60"><Lightbulb className="h-4 w-4" /> {usedHints.includes(1) ? "Pista utilizada" : hintLoading ? "Comprando pista…" : `Dame una pista · ${HINT_COSTS[0]} coins`}</button>{([1, 2, 3] as const).filter((number) => Boolean(visibleHints[number])).map((number) => <p key={number} className="mt-3 border-[3px] border-[#89774c] bg-[#242032] p-3 text-sm leading-6 text-[#ffedb8]"><strong className="mr-2 text-[#ffe08a]">Pista {number}:</strong>{visibleHints[number]}</p>)}</div>
@@ -1043,7 +984,21 @@ export default function QueEsEsaVainaGame() {
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-[#b5bfd5]"><Clock3 className="h-4 w-4" /> Responde antes de que se agote el tiempo</p><button type="button" onClick={handleNext} disabled={!revealed || answering || hintLoading} className="inline-flex min-h-11 items-center gap-2 border-[3px] border-[#a5d79a] bg-[#287b42] px-5 text-xs font-black text-white shadow-[4px_4px_0_#102b1c] transition hover:bg-[#32984f] active:translate-y-0.5 active:shadow-[2px_2px_0_#102b1c] disabled:cursor-not-allowed disabled:border-[#424b60] disabled:bg-[#222a3b] disabled:text-[#7c8497] disabled:shadow-none">{index + 1 === TOTAL_ROUNDS ? "Completar desafío" : selected === null && revealed ? "Siguiente pregunta" : !answeredCorrectly ? "Reintentar · otra pregunta" : "Siguiente"} <ArrowRight className="h-4 w-4" /></button></div>
             </div> : null}
           </section>
-          <aside className="grid gap-4"><section className="border-[3px] border-[#746e88] bg-[#0a1026]/[.98] p-4 shadow-[5px_5px_0_rgba(0,0,0,.45)] sm:p-5"><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#f0d28a]">Recompensa de la ronda</p><h2 className="mt-2 text-base font-black">El cofre misterioso</h2><div className={"relative mx-auto my-3 grid h-36 place-items-center " + (hasUnclaimedChest ? "chest-unlock-pulse" : "")}><div className="absolute inset-x-8 inset-y-3 rounded-full bg-amber-300/20 blur-xl" aria-hidden="true"/><Image src="/images/games/poco-responda/cofre.png" alt="Cofre pixel art" width={260} height={190} className="chest-idle-float relative z-10 h-32 w-full object-contain drop-shadow-[0_5px_0_rgba(0,0,0,.5)]"/>{hasUnclaimedChest && <span className="absolute bottom-0 z-20 border-2 border-[#ffe28b] bg-[#261d35] px-3 py-1 text-[10px] font-black text-[#ffe28b] shadow-[0_0_18px_rgba(255,214,92,.6)]">¡RECLÁMALO ARRIBA!</span>}</div><div className="grid grid-cols-3 gap-2" aria-label="Estado de los cofres">{Array.from({ length: 3 }, (_, i) => { const number = i + 1; const unlocked = !cooldownActive && !sessionOutdated && number === nextChestToClaim && rewardMeterScore >= CHEST_THRESHOLDS[i]; const claimed = claimedChests.includes(number); return <div key={number} title={claimed ? "Cofre reclamado" : unlocked ? "Disponible en la barra superior" : `Necesitas ${CHEST_THRESHOLDS[i]} puntos netos`} className={`flex min-h-10 items-center justify-center border-[3px] ${claimed ? "border-[#7f8798] bg-[#22283a] opacity-60" : unlocked ? "border-[#ffe08a] bg-[#5a3c11]" : "border-[#566079] bg-[#151b2d] opacity-65"}`}><Image src="/images/games/poco-responda/cofre.png" alt={`Cofre ${number}`} width={34} height={28} className={`h-7 w-9 object-contain ${claimed ? "grayscale" : unlocked ? "" : "grayscale opacity-45"}`}/></div>; })}</div><p className="mt-3 text-xs font-black leading-5 text-[#ffe5a0]">{chestMessage}</p>{cooldownActive && <p role="timer" className="mt-2 border-2 border-[#ffe08a] bg-[#211a2b] p-2 text-xs font-black text-[#ffe08a]">Cofres en recarga: {formatCooldown(cooldownRemainingMs)}</p>}<p className="mt-2 text-[10px] leading-5 text-[#9da8c5]">Reclama los cofres en orden. Después de completar el conjunto, la barra queda congelada una hora. Puedes seguir jugando, pero sin premios durante la recarga.</p></section><section className="border-[3px] border-[#5e6d8c] bg-[#081027]/[.98] p-4 shadow-[5px_5px_0_rgba(0,0,0,.4)] sm:p-5"><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#b8c8e9]">Pistas</p><div className="mt-3 grid gap-2">{([1, 2, 3] as const).map((hintNumber) => {
+          <aside className="grid gap-4"><section className="border-[3px] border-[#746e88] bg-[#0a1026]/[.98] p-4 shadow-[5px_5px_0_rgba(0,0,0,.45)] sm:p-5"><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#f0d28a]">Recompensa de la ronda</p><h2 className="mt-2 text-base font-black">El cofre misterioso</h2><div className={"relative mx-auto my-3 grid h-36 place-items-center " + (hasUnclaimedChest ? "chest-unlock-pulse" : "")}><div className="absolute inset-x-8 inset-y-3 rounded-full bg-amber-300/20 blur-xl" aria-hidden="true"/><Image src="/images/games/poco-responda/cofre.png" alt="Cofre pixel art" width={260} height={190} className="chest-idle-float relative z-10 h-32 w-full object-contain drop-shadow-[0_5px_0_rgba(0,0,0,.5)]"/>{hasUnclaimedChest && <span className="absolute bottom-0 z-20 border-2 border-[#ffe28b] bg-[#261d35] px-3 py-1 text-[10px] font-black text-[#ffe28b] shadow-[0_0_18px_rgba(255,214,92,.6)]">¡RECLÁMALO ARRIBA!</span>}</div><div className="grid grid-cols-3 gap-2" aria-label="Estado de los cofres">{Array.from({ length: 3 }, (_, i) => { const number = i + 1; const unlocked = !cooldownActive && !sessionOutdated && number === nextChestToClaim && rewardMeterScore >= CHEST_THRESHOLDS[i]; const claimed = claimedChests.includes(number); return <div key={number} title={claimed ? "Cofre reclamado" : unlocked ? "Disponible en la barra superior" : `Necesitas ${CHEST_THRESHOLDS[i]} puntos netos`} className={`flex min-h-10 items-center justify-center border-[3px] ${claimed ? "border-[#7f8798] bg-[#22283a] opacity-60" : unlocked ? "border-[#ffe08a] bg-[#5a3c11]" : "border-[#566079] bg-[#151b2d] opacity-65"}`}><Image src="/images/games/poco-responda/cofre.png" alt={`Cofre ${number}`} width={34} height={28} className={`h-7 w-9 object-contain ${claimed ? "grayscale" : unlocked ? "" : "grayscale opacity-45"}`}/></div>; })}</div><p className="mt-3 text-xs font-black leading-5 text-[#ffe5a0]">{chestMessage}</p>{cooldownActive && <p role="timer" className="mt-2 border-2 border-[#ffe08a] bg-[#211a2b] p-2 text-xs font-black text-[#ffe08a]">Cofres en recarga: {formatCooldown(cooldownRemainingMs)}</p>}<p className="mt-2 text-[10px] leading-5 text-[#9da8c5]">Reclama los cofres en orden. Después de completar el conjunto, la barra queda congelada una hora. Puedes seguir jugando, pero sin premios durante la recarga.</p></section>{finished ? <section className="overflow-hidden border-[3px] border-[#9b642f] bg-[#0b101c] shadow-[5px_5px_0_rgba(0,0,0,.4)]">
+  <div className="flex items-center gap-3 border-b border-[#704720] bg-gradient-to-r from-[#38220f] to-[#15121a] p-4">
+    <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-[#e99a43] bg-[#2b190d] shadow-[0_0_0_3px_rgba(249,115,22,.1)]">
+      <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby, tutor con IA" className="h-full w-full object-contain object-center"/>
+    </div>
+    <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[.16em] text-[#f1ad5c]">ORBY · TUTOR CON IA</p><h2 className="mt-1 text-base font-black text-white">¿Revisamos tus errores?</h2><p className="mt-1 text-[10px] leading-4 text-[#d8c7b4]">{incorrectAnswers.length ? `${incorrectAnswers.length} preguntas para repasar` : "Practica y aclara tus dudas"}</p></div>
+  </div>
+  <div className="p-4">
+    <p className="text-xs leading-5 text-[#d5c7b8]">{incorrectAnswers.length ? "Abre el chat de Orby y elige en el cuaderno la pregunta que quieres entender. Él te explica el razonamiento paso a paso." : "No registraste errores en esta ronda. Puedes abrir el chat para resolver una duda o practicar un concepto."}</p>
+    <button type="button" onClick={() => setOrbyReviewOpen(true)} className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 border-2 border-[#ffc078] bg-gradient-to-b from-[#e48a35] to-[#a95218] px-4 py-3 text-xs font-black text-[#fff8ed] shadow-[0_3px_0_#66300f] transition hover:from-[#f0a04b] hover:to-[#bd631f] active:translate-y-0.5 active:shadow-none">
+      <Image src="/avatars/photo_perfil/orbyp.png" alt="" width={26} height={26} className="h-6 w-6 rounded-full border border-[#ffd095] bg-[#38210d] object-contain"/>
+      {incorrectAnswers.length ? "Preguntar a Orby" : "Abrir chat con Orby"}
+    </button>
+  </div>
+</section> : <section className="border-[3px] border-[#5e6d8c] bg-[#081027]/[.98] p-4 shadow-[5px_5px_0_rgba(0,0,0,.4)] sm:p-5"><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#b8c8e9]">Pistas</p><div className="mt-3 grid gap-2">{([1, 2, 3] as const).map((hintNumber) => {
   const hintCost = HINT_COSTS[hintNumber - 1];
   const isUsed = usedHints.includes(hintNumber);
   const cannotAfford = wallet !== null && wallet.coins < hintCost;
@@ -1052,13 +1007,10 @@ export default function QueEsEsaVainaGame() {
     disabled={isUsed || hintLoading || answering || revealed || !gameStarted || !gameSessionId || cannotAfford}
     className={`flex items-center gap-3 border-[3px] p-3 text-left transition ${isUsed ? "border-[#8b7757] bg-[#201c17] opacity-70" : "border-[#9a7740] bg-[#171522] hover:border-[#e8b75b] hover:bg-[#292116]"} disabled:cursor-not-allowed disabled:opacity-50`}>
     <span className="grid h-9 w-9 shrink-0 place-items-center border-[3px] border-[#a77b35] bg-[#3a2812]"><Lightbulb className="h-5 w-5 text-[#ffe08a]"/></span>
-    <span className="min-w-0 flex-1">
-      <span className="block text-sm font-black text-[#fff0c6]">Pista {hintNumber} · {hintCost} Peak Coins</span>
-      <span className="block text-xs text-[#c3cce0]">{isUsed ? "Ya utilizada en esta partida" : hintLoading ? "Procesando compra…" : cannotAfford ? "No tienes monedas suficientes" : descriptions[hintNumber - 1]}</span>
-    </span>
+    <span className="min-w-0 flex-1"><span className="block text-sm font-black text-[#fff0c6]">Pista {hintNumber} · {hintCost} Peak Coins</span><span className="block text-xs text-[#c3cce0]">{isUsed ? "Ya utilizada en esta partida" : hintLoading ? "Procesando compra…" : cannotAfford ? "No tienes monedas suficientes" : descriptions[hintNumber - 1]}</span></span>
     <span className="text-[10px] font-black text-[#ffe08a]">{isUsed ? "✓" : ""}</span>
   </button>;
-})}</div><p className="mt-3 text-[10px] leading-5 text-[#c0b3d6]">Cada tipo de pista se puede usar una vez por partida: 5, 10 y 15 Peak Coins. Al iniciar otra partida, las tres vuelven a estar disponibles.</p></section></aside>
+})}</div><p className="mt-3 text-[10px] leading-5 text-[#c0b3d6]">Cada tipo de pista se puede usar una vez por partida: 5, 10 y 15 Peak Coins. Al iniciar otra partida, las tres vuelven a estar disponibles.</p></section>}</aside>
         </div>
       </div>
     </main>

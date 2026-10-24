@@ -104,10 +104,12 @@ export default function IntroExperience() {
   const activeSpeaker = story?.speaker ?? "Nova";
 
   useEffect(() => {
-    setVisibleCharacters(0);
+    const initialFrame = window.requestAnimationFrame(() => {
+      setVisibleCharacters(reduceMotion ? currentText.length : 0);
+    });
+
     if (reduceMotion) {
-      setVisibleCharacters(currentText.length);
-      return;
+      return () => window.cancelAnimationFrame(initialFrame);
     }
 
     let current = 0;
@@ -117,7 +119,10 @@ export default function IntroExperience() {
       if (current >= currentText.length) window.clearInterval(timer);
     }, 17);
 
-    return () => window.clearInterval(timer);
+    return () => {
+      window.cancelAnimationFrame(initialFrame);
+      window.clearInterval(timer);
+    };
   }, [currentText, reduceMotion]);
 
   const selectedValue = question ? answers[question.key] : "";

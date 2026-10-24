@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { FileText, LoaderCircle, Paperclip, Send, X } from "lucide-react";
 
@@ -172,7 +174,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-sky-300 bg-white shadow-[0_0_0_3px_rgba(14,165,233,.12)]">
-            <img src="/avatars/photo_perfil/orbyp.png" alt="Avatar de Orby" className="h-full w-full object-contain object-center" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
+            <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Avatar de Orby" className="h-full w-full object-contain object-center" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
           </div>
           <div className="min-w-0">
             <p className="font-extrabold text-slate-950">Orby <span className="text-sky-600">●</span></p>
@@ -185,7 +187,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <div className="min-h-0 flex-1 overflow-y-auto bg-[#f7f9fc] px-4 py-4" ref={scrollRef} aria-live="polite">
         {messages.length === 0 ? (
           <div className="flex min-h-full flex-col items-center justify-center">
-            <img src="/avatars/photo_perfil/orbyp.png" alt="Orby, tutor de PeakScore" className="mb-2 h-28 w-28 rounded-full border-2 border-sky-200 bg-white object-contain object-center shadow-[0_4px_18px_rgba(14,165,233,.16)]" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
+            <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby, tutor de PeakScore" className="mb-2 h-28 w-28 rounded-full border-2 border-sky-200 bg-white object-contain object-center shadow-[0_4px_18px_rgba(14,165,233,.16)]" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
             <div className="w-full rounded-2xl rounded-tl-sm border border-slate-200 bg-white p-4 shadow-sm">
               <p className="text-base font-extrabold text-slate-950">¡Hola! Soy Orby 👋</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">Te ayudo a comprender la teoría, analizar los datos y razonar tu respuesta. ¿Qué parte revisamos juntos?</p>
@@ -202,7 +204,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <article key={index} className={message.role === "user" ? "ml-auto max-w-[92%] rounded-2xl rounded-br-sm bg-sky-600 px-3 py-3 text-white" : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-100" : "mb-1 text-[10px] font-bold uppercase tracking-wider text-sky-700"}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[13px] leading-[1.75] sm:text-sm">{renderTutorContent(message.content)}</div>
-                {message.attachmentName && <div className="mb-2 flex items-center gap-2 rounded-lg border border-white/25 p-2">{message.attachmentPreview ? <img src={message.attachmentPreview} alt={`Adjunto: ${message.attachmentName}`} className="max-h-28 max-w-full rounded-md object-contain" /> : <FileText className="h-6 w-6 shrink-0" />}<p className="min-w-0 break-all text-[10px] opacity-80">{message.attachmentName}</p></div>}
+                {message.attachmentName && <div className="mb-2 flex items-center gap-2 rounded-lg border border-white/25 p-2">{message.attachmentPreview ? <Image src={message.attachmentPreview} width={1200} height={800} unoptimized alt={`Adjunto: ${message.attachmentName}`} className="max-h-28 max-w-full rounded-md object-contain" /> : <FileText className="h-6 w-6 shrink-0" />}<p className="min-w-0 break-all text-[10px] opacity-80">{message.attachmentName}</p></div>}
                 {message.checkQuestion && <div className="mt-3 rounded-lg border-l-2 border-amber-400 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-950"><strong>Comprueba lo aprendido:</strong> {message.checkQuestion}</div>}
               </article>
             ))}
@@ -214,7 +216,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       {attachment && <div className="shrink-0 border-t border-slate-100 bg-white px-3 pt-3">
         <div className="flex items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 p-2">
-          {attachmentPreview ? <img src={attachmentPreview} alt="Vista previa de la imagen adjunta" className="h-12 w-12 shrink-0 rounded-lg border border-sky-100 bg-white object-cover" /> : <FileText className="ml-2 h-8 w-8 shrink-0 text-sky-700" />}
+          {attachmentPreview ? <Image src={attachmentPreview} width={1200} height={800} unoptimized alt="Vista previa de la imagen adjunta" className="h-12 w-12 shrink-0 rounded-lg border border-sky-100 bg-white object-cover" /> : <FileText className="ml-2 h-8 w-8 shrink-0 text-sky-700" />}
           <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Listo para analizar · {(attachment.size / 1024).toFixed(0)} KB</p></div>
           <button type="button" onClick={clearAttachment} aria-label="Quitar imagen adjunta" className="rounded-full p-2 text-slate-500 hover:bg-white"><X className="h-4 w-4" /></button>
         </div>

@@ -238,10 +238,14 @@ export default function QueEsEsaVainaGame() {
       setScore((value) => value + 100);
       setCorrectCount((value) => value + 1);
     }
-    setSaved((value) => ({
-      ...value,
-      completedIds: value.completedIds.includes(current.id) ? value.completedIds : [...value.completedIds, current.id],
-    }));
+    // Una pregunta solo queda marcada como completada cuando se responde correctamente.
+    // Los intentos incorrectos permiten reintentar sin consumir progreso ni registrar el ID.
+    if (isCorrect) {
+      setSaved((value) => ({
+        ...value,
+        completedIds: value.completedIds.includes(current.id) ? value.completedIds : [...value.completedIds, current.id],
+      }));
+    }
   }, [finished, index, revealed, rounds]);
 
   const next = useCallback(() => {

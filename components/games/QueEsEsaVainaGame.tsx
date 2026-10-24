@@ -954,20 +954,21 @@ export default function QueEsEsaVainaGame() {
             </header>
             {gameError && <p role="alert" className="mb-4 border-2 border-rose-400 bg-rose-950/60 p-3 text-xs font-bold text-rose-100">{gameError}</p>}
             {finished ? <div className="p-4 sm:p-7">
-  <section className="mx-auto max-w-3xl overflow-hidden border-2 border-[#65513a] bg-[#0b101c] shadow-[0_5px_0_#030713]">
-    <div className="flex items-center gap-4 border-b border-[#51402d] bg-gradient-to-r from-[#231a12] via-[#12131b] to-[#0b101c] p-5 sm:p-7">
-      <div className="grid h-[76px] w-[76px] shrink-0 place-items-center rounded-2xl border border-[#c18b43] bg-[#2e2114] shadow-[inset_0_0_0_3px_#17120d]">
+  <section className="relative mx-auto max-w-3xl overflow-hidden border-[4px] border-double border-[#b58b45] bg-[#0b101c] shadow-[6px_6px_0_#030713,0_0_0_2px_#292018]">
+    <span aria-hidden="true" className="pointer-events-none absolute left-0 top-0 z-20 h-3 w-3 border-r-2 border-b-2 border-[#ffe09a] bg-[#b58b45]"/><span aria-hidden="true" className="pointer-events-none absolute right-0 top-0 z-20 h-3 w-3 border-l-2 border-b-2 border-[#ffe09a] bg-[#b58b45]"/><span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 z-20 h-3 w-3 border-r-2 border-t-2 border-[#ffe09a] bg-[#b58b45]"/><span aria-hidden="true" className="pointer-events-none absolute bottom-0 right-0 z-20 h-3 w-3 border-l-2 border-t-2 border-[#ffe09a] bg-[#b58b45]"/>
+    <div className="flex items-center gap-4 border-b-2 border-[#65502f] bg-gradient-to-r from-[#21180f] via-[#12131b] to-[#0b101c] p-5 sm:p-7">
+      <div className="grid h-[76px] w-[76px] shrink-0 place-items-center border-[3px] border-[#c18b43] bg-[#2e2114] shadow-[3px_3px_0_#030713,inset_0_0_0_3px_#17120d]">
         <Image src="/dashboard/premio-pixel.webp" alt="Trofeo de PeakScore" width={96} height={96} className="h-[62px] w-[62px] object-contain"/>
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[9px] font-black uppercase tracking-[.2em] text-[#dfa85e]">PARTIDA FINALIZADA · RONDA 10 DE 10</p>
-        <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl">{correctCount >= 8 ? "¡Excelente partida!" : correctCount >= 5 ? "¡Vas por buen camino!" : correctCount >= 1 ? "¡Vamos por la revancha!" : "Cada intento te enseña algo"}</h2>
-        <p className="mt-2 max-w-xl text-sm leading-6 text-[#d4c8ba]">{correctCount >= 8 ? "Tu esfuerzo se nota. Sigue así y ve por el siguiente desafío." : correctCount >= 5 ? "Ya tienes una base. Repasa lo que falló con Orby y vuelve a intentarlo." : correctCount >= 1 ? "Esta ronda estuvo difícil. Revisa tus errores con Orby y prueba otra vez." : "No te rindas. Revisa una pregunta con Orby y vuelve a intentarlo cuando estés listo."}</p>
+        <p className="pixel-font text-[8px] leading-5 uppercase tracking-[.08em] text-[#dfa85e]">PARTIDA FINALIZADA · RONDA 10 DE 10</p>
+        <h2 className="pixel-font mt-3 text-sm leading-[1.9] text-white sm:text-base">{correctCount >= 8 ? "¡Excelente partida!" : correctCount >= 5 ? "¡Vas por buen camino!" : correctCount >= 1 ? "¡Vamos por la revancha!" : "Cada intento te enseña algo"}</h2>
+        <p className="mt-3 max-w-xl text-sm leading-6 text-[#d4c8ba]">{correctCount >= 8 ? "Tu esfuerzo se nota. Sigue así y ve por el siguiente desafío." : correctCount >= 5 ? "Ya tienes una base. Repasa lo que falló con Orby y vuelve a intentarlo." : correctCount >= 1 ? "Esta ronda estuvo difícil. Revisa tus errores con Orby y prueba otra vez." : "No te rindas. Revisa una pregunta con Orby y vuelve a intentarlo cuando estés listo."}</p>
       </div>
     </div>
     <div className="flex flex-wrap items-center justify-center gap-3 p-5 sm:justify-start sm:p-6">
-      <button type="button" onClick={restart} className="inline-flex min-h-12 items-center gap-2 border-2 border-[#9ce5ae] bg-[#207543] px-6 py-3 text-xs font-black text-white shadow-[0_3px_0_#102b1c] transition hover:bg-[#2c8d50] active:translate-y-0.5 active:shadow-none"><RotateCcw className="h-4 w-4"/> Volver a intentar</button>
-      <Link href="/aprender/juegos" className="inline-flex min-h-12 items-center gap-2 border border-[#756b5c] bg-[#151923] px-6 py-3 text-xs font-bold text-[#f0e4d3] transition hover:border-[#d29a55] hover:bg-[#242019]"><ArrowLeft className="h-4 w-4"/> Ver más juegos</Link>
+      <button type="button" onClick={restart} className="pixel-font inline-flex min-h-12 items-center gap-2 border-[3px] border-[#9ce5ae] bg-[#207543] px-5 py-3 text-[8px] leading-5 text-white shadow-[3px_3px_0_#102b1c] transition hover:bg-[#2c8d50] active:translate-y-0.5 active:shadow-none"><RotateCcw className="h-4 w-4"/> Volver a intentar</button>
+      <Link href="/aprender/juegos" className="pixel-font inline-flex min-h-12 items-center gap-2 border-2 border-[#756b5c] bg-[#151923] px-5 py-3 text-[8px] leading-5 text-[#f0e4d3] transition hover:border-[#d29a55] hover:bg-[#242019]"><ArrowLeft className="h-4 w-4"/> Ver más juegos</Link>
     </div>
   </section>
 </div> : question ? <div className="p-4 sm:p-6">

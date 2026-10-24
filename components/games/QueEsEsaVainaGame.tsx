@@ -686,6 +686,7 @@ export default function QueEsEsaVainaGame() {
     setRevealed(false);
     setScore(0);
     setRewardScore(0);
+    setSessionOutdated(false);
     setCorrectCount(0);
     setShowHint(false);
     setFinished(false);

@@ -392,7 +392,7 @@ body {
   0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,214,92,0)); }
   50% { transform: scale(1.07); filter: drop-shadow(0 0 18px rgba(255,214,92,.9)); }
 }
-.chest-open-sequence { animation: chest-open-sequence 3s cubic-bezier(.2,.8,.2,1) both; }
+.chest-open-sequence { animation: chest-open-sequence 1.5s cubic-bezier(.2,.8,.2,1) both; }
 .chest-reward-glow { animation: chest-reward-glow 1.2s ease-in-out infinite; }
 @keyframes chest-idle-float {
   0%, 100% { transform: translateY(0) rotate(0); }

@@ -16,6 +16,12 @@ export default function AdminGameQuestionsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiGame, setAiGame] = useState("¿Qué es esa vaina?");
+  const [aiSubject, setAiSubject] = useState<Subject>("Matemáticas");
+  const [aiAmount, setAiAmount] = useState("5");
+  const [aiDifficulty, setAiDifficulty] = useState("mixta");
+  const [aiFocus, setAiFocus] = useState("");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const load = useCallback(async () => {
@@ -39,6 +45,17 @@ export default function AdminGameQuestionsPage() {
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : "Error inesperado al importar."); }
     finally { setImporting(false); }
+  };
+  const generateWithAI = async () => {
+    setAiGenerating(true); setError(""); setNotice("");
+    try {
+      const res = await fetch("/api/admin/game-questions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ aiGenerate: true, gameName: aiGame, subject: aiSubject, amount: Number(aiAmount), difficulty: aiDifficulty, focus: aiFocus }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "No se pudieron generar preguntas.");
+      setNotice(`IA: ${data.generated} preguntas nuevas guardadas como borradores. Revísalas antes de publicarlas.`);
+      await load();
+    } catch (e) { setError(e instanceof Error ? e.message : "Error inesperado al generar."); }
+    finally { setAiGenerating(false); }
   };
   const setField = (key: string, value: unknown) => setForm((old) => ({ ...old, [key]: value }));
   const save = async (publish = false) => {
@@ -82,7 +99,7 @@ export default function AdminGameQuestionsPage() {
         <section className="rounded-2xl border-2 border-slate-600 bg-[#0b1226] p-5 shadow-[5px_5px_0_#030712]">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">Preguntas guardadas</h2><div className="flex flex-wrap gap-2"><button disabled={importing} onClick={()=>void importLocalBank()} className="inline-flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-700 px-3 py-2 text-xs font-bold disabled:opacity-50">{importing?<LoaderCircle className="animate-spin" size={14}/>:<Download size={14}/>} Importar banco local ({QUESTION_BANK.length})</button><button onClick={()=>void load()} className="rounded-lg border border-slate-700 px-3 py-2 text-sm">Actualizar</button></div></div>
           {loading?<p className="text-sm text-slate-400">Cargando banco...</p>:questions.length===0?<p className="rounded-lg border border-dashed border-slate-700 p-5 text-sm text-slate-400">No hay preguntas todavía. Crea la primera. Si aparece un error de migración, aplica el SQL de Supabase.</p>:<div className="max-h-[900px] space-y-3 overflow-auto pr-1">{questions.map(q=><article key={q.id} className="rounded-xl border border-slate-700 bg-slate-900 p-4"><div className="mb-2 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-wider"><span className="rounded bg-slate-800 px-2 py-1 text-cyan-200">{q.subject}</span><span className="rounded bg-slate-800 px-2 py-1 text-amber-200">{q.difficulty}</span><span className={"rounded px-2 py-1 "+(q.status==="published"?"bg-emerald-950 text-emerald-300":"bg-slate-800 text-slate-300")}>{q.status}</span></div><h3 className="font-bold">{q.topic}</h3><p className="mt-2 line-clamp-3 text-sm text-slate-300">{q.clue}</p><button onClick={()=>edit(q)} className="mt-3 rounded-lg border border-slate-600 px-3 py-2 text-xs font-bold hover:border-amber-300">Editar</button></article>)}</div>}
-          <div className="mt-5 rounded-xl border border-amber-400/30 bg-amber-950/20 p-4"><p className="flex items-center gap-2 font-bold text-amber-200"><Sparkles size={16}/> Generación con IA</p><p className="mt-2 text-sm text-slate-300">La interfaz ya está preparada para administrar el banco. La generación automática debe conectarse a un proveedor de IA del proyecto y guardar primero como borrador; no publica preguntas sin revisión.</p></div>
+          <div className="mt-5 rounded-xl border border-amber-400/30 bg-amber-950/20 p-4"><p className="flex items-center gap-2 font-bold text-amber-200"><Sparkles size={16}/> Generación de preguntas con IA</p><p className="mt-2 text-sm text-slate-300">Elige el juego, configura el lote y revisa todo antes de publicar. La IA nunca publica automáticamente.</p><div className="mt-4 grid gap-3 sm:grid-cols-2"><label><span className={labelClass}>Juego</span><select className={fieldClass} value={aiGame} onChange={e=>setAiGame(e.target.value)}><option>¿Qué es esa vaina?</option></select></label><label><span className={labelClass}>Materia</span><select className={fieldClass} value={aiSubject} onChange={e=>setAiSubject(e.target.value as Subject)}>{subjects.map(s=><option key={s}>{s}</option>)}</select></label><label><span className={labelClass}>Cantidad (1–20)</span><input className={fieldClass} type="number" min={1} max={20} value={aiAmount} onChange={e=>setAiAmount(e.target.value)}/></label><label><span className={labelClass}>Dificultad</span><select className={fieldClass} value={aiDifficulty} onChange={e=>setAiDifficulty(e.target.value)}><option value="mixta">Mixta</option><option value="facil">Fácil</option><option value="media">Media</option><option value="dificil">Difícil</option></select></label><label className="sm:col-span-2"><span className={labelClass}>Enfoque opcional</span><input className={fieldClass} maxLength={500} value={aiFocus} onChange={e=>setAiFocus(e.target.value)} placeholder="Ej. proporcionalidad, ecosistemas, comprensión de gráficas…"/></label></div><button disabled={aiGenerating} onClick={()=>void generateWithAI()} className="mt-4 inline-flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-600 px-4 py-3 text-sm font-black text-slate-950 disabled:opacity-50">{aiGenerating?<LoaderCircle className="animate-spin" size={16}/>:<Sparkles size={16}/>} Generar preguntas con IA</button></div>
         </section>
       </div>
     </div>

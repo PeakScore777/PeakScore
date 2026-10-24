@@ -148,7 +148,10 @@ export default function EditQuestionPage() {
 
   useEffect(() => {
     if (!id) return;
-    void loadQuestion();
+    const frame = window.requestAnimationFrame(() => {
+      void loadQuestion();
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [id, loadQuestion]);
 
   function handleChange(

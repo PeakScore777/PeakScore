@@ -1,8 +1,29 @@
--- Each hint tier can be purchased once per game session, not once per question.
-alter table public.game_hint_uses
-  drop constraint if exists game_hint_uses_session_question_hint_key;
-alter table public.game_hint_uses
-  add constraint game_hint_uses_session_hint_key unique (session_id, hint_number);
+-- One charge per hint tier per game session. Keep existing per-question hint logs intact.
+create table if not exists public.game_hint_tier_session_uses (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  session_id uuid not null references public.game_round_sessions(id) on delete cascade,
+  game_key text not null default 'que-es-esa-vaina' check (game_key = 'que-es-esa-vaina'),
+  hint_number integer not null check (hint_number between 1 and 3),
+  question_id text not null,
+  coins_spent integer not null check (coins_spent in (5,10,15)),
+  created_at timestamptz not null default now(),
+  unique (session_id, hint_number)
+);
+create index if not exists game_hint_tier_session_user_idx
+  on public.game_hint_tier_session_uses(user_id, session_id);
+alter table public.game_hint_tier_session_uses enable row level security;
+revoke all on public.game_hint_tier_session_uses from public, anon, authenticated;
+grant select, insert, update, delete on public.game_hint_tier_session_uses to service_role;
+
+-- Preserve the first use of each tier in already-open sessions.
+insert into public.game_hint_tier_session_uses
+  (user_id, session_id, game_key, hint_number, question_id, coins_spent, created_at)
+select distinct on (session_id, hint_number)
+  user_id, session_id, game_key, hint_number, question_id, coins_spent, created_at
+from public.game_hint_uses
+order by session_id, hint_number, created_at asc
+on conflict (session_id, hint_number) do nothing;
 
 create or replace function public.use_que_es_esa_vaina_hint(
   p_user_id uuid,
@@ -61,10 +82,9 @@ begin
   for update;
   if not found then raise exception 'PROFILE_NOT_FOUND'; end if;
 
-  select id, question_id into v_hint_id, v_used_question_id
-  from public.game_hint_uses
-  where session_id = p_session_id
-    and hint_number = p_hint_number;
+  select question_id into v_used_question_id
+  from public.game_hint_tier_session_uses
+  where session_id = p_session_id and hint_number = p_hint_number;
 
   if found then
     if v_used_question_id is distinct from p_question_id then
@@ -83,14 +103,15 @@ begin
     raise exception 'COINS_INSUFFICIENT:%', v_cost;
   end if;
 
-  insert into public.game_hint_uses(user_id, session_id, game_key, question_id, hint_number, coins_spent)
-  values (v_user_id, p_session_id, 'que-es-esa-vaina', p_question_id, p_hint_number, v_cost)
+  insert into public.game_hint_tier_session_uses
+    (user_id, session_id, game_key, hint_number, question_id, coins_spent)
+  values (v_user_id, p_session_id, 'que-es-esa-vaina', p_hint_number, p_question_id, v_cost)
   on conflict (session_id, hint_number) do nothing
   returning id into v_hint_id;
 
   if v_hint_id is null then
     select question_id into v_used_question_id
-    from public.game_hint_uses
+    from public.game_hint_tier_session_uses
     where session_id = p_session_id and hint_number = p_hint_number;
     if v_used_question_id is distinct from p_question_id then
       raise exception 'HINT_ALREADY_USED_THIS_SESSION';
@@ -104,6 +125,10 @@ begin
       'coinsTotal', coalesce(v_coins_total, 0)
     );
   end if;
+
+  insert into public.game_hint_uses(user_id, session_id, game_key, question_id, hint_number, coins_spent)
+  values (v_user_id, p_session_id, 'que-es-esa-vaina', p_question_id, p_hint_number, v_cost)
+  on conflict (session_id, question_id, hint_number) do nothing;
 
   perform pg_catalog.set_config('peakscore.internal_operation', 'grant_gamification_reward', true);
   update public.profiles

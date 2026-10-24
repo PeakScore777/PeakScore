@@ -5,6 +5,7 @@ select distinct e.user_id, 'que-es-esa-vaina', 1, now(), null, 0, now()
 from public.gamification_events e
 where e.event_type = 'game_chest'
   and e.reference_id not like 'que-es-esa-vaina:cycle:%'
+  and (e.reference_id like 'que-es-esa-vaina:%' or e.metadata->>'game_key' = 'que-es-esa-vaina')
 on conflict (user_id, game_key) do nothing;
 
 create or replace function public.claim_que_es_esa_vaina_chest(p_session_id uuid, p_chest_number integer)
@@ -93,9 +94,15 @@ begin
     exists (
       select 1 from public.gamification_events e
       where e.user_id = v_user_id and e.event_type = 'game_chest'
-        and e.reference_id in (
-          'que-es-esa-vaina:' || p_chest_number::text,
-          v_session.id::text || ':' || p_chest_number::text
+        and (
+          e.reference_id in (
+            'que-es-esa-vaina:' || p_chest_number::text,
+            v_session.id::text || ':' || p_chest_number::text
+          )
+          or (
+            e.metadata->>'game_key' = 'que-es-esa-vaina'
+            and e.metadata->>'chest_number' = p_chest_number::text
+          )
         )
     )
     or exists (

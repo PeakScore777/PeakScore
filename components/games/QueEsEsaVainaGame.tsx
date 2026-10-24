@@ -9,7 +9,7 @@ import { QUESTION_BANK, type Question } from "@/lib/games/que-es-esa-vaina-bank"
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 const TOTAL_ROUNDS = 10;
-const CHEST_THRESHOLDS = [200, 500, 800] as const;
+const CHEST_THRESHOLDS = [200, 500, 1000] as const;
 const STORAGE_KEY = "peakscore-que-es-esa-vaina-v1";
 
 type SavedProgress = { bestScore: number; completedIds: string[]; chests: number };
@@ -549,7 +549,7 @@ export default function QueEsEsaVainaGame() {
       return () => window.cancelAnimationFrame(frame);
     }
   }, [hydrated, gameSessionId, sessionLoading, gameStarted, finished, revealed]);
-  // Los cofres se desbloquean por puntos netos: 200, 500 y 800.
+  // Los cofres se desbloquean por puntos netos: 200, 500 y 1000 (barra completa para el último).
   const answeredCorrectly = selected !== null && (serverAnswerCorrect ?? (question?.answer === selected));
 
   const chooseOption = useCallback(async (optionIndex: number) => {

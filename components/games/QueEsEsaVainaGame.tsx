@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, Trophy, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, XCircle } from "lucide-react";
 
 import { QUESTION_BANK, type Question } from "@/lib/games/que-es-esa-vaina-bank";
 import LessonAITutor from "@/components/aprender/LessonAITutor";

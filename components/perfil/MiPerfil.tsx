@@ -193,28 +193,32 @@ export default function MiPerfil() {
   useEffect(() => {
     if (!data) return;
 
-    const unlocked = new Set(data.unlockedBadgeIds ?? []);
-    let savedIds: string[] = [];
+    const frame = window.requestAnimationFrame(() => {
+      const unlocked = new Set(data.unlockedBadgeIds ?? []);
+      let savedIds: string[] = [];
 
-    try {
-      const saved = window.localStorage.getItem(BADGES_KEY);
+      try {
+        const saved = window.localStorage.getItem(BADGES_KEY);
 
-      if (saved) {
-        const parsed: unknown = JSON.parse(saved);
+        if (saved) {
+          const parsed: unknown = JSON.parse(saved);
 
-        if (Array.isArray(parsed)) {
-          savedIds = parsed.filter(
-            (id): id is string =>
-              typeof id === "string" && unlocked.has(id),
-          );
+          if (Array.isArray(parsed)) {
+            savedIds = parsed.filter(
+              (id): id is string =>
+                typeof id === "string" && unlocked.has(id),
+            );
+          }
         }
+      } catch (err) {
+        console.warn("No se pudieron restaurar las insignias:", err);
       }
-    } catch (err) {
-      console.warn("No se pudieron restaurar las insignias:", err);
-    }
 
-    setEquipped(normalizeSlots([...new Set(savedIds)]));
-    setPreferencesLoaded(true);
+      setEquipped(normalizeSlots([...new Set(savedIds)]));
+      setPreferencesLoaded(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [data]);
 
   // Guardar las insignias seleccionadas.

@@ -3,6 +3,22 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
+export async function GET() {
+  const supabase = await createClient();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
+
+  const [{ data: claims, error: claimsError }, { data: profile, error: profileError }] = await Promise.all([
+    supabase.from("game_chest_claims").select("chest_number").eq("user_id", user.id).eq("game_key", "que-es-esa-vaina"),
+    supabase.from("profiles").select("xp,coins").eq("id", user.id).maybeSingle(),
+  ]);
+  if (claimsError) return NextResponse.json({ error: "No se pudieron cargar los cofres reclamados." }, { status: 500 });
+  return NextResponse.json({
+    claimedChests: (claims ?? []).map((claim) => claim.chest_number),
+    wallet: profileError || !profile ? null : { xp: profile.xp, coins: profile.coins },
+  });
+}
+
 export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error } = await supabase.auth.getUser();

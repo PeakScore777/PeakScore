@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Plus, Pencil } from "lucide-react";
@@ -363,9 +365,9 @@ export default function EnglishQuestionBankPage() {
                     {set.shared_title && <h3 className="mb-4 text-center text-lg font-black uppercase tracking-wide">{set.shared_title}</h3>}
                     <div className={set.shared_image_url ? "grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(150px,0.42fr)]" : ""}>
                       <p className="whitespace-pre-wrap font-serif text-[13px] leading-6 text-slate-900">{set.shared_text}</p>
-                      {set.shared_image_url && <div className="flex justify-center md:justify-end"><img src={set.shared_image_url} alt="Ilustración del texto de lectura" className="h-auto max-h-64 max-w-full object-contain"/></div>}
+                      {set.shared_image_url && <div className="flex justify-center md:justify-end"><Image src={set.shared_image_url} width={1200} height={800} unoptimized alt="Ilustración del texto de lectura" className="h-auto max-h-64 max-w-full object-contain"/></div>}
                     </div>
-                  </section> : set.shared_image_url ? <div className={`mb-5 flex justify-center ${[4, 5, 7].includes(set.part) ? "" : "border border-slate-900 p-3"}`}><img src={set.shared_image_url} alt={set.part === 4 ? "Texto compartido de la Parte 4" : set.part === 5 ? "Imagen completa del texto de lectura" : "Imagen compartida del conjunto"} className="h-auto max-h-[560px] max-w-full object-contain" /></div> : set.shared_text && <div className={`mb-5 whitespace-pre-wrap font-serif text-[15px] leading-7 text-slate-900 ${set.part === 4 ? "" : "border border-slate-300 px-5 py-5"}`}>{set.shared_text}</div>}
+                  </section> : set.shared_image_url ? <div className={`mb-5 flex justify-center ${[4, 5, 7].includes(set.part) ? "" : "border border-slate-900 p-3"}`}><Image src={set.shared_image_url} width={1200} height={800} unoptimized alt={set.part === 4 ? "Texto compartido de la Parte 4" : set.part === 5 ? "Imagen completa del texto de lectura" : "Imagen compartida del conjunto"} className="h-auto max-h-[560px] max-w-full object-contain" /></div> : set.shared_text && <div className={`mb-5 whitespace-pre-wrap font-serif text-[15px] leading-7 text-slate-900 ${set.part === 4 ? "" : "border border-slate-300 px-5 py-5"}`}>{set.shared_text}</div>}
                   {words.length > 0 && <div className="mb-7">
                     {(() => { const exampleWord = words.find((word) => word.example); const exampleDescription = exampleWord?.example_description; const exampleAnswer = exampleWord?.example_answer ?? exampleWord?.key; return exampleDescription ? <div className="mb-6 border-b-2 border-slate-900 pb-5"><div className="mt-3 grid gap-4 md:grid-cols-[1fr_0.9fr]"><div className="flex gap-3"><strong>0.</strong><p className="whitespace-pre-wrap leading-6">{exampleDescription}</p></div><div className="flex flex-wrap items-center gap-2 rounded-sm border border-slate-300 p-3"><strong className="mr-2">Respuesta 0.</strong>{words.map((word) => <span key={word.key} className={word.key === exampleAnswer ? "flex h-7 w-7 items-center justify-center rounded-full border border-slate-900 bg-slate-900 text-xs font-bold text-white ring-2 ring-slate-300" : "flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-xs font-bold text-slate-600"}>{word.key}</span>)}</div></div></div> : null; })()}
                     <div className={`grid gap-8 md:grid-cols-[1fr_0.9fr] ${isWordBankSet ? "mt-8" : ""}`}>
@@ -378,7 +380,7 @@ export default function EnglishQuestionBankPage() {
                     </div>
                   </div>}
                   {!words.length && set.part === 3 && set.example_image_url && <div className="mb-5 border-b border-slate-900 pb-5">
-                    <div className="flex justify-center"><img src={set.example_image_url} alt="Ejemplo ilustrado de conversación" className="max-h-64 max-w-full object-contain" /></div>
+                    <div className="flex justify-center"><Image src={set.example_image_url} width={1200} height={800} unoptimized alt="Ejemplo ilustrado de conversación" className="max-h-64 max-w-full object-contain" /></div>
                   </div>}
                   {!words.length && set.part === 4 && <div className="mb-3 border-b border-slate-900 pb-3">
                     <div className="grid grid-cols-[1.5rem_minmax(0,1fr)_auto] items-center gap-3 text-[10px] leading-4">
@@ -398,7 +400,7 @@ export default function EnglishQuestionBankPage() {
                       <strong className="pt-1">0.</strong>
                       <div className={set.part === 5 ? "grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] sm:gap-5" : set.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
                         <div>
-                          {set.part !== 5 && set.example_image_url && <img src={set.example_image_url} alt="Imagen del ejemplo" className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-64 max-w-full object-contain"} />}
+                          {set.part !== 5 && set.example_image_url && <Image src={set.example_image_url} width={1200} height={800} unoptimized alt="Imagen del ejemplo" className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-64 max-w-full object-contain"} />}
                           <p className="whitespace-pre-wrap font-serif text-[11px] leading-4">{set.example_prompt}</p>
                         </div>
                         <div>
@@ -485,7 +487,7 @@ export default function EnglishQuestionBankPage() {
                       ) : (
                         <div className={set.part === 5 ? "grid grid-cols-1 gap-8 md:gap-10 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]" : set.part === 2 || set.part === 3 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
                           <div>
-                            {q.image_url && <img src={q.image_url} alt={`Imagen de la pregunta ${i + 1}`} className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
+                            {q.image_url && <Image src={q.image_url} width={1200} height={800} unoptimized alt={`Imagen de la pregunta ${i + 1}`} className={set.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
                             <p className={`whitespace-pre-wrap font-serif ${set.part === 2 ? "text-[10px] leading-4" : set.part === 5 ? "text-[13px] leading-5" : "text-[15px] leading-7"}`}>{q.question}</p>
                           </div>
                           <div>{opts.length > 0 && <div className={`grid grid-cols-1 ${set.part === 5 ? "gap-y-1" : "gap-y-2"}`}>{opts.map((o) => <div key={o.key} className={`flex gap-2 ${set.part === 2 ? "text-[10px] leading-4" : set.part === 5 ? "text-xs leading-4" : "text-sm leading-6"}`}><strong>{o.key}.</strong><span>{o.text}</span></div>)}</div>}</div>

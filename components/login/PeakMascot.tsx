@@ -23,9 +23,11 @@ export default function PeakMascot({
   const [eyesWereCovered, setEyesWereCovered] = useState(false);
 
   useEffect(() => {
-    if (coverEyes) {
+    if (!coverEyes) return;
+    const frame = window.requestAnimationFrame(() => {
       setEyesWereCovered(true);
-    }
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [coverEyes]);
 
   const pose = welcome

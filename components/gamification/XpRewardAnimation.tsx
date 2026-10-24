@@ -27,6 +27,8 @@ export default function XpRewardAnimation({
 }: XpRewardAnimationProps) {
   const [count, setCount] = useState(0);
 
+  const displayCount = open ? count : 0;
+
   const particles = useMemo(
     () =>
       Array.from({ length: 90 }, (_, index) => ({
@@ -43,10 +45,7 @@ export default function XpRewardAnimation({
   );
 
   useEffect(() => {
-    if (!open) {
-      setCount(0);
-      return;
-    }
+    if (!open) return;
 
     let frame = 0;
     const start = performance.now();
@@ -128,7 +127,7 @@ export default function XpRewardAnimation({
 
         <p className="pixel-font mt-3 text-[9px] tracking-[.18em] text-cyan-100/80">RECOMPENSA DESBLOQUEADA</p>
         <h2 id="xp-reward-title" className="pixel-font mt-5 text-3xl text-white drop-shadow-[0_0_16px_rgba(34,211,238,.55)] sm:text-4xl">
-          +{count} XP
+          +{displayCount} XP
         </h2>
         <p className="mt-4 text-sm font-semibold text-slate-200">¡EXPERIENCIA GANADA!</p>
         <p className="mt-2 max-w-xs text-xs leading-6 text-slate-400">Cada desafío te acerca a tu próxima conquista.</p>

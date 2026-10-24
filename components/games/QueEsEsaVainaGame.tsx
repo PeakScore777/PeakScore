@@ -225,8 +225,7 @@ export default function QueEsEsaVainaGame() {
           setSaved({
             bestScore: Math.max(0, Number(parsed.bestScore) || 0),
             completedIds: Array.isArray(parsed.completedIds) ? parsed.completedIds.filter((id): id is string => typeof id === "string") : [],
-            chests: Math.max(0, Number(parsed.chests) || 0,
-            ),
+            chests: Math.max(0, Number(parsed.chests) || 0),
           });
         }
       } catch {

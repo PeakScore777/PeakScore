@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 import { createQuestion } from "@/lib/services/question.service";
-import { supabase } from "@/lib/supabase/browser";
 
 const subjects = [
   "Matemáticas",

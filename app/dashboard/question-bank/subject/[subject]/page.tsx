@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -260,7 +262,7 @@ export default function SubjectQuestionsPage() {
                           )}
                           {question.image_url && (
                             <div className="mb-3 flex justify-center">
-                              <img src={question.image_url} alt={`Material visual de la pregunta ${questionNumber}`} loading="lazy" className="h-auto max-h-56 max-w-full object-contain" />
+                              <Image src={question.image_url} width={1200} height={800} unoptimized alt={`Material visual de la pregunta ${questionNumber}`} loading="lazy" className="h-auto max-h-56 max-w-full object-contain" />
                             </div>
                           )}
                           <p className="whitespace-pre-wrap font-serif text-[13px] leading-[1.45] text-slate-900">{question.question}</p>

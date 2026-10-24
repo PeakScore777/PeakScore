@@ -124,13 +124,14 @@ export async function GET(
       Array.isArray(data?.features)
         ? data.features
             .map((feature: unknown) => {
+              const featureRecord =
+                typeof feature === "object" && feature !== null
+                  ? (feature as Record<string, unknown>)
+                  : {};
+              const attributesValue = featureRecord.attributes;
               const attributes =
-                typeof feature === "object" &&
-                feature !== null &&
-                "attributes" in feature &&
-                typeof feature.attributes === "object" &&
-                feature.attributes !== null
-                  ? feature.attributes
+                typeof attributesValue === "object" && attributesValue !== null
+                  ? (attributesValue as Record<string, unknown>)
                   : {};
 
               return {

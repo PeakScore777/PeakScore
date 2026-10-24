@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -1120,9 +1122,8 @@ export default function EditQuestionPage() {
                         Imagen actual
                       </p>
 
-                      <img
-                        src={form.image_url}
-                        alt="Imagen de la pregunta"
+                      <Image
+                        src={form.image_url} width={1200} height={800} unoptimized alt="Imagen de la pregunta"
                         className="max-h-80 w-full rounded-lg object-contain"
                       />
                     </div>

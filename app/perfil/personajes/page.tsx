@@ -451,8 +451,6 @@ export default function PersonajesPage() {
 
   const loadData = useCallback(async () => {
     try {
-      setError(null);
-
       const response = await fetch("/api/profile", {
         cache: "no-store",
       });
@@ -611,6 +609,7 @@ export default function PersonajesPage() {
               type="button"
               onClick={() => {
                 setLoading(true);
+                setError(null);
                 void loadData();
               }}
               className="mt-3 rounded-lg border border-white/15 px-4 py-2 text-sm hover:bg-white/5"

@@ -6,12 +6,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, Trophy, XCircle } from "lucide-react";
 
 import { QUESTION_BANK, type Question } from "@/lib/games/que-es-esa-vaina-bank";
+import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 const TOTAL_ROUNDS = 10;
 const CHEST_THRESHOLDS = [200, 500, 800] as const;
 const STORAGE_KEY = "peakscore-que-es-esa-vaina-v1";
 
 type SavedProgress = { bestScore: number; completedIds: string[]; chests: number };
+type IncorrectAnswerReview = {
+  question: Question;
+  questionNumber: number;
+  selectedOption: number | null;
+  correctOption: number;
+};
 
 const RECENT_KEY = "peakscore-que-es-esa-vaina-recent-v1";
 const QUESTION_SECONDS = 20;
@@ -178,6 +185,9 @@ export default function QueEsEsaVainaGame() {
   const [serverCorrectOption, setServerCorrectOption] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [incorrectAnswers, setIncorrectAnswers] = useState<IncorrectAnswerReview[]>([]);
+  const [selectedReviewQuestionId, setSelectedReviewQuestionId] = useState<string | null>(null);
+  const [orbyReviewOpen, setOrbyReviewOpen] = useState(false);
   const [usedHints, setUsedHints] = useState<number[]>([]);
   const [visibleHints, setVisibleHints] = useState<Partial<Record<1 | 2 | 3, string>>>({});
   const [hintLoading, setHintLoading] = useState(false);
@@ -498,7 +508,14 @@ export default function QueEsEsaVainaGame() {
         const payload = await response.json();
         if (!response.ok || typeof payload.correctCount !== "number") throw new Error(payload.error || "No se pudo registrar el tiempo agotado.");
         setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
-        if (Number.isInteger(payload.correctOption) && payload.correctOption >= 0 && payload.correctOption <= 3) setServerCorrectOption(payload.correctOption);
+        const timeoutCorrectOption = Number.isInteger(payload.correctOption) && payload.correctOption >= 0 && payload.correctOption < timedOutQuestion.options.length
+          ? payload.correctOption
+          : timedOutQuestion.answer;
+        setServerCorrectOption(timeoutCorrectOption);
+        setIncorrectAnswers((current) => current.some((item) => item.question.id === timedOutQuestion.id)
+          ? current
+          : [...current, { question: timedOutQuestion, questionNumber: index + 1, selectedOption: null, correctOption: timeoutCorrectOption }]);
+        setSelectedReviewQuestionId((current) => current ?? timedOutQuestion.id);
       }).catch(() => setGameError("No se pudo registrar el intento agotado. Continúa con la siguiente pregunta.")).finally(() => {
         answeringRef.current = false;
         setAnswering(false);
@@ -580,9 +597,16 @@ export default function QueEsEsaVainaGame() {
         return;
       }
       const officialCorrect = payload.isCorrect;
+      const officialCorrectOption = Number.isInteger(payload.correctOption) && payload.correctOption >= 0 && payload.correctOption < current.options.length
+        ? payload.correctOption
+        : current.answer;
       setServerAnswerCorrect(officialCorrect);
-      if (Number.isInteger(payload.correctOption) && payload.correctOption >= 0 && payload.correctOption <= 3) {
-        setServerCorrectOption(payload.correctOption);
+      setServerCorrectOption(officialCorrectOption);
+      if (!officialCorrect) {
+        setIncorrectAnswers((currentAnswers) => currentAnswers.some((item) => item.question.id === current.id)
+          ? currentAnswers
+          : [...currentAnswers, { question: current, questionNumber: index + 1, selectedOption: optionIndex, correctOption: officialCorrectOption }]);
+        setSelectedReviewQuestionId((currentId) => currentId ?? current.id);
       }
       setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
       setScore(officialCorrect ? previousScore + 100 : Math.max(0, previousScore - WRONG_ANSWER_PENALTY));
@@ -690,6 +714,9 @@ export default function QueEsEsaVainaGame() {
     setRewardScore(0);
     setSessionOutdated(false);
     setCorrectCount(0);
+    setIncorrectAnswers([]);
+    setSelectedReviewQuestionId(null);
+    setOrbyReviewOpen(false);
     setUsedHints([]); setVisibleHints({});
     setFinished(false);
     setGameSessionId(null);
@@ -944,7 +971,7 @@ export default function QueEsEsaVainaGame() {
   </div>
 </div> : question ? <div className="p-4 sm:p-6">
               <div className="mb-4 flex flex-wrap gap-2"><span className="border-2 border-[#627d8d] bg-[#172b3a] px-3 py-1.5 text-[10px] font-black text-[#b8f3e7]">{question.subject}</span></div>
-              <div className="relative border-[4px] border-[#7d879e] bg-[#111a31] p-5 shadow-[inset_0_0_0_3px_#29344e,inset_0_0_0_6px_#080e20,6px_6px_0_#030713] sm:p-7"><div className="absolute left-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute right-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute bottom-2 left-2 h-2 w-2 bg-[#68738e]" /><div className="absolute bottom-2 right-2 h-2 w-2 bg-[#68738e]" /><div className="mb-4 flex h-10 w-10 items-center justify-center border-[3px] border-[#77829d] bg-[#252e49]"><CircleHelp className="h-5 w-5 text-[#f5d77c]" /></div><p className="text-base font-bold leading-7 text-white sm:text-lg sm:leading-8">{question.clue}</p><button type="button" onClick={() => void useHint(1)} disabled={usedHints.includes(1) || hintLoading || answering || revealed || !gameStarted || !gameSessionId || (wallet !== null && wallet.coins < HINT_COSTS[0])} className="mt-5 inline-flex min-h-10 items-center gap-2 border-[3px] border-[#8e8059] bg-[#28243a] px-3 text-xs font-black text-[#ffe7a2] shadow-[3px_3px_0_#050817] transition hover:bg-[#39334a] disabled:opacity-60"><Lightbulb className="h-4 w-4" /> {usedHints.includes(1) ? "Pista utilizada" : hintLoading ? "Comprando pista…" : `Dame una pista · ${HINT_COSTS[0]} coins`}</button>{([1, 2, 3] as const).filter((number) => Boolean(visibleHints[number])).map((number) => <p key={number} className="mt-3 border-[3px] border-[#89774c] bg-[#242032] p-3 text-sm leading-6 text-[#ffedb8]"><strong className="mr-2 text-[#ffe08a]">Pista {number}:</strong>{visibleHints[number]}</p>)}</div>
+              <div className="relative border-[4px] border-[#7d879e] bg-[#111a31] p-5 shadow-[inset_0_0_0_3px_#29344e,inset_0_0_0_6px_#080e20,6px_6px_0_#030713] sm:p-7"><div className="absolute left-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute right-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute bottom-2 left-2 h-2 w-2 bg-[#68738e]" /><div className="absolute bottom-2 right-2 h-2 w-2 bg-[#68738e]" /><div className="mb-4 flex h-10 w-10 items-center justify-center border-[3px] border-[#77829d] bg-[#252e49]"><CircleHelp className="h-5 w-5 text-[#f5d77c]" /></div><p className="text-base font-bold leading-7 text-white sm:text-lg sm:leading-8">{question.clue}</p><button type="button" onClick={() => void useHint(1)} disabled={usedHints.includes(1) || hintLoading || answering || revealed || !gameStarted || !gameSessionId || (wallet !== null && wallet.coins < HINT_COSTS[0])} className="mt-5 inline-flex min-h-10 items-center gap-2 border-[3px] border-[#a77b35] bg-[#382711] px-3 text-xs font-black text-[#ffe7a2] shadow-[3px_3px_0_#050817] transition hover:bg-[#4a3517] disabled:opacity-60"><Lightbulb className="h-4 w-4" /> {usedHints.includes(1) ? "Pista utilizada" : hintLoading ? "Comprando pista…" : `Dame una pista · ${HINT_COSTS[0]} coins`}</button>{([1, 2, 3] as const).filter((number) => Boolean(visibleHints[number])).map((number) => <p key={number} className="mt-3 border-[3px] border-[#89774c] bg-[#242032] p-3 text-sm leading-6 text-[#ffedb8]"><strong className="mr-2 text-[#ffe08a]">Pista {number}:</strong>{visibleHints[number]}</p>)}</div>
               {(!gameSessionId || sessionLoading) && <p role="status" className="mb-3 text-xs text-[#c7d5ee]">{sessionLoading ? "Preparando partida segura…" : "Conectando con el servidor…"}</p>}
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{question.options.map((option, optionIndex) => { const isSelected = selected === optionIndex; const isCorrect = optionIndex === (serverCorrectOption ?? question.answer); const stateClass = !revealed ? "border-[#69748d] bg-[#111a31] hover:border-[#d8c16b] hover:bg-[#222a40]" : isCorrect ? "border-[#8bc79a] bg-[#193b32]" : isSelected ? "border-[#d58a91] bg-[#3b202d]" : "border-[#3c4762] bg-[#0b1226] opacity-75"; return <button key={option} type="button" onClick={() => void chooseOption(optionIndex)} disabled={!gameStarted || revealed || answering || hintLoading || !gameSessionId} aria-pressed={isSelected} className={`relative flex min-h-[66px] items-center gap-3 border-[3px] p-4 text-left text-sm font-bold leading-6 shadow-[4px_4px_0_#030713] transition ${!revealed && isSelected ? "border-[#f5d77c] bg-[#34304a] ring-2 ring-[#f5d77c]/70" : stateClass}`}><span className="absolute left-1 top-1 h-1.5 w-1.5 bg-[#aeb8ce]" /><span className="flex h-8 w-8 shrink-0 items-center justify-center border-[3px] border-[#69738c] bg-[#080e20] text-xs font-black text-[#f5d77c] [font-family:var(--font-pixel),monospace]">{String.fromCharCode(65 + optionIndex)}</span><span>{option}</span>{revealed && isCorrect && <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-[#a5e6b1]" />}{revealed && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 shrink-0 text-[#ff9aa5]" />}</button>; })}</div>
               {revealed && <div role="status" aria-live="polite" className={`mt-4 border-[3px] p-4 ${answeredCorrectly ? "border-[#80bd8d] bg-[#14352c]" : "border-[#ca858d] bg-[#351d2a]"}`}><p className="text-sm font-black">{selected === null ? "¡Se acabó el tiempo!" : answeredCorrectly ? "¡Correcto, bien hecho!" : "Esta vez no fue. ¡Aprendamos!"}</p><p className="mt-2 text-sm leading-6 text-white/85">{question.explanation}</p>{!answeredCorrectly && <p className="mt-3 text-xs font-black text-rose-200">Penalización: −{WRONG_ANSWER_PENALTY} puntos. Esta pregunta ya no se puede repetir.</p>}</div>}
@@ -958,17 +985,15 @@ export default function QueEsEsaVainaGame() {
   const descriptions = ["Orientación para pensar el problema", "Categoría y tema que debes aplicar", "Revelar la respuesta correcta"];
   return <button key={hintNumber} type="button" onClick={() => void useHint(hintNumber)}
     disabled={isUsed || hintLoading || answering || revealed || !gameStarted || !gameSessionId || cannotAfford}
-    className={`flex items-center gap-3 border-[3px] p-3 text-left transition ${isUsed ? "border-[#6e6484] bg-[#17172e] opacity-70" : hintNumber === 1 ? "border-[#b58cdb] bg-[#251c3c] hover:bg-[#32234d]" : "border-[#405d84] bg-[#101b32] hover:bg-[#182845]"} disabled:cursor-not-allowed disabled:opacity-50`}>
-    <span className="grid h-9 w-9 shrink-0 place-items-center border-[3px] border-[#8b75b5] bg-[#382a52]">
-      {hintNumber === 1 ? <Lightbulb className="h-5 w-5 text-[#ffe36b]"/> : hintNumber === 2 ? <CircleHelp className="h-5 w-5 text-[#91d8ff]"/> : <CheckCircle2 className="h-5 w-5 text-[#a5e6b1]"/>}
-    </span>
+    className={`flex items-center gap-3 border-[3px] p-3 text-left transition ${isUsed ? "border-[#8b7757] bg-[#201c17] opacity-70" : "border-[#9a7740] bg-[#171522] hover:border-[#e8b75b] hover:bg-[#292116]"} disabled:cursor-not-allowed disabled:opacity-50`}>
+    <span className="grid h-9 w-9 shrink-0 place-items-center border-[3px] border-[#a77b35] bg-[#3a2812]"><Lightbulb className="h-5 w-5 text-[#ffe08a]"/></span>
     <span className="min-w-0 flex-1">
-      <span className="block text-sm font-black text-[#f4d8ff]">Pista {hintNumber} · {hintCost} Peak Coins</span>
-      <span className="block text-xs text-[#c3cce0]">{isUsed ? "Ya utilizada en esta pregunta" : hintLoading ? "Procesando compra…" : cannotAfford ? "No tienes monedas suficientes" : descriptions[hintNumber - 1]}</span>
+      <span className="block text-sm font-black text-[#fff0c6]">Pista {hintNumber} · {hintCost} Peak Coins</span>
+      <span className="block text-xs text-[#c3cce0]">{isUsed ? "Ya utilizada en esta partida" : hintLoading ? "Procesando compra…" : cannotAfford ? "No tienes monedas suficientes" : descriptions[hintNumber - 1]}</span>
     </span>
     <span className="text-[10px] font-black text-[#ffe08a]">{isUsed ? "✓" : ""}</span>
   </button>;
-})}</div><p className="mt-3 text-[10px] leading-5 text-[#c0b3d6]">Cada tipo se cobra una vez por pregunta: 5, 10 y 15 Peak Coins; al cambiar de pregunta vuelven a estar disponibles.</p></section></aside>
+})}</div><p className="mt-3 text-[10px] leading-5 text-[#c0b3d6]">Cada tipo de pista se puede usar una vez por partida: 5, 10 y 15 Peak Coins. Al iniciar otra partida, las tres vuelven a estar disponibles.</p></section></aside>
         </div>
       </div>
     </main>

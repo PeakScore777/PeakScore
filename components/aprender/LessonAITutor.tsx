@@ -6,8 +6,20 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { FileText, LoaderCircle, Paperclip, Send, X } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
+type ReviewQuestion = {
+  id: string;
+  number: number;
+  subject: string;
+  topic: string;
+  prompt: string;
+  options: string[];
+  userAnswer: string;
+  correctAnswer: string;
+  explanation: string;
+};
 
 type Props = {
+  reviewQuestions?: ReviewQuestion[];
   subject: string;
   topic: string;
   stage?: "theory" | "practice";
@@ -62,8 +74,10 @@ const starters = [
   "No entiendo por qué una opción es incorrecta",
 ];
 
-export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default" }: Props) {
+export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [] }: Props) {
   const orbyAccent = accent === "orby";
+  const [notebookOpen, setNotebookOpen] = useState(false);
+  const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
@@ -146,12 +160,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setError("");
     setLoading(true);
     try {
+      const activeReview = activeReviewRef.current;
+      const reviewContext = activeReview ? [
+        `Pregunta seleccionada: ${activeReview.prompt}`,
+        `Opciones: ${activeReview.options.map((option, index) => `${String.fromCharCode(65 + index)}) ${option}`).join("\\n")}`,
+        `Respuesta del estudiante: ${activeReview.userAnswer}`,
+        `Respuesta correcta: ${activeReview.correctAnswer}`,
+        `Explicación base: ${activeReview.explanation}`,
+      ].join("\\n") : context;
       const response = await fetch("/api/lesson-tutor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({
-          subject, topic, stage, question, context, message,
+          subject: activeReview?.subject ?? subject,
+          topic: activeReview?.topic ?? topic,
+          stage,
+          question: activeReview?.prompt ?? question,
+          context: reviewContext,
+          message,
           history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
           ...(imagePayload ? { image: imagePayload } : {}),
         }),
@@ -182,6 +209,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     void sendMessageRef.current(prompt);
   }, [open, initialPrompt]);
 
+  function explainReviewQuestion(item: ReviewQuestion) {
+    activeReviewRef.current = item;
+    setNotebookOpen(false);
+    const prompt = `Explícame paso a paso la pregunta ${item.number}. Quiero entender por qué mi respuesta fue incorrecta o por qué se agotó el tiempo, cómo se llega a la respuesta correcta y qué idea clave debo recordar para resolver una pregunta parecida. Distingue claramente mi respuesta de la correcta, usa la explicación base como referencia y no inventes datos.`;
+    void sendMessageRef.current(prompt);
+  }
+
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void sendMessage(input, true);
@@ -203,6 +237,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <button type="button" onClick={() => onOpenChange(false)} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>
       </header>
+
+      {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#d9c5ae] bg-[#fff9f0] px-3 py-2">
+        <button type="button" onClick={() => setNotebookOpen((value) => !value)} aria-expanded={notebookOpen} className={`flex min-h-10 w-full items-center justify-between gap-3 border px-3 py-2 text-left text-xs font-extrabold transition ${notebookOpen ? "border-orange-500 bg-orange-100 text-orange-950" : "border-orange-200 bg-white text-slate-800 hover:border-orange-400 hover:bg-orange-50"}`}>
+          <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-orange-600"/> Cuaderno de preguntas falladas <span className="rounded-full bg-orange-600 px-2 py-0.5 text-[10px] text-white">{reviewQuestions.length}</span></span>
+          <span className="text-[10px] text-orange-700">{notebookOpen ? "Cerrar −" : "Ver preguntas +"}</span>
+        </button>
+        {notebookOpen && <section aria-label="Cuaderno de preguntas falladas" className="mt-2 max-h-64 overflow-y-auto border border-orange-200 bg-[#fffdf9] p-2">
+          <p className="px-2 py-1 text-[10px] leading-4 text-slate-600">Elige una pregunta para enviársela a Orby. La explicación aparecerá en este chat.</p>
+          <div className="mt-1 grid gap-2">
+            {reviewQuestions.map((item) => <button key={item.id} type="button" onClick={() => explainReviewQuestion(item)} className="w-full border border-[#e7c6a5] bg-white px-3 py-2 text-left transition hover:border-orange-500 hover:bg-orange-50">
+              <span className="block text-[9px] font-black uppercase tracking-wider text-orange-700">Pregunta {item.number} · {item.subject}</span>
+              <span className="mt-1 block text-xs font-semibold leading-5 text-slate-900 [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden">{item.prompt}</span>
+              <span className="mt-1 block text-[10px] text-slate-600">Tu respuesta: {item.userAnswer}</span>
+            </button>)}
+          </div>
+        </section>}
+      </div>}
 
       <div className="min-h-0 flex-1 overflow-y-auto bg-[#f7f9fc] px-4 py-4" ref={scrollRef} aria-live="polite">
         {messages.length === 0 ? (

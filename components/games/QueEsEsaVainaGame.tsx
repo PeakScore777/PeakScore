@@ -805,7 +805,7 @@ export default function QueEsEsaVainaGame() {
     if (allChestsClaimed) return "¡Conjunto completado! Las recompensas entran en recarga durante una hora.";
     if (chestLevel >= 3) return "Tienes puntos para los tres cofres; reclámalos en orden desde la barra superior.";
     if (chestLevel >= 2) return "Ya alcanzaste el segundo umbral. Reclama los cofres en orden para continuar.";
-    if (chestLevel >= 1) return "¡Buen comienzo! Puedes reclamar el primer cofre al alcanzar 200 puntos netos.";
+    if (chestLevel >= 1) return "Primer umbral alcanzado. Puedes reclamar el cofre desde la barra superior.";
     return "Resuelve preguntas; los errores restan puntos y reducen el progreso de recompensa.";
   }, [allChestsClaimed, chestLevel, cooldownActive, sessionOutdated]);
 

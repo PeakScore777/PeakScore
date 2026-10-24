@@ -45,7 +45,13 @@ function readRecentIds(): string[] {
   try {
     const value: unknown = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
     if (!Array.isArray(value)) return [];
-    return [...new Set(value.filter((id): id is string => typeof id === "string"))].slice(0, 1000);
+    const recent = value.filter((id): id is string => typeof id === "string");
+    const localById = new Map(QUESTION_BANK.map((question) => [question.id, question]));
+    const migrated = recent.flatMap((id) => {
+      const localQuestion = localById.get(id);
+      return localQuestion ? [id, questionHistoryKey(localQuestion)] : [id];
+    });
+    return [...new Set(migrated)].slice(0, 1000);
   } catch {
     return [];
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 import Hero from "@/components/Hero";
 import Features from "@/components/Features";
@@ -11,45 +11,50 @@ import Footer from "@/components/Footer";
 
 type LandingTheme = "light" | "dark";
 
-export default function Home() {
-  const [theme, setTheme] =
-    useState<LandingTheme>("dark");
-
-  useEffect(() => {
-    const syncTheme = (event: Event) => {
-      const customEvent =
-        event as CustomEvent<LandingTheme>;
-
-      if (
-        customEvent.detail === "light" ||
-        customEvent.detail === "dark"
-      ) {
-        setTheme(customEvent.detail);
-      }
-    };
-
+function subscribeLandingTheme(onChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === "peakscore-theme") onChange();
+  };
+  const handleThemeChange = (event: Event) => {
+    const nextTheme = (event as CustomEvent<LandingTheme>).detail;
+    if (nextTheme !== "light" && nextTheme !== "dark") return;
     try {
-      const savedTheme =
-        window.localStorage.getItem(
-          "peakscore-theme",
-        );
-
-      if (
-        savedTheme === "light" ||
-        savedTheme === "dark"
-      ) {
-        setTheme(savedTheme);
-      }
+      window.localStorage.setItem("peakscore-theme", nextTheme);
     } catch {
-      // Se mantiene el tema oscuro como fallback.
+      // El tema sigue funcionando durante esta sesión.
     }
+    onChange();
+  };
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener("peakscore-theme-change", handleThemeChange);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener("peakscore-theme-change", handleThemeChange);
+  };
+}
 
-    window.addEventListener(
-      "peakscore-theme-change",
-      syncTheme,
-    );
+function getLandingThemeSnapshot(): LandingTheme {
+  try {
+    const savedTheme = window.localStorage.getItem("peakscore-theme");
+    return savedTheme === "light" || savedTheme === "dark" ? savedTheme : "dark";
+  } catch {
+    return "dark";
+  }
+}
 
-    return () => {
+function getServerLandingThemeSnapshot(): LandingTheme {
+  return "dark";
+}
+
+
+export default function Home() {
+  const theme = useSyncExternalStore(
+    subscribeLandingTheme,
+    getLandingThemeSnapshot,
+    getServerLandingThemeSnapshot,
+  );
+
+  return () => {
       window.removeEventListener(
         "peakscore-theme-change",
         syncTheme,
@@ -67,7 +72,7 @@ export default function Home() {
 
       <DashboardPreview theme={theme} />
 
-      <CTA />
+      <CTA theme={theme} />
 
       <Footer />
     </main>

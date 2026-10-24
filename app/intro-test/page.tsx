@@ -306,7 +306,7 @@ export default function IntroTestPage() {
           <p style={{ color: "#e4b95e", fontSize: 9, letterSpacing: ".2em", marginBottom: 24 }}>UNA NUEVA AVENTURA COMIENZA</p>
           <h1 className="intro-test-pixel" style={{ fontSize: "clamp(20px, 4vw, 36px)", lineHeight: 1.8, maxWidth: 760, margin: "0 auto 18px" }}>BIENVENIDO A PEAKSCORE</h1>
           <p style={{ color: "#a7a39a", fontSize: 10, lineHeight: 2.2, maxWidth: 520, marginBottom: 32 }}>Founder recibe a Nova, la aventurera que acaba de llegar.</p>
-          <button className="intro-test-action" style={{ padding: "17px 24px" }} onClick={() => setStarted(true)}>▶ COMENZAR</button>
+          <button className="intro-test-action" style={{ padding: "17px 24px" }} onClick={() => { setTypingProgress({ key: "", count: 0 }); setStarted(true); }}>▶ COMENZAR</button>
           <p style={{ color: "#5c5a55", fontSize: 8, lineHeight: 2, marginTop: 18 }}>Prueba local: las respuestas no se guardan.</p>
         </section>
       ) : (

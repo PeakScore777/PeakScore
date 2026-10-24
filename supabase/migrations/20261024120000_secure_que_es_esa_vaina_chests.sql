@@ -12,7 +12,11 @@ create table if not exists public.game_progress (
 alter table public.game_progress enable row level security;
 drop policy if exists "Users can read own game progress" on public.game_progress;
 create policy "Users can read own game progress" on public.game_progress for select to authenticated using (auth.uid() = user_id);
-grant select on public.game_progress to authenticated;
+drop policy if exists "Users can insert own game progress" on public.game_progress;
+create policy "Users can insert own game progress" on public.game_progress for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists "Users can update own game progress" on public.game_progress;
+create policy "Users can update own game progress" on public.game_progress for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+grant select, insert, update on public.game_progress to authenticated;
 
 create table if not exists public.game_round_sessions (
   id uuid primary key default gen_random_uuid(),

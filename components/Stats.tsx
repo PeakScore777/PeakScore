@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { motion, useReducedMotion } from "framer-motion";
 
 /* =========================================================
@@ -606,9 +608,8 @@ export default function Stats() {
             className="pointer-events-none absolute right-[-50px] top-[-35px] z-10 hidden h-[290px] w-[570px] lg:block"
           >
 
-            <img
-              src="/peaky/homepage/statspeakyruta.png"
-              alt=""
+            <Image
+              src="/peaky/homepage/statspeakyruta.png" width={1200} height={800} alt=""
               className="h-full w-full object-contain object-right drop-shadow-[0_0_30px_rgba(37,99,235,0.25)]"
             />
 
@@ -761,9 +762,8 @@ export default function Stats() {
                             }`}
                           />
 
-                          <img
-                            src={step.image}
-                            alt=""
+                          <Image
+                            src={step.image} width={1200} height={800} alt=""
                             className="h-8 w-8 object-contain"
                           />
 
@@ -1094,9 +1094,8 @@ export default function Stats() {
 
             <div className="pointer-events-none absolute right-[-4px] top-[35px] h-[175px] w-[185px]">
 
-              <img
-                src="/peaky/homepage/statspremio.png"
-                alt=""
+              <Image
+                src="/peaky/homepage/statspremio.png" width={1200} height={800} alt=""
                 className="h-full w-full object-contain drop-shadow-[0_0_25px_rgba(34,211,238,0.3)] transition-transform duration-500 group-hover:scale-110"
               />
 
@@ -1183,9 +1182,8 @@ export default function Stats() {
 
             <div className="pointer-events-none absolute right-[-3px] top-[35px] h-[175px] w-[185px]">
 
-              <img
-                src="/peaky/homepage/statslibro.png"
-                alt=""
+              <Image
+                src="/peaky/homepage/statslibro.png" width={1200} height={800} alt=""
                 className="h-full w-full object-contain drop-shadow-[0_0_25px_rgba(217,70,239,0.3)] transition-transform duration-500 group-hover:scale-110"
               />
 
@@ -1272,9 +1270,8 @@ export default function Stats() {
 
             <div className="pointer-events-none absolute right-[-8px] top-[30px] h-[185px] w-[200px]">
 
-              <img
-                src="/peaky/homepage/statsmontaña.png"
-                alt=""
+              <Image
+                src="/peaky/homepage/statsmontaña.png" width={1200} height={800} alt=""
                 className="h-full w-full object-contain drop-shadow-[0_0_25px_rgba(34,211,238,0.3)] transition-transform duration-500 group-hover:scale-110"
               />
 

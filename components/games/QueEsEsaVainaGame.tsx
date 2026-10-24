@@ -59,7 +59,8 @@ export default function QueEsEsaVainaGame() {
   const [timerSoundEnabled, setTimerSoundEnabled] = useState(false);
   const restoredMatchRef = useRef<PersistedMatch | null>(null);
   const resumeTimeRef = useRef<number | null>(null);
-  const soundUnlockListenersRef = useRef(false);
+  const soundUnlockedRef = useRef(false);
+  const answeringRef = useRef(false);
   const [gameSessionId, setGameSessionId] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(false);
   const sessionAttemptedRef = useRef(false);
@@ -71,36 +72,27 @@ export default function QueEsEsaVainaGame() {
   const [wallet, setWallet] = useState<{ xp: number; coins: number } | null>(null);
   const timerAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  const enableTimerSound = useCallback(() => {
-    try {
-      const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav");
-      timerAudioRef.current = audio;
-      audio.volume = 0.32;
-      if (audio.ended || audio.currentTime >= audio.duration) audio.currentTime = 0;
-      void audio.play().then(() => {
-        setTimerSoundEnabled(true);
-        soundUnlockListenersRef.current = true;
-      }).catch(() => {
-        setTimerSoundEnabled(false);
-      });
-    } catch {
-      setTimerSoundEnabled(false);
-    }
-  }, []);
-
-  // Intenta reproducir automáticamente. Si el navegador bloquea autoplay, se desbloquea
-  // con la primera interacción real del usuario, sin mostrar un botón de sonido.
+  // El navegador solo habilita el audio tras una interacción del usuario.
+  // No se reproduce nada al entrar en la web ni al salir del minijuego.
   useEffect(() => {
-    if (!hydrated || soundUnlockListenersRef.current) return;
-    enableTimerSound();
-    const unlock = () => enableTimerSound();
+    const unlock = () => { soundUnlockedRef.current = true; };
     window.addEventListener("pointerdown", unlock, { passive: true });
     window.addEventListener("keydown", unlock);
     return () => {
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("keydown", unlock);
     };
-  }, [hydrated, enableTimerSound]);
+  }, []);
+
+  // Limpieza defensiva: el reloj nunca debe sobrevivir al desmontaje del juego.
+  useEffect(() => () => {
+    const audio = timerAudioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.loop = false;
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -314,43 +306,54 @@ export default function QueEsEsaVainaGame() {
   }, []);
 
   useEffect(() => {
-    if (!hydrated || finished || revealed) return;
+    // El cronómetro no comienza hasta que la sesión segura está lista.
+    if (!hydrated || rounds.length !== TOTAL_ROUNDS || !gameSessionId || sessionLoading || finished || revealed) return;
     if (resumeTimeRef.current !== null) {
       setTimeLeft(resumeTimeRef.current);
       resumeTimeRef.current = null;
     } else {
       setTimeLeft(QUESTION_SECONDS);
     }
-    const timerAudio = timerAudioRef.current;
-    if (timerSoundEnabled && timerAudio) {
-      try {
-        timerAudio.currentTime = 0;
-        timerAudio.volume = 0.32;
-        void timerAudio.play().catch(() => setTimerSoundEnabled(false));
-      } catch {
-        setTimerSoundEnabled(false);
-      }
-    }
     const timer = window.setInterval(() => {
-      setTimeLeft((remaining) => {
-        if (remaining <= 1) {
-          window.clearInterval(timer);
-          setRevealed(true);
-          setSelected(null);
-          playSfx("wrong");
-          return 0;
-        }
-        return remaining - 1;
-      });
+      if (answeringRef.current) return;
+      setTimeLeft((remaining) => Math.max(0, remaining - 1));
     }, 1000);
-    return () => {
-      window.clearInterval(timer);
-      if (timerAudio) {
-        timerAudio.pause();
-        timerAudio.currentTime = 0;
+    return () => window.clearInterval(timer);
+  }, [hydrated, rounds.length, gameSessionId, sessionLoading, finished, revealed, index]);
+
+  // La expiración evalúa la pregunta automáticamente, sin depender de «Siguiente».
+  useEffect(() => {
+    if (!hydrated || !gameSessionId || sessionLoading || finished || revealed || timeLeft !== 0) return;
+    setSelected(null);
+    setRevealed(true);
+    playSfx("wrong");
+  }, [hydrated, gameSessionId, sessionLoading, finished, revealed, timeLeft, playSfx]);
+
+  const timerUrgent = timeLeft > 0 && timeLeft <= 5;
+  useEffect(() => {
+    if (!hydrated || !gameSessionId || sessionLoading || finished || revealed || !timerUrgent || !soundUnlockedRef.current) {
+      const existing = timerAudioRef.current;
+      if (existing) {
+        existing.pause();
+        existing.currentTime = 0;
       }
-    };
-  }, [hydrated, finished, revealed, index, playSfx, timerSoundEnabled]);
+      setTimerSoundEnabled(false);
+      return;
+    }
+    try {
+      const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav");
+      timerAudioRef.current = audio;
+      audio.loop = true;
+      audio.volume = 0.32;
+      void audio.play().then(() => setTimerSoundEnabled(true)).catch(() => setTimerSoundEnabled(false));
+      return () => {
+        audio.pause();
+        audio.currentTime = 0;
+      };
+    } catch {
+      setTimerSoundEnabled(false);
+    }
+  }, [hydrated, gameSessionId, sessionLoading, finished, revealed, timerUrgent]);
   // La barra conserva cinco hitos visuales, pero solo hay tres cofres reclamables.
   // Se desbloquean al alcanzar 2, 5 y 8 respuestas correctas.
   const chestThresholds = [2, 5, 8];
@@ -359,9 +362,11 @@ export default function QueEsEsaVainaGame() {
   const answeredCorrectly = selected !== null && question?.answer === selected;
 
   const chooseOption = useCallback(async (optionIndex: number) => {
-    if (revealed || finished || answering || !gameSessionId) return;
+    if (revealed || finished || answering || !gameSessionId || timeLeft <= 0) return;
     const current = rounds[index];
     if (!current) return;
+    answeringRef.current = true;
+    setSelected(optionIndex);
     setAnswering(true);
     setGameError(null);
     try {
@@ -385,11 +390,13 @@ export default function QueEsEsaVainaGame() {
         playSfx("wrong");
       }
     } catch (error) {
+      setSelected(null);
       setGameError(error instanceof Error ? error.message : "No se pudo validar la respuesta.");
     } finally {
+      answeringRef.current = false;
       setAnswering(false);
     }
-  }, [answering, finished, gameSessionId, index, playSfx, revealed, rounds]);
+  }, [answering, finished, gameSessionId, index, playSfx, revealed, rounds, timeLeft]);
 
   const next = useCallback(() => {
     if (!revealed) return;
@@ -509,8 +516,27 @@ export default function QueEsEsaVainaGame() {
     return "Resuelve preguntas para llenar el cofre.";
   }, [chestLevel]);
 
-  if (!hydrated || rounds.length === 0) {
-    return <main className="grid min-h-[70vh] place-items-center bg-[#07091a] text-white"><p className="animate-pulse text-sm">Preparando el desafío...</p></main>;
+  if (!hydrated || rounds.length === 0 || (sessionLoading && !gameSessionId)) {
+    return (
+      <main className="relative isolate min-h-[calc(100svh-72px)] overflow-hidden bg-[#070b18] p-3 text-white sm:p-5">
+        <div className="absolute inset-0 -z-20 bg-cover bg-center opacity-70" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} />
+        <div className="absolute inset-0 -z-10 bg-[#030817]/75" />
+        <div className="mx-auto max-w-[1390px] animate-pulse">
+          <div className="mb-4 h-10 w-36 border-2 border-slate-600 bg-slate-800/80" />
+          <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_270px]">
+            <section className="border-[3px] border-[#74809b] bg-[#070d22]/95 shadow-[7px_7px_0_rgba(0,0,0,.5)]">
+              <header className="border-b-[3px] border-[#35415e] p-5">
+                <div className="flex flex-wrap justify-between gap-4"><div className="space-y-3"><div className="h-3 w-28 rounded bg-slate-700"/><div className="h-7 w-48 rounded bg-slate-700"/></div><div className="flex gap-2">{[1,2,3].map((n) => <div key={n} className="h-16 w-24 border-2 border-slate-600 bg-slate-800"/></div>}</div>
+                <div className="mt-5 border-[3px] border-slate-600 bg-slate-900 p-3"><div className="mb-3 h-3 w-36 rounded bg-slate-700"/><div className="flex items-center gap-4 border border-slate-700 p-3"><div className="h-16 w-16 shrink-0 rounded-full border-4 border-slate-600 bg-slate-800"/><div className="flex-1 space-y-3"><div className="h-3 w-32 rounded bg-slate-700"/><div className="h-7 w-14 rounded bg-slate-700"/><div className="h-2 w-full rounded bg-slate-700"/></div></div><div className="mt-4 h-7 w-full rounded bg-slate-800"/></div>
+              </header>
+              <div className="space-y-4 p-5"><div className="h-5 w-28 bg-slate-700"/><div className="min-h-36 space-y-4 border-[4px] border-slate-600 bg-slate-800/80 p-6"><div className="h-4 w-24 bg-slate-700"/><div className="h-5 w-4/5 bg-slate-700"/><div className="h-10 w-32 bg-slate-700"/></div><div className="grid gap-3 sm:grid-cols-2">{[1,2,3,4].map((n) => <div key={n} className="h-16 border-[3px] border-slate-600 bg-slate-800"/></div><div className="flex justify-between gap-3"><div className="h-4 w-44 bg-slate-700"/><div className="h-11 w-32 border-2 border-slate-600 bg-slate-800"/></div></div>
+            </section>
+            <aside className="grid gap-4"><div className="h-64 border-[3px] border-slate-600 bg-slate-900/90 p-4"><div className="h-4 w-36 bg-slate-700"/><div className="mx-auto mt-8 h-28 w-32 rounded-xl bg-slate-800"/><div className="mt-5 grid grid-cols-3 gap-2">{[1,2,3].map((n) => <div key={n} className="h-10 border-2 border-slate-600 bg-slate-800"/></div></div><div className="h-48 border-[3px] border-slate-600 bg-slate-900/90 p-4"><div className="h-4 w-20 bg-slate-700"/><div className="mt-4 space-y-3">{[1,2,3].map((n) => <div key={n} className="h-14 border-2 border-slate-700 bg-slate-800"/></div></div></aside>
+          </div>
+          <p role="status" className="mt-5 text-center text-xs font-bold tracking-wide text-[#f4d57e]">{sessionLoading ? "Preparando una partida segura y cargando las preguntas…" : "Preparando el desafío…"}</p>
+        </div>
+      </main>
+    );
   }
 
   const handleNext = () => {
@@ -573,7 +599,7 @@ export default function QueEsEsaVainaGame() {
                     <span className="sr-only">{timeLeft} segundos restantes</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><span className="text-[9px] font-bold text-[#a8b6d3]">{timerSoundEnabled ? "RELOJ ACTIVO" : "RELOJ AUTOMÁTICO"}</span></div></div>
+                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><span className="text-[9px] font-bold text-[#a8b6d3]">{timerSoundEnabled ? "SONIDO ACTIVO" : "SONIDO AL FINAL"}</span></div></div>
                     <p className={"mt-1 text-3xl font-black tabular-nums [font-family:var(--font-pixel),monospace] " + (timeLeft <= 5 ? "text-rose-300" : "text-amber-100")}>{String(timeLeft).padStart(2, "0")}</p>
                     <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
                   </div>

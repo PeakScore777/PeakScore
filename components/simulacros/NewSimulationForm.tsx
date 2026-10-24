@@ -1,6 +1,6 @@
-import Image from "next/image";
-
 "use client";
+
+import Image from "next/image";
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";

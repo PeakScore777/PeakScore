@@ -529,7 +529,6 @@ export default function QueEsEsaVainaGame() {
       })
         .then(async (response) => {
           if (!response.ok) throw new Error("No se pudo guardar el progreso de la cuenta.");
-          const payload = await response.json();
           setSaveStatus("saved");
         })
         .catch(() => setSaveStatus("error"));

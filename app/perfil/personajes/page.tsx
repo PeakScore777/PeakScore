@@ -490,7 +490,8 @@ export default function PersonajesPage() {
   }, []);
 
   useEffect(() => {
-    void loadData();
+    const frame = window.requestAnimationFrame(() => void loadData());
+    return () => window.cancelAnimationFrame(frame);
   }, [loadData]);
 
   const catalog = data?.characters ?? [];

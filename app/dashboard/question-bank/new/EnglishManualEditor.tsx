@@ -184,8 +184,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setExampleAnswer(setRow.part === 1 ? exampleWord?.example_answer ?? exampleWord?.key ?? "H" : setRow.example_answer ?? "A");
       setSharedImageFile(null);
       setExampleImageFile(null);
-      setEditingQuestionIds(rows.map((q: any) => q.id));
-      setQuestions(rows.map((q: any) => {
+      setEditingQuestionIds(rows.map((q) => q.id));
+      setQuestions(rows.map((q) => {
         const loadedOptions = (q.english_options as Choice[] | null) ?? [];
         const fallbackOptions = [
           { key: "A", text: q.option_a },

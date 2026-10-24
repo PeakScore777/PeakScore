@@ -70,17 +70,21 @@ export default function Navbar({
   const profileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    try {
-      const cached = window.localStorage.getItem(
-        "peakscore-selected-character",
-      );
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const cached = window.localStorage.getItem(
+          "peakscore-selected-character",
+        );
 
-      if (cached && characterAvatars[cached]) {
-        setCachedCharacter(cached);
+        if (cached && characterAvatars[cached]) {
+          setCachedCharacter(cached);
+        }
+      } catch {
+        // La caché visual no es obligatoria.
       }
-    } catch {
-      // La caché visual no es obligatoria.
-    }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {

@@ -377,3 +377,23 @@ body {
     transition: none;
   }
 }
+
+
+/* Animación de apertura de cofres de ¿Qué es esa vaina? */
+@keyframes chest-open-sequence {
+  0% { transform: translateY(10px) scale(.78) rotate(-4deg); filter: brightness(.7); }
+  18% { transform: translateY(-7px) scale(1.08) rotate(3deg); filter: brightness(1.2); }
+  36% { transform: translateY(0) scale(1) rotate(-2deg); filter: brightness(1.5); }
+  55% { transform: translateY(-4px) scale(1.04) rotate(1deg); filter: brightness(1.8); }
+  75% { transform: translateY(0) scale(1) rotate(0); filter: brightness(1.25); }
+  100% { transform: translateY(0) scale(1) rotate(0); filter: brightness(1); }
+}
+@keyframes chest-reward-glow {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 0 rgba(255,214,92,0)); }
+  50% { transform: scale(1.07); filter: drop-shadow(0 0 18px rgba(255,214,92,.9)); }
+}
+.chest-open-sequence { animation: chest-open-sequence 3s cubic-bezier(.2,.8,.2,1) both; }
+.chest-reward-glow { animation: chest-reward-glow 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .chest-open-sequence, .chest-reward-glow { animation: none !important; }
+}

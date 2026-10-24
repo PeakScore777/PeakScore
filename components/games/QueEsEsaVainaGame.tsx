@@ -604,7 +604,7 @@ export default function QueEsEsaVainaGame() {
     setChestAnimation(null);
     setGameError(null);
     setSaveStatus("idle");
-  }, [questionPool, rounds]);
+  }, [index, questionPool, rounds]);
 
   const claimChest = useCallback(async (chestNumber: number) => {
     if (!gameSessionId || claimingChest !== null || claimedChests.includes(chestNumber)) return;

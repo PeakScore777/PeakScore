@@ -3,9 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
-const GAME_KEY = "que-es-esa-vaina";
+const DEFAULT_GAME_KEY = "que-es-esa-vaina";
+const ALLOWED_GAME_KEYS = new Set([DEFAULT_GAME_KEY, "caso-cero"]);
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -13,11 +14,14 @@ export async function GET() {
     return NextResponse.json({ error: "Debes iniciar sesión." }, { status: 401 });
   }
 
+  const requestedKey = new URL(request.url).searchParams.get("gameKey") ?? DEFAULT_GAME_KEY;
+  const gameKey = ALLOWED_GAME_KEYS.has(requestedKey) ? requestedKey : DEFAULT_GAME_KEY;
+
   const { data, error } = await supabase
     .from("game_progress")
     .select("best_score,best_correct,games_completed,updated_at")
     .eq("user_id", user.id)
-    .eq("game_key", GAME_KEY)
+    .eq("game_key", gameKey)
     .maybeSingle();
 
   if (error) {
@@ -50,6 +54,11 @@ export async function POST(request: Request) {
   }
 
   const candidate = body as Record<string, unknown>;
+  const requestedKey = candidate.gameKey === undefined ? DEFAULT_GAME_KEY : candidate.gameKey;
+  if (typeof requestedKey !== "string" || !ALLOWED_GAME_KEYS.has(requestedKey)) {
+    return NextResponse.json({ error: "Juego no disponible." }, { status: 400 });
+  }
+  const gameKey = requestedKey;
   const score = candidate.score;
   const correct = candidate.correct;
 
@@ -75,7 +84,7 @@ export async function POST(request: Request) {
 
   const payload = {
     user_id: user.id,
-    game_key: GAME_KEY,
+    game_key: gameKey,
     best_score: Math.max(current?.best_score ?? 0, score as number),
     best_correct: Math.max(current?.best_correct ?? 0, correct as number),
     games_completed: (current?.games_completed ?? 0) + 1,

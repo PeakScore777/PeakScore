@@ -74,16 +74,20 @@ export default function RegisterPage() {
   const [resendCooldown, setResendCooldown] = useState(60);
 
   useEffect(() => {
-    const pendingEmail = window.sessionStorage.getItem(
-      "peakscore_pending_signup_email"
-    );
+    const frame = window.requestAnimationFrame(() => {
+      const pendingEmail = window.sessionStorage.getItem(
+        "peakscore_pending_signup_email"
+      );
 
-    if (pendingEmail) {
-      setVerificationEmail(pendingEmail);
-      setVerificationMode(true);
-      setVerificationSeconds(600);
-      setResendCooldown(0);
-    }
+      if (pendingEmail) {
+        setVerificationEmail(pendingEmail);
+        setVerificationMode(true);
+        setVerificationSeconds(600);
+        setResendCooldown(0);
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {

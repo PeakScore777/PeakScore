@@ -240,7 +240,6 @@ export default function EnglishQuestionBankPage() {
     .reduce((sum, set) => sum + countSetQuestions(set, filter), 0);
   const current2026Count = countForProfile("saber11_2026");
   const historicalCount = countForProfile("historical");
-  const reviewCount = sets.filter(set => set.booklet_format === "custom_review").reduce((sum, set) => sum + (questionsBySet[set.id]?.length ?? 0), 0);
   const visibleQuestionCount = visibleSets.reduce((sum, set) => sum + countSetQuestions(set, formatFilter), 0);
 
   return (

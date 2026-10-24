@@ -204,6 +204,7 @@ export default function QueEsEsaVainaGame() {
   const [chestCycleNumber, setChestCycleNumber] = useState(1);
   const [chestCooldownUntil, setChestCooldownUntil] = useState<string | null>(null);
   const [frozenRewardScore, setFrozenRewardScore] = useState(0);
+  const [sessionOutdated, setSessionOutdated] = useState(false);
   const [cooldownNow, setCooldownNow] = useState(0);
   const cooldownRefreshRef = useRef(false);
   const lastChestCycleRef = useRef<number | null>(null);
@@ -352,6 +353,8 @@ export default function QueEsEsaVainaGame() {
     if (lastChestCycleRef.current !== chestCycleNumber) {
       lastChestCycleRef.current = chestCycleNumber;
       setRewardScore(0);
+      setSessionOutdated(true);
+      setGameError("Terminó la recarga. Pulsa Jugar otra vez para iniciar una partida nueva y reactivar los cofres.");
     }
   }, [chestCycleNumber]);
 

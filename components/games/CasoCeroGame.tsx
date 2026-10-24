@@ -18,7 +18,6 @@ import {
   Microscope,
   RotateCcw,
   ShieldCheck,
-  Sparkles,
   XCircle,
 } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";

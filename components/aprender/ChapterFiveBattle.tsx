@@ -69,7 +69,7 @@ export default function ChapterFiveBattle({
   // se recorta a 250 ms y el sonido de daño entra al llegar al frame de impacto.
   useEffect(() => {
     if (result === null) return;
-    let hurtTimer: ReturnType<typeof setTimeout> | undefined;
+    let hurtTimer: number | undefined;
     const attackAudio = new Audio("/sounds/chapter-5-attack.mp3");
     attackAudio.volume = 0.30;
     void attackAudio.play().catch(() => {});

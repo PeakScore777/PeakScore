@@ -638,7 +638,7 @@ export default function QueEsEsaVainaGame() {
     setServerAnswerCorrect(null);
     setServerCorrectOption(null);
     setRevealed(false);
-    setUsedHints([]); setVisibleHints({});
+    setVisibleHints({});
     setTimeLeft(QUESTION_SECONDS);
   }, [correctCount, index, revealed, rounds.length, score, rewardScore]);
 

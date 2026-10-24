@@ -57,6 +57,7 @@ export default function QueEsEsaVainaGame() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [timeLeft, setTimeLeft] = useState(QUESTION_SECONDS);
   const [timerSoundEnabled, setTimerSoundEnabled] = useState(false);
+  const [gameStarted, setGameStarted] = useState(false);
   const restoredMatchRef = useRef<PersistedMatch | null>(null);
   const resumeTimeRef = useRef<number | null>(null);
   const soundUnlockedRef = useRef(false);
@@ -271,7 +272,7 @@ export default function QueEsEsaVainaGame() {
 
   const question = rounds[index];
 
-  const playSfx = useCallback((kind: "tick" | "wrong" | "chest") => {
+  const playSfx = useCallback((kind: "tick" | "wrong" | "chest" | "click") => {
     try {
       const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextClass) return;
@@ -290,6 +291,7 @@ export default function QueEsEsaVainaGame() {
         oscillator.stop(ctx.currentTime + start + duration + 0.02);
       };
       if (kind === "tick") tone(1150, 0, 0.035, "square", 0.018);
+      if (kind === "click") tone(780, 0, 0.055, "square", 0.025);
       if (kind === "wrong") {
         tone(210, 0, 0.16, "sawtooth", 0.045);
         tone(145, 0.13, 0.2, "sawtooth", 0.04);
@@ -307,7 +309,7 @@ export default function QueEsEsaVainaGame() {
 
   useEffect(() => {
     // El cronómetro no comienza hasta que la sesión segura está lista.
-    if (!hydrated || rounds.length !== TOTAL_ROUNDS || !gameSessionId || sessionLoading || finished || revealed) return;
+    if (!hydrated || rounds.length !== TOTAL_ROUNDS || !gameSessionId || sessionLoading || !gameStarted || finished || revealed) return;
     if (resumeTimeRef.current !== null) {
       setTimeLeft(resumeTimeRef.current);
       resumeTimeRef.current = null;
@@ -319,19 +321,19 @@ export default function QueEsEsaVainaGame() {
       setTimeLeft((remaining) => Math.max(0, remaining - 1));
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [hydrated, rounds.length, gameSessionId, sessionLoading, finished, revealed, index]);
+  }, [hydrated, rounds.length, gameSessionId, sessionLoading, gameStarted, finished, revealed, index]);
 
   // La expiración evalúa la pregunta automáticamente, sin depender de «Siguiente».
   useEffect(() => {
-    if (!hydrated || !gameSessionId || sessionLoading || finished || revealed || timeLeft !== 0) return;
+    if (!hydrated || !gameSessionId || sessionLoading || !gameStarted || finished || revealed || timeLeft !== 0) return;
     setSelected(null);
     setRevealed(true);
     playSfx("wrong");
-  }, [hydrated, gameSessionId, sessionLoading, finished, revealed, timeLeft, playSfx]);
+  }, [hydrated, gameSessionId, sessionLoading, gameStarted, finished, revealed, timeLeft, playSfx]);
 
   const timerUrgent = timeLeft > 0 && timeLeft <= 5;
   useEffect(() => {
-    if (!hydrated || !gameSessionId || sessionLoading || finished || revealed || !timerUrgent || !soundUnlockedRef.current) {
+    if (!hydrated || !gameSessionId || sessionLoading || !gameStarted || finished || revealed) {
       const existing = timerAudioRef.current;
       if (existing) {
         existing.pause();
@@ -343,9 +345,12 @@ export default function QueEsEsaVainaGame() {
     try {
       const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav");
       timerAudioRef.current = audio;
-      audio.loop = true;
+      audio.loop = false;
       audio.volume = 0.32;
-      void audio.play().then(() => setTimerSoundEnabled(true)).catch(() => setTimerSoundEnabled(false));
+      audio.pause();
+      audio.currentTime = 0;
+      // Playback is started synchronously by the explicit "Comenzar" click below.
+      setTimerSoundEnabled(false);
       return () => {
         audio.pause();
         audio.currentTime = 0;
@@ -353,7 +358,7 @@ export default function QueEsEsaVainaGame() {
     } catch {
       setTimerSoundEnabled(false);
     }
-  }, [hydrated, gameSessionId, sessionLoading, finished, revealed, timerUrgent]);
+  }, [hydrated, gameSessionId, sessionLoading, gameStarted, finished, revealed]);
   // La barra conserva cinco hitos visuales, pero solo hay tres cofres reclamables.
   // Se desbloquean al alcanzar 2, 5 y 8 respuestas correctas.
   const chestThresholds = [2, 5, 8];
@@ -362,7 +367,7 @@ export default function QueEsEsaVainaGame() {
   const answeredCorrectly = selected !== null && question?.answer === selected;
 
   const chooseOption = useCallback(async (optionIndex: number) => {
-    if (revealed || finished || answering || !gameSessionId || timeLeft <= 0) return;
+    if (!gameStarted || revealed || finished || answering || !gameSessionId || timeLeft <= 0) return;
     const current = rounds[index];
     if (!current) return;
     answeringRef.current = true;
@@ -438,6 +443,8 @@ export default function QueEsEsaVainaGame() {
 
   const restart = useCallback(() => {
     const recent = [...readRecentIds(), ...rounds.map((q) => q.id)];
+    setGameStarted(false);
+    setTimerSoundEnabled(false);
     setRounds(getRoundsFromPool(questionPool, recent));
     setIndex(0);
     setSelected(null);
@@ -524,7 +531,7 @@ export default function QueEsEsaVainaGame() {
           style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }}
         />
         <div className="absolute inset-0 -z-10 bg-[#030817]/75" />
-        <div className="mx-auto max-w-[1390px] animate-pulse">
+        <div className="ml-auto mr-[1vw] w-full max-w-[1390px] px-3 pb-8 pt-4 sm:px-5 lg:px-6 animate-pulse">
           <div className="mb-4 h-10 w-36 border-2 border-slate-600 bg-slate-800/80" />
           <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_270px]">
             <section className="border-[3px] border-[#74809b] bg-[#070d22]/95 shadow-[7px_7px_0_rgba(0,0,0,.5)]">
@@ -641,8 +648,9 @@ export default function QueEsEsaVainaGame() {
                     <span className="sr-only">{timeLeft} segundos restantes</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><span className="text-[9px] font-bold text-[#a8b6d3]">{timerSoundEnabled ? "SONIDO ACTIVO" : "SONIDO AL FINAL"}</span></div></div>
+                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><span className="text-[9px] font-bold text-[#a8b6d3]">{gameStarted && timerSoundEnabled ? "SONIDO ACTIVO" : gameStarted ? "AUDIO NO DISPONIBLE" : "LISTO PARA INICIAR"}</span></div></div>
                     <p className={"mt-1 text-3xl font-black tabular-nums [font-family:var(--font-pixel),monospace] " + (timeLeft <= 5 ? "text-rose-300" : "text-amber-100")}>{String(timeLeft).padStart(2, "0")}</p>
+                    {!gameStarted && !finished && <button type="button" onClick={() => { const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav"); timerAudioRef.current = audio; audio.loop = false; audio.volume = 0.32; audio.currentTime = 0; soundUnlockedRef.current = true; setTimeLeft(QUESTION_SECONDS); setGameStarted(true); void audio.play().then(() => setTimerSoundEnabled(true)).catch(() => setTimerSoundEnabled(false)); }} disabled={!gameSessionId || sessionLoading} className="mt-2 min-h-10 border-[3px] border-[#ffe08a] bg-[#5a3c11] px-4 text-xs font-black text-white shadow-[3px_3px_0_#030713] disabled:opacity-50">{sessionLoading || !gameSessionId ? "PREPARANDO PARTIDA…" : "▶ COMENZAR PARTIDA"}</button>}
                     <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
                   </div>
                 </div>
@@ -654,9 +662,9 @@ export default function QueEsEsaVainaGame() {
               <div className="relative border-[4px] border-[#7d879e] bg-[#111a31] p-5 shadow-[inset_0_0_0_3px_#29344e,inset_0_0_0_6px_#080e20,6px_6px_0_#030713] sm:p-7"><div className="absolute left-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute right-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute bottom-2 left-2 h-2 w-2 bg-[#68738e]" /><div className="absolute bottom-2 right-2 h-2 w-2 bg-[#68738e]" /><div className="mb-4 flex h-10 w-10 items-center justify-center border-[3px] border-[#77829d] bg-[#252e49]"><CircleHelp className="h-5 w-5 text-[#f5d77c]" /></div><p className="text-base font-bold leading-7 text-white sm:text-lg sm:leading-8">{question.clue}</p><button type="button" onClick={useHint} disabled={showHint} className="mt-5 inline-flex min-h-10 items-center gap-2 border-[3px] border-[#8e8059] bg-[#28243a] px-3 text-xs font-black text-[#ffe7a2] shadow-[3px_3px_0_#050817] transition hover:bg-[#39334a] disabled:opacity-60"><Lightbulb className="h-4 w-4" /> {showHint ? "Pista revelada" : "Dame una pista"}</button>{showHint && <p className="mt-3 border-[3px] border-[#89774c] bg-[#242032] p-3 text-sm leading-6 text-[#ffedb8]">{question.hint}</p>}</div>
               {gameError && <p role="alert" className="mb-3 border-2 border-rose-400 bg-rose-950/60 p-3 text-xs font-bold text-rose-100">{gameError}</p>}
               {(!gameSessionId || sessionLoading) && <p role="status" className="mb-3 text-xs text-[#c7d5ee]">{sessionLoading ? "Preparando partida segura…" : "Conectando con el servidor…"}</p>}
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{question.options.map((option, optionIndex) => { const isSelected = selected === optionIndex; const isCorrect = optionIndex === question.answer; const stateClass = !revealed ? "border-[#69748d] bg-[#111a31] hover:border-[#d8c16b] hover:bg-[#222a40]" : isCorrect ? "border-[#8bc79a] bg-[#193b32]" : isSelected ? "border-[#d58a91] bg-[#3b202d]" : "border-[#3c4762] bg-[#0b1226] opacity-75"; return <button key={option} type="button" onClick={() => void chooseOption(optionIndex)} disabled={revealed || answering || !gameSessionId} aria-pressed={isSelected} className={`relative flex min-h-[66px] items-center gap-3 border-[3px] p-4 text-left text-sm font-bold leading-6 shadow-[4px_4px_0_#030713] transition ${stateClass}`}><span className="absolute left-1 top-1 h-1.5 w-1.5 bg-[#aeb8ce]" /><span className="flex h-8 w-8 shrink-0 items-center justify-center border-[3px] border-[#69738c] bg-[#080e20] text-xs font-black text-[#f5d77c] [font-family:var(--font-pixel),monospace]">{String.fromCharCode(65 + optionIndex)}</span><span>{option}</span>{revealed && isCorrect && <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-[#a5e6b1]" />}{revealed && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 shrink-0 text-[#ff9aa5]" />}</button>; })}</div>
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{question.options.map((option, optionIndex) => { const isSelected = selected === optionIndex; const isCorrect = optionIndex === question.answer; const stateClass = !revealed ? "border-[#69748d] bg-[#111a31] hover:border-[#d8c16b] hover:bg-[#222a40]" : isCorrect ? "border-[#8bc79a] bg-[#193b32]" : isSelected ? "border-[#d58a91] bg-[#3b202d]" : "border-[#3c4762] bg-[#0b1226] opacity-75"; return <button key={option} type="button" onClick={() => void chooseOption(optionIndex)} disabled={!gameStarted || revealed || answering || !gameSessionId} aria-pressed={isSelected} className={`relative flex min-h-[66px] items-center gap-3 border-[3px] p-4 text-left text-sm font-bold leading-6 shadow-[4px_4px_0_#030713] transition ${!revealed && isSelected ? "border-[#f5d77c] bg-[#34304a] ring-2 ring-[#f5d77c]/70" : stateClass}`}><span className="absolute left-1 top-1 h-1.5 w-1.5 bg-[#aeb8ce]" /><span className="flex h-8 w-8 shrink-0 items-center justify-center border-[3px] border-[#69738c] bg-[#080e20] text-xs font-black text-[#f5d77c] [font-family:var(--font-pixel),monospace]">{String.fromCharCode(65 + optionIndex)}</span><span>{option}</span>{revealed && isCorrect && <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-[#a5e6b1]" />}{revealed && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 shrink-0 text-[#ff9aa5]" />}</button>; })}</div>
               {revealed && <div role="status" aria-live="polite" className={`mt-4 border-[3px] p-4 ${answeredCorrectly ? "border-[#80bd8d] bg-[#14352c]" : "border-[#ca858d] bg-[#351d2a]"}`}><p className="text-sm font-black">{selected === null ? "¡Se acabó el tiempo!" : answeredCorrectly ? "¡Correcto, bien hecho!" : "Esta vez no fue. ¡Aprendamos!"}</p><p className="mt-2 text-sm leading-6 text-white/85">{question.explanation}</p></div>}
-              <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-[#b5bfd5]"><Clock3 className="h-4 w-4" /> Responde antes de que se agote el tiempo</p><button type="button" onClick={next} disabled={!revealed} className="inline-flex min-h-11 items-center gap-2 border-[3px] border-[#a5d79a] bg-[#287b42] px-5 text-xs font-black text-white shadow-[4px_4px_0_#102b1c] transition hover:bg-[#32984f] active:translate-y-0.5 active:shadow-[2px_2px_0_#102b1c] disabled:cursor-not-allowed disabled:border-[#424b60] disabled:bg-[#222a3b] disabled:text-[#7c8497] disabled:shadow-none">{selected === null && revealed ? "Siguiente" : !answeredCorrectly ? "Reintentar" : index + 1 === TOTAL_ROUNDS ? "Ver resultados" : "Siguiente"} <ArrowRight className="h-4 w-4" /></button></div>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-[#b5bfd5]"><Clock3 className="h-4 w-4" /> Responde antes de que se agote el tiempo</p><button type="button" onClick={() => { playSfx("click"); next(); }} disabled={!revealed} className="inline-flex min-h-11 items-center gap-2 border-[3px] border-[#a5d79a] bg-[#287b42] px-5 text-xs font-black text-white shadow-[4px_4px_0_#102b1c] transition hover:bg-[#32984f] active:translate-y-0.5 active:shadow-[2px_2px_0_#102b1c] disabled:cursor-not-allowed disabled:border-[#424b60] disabled:bg-[#222a3b] disabled:text-[#7c8497] disabled:shadow-none">{selected === null && revealed ? "Siguiente" : !answeredCorrectly ? "Reintentar" : index + 1 === TOTAL_ROUNDS ? "Ver resultados" : "Siguiente"} <ArrowRight className="h-4 w-4" /></button></div>
             </div> : null}
           </section>
           {!finished && <aside className="grid gap-4"><section className="border-[3px] border-[#746e88] bg-[#0a1026]/[.98] p-4 shadow-[5px_5px_0_rgba(0,0,0,.45)] sm:p-5"><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#f0d28a]">Recompensa de la ronda</p><h2 className="mt-2 text-base font-black">El cofre misterioso</h2><div className={"relative mx-auto my-3 grid h-36 place-items-center "+(chestLevel > 0 ? "animate-pulse" : "")}><div className="absolute inset-x-8 inset-y-3 rounded-full bg-amber-300/20 blur-xl" aria-hidden="true"/><Image src="/images/games/poco-responda/cofre.png" alt="Cofre pixel art" width={260} height={190} className={"relative z-10 h-32 w-full object-contain drop-shadow-[0_5px_0_rgba(0,0,0,.5)] "+(chestLevel > 0 ? "animate-bounce" : "")} />{chestLevel > 0 && <span className="absolute bottom-0 z-20 border-2 border-[#ffe28b] bg-[#261d35] px-3 py-1 text-[10px] font-black text-[#ffe28b] shadow-[0_0_18px_rgba(255,214,92,.6)]">¡RECOMPENSA DESBLOQUEADA!</span>}</div><div className="grid grid-cols-3 gap-2" aria-label={`${chestLevel} de 3 cofres desbloqueados`}>{Array.from({ length: 3 }, (_, i) => { const number = i + 1; const unlocked = correctCount >= chestThresholds[i]; const claimed = claimedChests.includes(number); return <button key={number} type="button" onClick={() => void claimChest(number)} disabled={!unlocked || claimed || claimingChest !== null || !gameSessionId} title={claimed ? "Recompensa reclamada" : unlocked ? "Abrir cofre" : `Necesitas ${chestThresholds[i]} respuestas correctas`} className={`relative flex min-h-10 items-center justify-center border-[3px] transition ${claimed ? "border-[#7f8798] bg-[#22283a] opacity-60" : unlocked ? "border-[#ffe08a] bg-[#5a3c11] shadow-[0_0_12px_rgba(255,214,92,.4)] hover:bg-[#785016]" : "border-[#566079] bg-[#151b2d] opacity-65"}`}><Image src="/images/games/poco-responda/cofre.png" alt={`Cofre ${number}`} width={34} height={28} className={`h-7 w-9 object-contain ${claimed ? "grayscale" : unlocked ? "animate-pulse" : "grayscale opacity-45"}`}/>{unlocked && !claimed && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border border-white bg-red-500"/>}{claimingChest === number && <span className="absolute inset-0 grid place-items-center bg-black/70 text-[8px] font-black">ABRIENDO</span>}</button>; })}</div><p className="mt-3 text-xs font-black leading-5 text-[#ffe5a0]">{chestMessage}</p><p className="mt-2 text-[10px] leading-5 text-[#9da8c5]">Hay 3 cofres que se desbloquean al llegar a 2, 5 y 8 respuestas correctas.</p></section>

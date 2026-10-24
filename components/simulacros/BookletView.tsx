@@ -101,7 +101,6 @@ export default function BookletView({
         const options = rawOptions
           .map((text, optionIndex) => ({ text, optionIndex }))
           .filter(option => typeof option.text === "string" && option.text.trim());
-        const stacked = isEnglish;
         const showPart3Example = firstInSet && part === 3 && Boolean(setInfo?.example_image_url);
         const showSharedText = firstInSet && Boolean(setInfo?.shared_image_url || setInfo?.shared_text || question.context_text);
         const wordBank = firstInSet ? setInfo?.word_bank ?? [] : [];

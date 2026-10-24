@@ -772,13 +772,14 @@ export default function QueEsEsaVainaGame() {
   }, [finished, rounds]);
 
   const chestMessage = useMemo(() => {
+    if (sessionOutdated) return "La recarga terminó. Pulsa Jugar otra vez para iniciar una partida nueva y reactivar los cofres.";
     if (cooldownActive) return "Ya reclamaste el conjunto de cofres. Puedes seguir jugando; las recompensas se reactivan al terminar la recarga.";
     if (allChestsClaimed) return "¡Conjunto completado! Las recompensas entran en recarga durante una hora.";
     if (chestLevel >= 3) return "Tienes puntos para los tres cofres; reclámalos en orden desde la barra superior.";
     if (chestLevel >= 2) return "Ya alcanzaste el segundo umbral. Reclama los cofres en orden para continuar.";
     if (chestLevel >= 1) return "¡Buen comienzo! Puedes reclamar el primer cofre al alcanzar 200 puntos netos.";
     return "Resuelve preguntas; los errores restan puntos y reducen el progreso de recompensa.";
-  }, [allChestsClaimed, chestLevel, cooldownActive]);
+  }, [allChestsClaimed, chestLevel, cooldownActive, sessionOutdated]);
 
   if (!hydrated || rounds.length === 0 || (sessionLoading && !gameSessionId)) {
     return (

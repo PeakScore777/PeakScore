@@ -13,8 +13,6 @@ const STORAGE_KEY = "peakscore-que-es-esa-vaina-v1";
 type SavedProgress = { bestScore: number; completedIds: string[]; chests: number };
 
 const RECENT_KEY = "peakscore-que-es-esa-vaina-recent-v1";
-const MATCH_KEY = "peakscore-que-es-esa-vaina-active-match-v1";
-type PersistedMatch = { rounds: Question[]; index: number; selected: number | null; revealed: boolean; score: number; correctCount: number; hintsUsed: string[]; showHint: boolean; finished: boolean; timeLeft: number; sessionId: string | null; claimedChests: number[] };
 const QUESTION_SECONDS = 20;
 
 function shuffleQuestions(source: Question[]): Question[] {
@@ -58,8 +56,6 @@ export default function QueEsEsaVainaGame() {
   const [timeLeft, setTimeLeft] = useState(QUESTION_SECONDS);
   const [timerSoundEnabled, setTimerSoundEnabled] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
-  const restoredMatchRef = useRef<PersistedMatch | null>(null);
-  const resumeTimeRef = useRef<number | null>(null);
   const soundUnlockedRef = useRef(false);
   const answeringRef = useRef(false);
   const timerDeadlineRef = useRef<number | null>(null);
@@ -104,9 +100,8 @@ export default function QueEsEsaVainaGame() {
 
   useEffect(() => {
     try {
-      // Cada entrada al minijuego inicia una partida nueva y un cronómetro limpio.
-      // Nunca reutilizamos un índice o un tiempo restante de una sesión anterior.
-      try { window.localStorage.removeItem(MATCH_KEY); } catch { /* almacenamiento opcional */ }
+      // Cada entrada empieza una partida nueva; borramos únicamente el estado temporal antiguo.
+      try { window.localStorage.removeItem("peakscore-que-es-esa-vaina-active-match-v1"); } catch { /* almacenamiento opcional */ }
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<SavedProgress>;
@@ -140,44 +135,12 @@ export default function QueEsEsaVainaGame() {
         ) as Question[];
         const pool = valid.length >= TOTAL_ROUNDS ? valid : QUESTION_BANK;
         setQuestionPool(pool);
-        const restored = restoredMatchRef.current;
-        if (restored) {
-          setRounds(restored.rounds);
-          setIndex(restored.index);
-          setSelected(restored.selected === null || (Number.isInteger(restored.selected) && restored.selected >= 0 && restored.selected <= 3) ? restored.selected : null);
-          setRevealed(Boolean(restored.revealed));
-          setScore(Math.max(0, Number(restored.score) || 0));
-          setCorrectCount(Math.max(0, Number(restored.correctCount) || 0));
-          setHintsUsed(Array.isArray(restored.hintsUsed) ? restored.hintsUsed.filter((id): id is string => typeof id === "string") : []);
-          setShowHint(Boolean(restored.showHint));
-          setFinished(Boolean(restored.finished));
-          setGameSessionId(typeof restored.sessionId === "string" ? restored.sessionId : null);
-          setClaimedChests(Array.isArray(restored.claimedChests) ? restored.claimedChests.filter((n): n is number => Number.isInteger(n) && n >= 1 && n <= 3) : []);
-          sessionAttemptedRef.current = Boolean(restored.sessionId);
-        } else {
-          setRounds(getRoundsFromPool(pool, readRecentIds()));
-        }
+        setRounds(getRoundsFromPool(pool, readRecentIds()));
       })
       .catch(() => {
         if (active) {
           setQuestionPool(QUESTION_BANK);
-          const restored = restoredMatchRef.current;
-          if (restored) {
-            setRounds(restored.rounds);
-            setIndex(restored.index);
-            setSelected(restored.selected ?? null);
-            setRevealed(Boolean(restored.revealed));
-            setScore(Math.max(0, Number(restored.score) || 0));
-            setCorrectCount(Math.max(0, Number(restored.correctCount) || 0));
-            setHintsUsed(Array.isArray(restored.hintsUsed) ? restored.hintsUsed : []);
-            setShowHint(Boolean(restored.showHint));
-            setFinished(Boolean(restored.finished));
-            setGameSessionId(typeof restored.sessionId === "string" ? restored.sessionId : null);
-            setClaimedChests(Array.isArray(restored.claimedChests) ? restored.claimedChests : []);
-            sessionAttemptedRef.current = Boolean(restored.sessionId);
-          } else {
-            setRounds(getRoundsFromPool(QUESTION_BANK, readRecentIds()));
-          }
+          setRounds(getRoundsFromPool(QUESTION_BANK, readRecentIds()));
         }
       })
       .finally(() => {
@@ -204,16 +167,6 @@ export default function QueEsEsaVainaGame() {
 
     return () => { active = false; };
   }, []);
-
-  useEffect(() => {
-    if (!hydrated || rounds.length !== TOTAL_ROUNDS) return;
-    try {
-      const match: PersistedMatch = { rounds, index, selected, revealed, score, correctCount, hintsUsed, showHint, finished, timeLeft, sessionId: gameSessionId, claimedChests };
-      window.localStorage.setItem(MATCH_KEY, JSON.stringify(match));
-    } catch {
-      // Si el navegador bloquea el almacenamiento, la partida sigue en memoria.
-    }
-  }, [hydrated, rounds, index, selected, revealed, score, correctCount, hintsUsed, showHint, finished, timeLeft, gameSessionId, claimedChests]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -523,9 +476,6 @@ export default function QueEsEsaVainaGame() {
     setShowHint(false);
     setFinished(false);
     setGameSessionId(null);
-    try { window.localStorage.removeItem(MATCH_KEY); } catch { /* no-op */ }
-    restoredMatchRef.current = null;
-    resumeTimeRef.current = null;
     sessionAttemptedRef.current = false;
     setClaimedChests([]);
     setClaimingChest(null);
@@ -718,7 +668,7 @@ export default function QueEsEsaVainaGame() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><span className="text-[9px] font-bold text-[#a8b6d3]">{gameStarted && timerSoundEnabled ? "SONIDO ACTIVO" : gameStarted ? "AUDIO NO DISPONIBLE" : "LISTO PARA INICIAR"}</span></div></div>
                     <p className={"mt-1 text-3xl font-black tabular-nums [font-family:var(--font-pixel),monospace] " + (timeLeft <= 5 ? "text-rose-300" : "text-amber-100")}>{String(timeLeft).padStart(2, "0")}</p>
-                    {!gameStarted && !finished && <button type="button" onClick={() => { const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav"); timerAudioRef.current = audio; audio.loop = false; audio.volume = 0.32; audio.pause(); audio.currentTime = 0; soundUnlockedRef.current = true; answeringRef.current = false; resumeTimeRef.current = null; timerDeadlineRef.current = performance.now() + QUESTION_SECONDS * 1000; setSelected(null); setAnswering(false); setRevealed(false); setShowHint(false); setGameError(null); setTimeLeft(QUESTION_SECONDS); setGameStarted(true); void audio.play().then(() => setTimerSoundEnabled(true)).catch(() => setTimerSoundEnabled(false)); }} disabled={!gameSessionId || sessionLoading} className="mt-2 min-h-10 border-[3px] border-[#ffe08a] bg-[#5a3c11] px-4 text-xs font-black text-white shadow-[3px_3px_0_#030713] disabled:opacity-50">{sessionLoading || !gameSessionId ? "PREPARANDO PARTIDA…" : "▶ COMENZAR PARTIDA"}</button>}
+                    {!gameStarted && !finished && <button type="button" onClick={() => { const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav"); timerAudioRef.current = audio; audio.loop = false; audio.volume = 0.32; audio.pause(); audio.currentTime = 0; soundUnlockedRef.current = true; answeringRef.current = false; timerDeadlineRef.current = performance.now() + QUESTION_SECONDS * 1000; setSelected(null); setAnswering(false); setRevealed(false); setShowHint(false); setGameError(null); setTimeLeft(QUESTION_SECONDS); setGameStarted(true); void audio.play().then(() => setTimerSoundEnabled(true)).catch(() => setTimerSoundEnabled(false)); }} disabled={!gameSessionId || sessionLoading} className="mt-2 min-h-10 border-[3px] border-[#ffe08a] bg-[#5a3c11] px-4 text-xs font-black text-white shadow-[3px_3px_0_#030713] disabled:opacity-50">{sessionLoading || !gameSessionId ? "PREPARANDO PARTIDA…" : "▶ COMENZAR PARTIDA"}</button>}
                     <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
                   </div>
                 </div>

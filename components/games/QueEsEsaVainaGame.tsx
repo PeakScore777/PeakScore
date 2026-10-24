@@ -186,7 +186,6 @@ export default function QueEsEsaVainaGame() {
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [incorrectAnswers, setIncorrectAnswers] = useState<IncorrectAnswerReview[]>([]);
-  const [selectedReviewQuestionId, setSelectedReviewQuestionId] = useState<string | null>(null);
   const [orbyReviewOpen, setOrbyReviewOpen] = useState(false);
   const [usedHints, setUsedHints] = useState<number[]>([]);
   const [visibleHints, setVisibleHints] = useState<Partial<Record<1 | 2 | 3, string>>>({});
@@ -390,7 +389,6 @@ export default function QueEsEsaVainaGame() {
   }, [chestCooldownUntil, refreshChestState]);
 
   const question = rounds[index];
-  const selectedReview = incorrectAnswers.find((item) => item.question.id === selectedReviewQuestionId) ?? incorrectAnswers[0] ?? null;
   const cooldownActive = Boolean(chestCooldownUntil && Date.parse(chestCooldownUntil) > cooldownNow);
   const allChestsClaimed = claimedChests.length >= 3;
   const rewardCanProgress = !cooldownActive && !allChestsClaimed && !sessionOutdated;
@@ -516,7 +514,6 @@ export default function QueEsEsaVainaGame() {
         setIncorrectAnswers((current) => current.some((item) => item.question.id === timedOutQuestion.id)
           ? current
           : [...current, { question: timedOutQuestion, questionNumber: index + 1, selectedOption: null, correctOption: timeoutCorrectOption }]);
-        setSelectedReviewQuestionId((current) => current ?? timedOutQuestion.id);
       }).catch(() => setGameError("No se pudo registrar el intento agotado. Continúa con la siguiente pregunta.")).finally(() => {
         answeringRef.current = false;
         setAnswering(false);
@@ -607,7 +604,6 @@ export default function QueEsEsaVainaGame() {
         setIncorrectAnswers((currentAnswers) => currentAnswers.some((item) => item.question.id === current.id)
           ? currentAnswers
           : [...currentAnswers, { question: current, questionNumber: index + 1, selectedOption: optionIndex, correctOption: officialCorrectOption }]);
-        setSelectedReviewQuestionId((currentId) => currentId ?? current.id);
       }
       setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
       setScore(officialCorrect ? previousScore + 100 : Math.max(0, previousScore - WRONG_ANSWER_PENALTY));
@@ -716,7 +712,6 @@ export default function QueEsEsaVainaGame() {
     setSessionOutdated(false);
     setCorrectCount(0);
     setIncorrectAnswers([]);
-    setSelectedReviewQuestionId(null);
     setOrbyReviewOpen(false);
     setUsedHints([]); setVisibleHints({});
     setFinished(false);
@@ -1028,17 +1023,10 @@ export default function QueEsEsaVainaGame() {
           onOpenChange={setOrbyReviewOpen}
           accent="orby"
           stage="practice"
-          subject={selectedReview?.question.subject ?? "Saber 11"}
-          topic={selectedReview?.question.topic ?? "Repaso de preguntas"}
-          question={selectedReview?.question.clue ?? ""}
-          context={selectedReview ? [
-            "Pregunta " + selectedReview.questionNumber + ": " + selectedReview.question.clue,
-            "Opciones: " + selectedReview.question.options.map((option, optionIndex) => String.fromCharCode(65 + optionIndex) + ") " + option).join("\n"),
-            "Respuesta del estudiante: " + (selectedReview.selectedOption === null ? "No alcanzó a responder; se agotó el tiempo." : selectedReview.question.options[selectedReview.selectedOption] ?? "Respuesta seleccionada"),
-            "Respuesta correcta: " + (selectedReview.question.options[selectedReview.correctOption] ?? selectedReview.question.options[selectedReview.question.answer]),
-            "Explicación base: " + selectedReview.question.explanation,
-          ].join("\n") : ""}
-          initialPrompt={selectedReview ? "Explícame paso a paso esta pregunta de la partida. Quiero entender por qué mi respuesta fue incorrecta o por qué se agotó el tiempo, cómo se llega a la respuesta correcta y qué idea clave debo recordar. Distingue claramente mi respuesta de la correcta y no inventes datos." : undefined}
+          subject="Saber 11"
+          topic="Tutor de estudio PeakScore"
+          question=""
+          context=""
         />
       </div>
     </main>

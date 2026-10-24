@@ -331,11 +331,7 @@ export default function InstitutionRegisterPage() {
   ========================================================== */
 
   useEffect(() => {
-    if (!form.department) {
-      setMunicipalities([]);
-      setLoadingMunicipalities(false);
-      return;
-    }
+    if (!form.department) return;
 
     const controller =
       new AbortController();

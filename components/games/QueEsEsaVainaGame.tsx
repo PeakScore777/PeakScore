@@ -1012,6 +1012,34 @@ export default function QueEsEsaVainaGame() {
   </button>;
 })}</div><p className="mt-3 text-[10px] leading-5 text-[#c0b3d6]">Cada tipo de pista se puede usar una vez por partida: 5, 10 y 15 Peak Coins. Al iniciar otra partida, las tres vuelven a estar disponibles.</p></section>}</aside>
         </div>
+        <LessonAITutor
+          reviewQuestions={incorrectAnswers.map((item) => ({
+            id: item.question.id,
+            number: item.questionNumber,
+            subject: item.question.subject,
+            topic: item.question.topic,
+            prompt: item.question.clue,
+            options: item.question.options,
+            userAnswer: item.selectedOption === null ? "No alcanzó a responder; se agotó el tiempo." : item.question.options[item.selectedOption] ?? "Respuesta seleccionada",
+            correctAnswer: item.question.options[item.correctOption] ?? item.question.options[item.question.answer] ?? "Respuesta correcta",
+            explanation: item.question.explanation,
+          }))}
+          open={orbyReviewOpen}
+          onOpenChange={setOrbyReviewOpen}
+          accent="orby"
+          stage="practice"
+          subject={selectedReview?.question.subject ?? "Saber 11"}
+          topic={selectedReview?.question.topic ?? "Repaso de preguntas"}
+          question={selectedReview?.question.clue ?? ""}
+          context={selectedReview ? [
+            "Pregunta " + selectedReview.questionNumber + ": " + selectedReview.question.clue,
+            "Opciones: " + selectedReview.question.options.map((option, optionIndex) => String.fromCharCode(65 + optionIndex) + ") " + option).join("\n"),
+            "Respuesta del estudiante: " + (selectedReview.selectedOption === null ? "No alcanzó a responder; se agotó el tiempo." : selectedReview.question.options[selectedReview.selectedOption] ?? "Respuesta seleccionada"),
+            "Respuesta correcta: " + (selectedReview.question.options[selectedReview.correctOption] ?? selectedReview.question.options[selectedReview.question.answer]),
+            "Explicación base: " + selectedReview.question.explanation,
+          ].join("\n") : ""}
+          initialPrompt={selectedReview ? "Explícame paso a paso esta pregunta de la partida. Quiero entender por qué mi respuesta fue incorrecta o por qué se agotó el tiempo, cómo se llega a la respuesta correcta y qué idea clave debo recordar. Distingue claramente mi respuesta de la correcta y no inventes datos." : undefined}
+        />
       </div>
     </main>
   );

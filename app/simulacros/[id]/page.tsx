@@ -111,12 +111,16 @@ export default function ExamPage() {
   const annotationStorageKey = `peakscore:annotations:${simulationId}`;
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(annotationStorageKey);
-      if (saved) setAnnotations(JSON.parse(saved) as Record<string, string[]>);
-    } catch {
-      console.error("[PeakScore] No se pudieron recuperar los subrayados.");
-    }
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const saved = localStorage.getItem(annotationStorageKey);
+        if (saved) setAnnotations(JSON.parse(saved) as Record<string, string[]>);
+      } catch {
+        console.error("[PeakScore] No se pudieron recuperar los subrayados.");
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [annotationStorageKey]);
 
   const captureTextSelection = (block: string) => {

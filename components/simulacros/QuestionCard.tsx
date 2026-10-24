@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 interface QuestionCardProps {
   questionNumber: number;
   statement: string;
@@ -32,9 +34,12 @@ export default function QuestionCard({
 
       {imageUrl && (
         <div className="mb-8 flex justify-center">
-          <img
+          <Image
             src={imageUrl}
             alt={`Recurso visual de la pregunta ${questionNumber}`}
+            width={1200}
+            height={800}
+            unoptimized
             className="max-h-[500px] w-auto max-w-full rounded-2xl border border-slate-200 object-contain"
           />
         </div>

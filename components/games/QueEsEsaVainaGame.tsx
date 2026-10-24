@@ -37,6 +37,10 @@ function questionTopicKey(question: Pick<Question, "subject" | "topic">): string
   return normalizeQuestionKey(question.subject) + "::" + normalizeQuestionKey(question.topic);
 }
 
+function questionHistoryKey(question: Pick<Question, "subject" | "clue">): string {
+  return "content::" + normalizeQuestionKey(question.subject) + "::" + normalizeQuestionKey(question.clue);
+}
+
 function readRecentIds(): string[] {
   try {
     const value: unknown = JSON.parse(window.localStorage.getItem(RECENT_KEY) ?? "[]");
@@ -99,20 +103,28 @@ function getRoundsFromPool(source: Question[], excludeIds: string[] = []): Quest
 
   const excluded = new Set(excludeIds);
   const historyPosition = new Map<string, number>();
-  excludeIds.forEach((id, index) => {
-    if (!historyPosition.has(id)) historyPosition.set(id, index);
+  excludeIds.forEach((key, index) => {
+    if (!historyPosition.has(key)) historyPosition.set(key, index);
   });
 
-  const unseen = pool.filter((question) => !excluded.has(question.id));
+  const isExcluded = (question: Question) =>
+    excluded.has(question.id) || excluded.has(questionHistoryKey(question));
+
+  const historyIndex = (question: Question) =>
+    Math.max(
+      historyPosition.get(question.id) ?? -1,
+      historyPosition.get(questionHistoryKey(question)) ?? -1
+    );
+
+  const unseen = pool.filter((question) => !isExcluded(question));
   const selected = pickDiverseQuestions(unseen, Math.min(TOTAL_ROUNDS, unseen.length));
 
   if (selected.length < TOTAL_ROUNDS) {
     const selectedIds = new Set(selected.map((question) => question.id));
     const olderQuestions = pool
-      .filter((question) => excluded.has(question.id) && !selectedIds.has(question.id))
-      .sort((a, b) =>
-        (historyPosition.get(b.id) ?? -1) - (historyPosition.get(a.id) ?? -1)
-      );
+      .filter((question) => isExcluded(question) && !selectedIds.has(question.id))
+      .sort((a, b) => historyIndex(b) - historyIndex(a));
+
     selected.push(...pickDiverseQuestions(
       olderQuestions,
       TOTAL_ROUNDS - selected.length,
@@ -575,7 +587,8 @@ export default function QueEsEsaVainaGame() {
   }, [answeredCorrectly, index, next, revealed, rounds.length, selected, startRoundTimer]);
 
   const restart = useCallback(() => {
-    const recent = [...new Set([...rounds.slice(0, index + 1).map((q) => q.id).reverse(), ...readRecentIds()])].slice(0, 1000);
+    const currentHistory = rounds.slice(0, index + 1).reverse().flatMap((question) => [question.id, questionHistoryKey(question)]);
+    const recent = [...new Set([...currentHistory, ...readRecentIds()])].slice(0, 1000);
     try {
       window.localStorage.setItem(RECENT_KEY, JSON.stringify(recent));
     } catch { /* El historial es una mejora opcional. */ }
@@ -650,7 +663,8 @@ export default function QueEsEsaVainaGame() {
   useEffect(() => {
     if (!finished || rounds.length === 0) return;
     try {
-      const ids = [...rounds.map((q) => q.id).reverse(), ...readRecentIds()].filter((id, i, all) => all.indexOf(id) === i).slice(0, 1000);
+      const playedHistory = rounds.slice().reverse().flatMap((question) => [question.id, questionHistoryKey(question)]);
+      const ids = [...playedHistory, ...readRecentIds()].filter((id, i, all) => all.indexOf(id) === i).slice(0, 1000);
       window.localStorage.setItem(RECENT_KEY, JSON.stringify(ids));
     } catch { /* La rotación sigue funcionando en memoria. */ }
   }, [finished, rounds]);

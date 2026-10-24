@@ -384,7 +384,7 @@ export default function QueEsEsaVainaGame() {
   const scoreProgress = Math.max(0, Math.min(100, Math.round((rewardMeterScore / 1000) * 100)));
   const chestLevel = CHEST_THRESHOLDS.filter((threshold) => rewardMeterScore >= threshold).length;
   const nextChestToClaim = ([1, 2, 3] as const).find((number) => !claimedChests.includes(number)) ?? null;
-  const hasUnclaimedChest = Boolean(nextChestToClaim && !cooldownActive && rewardMeterScore >= CHEST_THRESHOLDS[nextChestToClaim - 1]);
+  const hasUnclaimedChest = Boolean(nextChestToClaim && !cooldownActive && !sessionOutdated && rewardMeterScore >= CHEST_THRESHOLDS[nextChestToClaim - 1]);
   const cooldownRemainingMs = chestCooldownUntil ? Math.max(0, Date.parse(chestCooldownUntil) - cooldownNow) : 0;
 
   const playSfx = useCallback((kind: "tick" | "wrong" | "chest" | "click") => {
@@ -697,7 +697,7 @@ export default function QueEsEsaVainaGame() {
   }, [index, questionPool, rounds]);
 
   const claimChest = useCallback(async (chestNumber: number) => {
-    if (!gameSessionId || claimingChest !== null || claimedChests.includes(chestNumber) || cooldownActive || chestNumber !== nextChestToClaim) return;
+    if (!gameSessionId || claimingChest !== null || claimedChests.includes(chestNumber) || cooldownActive || sessionOutdated || chestNumber !== nextChestToClaim) return;
     const required = CHEST_THRESHOLDS[chestNumber - 1];
     if (rewardMeterScore < required) return;
     setClaimingChest(chestNumber);

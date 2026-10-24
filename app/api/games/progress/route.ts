@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     .from("game_progress")
     .select("best_score,best_correct,games_completed")
     .eq("user_id", user.id)
-    .eq("game_key", GAME_KEY)
+    .eq("game_key", gameKey)
     .maybeSingle();
 
   if (readError) {

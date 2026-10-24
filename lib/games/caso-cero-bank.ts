@@ -172,7 +172,7 @@ export const CASE_ZERO_QUESTIONS: EvidenceCase[] = [
       "El voltaje aumenta con cada resistencia, aunque la fuente se mantuvo en 12 V.",
     ],
     answer: 0,
-    explanation: "Con V constante, la ley de Ohm establece I = V/R. Al duplicar la resistencia de 2 Ω a 4 Ω, la corriente baja de 6 A a 3 A; al duplicarla otra vez a 8 Ω se esperaría la mitad, y la tabla mantiene la relación inversa. El voltaje no cambió según el montaje descrito.",
+    explanation: "Con V constante, la ley de Ohm establece I = V/R. La tabla muestra que al aumentar la resistencia de 2 Ω a 4 Ω, la corriente baja de 6 A a 3 A; con 6 Ω baja a 2 A y con 12 Ω, a 1 A. Los productos V = I × R se mantienen en 12 V, lo que respalda la relación inversa entre corriente y resistencia.",
     hint: "Verifica si el producto entre voltaje y corriente o la razón V/I se mantiene conforme cambia R."
   },
   {

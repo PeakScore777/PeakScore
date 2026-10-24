@@ -111,16 +111,44 @@ function LegacyCristalesMisteriososPage() {
       })
       .then((rows) => {
         if (!active || !rows || rows.length === 0) return;
-        const normalized = rows.map((row: any) => ({
-          difficulty: row.difficulty,
-          competency: row.competency ?? "",
-          context: row.context_text ?? "",
-          context_blocks: Array.isArray(row.context_blocks) ? row.context_blocks : [],
-          prompt: row.prompt,
-          options: Array.isArray(row.options) ? row.options : [],
-          answer: row.correct_answer,
-          explanation: row.explanation ?? "",
-        }));
+        const normalized = (rows as unknown[]).flatMap((value): Question[] => {
+          if (!value || typeof value !== "object") return [];
+          const row = value as Record<string, unknown>;
+          const difficulty =
+            row.difficulty === "Fácil" ||
+            row.difficulty === "Media" ||
+            row.difficulty === "Difícil"
+              ? row.difficulty
+              : null;
+          const prompt = typeof row.prompt === "string" ? row.prompt : "";
+          if (!difficulty || !prompt) return [];
+
+          const options = Array.isArray(row.options)
+            ? row.options.flatMap((option): Question["options"] => {
+                if (!option || typeof option !== "object") return [];
+                const candidate = option as Record<string, unknown>;
+                if (
+                  typeof candidate.label !== "string" ||
+                  typeof candidate.text !== "string"
+                ) return [];
+                return [{ label: candidate.label, text: candidate.text }];
+              })
+            : [];
+          if (options.length < 2) return [];
+
+          return [{
+            difficulty,
+            competency: typeof row.competency === "string" ? row.competency : "",
+            context: typeof row.context_text === "string" ? row.context_text : "",
+            context_blocks: Array.isArray(row.context_blocks)
+              ? row.context_blocks as Question["context_blocks"]
+              : undefined,
+            prompt,
+            options,
+            answer: typeof row.correct_answer === "string" ? row.correct_answer : "",
+            explanation: typeof row.explanation === "string" ? row.explanation : "",
+          }];
+        });
         setQuestions(normalized);
       })
       .catch(() => { /* La práctica conserva preguntas de respaldo si la API no está disponible. */ });

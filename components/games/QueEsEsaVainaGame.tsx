@@ -419,7 +419,8 @@ export default function QueEsEsaVainaGame() {
     if (!hydrated || !gameSessionId || sessionLoading || !gameStarted || finished || revealed || timerExpiredRef.current) return;
     timerExpiredRef.current = true;
     timerDeadlineRef.current = null;
-    answeringRef.current = false;
+    answeringRef.current = true;
+    setAnswering(true);
     const revealFrame = window.requestAnimationFrame(() => {
       setSelected(null);
       setRevealed(true);
@@ -437,7 +438,13 @@ export default function QueEsEsaVainaGame() {
         if (!response.ok || typeof payload.correctCount !== "number") throw new Error(payload.error || "No se pudo registrar el tiempo agotado.");
         setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
         if (Number.isInteger(payload.correctOption) && payload.correctOption >= 0 && payload.correctOption <= 3) setServerCorrectOption(payload.correctOption);
-      }).catch(() => setGameError("No se pudo registrar el intento agotado. Continúa con la siguiente pregunta."));
+      }).catch(() => setGameError("No se pudo registrar el intento agotado. Continúa con la siguiente pregunta.")).finally(() => {
+        answeringRef.current = false;
+        setAnswering(false);
+      });
+    } else {
+      answeringRef.current = false;
+      setAnswering(false);
     }
     const timerAudio = timerAudioRef.current;
     if (timerAudio) {

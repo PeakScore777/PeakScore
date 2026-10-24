@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import {
   PEAKSCORE_RANKS,
   getNextRank,
@@ -526,6 +526,41 @@ function RankDetails({
   );
 }
 
+function subscribeRankTheme(onChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === "peakscore-theme") onChange();
+  };
+  const handleThemeChange = (event: Event) => {
+    const nextTheme = (event as CustomEvent<"light" | "dark">).detail;
+    if (nextTheme !== "light" && nextTheme !== "dark") return;
+    try {
+      window.localStorage.setItem("peakscore-theme", nextTheme);
+    } catch {
+      // El tema sigue funcionando durante esta sesión.
+    }
+    onChange();
+  };
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener("peakscore-theme-change", handleThemeChange);
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener("peakscore-theme-change", handleThemeChange);
+  };
+}
+
+function getRankThemeSnapshot(): "light" | "dark" {
+  try {
+    const savedTheme = window.localStorage.getItem("peakscore-theme");
+    return savedTheme === "light" || savedTheme === "dark" ? savedTheme : "dark";
+  } catch {
+    return "dark";
+  }
+}
+
+function getServerRankThemeSnapshot(): "light" | "dark" {
+  return "dark";
+}
+
 /* -------------------------------------------------------------------------- */
 /* PÁGINA PRINCIPAL                                                           */
 /* -------------------------------------------------------------------------- */
@@ -536,36 +571,11 @@ export default function RangoPage() {
   const [error, setError] = useState("");
   const [selectedRankId, setSelectedRankId] = useState<RankId | null>(null);
 
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
-
-  useEffect(() => {
-    const syncTheme = (event: Event) => {
-      const customEvent = event as CustomEvent<"light" | "dark">;
-
-      if (
-        customEvent.detail === "light" ||
-        customEvent.detail === "dark"
-      ) {
-        setTheme(customEvent.detail);
-      }
-    };
-
-    try {
-      const savedTheme = window.localStorage.getItem("peakscore-theme");
-
-      if (savedTheme === "light" || savedTheme === "dark") {
-        setTheme(savedTheme);
-      }
-    } catch {
-      // Conserva el tema oscuro si localStorage no está disponible.
-    }
-
-    window.addEventListener("peakscore-theme-change", syncTheme);
-
-    return () => {
-      window.removeEventListener("peakscore-theme-change", syncTheme);
-    };
-  }, []);
+  const theme = useSyncExternalStore(
+    subscribeRankTheme,
+    getRankThemeSnapshot,
+    getServerRankThemeSnapshot,
+  );
 
   useEffect(() => {
     const controller = new AbortController();

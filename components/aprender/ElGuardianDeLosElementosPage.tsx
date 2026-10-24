@@ -179,10 +179,13 @@ export default function ElGuardianDeLosElementosPage() {
  const correct = choice === q.key;
 
  useEffect(() => {
-  const hash = window.location.hash.slice(1);
-  if (hash === "ejemplos") setView("examples");
-  if (hash === "desafio") setView("practice");
-  if (hash && hash !== "ejemplos" && hash !== "desafio") window.requestAnimationFrame(() => window.requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({behavior:"smooth",block:"start"})));
+  const frame = window.requestAnimationFrame(() => {
+   const hash = window.location.hash.slice(1);
+   if (hash === "ejemplos") setView("examples");
+   if (hash === "desafio") setView("practice");
+   if (hash && hash !== "ejemplos" && hash !== "desafio") window.requestAnimationFrame(() => window.requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView({behavior:"smooth",block:"start"})));
+  });
+  return () => window.cancelAnimationFrame(frame);
  }, []);
 
  // La música se reproduce exclusivamente durante los ejercicios y se detiene

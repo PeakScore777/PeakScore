@@ -30,8 +30,6 @@ export default function MiCuadernoPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const loadNotes = useCallback(async () => {
-    setLoading(true);
-    setError("");
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
@@ -109,7 +107,7 @@ export default function MiCuadernoPage() {
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar en tus resaltados y notas…" className="w-full border border-white/10 bg-[#0d1320] py-3 pl-10 pr-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-200/40" />
           </label>
-          <button type="button" onClick={() => void loadNotes()} disabled={loading} className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/10 bg-[#151c2b] px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-[#202b3f] disabled:opacity-50">
+          <button type="button" onClick={() => { setLoading(true); setError(""); void loadNotes(); }} disabled={loading} className="inline-flex min-h-11 items-center justify-center gap-2 border border-white/10 bg-[#151c2b] px-4 py-3 text-sm font-semibold text-slate-200 transition hover:bg-[#202b3f] disabled:opacity-50">
             {loading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <LoaderCircle className="h-4 w-4" />} Actualizar
           </button>
         </div>

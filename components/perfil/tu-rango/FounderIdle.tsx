@@ -27,8 +27,8 @@ export default function FounderIdle({
 
   useEffect(() => {
     if (!showDialogue) {
-      setDialogueVisible(false);
-      return;
+      const frame = window.requestAnimationFrame(() => setDialogueVisible(false));
+      return () => window.cancelAnimationFrame(frame);
     }
 
     const initialTimeout = window.setTimeout(() => {

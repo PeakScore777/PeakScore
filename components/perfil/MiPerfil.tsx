@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { Check, Plus, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 type ProfileData = {
   id: string;
@@ -62,6 +62,10 @@ const BADGES_KEY = "peakscore-profile-badges";
 const LEVEL_FRAME = "/perfil/levelcuadro.png";
 const PROFILE_BACKGROUND = "/perfil/biome-profile-dark.webp";
 const BADGE_LOCK = "/images/ranks/rank-lock.webp";
+const subscribeToHydration = () => () => {};
+const getHydratedSnapshot = () => true;
+const getServerHydratedSnapshot = () => false;
+
 const RANK_VERSION = "20261009-9";
 
 const CHARACTER_IMAGES: Record<string, string> = {
@@ -126,11 +130,11 @@ export default function MiPerfil() {
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
-  const [portalReady, setPortalReady] = useState(false);
-
-  useEffect(() => {
-    setPortalReady(true);
-  }, []);
+  const portalReady = useSyncExternalStore(
+    subscribeToHydration,
+    getHydratedSnapshot,
+    getServerHydratedSnapshot,
+  );
 
   // Cargar los datos del perfil.
   useEffect(() => {
@@ -189,28 +193,32 @@ export default function MiPerfil() {
   useEffect(() => {
     if (!data) return;
 
-    const unlocked = new Set(data.unlockedBadgeIds ?? []);
-    let savedIds: string[] = [];
+    const frame = window.requestAnimationFrame(() => {
+      const unlocked = new Set(data.unlockedBadgeIds ?? []);
+      let savedIds: string[] = [];
 
-    try {
-      const saved = window.localStorage.getItem(BADGES_KEY);
+      try {
+        const saved = window.localStorage.getItem(BADGES_KEY);
 
-      if (saved) {
-        const parsed: unknown = JSON.parse(saved);
+        if (saved) {
+          const parsed: unknown = JSON.parse(saved);
 
-        if (Array.isArray(parsed)) {
-          savedIds = parsed.filter(
-            (id): id is string =>
-              typeof id === "string" && unlocked.has(id),
-          );
+          if (Array.isArray(parsed)) {
+            savedIds = parsed.filter(
+              (id): id is string =>
+                typeof id === "string" && unlocked.has(id),
+            );
+          }
         }
+      } catch (err) {
+        console.warn("No se pudieron restaurar las insignias:", err);
       }
-    } catch (err) {
-      console.warn("No se pudieron restaurar las insignias:", err);
-    }
 
-    setEquipped(normalizeSlots([...new Set(savedIds)]));
-    setPreferencesLoaded(true);
+      setEquipped(normalizeSlots([...new Set(savedIds)]));
+      setPreferencesLoaded(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [data]);
 
   // Guardar las insignias seleccionadas.

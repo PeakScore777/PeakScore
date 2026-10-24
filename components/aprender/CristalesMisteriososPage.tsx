@@ -258,20 +258,23 @@ export default function CristalesMisteriososPage() {
   const correct = choice === q.answer;
 
   useEffect(() => {
-    const hash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
-    if (!hash) return;
-    if (hash === "ejemplos") {
-      setView("examples");
-      return;
-    }
-    if (hash === "desafio") {
-      setAttempt(0); setIndex(0); setChoice(null); setChecked(false); setScore(0);
-      setDone(false); setReward(false); setView("practice");
-      return;
-    }
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }));
+    const frame = window.requestAnimationFrame(() => {
+      const hash = decodeURIComponent(window.location.hash.replace(/^#/, ""));
+      if (!hash) return;
+      if (hash === "ejemplos") {
+        setView("examples");
+        return;
+      }
+      if (hash === "desafio") {
+        setAttempt(0); setIndex(0); setChoice(null); setChecked(false); setScore(0);
+        setDone(false); setReward(false); setView("practice");
+        return;
+      }
+      window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+        document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }));
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   function sound(file: string, volume = 0.2) {

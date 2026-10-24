@@ -126,7 +126,9 @@ export default function CharacterCards() {
   }, []);
 
   useEffect(() => {
-    void loadCharacter();
+    const initialLoadFrame = window.requestAnimationFrame(() => {
+      void loadCharacter();
+    });
 
     const refresh = () => void loadCharacter();
 
@@ -144,6 +146,7 @@ export default function CharacterCards() {
     window.addEventListener("peakscore:character-changed", refresh);
 
     return () => {
+      window.cancelAnimationFrame(initialLoadFrame);
       window.removeEventListener("focus", refresh);
       window.removeEventListener("storage", handleStorage);
       window.removeEventListener(
@@ -158,14 +161,18 @@ export default function CharacterCards() {
     CHARACTERS[0];
 
   useEffect(() => {
-    setImageFailed(false);
-    setPointer({
-      x: 50,
-      y: 35,
-      rotateX: 0,
-      rotateY: 0,
-      active: false,
+    const frame = window.requestAnimationFrame(() => {
+      setImageFailed(false);
+      setPointer({
+        x: 50,
+        y: 35,
+        rotateX: 0,
+        rotateY: 0,
+        active: false,
+      });
     });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [selectedId]);
 
   function handlePointerMove(event: PointerEvent<HTMLElement>) {

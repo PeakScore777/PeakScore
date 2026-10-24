@@ -106,17 +106,23 @@ export default function ExamPage() {
   const finishHandledRef =
     useRef(false);
 
+  const finishExamRef = useRef<((automatic?: boolean) => Promise<void>) | null>(null);
+
   const storageKey =
     `peakscore:simulation:${simulationId}`;
   const annotationStorageKey = `peakscore:annotations:${simulationId}`;
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(annotationStorageKey);
-      if (saved) setAnnotations(JSON.parse(saved) as Record<string, string[]>);
-    } catch {
-      console.error("[PeakScore] No se pudieron recuperar los subrayados.");
-    }
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const saved = localStorage.getItem(annotationStorageKey);
+        if (saved) setAnnotations(JSON.parse(saved) as Record<string, string[]>);
+      } catch {
+        console.error("[PeakScore] No se pudieron recuperar los subrayados.");
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [annotationStorageKey]);
 
   const captureTextSelection = (block: string) => {
@@ -765,6 +771,10 @@ export default function ExamPage() {
     }
   };
 
+  useEffect(() => {
+    finishExamRef.current = handleFinishExam;
+  }, [handleFinishExam]);
+
   /* =====================================================
      CONTINUAR LUEGO
   ====================================================== */
@@ -814,11 +824,11 @@ export default function ExamPage() {
     }
 
     if (timeLeft <= 0) {
-      if (
-        simulation.duration != null &&
-        simulation.duration > 0
-      ) {
-        void handleFinishExam(true);
+      if (simulation.duration != null && simulation.duration > 0) {
+        const finishTimer = window.setTimeout(() => {
+          void finishExamRef.current?.(true);
+        }, 0);
+        return () => window.clearTimeout(finishTimer);
       }
 
       return;

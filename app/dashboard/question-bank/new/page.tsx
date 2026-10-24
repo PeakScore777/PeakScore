@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 import { createQuestion } from "@/lib/services/question.service";
-import { supabase } from "@/lib/supabase/browser";
 
 const subjects = [
   "Matemáticas",
@@ -44,6 +43,36 @@ interface FormState {
   is_active: boolean;
 }
 
+type GeneratedQuestion = {
+  [key: string]: string | undefined;
+  id?: string;
+  difficulty?: string;
+  context_text?: string;
+  question?: string;
+  option_a?: string;
+  option_b?: string;
+  option_c?: string;
+  option_d?: string;
+  correct_answer?: string;
+};
+
+function subscribeToLocationChanges(onChange: () => void) {
+  window.addEventListener("popstate", onChange);
+  window.addEventListener("hashchange", onChange);
+  return () => {
+    window.removeEventListener("popstate", onChange);
+    window.removeEventListener("hashchange", onChange);
+  };
+}
+
+function getAIModeFromLocation() {
+  return new URLSearchParams(window.location.search).get("mode") === "ai";
+}
+
+function getServerAIMode() {
+  return false;
+}
+
 const initialForm: FormState = {
   subject: "",
   session: "",
@@ -68,7 +97,7 @@ const initialForm: FormState = {
 export default function NewQuestionPage() {
   const router = useRouter();
 
-  const [aiMode, setAiMode] = useState(false);
+  const aiMode = useSyncExternalStore(subscribeToLocationChanges, getAIModeFromLocation, getServerAIMode);
 
   const [loading, setLoading] = useState(false);
 
@@ -79,7 +108,7 @@ export default function NewQuestionPage() {
     difficulty: "Mixta",
   });
 
-  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  const [generatedQuestions, setGeneratedQuestions] = useState<GeneratedQuestion[]>([]);
   const [generationComplete, setGenerationComplete] = useState(false);
 
   const [form, setForm] = useState<FormState>(initialForm);
@@ -87,11 +116,6 @@ export default function NewQuestionPage() {
   /*
    * Detectar ?mode=ai
    */
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setAiMode(params.get("mode") === "ai");
-  }, []);
-
   /*
    * ================================
    * CAMBIOS DEL FORMULARIO MANUAL
@@ -259,7 +283,7 @@ export default function NewQuestionPage() {
         [];
 
       setGeneratedQuestions(
-        Array.isArray(questions) ? questions : []
+        Array.isArray(questions) ? questions as GeneratedQuestion[] : []
       );
 
       setGenerationComplete(true);

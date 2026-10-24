@@ -69,7 +69,11 @@ export default function ChapterFiveBattle({
   // se recorta a 250 ms y el sonido de daño entra al llegar al frame de impacto.
   useEffect(() => {
     if (result === null) return;
-    let hurtTimer: number | undefined;
+    const hurtTimer = window.setTimeout(() => {
+      const hurtAudio = new Audio("/sounds/chapter-5-hurt.wav");
+      hurtAudio.volume = 0.34;
+      void hurtAudio.play().catch(() => {});
+    }, 250);
     const attackAudio = new Audio("/sounds/chapter-5-attack.mp3");
     attackAudio.volume = 0.30;
     void attackAudio.play().catch(() => {});
@@ -77,14 +81,9 @@ export default function ChapterFiveBattle({
       attackAudio.pause();
       attackAudio.currentTime = 0;
     }, 250);
-    hurtTimer = window.setTimeout(() => {
-      const hurtAudio = new Audio("/sounds/chapter-5-hurt.wav");
-      hurtAudio.volume = 0.34;
-      void hurtAudio.play().catch(() => {});
-    }, 250);
     return () => {
       window.clearTimeout(attackCutoff);
-      if (hurtTimer !== undefined) window.clearTimeout(hurtTimer);
+      window.clearTimeout(hurtTimer);
       attackAudio.pause();
       attackAudio.currentTime = 0;
     };

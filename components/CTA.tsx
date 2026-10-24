@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+
 
 export type LandingTheme = "light" | "dark";
 
@@ -12,50 +12,7 @@ type CTAProps = {
 };
 
 export default function CTA({ theme: externalTheme }: CTAProps) {
-  const [internalTheme, setInternalTheme] =
-    useState<LandingTheme>("dark");
-
-  /*
-   * ============================================================
-   * TEMA
-   *
-   * Si page.tsx entrega el tema, ese es el que manda.
-   *
-   * El fallback interno solamente existe para no romper
-   * el componente si se utiliza en otro lugar.
-   * ============================================================
-   */
-
-  useEffect(() => {
-    if (externalTheme) {
-      setInternalTheme(externalTheme);
-      return;
-    }
-
-    const syncTheme = () => {
-      const currentTheme =
-        document.documentElement.dataset.theme;
-
-      setInternalTheme(
-        currentTheme === "light" ? "light" : "dark"
-      );
-    };
-
-    syncTheme();
-
-    const observer = new MutationObserver(syncTheme);
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["data-theme"],
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [externalTheme]);
-
-  const theme = externalTheme ?? internalTheme;
+  const theme = externalTheme ?? "dark";
   const isDark = theme === "dark";
 
   /*

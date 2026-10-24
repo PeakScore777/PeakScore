@@ -20,7 +20,11 @@ export default function AdminPracticeQuestionEditor({ position, initialQuestions
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (initialQuestions.length === 3) setQuestions(initialQuestions);
+    if (initialQuestions.length !== 3) return;
+    const frame = window.requestAnimationFrame(() => {
+      setQuestions(initialQuestions);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [initialQuestions]);
 
   useEffect(() => {

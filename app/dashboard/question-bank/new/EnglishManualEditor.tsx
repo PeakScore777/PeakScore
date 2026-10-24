@@ -137,7 +137,6 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
     const id = new URLSearchParams(window.location.search).get("id");
     if (!id) return;
     let alive = true;
-    setEditSetId(id);
     (async () => {
       setLoading(true);
       setError("");
@@ -156,6 +155,7 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
         return;
       }
       if (!alive) return;
+      setEditSetId(id);
 
       const loadedWordBank = Array.isArray(setRow.word_bank)
         ? setRow.word_bank as { key: string; text: string; example?: boolean; example_description?: string; example_answer?: string }[]
@@ -184,8 +184,8 @@ export default function EnglishManualEditor({ onBack }: { onBack?: () => void })
       setExampleAnswer(setRow.part === 1 ? exampleWord?.example_answer ?? exampleWord?.key ?? "H" : setRow.example_answer ?? "A");
       setSharedImageFile(null);
       setExampleImageFile(null);
-      setEditingQuestionIds(rows.map((q: any) => q.id));
-      setQuestions(rows.map((q: any) => {
+      setEditingQuestionIds(rows.map((q) => q.id));
+      setQuestions(rows.map((q) => {
         const loadedOptions = (q.english_options as Choice[] | null) ?? [];
         const fallbackOptions = [
           { key: "A", text: q.option_a },

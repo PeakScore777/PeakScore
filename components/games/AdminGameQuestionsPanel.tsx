@@ -26,7 +26,6 @@ export default function AdminGameQuestionsPage() {
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const load = useCallback(async () => {
-    setLoading(true); setError("");
     try {
       const res = await fetch("/api/admin/game-questions", { cache: "no-store" });
       const data = await res.json();

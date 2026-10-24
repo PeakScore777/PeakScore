@@ -20,6 +20,14 @@ export default function AdminPracticeQuestionEditor({ position, initialQuestions
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (initialQuestions.length !== 3) return;
+    const frame = window.requestAnimationFrame(() => {
+      setQuestions(initialQuestions);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [initialQuestions]);
+
+  useEffect(() => {
     let live = true;
     fetch("/api/admin/lesson-questions", { cache: "no-store" })
       .then(async (r) => {

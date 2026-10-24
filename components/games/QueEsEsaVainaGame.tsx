@@ -3,11 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, Trophy, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, XCircle } from "lucide-react";
 
 import { QUESTION_BANK, type Question } from "@/lib/games/que-es-esa-vaina-bank";
 
 const TOTAL_ROUNDS = 10;
+const CHEST_THRESHOLDS = [2, 5, 8] as const;
 const STORAGE_KEY = "peakscore-que-es-esa-vaina-v1";
 
 type SavedProgress = { bestScore: number; completedIds: string[]; chests: number };
@@ -165,12 +166,10 @@ export default function QueEsEsaVainaGame() {
   const [revealed, setRevealed] = useState(false);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
-  const [hintsUsed, setHintsUsed] = useState<string[]>([]);
   const [showHint, setShowHint] = useState(false);
   const [finished, setFinished] = useState(false);
   const [saved, setSaved] = useState<SavedProgress>({ bestScore: 0, completedIds: [], chests: 0 });
   const [hydrated, setHydrated] = useState(false);
-  const [accountProgress, setAccountProgress] = useState<{ best_score: number; best_correct: number; games_completed: number } | null>(null);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [timeLeft, setTimeLeft] = useState(QUESTION_SECONDS);
   const [timerSoundEnabled, setTimerSoundEnabled] = useState(false);
@@ -264,24 +263,6 @@ export default function QueEsEsaVainaGame() {
       })
       .finally(() => {
         if (active) setHydrated(true);
-      });
-
-    void fetch("/api/games/progress", { method: "GET", cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) return null;
-        const payload = await response.json();
-        return payload?.progress ?? null;
-      })
-      .then((progress) => {
-        if (!active || !progress) return;
-        setAccountProgress({
-          best_score: Math.max(0, Number(progress.best_score) || 0),
-          best_correct: Math.max(0, Number(progress.best_correct) || 0),
-          games_completed: Math.max(0, Number(progress.games_completed) || 0),
-        });
-      })
-      .catch(() => {
-        // El juego sigue disponible aunque no se pueda consultar el progreso de la cuenta.
       });
 
     return () => { active = false; window.cancelAnimationFrame(restoreFrame); };
@@ -467,9 +448,7 @@ export default function QueEsEsaVainaGame() {
   }, [hydrated, gameSessionId, sessionLoading, gameStarted, finished, revealed]);
   // La barra conserva cinco hitos visuales, pero solo hay tres cofres reclamables.
   // Se desbloquean al alcanzar 2, 5 y 8 respuestas correctas.
-  const chestThresholds = [2, 5, 8];
-  const chestLevel = chestThresholds.filter((threshold) => correctCount >= threshold).length;
-  const progress = finished ? 100 : Math.round((index / TOTAL_ROUNDS) * 100);
+  const chestLevel = CHEST_THRESHOLDS.filter((threshold) => correctCount >= threshold).length;
   const answeredCorrectly = selected !== null && question?.answer === selected;
 
   const chooseOption = useCallback(async (optionIndex: number) => {
@@ -540,7 +519,7 @@ export default function QueEsEsaVainaGame() {
       setSaved((value) => ({
         ...value,
         bestScore: Math.max(value.bestScore, score),
-        chests: Math.max(value.chests, chestThresholds.filter((threshold) => correctCount >= threshold).length),
+        chests: Math.max(value.chests, CHEST_THRESHOLDS.filter((threshold) => correctCount >= threshold).length),
       }));
       setSaveStatus("saving");
       void fetch("/api/games/progress", {
@@ -551,14 +530,6 @@ export default function QueEsEsaVainaGame() {
         .then(async (response) => {
           if (!response.ok) throw new Error("No se pudo guardar el progreso de la cuenta.");
           const payload = await response.json();
-          const progress = payload?.progress;
-          if (progress) {
-            setAccountProgress({
-              best_score: Math.max(0, Number(progress.best_score) || 0),
-              best_correct: Math.max(0, Number(progress.best_correct) || 0),
-              games_completed: Math.max(0, Number(progress.games_completed) || 0),
-            });
-          }
           setSaveStatus("saved");
         })
         .catch(() => setSaveStatus("error"));
@@ -624,7 +595,6 @@ export default function QueEsEsaVainaGame() {
     setRevealed(false);
     setScore(0);
     setCorrectCount(0);
-    setHintsUsed([]);
     setShowHint(false);
     setFinished(false);
     setGameSessionId(null);
@@ -638,7 +608,7 @@ export default function QueEsEsaVainaGame() {
 
   const claimChest = useCallback(async (chestNumber: number) => {
     if (!gameSessionId || claimingChest !== null || claimedChests.includes(chestNumber)) return;
-    const required = chestThresholds[chestNumber - 1];
+    const required = CHEST_THRESHOLDS[chestNumber - 1];
     if (correctCount < required) return;
     setClaimingChest(chestNumber);
     setGameError(null);
@@ -672,10 +642,8 @@ export default function QueEsEsaVainaGame() {
   const useHint = () => {
     if (!question || showHint) return;
     setShowHint(true);
-    setHintsUsed((current) => current.includes(question.id) ? current : [...current, question.id]);
   };
 
-  const totalCorrect = finished ? correctCount : correctCount;
   const earnedChests = chestLevel;
 
   useEffect(() => {
@@ -825,7 +793,7 @@ export default function QueEsEsaVainaGame() {
                     <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
                   </div>
                 </div>
-                <div className="relative flex h-8 items-center px-1"><div className="absolute left-1 right-1 top-1/2 h-3 -translate-y-1/2 border-2 border-[#7b8396] bg-[#171d2c]" /><div className="absolute left-1 top-1/2 h-3 -translate-y-1/2 border-y-2 border-[#fff0a6] bg-[#e8b936] transition-[width] duration-300" style={{ width: `calc(${Math.min(100, correctCount / TOTAL_ROUNDS * 100)}% - 8px)` }} /><div className="relative z-10 flex w-full items-center justify-between">{Array.from({ length: 5 }, (_, i) => { const chestIndex = i === 1 ? 0 : i === 2 ? 1 : i === 4 ? 2 : -1; const isChest = chestIndex >= 0; const unlocked = isChest && chestLevel > chestIndex; return <div key={i} className={`relative grid h-7 w-7 place-items-center border-2 ${isChest ? (unlocked ? "border-[#ffe08a] bg-[#4b3211]" : "border-[#566079] bg-[#101629]") : "border-[#8992a8] bg-[#182136]"} shadow-[2px_2px_0_#030713]`} title={isChest ? (unlocked ? "Cofre disponible para reclamar" : `Cofre al alcanzar ${chestThresholds[chestIndex]} aciertos`) : `Hito ${i + 1}`} >{isChest ? <button type="button" onClick={() => void claimChest(chestIndex + 1)} disabled={!unlocked || claimedChests.includes(chestIndex + 1) || claimingChest !== null || !gameSessionId} aria-label={claimedChests.includes(chestIndex + 1) ? `Cofre ${chestIndex + 1} reclamado` : `Reclamar cofre ${chestIndex + 1}`} className="relative grid h-full w-full place-items-center disabled:cursor-not-allowed"><Image src="/images/games/poco-responda/cofre.png" alt="" width={24} height={24} className={`h-6 w-6 object-contain ${claimedChests.includes(chestIndex + 1) ? "opacity-40 grayscale" : unlocked ? "animate-pulse" : "grayscale opacity-45"}`} />{unlocked && !claimedChests.includes(chestIndex + 1) && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border border-white bg-red-500" aria-label="Cofre disponible para reclamar" />}</button> : <span className="text-[10px] font-black text-[#c8d1e5] [font-family:var(--font-pixel),monospace]">{i === 0 || i === 3 ? "•" : ""}</span>}</div>; })}</div></div>
+                <div className="relative flex h-8 items-center px-1"><div className="absolute left-1 right-1 top-1/2 h-3 -translate-y-1/2 border-2 border-[#7b8396] bg-[#171d2c]" /><div className="absolute left-1 top-1/2 h-3 -translate-y-1/2 border-y-2 border-[#fff0a6] bg-[#e8b936] transition-[width] duration-300" style={{ width: `calc(${Math.min(100, correctCount / TOTAL_ROUNDS * 100)}% - 8px)` }} /><div className="relative z-10 flex w-full items-center justify-between">{Array.from({ length: 5 }, (_, i) => { const chestIndex = i === 1 ? 0 : i === 2 ? 1 : i === 4 ? 2 : -1; const isChest = chestIndex >= 0; const unlocked = isChest && chestLevel > chestIndex; return <div key={i} className={`relative grid h-7 w-7 place-items-center border-2 ${isChest ? (unlocked ? "border-[#ffe08a] bg-[#4b3211]" : "border-[#566079] bg-[#101629]") : "border-[#8992a8] bg-[#182136]"} shadow-[2px_2px_0_#030713]`} title={isChest ? (unlocked ? "Cofre disponible para reclamar" : `Cofre al alcanzar ${CHEST_THRESHOLDS[chestIndex]} aciertos`) : `Hito ${i + 1}`} >{isChest ? <button type="button" onClick={() => void claimChest(chestIndex + 1)} disabled={!unlocked || claimedChests.includes(chestIndex + 1) || claimingChest !== null || !gameSessionId} aria-label={claimedChests.includes(chestIndex + 1) ? `Cofre ${chestIndex + 1} reclamado` : `Reclamar cofre ${chestIndex + 1}`} className="relative grid h-full w-full place-items-center disabled:cursor-not-allowed"><Image src="/images/games/poco-responda/cofre.png" alt="" width={24} height={24} className={`h-6 w-6 object-contain ${claimedChests.includes(chestIndex + 1) ? "opacity-40 grayscale" : unlocked ? "animate-pulse" : "grayscale opacity-45"}`} />{unlocked && !claimedChests.includes(chestIndex + 1) && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border border-white bg-red-500" aria-label="Cofre disponible para reclamar" />}</button> : <span className="text-[10px] font-black text-[#c8d1e5] [font-family:var(--font-pixel),monospace]">{i === 0 || i === 3 ? "•" : ""}</span>}</div>; })}</div></div>
               </div>
             </header>
             {finished ? <div className="p-5 text-center sm:p-8"><h2 className="text-2xl font-black text-[#ffe28b]">¡Ronda terminada!</h2><p className="mt-2 text-sm text-slate-200">Acertaste {correctCount} de {TOTAL_ROUNDS} preguntas y conseguiste {score} puntos.</p><p className="mt-2 text-xs text-slate-400">{saveStatus === "saving" ? "Guardando tu progreso…" : saveStatus === "saved" ? "Progreso guardado en tu cuenta." : saveStatus === "error" ? "No se pudo guardar en la cuenta; tu partida local sigue disponible." : "Tu resultado está listo."}</p><div className="mx-auto mt-5 max-w-sm border-[3px] border-[#77839d] bg-[#0b1228] p-4 shadow-[5px_5px_0_#030713]"><Image src="/images/games/poco-responda/cofre.png" alt="Cofre de recompensas" width={180} height={130} className="mx-auto h-28 w-36 object-contain" /><div className="mt-3 flex gap-1.5">{Array.from({ length: 4 }, (_, i) => <div key={i} className={`h-3 flex-1 border-2 ${i < earnedChests ? "border-[#ffdc7a] bg-[#e8b936]" : "border-[#566079] bg-[#151c31]"}`} />)}</div><p className="mt-2 text-xs text-[#f5d987]">{earnedChests} / 3 cofres desbloqueados</p></div><div className="mt-6 flex flex-wrap justify-center gap-3"><button type="button" onClick={restart} className="inline-flex min-h-11 items-center gap-2 border-[3px] border-[#a8d99a] bg-[#287b42] px-5 text-xs font-black text-white shadow-[4px_4px_0_#102b1c] hover:bg-[#32934f]"><RotateCcw className="h-4 w-4" /> Jugar otra vez</button><Link href="/aprender/juegos" className="inline-flex min-h-11 items-center gap-2 border-[3px] border-[#737c93] bg-[#111a31] px-5 text-xs font-bold text-white hover:bg-[#1a2944]">Volver a juegos</Link></div></div> : question ? <div className="p-4 sm:p-6">
@@ -838,7 +806,7 @@ export default function QueEsEsaVainaGame() {
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-[#b5bfd5]"><Clock3 className="h-4 w-4" /> Responde antes de que se agote el tiempo</p><button type="button" onClick={handleNext} disabled={!revealed || answering} className="inline-flex min-h-11 items-center gap-2 border-[3px] border-[#a5d79a] bg-[#287b42] px-5 text-xs font-black text-white shadow-[4px_4px_0_#102b1c] transition hover:bg-[#32984f] active:translate-y-0.5 active:shadow-[2px_2px_0_#102b1c] disabled:cursor-not-allowed disabled:border-[#424b60] disabled:bg-[#222a3b] disabled:text-[#7c8497] disabled:shadow-none">{selected === null && revealed ? "Siguiente" : !answeredCorrectly ? "Reintentar" : index + 1 === TOTAL_ROUNDS ? "Ver resultados" : "Siguiente"} <ArrowRight className="h-4 w-4" /></button></div>
             </div> : null}
           </section>
-          {!finished && <aside className="grid gap-4"><section className="border-[3px] border-[#746e88] bg-[#0a1026]/[.98] p-4 shadow-[5px_5px_0_rgba(0,0,0,.45)] sm:p-5"><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#f0d28a]">Recompensa de la ronda</p><h2 className="mt-2 text-base font-black">El cofre misterioso</h2><div className={"relative mx-auto my-3 grid h-36 place-items-center "+(chestLevel > 0 ? "animate-pulse" : "")}><div className="absolute inset-x-8 inset-y-3 rounded-full bg-amber-300/20 blur-xl" aria-hidden="true"/><Image src="/images/games/poco-responda/cofre.png" alt="Cofre pixel art" width={260} height={190} className={"relative z-10 h-32 w-full object-contain drop-shadow-[0_5px_0_rgba(0,0,0,.5)] "+(chestLevel > 0 ? "animate-bounce" : "")} />{chestLevel > 0 && <span className="absolute bottom-0 z-20 border-2 border-[#ffe28b] bg-[#261d35] px-3 py-1 text-[10px] font-black text-[#ffe28b] shadow-[0_0_18px_rgba(255,214,92,.6)]">¡RECOMPENSA DESBLOQUEADA!</span>}</div><div className="grid grid-cols-3 gap-2" aria-label={`${chestLevel} de 3 cofres desbloqueados`}>{Array.from({ length: 3 }, (_, i) => { const number = i + 1; const unlocked = correctCount >= chestThresholds[i]; const claimed = claimedChests.includes(number); return <button key={number} type="button" onClick={() => void claimChest(number)} disabled={!unlocked || claimed || claimingChest !== null || !gameSessionId} title={claimed ? "Recompensa reclamada" : unlocked ? "Abrir cofre" : `Necesitas ${chestThresholds[i]} respuestas correctas`} className={`relative flex min-h-10 items-center justify-center border-[3px] transition ${claimed ? "border-[#7f8798] bg-[#22283a] opacity-60" : unlocked ? "border-[#ffe08a] bg-[#5a3c11] shadow-[0_0_12px_rgba(255,214,92,.4)] hover:bg-[#785016]" : "border-[#566079] bg-[#151b2d] opacity-65"}`}><Image src="/images/games/poco-responda/cofre.png" alt={`Cofre ${number}`} width={34} height={28} className={`h-7 w-9 object-contain ${claimed ? "grayscale" : unlocked ? "animate-pulse" : "grayscale opacity-45"}`}/>{unlocked && !claimed && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border border-white bg-red-500"/>}{claimingChest === number && <span className="absolute inset-0 grid place-items-center bg-black/70 text-[8px] font-black">ABRIENDO</span>}</button>; })}</div><p className="mt-3 text-xs font-black leading-5 text-[#ffe5a0]">{chestMessage}</p><p className="mt-2 text-[10px] leading-5 text-[#9da8c5]">Hay 3 cofres que se desbloquean al llegar a 2, 5 y 8 respuestas correctas.</p></section>
+          {!finished && <aside className="grid gap-4"><section className="border-[3px] border-[#746e88] bg-[#0a1026]/[.98] p-4 shadow-[5px_5px_0_rgba(0,0,0,.45)] sm:p-5"><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#f0d28a]">Recompensa de la ronda</p><h2 className="mt-2 text-base font-black">El cofre misterioso</h2><div className={"relative mx-auto my-3 grid h-36 place-items-center "+(chestLevel > 0 ? "animate-pulse" : "")}><div className="absolute inset-x-8 inset-y-3 rounded-full bg-amber-300/20 blur-xl" aria-hidden="true"/><Image src="/images/games/poco-responda/cofre.png" alt="Cofre pixel art" width={260} height={190} className={"relative z-10 h-32 w-full object-contain drop-shadow-[0_5px_0_rgba(0,0,0,.5)] "+(chestLevel > 0 ? "animate-bounce" : "")} />{chestLevel > 0 && <span className="absolute bottom-0 z-20 border-2 border-[#ffe28b] bg-[#261d35] px-3 py-1 text-[10px] font-black text-[#ffe28b] shadow-[0_0_18px_rgba(255,214,92,.6)]">¡RECOMPENSA DESBLOQUEADA!</span>}</div><div className="grid grid-cols-3 gap-2" aria-label={`${chestLevel} de 3 cofres desbloqueados`}>{Array.from({ length: 3 }, (_, i) => { const number = i + 1; const unlocked = correctCount >= CHEST_THRESHOLDS[i]; const claimed = claimedChests.includes(number); return <button key={number} type="button" onClick={() => void claimChest(number)} disabled={!unlocked || claimed || claimingChest !== null || !gameSessionId} title={claimed ? "Recompensa reclamada" : unlocked ? "Abrir cofre" : `Necesitas ${CHEST_THRESHOLDS[i]} respuestas correctas`} className={`relative flex min-h-10 items-center justify-center border-[3px] transition ${claimed ? "border-[#7f8798] bg-[#22283a] opacity-60" : unlocked ? "border-[#ffe08a] bg-[#5a3c11] shadow-[0_0_12px_rgba(255,214,92,.4)] hover:bg-[#785016]" : "border-[#566079] bg-[#151b2d] opacity-65"}`}><Image src="/images/games/poco-responda/cofre.png" alt={`Cofre ${number}`} width={34} height={28} className={`h-7 w-9 object-contain ${claimed ? "grayscale" : unlocked ? "animate-pulse" : "grayscale opacity-45"}`}/>{unlocked && !claimed && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border border-white bg-red-500"/>}{claimingChest === number && <span className="absolute inset-0 grid place-items-center bg-black/70 text-[8px] font-black">ABRIENDO</span>}</button>; })}</div><p className="mt-3 text-xs font-black leading-5 text-[#ffe5a0]">{chestMessage}</p><p className="mt-2 text-[10px] leading-5 text-[#9da8c5]">Hay 3 cofres que se desbloquean al llegar a 2, 5 y 8 respuestas correctas.</p></section>
           <section className="border-[3px] border-[#5e6d8c] bg-[#081027]/[.98] p-4 shadow-[5px_5px_0_rgba(0,0,0,.4)] sm:p-5"><p className="text-[10px] font-black uppercase tracking-[.18em] text-[#b8c8e9]">Pistas</p><div className="mt-3 grid gap-2"><button type="button" onClick={useHint} disabled={showHint} className={`flex items-center gap-3 border-[3px] p-3 text-left ${showHint ? "border-[#6e6484] bg-[#17172e] opacity-70" : "border-[#b58cdb] bg-[#251c3c] hover:bg-[#32234d]"}`}><span className="grid h-9 w-9 shrink-0 place-items-center border-[3px] border-[#8b75b5] bg-[#382a52]"><Lightbulb className="h-5 w-5 text-[#ffe36b]" /></span><span className="min-w-0"><span className="block text-sm font-black text-[#f4d8ff]">Pista 1</span><span className="block text-xs text-[#d8cce8]">{showHint ? "Ya revelada" : "Revelar una orientación"}</span></span></button><div className="flex items-center gap-3 border-[3px] border-[#35425e] bg-[#10172c] p-3 opacity-65"><span className="grid h-9 w-9 shrink-0 place-items-center border-[3px] border-[#405477] bg-[#152542] text-lg">◉</span><span><span className="block text-sm font-black text-[#a9dff4]">Pista 2</span><span className="block text-xs text-[#9da8c5]">Próximamente</span></span></div><div className="flex items-center gap-3 border-[3px] border-[#35425e] bg-[#10172c] p-3 opacity-65"><span className="grid h-9 w-9 shrink-0 place-items-center border-[3px] border-[#405477] bg-[#152542] text-lg">▤</span><span><span className="block text-sm font-black text-[#a9dff4]">Pista 3</span><span className="block text-xs text-[#9da8c5]">Próximamente</span></span></div></div></section></aside>}
         </div>
       </div>

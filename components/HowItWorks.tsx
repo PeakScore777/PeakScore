@@ -123,32 +123,19 @@ function ThemeBackground({
 }: {
   theme: LandingTheme;
 }) {
-  const [visibleTheme, setVisibleTheme] =
-    useState<LandingTheme>(theme);
+  const [visibleTheme, setVisibleTheme] = useState<LandingTheme>(theme);
+  const [readyTheme, setReadyTheme] = useState<LandingTheme | null>(null);
 
-  const [incomingTheme, setIncomingTheme] =
-    useState<LandingTheme | null>(null);
-
-  const [incomingReady, setIncomingReady] = useState(false);
+  const incomingTheme = theme !== visibleTheme ? theme : null;
+  const incomingReady = incomingTheme !== null && readyTheme === incomingTheme;
 
   useEffect(() => {
-    if (theme === visibleTheme) {
-      return;
-    }
+    if (!incomingTheme || !incomingReady) return;
 
-    setIncomingReady(false);
-    setIncomingTheme(theme);
-  }, [theme, visibleTheme]);
-
-  useEffect(() => {
-    if (!incomingTheme || !incomingReady) {
-      return;
-    }
-
+    const nextTheme = incomingTheme;
     const timeout = window.setTimeout(() => {
-      setVisibleTheme(incomingTheme);
-      setIncomingTheme(null);
-      setIncomingReady(false);
+      setVisibleTheme(nextTheme);
+      setReadyTheme(null);
     }, 500);
 
     return () => window.clearTimeout(timeout);
@@ -221,7 +208,7 @@ function ThemeBackground({
             alt=""
             draggable={false}
             decoding="async"
-            onLoad={() => setIncomingReady(true)}
+            onLoad={() => { if (incomingTheme) setReadyTheme(incomingTheme); }}
             className="
               h-full
               w-full

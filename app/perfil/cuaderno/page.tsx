@@ -52,7 +52,10 @@ export default function MiCuadernoPage() {
     }
   }, []);
 
-  useEffect(() => { void loadNotes(); }, [loadNotes]);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => void loadNotes());
+    return () => window.cancelAnimationFrame(frame);
+  }, [loadNotes]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("es");

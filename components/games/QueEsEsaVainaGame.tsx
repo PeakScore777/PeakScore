@@ -179,6 +179,7 @@ export default function QueEsEsaVainaGame() {
   const [timerEpoch, setTimerEpoch] = useState(0);
   const answeringRef = useRef(false);
   const timerDeadlineRef = useRef<number | null>(null);
+  const timerExpiredRef = useRef(false);
   const feedbackAudioRef = useRef<HTMLAudioElement | null>(null);
   const [gameSessionId, setGameSessionId] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(false);
@@ -214,21 +215,24 @@ export default function QueEsEsaVainaGame() {
   }, []);
 
   useEffect(() => {
-    try {
-      // Cada entrada empieza una partida nueva; borramos únicamente el estado temporal antiguo.
-      try { window.localStorage.removeItem("peakscore-que-es-esa-vaina-active-match-v1"); } catch { /* almacenamiento opcional */ }
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Partial<SavedProgress>;
-        setSaved({
-          bestScore: Math.max(0, Number(parsed.bestScore) || 0),
-          completedIds: Array.isArray(parsed.completedIds) ? parsed.completedIds.filter((id): id is string => typeof id === "string") : [],
-          chests: Math.max(0, Number(parsed.chests) || 0),
-        });
+    const restoreFrame = window.requestAnimationFrame(() => {
+      try {
+        // Cada entrada empieza una partida nueva; borramos únicamente el estado temporal antiguo.
+        try { window.localStorage.removeItem("peakscore-que-es-esa-vaina-active-match-v1"); } catch { /* almacenamiento opcional */ }
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<SavedProgress>;
+          setSaved({
+            bestScore: Math.max(0, Number(parsed.bestScore) || 0),
+            completedIds: Array.isArray(parsed.completedIds) ? parsed.completedIds.filter((id): id is string => typeof id === "string") : [],
+            chests: Math.max(0, Number(parsed.chests) || 0,
+            ),
+          });
+        }
+      } catch {
+        // El juego continúa sin progreso guardado si el almacenamiento está bloqueado.
       }
-    } catch {
-      // El juego continúa sin progreso guardado si el almacenamiento está bloqueado.
-    }
+    });
     let active = true;
     void fetch("/api/games/questions", { method: "GET", cache: "no-store" })
       .then(async (response) => {
@@ -281,7 +285,7 @@ export default function QueEsEsaVainaGame() {
         // El juego sigue disponible aunque no se pueda consultar el progreso de la cuenta.
       });
 
-    return () => { active = false; };
+    return () => { active = false; window.cancelAnimationFrame(restoreFrame); };
   }, []);
 
   useEffect(() => {
@@ -423,11 +427,18 @@ export default function QueEsEsaVainaGame() {
 
   // La expiración se procesa una sola vez al llegar a cero.
   useEffect(() => {
-    if (!hydrated || !gameSessionId || sessionLoading || !gameStarted || finished || revealed || timeLeft !== 0) return;
+    if (timeLeft !== 0) {
+      timerExpiredRef.current = false;
+      return;
+    }
+    if (!hydrated || !gameSessionId || sessionLoading || !gameStarted || finished || revealed || timerExpiredRef.current) return;
+    timerExpiredRef.current = true;
     timerDeadlineRef.current = null;
     answeringRef.current = false;
-    setSelected(null);
-    setRevealed(true);
+    const revealFrame = window.requestAnimationFrame(() => {
+      setSelected(null);
+      setRevealed(true);
+    });
     const timerAudio = timerAudioRef.current;
     if (timerAudio) {
       timerAudio.pause();
@@ -441,6 +452,7 @@ export default function QueEsEsaVainaGame() {
     } catch {
       playSfx("wrong");
     }
+    return () => window.cancelAnimationFrame(revealFrame);
   }, [hydrated, gameSessionId, sessionLoading, gameStarted, finished, revealed, timeLeft, playSfx]);
 
   useEffect(() => {
@@ -450,7 +462,8 @@ export default function QueEsEsaVainaGame() {
         existing.pause();
         existing.currentTime = 0;
       }
-      setTimerSoundEnabled(false);
+      const frame = window.requestAnimationFrame(() => setTimerSoundEnabled(false));
+      return () => window.cancelAnimationFrame(frame);
     }
   }, [hydrated, gameSessionId, sessionLoading, gameStarted, finished, revealed]);
   // La barra conserva cinco hitos visuales, pero solo hay tres cofres reclamables.

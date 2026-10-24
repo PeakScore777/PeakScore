@@ -19,7 +19,6 @@ import {
   Users,
   X,
   Menu,
-  LayoutDashboard,
   BarChart3,
   FileText,
   MessageCircle,
@@ -52,18 +51,6 @@ type DropdownName =
   | "preparation"
   | "community"
   | null;
-
-/* ============================================================
-   NAVEGACIÓN PRINCIPAL
-============================================================ */
-
-const navLinks = [
-  {
-    label: "Inicio",
-    href: "#inicio",
-    icon: Home,
-  },
-];
 
 /* ============================================================
    NAVBAR
@@ -773,12 +760,7 @@ export default function Navbar({
 
                 {openDropdown ===
                   "community" && (
-                  <CommunityDropdown
-                    theme={theme}
-                    onClose={() =>
-                      setOpenDropdown(null)
-                    }
-                  />
+                  <CommunityDropdown theme={theme} />
                 )}
               </div>
             </div>
@@ -2000,10 +1982,8 @@ function PreparationDropdown({
 
 function CommunityDropdown({
   theme,
-  onClose,
 }: {
   theme: LandingTheme;
-  onClose: () => void;
 }) {
   const isDark = theme === "dark";
 

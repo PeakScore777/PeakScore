@@ -156,8 +156,8 @@ function getSafeRange(
 export default function ScatterChartVisual({
   data,
 }: ScatterChartVisualProps) {
-  const series = data.series ?? [];
-  const categories = data.categories ?? [];
+  const series = useMemo(() => data.series ?? [], [data.series]);
+  const categories = useMemo(() => data.categories ?? [], [data.categories]);
 
   /* =======================================================
      PROCESAMIENTO DE DATOS Y ESCALAS

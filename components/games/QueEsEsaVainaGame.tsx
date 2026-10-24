@@ -185,6 +185,26 @@ export default function QueEsEsaVainaGame() {
     return () => window.clearTimeout(timer);
   }, [chestAnimation]);
 
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/games/chests/claim", { method: "GET", cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then((payload) => {
+        if (!active || !payload) return;
+        if (Array.isArray(payload.claimedChests)) {
+          setClaimedChests(payload.claimedChests.filter((number: unknown): number is number => Number.isInteger(number) && Number(number) >= 1 && Number(number) <= 3));
+        }
+        if (payload.wallet && Number.isFinite(Number(payload.wallet.xp)) && Number.isFinite(Number(payload.wallet.coins))) {
+          setWallet({ xp: Number(payload.wallet.xp), coins: Number(payload.wallet.coins) });
+        }
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
   const question = rounds[index];
 
   const playSfx = useCallback((kind: "tick" | "wrong" | "chest") => {

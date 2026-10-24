@@ -121,7 +121,7 @@ function recommendation(stage: Stage, experience: Experience, goal: Goal) {
 export default function IntroTestPage() {
   const [started, setStarted] = useState(false);
   const [sceneIndex, setSceneIndex] = useState(0);
-  const [visibleChars, setVisibleChars] = useState(0);
+  const [typingProgress, setTypingProgress] = useState<{ key: string; count: number }>({ key: "", count: 0 });
   const [questionIndex, setQuestionIndex] = useState(0);
   const [stage, setStage] = useState<Stage | "">("");
   const [experience, setExperience] = useState<Experience | "">("");
@@ -145,6 +145,8 @@ export default function IntroTestPage() {
     : showRecommendation
       ? "¡Listo, aventurero! Esta es la ruta que te recomendamos para empezar. Más adelante podrás desbloquear nuevos niveles y ajustar tu camino a medida que avances."
       : questionText;
+  const typingKey = JSON.stringify([started, sceneIndex, questionIndex, showRecommendation, text]);
+  const visibleChars = started && typingProgress.key === typingKey ? typingProgress.count : 0;
   const isTyping = visibleChars < text.length;
   const route = stage && experience && goal ? recommendation(stage, experience, goal) : null;
 
@@ -158,17 +160,18 @@ export default function IntroTestPage() {
 
   useEffect(() => {
     if (!started) return;
-    setVisibleChars(0);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) {
-      setVisibleChars(text.length);
-      return;
+      const frame = window.requestAnimationFrame(() => {
+        setTypingProgress({ key: typingKey, count: text.length });
+      });
+      return () => window.cancelAnimationFrame(frame);
     }
     let count = 0;
     let soundCounter = 0;
     const timer = window.setInterval(() => {
       count += 1;
-      setVisibleChars(count);
+      setTypingProgress({ key: typingKey, count });
       soundCounter += 1;
       // Un toque corto cada pocos caracteres: evita convertir el diálogo en ruido continuo.
       if (soundCounter >= 3 && count < text.length && typingRef.current) {
@@ -181,7 +184,7 @@ export default function IntroTestPage() {
       if (count >= text.length) window.clearInterval(timer);
     }, 34);
     return () => window.clearInterval(timer);
-  }, [started, sceneIndex, questionIndex, showRecommendation, text]);
+  }, [started, text, typingKey]);
 
   const currentOptions = showRecommendation
     ? []

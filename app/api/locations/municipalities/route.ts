@@ -123,9 +123,15 @@ export async function GET(
     let municipalities: Municipality[] =
       Array.isArray(data?.features)
         ? data.features
-            .map((feature: any) => {
+            .map((feature: unknown) => {
               const attributes =
-                feature?.attributes ?? {};
+                typeof feature === "object" &&
+                feature !== null &&
+                "attributes" in feature &&
+                typeof feature.attributes === "object" &&
+                feature.attributes !== null
+                  ? feature.attributes
+                  : {};
 
               return {
                 code: String(

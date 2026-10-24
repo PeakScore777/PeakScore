@@ -1,7 +1,7 @@
 -- Record legacy chest recipients and allow a zero-reward animation replay for old lifetime rewards.
 -- This preserves prior balances and ensures that the first cycle does not pay an old chest twice.
 insert into public.game_chest_reward_state (user_id, game_key, cycle_number, cycle_started_at, cooldown_until, frozen_score, updated_at)
-select distinct e.user_id, 'que-es-esa-vaina', 1, now(), null, 0, now()
+select distinct e.user_id, 'que-es-esa-vaina', 1, now(), null::timestamptz, 0, now()
 from public.gamification_events e
 where e.event_type = 'game_chest'
   and e.reference_id not like 'que-es-esa-vaina:cycle:%'

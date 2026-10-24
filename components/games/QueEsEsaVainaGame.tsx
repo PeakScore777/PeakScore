@@ -161,7 +161,6 @@ export default function QueEsEsaVainaGame() {
 
   useEffect(() => {
     if (!hydrated || rounds.length !== TOTAL_ROUNDS || gameSessionId || sessionAttemptedRef.current || finished) return;
-    let active = true;
     sessionAttemptedRef.current = true;
     setSessionLoading(true);
     setGameError(null);
@@ -172,13 +171,12 @@ export default function QueEsEsaVainaGame() {
     }).then(async (response) => {
       const payload = await response.json();
       if (!response.ok || typeof payload.sessionId !== "string") throw new Error(payload.error || "No se pudo iniciar una partida segura.");
-      if (active) setGameSessionId(payload.sessionId);
+      setGameSessionId(payload.sessionId);
     }).catch((error: unknown) => {
-      if (active) setGameError(error instanceof Error ? error.message : "No se pudo iniciar la partida.");
+      setGameError(error instanceof Error ? error.message : "No se pudo iniciar la partida.");
     }).finally(() => {
-      if (active) setSessionLoading(false);
+      setSessionLoading(false);
     });
-    return () => { active = false; };
   }, [hydrated, rounds, gameSessionId, finished]);
 
   useEffect(() => {

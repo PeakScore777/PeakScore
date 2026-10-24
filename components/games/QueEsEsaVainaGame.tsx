@@ -166,6 +166,8 @@ export default function QueEsEsaVainaGame() {
   const [index, setIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
+  const [serverAnswerCorrect, setServerAnswerCorrect] = useState<boolean | null>(null);
+  const [serverCorrectOption, setServerCorrectOption] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [showHint, setShowHint] = useState(false);
@@ -422,6 +424,7 @@ export default function QueEsEsaVainaGame() {
       setSelected(null);
       setRevealed(true);
     });
+    setServerAnswerCorrect(false);
     setScore((value) => Math.max(0, value - WRONG_ANSWER_PENALTY));
     const timedOutQuestion = rounds[index];
     if (timedOutQuestion) {
@@ -433,6 +436,7 @@ export default function QueEsEsaVainaGame() {
         const payload = await response.json();
         if (!response.ok || typeof payload.correctCount !== "number") throw new Error(payload.error || "No se pudo registrar el tiempo agotado.");
         setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
+        if (Number.isInteger(payload.correctOption) && payload.correctOption >= 0 && payload.correctOption <= 3) setServerCorrectOption(payload.correctOption);
       }).catch(() => setGameError("No se pudo registrar el intento agotado. Continúa con la siguiente pregunta."));
     }
     const timerAudio = timerAudioRef.current;
@@ -467,7 +471,7 @@ export default function QueEsEsaVainaGame() {
   const chestLevel = CHEST_THRESHOLDS.filter((threshold) => correctCount >= threshold).length;
   const scoreProgress = Math.max(0, Math.min(100, Math.round((score / (TOTAL_ROUNDS * 100)) * 100)));
   const hasUnclaimedChest = CHEST_THRESHOLDS.some((threshold, index) => correctCount >= threshold && !claimedChests.includes(index + 1));
-  const answeredCorrectly = selected !== null && question?.answer === selected;
+  const answeredCorrectly = selected !== null && (serverAnswerCorrect ?? (question?.answer === selected));
 
   const chooseOption = useCallback(async (optionIndex: number) => {
     if (!gameStarted || revealed || finished || answeringRef.current || hintLoading || !gameSessionId || timeLeft <= 0) return;
@@ -485,21 +489,11 @@ export default function QueEsEsaVainaGame() {
       timerAudio.currentTime = 0;
     }
     setSelected(optionIndex);
+    setServerAnswerCorrect(null);
+    setServerCorrectOption(null);
     setRevealed(true);
     setAnswering(true);
     setGameError(null);
-
-    if (isCorrectLocally) {
-      setCorrectCount((value) => value + 1);
-      setScore((value) => value + 100);
-      setSaved((value) => ({
-        ...value,
-        completedIds: value.completedIds.includes(current.id) ? value.completedIds : [...value.completedIds, current.id],
-      }));
-    } else {
-      setScore((value) => Math.max(0, value - WRONG_ANSWER_PENALTY));
-      playSfx("wrong");
-    }
 
     try {
       const response = await fetch("/api/games/answer", {
@@ -514,19 +508,35 @@ export default function QueEsEsaVainaGame() {
       if (payload.alreadyAnswered) {
         setScore(previousScore);
         setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
+        setServerAnswerCorrect(payload.isCorrect);
+        if (Number.isInteger(payload.correctOption) && payload.correctOption >= 0 && payload.correctOption <= 3) {
+          setServerCorrectOption(payload.correctOption);
+        }
         setGameError("Esta pregunta ya fue registrada y no se puede repetir.");
         return;
       }
-      setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
-      if (payload.isCorrect !== isCorrectLocally) {
-        setGameError("El servidor devolvió un resultado distinto; se sincronizó el recuento.");
+      const officialCorrect = payload.isCorrect;
+      setServerAnswerCorrect(officialCorrect);
+      if (Number.isInteger(payload.correctOption) && payload.correctOption >= 0 && payload.correctOption <= 3) {
+        setServerCorrectOption(payload.correctOption);
       }
-      if (payload.alreadyCorrect && isCorrectLocally) {
-        setScore((value) => Math.max(0, value - 100));
+      setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
+      setScore(officialCorrect ? previousScore + 100 : Math.max(0, previousScore - WRONG_ANSWER_PENALTY));
+      if (officialCorrect) {
+        setSaved((value) => ({
+          ...value,
+          completedIds: value.completedIds.includes(current.id) ? value.completedIds : [...value.completedIds, current.id],
+        }));
+      } else {
+        playSfx("wrong");
+      }
+      if (officialCorrect !== isCorrectLocally) {
+        setGameError("La validación del servidor difiere de la pregunta local; se usó el resultado oficial.");
       }
     } catch (error) {
       setScore(previousScore);
-      if (isCorrectLocally) setCorrectCount((value) => Math.max(0, value - 1));
+      setServerAnswerCorrect(null);
+      setServerCorrectOption(null);
       setGameError(error instanceof Error ? error.message : "No se pudo guardar la respuesta.");
     } finally {
       answeringRef.current = false;
@@ -560,6 +570,8 @@ export default function QueEsEsaVainaGame() {
     }
     setIndex((value) => value + 1);
     setSelected(null);
+    setServerAnswerCorrect(null);
+    setServerCorrectOption(null);
     setRevealed(false);
     setShowHint(false);
     setTimeLeft(QUESTION_SECONDS);
@@ -606,6 +618,8 @@ export default function QueEsEsaVainaGame() {
     setRounds(getRoundsFromPool(questionPool, recent));
     setIndex(0);
     setSelected(null);
+    setServerAnswerCorrect(null);
+    setServerCorrectOption(null);
     setRevealed(false);
     setScore(0);
     setCorrectCount(0);
@@ -835,7 +849,7 @@ export default function QueEsEsaVainaGame() {
               <div className="relative border-[4px] border-[#7d879e] bg-[#111a31] p-5 shadow-[inset_0_0_0_3px_#29344e,inset_0_0_0_6px_#080e20,6px_6px_0_#030713] sm:p-7"><div className="absolute left-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute right-2 top-2 h-2 w-2 bg-[#b7c0d3]" /><div className="absolute bottom-2 left-2 h-2 w-2 bg-[#68738e]" /><div className="absolute bottom-2 right-2 h-2 w-2 bg-[#68738e]" /><div className="mb-4 flex h-10 w-10 items-center justify-center border-[3px] border-[#77829d] bg-[#252e49]"><CircleHelp className="h-5 w-5 text-[#f5d77c]" /></div><p className="text-base font-bold leading-7 text-white sm:text-lg sm:leading-8">{question.clue}</p><button type="button" onClick={() => void useHint()} disabled={showHint || hintLoading || answering || revealed || !gameStarted || !gameSessionId || (wallet !== null && wallet.coins < HINT_COST)} className="mt-5 inline-flex min-h-10 items-center gap-2 border-[3px] border-[#8e8059] bg-[#28243a] px-3 text-xs font-black text-[#ffe7a2] shadow-[3px_3px_0_#050817] transition hover:bg-[#39334a] disabled:opacity-60"><Lightbulb className="h-4 w-4" /> {showHint ? "Pista revelada" : hintLoading ? "Comprando pista…" : `Dame una pista · ${HINT_COST} coins`}</button>{showHint && <p className="mt-3 border-[3px] border-[#89774c] bg-[#242032] p-3 text-sm leading-6 text-[#ffedb8]">{question.hint}</p>}</div>
               {gameError && <p role="alert" className="mb-3 border-2 border-rose-400 bg-rose-950/60 p-3 text-xs font-bold text-rose-100">{gameError}</p>}
               {(!gameSessionId || sessionLoading) && <p role="status" className="mb-3 text-xs text-[#c7d5ee]">{sessionLoading ? "Preparando partida segura…" : "Conectando con el servidor…"}</p>}
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{question.options.map((option, optionIndex) => { const isSelected = selected === optionIndex; const isCorrect = optionIndex === question.answer; const stateClass = !revealed ? "border-[#69748d] bg-[#111a31] hover:border-[#d8c16b] hover:bg-[#222a40]" : isCorrect ? "border-[#8bc79a] bg-[#193b32]" : isSelected ? "border-[#d58a91] bg-[#3b202d]" : "border-[#3c4762] bg-[#0b1226] opacity-75"; return <button key={option} type="button" onClick={() => void chooseOption(optionIndex)} disabled={!gameStarted || revealed || answering || hintLoading || !gameSessionId} aria-pressed={isSelected} className={`relative flex min-h-[66px] items-center gap-3 border-[3px] p-4 text-left text-sm font-bold leading-6 shadow-[4px_4px_0_#030713] transition ${!revealed && isSelected ? "border-[#f5d77c] bg-[#34304a] ring-2 ring-[#f5d77c]/70" : stateClass}`}><span className="absolute left-1 top-1 h-1.5 w-1.5 bg-[#aeb8ce]" /><span className="flex h-8 w-8 shrink-0 items-center justify-center border-[3px] border-[#69738c] bg-[#080e20] text-xs font-black text-[#f5d77c] [font-family:var(--font-pixel),monospace]">{String.fromCharCode(65 + optionIndex)}</span><span>{option}</span>{revealed && isCorrect && <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-[#a5e6b1]" />}{revealed && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 shrink-0 text-[#ff9aa5]" />}</button>; })}</div>
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">{question.options.map((option, optionIndex) => { const isSelected = selected === optionIndex; const isCorrect = optionIndex === (serverCorrectOption ?? question.answer); const stateClass = !revealed ? "border-[#69748d] bg-[#111a31] hover:border-[#d8c16b] hover:bg-[#222a40]" : isCorrect ? "border-[#8bc79a] bg-[#193b32]" : isSelected ? "border-[#d58a91] bg-[#3b202d]" : "border-[#3c4762] bg-[#0b1226] opacity-75"; return <button key={option} type="button" onClick={() => void chooseOption(optionIndex)} disabled={!gameStarted || revealed || answering || hintLoading || !gameSessionId} aria-pressed={isSelected} className={`relative flex min-h-[66px] items-center gap-3 border-[3px] p-4 text-left text-sm font-bold leading-6 shadow-[4px_4px_0_#030713] transition ${!revealed && isSelected ? "border-[#f5d77c] bg-[#34304a] ring-2 ring-[#f5d77c]/70" : stateClass}`}><span className="absolute left-1 top-1 h-1.5 w-1.5 bg-[#aeb8ce]" /><span className="flex h-8 w-8 shrink-0 items-center justify-center border-[3px] border-[#69738c] bg-[#080e20] text-xs font-black text-[#f5d77c] [font-family:var(--font-pixel),monospace]">{String.fromCharCode(65 + optionIndex)}</span><span>{option}</span>{revealed && isCorrect && <CheckCircle2 className="ml-auto h-5 w-5 shrink-0 text-[#a5e6b1]" />}{revealed && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 shrink-0 text-[#ff9aa5]" />}</button>; })}</div>
               {revealed && <div role="status" aria-live="polite" className={`mt-4 border-[3px] p-4 ${answeredCorrectly ? "border-[#80bd8d] bg-[#14352c]" : "border-[#ca858d] bg-[#351d2a]"}`}><p className="text-sm font-black">{selected === null ? "¡Se acabó el tiempo!" : answeredCorrectly ? "¡Correcto, bien hecho!" : "Esta vez no fue. ¡Aprendamos!"}</p><p className="mt-2 text-sm leading-6 text-white/85">{question.explanation}</p>{!answeredCorrectly && <p className="mt-3 text-xs font-black text-rose-200">Penalización: −{WRONG_ANSWER_PENALTY} puntos. Esta pregunta ya no se puede repetir.</p>}</div>}
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3"><p className="flex items-center gap-2 text-[10px] font-semibold text-[#b5bfd5]"><Clock3 className="h-4 w-4" /> Responde antes de que se agote el tiempo</p><button type="button" onClick={handleNext} disabled={!revealed || answering || hintLoading} className="inline-flex min-h-11 items-center gap-2 border-[3px] border-[#a5d79a] bg-[#287b42] px-5 text-xs font-black text-white shadow-[4px_4px_0_#102b1c] transition hover:bg-[#32984f] active:translate-y-0.5 active:shadow-[2px_2px_0_#102b1c] disabled:cursor-not-allowed disabled:border-[#424b60] disabled:bg-[#222a3b] disabled:text-[#7c8497] disabled:shadow-none">{index + 1 === TOTAL_ROUNDS ? "Completar desafío" : selected === null && revealed ? "Siguiente pregunta" : !answeredCorrectly ? "Reintentar · otra pregunta" : "Siguiente"} <ArrowRight className="h-4 w-4" /></button></div>
             </div> : null}

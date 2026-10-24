@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     .select("is_correct,selected_option").eq("session_id", sessionId).eq("question_id", questionId).maybeSingle();
   if (previous) {
     return NextResponse.json({ isCorrect: previous.is_correct, correctCount: await readCorrectCount(sessionId),
-      alreadyAnswered: true, alreadyCorrect: previous.is_correct });
+      correctOption: Number(session.answer_key[questionId]), alreadyAnswered: true, alreadyCorrect: previous.is_correct });
   }
 
   const correctOption = session.answer_key[questionId];
@@ -56,10 +56,10 @@ export async function POST(request: Request) {
       .eq("session_id", sessionId).eq("question_id", questionId).maybeSingle();
     if (retryCheck) {
       return NextResponse.json({ isCorrect: retryCheck.is_correct, correctCount: await readCorrectCount(sessionId),
-        alreadyAnswered: true, alreadyCorrect: retryCheck.is_correct });
+        correctOption: Number(session.answer_key[questionId]), alreadyAnswered: true, alreadyCorrect: retryCheck.is_correct });
     }
     console.error("[game-answer] Error guardando intento:", saveError.message);
     return NextResponse.json({ error: "No se pudo guardar la respuesta." }, { status: 500 });
   }
-  return NextResponse.json({ isCorrect, correctCount: await readCorrectCount(sessionId), alreadyAnswered: false, timedOut });
+  return NextResponse.json({ isCorrect, correctCount: await readCorrectCount(sessionId), correctOption: Number(correctOption), alreadyAnswered: false, timedOut });
 }

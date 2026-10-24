@@ -263,3 +263,14 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - La creación sensible de solicitudes y datos institucionales debe pasar por backend/server-side con validación estricta antes de producción.
 - El registro normal de usuarios permanece separado del registro institucional.
 - No se debe asumir que las tablas de verificación por sí solas constituyen un sistema completo de registro institucional.
+
+ 
+## Minijuego "¿Qué es esa vaina?" — rotación y generador IA (2026-10-24)
+- Se detectó que el selector anterior ignoraba el historial cuando quedaban menos de 10 preguntas nuevas y retenía solo 30 IDs recientes.
+- La rotación actualizada conserva hasta 1.000 IDs recientes y completa la ronda con las preguntas vistas menos recientemente cuando no quedan diez nuevas.
+- La selección intenta distribuir preguntas entre materias y temas diferentes; los bancos local y publicado se combinan deduplicando por ID y por materia/enunciado normalizado.
+- El generador de juegos incorpora guías por materia, selección explícita del nivel Saber 11 o profundización, validación de opciones únicas y comparación de similitud frente al banco local y los registros de Supabase.
+- La generación se valida antes de insertar; si un lote sigue conteniendo duplicados o preguntas inválidas después de un reintento, se rechaza completo. Las preguntas aceptadas quedan como borradores.
+- El editor se comparte entre la ruta de gestión de preguntas de juegos y la nueva ruta administrativa, ambas protegidas server-side con requireAdmin().
+- Rama de trabajo: fix/game-rotation-admin-ai, derivada de feat/founder-intro. La rama main no se ha modificado.
+- Pendiente de verificación: ejecutar lint/build en checkout local y verificar los cambios visualmente antes de fusionar.

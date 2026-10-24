@@ -184,3 +184,13 @@
 - Antes de habilitar el flujo se debe mover la creación sensible a backend/server-side y validar estrictamente los campos y archivos.
 - También debe revisarse el aislamiento entre instituciones, Storage y autorización institucional antes de producción.
 - El registro normal de PeakScore no se modifica; el flujo institucional permanece separado después de la autenticación.
+
+ 
+## 2026-10-24 — Rotación de preguntas y generador IA de juegos
+- Se mejora la selección de "¿Qué es esa vaina?" para reducir el reuso prematuro de preguntas y favorecer variedad por materia/tema.
+- Se combinan preguntas publicadas y locales deduplicando IDs y enunciados normalizados.
+- Se amplía el historial de 30 a 1.000 IDs recientes y se rellenan rondas con las preguntas menos recientes cuando se agota el conjunto no visto.
+- El generador incorpora reglas pedagógicas por materia, nivel seleccionable, comparación de similitud contra preguntas existentes y validación de lotes con un reintento.
+- Se añade "Juegos" al panel administrativo, con rutas server-side protegidas.
+- La generación no publica automáticamente: todo lote aprobado por las validaciones queda en estado borrador para revisión del administrador.
+- Validación pendiente: no se ha ejecutado npm run lint ni npm run build en un checkout local de esta rama.

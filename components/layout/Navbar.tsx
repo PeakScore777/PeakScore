@@ -206,11 +206,6 @@ export default function Navbar({
 
   const email = profile?.email ?? "";
 
-  const firstInitial = useMemo(
-    () => displayName.charAt(0).toUpperCase() || "E",
-    [displayName],
-  );
-
   const selectedCharacter = profile?.selectedCharacter ?? cachedCharacter;
 
   const selectedCharacterAvatar = useMemo(() => {
@@ -624,7 +619,6 @@ export default function Navbar({
                 profile={profile}
                 displayName={displayName}
                 email={email}
-                firstInitial={firstInitial}
                 selectedCharacterAvatar={selectedCharacterAvatar}
                 onClose={() => setProfileOpen(false)}
                 onLogout={handleLogout}
@@ -1219,7 +1213,6 @@ function UserMenu({
   profile,
   displayName,
   email,
-  firstInitial,
   selectedCharacterAvatar,
   onClose,
   onLogout,
@@ -1228,7 +1221,6 @@ function UserMenu({
   profile: ProfileData | null;
   displayName: string;
   email: string;
-  firstInitial: string;
   selectedCharacterAvatar: string | null;
   onClose: () => void;
   onLogout: () => void;

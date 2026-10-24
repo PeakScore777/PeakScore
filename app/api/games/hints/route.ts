@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { QUESTION_BANK } from "@/lib/games/que-es-esa-vaina-bank";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -17,6 +18,47 @@ export async function POST(request: Request) {
   }
   const hintNumber = Number(candidate.hintNumber) as 1 | 2 | 3;
   const hintCost = HINT_COSTS[hintNumber - 1];
+
+  // Read authoritative session data before charging; never return the answer before payment succeeds.
+  const { data: session, error: sessionReadError } = await supabaseAdmin
+    .from("game_round_sessions")
+    .select("answer_key,question_ids")
+    .eq("id", candidate.sessionId)
+    .eq("user_id", user.id)
+    .eq("game_key", "que-es-esa-vaina")
+    .maybeSingle();
+  if (sessionReadError || !session || !session.question_ids?.includes(candidate.questionId)) {
+    return NextResponse.json({ error: "La pregunta no pertenece a esta partida." }, { status: 403 });
+  }
+
+  const localQuestion = QUESTION_BANK.find((item) => item.id === candidate.questionId);
+  let dbQuestion: { subject?: string; topic?: string; hint?: string; options?: string[] } | null = null;
+  if (!localQuestion) {
+    const { data: row } = await supabaseAdmin.from("game_questions")
+      .select("subject,topic,hint,options")
+      .eq("id", candidate.questionId)
+      .eq("game_key", "que-es-esa-vaina")
+      .maybeSingle();
+    if (row) dbQuestion = {
+      subject: typeof row.subject === "string" ? row.subject : undefined,
+      topic: typeof row.topic === "string" ? row.topic : undefined,
+      hint: typeof row.hint === "string" ? row.hint : undefined,
+      options: Array.isArray(row.options) ? row.options.filter((option): option is string => typeof option === "string") : undefined,
+    };
+  }
+
+  const topic = localQuestion?.topic ?? dbQuestion?.topic ?? "el concepto principal de la pregunta";
+  const subject = localQuestion?.subject ?? dbQuestion?.subject ?? "la materia correspondiente";
+  const options = localQuestion?.options ?? dbQuestion?.options ?? [];
+  const answerIndex = Number(session.answer_key?.[candidate.questionId]);
+  const hintText = hintNumber === 1
+    ? (localQuestion?.hint ?? dbQuestion?.hint ?? `Busca la relación más importante entre los datos y lo que pregunta el enunciado.`)
+    : hintNumber === 2
+      ? `Categoría: ${subject}. Tema: ${topic}. Identifica qué concepto de este tema permite resolver la pregunta.`
+      : Number.isInteger(answerIndex) && answerIndex >= 0 && answerIndex < options.length
+        ? `La respuesta correcta es: ${options[answerIndex]}`
+        : `El tema que debes resolver es “${topic}”. Revisa las opciones y busca la que sea consistente con la explicación del concepto.`;
+
   const { data, error } = await supabaseAdmin.rpc("use_que_es_esa_vaina_hint", {
     p_user_id: user.id,
     p_session_id: candidate.sessionId,
@@ -34,7 +76,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status });
   }
   const reward = data && typeof data === "object" ? data as Record<string, unknown> : {};
-  return NextResponse.json({ alreadyUsed: Boolean(reward.alreadyUsed), hintNumber: Number(reward.hintNumber) || hintNumber,
-    coinsSpent: Number(reward.coinsSpent) || 0, coinsTotal: Number(reward.coinsTotal) || 0,
-    hintCost: Number(reward.hintCost) || hintCost });
+  return NextResponse.json({
+    alreadyUsed: Boolean(reward.alreadyUsed),
+    hintNumber: Number(reward.hintNumber) || hintNumber,
+    hintText,
+    coinsSpent: Number(reward.coinsSpent) || 0,
+    coinsTotal: Number(reward.coinsTotal) || 0,
+    hintCost: Number(reward.hintCost) || hintCost,
+  });
 }

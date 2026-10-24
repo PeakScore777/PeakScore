@@ -390,6 +390,7 @@ export default function QueEsEsaVainaGame() {
   }, [chestCooldownUntil, refreshChestState]);
 
   const question = rounds[index];
+  const selectedReview = incorrectAnswers.find((item) => item.question.id === selectedReviewQuestionId) ?? incorrectAnswers[0] ?? null;
   const cooldownActive = Boolean(chestCooldownUntil && Date.parse(chestCooldownUntil) > cooldownNow);
   const allChestsClaimed = claimedChests.length >= 3;
   const rewardCanProgress = !cooldownActive && !allChestsClaimed && !sessionOutdated;
@@ -911,10 +912,19 @@ export default function QueEsEsaVainaGame() {
             <header className="border-b-[3px] border-[#35415e] px-4 py-4 sm:px-6">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div><p className="text-[10px] font-black uppercase tracking-[.2em] text-[#f0c86d] [font-family:var(--font-pixel),monospace]">Ronda {finished ? TOTAL_ROUNDS : index + 1} de {TOTAL_ROUNDS}</p><h1 className="mt-2 text-xl font-black text-white [font-family:var(--font-pixel),monospace] sm:text-xl">{finished ? "¡Desafío completado!" : "Descifra la pista"}</h1></div>
-                <div className="flex flex-wrap items-stretch gap-2">
-                  <div className="min-w-[95px] border-[3px] border-[#68738e] bg-[#080e20] px-3 py-2 text-center shadow-[3px_3px_0_#030713]"><p className="text-[9px] font-bold text-[#aab4cf]">Puntos</p><p className="mt-1 flex items-center justify-center gap-1 text-lg font-black text-[#ffd65c]">{score} <span className="text-xs">PTS</span></p></div>
-                  <div className="min-w-[95px] border-[3px] border-[#68738e] bg-[#080e20] px-3 py-2 text-center shadow-[3px_3px_0_#030713]"><p className="text-[9px] font-bold text-[#aab4cf]">XP</p><div className="mt-1 flex items-center justify-center gap-1"><Image src="/peaky/homepage/xp.webp" alt="XP" width={24} height={24} className="h-6 w-6 object-contain" /><span className="text-sm font-black text-[#f2d68c]">{wallet ? wallet.xp : "—"}</span></div></div>
-                  <div className="min-w-[105px] border-[3px] border-[#68738e] bg-[#080e20] px-3 py-2 text-center shadow-[3px_3px_0_#030713]"><p className="text-[9px] font-bold text-[#aab4cf]">Peak Coins</p><div className="mt-1 flex items-center justify-center gap-1"><Image src="/images/currency/peakcoin.webp" alt="Peak Coins" width={24} height={24} className="h-6 w-6 object-contain" /><span className="text-sm font-black text-[#7feaff]">{wallet ? wallet.coins : "—"}</span></div></div>
+                <div className="flex flex-wrap items-stretch gap-0 overflow-hidden border border-[#3c465f] bg-[#080e20]/95">
+                  <div className="flex min-w-[112px] items-center gap-2 border-b-2 border-r border-[#5b4728] bg-gradient-to-b from-[#211a12] to-[#080e20] px-3 py-2">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-[#b58838] bg-[#33230f] text-[#ffe08a]"><Trophy className="h-5 w-5"/></span>
+                    <span><span className="block text-[9px] font-bold uppercase tracking-wide text-[#cdbd9b]">Puntos</span><span className="mt-1 block text-lg font-black leading-none text-[#ffd65c]">{score} <span className="text-[10px]">PTS</span></span></span>
+                  </div>
+                  <div className="flex min-w-[100px] items-center gap-2 border-b-2 border-r border-[#3c465f] border-b-[#9b8c51] bg-gradient-to-b from-[#171a1a] to-[#080e20] px-3 py-2">
+                    <Image src="/peaky/homepage/xp.webp" alt="XP" width={36} height={36} className="h-9 w-9 shrink-0 object-contain"/>
+                    <span><span className="block text-[9px] font-bold uppercase tracking-wide text-[#b9c7bf]">XP total</span><span className="mt-1 block text-lg font-black leading-none text-[#e9e0a5]">{wallet ? wallet.xp : "—"}</span></span>
+                  </div>
+                  <div className="flex min-w-[118px] items-center gap-2 border-b-2 border-b-[#d18a38] bg-gradient-to-b from-[#21170f] to-[#080e20] px-3 py-2">
+                    <Image src="/images/currency/monedasacopiladas.png" alt="Peak Coins acumuladas" width={42} height={36} className="h-9 w-10 shrink-0 object-contain"/>
+                    <span><span className="block text-[9px] font-bold uppercase tracking-wide text-[#d9b68c]">Peak Coins</span><span className="mt-1 block text-lg font-black leading-none text-[#ffbd68]">{wallet ? wallet.coins : "—"}</span></span>
+                  </div>
                 </div>
               </div>
               <div className="mt-5 border-[3px] border-[#5e6983] bg-[#080e20] p-2 shadow-[inset_0_0_0_2px_#202b44]">
@@ -960,6 +970,61 @@ export default function QueEsEsaVainaGame() {
         <div className="border-[2px] border-[#465677] bg-[#101b35] p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#aebdd8]">Respuestas correctas</p><p className="mt-2 text-3xl font-black text-[#9be8b0]">{correctCount}<span className="ml-2 text-xs text-[#cbd7ed]">/ {TOTAL_ROUNDS}</span></p></div>
         <div className="border-[2px] border-[#465677] bg-[#101b35] p-4"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#aebdd8]">Cofres reclamados</p><p className="mt-2 text-3xl font-black text-[#8ee8ff]">{claimedChests.length}<span className="ml-2 text-xs text-[#cbd7ed]">/ 3</span></p></div>
       </div>
+<section className="mt-5 overflow-hidden border-2 border-[#9a612c] bg-[#100f13] shadow-[0_4px_0_#28170b]">
+        <div className="flex flex-wrap items-center gap-3 border-b border-[#5b3b20] bg-gradient-to-r from-[#38220f] to-[#171117] p-4">
+          <div className="grid h-[68px] w-[68px] shrink-0 place-items-center overflow-hidden rounded-full border-2 border-[#ef9d3b] bg-[#24170d] shadow-[0_0_0_3px_rgba(249,115,22,.12)]">
+            <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby, tutor de inteligencia artificial PeakScore" className="h-full w-full object-contain object-center"/>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[9px] font-black uppercase tracking-[.2em] text-[#f7b45d]">ORBY · TUTOR CON IA</p>
+            <h3 className="mt-1 text-lg font-black text-white sm:text-xl">Aprendamos de tus errores</h3>
+            <p className="mt-1 text-xs leading-5 text-[#d8c8b7]">Selecciona una pregunta incorrecta y Orby te explicará el razonamiento paso a paso.</p>
+          </div>
+          <span className="border border-[#9a612c] bg-[#21170f] px-3 py-1.5 text-[10px] font-black text-[#ffca83]">{incorrectAnswers.length} {incorrectAnswers.length === 1 ? "PREGUNTA" : "PREGUNTAS"} POR REVISAR</span>
+        </div>
+        {incorrectAnswers.length > 0 ? <>
+          <div className="grid gap-2 p-3 sm:p-4">
+            {incorrectAnswers.map((item) => {
+              const isSelected = selectedReview?.question.id === item.question.id;
+              const selectedText = item.selectedOption === null ? "Tiempo agotado" : item.question.options[item.selectedOption] ?? "Respuesta seleccionada";
+              const correctText = item.question.options[item.correctOption] ?? item.question.options[item.question.answer] ?? "Respuesta correcta";
+              return <button key={item.question.id} type="button" onClick={() => setSelectedReviewQuestionId(item.question.id)} aria-pressed={isSelected}
+                className={`flex w-full items-start gap-3 border p-3 text-left transition ${isSelected ? "border-[#f1a34c] bg-[#352313] shadow-[inset_3px_0_0_#f1a34c]" : "border-[#5e4935] bg-[#18151a] hover:border-[#b87d3d] hover:bg-[#231b16]"}`}>
+                <span className={`grid h-8 w-8 shrink-0 place-items-center border ${isSelected ? "border-[#f1a34c] bg-[#603915] text-[#ffe0aa]" : "border-[#68533d] bg-[#211b16] text-[#d4b48b]"}`}><span className="text-xs font-black">{item.questionNumber}</span></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[9px] font-black uppercase tracking-[.13em] text-[#dca663]">{item.question.subject} · PREGUNTA {item.questionNumber}</span>
+                  <span className="mt-1 block text-sm font-bold leading-5 text-[#fff3e4]">{item.question.clue}</span>
+                  <span className="mt-2 block text-[10px] leading-4 text-[#d4bfa9]"><span className="font-bold text-[#f0a5a5]">Tu respuesta:</span> {selectedText} <span className="mx-1 text-[#8f7559]">·</span> <span className="font-bold text-[#a8ddb0]">Correcta:</span> {correctText}</span>
+                </span>
+                {isSelected && <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-[#ffbd68]"/>}
+              </button>;
+            })}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#50361f] bg-[#19120e] p-3 sm:px-4">
+            <p className="text-[10px] leading-4 text-[#cfbba5]">La explicación se adapta a la pregunta que selecciones.</p>
+            <button type="button" onClick={() => setOrbyReviewOpen(true)} className="inline-flex min-h-11 items-center justify-center gap-2 border-2 border-[#ffbd68] bg-gradient-to-b from-[#df842d] to-[#a95218] px-5 py-2 text-xs font-black text-[#fff8ed] shadow-[0_3px_0_#66300f] transition hover:from-[#ee9b43] hover:to-[#bd631f] active:translate-y-0.5 active:shadow-none">
+              <Image src="/avatars/photo_perfil/orbyp.png" alt="" width={24} height={24} className="h-6 w-6 rounded-full border border-[#ffd095] bg-[#38210d] object-contain"/> Explicar pregunta con Orby
+            </button>
+          </div>
+        </> : <div className="flex items-center gap-3 p-4"><CheckCircle2 className="h-6 w-6 shrink-0 text-[#a8ddb0]"/><p className="text-sm leading-5 text-[#e2d7ca]">¡Excelente! No hay respuestas incorrectas en esta partida para revisar con Orby.</p></div>}
+      </section>
+      <LessonAITutor
+        open={orbyReviewOpen}
+        onOpenChange={setOrbyReviewOpen}
+        accent="orby"
+        stage="practice"
+        subject={selectedReview?.question.subject ?? "Saber 11"}
+        topic={selectedReview?.question.topic ?? "Repaso de preguntas"}
+        question={selectedReview?.question.clue ?? ""}
+        context={selectedReview ? [
+          `Pregunta ${selectedReview.questionNumber}: ${selectedReview.question.clue}`,
+          `Opciones: ${selectedReview.question.options.map((option, optionIndex) => `${String.fromCharCode(65 + optionIndex)}) ${option}`).join("\n")}`,
+          `Respuesta del estudiante: ${selectedReview.selectedOption === null ? "No alcanzó a responder; se agotó el tiempo." : selectedReview.question.options[selectedReview.selectedOption] ?? "Respuesta seleccionada"}`,
+          `Respuesta correcta validada: ${selectedReview.question.options[selectedReview.correctOption] ?? selectedReview.question.options[selectedReview.question.answer]}`,
+          `Explicación base: ${selectedReview.question.explanation}`,
+        ].join("\n") : ""}
+        initialPrompt={selectedReview ? `Orby, explícame paso a paso la pregunta ${selectedReview.questionNumber}. Quiero entender por qué mi respuesta fue incorrecta o por qué se agotó el tiempo, cómo se llega a la respuesta correcta y qué idea clave debo recordar para resolver una pregunta parecida. Usa el contexto, distingue claramente mi respuesta de la correcta y no inventes datos.` : undefined}
+      />
       <div className="mt-5 border-[2px] border-[#465677] bg-[#0d1831] p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-black uppercase tracking-[.15em] text-[#ffe08a]">Progreso de recompensas</p><p className="text-sm font-black text-white">{Math.round(rewardMeterScore)} / 1000 PTS</p></div>
         <div className="mt-4 h-3 overflow-hidden border border-[#596987] bg-[#202a42]"><div className="h-full bg-gradient-to-r from-[#d99d2b] to-[#ffdf71] transition-[width] duration-300" style={{width: `${scoreProgress}%`}}/></div>

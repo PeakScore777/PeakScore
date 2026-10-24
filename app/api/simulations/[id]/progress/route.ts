@@ -13,19 +13,6 @@ interface ProgressBody {
   answers: ProgressAnswer[];
 }
 
-interface SimulationAttempt {
-  id: string;
-  user_id: string;
-  simulation_id: string;
-  started_at: string;
-  completed_at: string | null;
-  score: number;
-  correct_answers: number;
-  incorrect_answers: number;
-  unanswered_answers: number;
-  current_question: number;
-  time_left: number;
-}
 
 /* ============================================================
    GET — OBTENER PROGRESO DEL SIMULACRO
@@ -289,7 +276,6 @@ export async function POST(
     }
 
     const {
-      attempt_id,
       current_question,
       time_left,
       answers,

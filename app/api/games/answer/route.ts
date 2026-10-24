@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { CASE_ZERO_QUESTIONS } from "@/lib/games/caso-cero-bank";
 
 export const runtime = "nodejs";
 
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
   }
 
   const { data: session, error: sessionError } = await supabaseAdmin.from("game_round_sessions")
-    .select("id,user_id,question_ids,answer_key,expires_at").eq("id", sessionId).eq("user_id", user.id).single();
+    .select("id,user_id,game_key,question_ids,answer_key,expires_at").eq("id", sessionId).eq("user_id", user.id).single();
   if (sessionError || !session || new Date(session.expires_at).getTime() < Date.now()) {
     return NextResponse.json({ error: "La sesión expiró. Inicia otra partida." }, { status: 409 });
   }
@@ -37,11 +38,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "La pregunta no pertenece a esta partida." }, { status: 403 });
   }
 
+  const caseExplanation = session.game_key === "caso-cero" ? CASE_ZERO_QUESTIONS.find((item) => item.id === questionId)?.explanation : undefined;
+
   const { data: previous } = await supabaseAdmin.from("game_round_answers")
     .select("is_correct,selected_option").eq("session_id", sessionId).eq("question_id", questionId).maybeSingle();
   if (previous) {
     return NextResponse.json({ isCorrect: previous.is_correct, correctCount: await readCorrectCount(sessionId),
-      correctOption: Number(session.answer_key[questionId]), alreadyAnswered: true, alreadyCorrect: previous.is_correct });
+      correctOption: Number(session.answer_key[questionId]), alreadyAnswered: true, alreadyCorrect: previous.is_correct, ...(caseExplanation ? { explanation: caseExplanation } : {}) });
   }
 
   const correctOption = session.answer_key[questionId];
@@ -56,10 +59,10 @@ export async function POST(request: Request) {
       .eq("session_id", sessionId).eq("question_id", questionId).maybeSingle();
     if (retryCheck) {
       return NextResponse.json({ isCorrect: retryCheck.is_correct, correctCount: await readCorrectCount(sessionId),
-        correctOption: Number(session.answer_key[questionId]), alreadyAnswered: true, alreadyCorrect: retryCheck.is_correct });
+        correctOption: Number(session.answer_key[questionId]), alreadyAnswered: true, alreadyCorrect: retryCheck.is_correct, ...(caseExplanation ? { explanation: caseExplanation } : {}) });
     }
     console.error("[game-answer] Error guardando intento:", saveError.message);
     return NextResponse.json({ error: "No se pudo guardar la respuesta." }, { status: 500 });
   }
-  return NextResponse.json({ isCorrect, correctCount: await readCorrectCount(sessionId), correctOption: Number(correctOption), alreadyAnswered: false, timedOut });
+  return NextResponse.json({ isCorrect, correctCount: await readCorrectCount(sessionId), correctOption: Number(correctOption), alreadyAnswered: false, timedOut, ...(caseExplanation ? { explanation: caseExplanation } : {}) });
 }

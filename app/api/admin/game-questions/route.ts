@@ -42,6 +42,44 @@ export async function POST(request: Request) {
   if (response) return response;
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "JSON inválido." }, { status: 400 }); }
+  if (body && typeof body === "object" && (body as Record<string, unknown>).bulkImport === true) {
+    const payload = body as { questions?: unknown };
+    if (!Array.isArray(payload.questions) || payload.questions.length === 0 || payload.questions.length > 150) {
+      return NextResponse.json({ error: "La importación debe contener entre 1 y 150 preguntas." }, { status: 400 });
+    }
+    const prepared = payload.questions.map((value) => {
+      if (!value || typeof value !== "object") return value;
+      const q = value as Record<string, unknown>;
+      return { ...q, difficulty: q.difficulty ?? "media", status: "draft" };
+    });
+    for (const q of prepared) {
+      const validation = validateQuestion(q);
+      if (validation) return NextResponse.json({ error: `Importación cancelada: ${validation}` }, { status: 400 });
+    }
+    const { data: existing, error: existingError } = await supabase.from("game_questions").select("subject,clue").eq("game_key", "que-es-esa-vaina").limit(1000);
+    if (existingError) return NextResponse.json({ error: "No se pudo revisar si ya existen preguntas. Comprueba la migración de Supabase." }, { status: 500 });
+    const seen = new Set((existing ?? []).map((q) => `${q.subject}::${String(q.clue).trim().toLocaleLowerCase()}`));
+    const unique = prepared.filter((value) => {
+      const q = value as Record<string, unknown>;
+      const key = `${q.subject}::${String(q.clue).trim().toLocaleLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    if (unique.length === 0) return NextResponse.json({ imported: 0, skipped: prepared.length, message: "Todas las preguntas ya estaban registradas." });
+    const { data: { user } } = await supabase.auth.getUser();
+    const rows = unique.map((value) => {
+      const q = value as Record<string, unknown>;
+      return { game_key: "que-es-esa-vaina", subject: q.subject, topic: (q.topic as string).trim(), difficulty: q.difficulty, clue: (q.clue as string).trim(), options: q.options, answer: q.answer, explanation: (q.explanation as string).trim(), hint: (q.hint as string).trim(), status: "draft", created_by: user?.id };
+    });
+    let imported = 0;
+    for (let i = 0; i < rows.length; i += 25) {
+      const { data, error } = await supabase.from("game_questions").insert(rows.slice(i, i + 25)).select("id");
+      if (error) return NextResponse.json({ error: `La importación se detuvo después de guardar ${imported} preguntas. Revisa el banco antes de reintentar.`, imported, skipped: prepared.length - unique.length }, { status: 500 });
+      imported += data?.length ?? 0;
+    }
+    return NextResponse.json({ imported, skipped: prepared.length - unique.length, message: "Las preguntas se importaron como borradores para revisión." }, { status: 201 });
+  }
   const validation = validateQuestion(body);
   if (validation) return NextResponse.json({ error: validation }, { status: 400 });
   const q = body as Record<string, unknown>;

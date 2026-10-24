@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, Trophy, Volume2, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, CircleHelp, Clock3, Lightbulb, RotateCcw, Trophy, XCircle } from "lucide-react";
 
 import { QUESTION_BANK, type Question } from "@/lib/games/que-es-esa-vaina-bank";
 
@@ -13,6 +13,8 @@ const STORAGE_KEY = "peakscore-que-es-esa-vaina-v1";
 type SavedProgress = { bestScore: number; completedIds: string[]; chests: number };
 
 const RECENT_KEY = "peakscore-que-es-esa-vaina-recent-v1";
+const MATCH_KEY = "peakscore-que-es-esa-vaina-active-match-v1";
+type PersistedMatch = { rounds: Question[]; index: number; selected: number | null; revealed: boolean; score: number; correctCount: number; hintsUsed: string[]; showHint: boolean; finished: boolean; timeLeft: number; sessionId: string | null; claimedChests: number[] };
 const QUESTION_SECONDS = 20;
 
 function shuffleQuestions(source: Question[]): Question[] {
@@ -55,6 +57,9 @@ export default function QueEsEsaVainaGame() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [timeLeft, setTimeLeft] = useState(QUESTION_SECONDS);
   const [timerSoundEnabled, setTimerSoundEnabled] = useState(false);
+  const restoredMatchRef = useRef<PersistedMatch | null>(null);
+  const resumeTimeRef = useRef<number | null>(null);
+  const soundUnlockListenersRef = useRef(false);
   const [gameSessionId, setGameSessionId] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(false);
   const sessionAttemptedRef = useRef(false);
@@ -71,9 +76,10 @@ export default function QueEsEsaVainaGame() {
       const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav");
       timerAudioRef.current = audio;
       audio.volume = 0.32;
-      audio.currentTime = 0;
+      if (audio.ended || audio.currentTime >= audio.duration) audio.currentTime = 0;
       void audio.play().then(() => {
         setTimerSoundEnabled(true);
+        soundUnlockListenersRef.current = true;
       }).catch(() => {
         setTimerSoundEnabled(false);
       });
@@ -82,8 +88,32 @@ export default function QueEsEsaVainaGame() {
     }
   }, []);
 
+  // Intenta reproducir automáticamente. Si el navegador bloquea autoplay, se desbloquea
+  // con la primera interacción real del usuario, sin mostrar un botón de sonido.
+  useEffect(() => {
+    if (!hydrated || soundUnlockListenersRef.current) return;
+    enableTimerSound();
+    const unlock = () => enableTimerSound();
+    window.addEventListener("pointerdown", unlock, { passive: true });
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, [hydrated, enableTimerSound]);
+
   useEffect(() => {
     try {
+      const activeRaw = window.localStorage.getItem(MATCH_KEY);
+      if (activeRaw) {
+        const activeMatch = JSON.parse(activeRaw) as Partial<PersistedMatch>;
+        if (Array.isArray(activeMatch.rounds) && activeMatch.rounds.length === TOTAL_ROUNDS &&
+            activeMatch.rounds.every((q) => q && typeof q.id === "string" && Array.isArray(q.options) && q.options.length === 4) &&
+            Number.isInteger(activeMatch.index) && Number(activeMatch.index) >= 0 && Number(activeMatch.index) < TOTAL_ROUNDS) {
+          restoredMatchRef.current = activeMatch as PersistedMatch;
+          resumeTimeRef.current = Math.max(0, Math.min(QUESTION_SECONDS, Number(activeMatch.timeLeft) || QUESTION_SECONDS));
+        }
+      }
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<SavedProgress>;
@@ -117,12 +147,44 @@ export default function QueEsEsaVainaGame() {
         ) as Question[];
         const pool = valid.length >= TOTAL_ROUNDS ? valid : QUESTION_BANK;
         setQuestionPool(pool);
-        setRounds(getRoundsFromPool(pool, readRecentIds()));
+        const restored = restoredMatchRef.current;
+        if (restored) {
+          setRounds(restored.rounds);
+          setIndex(restored.index);
+          setSelected(restored.selected === null || (Number.isInteger(restored.selected) && restored.selected >= 0 && restored.selected <= 3) ? restored.selected : null);
+          setRevealed(Boolean(restored.revealed));
+          setScore(Math.max(0, Number(restored.score) || 0));
+          setCorrectCount(Math.max(0, Number(restored.correctCount) || 0));
+          setHintsUsed(Array.isArray(restored.hintsUsed) ? restored.hintsUsed.filter((id): id is string => typeof id === "string") : []);
+          setShowHint(Boolean(restored.showHint));
+          setFinished(Boolean(restored.finished));
+          setGameSessionId(typeof restored.sessionId === "string" ? restored.sessionId : null);
+          setClaimedChests(Array.isArray(restored.claimedChests) ? restored.claimedChests.filter((n): n is number => Number.isInteger(n) && n >= 1 && n <= 3) : []);
+          sessionAttemptedRef.current = Boolean(restored.sessionId);
+        } else {
+          setRounds(getRoundsFromPool(pool, readRecentIds()));
+        }
       })
       .catch(() => {
         if (active) {
           setQuestionPool(QUESTION_BANK);
-          setRounds(getRoundsFromPool(QUESTION_BANK, readRecentIds()));
+          const restored = restoredMatchRef.current;
+          if (restored) {
+            setRounds(restored.rounds);
+            setIndex(restored.index);
+            setSelected(restored.selected ?? null);
+            setRevealed(Boolean(restored.revealed));
+            setScore(Math.max(0, Number(restored.score) || 0));
+            setCorrectCount(Math.max(0, Number(restored.correctCount) || 0));
+            setHintsUsed(Array.isArray(restored.hintsUsed) ? restored.hintsUsed : []);
+            setShowHint(Boolean(restored.showHint));
+            setFinished(Boolean(restored.finished));
+            setGameSessionId(typeof restored.sessionId === "string" ? restored.sessionId : null);
+            setClaimedChests(Array.isArray(restored.claimedChests) ? restored.claimedChests : []);
+            sessionAttemptedRef.current = Boolean(restored.sessionId);
+          } else {
+            setRounds(getRoundsFromPool(QUESTION_BANK, readRecentIds()));
+          }
         }
       })
       .finally(() => {
@@ -149,6 +211,16 @@ export default function QueEsEsaVainaGame() {
 
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!hydrated || rounds.length !== TOTAL_ROUNDS) return;
+    try {
+      const match: PersistedMatch = { rounds, index, selected, revealed, score, correctCount, hintsUsed, showHint, finished, timeLeft, sessionId: gameSessionId, claimedChests };
+      window.localStorage.setItem(MATCH_KEY, JSON.stringify(match));
+    } catch {
+      // Si el navegador bloquea el almacenamiento, la partida sigue en memoria.
+    }
+  }, [hydrated, rounds, index, selected, revealed, score, correctCount, hintsUsed, showHint, finished, timeLeft, gameSessionId, claimedChests]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -243,7 +315,12 @@ export default function QueEsEsaVainaGame() {
 
   useEffect(() => {
     if (!hydrated || finished || revealed) return;
-    setTimeLeft(QUESTION_SECONDS);
+    if (resumeTimeRef.current !== null) {
+      setTimeLeft(resumeTimeRef.current);
+      resumeTimeRef.current = null;
+    } else {
+      setTimeLeft(QUESTION_SECONDS);
+    }
     const timerAudio = timerAudioRef.current;
     if (timerSoundEnabled && timerAudio) {
       try {
@@ -364,6 +441,9 @@ export default function QueEsEsaVainaGame() {
     setShowHint(false);
     setFinished(false);
     setGameSessionId(null);
+    try { window.localStorage.removeItem(MATCH_KEY); } catch { /* no-op */ }
+    restoredMatchRef.current = null;
+    resumeTimeRef.current = null;
     sessionAttemptedRef.current = false;
     setClaimedChests([]);
     setClaimingChest(null);
@@ -493,7 +573,7 @@ export default function QueEsEsaVainaGame() {
                     <span className="sr-only">{timeLeft} segundos restantes</span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><button type="button" onClick={enableTimerSound} aria-label={timerSoundEnabled ? "Reactivar sonido del reloj" : "Activar sonido del reloj"} title={timerSoundEnabled ? "Reactivar sonido del reloj" : "Activar sonido del reloj"} className="inline-flex h-7 items-center gap-1 border border-[#69748d] bg-[#111a31] px-2 text-[9px] font-bold text-[#f5d77c] hover:bg-[#222a40]"><Volume2 className="h-3.5 w-3.5"/>{timerSoundEnabled ? "SONIDO ON" : "ACTIVAR SONIDO"}</button></div></div>
+                    <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><<span className="text-[9px] font-bold text-[#a8b6d3]">{timerSoundEnabled ? "SONIDO ACTIVO" : "SONIDO AUTOMÁTICO"}</span></div></div>
                     <p className={"mt-1 text-3xl font-black tabular-nums [font-family:var(--font-pixel),monospace] " + (timeLeft <= 5 ? "text-rose-300" : "text-amber-100")}>{String(timeLeft).padStart(2, "0")}</p>
                     <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
                   </div>

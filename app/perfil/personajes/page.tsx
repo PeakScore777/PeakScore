@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { Check, ShoppingCart, X } from "lucide-react";

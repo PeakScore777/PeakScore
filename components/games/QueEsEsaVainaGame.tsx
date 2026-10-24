@@ -348,42 +348,47 @@ export default function QueEsEsaVainaGame() {
   const progress = finished ? 100 : Math.round((index / TOTAL_ROUNDS) * 100);
   const answeredCorrectly = selected !== null && question?.answer === selected;
 
-  const chooseOption = useCallback(async (optionIndex: number) => {
-    if (!gameStarted || revealed || finished || answering || !gameSessionId || timeLeft <= 0) return;
+  const chooseOption = useCallback((optionIndex: number) => {
+    if (!gameStarted || revealed || finished || answeringRef.current || !gameSessionId || timeLeft <= 0) return;
     const current = rounds[index];
     if (!current) return;
+
+    // La interfaz responde en este mismo evento; la validación del servidor sigue en segundo plano.
     answeringRef.current = true;
     setSelected(optionIndex);
-    setAnswering(true);
+    setRevealed(true);
+    setAnswering(false);
     setGameError(null);
-    try {
-      const response = await fetch("/api/games/answer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId: gameSessionId, questionId: current.id, selectedOption: optionIndex }),
-      });
-      const payload = await response.json();
-      if (!response.ok || typeof payload.isCorrect !== "boolean") throw new Error(payload.error || "No se pudo validar la respuesta.");
-      setSelected(optionIndex);
-      setRevealed(true);
-      setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
-      if (payload.isCorrect) {
-        setScore((value) => value + (payload.alreadyCorrect ? 0 : 100));
-        setSaved((value) => ({
-          ...value,
-          completedIds: value.completedIds.includes(current.id) ? value.completedIds : [...value.completedIds, current.id],
-        }));
-      } else {
-        playSfx("wrong");
-      }
-    } catch (error) {
-      setSelected(null);
-      setGameError(error instanceof Error ? error.message : "No se pudo validar la respuesta.");
-    } finally {
-      answeringRef.current = false;
-      setAnswering(false);
+    const isCorrectLocally = optionIndex === current.answer;
+    if (isCorrectLocally) {
+      setCorrectCount((value) => value + 1);
+      setScore((value) => value + 100);
+      setSaved((value) => ({
+        ...value,
+        completedIds: value.completedIds.includes(current.id) ? value : [...value.completedIds, current.id],
+      }));
+    } else {
+      playSfx("wrong");
     }
-  }, [answering, finished, gameSessionId, index, playSfx, revealed, rounds, timeLeft]);
+
+    void fetch("/api/games/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId: gameSessionId, questionId: current.id, selectedOption: optionIndex }),
+    }).then(async (response) => {
+      const payload = await response.json();
+      if (!response.ok || typeof payload.isCorrect !== "boolean") throw new Error(payload.error || "No se pudo guardar la respuesta.");
+      setCorrectCount(Math.max(0, Number(payload.correctCount) || 0));
+      if (!payload.isCorrect && isCorrectLocally) {
+        setScore((value) => Math.max(0, value - 100));
+        setGameError("El servidor no pudo confirmar esta respuesta. Tu selección se mantiene visible.");
+      }
+    }).catch((error: unknown) => {
+      setGameError(error instanceof Error ? error.message : "No se pudo sincronizar la respuesta.");
+    }).finally(() => {
+      answeringRef.current = false;
+    });
+  }, [finished, gameSessionId, gameStarted, index, playSfx, revealed, rounds, timeLeft]);
 
   const next = useCallback(() => {
     if (!revealed) return;
@@ -632,7 +637,7 @@ export default function QueEsEsaVainaGame() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2"><span className="text-[9px] font-black uppercase tracking-[.16em] text-[#c5d1e8]">Tiempo restante</span><div className="flex items-center gap-2"><span className={"text-[10px] font-black " + (timeLeft <= 5 ? "text-rose-300" : "text-[#f4d57e]")}>{timeLeft <= 5 ? "¡RÁPIDO!" : "20 SEGUNDOS"}</span><span className="text-[9px] font-bold text-[#a8b6d3]">{gameStarted && timerSoundEnabled ? "SONIDO ACTIVO" : gameStarted ? "AUDIO NO DISPONIBLE" : "LISTO PARA INICIAR"}</span></div></div>
                     <p className={"mt-1 text-3xl font-black tabular-nums [font-family:var(--font-pixel),monospace] " + (timeLeft <= 5 ? "text-rose-300" : "text-amber-100")}>{String(timeLeft).padStart(2, "0")}</p>
-                    {!gameStarted && !finished && <button type="button" onClick={() => { const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav"); timerAudioRef.current = audio; audio.loop = false; audio.volume = 0.32; audio.currentTime = 0; soundUnlockedRef.current = true; setTimeLeft(QUESTION_SECONDS); setGameStarted(true); void audio.play().then(() => setTimerSoundEnabled(true)).catch(() => setTimerSoundEnabled(false)); }} disabled={!gameSessionId || sessionLoading} className="mt-2 min-h-10 border-[3px] border-[#ffe08a] bg-[#5a3c11] px-4 text-xs font-black text-white shadow-[3px_3px_0_#030713] disabled:opacity-50">{sessionLoading || !gameSessionId ? "PREPARANDO PARTIDA…" : "▶ COMENZAR PARTIDA"}</button>}
+                    {!gameStarted && !finished && <button type="button" onClick={() => { const audio = timerAudioRef.current ?? new Audio("/audio/games/que-es-esa-vaina-timer.wav"); timerAudioRef.current = audio; audio.loop = false; audio.volume = 0.32; audio.currentTime = 0; soundUnlockedRef.current = true; answeringRef.current = false; setSelected(null); setAnswering(false); setRevealed(false); setShowHint(false); setTimeLeft(QUESTION_SECONDS); setGameStarted(true); void audio.play().then(() => setTimerSoundEnabled(true)).catch(() => setTimerSoundEnabled(false)); }} disabled={!gameSessionId || sessionLoading} className="mt-2 min-h-10 border-[3px] border-[#ffe08a] bg-[#5a3c11] px-4 text-xs font-black text-white shadow-[3px_3px_0_#030713] disabled:opacity-50">{sessionLoading || !gameSessionId ? "PREPARANDO PARTIDA…" : "▶ COMENZAR PARTIDA"}</button>}
                     <div className="mt-2 h-2 overflow-hidden border border-[#414d67] bg-[#252f47]"><div className={"h-full transition-[width] duration-300 " + (timeLeft <= 5 ? "bg-rose-400" : "bg-amber-300")} style={{ width: (timeLeft / QUESTION_SECONDS * 100) + "%" }}/></div>
                   </div>
                 </div>

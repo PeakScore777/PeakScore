@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -91,13 +91,7 @@ export default function EditQuestionPage() {
     chart_data: null as unknown | null,
   });
 
-  useEffect(() => {
-    if (!id) return;
-
-    loadQuestion();
-  }, [id]);
-
-  async function loadQuestion() {
+  const loadQuestion = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -149,7 +143,13 @@ export default function EditQuestionPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
+
+
+  useEffect(() => {
+    if (!id) return;
+    void loadQuestion();
+  }, [id, loadQuestion]);
 
   function handleChange(
     e: React.ChangeEvent<

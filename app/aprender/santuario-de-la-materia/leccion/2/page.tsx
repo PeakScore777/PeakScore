@@ -317,6 +317,8 @@ export default function CuandoLaMateriaCambiaPage() {
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
       document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }));
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, []);
   const question = activeQuestions[index];
   const isCorrect = selected === question.answer;

@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
@@ -1436,9 +1438,8 @@ export default function ExamPage() {
 
                     {question.image_url && (
                       <div className="mt-6 flex justify-center">
-                        <img
-                          src={question.image_url}
-                          alt={`Recurso visual de la pregunta ${currentQuestion + 1}`}
+                        <Image
+                          src={question.image_url} width={1200} height={800} unoptimized alt={`Recurso visual de la pregunta ${currentQuestion + 1}`}
                           className="max-h-[500px] w-auto max-w-full rounded-2xl border border-slate-200 object-contain"
                         />
                      </div>

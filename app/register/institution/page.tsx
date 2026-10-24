@@ -377,26 +377,16 @@ export default function InstitutionRegisterPage() {
 
           const parsedMunicipalities: MunicipalityOption[] =
             data
-              .map((item: any) => ({
-                code: String(
-                  item.code ?? ""
-                ),
-                name: String(
-                  item.name ?? ""
-                ),
-                departmentCode:
-                  String(
-                    item.departmentCode ??
-                      ""
-                  ),
-              }))
-              .filter(
-                (
-                  item: MunicipalityOption
-                ) =>
-                  item.code &&
-                  item.name
-              );
+              .flatMap((value: unknown): MunicipalityOption[] => {
+                if (!value || typeof value !== "object") return [];
+                const item = value as Record<string, unknown>;
+                const option = {
+                  code: String(item.code ?? ""),
+                  name: String(item.name ?? ""),
+                  departmentCode: String(item.departmentCode ?? ""),
+                };
+                return option.code && option.name ? [option] : [];
+              });
 
           setMunicipalities(
             parsedMunicipalities

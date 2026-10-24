@@ -57,7 +57,7 @@ export default function QueEsEsaVainaGame() {
   const [timerSoundEnabled, setTimerSoundEnabled] = useState(false);
   const [gameSessionId, setGameSessionId] = useState<string | null>(null);
   const [sessionLoading, setSessionLoading] = useState(false);
-  const [sessionAttempted, setSessionAttempted] = useState(false);
+  const sessionAttemptedRef = useRef(false);
   const [answering, setAnswering] = useState(false);
   const [gameError, setGameError] = useState<string | null>(null);
   const [claimedChests, setClaimedChests] = useState<number[]>([]);
@@ -160,10 +160,10 @@ export default function QueEsEsaVainaGame() {
   }, [saved, hydrated]);
 
   useEffect(() => {
-    if (!hydrated || rounds.length !== TOTAL_ROUNDS || gameSessionId || sessionLoading || sessionAttempted || finished) return;
+    if (!hydrated || rounds.length !== TOTAL_ROUNDS || gameSessionId || sessionAttemptedRef.current || finished) return;
     let active = true;
+    sessionAttemptedRef.current = true;
     setSessionLoading(true);
-    setSessionAttempted(true);
     setGameError(null);
     void fetch("/api/games/session", {
       method: "POST",
@@ -179,7 +179,7 @@ export default function QueEsEsaVainaGame() {
       if (active) setSessionLoading(false);
     });
     return () => { active = false; };
-  }, [hydrated, rounds, gameSessionId, sessionLoading, sessionAttempted, finished]);
+  }, [hydrated, rounds, gameSessionId, finished]);
 
   useEffect(() => {
     if (!chestAnimation || chestAnimation.phase !== "opening") return;
@@ -346,7 +346,7 @@ export default function QueEsEsaVainaGame() {
     setShowHint(false);
     setFinished(false);
     setGameSessionId(null);
-    setSessionAttempted(false);
+    sessionAttemptedRef.current = false;
     setClaimedChests([]);
     setClaimingChest(null);
     setChestAnimation(null);

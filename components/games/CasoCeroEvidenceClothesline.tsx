@@ -17,7 +17,7 @@ type EvidencePhoto = {
 
 const CASE_EVIDENCE: EvidencePhoto[] = [
   {
-    src: "https://images.pexels.com/photos/10010640/pexels-photo-10010640.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    src: "/api/caso-cero-evidence-image/river",
     alt: "Corriente de un río durante una tormenta, con agua golpeando las rocas",
     title: "01 · EL RÍO",
     description: "Punto de muestreo",
@@ -25,7 +25,7 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Interpretar una situación y distinguir observaciones de conclusiones.",
   },
   {
-    src: "https://images.pexels.com/photos/10514834/pexels-photo-10514834.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    src: "/api/caso-cero-evidence-image/samples",
     alt: "Técnico de campo recolectando una muestra de agua para análisis",
     title: "02 · MUESTRAS",
     description: "Trabajo de campo",
@@ -33,7 +33,7 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Comprobar si las muestras se obtuvieron bajo condiciones comparables.",
   },
   {
-    src: "https://images.pexels.com/photos/8850986/pexels-photo-8850986.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    src: "/api/caso-cero-evidence-image/laboratory",
     alt: "Material de laboratorio para analizar una muestra líquida",
     title: "03 · LABORATORIO",
     description: "Análisis de datos",

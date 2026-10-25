@@ -46,7 +46,19 @@ export function prepareCasoCeroAmbientAudio(): Promise<void> {
   cancelDeferredStop();
 
   const tracks = getTracks();
-  if (tracks.length !== 3 || hasRevealedAudio) return Promise.resolve();
+  if (tracks.length !== 3) return Promise.resolve();
+
+  // Re-entering from the game catalog must silence any previous run before
+  // navigation starts; otherwise a returning player could hear the old scene
+  // underneath the loading skeleton.
+  if (hasRevealedAudio) {
+    hasRevealedAudio = false;
+    for (const { audio } of tracks) {
+      audio.volume = 0;
+      audio.muted = true;
+    }
+  }
+
   if (pendingPrepare) return pendingPrepare;
 
   for (const { audio } of tracks) {

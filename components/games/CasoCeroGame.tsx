@@ -223,8 +223,8 @@ export default function CasoCeroGame() {
         <Link href="/aprender/juegos" className="inline-flex items-center gap-2 border border-[#65563d] bg-[#111720] px-3 py-2 text-xs font-bold text-[#f1e5d0] transition hover:border-[#d3a85f]"><ArrowLeft className="h-4 w-4"/> Todos los juegos</Link>
 
         {phase === "intro" && (
-          <section className="mx-auto mt-6 max-w-5xl overflow-hidden border-[3px] border-[#8b6b39] bg-[#0b101b] shadow-[6px_6px_0_#02050a]">
-            <div className="grid gap-0 lg:grid-cols-[1.15fr_.85fr]">
+          <section className="mx-auto mt-6 max-w-7xl overflow-hidden border-[3px] border-[#8b6b39] bg-[#0b101b] shadow-[6px_6px_0_#02050a]">
+            <div className="grid gap-0">
               <div className="p-5 sm:p-8">
                 <div className="inline-flex items-center gap-2 border border-[#957341] bg-[#261d11] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.18em] text-[#f5c879]"><ShieldCheck className="h-4 w-4"/> Investigación Saber 11</div>
                 <h1 className="mt-5 text-3xl font-black leading-tight sm:text-5xl">CASO CERO<span className="text-[#d9a653]">.</span></h1>

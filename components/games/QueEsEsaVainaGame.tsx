@@ -456,33 +456,85 @@ export default function QueEsEsaVainaGame() {
     }
   }, []);
 
-  // Un breve acorde ascendente, tipo recompensa premium: cálido, limpio y discreto.
+  // Coro celestial "ahhh" generado con Web Audio. No depende de un archivo remoto
+  // y solo suena cuando el cofre termina de abrirse.
   const playRewardSting = useCallback(() => {
     const context = rewardAudioContextRef.current;
     if (!context || context.state === "closed") return;
+
     void context.resume().then(() => {
-      const startAt = context.currentTime + 0.025;
-      const notes: Array<{ frequency: number; offset: number; duration: number; volume: number; wave: OscillatorType }> = [
-        { frequency: 392, offset: 0, duration: 0.34, volume: 0.014, wave: "sine" },
-        { frequency: 523.25, offset: 0.015, duration: 0.36, volume: 0.026, wave: "sine" },
-        { frequency: 659.25, offset: 0.105, duration: 0.34, volume: 0.023, wave: "sine" },
-        { frequency: 783.99, offset: 0.19, duration: 0.44, volume: 0.022, wave: "sine" },
-        { frequency: 1046.5, offset: 0.30, duration: 0.54, volume: 0.018, wave: "triangle" },
-        { frequency: 1567.98, offset: 0.34, duration: 0.28, volume: 0.007, wave: "sine" },
+      const startAt = context.currentTime + 0.035;
+      const master = context.createGain();
+      master.gain.setValueAtTime(0.72, startAt);
+      master.connect(context.destination);
+
+      // Eco corto y suave para dar profundidad sin crear un bucle de audio permanente.
+      const echo = context.createDelay(0.4);
+      echo.delayTime.setValueAtTime(0.24, startAt);
+      const echoGain = context.createGain();
+      echoGain.gain.setValueAtTime(0.19, startAt);
+      master.connect(echo);
+      echo.connect(echoGain);
+      echoGain.connect(context.destination);
+
+      const formants = [
+        { frequency: 780, q: 1.15, gain: 0.68 },
+        { frequency: 1180, q: 1.45, gain: 0.38 },
+        { frequency: 2650, q: 2.0, gain: 0.11 },
       ];
-      for (const note of notes) {
+      const voices: Array<{ frequency: number; detune: number; volume: number }> = [
+        { frequency: 261.63, detune: -7, volume: 0.032 },
+        { frequency: 261.63, detune: 6, volume: 0.028 },
+        { frequency: 329.63, detune: -5, volume: 0.026 },
+        { frequency: 329.63, detune: 7, volume: 0.024 },
+        { frequency: 392, detune: -6, volume: 0.021 },
+        { frequency: 392, detune: 5, volume: 0.019 },
+        { frequency: 523.25, detune: -4, volume: 0.009 },
+      ];
+
+      for (const voice of voices) {
         const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        const noteStart = startAt + note.offset;
-        oscillator.type = note.wave;
-        oscillator.frequency.setValueAtTime(note.frequency, noteStart);
-        gain.gain.setValueAtTime(0.0001, noteStart);
-        gain.gain.exponentialRampToValueAtTime(note.volume, noteStart + 0.025);
-        gain.gain.exponentialRampToValueAtTime(0.0001, noteStart + note.duration);
-        oscillator.connect(gain);
-        gain.connect(context.destination);
+        const envelope = context.createGain();
+        const voiceBus = context.createGain();
+        const vibrato = context.createOscillator();
+        const vibratoDepth = context.createGain();
+        const noteStart = startAt;
+
+        oscillator.type = "sawtooth";
+        oscillator.frequency.setValueAtTime(voice.frequency * 0.965, noteStart);
+        oscillator.frequency.exponentialRampToValueAtTime(voice.frequency, noteStart + 0.42);
+        oscillator.detune.setValueAtTime(voice.detune, noteStart);
+        vibrato.type = "sine";
+        vibrato.frequency.setValueAtTime(4.6 + Math.abs(voice.detune) * 0.025, noteStart);
+        vibratoDepth.gain.setValueAtTime(2.2, noteStart);
+        vibrato.connect(vibratoDepth);
+        vibratoDepth.connect(oscillator.detune);
+
+        envelope.gain.setValueAtTime(0.0001, noteStart);
+        envelope.gain.exponentialRampToValueAtTime(voice.volume, noteStart + 0.34);
+        envelope.gain.setValueAtTime(voice.volume * 0.88, noteStart + 1.08);
+        envelope.gain.exponentialRampToValueAtTime(0.0001, noteStart + 2.55);
+
+        oscillator.connect(voiceBus);
+        for (const formant of formants) {
+          const filter = context.createBiquadFilter();
+          const formantGain = context.createGain();
+          filter.type = "bandpass";
+          filter.frequency.setValueAtTime(formant.frequency, noteStart);
+          filter.Q.setValueAtTime(formant.q, noteStart);
+          formantGain.gain.setValueAtTime(formant.gain, noteStart);
+          oscillator.connect(filter);
+          filter.connect(formantGain);
+          formantGain.connect(voiceBus);
+        }
+        voiceBus.gain.setValueAtTime(0.72, noteStart);
+        voiceBus.connect(envelope);
+        envelope.connect(master);
+
         oscillator.start(noteStart);
-        oscillator.stop(noteStart + note.duration + 0.03);
+        vibrato.start(noteStart);
+        oscillator.stop(noteStart + 2.62);
+        vibrato.stop(noteStart + 2.65);
       }
     }).catch(() => undefined);
   }, []);
@@ -824,6 +876,16 @@ export default function QueEsEsaVainaGame() {
     }
   }, [claimedChests, claimingChest, cooldownActive, gameSessionId, nextChestToClaim, playSfx, primeRewardAudioContext, rewardMeterScore, sessionOutdated]);
 
+  // Vista previa local: muestra el premio y reproduce los sonidos, pero no llama a Supabase.
+  const previewChestReward = useCallback(() => {
+    primeRewardAudioContext();
+    const openingAudio = new Audio("/audio/games/que-es-esa-vaina-chest-open.mp3");
+    openingAudio.volume = 0.48;
+    feedbackAudioRef.current = openingAudio;
+    void openingAudio.play().catch(() => undefined);
+    setChestAnimation({ chestNumber: 1, xp: 5, coins: 3, phase: "opening" });
+  }, [primeRewardAudioContext]);
+
   const useHint = async (hintNumber: 1 | 2 | 3) => {
     const hintCost = HINT_COSTS[hintNumber - 1];
     if (!question || usedHints.includes(hintNumber) || hintLoading || answering || revealed || !gameStarted || !gameSessionId) return;
@@ -956,89 +1018,88 @@ export default function QueEsEsaVainaGame() {
   return (
     <main className="relative isolate min-h-[calc(100svh-72px)] overflow-hidden bg-[#070b18] text-white">
       {chestAnimation && (
-        <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-[#02030a]/90 p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Recompensa del cofre">
-          <div className="chest-reward-backdrop-glow pointer-events-none fixed inset-0" aria-hidden="true"/>
-          <section className="chest-reward-panel relative my-auto w-full max-w-[470px] overflow-hidden border-[4px] border-double border-[#ffe08a] bg-[#080e20] text-center shadow-[0_0_0_5px_#291b12,0_0_52px_rgba(255,204,74,.24),8px_8px_0_#02030a]">
-            <span aria-hidden="true" className="pointer-events-none absolute left-0 top-0 z-30 h-3 w-3 border-r-2 border-b-2 border-[#fff0b2] bg-[#bf8b37]"/>
-            <span aria-hidden="true" className="pointer-events-none absolute right-0 top-0 z-30 h-3 w-3 border-l-2 border-b-2 border-[#fff0b2] bg-[#bf8b37]"/>
-            <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 z-30 h-3 w-3 border-r-2 border-t-2 border-[#fff0b2] bg-[#bf8b37]"/>
-            <span aria-hidden="true" className="pointer-events-none absolute bottom-0 right-0 z-30 h-3 w-3 border-l-2 border-t-2 border-[#fff0b2] bg-[#bf8b37]"/>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#554324] bg-gradient-to-r from-[#21190f] via-[#111625] to-[#21190f] px-4 py-3">
-              <span className="pixel-font text-[7px] leading-4 text-[#f7d58a]">PEAKSCORE · RECOMPENSA</span>
-              <span className="border border-[#8b6b38] bg-[#241b10] px-2 py-1 text-[8px] font-black uppercase tracking-[.14em] text-[#ffe3a0]">COFRE {String(chestAnimation.chestNumber).padStart(2, "0")}</span>
-            </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-hidden overflow-y-auto bg-[#03020a]/95 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Recompensa del cofre">
+          <div className="absolute inset-0 scale-105 bg-cover bg-center opacity-35 blur-[3px]" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} aria-hidden="true" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_38%,rgba(255,165,29,.24)_0%,rgba(11,7,30,.46)_40%,rgba(2,3,10,.96)_100%)]" aria-hidden="true" />
+          <section className="chest-reward-legendary-frame relative flex min-h-[calc(100svh-16px)] w-full max-w-[1480px] flex-col items-center justify-between overflow-hidden border-[3px] border-[#eab348] px-3 pb-4 pt-4 shadow-[inset_0_0_0_2px_rgba(255,221,131,.35),0_0_0_2px_#39240e,0_0_40px_rgba(255,177,35,.22)] sm:min-h-[calc(100svh-32px)] sm:px-8 sm:pb-6 sm:pt-5">
+            <span aria-hidden="true" className="chest-reward-frame-corner chest-reward-frame-corner-tl" />
+            <span aria-hidden="true" className="chest-reward-frame-corner chest-reward-frame-corner-tr" />
+            <span aria-hidden="true" className="chest-reward-frame-corner chest-reward-frame-corner-bl" />
+            <span aria-hidden="true" className="chest-reward-frame-corner chest-reward-frame-corner-br" />
 
-            <div className="px-5 pb-5 pt-5 sm:px-8 sm:pb-7">
-              <p className="pixel-font text-[8px] leading-5 text-[#ffe08a]">
-                {chestAnimation.phase === "opening" ? "LA CERRADURA CEDE…" : "¡RECOMPENSA DESBLOQUEADA!"}
-              </p>
+            <div className="relative z-10 flex w-full max-w-[1000px] flex-col items-center">
+              <div className="mb-2 flex w-full max-w-[760px] items-center justify-center gap-3 sm:mb-3 sm:gap-5" aria-hidden="true">
+                <span className="h-[3px] flex-1 bg-gradient-to-r from-transparent via-[#f4b82f] to-[#ffe58b]" />
+                <span className="pixel-font text-xl leading-none text-[#ffdf53] drop-shadow-[0_0_12px_rgba(255,187,34,.9)] sm:text-3xl">✦</span>
+                <span className="h-[3px] flex-1 bg-gradient-to-l from-transparent via-[#f4b82f] to-[#ffe58b]" />
+              </div>
 
-              <div className={"relative mx-auto my-3 grid h-[178px] max-w-[300px] place-items-center " + (chestAnimation.phase === "opening" ? "chest-open-sequence" : "chest-reward-glow")}>
-                <div className="absolute inset-x-8 inset-y-7 rounded-full bg-[#ffc744]/20 blur-2xl" aria-hidden="true"/>
+              <h1 className="chest-reward-legendary-title pixel-font max-w-full text-center text-[14px] leading-7 sm:text-[23px] sm:leading-10 md:text-[31px]">
+                {chestAnimation.phase === "opening" ? "ABRIENDO COFRE…" : "¡RECOMPENSA OBTENIDA!"}
+              </h1>
+
+              <div className="mt-1 flex w-full items-center justify-center sm:mt-2">
+                <span className="h-[2px] w-[12%] bg-gradient-to-r from-transparent to-[#9d6320]" />
+                <span className="mx-2 pixel-font text-[10px] text-[#ffc74b] sm:mx-4 sm:text-base" aria-hidden="true">✦ ── ✦</span>
+                <span className="h-[2px] w-[12%] bg-gradient-to-l from-transparent to-[#9d6320]" />
+              </div>
+
+              <div className={"chest-reward-legendary-burst relative mt-1 grid h-[230px] w-full max-w-[680px] place-items-center sm:mt-0 sm:h-[min(39vh,365px)] " + (chestAnimation.phase === "opening" ? "chest-open-sequence" : "chest-reward-glow")}>
+                <div className="chest-reward-legendary-rays absolute inset-0" aria-hidden="true" />
+                <div className="absolute inset-x-[18%] inset-y-[18%] rounded-full bg-[#ffc12b]/30 blur-3xl" aria-hidden="true" />
                 {chestAnimation.phase === "reward" && (
                   <>
-                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-a"/>
-                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-b"/>
-                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-c"/>
-                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-d"/>
+                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-a" />
+                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-b" />
+                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-c" />
+                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-d" />
+                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-e" />
+                    <span aria-hidden="true" className="chest-reward-spark chest-reward-spark-f" />
                   </>
                 )}
                 <Image
                   src={chestAnimation.phase === "opening" ? "/images/games/que-es-esa-vaina/cofre-apertura.gif" : "/images/games/que-es-esa-vaina/cofre-abierto-luz.png"}
                   alt={chestAnimation.phase === "opening" ? "Animación de apertura del cofre" : "Cofre abierto liberando una luz dorada"}
                   unoptimized={chestAnimation.phase === "opening"}
-                  width={280}
-                  height={210}
-                  className="relative z-10 h-[170px] w-[240px] object-contain drop-shadow-[0_10px_0_rgba(0,0,0,.52)]"
+                  width={560}
+                  height={420}
+                  className="relative z-10 h-[220px] w-full max-w-[360px] object-contain drop-shadow-[0_12px_0_rgba(0,0,0,.55)] sm:h-full sm:max-w-[520px]"
                 />
               </div>
-
-              {chestAnimation.phase === "opening" ? (
-                <p className="pixel-font text-[7px] leading-5 text-[#ffe6a3]">TU TESORO TE ESPERA</p>
-              ) : (
-                <>
-                  <h2 className="pixel-font text-[9px] leading-6 text-white sm:text-[10px]">
-                    {chestAnimation.xp === 0 && chestAnimation.coins === 0 ? "COFRE ABIERTO" : "¡TESORO RECLAMADO!"}
-                  </h2>
-                  <p className="mt-2 text-xs leading-5 text-[#bfcbe0]">La recompensa se ha procesado en tu cuenta.</p>
-
-                  {chestAnimation.xp === 0 && chestAnimation.coins === 0 ? (
-                    <p className="mt-4 border border-[#67583d] bg-[#151725] p-4 text-sm leading-6 text-[#d6d9e4]">
-                      Este cofre no entregó una recompensa adicional en esta ocasión. Tus recompensas anteriores permanecen seguras.
-                    </p>
-                  ) : (
-                    <div className="mt-5 grid grid-cols-2 gap-3 text-left">
-                      <div className="chest-reward-stat border-2 border-[#72c8ff] bg-gradient-to-b from-[#112537] to-[#0b1525] p-3.5 shadow-[3px_3px_0_#07101b]" style={{ animationDelay: "80ms" }}>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[8px] font-black uppercase tracking-[.16em] text-[#9bdcff]">Experiencia</span>
-                          <Image src="/peaky/homepage/xp.webp" alt="" width={30} height={30} className="h-7 w-7 object-contain"/>
-                        </div>
-                        <p className="pixel-font mt-3 text-[9px] leading-5 text-[#fff0a6]">+{chestAnimation.xp} XP</p>
-                      </div>
-                      <div className="chest-reward-stat border-2 border-[#d79aff] bg-gradient-to-b from-[#24152e] to-[#120e20] p-3.5 shadow-[3px_3px_0_#080511]" style={{ animationDelay: "180ms" }}>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[8px] font-black uppercase tracking-[.16em] text-[#ecc4ff]">Peak Coins</span>
-                          <Image src="/images/currency/peakcoin.webp" alt="" width={30} height={30} className="h-7 w-7 object-contain"/>
-                        </div>
-                        <p className="pixel-font mt-3 text-[9px] leading-5 text-[#ffe08a]">+{chestAnimation.coins}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {wallet && !(chestAnimation.xp === 0 && chestAnimation.coins === 0) && (
-                    <div className="mt-3 border border-[#574b32] bg-[#111622] px-3 py-2">
-                      <p className="text-[9px] font-bold leading-5 text-[#b8c5d7]">
-                        SALDO ACTUALIZADO · XP TOTAL {wallet.xp.toLocaleString("es-CO")} · PEAK COINS {wallet.coins.toLocaleString("es-CO")}
-                      </p>
-                    </div>
-                  )}
-
-                  <button type="button" onClick={() => setChestAnimation(null)} className="pixel-font mt-5 inline-flex min-h-12 w-full items-center justify-center gap-3 border-[3px] border-[#fff0a6] bg-gradient-to-b from-[#986821] to-[#69440f] px-6 py-3 text-[8px] leading-5 text-white shadow-[4px_4px_0_#291b12] transition hover:from-[#b88435] hover:to-[#805817] active:translate-y-0.5 active:shadow-none">
-                    CONTINUAR <span aria-hidden="true">→</span>
-                  </button>
-                </>
-              )}
             </div>
+
+            {chestAnimation.phase === "opening" ? (
+              <p className="pixel-font relative z-10 mb-2 text-center text-[8px] leading-5 text-[#ffe6a3] sm:mb-4 sm:text-[10px]">TU TESORO TE ESPERA…</p>
+            ) : (
+              <div className="relative z-10 flex w-full max-w-[900px] flex-col items-center gap-4 sm:gap-5">
+                {chestAnimation.xp === 0 && chestAnimation.coins === 0 ? (
+                  <p className="max-w-[620px] border-2 border-[#96733c] bg-[#100b20]/95 p-4 text-center text-xs leading-6 text-[#f7e4b1] sm:text-sm">
+                    Este cofre no entregó una recompensa adicional en esta ocasión. Tus recompensas anteriores permanecen seguras.
+                  </p>
+                ) : (
+                  <div className="grid w-full max-w-[850px] grid-cols-2 gap-2 sm:gap-5">
+                    <div className="chest-reward-legendary-card chest-reward-legendary-card-xp flex min-h-[94px] items-center justify-center gap-2 px-2 py-3 sm:min-h-[142px] sm:gap-5 sm:px-6">
+                      <Image src="/peaky/homepage/xp.webp" alt="XP" width={92} height={92} className="h-10 w-10 shrink-0 object-contain sm:h-[76px] sm:w-[76px]" />
+                      <p className="pixel-font text-[11px] leading-6 text-white drop-shadow-[0_2px_0_#183456] sm:text-[19px] md:text-[23px]">+{chestAnimation.xp} XP</p>
+                    </div>
+                    <div className="chest-reward-legendary-card chest-reward-legendary-card-coins flex min-h-[94px] items-center justify-center gap-2 px-2 py-3 sm:min-h-[142px] sm:gap-5 sm:px-6">
+                      <Image src="/images/currency/peakcoin.webp" alt="Peak Coin" width={92} height={92} className="h-10 w-10 shrink-0 object-contain sm:h-[76px] sm:w-[76px]" />
+                      <p className="pixel-font text-[14px] leading-6 text-white drop-shadow-[0_2px_0_#501963] sm:text-[21px] md:text-[25px]">+{chestAnimation.coins}</p>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setChestAnimation(null)}
+                  className="chest-reward-legendary-continue pixel-font flex min-h-[54px] w-full max-w-[420px] items-center justify-center gap-3 px-5 py-3 text-[10px] text-[#291707] transition-transform hover:scale-[1.02] active:translate-y-1 sm:min-h-[72px] sm:text-[13px]"
+                >
+                  <span aria-hidden="true" className="text-[#9a5709]">➜</span>
+                  CONTINUAR
+                  <span aria-hidden="true" className="text-[#9a5709]">➜</span>
+                </button>
+              </div>
+            )}
           </section>
         </div>
       )}
@@ -1048,6 +1109,11 @@ export default function QueEsEsaVainaGame() {
       <div className="mx-auto w-full max-w-[1390px] px-0 pb-6 pt-2 sm:px-5 sm:pb-8 sm:pt-4 lg:px-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link href="/aprender/juegos" className="inline-flex min-h-10 items-center gap-2 border-[3px] border-[#77839d] bg-[#10172b]/95 px-3 py-2 text-xs font-black text-white shadow-[4px_4px_0_#030713] transition hover:bg-[#1c2942]"><ArrowLeft className="h-4 w-4" /> Todos los juegos</Link>
+          {process.env.NODE_ENV === "development" && (
+            <button type="button" onClick={previewChestReward} className="pixel-font min-h-10 border-2 border-[#ffe08a] bg-[#69440f] px-3 py-2 text-[8px] text-[#fff1b8] shadow-[3px_3px_0_#030713] transition hover:bg-[#805817]">
+              Probar cofre (sin guardar)
+            </button>
+          )}
         </div>
         <div className="grid min-w-0 items-start gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_270px]">
           <section className="min-w-0 border-[3px] border-[#74809b] bg-[#070d22]/[.98] shadow-[0_0_0_3px_#11182d,7px_7px_0_rgba(0,0,0,.5)]">

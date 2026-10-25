@@ -82,7 +82,7 @@ function EvidenceArtwork({ item }: { item: EvidenceItem }) {
       role="img"
       aria-label={item.title}
       className={"caso-cero-evidence-photo h-full w-full bg-[#13272b] bg-cover bg-center " + (item.scene === "river" ? "caso-cero-evidence-river" : "")}
-      style={{ backgroundImage: "url('" + item.image + "')" }}
+      style={{ backgroundImage: "linear-gradient(135deg, rgba(5, 17, 22, .12), rgba(3, 8, 12, .24)), url('" + item.image + "')" }}
     >
       <div className="h-full w-full bg-gradient-to-t from-[#071016]/30 via-transparent to-white/[0.04]" />
     </div>
@@ -114,14 +114,14 @@ function EvidenceCard({
         (compact ? " w-full" : "")
       }
     >
-      <span className={"absolute -top-1 left-1/2 z-10 h-4 w-2 -translate-x-1/2 rounded-sm border border-[#d7b06b] bg-[#8e6535] shadow-sm transition " + (selected ? "rotate-12" : "")} />
-      <div className={"border-[3px] bg-[#e7ddc5] p-1.5 shadow-[3px_4px_0_#02080b,0_8px_18px_#0006] transition group-hover:rotate-0 " + (selected ? "border-[#f0c16b]" : "border-[#b7a889]")}>
+      <span className={"absolute -top-1 left-1/2 z-10 h-5 w-2 -translate-x-1/2 rounded-sm border border-[#d7b06b] bg-[#8e6535] shadow-sm transition " + (selected ? "rotate-12" : "")} />
+      <div className={"border-[3px] bg-[#e7ddc5] p-2 shadow-[3px_4px_0_#02080b,0_12px_24px_#0008] transition group-hover:rotate-0 " + (selected ? "border-[#f0c16b]" : "border-[#b7a889]")}>
         <div className="aspect-[3/2] overflow-hidden bg-[#13272b]">
           <EvidenceArtwork item={item} />
         </div>
         <div className="flex items-center justify-between gap-1 px-1 pb-1 pt-2 text-[#28322f]">
-          <span className="truncate text-[7px] font-black tracking-[.04em] sm:text-[8px]">{item.label}</span>
-          <Icon className="h-3 w-3 shrink-0" />
+          <span className="truncate text-[9px] font-black tracking-[.02em] sm:text-[10px]">{item.label}</span>
+          <Icon className="h-4 w-4 shrink-0" />
         </div>
       </div>
       {selected && (
@@ -136,20 +136,20 @@ function EvidenceCard({
 function EvidenceDetails({ item, onClose }: { item: EvidenceItem; onClose: () => void }) {
   const Icon = item.icon;
   return (
-    <div className="border border-[#6b5940] bg-[#0b171c]/95 p-3 shadow-[3px_3px_0_#03080b] backdrop-blur-sm sm:p-4">
+    <div className="border border-[#6b5940]/90 bg-[#071116]/95 p-4 shadow-[0_8px_28px_rgba(0,0,0,.4)] backdrop-blur-md sm:p-5">
       <div className="flex items-start gap-2">
         <div className="grid h-8 w-8 shrink-0 place-items-center border border-[#6b8d83] bg-[#183b3b] text-[#a8e0d1]">
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[8px] font-black tracking-[.18em] text-[#e7bb70]">{item.tag} · PISTA {String(item.id).padStart(2, "0")}</p>
-          <h3 className="mt-1 text-xs font-black text-[#f2e6cf] sm:text-sm">{item.title}</h3>
+          <p className="text-[9px] font-black tracking-[.16em] text-[#e7bb70]">{item.tag} · PISTA {String(item.id).padStart(2, "0")}</p>
+          <h3 className="mt-1 text-sm font-black text-[#f2e6cf] sm:text-base">{item.title}</h3>
         </div>
         <button type="button" onClick={onClose} aria-label="Cerrar evidencia" className="grid h-7 w-7 shrink-0 place-items-center border border-[#455b5b] text-[#d1ded9] hover:bg-white/10">
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
-      <p className="mt-2 text-[10px] leading-5 text-[#c4d1cf] sm:text-xs">{item.description}</p>
+      <p className="mt-2 text-xs leading-5 text-[#c4d1cf] sm:text-sm">{item.description}</p>
     </div>
   );
 }
@@ -166,8 +166,8 @@ export default function CasoCeroScene() {
         <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(2,7,11,.22)_0%,transparent_36%,rgba(2,7,11,.12)_64%,rgba(2,7,11,.58)_100%)]" />
 
         <div className="absolute left-[39%] right-[4%] top-[5%] z-10">
-          <p className="text-[7px] font-black uppercase tracking-[.25em] text-[#a3d0c6] drop-shadow sm:text-[9px]">Laboratorio de campo · Archivo 001</p>
-          <h2 className="mt-1 text-xs font-black uppercase tracking-[.08em] text-[#f7e8ca] drop-shadow-[0_2px_5px_rgba(0,0,0,.9)] sm:text-lg lg:text-xl">El misterio del río</h2>
+          <p className="text-[9px] font-black uppercase tracking-[.2em] text-[#a3d0c6] drop-shadow sm:text-[10px]">Laboratorio de campo · Archivo 001</p>
+          <h2 className="mt-1 text-base font-black uppercase tracking-[.06em] text-[#f7e8ca] drop-shadow-[0_2px_5px_rgba(0,0,0,.9)] sm:text-xl lg:text-2xl">El misterio del río</h2>
         </div>
 
         <div className="pointer-events-none absolute left-[39%] right-[4%] top-[23%] z-[2] hidden h-[3px] rotate-[-1deg] bg-[#9d7040] shadow-[0_2px_4px_#000] lg:block">

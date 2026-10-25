@@ -458,7 +458,7 @@ export default function QueEsEsaVainaGame() {
 
   // Coro celestial "ahhh" generado con Web Audio. No depende de un archivo remoto
   // y solo suena cuando el cofre termina de abrirse.
-  const playRewardSting = useCallback(() => {
+  const playSyntheticRewardSting = useCallback(() => {
     const context = rewardAudioContextRef.current;
     if (!context || context.state === "closed") return;
 
@@ -537,6 +537,26 @@ export default function QueEsEsaVainaGame() {
       }
     }).catch(() => undefined);
   }, []);
+
+  // Primero usamos el coro celestial original elegido en Freesound. Si el CDN no
+  // responde, el sintetizador anterior queda como respaldo para no silenciar la recompensa.
+  const playRewardSting = useCallback(() => {
+    try {
+      const audio = new Audio("https://cdn.freesound.org/previews/392/392172_7387785-hq.mp3");
+      audio.preload = "auto";
+      audio.volume = 0.56;
+      feedbackAudioRef.current = audio;
+      audio.onended = () => {
+        if (feedbackAudioRef.current === audio) feedbackAudioRef.current = null;
+      };
+      void audio.play().catch(() => {
+        if (feedbackAudioRef.current === audio) feedbackAudioRef.current = null;
+        playSyntheticRewardSting();
+      });
+    } catch {
+      playSyntheticRewardSting();
+    }
+  }, [playSyntheticRewardSting]);
 
   useEffect(() => {
     if (!chestAnimation || chestAnimation.phase !== "reward" || (chestAnimation.xp === 0 && chestAnimation.coins === 0)) return;

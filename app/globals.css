@@ -666,3 +666,11 @@ body {
     animation: none !important;
   }
 }
+
+
+/* En monitores anchos reservamos más espacio visual para el búho y el cartel del fondo. */
+@media (min-width: 1536px) {
+  .qeav-game-shell {
+    transform: translateX(clamp(32px, 4vw, 68px));
+  }
+}

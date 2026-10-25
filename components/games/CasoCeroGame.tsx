@@ -21,6 +21,7 @@ import {
   XCircle,
 } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
+import CasoCeroScene from "@/components/games/CasoCeroScene";
 import type { EvidenceCase } from "@/lib/games/caso-cero-bank";
 
 type PublicCase = Omit<EvidenceCase, "answer" | "explanation">;
@@ -222,8 +223,8 @@ export default function CasoCeroGame() {
         <Link href="/aprender/juegos" className="inline-flex items-center gap-2 border border-[#65563d] bg-[#111720] px-3 py-2 text-xs font-bold text-[#f1e5d0] transition hover:border-[#d3a85f]"><ArrowLeft className="h-4 w-4"/> Todos los juegos</Link>
 
         {phase === "intro" && (
-          <section className="mx-auto mt-6 max-w-5xl overflow-hidden border-[3px] border-[#8b6b39] bg-[#0b101b] shadow-[6px_6px_0_#02050a]">
-            <div className="grid gap-0 lg:grid-cols-[1.15fr_.85fr]">
+          <section className="mx-auto mt-6 max-w-7xl overflow-hidden border-[3px] border-[#8b6b39] bg-[#0b101b] shadow-[6px_6px_0_#02050a]">
+            <div className="grid gap-0">
               <div className="p-5 sm:p-8">
                 <div className="inline-flex items-center gap-2 border border-[#957341] bg-[#261d11] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.18em] text-[#f5c879]"><ShieldCheck className="h-4 w-4"/> Investigación Saber 11</div>
                 <h1 className="mt-5 text-3xl font-black leading-tight sm:text-5xl">CASO CERO<span className="text-[#d9a653]">.</span></h1>
@@ -239,18 +240,7 @@ export default function CasoCeroGame() {
                 </button>
                 <p className="mt-3 text-[10px] leading-5 text-[#8390a3]">Preguntas originales de Ciencias Naturales. El expediente registra tus respuestas una sola vez por partida.</p>
               </div>
-              <div className="relative flex min-h-[260px] flex-col justify-between overflow-hidden border-t border-[#55452e] bg-[radial-gradient(ellipse_at_50%_15%,rgba(182,132,62,.23),transparent_52%),linear-gradient(145deg,#141d25,#080d18_70%)] p-5 sm:p-8 lg:border-l lg:border-t-0">
-                <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-[.2em] text-[#c7a970]"><span>Archivo 001</span><span>Clasificación: reservada</span></div>
-                <div className="relative mx-auto my-4 grid h-40 w-40 place-items-center">
-                  <div className="absolute inset-2 rotate-6 border border-[#946d35]/70"/>
-                  <div className="absolute inset-5 -rotate-3 border border-[#668b82]/60"/>
-                  <div className="absolute inset-8 border border-[#946d35]/60"/>
-                  <div className="relative grid h-24 w-24 place-items-center border-2 border-[#c69c58] bg-[#1a211f] shadow-[5px_5px_0_#090b10]"><Microscope className="h-12 w-12 text-[#e9bd71]"/></div>
-                  <span className="absolute right-0 top-3 border border-[#426b66] bg-[#102b2b] px-2 py-1 text-[9px] font-black text-[#a4e2d8]">EVIDENCIA</span>
-                  <span className="absolute bottom-3 left-0 border border-[#805c31] bg-[#2a1d11] px-2 py-1 text-[9px] font-black text-[#f1c47a]">NO ADIVINES</span>
-                </div>
-                <div className="border-t border-[#4a3c29] pt-4"><p className="text-xs font-extrabold text-white">Analiza. Contrasta. Concluye.</p><p className="mt-1 text-[10px] leading-5 text-[#9aa7b9]">Tu misión es identificar qué afirman los datos… y qué no pueden demostrar todavía.</p></div>
-              </div>
+              <CasoCeroScene />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#4f402a] bg-[#10141b] px-5 py-3 sm:px-8">
               <span className="text-[10px] text-[#aeb9c8]">Mejor puntuación: <strong className="text-[#f1c879]">{bestScore}/1000</strong></span>

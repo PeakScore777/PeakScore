@@ -104,7 +104,7 @@ export default function CasoCeroEvidenceClothesline() {
                 PISTA {String((activeEvidence ?? 0) + 1).padStart(2, "0")} · {active.tag}
               </p>
               <h2 id="caso-cero-evidence-title" className="mt-1 text-sm font-black sm:text-base">
-                {active.title.replace(/^\d+ · /, "")}
+                {active.title?.replace(/^\d+ · /, "") ?? "Evidencia científica"}
               </h2>
             </div>
             <button

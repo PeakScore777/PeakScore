@@ -1046,7 +1046,7 @@ export default function QueEsEsaVainaGame() {
   }
 
   return (
-    <main className="relative isolate min-h-[calc(100svh-72px)] overflow-hidden bg-[#070b18] text-white">
+    <main className="relative isolate min-h-[calc(100svh-72px)] overflow-x-clip bg-[#070b18] p-2 text-white sm:overflow-hidden sm:p-5">
       {chestAnimation && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-hidden overflow-y-auto bg-[#03020a]/95 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Recompensa del cofre">
           <div className="absolute inset-0 scale-105 bg-cover bg-center opacity-35 blur-[3px]" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} aria-hidden="true" />
@@ -1112,7 +1112,6 @@ export default function QueEsEsaVainaGame() {
                       <div className="chest-reward-card-header">
                         <span className="chest-reward-card-mark" aria-hidden="true">✦</span>
                         <span>EXPERIENCIA</span>
-                        <span className="chest-reward-card-type">XP</span>
                       </div>
                       <div className="chest-reward-card-body">
                         <Image src="/peaky/homepage/xp.webp" alt="Experiencia XP" width={92} height={92} className="chest-reward-card-icon" />
@@ -1126,7 +1125,6 @@ export default function QueEsEsaVainaGame() {
                       <div className="chest-reward-card-header">
                         <span className="chest-reward-card-mark" aria-hidden="true">✦</span>
                         <span>PEAK COINS</span>
-                        <span className="chest-reward-card-type">P</span>
                       </div>
                       <div className="chest-reward-card-body">
                         <Image src="/images/currency/peakcoin.webp" alt="Peak Coin" width={92} height={92} className="chest-reward-card-icon" />
@@ -1156,7 +1154,7 @@ export default function QueEsEsaVainaGame() {
       <div className="absolute inset-0 -z-30 bg-cover bg-center" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} />
       <div className="absolute inset-0 -z-20 bg-[#040817]/30" />
       <div className="absolute inset-0 -z-10 bg-[#030817]/20" />
-      <div className="qeav-game-shell mx-auto w-full max-w-[1390px] px-0 pb-6 pt-2 sm:px-5 sm:pb-8 sm:pt-4 lg:px-6">
+      <div className="qeav-game-shell ml-auto mr-[1vw] w-full max-w-[1390px] px-3 pb-8 pt-4 sm:px-5 lg:px-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link href="/aprender/juegos" className="inline-flex min-h-10 items-center gap-2 border-[3px] border-[#77839d] bg-[#10172b]/95 px-3 py-2 text-xs font-black text-white shadow-[4px_4px_0_#030713] transition hover:bg-[#1c2942]"><ArrowLeft className="h-4 w-4" /> Todos los juegos</Link>
           {process.env.NODE_ENV === "development" && (

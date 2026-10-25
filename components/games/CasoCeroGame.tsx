@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Activity,
   ArrowLeft,
@@ -24,6 +24,10 @@ import LessonAITutor from "@/components/aprender/LessonAITutor";
 import CasoCeroScene from "@/components/games/CasoCeroScene";
 import CasoCeroCinematicScene from "@/components/games/CasoCeroCinematicScene";
 import type { EvidenceCase } from "@/lib/games/caso-cero-bank";
+import {
+  startCasoCeroAmbientAudio,
+  stopCasoCeroAmbientAudio,
+} from "@/lib/games/caso-cero-audio";
 
 type PublicCase = Omit<EvidenceCase, "answer" | "explanation">;
 type CaseResult = PublicCase & {
@@ -71,76 +75,13 @@ export default function CasoCeroGame() {
   const [gamesCompleted, setGamesCompleted] = useState(0);
   const [orbyOpen, setOrbyOpen] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
-  const ambienceAudioRef = useRef<HTMLAudioElement | null>(null);
-  const windowRainAudioRef = useRef<HTMLAudioElement | null>(null);
-  const mysteryMusicAudioRef = useRef<HTMLAudioElement | null>(null);
-  const ambientStartPromiseRef = useRef<Promise<void> | null>(null);
-
-  const startAmbientAudio = useCallback(async () => {
-    const tracks = [
-      { audio: ambienceAudioRef.current, volume: 0.34 },
-      { audio: windowRainAudioRef.current, volume: 0.42 },
-      { audio: mysteryMusicAudioRef.current, volume: 0.14 },
-    ].filter((track): track is { audio: HTMLAudioElement; volume: number } => track.audio !== null);
-
-    if (tracks.length !== 3 || tracks.every(({ audio }) => !audio.paused)) return;
-    if (ambientStartPromiseRef.current) return ambientStartPromiseRef.current;
-
-    const attempt = Promise.all(
-      tracks.map(async ({ audio, volume }) => {
-        audio.loop = true;
-        audio.volume = volume;
-        audio.muted = false;
-        await audio.play();
-      }),
-    ).then(() => undefined);
-
-    ambientStartPromiseRef.current = attempt;
-    try {
-      await attempt;
-    } catch {
-      // Browsers may block audible autoplay. The first real interaction with
-      // the scene retries playback from inside that user gesture.
-    } finally {
-      if (ambientStartPromiseRef.current === attempt) {
-        ambientStartPromiseRef.current = null;
-      }
-    }
-  }, []);
+  const startAmbientAudio = useCallback(() => startCasoCeroAmbientAudio(), []);
 
   useEffect(() => {
-    // One stable set of tracks lives for the whole Caso Cero session.
-    const ambience = new Audio("/audio/caso-cero/ambiente-rio-lluvia.wav");
-    const windowRain = new Audio("/audio/caso-cero/lluvia-ventana.wav");
-    const mysteryMusic = new Audio("/audio/caso-cero/musica-misterio.wav");
-    const tracks = [ambience, windowRain, mysteryMusic];
-
-    for (const track of tracks) {
-      track.preload = "none";
-      track.loop = true;
-    }
-
-    ambienceAudioRef.current = ambience;
-    windowRainAudioRef.current = windowRain;
-    mysteryMusicAudioRef.current = mysteryMusic;
-
-    return () => {
-      for (const track of tracks) {
-        track.pause();
-        track.currentTime = 0;
-        track.src = "";
-      }
-      ambienceAudioRef.current = null;
-      windowRainAudioRef.current = null;
-      mysteryMusicAudioRef.current = null;
-      ambientStartPromiseRef.current = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    // Attempt immediate autoplay; if the browser requires a gesture, the scene
-    // capture handlers and the Start button will retry without showing a toggle.
+    // The JUGAR click in GamesHub starts these same shared audio instances
+    // before route navigation. Direct visits still attempt autoplay here.
     void startAmbientAudio();
+    return () => stopCasoCeroAmbientAudio();
   }, [startAmbientAudio]);
 
   useEffect(() => {

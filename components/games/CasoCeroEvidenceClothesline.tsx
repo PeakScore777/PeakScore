@@ -42,7 +42,9 @@ export default function CasoCeroEvidenceClothesline() {
   const active = activeEvidence === null ? null : CASE_EVIDENCE[activeEvidence];
 
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 640px)");
+    // Keep all three Polaroids visible within the narrow wall area on laptops
+    // and mobile. The package runs no animation loop while the photos are still.
+    const query = window.matchMedia("(max-width: 1150px)");
     const update = () => setCompact(query.matches);
     update();
     query.addEventListener("change", update);
@@ -54,7 +56,7 @@ export default function CasoCeroEvidenceClothesline() {
       className={[
         "caso-cero-evidence-clothesline pointer-events-none absolute left-1/2 top-[1.5%] z-20",
         "-translate-x-1/2",
-        "h-[260px] w-[94vw] sm:top-[2%] sm:h-[350px] sm:w-[min(760px,78vw)]",
+        "h-[205px] w-[96vw] sm:top-[5%] sm:h-[240px] sm:w-[min(510px,40vw)] lg:h-[290px]",
       ].join(" ")}
       aria-label="Fotografías de evidencia de Caso Cero"
     >

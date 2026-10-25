@@ -78,9 +78,9 @@ export default function CasoCeroGame() {
 
   const startAmbientAudio = useCallback(async () => {
     const tracks = [
-      { audio: ambienceAudioRef.current, volume: 0.42 },
-      { audio: windowRainAudioRef.current, volume: 0.31 },
-      { audio: mysteryMusicAudioRef.current, volume: 0.19 },
+      { audio: ambienceAudioRef.current, volume: 0.34 },
+      { audio: windowRainAudioRef.current, volume: 0.42 },
+      { audio: mysteryMusicAudioRef.current, volume: 0.14 },
     ].filter((track): track is { audio: HTMLAudioElement; volume: number } => track.audio !== null);
 
     if (tracks.length !== 3 || tracks.every(({ audio }) => !audio.paused)) return;

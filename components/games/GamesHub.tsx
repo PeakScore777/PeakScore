@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
+import { startCasoCeroAmbientAudio } from "@/lib/games/caso-cero-audio";
 
 type GameTone = "yellow" | "teal" | "red" | "orange" | "blue" | "purple";
 type GameCard = {
@@ -178,7 +179,24 @@ export default function GamesHub() {
 
                     <div className="mt-4 border-t border-white/10 pt-3">
                       {game.href ? (
-                        <Link href={game.href} className={["inline-flex min-h-10 w-full items-center justify-center gap-3 border-2 px-4 py-2.5 text-xs font-black transition active:translate-y-px", colors.button, colors.focus].join(" ")}>
+                        <Link
+                          href={game.href}
+                          onClick={(event) => {
+                            // Start audio in the same trusted click that opens Caso Cero,
+                            // so the intro does not ask for another click to enable sound.
+                            if (
+                              game.href === "/aprender/juegos/caso-cero" &&
+                              event.button === 0 &&
+                              !event.metaKey &&
+                              !event.ctrlKey &&
+                              !event.shiftKey &&
+                              !event.altKey
+                            ) {
+                              void startCasoCeroAmbientAudio();
+                            }
+                          }}
+                          className={["inline-flex min-h-10 w-full items-center justify-center gap-3 border-2 px-4 py-2.5 text-xs font-black transition active:translate-y-px", colors.button, colors.focus].join(" ")}
+                        >
                           <span className="pixel-font text-[9px] tracking-wide">JUGAR</span>
                         </Link>
                       ) : (

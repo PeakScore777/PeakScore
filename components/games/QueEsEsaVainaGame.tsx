@@ -219,6 +219,7 @@ export default function QueEsEsaVainaGame() {
   const [cooldownNow, setCooldownNow] = useState(0);
   const cooldownRefreshRef = useRef(false);
   const lastChestCycleRef = useRef<number | null>(null);
+  const chestStateInitializedRef = useRef(false);
   const [chestAnimation, setChestAnimation] = useState<{ chestNumber: number; xp: number; coins: number; phase: "opening" | "reward" } | null>(null);
   const [wallet, setWallet] = useState<{ xp: number; coins: number } | null>(null);
   const timerAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -351,7 +352,15 @@ export default function QueEsEsaVainaGame() {
     if (payload.wallet && Number.isFinite(Number(payload.wallet.xp)) && Number.isFinite(Number(payload.wallet.coins))) {
       setWallet({ xp: Number(payload.wallet.xp), coins: Number(payload.wallet.coins) });
     }
-    if (Number.isInteger(payload.cycleNumber) && payload.cycleNumber > 0) setChestCycleNumber(payload.cycleNumber);
+    if (Number.isInteger(payload.cycleNumber) && payload.cycleNumber > 0) {
+      const loadedCycleNumber = Number(payload.cycleNumber);
+      if (!chestStateInitializedRef.current) {
+        // La primera sincronización no es una recarga ocurrida en mitad de la partida.
+        chestStateInitializedRef.current = true;
+        lastChestCycleRef.current = loadedCycleNumber;
+      }
+      setChestCycleNumber(loadedCycleNumber);
+    }
     setChestCooldownUntil(typeof payload.cooldownUntil === "string" ? payload.cooldownUntil : null);
     setFrozenRewardScore(Math.max(0, Math.min(1000, Number(payload.frozenScore) || 0)));
     setCooldownNow(Date.now());
@@ -363,6 +372,8 @@ export default function QueEsEsaVainaGame() {
   }, [refreshChestState]);
 
   useEffect(() => {
+    // Espera a que Supabase haya entregado el ciclo real antes de detectar cambios.
+    if (!chestStateInitializedRef.current) return;
     if (lastChestCycleRef.current === null) {
       lastChestCycleRef.current = chestCycleNumber;
       return;
@@ -1040,7 +1051,7 @@ export default function QueEsEsaVainaGame() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-x-hidden overflow-y-auto bg-[#03020a]/95 p-2 sm:p-4" role="dialog" aria-modal="true" aria-label="Recompensa del cofre">
           <div className="absolute inset-0 scale-105 bg-cover bg-center opacity-35 blur-[3px]" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} aria-hidden="true" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_38%,rgba(255,165,29,.24)_0%,rgba(11,7,30,.46)_40%,rgba(2,3,10,.96)_100%)]" aria-hidden="true" />
-          <section className="chest-reward-legendary-frame relative flex min-h-[calc(100svh-16px)] w-full max-w-[1480px] flex-col items-center justify-between overflow-hidden border-[3px] border-[#eab348] px-3 pb-4 pt-4 shadow-[inset_0_0_0_2px_rgba(255,221,131,.35),0_0_0_2px_#39240e,0_0_40px_rgba(255,177,35,.22)] sm:min-h-[calc(100svh-32px)] sm:px-8 sm:pb-6 sm:pt-5">
+          <section className="chest-reward-legendary-frame relative my-auto flex min-h-0 max-h-[calc(100svh-24px)] w-full max-w-[820px] flex-col items-center justify-between overflow-x-hidden overflow-y-auto border-[3px] border-[#eab348] px-3 py-3 shadow-[inset_0_0_0_2px_rgba(255,221,131,.35),0_0_0_2px_#39240e,0_0_32px_rgba(255,177,35,.22)] sm:max-h-[calc(100svh-48px)] sm:px-7 sm:py-4">
             <span aria-hidden="true" className="chest-reward-frame-corner chest-reward-frame-corner-tl" />
             <span aria-hidden="true" className="chest-reward-frame-corner chest-reward-frame-corner-tr" />
             <span aria-hidden="true" className="chest-reward-frame-corner chest-reward-frame-corner-bl" />
@@ -1063,7 +1074,7 @@ export default function QueEsEsaVainaGame() {
                 <span className="h-[2px] w-[12%] bg-gradient-to-l from-transparent to-[#9d6320]" />
               </div>
 
-              <div className={"chest-reward-legendary-burst relative mt-1 grid h-[230px] w-full max-w-[680px] place-items-center sm:mt-0 sm:h-[min(39vh,365px)] " + (chestAnimation.phase === "opening" ? "chest-open-sequence" : "chest-reward-glow")}>
+              <div className={"chest-reward-legendary-burst relative mt-1 grid h-[clamp(150px,27vh,240px)] w-full max-w-[540px] place-items-center sm:mt-0 sm:h-[clamp(200px,30vh,310px)] sm:max-w-[650px] " + (chestAnimation.phase === "opening" ? "chest-open-sequence" : "chest-reward-glow")}>
                 <div className="chest-reward-legendary-rays absolute inset-0" aria-hidden="true" />
                 <div className="absolute inset-x-[18%] inset-y-[18%] rounded-full bg-[#ffc12b]/30 blur-3xl" aria-hidden="true" />
                 {chestAnimation.phase === "reward" && (
@@ -1082,7 +1093,7 @@ export default function QueEsEsaVainaGame() {
                   unoptimized={chestAnimation.phase === "opening"}
                   width={560}
                   height={420}
-                  className="relative z-10 h-[220px] w-full max-w-[360px] object-contain drop-shadow-[0_12px_0_rgba(0,0,0,.55)] sm:h-full sm:max-w-[520px]"
+                  className="relative z-10 h-[clamp(145px,25vh,225px)] w-full max-w-[350px] object-contain drop-shadow-[0_10px_0_rgba(0,0,0,.55)] sm:h-full sm:max-w-[430px]"
                 />
               </div>
             </div>
@@ -1125,7 +1136,7 @@ export default function QueEsEsaVainaGame() {
       <div className="absolute inset-0 -z-30 bg-cover bg-center" style={{ backgroundImage: "url('/images/games/que-es-esa-vaina/que-es-esa-vaina-cover.png')" }} />
       <div className="absolute inset-0 -z-20 bg-[#040817]/30" />
       <div className="absolute inset-0 -z-10 bg-[#030817]/20" />
-      <div className="mx-auto w-full max-w-[1390px] px-0 pb-6 pt-2 sm:px-5 sm:pb-8 sm:pt-4 lg:px-6">
+      <div className="qeav-game-shell mx-auto w-full max-w-[1390px] px-0 pb-6 pt-2 sm:px-5 sm:pb-8 sm:pt-4 lg:px-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link href="/aprender/juegos" className="inline-flex min-h-10 items-center gap-2 border-[3px] border-[#77839d] bg-[#10172b]/95 px-3 py-2 text-xs font-black text-white shadow-[4px_4px_0_#030713] transition hover:bg-[#1c2942]"><ArrowLeft className="h-4 w-4" /> Todos los juegos</Link>
           {process.env.NODE_ENV === "development" && (
@@ -1184,7 +1195,16 @@ export default function QueEsEsaVainaGame() {
                 <div className="relative flex h-8 items-center px-1"><div className="absolute left-1 right-1 top-1/2 h-3 -translate-y-1/2 border-2 border-[#7b8396] bg-[#171d2c]" /><div className="absolute left-1 top-1/2 h-3 -translate-y-1/2 border-y-2 border-[#fff0a6] bg-[#e8b936] transition-[width] duration-300" style={{ width: `${scoreProgress}%` }} /><div className="absolute inset-0 z-10">{Array.from({ length: 5 }, (_, i) => { const markerPosition = [0, 20, 50, 80, 100][i]; const chestIndex: 0 | 1 | 2 | null = i === 1 ? 0 : i === 2 ? 1 : i === 4 ? 2 : null; const isChest = chestIndex !== null; const chestNumber = chestIndex === null ? null : chestIndex + 1; const unlocked = chestIndex !== null && !cooldownActive && !sessionOutdated && chestNumber === nextChestToClaim && rewardMeterScore >= CHEST_THRESHOLDS[chestIndex]; return <div key={i} style={{ left: `${markerPosition}%` }} className={`absolute top-1/2 -translate-x-1/2 -translate-y-1/2 grid h-7 w-7 place-items-center border-2 ${isChest ? (unlocked ? "border-[#ffe08a] bg-[#4b3211]" : "border-[#566079] bg-[#101629]") : "border-[#8992a8] bg-[#182136]"} shadow-[2px_2px_0_#030713]`} title={chestIndex !== null ? (unlocked ? "Cofre disponible para reclamar" : `Cofre al alcanzar ${CHEST_THRESHOLDS[chestIndex]} puntos netos`) : `Hito ${i + 1}`} >{chestIndex !== null ? <button type="button" onClick={() => void claimChest(chestIndex + 1)} disabled={!unlocked || claimedChests.includes(chestIndex + 1) || claimingChest !== null || !gameSessionId || cooldownActive || sessionOutdated} aria-label={claimedChests.includes(chestIndex + 1) ? `Cofre ${chestIndex + 1} reclamado` : `Reclamar cofre ${chestIndex + 1}`} className="relative grid h-full w-full place-items-center disabled:cursor-not-allowed"><Image src="/images/games/poco-responda/cofre.png" alt="" width={24} height={24} className={`h-6 w-6 object-contain ${claimedChests.includes(chestIndex + 1) ? "opacity-40 grayscale" : unlocked ? "animate-pulse" : "grayscale opacity-45"}`} />{unlocked && !claimedChests.includes(chestIndex + 1) && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border border-white bg-red-500" aria-label="Cofre disponible para reclamar" />}</button> : <span className="text-[10px] font-black text-[#c8d1e5] [font-family:var(--font-pixel),monospace]">{i === 0 || i === 3 ? "•" : ""}</span>}</div>; })}</div></div>
               </div>
             </header>
-            {gameError && <p role="alert" className="mb-3 border-2 border-rose-400 bg-rose-950/60 p-3 text-xs font-bold text-rose-100 sm:mb-4">{gameError}</p>}
+            {gameError && (
+        <div role="alert" className="mb-3 flex flex-col gap-3 border-2 border-rose-400 bg-rose-950/60 p-3 text-xs font-bold text-rose-100 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0 flex-1">{gameError}</p>
+          {sessionOutdated && (
+            <button type="button" onClick={restart} className="pixel-font min-h-10 shrink-0 border-2 border-[#ffe08a] bg-gradient-to-b from-[#986821] to-[#69440f] px-3 py-2 text-[8px] text-white shadow-[3px_3px_0_#030713] transition hover:from-[#b88435] hover:to-[#805817]">
+              JUGAR OTRA VEZ ↻
+            </button>
+          )}
+        </div>
+      )}
             {!finished && <div className="mb-3 grid grid-cols-2 gap-2 xl:hidden">
               <button type="button" onClick={() => setMobileTools((value) => value === "chests" ? null : "chests")} aria-expanded={mobileTools === "chests"} className={`flex min-h-12 min-w-0 items-center gap-2 border-2 px-3 py-2 text-left shadow-[2px_2px_0_#030713] transition ${mobileTools === "chests" ? "border-[#ffe08a] bg-[#352711]" : "border-[#65583e] bg-[#111727]"}`}>
                 <Image src="/images/games/poco-responda/cofre.png" alt="" width={34} height={28} className="h-7 w-8 shrink-0 object-contain"/>

@@ -481,9 +481,6 @@ export default function CasoCeroGame() {
       )}
       {audioError && <div role="status" className="fixed right-3 top-[106px] z-[60] max-w-xs border border-[#9d5749] bg-[#2b1716]/95 px-3 py-2 text-[10px] leading-4 text-[#ffd1c6]">No se pudo iniciar el sonido. Pulsa de nuevo «Activar ambiente».</div>}
     </main>
-    <audio ref={ambienceAudioRef} src="/audio/caso-cero/ambiente-rio-lluvia.wav" preload="none" loop className="hidden" aria-hidden="true" />
-    <audio ref={windowRainAudioRef} src="/audio/caso-cero/lluvia-ventana.wav" preload="none" loop className="hidden" aria-hidden="true" />
-    <audio ref={mysteryMusicAudioRef} src="/audio/caso-cero/musica-misterio.wav" preload="none" loop className="hidden" aria-hidden="true" />
     </>
   );
 }

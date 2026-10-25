@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Component, Suspense, useEffect, useMemo, useState, type ErrorInfo, type ReactNode } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Image as DreiImage, OrthographicCamera } from "@react-three/drei";
 import * as THREE from "three";
@@ -17,7 +17,7 @@ type EvidencePhoto = {
 
 const CASE_EVIDENCE: EvidencePhoto[] = [
   {
-    src: "https://images.pexels.com/videos/5157996/pexels-photo-5157996.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    src: "https://images.pexels.com/photos/10010640/pexels-photo-10010640.jpeg?auto=compress&cs=tinysrgb&w=1200",
     alt: "Corriente de un río durante una tormenta, con agua golpeando las rocas",
     title: "01 · EL RÍO",
     description: "Punto de muestreo",
@@ -25,7 +25,7 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Interpretar una situación y distinguir observaciones de conclusiones.",
   },
   {
-    src: "https://images.pexels.com/photos/20806050/pexels-photo-20806050.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    src: "https://images.pexels.com/photos/10514834/pexels-photo-10514834.jpeg?auto=compress&cs=tinysrgb&w=1200",
     alt: "Técnico de campo recolectando una muestra de agua para análisis",
     title: "02 · MUESTRAS",
     description: "Trabajo de campo",
@@ -33,7 +33,7 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Comprobar si las muestras se obtuvieron bajo condiciones comparables.",
   },
   {
-    src: "https://images.pexels.com/photos/8850985/pexels-photo-8850985.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    src: "https://images.pexels.com/photos/8850986/pexels-photo-8850986.jpeg?auto=compress&cs=tinysrgb&w=1200",
     alt: "Material de laboratorio para analizar una muestra líquida",
     title: "03 · LABORATORIO",
     description: "Análisis de datos",
@@ -41,6 +41,35 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Relacionar mediciones y unidades para decidir qué conclusión respaldan los datos.",
   },
 ];
+
+type ImageBoundaryProps = {
+  children: ReactNode;
+  fallback: ReactNode;
+};
+
+type ImageBoundaryState = {
+  failed: boolean;
+};
+
+/**
+ * TextureLoader errors must not bubble out of the whole WebGL canvas.
+ * Keep the physical print visible as a dark fallback if a remote image is unavailable.
+ */
+class EvidenceImageBoundary extends Component<ImageBoundaryProps, ImageBoundaryState> {
+  state: ImageBoundaryState = { failed: false };
+
+  static getDerivedStateFromError(): ImageBoundaryState {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, _info: ErrorInfo) {
+    console.warn("Caso Cero: no se pudo cargar una fotografía de evidencia.", error);
+  }
+
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
+}
 
 function makeBraidedStrand(
   start: THREE.Vector3,
@@ -224,7 +253,8 @@ function EvidenceCard({
         <meshStandardMaterial color="#e8dfcd" roughness={0.92} />
       </mesh>
 
-      <Suspense
+      <EvidenceImageBoundary
+        key={photo.src}
         fallback={
           <mesh position={[0, 0.025, 0.003]}>
             <planeGeometry args={[1.32, 1.35]} />
@@ -232,14 +262,23 @@ function EvidenceCard({
           </mesh>
         }
       >
-        <DreiImage
-          url={photo.src}
-          position={[0, 0.025, 0.003]}
-          scale={[1.32, 1.35]}
-          toneMapped={false}
-          transparent={false}
-        />
-      </Suspense>
+        <Suspense
+          fallback={
+            <mesh position={[0, 0.025, 0.003]}>
+              <planeGeometry args={[1.32, 1.35]} />
+              <meshStandardMaterial color="#263137" roughness={1} />
+            </mesh>
+          }
+        >
+          <DreiImage
+            url={photo.src}
+            position={[0, 0.025, 0.003]}
+            scale={[1.32, 1.35]}
+            toneMapped={false}
+            transparent={false}
+          />
+        </Suspense>
+      </EvidenceImageBoundary>
 
       <mesh position={[0, -0.755, 0.006]}>
         <planeGeometry args={[1.32, 0.12]} />

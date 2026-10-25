@@ -40,7 +40,7 @@ export default function CasoCeroAmbientBackdrop() {
       <div className="caso-cero-window-motion absolute left-0 top-0 h-[59.5%] w-[39.4%] overflow-hidden">
         {!riverUnavailable ? (
           <video
-            className="absolute inset-0 h-full w-full object-cover"
+            className="caso-cero-river-video absolute inset-0 h-full w-full object-cover"
             src={RIVER_VIDEO}
             autoPlay
             loop

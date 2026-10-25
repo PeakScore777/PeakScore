@@ -203,11 +203,18 @@ export default function CasoCeroCinematicScene({
       >
         {!sceneVideoFailed ? (
           <video
-            className="caso-cero-river-video absolute inset-0 h-full w-full object-fill"
+            className="caso-cero-river-video absolute object-fill"
+            style={{
+              // Zoom into the moving-water portion and shift it upward so the
+              // river fills the entire window opening instead of only a few panes.
+              left: "-9%",
+              top: "-25%",
+              width: "118%",
+              height: "118%",
+            }}
             src="/videos/caso-cero/rio-nocturno.mp4"
             autoPlay
             muted
-            loop
             playsInline
             preload="metadata"
             disablePictureInPicture
@@ -358,10 +365,11 @@ export default function CasoCeroCinematicScene({
 
       <style jsx>{`
         .caso-cero-river-video {
-          /* A small overscan hides the clip's hard edges behind the window frame. */
-          transform: scale(1.045);
+          /* Overscan removes visible clip boundaries; the wooden frame PNGs
+             remain above it and hide everything outside the transparent panes. */
+          transform: scale(1.02);
           transform-origin: center;
-          filter: brightness(.62) saturate(.82) contrast(1.06);
+          filter: brightness(.86) saturate(.9) contrast(1.05);
           will-change: transform;
         }
 

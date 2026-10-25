@@ -133,39 +133,32 @@ export default function GamesHub() {
 
   return (
     <main className="games-hub relative isolate min-h-[calc(100svh-72px)] overflow-hidden bg-[#050817] text-white">
-      <div className="absolute inset-0 -z-20 bg-cover bg-center" style={{ backgroundImage: "url('/images/games/backgrounds/games-arcade-bg.png')" }} />
+      <div className="absolute inset-0 -z-20 bg-cover bg-center" style={{ backgroundImage: "url('/images/games/fondo-juegos-pixelart.png')" }} />
       <div className="absolute inset-0 -z-10 bg-[#050817]/[.28]" />
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[#050817]/15 via-[#050817]/20 to-[#050817]/75" />
 
-      <div className="mx-auto w-full max-w-[1600px] px-4 pb-10 pt-5 sm:px-7 sm:pt-6 lg:px-8">
-        <section className="ml-auto max-w-[1280px]">
-          <header className="mb-5 grid items-center gap-4 lg:mb-6 lg:grid-cols-[minmax(0,1fr)_390px]">
+      <div className="mx-auto w-full max-w-[1600px] px-4 pb-10 pt-5 sm:px-7 sm:pt-7 lg:px-8">
+        <section className="mx-auto max-w-[1160px]">
+          <header className="mb-6 flex flex-col items-center gap-3 text-center sm:mb-7">
+            <Gamepad2 aria-hidden="true" className="h-10 w-10 text-[#19d8ff] drop-shadow-[0_0_12px_rgba(25,216,255,.85)] sm:h-12 sm:w-12"/>
             <div className="min-w-0">
-              <div className="flex items-center gap-3 sm:gap-4">
-                <Gamepad2 aria-hidden="true" className="h-10 w-10 shrink-0 text-[#19d8ff] drop-shadow-[0_0_12px_rgba(25,216,255,.85)] sm:h-14 sm:w-14"/>
-                <h1 className="pixel-font text-lg leading-[1.8] text-white drop-shadow-[0_0_10px_rgba(190,70,255,.85)] sm:text-2xl xl:text-3xl">JUEGOS EDUCATIVOS</h1>
-              </div>
-              <p className="mt-2 max-w-2xl pl-1 text-sm leading-6 text-[#e1eaf8] sm:text-base">Practica, razona y domina los temas del ICFES con minijuegos únicos.</p>
+              <h1 className="pixel-font text-xl leading-[1.7] text-white drop-shadow-[0_0_10px_rgba(190,70,255,.85)] sm:text-2xl xl:text-3xl">JUEGOS EDUCATIVOS</h1>
+              <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#e1eaf8] sm:text-base">Practica, razona y domina los temas del ICFES con minijuegos únicos.</p>
+              <div aria-hidden="true" className="mx-auto mt-4 flex h-[3px] w-56 items-center justify-center bg-gradient-to-r from-[#19d8ff] via-[#b44bff] to-[#19d8ff]"><span className="h-3 w-3 rotate-45 border-2 border-[#ffc34a] bg-[#ff8a2a] shadow-[0_0_12px_#ff8a2a]"/></div>
             </div>
-
             <button
               type="button"
               onClick={() => setTutorOpen(true)}
-              className="group flex min-h-[102px] items-center gap-3 border-2 border-[#29bff0] bg-[#061326]/95 p-3 text-left shadow-[4px_4px_0_#020714,0_0_18px_rgba(19,177,237,.18)] transition hover:border-[#8beaff] hover:bg-[#0b1b30] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8beaff]"
+              className="group inline-flex min-h-9 items-center gap-2 border border-[#29bff0]/80 bg-[#061326]/90 px-3 py-2 text-left shadow-[3px_3px_0_#020714] transition hover:border-[#8beaff] hover:bg-[#0b1b30] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8beaff]"
               aria-label="Abrir el chat de Orby, tutor con inteligencia artificial"
             >
-              <div className="grid h-[76px] w-[82px] shrink-0 place-items-center overflow-hidden border border-[#31658a] bg-[#081b31]">
-                <Image src="/avatars/photo_perfil/orbyp.png" alt="Orby" width={1200} height={800} className="h-full w-full object-contain"/>
-              </div>
-              <span className="min-w-0 flex-1">
-                <span className="pixel-font block text-[8px] leading-5 text-[#a5ecff] sm:text-[9px]">ORBY TE ACOMPAÑA</span>
-                <span className="mt-1 block text-xs leading-5 text-[#eef4ff] sm:text-sm">¿Dudas en un juego? Pregúntame y te explico el concepto paso a paso.</span>
-              </span>
-              <ArrowRight className="h-6 w-6 shrink-0 text-[#35d8ff] transition-transform group-hover:translate-x-1"/>
+              <Image src="/avatars/photo_perfil/orbyp.png" alt="" width={32} height={32} className="h-8 w-8 object-contain"/>
+              <span className="pixel-font text-[8px] text-[#a5ecff] sm:text-[9px]">PREGÚNTALE A ORBY</span>
+              <ArrowRight className="h-4 w-4 shrink-0 text-[#35d8ff] transition-transform group-hover:translate-x-1"/>
             </button>
           </header>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 xl:gap-4">
             {games.map((game) => {
               const colors = palette[game.tone];
               return (

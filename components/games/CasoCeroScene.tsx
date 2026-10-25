@@ -20,6 +20,7 @@ type EvidenceItem = {
   description: string;
   image: string;
   photographerPage: string;
+  icon: typeof Waves;
   scene: "river" | "samples" | "lab" | "ecosystem";
   tag: string;
 };
@@ -34,6 +35,7 @@ const evidence: EvidenceItem[] = [
     image: "https://images.pexels.com/videos/5157996/pexels-photo-5157996.jpeg?auto=compress&cs=tinysrgb&w=1000",
     photographerPage: "https://www.pexels.com/video/flowing-river-while-raining-5157996/",
     scene: "river",
+    icon: Waves,
     tag: "OBSERVACIÓN",
   },
   {
@@ -45,6 +47,7 @@ const evidence: EvidenceItem[] = [
     image: "https://images.pexels.com/photos/20806050/pexels-photo-20806050.jpeg?auto=compress&cs=tinysrgb&w=1000",
     photographerPage: "https://www.pexels.com/photo/collecting-water-into-a-plastic-bottle-from-the-spring-20806050/",
     scene: "samples",
+    icon: FlaskConical,
     tag: "MÉTODO",
   },
   {
@@ -56,6 +59,7 @@ const evidence: EvidenceItem[] = [
     image: "https://images.pexels.com/photos/8850985/pexels-photo-8850985.jpeg?auto=compress&cs=tinysrgb&w=1000",
     photographerPage: "https://www.pexels.com/photo/person-holding-a-dropper-experimenting-chemical-on-a-glass-bottle-8850985/",
     scene: "lab",
+    icon: Microscope,
     tag: "DATOS",
   },
   {
@@ -67,6 +71,7 @@ const evidence: EvidenceItem[] = [
     image: "https://images.pexels.com/photos/9170405/pexels-photo-9170405.jpeg?auto=compress&cs=tinysrgb&w=1000",
     photographerPage: "https://www.pexels.com/photo/beige-photo-of-a-fish-and-stones-in-water-9170405/",
     scene: "ecosystem",
+    icon: Leaf,
     tag: "CONTEXTO",
   },
 ];

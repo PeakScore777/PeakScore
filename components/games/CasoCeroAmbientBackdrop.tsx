@@ -30,14 +30,14 @@ export default function CasoCeroAmbientBackdrop() {
           priority
           sizes="(max-width: 768px) 100vw, 1280px"
           onError={() => setBackgroundUnavailable(true)}
-          className="caso-cero-room-image object-cover"
+          className="caso-cero-room-image object-fill"
         />
       )}
 
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(3,9,14,.05)_0%,rgba(3,9,14,.12)_45%,rgba(2,6,10,.63)_100%)]" />
 
       {/* River video sits behind recreated window muntins. Source: Pexels video 4192175. */}
-      <div className="caso-cero-window-motion absolute left-0 top-0 h-[59.5%] w-[29.2%] overflow-hidden">
+      <div className="caso-cero-window-motion absolute left-0 top-0 h-[59.5%] w-[39.4%] overflow-hidden">
         {!riverUnavailable ? (
           <video
             className="absolute inset-0 h-full w-full object-cover"
@@ -80,7 +80,7 @@ export default function CasoCeroAmbientBackdrop() {
         <div className="caso-cero-window-frame pointer-events-none absolute inset-0 border-[9px] border-[#2d2117] shadow-[inset_0_0_0_2px_rgba(190,137,75,.34),0_0_20px_rgba(0,0,0,.45)]">
           <span className="absolute inset-y-0 left-[33.2%] w-[7px] bg-gradient-to-r from-[#1d160f] via-[#68482b] to-[#21170f] shadow-[1px_0_4px_rgba(0,0,0,.7)]" />
           <span className="absolute inset-y-0 left-[67.1%] w-[7px] bg-gradient-to-r from-[#1d160f] via-[#68482b] to-[#21170f] shadow-[1px_0_4px_rgba(0,0,0,.7)]" />
-          <span className="absolute inset-x-0 top-[32%] h-[7px] bg-gradient-to-b from-[#1e160f] via-[#75502d] to-[#21170f] shadow-[0_2px_5px_rgba(0,0,0,.65)]" />
+          <span className="absolute inset-x-0 top-[55%] h-[7px] bg-gradient-to-b from-[#1e160f] via-[#75502d] to-[#21170f] shadow-[0_2px_5px_rgba(0,0,0,.65)]" />
           <span className="absolute inset-x-0 bottom-[2%] h-[9px] bg-gradient-to-b from-[#674629] via-[#302216] to-[#17110c] shadow-[0_3px_7px_rgba(0,0,0,.7)]" />
         </div>
       </div>
@@ -89,7 +89,7 @@ export default function CasoCeroAmbientBackdrop() {
 
       <style jsx>{`
         .caso-cero-room-image {
-          object-position: center center;
+          object-position: left top;
         }
 
         .caso-cero-rain-streak {
@@ -120,7 +120,7 @@ export default function CasoCeroAmbientBackdrop() {
 
         @media (max-width: 640px) {
           .caso-cero-room-image {
-            object-position: 18% center;
+            object-position: left top;
           }
           .caso-cero-window-motion {
             opacity: .75;

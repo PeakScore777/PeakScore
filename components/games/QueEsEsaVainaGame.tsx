@@ -1088,7 +1088,7 @@ export default function QueEsEsaVainaGame() {
                   </>
                 )}
                 <Image
-                  src={chestAnimation.phase === "opening" ? "/images/games/que-es-esa-vaina/cofre-apertura.gif" : "/images/games/que-es-esa-vaina/cofre-abierto-luz.png"}
+                  src={chestAnimation.phase === "opening" ? "/images/games/que-es-esa-vaina/cofre-apertura.gif" : "/images/games/que-es-esa-vaina/cofre-abierto-recompensas.webp"}
                   alt={chestAnimation.phase === "opening" ? "Animación de apertura del cofre" : "Cofre abierto liberando una luz dorada"}
                   unoptimized={chestAnimation.phase === "opening"}
                   width={560}

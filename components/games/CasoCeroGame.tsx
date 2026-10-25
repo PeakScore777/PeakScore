@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ArrowLeft,
@@ -18,6 +18,8 @@ import {
   Microscope,
   RotateCcw,
   ShieldCheck,
+  Volume2,
+  VolumeX,
   XCircle,
 } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
@@ -71,6 +73,11 @@ export default function CasoCeroGame() {
   const [gamesCompleted, setGamesCompleted] = useState(0);
   const [orbyOpen, setOrbyOpen] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [audioError, setAudioError] = useState(false);
+  const ambienceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const windowRainAudioRef = useRef<HTMLAudioElement | null>(null);
+  const mysteryMusicAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,6 +102,46 @@ export default function CasoCeroGame() {
     });
     return () => { cancelled = true; };
   }, []);
+
+  const toggleAmbientAudio = useCallback(async () => {
+    const tracks = [
+      { audio: ambienceAudioRef.current, volume: 0.42 },
+      { audio: windowRainAudioRef.current, volume: 0.31 },
+      { audio: mysteryMusicAudioRef.current, volume: 0.19 },
+    ].filter((track): track is { audio: HTMLAudioElement; volume: number } => track.audio !== null);
+
+    if (audioEnabled) {
+      for (const track of tracks) track.audio.pause();
+      setAudioEnabled(false);
+      setAudioError(false);
+      return;
+    }
+
+    try {
+      for (const track of tracks) {
+        track.audio.loop = true;
+        track.audio.volume = track.volume;
+        track.audio.muted = false;
+      }
+      await Promise.all(tracks.map(({ audio }) => audio.play()));
+      setAudioEnabled(true);
+      setAudioError(false);
+    } catch {
+      for (const track of tracks) track.audio.pause();
+      setAudioEnabled(false);
+      setAudioError(true);
+    }
+  }, [audioEnabled]);
+
+  useEffect(() => {
+    if (phase !== "finished") return;
+    for (const track of [ambienceAudioRef.current, windowRainAudioRef.current, mysteryMusicAudioRef.current]) {
+      if (!track) continue;
+      track.pause();
+      track.currentTime = 0;
+    }
+    setAudioEnabled(false);
+  }, [phase]);
 
   const currentCase = rounds[index] ?? null;
   const correctCount = results.filter((item) => item.isCorrect).length;
@@ -225,11 +272,14 @@ export default function CasoCeroGame() {
         error={error}
         caseCount={cases.length}
         onStart={() => void beginCaseFile()}
+        audioEnabled={audioEnabled}
+        onToggleAudio={() => void toggleAmbientAudio()}
       />
     );
   }
 
   return (
+    <>
     <main className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#050a15] text-white">
       <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: "radial-gradient(ellipse at 16% 0%, rgba(40,117,111,.28), transparent 45%), radial-gradient(ellipse at 86% 80%, rgba(176,105,41,.18), transparent 42%)" }} />
       <div className="relative mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-7 sm:py-8">
@@ -380,6 +430,23 @@ export default function CasoCeroGame() {
           "Pista disponible: " + currentCase.hint,
         ].join("\n") : ""}
       />
+      {(phase === "playing" || phase === "feedback") && (
+        <button
+          type="button"
+          onClick={() => void toggleAmbientAudio()}
+          aria-pressed={audioEnabled}
+          aria-label={audioEnabled ? "Silenciar ambiente" : "Activar ambiente"}
+          className="fixed right-3 top-[58px] z-[60] inline-flex min-h-10 items-center gap-2 border border-[#a88b5b]/60 bg-[#070c11]/90 px-3 py-2 text-[10px] font-bold text-[#f2e7d3] shadow-lg backdrop-blur-md transition hover:border-[#e6bd72] sm:right-5 sm:text-xs"
+        >
+          {audioEnabled ? <Volume2 className="h-4 w-4 text-[#e5bd76]" /> : <VolumeX className="h-4 w-4" />}
+          <span>{audioEnabled ? "Ambiente activo" : "Activar ambiente"}</span>
+        </button>
+      )}
+      {audioError && <div role="status" className="fixed right-3 top-[106px] z-[60] max-w-xs border border-[#9d5749] bg-[#2b1716]/95 px-3 py-2 text-[10px] leading-4 text-[#ffd1c6]">No se pudo iniciar el sonido. Pulsa de nuevo «Activar ambiente».</div>}
     </main>
+    <audio ref={ambienceAudioRef} src="/audio/caso-cero/ambiente-rio-lluvia.wav" preload="none" loop className="hidden" aria-hidden="true" />
+    <audio ref={windowRainAudioRef} src="/audio/caso-cero/lluvia-ventana.wav" preload="none" loop className="hidden" aria-hidden="true" />
+    <audio ref={mysteryMusicAudioRef} src="/audio/caso-cero/musica-misterio.wav" preload="none" loop className="hidden" aria-hidden="true" />
+    </>
   );
 }

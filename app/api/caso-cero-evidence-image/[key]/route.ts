@@ -10,7 +10,7 @@ const EVIDENCE_IMAGES: Record<string, string> = {
   samples:
     "https://images.pexels.com/photos/20806050/pexels-photo-20806050.jpeg?auto=compress&cs=tinysrgb&w=1200",
   laboratory:
-    "https://images.pexels.com/photos/8850985/pexels-photo-8850985.jpeg?auto=compress&cs=tinysrgb&w=1200",
+    "https://images.pexels.com/photos/8940463/pexels-photo-8940463.jpeg?auto=compress&cs=tinysrgb&w=1200",
 };
 
 type RouteContext = {

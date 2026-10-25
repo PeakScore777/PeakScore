@@ -723,6 +723,7 @@ export default function QueEsEsaVainaGame() {
 
   const handleNext = useCallback(() => {
     if (!revealed || answeringRef.current || hintLoading) return;
+    setMobileTools(null);
 
     try {
       const navigationAudio = new Audio("/sounds/navigation.mp3");
@@ -773,6 +774,7 @@ export default function QueEsEsaVainaGame() {
     setOrbyReviewOpen(false);
     setUsedHints([]); setVisibleHints({});
     setFinished(false);
+    setMobileTools(null);
     setGameSessionId(null);
     sessionAttemptedRef.current = false;
     setClaimingChest(null);

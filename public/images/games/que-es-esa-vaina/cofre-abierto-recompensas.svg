@@ -57,8 +57,8 @@
   <g opacity=".98">
     <path d="M62 203H78V187H94V203H110V219H94V235H78V219H62Z" fill="#FFE25B" stroke="#8A3A11" stroke-width="4"/>
     <path d="M535 118H550V103H565V118H580V133H565V148H550V133H535Z" fill="#FFE25B" stroke="#8A3A11" stroke-width="4"/>
-    <use href="#spark" x="113" y="123" transform="translate(113 123) scale(.72) translate(-113 -123)"/>
-    <use href="#spark" x="535" y="245" transform="translate(535 245) scale(.8) translate(-535 -245)"/>
+    <use href="#spark" transform="translate(113 123) scale(.72)"/>
+    <use href="#spark" transform="translate(535 245) scale(.8)"/>
     <use href="#spark" transform="translate(170 66) scale(.48)"/>
     <use href="#spark" transform="translate(462 64) scale(.55)"/>
     <use href="#spark" transform="translate(86 294) scale(.45)"/>

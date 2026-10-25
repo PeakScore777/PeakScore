@@ -1149,11 +1149,6 @@ export default function QueEsEsaVainaGame() {
       <div className="qeav-game-shell ml-auto mr-[1vw] w-full max-w-[1390px] px-3 pb-8 pt-4 sm:px-5 lg:px-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <Link href="/aprender/juegos" className="inline-flex min-h-10 items-center gap-2 border-[3px] border-[#77839d] bg-[#10172b]/95 px-3 py-2 text-xs font-black text-white shadow-[4px_4px_0_#030713] transition hover:bg-[#1c2942]"><ArrowLeft className="h-4 w-4" /> Todos los juegos</Link>
-          {process.env.NODE_ENV === "development" && (
-            <button type="button" onClick={previewChestReward} className="pixel-font min-h-10 border-2 border-[#ffe08a] bg-[#69440f] px-3 py-2 text-[8px] text-[#fff1b8] shadow-[3px_3px_0_#030713] transition hover:bg-[#805817]">
-              Probar cofre (sin guardar)
-            </button>
-          )}
         </div>
         <div className="grid min-w-0 items-start gap-3 sm:gap-4 xl:grid-cols-[minmax(0,1fr)_270px]">
           <section className="min-w-0 border-[3px] border-[#74809b] bg-[#070d22]/[.98] shadow-[0_0_0_3px_#11182d,7px_7px_0_rgba(0,0,0,.5)]">

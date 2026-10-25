@@ -266,15 +266,20 @@ export default function CasoCeroGame() {
 
   if (phase === "intro") {
     return (
-      <CasoCeroCinematicScene
-        canStart={cases.length >= 10}
-        busyStarting={busyStarting}
-        error={error}
-        caseCount={cases.length}
-        onStart={() => void beginCaseFile()}
-        audioEnabled={audioEnabled}
-        onToggleAudio={() => void toggleAmbientAudio()}
-      />
+      <>
+        <CasoCeroCinematicScene
+          canStart={cases.length >= 10}
+          busyStarting={busyStarting}
+          error={error}
+          caseCount={cases.length}
+          onStart={() => void beginCaseFile()}
+          audioEnabled={audioEnabled}
+          onToggleAudio={() => void toggleAmbientAudio()}
+        />
+        <audio ref={ambienceAudioRef} src="/audio/caso-cero/ambiente-rio-lluvia.wav" preload="none" loop className="hidden" aria-hidden="true" />
+        <audio ref={windowRainAudioRef} src="/audio/caso-cero/lluvia-ventana.wav" preload="none" loop className="hidden" aria-hidden="true" />
+        <audio ref={mysteryMusicAudioRef} src="/audio/caso-cero/musica-misterio.wav" preload="none" loop className="hidden" aria-hidden="true" />
+      </>
     );
   }
 

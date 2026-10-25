@@ -515,7 +515,6 @@ export default function QueEsEsaVainaGame() {
         envelope.gain.setValueAtTime(voice.volume * 0.88, noteStart + 1.08);
         envelope.gain.exponentialRampToValueAtTime(0.0001, noteStart + 2.55);
 
-        oscillator.connect(voiceBus);
         for (const formant of formants) {
           const filter = context.createBiquadFilter();
           const formantGain = context.createGain();

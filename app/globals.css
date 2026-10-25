@@ -954,3 +954,18 @@ body {
     font-size: 15px;
   }
 }
+
+
+/* Recompensas: quitar la textura cuadriculada tipo cuaderno.
+   Se conserva el marco pixel-art y el color propio de cada recompensa. */
+.chest-reward-card-v2 .chest-reward-card-body {
+  background-image: none !important;
+}
+
+.chest-reward-legendary-card-xp.chest-reward-card-v2 {
+  background: linear-gradient(180deg, #123b70 0%, #09234a 45%, #06152d 46%, #0d2a50 100%) !important;
+}
+
+.chest-reward-legendary-card-coins.chest-reward-card-v2 {
+  background: linear-gradient(180deg, #52236e 0%, #35134d 45%, #1b0b2b 46%, #36124d 100%) !important;
+}

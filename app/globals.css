@@ -477,3 +477,192 @@ body {
     transform: none !important;
   }
 }
+
+
+/* Revelación de cofre legendario: marco, resplandor y tarjetas pixel-art. */
+.chest-reward-legendary-frame {
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 50% 39%, rgba(255, 156, 26, .17) 0%, rgba(23, 11, 37, .22) 36%, transparent 66%),
+    linear-gradient(180deg, rgba(5, 7, 22, .94), rgba(8, 4, 17, .97));
+}
+
+.chest-reward-frame-corner {
+  position: absolute;
+  z-index: 30;
+  width: clamp(1.5rem, 4vw, 3.75rem);
+  height: clamp(1.5rem, 4vw, 3.75rem);
+  border-color: #ffd45a;
+  filter: drop-shadow(0 0 5px rgba(255, 177, 37, .7));
+  pointer-events: none;
+}
+
+.chest-reward-frame-corner-tl {
+  top: 12px;
+  left: 12px;
+  border-top: 3px solid;
+  border-left: 3px solid;
+  clip-path: polygon(0 0, 100% 0, 100% 17%, 38% 17%, 38% 38%, 17% 38%, 17% 100%, 0 100%);
+}
+
+.chest-reward-frame-corner-tr {
+  top: 12px;
+  right: 12px;
+  border-top: 3px solid;
+  border-right: 3px solid;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 83% 100%, 83% 38%, 62% 38%, 62% 17%, 0 17%);
+}
+
+.chest-reward-frame-corner-bl {
+  bottom: 12px;
+  left: 12px;
+  border-bottom: 3px solid;
+  border-left: 3px solid;
+  clip-path: polygon(0 0, 17% 0, 17% 62%, 38% 62%, 38% 83%, 100% 83%, 100% 100%, 0 100%);
+}
+
+.chest-reward-frame-corner-br {
+  right: 12px;
+  bottom: 12px;
+  border-right: 3px solid;
+  border-bottom: 3px solid;
+  clip-path: polygon(83% 0, 100% 0, 100% 100%, 0 100%, 0 83%, 62% 83%, 62% 62%, 83% 62%);
+}
+
+.chest-reward-legendary-title {
+  color: #ffe76a;
+  letter-spacing: .035em;
+  text-wrap: balance;
+  text-shadow:
+    0 3px 0 #a84e0c,
+    0 5px 0 rgba(41, 17, 10, .75),
+    0 0 10px rgba(255, 211, 67, .95),
+    0 0 27px rgba(255, 147, 15, .58);
+  animation: chest-reward-title-flare 1.2s ease-out both;
+}
+
+.chest-reward-legendary-burst {
+  isolation: isolate;
+}
+
+.chest-reward-legendary-rays {
+  z-index: 0;
+  pointer-events: none;
+  background: repeating-conic-gradient(
+    from -10deg at 50% 54%,
+    rgba(255, 181, 36, .34) 0deg 5deg,
+    rgba(255, 185, 41, 0) 5deg 13deg
+  );
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 0%, rgba(0,0,0,.8) 33%, transparent 72%);
+  mask-image: radial-gradient(ellipse at center, #000 0%, rgba(0,0,0,.8) 33%, transparent 72%);
+  animation: chest-reward-legendary-rays 20s linear infinite;
+}
+
+.chest-reward-spark-e {
+  left: 9%;
+  top: 49%;
+  animation-delay: 240ms;
+}
+
+.chest-reward-spark-f {
+  right: 9%;
+  bottom: 40%;
+  animation-delay: 610ms;
+}
+
+.chest-reward-legendary-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 3px double currentColor;
+  clip-path: polygon(0 8%, 3% 8%, 3% 0, 97% 0, 97% 8%, 100% 8%, 100% 92%, 97% 92%, 97% 100%, 3% 100%, 3% 92%, 0 92%);
+  transition: filter 180ms ease, transform 180ms ease;
+}
+
+.chest-reward-legendary-card::before {
+  position: absolute;
+  z-index: -1;
+  inset: 5px;
+  border: 1px solid currentColor;
+  content: "";
+  opacity: .44;
+  pointer-events: none;
+}
+
+.chest-reward-legendary-card::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  background: linear-gradient(125deg, rgba(255,255,255,.11), transparent 42%, rgba(0,0,0,.2));
+  pointer-events: none;
+}
+
+.chest-reward-legendary-card-xp {
+  color: #54d2ff;
+  border-color: #50caff;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(19, 110, 230, .28), transparent 72%),
+    linear-gradient(150deg, #061b49, #07132c 65%, #091b40);
+  box-shadow: inset 0 0 0 2px rgba(16, 117, 227, .27), 0 0 22px rgba(20, 153, 255, .18), 4px 4px 0 #020918;
+}
+
+.chest-reward-legendary-card-coins {
+  color: #efadff;
+  border-color: #d990ff;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(151, 35, 214, .24), transparent 72%),
+    linear-gradient(150deg, #270b43, #140b2c 68%, #200c3e);
+  box-shadow: inset 0 0 0 2px rgba(205, 115, 255, .22), 0 0 22px rgba(202, 81, 255, .2), 4px 4px 0 #070310;
+}
+
+.chest-reward-legendary-continue {
+  position: relative;
+  border: 3px solid #fff2a8;
+  outline: 2px solid #9b5a12;
+  outline-offset: -7px;
+  background: linear-gradient(180deg, #ffed57 0%, #ffc229 58%, #f6a419 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(194, 104, 13, .78),
+    inset 0 5px 0 rgba(255, 255, 212, .6),
+    0 5px 0 #6d350c,
+    0 0 24px rgba(255, 176, 24, .38);
+  text-shadow: 0 1px 0 rgba(255,255,255,.28);
+}
+
+.chest-reward-legendary-continue:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 0 0 2px rgba(194, 104, 13, .78),
+    inset 0 5px 0 rgba(255, 255, 212, .68),
+    0 5px 0 #6d350c,
+    0 0 32px rgba(255, 176, 24, .55);
+}
+
+@keyframes chest-reward-legendary-rays {
+  from { transform: rotate(0deg) scale(1.02); }
+  to { transform: rotate(360deg) scale(1.02); }
+}
+
+@keyframes chest-reward-title-flare {
+  0% { opacity: 0; transform: translateY(6px) scale(.94); filter: brightness(.7); }
+  68% { opacity: 1; transform: translateY(-1px) scale(1.015); filter: brightness(1.22); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1); }
+}
+
+@media (max-width: 420px) {
+  .chest-reward-frame-corner-tl,
+  .chest-reward-frame-corner-tr,
+  .chest-reward-frame-corner-bl,
+  .chest-reward-frame-corner-br {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chest-reward-legendary-title,
+  .chest-reward-legendary-rays {
+    animation: none !important;
+  }
+}

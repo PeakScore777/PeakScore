@@ -54,6 +54,8 @@ export default function CasoCeroCinematicScene({
 }: Props) {
   const rootRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const riverLoopResettingRef = useRef(false);
+  const riverLoopStartRef = useRef(1.4);
   const [lightingStage, setLightingStage] = useState<LightingStage>(0);
   const [sceneVideoFailed, setSceneVideoFailed] = useState(false);
   const [rainFxFailed, setRainFxFailed] = useState(false);
@@ -218,6 +220,37 @@ export default function CasoCeroCinematicScene({
             playsInline
             preload="metadata"
             disablePictureInPicture
+            onLoadedMetadata={(event) => {
+              const video = event.currentTarget;
+              if (!Number.isFinite(video.duration) || video.duration <= 4) return;
+              // Skip any near-black lead-in in the source footage.
+              const startAt = Math.min(2, video.duration * 0.12);
+              riverLoopStartRef.current = startAt;
+              if (video.currentTime < startAt) video.currentTime = startAt;
+            }}
+            onTimeUpdate={(event) => {
+              const video = event.currentTarget;
+              if (
+                riverLoopResettingRef.current ||
+                !Number.isFinite(video.duration) ||
+                video.duration <= 4 ||
+                video.duration - video.currentTime > 0.42
+              ) return;
+
+              // Fade to the dark night scene before looping back into moving water.
+              // One decoder only, so this avoids adding a second video stream on low-RAM PCs.
+              riverLoopResettingRef.current = true;
+              video.style.opacity = "0";
+              video.currentTime = riverLoopStartRef.current;
+            }}
+            onSeeked={(event) => {
+              const video = event.currentTarget;
+              if (!riverLoopResettingRef.current) return;
+              window.requestAnimationFrame(() => {
+                video.style.opacity = "1";
+                riverLoopResettingRef.current = false;
+              });
+            }}
             onError={() => setSceneVideoFailed(true)}
             aria-hidden="true"
             tabIndex={-1}
@@ -370,7 +403,9 @@ export default function CasoCeroCinematicScene({
           transform: scale(1.02);
           transform-origin: center;
           filter: brightness(.86) saturate(.9) contrast(1.05);
-          will-change: transform;
+          opacity: 1;
+          transition: opacity 300ms ease-in-out;
+          will-change: transform, opacity;
         }
 
         .caso-cero-river-atmosphere {

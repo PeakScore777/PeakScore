@@ -30,3 +30,14 @@ Los siguientes resultados de Freesound son candidatos con licencia CC0, pendient
 - [dark ambient mood — solarpsychedelic](https://freesound.org/people/solarpsychedelic/sounds/847322/): ambiente musical de misterio.
 
 No iniciar audio automáticamente: debe empezar por una interacción del usuario, incluir control de volumen/silencio y detenerse al salir del juego. Confirmar las condiciones de descarga y licencias de cada archivo antes de redistribuirlo.
+
+## Fotografías de evidencias (Pexels)
+
+Pexels marca estas páginas como recursos de uso gratuito. Se usan como fotografías de apoyo dentro de tarjetas interactivas; no se redistribuyen como catálogo de stock independiente.
+
+- Evidencia 1 — río durante la lluvia: https://www.pexels.com/video/flowing-river-while-raining-5157996/
+- Evidencia 2 — recolección de agua en una botella: https://www.pexels.com/photo/collecting-water-into-a-plastic-bottle-from-the-spring-20806050/
+- Evidencia 3 — experimento de laboratorio con gotero: https://www.pexels.com/photo/person-holding-a-dropper-experimenting-chemical-on-a-glass-bottle-8850985/
+- Evidencia 4 — pez entre piedras del río: https://www.pexels.com/photo/beige-photo-of-a-fish-and-stones-in-water-9170405/
+
+Revisar las páginas de origen al renovar o sustituir una fotografía. Si algún recurso deja de estar disponible, sustituirlo por otra imagen de licencia clara y actualizar esta lista.

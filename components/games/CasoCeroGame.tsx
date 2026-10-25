@@ -219,11 +219,11 @@ export default function CasoCeroGame() {
   return (
     <main className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#050a15] text-white">
       <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: "radial-gradient(ellipse at 16% 0%, rgba(40,117,111,.28), transparent 45%), radial-gradient(ellipse at 86% 80%, rgba(176,105,41,.18), transparent 42%)" }} />
-      <div className="relative mx-auto w-full max-w-[1360px] px-4 py-5 sm:px-7 sm:py-8">
+      <div className="relative mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-7 sm:py-8">
         <Link href="/aprender/juegos" className="inline-flex items-center gap-2 border border-[#65563d] bg-[#111720] px-3 py-2 text-xs font-bold text-[#f1e5d0] transition hover:border-[#d3a85f]"><ArrowLeft className="h-4 w-4"/> Todos los juegos</Link>
 
         {phase === "intro" && (
-          <section className="mx-auto mt-6 max-w-7xl overflow-hidden border-[3px] border-[#8b6b39] bg-[#0b101b] shadow-[6px_6px_0_#02050a]">
+          <section className="mx-auto mt-6 max-w-[1560px] overflow-hidden border-[3px] border-[#8b6b39] bg-[#0b101b] shadow-[6px_6px_0_#02050a]">
             <div className="grid gap-0">
               <div className="p-5 sm:p-8">
                 <div className="inline-flex items-center gap-2 border border-[#957341] bg-[#261d11] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.18em] text-[#f5c879]"><ShieldCheck className="h-4 w-4"/> Investigación Saber 11</div>

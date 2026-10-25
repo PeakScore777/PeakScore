@@ -500,32 +500,32 @@ body {
 .chest-reward-frame-corner-tl {
   top: 12px;
   left: 12px;
-  border-top: 3px solid;
-  border-left: 3px solid;
+  border-top: 3px solid #ffd45a;
+  border-left: 3px solid #ffd45a;
   clip-path: polygon(0 0, 100% 0, 100% 17%, 38% 17%, 38% 38%, 17% 38%, 17% 100%, 0 100%);
 }
 
 .chest-reward-frame-corner-tr {
   top: 12px;
   right: 12px;
-  border-top: 3px solid;
-  border-right: 3px solid;
+  border-top: 3px solid #ffd45a;
+  border-right: 3px solid #ffd45a;
   clip-path: polygon(0 0, 100% 0, 100% 100%, 83% 100%, 83% 38%, 62% 38%, 62% 17%, 0 17%);
 }
 
 .chest-reward-frame-corner-bl {
   bottom: 12px;
   left: 12px;
-  border-bottom: 3px solid;
-  border-left: 3px solid;
+  border-bottom: 3px solid #ffd45a;
+  border-left: 3px solid #ffd45a;
   clip-path: polygon(0 0, 17% 0, 17% 62%, 38% 62%, 38% 83%, 100% 83%, 100% 100%, 0 100%);
 }
 
 .chest-reward-frame-corner-br {
   right: 12px;
   bottom: 12px;
-  border-right: 3px solid;
-  border-bottom: 3px solid;
+  border-right: 3px solid #ffd45a;
+  border-bottom: 3px solid #ffd45a;
   clip-path: polygon(83% 0, 100% 0, 100% 100%, 0 100%, 0 83%, 62% 83%, 62% 62%, 83% 62%);
 }
 

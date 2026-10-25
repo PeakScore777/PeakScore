@@ -24,7 +24,7 @@ export default function CasoCeroAmbientBackdrop() {
     >
       {!backgroundUnavailable && (
         <Image
-          src="/images/caso-cero/laboratorio-nocturno.webp"
+          src="/images/backgrounds/caso-cero-laboratorio-nocturno.webp"
           alt=""
           fill
           priority

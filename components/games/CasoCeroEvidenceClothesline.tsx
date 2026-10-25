@@ -19,8 +19,8 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Interpretar una situación y distinguir observaciones de conclusiones.",
   },
   {
-    src: "https://images.unsplash.com/photo-1758599669008-fb6f8eda6f53?auto=format&fit=crop&fm=jpg&q=82&w=1400",
-    alt: "Recolección de una muestra de agua para una investigación de campo",
+    src: "https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/images/human%20water%20sample%20collection.jpg",
+    alt: "Técnico de campo recolectando una muestra de agua para análisis",
     title: "02 · MUESTRAS",
     description: "Trabajo de campo",
     tag: "INDAGACIÓN",

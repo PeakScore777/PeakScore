@@ -1088,7 +1088,7 @@ export default function QueEsEsaVainaGame() {
                   </>
                 )}
                 <Image
-                  src={chestAnimation.phase === "opening" ? "/images/games/que-es-esa-vaina/cofre-apertura.gif" : "/images/games/que-es-esa-vaina/cofre-abierto-recompensas.svg"}
+                  src={chestAnimation.phase === "opening" ? "/images/games/que-es-esa-vaina/cofre-apertura.gif" : "/images/games/que-es-esa-vaina/cofre-abierto-recompensas.png"}
                   alt={chestAnimation.phase === "opening" ? "Animación de apertura del cofre" : "Cofre abierto con monedas, gemas Peak Coin y emblemas de experiencia XP"}
                   unoptimized={chestAnimation.phase === "opening"}
                   width={560}
@@ -1107,14 +1107,34 @@ export default function QueEsEsaVainaGame() {
                     Este cofre no entregó una recompensa adicional en esta ocasión. Tus recompensas anteriores permanecen seguras.
                   </p>
                 ) : (
-                  <div className="grid w-full max-w-[850px] grid-cols-2 gap-2 sm:gap-5">
-                    <div className="chest-reward-legendary-card chest-reward-legendary-card-xp flex min-h-[94px] items-center justify-center gap-2 px-2 py-3 sm:min-h-[142px] sm:gap-5 sm:px-6">
-                      <Image src="/peaky/homepage/xp.webp" alt="XP" width={92} height={92} className="h-10 w-10 shrink-0 object-contain sm:h-[76px] sm:w-[76px]" />
-                      <p className="pixel-font text-[11px] leading-6 text-white drop-shadow-[0_2px_0_#183456] sm:text-[19px] md:text-[23px]">+{chestAnimation.xp} XP</p>
+                  <div className="grid w-full max-w-[850px] grid-cols-2 gap-2 sm:gap-4">
+                    <div className="chest-reward-legendary-card chest-reward-legendary-card-xp chest-reward-card-v2">
+                      <div className="chest-reward-card-header">
+                        <span className="chest-reward-card-mark" aria-hidden="true">✦</span>
+                        <span>EXPERIENCIA</span>
+                        <span className="chest-reward-card-type">XP</span>
+                      </div>
+                      <div className="chest-reward-card-body">
+                        <Image src="/peaky/homepage/xp.webp" alt="Experiencia XP" width={92} height={92} className="chest-reward-card-icon" />
+                        <p className="pixel-font chest-reward-card-value">
+                          <span className="chest-reward-card-plus">+</span>{chestAnimation.xp}<span className="chest-reward-card-unit">XP</span>
+                        </p>
+                      </div>
+                      <span className="chest-reward-card-glint" aria-hidden="true" />
                     </div>
-                    <div className="chest-reward-legendary-card chest-reward-legendary-card-coins flex min-h-[94px] items-center justify-center gap-2 px-2 py-3 sm:min-h-[142px] sm:gap-5 sm:px-6">
-                      <Image src="/images/currency/peakcoin.webp" alt="Peak Coin" width={92} height={92} className="h-10 w-10 shrink-0 object-contain sm:h-[76px] sm:w-[76px]" />
-                      <p className="pixel-font text-[14px] leading-6 text-white drop-shadow-[0_2px_0_#501963] sm:text-[21px] md:text-[25px]">+{chestAnimation.coins}</p>
+                    <div className="chest-reward-legendary-card chest-reward-legendary-card-coins chest-reward-card-v2">
+                      <div className="chest-reward-card-header">
+                        <span className="chest-reward-card-mark" aria-hidden="true">✦</span>
+                        <span>PEAK COINS</span>
+                        <span className="chest-reward-card-type">P</span>
+                      </div>
+                      <div className="chest-reward-card-body">
+                        <Image src="/images/currency/peakcoin.webp" alt="Peak Coin" width={92} height={92} className="chest-reward-card-icon" />
+                        <p className="pixel-font chest-reward-card-value">
+                          <span className="chest-reward-card-plus">+</span>{chestAnimation.coins}
+                        </p>
+                      </div>
+                      <span className="chest-reward-card-glint" aria-hidden="true" />
                     </div>
                   </div>
                 )}

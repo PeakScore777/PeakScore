@@ -1109,10 +1109,6 @@ export default function QueEsEsaVainaGame() {
                 ) : (
                   <div className="grid w-full max-w-[850px] grid-cols-2 gap-2 sm:gap-4">
                     <div className="chest-reward-legendary-card chest-reward-legendary-card-xp chest-reward-card-v2">
-                      <div className="chest-reward-card-header">
-                        <span className="chest-reward-card-mark" aria-hidden="true">✦</span>
-                        <span>EXPERIENCIA</span>
-                      </div>
                       <div className="chest-reward-card-body">
                         <Image src="/peaky/homepage/xp.webp" alt="Experiencia XP" width={92} height={92} className="chest-reward-card-icon" />
                         <p className="pixel-font chest-reward-card-value">
@@ -1122,10 +1118,6 @@ export default function QueEsEsaVainaGame() {
                       <span className="chest-reward-card-glint" aria-hidden="true" />
                     </div>
                     <div className="chest-reward-legendary-card chest-reward-legendary-card-coins chest-reward-card-v2">
-                      <div className="chest-reward-card-header">
-                        <span className="chest-reward-card-mark" aria-hidden="true">✦</span>
-                        <span>PEAK COINS</span>
-                      </div>
                       <div className="chest-reward-card-body">
                         <Image src="/images/currency/peakcoin.webp" alt="Peak Coin" width={92} height={92} className="chest-reward-card-icon" />
                         <p className="pixel-font chest-reward-card-value">

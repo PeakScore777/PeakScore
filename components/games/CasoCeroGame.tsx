@@ -80,6 +80,35 @@ export default function CasoCeroGame() {
   const mysteryMusicAudioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    // Keep the tracks independent of the intro/gameplay JSX branches. That way
+    // changing phase does not unmount the audio and reset playback.
+    const ambience = new Audio("/audio/caso-cero/ambiente-rio-lluvia.wav");
+    const windowRain = new Audio("/audio/caso-cero/lluvia-ventana.wav");
+    const mysteryMusic = new Audio("/audio/caso-cero/musica-misterio.wav");
+    const tracks = [ambience, windowRain, mysteryMusic];
+
+    for (const track of tracks) {
+      track.preload = "none";
+      track.loop = true;
+    }
+
+    ambienceAudioRef.current = ambience;
+    windowRainAudioRef.current = windowRain;
+    mysteryMusicAudioRef.current = mysteryMusic;
+
+    return () => {
+      for (const track of tracks) {
+        track.pause();
+        track.currentTime = 0;
+        track.src = "";
+      }
+      ambienceAudioRef.current = null;
+      windowRainAudioRef.current = null;
+      mysteryMusicAudioRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     void Promise.all([
       fetch("/api/games/caso-cero/questions", { credentials: "same-origin" }),
@@ -109,6 +138,11 @@ export default function CasoCeroGame() {
       { audio: windowRainAudioRef.current, volume: 0.31 },
       { audio: mysteryMusicAudioRef.current, volume: 0.19 },
     ].filter((track): track is { audio: HTMLAudioElement; volume: number } => track.audio !== null);
+
+    if (tracks.length !== 3) {
+      setAudioError(true);
+      return;
+    }
 
     if (audioEnabled) {
       for (const track of tracks) track.audio.pause();
@@ -276,9 +310,7 @@ export default function CasoCeroGame() {
           audioEnabled={audioEnabled}
           onToggleAudio={() => void toggleAmbientAudio()}
         />
-        <audio ref={ambienceAudioRef} src="/audio/caso-cero/ambiente-rio-lluvia.wav" preload="none" loop className="hidden" aria-hidden="true" />
-        <audio ref={windowRainAudioRef} src="/audio/caso-cero/lluvia-ventana.wav" preload="none" loop className="hidden" aria-hidden="true" />
-        <audio ref={mysteryMusicAudioRef} src="/audio/caso-cero/musica-misterio.wav" preload="none" loop className="hidden" aria-hidden="true" />
+
       </>
     );
   }

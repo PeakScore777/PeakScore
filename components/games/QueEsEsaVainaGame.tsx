@@ -1089,11 +1089,11 @@ export default function QueEsEsaVainaGame() {
                 )}
                 <Image
                   src={chestAnimation.phase === "opening" ? "/images/games/que-es-esa-vaina/cofre-apertura.gif" : "/images/games/que-es-esa-vaina/cofre-abierto-recompensas.webp"}
-                  alt={chestAnimation.phase === "opening" ? "Animación de apertura del cofre" : "Cofre abierto liberando una luz dorada"}
+                  alt={chestAnimation.phase === "opening" ? "Animación de apertura del cofre" : "Cofre abierto con monedas, gemas Peak Coin y emblemas de experiencia XP"}
                   unoptimized={chestAnimation.phase === "opening"}
                   width={560}
                   height={420}
-                  className="relative z-10 h-[clamp(145px,25vh,225px)] w-full max-w-[350px] object-contain drop-shadow-[0_10px_0_rgba(0,0,0,.55)] sm:h-full sm:max-w-[430px]"
+                  className={"relative z-10 h-[clamp(145px,25vh,225px)] w-full max-w-[350px] object-contain drop-shadow-[0_10px_0_rgba(0,0,0,.55)] sm:h-full sm:max-w-[430px]" + (chestAnimation.phase === "reward" ? " chest-reward-open-art" : "")}
                 />
               </div>
             </div>

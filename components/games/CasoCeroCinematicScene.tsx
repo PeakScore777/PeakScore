@@ -134,7 +134,11 @@ export default function CasoCeroCinematicScene({
     let resizeObserver: ResizeObserver | null = null;
     // If WebGL takes too long on a low-memory computer, reveal the scene with
     // the CSS rain fallback instead of leaving the skeleton up indefinitely.
-    const rainReadyTimeout = window.setTimeout(() => setRainFxReady(true), 8500);
+    const rainReadyTimeout = window.setTimeout(() => {
+      if (disposed) return;
+      setRainFxFailed(true);
+      setRainFxReady(true);
+    }, 8500);
 
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
@@ -181,7 +185,10 @@ export default function CasoCeroCinematicScene({
         }
         instance = nextInstance;
         await instance.start();
-        if (!disposed) setRainFxReady(true);
+        if (!disposed) {
+          setRainFxFailed(false);
+          setRainFxReady(true);
+        }
       } catch {
         if (!disposed) {
           setRainFxFailed(true);

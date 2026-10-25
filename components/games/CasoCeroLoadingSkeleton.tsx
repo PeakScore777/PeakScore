@@ -10,7 +10,7 @@ function Shimmer({ className = "" }: { className?: string }) {
       aria-hidden="true"
       className={[
         "relative block overflow-hidden bg-[#13202a]",
-        "before:absolute before:inset-0 before:-translate-x-full before:animate-[caso-cero-shimmer_1.7s_ease-in-out_infinite]",
+        "before:absolute before:inset-0 before:animate-pulse",
         "before:bg-gradient-to-r before:from-transparent before:via-[#b8d8df]/[0.10] before:to-transparent",
         className,
       ].join(" ")}
@@ -111,10 +111,6 @@ export default function CasoCeroLoadingSkeleton({ overlay = false }: Props) {
       </div>
 
       <style jsx>{`
-        @keyframes caso-cero-shimmer {
-          100% { transform: translateX(100%); }
-        }
-
         @media (prefers-reduced-motion: reduce) {
           .caso-cero-loading :global(*) {
             animation: none !important;

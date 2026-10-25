@@ -487,7 +487,7 @@ export default function QueEsEsaVainaGame() {
   }, []);
 
   useEffect(() => {
-    if (!chestAnimation || chestAnimation.phase !== "reward") return;
+    if (!chestAnimation || chestAnimation.phase !== "reward" || (chestAnimation.xp === 0 && chestAnimation.coins === 0)) return;
     playRewardSting();
   }, [chestAnimation, playRewardSting]);
 

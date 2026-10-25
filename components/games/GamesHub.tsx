@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { Gamepad2, Sparkles, X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 type GameTone = "yellow" | "teal" | "red" | "orange" | "blue" | "purple";
@@ -140,10 +140,10 @@ export default function GamesHub() {
       <div className="mx-auto w-full max-w-[1600px] px-4 pb-10 pt-5 sm:px-7 sm:pt-7 lg:px-8">
         <section className="mx-auto max-w-[1160px]">
           <header className="mb-6 flex flex-col items-center gap-3 text-center sm:mb-7">
-            <Gamepad2 aria-hidden="true" className="h-10 w-10 text-[#19d8ff] drop-shadow-[0_0_12px_rgba(25,216,255,.85)] sm:h-12 sm:w-12"/>
+            <Image src="/images/games/gamepad-pixelart.png" alt="" aria-hidden="true" width={72} height={56} className="h-10 w-auto object-contain drop-shadow-[0_0_12px_rgba(25,216,255,.85)] sm:h-12" priority/>
             <div className="min-w-0">
               <h1 className="pixel-font text-xl leading-[1.7] text-white drop-shadow-[0_0_10px_rgba(190,70,255,.85)] sm:text-2xl xl:text-3xl">JUEGOS EDUCATIVOS</h1>
-              <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[#e1eaf8] sm:text-base">Practica, razona y domina los temas del ICFES con minijuegos únicos.</p>
+              <p className="pixel-font mx-auto mt-2 max-w-2xl text-[8px] leading-6 text-[#e1eaf8] drop-shadow-[0_1px_2px_#020617] sm:text-[9px]">Practica, razona y domina los temas del ICFES con minijuegos únicos.</p>
               <div aria-hidden="true" className="mx-auto mt-4 flex h-[3px] w-56 items-center justify-center bg-gradient-to-r from-[#19d8ff] via-[#b44bff] to-[#19d8ff]"><span className="h-3 w-3 rotate-45 border-2 border-[#ffc34a] bg-[#ff8a2a] shadow-[0_0_12px_#ff8a2a]"/></div>
             </div>
             <button

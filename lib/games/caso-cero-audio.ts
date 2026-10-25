@@ -44,6 +44,10 @@ function cancelDeferredStop(): void {
  */
 export function prepareCasoCeroAmbientAudio(): Promise<void> {
   cancelDeferredStop();
+  if (typeof window !== "undefined" && fadeFrameId !== null) {
+    window.cancelAnimationFrame(fadeFrameId);
+    fadeFrameId = null;
+  }
 
   const tracks = getTracks();
   if (tracks.length !== 3) return Promise.resolve();
@@ -91,10 +95,22 @@ export function revealCasoCeroAmbientAudio(): void {
   cancelDeferredStop();
 
   const tracks = getTracks();
-  if (tracks.length !== 3 || hasRevealedAudio) return;
-  hasRevealedAudio = true;
+  if (tracks.length !== 3 || typeof window === "undefined") return;
 
-  if (typeof window === "undefined") return;
+  // If an earlier unmute/autoplay attempt was rejected, retry from the next
+  // real scene interaction even though the reveal transition was already set.
+  if (hasRevealedAudio) {
+    for (const { audio, volume } of tracks) {
+      audio.muted = false;
+      if (audio.paused) {
+        audio.volume = volume;
+        void audio.play().catch(() => undefined);
+      }
+    }
+    return;
+  }
+
+  hasRevealedAudio = true;
   if (fadeFrameId !== null) {
     window.cancelAnimationFrame(fadeFrameId);
     fadeFrameId = null;
@@ -104,8 +120,8 @@ export function revealCasoCeroAmbientAudio(): void {
     audio.volume = 0;
     audio.muted = false;
 
-    // The click normally started these tracks silently. If the scene was
-    // opened directly, try playback again after the assets are ready.
+    // The JUGAR click normally started these tracks silently. Direct visits
+    // also attempt playback here, then a later gesture can retry if blocked.
     if (audio.paused) void audio.play().catch(() => undefined);
   }
 

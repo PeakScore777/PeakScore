@@ -192,21 +192,21 @@ export default function CasoCeroScene() {
 
   return (
     <section aria-label="Escena de investigación Caso Cero" className="relative isolate overflow-hidden border-y border-[#705638] bg-[#081116] text-white shadow-[0_16px_60px_rgba(0,0,0,.35)]">
-      <div className="relative h-[clamp(365px,56.25vw,720px)] overflow-hidden">
+      <div className="relative aspect-[16/9] w-full max-h-[720px] overflow-hidden">
         <CasoCeroAmbientBackdrop />
 
         <div className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(2,7,11,.22)_0%,transparent_36%,rgba(2,7,11,.12)_64%,rgba(2,7,11,.58)_100%)]" />
 
-        <div className="absolute left-[31%] right-[16%] top-[5%] z-10">
+        <div className="absolute left-[40%] right-[16%] top-[5%] z-10">
           <p className="text-[7px] font-black uppercase tracking-[.25em] text-[#a3d0c6] drop-shadow sm:text-[9px]">Laboratorio de campo · Archivo 001</p>
           <h2 className="mt-1 text-xs font-black uppercase tracking-[.08em] text-[#f7e8ca] drop-shadow-[0_2px_5px_rgba(0,0,0,.9)] sm:text-lg lg:text-xl">El misterio del río</h2>
         </div>
 
-        <div className="pointer-events-none absolute left-[31%] right-[16%] top-[20%] z-[2] hidden h-[3px] rotate-[-1deg] bg-[#9d7040] shadow-[0_2px_4px_#000] sm:block">
+        <div className="pointer-events-none absolute left-[31%] right-[16%] top-[20%] z-[2] hidden h-[3px] rotate-[-1deg] bg-[#9d7040] shadow-[0_2px_4px_#000] lg:block">
           <span className="absolute inset-0 bg-gradient-to-b from-[#e0b779] via-[#8a5e31] to-[#382315]" />
         </div>
 
-        <div className="absolute left-[31%] right-[16%] top-[21%] z-10 hidden grid-cols-4 gap-[1.5%] sm:grid">
+        <div className="absolute left-[31%] right-[16%] top-[21%] z-10 hidden grid-cols-4 gap-[1.5%] lg:grid">
           {evidence.map((item, index) => (
             <div key={item.id} className={index % 2 ? "rotate-[1.2deg]" : "rotate-[-1.2deg]"}>
               <EvidenceCard item={item} selected={selected === item.id} onSelect={() => setSelected(selected === item.id ? null : item.id)} />
@@ -215,7 +215,7 @@ export default function CasoCeroScene() {
         </div>
 
         {active && (
-          <div className="absolute bottom-[3%] left-[31%] right-[16%] z-20 hidden sm:block">
+          <div className="absolute bottom-[3%] left-[31%] right-[16%] z-20 hidden lg:block">
             <EvidenceDetails item={active} onClose={() => setSelected(null)} />
           </div>
         )}
@@ -226,7 +226,7 @@ export default function CasoCeroScene() {
         </div>
       </div>
 
-      <div className="relative z-10 border-t border-[#55442d] bg-[#080f13]/95 p-3 sm:hidden">
+      <div className="relative z-10 border-t border-[#55442d] bg-[#080f13]/95 p-3 lg:hidden">
         <div className="mb-3 flex items-center justify-between gap-2">
           <div>
             <p className="text-[8px] font-black uppercase tracking-[.18em] text-[#8fcac0]">Tendedero de evidencias</p>

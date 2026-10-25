@@ -74,6 +74,7 @@ export default function CasoCeroCinematicScene({
   const [rainFxFailed, setRainFxFailed] = useState(false);
   const [rainFxReady, setRainFxReady] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
+  const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(true);
   const [mediaBox, setMediaBox] = useState({ left: 0, top: 0, width: IMAGE_WIDTH, height: IMAGE_HEIGHT });
 
   const markLightLayerReady = (index: number) => {
@@ -83,6 +84,10 @@ export default function CasoCeroCinematicScene({
   };
 
   useEffect(() => {
+    // Do not run the lighting reveal behind the loading skeleton. Start the
+    // off -> right lamp -> off -> all lights sequence when the scene is visible.
+    if (!sceneReady) return;
+
     const firstLamp = window.setTimeout(() => setLightingStage(1), 450);
     const lampOut = window.setTimeout(() => setLightingStage(2), 1650);
     const allLights = window.setTimeout(() => setLightingStage(3), 2250);
@@ -91,7 +96,13 @@ export default function CasoCeroCinematicScene({
       window.clearTimeout(lampOut);
       window.clearTimeout(allLights);
     };
-  }, []);
+  }, [sceneReady]);
+
+  useEffect(() => {
+    if (!sceneReady) return;
+    const fadeOutTimer = window.setTimeout(() => setShowLoadingSkeleton(false), 420);
+    return () => window.clearTimeout(fadeOutTimer);
+  }, [sceneReady]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -459,7 +470,17 @@ export default function CasoCeroCinematicScene({
         LLUVIA EN VIVO · RÍO NOCTURNO
       </div>
 
-      {!sceneReady && <CasoCeroLoadingSkeleton overlay />}
+      {showLoadingSkeleton && (
+        <div
+          aria-hidden={sceneReady}
+          className={[
+            "absolute inset-0 z-50 transition-opacity duration-500 ease-out",
+            sceneReady ? "pointer-events-none opacity-0" : "opacity-100",
+          ].join(" ")}
+        >
+          <CasoCeroLoadingSkeleton overlay />
+        </div>
+      )}
 
       <style jsx>{`
         .caso-cero-river-video {

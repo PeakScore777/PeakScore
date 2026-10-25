@@ -23,9 +23,11 @@ import {
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import CasoCeroScene from "@/components/games/CasoCeroScene";
 import CasoCeroCinematicScene from "@/components/games/CasoCeroCinematicScene";
+import CasoCeroLoadingSkeleton from "@/components/games/CasoCeroLoadingSkeleton";
 import type { EvidenceCase } from "@/lib/games/caso-cero-bank";
 import {
-  startCasoCeroAmbientAudio,
+  prepareCasoCeroAmbientAudio,
+  revealCasoCeroAmbientAudio,
   stopCasoCeroAmbientAudio,
 } from "@/lib/games/caso-cero-audio";
 
@@ -75,14 +77,28 @@ export default function CasoCeroGame() {
   const [gamesCompleted, setGamesCompleted] = useState(0);
   const [orbyOpen, setOrbyOpen] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
-  const startAmbientAudio = useCallback(() => startCasoCeroAmbientAudio(), []);
+  const [cinematicReady, setCinematicReady] = useState(false);
+  const prepareAmbientAudio = useCallback(() => prepareCasoCeroAmbientAudio(), []);
+  const revealAmbientAudio = useCallback(() => revealCasoCeroAmbientAudio(), []);
+  const handleSceneReady = useCallback(() => setCinematicReady(true), []);
+  const handleSceneInteraction = useCallback(() => {
+    // Direct URL visits may not have received the catalog's JUGAR gesture.
+    // Keep audio silent until ready, then let a real interaction retry playback.
+    if (cinematicReady) revealAmbientAudio();
+    else prepareAmbientAudio();
+  }, [cinematicReady, prepareAmbientAudio, revealAmbientAudio]);
 
   useEffect(() => {
-    // The JUGAR click in GamesHub starts these same shared audio instances
-    // before route navigation. Direct visits still attempt autoplay here.
-    void startAmbientAudio();
+    // A direct route visit also prepares tracks silently while data/assets load.
+    void prepareAmbientAudio();
     return () => stopCasoCeroAmbientAudio();
-  }, [startAmbientAudio]);
+  }, [prepareAmbientAudio]);
+
+  useEffect(() => {
+    if (phase === "intro" && cinematicReady) {
+      revealAmbientAudio();
+    }
+  }, [phase, cinematicReady, revealAmbientAudio]);
 
   useEffect(() => {
     let cancelled = false;
@@ -226,7 +242,7 @@ export default function CasoCeroGame() {
   };
 
   if (phase === "loading") {
-    return <main className="relative min-h-[calc(100svh-72px)] bg-[#060b16] px-4 py-16 text-white"><div className="mx-auto flex max-w-xl items-center justify-center gap-3 border border-[#594a31] bg-[#10141b] p-6"><Image src="/avatars/photo_perfil/orbyp.png" alt="" width={40} height={40} className="h-10 w-10 object-contain"/><p className="text-sm text-[#eee0c9]">Abriendo el archivo de evidencias…</p></div></main>;
+    return <CasoCeroLoadingSkeleton />;
   }
 
   if (phase === "intro") {
@@ -238,7 +254,8 @@ export default function CasoCeroGame() {
           error={error}
           caseCount={cases.length}
           onStart={() => void beginCaseFile()}
-          onUserInteraction={() => { void startAmbientAudio(); }}
+          onSceneReady={handleSceneReady}
+          onUserInteraction={handleSceneInteraction}
         />
 
       </>
@@ -248,8 +265,8 @@ export default function CasoCeroGame() {
   return (
     <>
     <main
-      onPointerDownCapture={() => { void startAmbientAudio(); }}
-      onKeyDownCapture={() => { void startAmbientAudio(); }}
+      onPointerDownCapture={handleSceneInteraction}
+      onKeyDownCapture={handleSceneInteraction}
       className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#050a15] text-white"
     >
       <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: "radial-gradient(ellipse at 16% 0%, rgba(40,117,111,.28), transparent 45%), radial-gradient(ellipse at 86% 80%, rgba(176,105,41,.18), transparent 42%)" }} />

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, BrainCircuit, Gamepad2, Sparkles, X } from "lucide-react";
+import { ArrowRight, Gamepad2, Sparkles, X } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 type GameTone = "yellow" | "teal" | "red" | "orange" | "blue" | "purple";

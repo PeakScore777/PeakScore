@@ -11,7 +11,7 @@ type EvidencePhoto = PhotoClotheslineItem & {
 
 const CASE_EVIDENCE: EvidencePhoto[] = [
   {
-    src: "https://images.unsplash.com/photo-1760201068264-39955f9a4bae?auto=format&fit=crop&fm=jpg&q=82&w=1200",
+    src: "https://images.unsplash.com/photo-1758595868029-a8fb7d02b5cb?auto=format&fit=crop&fm=jpg&q=82&w=1400",
     alt: "Corriente de un río durante una tormenta, con agua golpeando las rocas",
     title: "01 · EL RÍO",
     description: "Punto de muestreo",
@@ -19,7 +19,7 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Interpretar una situación y distinguir observaciones de conclusiones.",
   },
   {
-    src: "https://images.unsplash.com/photo-1747110595225-220ad28fc6dc?auto=format&fit=crop&fm=jpg&q=82&w=1200",
+    src: "https://images.unsplash.com/photo-1758599669008-fb6f8eda6f53?auto=format&fit=crop&fm=jpg&q=82&w=1400",
     alt: "Recolección de una muestra de agua para una investigación de campo",
     title: "02 · MUESTRAS",
     description: "Trabajo de campo",
@@ -27,7 +27,7 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Comprobar si las muestras se obtuvieron bajo condiciones comparables.",
   },
   {
-    src: "https://images.unsplash.com/photo-1748261347902-451fb437e8fb?auto=format&fit=crop&fm=jpg&q=82&w=1200",
+    src: "https://images.unsplash.com/photo-1614935151651-0bea6508db6b?auto=format&fit=crop&fm=jpg&q=82&w=1400",
     alt: "Material de laboratorio para analizar una muestra líquida",
     title: "03 · LABORATORIO",
     description: "Análisis de datos",
@@ -45,7 +45,7 @@ export default function CasoCeroEvidenceClothesline() {
     // Scale the physical photos for each device class. This keeps the line wide
     // while avoiding the tiny desktop thumbnails from the previous layout.
     const mobileQuery = window.matchMedia("(max-width: 640px)");
-    const tabletQuery = window.matchMedia("(max-width: 1150px)");
+    const tabletQuery = window.matchMedia("(max-width: 1599px)");
     const update = () => {
       setLayoutMode(mobileQuery.matches ? "mobile" : tabletQuery.matches ? "tablet" : "desktop");
     };
@@ -59,17 +59,17 @@ export default function CasoCeroEvidenceClothesline() {
   }, []);
 
   const dimensions = layoutMode === "mobile"
-    ? { photoWidth: 96, photoHeight: 132, photoGap: 10, ropeTop: 22, ropeSag: 15, bandLength: 15, bandWidth: 4, maxPull: 14, tilt: 3 }
+    ? { photoWidth: 96, photoHeight: 132, photoGap: 10, ropeTop: 22, ropeSag: 12, bandLength: 15, bandWidth: 4, maxPull: 14, tilt: 3 }
     : layoutMode === "tablet"
-      ? { photoWidth: 178, photoHeight: 225, photoGap: 45, ropeTop: 42, ropeSag: 30, bandLength: 23, bandWidth: 6, maxPull: 20, tilt: 3.5 }
-      : { photoWidth: 320, photoHeight: 365, photoGap: 170, ropeTop: 60, ropeSag: 42, bandLength: 32, bandWidth: 7, maxPull: 24, tilt: 3.5 };
+      ? { photoWidth: 230, photoHeight: 285, photoGap: 170, ropeTop: 42, ropeSag: 28, bandLength: 22, bandWidth: 6, maxPull: 18, tilt: 3.5 }
+      : { photoWidth: 350, photoHeight: 380, photoGap: 260, ropeTop: 48, ropeSag: 32, bandLength: 28, bandWidth: 8, maxPull: 22, tilt: 3.5 };
 
   return (
     <div
       className={[
         "caso-cero-evidence-clothesline pointer-events-none absolute left-1/2 top-[1%] z-20",
         "-translate-x-1/2",
-        "h-[210px] w-[98vw] sm:h-[340px] lg:h-[480px]",
+        "h-[210px] w-[98vw] sm:h-[405px] lg:h-[530px]",
       ].join(" ")}
       aria-label="Fotografías de evidencia de Caso Cero"
     >

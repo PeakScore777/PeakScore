@@ -674,3 +674,10 @@ body {
     transform: translateX(clamp(32px, 4vw, 68px));
   }
 }
+
+
+/* El arte generado usa píxeles marcados: evitar que el navegador lo suavice al ampliarlo. */
+.chest-reward-open-art {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

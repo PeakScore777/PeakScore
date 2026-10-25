@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
-import { startCasoCeroAmbientAudio } from "@/lib/games/caso-cero-audio";
+import { prepareCasoCeroAmbientAudio } from "@/lib/games/caso-cero-audio";
 
 type GameTone = "yellow" | "teal" | "red" | "orange" | "blue" | "purple";
 type GameCard = {
@@ -192,7 +192,9 @@ export default function GamesHub() {
                               !event.shiftKey &&
                               !event.altKey
                             ) {
-                              void startCasoCeroAmbientAudio();
+                              // Warm up the audio silently during navigation.
+                              // It becomes audible only after the cinematic scene is ready.
+                              void prepareCasoCeroAmbientAudio();
                             }
                           }}
                           className={["inline-flex min-h-10 w-full items-center justify-center gap-3 border-2 px-4 py-2.5 text-xs font-black transition active:translate-y-px", colors.button, colors.focus].join(" ")}

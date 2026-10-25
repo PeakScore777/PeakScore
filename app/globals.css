@@ -827,13 +827,7 @@ body {
 }
 
 
-/* PeakScore: desplazar el escenario hacia la derecha sin tapar el cartel ni a Nova.
-   Una sola regla evita que un media query posterior anule el desplazamiento. */
-@media (min-width: 1536px) {
-  .qeav-game-shell {
-    transform: translateX(clamp(42px, 3.2vw, 58px));
-  }
-}
+/* El escenario usa exactamente el mismo contenedor que el esqueleto de carga. */
 
 /* Recompensas con lenguaje visual de inventario pixel-art: escalones duros,
    marcos dobles, placas interiores y sombras sin bordes redondeados. */

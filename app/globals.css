@@ -1092,3 +1092,149 @@ body {
   content: none !important;
   display: none !important;
 }
+
+
+/* Caso Cero — physical hemp rope, enlarged wooden clips and aged Polaroid paper.
+   Inspired by lightweight SVG clothesline implementations, while keeping the
+   existing @cos-design photo physics and its single idle-on-rest animation loop. */
+.caso-cero-clothesline {
+  background: transparent !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  contain: layout style;
+}
+
+.caso-cero-clothesline::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* The package's four live SVG paths share the exact physics curve. Layering
+   them gives the cord a dark contact shadow, a twisted hemp core and highlights. */
+.caso-cero-clothesline svg > path:nth-of-type(1) {
+  stroke: rgba(0, 0, 0, .78) !important;
+  stroke-width: 13px !important;
+  opacity: .92;
+  transform: translateY(4px);
+}
+
+.caso-cero-clothesline svg > path:nth-of-type(2) {
+  stroke: #24150e !important;
+  stroke-width: 9px !important;
+  opacity: .98;
+}
+
+.caso-cero-clothesline svg > path:nth-of-type(3) {
+  stroke: #684326 !important;
+  stroke-width: 6.5px !important;
+  opacity: 1;
+}
+
+.caso-cero-clothesline svg > path:nth-of-type(4) {
+  stroke: #c49a64 !important;
+  stroke-width: 1.8px !important;
+  stroke-dasharray: 2.5 3.7 !important;
+  stroke-linecap: round;
+  opacity: .9;
+}
+
+/* Bigger, shaped wooden clothespins with an obvious central split and spring. */
+.caso-cero-clothesline [class*="hanger"] > [class*="pin"] {
+  top: -27px !important;
+  width: 22px !important;
+  height: 43px !important;
+  border: 1px solid rgba(52, 29, 12, .72) !important;
+  border-radius: 4px 4px 5px 5px !important;
+  background:
+    repeating-linear-gradient(78deg, transparent 0 5px, rgba(75, 41, 16, .16) 5px 6px, transparent 6px 10px),
+    linear-gradient(90deg, #69401f 0%, #c18a4c 18%, #e2b572 44%, #aa7037 78%, #5b351d 100%) !important;
+  box-shadow:
+    0 5px 7px rgba(0, 0, 0, .48),
+    inset 0 1px 0 rgba(255, 237, 194, .62),
+    inset 0 -2px 0 rgba(44, 25, 12, .48) !important;
+  z-index: 5 !important;
+}
+
+.caso-cero-clothesline [class*="pinSpring"] {
+  top: 45% !important;
+  right: -2px !important;
+  left: -2px !important;
+  height: 4px !important;
+  background: linear-gradient(180deg, #f1e9d7 0%, #b7b1a4 46%, #5c564c 100%) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .6) !important;
+}
+
+/* Slightly weathered paper, deeper edge and believable contact shadow. */
+.caso-cero-clothesline [class*="frame"] {
+  padding: 9px 9px 0 !important;
+  border-radius: 2px !important;
+  background:
+    linear-gradient(142deg, rgba(255, 255, 255, .8), transparent 32%),
+    linear-gradient(135deg, #f4ead3 0%, #e8dcc2 75%, #d1c09e 100%) !important;
+  box-shadow:
+    0 19px 28px rgba(0, 0, 0, .48),
+    0 5px 9px rgba(0, 0, 0, .34),
+    inset 0 0 0 1px rgba(91, 62, 33, .28),
+    inset 0 -2px 0 rgba(95, 66, 39, .12) !important;
+}
+
+.caso-cero-clothesline [class*="photo"] {
+  background: #18252a !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(24, 15, 9, .5),
+    0 1px 2px rgba(0, 0, 0, .2) !important;
+}
+
+.caso-cero-clothesline [class*="photo"] img {
+  filter: saturate(.82) contrast(1.06) brightness(.91);
+}
+
+.caso-cero-clothesline [class*="caption"] {
+  padding-top: 7px !important;
+  padding-bottom: 6px !important;
+  color: #53412d !important;
+  font-size: 12px !important;
+  line-height: 1.24 !important;
+  letter-spacing: .015em;
+}
+
+.caso-cero-clothesline [class*="caption"] strong {
+  color: #34281d !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+}
+
+/* Keep the wooden clips proportionate when the photos become phone-sized. */
+@media (max-width: 640px) {
+  .caso-cero-clothesline svg > path:nth-of-type(1) {
+    stroke-width: 8px !important;
+  }
+
+  .caso-cero-clothesline svg > path:nth-of-type(2) {
+    stroke-width: 6px !important;
+  }
+
+  .caso-cero-clothesline svg > path:nth-of-type(3) {
+    stroke-width: 4px !important;
+  }
+
+  .caso-cero-clothesline svg > path:nth-of-type(4) {
+    stroke-width: 1.2px !important;
+    stroke-dasharray: 2 3 !important;
+  }
+
+  .caso-cero-clothesline [class*="hanger"] > [class*="pin"] {
+    top: -22px !important;
+    width: 16px !important;
+    height: 32px !important;
+  }
+
+  .caso-cero-clothesline [class*="frame"] {
+    padding: 6px 6px 0 !important;
+  }
+
+  .caso-cero-clothesline [class*="caption"],
+  .caso-cero-clothesline [class*="caption"] strong {
+    font-size: 9px !important;
+  }
+}

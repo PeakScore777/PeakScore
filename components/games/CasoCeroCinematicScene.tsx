@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, LoaderCircle, Waves } from "lucide-react";
 import CasoCeroLoadingSkeleton from "@/components/games/CasoCeroLoadingSkeleton";
+import CasoCeroEvidenceClothesline from "@/components/games/CasoCeroEvidenceClothesline";
 
 const IMAGE_WIDTH = 1672;
 const IMAGE_HEIGHT = 941;
@@ -422,6 +423,9 @@ export default function CasoCeroCinematicScene({
           onError={() => markLightLayerReady(2)}
         />
       </div>
+
+      {/* Three independent science clues hanging from twine, outside the river-video layer. */}
+      <CasoCeroEvidenceClothesline />
 
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,5,8,.10)_0%,transparent_22%,transparent_65%,rgba(2,5,8,.55)_100%)]" />
 

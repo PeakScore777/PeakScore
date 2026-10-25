@@ -1088,7 +1088,7 @@ export default function QueEsEsaVainaGame() {
                   </>
                 )}
                 <Image
-                  src={chestAnimation.phase === "opening" ? "/images/games/que-es-esa-vaina/cofre-apertura.gif" : "/images/games/que-es-esa-vaina/cofre-abierto-recompensas.webp"}
+                  src={chestAnimation.phase === "opening" ? "/images/games/que-es-esa-vaina/cofre-apertura.gif" : "/images/games/que-es-esa-vaina/cofre-abierto-recompensas.svg"}
                   alt={chestAnimation.phase === "opening" ? "Animación de apertura del cofre" : "Cofre abierto con monedas, gemas Peak Coin y emblemas de experiencia XP"}
                   unoptimized={chestAnimation.phase === "opening"}
                   width={560}

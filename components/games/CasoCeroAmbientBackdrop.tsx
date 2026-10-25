@@ -51,10 +51,10 @@ export default function CasoCeroAmbientBackdrop() {
             tabIndex={-1}
           />
         ) : (
-          <div className="caso-cero-water-fallback absolute inset-0 overflow-hidden bg-[#102b3a]">
+          <div className="caso-cero-water-fallback absolute inset-0 overflow-hidden bg-transparent">
             <span className="caso-cero-water-ripple absolute left-[-20%] top-[54%] h-[35%] w-[140%] rounded-[50%] border border-sky-200/20" />
             <span className="caso-cero-water-ripple absolute left-[-15%] top-[63%] h-[24%] w-[130%] rounded-[50%] border border-sky-100/20 [animation-delay:-2s]" />
-            <span className="absolute inset-0 bg-gradient-to-b from-[#0b1d31]/75 via-transparent to-[#07131e]/45" />
+            <span className="absolute inset-0 bg-gradient-to-b from-[#0b1d31]/10 via-transparent to-[#07131e]/10" />
           </div>
         )}
 

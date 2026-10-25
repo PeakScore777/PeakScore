@@ -41,6 +41,8 @@ type Props = {
   error: string | null;
   caseCount: number;
   onStart: () => void;
+  audioEnabled: boolean;
+  onToggleAudio: () => void;
 };
 
 export default function CasoCeroCinematicScene({
@@ -49,17 +51,14 @@ export default function CasoCeroCinematicScene({
   error,
   caseCount,
   onStart,
+  audioEnabled,
+  onToggleAudio,
 }: Props) {
   const rootRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const ambienceAudioRef = useRef<HTMLAudioElement | null>(null);
-  const windowRainAudioRef = useRef<HTMLAudioElement | null>(null);
-  const mysteryMusicAudioRef = useRef<HTMLAudioElement | null>(null);
   const [lightingStage, setLightingStage] = useState<LightingStage>(0);
   const [sceneVideoFailed, setSceneVideoFailed] = useState(false);
   const [rainFxFailed, setRainFxFailed] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(false);
-  const [audioError, setAudioError] = useState(false);
   const [mediaBox, setMediaBox] = useState({ left: 0, top: 0, width: IMAGE_WIDTH, height: IMAGE_HEIGHT });
 
   useEffect(() => {
@@ -168,45 +167,6 @@ export default function CasoCeroCinematicScene({
       instance = null;
     };
   }, []);
-
-  useEffect(() => () => {
-    const tracks = [ambienceAudioRef.current, windowRainAudioRef.current, mysteryMusicAudioRef.current];
-    for (const track of tracks) {
-      if (!track) continue;
-      track.pause();
-      track.currentTime = 0;
-    }
-  }, []);
-
-  const toggleAudio = async () => {
-    const tracks = [
-      { audio: ambienceAudioRef.current, volume: 0.42 },
-      { audio: windowRainAudioRef.current, volume: 0.31 },
-      { audio: mysteryMusicAudioRef.current, volume: 0.19 },
-    ].filter((track): track is { audio: HTMLAudioElement; volume: number } => track.audio !== null);
-
-    if (audioEnabled) {
-      for (const track of tracks) track.audio.pause();
-      setAudioEnabled(false);
-      setAudioError(false);
-      return;
-    }
-
-    try {
-      for (const track of tracks) {
-        track.audio.loop = true;
-        track.audio.volume = track.volume;
-        track.audio.muted = false;
-      }
-      await Promise.all(tracks.map(({ audio }) => audio.play()));
-      setAudioEnabled(true);
-      setAudioError(false);
-    } catch {
-      for (const track of tracks) track.audio.pause();
-      setAudioEnabled(false);
-      setAudioError(true);
-    }
-  };
 
   const maskStyle = {
     WebkitMaskImage: WINDOW_MASK,
@@ -320,7 +280,7 @@ export default function CasoCeroCinematicScene({
 
       <button
         type="button"
-        onClick={() => void toggleAudio()}
+        onClick={onToggleAudio}
         aria-pressed={audioEnabled}
         aria-label={audioEnabled ? "Silenciar ambiente" : "Activar ambiente"}
         className="absolute right-3 top-3 z-30 inline-flex min-h-10 items-center gap-2 border border-[#a88b5b]/60 bg-[#070c11]/75 px-3 py-2 text-[10px] font-bold text-[#f2e7d3] shadow-lg backdrop-blur-md transition hover:border-[#e6bd72] sm:right-5 sm:top-5 sm:text-xs"
@@ -341,9 +301,6 @@ export default function CasoCeroCinematicScene({
           <p className="mt-2 text-xs leading-5 text-[#d0d9df] sm:text-sm">
             La lluvia golpea el cristal. Examina las pistas, compara los datos y descubre qué conclusión respalda la evidencia.
           </p>
-          {audioError && (
-            <p role="status" className="mt-2 text-[10px] leading-4 text-[#f2c68c]">El navegador no permitió iniciar el ambiente. Pulsa de nuevo «Activar ambiente».</p>
-          )}
           {error && (
             <p role="alert" className="mt-3 border border-[#9d5749] bg-[#2b1716]/90 px-3 py-2 text-xs text-[#ffd1c6]">
               {error}
@@ -368,10 +325,6 @@ export default function CasoCeroCinematicScene({
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#b7dacf]" />
         LLUVIA EN VIVO · RÍO NOCTURNO
       </div>
-
-      <audio ref={ambienceAudioRef} src="/audio/caso-cero/ambiente-rio-lluvia.wav" preload="none" loop className="hidden" aria-hidden="true" />
-      <audio ref={windowRainAudioRef} src="/audio/caso-cero/lluvia-ventana.wav" preload="none" loop className="hidden" aria-hidden="true" />
-      <audio ref={mysteryMusicAudioRef} src="/audio/caso-cero/musica-misterio.wav" preload="none" loop className="hidden" aria-hidden="true" />
 
       <style jsx>{`
         .caso-cero-light-layer {

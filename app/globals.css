@@ -1079,3 +1079,16 @@ body {
     font-size: 19px;
   }
 }
+
+
+/* Caso Cero: the clothesline must be transparent over the existing cinematic lab. */
+.caso-cero-clothesline {
+  background: transparent !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+}
+
+.caso-cero-clothesline::after {
+  content: none !important;
+  display: none !important;
+}

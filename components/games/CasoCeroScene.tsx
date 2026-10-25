@@ -71,7 +71,7 @@ export default function CasoCeroScene() {
             return (
               <button key={item.id} type="button" aria-label={"Investigar evidencia: " + item.title} aria-pressed={isSelected} onClick={() => setSelected(isSelected ? null : item.id)} className={"group relative min-w-0 text-left transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2ca7b] " + (isSelected ? "-translate-y-1 scale-[1.02]" : "hover:-translate-y-1")}>
                 <span className={"absolute -top-1 left-1/2 z-10 h-4 w-2 -translate-x-1/2 rounded-sm border border-[#d7b06b] bg-[#8e6535] shadow-sm transition " + (isSelected ? "rotate-12" : "")} />
-                <div className={"border-[3px] bg-[#e7ddc5] p-1.5 shadow-[3px_4px_0_#02080b,0_8px_18px_#0006] transition group-hover:rotate-0 " + (index % 2 ? "rotate-[1.5deg]" : "rotate-[-1deg]") + " " + (isSelected ? "border-[#f0c16b]" : "border-[#b7a889")}>
+                <div className={"border-[3px] bg-[#e7ddc5] p-1.5 shadow-[3px_4px_0_#02080b,0_8px_18px_#0006] transition group-hover:rotate-0 " + (index % 2 ? "rotate-[1.5deg]" : "rotate-[-1deg]") + " " + (isSelected ? "border-[#f0c16b]" : "border-[#b7a889]")}>
                   <div className="h-[78px] overflow-hidden sm:h-[92px]"><EvidenceArtwork scene={item.scene} /></div>
                   <div className="flex items-center justify-between gap-1 px-1 pb-1 pt-2 text-[#28322f]"><span className="truncate text-[8px] font-black tracking-[.08em]">{item.label}</span><Icon className="h-3 w-3 shrink-0" /></div>
                 </div>

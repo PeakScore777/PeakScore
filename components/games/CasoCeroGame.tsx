@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import CasoCeroScene from "@/components/games/CasoCeroScene";
+import CasoCeroCinematicScene from "@/components/games/CasoCeroCinematicScene";
 import type { EvidenceCase } from "@/lib/games/caso-cero-bank";
 
 type PublicCase = Omit<EvidenceCase, "answer" | "explanation">;
@@ -214,6 +215,18 @@ export default function CasoCeroGame() {
 
   if (phase === "loading") {
     return <main className="relative min-h-[calc(100svh-72px)] bg-[#060b16] px-4 py-16 text-white"><div className="mx-auto flex max-w-xl items-center justify-center gap-3 border border-[#594a31] bg-[#10141b] p-6"><Image src="/avatars/photo_perfil/orbyp.png" alt="" width={40} height={40} className="h-10 w-10 object-contain"/><p className="text-sm text-[#eee0c9]">Abriendo el archivo de evidencias…</p></div></main>;
+  }
+
+  if (phase === "intro") {
+    return (
+      <CasoCeroCinematicScene
+        canStart={cases.length >= 10}
+        busyStarting={busyStarting}
+        error={error}
+        caseCount={cases.length}
+        onStart={() => void beginCaseFile()}
+      />
+    );
   }
 
   return (

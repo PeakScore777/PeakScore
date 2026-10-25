@@ -7,25 +7,33 @@ import { ArrowLeft, ArrowRight, LoaderCircle, Waves } from "lucide-react";
 const IMAGE_WIDTH = 1672;
 const IMAGE_HEIGHT = 941;
 
+// Coordinates are relative to the window's own bounding box rather than
+// the full illustration. This concentrates WebGL work inside the panes.
 const WINDOW_MASK_SVG = `
-<svg xmlns="http://www.w3.org/2000/svg" width="1672" height="941" viewBox="0 0 1672 941">
+<svg xmlns="http://www.w3.org/2000/svg" width="689" height="495" viewBox="0 0 689 495">
   <g fill="white">
-    <rect x="466" y="101" width="144" height="160"/>
-    <rect x="646" y="101" width="141" height="160"/>
-    <rect x="847" y="101" width="138" height="160"/>
-    <rect x="1021" y="101" width="134" height="160"/>
-    <rect x="466" y="303" width="144" height="101"/>
-    <rect x="647" y="303" width="141" height="101"/>
-    <rect x="847" y="303" width="138" height="101"/>
-    <rect x="1021" y="303" width="134" height="101"/>
-    <rect x="480" y="447" width="128" height="149"/>
-    <rect x="647" y="447" width="141" height="149"/>
-    <rect x="848" y="447" width="137" height="149"/>
-    <rect x="1022" y="447" width="132" height="149"/>
+    <rect x="0" y="0" width="144" height="160"/>
+    <rect x="180" y="0" width="141" height="160"/>
+    <rect x="381" y="0" width="138" height="160"/>
+    <rect x="555" y="0" width="134" height="160"/>
+    <rect x="0" y="202" width="144" height="101"/>
+    <rect x="181" y="202" width="141" height="101"/>
+    <rect x="381" y="202" width="138" height="101"/>
+    <rect x="555" y="202" width="134" height="101"/>
+    <rect x="14" y="346" width="128" height="149"/>
+    <rect x="181" y="346" width="141" height="149"/>
+    <rect x="382" y="346" width="137" height="149"/>
+    <rect x="556" y="346" width="132" height="149"/>
   </g>
 </svg>`;
 
 const WINDOW_MASK = `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(WINDOW_MASK_SVG)}")`;
+const WINDOW_BOUNDS_STYLE = {
+  left: "27.87%",
+  top: "10.73%",
+  width: "41.21%",
+  height: "52.60%",
+} as const;
 
 type LightingStage = 0 | 1 | 2 | 3;
 type RainFxInstance = {
@@ -265,15 +273,15 @@ export default function CasoCeroCinematicScene({
         <canvas
           ref={canvasRef}
           aria-hidden="true"
-          className="caso-cero-rain-canvas pointer-events-none absolute inset-0 h-full w-full"
-          style={maskStyle}
+          className="caso-cero-rain-canvas pointer-events-none absolute"
+          style={{ ...WINDOW_BOUNDS_STYLE, ...maskStyle }}
         />
 
         {rainFxFailed && (
           <div
             aria-hidden="true"
-            className="caso-cero-rain-fallback pointer-events-none absolute inset-0 overflow-hidden"
-            style={maskStyle}
+            className="caso-cero-rain-fallback pointer-events-none absolute overflow-hidden"
+            style={{ ...WINDOW_BOUNDS_STYLE, ...maskStyle }}
           >
             {Array.from({ length: 48 }, (_, index) => (
               <span
@@ -294,15 +302,15 @@ export default function CasoCeroCinematicScene({
         {/* Fogged, damp glass texture: masked to the twelve transparent panes only. */}
         <div
           aria-hidden="true"
-          className="caso-cero-glass-humidity pointer-events-none absolute inset-0"
-          style={maskStyle}
+          className="caso-cero-glass-humidity pointer-events-none absolute"
+          style={{ ...WINDOW_BOUNDS_STYLE, ...maskStyle }}
         />
         <div
           aria-hidden="true"
-          className="caso-cero-glass-streaks pointer-events-none absolute inset-0 overflow-hidden"
-          style={maskStyle}
+          className="caso-cero-glass-streaks pointer-events-none absolute overflow-hidden"
+          style={{ ...WINDOW_BOUNDS_STYLE, ...maskStyle }}
         >
-          {Array.from({ length: 38 }, (_, index) => (
+          {Array.from({ length: 56 }, (_, index) => (
             <span
               key={index}
               className="caso-cero-wet-streak absolute block rounded-full"

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, LoaderCircle, Volume2, VolumeX, Waves } from "lucide-react";
+import { ArrowLeft, ArrowRight, LoaderCircle, Waves } from "lucide-react";
 
 const IMAGE_WIDTH = 1672;
 const IMAGE_HEIGHT = 941;
@@ -41,8 +41,7 @@ type Props = {
   error: string | null;
   caseCount: number;
   onStart: () => void;
-  audioEnabled: boolean;
-  onToggleAudio: () => void;
+  onUserInteraction: () => void;
 };
 
 export default function CasoCeroCinematicScene({
@@ -51,8 +50,7 @@ export default function CasoCeroCinematicScene({
   error,
   caseCount,
   onStart,
-  audioEnabled,
-  onToggleAudio,
+  onUserInteraction,
 }: Props) {
   const rootRef = useRef<HTMLElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -108,7 +106,9 @@ export default function CasoCeroCinematicScene({
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
       if (rect.width < 1 || rect.height < 1) return false;
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+      // Keep the WebGL rain layer light enough for entry-level laptops.
+      // A 1x drawing buffer cuts its pixel workload substantially on HiDPI screens.
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 640 ? 0.85 : 1);
       const width = Math.max(1, Math.round(rect.width * pixelRatio));
       const height = Math.max(1, Math.round(rect.height * pixelRatio));
       if (canvas.width !== width || canvas.height !== height) {
@@ -131,13 +131,13 @@ export default function CasoCeroCinematicScene({
           windowMode: true,
           // Slightly darken the glass so the refracted drop edges read clearly
           // over the river, without obscuring the transparent window itself.
-          windowOverlayColor: [0.008, 0.014, 0.024, 0.32],
+          windowOverlayColor: [0.008, 0.014, 0.024, 0.38],
           mist: false,
-          spawnInterval: [0.075, 0.18],
-          spawnSize: [26, 64],
+          spawnInterval: [0.06, 0.15],
+          spawnSize: [24, 60],
           spawnLimit: 650,
-          dropletsPerSeconds: 85,
-          dropletSize: [8, 25],
+          dropletsPerSeconds: 105,
+          dropletSize: [8, 27],
           backgroundBlurSteps: 2,
           raindropCompose: "smoother",
         });
@@ -183,6 +183,9 @@ export default function CasoCeroCinematicScene({
     <main
       ref={rootRef}
       aria-label="Caso Cero, laboratorio nocturno"
+      onPointerDownCapture={onUserInteraction}
+      onKeyDownCapture={onUserInteraction}
+      onClickCapture={onUserInteraction}
       className="caso-cero-cinematic relative w-full overflow-hidden bg-[#030609] text-white"
       style={{
         height: "calc(100svh - 48px)",
@@ -200,13 +203,14 @@ export default function CasoCeroCinematicScene({
       >
         {!sceneVideoFailed ? (
           <video
-            className="absolute inset-0 h-full w-full object-fill"
+            className="caso-cero-river-video absolute inset-0 h-full w-full object-fill"
             src="/videos/caso-cero/rio-nocturno.mp4"
             autoPlay
             muted
             loop
             playsInline
-            preload="auto"
+            preload="metadata"
+            disablePictureInPicture
             onError={() => setSceneVideoFailed(true)}
             aria-hidden="true"
             tabIndex={-1}
@@ -247,6 +251,37 @@ export default function CasoCeroCinematicScene({
           </div>
         )}
 
+        {/* Fogged, damp glass texture: masked to the twelve transparent panes only. */}
+        <div
+          aria-hidden="true"
+          className="caso-cero-glass-humidity pointer-events-none absolute inset-0"
+          style={maskStyle}
+        />
+        <div
+          aria-hidden="true"
+          className="caso-cero-glass-streaks pointer-events-none absolute inset-0 overflow-hidden"
+          style={maskStyle}
+        >
+          {Array.from({ length: 38 }, (_, index) => (
+            <span
+              key={index}
+              className="caso-cero-wet-streak absolute block rounded-full"
+              style={{
+                left: ((index * 47) % 98) + "%",
+                top: ((index * 31) % 96) + "%",
+                height: 22 + ((index * 17) % 48) + "px",
+                width: 1 + (index % 3 === 0 ? 1 : 0) + "px",
+                opacity: 0.22 + ((index * 7) % 9) / 35,
+                animationDelay: "-" + ((index * 13) % 70) / 5 + "s",
+                animationDuration: 5.5 + ((index * 7) % 70) / 10 + "s",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Soft edge shading blends the moving water into the dark rainy night. */}
+        <div aria-hidden="true" className="caso-cero-river-atmosphere pointer-events-none absolute inset-0" />
+
         <img
           src="/images/backgrounds/caso-cero/escena-apagada.png"
           alt=""
@@ -283,17 +318,6 @@ export default function CasoCeroCinematicScene({
         <ArrowLeft className="h-4 w-4" />
         Todos los juegos
       </Link>
-
-      <button
-        type="button"
-        onClick={onToggleAudio}
-        aria-pressed={audioEnabled}
-        aria-label={audioEnabled ? "Silenciar ambiente" : "Activar ambiente"}
-        className="absolute right-3 top-3 z-30 inline-flex min-h-10 items-center gap-2 border border-[#a88b5b]/60 bg-[#070c11]/75 px-3 py-2 text-[10px] font-bold text-[#f2e7d3] shadow-lg backdrop-blur-md transition hover:border-[#e6bd72] sm:right-5 sm:top-5 sm:text-xs"
-      >
-        {audioEnabled ? <Volume2 className="h-4 w-4 text-[#e5bd76]" /> : <VolumeX className="h-4 w-4" />}
-        <span className="hidden sm:inline">{audioEnabled ? "Ambiente activo" : "Activar ambiente"}</span>
-      </button>
 
       <section className="absolute bottom-4 left-3 z-30 w-[min(390px,calc(100%-24px))] sm:bottom-7 sm:left-7">
         <div className="border border-[#b28a4e]/65 bg-[#061016]/82 p-4 shadow-[0_16px_45px_rgba(0,0,0,.48)] backdrop-blur-md sm:p-5">
@@ -333,6 +357,57 @@ export default function CasoCeroCinematicScene({
       </div>
 
       <style jsx>{`
+        .caso-cero-river-video {
+          /* A small overscan hides the clip's hard edges behind the window frame. */
+          transform: scale(1.045);
+          transform-origin: center;
+          filter: brightness(.62) saturate(.82) contrast(1.06);
+          will-change: transform;
+        }
+
+        .caso-cero-river-atmosphere {
+          background:
+            linear-gradient(90deg, rgba(3, 8, 13, .18), transparent 13%, transparent 86%, rgba(3, 8, 13, .22)),
+            linear-gradient(180deg, rgba(3, 8, 13, .12), transparent 24%, transparent 74%, rgba(3, 8, 13, .17));
+          mix-blend-mode: multiply;
+        }
+
+        .caso-cero-glass-humidity {
+          opacity: .68;
+          background:
+            radial-gradient(ellipse at 21% 18%, rgba(220, 238, 246, .20), transparent 17%),
+            radial-gradient(ellipse at 77% 68%, rgba(186, 215, 231, .15), transparent 25%),
+            radial-gradient(ellipse at 48% 42%, rgba(201, 228, 240, .10), transparent 42%),
+            linear-gradient(115deg, rgba(226, 244, 250, .06), transparent 24%, rgba(180, 214, 231, .08) 71%, transparent);
+          mix-blend-mode: screen;
+        }
+
+        .caso-cero-wet-streak {
+          background: linear-gradient(
+            180deg,
+            rgba(220, 241, 252, .04),
+            rgba(216, 238, 249, .45) 36%,
+            rgba(237, 248, 255, .78) 52%,
+            rgba(194, 224, 241, .20) 82%,
+            transparent
+          );
+          box-shadow: 0 0 3px rgba(201, 230, 245, .22);
+          filter: blur(.12px);
+          animation: caso-cero-wet-glass-slide linear infinite;
+        }
+
+        .caso-cero-wet-streak::after {
+          content: "";
+          position: absolute;
+          left: -1px;
+          bottom: 1px;
+          width: 3px;
+          height: 4px;
+          border-radius: 50%;
+          background: rgba(228, 245, 255, .52);
+          box-shadow: 0 0 4px rgba(205, 234, 250, .38);
+        }
+
         .caso-cero-light-layer {
           opacity: 0;
           transition: opacity 220ms ease;
@@ -381,13 +456,22 @@ export default function CasoCeroCinematicScene({
           to { transform: translate3d(-3px, 145px, 0); }
         }
 
+        @keyframes caso-cero-wet-glass-slide {
+          0% { transform: translate3d(1px, -54px, 0); }
+          100% { transform: translate3d(-3px, 145px, 0); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .caso-cero-light-layer {
             transition: none;
           }
           .caso-cero-right-lamp.is-flickering,
-          .caso-cero-fallback-drop {
+          .caso-cero-fallback-drop,
+          .caso-cero-wet-streak {
             animation: none !important;
+          }
+          .caso-cero-river-video {
+            transform: none;
           }
         }
 

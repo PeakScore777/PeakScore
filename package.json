@@ -10,6 +10,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@cos-design/photo-clothesline": "^3.7.4",
     "@google/genai": "^2.17.1",
     "@marsidev/react-turnstile": "^1.6.1",
     "@napi-rs/canvas": "^1.0.8",

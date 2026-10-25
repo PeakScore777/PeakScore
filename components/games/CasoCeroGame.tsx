@@ -18,8 +18,6 @@ import {
   Microscope,
   RotateCcw,
   ShieldCheck,
-  Volume2,
-  VolumeX,
   XCircle,
 } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
@@ -73,15 +71,45 @@ export default function CasoCeroGame() {
   const [gamesCompleted, setGamesCompleted] = useState(0);
   const [orbyOpen, setOrbyOpen] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(false);
-  const [audioError, setAudioError] = useState(false);
   const ambienceAudioRef = useRef<HTMLAudioElement | null>(null);
   const windowRainAudioRef = useRef<HTMLAudioElement | null>(null);
   const mysteryMusicAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ambientStartPromiseRef = useRef<Promise<void> | null>(null);
+
+  const startAmbientAudio = useCallback(async () => {
+    const tracks = [
+      { audio: ambienceAudioRef.current, volume: 0.42 },
+      { audio: windowRainAudioRef.current, volume: 0.31 },
+      { audio: mysteryMusicAudioRef.current, volume: 0.19 },
+    ].filter((track): track is { audio: HTMLAudioElement; volume: number } => track.audio !== null);
+
+    if (tracks.length !== 3 || tracks.every(({ audio }) => !audio.paused)) return;
+    if (ambientStartPromiseRef.current) return ambientStartPromiseRef.current;
+
+    const attempt = Promise.all(
+      tracks.map(async ({ audio, volume }) => {
+        audio.loop = true;
+        audio.volume = volume;
+        audio.muted = false;
+        await audio.play();
+      }),
+    ).then(() => undefined);
+
+    ambientStartPromiseRef.current = attempt;
+    try {
+      await attempt;
+    } catch {
+      // Browsers may block audible autoplay. The first real interaction with
+      // the scene retries playback from inside that user gesture.
+    } finally {
+      if (ambientStartPromiseRef.current === attempt) {
+        ambientStartPromiseRef.current = null;
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    // Keep the tracks independent of the intro/gameplay JSX branches. That way
-    // changing phase does not unmount the audio and reset playback.
+    // One stable set of tracks lives for the whole Caso Cero session.
     const ambience = new Audio("/audio/caso-cero/ambiente-rio-lluvia.wav");
     const windowRain = new Audio("/audio/caso-cero/lluvia-ventana.wav");
     const mysteryMusic = new Audio("/audio/caso-cero/musica-misterio.wav");
@@ -105,8 +133,15 @@ export default function CasoCeroGame() {
       ambienceAudioRef.current = null;
       windowRainAudioRef.current = null;
       mysteryMusicAudioRef.current = null;
+      ambientStartPromiseRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    // Attempt immediate autoplay; if the browser requires a gesture, the scene
+    // capture handlers and the Start button will retry without showing a toggle.
+    void startAmbientAudio();
+  }, [startAmbientAudio]);
 
   useEffect(() => {
     let cancelled = false;
@@ -131,51 +166,6 @@ export default function CasoCeroGame() {
     });
     return () => { cancelled = true; };
   }, []);
-
-  const toggleAmbientAudio = useCallback(async () => {
-    const tracks = [
-      { audio: ambienceAudioRef.current, volume: 0.42 },
-      { audio: windowRainAudioRef.current, volume: 0.31 },
-      { audio: mysteryMusicAudioRef.current, volume: 0.19 },
-    ].filter((track): track is { audio: HTMLAudioElement; volume: number } => track.audio !== null);
-
-    if (tracks.length !== 3) {
-      setAudioError(true);
-      return;
-    }
-
-    if (audioEnabled) {
-      for (const track of tracks) track.audio.pause();
-      setAudioEnabled(false);
-      setAudioError(false);
-      return;
-    }
-
-    try {
-      for (const track of tracks) {
-        track.audio.loop = true;
-        track.audio.volume = track.volume;
-        track.audio.muted = false;
-      }
-      await Promise.all(tracks.map(({ audio }) => audio.play()));
-      setAudioEnabled(true);
-      setAudioError(false);
-    } catch {
-      for (const track of tracks) track.audio.pause();
-      setAudioEnabled(false);
-      setAudioError(true);
-    }
-  }, [audioEnabled]);
-
-  useEffect(() => {
-    if (phase !== "finished") return;
-    for (const track of [ambienceAudioRef.current, windowRainAudioRef.current, mysteryMusicAudioRef.current]) {
-      if (!track) continue;
-      track.pause();
-      track.currentTime = 0;
-    }
-    setAudioEnabled(false);
-  }, [phase]);
 
   const currentCase = rounds[index] ?? null;
   const correctCount = results.filter((item) => item.isCorrect).length;
@@ -307,8 +297,7 @@ export default function CasoCeroGame() {
           error={error}
           caseCount={cases.length}
           onStart={() => void beginCaseFile()}
-          audioEnabled={audioEnabled}
-          onToggleAudio={() => void toggleAmbientAudio()}
+          onUserInteraction={() => { void startAmbientAudio(); }}
         />
 
       </>
@@ -317,7 +306,11 @@ export default function CasoCeroGame() {
 
   return (
     <>
-    <main className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#050a15] text-white">
+    <main
+      onPointerDownCapture={() => { void startAmbientAudio(); }}
+      onKeyDownCapture={() => { void startAmbientAudio(); }}
+      className="relative min-h-[calc(100svh-72px)] overflow-hidden bg-[#050a15] text-white"
+    >
       <div className="pointer-events-none absolute inset-0 opacity-35" style={{ backgroundImage: "radial-gradient(ellipse at 16% 0%, rgba(40,117,111,.28), transparent 45%), radial-gradient(ellipse at 86% 80%, rgba(176,105,41,.18), transparent 42%)" }} />
       <div className="relative mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-7 sm:py-8">
         <Link href="/aprender/juegos" className="inline-flex items-center gap-2 border border-[#65563d] bg-[#111720] px-3 py-2 text-xs font-bold text-[#f1e5d0] transition hover:border-[#d3a85f]"><ArrowLeft className="h-4 w-4"/> Todos los juegos</Link>
@@ -467,19 +460,6 @@ export default function CasoCeroGame() {
           "Pista disponible: " + currentCase.hint,
         ].join("\n") : ""}
       />
-      {(phase === "playing" || phase === "feedback") && (
-        <button
-          type="button"
-          onClick={() => void toggleAmbientAudio()}
-          aria-pressed={audioEnabled}
-          aria-label={audioEnabled ? "Silenciar ambiente" : "Activar ambiente"}
-          className="fixed right-3 top-[58px] z-[60] inline-flex min-h-10 items-center gap-2 border border-[#a88b5b]/60 bg-[#070c11]/90 px-3 py-2 text-[10px] font-bold text-[#f2e7d3] shadow-lg backdrop-blur-md transition hover:border-[#e6bd72] sm:right-5 sm:text-xs"
-        >
-          {audioEnabled ? <Volume2 className="h-4 w-4 text-[#e5bd76]" /> : <VolumeX className="h-4 w-4" />}
-          <span>{audioEnabled ? "Ambiente activo" : "Activar ambiente"}</span>
-        </button>
-      )}
-      {audioError && <div role="status" className="fixed right-3 top-[106px] z-[60] max-w-xs border border-[#9d5749] bg-[#2b1716]/95 px-3 py-2 text-[10px] leading-4 text-[#ffd1c6]">No se pudo iniciar el sonido. Pulsa de nuevo «Activar ambiente».</div>}
     </main>
     </>
   );

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { ArrowRight, Gamepad2, Sparkles, X } from "lucide-react";
+import { Gamepad2, Sparkles, X } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
 type GameTone = "yellow" | "teal" | "red" | "orange" | "blue" | "purple";
@@ -149,12 +149,11 @@ export default function GamesHub() {
             <button
               type="button"
               onClick={() => setTutorOpen(true)}
-              className="group inline-flex min-h-9 items-center gap-2 border border-[#29bff0]/80 bg-[#061326]/90 px-3 py-2 text-left shadow-[3px_3px_0_#020714] transition hover:border-[#8beaff] hover:bg-[#0b1b30] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8beaff]"
+              className="group inline-flex min-h-9 items-center gap-2 border-2 border-[#ff9a47] bg-[#2a1308]/95 px-3 py-2 text-left shadow-[3px_3px_0_#020714] transition hover:border-[#ffc18b] hover:bg-[#3b1c0a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ffb36e]"
               aria-label="Abrir el chat de Orby, tutor con inteligencia artificial"
             >
               <Image src="/avatars/photo_perfil/orbyp.png" alt="" width={32} height={32} className="h-8 w-8 object-contain"/>
-              <span className="pixel-font text-[8px] text-[#a5ecff] sm:text-[9px]">PREGÚNTALE A ORBY</span>
-              <ArrowRight className="h-4 w-4 shrink-0 text-[#35d8ff] transition-transform group-hover:translate-x-1"/>
+              <span className="pixel-font text-[8px] text-[#ffad63] sm:text-[9px]">PREGÚNTALE A ORBY</span>
             </button>
           </header>
 
@@ -180,11 +179,11 @@ export default function GamesHub() {
                     <div className="mt-4 border-t border-white/10 pt-3">
                       {game.href ? (
                         <Link href={game.href} className={["inline-flex min-h-10 w-full items-center justify-center gap-3 border-2 px-4 py-2.5 text-xs font-black transition active:translate-y-px", colors.button, colors.focus].join(" ")}>
-                          JUGAR <ArrowRight className="h-4 w-4"/>
+                          <span className="pixel-font text-[9px] tracking-wide">JUGAR</span>
                         </Link>
                       ) : (
                         <button type="button" onClick={() => setComingSoon(game.title)} className={["inline-flex min-h-10 w-full items-center justify-center gap-3 border-2 px-4 py-2.5 text-xs font-black transition active:translate-y-px", colors.button, colors.focus].join(" ")}>
-                          JUGAR <ArrowRight className="h-4 w-4"/>
+                          <span className="pixel-font text-[9px] tracking-wide">JUGAR</span>
                         </button>
                       )}
                     </div>

@@ -11,7 +11,7 @@ type EvidencePhoto = PhotoClotheslineItem & {
 
 const CASE_EVIDENCE: EvidencePhoto[] = [
   {
-    src: "https://images.pexels.com/videos/5157996/pexels-photo-5157996.jpeg?auto=compress&cs=tinysrgb&w=900",
+    src: "https://images.unsplash.com/photo-1760201068264-39955f9a4bae?auto=format&fit=crop&fm=jpg&q=82&w=1200",
     alt: "Corriente de un río durante una tormenta, con agua golpeando las rocas",
     title: "01 · EL RÍO",
     description: "Punto de muestreo",
@@ -19,7 +19,7 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Interpretar una situación y distinguir observaciones de conclusiones.",
   },
   {
-    src: "https://images.pexels.com/photos/20806050/pexels-photo-20806050.jpeg?auto=compress&cs=tinysrgb&w=900",
+    src: "https://images.unsplash.com/photo-1747110595225-220ad28fc6dc?auto=format&fit=crop&fm=jpg&q=82&w=1200",
     alt: "Recolección de una muestra de agua para una investigación de campo",
     title: "02 · MUESTRAS",
     description: "Trabajo de campo",
@@ -27,7 +27,7 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Comprobar si las muestras se obtuvieron bajo condiciones comparables.",
   },
   {
-    src: "https://images.pexels.com/photos/8850985/pexels-photo-8850985.jpeg?auto=compress&cs=tinysrgb&w=900",
+    src: "https://images.unsplash.com/photo-1748261347902-451fb437e8fb?auto=format&fit=crop&fm=jpg&q=82&w=1200",
     alt: "Material de laboratorio para analizar una muestra líquida",
     title: "03 · LABORATORIO",
     description: "Análisis de datos",
@@ -37,26 +37,39 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
 ];
 
 export default function CasoCeroEvidenceClothesline() {
-  const [compact, setCompact] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
   const active = activeEvidence === null ? null : CASE_EVIDENCE[activeEvidence];
 
   useEffect(() => {
-    // Keep all three Polaroids visible within the narrow wall area on laptops
-    // and mobile. The package runs no animation loop while the photos are still.
-    const query = window.matchMedia("(max-width: 1150px)");
-    const update = () => setCompact(query.matches);
+    // Scale the physical photos for each device class. This keeps the line wide
+    // while avoiding the tiny desktop thumbnails from the previous layout.
+    const mobileQuery = window.matchMedia("(max-width: 640px)");
+    const tabletQuery = window.matchMedia("(max-width: 1150px)");
+    const update = () => {
+      setLayoutMode(mobileQuery.matches ? "mobile" : tabletQuery.matches ? "tablet" : "desktop");
+    };
     update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
+    mobileQuery.addEventListener("change", update);
+    tabletQuery.addEventListener("change", update);
+    return () => {
+      mobileQuery.removeEventListener("change", update);
+      tabletQuery.removeEventListener("change", update);
+    };
   }, []);
+
+  const dimensions = layoutMode === "mobile"
+    ? { photoWidth: 96, photoHeight: 132, photoGap: 10, ropeTop: 22, ropeSag: 15, bandLength: 15, bandWidth: 4, maxPull: 14, tilt: 3 }
+    : layoutMode === "tablet"
+      ? { photoWidth: 178, photoHeight: 225, photoGap: 45, ropeTop: 42, ropeSag: 30, bandLength: 23, bandWidth: 6, maxPull: 20, tilt: 3.5 }
+      : { photoWidth: 320, photoHeight: 365, photoGap: 170, ropeTop: 60, ropeSag: 42, bandLength: 32, bandWidth: 7, maxPull: 24, tilt: 3.5 };
 
   return (
     <div
       className={[
-        "caso-cero-evidence-clothesline pointer-events-none absolute left-1/2 top-[1.5%] z-20",
+        "caso-cero-evidence-clothesline pointer-events-none absolute left-1/2 top-[1%] z-20",
         "-translate-x-1/2",
-        "h-[205px] w-[96vw] sm:top-[5%] sm:h-[240px] sm:w-[min(510px,40vw)] lg:h-[290px]",
+        "h-[210px] w-[98vw] sm:h-[340px] lg:h-[480px]",
       ].join(" ")}
       aria-label="Fotografías de evidencia de Caso Cero"
     >
@@ -65,18 +78,18 @@ export default function CasoCeroEvidenceClothesline() {
           photos={CASE_EVIDENCE}
           width="100%"
           height="100%"
-          photoWidth={compact ? 88 : 124}
-          photoHeight={compact ? 118 : 158}
-          photoGap={compact ? 13 : 30}
-          ropeTop={compact ? 25 : 43}
-          ropeSag={compact ? 12 : 18}
-          bandLength={compact ? 17 : 24}
-          bandWidth={compact ? 4 : 5}
-          maxPull={compact ? 18 : 27}
+          photoWidth={dimensions.photoWidth}
+          photoHeight={dimensions.photoHeight}
+          photoGap={dimensions.photoGap}
+          ropeTop={dimensions.ropeTop}
+          ropeSag={dimensions.ropeSag}
+          bandLength={dimensions.bandLength}
+          bandWidth={dimensions.bandWidth}
+          maxPull={dimensions.maxPull}
           stiffness={0.9}
           damping={0.42}
           tension={0.28}
-          tilt={4}
+          tilt={dimensions.tilt}
           ropeColor="#4a3024"
           bandColor="#795538"
           pinColor="#bc8746"

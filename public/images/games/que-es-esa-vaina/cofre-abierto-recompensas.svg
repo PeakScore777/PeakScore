@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="500" viewBox="0 0 640 500" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="110" y1="60" x2="525" y2="430" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF6A5"/><stop offset=".18" stop-color="#FFE75A"/><stop offset=".42" stop-color="#FFB817"/><stop offset=".68" stop-color="#FFD94B"/><stop offset=".86" stop-color="#C45A10"/><stop offset="1" stop-color="#74300D"/>
+    </linearGradient>
+    <linearGradient id="goldFace" x1="155" y1="94" x2="485" y2="220" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDE0"/><stop offset=".22" stop-color="#FFE85B"/><stop offset=".5" stop-color="#FFB91B"/><stop offset=".8" stop-color="#FFD84B"/><stop offset="1" stop-color="#D86A11"/>
+    </linearGradient>
+    <linearGradient id="red" x1="170" y1="100" x2="468" y2="255" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF4B39"/><stop offset=".25" stop-color="#E91934"/><stop offset=".62" stop-color="#B70639"/><stop offset="1" stop-color="#5A062B"/>
+    </linearGradient>
+    <linearGradient id="redFront" x1="150" y1="270" x2="450" y2="423" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF4839"/><stop offset=".25" stop-color="#E71739"/><stop offset=".62" stop-color="#B0083A"/><stop offset="1" stop-color="#69052F"/>
+    </linearGradient>
+    <linearGradient id="purpleGem" x1="286" y1="185" x2="359" y2="287" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7D7FF"/><stop offset=".28" stop-color="#B93BFF"/><stop offset=".68" stop-color="#6418DC"/><stop offset="1" stop-color="#2A0A73"/>
+    </linearGradient>
+    <linearGradient id="blueXP" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#B3FFFF"/><stop offset=".35" stop-color="#28DEFF"/><stop offset=".72" stop-color="#1689FF"/><stop offset="1" stop-color="#173BD6"/>
+    </linearGradient>
+    <radialGradient id="treasureGlow">
+      <stop stop-color="#FFF7A3" stop-opacity=".9"/><stop offset=".3" stop-color="#FFB928" stop-opacity=".48"/><stop offset="1" stop-color="#FFB928" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+    <g id="coin">
+      <ellipse rx="25" ry="16" fill="#6B2809" stroke="#1A0B14" stroke-width="8"/>
+      <ellipse rx="24" ry="15" fill="url(#gold)" stroke="#FFEB73" stroke-width="4"/>
+      <ellipse rx="13" ry="7" fill="#F78A10" stroke="#FFE76B" stroke-width="3"/>
+      <path d="M-12 -4L1 -9L12 -4" stroke="#FFF8B1" stroke-width="3" stroke-linecap="square"/>
+    </g>
+    <g id="peakCoin">
+      <path d="M0 -35L29 -17L29 17L0 35L-29 17L-29 -17Z" fill="#1C082D" stroke="#12091B" stroke-width="9" stroke-linejoin="miter"/>
+      <path d="M0 -31L25 -15L25 15L0 31L-25 15L-25 -15Z" fill="url(#gold)" stroke="#FFF0A0" stroke-width="4" stroke-linejoin="miter"/>
+      <path d="M0 -23L18 0L0 23L-18 0Z" fill="url(#purpleGem)" stroke="#6516A5" stroke-width="4" stroke-linejoin="miter"/>
+      <path d="M0 -23V23L-18 0Z" fill="#E69AFF" opacity=".92"/>
+      <path d="M0 -23L18 0H0Z" fill="#FFFFFF" opacity=".85"/>
+      <path d="M-18 0H18" stroke="#FBE8FF" stroke-width="2"/>
+    </g>
+    <g id="xpToken">
+      <path d="M-30 -24L-19 -35H19L30 -24V24L19 35H-19L-30 24Z" fill="#091340" stroke="#050816" stroke-width="9" stroke-linejoin="miter"/>
+      <path d="M-26 -21L-16 -31H16L26 -21V21L16 31H-16L-26 21Z" fill="url(#blueXP)" stroke="#70F9FF" stroke-width="4" stroke-linejoin="miter"/>
+      <path d="M-17 -23H5L-7 -4H-17Z" fill="#FFFFFF" opacity=".78"/>
+      <text x="0" y="8" font-family="monospace" font-size="18" font-weight="900" text-anchor="middle" fill="#FFFFFF" stroke="#1230A0" stroke-width="1.8" paint-order="stroke">XP</text>
+      <path d="M-14 23H15" stroke="#6AFBFF" stroke-width="3"/>
+    </g>
+    <g id="spark">
+      <path d="M0 -16L5 -5L16 0L5 5L0 16L-5 5L-16 0L-5 -5Z" fill="#FFFCC0" stroke="#FFB91F" stroke-width="2"/>
+    </g>
+  </defs>
+
+  <!-- Gold glow and little pixel sparks around the reward -->
+  <ellipse cx="320" cy="245" rx="250" ry="190" fill="url(#treasureGlow)"/>
+  <ellipse cx="320" cy="242" rx="180" ry="100" fill="#FFD341" opacity=".25" filter="url(#softGlow)"/>
+  <g opacity=".98">
+    <path d="M62 203H78V187H94V203H110V219H94V235H78V219H62Z" fill="#FFE25B" stroke="#8A3A11" stroke-width="4"/>
+    <path d="M535 118H550V103H565V118H580V133H565V148H550V133H535Z" fill="#FFE25B" stroke="#8A3A11" stroke-width="4"/>
+    <use href="#spark" x="113" y="123" transform="translate(113 123) scale(.72) translate(-113 -123)"/>
+    <use href="#spark" x="535" y="245" transform="translate(535 245) scale(.8) translate(-535 -245)"/>
+    <use href="#spark" transform="translate(170 66) scale(.48)"/>
+    <use href="#spark" transform="translate(462 64) scale(.55)"/>
+    <use href="#spark" transform="translate(86 294) scale(.45)"/>
+    <use href="#spark" transform="translate(556 323) scale(.5)"/>
+    <path d="M95 153H107V165H95ZM520 182H532V194H520ZM132 260H144V272H132ZM482 91H494V103H482Z" fill="#FFFFFF"/>
+  </g>
+
+  <!-- Open lid, with the same crimson enamel and chunky gold hardware as the closed sprite -->
+  <path d="M102 192L147 104L199 63L440 63L493 104L538 192L509 224H130Z" fill="#170B1A" stroke="#120A17" stroke-width="18" stroke-linejoin="miter"/>
+  <path d="M112 184L156 106L204 73H435L484 106L528 184L505 208H135Z" fill="url(#gold)" stroke="#0E0812" stroke-width="8" stroke-linejoin="miter"/>
+  <path d="M152 111L205 78H434L485 111L468 147H170Z" fill="url(#red)" stroke="#650927" stroke-width="7" stroke-linejoin="miter"/>
+  <path d="M206 82H431L458 101H182Z" fill="#FF5760" opacity=".9"/>
+  <path d="M173 111H274V123H173ZM295 96H418V108H295ZM194 130H337V141H194Z" fill="#FF9C65" opacity=".78"/>
+  <path d="M115 184H527L505 209H136Z" fill="url(#goldFace)" stroke="#1B0B15" stroke-width="9" stroke-linejoin="miter"/>
+  <path d="M135 188H505L487 202H151Z" fill="#5F0528" stroke="#9C300C" stroke-width="4"/>
+
+  <!-- Dark cavity behind the treasure -->
+  <path d="M132 196H508L481 300H160Z" fill="#1A0828" stroke="#110817" stroke-width="12" stroke-linejoin="miter"/>
+  <path d="M151 207H489L472 286H166Z" fill="#32103B"/>
+  <path d="M173 220H466V231H173ZM160 246H480V257H160Z" fill="#5C1C52" opacity=".65"/>
+
+  <!-- Treasure pile: gold coins at different angles and sizes -->
+  <g stroke-linejoin="miter">
+    <use href="#coin" transform="translate(177 244) rotate(-23) scale(.85)"/>
+    <use href="#coin" transform="translate(226 226) rotate(18) scale(.82)"/>
+    <use href="#coin" transform="translate(270 250) rotate(-8) scale(1.02)"/>
+    <use href="#coin" transform="translate(327 229) rotate(16) scale(.82)"/>
+    <use href="#coin" transform="translate(383 246) rotate(-18) scale(.92)"/>
+    <use href="#coin" transform="translate(432 225) rotate(24) scale(.82)"/>
+    <use href="#coin" transform="translate(464 254) rotate(-8) scale(.76)"/>
+    <use href="#coin" transform="translate(208 271) rotate(12) scale(.8)"/>
+    <use href="#coin" transform="translate(370 271) rotate(-6) scale(.9)"/>
+  </g>
+
+  <!-- Peak Coins and XP pieces float above the treasure -->
+  <use href="#peakCoin" transform="translate(244 208) rotate(-13) scale(.9)"/>
+  <use href="#xpToken" transform="translate(190 199) rotate(-11) scale(.86)"/>
+  <use href="#peakCoin" transform="translate(329 190) rotate(6) scale(.9)"/>
+  <use href="#xpToken" transform="translate(428 207) rotate(8) scale(.91)"/>
+  <use href="#peakCoin" transform="translate(474 236) rotate(12) scale(.68)"/>
+  <use href="#xpToken" transform="translate(302 252) rotate(-5) scale(.72)"/>
+
+  <!-- Front rim: layered gold plates and shadow pixels -->
+  <path d="M92 273H548L526 330H116Z" fill="#120916" stroke="#110914" stroke-width="14" stroke-linejoin="miter"/>
+  <path d="M105 269H535L516 318H124Z" fill="url(#goldFace)" stroke="#1C0B15" stroke-width="9" stroke-linejoin="miter"/>
+  <path d="M121 276H518L502 301H139Z" fill="#FFE661"/>
+  <path d="M140 287H499L487 307H151Z" fill="#F39214"/>
+  
+  <!-- Heavy red chest body -->
+  <path d="M111 302H529V414L495 448H147L111 416Z" fill="#140911" stroke="#0A0710" stroke-width="18" stroke-linejoin="miter"/>
+  <path d="M127 309H513V408L489 432H153L127 408Z" fill="url(#redFront)" stroke="url(#gold)" stroke-width="12" stroke-linejoin="miter"/>
+  <path d="M154 322H486V335H154ZM142 346H498V359H142ZM160 381H480V395H160Z" fill="#FF4250" opacity=".55"/>
+  <path d="M130 312H152V405H130ZM486 312H508V405H486Z" fill="url(#gold)" stroke="#6D2A0B" stroke-width="5"/>
+  <path d="M111 400H529V421L495 448H145L111 421Z" fill="url(#gold)" stroke="#1A0A12" stroke-width="10" stroke-linejoin="miter"/>
+  <path d="M143 410H497L483 427H157Z" fill="#FFF078"/>
+  <path d="M164 432H477V444H164Z" fill="#C86612"/>
+
+  <!-- Center lock, deliberately chunky to echo the original GIF -->
+  <path d="M266 276V250Q266 224 294 224H347Q375 224 375 250V276H393V338H247V276Z" fill="#130A17" stroke="#09070E" stroke-width="10" stroke-linejoin="miter"/>
+  <path d="M280 271V252Q280 238 297 238H344Q361 238 361 252V271H280Z" fill="url(#gold)" stroke="#67300D" stroke-width="6"/>
+  <path d="M264 269H376V326H264Z" fill="url(#goldFace)" stroke="#1A0A14" stroke-width="8" stroke-linejoin="miter"/>
+  <path d="M277 282H363V314H277Z" fill="#FFE75A" stroke="#9F430E" stroke-width="5"/>
+  <path d="M307 289H334V318H307Z" fill="#141122" stroke="#59240D" stroke-width="4"/>
+  <path d="M314 294H326V313H314Z" fill="#080914"/>
+  <path d="M279 276H361V283H279Z" fill="#FFFFFF" opacity=".85"/>
+
+  <!-- Pixel highlights on the lower corners -->
+  <path d="M110 371H124V385H110ZM130 385H144V399H130ZM496 371H510V385H496ZM516 385H530V399H516Z" fill="#FFF6A2"/>
+  <path d="M171 445H191V455H171ZM450 445H470V455H450Z" fill="#F7A51B"/>
+</svg>

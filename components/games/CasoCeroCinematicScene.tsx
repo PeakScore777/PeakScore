@@ -98,7 +98,7 @@ export default function CasoCeroCinematicScene({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     let disposed = false;
     let starting = false;
@@ -129,13 +129,15 @@ export default function CasoCeroCinematicScene({
         const nextInstance = new RainDropFX({
           canvas,
           windowMode: true,
-          windowOverlayColor: [0.008, 0.014, 0.024, 0.24],
+          // Slightly darken the glass so the refracted drop edges read clearly
+          // over the river, without obscuring the transparent window itself.
+          windowOverlayColor: [0.008, 0.014, 0.024, 0.32],
           mist: false,
-          spawnInterval: [0.09, 0.22],
-          spawnSize: [24, 58],
+          spawnInterval: [0.075, 0.18],
+          spawnSize: [26, 64],
           spawnLimit: 650,
-          dropletsPerSeconds: 100,
-          dropletSize: [7, 22],
+          dropletsPerSeconds: 85,
+          dropletSize: [8, 25],
           backgroundBlurSteps: 2,
           raindropCompose: "smoother",
         });
@@ -181,7 +183,11 @@ export default function CasoCeroCinematicScene({
     <main
       ref={rootRef}
       aria-label="Caso Cero, laboratorio nocturno"
-      className="caso-cero-cinematic relative h-[calc(100svh-48px)] min-h-[540px] w-full overflow-hidden bg-[#030609] text-white"
+      className="caso-cero-cinematic relative w-full overflow-hidden bg-[#030609] text-white"
+      style={{
+        height: "calc(100svh - 48px)",
+        minHeight: "min(540px, calc(100svh - 48px))",
+      }}
     >
       <div
         className="absolute overflow-hidden"

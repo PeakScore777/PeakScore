@@ -26,8 +26,10 @@ function Shimmer({ className = "" }: { className?: string }) {
  * behind it, so the loading state itself stays lightweight.
  */
 export default function CasoCeroLoadingSkeleton({ overlay = false }: Props) {
+  const SkeletonRoot = overlay ? "div" : "main";
+
   return (
-    <main
+    <SkeletonRoot
       role="status"
       aria-label="Cargando Caso Cero"
       aria-live="polite"
@@ -119,6 +121,6 @@ export default function CasoCeroLoadingSkeleton({ overlay = false }: Props) {
           }
         }
       `}</style>
-    </main>
+    </SkeletonRoot>
   );
 }

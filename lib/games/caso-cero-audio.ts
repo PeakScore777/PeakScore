@@ -5,6 +5,7 @@ type CasoCeroTrack = {
 
 let ambientTracks: CasoCeroTrack[] | null = null;
 let pendingStart: Promise<void> | null = null;
+let deferredStopTimer: number | null = null;
 
 function getTracks(): CasoCeroTrack[] {
   if (typeof window === "undefined") return [];
@@ -33,6 +34,11 @@ function getTracks(): CasoCeroTrack[] {
  * inside the cinematic scene on browsers that block audible autoplay.
  */
 export function startCasoCeroAmbientAudio(): Promise<void> {
+  if (typeof window !== "undefined" && deferredStopTimer !== null) {
+    window.clearTimeout(deferredStopTimer);
+    deferredStopTimer = null;
+  }
+
   const tracks = getTracks();
   if (tracks.length !== 3 || tracks.every(({ audio }) => !audio.paused)) {
     return Promise.resolve();
@@ -62,12 +68,21 @@ export function startCasoCeroAmbientAudio(): Promise<void> {
   return pendingStart;
 }
 
-/** Stop the ambience when leaving Caso Cero, without creating duplicate players. */
+/**
+ * Stop the ambience when leaving Caso Cero. The short delay is intentional:
+ * React Strict Mode replays effects in development, and an immediate cleanup
+ * would stop audio that was successfully started by the JUGAR click.
+ */
 export function stopCasoCeroAmbientAudio(): void {
-  if (!ambientTracks) return;
-  for (const { audio } of ambientTracks) {
-    audio.pause();
-    audio.currentTime = 0;
-  }
-  pendingStart = null;
+  if (!ambientTracks || typeof window === "undefined") return;
+  if (deferredStopTimer !== null) window.clearTimeout(deferredStopTimer);
+
+  deferredStopTimer = window.setTimeout(() => {
+    for (const { audio } of ambientTracks ?? []) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    pendingStart = null;
+    deferredStopTimer = null;
+  }, 300);
 }

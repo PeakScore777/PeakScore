@@ -92,6 +92,10 @@ export default function CasoCeroAmbientBackdrop() {
           object-position: left top;
         }
 
+        .caso-cero-river-video {
+          filter: brightness(.56) saturate(.78) contrast(1.12);
+        }
+
         .caso-cero-rain-streak {
           width: 1.5px;
           background: linear-gradient(

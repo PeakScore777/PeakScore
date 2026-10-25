@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, LoaderCircle, Waves } from "lucide-react";
+import CasoCeroLoadingSkeleton from "@/components/games/CasoCeroLoadingSkeleton";
 
 const IMAGE_WIDTH = 1672;
 const IMAGE_HEIGHT = 941;
@@ -49,6 +50,7 @@ type Props = {
   error: string | null;
   caseCount: number;
   onStart: () => void;
+  onSceneReady: () => void;
   onUserInteraction: () => void;
 };
 
@@ -58,6 +60,7 @@ export default function CasoCeroCinematicScene({
   error,
   caseCount,
   onStart,
+  onSceneReady,
   onUserInteraction,
 }: Props) {
   const rootRef = useRef<HTMLElement | null>(null);
@@ -66,8 +69,18 @@ export default function CasoCeroCinematicScene({
   const riverLoopStartRef = useRef(1.4);
   const [lightingStage, setLightingStage] = useState<LightingStage>(0);
   const [sceneVideoFailed, setSceneVideoFailed] = useState(false);
+  const [sceneVideoReady, setSceneVideoReady] = useState(false);
+  const [lightLayersReady, setLightLayersReady] = useState([false, false, false]);
   const [rainFxFailed, setRainFxFailed] = useState(false);
+  const [rainFxReady, setRainFxReady] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
   const [mediaBox, setMediaBox] = useState({ left: 0, top: 0, width: IMAGE_WIDTH, height: IMAGE_HEIGHT });
+
+  const markLightLayerReady = (index: number) => {
+    setLightLayersReady((previous) =>
+      previous.map((isReady, layerIndex) => layerIndex === index ? true : isReady),
+    );
+  };
 
   useEffect(() => {
     const firstLamp = window.setTimeout(() => setLightingStage(1), 450);
@@ -106,12 +119,22 @@ export default function CasoCeroCinematicScene({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!canvas) {
+      setRainFxReady(true);
+      return;
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setRainFxReady(true);
+      return;
+    }
 
     let disposed = false;
     let starting = false;
     let instance: RainFxInstance | null = null;
     let resizeObserver: ResizeObserver | null = null;
+    // If WebGL takes too long on a low-memory computer, reveal the scene with
+    // the CSS rain fallback instead of leaving the skeleton up indefinitely.
+    const rainReadyTimeout = window.setTimeout(() => setRainFxReady(true), 8500);
 
     const resizeCanvas = () => {
       const rect = canvas.getBoundingClientRect();
@@ -158,8 +181,12 @@ export default function CasoCeroCinematicScene({
         }
         instance = nextInstance;
         await instance.start();
+        if (!disposed) setRainFxReady(true);
       } catch {
-        if (!disposed) setRainFxFailed(true);
+        if (!disposed) {
+          setRainFxFailed(true);
+          setRainFxReady(true);
+        }
       } finally {
         starting = false;
       }
@@ -174,11 +201,22 @@ export default function CasoCeroCinematicScene({
 
     return () => {
       disposed = true;
+      window.clearTimeout(rainReadyTimeout);
       resizeObserver?.disconnect();
       instance?.destroy();
       instance = null;
     };
   }, []);
+
+  useEffect(() => {
+    const visualLayersLoaded = lightLayersReady.every(Boolean);
+    const videoCanRender = sceneVideoReady || sceneVideoFailed;
+
+    if (!sceneReady && visualLayersLoaded && videoCanRender && rainFxReady) {
+      setSceneReady(true);
+      onSceneReady();
+    }
+  }, [lightLayersReady, sceneVideoReady, sceneVideoFailed, rainFxReady, sceneReady, onSceneReady]);
 
   const maskStyle = {
     WebkitMaskImage: WINDOW_MASK,
@@ -228,6 +266,7 @@ export default function CasoCeroCinematicScene({
             playsInline
             preload="metadata"
             disablePictureInPicture
+            onLoadedData={() => setSceneVideoReady(true)}
             onLoadedMetadata={(event) => {
               const video = event.currentTarget;
               if (!Number.isFinite(video.duration) || video.duration <= 4) return;
@@ -259,7 +298,10 @@ export default function CasoCeroCinematicScene({
                 riverLoopResettingRef.current = false;
               });
             }}
-            onError={() => setSceneVideoFailed(true)}
+            onError={() => {
+              setSceneVideoFailed(true);
+              setSceneVideoReady(true);
+            }}
             aria-hidden="true"
             tabIndex={-1}
           />
@@ -335,6 +377,8 @@ export default function CasoCeroCinematicScene({
           alt=""
           draggable={false}
           className="caso-cero-light-layer absolute inset-0 h-full w-full object-fill"
+          onLoad={() => markLightLayerReady(0)}
+          onError={() => markLightLayerReady(0)}
         />
         <img
           src="/images/backgrounds/caso-cero/escena-lampara-derecha.png"
@@ -345,6 +389,8 @@ export default function CasoCeroCinematicScene({
             (lightingStage === 1 ? "is-flickering " : "") +
             (lightingStage === 1 ? "is-visible" : "")
           }
+          onLoad={() => markLightLayerReady(1)}
+          onError={() => markLightLayerReady(1)}
         />
         <img
           src="/images/backgrounds/caso-cero/escena-encendida.png"
@@ -354,6 +400,8 @@ export default function CasoCeroCinematicScene({
             "caso-cero-light-layer caso-cero-all-lights absolute inset-0 h-full w-full object-fill " +
             (lightingStage === 3 ? "is-visible" : "")
           }
+          onLoad={() => markLightLayerReady(2)}
+          onError={() => markLightLayerReady(2)}
         />
       </div>
 
@@ -403,6 +451,8 @@ export default function CasoCeroCinematicScene({
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#b7dacf]" />
         LLUVIA EN VIVO · RÍO NOCTURNO
       </div>
+
+      {!sceneReady && <CasoCeroLoadingSkeleton overlay />}
 
       <style jsx>{`
         .caso-cero-river-video {

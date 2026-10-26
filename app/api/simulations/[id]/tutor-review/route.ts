@@ -263,11 +263,13 @@ export async function POST(
       .select("question_id,selected_answer")
       .eq("attempt_id", attempt.id);
 
-    if (answersError || !savedAnswers || savedAnswers.length !== relations.length) {
+    // La finalización atómica solo persiste respuestas contestadas.
+    // Las preguntas omitidas no tienen fila en simulation_answers y se interpretan como null abajo.
+    if (answersError || !savedAnswers) {
       return NextResponse.json(
         {
           success: false,
-          error: "No pudimos verificar todas tus respuestas guardadas. Inténtalo de nuevo.",
+          error: "No pudimos recuperar tus respuestas guardadas. Inténtalo de nuevo.",
         },
         { status: 409 },
       );

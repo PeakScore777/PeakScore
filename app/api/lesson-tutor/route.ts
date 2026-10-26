@@ -126,13 +126,14 @@ ${JSON.stringify({ question, context }).replace(/</g, "\\u003c").replace(/>/g, "
 Escribe una explicación breve pero útil: indica qué idea hay que reconocer, desarrolla el razonamiento en pasos comprensibles y termina con una estrategia para resolver una pregunta semejante. Si la información compartida no basta, explica qué falta en lugar de adivinar.
 `;
 
-    const answer = await generateAI({
+    const response = await generateAI({
       prompt,
       task: "tutor",
       useFallback: true,
     });
+    const answer = response.text?.trim() ?? "";
 
-    if (typeof answer !== "string" || !answer.trim()) {
+    if (!answer) {
       return NextResponse.json(
         { success: false, error: "Orby no pudo preparar una explicación en este momento." },
         { status: 503 },
@@ -141,7 +142,7 @@ Escribe una explicación breve pero útil: indica qué idea hay que reconocer, d
 
     return NextResponse.json({
       success: true,
-      answer: answer.trim().slice(0, 6500),
+      answer: answer.slice(0, 6500),
     });
   } catch (error) {
     console.error("[PeakScore Orby] Error procesando la consulta.", {

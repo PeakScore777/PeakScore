@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Image from "next/image";
+import ZoomableImage from "@/components/ZoomableImage";
 import type { Question } from "@/lib/services/question.service";
 
 type EnglishSetDisplay = {
@@ -116,7 +116,7 @@ export default function BookletView({
                 {showPart3Example && (
                   <div className="mt-4">
                     <div className="flex justify-center">
-                      <Image src={setInfo.example_image_url!} alt="Ejemplo ilustrado de conversación" className="w-auto max-h-64 max-w-full object-contain"  width={1200} height={800} unoptimized />
+                      <ZoomableImage src={setInfo.example_image_url!} alt="Ejemplo ilustrado de conversación" className="w-auto max-h-64 max-w-full object-contain" width={1200} height={800} />
                     </div>
                   </div>
                 )}
@@ -141,7 +141,7 @@ export default function BookletView({
             {firstInSet && setInfo && part !== 1 && part !== 3 && (setInfo.example_prompt || setInfo.example_image_url) && (
               <div className="mb-2 border-b border-slate-900 pb-2">
                 <p className="mb-3 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
-                {setInfo.example_image_url && <div className="mb-3 flex justify-center"><Image src={setInfo.example_image_url} alt="Imagen del ejemplo" className="w-auto max-h-56 max-w-full object-contain"  width={1200} height={800} unoptimized /></div>}
+                {setInfo.example_image_url && <div className="mb-3 flex justify-center"><ZoomableImage src={setInfo.example_image_url} alt="Imagen del ejemplo" className="w-auto max-h-56 max-w-full object-contain" width={1200} height={800} /></div>}
                 {setInfo.example_prompt && <p className="mb-3 whitespace-pre-wrap font-serif text-sm leading-6"><strong>0.</strong> {setInfo.example_prompt}</p>}
                 {!!setInfo.example_options?.length && <div className="grid grid-cols-1 gap-y-1 text-sm leading-6">{setInfo.example_options.map(option => <div key={option.key} className="flex gap-2"><strong>{option.key}.</strong><span>{option.text}</span></div>)}</div>}
                 {!!setInfo.example_options?.length && setInfo.example_answer && <div className="mt-3 inline-flex flex-wrap items-center gap-1 border border-slate-400 px-2 py-1 text-xs"><strong className="mr-2">Respuesta 0.</strong>{setInfo.example_options.map(option => <span key={option.key} className={`flex h-6 w-6 items-center justify-center rounded-full border ${setInfo.example_answer === option.key ? "border-slate-950 bg-slate-950 text-white" : "border-slate-400"}`}>{option.key}</span>)}</div>}
@@ -150,7 +150,7 @@ export default function BookletView({
             {showSharedText && (
               setInfo?.shared_image_url ? (
                 <div className="mb-2 flex justify-center border border-slate-900 p-2">
-                  <Image src={setInfo.shared_image_url} alt="Texto compartido de la Parte 4" className="w-auto h-auto max-h-[560px] max-w-full object-contain"  width={1200} height={800} unoptimized />
+                  <ZoomableImage src={setInfo.shared_image_url} alt="Texto compartido de la Parte 4" className="w-auto h-auto max-h-[560px] max-w-full object-contain" width={1200} height={800} />
                 </div>
               ) : (
                 <div className="mb-2 whitespace-pre-wrap font-serif text-[13px] leading-[1.4] text-slate-900">
@@ -175,13 +175,13 @@ export default function BookletView({
               <div>
                 {question.image_url && part === 2 && (
                   <div className="mb-2 flex justify-start">
-                    <Image src={question.image_url} alt={`Aviso de la pregunta ${officialNumber}`} className="w-auto max-h-28 max-w-[280px] object-contain"  width={1200} height={800} unoptimized />
+                    <ZoomableImage src={question.image_url} alt={`Aviso de la pregunta ${officialNumber}`} className="w-auto max-h-28 max-w-[280px] object-contain" width={1200} height={800} />
                   </div>
                 )}
                 <p className="whitespace-pre-wrap font-serif text-[13px] leading-[1.4] text-slate-900">{question.question}</p>
                 {question.image_url && part !== 2 && (
                   <div className="mt-2 flex justify-center">
-                    <Image src={question.image_url} alt={`Recurso de la pregunta ${officialNumber}`} className="w-auto max-h-[480px] max-w-full object-contain"  width={1200} height={800} unoptimized />
+                    <ZoomableImage src={question.image_url} alt={`Recurso de la pregunta ${officialNumber}`} className="w-auto max-h-[480px] max-w-full object-contain" width={1200} height={800} />
                   </div>
                 )}
                 <div className="mt-2 grid grid-cols-1 gap-y-1">

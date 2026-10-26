@@ -981,18 +981,35 @@ export default function ExamPage() {
       ? englishSets[question.english_set_id] ?? null
       : null;
 
+  const englishWordBankOptions =
+    question?.english_part === 1 && Array.isArray(currentEnglishSet?.word_bank)
+      ? currentEnglishSet.word_bank.flatMap((entry) => {
+          const item = entry as { key?: unknown; text?: unknown; example?: unknown };
+          if (
+            item.example === true ||
+            typeof item.key !== "string" ||
+            typeof item.text !== "string"
+          ) {
+            return [];
+          }
+          return [{ key: item.key, text: item.text }];
+        })
+      : [];
+
   const questionOptions = question
-    ? question.english_options?.length
-      ? question.english_options.map((option) => ({
-          key: option.key,
-          text: option.text,
-        }))
-      : [
-          { key: "A", text: question.option_a },
-          { key: "B", text: question.option_b },
-          { key: "C", text: question.option_c },
-          { key: "D", text: question.option_d },
-        ]
+    ? englishWordBankOptions.length > 0
+      ? englishWordBankOptions
+      : question.english_options?.length
+        ? question.english_options.map((option) => ({
+            key: option.key,
+            text: option.text,
+          }))
+        : [
+            { key: "A", text: question.option_a },
+            { key: "B", text: question.option_b },
+            { key: "C", text: question.option_c },
+            { key: "D", text: question.option_d },
+          ]
     : [];
 
   const answeredQuestions =

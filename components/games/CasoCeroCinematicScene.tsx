@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, LoaderCircle, Waves } from "lucide-react";
@@ -10,7 +11,7 @@ const IMAGE_WIDTH = 1672;
 const IMAGE_HEIGHT = 941;
 
 // Coordinates are relative to the window's own bounding box rather than
-// the full illustration. This concentrates WebGL work inside the panes.
+// the full illustration, keeping the rain effects clipped to the panes.
 const WINDOW_MASK_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" width="689" height="495" viewBox="0 0 689 495">
   <g fill="white">
@@ -206,32 +207,42 @@ export default function CasoCeroCinematicScene({
         </div>
 
 
-        <img
+        <Image
           src="/images/backgrounds/caso-cero/escena-apagada.png"
           alt=""
           draggable={false}
-          className="caso-cero-light-layer absolute inset-0 h-full w-full object-fill"
+          fill
+          sizes="100vw"
+          quality={85}
+          preload
+          className="caso-cero-light-layer object-fill"
           onLoad={() => markLightLayerReady(0)}
           onError={() => markLightLayerReady(0)}
         />
-        <img
+        <Image
           src="/images/backgrounds/caso-cero/escena-lampara-derecha.png"
           alt=""
           draggable={false}
+          fill
+          sizes="100vw"
+          quality={85}
           className={
-            "caso-cero-light-layer caso-cero-right-lamp absolute inset-0 h-full w-full object-fill " +
+            "caso-cero-light-layer caso-cero-right-lamp object-fill " +
             (lightingStage === 1 ? "is-flickering " : "") +
             (lightingStage === 1 ? "is-visible" : "")
           }
           onLoad={() => markLightLayerReady(1)}
           onError={() => markLightLayerReady(1)}
         />
-        <img
+        <Image
           src="/images/backgrounds/caso-cero/escena-encendida.png"
           alt=""
           draggable={false}
+          fill
+          sizes="100vw"
+          quality={85}
           className={
-            "caso-cero-light-layer caso-cero-all-lights absolute inset-0 h-full w-full object-fill " +
+            "caso-cero-light-layer caso-cero-all-lights object-fill " +
             (lightingStage === 3 ? "is-visible" : "")
           }
           onLoad={() => markLightLayerReady(2)}
@@ -239,7 +250,7 @@ export default function CasoCeroCinematicScene({
         />
       </div>
 
-      {/* Three independent science clues hanging from twine, outside the river-video layer. */}
+      {/* Three independent science clues hanging from twine, above the window layer. */}
       <CasoCeroEvidenceClothesline />
 
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(2,5,8,.10)_0%,transparent_22%,transparent_65%,rgba(2,5,8,.55)_100%)]" />

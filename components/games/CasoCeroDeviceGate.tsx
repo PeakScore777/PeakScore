@@ -98,7 +98,7 @@ function MobileUnavailableScreen() {
                 Dispositivo no compatible
               </p>
               <h1 className="mt-2 text-2xl font-black leading-tight tracking-tight sm:text-3xl">
-                Esta investigación requiere un computador.
+                Este juego no está disponible en tu dispositivo.
               </h1>
             </div>
           </div>

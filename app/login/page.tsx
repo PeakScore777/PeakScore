@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Turnstile } from "@marsidev/react-turnstile";
@@ -59,6 +59,15 @@ export default function LoginPage() {
   const [passwordFocused, setPasswordFocused] = useState(false);
 
   const normalizedEmail = email.trim().toLowerCase();
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("authError") === "google") {
+      setError(
+        "No pudimos completar el acceso con Google. Comprueba la configuración de autenticación e inténtalo nuevamente."
+      );
+    }
+  }, []);
 
   function resetCaptcha() {
     setCaptchaToken("");

@@ -88,7 +88,7 @@ export default function ExamPage() {
   const [currentQuestion, setCurrentQuestion] =
     useState(0);
 
-  const [bookletView, setBookletView] = useState(false);
+  const [bookletView] = useState(true);
 
   const [examFinished, setExamFinished] =
     useState(false);
@@ -1345,15 +1345,10 @@ export default function ExamPage() {
 
         </div>
 
-        <div className="mb-5 flex justify-end">
-          <button type="button" onClick={() => setBookletView((value) => !value)} className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50">
-            {bookletView ? "Ver pregunta individual" : "Ver cuadernillo completo"}
-          </button>
-        </div>
-
         {bookletView && (
           <BookletView
             questions={questions}
+            simulationTitle={simulation?.title}
             answers={answers}
             englishSets={englishSets}
             saving={savingAttempt}

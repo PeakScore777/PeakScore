@@ -4,7 +4,9 @@ import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState,
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import { X } from "lucide-react";
+import { X, ZoomIn } from "lucide-react";
+import Lightbox from "yet-another-react-lightbox";
+import Zoom from "yet-another-react-lightbox/plugins/zoom";
 
 type EvidencePhoto = {
   src: string;
@@ -41,6 +43,11 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
     competence: "Relacionar mediciones y unidades para decidir qué conclusión respaldan los datos.",
   },
 ];
+
+const EVIDENCE_LIGHTBOX_SLIDES = CASE_EVIDENCE.map(({ src, alt }) => ({
+  src,
+  alt,
+}));
 
 type ImageBoundaryProps = {
   children: ReactNode;
@@ -255,7 +262,13 @@ function createWoodHalf(side: -1 | 1) {
   });
 }
 
-function PhotoTexture({ src }: { src: string }) {
+function PhotoTexture({
+  src,
+  onPhotoClick,
+}: {
+  src: string;
+  onPhotoClick: () => void;
+}) {
   const texture = useLoader(THREE.TextureLoader, src);
   const [paperMaps, setPaperMaps] = useState<PbrTextureSet | null>(null);
   useEffect(() => setPaperMaps(getPbrTextureSet("paper")), []);
@@ -282,7 +295,20 @@ function PhotoTexture({ src }: { src: string }) {
   }, [texture, geometry]);
 
   return (
-    <mesh geometry={geometry} position={[0, 0.025, 0.006]}>
+    <mesh
+      geometry={geometry}
+      position={[0, 0.025, 0.006]}
+      onClick={(event) => {
+        event.stopPropagation();
+        onPhotoClick();
+      }}
+      onPointerOver={() => {
+        document.body.style.cursor = "zoom-in";
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = "";
+      }}
+    >
       <meshStandardMaterial
         map={texture}
         normalMap={paperMaps?.normal}
@@ -513,6 +539,7 @@ function EvidenceCard({
   ropeAngle,
   scale,
   onSelect,
+  onPhotoClick,
 }: {
   photo: EvidencePhoto;
   index: number;
@@ -520,6 +547,7 @@ function EvidenceCard({
   ropeAngle: number;
   scale: number;
   onSelect: (index: number) => void;
+  onPhotoClick: (index: number) => void;
 }) {
   const [labelTexture, setLabelTexture] = useState<THREE.CanvasTexture | null>(null);
   const rigRef = useRef<THREE.Group | null>(null);
@@ -609,7 +637,7 @@ function EvidenceCard({
             </mesh>
           }
         >
-          <PhotoTexture src={photo.src} />
+          <PhotoTexture src={photo.src} onPhotoClick={() => onPhotoClick(index)} />
         </Suspense>
       </EvidenceImageBoundary>
 
@@ -848,9 +876,11 @@ function WallEyelet({ position }: { position: [number, number, number] }) {
 function EvidenceScene({
   mobile,
   onSelect,
+  onPhotoClick,
 }: {
   mobile: boolean;
   onSelect: (index: number) => void;
+  onPhotoClick: (index: number) => void;
 }) {
   const { size } = useThree();
   const cardScale = mobile ? 0.84 : 1;
@@ -905,6 +935,7 @@ function EvidenceScene({
           ropeAngle={ropeAngle}
           scale={cardScale}
           onSelect={onSelect}
+          onPhotoClick={onPhotoClick}
         />
       ))}
     </>
@@ -913,6 +944,7 @@ function EvidenceScene({
 
 export default function CasoCeroEvidenceClothesline() {
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState(-1);
   const [mobile, setMobile] = useState(false);
   const active = activeEvidence === null ? null : CASE_EVIDENCE[activeEvidence];
 
@@ -955,7 +987,11 @@ export default function CasoCeroEvidenceClothesline() {
           style={{ display: "block", width: "100%", height: "100%" }}
         >
           <CameraFraming mobile={mobile} />
-          <EvidenceScene mobile={mobile} onSelect={setActiveEvidence} />
+          <EvidenceScene
+            mobile={mobile}
+            onSelect={setActiveEvidence}
+            onPhotoClick={setLightboxIndex}
+          />
         </Canvas>
       </div>
 
@@ -990,6 +1026,25 @@ export default function CasoCeroEvidenceClothesline() {
           </p>
         </aside>
       )}
+
+      <Lightbox
+        open={lightboxIndex >= 0}
+        close={() => setLightboxIndex(-1)}
+        index={lightboxIndex >= 0 ? lightboxIndex : 0}
+        slides={EVIDENCE_LIGHTBOX_SLIDES}
+        plugins={[Zoom]}
+        zoom={{
+          maxZoomPixelRatio: 4,
+          zoomInMultiplier: 2,
+          scrollToZoom: true,
+          doubleClickMaxStops: 3,
+        }}
+        controller={{
+          closeOnBackdropClick: true,
+          closeOnEscape: true,
+        }}
+        animation={{ zoom: 350 }}
+      />
     </div>
   );
 }

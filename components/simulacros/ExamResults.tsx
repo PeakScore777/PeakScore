@@ -18,7 +18,7 @@ type TutorReviewItem = {
   number: number;
   question: string;
   context: string | null;
-  options: Record<"A" | "B" | "C" | "D", string>;
+  options: Record<string, string>;
   selectedAnswer: string | null;
   correctAnswer: string;
   explanation: string;
@@ -779,7 +779,7 @@ export default function ExamResults({
                                   {item.question}
                                 </p>
                                 <div className="space-y-2">
-                                  {(["A", "B", "C", "D"] as const).map((letter) => (
+                                  {Object.entries(item.options).map(([letter, optionText]) => (
                                     <div
                                       key={letter}
                                       className={[
@@ -792,7 +792,7 @@ export default function ExamResults({
                                       ].join(" ")}
                                     >
                                       <span className="font-black">{letter}.</span>
-                                      <span className="min-w-0 flex-1">{item.options[letter]}</span>
+                                      <span className="min-w-0 flex-1">{optionText}</span>
                                       {letter === item.correctAnswer && (
                                         <Check size={15} className="mt-1 shrink-0 text-emerald-700" />
                                       )}

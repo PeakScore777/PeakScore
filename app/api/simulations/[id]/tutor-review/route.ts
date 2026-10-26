@@ -12,6 +12,11 @@ const UUID_RE =
 
 type AnswerLetter = "A" | "B" | "C" | "D";
 
+type EnglishOption = {
+  key: string;
+  text: string;
+};
+
 type ReviewQuestion = {
   id: string;
   subject: string | null;
@@ -27,10 +32,25 @@ type ReviewQuestion = {
   correct_answer: string;
   explanation: string | null;
   visual_description: string | null;
+  image_url: string | null;
   english_part: number | null;
   english_position: number | null;
+  english_set_id: string | null;
+  english_options: EnglishOption[] | null;
   question_number: number | null;
   source: string | null;
+};
+
+type EnglishSetReviewContext = {
+  id: string;
+  title: string;
+  shared_title: string | null;
+  shared_text: string | null;
+  instructions: string | null;
+  word_bank: unknown[] | null;
+  booklet_format: string;
+  part: number;
+  shared_image_url: string | null;
 };
 
 type GeneratedExplanation = {
@@ -39,6 +59,47 @@ type GeneratedExplanation = {
   method: string;
   tip: string;
 };
+
+function getQuestionOptions(question: ReviewQuestion): Record<string, string> {
+  const englishOptions = Array.isArray(question.english_options)
+    ? question.english_options
+        .filter(
+          (option) =>
+            option &&
+            typeof option.key === "string" &&
+            typeof option.text === "string",
+        )
+        .map((option) => [option.key.trim().toUpperCase(), option.text] as const)
+    : [];
+
+  if (englishOptions.length > 0) {
+    return Object.fromEntries(englishOptions);
+  }
+
+  return {
+    A: question.option_a,
+    B: question.option_b,
+    C: question.option_c,
+    D: question.option_d,
+  };
+}
+
+function getQuestionContext(
+  question: ReviewQuestion,
+  englishSet?: EnglishSetReviewContext,
+): string | null {
+  const parts = [
+    englishSet?.shared_title,
+    englishSet?.title,
+    englishSet?.instructions,
+    englishSet?.shared_text
+      ? `Texto compartido del conjunto:\n${englishSet.shared_text}`
+      : null,
+    question.context_text,
+  ].filter((part): part is string => Boolean(part?.trim()));
+
+  return parts.length > 0 ? parts.join("\n\n") : null;
+}
 
 function parseAIJson(raw: string): {
   summary?: string;
@@ -216,7 +277,7 @@ export async function POST(
     const { data: questionRows, error: questionsError } = await adminSupabase
       .from("questions")
       .select(
-        "id,subject,component,competence,difficulty,question,context_text,option_a,option_b,option_c,option_d,correct_answer,explanation,visual_description,english_part,english_position,question_number,source",
+        "id,subject,component,competence,difficulty,question,context_text,option_a,option_b,option_c,option_d,correct_answer,explanation,visual_description,image_url,english_part,english_position,english_set_id,english_options,question_number,source",
       )
       .in("id", questionIds);
 
@@ -225,6 +286,39 @@ export async function POST(
         { success: false, error: "No pudimos verificar el contenido de las preguntas." },
         { status: 500 },
       );
+    }
+
+    const typedQuestions = questionRows as ReviewQuestion[];
+    const englishSetIds = [
+      ...new Set(
+        typedQuestions
+          .map((question) => question.english_set_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+
+    const englishSetMap = new Map<string, EnglishSetReviewContext>();
+    if (englishSetIds.length > 0) {
+      const { data: englishSets, error: englishSetsError } = await adminSupabase
+        .from("english_question_sets")
+        .select(
+          "id,title,shared_title,shared_text,instructions,word_bank,booklet_format,part,shared_image_url",
+        )
+        .in("id", englishSetIds);
+
+      if (englishSetsError) {
+        console.error("[PeakScore Tutor] No pudimos cargar los conjuntos de Inglés.", {
+          errorCode: englishSetsError.code ?? "UNKNOWN",
+        });
+        return NextResponse.json(
+          { success: false, error: "No pudimos recuperar el material compartido de Inglés." },
+          { status: 500 },
+        );
+      }
+
+      for (const set of (englishSets ?? []) as EnglishSetReviewContext[]) {
+        englishSetMap.set(set.id, set);
+      }
     }
 
     const answerMap = new Map(
@@ -236,7 +330,7 @@ export async function POST(
       ]),
     );
     const questionMap = new Map(
-      (questionRows as ReviewQuestion[]).map((question) => [question.id, question]),
+      typedQuestions.map((question) => [question.id, question]),
     );
 
     const reviewedQuestions = relations.flatMap((relation, index) => {
@@ -251,6 +345,9 @@ export async function POST(
 
       return [{
         question,
+        englishSet: question.english_set_id
+          ? englishSetMap.get(question.english_set_id) ?? null
+          : null,
         selectedAnswer,
         correctAnswer: correctAnswer as AnswerLetter,
         number: index + 1,
@@ -286,28 +383,31 @@ export async function POST(
       );
     }
 
-    const promptQuestions = reviewedQuestions.map(({ question, selectedAnswer, correctAnswer, number }) => ({
-      question_id: question.id,
-      number,
-      area: question.subject ?? simulation.subject ?? "Saber 11",
-      component: question.component,
-      competence: question.competence,
-      difficulty: question.difficulty,
-      context: question.context_text,
-      question: question.question,
-      options: {
-        A: question.option_a,
-        B: question.option_b,
-        C: question.option_c,
-        D: question.option_d,
-      },
-      selected_answer: selectedAnswer,
-      correct_answer: correctAnswer,
-      official_explanation: question.explanation,
-      visual_description: question.visual_description,
-      english_part: question.english_part,
-      english_position: question.english_position,
-    }));
+    const promptQuestions = reviewedQuestions.map(
+      ({ question, englishSet, selectedAnswer, correctAnswer, number }) => ({
+        question_id: question.id,
+        number,
+        area: question.subject ?? simulation.subject ?? "Saber 11",
+        component: question.component,
+        competence: question.competence,
+        difficulty: question.difficulty,
+        context: getQuestionContext(question, englishSet ?? undefined),
+        question: question.question,
+        options: getQuestionOptions(question),
+        selected_answer: selectedAnswer,
+        correct_answer: correctAnswer,
+        official_explanation: question.explanation,
+        visual_description: question.visual_description,
+        visual_asset_not_attached: Boolean(
+          question.image_url || englishSet?.shared_image_url,
+        ),
+        english_part: question.english_part,
+        english_position: question.english_position,
+        english_instructions: englishSet?.instructions ?? null,
+        english_word_bank: englishSet?.word_bank ?? null,
+        english_format: englishSet?.booklet_format ?? null,
+      }),
+    );
 
     const prompt = `
 Eres TUTOR de PeakScore: un tutor académico amable, preciso y paciente que acompaña a estudiantes que se preparan para el Saber 11 colombiano. Habla en español claro, sin infantilizar ni regañar. No eres el tutor de Ciencias de los niveles; ayudas a revisar este simulacro de cualquier materia.
@@ -334,9 +434,9 @@ Reglas:
 }
 - Debe haber exactamente un elemento por cada pregunta recibida y usar su question_id exacto.
 
-<preguntas>
-${JSON.stringify(promptQuestions)}
-</preguntas>`;
+<preguntas_json>
+${JSON.stringify(promptQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026")}
+</preguntas_json>`;
 
     try {
       const raw = await generateAI({
@@ -349,30 +449,27 @@ ${JSON.stringify(promptQuestions)}
         (parsed.items ?? []).map((item) => [item.question_id, item]),
       );
 
-      const items = reviewedQuestions.map(({ question, selectedAnswer, correctAnswer, number }) => {
-        const generated = generatedById.get(question.id);
-        return {
-          questionId: question.id,
-          number,
-          question: question.question,
-          context: question.context_text,
-          options: {
-            A: question.option_a,
-            B: question.option_b,
-            C: question.option_c,
-            D: question.option_d,
-          },
-          selectedAnswer,
-          correctAnswer,
-          explanation:
-            generated?.explanation ||
-            question.explanation ||
-            "No encontramos una explicación adicional para esta pregunta. Revisa el enunciado y compara tu elección con la respuesta correcta.",
-          method: generated?.method ?? "",
-          tip: generated?.tip ?? "",
-          source: generated?.explanation ? "ai" : "official",
-        };
-      });
+      const items = reviewedQuestions.map(
+        ({ question, englishSet, selectedAnswer, correctAnswer, number }) => {
+          const generated = generatedById.get(question.id);
+          return {
+            questionId: question.id,
+            number,
+            question: question.question,
+            context: getQuestionContext(question, englishSet ?? undefined),
+            options: getQuestionOptions(question),
+            selectedAnswer,
+            correctAnswer,
+            explanation:
+              generated?.explanation ||
+              question.explanation ||
+              "No encontramos una explicación adicional para esta pregunta. Revisa el enunciado y compara tu elección con la respuesta correcta.",
+            method: generated?.method ?? "",
+            tip: generated?.tip ?? "",
+            source: generated?.explanation ? "ai" : question.explanation ? "official" : "unavailable",
+          };
+        },
+      );
 
       return NextResponse.json({
         success: true,

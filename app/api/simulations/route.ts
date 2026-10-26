@@ -279,17 +279,14 @@ export async function POST(request: Request) {
     let selectedEnglishPart: string | null = null;
 
     if (subject === "Inglés") {
-      const validFormat =
-        englishFormat === "historical" ||
-        englishFormat === "saber11_2026";
-
       const requestedPart =
         typeof englishPart === "string"
           ? englishPart.toUpperCase()
           : "";
 
       if (
-        !validFormat ||
+        (englishFormat !== "historical" &&
+          englishFormat !== "saber11_2026") ||
         !ENGLISH_PARTS[englishFormat].includes(requestedPart)
       ) {
         return NextResponse.json(

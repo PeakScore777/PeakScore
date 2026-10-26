@@ -105,7 +105,7 @@ function MobileUnavailableScreen() {
 
           <p className="mt-5 text-sm leading-6 text-[#c4cfdb] sm:text-base">
             Caso Cero no está disponible en teléfonos móviles. El laboratorio combina
-            lluvia animada, vídeo y evidencias tridimensionales; necesita una pantalla
+            lluvia sobre el cristal y evidencias tridimensionales; necesita una pantalla
             amplia y recursos gráficos que permitan mantener la experiencia fluida.
           </p>
 

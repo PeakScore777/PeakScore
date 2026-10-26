@@ -927,7 +927,7 @@ function MagnifyingGlassModel({
   onLoaded: () => void;
 }) {
   const { scene } = useGLTF(MAGNIFIER_MODEL_URL);
-  const { camera, size } = useThree();
+  const { camera, size, invalidate } = useThree();
   const groupRef = useRef<THREE.Group | null>(null);
 
   const normalizedModel = useMemo(() => {
@@ -959,38 +959,36 @@ function MagnifyingGlassModel({
     camera.position.set(0, 0, 1200);
     camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();
-  }, [camera, size.width, size.height]);
+    invalidate();
+  }, [camera, size.width, size.height, invalidate]);
 
-  useFrame(() => {
+  useEffect(() => {
     const group = groupRef.current;
     if (!group) return;
 
-    // When held, the lens itself is centered on the pointer. The model's body
-    // extends down/right, like a real handheld magnifying glass.
-    if (active && !pointerPosition) {
+    // While the lens is in use, the DOM lens and image crop share one exact
+    // pointer center. Keep the idle 3D prop out of that overlay to avoid drift.
+    if (active) {
       group.visible = false;
+      invalidate();
       return;
     }
 
     group.visible = true;
-    const modelWidth = active ? 350 : 184;
-    const lensX = active && pointerPosition
-      ? pointerPosition.x
-      : size.width * 0.53 - 24;
-    const lensY = active && pointerPosition
-      ? pointerPosition.y
-      : size.height - 92;
+    const modelWidth = 184;
+    const lensX = size.width * 0.53 - 24;
+    const lensY = size.height - 92;
 
+    // Offset compensates for the handle extending the model bounds down/right.
     group.position.set(
-      lensX - size.width / 2,
+      lensX - size.width / 2 + modelWidth * 0.19,
       size.height / 2 - lensY - modelWidth * 0.055,
       30,
     );
     group.scale.setScalar(modelWidth);
-    // The source model is oriented lens-first; a slight roll matches the
-    // diagonal handle from the real prop while keeping the glass face visible.
     group.rotation.set(0.03, -0.02, -0.22);
-  });
+    invalidate();
+  }, [active, pointerPosition, size.width, size.height, invalidate]);
 
   return (
     <group ref={groupRef}>
@@ -1200,7 +1198,7 @@ export default function CasoCeroEvidenceClothesline() {
             gl.outputColorSpace = THREE.SRGBColorSpace;
             gl.toneMapping = THREE.ACESFilmicToneMapping;
             gl.toneMappingExposure = 1.02;
-            gl.shadowMap.type = THREE.PCFSoftShadowMap;
+            gl.shadowMap.type = THREE.PCFShadowMap;
           }}
           style={{ display: "block", width: "100%", height: "100%" }}
         >
@@ -1218,8 +1216,9 @@ export default function CasoCeroEvidenceClothesline() {
       <div className="pointer-events-none absolute inset-0 z-30">
         <Canvas
           orthographic
+          frameloop="demand"
           camera={{ position: [0, 0, 1200], left: -800, right: 800, top: 450, bottom: -450, near: 0.1, far: 2400 }}
-          dpr={[1, 1.35]}
+          dpr={[1, 1.1]}
           gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
           onCreated={({ gl }) => {
             gl.setClearColor(0x000000, 0);
@@ -1340,10 +1339,21 @@ export default function CasoCeroEvidenceClothesline() {
           className="pointer-events-none absolute z-[100] h-0 w-0"
           style={{ left: pointerPosition.x, top: pointerPosition.y }}
         >
-          {/* The CC0 model supplies the metal rim and handle. This inner circular
-              image crop is the actual zoom through its glass. */}
+          {/* The handle, metal rim and zoom crop share this exact pointer origin. */}
           <div
-            className="absolute -left-[69px] -top-[69px] h-[138px] w-[138px] overflow-hidden rounded-full border border-white/30"
+            className="absolute left-[34px] top-[43px] z-0 h-[25px] w-[148px] origin-[12px_12px] rotate-[43deg] rounded-[6px] border border-[#111619] shadow-[2px_5px_8px_rgba(0,0,0,.72)]"
+            style={{ background: "linear-gradient(180deg,#e1e4df 0%,#858d8f 10%,#2e3539 26%,#111518 55%,#333a3e 78%,#b5babb 96%,#454c50 100%)" }}
+          />
+          <div
+            className="absolute left-[34px] top-[43px] z-[1] h-[29px] w-[32px] origin-[12px_14px] rotate-[43deg] rounded-[5px] border border-[#20272a]"
+            style={{ background: "linear-gradient(135deg,#f3f1e8,#7b8588 28%,#242a2d 58%,#c3c9c6 84%,#565e61)" }}
+          />
+          <div
+            className="absolute -left-[77px] -top-[77px] z-[2] h-[154px] w-[154px] rounded-full border-[5px] border-[#171d20] shadow-[0_4px_12px_rgba(0,0,0,.6),inset_0_1px_2px_rgba(255,255,255,.75)]"
+            style={{ background: "linear-gradient(135deg,#e2e5df 0%,#737d81 14%,#22282c 35%,#151a1d 58%,#c2c9c9 82%,#4d5559 100%)" }}
+          />
+          <div
+            className="absolute -left-[69px] -top-[69px] z-[3] h-[138px] w-[138px] overflow-hidden rounded-full border border-[#c5d1d4]/80"
             style={{
               background: "rgba(184,214,225,.18)",
               boxShadow: "inset 0 1px 8px rgba(255,255,255,.23), inset 0 -2px 8px rgba(2,12,19,.20)",

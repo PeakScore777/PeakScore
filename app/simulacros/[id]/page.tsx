@@ -86,7 +86,7 @@ export default function ExamPage() {
   const [currentQuestion, setCurrentQuestion] =
     useState(0);
 
-  const [bookletView, setBookletView] = useState(true);
+  const [bookletView, setBookletView] = useState(false);
 
   const [examFinished, setExamFinished] =
     useState(false);
@@ -686,6 +686,10 @@ export default function ExamPage() {
           data.result.percentage,
       };
 
+      if (typeof data.attempt?.id === "string") {
+        setServerAttemptId(data.attempt.id);
+      }
+
       console.log(
         "[PeakScore] Simulacro finalizado correctamente."
       );
@@ -1018,6 +1022,8 @@ export default function ExamPage() {
           percentage={
             result.percentage
           }
+          simulationId={simulationId}
+          attemptId={serverAttemptId}
           onRetry={() => {
             clearLocalProgress();
             window.location.reload();
@@ -1273,7 +1279,16 @@ export default function ExamPage() {
 
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">\n          <button type="button" onClick={() => { setAnnotationMode((value) => !value); setPendingSelection(null); }} className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold ${annotationMode ? "border-amber-400 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-700"}`} aria-pressed={annotationMode}>\n            <Pencil size={16} /> {annotationMode ? "Lápiz activado" : "Lápiz"}\n          </button>\n          {annotationMode && <span className="text-xs text-slate-500">Selecciona texto y subráyalo.</span>}\n          {pendingSelection && <button type="button" onClick={saveUnderline} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white"><Highlighter size={16}/> Subrayar selección</button>}\n          {pendingSelection && <button type="button" onClick={() => setPendingSelection(null)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600" aria-label="Cancelar subrayado"><X size={16}/></button>}\n        </div>\n\n        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+          <div className="flex flex-wrap items-center gap-2">
+          <button type="button" onClick={() => { setAnnotationMode((value) => !value); setPendingSelection(null); }} className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold ${annotationMode ? "border-amber-400 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-700"}`} aria-pressed={annotationMode}>
+            <Pencil size={16} /> {annotationMode ? "Lápiz activado" : "Lápiz"}
+          </button>
+          {annotationMode && <span className="text-xs text-slate-500">Selecciona texto y subráyalo.</span>}
+          {pendingSelection && <button type="button" onClick={saveUnderline} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white"><Highlighter size={16}/> Subrayar selección</button>}
+          {pendingSelection && <button type="button" onClick={() => setPendingSelection(null)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600" aria-label="Cancelar subrayado"><X size={16}/></button>}
+        </div>
+
+        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
 
             <ShieldCheck
               size={17}

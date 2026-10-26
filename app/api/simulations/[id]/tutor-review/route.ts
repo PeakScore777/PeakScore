@@ -60,7 +60,29 @@ type GeneratedExplanation = {
   tip: string;
 };
 
-function getQuestionOptions(question: ReviewQuestion): Record<string, string> {
+function getQuestionOptions(
+  question: ReviewQuestion,
+  englishSet?: EnglishSetReviewContext,
+): Record<string, string> {
+  // Part 1 uses a shared word bank (A–G); the example entry is not selectable.
+  if (question.english_part === 1 && Array.isArray(englishSet?.word_bank)) {
+    const wordBankOptions = englishSet.word_bank.flatMap((value) => {
+      if (!value || typeof value !== "object") return [];
+      const item = value as { key?: unknown; text?: unknown; example?: unknown };
+      if (
+        item.example === true ||
+        typeof item.key !== "string" ||
+        typeof item.text !== "string"
+      ) {
+        return [];
+      }
+      return [[item.key.trim().toUpperCase(), item.text] as const];
+    });
+    if (wordBankOptions.length > 0) {
+      return Object.fromEntries(wordBankOptions);
+    }
+  }
+
   const englishOptions = Array.isArray(question.english_options)
     ? question.english_options
         .filter(
@@ -391,7 +413,7 @@ export async function POST(
         difficulty: question.difficulty,
         context: getQuestionContext(question, englishSet ?? undefined),
         question: question.question,
-        options: getQuestionOptions(question),
+        options: getQuestionOptions(question, englishSet ?? undefined),
         selected_answer: selectedAnswer,
         correct_answer: correctAnswer,
         official_explanation: question.explanation,
@@ -459,7 +481,7 @@ ${JSON.stringify(promptQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003
             number,
             question: question.question,
             context: getQuestionContext(question, englishSet ?? undefined),
-            options: getQuestionOptions(question),
+            options: getQuestionOptions(question, englishSet ?? undefined),
             selectedAnswer,
             correctAnswer,
             explanation:
@@ -492,7 +514,7 @@ ${JSON.stringify(promptQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003
           number,
           question: question.question,
           context: getQuestionContext(question, englishSet ?? undefined),
-          options: getQuestionOptions(question),
+          options: getQuestionOptions(question, englishSet ?? undefined),
           selectedAnswer,
           correctAnswer,
           explanation:

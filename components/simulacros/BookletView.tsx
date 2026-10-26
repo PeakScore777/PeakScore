@@ -287,7 +287,7 @@ export default function BookletView({
             </div>
           ) : englishPart === 6 ? (
             <>
-              <div className="grid gap-x-7 gap-y-4 md:grid-cols-2">
+              <div className="space-y-1">
                 {[[0, 2], [1, 3]].map((pair, rowIndex) => (
                   <div key={rowIndex} className="grid gap-x-6 gap-y-4 border-b border-slate-300 py-3 md:grid-cols-2">
                     {pair.map((questionIndex) => {

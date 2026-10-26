@@ -1,21 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-
-const RIVER_VIDEO =
-  "https://videos.pexels.com/video-files/4192175/4192175-hd_1920_1080_25fps.mp4";
 
 const rainDrops = Array.from({ length: 44 }, (_, index) => index);
 
 /**
  * Atmospheric layers for Caso Cero.
- * The generated room background is kept separate from the moving river,
- * so evidence cards can stay interactive React elements above this layer.
+ * The river video was removed to reduce network transfer, decoding and GPU work.
+ * The window now stays dark with the existing rain-on-glass effect.
  */
 export default function CasoCeroAmbientBackdrop() {
   const [backgroundUnavailable, setBackgroundUnavailable] = useState(false);
-  const [riverUnavailable, setRiverUnavailable] = useState(false);
 
   return (
     <div
@@ -36,27 +31,11 @@ export default function CasoCeroAmbientBackdrop() {
 
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(3,9,14,.05)_0%,rgba(3,9,14,.12)_45%,rgba(2,6,10,.63)_100%)]" />
 
-      {/* River video sits behind recreated window muntins. Source: Pexels video 4192175. */}
-      <div className="caso-cero-window-motion absolute left-0 top-0 h-[59.5%] w-[39.4%] overflow-hidden">
-        {!riverUnavailable ? (
-          <video
-            className="absolute inset-0 h-full w-full object-cover"
-            src={RIVER_VIDEO}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="metadata"
-            onError={() => setRiverUnavailable(true)}
-            tabIndex={-1}
-          />
-        ) : (
-          <div className="caso-cero-water-fallback absolute inset-0 overflow-hidden bg-[#102b3a]">
-            <span className="caso-cero-water-ripple absolute left-[-20%] top-[54%] h-[35%] w-[140%] rounded-[50%] border border-sky-200/20" />
-            <span className="caso-cero-water-ripple absolute left-[-15%] top-[63%] h-[24%] w-[130%] rounded-[50%] border border-sky-100/20 [animation-delay:-2s]" />
-            <span className="absolute inset-0 bg-gradient-to-b from-[#0b1d31]/75 via-transparent to-[#07131e]/45" />
-          </div>
-        )}
+      {/* Dark window glass: no remote video, only lightweight rain overlays. */}
+      <div className="caso-cero-window-motion absolute left-0 top-0 h-[59.5%] w-[39.4%] overflow-hidden bg-[#050b10]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_42%_22%,rgba(79,113,127,.18),transparent_56%),linear-gradient(180deg,#0b151d_0%,#03070b_72%,#101b20_100%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-[16%] h-px bg-white/[0.06]" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-[13%] h-[18%] bg-gradient-to-t from-slate-300/[0.035] to-transparent" />
 
         <div className="caso-cero-glass-rain absolute inset-0 overflow-hidden">
           {rainDrops.map((drop) => (
@@ -76,7 +55,7 @@ export default function CasoCeroAmbientBackdrop() {
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.09] via-transparent to-sky-200/[0.07] mix-blend-screen" />
         </div>
 
-        {/* Window wood frame/muntins stay above the video. */}
+        {/* Window wood frame/muntins stay above the dark rain glass. */}
         <div className="caso-cero-window-frame pointer-events-none absolute inset-0 border-[9px] border-[#2d2117] shadow-[inset_0_0_0_2px_rgba(190,137,75,.34),0_0_20px_rgba(0,0,0,.45)]">
           <span className="absolute inset-y-0 left-[33.2%] w-[7px] bg-gradient-to-r from-[#1d160f] via-[#68482b] to-[#21170f] shadow-[1px_0_4px_rgba(0,0,0,.7)]" />
           <span className="absolute inset-y-0 left-[67.1%] w-[7px] bg-gradient-to-r from-[#1d160f] via-[#68482b] to-[#21170f] shadow-[1px_0_4px_rgba(0,0,0,.7)]" />
@@ -113,17 +92,9 @@ export default function CasoCeroAmbientBackdrop() {
           to { transform: translate3d(-4px, 160px, 0); }
         }
 
-        @keyframes caso-cero-water-drift {
-          from { transform: translateX(-3%) scaleY(.92); opacity: .35; }
-          to { transform: translateX(4%) scaleY(1.08); opacity: .85; }
-        }
-
         @media (max-width: 640px) {
           .caso-cero-room-image {
             object-position: left top;
-          }
-          .caso-cero-window-motion {
-            opacity: .75;
           }
           .caso-cero-rain-streak {
             width: 1px;

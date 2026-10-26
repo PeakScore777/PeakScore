@@ -132,6 +132,12 @@ export default function ExamResults({
     Math.min(100, percentage)
   );
 
+  const unansweredCount = Math.max(
+    0,
+    unansweredAnswers,
+    totalQuestions - correctAnswers - incorrectAnswers,
+  );
+
   /*
    * =========================================================
    * MENSAJE DEL RESULTADO
@@ -592,7 +598,7 @@ export default function ExamResults({
                 />
 
                 <Metric
-                  value={unansweredAnswers}
+                  value={unansweredCount}
                   label="Sin responder"
                   type="neutral"
                 />

@@ -4,7 +4,6 @@ import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState,
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 type EvidenceToolId = "magnifier" | "camera" | "tweezers" | "sample" | "microscope";
@@ -17,150 +16,194 @@ const EVIDENCE_TOOLS: { id: EvidenceToolId; label: string }[] = [
   { id: "microscope", label: "Microscopio" },
 ];
 
+function ThreeDimensionalTool({ tool }: { tool: Exclude<EvidenceToolId, "magnifier"> }) {
+  if (tool === "camera") {
+    return (
+      <group rotation={[0.2, -0.24, -0.12]}>
+        <mesh position={[0, -0.04, 0]} castShadow receiveShadow>
+          <boxGeometry args={[1.22, 0.72, 0.42]} />
+          <meshPhysicalMaterial color="#252c2e" metalness={0.72} roughness={0.28} clearcoat={0.7} />
+        </mesh>
+        <mesh position={[-0.16, 0.38, -0.01]} castShadow>
+          <boxGeometry args={[0.42, 0.12, 0.34]} />
+          <meshStandardMaterial color="#3d4647" metalness={0.68} roughness={0.31} />
+        </mesh>
+        <mesh position={[0.03, 0.02, 0.235]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+          <cylinderGeometry args={[0.29, 0.31, 0.15, 40]} />
+          <meshPhysicalMaterial color="#9ea7a5" metalness={0.91} roughness={0.2} />
+        </mesh>
+        <mesh position={[0.03, 0.02, 0.33]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.235, 0.235, 0.12, 40]} />
+          <meshPhysicalMaterial color="#16262d" metalness={0.55} roughness={0.14} clearcoat={1} />
+        </mesh>
+        <mesh position={[0.03, 0.02, 0.405]}>
+          <circleGeometry args={[0.17, 40]} />
+          <meshPhysicalMaterial color="#53889a" metalness={0.34} roughness={0.13} clearcoat={1} />
+        </mesh>
+        <mesh position={[-0.25, 0.12, 0.414]}>
+          <circleGeometry args={[0.045, 24]} />
+          <meshBasicMaterial color="#f3fbf8" />
+        </mesh>
+        <mesh position={[0.42, 0.2, 0.02]}>
+          <boxGeometry args={[0.13, 0.06, 0.12]} />
+          <meshStandardMaterial color="#c9a469" metalness={0.74} roughness={0.3} />
+        </mesh>
+      </group>
+    );
+  }
+
+  if (tool === "tweezers") {
+    return (
+      <group rotation={[0.12, -0.28, -0.18]}>
+        <mesh position={[-0.14, 0.02, 0]} rotation={[0, 0, -0.105]} castShadow>
+          <cylinderGeometry args={[0.018, 0.075, 1.48, 14]} />
+          <meshPhysicalMaterial color="#b8c1c0" metalness={0.94} roughness={0.2} clearcoat={0.7} />
+        </mesh>
+        <mesh position={[0.14, 0.02, 0]} rotation={[0, 0, 0.105]} castShadow>
+          <cylinderGeometry args={[0.018, 0.075, 1.48, 14]} />
+          <meshPhysicalMaterial color="#7f8a8d" metalness={0.96} roughness={0.22} clearcoat={0.7} />
+        </mesh>
+        <mesh position={[0, -0.55, 0]}>
+          <sphereGeometry args={[0.075, 18, 14]} />
+          <meshStandardMaterial color="#d8dfdc" metalness={0.96} roughness={0.2} />
+        </mesh>
+        <mesh position={[-0.15, 0.46, 0]}>
+          <sphereGeometry args={[0.026, 12, 10]} />
+          <meshStandardMaterial color="#f3f5ef" metalness={0.9} roughness={0.18} />
+        </mesh>
+        <mesh position={[0.15, 0.46, 0]}>
+          <sphereGeometry args={[0.026, 12, 10]} />
+          <meshStandardMaterial color="#f3f5ef" metalness={0.9} roughness={0.18} />
+        </mesh>
+      </group>
+    );
+  }
+
+  if (tool === "sample") {
+    const tubes = [
+      { x: -0.34, liquid: "#548f91", cap: "#7b8583" },
+      { x: 0, liquid: "#a88b59", cap: "#c9c6b8" },
+      { x: 0.34, liquid: "#7a9b83", cap: "#8e9893" },
+    ];
+    return (
+      <group rotation={[0.08, -0.2, 0.08]}>
+        {tubes.map((tube) => (
+          <group key={tube.x} position={[tube.x, 0, 0]}>
+            <mesh position={[0, 0, 0]} castShadow>
+              <cylinderGeometry args={[0.125, 0.12, 0.93, 28, 1, true]} />
+              <meshPhysicalMaterial color="#c4e1e4" metalness={0.05} roughness={0.13} transmission={0.55} transparent opacity={0.42} side={THREE.DoubleSide} />
+            </mesh>
+            <mesh position={[0, -0.24, 0]}>
+              <cylinderGeometry args={[0.094, 0.094, 0.39, 24]} />
+              <meshPhysicalMaterial color={tube.liquid} metalness={0.08} roughness={0.18} transparent opacity={0.8} />
+            </mesh>
+            <mesh position={[0, 0.49, 0]} castShadow>
+              <cylinderGeometry args={[0.14, 0.14, 0.13, 24]} />
+              <meshStandardMaterial color={tube.cap} metalness={0.48} roughness={0.32} />
+            </mesh>
+            <mesh position={[-0.052, 0.01, 0.11]}>
+              <boxGeometry args={[0.016, 0.48, 0.012]} />
+              <meshBasicMaterial color="#f5ffff" transparent opacity={0.68} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+    );
+  }
+
+  return (
+    <group rotation={[0.1, -0.23, -0.18]}>
+      <mesh position={[0.04, -0.49, 0.02]} castShadow receiveShadow>
+        <boxGeometry args={[1.05, 0.14, 0.48]} />
+        <meshPhysicalMaterial color="#30383a" metalness={0.82} roughness={0.27} clearcoat={0.6} />
+      </mesh>
+      <mesh position={[0.16, -0.09, -0.02]} rotation={[0, 0, -0.09]} castShadow>
+        <cylinderGeometry args={[0.064, 0.085, 0.7, 20]} />
+        <meshStandardMaterial color="#8c9695" metalness={0.88} roughness={0.25} />
+      </mesh>
+      <mesh position={[-0.1, 0.23, 0]} rotation={[0, 0, -0.48]} castShadow>
+        <cylinderGeometry args={[0.075, 0.095, 0.72, 20]} />
+        <meshPhysicalMaterial color="#465054" metalness={0.84} roughness={0.27} clearcoat={0.55} />
+      </mesh>
+      <mesh position={[-0.36, 0.48, 0.02]} rotation={[0, 0, -0.48]} castShadow>
+        <cylinderGeometry args={[0.105, 0.12, 0.25, 20]} />
+        <meshStandardMaterial color="#a4acab" metalness={0.92} roughness={0.22} />
+      </mesh>
+      <mesh position={[0.23, -0.23, 0.09]} castShadow>
+        <boxGeometry args={[0.58, 0.08, 0.35]} />
+        <meshStandardMaterial color="#b3b9b3" metalness={0.77} roughness={0.28} />
+      </mesh>
+      <mesh position={[0.29, -0.06, 0.11]} rotation={[0, 0, -0.18]}>
+        <cylinderGeometry args={[0.045, 0.065, 0.23, 18]} />
+        <meshPhysicalMaterial color="#6c7a7c" metalness={0.88} roughness={0.2} />
+      </mesh>
+      <mesh position={[0.32, -0.4, 0.04]} castShadow>
+        <sphereGeometry args={[0.095, 18, 14]} />
+        <meshStandardMaterial color="#c5a66e" metalness={0.88} roughness={0.24} />
+      </mesh>
+    </group>
+  );
+}
+
 function ToolIllustration({ tool, className = "h-16 w-16" }: { tool: EvidenceToolId; className?: string }) {
   if (tool === "magnifier") return (
-    <span className={`block overflow-visible ${className}`} aria-hidden="true">
+    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="mag-metal" x1="18" y1="16" x2="59" y2="61" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#f9faf7"/><stop offset=".22" stopColor="#9ca8ab"/><stop offset=".48" stopColor="#313a3e"/><stop offset=".72" stopColor="#e1e4e0"/><stop offset="1" stopColor="#626d72"/>
+        </linearGradient>
+        <radialGradient id="mag-glass" cx=".25" cy=".2" r=".9">
+          <stop stopColor="#f5ffff" stopOpacity=".95"/><stop offset=".42" stopColor="#a5ccd5" stopOpacity=".48"/><stop offset="1" stopColor="#3f6471" stopOpacity=".78"/>
+        </radialGradient>
+        <linearGradient id="mag-handle" x1="54" y1="55" x2="78" y2="84" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#8d999b"/><stop offset=".22" stopColor="#20272b"/><stop offset=".58" stopColor="#101518"/><stop offset=".82" stopColor="#7e8a8e"/><stop offset="1" stopColor="#283034"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="53" cy="79" rx="28" ry="6" fill="#152025" opacity=".13"/>
+      <path d="M53 55 78 82" stroke="#111619" strokeWidth="14" strokeLinecap="round"/>
+      <path d="M53 55 78 82" stroke="url(#mag-handle)" strokeWidth="10" strokeLinecap="round"/>
+      <path d="M51 53 60 62" stroke="#394348" strokeWidth="13" strokeLinecap="round"/>
+      <path d="M51 53 60 62" stroke="url(#mag-metal)" strokeWidth="8" strokeLinecap="round"/>
+      <circle cx="36" cy="35" r="25" fill="#151b1e"/>
+      <circle cx="36" cy="35" r="23" fill="url(#mag-metal)"/>
+      <circle cx="36" cy="35" r="18.5" fill="#e2e9e6"/>
+      <circle cx="36" cy="35" r="16.5" fill="url(#mag-glass)" stroke="#f8ffff" strokeOpacity=".8"/>
+      <path d="M24 23c5-6 12-7 18-3" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity=".9"/>
+      <path d="M25 45c6 6 14 7 21 2" stroke="#e7fbff" strokeWidth="1.8" strokeLinecap="round" opacity=".55"/>
+    </svg>
+  );
+  return (
+    <div className={className} aria-hidden="true">
       <Canvas
         orthographic
         frameloop="demand"
-        camera={{ position: [0, 0, 5], left: -1.125, right: 1.125, top: 1.125, bottom: -1.125, near: 0.1, far: 50 }}
+        dpr={[1, 1.5]}
+        camera={{ position: [0, 0, 4.5], left: -1.12, right: 1.12, top: 1.12, bottom: -1.12, near: 0.1, far: 50 }}
         gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
         onCreated={({ gl }) => {
           gl.setClearColor("#000000", 0);
           gl.outputColorSpace = THREE.SRGBColorSpace;
           gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.08;
         }}
-        style={{ display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
       >
-        <ambientLight intensity={1.7} />
-        <directionalLight position={[2.5, 3.5, 5]} intensity={2.2} />
-        <directionalLight position={[-3, 1, 2]} intensity={0.8} />
+        <ambientLight intensity={1.45} />
+        <hemisphereLight args={["#f5fbff", "#34352d", 0.9]} />
+        <directionalLight position={[2.8, 3.5, 5]} intensity={2.1} />
+        <directionalLight position={[-3, -1, 2]} intensity={0.8} />
         <Suspense fallback={null}>
-          <MagnifierCursorModel />
+          <ThreeDimensionalTool tool={tool} />
         </Suspense>
       </Canvas>
-    </span>
-  );
-  if (tool === "camera") return (
-    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="cam-body" x1="20" y1="24" x2="76" y2="74" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#515b60"/><stop offset=".44" stopColor="#20272a"/><stop offset=".78" stopColor="#0c1012"/><stop offset="1" stopColor="#687276"/>
-        </linearGradient>
-        <radialGradient id="cam-lens"><stop stopColor="#b8e4e9"/><stop offset=".26" stopColor="#456c79"/><stop offset=".62" stopColor="#14242d"/><stop offset="1" stopColor="#080d11"/></radialGradient>
-      </defs>
-      <ellipse cx="48" cy="77" rx="30" ry="6" fill="#152025" opacity=".13"/>
-      <path d="M24 31h12l5-7h18l5 7h9a6 6 0 0 1 6 6v29a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6V37a6 6 0 0 1 6-6Z" fill="url(#cam-body)" stroke="#101619" strokeWidth="2"/>
-      <path d="M24 33h12l5-7h18l5 7" stroke="#d1d6d2" strokeWidth="2" opacity=".8"/>
-      <circle cx="49" cy="49" r="17" fill="#080c0f" stroke="#b9c3c2" strokeWidth="3"/>
-      <circle cx="49" cy="49" r="12.5" fill="url(#cam-lens)" stroke="#56646a" strokeWidth="2"/>
-      <circle cx="45" cy="44" r="3" fill="#e3fbff" opacity=".8"/>
-      <rect x="60" y="37" width="7" height="4" rx="1.5" fill="#e2c88d"/>
-    </svg>
-  );
-  if (tool === "tweezers") return (
-    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
-      <defs><linearGradient id="tweezer-steel" x1="22" y1="10" x2="69" y2="84" gradientUnits="userSpaceOnUse"><stop stopColor="#f7faf6"/><stop offset=".22" stopColor="#8f9a9d"/><stop offset=".43" stopColor="#e0e5e1"/><stop offset=".68" stopColor="#535e63"/><stop offset=".86" stopColor="#cbd1cf"/><stop offset="1" stopColor="#657277"/></linearGradient></defs>
-      <ellipse cx="47" cy="77" rx="21" ry="6" fill="#152025" opacity=".12"/>
-      <path d="M27 13c1 15 12 28 18 40 6 12 9 22 12 28" stroke="#252d30" strokeWidth="11" strokeLinecap="round"/>
-      <path d="M27 13c1 15 12 28 18 40 6 12 9 22 12 28" stroke="url(#tweezer-steel)" strokeWidth="7" strokeLinecap="round"/>
-      <path d="M68 13c-1 15-12 28-18 40-6 12-9 22-12 28" stroke="#252d30" strokeWidth="11" strokeLinecap="round"/>
-      <path d="M68 13c-1 15-12 28-18 40-6 12-9 22-12 28" stroke="url(#tweezer-steel)" strokeWidth="7" strokeLinecap="round"/>
-      <path d="M27 13 25 7M68 13l2-6" stroke="#f7f9f5" strokeWidth="3" strokeLinecap="round"/>
-    </svg>
-  );
-  if (tool === "sample") return (
-    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
-      <defs><linearGradient id="vial-glass" x1="18" y1="12" x2="60" y2="82" gradientUnits="userSpaceOnUse"><stop stopColor="#fff" stopOpacity=".95"/><stop offset=".48" stopColor="#b9dadd" stopOpacity=".35"/><stop offset=".82" stopColor="#72a8b5" stopOpacity=".6"/><stop offset="1" stopColor="#edf6f4" stopOpacity=".9"/></linearGradient></defs>
-      <ellipse cx="47" cy="80" rx="27" ry="5" fill="#152025" opacity=".12"/>
-      <g transform="translate(14 9) rotate(-7 21 39)"><rect x="12" y="7" width="18" height="8" rx="2" fill="#777f80" stroke="#4c5557"/><path d="M14 15v8l-4 7v34a7 7 0 0 0 7 7h6a7 7 0 0 0 7-7V30l-4-7v-8" fill="url(#vial-glass)" stroke="#74898d" strokeWidth="1.6"/><path d="M12 49h16v15a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6Z" fill="#78b7c2" opacity=".65"/><path d="M17 25v39" stroke="white" strokeWidth="1.8" opacity=".85"/></g>
-      <g transform="translate(51 20) rotate(8 12 28)"><rect x="3" y="0" width="18" height="8" rx="2" fill="#e4e1d7" stroke="#9aa3a0"/><path d="M5 8v8l-3 6v36a6 6 0 0 0 6 6h6a6 6 0 0 0 6-6V22l-3-6V8" fill="url(#vial-glass)" stroke="#71868a" strokeWidth="1.5"/><path d="M3 39h14v19a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5Z" fill="#e3c88f" opacity=".72"/><path d="M8 22v36" stroke="white" strokeWidth="1.7" opacity=".85"/></g>
-    </svg>
-  );
-  return (
-    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
-      <defs><linearGradient id="micro-metal" x1="23" y1="12" x2="69" y2="74" gradientUnits="userSpaceOnUse"><stop stopColor="#f7f8f3"/><stop offset=".28" stopColor="#8e999b"/><stop offset=".56" stopColor="#3c474b"/><stop offset=".81" stopColor="#d4dbd7"/><stop offset="1" stopColor="#657175"/></linearGradient></defs>
-      <ellipse cx="49" cy="80" rx="27" ry="5" fill="#152025" opacity=".12"/>
-      <path d="M32 15h20v8H32z" fill="#333d41"/>
-      <path d="M35 20c-1 11 3 20 12 25l-6 8c-14-8-19-20-18-33" fill="url(#micro-metal)" stroke="#313a3e" strokeWidth="2"/>
-      <path d="M49 40c11 5 15 14 11 25l-10 2c2-9-1-14-8-17Z" fill="#252e32" stroke="#8b9698" strokeWidth="2"/>
-      <path d="M43 52 34 65H58" stroke="#899699" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M24 73h48" stroke="#333d41" strokeWidth="8" strokeLinecap="round"/>
-      <path d="M27 73h42" stroke="#a8b0ae" strokeWidth="3" strokeLinecap="round"/>
-      <circle cx="51" cy="42" r="5" fill="#d5d9d2" stroke="#344045" strokeWidth="2"/>
-      <rect x="47" y="22" width="13" height="8" rx="2" transform="rotate(30 47 22)" fill="#1d2528" stroke="#7d888a"/>
-    </svg>
+    </div>
   );
 }
 
-/**
- * Real Poly Haven magnifier (CC0), loaded through the same-origin API route.
- * The upright asset's lens is above the handle's center of mass, so the model
- * is shifted to keep its lens aligned with the pointer while the handle trails
- * diagonally down-right. Keep the zoomed image in a separate layer underneath
- * the translucent glass for a genuinely usable magnifier.
- */
-function MagnifierCursorModel() {
-  const gltf = useLoader(GLTFLoader, "/api/caso-cero-magnifier-model");
-  const model = useMemo(() => {
-    const scene = gltf.scene.clone(true);
-    scene.updateMatrixWorld(true);
-
-    const bounds = new THREE.Box3().setFromObject(scene);
-    const size = bounds.getSize(new THREE.Vector3());
-    const center = bounds.getCenter(new THREE.Vector3());
-    const longestSide = Math.max(size.x, size.y, size.z, 0.001);
-    const scale = 2.15 / longestSide;
-    const angle = Math.PI / 4;
-    const zAxis = new THREE.Vector3(0, 0, 1);
-
-    scene.scale.setScalar(scale);
-    scene.rotation.set(0, 0, angle);
-
-    // The source preview places the circular lens at roughly the upper quarter
-    // of the complete upright silhouette. Move that lens center to (0, 0).
-    const lensOffset = new THREE.Vector3(0, size.y * 0.24, 0)
-      .multiplyScalar(scale)
-      .applyAxisAngle(zAxis, angle);
-    const scaledCenter = center
-      .clone()
-      .multiplyScalar(scale)
-      .applyAxisAngle(zAxis, angle);
-    scene.position.copy(scaledCenter.negate().sub(lensOffset));
-
-    scene.traverse((node) => {
-      if (!(node instanceof THREE.Mesh)) return;
-      node.castShadow = true;
-      node.receiveShadow = true;
-
-      const tuneMaterial = (material: THREE.Material) => {
-        const cloned = material.clone();
-        const materialName = `${cloned.name} ${node.name}`.toLowerCase();
-        if (
-          /(glass|lens|lense|magnifying)/.test(materialName) &&
-          cloned instanceof THREE.MeshStandardMaterial
-        ) {
-          // Preserve the model's physical reflections but let the live zoom
-          // crop show through the optical glass.
-          cloned.transparent = true;
-          cloned.opacity = Math.min(cloned.opacity, 0.3);
-          cloned.depthWrite = false;
-          cloned.roughness = 0.12;
-          cloned.needsUpdate = true;
-        }
-        return cloned;
-      };
-
-      node.material = Array.isArray(node.material)
-        ? node.material.map(tuneMaterial)
-        : tuneMaterial(node.material);
-    });
-
-    return scene;
-  }, [gltf.scene]);
-
-  return <primitive object={model} dispose={null} />;
-}
+type ToolActionFeedback = {
+  tool: Exclude<EvidenceToolId, "magnifier">;
+  evidenceIndex: number;
+  message: string;
+};
 
 type EvidencePhoto = {
   src: string;
@@ -1127,6 +1170,7 @@ export default function CasoCeroEvidenceClothesline() {
   const [magnifierActive, setMagnifierActive] = useState(false);
   const [pointerPosition, setPointerPosition] = useState<{ x: number; y: number } | null>(null);
   const [magnifierTarget, setMagnifierTarget] = useState<MagnifierTarget | null>(null);
+  const [toolAction, setToolAction] = useState<ToolActionFeedback | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasFrameRef = useRef<HTMLDivElement | null>(null);
   const active = activeEvidence === null ? null : CASE_EVIDENCE[activeEvidence];
@@ -1134,6 +1178,18 @@ export default function CasoCeroEvidenceClothesline() {
   const handlePhotoClick = useCallback((index: number) => {
     if (magnifierActive) return;
     setActiveEvidence(index);
+
+    if (activeTool && activeTool !== "magnifier") {
+      const title = CASE_EVIDENCE[index].title.replace(/^\\d+ · /, "");
+      const messages: Record<Exclude<EvidenceToolId, "magnifier">, string> = {
+        camera: `Registro fotográfico guardado: ${title}. Usa las demás pistas para contrastar lo observado.`,
+        tweezers: `Evidencia aislada: ${title}. Esta pista queda marcada para compararla con las muestras.`,
+        sample: `Registro de muestreo creado para ${title}. Comprueba ubicación y procedimiento antes de concluir.`,
+        microscope: `Inspección ampliada abierta: revisa los detalles de ${title} sin confundir observación con causa demostrada.`,
+      };
+      setToolAction({ tool: activeTool, evidenceIndex: index, message: messages[activeTool] });
+    }
+
     if (activeTool) {
       setActiveTool(null);
       setMagnifierActive(false);
@@ -1287,7 +1343,25 @@ export default function CasoCeroEvidenceClothesline() {
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
+          {toolAction?.evidenceIndex === activeEvidence && toolAction.tool === "microscope" && (
+            <div
+              role="img"
+              aria-label={`Detalle ampliado de ${active.title}`}
+              className="mt-3 h-28 overflow-hidden border border-[#8f7c5c] bg-[#111a19]"
+              style={{
+                backgroundImage: `linear-gradient(180deg,rgba(4,10,12,.02),rgba(4,10,12,.18)),url("${active.src}")`,
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+                backgroundSize: "190%",
+              }}
+            />
+          )}
           <p className="mt-2 text-[11px] leading-5 text-[#cad3d4] sm:text-xs">{active.competence}</p>
+          {toolAction?.evidenceIndex === activeEvidence && (
+            <p role="status" className="mt-2 border border-[#718b78] bg-[#1a3329] px-2.5 py-2 text-[10px] leading-4 text-[#d8ebd8]">
+              {toolAction.message}
+            </p>
+          )}
           <p className="mt-2 border-t border-[#5a4932]/70 pt-2 text-[9px] leading-4 text-[#d9b878]">
             Observa la pista y contrástala con las demás antes de formular una conclusión.
           </p>
@@ -1299,34 +1373,91 @@ export default function CasoCeroEvidenceClothesline() {
           <aside
             id="caso-cero-tools-drawer"
             aria-label="Herramientas de investigación"
-            className="caso-cero-tools-panel pointer-events-auto mr-2 w-[min(246px,calc(100vw_-_52px))] rounded-[4px] border border-[#d7d7d0] bg-[#f5f5f0] p-3 shadow-[-9px_12px_28px_rgba(0,0,0,.28)]"
+            className="caso-cero-tools-panel pointer-events-auto mr-2 w-[min(292px,calc(100vw_-_52px))] rounded-[7px] border border-[#ad8b55] bg-[#e4d8bd] p-3 shadow-[-12px_14px_34px_rgba(0,0,0,.42)]"
           >
-            <div className="grid grid-cols-3 gap-2">
-              {EVIDENCE_TOOLS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveEvidence(null);
-                    setMagnifierTarget(null);
-                    setPointerPosition(null);
-                    setActiveTool(item.id);
-                    setMagnifierActive(item.id === "magnifier");
-                    setToolsOpen(false);
-                  }}
-                  aria-label={item.label}
-                  className={[
-                    "group grid aspect-square place-items-center rounded-[3px] border bg-white p-1.5 shadow-[0_1px_2px_rgba(0,0,0,.07)] transition",
-                    activeTool === item.id
-                      ? "border-[#757b7d] ring-1 ring-[#757b7d]/20"
-                      : "border-[#e0e0d9] hover:border-[#a4a9a7] hover:bg-[#fdfdf9]",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#343a3d]",
-                  ].join(" ")}
-                >
-                  <ToolIllustration tool={item.id} className="h-full w-full max-h-[62px] max-w-[62px] transition-transform duration-150 group-hover:scale-[1.04]" />
-                </button>
-              ))}
+            <div className="mb-3 flex items-center gap-2 border border-[#3f504a] bg-[#14211f] px-2.5 py-2.5 text-[#f0e4c9] shadow-[inset_0_1px_0_rgba(255,255,255,.08)]">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-sm border border-[#b99a63] bg-[#263b34] text-sm text-[#e8c98e]">✦</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-black uppercase tracking-[.2em]">Estación de campo</p>
+                <p className="mt-0.5 text-[8px] tracking-[.11em] text-[#b8c8bd]">KIT DE INVESTIGACIÓN · 05 EQUIPOS</p>
+              </div>
+              <span className="rounded-sm border border-[#66756b] px-1.5 py-1 text-[8px] font-black text-[#d9c08f]">3D</span>
             </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {EVIDENCE_TOOLS.map((item) => {
+                const selected = activeTool === item.id;
+                const shortLabel = item.id === "magnifier"
+                  ? "Lupa"
+                  : item.id === "camera"
+                    ? "Cámara"
+                    : item.id === "tweezers"
+                      ? "Pinzas"
+                      : item.id === "sample"
+                        ? "Muestras"
+                        : "Microscopio";
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveEvidence(null);
+                      setMagnifierTarget(null);
+                      setPointerPosition(null);
+                      setActiveTool(item.id);
+                      setMagnifierActive(item.id === "magnifier");
+                      setToolsOpen(false);
+                    }}
+                    aria-label={item.label}
+                    aria-pressed={selected}
+                    className={[
+                      "group relative grid min-h-[91px] min-w-0 grid-rows-[1fr_auto] place-items-center overflow-hidden rounded-[4px] border p-1.5 text-center transition duration-150",
+                      selected
+                        ? "border-[#d8b36e] bg-[#1b2d29] text-[#f2dfb9] shadow-[inset_0_0_0_1px_rgba(216,179,110,.28),0_3px_5px_rgba(0,0,0,.18)]"
+                        : "border-[#c2b28f] bg-gradient-to-b from-[#fcf8ed] to-[#ddd0b5] text-[#26312c] shadow-[0_2px_2px_rgba(63,48,28,.14)] hover:-translate-y-0.5 hover:border-[#9a7543] hover:from-white hover:to-[#e9dcc1]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#343a3d]",
+                    ].join(" ")}
+                  >
+                    <span className={[
+                      "absolute right-1 top-1 rounded-[2px] px-1 py-0.5 text-[6px] font-black uppercase tracking-[.1em]",
+                      selected ? "bg-[#c39a57] text-[#18201c]" : "bg-[#e4dbc6] text-[#67604f]",
+                    ].join(" ")}>{selected ? "En uso" : item.id === "magnifier" ? "Zoom" : "3D"}</span>
+                    <div className="mt-2 flex h-[52px] w-full items-center justify-center">
+                      <ToolIllustration
+                        tool={item.id}
+                        className="h-full w-full max-h-[54px] max-w-[58px] transition-transform duration-150 group-hover:scale-[1.05]"
+                      />
+                    </div>
+                    <span className="mt-1 w-full truncate text-[9px] font-black leading-tight sm:text-[10px]">{shortLabel}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 border border-[#bbaa84] bg-[#f6efdf] px-2.5 py-2 text-[#33403a]">
+              <p className="text-[8px] font-black uppercase tracking-[.17em] text-[#89663a]">Cómo usar el equipo</p>
+              <p className="mt-1 text-[9px] leading-4">
+                {!activeTool
+                  ? "Selecciona una herramienta y toca una fotografía del tendedero."
+                  : activeTool === "magnifier"
+                    ? "Desliza la lupa sobre una foto para examinar sus detalles con el aumento seleccionado."
+                    : activeTool === "camera"
+                      ? "Toca una foto para registrar esa evidencia."
+                      : activeTool === "tweezers"
+                        ? "Toca una foto para marcar la pista que vas a aislar y comparar."
+                        : activeTool === "sample"
+                          ? "Toca una pista para registrar su muestra y revisar el método de recolección."
+                          : "Toca una foto para inspeccionarla con detalle y abrir su ficha."
+                }
+              </p>
+            </div>
+
+            {toolAction && (
+              <div role="status" className="mt-2 border border-[#718b78] bg-[#e5eddc] px-2.5 py-2 text-[#1d3a2a]">
+                <p className="text-[8px] font-black uppercase tracking-[.16em]">Última acción · {EVIDENCE_TOOLS.find((item) => item.id === toolAction.tool)?.label}</p>
+                <p className="mt-1 text-[9px] leading-4">{toolAction.message}</p>
+              </div>
+            )}
           </aside>
         )}
 
@@ -1364,55 +1495,45 @@ export default function CasoCeroEvidenceClothesline() {
           className="pointer-events-none absolute z-[100] h-0 w-0"
           style={{ left: pointerPosition.x, top: pointerPosition.y }}
         >
-          <div className="absolute -left-[135px] -top-[135px] h-[270px] w-[270px]">
-            {/* The selected magnification (3.15×) is unchanged; the physical GLB lens sits above this live crop. */}
-            <div
-              className="absolute left-1/2 top-1/2 z-0 h-[138px] w-[138px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-[#b9c9ce]/80"
-              style={{
-                background: "rgba(184,214,225,.18)",
-                boxShadow: "inset 0 1px 8px rgba(255,255,255,.23), inset 0 -2px 8px rgba(2,12,19,.20)",
-              }}
-            >
-              {magnifierTarget && (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url("${magnifierTarget.src}")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: `${magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
-                    backgroundPosition: `${MAGNIFIER_INNER_DIAMETER / 2 - magnifierTarget.u * magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${MAGNIFIER_INNER_DIAMETER / 2 - (1 - magnifierTarget.v) * magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
-                    filter: "contrast(1.04) saturate(1.06)",
-                  }}
-                />
-              )}
+          {/* The handle, metal rim and zoom crop share this exact pointer origin. */}
+          <div
+            className="absolute left-[34px] top-[43px] z-0 h-[25px] w-[148px] origin-[12px_12px] rotate-[43deg] rounded-[6px] border border-[#111619] shadow-[2px_5px_8px_rgba(0,0,0,.72)]"
+            style={{ background: "linear-gradient(180deg,#e1e4df 0%,#858d8f 10%,#2e3539 26%,#111518 55%,#333a3e 78%,#b5babb 96%,#454c50 100%)" }}
+          />
+          <div
+            className="absolute left-[34px] top-[43px] z-[1] h-[29px] w-[32px] origin-[12px_14px] rotate-[43deg] rounded-[5px] border border-[#20272a]"
+            style={{ background: "linear-gradient(135deg,#f3f1e8,#7b8588 28%,#242a2d 58%,#c3c9c6 84%,#565e61)" }}
+          />
+          <div
+            className="absolute -left-[77px] -top-[77px] z-[2] h-[154px] w-[154px] rounded-full border-[5px] border-[#171d20] shadow-[0_4px_12px_rgba(0,0,0,.6),inset_0_1px_2px_rgba(255,255,255,.75)]"
+            style={{ background: "linear-gradient(135deg,#e2e5df 0%,#737d81 14%,#22282c 35%,#151a1d 58%,#c2c9c9 82%,#4d5559 100%)" }}
+          />
+          <div
+            className="absolute -left-[69px] -top-[69px] z-[3] h-[138px] w-[138px] overflow-hidden rounded-full border border-[#c5d1d4]/80"
+            style={{
+              background: "rgba(184,214,225,.18)",
+              boxShadow: "inset 0 1px 8px rgba(255,255,255,.23), inset 0 -2px 8px rgba(2,12,19,.20)",
+            }}
+          >
+            {magnifierTarget && (
               <div
-                className="pointer-events-none absolute inset-0 rounded-full"
+                className="absolute inset-0"
                 style={{
-                  background: "radial-gradient(ellipse at 24% 15%,rgba(255,255,255,.54),transparent 22%),radial-gradient(ellipse at 73% 82%,rgba(132,184,199,.18),transparent 38%),linear-gradient(132deg,rgba(239,251,255,.08),transparent 44%,rgba(3,14,22,.13))",
-                  boxShadow: "inset 0 1px 8px rgba(255,255,255,.24),inset 0 -3px 8px rgba(4,12,18,.18)",
+                  backgroundImage: `url("${magnifierTarget.src}")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: `${magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
+                  backgroundPosition: `${MAGNIFIER_INNER_DIAMETER / 2 - magnifierTarget.u * magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${MAGNIFIER_INNER_DIAMETER / 2 - (1 - magnifierTarget.v) * magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
+                  filter: "contrast(1.04) saturate(1.06)",
                 }}
               />
-            </div>
-            <Canvas
-              orthographic
-              frameloop="demand"
-              camera={{ position: [0, 0, 5], left: -1.125, right: 1.125, top: 1.125, bottom: -1.125, near: 0.1, far: 50 }}
-              gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
-              onCreated={({ gl }) => {
-                gl.setClearColor("#000000", 0);
-                gl.outputColorSpace = THREE.SRGBColorSpace;
-                gl.toneMapping = THREE.ACESFilmicToneMapping;
-                gl.toneMappingExposure = 1.05;
+            )}
+            <div
+              className="pointer-events-none absolute inset-0 rounded-full"
+              style={{
+                background: "radial-gradient(ellipse at 24% 15%,rgba(255,255,255,.54),transparent 22%),radial-gradient(ellipse at 73% 82%,rgba(132,184,199,.18),transparent 38%),linear-gradient(132deg,rgba(239,251,255,.08),transparent 44%,rgba(3,14,22,.13))",
+                boxShadow: "inset 0 1px 8px rgba(255,255,255,.24),inset 0 -3px 8px rgba(4,12,18,.18)",
               }}
-              style={{ position: "absolute", inset: 0, zIndex: 2, display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
-            >
-              <ambientLight intensity={1.65} />
-              <directionalLight position={[2.5, 3.5, 5]} intensity={2.25} />
-              <directionalLight position={[-3, 1, 2]} intensity={0.85} />
-              <Suspense fallback={null}>
-                <MagnifierCursorModel />
-              </Suspense>
-            </Canvas>
+            />
           </div>
         </div>
       )}

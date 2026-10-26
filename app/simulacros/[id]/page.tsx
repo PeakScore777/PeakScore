@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ZoomableImage from "@/components/ZoomableImage";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -1438,8 +1438,11 @@ export default function ExamPage() {
 
                     {question.image_url && (
                       <div className="mt-6 flex justify-center">
-                        <Image
-                          src={question.image_url} width={1200} height={800} unoptimized alt={`Recurso visual de la pregunta ${currentQuestion + 1}`}
+                        <ZoomableImage
+                          src={question.image_url}
+                          alt={`Recurso visual de la pregunta ${currentQuestion + 1}`}
+                          width={1200}
+                          height={800}
                           className="max-h-[500px] w-auto max-w-full rounded-2xl border border-slate-200 object-contain"
                         />
                      </div>

@@ -183,7 +183,7 @@ export default function NewSimulationPage() {
         body: JSON.stringify({
           type: "normal",
           subject,
-          amount,
+          amount: subject === "Inglés" ? null : amount,
           difficulty: effectiveDifficulty,
           englishFormat: subject === "Inglés" ? bookletFormat : null,
           englishPart: subject === "Inglés" ? englishPart : null,
@@ -332,7 +332,7 @@ export default function NewSimulationPage() {
               </div>
 
               <span className="border border-[#8de9f2]/25 bg-[#8de9f2]/5 px-3 py-2 text-[9px] font-bold text-[#b8f8ff]">
-                {subject === "Inglés" ? "4 pasos" : "3 pasos"}
+                3 pasos
               </span>
             </div>
 
@@ -549,75 +549,91 @@ export default function NewSimulationPage() {
                 </>
               )}
 
-              <div className="my-7 border-t border-white/10 sm:my-8" />
-
-              {/* Paso 3: preguntas */}
-              <section>
-                <div className="mb-5 flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/50 bg-[#a99bea]/10">
-                    <span
-                      className="text-[10px] text-[#c7bbff]"
-                      style={pixelFont}
-                    >
-                      {subject === "Inglés" ? "03" : "02"}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h2
-                      className="text-[10px] leading-6 text-white sm:text-[11px]"
-                      style={pixelFont}
-                    >
-                      ¿CUÁNTAS PREGUNTAS?
-                    </h2>
-
-                    <p className="mt-1 text-sm leading-6 text-slate-400">
-                      Elige el tamaño de tu entrenamiento.
-                    </p>
-                  </div>
+              {subject === "Inglés" ? (
+                <div className="my-7 border border-[#8de9f2]/25 bg-[#8de9f2]/[0.05] px-4 py-4 sm:px-5">
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#b8f8ff]">
+                    Sección completa
+                  </p>
+                  <p className="mt-2 text-sm font-bold text-white">
+                    Practicarás toda la Parte {englishPart}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">
+                    El simulacro incluirá todas las preguntas activas del conjunto publicado para esta parte, en el orden del cuadernillo. No puedes recortar ni elegir una cantidad.
+                  </p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {QUESTION_AMOUNTS.map((value) => {
-                    const selected = amount === value;
-
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => setAmount(value)}
-                        className={`relative flex min-h-[86px] flex-col items-center justify-center border transition duration-200 ${
-                          selected
-                            ? "border-[#8de9f2] bg-[#102431] text-white shadow-[inset_0_0_24px_rgba(34,211,238,0.07)]"
-                            : "border-white/10 bg-[#0d1020] text-slate-300 hover:border-white/25 hover:bg-[#11152a]"
-                        }`}
+              ) : (
+                <>
+                <div className="my-7 border-t border-white/10 sm:my-8" />
+  
+                {/* Paso 2: preguntas */}
+                <section>
+                  <div className="mb-5 flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/50 bg-[#a99bea]/10">
+                      <span
+                        className="text-[10px] text-[#c7bbff]"
+                        style={pixelFont}
                       >
-                        <span className="text-2xl font-black tabular-nums">
-                          {value}
-                        </span>
-
-                        <span
-                          className={`mt-2 text-[7px] leading-4 ${
-                            selected ? "text-[#8de9f2]" : "text-slate-500"
+                        {subject === "Inglés" ? "03" : "02"}
+                      </span>
+                    </div>
+  
+                    <div>
+                      <h2
+                        className="text-[10px] leading-6 text-white sm:text-[11px]"
+                        style={pixelFont}
+                      >
+                        ¿CUÁNTAS PREGUNTAS?
+                      </h2>
+  
+                      <p className="mt-1 text-sm leading-6 text-slate-400">
+                        Elige el tamaño de tu entrenamiento.
+                      </p>
+                    </div>
+                  </div>
+  
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {QUESTION_AMOUNTS.map((value) => {
+                      const selected = amount === value;
+  
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => setAmount(value)}
+                          className={`relative flex min-h-[86px] flex-col items-center justify-center border transition duration-200 ${
+                            selected
+                              ? "border-[#8de9f2] bg-[#102431] text-white shadow-[inset_0_0_24px_rgba(34,211,238,0.07)]"
+                              : "border-white/10 bg-[#0d1020] text-slate-300 hover:border-white/25 hover:bg-[#11152a]"
                           }`}
-                          style={pixelFont}
                         >
-                          PREGUNTAS
-                        </span>
-
-                        {selected && (
-                          <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#8de9f2] text-[#06101c]">
-                            <Check size={10} strokeWidth={3} />
+                          <span className="text-2xl font-black tabular-nums">
+                            {value}
                           </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-
-              <div className="my-7 border-t border-white/10 sm:my-8" />
+  
+                          <span
+                            className={`mt-2 text-[7px] leading-4 ${
+                              selected ? "text-[#8de9f2]" : "text-slate-500"
+                            }`}
+                            style={pixelFont}
+                          >
+                            PREGUNTAS
+                          </span>
+  
+                          {selected && (
+                            <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#8de9f2] text-[#06101c]">
+                              <Check size={10} strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+  
+                <div className="my-7 border-t border-white/10 sm:my-8" />
+                </>
+              )}
 
               {/* Paso 4: dificultad */}
               <section>
@@ -627,7 +643,7 @@ export default function NewSimulationPage() {
                       className="text-[10px] text-[#c7bbff]"
                       style={pixelFont}
                     >
-                      {subject === "Inglés" ? "04" : "03"}
+                      03
                     </span>
                   </div>
 
@@ -636,11 +652,11 @@ export default function NewSimulationPage() {
                       className="text-[10px] leading-6 text-white sm:text-[11px]"
                       style={pixelFont}
                     >
-                      ELIGE LA DIFICULTAD
+                      {subject === "Inglés" ? "DIFICULTAD DE LA PARTE" : "ELIGE LA DIFICULTAD"}
                     </h2>
 
                     <p className="mt-1 text-sm leading-6 text-slate-400">
-                      Selecciona el nivel de desafío.
+                      {subject === "Inglés" ? "La dificultad está definida por la sección del cuadernillo." : "Selecciona el nivel de desafío."}
                     </p>
                   </div>
                 </div>
@@ -837,25 +853,26 @@ export default function NewSimulationPage() {
                 </div>
               )}
 
-              {/* Preguntas */}
+              {/* Cantidad/longitud de la práctica */}
               <div className="flex items-center gap-4 border border-white/10 bg-[#0d1020] p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/25 bg-[#a99bea]/10">
-                  <span
-                    className="text-[9px] text-[#c7bbff]"
-                    style={pixelFont}
-                  >
-                    {amount}
+                  <span className="text-[9px] text-[#c7bbff]" style={pixelFont}>
+                    {subject === "Inglés" ? "FULL" : amount}
                   </span>
                 </div>
 
                 <div>
                   <p className="text-[11px] text-slate-400">
-                    Número de preguntas
+                    {subject === "Inglés" ? "Longitud de la práctica" : "Número de preguntas"}
                   </p>
-
                   <p className="mt-1 text-sm font-bold text-white">
-                    {amount} preguntas
+                    {subject === "Inglés" ? `Parte ${englishPart} completa` : `${amount} preguntas`}
                   </p>
+                  {subject === "Inglés" && (
+                    <p className="mt-1 text-[11px] leading-4 text-slate-400">
+                      Todas las preguntas del conjunto seleccionado.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -896,16 +913,28 @@ export default function NewSimulationPage() {
                   </p>
                 </div>
 
-                <p className="mt-2 text-3xl font-black text-white">
-                  {duration}
-                  <span className="ml-2 text-sm font-semibold text-slate-400">
-                    min
-                  </span>
-                </p>
-
-                <p className="mt-2 text-[11px] leading-5 text-slate-400">
-                  Estimación de duración según la cantidad de preguntas.
-                </p>
+                {subject === "Inglés" ? (
+                  <>
+                    <p className="mt-2 text-lg font-black leading-7 text-white">
+                      Sección completa
+                    </p>
+                    <p className="mt-2 text-[11px] leading-5 text-slate-400">
+                      La duración se calculará según el total real de preguntas de la parte.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-2 text-3xl font-black text-white">
+                      {duration}
+                      <span className="ml-2 text-sm font-semibold text-slate-400">
+                        min
+                      </span>
+                    </p>
+                    <p className="mt-2 text-[11px] leading-5 text-slate-400">
+                      Estimación de duración según la cantidad de preguntas.
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Recordatorio */}

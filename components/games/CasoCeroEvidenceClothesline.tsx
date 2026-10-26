@@ -919,11 +919,9 @@ class MagnifierModelBoundary extends Component<{ children: ReactNode }, { failed
  */
 function MagnifyingGlassModel({
   active,
-  pointerPosition,
   onLoaded,
 }: {
   active: boolean;
-  pointerPosition: { x: number; y: number } | null;
   onLoaded: () => void;
 }) {
   const { scene } = useGLTF(MAGNIFIER_MODEL_URL);
@@ -988,7 +986,7 @@ function MagnifyingGlassModel({
     group.scale.setScalar(modelWidth);
     group.rotation.set(0.03, -0.02, -0.22);
     invalidate();
-  }, [active, pointerPosition, size.width, size.height, invalidate]);
+  }, [active, size.width, size.height, invalidate]);
 
   return (
     <group ref={groupRef}>
@@ -1235,7 +1233,6 @@ export default function CasoCeroEvidenceClothesline() {
             <Suspense fallback={null}>
               <MagnifyingGlassModel
                 active={magnifierActive}
-                pointerPosition={pointerPosition}
                 onLoaded={handleMagnifierModelLoaded}
               />
             </Suspense>
@@ -1323,13 +1320,6 @@ export default function CasoCeroEvidenceClothesline() {
       ) : (
         <div aria-live="polite" className="pointer-events-auto absolute bottom-[5.5%] left-[53%] z-40 -translate-x-1/2 border border-[#9b804e]/70 bg-[#080d12]/85 px-3 py-2 text-[9px] font-black uppercase tracking-[.13em] text-[#f1d4a1] shadow-lg backdrop-blur-sm">
           Lupa en uso · Esc para devolver
-        </div>
-      )}
-
-      {!magnifierModelReady && magnifierActive && pointerPosition && (
-        <div aria-hidden="true" className="pointer-events-none absolute z-[90] h-0 w-0" style={{ left: pointerPosition.x, top: pointerPosition.y }}>
-          <div className="absolute left-[43px] top-[39px] h-[23px] w-[133px] origin-[12px_11px] rotate-[43deg] rounded-full border border-[#080a0c] shadow-[2px_5px_7px_rgba(0,0,0,.58)]" style={{ background: "linear-gradient(180deg,#d7dcdd 0%,#737d82 12%,#242a2f 28%,#080a0d 52%,#20262b 78%,#a8b0b3 96%,#4b5358 100%)" }} />
-          <div className="absolute left-[43px] top-[39px] h-[25px] w-[28px] origin-[12px_12px] rotate-[43deg] rounded-[5px] border border-[#252a2d] shadow-[inset_0_1px_2px_rgba(255,255,255,.55)]" style={{ background: "linear-gradient(135deg,#f0f0e8,#69757a 26%,#202529 56%,#c3c9c8 82%,#535d62)" }} />
         </div>
       )}
 

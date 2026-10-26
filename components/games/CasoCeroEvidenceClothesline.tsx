@@ -974,7 +974,7 @@ function MagnifyingGlassModel({
 
     group.visible = true;
     const modelWidth = 184;
-    const lensX = size.width * 0.53 - 24;
+    const lensX = size.width / 2 - 24;
     const lensY = size.height - 92;
 
     // Offset compensates for the handle extending the model bounds down/right.
@@ -1211,11 +1211,11 @@ export default function CasoCeroEvidenceClothesline() {
         </Canvas>
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-30">
+      <div className="pointer-events-none absolute bottom-[1%] left-[53%] z-30 h-[240px] w-[320px] -translate-x-1/2">
         <Canvas
           orthographic
           frameloop="demand"
-          camera={{ position: [0, 0, 1200], left: -800, right: 800, top: 450, bottom: -450, near: 0.1, far: 2400 }}
+          camera={{ position: [0, 0, 1200], left: -160, right: 160, top: 120, bottom: -120, near: 0.1, far: 2400 }}
           dpr={[1, 1.1]}
           gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
           onCreated={({ gl }) => {

@@ -469,7 +469,7 @@ Debes explicar SOLO las preguntas que el estudiante respondió mal o dejó en bl
 
 Reglas obligatorias para CADA pregunta:
 - Nada de frases genéricas como "lee con atención" o "la respuesta se basa en el texto". Usa los datos concretos de esta pregunta.
-- En "explanation", enseña el razonamiento en 3 pasos dentro de un texto breve: (1) qué pide exactamente, (2) qué pista, dato, operación o regla hay que usar, (3) cómo esa pista demuestra que la respuesta correcta es correcta.
+- En "explanation", entrega SIEMPRE tres líneas separadas y visibles con los rótulos exactos "Paso 1:", "Paso 2:" y "Paso 3:". Paso 1 identifica qué pide la pregunta; Paso 2 señala la pista, dato, operación, evidencia o regla exacta; Paso 3 demuestra por qué esa pista conduce a la opción correcta. No lo conviertas en un resumen genérico.
 - En "why_your_answer", explica específicamente por qué la respuesta seleccionada no encaja. Si quedó en blanco, identifica qué pista habría ayudado a resolverla. No inventes pensamientos ni intenciones del estudiante.
 - En Lectura, cita una frase o dato del texto proporcionado; en Matemáticas, escribe la operación necesaria; en Inglés, explica en español la palabra, estructura o pista contextual que distingue la opción correcta.
 - Contrasta la opción marcada con la correcta siempre que el enunciado y las opciones permitan hacerlo. No inventes contenido que no aparece en los datos.
@@ -482,7 +482,7 @@ Reglas obligatorias para CADA pregunta:
   "items": [
     {
       "question_id": "ID exacto",
-      "explanation": "razonamiento concreto en tres pasos",
+      "explanation": "Paso 1: qué pide la pregunta.\\nPaso 2: pista o regla concreta.\\nPaso 3: por qué la opción correcta encaja.",
       "why_your_answer": "por qué la elección del estudiante no encaja o qué pista faltó",
       "method": "método breve y reutilizable",
       "tip": "consejo concreto sobre esta pregunta"
@@ -548,11 +548,7 @@ ${JSON.stringify(promptQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003
           const retryPrompt = `
 Eres TUTOR de PeakScore. Explica en español sencillo estas respuestas incorrectas o no contestadas. Usa el texto compartido cuando corresponda; no inventes información.
 
-Cada explicación debe ser concreta y útil:
-1. Explica qué pide el enunciado y señala la pista exacta que se debe usar.
-2. Justifica por qué la opción correcta encaja.
-3. Contrasta la respuesta marcada o indica qué pista habría ayudado si quedó en blanco.
-4. Termina con un método breve y un consejo específico.
+Cada explicación debe ser concreta y útil. En el campo "explanation" usa obligatoriamente tres líneas con estos rótulos: "Paso 1:", "Paso 2:" y "Paso 3:". Paso 1: qué pide el enunciado. Paso 2: pista exacta, evidencia, regla u operación. Paso 3: por qué esa pista demuestra que la opción correcta encaja. En "why_your_answer", contrasta la opción marcada o di qué pista habría ayudado si quedó en blanco. Termina con un método breve y un consejo específico.
 
 Devuelve JSON válido, sin Markdown, exactamente con esta estructura:
 {"items":[{"question_id":"ID exacto copiado del dato recibido","number":1,"explanation":"razonamiento específico","why_your_answer":"por qué la elección no encaja","method":"dos pasos reutilizables","tip":"consejo concreto"}]}

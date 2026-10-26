@@ -1135,7 +1135,7 @@ export default function CasoCeroEvidenceClothesline() {
           <aside
             id="caso-cero-tools-drawer"
             aria-label="Herramientas de investigación"
-            className="pointer-events-auto mr-2 w-[min(296px,calc(100vw-58px))] overflow-hidden border border-[#9f7a49]/75 bg-[#080e14]/95 text-[#f1e7d5] shadow-[-12px_12px_34px_rgba(0,0,0,.55)] backdrop-blur-xl"
+            className="caso-cero-tools-panel pointer-events-auto mr-2 w-[296px] max-w-[calc(100vw_-_58px)] overflow-hidden border border-[#9f7a49]/75 bg-[#080e14]/95 text-[#f1e7d5] shadow-[-12px_12px_34px_rgba(0,0,0,.55)] backdrop-blur-xl"
           >
             <div className="flex items-center justify-between border-b border-[#8a6b43]/50 bg-[#171611]/90 px-4 py-3">
               <div className="flex items-center gap-2">
@@ -1205,6 +1205,12 @@ export default function CasoCeroEvidenceClothesline() {
         </button>
       </div>
 
+      {magnifierActive && (
+        <div className="pointer-events-none absolute bottom-4 right-14 z-[105] border border-[#9b804e]/70 bg-[#080d12]/90 px-3 py-2 text-[9px] font-black uppercase tracking-[.13em] text-[#f1d4a1] shadow-lg backdrop-blur-sm">
+          Lupa activa <span className="mx-1 text-[#7d8b94]">·</span> Esc para devolver
+        </div>
+      )}
+
       {magnifierActive && pointerPosition && (
         <div
           aria-hidden="true"
@@ -1255,6 +1261,16 @@ export default function CasoCeroEvidenceClothesline() {
       )}
 
       <style jsx global>{`
+        @keyframes caso-cero-tools-drawer-in {
+          from { opacity: 0; transform: translate3d(14px, 0, 0); }
+          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+        .caso-cero-tools-panel {
+          animation: caso-cero-tools-drawer-in 180ms ease-out both;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .caso-cero-tools-panel { animation: none; }
+        }
         .caso-cero-cinematic.caso-cero-loupe-active,
         .caso-cero-cinematic.caso-cero-loupe-active * {
           cursor: none !important;

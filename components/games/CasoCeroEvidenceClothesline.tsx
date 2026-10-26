@@ -4,7 +4,7 @@ import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState,
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Wrench, X } from "lucide-react";
 
 type EvidencePhoto = {
   src: string;
@@ -963,117 +963,10 @@ function EvidenceScene({
   );
 }
 
-function TabletopMagnifier3D() {
-  return (
-    <Canvas
-      orthographic
-      frameloop="demand"
-      dpr={1}
-      camera={{
-        position: [0, 0, 7],
-        left: -1.25,
-        right: 1.25,
-        top: 0.82,
-        bottom: -0.82,
-        near: 0.1,
-        far: 30,
-      }}
-      gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
-      onCreated={({ gl }) => {
-        gl.setClearColor("#000000", 0);
-        gl.outputColorSpace = THREE.SRGBColorSpace;
-        gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.08;
-      }}
-      style={{ display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
-    >
-      <ambientLight intensity={1.15} />
-      <directionalLight position={[-2.5, 3.5, 5]} intensity={3.4} />
-      <pointLight position={[1.6, -1.5, 3]} intensity={2.0} color="#e6b678" />
-      <pointLight position={[-2, 0.5, 2]} intensity={0.8} color="#b2d9e4" />
-
-      <group position={[0, -0.02, 0]} rotation={[0.16, -0.13, -0.12]} scale={1.0}>
-        {/* Soft tabletop contact shadow; transparent canvas keeps the room visible. */}
-        <mesh position={[0.12, -0.34, -0.16]} rotation={[0, 0, -0.3]} scale={[1.18, 0.34, 1]}>
-          <circleGeometry args={[0.62, 48]} />
-          <meshBasicMaterial color="#020304" transparent opacity={0.34} depthWrite={false} />
-        </mesh>
-
-        {/* Lens body: a short dark metal barrel gives the glass a real edge. */}
-        <mesh position={[-0.22, 0.18, 0.005]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.365, 0.365, 0.075, 64, 1, true]} />
-          <meshPhysicalMaterial color="#20272b" metalness={0.9} roughness={0.25} side={THREE.DoubleSide} />
-        </mesh>
-        <mesh position={[-0.22, 0.18, 0.038]} castShadow>
-          <torusGeometry args={[0.365, 0.052, 18, 72]} />
-          <meshPhysicalMaterial color="#b8c1c1" metalness={0.94} roughness={0.19} clearcoat={0.9} clearcoatRoughness={0.12} />
-        </mesh>
-        <mesh position={[-0.22, 0.18, 0.044]}>
-          <torusGeometry args={[0.319, 0.011, 10, 72]} />
-          <meshPhysicalMaterial color="#e0e1d8" metalness={0.82} roughness={0.22} />
-        </mesh>
-
-        {/* Pale blue-gray glass with a second polished surface highlight. */}
-        <mesh position={[-0.22, 0.18, 0.026]} scale={[1, 1, 0.12]}>
-          <sphereGeometry args={[0.322, 48, 24]} />
-          <meshPhysicalMaterial
-            color="#91b2bb"
-            metalness={0.04}
-            roughness={0.1}
-            clearcoat={1}
-            clearcoatRoughness={0.05}
-            transparent
-            opacity={0.48}
-            side={THREE.DoubleSide}
-            depthWrite={false}
-          />
-        </mesh>
-        <mesh position={[-0.34, 0.31, 0.052]} rotation={[0, 0, 0.72]}>
-          <capsuleGeometry args={[0.009, 0.12, 5, 12]} />
-          <meshBasicMaterial color="#f3fbff" transparent opacity={0.68} />
-        </mesh>
-        <mesh position={[-0.14, 0.02, 0.052]} rotation={[0, 0, 0.68]}>
-          <capsuleGeometry args={[0.005, 0.075, 4, 10]} />
-          <meshBasicMaterial color="#d8e9ed" transparent opacity={0.35} />
-        </mesh>
-
-        {/* Ferrule and black, rubberized handle; all parts are actual 3D meshes. */}
-        <group position={[0.29, -0.33, 0.015]} rotation={[0, 0, -Math.PI * 0.75]}>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.058, 0.066, 0.76, 32, 1]} />
-            <meshPhysicalMaterial color="#242a2d" metalness={0.76} roughness={0.27} clearcoat={0.85} clearcoatRoughness={0.18} />
-          </mesh>
-          <mesh position={[0, 0.035, 0.018]}>
-            <cylinderGeometry args={[0.048, 0.048, 0.47, 32, 1]} />
-            <meshPhysicalMaterial color="#111619" metalness={0.18} roughness={0.38} clearcoat={0.7} clearcoatRoughness={0.24} />
-          </mesh>
-          {[ -0.12, 0.0, 0.12, 0.24 ].map((y) => (
-            <mesh key={y} position={[0, y, 0.024]}>
-              <torusGeometry args={[0.049, 0.006, 8, 32]} />
-              <meshStandardMaterial color="#454d50" metalness={0.76} roughness={0.28} />
-            </mesh>
-          ))}
-          <mesh position={[0, -0.35, 0.01]}>
-            <cylinderGeometry args={[0.078, 0.078, 0.075, 32]} />
-            <meshPhysicalMaterial color="#c0c7c5" metalness={0.96} roughness={0.2} />
-          </mesh>
-          <mesh position={[0, -0.305, 0.012]}>
-            <torusGeometry args={[0.072, 0.008, 10, 32]} />
-            <meshStandardMaterial color="#6e777a" metalness={0.93} roughness={0.21} />
-          </mesh>
-          <mesh position={[0, 0.392, 0]}>
-            <sphereGeometry args={[0.059, 20, 16]} />
-            <meshPhysicalMaterial color="#202629" metalness={0.58} roughness={0.3} />
-          </mesh>
-        </group>
-      </group>
-    </Canvas>
-  );
-}
-
 export default function CasoCeroEvidenceClothesline() {
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
   const [mobile, setMobile] = useState(false);
+  const [toolsOpen, setToolsOpen] = useState(false);
   const [magnifierActive, setMagnifierActive] = useState(false);
   const [pointerPosition, setPointerPosition] = useState<{ x: number; y: number } | null>(null);
   const [magnifierTarget, setMagnifierTarget] = useState<MagnifierTarget | null>(null);
@@ -1145,7 +1038,10 @@ export default function CasoCeroEvidenceClothesline() {
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setMagnifierActive(false);
+      if (event.key === "Escape") {
+        setMagnifierActive(false);
+        setToolsOpen(true);
+      }
     };
     window.addEventListener("pointermove", movePointer, { passive: true });
     window.addEventListener("keydown", handleKeyDown);
@@ -1243,26 +1139,80 @@ export default function CasoCeroEvidenceClothesline() {
         </aside>
       )}
 
-      {!magnifierActive ? (
+      <div className="pointer-events-none absolute right-0 top-1/2 z-[110] flex -translate-y-1/2 items-stretch">
+        {toolsOpen && (
+          <aside
+            id="caso-cero-tools-drawer"
+            aria-label="Herramientas de investigación"
+            className="pointer-events-auto mr-2 w-[min(296px,calc(100vw-58px))] overflow-hidden border border-[#9f7a49]/75 bg-[#080e14]/95 text-[#f1e7d5] shadow-[-12px_12px_34px_rgba(0,0,0,.55)] backdrop-blur-xl"
+          >
+            <div className="flex items-center justify-between border-b border-[#8a6b43]/50 bg-[#171611]/90 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Wrench className="h-4 w-4 text-[#e3b76d]" />
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[.18em]">Herramientas</p>
+                  <p className="mt-0.5 text-[9px] text-[#9aa8b3]">EQUIPO DEL INVESTIGADOR</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setToolsOpen(false)}
+                aria-label="Cerrar herramientas"
+                className="grid h-8 w-8 place-items-center border border-[#4a4c48] text-[#cfc4b1] hover:border-[#d2a45c] hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="p-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveEvidence(null);
+                  setMagnifierTarget(null);
+                  setMagnifierActive(true);
+                  setToolsOpen(false);
+                }}
+                className="group flex min-h-[76px] w-full items-center gap-3 border border-[#9e7948]/65 bg-gradient-to-r from-[#2b2418] to-[#111820] p-3 text-left transition hover:border-[#f0ca85] hover:from-[#3a2c18] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0ca85]"
+              >
+                <span className="grid h-11 w-11 shrink-0 place-items-center border border-[#c3a16c]/55 bg-[#080c10] text-[#e3c58d] shadow-inner">
+                  <Search className="h-5 w-5" strokeWidth={1.65} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[12px] font-bold text-[#f4e7d1]">Lupa forense</span>
+                  <span className="mt-1 block text-[10px] leading-4 text-[#aeb9c2]">Amplía detalles de las fotografías de evidencia.</span>
+                </span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#c3a16c] transition-transform group-hover:translate-x-0.5" />
+              </button>
+
+              <div className="mt-2 border border-dashed border-[#46505a]/75 px-3 py-3">
+                <p className="text-[9px] font-bold uppercase tracking-[.12em] text-[#9baab6]">Equipo adicional</p>
+                <p className="mt-1 text-[10px] leading-4 text-[#74828d]">Se habilitará cuando las nuevas herramientas tengan una interacción propia dentro del caso.</p>
+              </div>
+            </div>
+
+            <div className="border-t border-[#36414a]/80 px-4 py-2 text-[9px] text-[#8f9ba7]">
+              <span className="text-[#d5b578]">ESC</span> · Devolver la herramienta
+            </div>
+          </aside>
+        )}
+
         <button
           type="button"
-          onClick={handleTakeMagnifier}
-          aria-label="Tomar la lupa de evidencia"
-          title="Tomar lupa de evidencia"
-          className="pointer-events-auto absolute bottom-[1%] left-[53%] z-40 grid h-[160px] w-[260px] -translate-x-1/2 place-items-center overflow-visible rounded-sm bg-transparent transition duration-200 hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0cb8a]"
+          onClick={() => {
+            if (!toolsOpen && magnifierActive) setMagnifierActive(false);
+            setToolsOpen((open) => !open);
+          }}
+          aria-label={toolsOpen ? "Cerrar menú de herramientas" : "Abrir menú de herramientas"}
+          aria-expanded={toolsOpen}
+          aria-controls="caso-cero-tools-drawer"
+          title="Herramientas"
+          className="pointer-events-auto flex h-[104px] w-10 flex-col items-center justify-center gap-2 border border-r-0 border-[#b18a52]/80 bg-[#080d12]/95 text-[#e8c17c] shadow-[-5px_5px_22px_rgba(0,0,0,.48)] transition hover:w-11 hover:border-[#f0cf91] hover:bg-[#191911] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0ca85]"
         >
-          <div className="h-[126px] w-[190px] drop-shadow-[0_9px_8px_rgba(0,0,0,.72)]">
-            <TabletopMagnifier3D />
-          </div>
-          <span className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#7e6746]/70 bg-[#080d12]/85 px-2 py-1 text-[8px] font-black uppercase tracking-[.16em] text-[#ead9ba] shadow-md">
-            Lupa de evidencia
-          </span>
+          {toolsOpen ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          <span className="text-[8px] font-black uppercase tracking-[.11em]" style={{ writingMode: "vertical-rl" }}>Herramientas</span>
         </button>
-      ) : (
-        <div aria-live="polite" className="pointer-events-auto absolute bottom-[5.5%] left-[53%] z-40 -translate-x-1/2 border border-[#9b804e]/70 bg-[#080d12]/85 px-3 py-2 text-[9px] font-black uppercase tracking-[.13em] text-[#f1d4a1] shadow-lg backdrop-blur-sm">
-          Lupa en uso · Esc para devolver
-        </div>
-      )}
+      </div>
 
       {magnifierActive && pointerPosition && (
         <div

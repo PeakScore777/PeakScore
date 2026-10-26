@@ -1,7 +1,7 @@
 "use client";
 
-import { Component, Suspense, useEffect, useMemo, useState, type ErrorInfo, type ReactNode } from "react";
-import { Canvas, useFrame, useLoader, useRef, useThree } from "@react-three/fiber";
+import { Component, Suspense, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { X } from "lucide-react";
 

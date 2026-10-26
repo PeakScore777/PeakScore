@@ -1297,51 +1297,36 @@ export default function ExamPage() {
             </div>
 
             <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-
-              Pregunta{" "}
-
-              {String(
-                currentQuestion + 1
-              ).padStart(2, "0")}
-
-              <span className="ml-2 text-slate-300">
-
-                /{" "}
-
-                {String(
-                  questions.length
-                ).padStart(2, "0")}
-
-              </span>
-
+              {bookletView
+                ? "Cuadernillo de práctica"
+                : `Pregunta ${String(currentQuestion + 1).padStart(2, "0")} / ${String(questions.length).padStart(2, "0")}`}
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Selecciona una sola respuesta.
-              Puedes cambiarla antes de finalizar.
+              {bookletView
+                ? "Resuelve la sección respetando el formato del cuadernillo y marca tus respuestas en la hoja final."
+                : "Selecciona una sola respuesta. Puedes cambiarla antes de finalizar."}
             </p>
 
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-          <button type="button" onClick={() => { setAnnotationMode((value) => !value); setPendingSelection(null); }} className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold ${annotationMode ? "border-amber-400 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-700"}`} aria-pressed={annotationMode}>
-            <Pencil size={16} /> {annotationMode ? "Lápiz activado" : "Lápiz"}
-          </button>
-          {annotationMode && <span className="text-xs text-slate-500">Selecciona texto y subráyalo.</span>}
-          {pendingSelection && <button type="button" onClick={saveUnderline} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white"><Highlighter size={16}/> Subrayar selección</button>}
-          {pendingSelection && <button type="button" onClick={() => setPendingSelection(null)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600" aria-label="Cancelar subrayado"><X size={16}/></button>}
-        </div>
+          {!bookletView && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => { setAnnotationMode((value) => !value); setPendingSelection(null); }} className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold ${annotationMode ? "border-amber-400 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-700"}`} aria-pressed={annotationMode}>
+                <Pencil size={16} /> {annotationMode ? "Lápiz activado" : "Lápiz"}
+              </button>
+              {annotationMode && <span className="text-xs text-slate-500">Selecciona texto y subráyalo.</span>}
+              {pendingSelection && <button type="button" onClick={saveUnderline} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white"><Highlighter size={16}/> Subrayar selección</button>}
+              {pendingSelection && <button type="button" onClick={() => setPendingSelection(null)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600" aria-label="Cancelar subrayado"><X size={16}/></button>}
+            </div>
+          )}
 
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-
-            <ShieldCheck
-              size={17}
-              className="text-emerald-600"
-            />
-
-            Respuesta única
-
-          </div>
+          {!bookletView && (
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+              <ShieldCheck size={17} className="text-emerald-600" />
+              Respuesta única
+            </div>
+          )}
 
         </div>
 

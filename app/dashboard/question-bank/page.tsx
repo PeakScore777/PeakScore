@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ZoomableImage from "@/components/ZoomableImage";
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
@@ -775,8 +775,11 @@ export default function QuestionBankPage() {
                               </span>
                             </div>
 
-                            <Image
-                              src={question.image_url} width={1200} height={800} unoptimized alt="Imagen de apoyo de la pregunta"
+                            <ZoomableImage
+                              src={question.image_url}
+                              alt="Imagen de apoyo de la pregunta"
+                              width={1200}
+                              height={800}
                               className="max-h-[500px] w-full rounded-xl object-contain"
                             />
                           </div>

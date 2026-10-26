@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import CasoCeroGame from "@/components/games/CasoCeroGame";
+import CasoCeroDeviceGate from "@/components/games/CasoCeroDeviceGate";
 
 export const metadata = {
   title: "Caso Cero | PeakScore Juegos",
@@ -12,5 +12,5 @@ export default async function CasoCeroPage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  return <CasoCeroGame />;
+  return <CasoCeroDeviceGate />;
 }

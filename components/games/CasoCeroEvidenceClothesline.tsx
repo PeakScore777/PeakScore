@@ -3,7 +3,7 @@
 import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 type EvidenceToolId = "magnifier" | "camera" | "tweezers" | "sample" | "microscope";
@@ -957,7 +957,7 @@ function ExternalRopeTextureMaps({ onLoaded }: { onLoaded: (maps: PbrTextureSet)
 
 function PhotographicRoomEnvironment() {
   const { scene, invalidate } = useThree();
-  const texture = useLoader(RGBELoader, "/api/caso-cero-hdri");
+  const texture = useLoader(HDRLoader, "/api/caso-cero-hdri");
 
   useEffect(() => {
     texture.mapping = THREE.EquirectangularReflectionMapping;

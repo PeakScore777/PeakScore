@@ -4,7 +4,96 @@ import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState,
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import { ChevronLeft, ChevronRight, Search, Wrench, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
+type EvidenceToolId = "magnifier" | "camera" | "tweezers" | "sample" | "microscope";
+
+const EVIDENCE_TOOLS: { id: EvidenceToolId; label: string }[] = [
+  { id: "magnifier", label: "Lupa forense" },
+  { id: "camera", label: "Cámara de evidencias" },
+  { id: "tweezers", label: "Pinzas de precisión" },
+  { id: "sample", label: "Frascos de muestras" },
+  { id: "microscope", label: "Microscopio" },
+];
+
+function ToolIllustration({ tool, className = "h-16 w-16" }: { tool: EvidenceToolId; className?: string }) {
+  if (tool === "magnifier") return (
+    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="mag-metal" x1="18" y1="16" x2="59" y2="61" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#f9faf7"/><stop offset=".22" stopColor="#9ca8ab"/><stop offset=".48" stopColor="#313a3e"/><stop offset=".72" stopColor="#e1e4e0"/><stop offset="1" stopColor="#626d72"/>
+        </linearGradient>
+        <radialGradient id="mag-glass" cx=".25" cy=".2" r=".9">
+          <stop stopColor="#f5ffff" stopOpacity=".95"/><stop offset=".42" stopColor="#a5ccd5" stopOpacity=".48"/><stop offset="1" stopColor="#3f6471" stopOpacity=".78"/>
+        </radialGradient>
+        <linearGradient id="mag-handle" x1="54" y1="55" x2="78" y2="84" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#8d999b"/><stop offset=".22" stopColor="#20272b"/><stop offset=".58" stopColor="#101518"/><stop offset=".82" stopColor="#7e8a8e"/><stop offset="1" stopColor="#283034"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="53" cy="79" rx="28" ry="6" fill="#152025" opacity=".13"/>
+      <path d="M53 55 78 82" stroke="#111619" strokeWidth="14" strokeLinecap="round"/>
+      <path d="M53 55 78 82" stroke="url(#mag-handle)" strokeWidth="10" strokeLinecap="round"/>
+      <path d="M51 53 60 62" stroke="#394348" strokeWidth="13" strokeLinecap="round"/>
+      <path d="M51 53 60 62" stroke="url(#mag-metal)" strokeWidth="8" strokeLinecap="round"/>
+      <circle cx="36" cy="35" r="25" fill="#151b1e"/>
+      <circle cx="36" cy="35" r="23" fill="url(#mag-metal)"/>
+      <circle cx="36" cy="35" r="18.5" fill="#e2e9e6"/>
+      <circle cx="36" cy="35" r="16.5" fill="url(#mag-glass)" stroke="#f8ffff" strokeOpacity=".8"/>
+      <path d="M24 23c5-6 12-7 18-3" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity=".9"/>
+      <path d="M25 45c6 6 14 7 21 2" stroke="#e7fbff" strokeWidth="1.8" strokeLinecap="round" opacity=".55"/>
+    </svg>
+  );
+  if (tool === "camera") return (
+    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="cam-body" x1="20" y1="24" x2="76" y2="74" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#515b60"/><stop offset=".44" stopColor="#20272a"/><stop offset=".78" stopColor="#0c1012"/><stop offset="1" stopColor="#687276"/>
+        </linearGradient>
+        <radialGradient id="cam-lens"><stop stopColor="#b8e4e9"/><stop offset=".26" stopColor="#456c79"/><stop offset=".62" stopColor="#14242d"/><stop offset="1" stopColor="#080d11"/></radialGradient>
+      </defs>
+      <ellipse cx="48" cy="77" rx="30" ry="6" fill="#152025" opacity=".13"/>
+      <path d="M24 31h12l5-7h18l5 7h9a6 6 0 0 1 6 6v29a6 6 0 0 1-6 6H24a6 6 0 0 1-6-6V37a6 6 0 0 1 6-6Z" fill="url(#cam-body)" stroke="#101619" strokeWidth="2"/>
+      <path d="M24 33h12l5-7h18l5 7" stroke="#d1d6d2" strokeWidth="2" opacity=".8"/>
+      <circle cx="49" cy="49" r="17" fill="#080c0f" stroke="#b9c3c2" strokeWidth="3"/>
+      <circle cx="49" cy="49" r="12.5" fill="url(#cam-lens)" stroke="#56646a" strokeWidth="2"/>
+      <circle cx="45" cy="44" r="3" fill="#e3fbff" opacity=".8"/>
+      <rect x="60" y="37" width="7" height="4" rx="1.5" fill="#e2c88d"/>
+    </svg>
+  );
+  if (tool === "tweezers") return (
+    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
+      <defs><linearGradient id="tweezer-steel" x1="22" y1="10" x2="69" y2="84" gradientUnits="userSpaceOnUse"><stop stopColor="#f7faf6"/><stop offset=".22" stopColor="#8f9a9d"/><stop offset=".43" stopColor="#e0e5e1"/><stop offset=".68" stopColor="#535e63"/><stop offset=".86" stopColor="#cbd1cf"/><stop offset="1" stopColor="#657277"/></linearGradient></defs>
+      <ellipse cx="47" cy="77" rx="21" ry="6" fill="#152025" opacity=".12"/>
+      <path d="M27 13c1 15 12 28 18 40 6 12 9 22 12 28" stroke="#252d30" strokeWidth="11" strokeLinecap="round"/>
+      <path d="M27 13c1 15 12 28 18 40 6 12 9 22 12 28" stroke="url(#tweezer-steel)" strokeWidth="7" strokeLinecap="round"/>
+      <path d="M68 13c-1 15-12 28-18 40-6 12-9 22-12 28" stroke="#252d30" strokeWidth="11" strokeLinecap="round"/>
+      <path d="M68 13c-1 15-12 28-18 40-6 12-9 22-12 28" stroke="url(#tweezer-steel)" strokeWidth="7" strokeLinecap="round"/>
+      <path d="M27 13 25 7M68 13l2-6" stroke="#f7f9f5" strokeWidth="3" strokeLinecap="round"/>
+    </svg>
+  );
+  if (tool === "sample") return (
+    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
+      <defs><linearGradient id="vial-glass" x1="18" y1="12" x2="60" y2="82" gradientUnits="userSpaceOnUse"><stop stopColor="#fff" stopOpacity=".95"/><stop offset=".48" stopColor="#b9dadd" stopOpacity=".35"/><stop offset=".82" stopColor="#72a8b5" stopOpacity=".6"/><stop offset="1" stopColor="#edf6f4" stopOpacity=".9"/></linearGradient></defs>
+      <ellipse cx="47" cy="80" rx="27" ry="5" fill="#152025" opacity=".12"/>
+      <g transform="translate(14 9) rotate(-7 21 39)"><rect x="12" y="7" width="18" height="8" rx="2" fill="#777f80" stroke="#4c5557"/><path d="M14 15v8l-4 7v34a7 7 0 0 0 7 7h6a7 7 0 0 0 7-7V30l-4-7v-8" fill="url(#vial-glass)" stroke="#74898d" strokeWidth="1.6"/><path d="M12 49h16v15a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6Z" fill="#78b7c2" opacity=".65"/><path d="M17 25v39" stroke="white" strokeWidth="1.8" opacity=".85"/></g>
+      <g transform="translate(51 20) rotate(8 12 28)"><rect x="3" y="0" width="18" height="8" rx="2" fill="#e4e1d7" stroke="#9aa3a0"/><path d="M5 8v8l-3 6v36a6 6 0 0 0 6 6h6a6 6 0 0 0 6-6V22l-3-6V8" fill="url(#vial-glass)" stroke="#71868a" strokeWidth="1.5"/><path d="M3 39h14v19a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5Z" fill="#e3c88f" opacity=".72"/><path d="M8 22v36" stroke="white" strokeWidth="1.7" opacity=".85"/></g>
+    </svg>
+  );
+  return (
+    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
+      <defs><linearGradient id="micro-metal" x1="23" y1="12" x2="69" y2="74" gradientUnits="userSpaceOnUse"><stop stopColor="#f7f8f3"/><stop offset=".28" stopColor="#8e999b"/><stop offset=".56" stopColor="#3c474b"/><stop offset=".81" stopColor="#d4dbd7"/><stop offset="1" stopColor="#657175"/></linearGradient></defs>
+      <ellipse cx="49" cy="80" rx="27" ry="5" fill="#152025" opacity=".12"/>
+      <path d="M32 15h20v8H32z" fill="#333d41"/>
+      <path d="M35 20c-1 11 3 20 12 25l-6 8c-14-8-19-20-18-33" fill="url(#micro-metal)" stroke="#313a3e" strokeWidth="2"/>
+      <path d="M49 40c11 5 15 14 11 25l-10 2c2-9-1-14-8-17Z" fill="#252e32" stroke="#8b9698" strokeWidth="2"/>
+      <path d="M43 52 34 65H58" stroke="#899699" strokeWidth="8" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M24 73h48" stroke="#333d41" strokeWidth="8" strokeLinecap="round"/>
+      <path d="M27 73h42" stroke="#a8b0ae" strokeWidth="3" strokeLinecap="round"/>
+      <circle cx="51" cy="42" r="5" fill="#d5d9d2" stroke="#344045" strokeWidth="2"/>
+      <rect x="47" y="22" width="13" height="8" rx="2" transform="rotate(30 47 22)" fill="#1d2528" stroke="#7d888a"/>
+    </svg>
+  );
+}
 
 type EvidencePhoto = {
   src: string;
@@ -967,6 +1056,7 @@ export default function CasoCeroEvidenceClothesline() {
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
   const [mobile, setMobile] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [activeTool, setActiveTool] = useState<EvidenceToolId | null>(null);
   const [magnifierActive, setMagnifierActive] = useState(false);
   const [pointerPosition, setPointerPosition] = useState<{ x: number; y: number } | null>(null);
   const [magnifierTarget, setMagnifierTarget] = useState<MagnifierTarget | null>(null);
@@ -977,7 +1067,12 @@ export default function CasoCeroEvidenceClothesline() {
   const handlePhotoClick = useCallback((index: number) => {
     if (magnifierActive) return;
     setActiveEvidence(index);
-  }, [magnifierActive]);
+    if (activeTool) {
+      setActiveTool(null);
+      setMagnifierActive(false);
+      setToolsOpen(true);
+    }
+  }, [activeTool, magnifierActive]);
 
   const handlePhotoPointerMove = useCallback((
     _index: number,
@@ -1013,10 +1108,10 @@ export default function CasoCeroEvidenceClothesline() {
   }, []);
 
   useEffect(() => {
-    if (!magnifierActive) {
+    if (!activeTool) {
       setMagnifierTarget(null);
       setPointerPosition(null);
-      rootRef.current?.closest(".caso-cero-cinematic")?.classList.remove("caso-cero-loupe-active");
+      rootRef.current?.closest(".caso-cero-cinematic")?.classList.remove("caso-cero-loupe-active", "caso-cero-tool-active");
       return;
     }
 
@@ -1028,7 +1123,8 @@ export default function CasoCeroEvidenceClothesline() {
 
       const inside = event.clientX >= rect.left && event.clientX <= rect.right &&
         event.clientY >= rect.top && event.clientY <= rect.bottom;
-      sceneRoot?.classList.toggle("caso-cero-loupe-active", inside);
+      sceneRoot?.classList.toggle("caso-cero-loupe-active", inside && magnifierActive);
+      sceneRoot?.classList.toggle("caso-cero-tool-active", inside && activeTool !== null);
       if (!inside) {
         setPointerPosition(null);
         setMagnifierTarget(null);
@@ -1039,6 +1135,7 @@ export default function CasoCeroEvidenceClothesline() {
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        setActiveTool(null);
         setMagnifierActive(false);
         setToolsOpen(true);
       }
@@ -1048,9 +1145,9 @@ export default function CasoCeroEvidenceClothesline() {
     return () => {
       window.removeEventListener("pointermove", movePointer);
       window.removeEventListener("keydown", handleKeyDown);
-      sceneRoot?.classList.remove("caso-cero-loupe-active");
+      sceneRoot?.classList.remove("caso-cero-loupe-active", "caso-cero-tool-active");
     };
-  }, [magnifierActive]);
+  }, [activeTool, magnifierActive]);
 
   return (
     <div
@@ -1135,55 +1232,34 @@ export default function CasoCeroEvidenceClothesline() {
           <aside
             id="caso-cero-tools-drawer"
             aria-label="Herramientas de investigación"
-            className="caso-cero-tools-panel pointer-events-auto mr-2 w-[296px] max-w-[calc(100vw_-_58px)] overflow-hidden border border-[#9f7a49]/75 bg-[#080e14]/95 text-[#f1e7d5] shadow-[-12px_12px_34px_rgba(0,0,0,.55)] backdrop-blur-xl"
+            className="caso-cero-tools-panel pointer-events-auto mr-2 w-[min(246px,calc(100vw-52px))] rounded-[4px] border border-[#d7d7d0] bg-[#f5f5f0] p-3 shadow-[-9px_12px_28px_rgba(0,0,0,.28)]"
           >
-            <div className="flex items-center justify-between border-b border-[#8a6b43]/50 bg-[#171611]/90 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Wrench className="h-4 w-4 text-[#e3b76d]" />
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[.18em]">Herramientas</p>
-                  <p className="mt-0.5 text-[9px] text-[#9aa8b3]">EQUIPO DEL INVESTIGADOR</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setToolsOpen(false)}
-                aria-label="Cerrar herramientas"
-                className="grid h-8 w-8 place-items-center border border-[#4a4c48] text-[#cfc4b1] hover:border-[#d2a45c] hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="p-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveEvidence(null);
-                  setMagnifierTarget(null);
-                  setMagnifierActive(true);
-                  setToolsOpen(false);
-                }}
-                className="group flex min-h-[76px] w-full items-center gap-3 border border-[#9e7948]/65 bg-gradient-to-r from-[#2b2418] to-[#111820] p-3 text-left transition hover:border-[#f0ca85] hover:from-[#3a2c18] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0ca85]"
-              >
-                <span className="grid h-11 w-11 shrink-0 place-items-center border border-[#c3a16c]/55 bg-[#080c10] text-[#e3c58d] shadow-inner">
-                  <Search className="h-5 w-5" strokeWidth={1.65} />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-[12px] font-bold text-[#f4e7d1]">Lupa forense</span>
-                  <span className="mt-1 block text-[10px] leading-4 text-[#aeb9c2]">Amplía detalles de las fotografías de evidencia.</span>
-                </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-[#c3a16c] transition-transform group-hover:translate-x-0.5" />
-              </button>
-
-              <div className="mt-2 border border-dashed border-[#46505a]/75 px-3 py-3">
-                <p className="text-[9px] font-bold uppercase tracking-[.12em] text-[#9baab6]">Equipo adicional</p>
-                <p className="mt-1 text-[10px] leading-4 text-[#74828d]">Se habilitará cuando las nuevas herramientas tengan una interacción propia dentro del caso.</p>
-              </div>
-            </div>
-
-            <div className="border-t border-[#36414a]/80 px-4 py-2 text-[9px] text-[#8f9ba7]">
-              <span className="text-[#d5b578]">ESC</span> · Devolver la herramienta
+            <div className="grid grid-cols-3 gap-2">
+              {EVIDENCE_TOOLS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveEvidence(null);
+                    setMagnifierTarget(null);
+                    setPointerPosition(null);
+                    setActiveTool(item.id);
+                    setMagnifierActive(item.id === "magnifier");
+                    setToolsOpen(false);
+                  }}
+                  aria-label={item.label}
+                  title={item.label}
+                  className={[
+                    "group grid aspect-square place-items-center rounded-[3px] border bg-white p-1.5 shadow-[0_1px_2px_rgba(0,0,0,.07)] transition",
+                    activeTool === item.id
+                      ? "border-[#757b7d] ring-1 ring-[#757b7d]/20"
+                      : "border-[#e0e0d9] hover:border-[#a4a9a7] hover:bg-[#fdfdf9]",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#343a3d]",
+                  ].join(" ")}
+                >
+                  <ToolIllustration tool={item.id} className="h-full w-full max-h-[62px] max-w-[62px] transition-transform duration-150 group-hover:scale-[1.04]" />
+                </button>
+              ))}
             </div>
           </aside>
         )}
@@ -1191,23 +1267,29 @@ export default function CasoCeroEvidenceClothesline() {
         <button
           type="button"
           onClick={() => {
-            if (!toolsOpen && magnifierActive) setMagnifierActive(false);
+            if (!toolsOpen && activeTool) {
+              setActiveTool(null);
+              setMagnifierActive(false);
+            }
             setToolsOpen((open) => !open);
           }}
-          aria-label={toolsOpen ? "Cerrar menú de herramientas" : "Abrir menú de herramientas"}
+          aria-label={toolsOpen ? "Cerrar herramientas" : "Abrir herramientas"}
           aria-expanded={toolsOpen}
           aria-controls="caso-cero-tools-drawer"
           title="Herramientas"
-          className="pointer-events-auto flex h-[104px] w-10 flex-col items-center justify-center gap-2 border border-r-0 border-[#b18a52]/80 bg-[#080d12]/95 text-[#e8c17c] shadow-[-5px_5px_22px_rgba(0,0,0,.48)] transition hover:w-11 hover:border-[#f0cf91] hover:bg-[#191911] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0ca85]"
+          className="pointer-events-auto grid h-[62px] w-8 place-items-center rounded-l-[3px] border border-r-0 border-[#dadad4] bg-[#f7f7f2] text-[#171a1c] shadow-[-5px_5px_15px_rgba(0,0,0,.2)] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#42494c]"
         >
-          {toolsOpen ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-          <span className="text-[8px] font-black uppercase tracking-[.11em]" style={{ writingMode: "vertical-rl" }}>Herramientas</span>
+          {toolsOpen ? <ChevronRight className="h-5 w-5" strokeWidth={2.5} /> : <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />}
         </button>
       </div>
 
-      {magnifierActive && (
-        <div className="pointer-events-none absolute bottom-4 right-14 z-[105] border border-[#9b804e]/70 bg-[#080d12]/90 px-3 py-2 text-[9px] font-black uppercase tracking-[.13em] text-[#f1d4a1] shadow-lg backdrop-blur-sm">
-          Lupa activa <span className="mx-1 text-[#7d8b94]">·</span> Esc para devolver
+            {activeTool && activeTool !== "magnifier" && pointerPosition && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute z-[100] h-[62px] w-[62px]"
+          style={{ left: pointerPosition.x - 15, top: pointerPosition.y - 15 }}
+        >
+          <ToolIllustration tool={activeTool} className="h-full w-full drop-shadow-[0_4px_4px_rgba(0,0,0,.48)]" />
         </div>
       )}
 
@@ -1261,21 +1343,20 @@ export default function CasoCeroEvidenceClothesline() {
       )}
 
       <style jsx global>{`
-        @keyframes caso-cero-tools-drawer-in {
-          from { opacity: 0; transform: translate3d(14px, 0, 0); }
-          to { opacity: 1; transform: translate3d(0, 0, 0); }
+        @keyframes caso-cero-tools-board-in {
+          from { opacity: 0; transform: translate3d(10px, 0, 0) scale(.985); }
+          to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
         }
-        .caso-cero-tools-panel {
-          animation: caso-cero-tools-drawer-in 180ms ease-out both;
-        }
+        .caso-cero-tools-panel { animation: caso-cero-tools-board-in 160ms ease-out both; }
         @media (prefers-reduced-motion: reduce) {
           .caso-cero-tools-panel { animation: none; }
         }
         .caso-cero-cinematic.caso-cero-loupe-active,
-        .caso-cero-cinematic.caso-cero-loupe-active * {
+        .caso-cero-cinematic.caso-cero-loupe-active *,
+        .caso-cero-cinematic.caso-cero-tool-active,
+        .caso-cero-cinematic.caso-cero-tool-active * {
           cursor: none !important;
         }
-      `}</style>
-    </div>
+      `}</style>    </div>
   );
 }

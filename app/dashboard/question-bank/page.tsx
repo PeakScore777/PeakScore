@@ -778,8 +778,6 @@ export default function QuestionBankPage() {
                             <ZoomableImage
                               src={question.image_url}
                               alt="Imagen de apoyo de la pregunta"
-                              width={1200}
-                              height={800}
                               className="max-h-[500px] w-full rounded-xl object-contain"
                             />
                           </div>

@@ -584,32 +584,46 @@ ${JSON.stringify(retryQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003e
       const items = reviewedQuestions.map(
         ({ question, englishSet, selectedAnswer, correctAnswer, number }) => {
           const generated = generatedById.get(question.id);
+          const options = getQuestionOptions(question, englishSet ?? undefined);
+          const selectedOptionText = selectedAnswer ? options[selectedAnswer] : null;
+          const correctOptionText = options[correctAnswer] ?? null;
+
+          const fallbackWhy = selectedAnswer
+            ? `Marcaste ${selectedAnswer}${selectedOptionText ? ` (“${selectedOptionText}”)` : ""}, pero la clave registrada en el banco es ${correctAnswer}${correctOptionText ? ` (“${correctOptionText}”)` : ""}. Compara ambas opciones con la pista y el objetivo del enunciado; la clave por sí sola no sustituye el razonamiento.`
+            : `La pregunta quedó sin responder. La clave registrada es ${correctAnswer}${correctOptionText ? ` (“${correctOptionText}”)` : ""}. Al retomarla, identifica primero qué pide el enunciado y qué dato o evidencia permite descartar las demás opciones.`;
+
           return {
             questionId: question.id,
             number,
             question: question.question,
             context: getQuestionContext(question, englishSet ?? undefined),
-            options: getQuestionOptions(question, englishSet ?? undefined),
+            options,
             selectedAnswer,
             correctAnswer,
             explanation:
               generated?.explanation ||
               question.explanation ||
-              "No encontramos una explicación guardada para esta pregunta. TUTOR intentará preparar una explicación personalizada si la IA está disponible.",
-            whyYourAnswer: generated?.why_your_answer ?? "",
-            method: generated?.method ?? "",
-            tip: generated?.tip ?? "",
+              "No encontramos una explicación guardada para esta pregunta. La clave aparece como referencia, pero no equivale a una explicación personalizada.",
+            whyYourAnswer: generated?.why_your_answer?.trim() || fallbackWhy,
+            method:
+              generated?.method ||
+              "1. Identifica qué te pide el enunciado y señala la pista principal. 2. Comprueba qué opción encaja con esa pista y descarta las que no responden a la pregunta.",
+            tip:
+              generated?.tip ||
+              "Antes de marcar, comprueba que la opción responda a todo lo que pregunta el enunciado, no solo a una palabra que reconoces.",
             source: generated?.explanation ? "ai" : question.explanation ? "official" : "unavailable",
           };
         },
       );
+      const hasPersonalizedExplanations = items.some((item) => item.source === "ai");
 
       return NextResponse.json({
         success: true,
-        source: "ai",
+        source: hasPersonalizedExplanations ? "ai" : "official",
         summary:
-          parsed.summary ??
-          "Revisemos cada error y convirtámoslo en una oportunidad para mejorar.",
+          hasPersonalizedExplanations && parsed.summary
+            ? parsed.summary
+            : "Compara tu elección con la clave y revisa las pistas de cada pregunta. Cuando TUTOR pueda personalizar el análisis, añadirá el razonamiento específico, un método y un consejo por error.",
         items,
       });
     } catch (error) {
@@ -628,9 +642,12 @@ ${JSON.stringify(retryQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003e
           correctAnswer,
           explanation:
             question.explanation ??
-            "TUTOR no pudo generar una explicación nueva en este momento. Inténtalo de nuevo más tarde.",
-          method: "",
-          tip: "",
+            "TUTOR no pudo generar una explicación personalizada en este momento. La clave del banco sirve como referencia, pero no sustituye el razonamiento.",
+          whyYourAnswer: selectedAnswer
+            ? `Marcaste ${selectedAnswer}, pero la clave del banco es ${correctAnswer}. Compara la opción marcada con la correcta y revisa qué pista del enunciado descarta tu elección.`
+            : `La dejaste sin responder. La clave del banco es ${correctAnswer}; busca primero qué pide el enunciado y qué evidencia permite elegir esa opción.`,
+          method: "Identifica qué pide la pregunta y la pista principal; después verifica qué opción encaja con esa pista.",
+          tip: "Comprueba la opción completa antes de elegirla y no te guíes solo por una palabra parecida.",
           source: question.explanation ? "official" : "unavailable",
         }),
       );

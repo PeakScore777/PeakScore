@@ -428,10 +428,25 @@ export async function POST(request: Request) {
     let availableQuestions = (questions ?? []) as Question[];
 
     if (subject === "Inglés") {
-      // Una práctica de Inglés es una sección completa de un solo conjunto,
-      // no una mezcla de sesiones ni una cantidad recortada por el usuario.
-      const questionsBySet = new Map<string, Question[]>();
+      // A practice simulation corresponds to one published set/session.
+      // Never combine different versions or let the user trim the section.
+      const expectedQuestionCount = getEnglishPartQuestionCount(
+        selectedEnglishFormat!,
+        selectedEnglishPart!,
+      );
 
+      if (expectedQuestionCount === null) {
+        return NextResponse.json(
+          { success: false, error: "No encontramos la cantidad de preguntas definida para esta parte." },
+          { status: 400 },
+        );
+      }
+
+      const is2026Part3 =
+        selectedEnglishFormat === "saber11_2026" &&
+        selectedEnglishPart === "3";
+
+      const questionsBySet = new Map<string, Question[]>();
       for (const candidate of availableQuestions) {
         if (!candidate.english_set_id) continue;
         const group = questionsBySet.get(candidate.english_set_id) ?? [];
@@ -439,15 +454,34 @@ export async function POST(request: Request) {
         questionsBySet.set(candidate.english_set_id, group);
       }
 
-      const completeSections = [...questionsBySet.values()].filter(
-        (section) => section.length > 0,
-      );
+      const completeSections = [...questionsBySet.values()]
+        .map((section) =>
+          [...section].sort((a, b) => {
+            const positionA = a.english_position ?? a.question_number ?? 0;
+            const positionB = b.english_position ?? b.question_number ?? 0;
+            return positionA - positionB;
+          }),
+        )
+        .filter((section) =>
+          is2026Part3
+            ? section.length >= expectedQuestionCount
+            : section.length === expectedQuestionCount,
+        );
 
       if (completeSections.length === 0) {
         return NextResponse.json(
           {
             success: false,
-            error: `La Parte ${selectedEnglishPart} de ${selectedEnglishFormat === "historical" ? "formato histórico" : "Saber 11 · 2026 Cal A"} todavía no tiene preguntas activas en un conjunto publicado. Revisa, publica y activa la sección completa en el banco de Inglés.`,
+            error:
+              "La Parte " +
+              selectedEnglishPart +
+              " de " +
+              (selectedEnglishFormat === "historical"
+                ? "formato histórico"
+                : "Saber 11 · 2026 Cal A") +
+              " no tiene un conjunto publicado con la sección completa de " +
+              expectedQuestionCount +
+              " preguntas activas. Revisa que todas las preguntas estén publicadas y activas en el banco de Inglés.",
           },
           { status: 400 },
         );
@@ -457,11 +491,11 @@ export async function POST(request: Request) {
         Math.floor(Math.random() * completeSections.length)
       ];
 
-      availableQuestions = [...chosenSection].sort((a, b) => {
-        const positionA = a.english_position ?? a.question_number ?? 0;
-        const positionB = b.english_position ?? b.question_number ?? 0;
-        return positionA - positionB;
-      });
+      // The 2026 version of Part 3 uses five questions from the shared
+      // seven-question source used by the historical booklet.
+      availableQuestions = is2026Part3
+        ? chosenSection.slice(0, expectedQuestionCount)
+        : chosenSection;
       questionAmount = availableQuestions.length;
     } else {
       /* =====================================================
@@ -471,7 +505,10 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             success: false,
-            error: `Hay ${availableQuestions.length} preguntas activas disponibles para ${subject}, pero seleccionaste ${questionAmount}. Publica más preguntas revisadas o elige una cantidad menor.`,
+            error: "Hay " + availableQuestions.length +
+              " preguntas activas disponibles para " + subject +
+              ", pero seleccionaste " + questionAmount +
+              ". Publica más preguntas revisadas o elige una cantidad menor.",
           },
           { status: 400 },
         );

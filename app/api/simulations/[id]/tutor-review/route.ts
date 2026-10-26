@@ -439,11 +439,28 @@ export async function POST(
         ),
         english_part: question.english_part,
         english_position: question.english_position,
-        english_part: question.english_part,
-        english_position: question.english_position,
         english_format: englishSet?.booklet_format ?? null,
       }),
     );
+
+    const relevantEnglishSetIds = new Set(
+      reviewedQuestions
+        .map(({ question }) => question.english_set_id)
+        .filter((id): id is string => Boolean(id)),
+    );
+    const sharedEnglishMaterials = [...englishSetMap.values()]
+      .filter((set) => relevantEnglishSetIds.has(set.id))
+      .map((set) => ({
+        english_set_id: set.id,
+        title: set.title,
+        shared_title: set.shared_title,
+        part: set.part,
+        format: set.booklet_format,
+        instructions: set.instructions,
+        shared_text: set.shared_text,
+        word_bank: set.word_bank,
+        shared_image_available: Boolean(set.shared_image_url),
+      }));
 
     const prompt = `
 Eres TUTOR de PeakScore: un tutor académico amable, preciso y paciente que acompaña a estudiantes que se preparan para el Saber 11 colombiano. Habla en español claro, sin infantilizar ni regañar. No eres el tutor de Ciencias de los niveles; ayudas a revisar este simulacro de cualquier materia.
@@ -474,6 +491,10 @@ Reglas obligatorias para CADA pregunta:
 }
 - Debe haber exactamente un elemento por cada pregunta recibida y usar su question_id exacto.
 
+<material_compartido_json>
+${JSON.stringify(sharedEnglishMaterials).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026")}
+</material_compartido_json>
+
 <preguntas_json>
 ${JSON.stringify(promptQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026")}
 </preguntas_json>`;
@@ -489,9 +510,76 @@ ${JSON.stringify(promptQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003
         throw new Error("TUTOR no devolvió una explicación de texto.");
       }
       const parsed = parseAIJson(raw);
-      const generatedById = new Map(
-        (parsed.items ?? []).map((item) => [item.question_id, item]),
+      const validQuestionIds = new Set(reviewedQuestions.map(({ question }) => question.id));
+      const questionIdByNumber = new Map(
+        reviewedQuestions.map(({ question, number }) => [number, question.id]),
       );
+      const generatedById = new Map<string, GeneratedExplanation>();
+
+      const mapGeneratedItems = (generatedItems: GeneratedExplanation[]) => {
+        for (const generated of generatedItems) {
+          const normalizedId = validQuestionIds.has(generated.question_id)
+            ? generated.question_id
+            : generated.number !== undefined
+              ? questionIdByNumber.get(generated.number)
+              : undefined;
+
+          if (normalizedId && !generatedById.has(normalizedId)) {
+            generatedById.set(normalizedId, {
+              ...generated,
+              question_id: normalizedId,
+            });
+          }
+        }
+      };
+
+      mapGeneratedItems(parsed.items ?? []);
+
+      // Si el modelo devuelve un lote incompleto, reintentamos únicamente las
+      // preguntas que no tienen explicación asociada antes de usar el fallback del banco.
+      const missingQuestions = reviewedQuestions.filter(
+        ({ question }) => !generatedById.has(question.id),
+      );
+
+      if (missingQuestions.length > 0) {
+        try {
+          const missingIds = new Set(missingQuestions.map(({ question }) => question.id));
+          const retryQuestions = promptQuestions.filter((item) => missingIds.has(item.question_id));
+          const retryPrompt = `
+Eres TUTOR de PeakScore. Explica en español sencillo estas respuestas incorrectas o no contestadas. Usa el texto compartido cuando corresponda; no inventes información.
+
+Cada explicación debe ser concreta y útil:
+1. Explica qué pide el enunciado y señala la pista exacta que se debe usar.
+2. Justifica por qué la opción correcta encaja.
+3. Contrasta la respuesta marcada o indica qué pista habría ayudado si quedó en blanco.
+4. Termina con un método breve y un consejo específico.
+
+Devuelve JSON válido, sin Markdown, exactamente con esta estructura:
+{"items":[{"question_id":"ID exacto copiado del dato recibido","number":1,"explanation":"razonamiento específico","why_your_answer":"por qué la elección no encaja","method":"dos pasos reutilizables","tip":"consejo concreto"}]}
+
+<material_compartido_json>
+${JSON.stringify(sharedEnglishMaterials).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026")}
+</material_compartido_json>
+<preguntas_json>
+${JSON.stringify(retryQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026")}
+</preguntas_json>`;
+
+          const retryResponse = await generateAI({
+            prompt: retryPrompt,
+            task: "tutor",
+            useFallback: true,
+          });
+          const retryRaw = retryResponse.text?.trim() ?? "";
+          if (retryRaw) {
+            const retryParsed = parseAIJson(retryRaw);
+            mapGeneratedItems(retryParsed.items ?? []);
+          }
+        } catch (retryError) {
+          console.warn("[PeakScore Tutor] El reintento de explicaciones quedó incompleto.", {
+            errorName: retryError instanceof Error ? retryError.name : "UNKNOWN",
+          });
+        }
+      }
 
       const items = reviewedQuestions.map(
         ({ question, englishSet, selectedAnswer, correctAnswer, number }) => {

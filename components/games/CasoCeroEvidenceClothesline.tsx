@@ -1,8 +1,8 @@
 "use client";
 
 import { Component, Suspense, useEffect, useMemo, useState, type ErrorInfo, type ReactNode } from "react";
-import { Canvas } from "@react-three/fiber";
-import { Image as DreiImage, OrthographicCamera } from "@react-three/drei";
+import { Canvas, useThree } from "@react-three/fiber";
+import { Image as DreiImage } from "@react-three/drei";
 import * as THREE from "three";
 import { X } from "lucide-react";
 
@@ -301,6 +301,30 @@ function EvidenceCard({
   );
 }
 
+function CameraFraming({ mobile }: { mobile: boolean }) {
+  const { camera, size } = useThree();
+
+  useEffect(() => {
+    if (!(camera instanceof THREE.OrthographicCamera)) return;
+
+    // Match the world-space frustum to the actual canvas aspect ratio.
+    // The previous fixed [-1, 1] camera clipped the evidence cards on wide screens.
+    const visibleHeight = mobile ? 2.7 : 2.75;
+    const aspect = size.width / Math.max(size.height, 1);
+    const visibleWidth = visibleHeight * aspect;
+
+    camera.left = -visibleWidth / 2;
+    camera.right = visibleWidth / 2;
+    camera.top = visibleHeight / 2;
+    camera.bottom = -visibleHeight / 2;
+    camera.position.set(0, 0.12, 10);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+  }, [camera, size.width, size.height, mobile]);
+
+  return null;
+}
+
 function EvidenceScene({
   mobile,
   onSelect,
@@ -308,10 +332,17 @@ function EvidenceScene({
   mobile: boolean;
   onSelect: (index: number) => void;
 }) {
-  const cardScale = mobile ? 0.72 : 1;
-  const positions: [number, number, number][] = mobile
-    ? [[-1.12, -0.02, 0], [0, -0.02, 0], [1.12, -0.02, 0]]
-    : [[-2.38, -0.02, 0], [0, -0.02, 0], [2.38, -0.02, 0]];
+  const { size } = useThree();
+  const cardScale = mobile ? 0.86 : 1;
+  const visibleHeight = mobile ? 2.7 : 2.75;
+  const halfWorldWidth = (size.width / Math.max(size.height, 1)) * visibleHeight / 2;
+  const outerX = mobile ? 1.35 : halfWorldWidth * 0.68;
+  const ropeX = mobile ? 2.15 : halfWorldWidth * 0.93;
+  const positions: [number, number, number][] = [
+    [-outerX, -0.02, 0],
+    [0, -0.02, 0],
+    [outerX, -0.02, 0],
+  ];
 
   return (
     <>
@@ -322,8 +353,8 @@ function EvidenceScene({
       <pointLight position={[-3, 0, 2]} intensity={8} color="#8cbac4" />
 
       <BraidedRope
-        left={mobile ? -1.82 : -3.15}
-        right={mobile ? 1.82 : 3.15}
+        left={-ropeX}
+        right={ropeX}
         sag={mobile ? 0.09 : 0.15}
       />
 
@@ -361,22 +392,27 @@ export default function CasoCeroEvidenceClothesline() {
     >
       <div className="pointer-events-auto h-full w-full">
         <Canvas
+          orthographic
           shadows
           dpr={[1, 1.35]}
-          camera={{ position: [0, 0.12, 10], fov: 40 }}
+          camera={{
+            position: [0, 0.12, 10],
+            left: -4,
+            right: 4,
+            top: 1.375,
+            bottom: -1.375,
+            near: 0.1,
+            far: 100,
+            zoom: 1,
+          }}
           gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
           onCreated={({ gl }) => {
             gl.setClearColor("#000000", 0);
             gl.outputColorSpace = THREE.SRGBColorSpace;
           }}
+          style={{ display: "block", width: "100%", height: "100%" }}
         >
-          <OrthographicCamera
-            makeDefault
-            position={[0, 0.12, 10]}
-            zoom={mobile ? 0.84 : 0.78}
-            near={0.1}
-            far={100}
-          />
+          <CameraFraming mobile={mobile} />
           <EvidenceScene mobile={mobile} onSelect={setActiveEvidence} />
         </Canvas>
       </div>

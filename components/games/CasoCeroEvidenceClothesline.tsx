@@ -1,12 +1,10 @@
 "use client";
 
-import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
+import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { X } from "lucide-react";
-import Lightbox from "yet-another-react-lightbox";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
 
 type EvidencePhoto = {
   src: string;
@@ -44,11 +42,6 @@ const CASE_EVIDENCE: EvidencePhoto[] = [
   },
 ];
 
-const EVIDENCE_LIGHTBOX_SLIDES = CASE_EVIDENCE.map(({ src, alt }) => ({
-  src,
-  alt,
-}));
-
 type ImageBoundaryProps = {
   children: ReactNode;
   fallback: ReactNode;
@@ -84,6 +77,12 @@ type PbrTextureSet = {
   normal: THREE.Texture;
   roughness: THREE.Texture;
 };
+
+type PhotoPointerDetails = { clientX: number; clientY: number; u: number; v: number };
+type MagnifierTarget = { src: string; u: number; v: number; imageWidth: number; imageHeight: number };
+
+const MAGNIFIER_ZOOM = 3.15;
+const MAGNIFIER_INNER_DIAMETER = 150;
 
 const pbrCache = new Map<"wood" | "jute" | "paper", PbrTextureSet>();
 
@@ -264,10 +263,18 @@ function createWoodHalf(side: -1 | 1) {
 
 function PhotoTexture({
   src,
+  photoIndex,
+  scale,
   onPhotoClick,
+  onPhotoPointerMove,
+  onPhotoPointerOut,
 }: {
   src: string;
+  photoIndex: number;
+  scale: number;
   onPhotoClick: () => void;
+  onPhotoPointerMove: (index: number, src: string, scale: number, point: PhotoPointerDetails) => void;
+  onPhotoPointerOut: () => void;
 }) {
   const texture = useLoader(THREE.TextureLoader, src);
   const [paperMaps, setPaperMaps] = useState<PbrTextureSet | null>(null);
@@ -302,12 +309,16 @@ function PhotoTexture({
         event.stopPropagation();
         onPhotoClick();
       }}
-      onPointerOver={() => {
-        document.body.style.cursor = "zoom-in";
+      onPointerMove={(event) => {
+        event.stopPropagation();
+        onPhotoPointerMove(photoIndex, src, scale, {
+          clientX: event.clientX,
+          clientY: event.clientY,
+          u: event.uv?.x ?? 0.5,
+          v: event.uv?.y ?? 0.5,
+        });
       }}
-      onPointerOut={() => {
-        document.body.style.cursor = "";
-      }}
+      onPointerOut={() => onPhotoPointerOut()}
     >
       <meshStandardMaterial
         map={texture}
@@ -540,6 +551,8 @@ function EvidenceCard({
   scale,
   onSelect,
   onPhotoClick,
+  onPhotoPointerMove,
+  onPhotoPointerOut,
 }: {
   photo: EvidencePhoto;
   index: number;
@@ -548,6 +561,8 @@ function EvidenceCard({
   scale: number;
   onSelect: (index: number) => void;
   onPhotoClick: (index: number) => void;
+  onPhotoPointerMove: (index: number, src: string, scale: number, point: PhotoPointerDetails) => void;
+  onPhotoPointerOut: () => void;
 }) {
   const [labelTexture, setLabelTexture] = useState<THREE.CanvasTexture | null>(null);
   const rigRef = useRef<THREE.Group | null>(null);
@@ -637,7 +652,14 @@ function EvidenceCard({
             </mesh>
           }
         >
-          <PhotoTexture src={photo.src} onPhotoClick={() => onPhotoClick(index)} />
+          <PhotoTexture
+            src={photo.src}
+            photoIndex={index}
+            scale={scale}
+            onPhotoClick={() => onPhotoClick(index)}
+            onPhotoPointerMove={onPhotoPointerMove}
+            onPhotoPointerOut={onPhotoPointerOut}
+          />
         </Suspense>
       </EvidenceImageBoundary>
 
@@ -877,10 +899,14 @@ function EvidenceScene({
   mobile,
   onSelect,
   onPhotoClick,
+  onPhotoPointerMove,
+  onPhotoPointerOut,
 }: {
   mobile: boolean;
   onSelect: (index: number) => void;
   onPhotoClick: (index: number) => void;
+  onPhotoPointerMove: (index: number, src: string, scale: number, point: PhotoPointerDetails) => void;
+  onPhotoPointerOut: () => void;
 }) {
   const { size } = useThree();
   const cardScale = mobile ? 0.84 : 1;
@@ -936,6 +962,8 @@ function EvidenceScene({
           scale={cardScale}
           onSelect={onSelect}
           onPhotoClick={onPhotoClick}
+          onPhotoPointerMove={onPhotoPointerMove}
+          onPhotoPointerOut={onPhotoPointerOut}
         />
       ))}
     </>
@@ -944,9 +972,43 @@ function EvidenceScene({
 
 export default function CasoCeroEvidenceClothesline() {
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
-  const [lightboxIndex, setLightboxIndex] = useState(-1);
   const [mobile, setMobile] = useState(false);
+  const [magnifierActive, setMagnifierActive] = useState(false);
+  const [pointerPosition, setPointerPosition] = useState<{ x: number; y: number } | null>(null);
+  const [magnifierTarget, setMagnifierTarget] = useState<MagnifierTarget | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const canvasFrameRef = useRef<HTMLDivElement | null>(null);
   const active = activeEvidence === null ? null : CASE_EVIDENCE[activeEvidence];
+
+  const handlePhotoClick = useCallback((index: number) => {
+    if (magnifierActive) return;
+    setActiveEvidence(index);
+  }, [magnifierActive]);
+
+  const handlePhotoPointerMove = useCallback((
+    _index: number,
+    src: string,
+    imageScale: number,
+    point: PhotoPointerDetails,
+  ) => {
+    if (!magnifierActive) return;
+    const rootRect = rootRef.current?.getBoundingClientRect();
+    const frameRect = canvasFrameRef.current?.getBoundingClientRect();
+    if (!rootRect || !frameRect) return;
+
+    const visibleHeight = mobile ? 2.7 : 2.75;
+    const pixelsPerWorldUnit = frameRect.height / visibleHeight;
+    setPointerPosition({ x: point.clientX - rootRect.left, y: point.clientY - rootRect.top });
+    setMagnifierTarget({
+      src,
+      u: THREE.MathUtils.clamp(point.u, 0, 1),
+      v: THREE.MathUtils.clamp(point.v, 0, 1),
+      imageWidth: 1.32 * imageScale * pixelsPerWorldUnit,
+      imageHeight: 1.35 * imageScale * pixelsPerWorldUnit,
+    });
+  }, [magnifierActive, mobile]);
+
+  const handlePhotoPointerOut = useCallback(() => setMagnifierTarget(null), []);
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 640px)");
@@ -956,12 +1018,62 @@ export default function CasoCeroEvidenceClothesline() {
     return () => query.removeEventListener("change", update);
   }, []);
 
+  useEffect(() => {
+    if (!magnifierActive) {
+      setMagnifierTarget(null);
+      setPointerPosition(null);
+      rootRef.current?.closest(".caso-cero-cinematic")?.classList.remove("caso-cero-loupe-active");
+      return;
+    }
+
+    const sceneRoot = rootRef.current?.closest(".caso-cero-cinematic");
+    const movePointer = (event: PointerEvent) => {
+      const root = rootRef.current;
+      const rect = root?.getBoundingClientRect();
+      if (!root || !rect) return;
+
+      const inside = event.clientX >= rect.left && event.clientX <= rect.right &&
+        event.clientY >= rect.top && event.clientY <= rect.bottom;
+      sceneRoot?.classList.toggle("caso-cero-loupe-active", inside);
+      if (!inside) {
+        setPointerPosition(null);
+        setMagnifierTarget(null);
+        return;
+      }
+      setPointerPosition({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMagnifierActive(false);
+    };
+    window.addEventListener("pointermove", movePointer, { passive: true });
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("pointermove", movePointer);
+      window.removeEventListener("keydown", handleKeyDown);
+      sceneRoot?.classList.remove("caso-cero-loupe-active");
+    };
+  }, [magnifierActive]);
+
+  const handleTakeMagnifier = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    const rect = rootRef.current?.getBoundingClientRect();
+    if (rect) setPointerPosition({ x: event.clientX - rect.left, y: event.clientY - rect.top });
+    setActiveEvidence(null);
+    setMagnifierTarget(null);
+    setMagnifierActive(true);
+  }, []);
+
   return (
     <div
-      className="caso-cero-evidence-clothesline pointer-events-none absolute left-1/2 top-[1%] z-20 h-[210px] w-screen -translate-x-1/2 sm:h-[405px] lg:h-[530px]"
+      ref={rootRef}
+      className="caso-cero-evidence-clothesline pointer-events-none absolute inset-0 z-20"
       aria-label="Fotografías de evidencia de Caso Cero"
     >
-      <div className="pointer-events-auto h-full w-full">
+      <div
+        ref={canvasFrameRef}
+        className="pointer-events-auto absolute left-1/2 top-[1%] h-[210px] w-screen -translate-x-1/2 sm:h-[405px] lg:h-[530px]"
+      >
         <Canvas
           orthographic
           shadows
@@ -990,7 +1102,9 @@ export default function CasoCeroEvidenceClothesline() {
           <EvidenceScene
             mobile={mobile}
             onSelect={setActiveEvidence}
-            onPhotoClick={setLightboxIndex}
+            onPhotoClick={handlePhotoClick}
+            onPhotoPointerMove={handlePhotoPointerMove}
+            onPhotoPointerOut={handlePhotoPointerOut}
           />
         </Canvas>
       </div>
@@ -1000,7 +1114,7 @@ export default function CasoCeroEvidenceClothesline() {
           role="dialog"
           aria-modal="false"
           aria-labelledby="caso-cero-evidence-title"
-          className="pointer-events-auto absolute left-1/2 top-[calc(100%-18px)] z-30 w-[min(360px,92vw)] -translate-x-1/2 border border-[#9c7949]/70 bg-[#061016]/95 p-3 text-[#eee3ce] shadow-[0_14px_38px_rgba(0,0,0,.65)] backdrop-blur-md sm:top-[calc(100%-22px)] sm:p-4"
+          className="pointer-events-auto absolute left-1/2 top-[58%] z-30 w-[min(360px,92vw)] -translate-x-1/2 border border-[#9c7949]/70 bg-[#061016]/95 p-3 text-[#eee3ce] shadow-[0_14px_38px_rgba(0,0,0,.65)] backdrop-blur-md sm:top-[58%] sm:p-4"
         >
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
@@ -1027,24 +1141,90 @@ export default function CasoCeroEvidenceClothesline() {
         </aside>
       )}
 
-      <Lightbox
-        open={lightboxIndex >= 0}
-        close={() => setLightboxIndex(-1)}
-        index={lightboxIndex >= 0 ? lightboxIndex : 0}
-        slides={EVIDENCE_LIGHTBOX_SLIDES}
-        plugins={[Zoom]}
-        zoom={{
-          maxZoomPixelRatio: 4,
-          zoomInMultiplier: 2,
-          scrollToZoom: true,
-          doubleClickMaxStops: 3,
-        }}
-        controller={{
-          closeOnBackdropClick: true,
-          closeOnEscape: true,
-        }}
-        animation={{ zoom: 350 }}
-      />
+      {!magnifierActive ? (
+        <button
+          type="button"
+          onClick={handleTakeMagnifier}
+          aria-label="Tomar la lupa de evidencia"
+          title="Tomar lupa de evidencia"
+          className="pointer-events-auto absolute bottom-[4.5%] left-[53%] z-40 grid h-[84px] w-[112px] -translate-x-1/2 place-items-center overflow-visible rounded-sm bg-transparent transition duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0cb8a]"
+        >
+          <svg viewBox="0 0 190 135" className="h-[82px] w-[116px] drop-shadow-[0_7px_5px_rgba(0,0,0,.58)]" aria-hidden="true">
+            <defs>
+              <linearGradient id="table-loupe-handle" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#c0c7cb" />
+                <stop offset=".12" stopColor="#4b5359" />
+                <stop offset=".38" stopColor="#151a1e" />
+                <stop offset=".68" stopColor="#050709" />
+                <stop offset=".9" stopColor="#343b40" />
+                <stop offset="1" stopColor="#8e989e" />
+              </linearGradient>
+              <linearGradient id="table-loupe-metal" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stopColor="#f3f0df" />
+                <stop offset=".2" stopColor="#9da8ad" />
+                <stop offset=".48" stopColor="#30383d" />
+                <stop offset=".72" stopColor="#c7cfce" />
+                <stop offset="1" stopColor="#60686c" />
+              </linearGradient>
+              <radialGradient id="table-loupe-glass" cx=".28" cy=".2" r=".92">
+                <stop offset="0" stopColor="#e8f7f6" stopOpacity=".72" />
+                <stop offset=".48" stopColor="#a4c6d0" stopOpacity=".34" />
+                <stop offset="1" stopColor="#293d49" stopOpacity=".72" />
+              </radialGradient>
+            </defs>
+            <rect x="77" y="55" width="105" height="18" rx="9" transform="rotate(42 77 64)" fill="url(#table-loupe-handle)" stroke="#080a0b" strokeWidth="1.4" />
+            <rect x="74" y="54" width="23" height="19" rx="4" transform="rotate(42 74 64)" fill="url(#table-loupe-metal)" stroke="#31373a" strokeWidth="1" />
+            <circle cx="55" cy="43" r="42" fill="url(#table-loupe-metal)" stroke="#15191c" strokeWidth="2" />
+            <circle cx="55" cy="43" r="35.5" fill="url(#table-loupe-glass)" stroke="#dce5e2" strokeWidth="1.5" />
+            <path d="M31 17 C42 7 62 8 73 22" fill="none" stroke="#f9fffb" strokeOpacity=".72" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M30 63 C40 75 58 77 69 66" fill="none" stroke="#d9eff3" strokeOpacity=".28" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="55" cy="43" r="38.5" fill="none" stroke="#050708" strokeOpacity=".7" strokeWidth="1" />
+          </svg>
+          <span className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#7e6746]/70 bg-[#080d12]/85 px-2 py-1 text-[8px] font-black uppercase tracking-[.16em] text-[#ead9ba] shadow-md">
+            Lupa de evidencia
+          </span>
+        </button>
+      ) : (
+        <div aria-live="polite" className="pointer-events-auto absolute bottom-[5.5%] left-[53%] z-40 -translate-x-1/2 border border-[#9b804e]/70 bg-[#080d12]/85 px-3 py-2 text-[9px] font-black uppercase tracking-[.13em] text-[#f1d4a1] shadow-lg backdrop-blur-sm">
+          Lupa en uso · Esc para devolver
+        </div>
+      )}
+
+      {magnifierActive && pointerPosition && (
+        <div aria-hidden="true" className="pointer-events-none absolute z-[100] h-0 w-0" style={{ left: pointerPosition.x, top: pointerPosition.y }}>
+          <div className="absolute left-[43px] top-[39px] h-[23px] w-[133px] origin-[12px_11px] rotate-[43deg] rounded-full border border-[#080a0c] shadow-[2px_5px_7px_rgba(0,0,0,.58)]" style={{ background: "linear-gradient(180deg,#d7dcdd 0%,#737d82 12%,#242a2f 28%,#080a0d 52%,#20262b 78%,#a8b0b3 96%,#4b5358 100%)" }} />
+          <div className="absolute left-[43px] top-[39px] h-[25px] w-[28px] origin-[12px_12px] rotate-[43deg] rounded-[5px] border border-[#252a2d] shadow-[inset_0_1px_2px_rgba(255,255,255,.55)]" style={{ background: "linear-gradient(135deg,#f0f0e8,#69757a 26%,#202529 56%,#c3c9c8 82%,#535d62)" }} />
+          <div
+            className="absolute -left-[82px] -top-[82px] h-[164px] w-[164px] rounded-full border border-[#0b1014] p-[7px] shadow-[0_6px_16px_rgba(0,0,0,.62),inset_0_1px_2px_rgba(255,255,255,.8)]"
+            style={{ background: "conic-gradient(from 210deg,#3e474b 0deg,#e6e7df 32deg,#7d898d 72deg,#f4f2e8 102deg,#59646a 148deg,#d0d4d0 202deg,#353e43 260deg,#e0e1d7 315deg,#3e474b 360deg)" }}
+          >
+            <div className="relative h-full w-full overflow-hidden rounded-full border border-[#dce7e7]/80" style={{ backgroundColor: magnifierTarget ? "#080d12" : "rgba(190,215,224,.16)", backdropFilter: magnifierTarget ? undefined : "blur(1.5px) saturate(1.25)" }}>
+              {magnifierTarget && (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url("${magnifierTarget.src}")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: `${magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
+                    backgroundPosition: `${MAGNIFIER_INNER_DIAMETER / 2 - magnifierTarget.u * magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${MAGNIFIER_INNER_DIAMETER / 2 - (1 - magnifierTarget.v) * magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
+                    filter: "contrast(1.04) saturate(1.06)",
+                  }}
+                />
+              )}
+              <div className="pointer-events-none absolute inset-0 rounded-full" style={{ background: "radial-gradient(ellipse at 27% 18%,rgba(255,255,255,.62),transparent 23%),radial-gradient(ellipse at 72% 84%,rgba(132,184,199,.2),transparent 38%),linear-gradient(132deg,rgba(239,251,255,.12),transparent 44%,rgba(3,14,22,.16))", boxShadow: "inset 0 1px 10px rgba(255,255,255,.28),inset 0 -3px 9px rgba(4,12,18,.26)" }} />
+              <div className="pointer-events-none absolute left-[15%] top-[11%] h-[18%] w-[38%] rotate-[-27deg] rounded-full bg-white/20 blur-[2px]" />
+            </div>
+          </div>
+          <div className="pointer-events-none absolute -left-[74px] -top-[74px] h-[148px] w-[148px] rounded-full border border-white/45" style={{ boxShadow: "0 0 0 1px rgba(255,255,255,.12),inset 0 0 0 1px rgba(255,255,255,.12)" }} />
+        </div>
+      )}
+
+      <style jsx global>{`
+        .caso-cero-cinematic.caso-cero-loupe-active,
+        .caso-cero-cinematic.caso-cero-loupe-active * {
+          cursor: none !important;
+        }
+      `}</style>
     </div>
   );
 }

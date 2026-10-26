@@ -19,6 +19,8 @@ interface Question {
   is_active: boolean;
   english_part?: number | null;
   english_set_id?: string | null;
+  english_position?: number | null;
+  question_number?: number | null;
 }
 
 interface EnglishQuestionSet {
@@ -202,11 +204,12 @@ export async function POST(request: Request) {
        VALIDAR CANTIDAD
     ====================================================== */
 
-    const questionAmount = Number(amount);
+    let questionAmount = subject === "Inglés" ? 0 : Number(amount);
 
     if (
-      !Number.isInteger(questionAmount) ||
-      !QUESTION_AMOUNTS.includes(questionAmount)
+      subject !== "Inglés" &&
+      (!Number.isInteger(questionAmount) ||
+        !QUESTION_AMOUNTS.includes(questionAmount))
     ) {
       return NextResponse.json(
         {
@@ -270,7 +273,7 @@ export async function POST(request: Request) {
     let query = adminSupabase
       .from("questions")
       .select(
-        "id, subject, difficulty, is_active, english_part, english_set_id"
+        "id, subject, difficulty, is_active, english_part, english_set_id, english_position, question_number"
       )
       .eq("subject", subject)
       .eq("is_active", true);
@@ -375,7 +378,7 @@ export async function POST(request: Request) {
      * Mixta = no filtramos dificultad.
      */
 
-    if (effectiveDifficulty !== "Mixta") {
+    if (subject !== "Inglés" && effectiveDifficulty !== "Mixta") {
       query = query.eq(
         "difficulty",
         effectiveDifficulty
@@ -403,38 +406,68 @@ export async function POST(request: Request) {
       );
     }
 
-    const availableQuestions =
-      (questions ?? []) as Question[];
+    let availableQuestions = (questions ?? []) as Question[];
 
-    /* =====================================================
-       COMPROBAR CANTIDAD
-    ====================================================== */
+    if (subject === "Inglés") {
+      // Una práctica de Inglés es una sección completa de un solo conjunto,
+      // no una mezcla de sesiones ni una cantidad recortada por el usuario.
+      const questionsBySet = new Map<string, Question[]>();
 
-    if (
-      availableQuestions.length <
-      questionAmount
-    ) {
-      const englishContext =
-        selectedEnglishFormat && selectedEnglishPart
-          ? ` para la Parte ${selectedEnglishPart} de ${selectedEnglishFormat === "historical" ? "formato histórico" : "Saber 11 · 2026 Cal A"}`
-          : "";
+      for (const candidate of availableQuestions) {
+        if (!candidate.english_set_id) continue;
+        const group = questionsBySet.get(candidate.english_set_id) ?? [];
+        group.push(candidate);
+        questionsBySet.set(candidate.english_set_id, group);
+      }
 
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Hay ${availableQuestions.length} preguntas activas disponibles para ${subject}${englishContext}, pero seleccionaste ${questionAmount}. Publica más preguntas revisadas o elige una cantidad menor.`,
-        },
-        { status: 400 }
+      const completeSections = [...questionsBySet.values()].filter(
+        (section) => section.length > 0,
       );
+
+      if (completeSections.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `La Parte ${selectedEnglishPart} de ${selectedEnglishFormat === "historical" ? "formato histórico" : "Saber 11 · 2026 Cal A"} todavía no tiene preguntas activas en un conjunto publicado. Revisa, publica y activa la sección completa en el banco de Inglés.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      const chosenSection = completeSections[
+        Math.floor(Math.random() * completeSections.length)
+      ];
+
+      availableQuestions = [...chosenSection].sort((a, b) => {
+        const positionA = a.english_position ?? a.question_number ?? 0;
+        const positionB = b.english_position ?? b.question_number ?? 0;
+        return positionA - positionB;
+      });
+      questionAmount = availableQuestions.length;
+    } else {
+      /* =====================================================
+         COMPROBAR CANTIDAD PARA OTRAS MATERIAS
+      ====================================================== */
+      if (availableQuestions.length < questionAmount) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Hay ${availableQuestions.length} preguntas activas disponibles para ${subject}, pero seleccionaste ${questionAmount}. Publica más preguntas revisadas o elige una cantidad menor.`,
+          },
+          { status: 400 },
+        );
+      }
     }
 
     /* =====================================================
-       SELECCIONAR PREGUNTAS ALEATORIAS
+       SELECCIONAR PREGUNTAS
+       Inglés conserva el orden original de la sección completa.
     ====================================================== */
 
-    const selectedQuestions = shuffle(
-      availableQuestions
-    ).slice(0, questionAmount);
+    const selectedQuestions =
+      subject === "Inglés"
+        ? availableQuestions
+        : shuffle(availableQuestions).slice(0, questionAmount);
 
     /* =====================================================
        DURACIÓN

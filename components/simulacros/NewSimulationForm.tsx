@@ -558,7 +558,7 @@ export default function NewSimulationPage() {
                     Practicarás toda la Parte {englishPart}
                   </p>
                   <p className="mt-1 text-xs leading-5 text-slate-400">
-                    El simulacro incluirá todas las preguntas activas del conjunto publicado para esta parte, en el orden del cuadernillo. No puedes recortar ni elegir una cantidad.
+                    La práctica incluirá el número completo de preguntas que corresponde a esta sección y respetará el orden del formato seleccionado. No puedes recortarla ni elegir una cantidad.
                   </p>
                 </div>
               ) : (
@@ -573,7 +573,7 @@ export default function NewSimulationPage() {
                         className="text-[10px] text-[#c7bbff]"
                         style={pixelFont}
                       >
-                        {subject === "Inglés" ? "03" : "02"}
+                        02
                       </span>
                     </div>
   
@@ -635,7 +635,7 @@ export default function NewSimulationPage() {
                 </>
               )}
 
-              {/* Paso 4: dificultad */}
+              {/* Paso 3: dificultad */}
               <section>
                 <div className="mb-5 flex items-start gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/50 bg-[#a99bea]/10">
@@ -870,7 +870,7 @@ export default function NewSimulationPage() {
                   </p>
                   {subject === "Inglés" && (
                     <p className="mt-1 text-[11px] leading-4 text-slate-400">
-                      Todas las preguntas del conjunto seleccionado.
+                      La sección completa según el formato seleccionado.
                     </p>
                   )}
                 </div>

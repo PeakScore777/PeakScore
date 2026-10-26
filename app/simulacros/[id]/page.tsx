@@ -59,6 +59,8 @@ export default function ExamPage() {
 
   const [englishSets, setEnglishSets] = useState<Record<string, {
     title: string;
+    shared_title: string | null;
+    booklet_format: string;
     part: number;
     shared_text: string | null;
     shared_image_url?: string | null;
@@ -974,6 +976,25 @@ export default function ExamPage() {
   const question =
     questions[currentQuestion];
 
+  const currentEnglishSet =
+    question?.english_set_id
+      ? englishSets[question.english_set_id] ?? null
+      : null;
+
+  const questionOptions = question
+    ? question.english_options?.length
+      ? question.english_options.map((option) => ({
+          key: option.key,
+          text: option.text,
+        }))
+      : [
+          { key: "A", text: question.option_a },
+          { key: "B", text: question.option_b },
+          { key: "C", text: question.option_c },
+          { key: "D", text: question.option_d },
+        ]
+    : [];
+
   const answeredQuestions =
     Object.keys(
       answers
@@ -1392,6 +1413,74 @@ export default function ExamPage() {
                     CONTEXTO
                 ================================================== */}
 
+                {currentEnglishSet && (
+                  <div className="relative mb-7 overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-white to-violet-50/60">
+                    <div className="absolute inset-y-0 left-0 w-1 bg-violet-500" />
+                    <div className="px-5 py-5 pl-6 sm:px-7 sm:py-7 sm:pl-8">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-700">
+                          Inglés · Parte {currentEnglishSet.part}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                          {currentEnglishSet.booklet_format === "historical"
+                            ? "Formato histórico"
+                            : currentEnglishSet.booklet_format === "saber11_2026"
+                              ? "Saber 11 · 2026 Cal A"
+                              : "Texto compartido"}
+                        </span>
+                      </div>
+                      {(currentEnglishSet.shared_title || currentEnglishSet.title) && (
+                        <h2 className="text-lg font-black leading-7 text-slate-900">
+                          {currentEnglishSet.shared_title || currentEnglishSet.title}
+                        </h2>
+                      )}
+                      {currentEnglishSet.instructions && (
+                        <p className="mt-3 text-sm font-semibold leading-6 text-violet-900">
+                          {currentEnglishSet.instructions}
+                        </p>
+                      )}
+                      {currentEnglishSet.shared_text && (
+                        <div
+                          onMouseUp={() => captureTextSelection("english-shared-text")}
+                          className={`mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700 sm:text-[15px] ${annotationMode ? "cursor-text select-text" : ""}`}
+                        >
+                          {renderAnnotatedText(currentEnglishSet.shared_text, "english-shared-text")}
+                        </div>
+                      )}
+                      {currentEnglishSet.shared_image_url && (
+                        <div className="mt-4 flex justify-center">
+                          <img
+                            src={currentEnglishSet.shared_image_url}
+                            alt={currentEnglishSet.shared_title || currentEnglishSet.title}
+                            className="max-h-[440px] w-auto max-w-full rounded-xl border border-slate-200 object-contain"
+                          />
+                        </div>
+                      )}
+                      {Array.isArray(currentEnglishSet.word_bank) && currentEnglishSet.word_bank.length > 0 && (
+                        <div className="mt-4 rounded-xl border border-violet-200/80 bg-white/80 p-4">
+                          <p className="text-xs font-black uppercase tracking-wide text-violet-800">
+                            Banco de palabras
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {currentEnglishSet.word_bank.map((entry, index) => {
+                              const item = entry as { key?: string; text?: string };
+                              if (typeof item.text !== "string") return null;
+                              return (
+                                <span
+                                  key={item.key || index}
+                                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700"
+                                >
+                                  {item.text}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {question.context_text &&
                   question.context_text.trim() && (
                     <div className="relative mb-7 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
@@ -1477,12 +1566,7 @@ export default function ExamPage() {
 
                   <div className="space-y-3">
 
-                    {[
-                      question.option_a,
-                      question.option_b,
-                      question.option_c,
-                      question.option_d,
-                    ].map(
+                    {questionOptions.map(
                       (
                         option,
                         index
@@ -1536,14 +1620,11 @@ export default function ExamPage() {
                                   : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
                               }`}
                             >
-                              {String.fromCharCode(
-                                64 +
-                                  optionNumber
-                              )}
+                              {option.key || String.fromCharCode(64 + optionNumber)}
                             </span>
 
                             <span className="flex-1 pt-1 text-sm font-medium leading-6 text-slate-700 sm:text-[15px]">
-                              {option}
+                              {option.text}
                             </span>
 
                             <span

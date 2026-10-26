@@ -1416,7 +1416,8 @@ export default function CasoCeroEvidenceClothesline() {
           </div>
         </div>
       )}
-{`
+
+      <style jsx global>{`
         @keyframes caso-cero-tools-board-in {
           from { opacity: 0; transform: translate3d(10px, 0, 0) scale(.985); }
           to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }

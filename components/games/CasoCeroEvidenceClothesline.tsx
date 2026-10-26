@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
+import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
@@ -1051,15 +1051,6 @@ export default function CasoCeroEvidenceClothesline() {
       sceneRoot?.classList.remove("caso-cero-loupe-active");
     };
   }, [magnifierActive]);
-
-  const handleTakeMagnifier = useCallback((event: ReactPointerEvent<HTMLButtonElement>) => {
-    event.stopPropagation();
-    const rect = rootRef.current?.getBoundingClientRect();
-    if (rect) setPointerPosition({ x: event.clientX - rect.left, y: event.clientY - rect.top });
-    setActiveEvidence(null);
-    setMagnifierTarget(null);
-    setMagnifierActive(true);
-  }, []);
 
   return (
     <div

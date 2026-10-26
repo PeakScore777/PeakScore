@@ -157,8 +157,8 @@ export default function BookletView({
   const displayPartTitle = firstSet?.part === 7
     ? (formatFilter === "historical"
       ? "Parte 7"
-      : \`Parte \${group ?? (firstSet.title.startsWith("7B") ? "7B" : "7A")}\`)
-    : \`\${group ? \`Parte \${group}\` : \`Parte \${displayPart}\`} · \${displayPartName}\`;
+      : `Parte ${group ?? (firstSet.title.startsWith("7B") ? "7B" : "7A")}`)
+    : `${group ? `Parte ${group}` : `Parte ${displayPart}`} · ${displayPartName}`;
   const displayFormatLabel = formatFilter === "historical"
     ? firstSet?.booklet_format === "historical"
       ? "Formato histórico"
@@ -217,10 +217,10 @@ export default function BookletView({
       <div className="flex flex-col gap-3 rounded-xl border border-slate-300 bg-white p-3 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <p className="text-sm text-slate-600">
           {isAnswerSheetPage
-            ? \`Hoja de respuestas · \${questions.length} preguntas\`
+            ? `Hoja de respuestas · ${questions.length} preguntas`
             : isEnglishSimulation
-              ? \`Cuadernillo · Parte \${displayPartTitle.replace(/^Parte\s*/i, "")}\`
-              : \`Página \${currentPage} de \${questionPages} · Preguntas \${startIndex + 1}–\${Math.min(startIndex + questionsPerPage, questions.length)} de \${questions.length}\`}
+              ? `Cuadernillo · Parte ${displayPartTitle.replace(/^Parte\s*/i, "")}`
+              : `Página ${currentPage} de ${questionPages} · Preguntas ${startIndex + 1}–${Math.min(startIndex + questionsPerPage, questions.length)} de ${questions.length}`}
         </p>
         <div className="flex items-center gap-2">
           <button
@@ -244,7 +244,7 @@ export default function BookletView({
       </div>
 
       {!isAnswerSheetPage && showEnglishBankLayout && (
-        <article className={\`mx-auto \${firstSet!.part === 6 ? "" : "min-h-[297mm]"} w-full max-w-[210mm] overflow-hidden border border-slate-300 bg-white shadow-sm \${firstSet!.part === 6 ? "" : "print:break-after-page"}\`}>
+        <article className={`mx-auto ${firstSet!.part === 6 ? "" : "min-h-[297mm]"} w-full max-w-[210mm] overflow-hidden border border-slate-300 bg-white shadow-sm ${firstSet!.part === 6 ? "" : "print:break-after-page"}`}>
           <div className="border-b border-slate-200 px-6 py-5 sm:px-10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
@@ -272,11 +272,11 @@ export default function BookletView({
                 </div>
               </section>
             ) : firstSet!.shared_image_url ? (
-              <div className={\`mb-5 flex justify-center \${[4, 5, 7].includes(firstSet!.part) ? "" : "border border-slate-900 p-3"}\`}>
+              <div className={`mb-5 flex justify-center ${[4, 5, 7].includes(firstSet!.part) ? "" : "border border-slate-900 p-3"}`}>
                 <img src={firstSet!.shared_image_url} alt={firstSet!.part === 4 ? "Texto compartido de la Parte 4" : firstSet!.part === 5 ? "Imagen completa del texto de lectura" : "Imagen compartida del conjunto"} className="h-auto max-h-[560px] max-w-full object-contain" />
               </div>
             ) : firstSet!.shared_text ? (
-              <div className={\`mb-5 whitespace-pre-wrap font-serif text-[15px] leading-7 text-slate-900 \${firstSet!.part === 4 ? "" : "border border-slate-300 px-5 py-5"}\`}>{firstSet!.shared_text}</div>
+              <div className={`mb-5 whitespace-pre-wrap font-serif text-[15px] leading-7 text-slate-900 ${firstSet!.part === 4 ? "" : "border border-slate-300 px-5 py-5"}`}>{firstSet!.shared_text}</div>
             ) : null}
 
             {words.length > 0 && (
@@ -297,14 +297,14 @@ export default function BookletView({
                     </div>
                   ) : null;
                 })()}
-                <div className={\`grid gap-8 md:grid-cols-[1fr_0.9fr] \${isWordBankSet ? "mt-8" : ""}\`}>
+                <div className={`grid gap-8 md:grid-cols-[1fr_0.9fr] ${isWordBankSet ? "mt-8" : ""}`}>
                   <div>
                     <h3 className="mb-4 border-b border-slate-300 pb-3 text-center text-sm font-black uppercase tracking-wide">Descripciones</h3>
                     <div className={isWordBankSet ? "space-y-8" : "space-y-3"}>
                       {qs.map((question, index) => (
-                        <div key={question.id} className={\`grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 \${isWordBankSet ? "min-h-[90px] pb-5 pt-2" : "pb-3"}\`}>
+                        <div key={question.id} className={`grid grid-cols-[3rem_1fr] gap-3 border-b border-dotted border-slate-300 ${isWordBankSet ? "min-h-[90px] pb-5 pt-2" : "pb-3"}`}>
                           <strong>{(displayPart === 1 ? 80 : 85) + index}.</strong>
-                          <p className={\`whitespace-pre-wrap \${isWordBankSet ? "text-sm leading-7" : "leading-6"}\`}>{question.question}</p>
+                          <p className={`whitespace-pre-wrap ${isWordBankSet ? "text-sm leading-7" : "leading-6"}`}>{question.question}</p>
                         </div>
                       ))}
                     </div>
@@ -312,7 +312,7 @@ export default function BookletView({
                   <div>
                     <h3 className="mb-4 border-b border-slate-300 pb-3 text-center text-sm font-black uppercase tracking-wide">Palabras</h3>
                     <div className={isWordBankSet ? "space-y-8" : "space-y-3"}>
-                      {words.map((word) => <div key={word.key} className={\`flex min-h-[42px] items-start gap-3 rounded-sm px-2 py-2 \${isWordBankSet ? "text-sm leading-6" : ""} \${word.example ? "font-bold underline decoration-2" : ""}\`}><strong>{word.key}.</strong><span>{word.text}{word.example ? " (ejemplo)" : ""}</span></div>)}
+                      {words.map((word) => <div key={word.key} className={`flex min-h-[42px] items-start gap-3 rounded-sm px-2 py-2 ${isWordBankSet ? "text-sm leading-6" : ""} ${word.example ? "font-bold underline decoration-2" : ""}`}><strong>{word.key}.</strong><span>{word.text}{word.example ? " (ejemplo)" : ""}</span></div>)}
                     </div>
                   </div>
                 </div>
@@ -332,17 +332,17 @@ export default function BookletView({
                   <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-3">
                     {(firstSet!.example_options ?? []).map((option) => <div key={option.key} className="flex gap-1"><strong>{option.key}.</strong><span>{option.text}</span></div>)}
                   </div>
-                  <div className="inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={\`Hoja de respuestas del ejemplo: \${firstSet!.example_answer ?? "sin respuesta marcada"}\`}>
+                  <div className="inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={`Hoja de respuestas del ejemplo: ${firstSet!.example_answer ?? "sin respuesta marcada"}`}>
                     <span className="mr-1 font-semibold">Respuesta 0.</span>
-                    {["A", "B", "C"].map((key) => <span key={key} className={\`flex h-4 w-4 items-center justify-center rounded-full border \${firstSet!.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}\`}>{key}</span>)}
+                    {["A", "B", "C"].map((key) => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${firstSet!.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
                   </div>
                 </div>
               </div>
             )}
 
             {!words.length && firstSet!.part !== 3 && firstSet!.part !== 4 && firstSet!.part !== 6 && firstSet!.part !== 7 && firstSet!.example_prompt && (
-              <div className={\`mb-3 border-b border-slate-900 pb-3 \${firstSet!.part === 2 ? "text-[10px] leading-4" : ""}\`}>
-                <div className={\`grid gap-2 \${firstSet!.part === 2 ? "grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}\`}>
+              <div className={`mb-3 border-b border-slate-900 pb-3 ${firstSet!.part === 2 ? "text-[10px] leading-4" : ""}`}>
+                <div className={`grid gap-2 ${firstSet!.part === 2 ? "grid-cols-[1rem_minmax(0,1fr)] sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[3.5rem_1fr]"}`}>
                   <strong className="pt-1">0.</strong>
                   <div className={firstSet!.part === 5 ? "grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] sm:gap-5" : firstSet!.part === 2 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
                     <div>
@@ -351,14 +351,14 @@ export default function BookletView({
                     </div>
                     <div>
                       {!!firstSet!.example_options?.length && (
-                        <div className={\`grid gap-x-3 gap-y-1 \${firstSet!.part === 2 ? "grid-cols-1" : firstSet!.example_options.length > 2 ? "sm:grid-cols-2" : ""}\`}>
+                        <div className={`grid gap-x-3 gap-y-1 ${firstSet!.part === 2 ? "grid-cols-1" : firstSet!.example_options.length > 2 ? "sm:grid-cols-2" : ""}`}>
                           {firstSet!.example_options.map((option) => <div key={option.key} className="flex gap-1 text-[10px] leading-4"><strong>{option.key}.</strong><span>{option.text}</span></div>)}
                         </div>
                       )}
                       {[2, 3, 4, 5, 7].includes(firstSet!.part) && (
-                        <div className="mt-2 inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={\`Hoja de respuestas del ejemplo: \${firstSet!.example_answer ?? "sin respuesta marcada"}\`}>
+                        <div className="mt-2 inline-flex items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={`Hoja de respuestas del ejemplo: ${firstSet!.example_answer ?? "sin respuesta marcada"}`}>
                           <span className="mr-1 font-semibold">0.</span>
-                          {(firstSet!.part === 7 ? ["A", "B", "C", "D"] : ["A", "B", "C"]).map((key) => <span key={key} className={\`flex h-4 w-4 items-center justify-center rounded-full border \${firstSet!.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}\`}>{key}</span>)}
+                          {(firstSet!.part === 7 ? ["A", "B", "C", "D"] : ["A", "B", "C"]).map((key) => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${firstSet!.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
                         </div>
                       )}
                     </div>
@@ -374,9 +374,9 @@ export default function BookletView({
                     <strong>0.</strong>
                     <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
                       <div className="grid grid-cols-2 gap-x-3 gap-y-1 sm:grid-cols-4">{(firstSet!.example_options ?? []).map((option) => <p key={option.key}><strong>{option.key}.</strong> {option.text}</p>)}</div>
-                      <div className="inline-flex h-fit items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={\`Hoja de respuestas del ejemplo: \${firstSet!.example_answer ?? "sin respuesta marcada"}\`}>
+                      <div className="inline-flex h-fit items-center gap-1 border border-slate-400 px-2 py-1 text-[9px] leading-none" aria-label={`Hoja de respuestas del ejemplo: ${firstSet!.example_answer ?? "sin respuesta marcada"}`}>
                         <strong className="mr-1">Respuesta 0.</strong>
-                        {["A", "B", "C", "D"].map((key) => <span key={key} className={\`flex h-4 w-4 items-center justify-center rounded-full border \${firstSet!.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}\`}>{key}</span>)}
+                        {["A", "B", "C", "D"].map((key) => <span key={key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${firstSet!.example_answer?.trim().toUpperCase() === key ? "border-black bg-black font-bold text-white" : "border-slate-500 text-slate-700"}`}>{key}</span>)}
                       </div>
                     </div>
                   </div>
@@ -434,7 +434,7 @@ export default function BookletView({
                   const options = getOptions(question);
                   const questionNumber = getBankQuestionNumber(firstSet!, question, index, formatFilter);
                   return (
-                    <div key={question.id} className={\`grid gap-2 border-b border-slate-300 last:border-0 \${firstSet!.part === 4 ? "grid-cols-[2rem_minmax(0,1fr)] items-center py-2" : firstSet!.part === 5 ? "grid-cols-[1.5rem_minmax(0,1fr)] py-2" : \`pb-3 pt-2 \${firstSet!.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[2rem_minmax(0,1fr)]"} \${firstSet!.part === 3 ? "min-h-[72px] pb-3 pt-3" : ""}\`}\`}>
+                    <div key={question.id} className={`grid gap-2 border-b border-slate-300 last:border-0 ${firstSet!.part === 4 ? "grid-cols-[2rem_minmax(0,1fr)] items-center py-2" : firstSet!.part === 5 ? "grid-cols-[1.5rem_minmax(0,1fr)] py-2" : `pb-3 pt-2 ${firstSet!.part === 2 ? "text-[10px] leading-4 sm:grid-cols-[1.5rem_minmax(0,1fr)]" : "md:grid-cols-[2rem_minmax(0,1fr)]"} ${firstSet!.part === 3 ? "min-h-[72px] pb-3 pt-3" : ""}`}`}>
                       <strong className="pt-1 text-[11px]">{questionNumber}.</strong>
                       {firstSet!.part === 4 ? (
                         <div className="grid grid-cols-3 items-start gap-x-3 text-sm leading-5">
@@ -446,10 +446,10 @@ export default function BookletView({
                       ) : (
                         <div className={firstSet!.part === 5 ? "grid grid-cols-1 gap-8 md:gap-10 md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]" : firstSet!.part === 2 || firstSet!.part === 3 ? "grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] sm:gap-4" : ""}>
                           <div>
-                            {question.image_url && <img src={question.image_url} alt={\`Imagen de la pregunta \${index + 1}\`} className={firstSet!.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
-                            <p className={\`whitespace-pre-wrap font-serif \${firstSet!.part === 2 ? "text-[10px] leading-4" : firstSet!.part === 5 ? "text-[13px] leading-5" : "text-[15px] leading-7"}\`}>{question.question}</p>
+                            {question.image_url && <img src={question.image_url} alt={`Imagen de la pregunta ${index + 1}`} className={firstSet!.part === 2 ? "mb-1 h-auto max-h-20 w-fit max-w-full object-contain" : "mb-4 max-h-72 max-w-full object-contain"}/>}
+                            <p className={`whitespace-pre-wrap font-serif ${firstSet!.part === 2 ? "text-[10px] leading-4" : firstSet!.part === 5 ? "text-[13px] leading-5" : "text-[15px] leading-7"}`}>{question.question}</p>
                           </div>
-                          <div>{options.length > 0 && <div className={\`grid grid-cols-1 \${firstSet!.part === 5 ? "gap-y-1" : "gap-y-2"}\`}>{options.map((option) => <div key={option.key} className={\`flex gap-2 \${firstSet!.part === 2 ? "text-[10px] leading-4" : firstSet!.part === 5 ? "text-xs leading-4" : "text-sm leading-6"}\`}><strong>{option.key}.</strong><span>{option.text}</span></div>)}</div>}</div>
+                          <div>{options.length > 0 && <div className={`grid grid-cols-1 ${firstSet!.part === 5 ? "gap-y-1" : "gap-y-2"}`}>{options.map((option) => <div key={option.key} className={`flex gap-2 ${firstSet!.part === 2 ? "text-[10px] leading-4" : firstSet!.part === 5 ? "text-xs leading-4" : "text-sm leading-6"}`}><strong>{option.key}.</strong><span>{option.text}</span></div>)}</div>}</div>
                         </div>
                       )}
                     </div>
@@ -474,12 +474,12 @@ export default function BookletView({
                 <article key={question.id} className="mb-4 border-b border-slate-200 pb-4">
                   <p className="font-serif text-sm leading-6"><strong>Pregunta {index + 1}.</strong> {question.question}</p>
                   {question.context_text && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{question.context_text}</p>}
-                  {question.image_url && <img src={question.image_url} alt={\`Recurso de la pregunta \${index + 1}\`} className="mt-3 max-h-72 max-w-full object-contain"/>}
+                  {question.image_url && <img src={question.image_url} alt={`Recurso de la pregunta ${index + 1}`} className="mt-3 max-h-72 max-w-full object-contain"/>}
                   <div className="mt-3 space-y-2">
                     {options.map((option) => {
                       const value = option.key.charCodeAt(0) - 64;
                       return (
-                        <button key={option.key} type="button" onClick={() => onAnswer(index, value)} aria-pressed={selected === value} className={\`flex w-full items-start gap-2 rounded-md border px-3 py-2 text-left text-sm \${selected === value ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}\`}>
+                        <button key={option.key} type="button" onClick={() => onAnswer(index, value)} aria-pressed={selected === value} className={`flex w-full items-start gap-2 rounded-md border px-3 py-2 text-left text-sm ${selected === value ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}`}>
                           <strong>{option.key}.</strong><span>{option.text}</span>
                         </button>
                       );
@@ -515,7 +515,7 @@ export default function BookletView({
                     {letters.map((letter) => {
                       const optionNumber = letter.charCodeAt(0) - 64;
                       const active = selected === optionNumber;
-                      return <button key={letter} type="button" onClick={() => onAnswer(index, optionNumber)} aria-label={\`Pregunta \${number}, respuesta \${letter}\`} aria-pressed={active} className={\`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold transition \${active ? "border-slate-950 bg-slate-950 text-white shadow-sm" : "border-slate-400 bg-white text-slate-700 hover:border-blue-600 hover:text-blue-700"}\`}>{letter}</button>;
+                      return <button key={letter} type="button" onClick={() => onAnswer(index, optionNumber)} aria-label={`Pregunta ${number}, respuesta ${letter}`} aria-pressed={active} className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold transition ${active ? "border-slate-950 bg-slate-950 text-white shadow-sm" : "border-slate-400 bg-white text-slate-700 hover:border-blue-600 hover:text-blue-700"}`}>{letter}</button>;
                     })}
                   </div>
                 </div>

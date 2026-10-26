@@ -72,9 +72,9 @@ export default function CasoCeroCinematicScene({
   };
 
   useEffect(() => {
-    // Do not run the lighting reveal behind the loading skeleton. Start the
-    // off -> right lamp -> off -> all lights sequence when the scene is visible.
-    if (!sceneReady) return;
+    // Reveal the lighting sequence only when its two overlay images are ready.
+    // The base scene can be shown earlier while they finish optimizing/loading.
+    if (!sceneReady || !lightLayersReady[1] || !lightLayersReady[2]) return;
 
     const firstLamp = window.setTimeout(() => setLightingStage(1), 450);
     const lampOut = window.setTimeout(() => setLightingStage(2), 1650);
@@ -84,7 +84,7 @@ export default function CasoCeroCinematicScene({
       window.clearTimeout(lampOut);
       window.clearTimeout(allLights);
     };
-  }, [sceneReady]);
+  }, [sceneReady, lightLayersReady[1], lightLayersReady[2]]);
 
   useEffect(() => {
     if (!sceneReady) return;
@@ -117,7 +117,9 @@ export default function CasoCeroCinematicScene({
   }, []);
 
   useEffect(() => {
-    if (!sceneReady && lightLayersReady.every(Boolean)) {
+    // Show the cinematic as soon as its base image is ready; light overlays
+    // can finish loading in the background without holding the whole scene hostage.
+    if (!sceneReady && lightLayersReady[0]) {
       setSceneReady(true);
       onSceneReady();
     }

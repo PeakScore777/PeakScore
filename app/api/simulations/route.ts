@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { getEnglishDifficulty } from "@/lib/simulations/english-difficulty";
 import { createClient } from "@/lib/supabase/server";
 
 interface CreateSimulationBody {
@@ -23,7 +24,6 @@ interface Question {
 interface EnglishQuestionSet {
   id: string;
   title: string;
-  shared_title: string | null;
   part: number;
   booklet_format: string;
   status: string;
@@ -43,7 +43,7 @@ function matchesEnglishVariant(
   format: "historical" | "saber11_2026",
   selectedPart: string,
 ): boolean {
-  const title = `${set.shared_title ?? ""} ${set.title ?? ""}`.trim();
+  const title = (set.title ?? "").trim();
 
   if (selectedPart === "4A") return /\b4A\b/i.test(title);
   if (selectedPart === "4B") return /\b4B\b/i.test(title);
@@ -277,6 +277,7 @@ export async function POST(request: Request) {
 
     let selectedEnglishFormat: "historical" | "saber11_2026" | null = null;
     let selectedEnglishPart: string | null = null;
+    let effectiveDifficulty = difficulty;
 
     if (subject === "Inglés") {
       const requestedPart =
@@ -300,28 +301,51 @@ export async function POST(request: Request) {
 
       selectedEnglishFormat = englishFormat;
       selectedEnglishPart = requestedPart;
+      effectiveDifficulty = getEnglishDifficulty(requestedPart);
+
+      // Historical format reuses the 2026 sets for the shared parts 1, 2, 3, 5 and 6.
+      const sharedHistoricalPart =
+        selectedEnglishFormat === "historical" &&
+        ["1", "2", "3", "5", "6"].includes(requestedPart);
+      const candidateFormats = sharedHistoricalPart
+        ? ["historical", "saber11_2026"]
+        : [selectedEnglishFormat];
 
       const { data: sets, error: setsError } = await adminSupabase
         .from("english_question_sets")
-        .select("id,title,shared_title,part,booklet_format,status")
-        .eq("booklet_format", selectedEnglishFormat)
-        .eq("part", getNumericEnglishPart(requestedPart))
-        .eq("status", "published");
+        .select("id,title,part,booklet_format,status")
+        .in("booklet_format", candidateFormats)
+        .eq("part", getNumericEnglishPart(requestedPart));
 
       if (setsError) {
-        console.error("[PeakScore] No fue posible consultar conjuntos publicados de Inglés.", {
-          errorCode: setsError.code ?? "UNKNOWN",
+        // Keep diagnostics in server logs; only show them in local development.
+        console.error("[PeakScore] No fue posible consultar conjuntos de Inglés.", {
+          code: setsError.code ?? "UNKNOWN",
+          message: setsError.message ?? "Unknown Supabase query error",
+          details: setsError.details ?? null,
+          hint: setsError.hint ?? null,
+          format: selectedEnglishFormat,
+          part: requestedPart,
         });
+        const developmentDetails =
+          process.env.NODE_ENV === "development"
+            ? ` [${setsError.code ?? "UNKNOWN"}] ${setsError.message ?? "Error de consulta"}`
+            : "";
         return NextResponse.json(
           {
             success: false,
-            error: "No fue posible revisar la disponibilidad de esta parte de Inglés.",
+            error: `No fue posible revisar la disponibilidad de esta parte de Inglés.${developmentDetails}`,
           },
           { status: 500 }
         );
       }
 
       const matchingSetIds = ((sets ?? []) as EnglishQuestionSet[])
+        .filter((set) => set.status === "published")
+        .filter((set) =>
+          set.booklet_format === selectedEnglishFormat ||
+          (sharedHistoricalPart && set.booklet_format === "saber11_2026")
+        )
         .filter((set) =>
           matchesEnglishVariant(set, selectedEnglishFormat!, requestedPart)
         )
@@ -351,10 +375,10 @@ export async function POST(request: Request) {
      * Mixta = no filtramos dificultad.
      */
 
-    if (difficulty !== "Mixta") {
+    if (effectiveDifficulty !== "Mixta") {
       query = query.eq(
         "difficulty",
-        difficulty
+        effectiveDifficulty
       );
     }
 
@@ -442,7 +466,7 @@ export async function POST(request: Request) {
               : "Simulacro personalizado creado por el usuario.",
           subject,
           duration,
-          difficulty,
+          difficulty: effectiveDifficulty,
           color: "bg-blue-600",
           created_by: user.id,
         })
@@ -529,7 +553,7 @@ export async function POST(request: Request) {
     );
 
     console.log(
-      `[PeakScore] Dificultad: ${difficulty}`
+      `[PeakScore] Dificultad: ${effectiveDifficulty}`
     );
 
     if (selectedEnglishFormat && selectedEnglishPart) {
@@ -545,6 +569,7 @@ export async function POST(request: Request) {
         questions: questionAmount,
         englishFormat: selectedEnglishFormat,
         englishPart: selectedEnglishPart,
+        difficulty: effectiveDifficulty,
       },
       { status: 201 }
     );

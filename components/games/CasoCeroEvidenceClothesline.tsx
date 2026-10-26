@@ -1,7 +1,7 @@
 "use client";
 
 import { Component, Suspense, useEffect, useMemo, useState, type ErrorInfo, type ReactNode } from "react";
-import { Canvas, useLoader, useThree } from "@react-three/fiber";
+import { Canvas, useFrame, useLoader, useRef, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { X } from "lucide-react";
 
@@ -521,6 +521,7 @@ function EvidenceCard({
   onSelect: (index: number) => void;
 }) {
   const [labelTexture, setLabelTexture] = useState<THREE.CanvasTexture | null>(null);
+  const rigRef = useRef<THREE.Group | null>(null);
   const paperGeometry = useMemo(
     () => new THREE.ExtrudeGeometry(roundedRectangle(1.48, 1.76, 0.035), {
       depth: 0.045,
@@ -537,6 +538,18 @@ function EvidenceCard({
   const rotationZ = [-0.045, 0.025, -0.035][index];
   const rotationY = [-0.11, 0.035, 0.09][index];
   const rotationX = [0.025, -0.035, 0.018][index];
+
+  useFrame(({ clock }) => {
+    const rig = rigRef.current;
+    if (!rig) return;
+
+    // Tiny damped movement around the actual rope attachment point:
+    // enough to feel suspended, not enough to distract during investigation.
+    const time = clock.elapsedTime;
+    rig.rotation.z = rotationZ + Math.sin(time * 0.42 + index * 1.7) * 0.006;
+    rig.rotation.x = rotationX + Math.sin(time * 0.31 + index * 1.25) * 0.003;
+    rig.rotation.y = rotationY + Math.sin(time * 0.27 + index * 1.1) * 0.004;
+  });
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
@@ -559,6 +572,7 @@ function EvidenceCard({
 
   return (
     <group
+      ref={rigRef}
       position={position}
       scale={scale}
       rotation={[rotationX, rotationY, rotationZ]}
@@ -567,8 +581,10 @@ function EvidenceCard({
         onSelect(index);
       }}
     >
-      {/* Soft cast shadow connects the physical print to the laboratory backdrop. */}
-      <PhotoDropShadow />
+      {/* All paper geometry is offset below the attachment pivot at the rope. */}
+      <group position={[0, -1.195, 0]}>
+        {/* Soft cast shadow connects the physical print to the laboratory backdrop. */}
+        <PhotoDropShadow />
 
       {/* Bevelled, rounded paper stock with a visible edge under the print. */}
       <mesh geometry={paperGeometry} position={[0, 0, -0.05]} castShadow receiveShadow>
@@ -607,8 +623,10 @@ function EvidenceCard({
         </mesh>
       )}
 
-      {/* The shaped wooden jaws and visible coiled spring grip the top paper edge. */}
-      <WoodenPin position={[0, 0.99, 0.085]} />
+      </group>
+
+      {/* The peg's upper jaw sits directly at the rope; the print hangs below it. */}
+      <WoodenPin position={[0, -0.205, 0.085]} />
     </group>
   );
 }
@@ -734,7 +752,7 @@ function EvidenceScene({
     const t = THREE.MathUtils.clamp((x + ropeX) / (2 * ropeX), 0, 1);
     const ropeY = 1.2 - Math.sin(Math.PI * t) * sag;
     // The top tip of each peg lands directly on the rope instead of floating below it.
-    return [x, ropeY - 1.195, x === 0 ? -0.025 : 0.035] as [number, number, number];
+    return [x, ropeY, x === 0 ? -0.025 : 0.035] as [number, number, number];
   });
 
   return (

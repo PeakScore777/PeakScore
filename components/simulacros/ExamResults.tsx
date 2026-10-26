@@ -22,6 +22,7 @@ type TutorReviewItem = {
   selectedAnswer: string | null;
   correctAnswer: string;
   explanation: string;
+  whyYourAnswer?: string;
   method: string;
   tip: string;
   source: "ai" | "official" | "unavailable";
@@ -408,7 +409,7 @@ export default function ExamResults({
 
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-950" />
 
-                Peak Moment
+                RESUMEN DE TU PRÁCTICA
 
               </div>
 
@@ -585,9 +586,17 @@ export default function ExamResults({
               }`}
             >
 
-              <div className="mb-3 text-center">
-                <span className="text-[9px] font-black uppercase tracking-[0.24em] text-slate-400">
-                  Desglose del intento
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+                    RESULTADO GENERAL
+                  </p>
+                  <h2 className="mt-1 text-lg font-black tracking-tight text-slate-950">
+                    Así te fue
+                  </h2>
+                </div>
+                <span className="text-xs font-semibold text-slate-400">
+                  {correctAnswers} de {totalQuestions} correctas
                 </span>
               </div>
 
@@ -646,7 +655,7 @@ export default function ExamResults({
                     Convierte tus errores en aprendizaje
                   </h2>
                   <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-                    Orby revisa tus respuestas incorrectas o pendientes y te explica el razonamiento, la respuesta correcta y una estrategia para la próxima vez.
+                    No solo verás la clave. TUTOR te ayuda a identificar la pista, seguir el razonamiento y reconocer una pregunta parecida la próxima vez.
                   </p>
                 </div>
 
@@ -694,11 +703,18 @@ export default function ExamResults({
 
               {tutorStatus === "ready" && tutorReview && (
                 <div className="space-y-4 px-4 py-5 sm:px-7 sm:py-6">
-                  <div className="flex items-start gap-3 rounded-2xl border border-violet-100 bg-violet-50/70 p-4">
-                    <BookOpenCheck size={19} className="mt-0.5 shrink-0 text-violet-700" />
-                    <p className="text-sm leading-6 text-violet-950">
-                      {tutorReview.summary}
-                    </p>
+                  <div className="flex items-start gap-3 rounded-2xl border border-violet-100 bg-gradient-to-r from-violet-50 to-white p-4 sm:p-5">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-violet-700 shadow-sm ring-1 ring-violet-100">
+                      <BookOpenCheck size={19} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-700">
+                        Tu plan de mejora
+                      </p>
+                      <p className="mt-1 text-sm leading-6 text-violet-950">
+                        {tutorReview.summary}
+                      </p>
+                    </div>
                   </div>
 
                   {tutorReview.items.length === 0 ? (
@@ -754,6 +770,35 @@ export default function ExamResults({
                                 </div>
                                 <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
                                   {item.explanation}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <div className="rounded-xl border border-rose-100 bg-rose-50/60 p-3.5">
+                                <p className="text-[10px] font-black uppercase tracking-wide text-rose-700">
+                                  {item.selectedAnswer ? "Lo que marcaste" : "Tu respuesta"}
+                                </p>
+                                <p className="mt-1 text-sm font-bold leading-5 text-rose-950">
+                                  {item.selectedAnswer
+                                    ? `${item.selectedAnswer}. ${item.options[item.selectedAnswer] ?? "Opción seleccionada"}`
+                                    : "La dejaste sin responder"}
+                                </p>
+                                {item.whyYourAnswer && (
+                                  <p className="mt-2 text-xs leading-5 text-rose-900">
+                                    {item.whyYourAnswer}
+                                  </p>
+                                )}
+                              </div>
+                              <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3.5">
+                                <p className="text-[10px] font-black uppercase tracking-wide text-emerald-700">
+                                  La respuesta correcta
+                                </p>
+                                <p className="mt-1 text-sm font-bold leading-5 text-emerald-950">
+                                  {item.correctAnswer}. {item.options[item.correctAnswer] ?? "Respuesta correcta"}
+                                </p>
+                                <p className="mt-2 text-xs leading-5 text-emerald-900">
+                                  Busca la pista que conecta esta opción con lo que pregunta el enunciado.
                                 </p>
                               </div>
                             </div>

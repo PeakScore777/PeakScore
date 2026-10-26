@@ -365,14 +365,10 @@ export async function POST(
       });
     }
 
-    // Reutiliza el límite por usuario existente para evitar llamadas ilimitadas a la IA.
+    // El tutor de lecciones y la revisión de resultados comparten un límite
+    // dedicado de 8 consultas por usuario en una ventana móvil de una hora.
     const { data: rateAllowed, error: rateError } = await supabase.rpc(
-      "consume_api_rate_limit",
-      {
-        p_bucket: "create-simulation",
-        p_limit: 20,
-        p_window_seconds: 3600,
-      },
+      "consume_lesson_tutor_rate_limit",
     );
 
     if (rateError || rateAllowed !== true) {

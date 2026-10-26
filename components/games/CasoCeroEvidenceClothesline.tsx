@@ -2,6 +2,7 @@
 
 import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { X } from "lucide-react";
@@ -82,7 +83,8 @@ type PhotoPointerDetails = { clientX: number; clientY: number; u: number; v: num
 type MagnifierTarget = { src: string; u: number; v: number; imageWidth: number; imageHeight: number };
 
 const MAGNIFIER_ZOOM = 3.15;
-const MAGNIFIER_INNER_DIAMETER = 150;
+const MAGNIFIER_INNER_DIAMETER = 138;
+const MAGNIFIER_MODEL_URL = "/api/caso-cero-magnifier-model";
 
 const pbrCache = new Map<"wood" | "jute" | "paper", PbrTextureSet>();
 
@@ -895,6 +897,108 @@ function WallEyelet({ position }: { position: [number, number, number] }) {
   );
 }
 
+class MagnifierModelBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn("Caso Cero: no se pudo cargar el modelo 3D de la lupa; se usará el recurso de respaldo.", error);
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+/**
+ * Real CC0 Poly Haven magnifying-glass model.
+ * Its mesh is normalized to one unit, so it can be sized in screen-space pixels.
+ */
+function MagnifyingGlassModel({
+  active,
+  pointerPosition,
+  onLoaded,
+}: {
+  active: boolean;
+  pointerPosition: { x: number; y: number } | null;
+  onLoaded: () => void;
+}) {
+  const { scene } = useGLTF(MAGNIFIER_MODEL_URL);
+  const { camera, size } = useThree();
+  const groupRef = useRef<THREE.Group | null>(null);
+
+  const normalizedModel = useMemo(() => {
+    const clone = scene.clone(true);
+    clone.updateMatrixWorld(true);
+
+    const bounds = new THREE.Box3().setFromObject(clone);
+    const center = bounds.getCenter(new THREE.Vector3());
+    const dimensions = bounds.getSize(new THREE.Vector3());
+    const maxDimension = Math.max(dimensions.x, dimensions.y, dimensions.z, 0.001);
+
+    const wrapper = new THREE.Group();
+    wrapper.add(clone);
+    wrapper.scale.setScalar(1 / maxDimension);
+    wrapper.position.copy(center).multiplyScalar(-1 / maxDimension);
+    return wrapper;
+  }, [scene]);
+
+  useEffect(() => {
+    onLoaded();
+  }, [onLoaded]);
+
+  useEffect(() => {
+    if (!(camera instanceof THREE.OrthographicCamera)) return;
+    camera.left = -size.width / 2;
+    camera.right = size.width / 2;
+    camera.top = size.height / 2;
+    camera.bottom = -size.height / 2;
+    camera.position.set(0, 0, 1200);
+    camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
+
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    // When held, the lens itself is centered on the pointer. The model's body
+    // extends down/right, like a real handheld magnifying glass.
+    if (active && !pointerPosition) {
+      group.visible = false;
+      return;
+    }
+
+    group.visible = true;
+    const modelWidth = active ? 350 : 184;
+    const lensX = active && pointerPosition
+      ? pointerPosition.x
+      : size.width * 0.53 - 24;
+    const lensY = active && pointerPosition
+      ? pointerPosition.y
+      : size.height - 92;
+
+    group.position.set(
+      lensX - size.width / 2 + modelWidth * 0.19,
+      size.height / 2 - lensY - modelWidth * 0.055,
+      30,
+    );
+    group.scale.setScalar(modelWidth);
+    // The source model is oriented lens-first; a slight roll matches the
+    // diagonal handle from the real prop while keeping the glass face visible.
+    group.rotation.set(0.03, -0.02, -0.22);
+  });
+
+  return (
+    <group ref={groupRef}>
+      <primitive object={normalizedModel} />
+    </group>
+  );
+}
+
 function EvidenceScene({
   mobile,
   onSelect,
@@ -974,6 +1078,7 @@ export default function CasoCeroEvidenceClothesline() {
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
   const [mobile, setMobile] = useState(false);
   const [magnifierActive, setMagnifierActive] = useState(false);
+  const [magnifierModelReady, setMagnifierModelReady] = useState(false);
   const [pointerPosition, setPointerPosition] = useState<{ x: number; y: number } | null>(null);
   const [magnifierTarget, setMagnifierTarget] = useState<MagnifierTarget | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -1009,6 +1114,7 @@ export default function CasoCeroEvidenceClothesline() {
   }, [magnifierActive, mobile]);
 
   const handlePhotoPointerOut = useCallback(() => setMagnifierTarget(null), []);
+  const handleMagnifierModelLoaded = useCallback(() => setMagnifierModelReady(true), []);
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 640px)");
@@ -1109,6 +1215,35 @@ export default function CasoCeroEvidenceClothesline() {
         </Canvas>
       </div>
 
+      <div className="pointer-events-none absolute inset-0 z-30">
+        <Canvas
+          orthographic
+          camera={{ position: [0, 0, 1200], left: -800, right: 800, top: 450, bottom: -450, near: 0.1, far: 2400 }}
+          dpr={[1, 1.35]}
+          gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
+          onCreated={({ gl }) => {
+            gl.setClearColor(0x000000, 0);
+            gl.outputColorSpace = THREE.SRGBColorSpace;
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 1.05;
+          }}
+          style={{ width: "100%", height: "100%", pointerEvents: "none" }}
+        >
+          <ambientLight intensity={1.15} />
+          <directionalLight position={[-4, 7, 10]} intensity={2.5} />
+          <directionalLight position={[5, -2, 7]} intensity={1.15} />
+          <MagnifierModelBoundary>
+            <Suspense fallback={null}>
+              <MagnifyingGlassModel
+                active={magnifierActive}
+                pointerPosition={pointerPosition}
+                onLoaded={handleMagnifierModelLoaded}
+              />
+            </Suspense>
+          </MagnifierModelBoundary>
+        </Canvas>
+      </div>
+
       {active && (
         <aside
           role="dialog"
@@ -1147,39 +1282,41 @@ export default function CasoCeroEvidenceClothesline() {
           onClick={handleTakeMagnifier}
           aria-label="Tomar la lupa de evidencia"
           title="Tomar lupa de evidencia"
-          className="pointer-events-auto absolute bottom-[4.5%] left-[53%] z-40 grid h-[84px] w-[112px] -translate-x-1/2 place-items-center overflow-visible rounded-sm bg-transparent transition duration-200 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0cb8a]"
+          className="pointer-events-auto absolute bottom-[1%] left-[53%] z-40 grid h-[160px] w-[260px] -translate-x-1/2 place-items-center overflow-visible rounded-sm bg-transparent transition duration-200 hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0cb8a]"
         >
-          <svg viewBox="0 0 190 135" className="h-[82px] w-[116px] drop-shadow-[0_7px_5px_rgba(0,0,0,.58)]" aria-hidden="true">
-            <defs>
-              <linearGradient id="table-loupe-handle" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor="#c0c7cb" />
-                <stop offset=".12" stopColor="#4b5359" />
-                <stop offset=".38" stopColor="#151a1e" />
-                <stop offset=".68" stopColor="#050709" />
-                <stop offset=".9" stopColor="#343b40" />
-                <stop offset="1" stopColor="#8e989e" />
-              </linearGradient>
-              <linearGradient id="table-loupe-metal" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor="#f3f0df" />
-                <stop offset=".2" stopColor="#9da8ad" />
-                <stop offset=".48" stopColor="#30383d" />
-                <stop offset=".72" stopColor="#c7cfce" />
-                <stop offset="1" stopColor="#60686c" />
-              </linearGradient>
-              <radialGradient id="table-loupe-glass" cx=".28" cy=".2" r=".92">
-                <stop offset="0" stopColor="#e8f7f6" stopOpacity=".72" />
-                <stop offset=".48" stopColor="#a4c6d0" stopOpacity=".34" />
-                <stop offset="1" stopColor="#293d49" stopOpacity=".72" />
-              </radialGradient>
-            </defs>
-            <rect x="77" y="55" width="105" height="18" rx="9" transform="rotate(42 77 64)" fill="url(#table-loupe-handle)" stroke="#080a0b" strokeWidth="1.4" />
-            <rect x="74" y="54" width="23" height="19" rx="4" transform="rotate(42 74 64)" fill="url(#table-loupe-metal)" stroke="#31373a" strokeWidth="1" />
-            <circle cx="55" cy="43" r="42" fill="url(#table-loupe-metal)" stroke="#15191c" strokeWidth="2" />
-            <circle cx="55" cy="43" r="35.5" fill="url(#table-loupe-glass)" stroke="#dce5e2" strokeWidth="1.5" />
-            <path d="M31 17 C42 7 62 8 73 22" fill="none" stroke="#f9fffb" strokeOpacity=".72" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M30 63 C40 75 58 77 69 66" fill="none" stroke="#d9eff3" strokeOpacity=".28" strokeWidth="2" strokeLinecap="round" />
-            <circle cx="55" cy="43" r="38.5" fill="none" stroke="#050708" strokeOpacity=".7" strokeWidth="1" />
-          </svg>
+          {!magnifierModelReady && (
+            <svg viewBox="0 0 190 135" className="h-[82px] w-[116px] drop-shadow-[0_7px_5px_rgba(0,0,0,.58)]" aria-hidden="true">
+                        <defs>
+                          <linearGradient id="table-loupe-handle" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stopColor="#c0c7cb" />
+                            <stop offset=".12" stopColor="#4b5359" />
+                            <stop offset=".38" stopColor="#151a1e" />
+                            <stop offset=".68" stopColor="#050709" />
+                            <stop offset=".9" stopColor="#343b40" />
+                            <stop offset="1" stopColor="#8e989e" />
+                          </linearGradient>
+                          <linearGradient id="table-loupe-metal" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0" stopColor="#f3f0df" />
+                            <stop offset=".2" stopColor="#9da8ad" />
+                            <stop offset=".48" stopColor="#30383d" />
+                            <stop offset=".72" stopColor="#c7cfce" />
+                            <stop offset="1" stopColor="#60686c" />
+                          </linearGradient>
+                          <radialGradient id="table-loupe-glass" cx=".28" cy=".2" r=".92">
+                            <stop offset="0" stopColor="#e8f7f6" stopOpacity=".72" />
+                            <stop offset=".48" stopColor="#a4c6d0" stopOpacity=".34" />
+                            <stop offset="1" stopColor="#293d49" stopOpacity=".72" />
+                          </radialGradient>
+                        </defs>
+                        <rect x="77" y="55" width="105" height="18" rx="9" transform="rotate(42 77 64)" fill="url(#table-loupe-handle)" stroke="#080a0b" strokeWidth="1.4" />
+                        <rect x="74" y="54" width="23" height="19" rx="4" transform="rotate(42 74 64)" fill="url(#table-loupe-metal)" stroke="#31373a" strokeWidth="1" />
+                        <circle cx="55" cy="43" r="42" fill="url(#table-loupe-metal)" stroke="#15191c" strokeWidth="2" />
+                        <circle cx="55" cy="43" r="35.5" fill="url(#table-loupe-glass)" stroke="#dce5e2" strokeWidth="1.5" />
+                        <path d="M31 17 C42 7 62 8 73 22" fill="none" stroke="#f9fffb" strokeOpacity=".72" strokeWidth="2.5" strokeLinecap="round" />
+                        <path d="M30 63 C40 75 58 77 69 66" fill="none" stroke="#d9eff3" strokeOpacity=".28" strokeWidth="2" strokeLinecap="round" />
+                        <circle cx="55" cy="43" r="38.5" fill="none" stroke="#050708" strokeOpacity=".7" strokeWidth="1" />
+            </svg>
+          )}
           <span className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#7e6746]/70 bg-[#080d12]/85 px-2 py-1 text-[8px] font-black uppercase tracking-[.16em] text-[#ead9ba] shadow-md">
             Lupa de evidencia
           </span>
@@ -1190,32 +1327,48 @@ export default function CasoCeroEvidenceClothesline() {
         </div>
       )}
 
-      {magnifierActive && pointerPosition && (
-        <div aria-hidden="true" className="pointer-events-none absolute z-[100] h-0 w-0" style={{ left: pointerPosition.x, top: pointerPosition.y }}>
+      {!magnifierModelReady && magnifierActive && pointerPosition && (
+        <div aria-hidden="true" className="pointer-events-none absolute z-[90] h-0 w-0" style={{ left: pointerPosition.x, top: pointerPosition.y }}>
           <div className="absolute left-[43px] top-[39px] h-[23px] w-[133px] origin-[12px_11px] rotate-[43deg] rounded-full border border-[#080a0c] shadow-[2px_5px_7px_rgba(0,0,0,.58)]" style={{ background: "linear-gradient(180deg,#d7dcdd 0%,#737d82 12%,#242a2f 28%,#080a0d 52%,#20262b 78%,#a8b0b3 96%,#4b5358 100%)" }} />
           <div className="absolute left-[43px] top-[39px] h-[25px] w-[28px] origin-[12px_12px] rotate-[43deg] rounded-[5px] border border-[#252a2d] shadow-[inset_0_1px_2px_rgba(255,255,255,.55)]" style={{ background: "linear-gradient(135deg,#f0f0e8,#69757a 26%,#202529 56%,#c3c9c8 82%,#535d62)" }} />
+        </div>
+      )}
+
+      {magnifierActive && pointerPosition && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute z-[100] h-0 w-0"
+          style={{ left: pointerPosition.x, top: pointerPosition.y }}
+        >
+          {/* The CC0 model supplies the metal rim and handle. This inner circular
+              image crop is the actual zoom through its glass. */}
           <div
-            className="absolute -left-[82px] -top-[82px] h-[164px] w-[164px] rounded-full border border-[#0b1014] p-[7px] shadow-[0_6px_16px_rgba(0,0,0,.62),inset_0_1px_2px_rgba(255,255,255,.8)]"
-            style={{ background: "conic-gradient(from 210deg,#3e474b 0deg,#e6e7df 32deg,#7d898d 72deg,#f4f2e8 102deg,#59646a 148deg,#d0d4d0 202deg,#353e43 260deg,#e0e1d7 315deg,#3e474b 360deg)" }}
+            className="absolute -left-[69px] -top-[69px] h-[138px] w-[138px] overflow-hidden rounded-full border border-white/30"
+            style={{
+              background: "rgba(184,214,225,.18)",
+              boxShadow: "inset 0 1px 8px rgba(255,255,255,.23), inset 0 -2px 8px rgba(2,12,19,.20)",
+            }}
           >
-            <div className="relative h-full w-full overflow-hidden rounded-full border border-[#dce7e7]/80" style={{ backgroundColor: magnifierTarget ? "#080d12" : "rgba(190,215,224,.16)", backdropFilter: magnifierTarget ? undefined : "blur(1.5px) saturate(1.25)" }}>
-              {magnifierTarget && (
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    backgroundImage: `url("${magnifierTarget.src}")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: `${magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
-                    backgroundPosition: `${MAGNIFIER_INNER_DIAMETER / 2 - magnifierTarget.u * magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${MAGNIFIER_INNER_DIAMETER / 2 - (1 - magnifierTarget.v) * magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
-                    filter: "contrast(1.04) saturate(1.06)",
-                  }}
-                />
-              )}
-              <div className="pointer-events-none absolute inset-0 rounded-full" style={{ background: "radial-gradient(ellipse at 27% 18%,rgba(255,255,255,.62),transparent 23%),radial-gradient(ellipse at 72% 84%,rgba(132,184,199,.2),transparent 38%),linear-gradient(132deg,rgba(239,251,255,.12),transparent 44%,rgba(3,14,22,.16))", boxShadow: "inset 0 1px 10px rgba(255,255,255,.28),inset 0 -3px 9px rgba(4,12,18,.26)" }} />
-              <div className="pointer-events-none absolute left-[15%] top-[11%] h-[18%] w-[38%] rotate-[-27deg] rounded-full bg-white/20 blur-[2px]" />
-            </div>
+            {magnifierTarget && (
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage: `url("${magnifierTarget.src}")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundSize: `${magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
+                  backgroundPosition: `${MAGNIFIER_INNER_DIAMETER / 2 - magnifierTarget.u * magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${MAGNIFIER_INNER_DIAMETER / 2 - (1 - magnifierTarget.v) * magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
+                  filter: "contrast(1.04) saturate(1.06)",
+                }}
+              />
+            )}
+            <div
+              className="pointer-events-none absolute inset-0 rounded-full"
+              style={{
+                background: "radial-gradient(ellipse at 24% 15%,rgba(255,255,255,.54),transparent 22%),radial-gradient(ellipse at 73% 82%,rgba(132,184,199,.18),transparent 38%),linear-gradient(132deg,rgba(239,251,255,.08),transparent 44%,rgba(3,14,22,.13))",
+                boxShadow: "inset 0 1px 8px rgba(255,255,255,.24),inset 0 -3px 8px rgba(4,12,18,.18)",
+              }}
+            />
           </div>
-          <div className="pointer-events-none absolute -left-[74px] -top-[74px] h-[148px] w-[148px] rounded-full border border-white/45" style={{ boxShadow: "0 0 0 1px rgba(255,255,255,.12),inset 0 0 0 1px rgba(255,255,255,.12)" }} />
         </div>
       )}
 

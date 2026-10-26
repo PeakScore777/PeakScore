@@ -1125,8 +1125,6 @@ export default function EditQuestionPage() {
                       <ZoomableImage
                         src={form.image_url}
                         alt="Imagen de la pregunta"
-                        width={1200}
-                        height={800}
                         className="max-h-80 w-full rounded-lg object-contain"
                       />
                     </div>

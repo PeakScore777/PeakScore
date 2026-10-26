@@ -379,6 +379,18 @@ export async function POST(request: Request) {
       query = query
         .in("english_set_id", matchingSetIds)
         .eq("english_part", getNumericEnglishPart(requestedPart));
+
+      const expectedQuestionCount = getEnglishPartQuestionCount(
+        selectedEnglishFormat,
+        requestedPart,
+      );
+
+      if (expectedQuestionCount === null) {
+        return NextResponse.json(
+          { success: false, error: "No encontramos la cantidad de preguntas definida para esta parte." },
+          { status: 400 },
+        );
+      }
     }
 
     /*

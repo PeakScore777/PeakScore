@@ -27,37 +27,38 @@ type Props = {
   saving: boolean;
   answeredCount: number;
   englishSets?: Record<string, EnglishSetDisplay>;
+  simulationTitle?: string;
 };
+
+function isHistorical(simulationTitle: string | undefined, setInfo?: EnglishSetDisplay) {
+  if (simulationTitle?.toLowerCase().includes("histórico")) return true;
+  return setInfo?.booklet_format === "historical";
+}
 
 function getEnglishNumber(
   question: Question,
   fallback: number,
-  setInfo?: EnglishSetDisplay,
+  setInfo: EnglishSetDisplay | undefined,
+  historical: boolean,
 ) {
   const part = question.english_part;
   const position = question.english_position;
   if (!part || !position) return fallback;
 
-  const historical = setInfo?.booklet_format === "historical";
   const title = setInfo?.title ?? question.component ?? "";
-
   if (part === 1) return 79 + position;
   if (part === 2) return 84 + position;
   if (part === 3) return 89 + position;
-
   if (part === 4) {
     if (/^4B\b/i.test(title)) return 104 + position;
-    return historical ? 96 + position : 94 + position;
+    return (historical ? 96 : 94) + position;
   }
-
   if (part === 5) return (historical ? 112 : 102) + position;
   if (part === 6) return (historical ? 119 : 109) + position;
-
   if (part === 7) {
     if (historical || /^7B\b/i.test(title)) return 124 + position;
     return 114 + position;
   }
-
   return fallback;
 }
 
@@ -92,17 +93,38 @@ export default function BookletView({
   saving,
   answeredCount,
   englishSets = {},
+  simulationTitle,
 }: Props) {
   const questionsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
-  const questionPages = Math.max(1, Math.ceil(questions.length / questionsPerPage));
   const isEnglishSimulation = questions.some((question) => Boolean(question.english_part));
+  const questionPages = Math.max(1, Math.ceil(questions.length / questionsPerPage));
   const totalPages = questionPages + (isEnglishSimulation ? 1 : 0);
   const isAnswerSheetPage = isEnglishSimulation && currentPage > questionPages;
   const startIndex = (currentPage - 1) * questionsPerPage;
   const visibleQuestions = isAnswerSheetPage
     ? []
     : questions.slice(startIndex, startIndex + questionsPerPage);
+
+  const firstQuestion = questions[0];
+  const firstSet = firstQuestion?.english_set_id
+    ? englishSets[firstQuestion.english_set_id]
+    : undefined;
+  const englishPart = firstQuestion?.english_part ?? 0;
+  const historical = isHistorical(simulationTitle, firstSet);
+  const currentSectionName =
+    englishPart === 1 ? "Parte 1. Descripciones y banco de palabras" :
+    englishPart === 2 ? "Parte 2. Avisos y situaciones" :
+    englishPart === 3 ? "Parte 3. Conversaciones cotidianas" :
+    englishPart === 4 ? (/^4B\b/i.test(firstSet?.title ?? "") ? "Parte 4B. Completar espacios" : historical ? "Parte 4A. Completar espacios" : "Parte 4. Uso del idioma en contexto") :
+    englishPart === 5 ? "Parte 5. Comprensión de lectura" :
+    englishPart === 6 ? "Parte 6. Lectura inferencial" :
+    englishPart === 7 ? (historical ? "Parte 7. Formato histórico" : /^7B\b/i.test(firstSet?.title ?? "") ? "Parte 7B. Formato Saber 11 · 2026" : "Parte 7A. Formato Saber 11 · 2026") : "Cuadernillo de práctica";
+
+  const sectionQuestions = visibleQuestions;
+  const wordBank = firstSet?.word_bank ?? [];
+  const exampleWord = wordBank.find((word) => word.example);
+  const hasEnglishSet = Boolean(isEnglishSimulation && firstSet);
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-3">
@@ -115,10 +137,10 @@ export default function BookletView({
         </h2>
         <p className="mx-auto mt-1 max-w-2xl text-xs leading-4 text-slate-600">
           {isAnswerSheetPage
-            ? "Marca una sola opción por pregunta. Puedes cambiarla antes de finalizar."
+            ? "Marca una sola burbuja por pregunta. Puedes cambiar las respuestas antes de finalizar."
             : isEnglishSimulation
-              ? "Resuelve las preguntas siguiendo el orden del cuadernillo y registra tus respuestas en la hoja al final."
-              : "Lee cada sección y marca una sola respuesta por pregunta. Puedes cambiarla antes de entregar."}
+              ? "Respeta el orden y la estructura de la sección seleccionada. Registra tus respuestas en la hoja al final."
+              : "Lee cada pregunta y selecciona una respuesta. Puedes cambiarla antes de finalizar."}
         </p>
         <div className="mt-2 flex flex-wrap justify-between gap-2 border-t border-slate-200 pt-2 text-xs font-bold text-slate-600">
           <span>{answeredCount} de {questions.length} respondidas</span>
@@ -147,186 +169,193 @@ export default function BookletView({
             disabled={currentPage === totalPages}
             className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
           >
-            {isEnglishSimulation && currentPage === questionPages ? "Hoja de respuestas" : isAnswerSheetPage ? "Última página" : "Siguiente"}
+            {isEnglishSimulation && currentPage === questionPages ? "Hoja de respuestas" : "Siguiente"}
             <ChevronRight size={16} />
           </button>
         </div>
       </div>
 
-      {!isAnswerSheetPage && (
-        <section className="mx-auto w-full max-w-[210mm] border border-slate-300 bg-white px-4 py-3 shadow-sm sm:px-6 sm:py-4">
-          <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
+      {!isAnswerSheetPage && hasEnglishSet && englishPart === 1 && (
+        <section className="mx-auto w-full max-w-[210mm] border border-slate-300 bg-white px-5 py-5 shadow-sm sm:px-8 sm:py-7">
+          <header className="mb-5 border-b border-slate-200 pb-4">
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              Inglés · Sesión {firstQuestion?.session}
+            </p>
+            <h3 className="mt-1 text-xl font-black text-slate-950">{firstSet?.shared_title || firstSet?.title}</h3>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+              {firstSet?.instructions || "Lee las descripciones de la columna de la izquierda. Elige la palabra de la derecha que corresponde a cada descripción. Usa el ejemplo como guía."}
+            </p>
+          </header>
+          {exampleWord?.example_description && (
+            <div className="mb-5 border-b-2 border-slate-900 pb-5">
+              <p className="mb-3 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
+              <div className="grid gap-4 sm:grid-cols-[1fr_0.9fr]">
+                <p className="font-serif text-sm leading-6"><strong>0.</strong> {exampleWord.example_description}</p>
+                <div className="flex flex-wrap items-center gap-1 border border-slate-300 p-3 text-xs">
+                  <strong className="mr-1">Respuesta 0.</strong>
+                  {wordBank.map((word) => (
+                    <span key={word.key} className={`flex h-6 w-6 items-center justify-center rounded-full border ${word.key === (exampleWord.example_answer ?? exampleWord.key) ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300"}`}>{word.key}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="grid gap-7 md:grid-cols-2">
+            <section>
+              <h4 className="mb-4 border-b border-slate-300 pb-3 text-center text-xs font-black uppercase tracking-wide">Descripciones</h4>
+              <div className="space-y-0">
+                {sectionQuestions.map((question, index) => {
+                  const number = getEnglishNumber(question, index + 1, firstSet, historical);
+                  return (
+                    <div key={question.id} className="grid min-h-[58px] grid-cols-[2.5rem_minmax(0,1fr)] gap-2 border-b border-dotted border-slate-300 py-3">
+                      <strong className="text-xs">{number}.</strong>
+                      <p className="whitespace-pre-wrap font-serif text-sm leading-6 text-slate-900">{question.question}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+            <section>
+              <h4 className="mb-4 border-b border-slate-300 pb-3 text-center text-xs font-black uppercase tracking-wide">Palabras</h4>
+              <div className="space-y-0">
+                {wordBank.map((word) => (
+                  <div key={word.key} className={`flex min-h-[48px] items-start gap-3 border-b border-dotted border-slate-300 px-2 py-3 text-sm leading-6 ${word.example ? "font-bold underline decoration-2" : ""}`}>
+                    <strong>{word.key}.</strong>
+                    <span>{word.text}{word.example ? " (ejemplo)" : ""}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+          <footer className="mt-5 border-t border-slate-300 pt-3 text-[10px] text-slate-400">PeakScore · Material de práctica · Las respuestas correctas no se muestran en esta vista.</footer>
+        </section>
+      )}
+
+      {!isAnswerSheetPage && hasEnglishSet && englishPart !== 1 && (
+        <section className="mx-auto w-full max-w-[210mm] border border-slate-300 bg-white px-5 py-5 shadow-sm sm:px-8 sm:py-7">
+          <header className="mb-5 border-b border-slate-200 pb-4">
+            <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">Inglés · Sesión {firstQuestion?.session}</p>
+            <h3 className="mt-1 text-xl font-black text-slate-950">{firstSet?.shared_title || currentSectionName}</h3>
+            {firstSet?.title && <p className="mt-1 text-sm text-slate-600">{firstSet.title}</p>}
+            {firstSet?.instructions && <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{firstSet.instructions}</p>}
+          </header>
+
+          {firstSet?.example_image_url && englishPart === 3 && (
+            <div className="mb-5 flex justify-center border-b border-slate-300 pb-4">
+              <img src={firstSet.example_image_url} alt="Ejemplo de la sección" className="max-h-60 max-w-full object-contain"/>
+            </div>
+          )}
+
+          {firstSet?.example_prompt && (
+            <div className="mb-5 border-b border-slate-300 pb-4">
+              <p className="mb-2 text-center text-xs font-black uppercase tracking-widest">Ejemplo</p>
+              <p className="whitespace-pre-wrap font-serif text-sm leading-6"><strong>0.</strong> {firstSet.example_prompt}</p>
+              {firstSet.example_image_url && englishPart !== 3 && <img src={firstSet.example_image_url} alt="Imagen de ejemplo" className="mt-3 max-h-52 max-w-full object-contain"/>}
+              {!!firstSet.example_options?.length && <div className="mt-3 grid gap-2 sm:grid-cols-2">{firstSet.example_options.map((option) => <p key={option.key} className="text-sm"><strong>{option.key}.</strong> {option.text}</p>)}</div>}
+              {firstSet.example_answer && <p className="mt-2 text-xs text-slate-500">Respuesta de ejemplo: {firstSet.example_answer}</p>}
+            </div>
+          )}
+
+          {firstSet?.shared_image_url && (
+            <div className="mb-5 flex justify-center">
+              <img src={firstSet.shared_image_url} alt={firstSet.shared_title || firstSet.title} className="max-h-[560px] max-w-full object-contain"/>
+            </div>
+          )}
+          {firstSet?.shared_text && (
+            <div className="mb-5 whitespace-pre-wrap border-b border-slate-300 pb-5 font-serif text-sm leading-7 text-slate-900">
+              {firstSet.shared_text}
+            </div>
+          )}
+
+          {englishPart === 4 ? (
+            <div className="space-y-0">
+              {sectionQuestions.map((question, index) => {
+                const number = getEnglishNumber(question, index + 1, firstSet, historical);
+                const options = getOptions(question, englishPart);
+                return (
+                  <article key={question.id} className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 border-b border-slate-300 py-3">
+                    <strong className="pt-1 text-xs">{number}.</strong>
+                    <div>
+                      {!question.question.toLowerCase().startsWith("completa el espacio") && <p className="mb-2 whitespace-pre-wrap font-serif text-sm">{question.question}</p>}
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        {options.map((option) => <p key={option.key} className="text-sm leading-6"><strong>{option.key}.</strong> {option.text}</p>)}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : englishPart === 6 ? (
+            <div className="grid gap-x-7 md:grid-cols-2">
+              {sectionQuestions.map((question, index) => {
+                const number = getEnglishNumber(question, index + 1, firstSet, historical);
+                const options = getOptions(question, englishPart);
+                return (
+                  <article key={question.id} className="border-b border-slate-300 py-3">
+                    <p className="font-serif text-sm leading-6"><strong>{number}.</strong> {question.question}</p>
+                    <div className="mt-2 space-y-1">
+                      {options.map((option) => <p key={option.key} className="text-sm leading-5"><strong>{option.key}.</strong> {option.text}</p>)}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={`grid gap-x-7 ${englishPart === 2 || englishPart === 3 || englishPart === 5 ? "md:grid-cols-2" : "grid-cols-1"}`}>
+              {sectionQuestions.map((question, index) => {
+                const number = getEnglishNumber(question, index + 1, firstSet, historical);
+                const options = getOptions(question, englishPart);
+                return (
+                  <article key={question.id} className={`border-b border-slate-300 py-3 ${englishPart === 3 ? "min-h-[100px]" : ""}`}>
+                    <div className={`grid gap-3 ${englishPart === 2 ? "sm:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]" : "grid-cols-1"}`}>
+                      <div>
+                        {question.image_url && <img src={question.image_url} alt={`Recurso de la pregunta ${number}`} className={englishPart === 2 ? "mb-2 max-h-36 max-w-full object-contain" : "mb-2 max-h-64 max-w-full object-contain"}/>}
+                        <p className="whitespace-pre-wrap font-serif text-sm leading-6"><strong>{number}.</strong> {question.question}</p>
+                      </div>
+                      <div className={`grid gap-2 ${englishPart === 5 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                        {options.map((option) => <p key={option.key} className="text-sm leading-5"><strong>{option.key}.</strong> {option.text}</p>)}
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          <footer className="mt-5 border-t border-slate-300 pt-3 text-[10px] text-slate-400">PeakScore · Material de práctica · Las respuestas correctas no se muestran en esta vista.</footer>
+        </section>
+      )}
+
+      {!isAnswerSheetPage && !hasEnglishSet && (
+        <section className="mx-auto w-full max-w-[210mm] border border-slate-300 bg-white px-5 py-5 shadow-sm sm:px-8 sm:py-7">
+          <header className="mb-5 border-b border-slate-200 pb-4">
+            <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-500">PeakScore · Cuadernillo de práctica</p>
+            <h3 className="mt-1 text-center text-xl font-black text-slate-950">Cuadernillo del simulacro</h3>
+          </header>
+          <div className="grid gap-x-7 md:grid-cols-2">
             {visibleQuestions.map((question, pageIndex) => {
               const index = startIndex + pageIndex;
-              const setId = question.english_set_id ?? "";
-              const setInfo = setId ? englishSets[setId] : undefined;
-              const isEnglish = Boolean(question.english_part);
-              const part = question.english_part ?? 0;
-              const title = setInfo?.title ?? question.component ?? "";
-              const officialNumber = getEnglishNumber(question, index + 1, setInfo);
-              const options = getOptions(question, part);
-              const isFirstInSet = pageIndex === 0 || visibleQuestions[pageIndex - 1]?.english_set_id !== setId;
-              const wordBank = isFirstInSet ? setInfo?.word_bank ?? [] : [];
-              const showSharedText = isFirstInSet && Boolean(setInfo?.shared_image_url || setInfo?.shared_text || question.context_text);
-              const showPart3Example = isFirstInSet && part === 3 && Boolean(setInfo?.example_image_url);
-
+              const selected = answers[index] ?? 0;
+              const options = getOptions(question, 0);
               return (
-                <article
-                  key={question.id}
-                  id={`booklet-question-${index}`}
-                  className="mb-4 min-w-0 break-inside-avoid border-b border-slate-200 pb-3"
-                >
-                  {isFirstInSet && setInfo && (
-                    <header className="mb-2 border-b border-slate-300 pb-2">
-                      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                        Inglés · Sesión {question.session}
-                      </p>
-                      <h3 className="mt-1 text-sm font-black leading-5 text-slate-950">
-                        {setInfo.shared_title || setInfo.title}
-                      </h3>
-                      {setInfo.instructions && (
-                        <p className="mt-2 whitespace-pre-wrap text-[11px] leading-4 text-slate-700">
-                          {setInfo.instructions}
-                        </p>
-                      )}
-                      {showPart3Example && (
-                        <div className="mt-3 flex justify-center">
-                          <img src={setInfo.example_image_url!} alt="Ejemplo ilustrado de conversación" className="max-h-48 max-w-full object-contain" />
-                        </div>
-                      )}
-                    </header>
-                  )}
-
-                  {isFirstInSet && setInfo && part === 1 && wordBank.length > 0 && (() => {
-                    const exampleWord = wordBank.find((word) => word.example);
-                    return exampleWord?.example_description ? (
-                      <div className="mb-2 border-b-2 border-slate-900 pb-2">
-                        <p className="mb-2 text-center text-[9px] font-black uppercase tracking-widest">Ejemplo</p>
-                        <div className="grid gap-2 sm:grid-cols-[1fr_0.9fr]">
-                          <p className="font-serif text-[11px] leading-4">
-                            <strong>0.</strong> {exampleWord.example_description}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-1 border border-slate-300 p-2 text-[9px]">
-                            <strong className="mr-1">Respuesta 0.</strong>
-                            {wordBank.map((word) => (
-                              <span key={word.key} className={`flex h-5 w-5 items-center justify-center rounded-full border ${word.key === (exampleWord.example_answer ?? exampleWord.key) ? "border-slate-950 bg-slate-950 text-white" : "border-slate-300"}`}>
-                                {word.key}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ) : null;
-                  })()}
-
-                  {isFirstInSet && setInfo && part !== 1 && part !== 3 && (setInfo.example_prompt || setInfo.example_image_url) && (
-                    <div className="mb-2 border-b border-slate-900 pb-2">
-                      <p className="mb-2 text-center text-[9px] font-black uppercase tracking-widest">Ejemplo</p>
-                      {setInfo.example_image_url && (
-                        <div className="mb-2 flex justify-center">
-                          <img src={setInfo.example_image_url} alt="Imagen del ejemplo del banco de preguntas" className="max-h-44 max-w-full object-contain" />
-                        </div>
-                      )}
-                      {setInfo.example_prompt && (
-                        <p className="mb-2 whitespace-pre-wrap font-serif text-[11px] leading-4">
-                          <strong>0.</strong> {setInfo.example_prompt}
-                        </p>
-                      )}
-                      {!!setInfo.example_options?.length && (
-                        <div className={`grid gap-x-3 gap-y-1 text-[10px] leading-4 ${setInfo.example_options.length > 2 ? "grid-cols-2" : "grid-cols-1"}`}>
-                          {setInfo.example_options.map((option) => (
-                            <div key={option.key} className="flex gap-1">
-                              <strong>{option.key}.</strong><span>{option.text}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      {!!setInfo.example_options?.length && setInfo.example_answer && (
-                        <div className="mt-2 inline-flex flex-wrap items-center gap-1 border border-slate-400 px-2 py-1 text-[9px]">
-                          <strong className="mr-1">Respuesta 0.</strong>
-                          {setInfo.example_options.map((option) => (
-                            <span key={option.key} className={`flex h-4 w-4 items-center justify-center rounded-full border ${setInfo.example_answer === option.key ? "border-black bg-black font-bold text-white" : "border-slate-400"}`}>
-                              {option.key}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {showSharedText && (
-                    setInfo?.shared_image_url ? (
-                      <div className="mb-2 flex justify-center">
-                        <img src={setInfo.shared_image_url} alt={setInfo.shared_title || setInfo.title} className="h-auto max-h-[500px] max-w-full object-contain" />
-                      </div>
-                    ) : (
-                      <div className="mb-2 whitespace-pre-wrap font-serif text-[11px] leading-[1.4] text-slate-900">
-                        {setInfo?.shared_text ?? question.context_text}
-                      </div>
-                    )
-                  )}
-
-                  {wordBank.length > 0 && isFirstInSet && (
-                    <div className="mb-2 grid gap-1 border-b border-slate-300 pb-2 sm:grid-cols-2">
-                      {wordBank.map((word) => (
-                        <div key={word.key} className="flex gap-2 py-0.5 text-[11px] leading-4">
-                          <strong>{word.key}.</strong>
-                          <span>{word.text}{word.example ? " (ejemplo)" : ""}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-[1.5rem_minmax(0,1fr)] gap-2">
-                    <strong className="text-[11px] text-slate-950">
-                      {isEnglish ? `${officialNumber}.` : `Pregunta ${index + 1}`}
-                    </strong>
-                    <div>
-                      {question.image_url && part === 2 && (
-                        <div className="mb-2 flex justify-start">
-                          <img src={question.image_url} alt={`Aviso de la pregunta ${officialNumber}`} className="max-h-24 max-w-[240px] object-contain" />
-                        </div>
-                      )}
-                      <p className="whitespace-pre-wrap font-serif text-[11px] leading-[1.4] text-slate-900">
-                        {question.question}
-                      </p>
-                      {question.image_url && part !== 2 && (
-                        <div className="mt-2 flex justify-center">
-                          <img src={question.image_url} alt={`Recurso de la pregunta ${officialNumber}`} className="max-h-[420px] max-w-full object-contain" />
-                        </div>
-                      )}
-                      {options.length > 0 && (
-                        <div className={`mt-2 grid gap-x-3 gap-y-1 ${part === 4 ? "grid-cols-3" : part === 5 || part === 6 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
-                          {options.map((option) => (
-                            isEnglish ? (
-                              <div key={option.key} className="flex gap-1 text-[10px] leading-[1.35]">
-                                <strong>{option.key}.</strong><span>{option.text}</span>
-                              </div>
-                            ) : (
-                              <button
-                                key={option.key}
-                                type="button"
-                                onClick={() => onAnswer(index, option.key.charCodeAt(0) - 64)}
-                                aria-pressed={answers[index] === option.key.charCodeAt(0) - 64}
-                                className={`flex items-start gap-2 border-0 px-0 py-0.5 text-left transition ${answers[index] === option.key.charCodeAt(0) - 64 ? "bg-blue-50" : "hover:bg-slate-50"}`}
-                              >
-                                <strong className="shrink-0">{option.key}.</strong>
-                                <span className="text-[12px] leading-[1.35] text-slate-900">{option.text}</span>
-                              </button>
-                            )
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                <article key={question.id} className="mb-4 border-b border-slate-200 pb-4">
+                  <p className="font-serif text-sm leading-6"><strong>Pregunta {index + 1}.</strong> {question.question}</p>
+                  {question.context_text && <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">{question.context_text}</p>}
+                  {question.image_url && <img src={question.image_url} alt={`Recurso de la pregunta ${index + 1}`} className="mt-3 max-h-72 max-w-full object-contain"/>}
+                  <div className="mt-3 space-y-2">
+                    {options.map((option) => {
+                      const value = option.key.charCodeAt(0) - 64;
+                      return (
+                        <button key={option.key} type="button" onClick={() => onAnswer(index, value)} aria-pressed={selected === value} className={`flex w-full items-start gap-2 rounded-md border px-3 py-2 text-left text-sm ${selected === value ? "border-blue-500 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}`}>
+                          <strong>{option.key}.</strong><span>{option.text}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </article>
               );
             })}
           </div>
-          <footer className="mt-2 flex items-center justify-between border-t border-slate-300 pt-2 text-[9px] text-slate-500">
-            <span>PeakScore · Material de práctica</span>
-            <span>Página {currentPage} de {questionPages}</span>
-          </footer>
         </section>
       )}
 
@@ -335,38 +364,27 @@ export default function BookletView({
           <header className="mb-5 border-b-2 border-slate-900 pb-4 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Saber 11 · Inglés</p>
             <h3 className="mt-1 text-xl font-black text-slate-950">Hoja de respuestas</h3>
-            <p className="mt-2 text-xs leading-5 text-slate-600">
-              Selecciona una burbuja por pregunta. Las letras disponibles cambian según la parte del cuadernillo.
-            </p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">Marca una sola burbuja por pregunta. Las letras disponibles corresponden a cada parte.</p>
           </header>
-
           <div className="grid grid-cols-1 gap-x-8 sm:grid-cols-2">
             {questions.map((question, index) => {
               const part = question.english_part ?? 0;
               const setInfo = question.english_set_id ? englishSets[question.english_set_id] : undefined;
               const letters = getAllowedLetters(part);
-              const number = getEnglishNumber(question, index + 1, setInfo);
+              const number = getEnglishNumber(question, index + 1, setInfo, historical);
               const selected = answers[index] ?? 0;
-
               return (
                 <div key={question.id} className="flex min-w-0 items-center justify-between gap-3 border-b border-slate-200 py-3">
                   <div className="min-w-0">
                     <p className="text-xs font-black text-slate-900">{number}.</p>
-                    <p className="text-[10px] text-slate-500">Parte {part}</p>
+                    <p className="text-[10px] text-slate-500">{currentSectionName}</p>
                   </div>
                   <div className="flex flex-wrap items-center justify-end gap-1.5">
                     {letters.map((letter) => {
                       const optionNumber = letter.charCodeAt(0) - 64;
                       const active = selected === optionNumber;
                       return (
-                        <button
-                          key={letter}
-                          type="button"
-                          onClick={() => onAnswer(index, optionNumber)}
-                          aria-label={`Pregunta ${number}, respuesta ${letter}`}
-                          aria-pressed={active}
-                          className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold transition ${active ? "border-slate-950 bg-slate-950 text-white shadow-sm" : "border-slate-400 bg-white text-slate-700 hover:border-blue-600 hover:text-blue-700"}`}
-                        >
+                        <button key={letter} type="button" onClick={() => onAnswer(index, optionNumber)} aria-label={`Pregunta ${number}, respuesta ${letter}`} aria-pressed={active} className={`flex h-8 w-8 items-center justify-center rounded-full border text-xs font-bold transition ${active ? "border-slate-950 bg-slate-950 text-white shadow-sm" : "border-slate-400 bg-white text-slate-700 hover:border-blue-600 hover:text-blue-700"}`}>
                           {letter}
                         </button>
                       );
@@ -377,12 +395,8 @@ export default function BookletView({
             })}
           </div>
           <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
-            {answeredCount} de {questions.length} respuestas marcadas. Puedes volver al cuadernillo para revisar el enunciado sin perder tus selecciones.
+            {answeredCount} de {questions.length} respuestas marcadas. Puedes volver al cuadernillo para revisar los enunciados sin perder tus selecciones.
           </div>
-          <footer className="mt-5 flex items-center justify-between border-t border-slate-300 pt-3 text-[9px] text-slate-500">
-            <span>PeakScore · Hoja de respuestas</span>
-            <span>Página {totalPages} de {totalPages}</span>
-          </footer>
         </section>
       )}
 

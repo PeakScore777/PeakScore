@@ -1000,7 +1000,7 @@ function TabletopMagnifier3D() {
         </mesh>
 
         {/* Lens body: a short dark metal barrel gives the glass a real edge. */}
-        <mesh position={[-0.22, 0.18, 0.005]} rotation={[0, 0, 0]}>
+        <mesh position={[-0.22, 0.18, 0.005]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.365, 0.365, 0.075, 64, 1, true]} />
           <meshPhysicalMaterial color="#20272b" metalness={0.9} roughness={0.25} side={THREE.DoubleSide} />
         </mesh>

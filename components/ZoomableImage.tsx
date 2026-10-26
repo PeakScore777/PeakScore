@@ -5,8 +5,6 @@ import InnerImageZoom from "react-inner-image-zoom";
 type ZoomableImageProps = {
   src: string;
   alt: string;
-  width?: number;
-  height?: number;
   className?: string;
   zoomSrc?: string;
 };
@@ -19,8 +17,6 @@ type ZoomableImageProps = {
 export default function ZoomableImage({
   src,
   alt,
-  width = 1200,
-  height = 800,
   className = "h-auto max-h-[480px] w-auto max-w-full object-contain",
   zoomSrc,
 }: ZoomableImageProps) {
@@ -37,8 +33,6 @@ export default function ZoomableImage({
       hideCloseButton={false}
       hideHint={false}
       hasSpacer={false}
-      width={width}
-      height={height}
       className="peakscore-click-zoom"
       imgAttributes={{
         alt,

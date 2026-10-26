@@ -19,6 +19,14 @@ import {
 
 import { supabase } from "@/lib/supabase/client";
 
+const ALLOWED_PASSWORD_SYMBOLS = "!@#$%^&*()_+-=[]{};':"\\|<>?,./`~";
+
+function hasAllowedPasswordSymbol(value: string): boolean {
+  return [...value].some((character) =>
+    ALLOWED_PASSWORD_SYMBOLS.includes(character),
+  );
+}
+
 function GoogleIcon() {
   return (
     <svg
@@ -110,7 +118,7 @@ export default function RegisterPage() {
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasNumber = /\d/.test(password);
-  const hasSymbol = /[^A-Za-z0-9]/.test(password);
+  const hasSymbol = hasAllowedPasswordSymbol(password);
 
   const passwordStrength = [
     hasMinLength,
@@ -125,7 +133,7 @@ export default function RegisterPage() {
     { label: "Una mayúscula", valid: hasUppercase },
     { label: "Una minúscula", valid: hasLowercase },
     { label: "Un número", valid: hasNumber },
-    { label: "Un símbolo", valid: hasSymbol },
+    { label: "Un símbolo permitido por el servicio", valid: hasSymbol },
   ];
 
   function resetCaptcha() {
@@ -207,11 +215,11 @@ export default function RegisterPage() {
       /[A-Z]/.test(password) &&
       /[a-z]/.test(password) &&
       /\d/.test(password) &&
-      /[^A-Za-z0-9]/.test(password);
+      hasAllowedPasswordSymbol(password);
 
     if (!strongPassword) {
       setError(
-        "La contraseña debe tener al menos 15 caracteres e incluir mayúsculas, minúsculas, números y símbolos."
+        "La contraseña debe tener al menos 15 caracteres e incluir mayúsculas, minúsculas, números y un símbolo admitido (por ejemplo: !, @, # o $)."
       );
       setPasswordFocused(true);
       return;
@@ -277,10 +285,20 @@ export default function RegisterPage() {
           return;
         }
 
+        const backendPasswordPolicyError =
+          registerError.message
+            .toLowerCase()
+            .includes("password should contain at least one character of each") ||
+          registerError.message.toLowerCase().includes("password does not meet");
+
         setError(
           registerError.code === "over_email_send_rate_limit"
             ? "El servicio de correo alcanzó un límite temporal. Espera unos minutos antes de intentarlo nuevamente."
-            : "No fue posible crear la cuenta. Verifica los datos e inténtalo nuevamente."
+            : backendPasswordPolicyError
+              ? "La contraseña no cumple la política de seguridad: usa mayúscula, minúscula, número y un símbolo admitido como !, @, # o $."
+              : registerError.code === "captcha_failed"
+                ? "La verificación de seguridad expiró o no se validó. Completa Cloudflare nuevamente."
+                : "No fue posible crear la cuenta. Verifica los datos e inténtalo nuevamente."
         );
 
         resetCaptcha();

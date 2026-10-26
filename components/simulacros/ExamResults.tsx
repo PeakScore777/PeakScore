@@ -36,6 +36,8 @@ type TutorReview = {
 type ExamResultsProps = {
   correctAnswers: number;
   incorrectAnswers: number;
+  unansweredAnswers: number;
+  totalQuestions: number;
   percentage: number;
   simulationId: string;
   attemptId: string | null;
@@ -51,6 +53,8 @@ type ResultLevel = {
 export default function ExamResults({
   correctAnswers,
   incorrectAnswers,
+  unansweredAnswers,
+  totalQuestions,
   percentage,
   simulationId,
   attemptId,
@@ -127,9 +131,6 @@ export default function ExamResults({
     0,
     Math.min(100, percentage)
   );
-
-  const totalQuestions =
-    correctAnswers + incorrectAnswers;
 
   /*
    * =========================================================
@@ -591,12 +592,7 @@ export default function ExamResults({
                 />
 
                 <Metric
-                  value={Math.max(
-                    0,
-                    totalQuestions -
-                      correctAnswers -
-                      incorrectAnswers
-                  )}
+                  value={unansweredAnswers}
                   label="Sin responder"
                   type="neutral"
                 />

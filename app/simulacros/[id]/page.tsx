@@ -1441,8 +1441,6 @@ export default function ExamPage() {
                         <ZoomableImage
                           src={question.image_url}
                           alt={`Recurso visual de la pregunta ${currentQuestion + 1}`}
-                          width={1200}
-                          height={800}
                           className="max-h-[500px] w-auto max-w-full rounded-2xl border border-slate-200 object-contain"
                         />
                      </div>

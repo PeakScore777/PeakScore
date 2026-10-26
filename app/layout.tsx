@@ -6,6 +6,7 @@ import GlobalNavbar from "@/components/layout/GlobalNavbar";
 import { createClient } from "@/lib/supabase/server";
 
 import "./globals.css";
+import "react-inner-image-zoom/lib/styles.min.css";
 
 const pixelFont = Press_Start_2P({
   weight: "400",

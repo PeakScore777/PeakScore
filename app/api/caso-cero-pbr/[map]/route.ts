@@ -14,11 +14,33 @@ const MAP_FILES: Record<string, string> = {
 };
 
 function extractZipEntry(archive: Buffer, targetName: string): Buffer | null {
-  // Walk the ZIP central directory, then read the selected local file entry.
-  let entryOffset = archive.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]));
+  // Use the ZIP end-of-central-directory record instead of scanning binary data,
+  // so a byte pattern inside a compressed image cannot be mistaken for a file header.
+  const eocdSignature = Buffer.from([0x50, 0x4b, 0x05, 0x06]);
+  const eocdOffset = archive.lastIndexOf(eocdSignature);
 
-  while (entryOffset >= 0 && entryOffset + 46 <= archive.length) {
-    if (archive.readUInt32LE(entryOffset) !== 0x02014b50) break;
+  if (eocdOffset < 0 || eocdOffset + 22 > archive.length) {
+    throw new Error("Invalid PBR texture ZIP");
+  }
+
+  const directorySize = archive.readUInt32LE(eocdOffset + 12);
+  const directoryOffset = archive.readUInt32LE(eocdOffset + 16);
+  const directoryEnd = directoryOffset + directorySize;
+
+  if (
+    directoryOffset < 0 ||
+    directorySize <= 0 ||
+    directoryEnd > archive.length ||
+    directoryEnd > eocdOffset
+  ) {
+    throw new Error("Invalid PBR texture directory");
+  }
+
+  let entryOffset = directoryOffset;
+  while (entryOffset + 46 <= directoryEnd) {
+    if (archive.readUInt32LE(entryOffset) !== 0x02014b50) {
+      throw new Error("Corrupt PBR texture directory entry");
+    }
 
     const compression = archive.readUInt16LE(entryOffset + 10);
     const compressedSize = archive.readUInt32LE(entryOffset + 20);
@@ -53,18 +75,19 @@ function extractZipEntry(archive: Buffer, targetName: string): Buffer | null {
       const compressed = archive.subarray(dataStart, dataEnd);
       let result: Buffer;
       if (compression === 0) result = Buffer.from(compressed);
-      else if (compression === 8) result = inflateRawSync(compressed, { maxOutputLength: 12 * 1024 * 1024 });
-      else throw new Error("Unsupported PBR map compression");
+      else if (compression === 8) {
+        result = inflateRawSync(compressed, { maxOutputLength: 12 * 1024 * 1024 });
+      } else {
+        throw new Error("Unsupported PBR map compression");
+      }
 
       if (result.length !== uncompressedSize) {
-        throw new Error("PBR map checksum/size mismatch");
+        throw new Error("PBR map size mismatch");
       }
       return result;
     }
 
     entryOffset += 46 + nameLength + extraLength + commentLength;
-    const nextSignature = archive.indexOf(Buffer.from([0x50, 0x4b, 0x01, 0x02]), entryOffset);
-    entryOffset = nextSignature;
   }
 
   return null;
@@ -95,6 +118,12 @@ export async function GET(
     }
 
     const archive = Buffer.from(await upstream.arrayBuffer());
+    if (archive.length > 12 * 1024 * 1024) {
+      return new NextResponse("CC0 rope material archive exceeds the size limit", {
+        status: 502,
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
     const image = extractZipEntry(archive, fileName);
     if (!image) {
       return new NextResponse("Required PBR map was not found in the archive", {

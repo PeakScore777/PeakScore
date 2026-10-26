@@ -8,6 +8,7 @@ import {
   Check,
   Clock3,
 } from "lucide-react";
+import { getEnglishDifficulty } from "@/lib/simulations/english-difficulty";
 
 const SUBJECTS = [
   {
@@ -144,10 +145,18 @@ export default function NewSimulationPage() {
     [subject],
   );
 
+  const effectiveDifficulty =
+    subject === "Inglés" ? getEnglishDifficulty(englishPart) : difficulty;
+
   const selectedDifficulty = useMemo(
-    () => DIFFICULTIES.find((item) => item.value === difficulty),
-    [difficulty],
+    () => DIFFICULTIES.find((item) => item.value === effectiveDifficulty),
+    [effectiveDifficulty],
   );
+
+  const visibleDifficulties =
+    subject === "Inglés"
+      ? DIFFICULTIES.filter((item) => item.value === effectiveDifficulty)
+      : DIFFICULTIES;
 
   const selectedEnglishPart = useMemo(
     () =>
@@ -175,7 +184,7 @@ export default function NewSimulationPage() {
           type: "normal",
           subject,
           amount,
-          difficulty,
+          difficulty: effectiveDifficulty,
           englishFormat: subject === "Inglés" ? bookletFormat : null,
           englishPart: subject === "Inglés" ? englishPart : null,
         }),
@@ -363,7 +372,12 @@ export default function NewSimulationPage() {
                         key={item.name}
                         type="button"
                         aria-pressed={selected}
-                        onClick={() => setSubject(item.name)}
+                        onClick={() => {
+                          setSubject(item.name);
+                          if (item.name !== "Inglés") {
+                            setDifficulty("Mixta");
+                          }
+                        }}
                         className={`group relative flex min-h-[112px] min-w-0 items-center gap-3 border p-3 text-left transition duration-200 sm:p-4 ${
                           selected
                             ? "border-[#8de9f2] bg-[#10202c]/90 shadow-[inset_0_0_22px_rgba(34,211,238,0.07),0_0_16px_rgba(34,211,238,0.08)]"
@@ -631,8 +645,13 @@ export default function NewSimulationPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {DIFFICULTIES.map((item) => {
+                {subject === "Inglés" && (
+                  <p className="mb-3 rounded-xl border border-[#8de9f2]/20 bg-[#8de9f2]/[0.04] px-4 py-3 text-xs leading-5 text-slate-300">
+                    Esta parte tiene una dificultad definida por el banco de preguntas.
+                  </p>
+                )}
+                <div className={subject === "Inglés" ? "grid grid-cols-1 sm:max-w-[220px]" : "grid grid-cols-2 gap-3 sm:grid-cols-4"}>
+                  {visibleDifficulties.map((item) => {
                     const selected = difficulty === item.value;
 
                     return (
@@ -640,7 +659,9 @@ export default function NewSimulationPage() {
                         key={item.value}
                         type="button"
                         aria-pressed={selected}
-                        onClick={() => setDifficulty(item.value)}
+                        onClick={() => {
+                          if (subject !== "Inglés") setDifficulty(item.value);
+                        }}
                         className={`group relative flex min-w-0 flex-col items-center border px-2 py-4 text-center transition duration-200 sm:px-3 ${
                           selected
                             ? "border-[#a99bea] bg-[#17132b] shadow-[inset_0_0_22px_rgba(167,139,250,0.1)]"
@@ -856,7 +877,7 @@ export default function NewSimulationPage() {
                   </p>
 
                   <p className="mt-1 text-sm font-bold text-white">
-                    {difficulty}
+                    {effectiveDifficulty}
                   </p>
 
                   <p className="mt-1 text-[11px] leading-4 text-slate-400">

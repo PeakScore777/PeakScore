@@ -333,6 +333,26 @@ function PhotoDropShadow() {
   );
 }
 
+function catenaryDrop(t: number, sag: number) {
+  // A catenary has a flatter tangent at each wall tie than a sine wave.
+  const curve = 2.6;
+  const edge = Math.cosh(curve / 2);
+  return sag * (edge - Math.cosh((t - 0.5) * curve)) / (edge - 1);
+}
+
+function ropeYAt(t: number, anchorY: number, sag: number) {
+  return anchorY - catenaryDrop(THREE.MathUtils.clamp(t, 0, 1), sag);
+}
+
+function ropeTangentAngle(t: number, ropeX: number, anchorY: number, sag: number) {
+  const step = 0.001;
+  const leftT = Math.max(0, t - step);
+  const rightT = Math.min(1, t + step);
+  const dy = ropeYAt(rightT, anchorY, sag) - ropeYAt(leftT, anchorY, sag);
+  const dx = (rightT - leftT) * ropeX * 2;
+  return Math.atan2(dy, Math.max(dx, 0.0001));
+}
+
 function makeBraidedStrand(
   start: THREE.Vector3,
   end: THREE.Vector3,
@@ -351,7 +371,7 @@ function makeBraidedStrand(
   for (let i = 0; i <= segments; i++) {
     const t = i / segments;
     const center = start.clone().lerp(end, t);
-    center.y -= Math.sin(Math.PI * t) * sag;
+    center.y -= catenaryDrop(t, sag);
 
     // Rounded helix with dense ridges; PBR maps supply the fine jute fibres.
     const angle = t * length * 19 + phase;
@@ -373,10 +393,12 @@ function makeBraidedStrand(
 function BraidedRope({
   left,
   right,
+  anchorY,
   sag,
 }: {
   left: number;
   right: number;
+  anchorY: number;
   sag: number;
 }) {
   const [maps, setMaps] = useState<PbrTextureSet | null>(null);
@@ -389,8 +411,8 @@ function BraidedRope({
   }, []);
 
   const geometries = useMemo(() => {
-    const start = new THREE.Vector3(left, 1.2, 0);
-    const end = new THREE.Vector3(right, 1.2, 0);
+    const start = new THREE.Vector3(left, anchorY, 0);
+    const end = new THREE.Vector3(right, anchorY, 0);
     const mainStrands = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((phase) =>
       makeBraidedStrand(start, end, sag, phase),
     );
@@ -398,7 +420,7 @@ function BraidedRope({
       makeBraidedStrand(start, end, sag, (index * Math.PI) / 3 + 0.28),
     );
     return [...mainStrands, ...fineStrands];
-  }, [left, right, sag]);
+  }, [left, right, anchorY, sag]);
 
   useEffect(
     () => () => geometries.forEach((geometry) => geometry.dispose()),
@@ -448,21 +470,21 @@ function WoodenPin({ position }: { position: [number, number, number] }) {
       coil.push(new THREE.Vector3(
         Math.cos(angle) * 0.025,
         -0.01 + t * 0.045 + Math.sin(angle) * 0.003,
-        0.085 + Math.sin(angle) * 0.014,
+        0.025 + Math.sin(angle) * 0.010,
       ));
     }
 
     const leftArm = [
-      new THREE.Vector3(-0.006, -0.006, 0.084),
-      new THREE.Vector3(-0.024, -0.036, 0.088),
-      new THREE.Vector3(-0.047, -0.068, 0.083),
-      new THREE.Vector3(-0.047, -0.125, 0.075),
+      new THREE.Vector3(-0.006, -0.006, 0.024),
+      new THREE.Vector3(-0.024, -0.036, 0.028),
+      new THREE.Vector3(-0.047, -0.068, 0.023),
+      new THREE.Vector3(-0.047, -0.125, 0.015),
     ];
     const rightArm = [
-      new THREE.Vector3(0.006, 0.028, 0.084),
-      new THREE.Vector3(0.031, 0.056, 0.088),
-      new THREE.Vector3(0.047, 0.105, 0.083),
-      new THREE.Vector3(0.047, 0.15, 0.075),
+      new THREE.Vector3(0.006, 0.028, 0.024),
+      new THREE.Vector3(0.031, 0.056, 0.028),
+      new THREE.Vector3(0.047, 0.105, 0.023),
+      new THREE.Vector3(0.047, 0.15, 0.015),
     ];
 
     return [
@@ -481,7 +503,7 @@ function WoodenPin({ position }: { position: [number, number, number] }) {
   }, [halfGeometries, springGeometries]);
 
   return (
-    <group position={position} rotation={[0.015, -0.035, -0.055]}>
+    <group position={position} scale={[1.7, 1.55, 1]} rotation={[0, 0, 0]}>
       {halfGeometries.map((geometry, index) => (
         <mesh
           key={index}
@@ -522,12 +544,14 @@ function EvidenceCard({
   photo,
   index,
   position,
+  ropeAngle,
   scale,
   onSelect,
 }: {
   photo: EvidencePhoto;
   index: number;
   position: [number, number, number];
+  ropeAngle: number;
   scale: number;
   onSelect: (index: number) => void;
 }) {
@@ -546,7 +570,7 @@ function EvidenceCard({
   );
   useEffect(() => () => paperGeometry.dispose(), [paperGeometry]);
 
-  const rotationZ = [-0.045, 0.025, -0.035][index];
+  const rotationZ = [-0.035, 0.015, -0.025][index] + ropeAngle * 0.68;
   const rotationY = [-0.11, 0.035, 0.09][index];
   const rotationX = [0.025, -0.035, 0.018][index];
 
@@ -637,7 +661,7 @@ function EvidenceCard({
       </group>
 
       {/* The peg's upper jaw sits directly at the rope; the print hangs below it. */}
-      <WoodenPin position={[0, -0.205, 0.085]} />
+      <WoodenPin position={[0, -0.012, -0.015]} />
     </group>
   );
 }
@@ -830,6 +854,31 @@ function RoomReflectionEnvironment() {
   return null;
 }
 
+function WallEyelet({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.045, -0.018]} castShadow>
+        <cylinderGeometry args={[0.022, 0.025, 0.018, 16]} />
+        <meshPhysicalMaterial color="#5b4a36" metalness={0.72} roughness={0.42} />
+      </mesh>
+      <mesh position={[0, 0, 0.028]} castShadow receiveShadow>
+        <torusGeometry args={[0.048, 0.009, 10, 28]} />
+        <meshPhysicalMaterial
+          color="#86765e"
+          metalness={0.9}
+          roughness={0.26}
+          clearcoat={0.24}
+          clearcoatRoughness={0.2}
+        />
+      </mesh>
+      <mesh position={[0, 0.045, 0.0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.008, 0.008, 0.005, 12]} />
+        <meshStandardMaterial color="#332a21" metalness={0.75} roughness={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
 function EvidenceScene({
   mobile,
   onSelect,
@@ -842,14 +891,19 @@ function EvidenceScene({
   const visibleHeight = mobile ? 2.7 : 2.75;
   const halfWorldWidth = (size.width / Math.max(size.height, 1)) * visibleHeight / 2;
   const outerX = mobile ? 1.32 : halfWorldWidth * 0.68;
-  const ropeX = mobile ? 2.15 : halfWorldWidth * 0.93;
-  const sag = mobile ? 0.23 : 0.31;
+  // Tie each end almost against the two marked side-wall points.
+  const ropeX = Math.max(1.72, halfWorldWidth - (mobile ? 0.08 : 0.045));
+  const anchorY = 1.43;
+  const sag = mobile ? 0.27 : 0.34;
   const cardXs = [-outerX, 0, outerX];
-  const positions: [number, number, number][] = cardXs.map((x) => {
+  const hangingCards = cardXs.map((x, index) => {
     const t = THREE.MathUtils.clamp((x + ropeX) / (2 * ropeX), 0, 1);
-    const ropeY = 1.2 - Math.sin(Math.PI * t) * sag;
-    // The top tip of each peg lands directly on the rope instead of floating below it.
-    return [x, ropeY, x === 0 ? -0.025 : 0.035] as [number, number, number];
+    const ropeY = ropeYAt(t, anchorY, sag);
+    return {
+      index,
+      position: [x, ropeY, index === 1 ? -0.025 : 0.035] as [number, number, number],
+      ropeAngle: ropeTangentAngle(t, ropeX, anchorY, sag),
+    };
   });
 
   return (
@@ -869,15 +923,20 @@ function EvidenceScene({
       <BraidedRope
         left={-ropeX}
         right={ropeX}
+        anchorY={anchorY}
         sag={sag}
       />
 
-      {positions.map((position, index) => (
+      <WallEyelet position={[-ropeX, anchorY, 0.015]} />
+      <WallEyelet position={[ropeX, anchorY, 0.015]} />
+
+      {hangingCards.map(({ index, position, ropeAngle }) => (
         <EvidenceCard
           key={CASE_EVIDENCE[index].title}
           photo={CASE_EVIDENCE[index]}
           index={index}
           position={position}
+          ropeAngle={ropeAngle}
           scale={cardScale}
           onSelect={onSelect}
         />
@@ -901,7 +960,7 @@ export default function CasoCeroEvidenceClothesline() {
 
   return (
     <div
-      className="caso-cero-evidence-clothesline pointer-events-none absolute left-1/2 top-[1%] z-20 h-[210px] w-[98vw] -translate-x-1/2 sm:h-[405px] lg:h-[530px]"
+      className="caso-cero-evidence-clothesline pointer-events-none absolute left-1/2 top-[1%] z-20 h-[210px] w-screen -translate-x-1/2 sm:h-[405px] lg:h-[530px]"
       aria-label="Fotografías de evidencia de Caso Cero"
     >
       <div className="pointer-events-auto h-full w-full">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -68,8 +68,8 @@ export default function ExamResults({
   const [tutorReview, setTutorReview] = useState<TutorReview | null>(null);
   const [tutorError, setTutorError] = useState("");
 
-  async function requestTutorReview() {
-    if (tutorStatus === "loading") return;
+  const requestTutorReview = useCallback(async () => {
+    if (tutorStatus === "loading" || tutorStatus === "ready") return;
 
     if (!attemptId) {
       setTutorStatus("error");
@@ -119,7 +119,13 @@ export default function ExamResults({
       );
       setTutorStatus("error");
     }
-  }
+  }, [attemptId, simulationId, tutorStatus]);
+
+  useEffect(() => {
+    if (tutorStatus === "idle") {
+      void requestTutorReview();
+    }
+  }, [requestTutorReview, tutorStatus]);
 
   const [stage, setStage] = useState<
     "analysis" | "reveal" | "complete"

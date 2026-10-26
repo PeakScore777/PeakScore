@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, Suspense, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
+import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
@@ -73,9 +73,9 @@ class EvidenceImageBoundary extends Component<ImageBoundaryProps, ImageBoundaryS
 
 
 type PbrTextureSet = {
-  color: THREE.CanvasTexture;
-  normal: THREE.CanvasTexture;
-  roughness: THREE.CanvasTexture;
+  color: THREE.Texture;
+  normal: THREE.Texture;
+  roughness: THREE.Texture;
 };
 
 const pbrCache = new Map<"wood" | "jute" | "paper", PbrTextureSet>();
@@ -380,6 +380,9 @@ function BraidedRope({
   sag: number;
 }) {
   const [maps, setMaps] = useState<PbrTextureSet | null>(null);
+  const onExternalMapsLoaded = useCallback((nextMaps: PbrTextureSet) => {
+    setMaps(nextMaps);
+  }, []);
 
   useEffect(() => {
     setMaps(getPbrTextureSet("jute"));
@@ -404,6 +407,11 @@ function BraidedRope({
 
   return (
     <group>
+      <PbrTextureBoundary>
+        <Suspense fallback={null}>
+          <ExternalRopeTextureMaps onLoaded={onExternalMapsLoaded} />
+        </Suspense>
+      </PbrTextureBoundary>
       {geometries.map((geometry, index) => (
         <mesh key={index} geometry={geometry} castShadow receiveShadow>
           <meshStandardMaterial
@@ -675,6 +683,51 @@ class EnvironmentBoundary extends Component<EnvironmentBoundaryProps, { failed: 
     return this.state.failed ? null : this.props.children;
   }
 }
+class PbrTextureBoundary extends Component<EnvironmentBoundaryProps, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn("Caso Cero: textura fotográfica de cuerda no disponible; se conserva el material de respaldo.", error);
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+function ExternalRopeTextureMaps({ onLoaded }: { onLoaded: (maps: PbrTextureSet) => void }) {
+  const loaded = useLoader(THREE.TextureLoader, [
+    "/api/caso-cero-pbr/rope-color",
+    "/api/caso-cero-pbr/rope-normal",
+    "/api/caso-cero-pbr/rope-roughness",
+  ]) as THREE.Texture[];
+  const [color, normal, roughness] = loaded;
+
+  useEffect(() => {
+    if (!color || !normal || !roughness) return;
+
+    color.colorSpace = THREE.SRGBColorSpace;
+    normal.colorSpace = THREE.NoColorSpace;
+    roughness.colorSpace = THREE.NoColorSpace;
+
+    for (const texture of [color, normal, roughness]) {
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(2, 9);
+      texture.anisotropy = 8;
+      texture.needsUpdate = true;
+    }
+
+    onLoaded({ color, normal, roughness });
+  }, [color, normal, roughness, onLoaded]);
+
+  return null;
+}
+
 
 function PhotographicRoomEnvironment() {
   const { scene } = useThree();

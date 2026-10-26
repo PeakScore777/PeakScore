@@ -47,7 +47,12 @@ function matchesEnglishVariant(
 ): boolean {
   const title = (set.title ?? "").trim();
 
-  if (selectedPart === "4A") return /\b4A\b/i.test(title);
+  if (selectedPart === "4A") {
+    return /\b4A\b/i.test(title) ||
+      (format === "historical" &&
+        set.booklet_format === "saber11_2026" &&
+        !/\b4B\b/i.test(title));
+  }
   if (selectedPart === "4B") return /\b4B\b/i.test(title);
   if (selectedPart === "7A") return /\b7A\b/i.test(title);
   if (selectedPart === "7B") return /\b7B\b/i.test(title);
@@ -308,7 +313,9 @@ export async function POST(request: Request) {
 
       // Parts 1, 2, 3, 5 and 6 reuse content across the two booklet formats.
       // Query both sources for those parts, then prefer the selected format.
-      const sharedPart = ["1", "2", "3", "5", "6"].includes(requestedPart);
+      const sharedPart =
+        ["1", "2", "3", "5", "6"].includes(requestedPart) ||
+        (selectedEnglishFormat === "historical" && requestedPart === "4A");
       const candidateFormats = sharedPart
         ? ["historical", "saber11_2026"]
         : [selectedEnglishFormat];
@@ -343,11 +350,11 @@ export async function POST(request: Request) {
       }
 
       const eligibleSets = ((sets ?? []) as EnglishQuestionSet[])
-        .filter((set) => set.status === "published")
+        .filter((set) => set.status === "approved")
         .filter((set) => matchesEnglishVariant(set, selectedEnglishFormat!, requestedPart));
 
-      // Respect the selected format if its own section is published.
-      // Reuse the 2026 set only when a historical shared part has no published historical set.
+      // Respect the selected format if its own section is approved.
+      // Reuse the other format only when the selected format has no approved set for this shared part.
       const preferredSetIds = eligibleSets
         .filter((set) => set.booklet_format === selectedEnglishFormat)
         .map((set) => set.id);
@@ -372,7 +379,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             success: false,
-            error: `${partLabel} del ${selectedEnglishFormat === "historical" ? "formato histórico" : "Saber 11 · 2026 Cal A"} todavía no tiene conjuntos publicados. Revisa el banco de Inglés y publica un conjunto revisado para poder practicarlo.`,
+            error: `${partLabel} del ${selectedEnglishFormat === "historical" ? "formato histórico" : "Saber 11 · 2026 Cal A"} todavía no tiene conjuntos aprobados. Revisa el banco de Inglés y aprueba un conjunto revisado para poder practicarlo.`,
           },
           { status: 400 }
         );
@@ -481,9 +488,9 @@ export async function POST(request: Request) {
               (selectedEnglishFormat === "historical"
                 ? "formato histórico"
                 : "Saber 11 · 2026 Cal A") +
-              " no tiene un conjunto publicado con la sección completa de " +
+              " no tiene un conjunto aprobado con la sección completa de " +
               expectedQuestionCount +
-              " preguntas activas. Revisa que todas las preguntas estén publicadas y activas en el banco de Inglés.",
+              " preguntas activas. Revisa que todas las preguntas estén aprobadas y activas en el banco de Inglés.",
           },
           { status: 400 },
         );

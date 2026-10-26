@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import "./globals.css";
 import "react-inner-image-zoom/lib/styles.min.css";
+import "yet-another-react-lightbox/styles.css";
 
 const pixelFont = Press_Start_2P({
   weight: "400",

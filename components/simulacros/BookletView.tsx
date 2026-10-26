@@ -286,15 +286,54 @@ export default function BookletView({
               })}
             </div>
           ) : englishPart === 6 ? (
-            <div className="grid gap-x-7 md:grid-cols-2">
+            <>
+              <div className="grid gap-x-7 gap-y-4 md:grid-cols-2">
+                {[[0, 2], [1, 3]].map((pair, rowIndex) => (
+                  <div key={rowIndex} className="grid gap-x-6 gap-y-4 border-b border-slate-300 py-3 md:grid-cols-2">
+                    {pair.map((questionIndex) => {
+                      const question = sectionQuestions[questionIndex];
+                      if (!question) return null;
+                      const number = getEnglishNumber(question, questionIndex + 1, firstSet, historical);
+                      const options = getOptions(question, englishPart);
+                      return (
+                        <article key={question.id} className="min-w-0">
+                          <p className="font-serif text-sm leading-6"><strong>{number}.</strong> {question.question}</p>
+                          <div className="mt-2 space-y-1">
+                            {options.map((option) => <p key={option.key} className="text-sm leading-5"><strong>{option.key}.</strong> {option.text}</p>)}
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+              {sectionQuestions[4] && (() => {
+                const question = sectionQuestions[4];
+                const number = getEnglishNumber(question, 5, firstSet, historical);
+                const options = getOptions(question, englishPart);
+                return (
+                  <article className="mt-3 border-t-2 border-slate-900 pt-3">
+                    <p className="font-serif text-sm leading-6"><strong>{number}.</strong> {question.question}</p>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {options.map((option) => <p key={option.key} className="text-sm leading-5"><strong>{option.key}.</strong> {option.text}</p>)}
+                    </div>
+                  </article>
+                );
+              })()}
+            </>
+          ) : englishPart === 7 ? (
+            <div className="space-y-0">
               {sectionQuestions.map((question, index) => {
                 const number = getEnglishNumber(question, index + 1, firstSet, historical);
                 const options = getOptions(question, englishPart);
                 return (
-                  <article key={question.id} className="border-b border-slate-300 py-3">
-                    <p className="font-serif text-sm leading-6"><strong>{number}.</strong> {question.question}</p>
-                    <div className="mt-2 space-y-1">
-                      {options.map((option) => <p key={option.key} className="text-sm leading-5"><strong>{option.key}.</strong> {option.text}</p>)}
+                  <article key={question.id} className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-3 border-b border-slate-400 py-3 last:border-0">
+                    <strong className="pt-1 text-xs">{number}.</strong>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm leading-5 sm:grid-cols-4">
+                      {["A", "B", "C", "D"].map((letter) => {
+                        const option = options.find((item) => item.key === letter);
+                        return <p key={letter}><strong>{letter}.</strong> {option?.text ?? ""}</p>;
+                      })}
                     </div>
                   </article>
                 );

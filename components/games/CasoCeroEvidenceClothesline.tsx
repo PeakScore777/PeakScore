@@ -1014,8 +1014,8 @@ function TabletopMagnifier3D() {
         </mesh>
 
         {/* Pale blue-gray glass with a second polished surface highlight. */}
-        <mesh position={[-0.22, 0.18, 0.026]}>
-          <sphereGeometry args={[0.322, 48, 24]} scale={[1, 1, 0.065]} />
+        <mesh position={[-0.22, 0.18, 0.026]} scale={[1, 1, 0.12]}>
+          <sphereGeometry args={[0.322, 48, 24]} />
           <meshPhysicalMaterial
             color="#91b2bb"
             metalness={0.04}

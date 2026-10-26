@@ -971,10 +971,10 @@ function TabletopMagnifier3D() {
       dpr={1}
       camera={{
         position: [0, 0, 7],
-        left: -1.38,
-        right: 1.38,
-        top: 0.96,
-        bottom: -0.96,
+        left: -1.25,
+        right: 1.25,
+        top: 0.82,
+        bottom: -0.82,
         near: 0.1,
         far: 30,
       }}
@@ -992,7 +992,7 @@ function TabletopMagnifier3D() {
       <pointLight position={[1.6, -1.5, 3]} intensity={2.0} color="#e6b678" />
       <pointLight position={[-2, 0.5, 2]} intensity={0.8} color="#b2d9e4" />
 
-      <group position={[0, -0.02, 0]} rotation={[0.16, -0.13, -0.12]} scale={0.82}>
+      <group position={[0, -0.02, 0]} rotation={[0.16, -0.13, -0.12]} scale={1.0}>
         {/* Soft tabletop contact shadow; transparent canvas keeps the room visible. */}
         <mesh position={[0.12, -0.34, -0.16]} rotation={[0, 0, -0.3]} scale={[1.18, 0.34, 1]}>
           <circleGeometry args={[0.62, 48]} />
@@ -1015,7 +1015,7 @@ function TabletopMagnifier3D() {
 
         {/* Pale blue-gray glass with a second polished surface highlight. */}
         <mesh position={[-0.22, 0.18, 0.026]}>
-          <circleGeometry args={[0.322, 64]} />
+          <sphereGeometry args={[0.322, 48, 24]} scale={[1, 1, 0.065]} />
           <meshPhysicalMaterial
             color="#91b2bb"
             metalness={0.04}

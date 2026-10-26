@@ -54,8 +54,7 @@ function getBankQuestionNumber(
     return question.question_number ?? 114 + position;
   }
 
-  const historicalView = filter === "historical" ||
-    (filter === "historical" && set.booklet_format === "historical");
+  const historicalView = filter === "historical";
 
   switch (set.part) {
     case 1: return 79 + position;

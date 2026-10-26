@@ -441,11 +441,15 @@ ${JSON.stringify(promptQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003
 </preguntas_json>`;
 
     try {
-      const raw = await generateAI({
+      const response = await generateAI({
         prompt,
         task: "tutor",
         useFallback: true,
       });
+      const raw = response.text?.trim() ?? "";
+      if (!raw) {
+        throw new Error("TUTOR no devolvió una explicación de texto.");
+      }
       const parsed = parseAIJson(raw);
       const generatedById = new Map(
         (parsed.items ?? []).map((item) => [item.question_id, item]),

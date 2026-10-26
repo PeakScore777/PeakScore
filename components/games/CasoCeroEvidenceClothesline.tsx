@@ -493,10 +493,13 @@ function WoodenPin({ position }: { position: [number, number, number] }) {
 
       {springGeometries.map((geometry, index) => (
         <mesh key={index} geometry={geometry} castShadow>
-          <meshStandardMaterial
+          <meshPhysicalMaterial
             color={index === 0 ? "#c6c4bf" : "#a8a7a2"}
-            metalness={0.94}
-            roughness={0.24}
+            metalness={0.96}
+            roughness={0.22}
+            clearcoat={0.32}
+            clearcoatRoughness={0.16}
+            envMapIntensity={1.45}
           />
         </mesh>
       ))}
@@ -634,6 +637,84 @@ function CameraFraming({ mobile }: { mobile: boolean }) {
   return null;
 }
 
+function RoomReflectionEnvironment() {
+  const { scene } = useThree();
+
+  useEffect(() => {
+    // Generate a local, equirectangular reflection card based on Caso Cero's
+    // cool rain-window and warm laboratory lamps; no external HDRI dependency.
+    const canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const base = ctx.createLinearGradient(0, 0, 0, 512);
+    base.addColorStop(0, "#18232c");
+    base.addColorStop(0.28, "#0b1117");
+    base.addColorStop(0.57, "#12171a");
+    base.addColorStop(0.76, "#342216");
+    base.addColorStop(1, "#090b0d");
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, 1024, 512);
+
+    // Broad cool window panels and mullions make the metal spring reflect
+    // the same dark-blue window shape that sits behind the rope.
+    for (const x of [92, 248, 414, 590, 760]) {
+      const windowGlow = ctx.createLinearGradient(x, 75, x + 110, 290);
+      windowGlow.addColorStop(0, "rgba(177,204,216,0.34)");
+      windowGlow.addColorStop(0.45, "rgba(74,107,123,0.18)");
+      windowGlow.addColorStop(1, "rgba(8,16,23,0.02)");
+      ctx.fillStyle = windowGlow;
+      ctx.fillRect(x, 70 + (x % 3) * 12, 110, 220);
+      ctx.strokeStyle = "rgba(205,221,226,0.18)";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(x, 70 + (x % 3) * 12, 110, 220);
+    }
+
+    // Long, soft photographic highlights from practical lamps and wet wood.
+    const lights = [
+      { x: 70, y: 365, r: 68, color: "rgba(255,184,93,0.86)" },
+      { x: 850, y: 280, r: 86, color: "rgba(255,157,61,0.78)" },
+      { x: 940, y: 350, r: 46, color: "rgba(246,203,126,0.58)" },
+    ];
+    for (const light of lights) {
+      const glow = ctx.createRadialGradient(light.x, light.y, 2, light.x, light.y, light.r);
+      glow.addColorStop(0, light.color);
+      glow.addColorStop(0.18, light.color.replace(/0\.\d+\)/, "0.24)"));
+      glow.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(light.x - light.r, light.y - light.r, light.r * 2, light.r * 2);
+    }
+
+    // Tiny low-contrast horizontal bands suggest workshop shelves without
+    // creating noisy false reflections on the small metal coil.
+    for (let i = 0; i < 24; i++) {
+      const y = 320 + i * 7;
+      ctx.fillStyle = i % 3 === 0
+        ? "rgba(218,158,91,0.07)"
+        : "rgba(171,190,196,0.025)";
+      ctx.fillRect(0, y, 1024, 1 + (i % 2));
+    }
+
+    const environment = new THREE.CanvasTexture(canvas);
+    environment.mapping = THREE.EquirectangularReflectionMapping;
+    environment.colorSpace = THREE.SRGBColorSpace;
+    environment.needsUpdate = true;
+
+    const previousEnvironment = scene.environment;
+    scene.environment = environment;
+    scene.environmentIntensity = 0.72;
+
+    return () => {
+      if (scene.environment === environment) scene.environment = previousEnvironment;
+      environment.dispose();
+    };
+  }, [scene]);
+
+  return null;
+}
+
 function EvidenceScene({
   mobile,
   onSelect,
@@ -658,11 +739,12 @@ function EvidenceScene({
 
   return (
     <>
-      <ambientLight intensity={1.05} />
+      <RoomReflectionEnvironment />
+      <ambientLight intensity={0.82} />
       <hemisphereLight args={["#d7e2e5", "#24180f", 1.15]} />
-      <directionalLight position={[-3.5, 5, 5]} intensity={2.2} castShadow />
-      <pointLight position={[3, 1, 3]} intensity={22} color="#e4b87d" />
-      <pointLight position={[-3, 0, 2]} intensity={8} color="#8cbac4" />
+      <directionalLight position={[-3.5, 5, 5]} intensity={2.8} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-bias={-0.00015} />
+      <pointLight position={[3, 1, 3]} intensity={15} distance={8} decay={2} color="#e4b87d" />
+      <pointLight position={[-3, 0, 2]} intensity={6} distance={7} decay={2} color="#8cbac4" />
 
       <BraidedRope
         left={-ropeX}

@@ -7,6 +7,8 @@ interface CreateSimulationBody {
   subject: string;
   amount: number;
   difficulty: string;
+  englishFormat?: "historical" | "saber11_2026" | null;
+  englishPart?: string | null;
 }
 
 interface Question {
@@ -14,6 +16,49 @@ interface Question {
   subject: string;
   difficulty: string;
   is_active: boolean;
+  english_part?: number | null;
+  english_set_id?: string | null;
+}
+
+interface EnglishQuestionSet {
+  id: string;
+  title: string;
+  shared_title: string | null;
+  part: number;
+  booklet_format: string;
+  status: string;
+}
+
+const ENGLISH_PARTS: Record<string, readonly string[]> = {
+  historical: ["1", "2", "3", "4A", "4B", "5", "6", "7"],
+  saber11_2026: ["1", "2", "3", "4", "5", "6", "7A", "7B"],
+};
+
+function getNumericEnglishPart(part: string): number {
+  return Number(part.replace(/[AB]$/i, ""));
+}
+
+function matchesEnglishVariant(
+  set: EnglishQuestionSet,
+  format: "historical" | "saber11_2026",
+  selectedPart: string,
+): boolean {
+  const title = `${set.shared_title ?? ""} ${set.title ?? ""}`.trim();
+
+  if (selectedPart === "4A") return /\b4A\b/i.test(title);
+  if (selectedPart === "4B") return /\b4B\b/i.test(title);
+  if (selectedPart === "7A") return /\b7A\b/i.test(title);
+  if (selectedPart === "7B") return /\b7B\b/i.test(title);
+
+  if (format === "saber11_2026" && selectedPart === "4") {
+    return !/\b4[AB]\b/i.test(title);
+  }
+
+  if (format === "historical" && selectedPart === "7") {
+    return !/\b7[AB]\b/i.test(title);
+  }
+
+  return true;
 }
 
 const SUBJECTS = [
@@ -120,6 +165,8 @@ export async function POST(request: Request) {
       subject,
       amount,
       difficulty,
+      englishFormat,
+      englishPart,
     } = body;
 
     /* =====================================================
@@ -223,10 +270,85 @@ export async function POST(request: Request) {
     let query = adminSupabase
       .from("questions")
       .select(
-        "id, subject, difficulty, is_active"
+        "id, subject, difficulty, is_active, english_part, english_set_id"
       )
       .eq("subject", subject)
       .eq("is_active", true);
+
+    let selectedEnglishFormat: "historical" | "saber11_2026" | null = null;
+    let selectedEnglishPart: string | null = null;
+
+    if (subject === "Inglés") {
+      const validFormat =
+        englishFormat === "historical" ||
+        englishFormat === "saber11_2026";
+
+      const requestedPart =
+        typeof englishPart === "string"
+          ? englishPart.toUpperCase()
+          : "";
+
+      if (
+        !validFormat ||
+        !ENGLISH_PARTS[englishFormat].includes(requestedPart)
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Selecciona un formato y una parte válidos para Inglés.",
+          },
+          { status: 400 }
+        );
+      }
+
+      selectedEnglishFormat = englishFormat;
+      selectedEnglishPart = requestedPart;
+
+      const { data: sets, error: setsError } = await adminSupabase
+        .from("english_question_sets")
+        .select("id,title,shared_title,part,booklet_format,status")
+        .eq("booklet_format", selectedEnglishFormat)
+        .eq("part", getNumericEnglishPart(requestedPart))
+        .eq("status", "published");
+
+      if (setsError) {
+        console.error("[PeakScore] No fue posible consultar conjuntos publicados de Inglés.", {
+          errorCode: setsError.code ?? "UNKNOWN",
+        });
+        return NextResponse.json(
+          {
+            success: false,
+            error: "No fue posible revisar la disponibilidad de esta parte de Inglés.",
+          },
+          { status: 500 }
+        );
+      }
+
+      const matchingSetIds = ((sets ?? []) as EnglishQuestionSet[])
+        .filter((set) =>
+          matchesEnglishVariant(set, selectedEnglishFormat!, requestedPart)
+        )
+        .map((set) => set.id);
+
+      if (matchingSetIds.length === 0) {
+        const partLabel =
+          requestedPart.startsWith("4") || requestedPart.startsWith("7")
+            ? `Parte ${requestedPart}`
+            : `Parte ${requestedPart}`;
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: `${partLabel} del ${selectedEnglishFormat === "historical" ? "formato histórico" : "Saber 11 · 2026 Cal A"} todavía no tiene conjuntos publicados. Revisa el banco de Inglés y publica un conjunto revisado para poder practicarlo.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      query = query
+        .in("english_set_id", matchingSetIds)
+        .eq("english_part", getNumericEnglishPart(requestedPart));
+    }
 
     /*
      * Mixta = no filtramos dificultad.
@@ -271,10 +393,15 @@ export async function POST(request: Request) {
       availableQuestions.length <
       questionAmount
     ) {
+      const englishContext =
+        selectedEnglishFormat && selectedEnglishPart
+          ? ` para la Parte ${selectedEnglishPart} de ${selectedEnglishFormat === "historical" ? "formato histórico" : "Saber 11 · 2026 Cal A"}`
+          : "";
+
       return NextResponse.json(
         {
           success: false,
-          error: `No hay suficientes preguntas disponibles para ${subject}. Disponibles: ${availableQuestions.length}. Necesarias: ${questionAmount}.`,
+          error: `Hay ${availableQuestions.length} preguntas activas disponibles para ${subject}${englishContext}, pero seleccionaste ${questionAmount}. Publica más preguntas revisadas o elige una cantidad menor.`,
         },
         { status: 400 }
       );
@@ -305,12 +432,17 @@ export async function POST(request: Request) {
       await adminSupabase
         .from("simulations")
         .insert({
-          title: `Práctica de ${subject}`,
+          title:
+            subject === "Inglés" && selectedEnglishFormat && selectedEnglishPart
+              ? `Práctica de Inglés · ${selectedEnglishFormat === "historical" ? "Histórico" : "Saber 11 · 2026 Cal A"} · Parte ${selectedEnglishPart}`
+              : `Práctica de ${subject}`,
           type: "custom_simulation",
           total_questions:
             selectedQuestions.length,
           description:
-            "Simulacro personalizado creado por el usuario.",
+            subject === "Inglés" && selectedEnglishFormat && selectedEnglishPart
+              ? `Simulacro personalizado de Inglés. Formato: ${selectedEnglishFormat}; parte: ${selectedEnglishPart}.`
+              : "Simulacro personalizado creado por el usuario.",
           subject,
           duration,
           difficulty,
@@ -403,11 +535,19 @@ export async function POST(request: Request) {
       `[PeakScore] Dificultad: ${difficulty}`
     );
 
+    if (selectedEnglishFormat && selectedEnglishPart) {
+      console.log(
+        `[PeakScore] Inglés: ${selectedEnglishFormat} · Parte ${selectedEnglishPart}`
+      );
+    }
+
     return NextResponse.json(
       {
         success: true,
         simulation,
         questions: questionAmount,
+        englishFormat: selectedEnglishFormat,
+        englishPart: selectedEnglishPart,
       },
       { status: 201 }
     );

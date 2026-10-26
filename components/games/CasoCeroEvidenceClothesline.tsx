@@ -124,7 +124,7 @@ function tubeFromPoints(points: THREE.Vector3[], radius: number) {
   return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 36, radius, 8, false);
 }
 
-function PhotoTexture({ src, alt }: { src: string; alt: string }) {
+function PhotoTexture({ src }: { src: string }) {
   const texture = useLoader(THREE.TextureLoader, src);
   const geometry = useMemo(() => {
     const mesh = new THREE.PlaneGeometry(1.32, 1.35, 20, 20);
@@ -472,7 +472,7 @@ function EvidenceCard({
             </mesh>
           }
         >
-          <PhotoTexture src={photo.src} alt={photo.alt} />
+          <PhotoTexture src={photo.src} />
         </Suspense>
       </EvidenceImageBoundary>
 

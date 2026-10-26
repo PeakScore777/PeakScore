@@ -113,9 +113,9 @@ function getPbrTextureSet(kind: "wood" | "jute" | "paper"): PbrTextureSet {
       const v = y / size;
       const noise = noiseAt(x, y);
       let height = 0.5;
-      let r = kind === "paper" ? 228 : kind === "jute" ? 145 : 158;
-      let g = kind === "paper" ? 218 : kind === "jute" ? 103 : 110;
-      let b = kind === "paper" ? 200 : kind === "jute" ? 66 : 66;
+      let r = kind === "paper" ? 228 : kind === "jute" ? 145 : 205;
+      let g = kind === "paper" ? 218 : kind === "jute" ? 103 : 164;
+      let b = kind === "paper" ? 200 : kind === "jute" ? 66 : 105;
       if (kind === "wood") {
         const warped = u + Math.sin(v * 17) * 0.012 + Math.sin(v * 57) * 0.002;
         const grain = Math.sin(warped * 660) * 0.46
@@ -219,37 +219,40 @@ function roundedRectangle(width: number, height: number, radius: number) {
 }
 
 function createWoodHalf(side: -1 | 1) {
-  const shape = new THREE.Shape();
-  const points: [number, number][] = side < 0
-    ? [
-        [-0.057, -0.205], [-0.014, -0.205], [-0.019, -0.12],
-        [-0.011, -0.035], [-0.025, 0.075], [-0.012, 0.18],
-        [-0.039, 0.202], [-0.053, 0.105], [-0.041, 0.02],
-        [-0.052, -0.075],
-      ]
-    : [
-        [0.014, -0.205], [0.057, -0.205], [0.052, -0.075],
-        [0.041, 0.02], [0.053, 0.105], [0.039, 0.202],
-        [0.012, 0.18], [0.025, 0.075], [0.011, -0.035],
-        [0.019, -0.12],
-      ];
+  // Long, almost straight wooden jaw with softened ends.
+  // The two jaws are stacked front-to-back, as in the reference photo,
+  // rather than separated widely across the visible face.
+  const xShift = side * 0.0025;
+  const points: [number, number][] = [
+    [-0.025, -0.348],
+    [-0.028, -0.332],
+    [-0.024, -0.295],
+    [-0.025, -0.075],
+    [-0.027, 0.245],
+    [-0.022, 0.276],
+    [0.020, 0.283],
+    [0.027, 0.264],
+    [0.025, -0.075],
+    [0.024, -0.295],
+    [0.028, -0.332],
+    [0.025, -0.348],
+  ].map(([x, y]) => [x + xShift, y]);
 
+  const shape = new THREE.Shape();
   shape.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length; i++) shape.lineTo(points[i][0], points[i][1]);
+  for (let i = 1; i < points.length; i++) {
+    shape.lineTo(points[i][0], points[i][1]);
+  }
   shape.closePath();
 
   return new THREE.ExtrudeGeometry(shape, {
-    depth: 0.036,
+    depth: 0.018,
     bevelEnabled: true,
-    bevelThickness: 0.004,
-    bevelSize: 0.004,
+    bevelThickness: 0.0035,
+    bevelSize: 0.003,
     bevelSegments: 3,
     curveSegments: 8,
   });
-}
-
-function tubeFromPoints(points: THREE.Vector3[], radius: number) {
-  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 36, radius, 8, false);
 }
 
 function PhotoTexture({ src }: { src: string }) {
@@ -453,86 +456,49 @@ function BraidedRope({
   );
 }
 
-function WoodenPin({ position }: { position: [number, number, number] }) {
+function WoodenPin({
+  position,
+  ropeAngle,
+}: {
+  position: [number, number, number];
+  ropeAngle: number;
+}) {
   const [woodMaps, setWoodMaps] = useState<PbrTextureSet | null>(null);
-  const halfGeometries = useMemo(
+  const jaws = useMemo(
     () => [createWoodHalf(-1), createWoodHalf(1)],
     [],
   );
-  const springGeometries = useMemo(() => {
-    const coil: THREE.Vector3[] = [];
-    const turns = 2.35;
-    const steps = 100;
-
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const angle = t * Math.PI * 2 * turns;
-      coil.push(new THREE.Vector3(
-        Math.cos(angle) * 0.025,
-        -0.01 + t * 0.045 + Math.sin(angle) * 0.003,
-        0.025 + Math.sin(angle) * 0.010,
-      ));
-    }
-
-    const leftArm = [
-      new THREE.Vector3(-0.006, -0.006, 0.024),
-      new THREE.Vector3(-0.024, -0.036, 0.028),
-      new THREE.Vector3(-0.047, -0.068, 0.023),
-      new THREE.Vector3(-0.047, -0.125, 0.015),
-    ];
-    const rightArm = [
-      new THREE.Vector3(0.006, 0.028, 0.024),
-      new THREE.Vector3(0.031, 0.056, 0.028),
-      new THREE.Vector3(0.047, 0.105, 0.023),
-      new THREE.Vector3(0.047, 0.15, 0.015),
-    ];
-
-    return [
-      tubeFromPoints(coil, 0.0045),
-      tubeFromPoints(leftArm, 0.0043),
-      tubeFromPoints(rightArm, 0.0043),
-    ];
-  }, []);
 
   useEffect(() => {
     setWoodMaps(getPbrTextureSet("wood"));
-    return () => {
-      halfGeometries.forEach((geometry) => geometry.dispose());
-      springGeometries.forEach((geometry) => geometry.dispose());
-    };
-  }, [halfGeometries, springGeometries]);
+    return () => jaws.forEach((geometry) => geometry.dispose());
+  }, [jaws]);
 
   return (
-    <group position={position} scale={[1.7, 1.55, 1]} rotation={[0, 0, 0]}>
-      {halfGeometries.map((geometry, index) => (
+    <group
+      position={position}
+      // Counter-rotate against the photograph so the peg remains nearly vertical
+      // even where the rope's tangent slopes down toward its wall anchors.
+      rotation={[0, 0, -ropeAngle * 0.68]}
+    >
+      {jaws.map((geometry, index) => (
         <mesh
           key={index}
           geometry={geometry}
-          position={[0, 0, index * 0.008]}
+          // Rear jaw is behind the rope; front jaw is in front of the paper.
+          // Slightly offset in X so the two pieces remain readable from the camera.
+          position={[index === 0 ? -0.004 : 0.004, 0, index === 0 ? -0.071 : 0.03]}
           castShadow
           receiveShadow
         >
           <meshStandardMaterial
-            color={index === 0 ? "#b58a58" : "#93683f"}
+            color={index === 0 ? "#c4a16b" : "#eed29b"}
             map={woodMaps?.color}
             normalMap={woodMaps?.normal}
-            normalScale={new THREE.Vector2(0.18, 0.45)}
+            normalScale={new THREE.Vector2(0.12, 0.26)}
             roughnessMap={woodMaps?.roughness}
-            roughness={0.86}
+            roughness={0.91}
             metalness={0}
-          />
-        </mesh>
-      ))}
-
-      {springGeometries.map((geometry, index) => (
-        <mesh key={index} geometry={geometry} castShadow>
-          <meshPhysicalMaterial
-            color={index === 0 ? "#c6c4bf" : "#a8a7a2"}
-            metalness={0.96}
-            roughness={0.22}
-            clearcoat={0.32}
-            clearcoatRoughness={0.16}
-            envMapIntensity={1.45}
           />
         </mesh>
       ))}
@@ -661,7 +627,7 @@ function EvidenceCard({
       </group>
 
       {/* The peg's upper jaw sits directly at the rope; the print hangs below it. */}
-      <WoodenPin position={[0, -0.012, -0.015]} />
+      <WoodenPin position={[0, 0, 0]} ropeAngle={ropeAngle} />
     </group>
   );
 }

@@ -982,7 +982,7 @@ function MagnifyingGlassModel({
       : size.height - 92;
 
     group.position.set(
-      lensX - size.width / 2 + modelWidth * 0.19,
+      lensX - size.width / 2,
       size.height / 2 - lensY - modelWidth * 0.055,
       30,
     );
@@ -1183,7 +1183,7 @@ export default function CasoCeroEvidenceClothesline() {
         <Canvas
           orthographic
           shadows
-          dpr={[1, 1.35]}
+          dpr={[1, 1.1]}
           camera={{
             position: [0, 0.12, 10],
             left: -4,

@@ -306,11 +306,10 @@ export async function POST(request: Request) {
       selectedEnglishPart = requestedPart;
       effectiveDifficulty = getEnglishDifficulty(requestedPart);
 
-      // Historical format reuses the 2026 sets for the shared parts 1, 2, 3, 5 and 6.
-      const sharedHistoricalPart =
-        selectedEnglishFormat === "historical" &&
-        ["1", "2", "3", "5", "6"].includes(requestedPart);
-      const candidateFormats = sharedHistoricalPart
+      // Parts 1, 2, 3, 5 and 6 reuse content across the two booklet formats.
+      // Query both sources for those parts, then prefer the selected format.
+      const sharedPart = ["1", "2", "3", "5", "6"].includes(requestedPart);
+      const candidateFormats = sharedPart
         ? ["historical", "saber11_2026"]
         : [selectedEnglishFormat];
 
@@ -352,13 +351,16 @@ export async function POST(request: Request) {
       const preferredSetIds = eligibleSets
         .filter((set) => set.booklet_format === selectedEnglishFormat)
         .map((set) => set.id);
-      const shared2026SetIds = eligibleSets
-        .filter((set) => set.booklet_format === "saber11_2026")
+      const fallbackFormat = selectedEnglishFormat === "historical"
+        ? "saber11_2026"
+        : "historical";
+      const fallbackSetIds = eligibleSets
+        .filter((set) => set.booklet_format === fallbackFormat)
         .map((set) => set.id);
       const matchingSetIds = preferredSetIds.length > 0
         ? preferredSetIds
-        : sharedHistoricalPart
-          ? shared2026SetIds
+        : sharedPart
+          ? fallbackSetIds
           : [];
 
       if (matchingSetIds.length === 0) {

@@ -2,7 +2,6 @@
 
 import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { X } from "lucide-react";
@@ -84,7 +83,6 @@ type MagnifierTarget = { src: string; u: number; v: number; imageWidth: number; 
 
 const MAGNIFIER_ZOOM = 3.15;
 const MAGNIFIER_INNER_DIAMETER = 138;
-const MAGNIFIER_MODEL_URL = "/api/caso-cero-magnifier-model";
 
 const pbrCache = new Map<"wood" | "jute" | "paper", PbrTextureSet>();
 
@@ -897,104 +895,6 @@ function WallEyelet({ position }: { position: [number, number, number] }) {
   );
 }
 
-class MagnifierModelBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-
-  componentDidCatch(error: Error) {
-    console.warn("Caso Cero: no se pudo cargar el modelo 3D de la lupa; se usará el recurso de respaldo.", error);
-  }
-
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
-}
-
-/**
- * Real CC0 Poly Haven magnifying-glass model.
- * Its mesh is normalized to one unit, so it can be sized in screen-space pixels.
- */
-function MagnifyingGlassModel({
-  active,
-  onLoaded,
-}: {
-  active: boolean;
-  onLoaded: () => void;
-}) {
-  const { scene } = useGLTF(MAGNIFIER_MODEL_URL);
-  const { camera, size, invalidate } = useThree();
-  const groupRef = useRef<THREE.Group | null>(null);
-
-  const normalizedModel = useMemo(() => {
-    const clone = scene.clone(true);
-    clone.updateMatrixWorld(true);
-
-    const bounds = new THREE.Box3().setFromObject(clone);
-    const center = bounds.getCenter(new THREE.Vector3());
-    const dimensions = bounds.getSize(new THREE.Vector3());
-    const maxDimension = Math.max(dimensions.x, dimensions.y, dimensions.z, 0.001);
-
-    const wrapper = new THREE.Group();
-    wrapper.add(clone);
-    wrapper.scale.setScalar(1 / maxDimension);
-    wrapper.position.copy(center).multiplyScalar(-1 / maxDimension);
-    return wrapper;
-  }, [scene]);
-
-  useEffect(() => {
-    onLoaded();
-  }, [onLoaded]);
-
-  useEffect(() => {
-    if (!(camera instanceof THREE.OrthographicCamera)) return;
-    camera.left = -size.width / 2;
-    camera.right = size.width / 2;
-    camera.top = size.height / 2;
-    camera.bottom = -size.height / 2;
-    camera.position.set(0, 0, 1200);
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
-    invalidate();
-  }, [camera, size.width, size.height, invalidate]);
-
-  useEffect(() => {
-    const group = groupRef.current;
-    if (!group) return;
-
-    // While the lens is in use, the DOM lens and image crop share one exact
-    // pointer center. Keep the idle 3D prop out of that overlay to avoid drift.
-    if (active) {
-      group.visible = false;
-      invalidate();
-      return;
-    }
-
-    group.visible = true;
-    const modelWidth = 184;
-    const lensX = size.width / 2 - 24;
-    const lensY = size.height - 92;
-
-    // Offset compensates for the handle extending the model bounds down/right.
-    group.position.set(
-      lensX - size.width / 2 + modelWidth * 0.19,
-      size.height / 2 - lensY - modelWidth * 0.055,
-      30,
-    );
-    group.scale.setScalar(modelWidth);
-    group.rotation.set(0.03, -0.02, -0.22);
-    invalidate();
-  }, [active, size.width, size.height, invalidate]);
-
-  return (
-    <group ref={groupRef}>
-      <primitive object={normalizedModel} />
-    </group>
-  );
-}
-
 function EvidenceScene({
   mobile,
   onSelect,
@@ -1074,7 +974,6 @@ export default function CasoCeroEvidenceClothesline() {
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
   const [mobile, setMobile] = useState(false);
   const [magnifierActive, setMagnifierActive] = useState(false);
-  const [magnifierModelReady, setMagnifierModelReady] = useState(false);
   const [pointerPosition, setPointerPosition] = useState<{ x: number; y: number } | null>(null);
   const [magnifierTarget, setMagnifierTarget] = useState<MagnifierTarget | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -1110,7 +1009,6 @@ export default function CasoCeroEvidenceClothesline() {
   }, [magnifierActive, mobile]);
 
   const handlePhotoPointerOut = useCallback(() => setMagnifierTarget(null), []);
-  const handleMagnifierModelLoaded = useCallback(() => setMagnifierModelReady(true), []);
 
   useEffect(() => {
     const query = window.matchMedia("(max-width: 640px)");
@@ -1211,35 +1109,6 @@ export default function CasoCeroEvidenceClothesline() {
         </Canvas>
       </div>
 
-      <div className="pointer-events-none absolute bottom-[1%] left-[53%] z-30 h-[240px] w-[320px] -translate-x-1/2">
-        <Canvas
-          orthographic
-          frameloop="demand"
-          camera={{ position: [0, 0, 1200], left: -160, right: 160, top: 120, bottom: -120, near: 0.1, far: 2400 }}
-          dpr={[1, 1.1]}
-          gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
-          onCreated={({ gl }) => {
-            gl.setClearColor(0x000000, 0);
-            gl.outputColorSpace = THREE.SRGBColorSpace;
-            gl.toneMapping = THREE.ACESFilmicToneMapping;
-            gl.toneMappingExposure = 1.05;
-          }}
-          style={{ width: "100%", height: "100%", pointerEvents: "none" }}
-        >
-          <ambientLight intensity={1.15} />
-          <directionalLight position={[-4, 7, 10]} intensity={2.5} />
-          <directionalLight position={[5, -2, 7]} intensity={1.15} />
-          <MagnifierModelBoundary>
-            <Suspense fallback={null}>
-              <MagnifyingGlassModel
-                active={magnifierActive}
-                onLoaded={handleMagnifierModelLoaded}
-              />
-            </Suspense>
-          </MagnifierModelBoundary>
-        </Canvas>
-      </div>
-
       {active && (
         <aside
           role="dialog"
@@ -1280,8 +1149,7 @@ export default function CasoCeroEvidenceClothesline() {
           title="Tomar lupa de evidencia"
           className="pointer-events-auto absolute bottom-[1%] left-[53%] z-40 grid h-[160px] w-[260px] -translate-x-1/2 place-items-center overflow-visible rounded-sm bg-transparent transition duration-200 hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0cb8a]"
         >
-          {!magnifierModelReady && (
-            <svg viewBox="0 0 190 135" className="h-[82px] w-[116px] drop-shadow-[0_7px_5px_rgba(0,0,0,.58)]" aria-hidden="true">
+          <svg viewBox="0 0 190 135" className="h-[82px] w-[116px] drop-shadow-[0_7px_5px_rgba(0,0,0,.58)]" aria-hidden="true">
                         <defs>
                           <linearGradient id="table-loupe-handle" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0" stopColor="#c0c7cb" />
@@ -1311,8 +1179,7 @@ export default function CasoCeroEvidenceClothesline() {
                         <path d="M31 17 C42 7 62 8 73 22" fill="none" stroke="#f9fffb" strokeOpacity=".72" strokeWidth="2.5" strokeLinecap="round" />
                         <path d="M30 63 C40 75 58 77 69 66" fill="none" stroke="#d9eff3" strokeOpacity=".28" strokeWidth="2" strokeLinecap="round" />
                         <circle cx="55" cy="43" r="38.5" fill="none" stroke="#050708" strokeOpacity=".7" strokeWidth="1" />
-            </svg>
-          )}
+          </svg>
           <span className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#7e6746]/70 bg-[#080d12]/85 px-2 py-1 text-[8px] font-black uppercase tracking-[.16em] text-[#ead9ba] shadow-md">
             Lupa de evidencia
           </span>

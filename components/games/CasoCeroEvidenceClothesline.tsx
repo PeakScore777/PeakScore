@@ -71,6 +71,131 @@ class EvidenceImageBoundary extends Component<ImageBoundaryProps, ImageBoundaryS
 }
 
 
+type PbrTextureSet = {
+  color: THREE.CanvasTexture;
+  normal: THREE.CanvasTexture;
+  roughness: THREE.CanvasTexture;
+};
+
+const pbrCache = new Map<"wood" | "jute" | "paper", PbrTextureSet>();
+
+/** Shared browser-generated microtexture maps; no external texture requests. */
+function getPbrTextureSet(kind: "wood" | "jute" | "paper"): PbrTextureSet {
+  const cached = pbrCache.get(kind);
+  if (cached) return cached;
+
+  const size = 512;
+  const canvases = [0, 1, 2].map(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = size;
+    return canvas;
+  });
+  const contexts = canvases.map((canvas) => canvas.getContext("2d", { willReadFrequently: true }));
+  if (!contexts[0] || !contexts[1] || !contexts[2]) {
+    throw new Error("Could not build Caso Cero PBR texture maps");
+  }
+
+  const colorImage = contexts[0].createImageData(size, size);
+  const normalImage = contexts[1].createImageData(size, size);
+  const roughImage = contexts[2].createImageData(size, size);
+  const heights = new Float32Array(size * size);
+  const noiseAt = (x: number, y: number) => {
+    const n = Math.sin(x * 127.1 + y * 311.7 + 74.7) * 43758.5453;
+    return (n - Math.floor(n)) * 2 - 1;
+  };
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const u = x / size;
+      const v = y / size;
+      const noise = noiseAt(x, y);
+      let height = 0.5;
+      let r = kind === "paper" ? 228 : kind === "jute" ? 145 : 158;
+      let g = kind === "paper" ? 218 : kind === "jute" ? 103 : 110;
+      let b = kind === "paper" ? 200 : kind === "jute" ? 66 : 66;
+      if (kind === "wood") {
+        const warped = u + Math.sin(v * 17) * 0.012 + Math.sin(v * 57) * 0.002;
+        const grain = Math.sin(warped * 660) * 0.46
+          + Math.sin(warped * 1730) * 0.20
+          + Math.sin(warped * 3250) * 0.08;
+        const knotA = Math.exp(-((u - 0.27) ** 2 / 0.0008 + (v - 0.58) ** 2 / 0.006));
+        const knotB = Math.exp(-((u - 0.76) ** 2 / 0.0011 + (v - 0.21) ** 2 / 0.004));
+        const value = grain + noise * 0.16 - (knotA + knotB) * 0.26;
+        height = 0.5 + value * 0.14;
+        r += value * 39; g += value * 30; b += value * 20;
+      } else if (kind === "jute") {
+        const twistA = Math.sin((x + y * 0.68) * 0.29);
+        const twistB = Math.sin((x - y * 0.76) * 0.25);
+        const crossedFibres = Math.pow(Math.max(0, twistA), 7) * 0.46
+          + Math.pow(Math.max(0, twistB), 7) * 0.36;
+        const fuzz = Math.sin(x * 1.31 + y * 0.93) * 0.08 + noise * 0.12;
+        height = 0.5 + crossedFibres * 0.24 + fuzz * 0.14;
+        const value = crossedFibres * 0.45 + fuzz;
+        r += value * 54; g += value * 40; b += value * 27;
+      } else {
+        const grain = noise * 0.45 + Math.sin(x * 2.4 + y * 1.1) * 0.18;
+        height = 0.5 + grain * 0.018;
+        r += grain * 5; g += grain * 5; b += grain * 4;
+      }
+
+      const idx = (y * size + x) * 4;
+      heights[y * size + x] = height;
+      colorImage.data[idx] = THREE.MathUtils.clamp(r, 0, 255);
+      colorImage.data[idx + 1] = THREE.MathUtils.clamp(g, 0, 255);
+      colorImage.data[idx + 2] = THREE.MathUtils.clamp(b, 0, 255);
+      colorImage.data[idx + 3] = 255;
+
+      const rough = kind === "paper" ? 232 + noise * 7 : kind === "wood" ? 210 + noise * 24 : 218 + noise * 25;
+      roughImage.data[idx] = THREE.MathUtils.clamp(rough, 0, 255);
+      roughImage.data[idx + 1] = roughImage.data[idx];
+      roughImage.data[idx + 2] = roughImage.data[idx];
+      roughImage.data[idx + 3] = 255;
+    }
+  }
+
+  const normalStrength = kind === "wood" ? 2.6 : kind === "jute" ? 5.2 : 0.65;
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (heights[y * size + ((x - 1 + size) % size)] - heights[y * size + ((x + 1) % size)]) * normalStrength;
+      const dy = (heights[((y - 1 + size) % size) * size + x] - heights[((y + 1) % size) * size + x]) * normalStrength;
+      const len = Math.sqrt(dx * dx + dy * dy + 1);
+      const idx = (y * size + x) * 4;
+      normalImage.data[idx] = (dx / len * 0.5 + 0.5) * 255;
+      normalImage.data[idx + 1] = (dy / len * 0.5 + 0.5) * 255;
+      normalImage.data[idx + 2] = (1 / len * 0.5 + 0.5) * 255;
+      normalImage.data[idx + 3] = 255;
+    }
+  }
+
+  contexts[0].putImageData(colorImage, 0, 0);
+  contexts[1].putImageData(normalImage, 0, 0);
+  contexts[2].putImageData(roughImage, 0, 0);
+
+  const color = new THREE.CanvasTexture(canvases[0]);
+  const normal = new THREE.CanvasTexture(canvases[1]);
+  const roughness = new THREE.CanvasTexture(canvases[2]);
+  color.colorSpace = THREE.SRGBColorSpace;
+  for (const texture of [color, normal, roughness]) {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.generateMipmaps = true;
+    texture.anisotropy = 8;
+    texture.needsUpdate = true;
+  }
+  if (kind === "jute") {
+    for (const texture of [color, normal, roughness]) texture.repeat.set(2, 9);
+  } else if (kind === "wood") {
+    for (const texture of [color, normal, roughness]) texture.repeat.set(1.2, 1.7);
+  }
+
+  const result = { color, normal, roughness };
+  pbrCache.set(kind, result);
+  return result;
+}
+
+
 function roundedRectangle(width: number, height: number, radius: number) {
   const shape = new THREE.Shape();
   const left = -width / 2;
@@ -126,6 +251,8 @@ function tubeFromPoints(points: THREE.Vector3[], radius: number) {
 
 function PhotoTexture({ src }: { src: string }) {
   const texture = useLoader(THREE.TextureLoader, src);
+  const [paperMaps, setPaperMaps] = useState<PbrTextureSet | null>(null);
+  useEffect(() => setPaperMaps(getPbrTextureSet("paper")), []);
   const geometry = useMemo(() => {
     const mesh = new THREE.PlaneGeometry(1.32, 1.35, 20, 20);
     const positions = mesh.getAttribute("position") as THREE.BufferAttribute;
@@ -152,7 +279,10 @@ function PhotoTexture({ src }: { src: string }) {
     <mesh geometry={geometry} position={[0, 0.025, 0.006]}>
       <meshStandardMaterial
         map={texture}
-        roughness={0.82}
+        normalMap={paperMaps?.normal}
+        normalScale={new THREE.Vector2(0.035, 0.035)}
+        roughnessMap={paperMaps?.roughness}
+        roughness={0.78}
         metalness={0}
         side={THREE.DoubleSide}
         toneMapped
@@ -165,191 +295,7 @@ function PhotoDropShadow() {
   const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
 
   useEffect(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 300;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.shadowColor = "rgba(0,0,0,0.78)";
-    context.shadowBlur = 22;
-    context.fillStyle = "rgba(0,0,0,0.7)";
-    context.beginPath();
-    context.roundRect(34, 28, 188, 244, 5);
-    context.fill();
-
-    const nextTexture = new THREE.CanvasTexture(canvas);
-    nextTexture.colorSpace = THREE.SRGBColorSpace;
-    setTexture(nextTexture);
-    return () => nextTexture.dispose();
-  }, []);
-
-  if (!texture) return null;
-  return (
-    <mesh position={[0.045, -0.055, -0.061]} renderOrder={-1}>
-      <planeGeometry args={[1.76, 2.02]} />
-      <meshBasicMaterial
-        map={texture}
-        transparent
-        depthWrite={false}
-        opacity={0.84}
-        toneMapped={false}
-      />
-    </mesh>
-  );
-}
-
-function makeBraidedStrand(
-  start: THREE.Vector3,
-  end: THREE.Vector3,
-  sag: number,
-  phase: number,
-) {
-  const points: THREE.Vector3[] = [];
-  const direction = new THREE.Vector3().subVectors(end, start);
-  const length = direction.length();
-  const axis = direction.clone().normalize();
-  const reference = new THREE.Vector3(0, 0, 1);
-  const normal = new THREE.Vector3().crossVectors(axis, reference).normalize();
-  const binormal = new THREE.Vector3().crossVectors(axis, normal).normalize();
-  const segments = 150;
-
-  for (let i = 0; i <= segments; i++) {
-    const t = i / segments;
-    const center = start.clone().lerp(end, t);
-    center.y -= Math.sin(Math.PI * t) * sag;
-
-    // Three helical strands wrap around the main rope axis.
-    const angle = t * length * 18 + phase;
-    center
-      .addScaledVector(normal, Math.cos(angle) * 0.021)
-      .addScaledVector(binormal, Math.sin(angle) * 0.021);
-    points.push(center);
-  }
-
-  return new THREE.TubeGeometry(
-    new THREE.CatmullRomCurve3(points),
-    segments,
-    0.0105,
-    5,
-    false,
-  );
-}
-
-function BraidedRope({
-  left,
-  right,
-  sag,
-}: {
-  left: number;
-  right: number;
-  sag: number;
-}) {
-  const geometries = useMemo(() => {
-    const start = new THREE.Vector3(left, 1.2, 0);
-    const end = new THREE.Vector3(right, 1.2, 0);
-    const main = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((phase) =>
-      makeBraidedStrand(start, end, sag, phase),
-    );
-    // Finer twisted fibers catch narrow highlights along the coarse jute strands.
-    const fibers: THREE.TubeGeometry[] = [];
-    for (let i = 0; i < 6; i++) {
-      fibers.push(makeBraidedStrand(start, end, sag, (i * Math.PI) / 3 + 0.28));
-    }
-    return [...main, ...fibers];
-  }, [left, right, sag]);
-
-  useEffect(() => () => geometries.forEach((geometry) => geometry.dispose()), [geometries]);
-
-  return (
-    <group>
-      {geometries.map((geometry, index) => (
-        <mesh key={index} geometry={geometry} castShadow receiveShadow>
-          <meshStandardMaterial
-            color={index < 3
-              ? ["#806043", "#b18a5d", "#593a27"][index]
-              : ["#c19a6c", "#593d28", "#9a754f"][index % 3]}
-            roughness={0.93}
-          />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-function WoodenPin({ position }: { position: [number, number, number] }) {
-  const [woodTexture, setWoodTexture] = useState<THREE.CanvasTexture | null>(null);
-  const halfGeometries = useMemo(
-    () => [createWoodHalf(-1), createWoodHalf(1)],
-    [],
-  );
-
-  const springGeometries = useMemo(() => {
-    const coil: THREE.Vector3[] = [];
-    const turns = 2.35;
-    const steps = 100;
-
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const angle = t * Math.PI * 2 * turns;
-      const radius = 0.004 + 0.025 * t;
-      coil.push(new THREE.Vector3(
-        Math.cos(angle) * radius,
-        0.012 + Math.sin(angle) * radius,
-        0.082 + t * 0.003,
-      ));
-    }
-
-    const leftArm = [
-      new THREE.Vector3(-0.006, -0.006, 0.084),
-      new THREE.Vector3(-0.024, -0.036, 0.088),
-      new THREE.Vector3(-0.047, -0.068, 0.083),
-      new THREE.Vector3(-0.047, -0.125, 0.075),
-    ];
-    const rightArm = [
-      new THREE.Vector3(0.006, 0.028, 0.084),
-      new THREE.Vector3(0.031, 0.056, 0.088),
-      new THREE.Vector3(0.047, 0.105, 0.083),
-      new THREE.Vector3(0.047, 0.15, 0.075),
-    ];
-
-    return [
-      tubeFromPoints(coil, 0.0045),
-      tubeFromPoints(leftArm, 0.0043),
-      tubeFromPoints(rightArm, 0.0043),
-    ];
-  }, []);
-
-  useEffect(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 256;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    context.fillStyle = "#a77b4d";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < 260; i++) {
-      const y = (i * 37) % 256;
-      context.beginPath();
-      context.moveTo(0, y);
-      context.bezierCurveTo(70, y - 3 + (i % 5), 170, y + 2, 256, y - 1);
-      context.strokeStyle = i % 4 === 0
-        ? "rgba(61,37,19,0.28)"
-        : "rgba(239,194,130,0.17)";
-      context.lineWidth = i % 6 === 0 ? 1.8 : 0.7;
-      context.stroke();
-    }
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
-    setWoodTexture(texture);
-
     return () => {
-      texture.dispose();
       halfGeometries.forEach((geometry) => geometry.dispose());
       springGeometries.forEach((geometry) => geometry.dispose());
     };
@@ -367,8 +313,11 @@ function WoodenPin({ position }: { position: [number, number, number] }) {
         >
           <meshStandardMaterial
             color={index === 0 ? "#b58a58" : "#93683f"}
-            map={woodTexture ?? undefined}
-            roughness={0.78}
+            map={woodMaps?.color}
+            normalMap={woodMaps?.normal}
+            normalScale={new THREE.Vector2(0.18, 0.45)}
+            roughnessMap={woodMaps?.roughness}
+            roughness={0.86}
             metalness={0}
           />
         </mesh>
@@ -604,6 +553,9 @@ export default function CasoCeroEvidenceClothesline() {
           onCreated={({ gl }) => {
             gl.setClearColor("#000000", 0);
             gl.outputColorSpace = THREE.SRGBColorSpace;
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 1.02;
+            gl.shadowMap.type = THREE.PCFSoftShadowMap;
           }}
           style={{ display: "block", width: "100%", height: "100%" }}
         >

@@ -47,6 +47,42 @@ const SUBJECTS = [
   },
 ] as const;
 
+type EnglishFormat = "historical" | "saber11_2026";
+
+type EnglishPartOption = {
+  value: string;
+  label: string;
+  description: string;
+};
+
+const ENGLISH_PARTS_BY_FORMAT: Record<EnglishFormat, EnglishPartOption[]> = {
+  historical: [
+    { value: "1", label: "Parte 1", description: "Vocabulario y descripciones" },
+    { value: "2", label: "Parte 2", description: "Avisos y situaciones" },
+    { value: "3", label: "Parte 3", description: "Conversaciones cotidianas" },
+    { value: "4A", label: "Parte 4A", description: "Formato histórico" },
+    { value: "4B", label: "Parte 4B", description: "Formato histórico" },
+    { value: "5", label: "Parte 5", description: "Comprensión de lectura" },
+    { value: "6", label: "Parte 6", description: "Lectura inferencial" },
+    { value: "7", label: "Parte 7", description: "Formato histórico" },
+  ],
+  saber11_2026: [
+    { value: "1", label: "Parte 1", description: "Vocabulario y descripciones" },
+    { value: "2", label: "Parte 2", description: "Avisos y situaciones" },
+    { value: "3", label: "Parte 3", description: "Conversaciones cotidianas" },
+    { value: "4", label: "Parte 4", description: "Uso del idioma en contexto" },
+    { value: "5", label: "Parte 5", description: "Comprensión de lectura" },
+    { value: "6", label: "Parte 6", description: "Lectura inferencial" },
+    { value: "7A", label: "Parte 7A", description: "Formato Saber 11 · 2026" },
+    { value: "7B", label: "Parte 7B", description: "Formato Saber 11 · 2026" },
+  ],
+};
+
+const ENGLISH_FORMAT_LABELS: Record<EnglishFormat, string> = {
+  historical: "Formato histórico",
+  saber11_2026: "Saber 11 · 2026 Cal A",
+};
+
 const QUESTION_AMOUNTS = [5, 10, 25, 50];
 
 const DIFFICULTIES = [
@@ -96,6 +132,9 @@ export default function NewSimulationPage() {
   const [subject, setSubject] = useState("Matemáticas");
   const [amount, setAmount] = useState(10);
   const [difficulty, setDifficulty] = useState("Mixta");
+  const [bookletFormat, setBookletFormat] =
+    useState<EnglishFormat>("saber11_2026");
+  const [englishPart, setEnglishPart] = useState("1");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -108,6 +147,14 @@ export default function NewSimulationPage() {
   const selectedDifficulty = useMemo(
     () => DIFFICULTIES.find((item) => item.value === difficulty),
     [difficulty],
+  );
+
+  const selectedEnglishPart = useMemo(
+    () =>
+      ENGLISH_PARTS_BY_FORMAT[bookletFormat].find(
+        (item) => item.value === englishPart,
+      ),
+    [bookletFormat, englishPart],
   );
 
   const duration = calculateDuration(amount);
@@ -129,6 +176,8 @@ export default function NewSimulationPage() {
           subject,
           amount,
           difficulty,
+          englishFormat: subject === "Inglés" ? bookletFormat : null,
+          englishPart: subject === "Inglés" ? englishPart : null,
         }),
       });
 
@@ -364,9 +413,131 @@ export default function NewSimulationPage() {
                 </div>
               </section>
 
+              {subject === "Inglés" && (
+                <>
+                  <div className="my-7 border-t border-white/10 sm:my-8" />
+
+                  <section aria-labelledby="english-format-title">
+                    <div className="mb-5 flex items-start gap-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#8de9f2]/50 bg-[#8de9f2]/10">
+                        <span className="text-[10px] text-[#8de9f2]" style={pixelFont}>
+                          02
+                        </span>
+                      </div>
+                      <div>
+                        <h2
+                          id="english-format-title"
+                          className="text-[10px] leading-6 text-white sm:text-[11px]"
+                          style={pixelFont}
+                        >
+                          FORMATO DE INGLÉS
+                        </h2>
+                        <p className="mt-1 text-sm leading-6 text-slate-400">
+                          Elige la estructura del cuadernillo que deseas practicar.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {(
+                        [
+                          {
+                            value: "historical",
+                            label: "Formato histórico",
+                            description: "Incluye 4A, 4B y una sola Parte 7.",
+                          },
+                          {
+                            value: "saber11_2026",
+                            label: "Saber 11 · 2026 Cal A",
+                            description: "Incluye Parte 4 y las secciones 7A y 7B.",
+                          },
+                        ] as const
+                      ).map((format) => {
+                        const selected = bookletFormat === format.value;
+
+                        return (
+                          <button
+                            key={format.value}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => {
+                              setBookletFormat(format.value);
+                              setEnglishPart("1");
+                            }}
+                            className={[
+                              "relative min-h-[98px] border p-4 text-left transition",
+                              selected
+                                ? "border-[#8de9f2] bg-[#102431] shadow-[inset_0_0_24px_rgba(34,211,238,0.07)]"
+                                : "border-white/10 bg-[#0d1020] hover:border-white/25 hover:bg-[#11152a]",
+                            ].join(" ")}
+                          >
+                            <span className="block text-sm font-bold text-white">
+                              {format.label}
+                            </span>
+                            <span className="mt-2 block text-xs leading-5 text-slate-400">
+                              {format.description}
+                            </span>
+                            {selected && (
+                              <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#8de9f2] text-[#06101c]">
+                                <Check size={13} strokeWidth={3} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-5">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="text-sm font-bold text-white">
+                          ¿Qué parte quieres presentar?
+                        </h3>
+                        <span className="text-[11px] text-slate-500">
+                          {ENGLISH_FORMAT_LABELS[bookletFormat]}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {ENGLISH_PARTS_BY_FORMAT[bookletFormat].map((part) => {
+                          const selected = englishPart === part.value;
+
+                          return (
+                            <button
+                              key={part.value}
+                              type="button"
+                              aria-pressed={selected}
+                              onClick={() => setEnglishPart(part.value)}
+                              className={[
+                                "relative flex min-h-[76px] flex-col justify-center border px-3 py-3 text-left transition",
+                                selected
+                                  ? "border-[#a99bea] bg-[#17132b] shadow-[inset_0_0_20px_rgba(167,139,250,0.09)]"
+                                  : "border-white/10 bg-[#0d1020] hover:border-white/25 hover:bg-[#11152a]",
+                              ].join(" ")}
+                            >
+                              <span className="text-sm font-black text-white">
+                                {part.label}
+                              </span>
+                              <span className="mt-1 text-[10px] leading-4 text-slate-400">
+                                {part.description}
+                              </span>
+                              {selected && (
+                                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#c7bbff]" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-3 rounded-xl border border-amber-300/20 bg-amber-200/[0.04] px-4 py-3 text-xs leading-5 text-amber-100/80">
+                        Solo aparecerán preguntas que estén revisadas, publicadas y disponibles en el banco para el formato y la parte elegidos.
+                      </p>
+                    </div>
+                  </section>
+                </>
+              )}
+
               <div className="my-7 border-t border-white/10 sm:my-8" />
 
-              {/* Paso 2: preguntas */}
+              {/* Paso 3: preguntas */}
               <section>
                 <div className="mb-5 flex items-start gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/50 bg-[#a99bea]/10">
@@ -374,7 +545,7 @@ export default function NewSimulationPage() {
                       className="text-[10px] text-[#c7bbff]"
                       style={pixelFont}
                     >
-                      02
+                      03
                     </span>
                   </div>
 
@@ -434,7 +605,7 @@ export default function NewSimulationPage() {
 
               <div className="my-7 border-t border-white/10 sm:my-8" />
 
-              {/* Paso 3: dificultad */}
+              {/* Paso 4: dificultad */}
               <section>
                 <div className="mb-5 flex items-start gap-4">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/50 bg-[#a99bea]/10">
@@ -442,7 +613,7 @@ export default function NewSimulationPage() {
                       className="text-[10px] text-[#c7bbff]"
                       style={pixelFont}
                     >
-                      03
+                      04
                     </span>
                   </div>
 
@@ -627,6 +798,23 @@ export default function NewSimulationPage() {
                   </p>
                 </div>
               </div>
+
+              {subject === "Inglés" && (
+                <div className="flex items-center gap-4 border border-[#8de9f2]/20 bg-[#8de9f2]/[0.06] p-4">
+                  <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center border border-[#8de9f2]/30 bg-[#8de9f2]/10 text-xs font-black text-[#8de9f2]">
+                    EN
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400">Formato · Parte</p>
+                    <p className="mt-1 text-sm font-bold text-white">
+                      {ENGLISH_FORMAT_LABELS[bookletFormat]} · {selectedEnglishPart?.label}
+                    </p>
+                    <p className="mt-1 text-[11px] leading-4 text-slate-400">
+                      Solo se seleccionará contenido de esta sección.
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Preguntas */}
               <div className="flex items-center gap-4 border border-white/10 bg-[#0d1020] p-4">

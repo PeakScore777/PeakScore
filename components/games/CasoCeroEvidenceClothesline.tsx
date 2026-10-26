@@ -963,6 +963,114 @@ function EvidenceScene({
   );
 }
 
+function TabletopMagnifier3D() {
+  return (
+    <Canvas
+      orthographic
+      frameloop="demand"
+      dpr={1}
+      camera={{
+        position: [0, 0, 7],
+        left: -1.38,
+        right: 1.38,
+        top: 0.96,
+        bottom: -0.96,
+        near: 0.1,
+        far: 30,
+      }}
+      gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
+      onCreated={({ gl }) => {
+        gl.setClearColor("#000000", 0);
+        gl.outputColorSpace = THREE.SRGBColorSpace;
+        gl.toneMapping = THREE.ACESFilmicToneMapping;
+        gl.toneMappingExposure = 1.08;
+      }}
+      style={{ display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
+    >
+      <ambientLight intensity={1.15} />
+      <directionalLight position={[-2.5, 3.5, 5]} intensity={3.4} />
+      <pointLight position={[1.6, -1.5, 3]} intensity={2.0} color="#e6b678" />
+      <pointLight position={[-2, 0.5, 2]} intensity={0.8} color="#b2d9e4" />
+
+      <group position={[0, -0.02, 0]} rotation={[0.16, -0.13, -0.12]} scale={0.82}>
+        {/* Soft tabletop contact shadow; transparent canvas keeps the room visible. */}
+        <mesh position={[0.12, -0.34, -0.16]} rotation={[0, 0, -0.3]} scale={[1.18, 0.34, 1]}>
+          <circleGeometry args={[0.62, 48]} />
+          <meshBasicMaterial color="#020304" transparent opacity={0.34} depthWrite={false} />
+        </mesh>
+
+        {/* Lens body: a short dark metal barrel gives the glass a real edge. */}
+        <mesh position={[-0.22, 0.18, 0.005]} rotation={[0, 0, 0]}>
+          <cylinderGeometry args={[0.365, 0.365, 0.075, 64, 1, true]} />
+          <meshPhysicalMaterial color="#20272b" metalness={0.9} roughness={0.25} side={THREE.DoubleSide} />
+        </mesh>
+        <mesh position={[-0.22, 0.18, 0.038]} castShadow>
+          <torusGeometry args={[0.365, 0.052, 18, 72]} />
+          <meshPhysicalMaterial color="#b8c1c1" metalness={0.94} roughness={0.19} clearcoat={0.9} clearcoatRoughness={0.12} />
+        </mesh>
+        <mesh position={[-0.22, 0.18, 0.044]}>
+          <torusGeometry args={[0.319, 0.011, 10, 72]} />
+          <meshPhysicalMaterial color="#e0e1d8" metalness={0.82} roughness={0.22} />
+        </mesh>
+
+        {/* Pale blue-gray glass with a second polished surface highlight. */}
+        <mesh position={[-0.22, 0.18, 0.026]}>
+          <circleGeometry args={[0.322, 64]} />
+          <meshPhysicalMaterial
+            color="#91b2bb"
+            metalness={0.04}
+            roughness={0.1}
+            clearcoat={1}
+            clearcoatRoughness={0.05}
+            transparent
+            opacity={0.48}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+        <mesh position={[-0.34, 0.31, 0.052]} rotation={[0, 0, 0.72]}>
+          <capsuleGeometry args={[0.009, 0.12, 5, 12]} />
+          <meshBasicMaterial color="#f3fbff" transparent opacity={0.68} />
+        </mesh>
+        <mesh position={[-0.14, 0.02, 0.052]} rotation={[0, 0, 0.68]}>
+          <capsuleGeometry args={[0.005, 0.075, 4, 10]} />
+          <meshBasicMaterial color="#d8e9ed" transparent opacity={0.35} />
+        </mesh>
+
+        {/* Ferrule and black, rubberized handle; all parts are actual 3D meshes. */}
+        <group position={[0.29, -0.33, 0.015]} rotation={[0, 0, -Math.PI * 0.75]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.058, 0.066, 0.76, 32, 1]} />
+            <meshPhysicalMaterial color="#242a2d" metalness={0.76} roughness={0.27} clearcoat={0.85} clearcoatRoughness={0.18} />
+          </mesh>
+          <mesh position={[0, 0.035, 0.018]}>
+            <cylinderGeometry args={[0.048, 0.048, 0.47, 32, 1]} />
+            <meshPhysicalMaterial color="#111619" metalness={0.18} roughness={0.38} clearcoat={0.7} clearcoatRoughness={0.24} />
+          </mesh>
+          {[ -0.12, 0.0, 0.12, 0.24 ].map((y) => (
+            <mesh key={y} position={[0, y, 0.024]}>
+              <torusGeometry args={[0.049, 0.006, 8, 32]} />
+              <meshStandardMaterial color="#454d50" metalness={0.76} roughness={0.28} />
+            </mesh>
+          ))}
+          <mesh position={[0, -0.35, 0.01]}>
+            <cylinderGeometry args={[0.078, 0.078, 0.075, 32]} />
+            <meshPhysicalMaterial color="#c0c7c5" metalness={0.96} roughness={0.2} />
+          </mesh>
+          <mesh position={[0, -0.305, 0.012]}>
+            <torusGeometry args={[0.072, 0.008, 10, 32]} />
+            <meshStandardMaterial color="#6e777a" metalness={0.93} roughness={0.21} />
+          </mesh>
+          <mesh position={[0, 0.392, 0]}>
+            <sphereGeometry args={[0.059, 20, 16]} />
+            <meshPhysicalMaterial color="#202629" metalness={0.58} roughness={0.3} />
+          </mesh>
+        </group>
+      </group>
+    </Canvas>
+  );
+}
+
 export default function CasoCeroEvidenceClothesline() {
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
   const [mobile, setMobile] = useState(false);
@@ -1143,37 +1251,9 @@ export default function CasoCeroEvidenceClothesline() {
           title="Tomar lupa de evidencia"
           className="pointer-events-auto absolute bottom-[1%] left-[53%] z-40 grid h-[160px] w-[260px] -translate-x-1/2 place-items-center overflow-visible rounded-sm bg-transparent transition duration-200 hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0cb8a]"
         >
-          <svg viewBox="0 0 190 135" className="h-[82px] w-[116px] drop-shadow-[0_7px_5px_rgba(0,0,0,.58)]" aria-hidden="true">
-                        <defs>
-                          <linearGradient id="table-loupe-handle" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0" stopColor="#c0c7cb" />
-                            <stop offset=".12" stopColor="#4b5359" />
-                            <stop offset=".38" stopColor="#151a1e" />
-                            <stop offset=".68" stopColor="#050709" />
-                            <stop offset=".9" stopColor="#343b40" />
-                            <stop offset="1" stopColor="#8e989e" />
-                          </linearGradient>
-                          <linearGradient id="table-loupe-metal" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0" stopColor="#f3f0df" />
-                            <stop offset=".2" stopColor="#9da8ad" />
-                            <stop offset=".48" stopColor="#30383d" />
-                            <stop offset=".72" stopColor="#c7cfce" />
-                            <stop offset="1" stopColor="#60686c" />
-                          </linearGradient>
-                          <radialGradient id="table-loupe-glass" cx=".28" cy=".2" r=".92">
-                            <stop offset="0" stopColor="#e8f7f6" stopOpacity=".72" />
-                            <stop offset=".48" stopColor="#a4c6d0" stopOpacity=".34" />
-                            <stop offset="1" stopColor="#293d49" stopOpacity=".72" />
-                          </radialGradient>
-                        </defs>
-                        <rect x="77" y="55" width="105" height="18" rx="9" transform="rotate(42 77 64)" fill="url(#table-loupe-handle)" stroke="#080a0b" strokeWidth="1.4" />
-                        <rect x="74" y="54" width="23" height="19" rx="4" transform="rotate(42 74 64)" fill="url(#table-loupe-metal)" stroke="#31373a" strokeWidth="1" />
-                        <circle cx="55" cy="43" r="42" fill="url(#table-loupe-metal)" stroke="#15191c" strokeWidth="2" />
-                        <circle cx="55" cy="43" r="35.5" fill="url(#table-loupe-glass)" stroke="#dce5e2" strokeWidth="1.5" />
-                        <path d="M31 17 C42 7 62 8 73 22" fill="none" stroke="#f9fffb" strokeOpacity=".72" strokeWidth="2.5" strokeLinecap="round" />
-                        <path d="M30 63 C40 75 58 77 69 66" fill="none" stroke="#d9eff3" strokeOpacity=".28" strokeWidth="2" strokeLinecap="round" />
-                        <circle cx="55" cy="43" r="38.5" fill="none" stroke="#050708" strokeOpacity=".7" strokeWidth="1" />
-          </svg>
+          <div className="h-[126px] w-[190px] drop-shadow-[0_9px_8px_rgba(0,0,0,.72)]">
+            <TabletopMagnifier3D />
+          </div>
           <span className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 whitespace-nowrap border border-[#7e6746]/70 bg-[#080d12]/85 px-2 py-1 text-[8px] font-black uppercase tracking-[.16em] text-[#ead9ba] shadow-md">
             Lupa de evidencia
           </span>

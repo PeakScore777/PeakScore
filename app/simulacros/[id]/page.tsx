@@ -1019,6 +1019,12 @@ export default function ExamPage() {
           incorrectAnswers={
             result.incorrectAnswers
           }
+          unansweredAnswers={
+            result.unansweredAnswers
+          }
+          totalQuestions={
+            result.totalQuestions
+          }
           percentage={
             result.percentage
           }

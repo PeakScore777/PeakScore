@@ -4,6 +4,7 @@ import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState,
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 type EvidenceToolId = "magnifier" | "camera" | "tweezers" | "sample" | "microscope";
@@ -18,30 +19,27 @@ const EVIDENCE_TOOLS: { id: EvidenceToolId; label: string }[] = [
 
 function ToolIllustration({ tool, className = "h-16 w-16" }: { tool: EvidenceToolId; className?: string }) {
   if (tool === "magnifier") return (
-    <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
-      <defs>
-        <linearGradient id="mag-metal" x1="18" y1="16" x2="59" y2="61" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#f9faf7"/><stop offset=".22" stopColor="#9ca8ab"/><stop offset=".48" stopColor="#313a3e"/><stop offset=".72" stopColor="#e1e4e0"/><stop offset="1" stopColor="#626d72"/>
-        </linearGradient>
-        <radialGradient id="mag-glass" cx=".25" cy=".2" r=".9">
-          <stop stopColor="#f5ffff" stopOpacity=".95"/><stop offset=".42" stopColor="#a5ccd5" stopOpacity=".48"/><stop offset="1" stopColor="#3f6471" stopOpacity=".78"/>
-        </radialGradient>
-        <linearGradient id="mag-handle" x1="54" y1="55" x2="78" y2="84" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#8d999b"/><stop offset=".22" stopColor="#20272b"/><stop offset=".58" stopColor="#101518"/><stop offset=".82" stopColor="#7e8a8e"/><stop offset="1" stopColor="#283034"/>
-        </linearGradient>
-      </defs>
-      <ellipse cx="53" cy="79" rx="28" ry="6" fill="#152025" opacity=".13"/>
-      <path d="M53 55 78 82" stroke="#111619" strokeWidth="14" strokeLinecap="round"/>
-      <path d="M53 55 78 82" stroke="url(#mag-handle)" strokeWidth="10" strokeLinecap="round"/>
-      <path d="M51 53 60 62" stroke="#394348" strokeWidth="13" strokeLinecap="round"/>
-      <path d="M51 53 60 62" stroke="url(#mag-metal)" strokeWidth="8" strokeLinecap="round"/>
-      <circle cx="36" cy="35" r="25" fill="#151b1e"/>
-      <circle cx="36" cy="35" r="23" fill="url(#mag-metal)"/>
-      <circle cx="36" cy="35" r="18.5" fill="#e2e9e6"/>
-      <circle cx="36" cy="35" r="16.5" fill="url(#mag-glass)" stroke="#f8ffff" strokeOpacity=".8"/>
-      <path d="M24 23c5-6 12-7 18-3" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity=".9"/>
-      <path d="M25 45c6 6 14 7 21 2" stroke="#e7fbff" strokeWidth="1.8" strokeLinecap="round" opacity=".55"/>
-    </svg>
+    <span className={`block overflow-visible ${className}`} aria-hidden="true">
+      <Canvas
+        orthographic
+        frameloop="demand"
+        camera={{ position: [0, 0, 5], left: -1.125, right: 1.125, top: 1.125, bottom: -1.125, near: 0.1, far: 50 }}
+        gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
+        onCreated={({ gl }) => {
+          gl.setClearColor("#000000", 0);
+          gl.outputColorSpace = THREE.SRGBColorSpace;
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+        }}
+        style={{ display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
+      >
+        <ambientLight intensity={1.7} />
+        <directionalLight position={[2.5, 3.5, 5]} intensity={2.2} />
+        <directionalLight position={[-3, 1, 2]} intensity={0.8} />
+        <Suspense fallback={null}>
+          <MagnifierCursorModel />
+        </Suspense>
+      </Canvas>
+    </span>
   );
   if (tool === "camera") return (
     <svg viewBox="0 0 96 96" className={className} fill="none" aria-hidden="true">
@@ -93,6 +91,75 @@ function ToolIllustration({ tool, className = "h-16 w-16" }: { tool: EvidenceToo
       <rect x="47" y="22" width="13" height="8" rx="2" transform="rotate(30 47 22)" fill="#1d2528" stroke="#7d888a"/>
     </svg>
   );
+}
+
+/**
+ * Real Poly Haven magnifier (CC0), loaded through the same-origin API route.
+ * The upright asset's lens is above the handle's center of mass, so the model
+ * is shifted to keep its lens aligned with the pointer while the handle trails
+ * diagonally down-right. Keep the zoomed image in a separate layer underneath
+ * the translucent glass for a genuinely usable magnifier.
+ */
+function MagnifierCursorModel() {
+  const gltf = useLoader(GLTFLoader, "/api/caso-cero-magnifier-model");
+  const model = useMemo(() => {
+    const scene = gltf.scene.clone(true);
+    scene.updateMatrixWorld(true);
+
+    const bounds = new THREE.Box3().setFromObject(scene);
+    const size = bounds.getSize(new THREE.Vector3());
+    const center = bounds.getCenter(new THREE.Vector3());
+    const longestSide = Math.max(size.x, size.y, size.z, 0.001);
+    const scale = 2.15 / longestSide;
+    const angle = Math.PI / 4;
+    const zAxis = new THREE.Vector3(0, 0, 1);
+
+    scene.scale.setScalar(scale);
+    scene.rotation.set(0, 0, angle);
+
+    // The source preview places the circular lens at roughly the upper quarter
+    // of the complete upright silhouette. Move that lens center to (0, 0).
+    const lensOffset = new THREE.Vector3(0, size.y * 0.24, 0)
+      .multiplyScalar(scale)
+      .applyAxisAngle(zAxis, angle);
+    const scaledCenter = center
+      .clone()
+      .multiplyScalar(scale)
+      .applyAxisAngle(zAxis, angle);
+    scene.position.copy(scaledCenter.negate().sub(lensOffset));
+
+    scene.traverse((node) => {
+      if (!(node instanceof THREE.Mesh)) return;
+      node.castShadow = true;
+      node.receiveShadow = true;
+
+      const tuneMaterial = (material: THREE.Material) => {
+        const cloned = material.clone();
+        const materialName = `${cloned.name} ${node.name}`.toLowerCase();
+        if (
+          /(glass|lens|lense|magnifying)/.test(materialName) &&
+          cloned instanceof THREE.MeshStandardMaterial
+        ) {
+          // Preserve the model's physical reflections but let the live zoom
+          // crop show through the optical glass.
+          cloned.transparent = true;
+          cloned.opacity = Math.min(cloned.opacity, 0.3);
+          cloned.depthWrite = false;
+          cloned.roughness = 0.12;
+          cloned.needsUpdate = true;
+        }
+        return cloned;
+      };
+
+      node.material = Array.isArray(node.material)
+        ? node.material.map(tuneMaterial)
+        : tuneMaterial(node.material);
+    });
+
+    return scene;
+  }, [gltf.scene]);
+
+  return <primitive object={model} dispose={null} />;
 }
 
 type EvidencePhoto = {
@@ -1297,50 +1364,59 @@ export default function CasoCeroEvidenceClothesline() {
           className="pointer-events-none absolute z-[100] h-0 w-0"
           style={{ left: pointerPosition.x, top: pointerPosition.y }}
         >
-          {/* The handle, metal rim and zoom crop share this exact pointer origin. */}
-          <div
-            className="absolute left-[34px] top-[43px] z-0 h-[25px] w-[148px] origin-[12px_12px] rotate-[43deg] rounded-[6px] border border-[#111619] shadow-[2px_5px_8px_rgba(0,0,0,.72)]"
-            style={{ background: "linear-gradient(180deg,#e1e4df 0%,#858d8f 10%,#2e3539 26%,#111518 55%,#333a3e 78%,#b5babb 96%,#454c50 100%)" }}
-          />
-          <div
-            className="absolute left-[34px] top-[43px] z-[1] h-[29px] w-[32px] origin-[12px_14px] rotate-[43deg] rounded-[5px] border border-[#20272a]"
-            style={{ background: "linear-gradient(135deg,#f3f1e8,#7b8588 28%,#242a2d 58%,#c3c9c6 84%,#565e61)" }}
-          />
-          <div
-            className="absolute -left-[77px] -top-[77px] z-[2] h-[154px] w-[154px] rounded-full border-[5px] border-[#171d20] shadow-[0_4px_12px_rgba(0,0,0,.6),inset_0_1px_2px_rgba(255,255,255,.75)]"
-            style={{ background: "linear-gradient(135deg,#e2e5df 0%,#737d81 14%,#22282c 35%,#151a1d 58%,#c2c9c9 82%,#4d5559 100%)" }}
-          />
-          <div
-            className="absolute -left-[69px] -top-[69px] z-[3] h-[138px] w-[138px] overflow-hidden rounded-full border border-[#c5d1d4]/80"
-            style={{
-              background: "rgba(184,214,225,.18)",
-              boxShadow: "inset 0 1px 8px rgba(255,255,255,.23), inset 0 -2px 8px rgba(2,12,19,.20)",
-            }}
-          >
-            {magnifierTarget && (
+          <div className="absolute -left-[135px] -top-[135px] h-[270px] w-[270px]">
+            {/* The selected magnification (3.15×) is unchanged; the physical GLB lens sits above this live crop. */}
+            <div
+              className="absolute left-1/2 top-1/2 z-[1] h-[138px] w-[138px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-[#b9c9ce]/80"
+              style={{
+                background: "rgba(184,214,225,.18)",
+                boxShadow: "inset 0 1px 8px rgba(255,255,255,.23), inset 0 -2px 8px rgba(2,12,19,.20)",
+              }}
+            >
+              {magnifierTarget && (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `url("${magnifierTarget.src}")`,
+                    backgroundRepeat: "no-repeat",
+                    backgroundSize: `${magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
+                    backgroundPosition: `${MAGNIFIER_INNER_DIAMETER / 2 - magnifierTarget.u * magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${MAGNIFIER_INNER_DIAMETER / 2 - (1 - magnifierTarget.v) * magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
+                    filter: "contrast(1.04) saturate(1.06)",
+                  }}
+                />
+              )}
               <div
-                className="absolute inset-0"
+                className="pointer-events-none absolute inset-0 rounded-full"
                 style={{
-                  backgroundImage: `url("${magnifierTarget.src}")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundSize: `${magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
-                  backgroundPosition: `${MAGNIFIER_INNER_DIAMETER / 2 - magnifierTarget.u * magnifierTarget.imageWidth * MAGNIFIER_ZOOM}px ${MAGNIFIER_INNER_DIAMETER / 2 - (1 - magnifierTarget.v) * magnifierTarget.imageHeight * MAGNIFIER_ZOOM}px`,
-                  filter: "contrast(1.04) saturate(1.06)",
+                  background: "radial-gradient(ellipse at 24% 15%,rgba(255,255,255,.54),transparent 22%),radial-gradient(ellipse at 73% 82%,rgba(132,184,199,.18),transparent 38%),linear-gradient(132deg,rgba(239,251,255,.08),transparent 44%,rgba(3,14,22,.13))",
+                  boxShadow: "inset 0 1px 8px rgba(255,255,255,.24),inset 0 -3px 8px rgba(4,12,18,.18)",
                 }}
               />
-            )}
-            <div
-              className="pointer-events-none absolute inset-0 rounded-full"
-              style={{
-                background: "radial-gradient(ellipse at 24% 15%,rgba(255,255,255,.54),transparent 22%),radial-gradient(ellipse at 73% 82%,rgba(132,184,199,.18),transparent 38%),linear-gradient(132deg,rgba(239,251,255,.08),transparent 44%,rgba(3,14,22,.13))",
-                boxShadow: "inset 0 1px 8px rgba(255,255,255,.24),inset 0 -3px 8px rgba(4,12,18,.18)",
+            </div>
+            <Canvas
+              orthographic
+              frameloop="demand"
+              camera={{ position: [0, 0, 5], left: -1.125, right: 1.125, top: 1.125, bottom: -1.125, near: 0.1, far: 50 }}
+              gl={{ alpha: true, antialias: true, powerPreference: "low-power" }}
+              onCreated={({ gl }) => {
+                gl.setClearColor("#000000", 0);
+                gl.outputColorSpace = THREE.SRGBColorSpace;
+                gl.toneMapping = THREE.ACESFilmicToneMapping;
+                gl.toneMappingExposure = 1.05;
               }}
-            />
+              style={{ position: "absolute", inset: 0, display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
+            >
+              <ambientLight intensity={1.65} />
+              <directionalLight position={[2.5, 3.5, 5]} intensity={2.25} />
+              <directionalLight position={[-3, 1, 2]} intensity={0.85} />
+              <Suspense fallback={null}>
+                <MagnifierCursorModel />
+              </Suspense>
+            </Canvas>
           </div>
         </div>
       )}
-
-      <style jsx global>{`
+{`
         @keyframes caso-cero-tools-board-in {
           from { opacity: 0; transform: translate3d(10px, 0, 0) scale(.985); }
           to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }

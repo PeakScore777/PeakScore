@@ -28,7 +28,6 @@ import {
   type ReactNode,
 } from "react";
 
-import PeakScoreMusicPlayer from "./PeakScoreMusicPlayer";
 import type { GlobalTheme } from "./navbar-types";
 import { supabase } from "@/lib/supabase/browser";
 
@@ -784,12 +783,6 @@ export default function GlobalNavbar({
                 <Sun className="h-[18px] w-[18px]" />
               )}
             </button>
-
-            {/* REPRODUCTOR GLOBAL */}
-            <PeakScoreMusicPlayer
-              theme={theme}
-              isAuthenticated={Boolean(profile)}
-            />
 
             {/* PERFIL */}
             <div className="relative">

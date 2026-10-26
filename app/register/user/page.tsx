@@ -19,11 +19,15 @@ import {
 
 import { supabase } from "@/lib/supabase/client";
 
-const ALLOWED_PASSWORD_SYMBOLS = "!@#$%^&*()_+-=[]{};':"\\|<>?,./`~";
+const ALLOWED_PASSWORD_SYMBOLS = new Set([
+  "!", "@", "#", "$", "%", "^", "&", "*", "(", ")", "_", "+", "-", "=",
+  "[", "]", "{", "}", ";", "'", ":", "\"",
+  "\\", "|", "<", ">", "?", ",", ".", "/", "`", "~",
+]);
 
 function hasAllowedPasswordSymbol(value: string): boolean {
   return [...value].some((character) =>
-    ALLOWED_PASSWORD_SYMBOLS.includes(character),
+    ALLOWED_PASSWORD_SYMBOLS.has(character),
   );
 }
 

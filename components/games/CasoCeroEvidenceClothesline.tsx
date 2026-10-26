@@ -3,6 +3,7 @@
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { X } from "lucide-react";
 
 type EvidencePhoto = {
@@ -90,14 +91,16 @@ function getPbrTextureSet(kind: "wood" | "jute" | "paper"): PbrTextureSet {
     canvas.width = canvas.height = size;
     return canvas;
   });
-  const contexts = canvases.map((canvas) => canvas.getContext("2d", { willReadFrequently: true }));
-  if (!contexts[0] || !contexts[1] || !contexts[2]) {
+  const [colorContext, normalContext, roughnessContext] = canvases.map((canvas) =>
+    canvas.getContext("2d", { willReadFrequently: true }),
+  );
+  if (!colorContext || !normalContext || !roughnessContext) {
     throw new Error("Could not build Caso Cero PBR texture maps");
   }
 
-  const colorImage = contexts[0].createImageData(size, size);
-  const normalImage = contexts[1].createImageData(size, size);
-  const roughImage = contexts[2].createImageData(size, size);
+  const colorImage = colorContext.createImageData(size, size);
+  const normalImage = normalContext.createImageData(size, size);
+  const roughImage = roughnessContext.createImageData(size, size);
   const heights = new Float32Array(size * size);
   const noiseAt = (x: number, y: number) => {
     const n = Math.sin(x * 127.1 + y * 311.7 + 74.7) * 43758.5453;
@@ -167,9 +170,9 @@ function getPbrTextureSet(kind: "wood" | "jute" | "paper"): PbrTextureSet {
     }
   }
 
-  contexts[0].putImageData(colorImage, 0, 0);
-  contexts[1].putImageData(normalImage, 0, 0);
-  contexts[2].putImageData(roughImage, 0, 0);
+  colorContext.putImageData(colorImage, 0, 0);
+  normalContext.putImageData(normalImage, 0, 0);
+  roughnessContext.putImageData(roughImage, 0, 0);
 
   const color = new THREE.CanvasTexture(canvases[0]);
   const normal = new THREE.CanvasTexture(canvases[1]);
@@ -655,6 +658,47 @@ function CameraFraming({ mobile }: { mobile: boolean }) {
   return null;
 }
 
+type EnvironmentBoundaryProps = { children: ReactNode };
+
+class EnvironmentBoundary extends Component<EnvironmentBoundaryProps, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error) {
+    console.warn("Caso Cero: HDRI real no disponible; se conserva la iluminación de respaldo.", error);
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+function PhotographicRoomEnvironment() {
+  const { scene } = useThree();
+  const texture = useLoader(RGBELoader, "/api/caso-cero-hdri");
+
+  useEffect(() => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    texture.colorSpace = THREE.LinearSRGBColorSpace;
+    texture.needsUpdate = true;
+
+    const previousEnvironment = scene.environment;
+    const previousIntensity = scene.environmentIntensity;
+    scene.environment = texture;
+    scene.environmentIntensity = 0.56;
+
+    return () => {
+      if (scene.environment === texture) scene.environment = previousEnvironment;
+      scene.environmentIntensity = previousIntensity;
+    };
+  }, [scene, texture]);
+
+  return null;
+}
+
 function RoomReflectionEnvironment() {
   const { scene } = useThree();
 
@@ -758,6 +802,11 @@ function EvidenceScene({
   return (
     <>
       <RoomReflectionEnvironment />
+      <EnvironmentBoundary>
+        <Suspense fallback={null}>
+          <PhotographicRoomEnvironment />
+        </Suspense>
+      </EnvironmentBoundary>
       <ambientLight intensity={0.82} />
       <hemisphereLight args={["#d7e2e5", "#24180f", 1.15]} />
       <directionalLight position={[-3.5, 5, 5]} intensity={2.8} castShadow shadow-mapSize-width={1024} shadow-mapSize-height={1024} shadow-bias={-0.00015} />

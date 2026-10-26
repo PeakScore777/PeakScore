@@ -509,7 +509,17 @@ ${JSON.stringify(promptQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003
       if (!raw) {
         throw new Error("TUTOR no devolvió una explicación de texto.");
       }
-      const parsed = parseAIJson(raw);
+      let parsed: ReturnType<typeof parseAIJson> = {};
+      try {
+        parsed = parseAIJson(raw);
+      } catch (parseError) {
+        // A malformed batch must not force every item straight to the bank fallback.
+        // The recovery pass below will ask only for questions still missing.
+        console.warn("[PeakScore Tutor] La respuesta inicial no tenía JSON válido; se activará la recuperación.", {
+          errorName: parseError instanceof Error ? parseError.name : "UNKNOWN",
+        });
+      }
+      let reviewSummary = parsed.summary;
       const validQuestionIds = new Set(reviewedQuestions.map(({ question }) => question.id));
       const questionIdByNumber = new Map(
         reviewedQuestions.map(({ question, number }) => [number, question.id]),
@@ -569,6 +579,9 @@ ${JSON.stringify(retryQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003e
           if (retryRaw) {
             const retryParsed = parseAIJson(retryRaw);
             mapGeneratedItems(retryParsed.items ?? []);
+            if (retryParsed.summary?.trim()) {
+              reviewSummary = retryParsed.summary;
+            }
           }
         } catch (retryError) {
           console.warn("[PeakScore Tutor] El reintento de explicaciones quedó incompleto.", {
@@ -617,8 +630,8 @@ ${JSON.stringify(retryQuestions).replace(/</g, "\\u003c").replace(/>/g, "\\u003e
         success: true,
         source: hasPersonalizedExplanations ? "ai" : "official",
         summary:
-          hasPersonalizedExplanations && parsed.summary
-            ? parsed.summary
+          hasPersonalizedExplanations && reviewSummary
+            ? reviewSummary
             : "Compara tu elección con la clave y revisa las pistas de cada pregunta. Cuando TUTOR pueda personalizar el análisis, añadirá el razonamiento específico, un método y un consejo por error.",
         items,
       });

@@ -368,7 +368,7 @@ export default function ExamResults({
           CONTENEDOR
       ====================================================== */}
 
-      <section className="peak-results relative z-10 w-full max-w-3xl">
+      <section className="peak-results relative z-10 w-full max-w-6xl">
 
         <div className="overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.08)]">
 
@@ -388,7 +388,9 @@ export default function ExamResults({
 
           </div>
 
-          <div className="px-5 py-8 sm:px-12 sm:py-12">
+          <div className="px-5 py-7 sm:px-8 sm:py-10 lg:px-10">
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:items-start">
+              <div className="min-w-0">
 
             {/* =================================================
                 HEADER
@@ -613,6 +615,9 @@ export default function ExamResults({
 
             </div>
 
+              </div>
+
+              <div className="min-w-0">
             {/* =================================================
                 TUTOR — EXPLICACIÓN DE ERRORES
             ================================================== */}
@@ -732,13 +737,13 @@ export default function ExamResults({
                                 <Sparkles size={16} />
                               </span>
                               <div className="min-w-0">
-                                <div className="mb-1 flex flex-wrap items-center gap-2">
+                                <div className="mb-2 flex flex-wrap items-center gap-2">
                                   <p className="text-sm font-extrabold text-slate-900">
-                                    {item.source === "ai" ? "Explicación de TUTOR" : "Explicación disponible"}
+                                    {item.source === "ai" ? "Explicación personalizada de TUTOR" : item.source === "official" ? "Explicación del banco de preguntas" : "Guía de repaso"}
                                   </p>
                                   {item.source === "official" && (
                                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
-                                      Banco de preguntas
+                                      Sin explicación de IA
                                     </span>
                                   )}
                                   {item.source === "unavailable" && (
@@ -816,8 +821,8 @@ export default function ExamResults({
                   )}
 
                   {tutorReview.source === "official" && (
-                    <p className="text-xs leading-5 text-slate-400">
-                      La IA no respondió en este intento; se muestran las explicaciones oficiales disponibles en el banco.
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
+                      En este intento TUTOR no pudo generar explicaciones personalizadas. Se muestran las explicaciones guardadas en el banco cuando existen; puedes reintentar para solicitar el análisis de IA.
                     </p>
                   )}
                 </div>
@@ -877,6 +882,8 @@ export default function ExamResults({
 
             </div>
 
+              </div>
+            </div>
           </div>
 
           {/* =================================================

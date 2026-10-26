@@ -4,7 +4,7 @@ import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState,
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 type EvidenceToolId = "magnifier" | "camera" | "tweezers" | "sample" | "microscope";
 
@@ -1232,7 +1232,7 @@ export default function CasoCeroEvidenceClothesline() {
           <aside
             id="caso-cero-tools-drawer"
             aria-label="Herramientas de investigación"
-            className="caso-cero-tools-panel pointer-events-auto mr-2 w-[min(246px,calc(100vw-52px))] rounded-[4px] border border-[#d7d7d0] bg-[#f5f5f0] p-3 shadow-[-9px_12px_28px_rgba(0,0,0,.28)]"
+            className="caso-cero-tools-panel pointer-events-auto mr-2 w-[min(246px,calc(100vw_-_52px))] rounded-[4px] border border-[#d7d7d0] bg-[#f5f5f0] p-3 shadow-[-9px_12px_28px_rgba(0,0,0,.28)]"
           >
             <div className="grid grid-cols-3 gap-2">
               {EVIDENCE_TOOLS.map((item) => (
@@ -1248,7 +1248,6 @@ export default function CasoCeroEvidenceClothesline() {
                     setToolsOpen(false);
                   }}
                   aria-label={item.label}
-                  title={item.label}
                   className={[
                     "group grid aspect-square place-items-center rounded-[3px] border bg-white p-1.5 shadow-[0_1px_2px_rgba(0,0,0,.07)] transition",
                     activeTool === item.id
@@ -1357,6 +1356,7 @@ export default function CasoCeroEvidenceClothesline() {
         .caso-cero-cinematic.caso-cero-tool-active * {
           cursor: none !important;
         }
-      `}</style>    </div>
+      `}</style>
+    </div>
   );
 }

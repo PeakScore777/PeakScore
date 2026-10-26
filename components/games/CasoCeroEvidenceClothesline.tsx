@@ -757,7 +757,7 @@ function ExternalRopeTextureMaps({ onLoaded }: { onLoaded: (maps: PbrTextureSet)
 
 
 function PhotographicRoomEnvironment() {
-  const { scene } = useThree();
+  const { scene, invalidate } = useThree();
   const texture = useLoader(RGBELoader, "/api/caso-cero-hdri");
 
   useEffect(() => {
@@ -769,18 +769,20 @@ function PhotographicRoomEnvironment() {
     const previousIntensity = scene.environmentIntensity;
     scene.environment = texture;
     scene.environmentIntensity = 0.56;
+    invalidate();
 
     return () => {
       if (scene.environment === texture) scene.environment = previousEnvironment;
       scene.environmentIntensity = previousIntensity;
+      invalidate();
     };
-  }, [scene, texture]);
+  }, [scene, texture, invalidate]);
 
   return null;
 }
 
 function RoomReflectionEnvironment() {
-  const { scene } = useThree();
+  const { scene, invalidate } = useThree();
 
   useEffect(() => {
     // Generate a local, equirectangular reflection card based on Caso Cero's
@@ -845,14 +847,18 @@ function RoomReflectionEnvironment() {
     environment.needsUpdate = true;
 
     const previousEnvironment = scene.environment;
+    const previousIntensity = scene.environmentIntensity;
     scene.environment = environment;
     scene.environmentIntensity = 0.72;
+    invalidate();
 
     return () => {
       if (scene.environment === environment) scene.environment = previousEnvironment;
+      scene.environmentIntensity = previousIntensity;
       environment.dispose();
+      invalidate();
     };
-  }, [scene]);
+  }, [scene, invalidate]);
 
   return null;
 }

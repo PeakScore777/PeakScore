@@ -1275,7 +1275,6 @@ export default function CasoCeroEvidenceClothesline() {
           aria-label={toolsOpen ? "Cerrar herramientas" : "Abrir herramientas"}
           aria-expanded={toolsOpen}
           aria-controls="caso-cero-tools-drawer"
-          title="Herramientas"
           className="pointer-events-auto grid h-[62px] w-8 place-items-center rounded-l-[3px] border border-r-0 border-[#dadad4] bg-[#f7f7f2] text-[#171a1c] shadow-[-5px_5px_15px_rgba(0,0,0,.2)] transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#42494c]"
         >
           {toolsOpen ? <ChevronRight className="h-5 w-5" strokeWidth={2.5} /> : <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />}
@@ -1286,7 +1285,7 @@ export default function CasoCeroEvidenceClothesline() {
         <div
           aria-hidden="true"
           className="pointer-events-none absolute z-[100] h-[62px] w-[62px]"
-          style={{ left: pointerPosition.x - 15, top: pointerPosition.y - 15 }}
+          style={{ left: pointerPosition.x - 31, top: pointerPosition.y - 31 }}
         >
           <ToolIllustration tool={activeTool} className="h-full w-full drop-shadow-[0_4px_4px_rgba(0,0,0,.48)]" />
         </div>

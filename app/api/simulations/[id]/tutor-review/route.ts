@@ -55,6 +55,7 @@ type EnglishSetReviewContext = {
 
 type GeneratedExplanation = {
   question_id: string;
+  number?: number;
   explanation: string;
   why_your_answer: string;
   method: string;
@@ -156,12 +157,18 @@ function parseAIJson(raw: string, defaultQuestionId?: string): {
         const questionId =
           typeof item.question_id === "string"
             ? item.question_id
-            : defaultQuestionId;
-        if (!questionId || typeof item.explanation !== "string") {
+            : typeof item.questionId === "string"
+              ? item.questionId
+              : defaultQuestionId;
+        const number = typeof item.number === "number" && Number.isFinite(item.number)
+          ? item.number
+          : undefined;
+        if ((!questionId && number === undefined) || typeof item.explanation !== "string") {
           return [];
         }
         return [{
-          question_id: questionId,
+          question_id: questionId ?? "",
+          number,
           explanation: item.explanation.slice(0, 2200),
           why_your_answer:
             typeof item.why_your_answer === "string"
@@ -419,7 +426,8 @@ export async function POST(
         component: question.component,
         competence: question.competence,
         difficulty: question.difficulty,
-        context: getQuestionContext(question, englishSet ?? undefined),
+        context: question.context_text,
+        english_set_id: question.english_set_id,
         question: question.question,
         options: getQuestionOptions(question, englishSet ?? undefined),
         selected_answer: selectedAnswer,
@@ -431,8 +439,8 @@ export async function POST(
         ),
         english_part: question.english_part,
         english_position: question.english_position,
-        english_instructions: englishSet?.instructions ?? null,
-        english_word_bank: englishSet?.word_bank ?? null,
+        english_part: question.english_part,
+        english_position: question.english_position,
         english_format: englishSet?.booklet_format ?? null,
       }),
     );

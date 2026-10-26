@@ -38,13 +38,6 @@ const WINDOW_BOUNDS_STYLE = {
 } as const;
 
 type LightingStage = 0 | 1 | 2 | 3;
-type RainFxInstance = {
-  start: () => Promise<void> | void;
-  resize: (width: number, height: number) => void;
-  destroy: () => void;
-};
-type RainFxConstructor = new (options: Record<string, unknown>) => RainFxInstance;
-
 type Props = {
   canStart: boolean;
   busyStarting: boolean;
@@ -65,15 +58,8 @@ export default function CasoCeroCinematicScene({
   onUserInteraction,
 }: Props) {
   const rootRef = useRef<HTMLElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const riverLoopResettingRef = useRef(false);
-  const riverLoopStartRef = useRef(1.4);
   const [lightingStage, setLightingStage] = useState<LightingStage>(0);
-  const [sceneVideoFailed, setSceneVideoFailed] = useState(false);
-  const [sceneVideoReady, setSceneVideoReady] = useState(false);
   const [lightLayersReady, setLightLayersReady] = useState([false, false, false]);
-  const [rainFxFailed, setRainFxFailed] = useState(false);
-  const [rainFxReady, setRainFxReady] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(true);
   const [mediaBox, setMediaBox] = useState({ left: 0, top: 0, width: IMAGE_WIDTH, height: IMAGE_HEIGHT });
@@ -130,112 +116,11 @@ export default function CasoCeroCinematicScene({
   }, []);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      setRainFxReady(true);
-      return;
-    }
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setRainFxReady(true);
-      return;
-    }
-
-    let disposed = false;
-    let starting = false;
-    let instance: RainFxInstance | null = null;
-    let resizeObserver: ResizeObserver | null = null;
-    // If WebGL takes too long on a low-memory computer, reveal the scene with
-    // the CSS rain fallback instead of leaving the skeleton up indefinitely.
-    const rainReadyTimeout = window.setTimeout(() => {
-      if (disposed) return;
-      setRainFxFailed(true);
-      setRainFxReady(true);
-    }, 8500);
-
-    const resizeCanvas = () => {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width < 1 || rect.height < 1) return false;
-      // Keep the WebGL rain layer light enough for entry-level laptops.
-      // A 1x drawing buffer cuts its pixel workload substantially on HiDPI screens.
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, window.innerWidth <= 640 ? 0.85 : 1);
-      const width = Math.max(1, Math.round(rect.width * pixelRatio));
-      const height = Math.max(1, Math.round(rect.height * pixelRatio));
-      if (canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-        if (instance) instance.resize(width, height);
-      }
-      return true;
-    };
-
-    const initialiseRain = async () => {
-      if (disposed || starting || instance || !resizeCanvas()) return;
-      starting = true;
-      try {
-        const imported: unknown = await import("raindrop-fx");
-        const moduleValue = imported as { default?: unknown };
-        const RainDropFX = (moduleValue.default ?? imported) as RainFxConstructor;
-        const nextInstance = new RainDropFX({
-          canvas,
-          windowMode: true,
-          // Slightly darken the glass so the refracted drop edges read clearly
-          // over the river, without obscuring the transparent window itself.
-          windowOverlayColor: [0.008, 0.014, 0.024, 0.38],
-          mist: false,
-          spawnInterval: [0.06, 0.15],
-          spawnSize: [24, 60],
-          spawnLimit: 650,
-          dropletsPerSeconds: 105,
-          dropletSize: [8, 27],
-          backgroundBlurSteps: 2,
-          raindropCompose: "smoother",
-        });
-
-        if (disposed) {
-          nextInstance.destroy();
-          return;
-        }
-        instance = nextInstance;
-        await instance.start();
-        if (!disposed) {
-          setRainFxFailed(false);
-          setRainFxReady(true);
-        }
-      } catch {
-        if (!disposed) {
-          setRainFxFailed(true);
-          setRainFxReady(true);
-        }
-      } finally {
-        starting = false;
-      }
-    };
-
-    resizeObserver = new ResizeObserver(() => {
-      resizeCanvas();
-      if (!instance) void initialiseRain();
-    });
-    resizeObserver.observe(canvas);
-    void initialiseRain();
-
-    return () => {
-      disposed = true;
-      window.clearTimeout(rainReadyTimeout);
-      resizeObserver?.disconnect();
-      instance?.destroy();
-      instance = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    const visualLayersLoaded = lightLayersReady.every(Boolean);
-    const videoCanRender = sceneVideoReady || sceneVideoFailed;
-
-    if (!sceneReady && visualLayersLoaded && videoCanRender && rainFxReady) {
+    if (!sceneReady && lightLayersReady.every(Boolean)) {
       setSceneReady(true);
       onSceneReady();
     }
-  }, [lightLayersReady, sceneVideoReady, sceneVideoFailed, rainFxReady, sceneReady, onSceneReady]);
+  }, [lightLayersReady, sceneReady, onSceneReady]);
 
   const maskStyle = {
     WebkitMaskImage: WINDOW_MASK,
@@ -268,97 +153,29 @@ export default function CasoCeroCinematicScene({
           height: mediaBox.height,
         }}
       >
-        {!sceneVideoFailed ? (
-          <video
-            className="caso-cero-river-video absolute object-fill"
-            style={{
-              // Zoom into the moving-water portion and shift it upward so the
-              // river fills the entire window opening instead of only a few panes.
-              left: "-9%",
-              top: "-25%",
-              width: "118%",
-              height: "118%",
-            }}
-            src="/videos/caso-cero/rio-nocturno.mp4"
-            autoPlay
-            muted
-            playsInline
-            preload="metadata"
-            disablePictureInPicture
-            onLoadedData={() => setSceneVideoReady(true)}
-            onLoadedMetadata={(event) => {
-              const video = event.currentTarget;
-              if (!Number.isFinite(video.duration) || video.duration <= 4) return;
-              // Skip any near-black lead-in in the source footage.
-              const startAt = Math.min(2, video.duration * 0.12);
-              riverLoopStartRef.current = startAt;
-              if (video.currentTime < startAt) video.currentTime = startAt;
-            }}
-            onTimeUpdate={(event) => {
-              const video = event.currentTarget;
-              if (
-                riverLoopResettingRef.current ||
-                !Number.isFinite(video.duration) ||
-                video.duration <= 4 ||
-                video.duration - video.currentTime > 0.42
-              ) return;
-
-              // Fade to the dark night scene before looping back into moving water.
-              // One decoder only, so this avoids adding a second video stream on low-RAM PCs.
-              riverLoopResettingRef.current = true;
-              video.style.opacity = "0";
-              video.currentTime = riverLoopStartRef.current;
-            }}
-            onSeeked={(event) => {
-              const video = event.currentTarget;
-              if (!riverLoopResettingRef.current) return;
-              window.requestAnimationFrame(() => {
-                video.style.opacity = "1";
-                riverLoopResettingRef.current = false;
-              });
-            }}
-            onError={() => {
-              setSceneVideoFailed(true);
-              setSceneVideoReady(true);
-            }}
-            aria-hidden="true"
-            tabIndex={-1}
-          />
-        ) : (
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_92%,rgba(41,72,78,.42),transparent_50%),linear-gradient(180deg,#03080e,#07131a_65%,#0b181a)]"
-          />
-        )}
-
-        <canvas
-          ref={canvasRef}
+        {/* Solid dark backing for all window panes: no video, network fetch, or decoder. */}
+        <div aria-hidden="true" className="absolute inset-0 bg-[#030609]" />
+        {/* Lightweight CSS rain replaces a second WebGL renderer and live refraction. */}
+        <div
           aria-hidden="true"
-          className="caso-cero-rain-canvas pointer-events-none absolute"
+          className="caso-cero-rain-fallback pointer-events-none absolute overflow-hidden"
           style={{ ...WINDOW_BOUNDS_STYLE, ...maskStyle }}
-        />
+        >
+          {Array.from({ length: 32 }, (_, index) => (
+            <span
+              key={index}
+              className="caso-cero-fallback-drop absolute block rounded-full"
+              style={{
+                left: ((index * 43) % 98) + "%",
+                top: ((index * 29) % 94) + "%",
+                height: 14 + ((index * 7) % 21) + "px",
+                animationDelay: "-" + (((index * 11) % 25) / 3) + "s",
+                animationDuration: 2.8 + ((index * 5) % 12) / 10 + "s",
+              }}
+            />
+          ))}
+        </div>
 
-        {rainFxFailed && (
-          <div
-            aria-hidden="true"
-            className="caso-cero-rain-fallback pointer-events-none absolute overflow-hidden"
-            style={{ ...WINDOW_BOUNDS_STYLE, ...maskStyle }}
-          >
-            {Array.from({ length: 48 }, (_, index) => (
-              <span
-                key={index}
-                className="caso-cero-fallback-drop absolute block rounded-full"
-                style={{
-                  left: ((index * 43) % 98) + "%",
-                  top: ((index * 29) % 94) + "%",
-                  height: 14 + ((index * 7) % 21) + "px",
-                  animationDelay: "-" + (((index * 11) % 25) / 3) + "s",
-                  animationDuration: 2.1 + ((index * 5) % 14) / 10 + "s",
-                }}
-              />
-            ))}
-          </div>
-        )}
 
         {/* Fogged, damp glass texture: masked to the twelve transparent panes only. */}
         <div
@@ -388,8 +205,6 @@ export default function CasoCeroCinematicScene({
           ))}
         </div>
 
-        {/* Soft edge shading blends the moving water into the dark rainy night. */}
-        <div aria-hidden="true" className="caso-cero-river-atmosphere pointer-events-none absolute inset-0" />
 
         <img
           src="/images/backgrounds/caso-cero/escena-apagada.png"
@@ -471,7 +286,7 @@ export default function CasoCeroCinematicScene({
 
       <div className="pointer-events-none absolute bottom-4 right-5 z-20 hidden items-center gap-2 text-[9px] font-semibold tracking-[.14em] text-white/65 lg:flex">
         <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#b7dacf]" />
-        LLUVIA EN VIVO · RÍO NOCTURNO
+        LLUVIA SOBRE EL CRISTAL
       </div>
 
       {showLoadingSkeleton && (
@@ -487,24 +302,6 @@ export default function CasoCeroCinematicScene({
       )}
 
       <style jsx>{`
-        .caso-cero-river-video {
-          /* Overscan removes visible clip boundaries; the wooden frame PNGs
-             remain above it and hide everything outside the transparent panes. */
-          transform: scale(1.02);
-          transform-origin: center;
-          filter: brightness(.86) saturate(.9) contrast(1.05);
-          opacity: 1;
-          transition: opacity 300ms ease-in-out;
-          will-change: transform, opacity;
-        }
-
-        .caso-cero-river-atmosphere {
-          background:
-            linear-gradient(90deg, rgba(3, 8, 13, .18), transparent 13%, transparent 86%, rgba(3, 8, 13, .22)),
-            linear-gradient(180deg, rgba(3, 8, 13, .12), transparent 24%, transparent 74%, rgba(3, 8, 13, .17));
-          mix-blend-mode: multiply;
-        }
-
         .caso-cero-glass-humidity {
           opacity: .68;
           background:
@@ -602,9 +399,6 @@ export default function CasoCeroCinematicScene({
           .caso-cero-fallback-drop,
           .caso-cero-wet-streak {
             animation: none !important;
-          }
-          .caso-cero-river-video {
-            transform: none;
           }
         }
 

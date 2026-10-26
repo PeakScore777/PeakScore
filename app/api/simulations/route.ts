@@ -390,7 +390,7 @@ export async function POST(request: Request) {
         .eq("english_part", getNumericEnglishPart(requestedPart));
 
       const expectedQuestionCount = getEnglishPartQuestionCount(
-        selectedEnglishFormat,
+        selectedEnglishFormat!,
         requestedPart,
       );
 

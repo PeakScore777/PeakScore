@@ -32,7 +32,8 @@
     "react-inner-image-zoom": "^4.0.2",
     "recharts": "^3.10.1",
     "tesseract.js": "^7.0.0",
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "yet-another-react-lightbox": "^3.32.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

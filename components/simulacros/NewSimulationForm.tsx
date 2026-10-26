@@ -323,7 +323,7 @@ export default function NewSimulationPage() {
               </div>
 
               <span className="border border-[#8de9f2]/25 bg-[#8de9f2]/5 px-3 py-2 text-[9px] font-bold text-[#b8f8ff]">
-                3 pasos
+                {subject === "Inglés" ? "4 pasos" : "3 pasos"}
               </span>
             </div>
 
@@ -545,7 +545,7 @@ export default function NewSimulationPage() {
                       className="text-[10px] text-[#c7bbff]"
                       style={pixelFont}
                     >
-                      03
+                      {subject === "Inglés" ? "03" : "02"}
                     </span>
                   </div>
 
@@ -613,7 +613,7 @@ export default function NewSimulationPage() {
                       className="text-[10px] text-[#c7bbff]"
                       style={pixelFont}
                     >
-                      04
+                      {subject === "Inglés" ? "04" : "03"}
                     </span>
                   </div>
 

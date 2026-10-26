@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ZoomableImage from "@/components/ZoomableImage";
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -1122,8 +1122,11 @@ export default function EditQuestionPage() {
                         Imagen actual
                       </p>
 
-                      <Image
-                        src={form.image_url} width={1200} height={800} unoptimized alt="Imagen de la pregunta"
+                      <ZoomableImage
+                        src={form.image_url}
+                        alt="Imagen de la pregunta"
+                        width={1200}
+                        height={800}
                         className="max-h-80 w-full rounded-lg object-contain"
                       />
                     </div>

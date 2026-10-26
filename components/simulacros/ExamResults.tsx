@@ -34,6 +34,13 @@ type TutorReview = {
   items: TutorReviewItem[];
 };
 
+function formatTutorExplanation(explanation: string): string {
+  return explanation
+    .trim()
+    .replace(/\s*(Paso\s*[1-3]:)/gi, "\n$1")
+    .replace(/^\n/, "");
+}
+
 type ExamResultsProps = {
   correctAnswers: number;
   incorrectAnswers: number;
@@ -630,7 +637,7 @@ export default function ExamResults({
             {/* =================================================
                 TUTOR — EXPLICACIÓN DE ERRORES
             ================================================== */}
-            <section className="mt-8 overflow-hidden rounded-[24px] border border-violet-200 bg-white shadow-[0_14px_38px_rgba(15,23,42,0.06)]">
+            <section className="mt-8 overflow-hidden rounded-[24px] border border-violet-200 bg-white shadow-[0_14px_38px_rgba(15,23,42,0.06)] lg:mt-0">
               <div className="flex flex-wrap items-center gap-4 border-b border-violet-100 bg-gradient-to-r from-violet-50 via-white to-cyan-50 px-5 py-5 sm:px-7">
                 <div className="flex h-[68px] w-[68px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-violet-200 bg-white shadow-sm">
                   <img
@@ -769,7 +776,7 @@ export default function ExamResults({
                                   )}
                                 </div>
                                 <p className="whitespace-pre-wrap text-sm leading-7 text-slate-700">
-                                  {item.explanation}
+                                  {formatTutorExplanation(item.explanation)}
                                 </p>
                               </div>
                             </div>
@@ -865,9 +872,9 @@ export default function ExamResults({
                     </div>
                   )}
 
-                  {tutorReview.source === "official" && (
+                  {tutorReview.items.some((item) => item.source !== "ai") && (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
-                      En este intento TUTOR no pudo generar explicaciones personalizadas. Se muestran las explicaciones guardadas en el banco cuando existen; puedes reintentar para solicitar el análisis de IA.
+                      Algunas preguntas usan la explicación guardada en el banco porque TUTOR no pudo personalizarlas en este intento. Las tarjetas indican la fuente; puedes reintentar para solicitar otra revisión.
                     </p>
                   )}
                 </div>

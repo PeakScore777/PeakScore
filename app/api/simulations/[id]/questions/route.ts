@@ -241,6 +241,8 @@ export async function GET(
     )];
     let englishSets: Record<string, {
       title: string;
+      shared_title: string | null;
+      booklet_format: string;
       part: number;
       shared_text: string | null;
       shared_image_url: string | null;
@@ -254,7 +256,7 @@ export async function GET(
     if (englishSetIds.length > 0) {
       const { data: setRows, error: setRowsError } = await adminSupabase
         .from("english_question_sets")
-        .select("id,title,part,shared_text,shared_image_url,instructions,word_bank,example_prompt,example_options,example_image_url,example_answer")
+        .select("id,title,shared_title,booklet_format,part,shared_text,shared_image_url,instructions,word_bank,example_prompt,example_options,example_image_url,example_answer")
         .in("id", englishSetIds);
       if (setRowsError) {
         console.error("[PeakScore] No se pudieron cargar los conjuntos de Inglés.", { errorCode: setRowsError.code ?? "UNKNOWN" });
@@ -262,6 +264,8 @@ export async function GET(
       }
       englishSets = Object.fromEntries((setRows ?? []).map((set) => [set.id, {
         title: set.title,
+        shared_title: set.shared_title,
+        booklet_format: set.booklet_format,
         part: set.part,
         shared_text: set.shared_text,
         shared_image_url: set.shared_image_url,

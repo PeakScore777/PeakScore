@@ -1,7 +1,7 @@
 "use client";
 
 import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
-import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { RGBELoader } from "three/examples/jsm/loaders/RGBELoader.js";
 import { X } from "lucide-react";
@@ -565,7 +565,6 @@ function EvidenceCard({
   onPhotoPointerOut: () => void;
 }) {
   const [labelTexture, setLabelTexture] = useState<THREE.CanvasTexture | null>(null);
-  const rigRef = useRef<THREE.Group | null>(null);
   const paperGeometry = useMemo(
     () => new THREE.ExtrudeGeometry(roundedRectangle(1.48, 1.76, 0.035), {
       depth: 0.045,
@@ -582,18 +581,6 @@ function EvidenceCard({
   const rotationZ = [-0.035, 0.015, -0.025][index] + ropeAngle * 0.68;
   const rotationY = [-0.11, 0.035, 0.09][index];
   const rotationX = [0.025, -0.035, 0.018][index];
-
-  useFrame(({ clock }) => {
-    const rig = rigRef.current;
-    if (!rig) return;
-
-    // Tiny damped movement around the actual rope attachment point:
-    // enough to feel suspended, not enough to distract during investigation.
-    const time = clock.elapsedTime;
-    rig.rotation.z = rotationZ + Math.sin(time * 0.42 + index * 1.7) * 0.006;
-    rig.rotation.x = rotationX + Math.sin(time * 0.31 + index * 1.25) * 0.003;
-    rig.rotation.y = rotationY + Math.sin(time * 0.27 + index * 1.1) * 0.004;
-  });
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
@@ -616,7 +603,6 @@ function EvidenceCard({
 
   return (
     <group
-      ref={rigRef}
       position={position}
       scale={scale}
       rotation={[rotationX, rotationY, rotationZ]}
@@ -683,7 +669,7 @@ function EvidenceCard({
 }
 
 function CameraFraming({ mobile }: { mobile: boolean }) {
-  const { camera, size } = useThree();
+  const { camera, size, invalidate } = useThree();
 
   useEffect(() => {
     if (!(camera instanceof THREE.OrthographicCamera)) return;
@@ -701,7 +687,8 @@ function CameraFraming({ mobile }: { mobile: boolean }) {
     camera.position.set(0, 0.12, 10);
     camera.lookAt(0, 0, 0);
     camera.updateProjectionMatrix();
-  }, [camera, size.width, size.height, mobile]);
+    invalidate();
+  }, [camera, size.width, size.height, mobile, invalidate]);
 
   return null;
 }
@@ -1076,6 +1063,7 @@ export default function CasoCeroEvidenceClothesline() {
       >
         <Canvas
           orthographic
+          frameloop="demand"
           shadows
           dpr={[1, 1.1]}
           camera={{

@@ -1367,7 +1367,7 @@ export default function CasoCeroEvidenceClothesline() {
           <div className="absolute -left-[135px] -top-[135px] h-[270px] w-[270px]">
             {/* The selected magnification (3.15×) is unchanged; the physical GLB lens sits above this live crop. */}
             <div
-              className="absolute left-1/2 top-1/2 z-[1] h-[138px] w-[138px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-[#b9c9ce]/80"
+              className="absolute left-1/2 top-1/2 z-0 h-[138px] w-[138px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-[#b9c9ce]/80"
               style={{
                 background: "rgba(184,214,225,.18)",
                 boxShadow: "inset 0 1px 8px rgba(255,255,255,.23), inset 0 -2px 8px rgba(2,12,19,.20)",
@@ -1404,7 +1404,7 @@ export default function CasoCeroEvidenceClothesline() {
                 gl.toneMapping = THREE.ACESFilmicToneMapping;
                 gl.toneMappingExposure = 1.05;
               }}
-              style={{ position: "absolute", inset: 0, display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
+              style={{ position: "absolute", inset: 0, zIndex: 2, display: "block", width: "100%", height: "100%", pointerEvents: "none" }}
             >
               <ambientLight intensity={1.65} />
               <directionalLight position={[2.5, 3.5, 5]} intensity={2.25} />

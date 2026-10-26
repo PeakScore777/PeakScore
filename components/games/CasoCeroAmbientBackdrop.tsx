@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 const rainDrops = Array.from({ length: 44 }, (_, index) => index);
 

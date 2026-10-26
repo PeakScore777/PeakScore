@@ -1,12 +1,12 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { getEnglishDifficulty } from "@/lib/simulations/english-difficulty";
+import { getEnglishDifficulty, getEnglishPartQuestionCount } from "@/lib/simulations/english-difficulty";
 import { createClient } from "@/lib/supabase/server";
 
 interface CreateSimulationBody {
   type: "normal";
   subject: string;
-  amount: number;
+  amount: number | null;
   difficulty: string;
   englishFormat?: "historical" | "saber11_2026" | null;
   englishPart?: string | null;
@@ -343,16 +343,23 @@ export async function POST(request: Request) {
         );
       }
 
-      const matchingSetIds = ((sets ?? []) as EnglishQuestionSet[])
+      const eligibleSets = ((sets ?? []) as EnglishQuestionSet[])
         .filter((set) => set.status === "published")
-        .filter((set) =>
-          set.booklet_format === selectedEnglishFormat ||
-          (sharedHistoricalPart && set.booklet_format === "saber11_2026")
-        )
-        .filter((set) =>
-          matchesEnglishVariant(set, selectedEnglishFormat!, requestedPart)
-        )
+        .filter((set) => matchesEnglishVariant(set, selectedEnglishFormat!, requestedPart));
+
+      // Respect the selected format if its own section is published.
+      // Reuse the 2026 set only when a historical shared part has no published historical set.
+      const preferredSetIds = eligibleSets
+        .filter((set) => set.booklet_format === selectedEnglishFormat)
         .map((set) => set.id);
+      const shared2026SetIds = eligibleSets
+        .filter((set) => set.booklet_format === "saber11_2026")
+        .map((set) => set.id);
+      const matchingSetIds = preferredSetIds.length > 0
+        ? preferredSetIds
+        : sharedHistoricalPart
+          ? shared2026SetIds
+          : [];
 
       if (matchingSetIds.length === 0) {
         const partLabel =

@@ -295,6 +295,174 @@ function PhotoDropShadow() {
   const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
 
   useEffect(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 320;
+    const context = canvas.getContext("2d");
+    if (!context) return;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    const gradient = context.createRadialGradient(128, 160, 24, 128, 160, 145);
+    gradient.addColorStop(0, "rgba(0,0,0,0.60)");
+    gradient.addColorStop(0.55, "rgba(0,0,0,0.32)");
+    gradient.addColorStop(1, "rgba(0,0,0,0)");
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    const nextTexture = new THREE.CanvasTexture(canvas);
+    nextTexture.colorSpace = THREE.SRGBColorSpace;
+    setTexture(nextTexture);
+    return () => nextTexture.dispose();
+  }, []);
+
+  if (!texture) return null;
+  return (
+    <mesh position={[0.065, -0.07, -0.071]} renderOrder={-1}>
+      <planeGeometry args={[1.9, 2.13]} />
+      <meshBasicMaterial
+        map={texture}
+        transparent
+        depthWrite={false}
+        opacity={0.9}
+        toneMapped={false}
+      />
+    </mesh>
+  );
+}
+
+function makeBraidedStrand(
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  sag: number,
+  phase: number,
+) {
+  const points: THREE.Vector3[] = [];
+  const direction = new THREE.Vector3().subVectors(end, start);
+  const length = direction.length();
+  const axis = direction.clone().normalize();
+  const reference = new THREE.Vector3(0, 0, 1);
+  const normal = new THREE.Vector3().crossVectors(axis, reference).normalize();
+  const binormal = new THREE.Vector3().crossVectors(axis, normal).normalize();
+  const segments = 180;
+
+  for (let i = 0; i <= segments; i++) {
+    const t = i / segments;
+    const center = start.clone().lerp(end, t);
+    center.y -= Math.sin(Math.PI * t) * sag;
+
+    // Rounded helix with dense ridges; PBR maps supply the fine jute fibres.
+    const angle = t * length * 19 + phase;
+    center
+      .addScaledVector(normal, Math.cos(angle) * 0.021)
+      .addScaledVector(binormal, Math.sin(angle) * 0.021);
+    points.push(center);
+  }
+
+  return new THREE.TubeGeometry(
+    new THREE.CatmullRomCurve3(points),
+    segments,
+    0.0125,
+    6,
+    false,
+  );
+}
+
+function BraidedRope({
+  left,
+  right,
+  sag,
+}: {
+  left: number;
+  right: number;
+  sag: number;
+}) {
+  const [maps, setMaps] = useState<PbrTextureSet | null>(null);
+
+  useEffect(() => {
+    setMaps(getPbrTextureSet("jute"));
+  }, []);
+
+  const geometries = useMemo(() => {
+    const start = new THREE.Vector3(left, 1.2, 0);
+    const end = new THREE.Vector3(right, 1.2, 0);
+    const mainStrands = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((phase) =>
+      makeBraidedStrand(start, end, sag, phase),
+    );
+    const fineStrands = Array.from({ length: 6 }, (_, index) =>
+      makeBraidedStrand(start, end, sag, (index * Math.PI) / 3 + 0.28),
+    );
+    return [...mainStrands, ...fineStrands];
+  }, [left, right, sag]);
+
+  useEffect(
+    () => () => geometries.forEach((geometry) => geometry.dispose()),
+    [geometries],
+  );
+
+  return (
+    <group>
+      {geometries.map((geometry, index) => (
+        <mesh key={index} geometry={geometry} castShadow receiveShadow>
+          <meshStandardMaterial
+            color={index < 3
+              ? ["#806043", "#b18a5d", "#593a27"][index]
+              : ["#c19a6c", "#593d28", "#9a754f"][index % 3]}
+            map={maps?.color}
+            normalMap={maps?.normal}
+            normalScale={new THREE.Vector2(0.48, 0.7)}
+            roughnessMap={maps?.roughness}
+            roughness={0.96}
+            metalness={0}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function WoodenPin({ position }: { position: [number, number, number] }) {
+  const [woodMaps, setWoodMaps] = useState<PbrTextureSet | null>(null);
+  const halfGeometries = useMemo(
+    () => [createWoodHalf(-1), createWoodHalf(1)],
+    [],
+  );
+  const springGeometries = useMemo(() => {
+    const coil: THREE.Vector3[] = [];
+    const turns = 2.35;
+    const steps = 100;
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const angle = t * Math.PI * 2 * turns;
+      coil.push(new THREE.Vector3(
+        Math.cos(angle) * 0.025,
+        -0.01 + t * 0.045 + Math.sin(angle) * 0.003,
+        0.085 + Math.sin(angle) * 0.014,
+      ));
+    }
+
+    const leftArm = [
+      new THREE.Vector3(-0.006, -0.006, 0.084),
+      new THREE.Vector3(-0.024, -0.036, 0.088),
+      new THREE.Vector3(-0.047, -0.068, 0.083),
+      new THREE.Vector3(-0.047, -0.125, 0.075),
+    ];
+    const rightArm = [
+      new THREE.Vector3(0.006, 0.028, 0.084),
+      new THREE.Vector3(0.031, 0.056, 0.088),
+      new THREE.Vector3(0.047, 0.105, 0.083),
+      new THREE.Vector3(0.047, 0.15, 0.075),
+    ];
+
+    return [
+      tubeFromPoints(coil, 0.0045),
+      tubeFromPoints(leftArm, 0.0043),
+      tubeFromPoints(rightArm, 0.0043),
+    ];
+  }, []);
+
+  useEffect(() => {
+    setWoodMaps(getPbrTextureSet("wood"));
     return () => {
       halfGeometries.forEach((geometry) => geometry.dispose());
       springGeometries.forEach((geometry) => geometry.dispose());

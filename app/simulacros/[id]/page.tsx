@@ -59,6 +59,8 @@ export default function ExamPage() {
 
   const [englishSets, setEnglishSets] = useState<Record<string, {
     title: string;
+    shared_title: string | null;
+    booklet_format: string;
     part: number;
     shared_text: string | null;
     shared_image_url?: string | null;
@@ -86,7 +88,7 @@ export default function ExamPage() {
   const [currentQuestion, setCurrentQuestion] =
     useState(0);
 
-  const [bookletView, setBookletView] = useState(true);
+  const [bookletView] = useState(true);
 
   const [examFinished, setExamFinished] =
     useState(false);
@@ -367,7 +369,7 @@ export default function ExamPage() {
 
               if (
                 questionIndex >= 0 &&
-                ["A", "B", "C", "D"].includes(
+                ["A", "B", "C", "D", "E", "F", "G"].includes(
                   answer.selected_answer
                 )
               ) {
@@ -686,6 +688,10 @@ export default function ExamPage() {
           data.result.percentage,
       };
 
+      if (typeof data.attempt?.id === "string") {
+        setServerAttemptId(data.attempt.id);
+      }
+
       console.log(
         "[PeakScore] Simulacro finalizado correctamente."
       );
@@ -970,6 +976,42 @@ export default function ExamPage() {
   const question =
     questions[currentQuestion];
 
+  const currentEnglishSet =
+    question?.english_set_id
+      ? englishSets[question.english_set_id] ?? null
+      : null;
+
+  const englishWordBankOptions =
+    question?.english_part === 1 && Array.isArray(currentEnglishSet?.word_bank)
+      ? currentEnglishSet.word_bank.flatMap((entry) => {
+          const item = entry as { key?: unknown; text?: unknown; example?: unknown };
+          if (
+            item.example === true ||
+            typeof item.key !== "string" ||
+            typeof item.text !== "string"
+          ) {
+            return [];
+          }
+          return [{ key: item.key, text: item.text }];
+        })
+      : [];
+
+  const questionOptions = question
+    ? englishWordBankOptions.length > 0
+      ? englishWordBankOptions
+      : question.english_options?.length
+        ? question.english_options.map((option) => ({
+            key: option.key,
+            text: option.text,
+          }))
+        : [
+            { key: "A", text: question.option_a },
+            { key: "B", text: question.option_b },
+            { key: "C", text: question.option_c },
+            { key: "D", text: question.option_d },
+          ]
+    : [];
+
   const answeredQuestions =
     Object.keys(
       answers
@@ -1015,9 +1057,17 @@ export default function ExamPage() {
           incorrectAnswers={
             result.incorrectAnswers
           }
+          unansweredAnswers={
+            result.unansweredAnswers
+          }
+          totalQuestions={
+            result.totalQuestions
+          }
           percentage={
             result.percentage
           }
+          simulationId={simulationId}
+          attemptId={serverAttemptId}
           onRetry={() => {
             clearLocalProgress();
             window.location.reload();
@@ -1247,54 +1297,43 @@ export default function ExamPage() {
             </div>
 
             <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-
-              Pregunta{" "}
-
-              {String(
-                currentQuestion + 1
-              ).padStart(2, "0")}
-
-              <span className="ml-2 text-slate-300">
-
-                /{" "}
-
-                {String(
-                  questions.length
-                ).padStart(2, "0")}
-
-              </span>
-
+              {bookletView
+                ? "Cuadernillo de práctica"
+                : `Pregunta ${String(currentQuestion + 1).padStart(2, "0")} / ${String(questions.length).padStart(2, "0")}`}
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Selecciona una sola respuesta.
-              Puedes cambiarla antes de finalizar.
+              {bookletView
+                ? "Resuelve la sección respetando el formato del cuadernillo y marca tus respuestas en la hoja final."
+                : "Selecciona una sola respuesta. Puedes cambiarla antes de finalizar."}
             </p>
 
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">\n          <button type="button" onClick={() => { setAnnotationMode((value) => !value); setPendingSelection(null); }} className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold ${annotationMode ? "border-amber-400 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-700"}`} aria-pressed={annotationMode}>\n            <Pencil size={16} /> {annotationMode ? "Lápiz activado" : "Lápiz"}\n          </button>\n          {annotationMode && <span className="text-xs text-slate-500">Selecciona texto y subráyalo.</span>}\n          {pendingSelection && <button type="button" onClick={saveUnderline} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white"><Highlighter size={16}/> Subrayar selección</button>}\n          {pendingSelection && <button type="button" onClick={() => setPendingSelection(null)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600" aria-label="Cancelar subrayado"><X size={16}/></button>}\n        </div>\n\n        <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+          {!bookletView && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => { setAnnotationMode((value) => !value); setPendingSelection(null); }} className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-bold ${annotationMode ? "border-amber-400 bg-amber-100 text-amber-900" : "border-slate-200 bg-white text-slate-700"}`} aria-pressed={annotationMode}>
+                <Pencil size={16} /> {annotationMode ? "Lápiz activado" : "Lápiz"}
+              </button>
+              {annotationMode && <span className="text-xs text-slate-500">Selecciona texto y subráyalo.</span>}
+              {pendingSelection && <button type="button" onClick={saveUnderline} className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-3 py-2 text-sm font-bold text-white"><Highlighter size={16}/> Subrayar selección</button>}
+              {pendingSelection && <button type="button" onClick={() => setPendingSelection(null)} className="rounded-xl border border-slate-200 bg-white p-2 text-slate-600" aria-label="Cancelar subrayado"><X size={16}/></button>}
+            </div>
+          )}
 
-            <ShieldCheck
-              size={17}
-              className="text-emerald-600"
-            />
+          {!bookletView && (
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+              <ShieldCheck size={17} className="text-emerald-600" />
+              Respuesta única
+            </div>
+          )}
 
-            Respuesta única
-
-          </div>
-
-        </div>
-
-        <div className="mb-5 flex justify-end">
-          <button type="button" onClick={() => setBookletView((value) => !value)} className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50">
-            {bookletView ? "Ver pregunta individual" : "Ver cuadernillo completo"}
-          </button>
         </div>
 
         {bookletView && (
           <BookletView
             questions={questions}
+            simulationTitle={simulation?.title}
             answers={answers}
             englishSets={englishSets}
             saving={savingAttempt}
@@ -1370,6 +1409,74 @@ export default function ExamPage() {
                 {/* =================================================
                     CONTEXTO
                 ================================================== */}
+
+                {currentEnglishSet && (
+                  <div className="relative mb-7 overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-white to-violet-50/60">
+                    <div className="absolute inset-y-0 left-0 w-1 bg-violet-500" />
+                    <div className="px-5 py-5 pl-6 sm:px-7 sm:py-7 sm:pl-8">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full border border-violet-200 bg-white px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-violet-700">
+                          Inglés · Parte {currentEnglishSet.part}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                          {currentEnglishSet.booklet_format === "historical"
+                            ? "Formato histórico"
+                            : currentEnglishSet.booklet_format === "saber11_2026"
+                              ? "Saber 11 · 2026 Cal A"
+                              : "Texto compartido"}
+                        </span>
+                      </div>
+                      {(currentEnglishSet.shared_title || currentEnglishSet.title) && (
+                        <h2 className="text-lg font-black leading-7 text-slate-900">
+                          {currentEnglishSet.shared_title || currentEnglishSet.title}
+                        </h2>
+                      )}
+                      {currentEnglishSet.instructions && (
+                        <p className="mt-3 text-sm font-semibold leading-6 text-violet-900">
+                          {currentEnglishSet.instructions}
+                        </p>
+                      )}
+                      {currentEnglishSet.shared_text && (
+                        <div
+                          onMouseUp={() => captureTextSelection("english-shared-text")}
+                          className={`mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-700 sm:text-[15px] ${annotationMode ? "cursor-text select-text" : ""}`}
+                        >
+                          {renderAnnotatedText(currentEnglishSet.shared_text, "english-shared-text")}
+                        </div>
+                      )}
+                      {currentEnglishSet.shared_image_url && (
+                        <div className="mt-4 flex justify-center">
+                          <img
+                            src={currentEnglishSet.shared_image_url}
+                            alt={currentEnglishSet.shared_title || currentEnglishSet.title}
+                            className="max-h-[440px] w-auto max-w-full rounded-xl border border-slate-200 object-contain"
+                          />
+                        </div>
+                      )}
+                      {Array.isArray(currentEnglishSet.word_bank) && currentEnglishSet.word_bank.length > 0 && (
+                        <div className="mt-4 rounded-xl border border-violet-200/80 bg-white/80 p-4">
+                          <p className="text-xs font-black uppercase tracking-wide text-violet-800">
+                            Banco de palabras
+                          </p>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {currentEnglishSet.word_bank.map((entry, index) => {
+                              const item = entry as { key?: string; text?: string };
+                              if (typeof item.text !== "string") return null;
+                              return (
+                                <span
+                                  key={item.key || index}
+                                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700"
+                                >
+                                  {item.text}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {question.context_text &&
                   question.context_text.trim() && (
@@ -1456,12 +1563,7 @@ export default function ExamPage() {
 
                   <div className="space-y-3">
 
-                    {[
-                      question.option_a,
-                      question.option_b,
-                      question.option_c,
-                      question.option_d,
-                    ].map(
+                    {questionOptions.map(
                       (
                         option,
                         index
@@ -1515,14 +1617,11 @@ export default function ExamPage() {
                                   : "bg-slate-100 text-slate-600 group-hover:bg-slate-200"
                               }`}
                             >
-                              {String.fromCharCode(
-                                64 +
-                                  optionNumber
-                              )}
+                              {option.key || String.fromCharCode(64 + optionNumber)}
                             </span>
 
                             <span className="flex-1 pt-1 text-sm font-medium leading-6 text-slate-700 sm:text-[15px]">
-                              {option}
+                              {option.text}
                             </span>
 
                             <span

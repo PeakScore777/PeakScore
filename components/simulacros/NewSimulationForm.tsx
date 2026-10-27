@@ -8,6 +8,7 @@ import {
   Check,
   Clock3,
 } from "lucide-react";
+import { getEnglishDifficulty } from "@/lib/simulations/english-difficulty";
 
 const SUBJECTS = [
   {
@@ -46,6 +47,42 @@ const SUBJECTS = [
     accent: "pink",
   },
 ] as const;
+
+type EnglishFormat = "historical" | "saber11_2026";
+
+type EnglishPartOption = {
+  value: string;
+  label: string;
+  description: string;
+};
+
+const ENGLISH_PARTS_BY_FORMAT: Record<EnglishFormat, EnglishPartOption[]> = {
+  historical: [
+    { value: "1", label: "Parte 1", description: "Vocabulario y descripciones" },
+    { value: "2", label: "Parte 2", description: "Avisos y situaciones" },
+    { value: "3", label: "Parte 3", description: "Conversaciones cotidianas" },
+    { value: "4A", label: "Parte 4A", description: "Formato histórico" },
+    { value: "4B", label: "Parte 4B", description: "Formato histórico" },
+    { value: "5", label: "Parte 5", description: "Comprensión de lectura" },
+    { value: "6", label: "Parte 6", description: "Lectura inferencial" },
+    { value: "7", label: "Parte 7", description: "Formato histórico" },
+  ],
+  saber11_2026: [
+    { value: "1", label: "Parte 1", description: "Vocabulario y descripciones" },
+    { value: "2", label: "Parte 2", description: "Avisos y situaciones" },
+    { value: "3", label: "Parte 3", description: "Conversaciones cotidianas" },
+    { value: "4", label: "Parte 4", description: "Uso del idioma en contexto" },
+    { value: "5", label: "Parte 5", description: "Comprensión de lectura" },
+    { value: "6", label: "Parte 6", description: "Lectura inferencial" },
+    { value: "7A", label: "Parte 7A", description: "Formato Saber 11 · 2026" },
+    { value: "7B", label: "Parte 7B", description: "Formato Saber 11 · 2026" },
+  ],
+};
+
+const ENGLISH_FORMAT_LABELS: Record<EnglishFormat, string> = {
+  historical: "Formato histórico",
+  saber11_2026: "Saber 11 · 2026 Cal A",
+};
 
 const QUESTION_AMOUNTS = [5, 10, 25, 50];
 
@@ -96,6 +133,9 @@ export default function NewSimulationPage() {
   const [subject, setSubject] = useState("Matemáticas");
   const [amount, setAmount] = useState(10);
   const [difficulty, setDifficulty] = useState("Mixta");
+  const [bookletFormat, setBookletFormat] =
+    useState<EnglishFormat>("saber11_2026");
+  const [englishPart, setEnglishPart] = useState("1");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -105,9 +145,25 @@ export default function NewSimulationPage() {
     [subject],
   );
 
+  const effectiveDifficulty =
+    subject === "Inglés" ? getEnglishDifficulty(englishPart) : difficulty;
+
   const selectedDifficulty = useMemo(
-    () => DIFFICULTIES.find((item) => item.value === difficulty),
-    [difficulty],
+    () => DIFFICULTIES.find((item) => item.value === effectiveDifficulty),
+    [effectiveDifficulty],
+  );
+
+  const visibleDifficulties =
+    subject === "Inglés"
+      ? DIFFICULTIES.filter((item) => item.value === effectiveDifficulty)
+      : DIFFICULTIES;
+
+  const selectedEnglishPart = useMemo(
+    () =>
+      ENGLISH_PARTS_BY_FORMAT[bookletFormat].find(
+        (item) => item.value === englishPart,
+      ),
+    [bookletFormat, englishPart],
   );
 
   const duration = calculateDuration(amount);
@@ -127,8 +183,10 @@ export default function NewSimulationPage() {
         body: JSON.stringify({
           type: "normal",
           subject,
-          amount,
-          difficulty,
+          amount: subject === "Inglés" ? null : amount,
+          difficulty: effectiveDifficulty,
+          englishFormat: subject === "Inglés" ? bookletFormat : null,
+          englishPart: subject === "Inglés" ? englishPart : null,
         }),
       });
 
@@ -314,7 +372,12 @@ export default function NewSimulationPage() {
                         key={item.name}
                         type="button"
                         aria-pressed={selected}
-                        onClick={() => setSubject(item.name)}
+                        onClick={() => {
+                          setSubject(item.name);
+                          if (item.name !== "Inglés") {
+                            setDifficulty("Mixta");
+                          }
+                        }}
                         className={`group relative flex min-h-[112px] min-w-0 items-center gap-3 border p-3 text-left transition duration-200 sm:p-4 ${
                           selected
                             ? "border-[#8de9f2] bg-[#10202c]/90 shadow-[inset_0_0_22px_rgba(34,211,238,0.07),0_0_16px_rgba(34,211,238,0.08)]"
@@ -364,75 +427,213 @@ export default function NewSimulationPage() {
                 </div>
               </section>
 
-              <div className="my-7 border-t border-white/10 sm:my-8" />
+              {subject === "Inglés" && (
+                <>
+                  <div className="my-7 border-t border-white/10 sm:my-8" />
 
-              {/* Paso 2: preguntas */}
-              <section>
-                <div className="mb-5 flex items-start gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/50 bg-[#a99bea]/10">
-                    <span
-                      className="text-[10px] text-[#c7bbff]"
-                      style={pixelFont}
-                    >
-                      02
-                    </span>
-                  </div>
-
-                  <div>
-                    <h2
-                      className="text-[10px] leading-6 text-white sm:text-[11px]"
-                      style={pixelFont}
-                    >
-                      ¿CUÁNTAS PREGUNTAS?
-                    </h2>
-
-                    <p className="mt-1 text-sm leading-6 text-slate-400">
-                      Elige el tamaño de tu entrenamiento.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {QUESTION_AMOUNTS.map((value) => {
-                    const selected = amount === value;
-
-                    return (
-                      <button
-                        key={value}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => setAmount(value)}
-                        className={`relative flex min-h-[86px] flex-col items-center justify-center border transition duration-200 ${
-                          selected
-                            ? "border-[#8de9f2] bg-[#102431] text-white shadow-[inset_0_0_24px_rgba(34,211,238,0.07)]"
-                            : "border-white/10 bg-[#0d1020] text-slate-300 hover:border-white/25 hover:bg-[#11152a]"
-                        }`}
-                      >
-                        <span className="text-2xl font-black tabular-nums">
-                          {value}
+                  <section aria-labelledby="english-format-title">
+                    <div className="mb-5 flex items-start gap-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#8de9f2]/50 bg-[#8de9f2]/10">
+                        <span className="text-[10px] text-[#8de9f2]" style={pixelFont}>
+                          02
                         </span>
-
-                        <span
-                          className={`mt-2 text-[7px] leading-4 ${
-                            selected ? "text-[#8de9f2]" : "text-slate-500"
-                          }`}
+                      </div>
+                      <div>
+                        <h2
+                          id="english-format-title"
+                          className="text-[10px] leading-6 text-white sm:text-[11px]"
                           style={pixelFont}
                         >
-                          PREGUNTAS
+                          FORMATO DE INGLÉS
+                        </h2>
+                        <p className="mt-1 text-sm leading-6 text-slate-400">
+                          Elige la estructura del cuadernillo que deseas practicar.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {(
+                        [
+                          {
+                            value: "historical",
+                            label: "Formato histórico",
+                            description: "Incluye 4A, 4B y una sola Parte 7.",
+                          },
+                          {
+                            value: "saber11_2026",
+                            label: "Saber 11 · 2026 Cal A",
+                            description: "Incluye Parte 4 y las secciones 7A y 7B.",
+                          },
+                        ] as const
+                      ).map((format) => {
+                        const selected = bookletFormat === format.value;
+
+                        return (
+                          <button
+                            key={format.value}
+                            type="button"
+                            aria-pressed={selected}
+                            onClick={() => {
+                              setBookletFormat(format.value);
+                              setEnglishPart("1");
+                            }}
+                            className={[
+                              "relative min-h-[98px] border p-4 text-left transition",
+                              selected
+                                ? "border-[#8de9f2] bg-[#102431] shadow-[inset_0_0_24px_rgba(34,211,238,0.07)]"
+                                : "border-white/10 bg-[#0d1020] hover:border-white/25 hover:bg-[#11152a]",
+                            ].join(" ")}
+                          >
+                            <span className="block text-sm font-bold text-white">
+                              {format.label}
+                            </span>
+                            <span className="mt-2 block text-xs leading-5 text-slate-400">
+                              {format.description}
+                            </span>
+                            {selected && (
+                              <span className="absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-[#8de9f2] text-[#06101c]">
+                                <Check size={13} strokeWidth={3} />
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-5">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="text-sm font-bold text-white">
+                          ¿Qué parte quieres presentar?
+                        </h3>
+                        <span className="text-[11px] text-slate-500">
+                          {ENGLISH_FORMAT_LABELS[bookletFormat]}
                         </span>
+                      </div>
 
-                        {selected && (
-                          <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#8de9f2] text-[#06101c]">
-                            <Check size={10} strokeWidth={3} />
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {ENGLISH_PARTS_BY_FORMAT[bookletFormat].map((part) => {
+                          const selected = englishPart === part.value;
+
+                          return (
+                            <button
+                              key={part.value}
+                              type="button"
+                              aria-pressed={selected}
+                              onClick={() => setEnglishPart(part.value)}
+                              className={[
+                                "relative flex min-h-[76px] flex-col justify-center border px-3 py-3 text-left transition",
+                                selected
+                                  ? "border-[#a99bea] bg-[#17132b] shadow-[inset_0_0_20px_rgba(167,139,250,0.09)]"
+                                  : "border-white/10 bg-[#0d1020] hover:border-white/25 hover:bg-[#11152a]",
+                              ].join(" ")}
+                            >
+                              <span className="text-sm font-black text-white">
+                                {part.label}
+                              </span>
+                              <span className="mt-1 text-[10px] leading-4 text-slate-400">
+                                {part.description}
+                              </span>
+                              {selected && (
+                                <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[#c7bbff]" />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-3 rounded-xl border border-amber-300/20 bg-amber-200/[0.04] px-4 py-3 text-xs leading-5 text-amber-100/80">
+                        Solo aparecerán preguntas que estén revisadas, publicadas y disponibles en el banco para el formato y la parte elegidos.
+                      </p>
+                    </div>
+                  </section>
+                </>
+              )}
+
+              {subject === "Inglés" ? (
+                <div className="my-7 border border-[#8de9f2]/25 bg-[#8de9f2]/[0.05] px-4 py-4 sm:px-5">
+                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-[#b8f8ff]">
+                    Sección completa
+                  </p>
+                  <p className="mt-2 text-sm font-bold text-white">
+                    Practicarás toda la Parte {englishPart}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-slate-400">
+                    La práctica incluirá el número completo de preguntas que corresponde a esta sección y respetará el orden del formato seleccionado. No puedes recortarla ni elegir una cantidad.
+                  </p>
                 </div>
-              </section>
-
-              <div className="my-7 border-t border-white/10 sm:my-8" />
+              ) : (
+                <>
+                <div className="my-7 border-t border-white/10 sm:my-8" />
+  
+                {/* Paso 2: preguntas */}
+                <section>
+                  <div className="mb-5 flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/50 bg-[#a99bea]/10">
+                      <span
+                        className="text-[10px] text-[#c7bbff]"
+                        style={pixelFont}
+                      >
+                        02
+                      </span>
+                    </div>
+  
+                    <div>
+                      <h2
+                        className="text-[10px] leading-6 text-white sm:text-[11px]"
+                        style={pixelFont}
+                      >
+                        ¿CUÁNTAS PREGUNTAS?
+                      </h2>
+  
+                      <p className="mt-1 text-sm leading-6 text-slate-400">
+                        Elige el tamaño de tu entrenamiento.
+                      </p>
+                    </div>
+                  </div>
+  
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    {QUESTION_AMOUNTS.map((value) => {
+                      const selected = amount === value;
+  
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => setAmount(value)}
+                          className={`relative flex min-h-[86px] flex-col items-center justify-center border transition duration-200 ${
+                            selected
+                              ? "border-[#8de9f2] bg-[#102431] text-white shadow-[inset_0_0_24px_rgba(34,211,238,0.07)]"
+                              : "border-white/10 bg-[#0d1020] text-slate-300 hover:border-white/25 hover:bg-[#11152a]"
+                          }`}
+                        >
+                          <span className="text-2xl font-black tabular-nums">
+                            {value}
+                          </span>
+  
+                          <span
+                            className={`mt-2 text-[7px] leading-4 ${
+                              selected ? "text-[#8de9f2]" : "text-slate-500"
+                            }`}
+                            style={pixelFont}
+                          >
+                            PREGUNTAS
+                          </span>
+  
+                          {selected && (
+                            <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[#8de9f2] text-[#06101c]">
+                              <Check size={10} strokeWidth={3} />
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+  
+                <div className="my-7 border-t border-white/10 sm:my-8" />
+                </>
+              )}
 
               {/* Paso 3: dificultad */}
               <section>
@@ -451,17 +652,22 @@ export default function NewSimulationPage() {
                       className="text-[10px] leading-6 text-white sm:text-[11px]"
                       style={pixelFont}
                     >
-                      ELIGE LA DIFICULTAD
+                      {subject === "Inglés" ? "DIFICULTAD DE LA PARTE" : "ELIGE LA DIFICULTAD"}
                     </h2>
 
                     <p className="mt-1 text-sm leading-6 text-slate-400">
-                      Selecciona el nivel de desafío.
+                      {subject === "Inglés" ? "La dificultad está definida por la sección del cuadernillo." : "Selecciona el nivel de desafío."}
                     </p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  {DIFFICULTIES.map((item) => {
+                {subject === "Inglés" && (
+                  <p className="mb-3 rounded-xl border border-[#8de9f2]/20 bg-[#8de9f2]/[0.04] px-4 py-3 text-xs leading-5 text-slate-300">
+                    Esta parte tiene una dificultad definida por el banco de preguntas.
+                  </p>
+                )}
+                <div className={subject === "Inglés" ? "grid grid-cols-1 sm:max-w-[220px]" : "grid grid-cols-2 gap-3 sm:grid-cols-4"}>
+                  {visibleDifficulties.map((item) => {
                     const selected = difficulty === item.value;
 
                     return (
@@ -469,7 +675,9 @@ export default function NewSimulationPage() {
                         key={item.value}
                         type="button"
                         aria-pressed={selected}
-                        onClick={() => setDifficulty(item.value)}
+                        onClick={() => {
+                          if (subject !== "Inglés") setDifficulty(item.value);
+                        }}
                         className={`group relative flex min-w-0 flex-col items-center border px-2 py-4 text-center transition duration-200 sm:px-3 ${
                           selected
                             ? "border-[#a99bea] bg-[#17132b] shadow-[inset_0_0_22px_rgba(167,139,250,0.1)]"
@@ -628,25 +836,43 @@ export default function NewSimulationPage() {
                 </div>
               </div>
 
-              {/* Preguntas */}
+              {subject === "Inglés" && (
+                <div className="flex items-center gap-4 border border-[#8de9f2]/20 bg-[#8de9f2]/[0.06] p-4">
+                  <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center border border-[#8de9f2]/30 bg-[#8de9f2]/10 text-xs font-black text-[#8de9f2]">
+                    EN
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] text-slate-400">Formato · Parte</p>
+                    <p className="mt-1 text-sm font-bold text-white">
+                      {ENGLISH_FORMAT_LABELS[bookletFormat]} · {selectedEnglishPart?.label}
+                    </p>
+                    <p className="mt-1 text-[11px] leading-4 text-slate-400">
+                      Solo se seleccionará contenido de esta sección.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Cantidad/longitud de la práctica */}
               <div className="flex items-center gap-4 border border-white/10 bg-[#0d1020] p-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center border border-[#a99bea]/25 bg-[#a99bea]/10">
-                  <span
-                    className="text-[9px] text-[#c7bbff]"
-                    style={pixelFont}
-                  >
-                    {amount}
+                  <span className="text-[9px] text-[#c7bbff]" style={pixelFont}>
+                    {subject === "Inglés" ? "FULL" : amount}
                   </span>
                 </div>
 
                 <div>
                   <p className="text-[11px] text-slate-400">
-                    Número de preguntas
+                    {subject === "Inglés" ? "Longitud de la práctica" : "Número de preguntas"}
                   </p>
-
                   <p className="mt-1 text-sm font-bold text-white">
-                    {amount} preguntas
+                    {subject === "Inglés" ? `Parte ${englishPart} completa` : `${amount} preguntas`}
                   </p>
+                  {subject === "Inglés" && (
+                    <p className="mt-1 text-[11px] leading-4 text-slate-400">
+                      La sección completa según el formato seleccionado.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -668,7 +894,7 @@ export default function NewSimulationPage() {
                   </p>
 
                   <p className="mt-1 text-sm font-bold text-white">
-                    {difficulty}
+                    {effectiveDifficulty}
                   </p>
 
                   <p className="mt-1 text-[11px] leading-4 text-slate-400">
@@ -687,16 +913,28 @@ export default function NewSimulationPage() {
                   </p>
                 </div>
 
-                <p className="mt-2 text-3xl font-black text-white">
-                  {duration}
-                  <span className="ml-2 text-sm font-semibold text-slate-400">
-                    min
-                  </span>
-                </p>
-
-                <p className="mt-2 text-[11px] leading-5 text-slate-400">
-                  Estimación de duración según la cantidad de preguntas.
-                </p>
+                {subject === "Inglés" ? (
+                  <>
+                    <p className="mt-2 text-lg font-black leading-7 text-white">
+                      Sección completa
+                    </p>
+                    <p className="mt-2 text-[11px] leading-5 text-slate-400">
+                      La duración se calculará según el total real de preguntas de la parte.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p className="mt-2 text-3xl font-black text-white">
+                      {duration}
+                      <span className="ml-2 text-sm font-semibold text-slate-400">
+                        min
+                      </span>
+                    </p>
+                    <p className="mt-2 text-[11px] leading-5 text-slate-400">
+                      Estimación de duración según la cantidad de preguntas.
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Recordatorio */}

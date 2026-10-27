@@ -1,12 +1,15 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { getEnglishDifficulty, getEnglishPartQuestionCount } from "@/lib/simulations/english-difficulty";
 import { createClient } from "@/lib/supabase/server";
 
 interface CreateSimulationBody {
   type: "normal";
   subject: string;
-  amount: number;
+  amount: number | null;
   difficulty: string;
+  englishFormat?: "historical" | "saber11_2026" | null;
+  englishPart?: string | null;
 }
 
 interface Question {
@@ -14,6 +17,55 @@ interface Question {
   subject: string;
   difficulty: string;
   is_active: boolean;
+  english_part?: number | null;
+  english_set_id?: string | null;
+  english_position?: number | null;
+  question_number?: number | null;
+}
+
+interface EnglishQuestionSet {
+  id: string;
+  title: string;
+  part: number;
+  booklet_format: string;
+  status: string;
+}
+
+const ENGLISH_PARTS: Record<string, readonly string[]> = {
+  historical: ["1", "2", "3", "4A", "4B", "5", "6", "7"],
+  saber11_2026: ["1", "2", "3", "4", "5", "6", "7A", "7B"],
+};
+
+function getNumericEnglishPart(part: string): number {
+  return Number(part.replace(/[AB]$/i, ""));
+}
+
+function matchesEnglishVariant(
+  set: EnglishQuestionSet,
+  format: "historical" | "saber11_2026",
+  selectedPart: string,
+): boolean {
+  const title = (set.title ?? "").trim();
+
+  if (selectedPart === "4A") {
+    return /\b4A\b/i.test(title) ||
+      (format === "historical" &&
+        set.booklet_format === "saber11_2026" &&
+        !/\b4B\b/i.test(title));
+  }
+  if (selectedPart === "4B") return /\b4B\b/i.test(title);
+  if (selectedPart === "7A") return /\b7A\b/i.test(title);
+  if (selectedPart === "7B") return /\b7B\b/i.test(title);
+
+  if (format === "saber11_2026" && selectedPart === "4") {
+    return !/\b4[AB]\b/i.test(title);
+  }
+
+  if (format === "historical" && selectedPart === "7") {
+    return !/\b7[AB]\b/i.test(title);
+  }
+
+  return true;
 }
 
 const SUBJECTS = [
@@ -120,6 +172,8 @@ export async function POST(request: Request) {
       subject,
       amount,
       difficulty,
+      englishFormat,
+      englishPart,
     } = body;
 
     /* =====================================================
@@ -155,11 +209,12 @@ export async function POST(request: Request) {
        VALIDAR CANTIDAD
     ====================================================== */
 
-    const questionAmount = Number(amount);
+    let questionAmount = subject === "Inglés" ? 0 : Number(amount);
 
     if (
-      !Number.isInteger(questionAmount) ||
-      !QUESTION_AMOUNTS.includes(questionAmount)
+      subject !== "Inglés" &&
+      (!Number.isInteger(questionAmount) ||
+        !QUESTION_AMOUNTS.includes(questionAmount))
     ) {
       return NextResponse.json(
         {
@@ -223,19 +278,138 @@ export async function POST(request: Request) {
     let query = adminSupabase
       .from("questions")
       .select(
-        "id, subject, difficulty, is_active"
+        "id, subject, difficulty, is_active, english_part, english_set_id, english_position, question_number"
       )
       .eq("subject", subject)
       .eq("is_active", true);
+
+    let selectedEnglishFormat: "historical" | "saber11_2026" | null = null;
+    let selectedEnglishPart: string | null = null;
+    let effectiveDifficulty = difficulty;
+
+    if (subject === "Inglés") {
+      const requestedPart =
+        typeof englishPart === "string"
+          ? englishPart.toUpperCase()
+          : "";
+
+      if (
+        (englishFormat !== "historical" &&
+          englishFormat !== "saber11_2026") ||
+        !ENGLISH_PARTS[englishFormat].includes(requestedPart)
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Selecciona un formato y una parte válidos para Inglés.",
+          },
+          { status: 400 }
+        );
+      }
+
+      selectedEnglishFormat = englishFormat;
+      selectedEnglishPart = requestedPart;
+      effectiveDifficulty = getEnglishDifficulty(requestedPart);
+
+      // Parts 1, 2, 3, 5 and 6 reuse content across the two booklet formats.
+      // Query both sources for those parts, then prefer the selected format.
+      const sharedPart =
+        ["1", "2", "3", "5", "6"].includes(requestedPart) ||
+        (selectedEnglishFormat === "historical" && requestedPart === "4A");
+      const candidateFormats = sharedPart
+        ? ["historical", "saber11_2026"]
+        : [selectedEnglishFormat];
+
+      const { data: sets, error: setsError } = await adminSupabase
+        .from("english_question_sets")
+        .select("id,title,part,booklet_format,status")
+        .in("booklet_format", candidateFormats)
+        .eq("part", getNumericEnglishPart(requestedPart));
+
+      if (setsError) {
+        // Keep diagnostics in server logs; only show them in local development.
+        console.error("[PeakScore] No fue posible consultar conjuntos de Inglés.", {
+          code: setsError.code ?? "UNKNOWN",
+          message: setsError.message ?? "Unknown Supabase query error",
+          details: setsError.details ?? null,
+          hint: setsError.hint ?? null,
+          format: selectedEnglishFormat,
+          part: requestedPart,
+        });
+        const developmentDetails =
+          process.env.NODE_ENV === "development"
+            ? ` [${setsError.code ?? "UNKNOWN"}] ${setsError.message ?? "Error de consulta"}`
+            : "";
+        return NextResponse.json(
+          {
+            success: false,
+            error: `No fue posible revisar la disponibilidad de esta parte de Inglés.${developmentDetails}`,
+          },
+          { status: 500 }
+        );
+      }
+
+      const eligibleSets = ((sets ?? []) as EnglishQuestionSet[])
+        .filter((set) => set.status === "approved")
+        .filter((set) => matchesEnglishVariant(set, selectedEnglishFormat!, requestedPart));
+
+      // Respect the selected format if its own section is approved.
+      // Reuse the other format only when the selected format has no approved set for this shared part.
+      const preferredSetIds = eligibleSets
+        .filter((set) => set.booklet_format === selectedEnglishFormat)
+        .map((set) => set.id);
+      const fallbackFormat = selectedEnglishFormat === "historical"
+        ? "saber11_2026"
+        : "historical";
+      const fallbackSetIds = eligibleSets
+        .filter((set) => set.booklet_format === fallbackFormat)
+        .map((set) => set.id);
+      const matchingSetIds = preferredSetIds.length > 0
+        ? preferredSetIds
+        : sharedPart
+          ? fallbackSetIds
+          : [];
+
+      if (matchingSetIds.length === 0) {
+        const partLabel =
+          requestedPart.startsWith("4") || requestedPart.startsWith("7")
+            ? `Parte ${requestedPart}`
+            : `Parte ${requestedPart}`;
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: `${partLabel} del ${selectedEnglishFormat === "historical" ? "formato histórico" : "Saber 11 · 2026 Cal A"} todavía no tiene conjuntos aprobados. Revisa el banco de Inglés y aprueba un conjunto revisado para poder practicarlo.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      query = query
+        .in("english_set_id", matchingSetIds)
+        .eq("english_part", getNumericEnglishPart(requestedPart));
+
+      const expectedQuestionCount = getEnglishPartQuestionCount(
+        selectedEnglishFormat!,
+        requestedPart,
+      );
+
+      if (expectedQuestionCount === null) {
+        return NextResponse.json(
+          { success: false, error: "No encontramos la cantidad de preguntas definida para esta parte." },
+          { status: 400 },
+        );
+      }
+    }
 
     /*
      * Mixta = no filtramos dificultad.
      */
 
-    if (difficulty !== "Mixta") {
+    if (subject !== "Inglés" && effectiveDifficulty !== "Mixta") {
       query = query.eq(
         "difficulty",
-        difficulty
+        effectiveDifficulty
       );
     }
 
@@ -260,33 +434,105 @@ export async function POST(request: Request) {
       );
     }
 
-    const availableQuestions =
-      (questions ?? []) as Question[];
+    let availableQuestions = (questions ?? []) as Question[];
 
-    /* =====================================================
-       COMPROBAR CANTIDAD
-    ====================================================== */
-
-    if (
-      availableQuestions.length <
-      questionAmount
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `No hay suficientes preguntas disponibles para ${subject}. Disponibles: ${availableQuestions.length}. Necesarias: ${questionAmount}.`,
-        },
-        { status: 400 }
+    if (subject === "Inglés") {
+      // A practice simulation corresponds to one published set/session.
+      // Never combine different versions or let the user trim the section.
+      const expectedQuestionCount = getEnglishPartQuestionCount(
+        selectedEnglishFormat!,
+        selectedEnglishPart!,
       );
+
+      if (expectedQuestionCount === null) {
+        return NextResponse.json(
+          { success: false, error: "No encontramos la cantidad de preguntas definida para esta parte." },
+          { status: 400 },
+        );
+      }
+
+      const is2026Part3 =
+        selectedEnglishFormat === "saber11_2026" &&
+        selectedEnglishPart === "3";
+
+      const questionsBySet = new Map<string, Question[]>();
+      for (const candidate of availableQuestions) {
+        if (!candidate.english_set_id) continue;
+        const group = questionsBySet.get(candidate.english_set_id) ?? [];
+        group.push(candidate);
+        questionsBySet.set(candidate.english_set_id, group);
+      }
+
+      const completeSections = [...questionsBySet.values()]
+        .map((section) =>
+          [...section].sort((a, b) => {
+            const positionA = a.english_position ?? a.question_number ?? 0;
+            const positionB = b.english_position ?? b.question_number ?? 0;
+            return positionA - positionB;
+          }),
+        )
+        .filter((section) =>
+          is2026Part3
+            ? section.length >= expectedQuestionCount
+            : section.length === expectedQuestionCount,
+        );
+
+      if (completeSections.length === 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "La Parte " +
+              selectedEnglishPart +
+              " de " +
+              (selectedEnglishFormat === "historical"
+                ? "formato histórico"
+                : "Saber 11 · 2026 Cal A") +
+              " no tiene un conjunto aprobado con la sección completa de " +
+              expectedQuestionCount +
+              " preguntas activas. Revisa que todas las preguntas estén aprobadas y activas en el banco de Inglés.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const chosenSection = completeSections[
+        Math.floor(Math.random() * completeSections.length)
+      ];
+
+      // The 2026 version of Part 3 uses five questions from the shared
+      // seven-question source used by the historical booklet.
+      availableQuestions = is2026Part3
+        ? chosenSection.slice(0, expectedQuestionCount)
+        : chosenSection;
+      questionAmount = availableQuestions.length;
+    } else {
+      /* =====================================================
+         COMPROBAR CANTIDAD PARA OTRAS MATERIAS
+      ====================================================== */
+      if (availableQuestions.length < questionAmount) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Hay " + availableQuestions.length +
+              " preguntas activas disponibles para " + subject +
+              ", pero seleccionaste " + questionAmount +
+              ". Publica más preguntas revisadas o elige una cantidad menor.",
+          },
+          { status: 400 },
+        );
+      }
     }
 
     /* =====================================================
-       SELECCIONAR PREGUNTAS ALEATORIAS
+       SELECCIONAR PREGUNTAS
+       Inglés conserva el orden original de la sección completa.
     ====================================================== */
 
-    const selectedQuestions = shuffle(
-      availableQuestions
-    ).slice(0, questionAmount);
+    const selectedQuestions =
+      subject === "Inglés"
+        ? availableQuestions
+        : shuffle(availableQuestions).slice(0, questionAmount);
 
     /* =====================================================
        DURACIÓN
@@ -305,15 +551,20 @@ export async function POST(request: Request) {
       await adminSupabase
         .from("simulations")
         .insert({
-          title: `Práctica de ${subject}`,
+          title:
+            subject === "Inglés" && selectedEnglishFormat && selectedEnglishPart
+              ? `Práctica de Inglés · ${selectedEnglishFormat === "historical" ? "Histórico" : "Saber 11 · 2026 Cal A"} · Parte ${selectedEnglishPart}`
+              : `Práctica de ${subject}`,
           type: "custom_simulation",
           total_questions:
             selectedQuestions.length,
           description:
-            "Simulacro personalizado creado por el usuario.",
+            subject === "Inglés" && selectedEnglishFormat && selectedEnglishPart
+              ? `Simulacro personalizado de Inglés. Formato: ${selectedEnglishFormat}; parte: ${selectedEnglishPart}.`
+              : "Simulacro personalizado creado por el usuario.",
           subject,
           duration,
-          difficulty,
+          difficulty: effectiveDifficulty,
           color: "bg-blue-600",
           created_by: user.id,
         })
@@ -400,14 +651,23 @@ export async function POST(request: Request) {
     );
 
     console.log(
-      `[PeakScore] Dificultad: ${difficulty}`
+      `[PeakScore] Dificultad: ${effectiveDifficulty}`
     );
+
+    if (selectedEnglishFormat && selectedEnglishPart) {
+      console.log(
+        `[PeakScore] Inglés: ${selectedEnglishFormat} · Parte ${selectedEnglishPart}`
+      );
+    }
 
     return NextResponse.json(
       {
         success: true,
         simulation,
         questions: questionAmount,
+        englishFormat: selectedEnglishFormat,
+        englishPart: selectedEnglishPart,
+        difficulty: effectiveDifficulty,
       },
       { status: 201 }
     );

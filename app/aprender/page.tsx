@@ -16,9 +16,7 @@ function safeNumber(value: unknown) {
 }
 
 const LOCKED_LEVELS = [
-  { number: "02", title: "El Laboratorio de las Mezclas", subject: "CIENCIAS NATURALES", detail: "Sustancias y mezclas" },
-  { number: "03", title: "El Código del Átomo", subject: "CIENCIAS NATURALES", detail: "Partículas y estructura atómica" },
-  { number: "04", title: "El Guardián de los Elementos", subject: "JEFE DE RUTA", detail: "Demuestra lo que aprendiste" },
+  { number: "03", title: "El Santuario de la Vida Celular", subject: "CIENCIAS NATURALES", detail: "Células y microorganismos" },
 ];
 
 export default async function AprenderPage() {
@@ -95,16 +93,16 @@ export default async function AprenderPage() {
         <section className="mt-7">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="pixel-font text-[9px] leading-6 text-[#b6c5a5]">RUTA 01 · CIENCIAS NATURALES</p>
+              <p className="pixel-font text-[9px] leading-6 text-[#b6c5a5]">MUNDOS DE APRENDIZAJE · CIENCIAS NATURALES</p>
               <h2 className="pixel-font mt-2 text-[13px] leading-[1.9] text-[#f2edda] sm:text-[16px]">
-                El Santuario de la Materia
+                Rutas de exploración
               </h2>
               <p className="pixel-font mt-2 max-w-2xl text-[9px] leading-[2] text-white/60">
-                Explora la materia, resuelve sus misterios y descubre de qué está hecho el mundo.
+                Avanza por mundos conectados, aprende ciencias naturales y resuelve misterios con Nova.
               </p>
             </div>
             <div className="pixel-font rounded border border-[#c9d5b4]/20 bg-[#0b1020]/75 px-3 py-2 text-[8px] leading-6 text-white/65">
-              01 / 04 DESAFÍOS
+              02 RUTAS DISPONIBLES
             </div>
           </div>
 
@@ -162,6 +160,48 @@ export default async function AprenderPage() {
                 </div>
                 <div className="level-card-cta mt-3 flex items-center justify-center border border-[#a6d18f]/30 bg-[#293e2d] px-3 py-2.5 transition group-hover:bg-[#354f38]">
                   <span className="pixel-font text-[7px] text-[#d7f3c7]">EXPLORAR EL SANTUARIO</span>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              href="/aprender/la-cuenca-de-los-ecos"
+              className="level-card level-card-open group"
+              aria-label="Abrir ruta 2: La Cuenca de los Ecos"
+            >
+              <div className="level-art relative">
+                <Image src="/images/aprender/cuenca-de-los-ecos/header.svg" alt="Río entre los árboles de la Cuenca de los Ecos" fill sizes="(max-width: 768px) 100vw, 310px" className="object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#07130e]/95 via-[#07130e]/25 to-black/10" />
+                <div className="absolute left-2 top-1 flex gap-1.5">
+                  <span className="pixel-font rounded-sm border border-[#a8e69c]/40 bg-[#13291b]/90 px-2 py-1 text-[6px] text-[#a8e69c]">DISPONIBLE</span>
+                  <span className="pixel-font rounded-sm bg-black/65 px-2 py-1 text-[6px] text-white/80">02</span>
+                </div>
+                <div className="absolute bottom-3 right-3">
+                  <Image src="/characters/peaky-nova/nova-pixel.webp" alt="" width={62} height={62} className="h-14 w-14 object-contain drop-shadow-[0_3px_8px_rgba(0,0,0,.8)]" />
+                </div>
+                <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-2 pr-14">
+                  <span className="pixel-font text-[6px] text-white/75">PROGRESO</span>
+                  <span className="pixel-font text-[7px] text-white">0%</span>
+                </div>
+                <div className="absolute bottom-0 left-0 h-[3px] w-full bg-white/15">
+                  <div className="h-full w-0 bg-[#b5e49b]" />
+                </div>
+              </div>
+              <div className="level-card-body">
+                <p className="pixel-font text-[6px] leading-4 tracking-[.14em] text-[#8fd0ac]">CIENCIAS NATURALES · BIOLOGÍA</p>
+                <h3 className="pixel-font mt-2 text-[9px] leading-[1.9] text-white">La Cuenca de los Ecos</h3>
+                <p className="pixel-font mt-2 text-[7px] leading-[2] text-white/60">Investiga el silencio del bosque, reconoce las relaciones del ecosistema y sigue las pistas que dejó el cristal.</p>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <span className="pixel-font rounded-full border border-[#9ecb8a]/15 bg-[#203d2c] px-2.5 py-1.5 text-[6px] text-[#c4ef9d]">NIVEL 2</span>
+                  <span className="pixel-font text-[6px] text-white/40">10–15 MIN</span>
+                </div>
+                <div className="level-reward mt-3 flex items-center gap-2 border-t border-white/[.08] pt-3">
+                  <span className="pixel-font flex h-7 w-7 items-center justify-center border border-[#d4bd72]/25 bg-[#4a3a20] text-[7px] text-[#f0d68a]">XP</span>
+                  <span className="pixel-font text-[7px] leading-5 text-[#f0d68a]">+25 EXP</span>
+                  <span className="pixel-font ml-auto text-[6px] text-white/40">NUEVA EXPEDICIÓN</span>
+                </div>
+                <div className="level-card-cta mt-3 flex items-center justify-center border border-[#a6d18f]/30 bg-[#293e2d] px-3 py-2.5 transition group-hover:bg-[#354f38]">
+                  <span className="pixel-font text-[7px] text-[#d7f3c7]">EXPLORAR LA CUENCA</span>
                 </div>
               </div>
             </Link>

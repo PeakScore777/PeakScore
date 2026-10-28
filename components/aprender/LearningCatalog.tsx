@@ -4,19 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import {
-  ArrowLeft,
   ArrowRight,
-  BookOpen,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock3,
-  FlaskConical,
-  GraduationCap,
-  LockKeyhole,
-  Sparkles,
-  Target,
-  Trophy,
 } from "lucide-react";
 
 type Tab = "routes" | "courses";
@@ -50,7 +41,7 @@ const routes: CatalogItem[] = [
     description: "Observa los materiales, comprende sus propiedades y resuelve misterios usando evidencia.",
     image: "/images/aprender/santuario/misterio-cristales.png",
     href: "/aprender/santuario-de-la-materia",
-    badge: "RUTA 01",
+    badge: "CIENCIAS NATURALES",
     duration: "10–15 MIN",
     level: "INICIAL",
   },
@@ -61,7 +52,7 @@ const routes: CatalogItem[] = [
     description: "Investiga el silencio del bosque y descubre cómo se conectan los seres vivos con su entorno.",
     image: "/images/aprender/cuenca-de-los-ecos/header.svg",
     href: "/aprender/la-cuenca-de-los-ecos",
-    badge: "RUTA 02",
+    badge: "BIOLOGÍA",
     duration: "10–15 MIN",
     level: "INICIAL",
   },
@@ -250,74 +241,40 @@ export default function LearningCatalog({
 
   return (
     <main className="learning-catalog min-h-[calc(100vh-72px)] overflow-hidden bg-[#090d17] text-white">
-      <div aria-hidden="true" className="catalog-backdrop" />
       <div className="catalog-shell relative z-10 mx-auto w-full max-w-[1240px] px-4 pb-14 pt-6 sm:px-7 sm:pt-8">
-        <header className="flex flex-col gap-4 border-b border-white/[.08] pb-5 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="pixel-font text-[8px] leading-5 tracking-[.1em] text-cyan-200/80 sm:text-[9px]">{seasonName}</p>
-            <h1 className="pixel-font mt-2 text-[20px] leading-[1.65] text-[#f4f1df] sm:text-[25px]">Cursos</h1>
-            <p className="mt-2 text-xs leading-5 text-slate-300/75">
-              Hola, {firstName} · prepárate para Saber 11 paso a paso.
-            </p>
-            <p className="mt-1 text-[10px] text-slate-500">2 rutas interactivas · 5 áreas de evaluación</p>
+        <header className="border-b border-white/[.08] pb-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="pixel-font text-[20px] leading-[1.65] text-[#f4f1df] sm:text-[25px]">Cursos</h1>
+              <p className="mt-1 text-xs leading-5 text-slate-300/75">
+                {tab === "routes" ? "4 opciones de aprendizaje" : "5 áreas de evaluación"}
+              </p>
+            </div>
+            <div className="catalog-tabs" role="tablist" aria-label="Tipo de catálogo">
+              <button type="button" role="tab" aria-selected={tab === "routes"} onClick={() => setTab("routes")} className={"catalog-tab " + (tab === "routes" ? "catalog-tab-active" : "")}>Rutas</button>
+              <button type="button" role="tab" aria-selected={tab === "courses"} onClick={() => setTab("courses")} className={"catalog-tab " + (tab === "courses" ? "catalog-tab-active" : "")}>Cursos</button>
+            </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="catalog-user-stat">
-              <span className="text-[9px] uppercase tracking-wide text-slate-400">XP temporada</span>
-              <span className="text-xs font-bold tabular-nums text-white">{seasonXp.toLocaleString("es-CO")}</span>
-            </div>
-            <div className="catalog-user-stat">
-              <Image src="/images/currency/peakcoin.webp" alt="PeakCoin" width={23} height={23} className="h-6 w-6 object-contain" />
-              <span className="text-xs font-bold tabular-nums text-amber-100">{coins.toLocaleString("es-CO")}</span>
-            </div>
-            <div className="catalog-user-stat">
-              <Image src={rankImageFor(rankName)} alt={"Rango " + rankName} width={28} height={28} className="h-7 w-7 object-contain" />
-              <span className="text-[9px] font-bold text-slate-200">{rankName.toLocaleUpperCase("es-CO")}</span>
-            </div>
+          <div className="catalog-account-line mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] text-slate-500">
+            <span>Hola, {firstName}</span>
+            <span>{seasonName}</span>
+            <span>XP temporada <strong className="ml-1 tabular-nums text-slate-300">{seasonXp.toLocaleString("es-CO")}</strong></span>
+            <span className="inline-flex items-center gap-1.5"><Image src="/images/currency/peakcoin.webp" alt="PeakCoin" width={17} height={17} className="h-[17px] w-[17px] object-contain" /> <strong className="tabular-nums text-amber-100">{coins.toLocaleString("es-CO")}</strong></span>
+            <span className="inline-flex items-center gap-1.5"><Image src={rankImageFor(rankName)} alt="" width={18} height={18} className="h-[18px] w-[18px] object-contain" /> <strong className="text-slate-300">{rankName.toLocaleUpperCase("es-CO")}</strong></span>
           </div>
         </header>
 
-        <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="max-w-3xl">
-            <p className="pixel-font text-[8px] leading-6 text-cyan-200 sm:text-[9px]">ACADEMIA PEAKSCORE · PREPARACIÓN ICFES</p>
-            <p className="mt-1 text-sm leading-6 text-slate-300/80">
-              Elige una ruta de aprendizaje o entra directamente al área que quieres reforzar.
-            </p>
-          </div>
-          <div className="catalog-tabs" role="tablist" aria-label="Tipo de catálogo">
-            <button type="button" role="tab" aria-selected={tab === "routes"} onClick={() => setTab("routes")} className={"catalog-tab " + (tab === "routes" ? "catalog-tab-active" : "")}>
-              <Sparkles className="h-3.5 w-3.5" /> Rutas
-            </button>
-            <button type="button" role="tab" aria-selected={tab === "courses"} onClick={() => setTab("courses")} className={"catalog-tab " + (tab === "courses" ? "catalog-tab-active" : "")}>
-              <BookOpen className="h-3.5 w-3.5" /> Cursos
-            </button>
-          </div>
-        </div>
-
         {tab === "routes" ? (
           <>
-            <section className="catalog-feature mt-5 overflow-hidden rounded-xl border border-cyan-100/10">
-              <div className="catalog-feature-art relative min-h-[190px] sm:min-h-[222px]">
-                <Image src="/images/challenges/levels-background.png" alt="" fill sizes="100vw" className="object-cover object-center" />
-                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(5,12,25,.96)_0%,rgba(5,12,25,.88)_42%,rgba(5,12,25,.36)_100%)]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#080e1b]/70 via-transparent to-black/10" />
-                <div className="relative flex min-h-[190px] flex-col justify-center p-5 sm:min-h-[222px] sm:p-7">
-                  <span className="inline-flex w-fit items-center gap-2 border border-amber-200/30 bg-[#151b27]/90 px-2.5 py-1.5 text-[8px] font-bold tracking-wide text-amber-100"><Target className="h-3.5 w-3.5" /> TU CAMINO HACIA SABER 11</span>
-                  <h2 className="pixel-font mt-4 max-w-2xl text-[12px] leading-[2] text-white sm:text-[15px]">No estudies a ciegas. Aprende, practica y demuestra lo que sabes.</h2>
-                  <p className="mt-2 max-w-2xl text-xs leading-6 text-slate-200/85">Empieza con conceptos guiados, resuelve desafíos y después pon a prueba tus competencias con preguntas tipo ICFES.</p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="catalog-feature-pill"><CheckCircle2 className="h-3.5 w-3.5" /> Aprendizaje paso a paso</span>
-                    <span className="catalog-feature-pill"><Trophy className="h-3.5 w-3.5" /> XP y recompensas</span>
-                  </div>
-                </div>
-              </div>
+            <section className="catalog-intro mt-5">
+              <h2 className="pixel-font text-[11px] leading-[2] text-[#f4f1df] sm:text-[13px]">Si no sabes por dónde empezar, este es tu camino</h2>
+              <p className="mt-2 text-xs leading-6 text-slate-400">Empieza con una ruta interactiva, practica con simulacros y refuerza las áreas de Saber 11 que necesites.</p>
             </section>
 
             <CourseRail
               id="featured-routes"
-              title="Si no sabes por dónde empezar, este es tu camino"
-              subtitle="Rutas interactivas, práctica y retos para avanzar en orden."
+              title="Rutas y práctica"
+              subtitle="Las experiencias disponibles para empezar a prepararte."
               items={routes}
             />
 
@@ -381,18 +338,7 @@ export default function LearningCatalog({
 
       <style jsx global>{`
         .learning-catalog { position: relative; isolation: isolate; }
-        .catalog-backdrop {
-          position: absolute; inset: 0 0 auto; height: 230px; pointer-events: none;
-          background:
-            linear-gradient(180deg, rgba(7,12,22,.18) 0%, rgba(8,13,23,.35) 42%, #090d17 100%),
-            url("/images/challenges/levels-background.png") center 40% / cover no-repeat;
-          opacity: .5;
-        }
         .learning-catalog .pixel-font { font-family: var(--font-press-start), "Press Start 2P", monospace; }
-        .catalog-user-stat {
-          min-height: 43px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-          border: 1px solid rgba(255,255,255,.11); background: rgba(8,13,24,.78); padding: 7px 10px;
-        }
         .catalog-tabs { display: inline-flex; align-self: flex-start; flex-shrink: 0; gap: 4px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; padding: 4px; background: rgba(7,13,24,.88); }
         .catalog-tab {
           display: inline-flex; min-height: 34px; align-items: center; justify-content: center; gap: 7px;
@@ -409,15 +355,13 @@ export default function LearningCatalog({
         .catalog-rail { scrollbar-width: thin; scrollbar-color: rgba(164,183,208,.48) rgba(255,255,255,.04); overscroll-behavior-x: contain; }
         .catalog-card { min-height: 326px; }
         .catalog-card-image img { image-rendering: auto; }
-        .catalog-feature { box-shadow: 0 12px 34px rgba(0,0,0,.18); }
-        .catalog-feature-pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,.15); background: rgba(7,14,26,.76); padding: 7px 10px; color: #e4edf5; font-size: 10px; }
         @media (max-width: 640px) {
           .catalog-shell { padding-top: 17px; }
           .catalog-tab { padding: 0 12px; }
+          .catalog-account-line { gap: 8px 12px; }
           .catalog-card { min-height: 320px; }
           .catalog-card-image { height: 130px; }
           .catalog-card-body { padding: 12px; }
-          .catalog-feature-pill { font-size: 9px; }
         }
         @media (prefers-reduced-motion: reduce) {
           .catalog-card, .catalog-card *, .catalog-arrow, .catalog-tab { transition: none !important; }

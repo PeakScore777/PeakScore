@@ -273,33 +273,6 @@ export default function CasoCeroGame() {
       <div className="relative mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-7 sm:py-8">
         <Link href="/aprender/juegos" className="inline-flex items-center gap-2 border border-[#65563d] bg-[#111720] px-3 py-2 text-xs font-bold text-[#f1e5d0] transition hover:border-[#d3a85f]"><ArrowLeft className="h-4 w-4"/> Todos los juegos</Link>
 
-        {phase === "intro" && (
-          <section className="mx-auto mt-6 max-w-[1560px] overflow-hidden border-[3px] border-[#8b6b39] bg-[#0b101b] shadow-[6px_6px_0_#02050a]">
-            <div className="grid gap-0">
-              <div className="p-5 sm:p-8">
-                <div className="inline-flex items-center gap-2 border border-[#957341] bg-[#261d11] px-3 py-1.5 text-[10px] font-black uppercase tracking-[.18em] text-[#f5c879]"><ShieldCheck className="h-4 w-4"/> Investigación Saber 11</div>
-                <h1 className="mt-5 text-3xl font-black leading-tight sm:text-5xl">CASO CERO<span className="text-[#d9a653]">.</span></h1>
-                <p className="mt-3 max-w-xl text-sm leading-6 text-[#d0d7e2] sm:text-base">El dato no miente. Tu conclusión sí puede equivocarse. Lee la evidencia, identifica las variables y encuentra la explicación que realmente respaldan los resultados.</p>
-                <div className="mt-6 grid gap-2 sm:grid-cols-3">
-                  <div className="border border-[#313d49] bg-[#111923] p-3"><ClipboardList className="h-5 w-5 text-[#dcb66f]"/><p className="mt-2 text-sm font-extrabold">10 expedientes</p><p className="mt-1 text-[10px] text-[#9eacbd]">Una pregunta por caso</p></div>
-                  <div className="border border-[#313d49] bg-[#111923] p-3"><FileSearch className="h-5 w-5 text-[#83c6c1]"/><p className="mt-2 text-sm font-extrabold">Evidencia real</p><p className="mt-1 text-[10px] text-[#9eacbd]">Datos, variables y tablas</p></div>
-                  <div className="border border-[#313d49] bg-[#111923] p-3"><BrainCircuit className="h-5 w-5 text-[#e1b26c]"/><p className="mt-2 text-sm font-extrabold">Razonamiento</p><p className="mt-1 text-[10px] text-[#9eacbd]">Distractores exigentes</p></div>
-                </div>
-                {error && <p role="alert" className="mt-4 border border-[#9d5749] bg-[#2b1716] px-3 py-2 text-sm text-[#ffd1c6]">{error}</p>}
-                <button type="button" onClick={() => void beginCaseFile()} disabled={busyStarting || cases.length < 10} className="mt-6 inline-flex min-h-12 items-center justify-center gap-3 border-[3px] border-[#f2cc7f] bg-[#bd7729] px-5 py-3 text-xs font-black text-[#fff8eb] shadow-[4px_4px_0_#4e2c11] transition hover:bg-[#d28c3d] disabled:cursor-not-allowed disabled:opacity-50">
-                  <Microscope className="h-5 w-5"/>{busyStarting ? "PREPARANDO CASOS…" : "INICIAR INVESTIGACIÓN"}<ArrowRight className="h-4 w-4"/>
-                </button>
-                <p className="mt-3 text-[10px] leading-5 text-[#8390a3]">Preguntas originales de Ciencias Naturales. El expediente registra tus respuestas una sola vez por partida.</p>
-              </div>
-              <CasoCeroScene />
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#4f402a] bg-[#10141b] px-5 py-3 sm:px-8">
-              <span className="text-[10px] text-[#aeb9c8]">Mejor puntuación: <strong className="text-[#f1c879]">{bestScore}/1000</strong></span>
-              <span className="text-[10px] text-[#aeb9c8]">Expedientes completados: <strong className="text-white">{gamesCompleted}</strong></span>
-            </div>
-          </section>
-        )}
-
         {(phase === "playing" || phase === "feedback") && currentCase && (
           <section className="mx-auto mt-5 max-w-6xl">
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_270px]">

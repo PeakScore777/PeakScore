@@ -102,7 +102,7 @@ export default function LearningCatalog(_props: LearningCatalogProps) {
       <div className="mx-auto w-full max-w-[1072px] px-4 pb-14 pt-9 sm:px-7 sm:pt-11">
         <header className="flex items-start justify-between gap-5">
           <div>
-            <h1 className="font-[var(--font-press-start)] text-[25px] leading-[1.55] text-[#f5f1e8] sm:text-[30px]">
+            <h1 className="pixel-font text-[22px] leading-[1.8] text-[#f5f1e8] sm:text-[27px]">
               Niveles
             </h1>
             <p className="mt-1 text-[13px] text-[#aab2c2]">
@@ -132,7 +132,7 @@ export default function LearningCatalog(_props: LearningCatalogProps) {
         </header>
 
         <section className="mt-8 sm:mt-9" aria-live="polite">
-          <h2 className="font-[var(--font-press-start)] max-w-4xl text-[15px] leading-[1.9] text-[#f5f1e8] sm:text-[20px]">
+          <h2 className="pixel-font max-w-4xl text-[11px] leading-[2.1] text-[#f5f1e8] sm:text-[13px]">
             {isRoutes ? "Tu camino hacia Saber 11 empieza aquí" : "Cursos interactivos disponibles"}
           </h2>
           <p className="mt-1.5 max-w-3xl text-[13px] leading-6 text-[#aab2c2]">

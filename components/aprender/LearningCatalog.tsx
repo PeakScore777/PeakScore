@@ -379,7 +379,7 @@ export default function LearningCatalog({
         </footer>
       </div>
 
-      <style jsx global>{\`
+      <style jsx global>{`
         .learning-catalog { position: relative; isolation: isolate; }
         .catalog-backdrop {
           position: absolute; inset: 0 0 auto; height: 230px; pointer-events: none;
@@ -423,7 +423,7 @@ export default function LearningCatalog({
           .catalog-card, .catalog-card *, .catalog-arrow, .catalog-tab { transition: none !important; }
           .catalog-card:hover { transform: none; }
         }
-      \`}</style>
+      `}</style>
     </main>
   );
 }

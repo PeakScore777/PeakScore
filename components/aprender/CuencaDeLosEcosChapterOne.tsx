@@ -173,6 +173,14 @@ export default function CuencaDeLosEcosChapterOnePage() {
         </header>
       )}
 
+      {!(view === "practice" && done) && (
+        <nav aria-label="Secciones del capítulo" className="mx-auto mt-3 grid max-w-[1560px] grid-cols-3 rounded-xl border border-emerald-100/15 bg-[#07140f] p-1 px-3 sm:px-5">
+          {navButton("Historia y teoría", view === "theory", () => setView("theory"))}
+          {navButton("Ejemplo guiado", view === "examples", () => setView("examples"))}
+          {navButton("Desafío", view === "practice", startPractice)}
+        </nav>
+      )}
+
       {view === "theory" && (
         <div className="mx-auto grid max-w-[1560px] gap-3 p-3 pb-28 sm:p-5 xl:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0">
@@ -183,12 +191,6 @@ export default function CuencaDeLosEcosChapterOnePage() {
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-emerald-50/90">Reconstruye el equilibrio de la cuenca: identifica los seres vivos, las condiciones del ambiente y las relaciones que los conectan.</p>
               </div>
             </section>
-
-            <nav aria-label="Secciones del capítulo" className="mt-2 grid grid-cols-3 rounded-xl border border-emerald-100/15 bg-[#07140f] p-1">
-              {navButton("Historia y teoría", view === "theory", () => setView("theory"))}
-              {navButton("Ejemplo guiado", view === "examples", () => setView("examples"))}
-              {navButton("Desafío", view === "practice", startPractice)}
-            </nav>
 
             <div className="mt-3 space-y-3">
               <LessonNotesSelection sourceTitle="El Bosque que Dejó de Cantar" sourcePath="/aprender/la-cuenca-de-los-ecos/leccion/1">

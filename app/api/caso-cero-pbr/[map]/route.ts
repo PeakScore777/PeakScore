@@ -132,7 +132,10 @@ export async function GET(
       });
     }
 
-    return new Response(image, {
+    const imageBody = new ArrayBuffer(image.byteLength);
+    new Uint8Array(imageBody).set(image);
+
+    return new Response(imageBody, {
       status: 200,
       headers: {
         "Content-Type": "image/jpeg",

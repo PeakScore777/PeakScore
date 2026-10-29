@@ -296,7 +296,7 @@ export default function LaCuencaDeLosEcosPage() {
 
           </div>
 
-          <aside className="mt-0 space-y-4 lg:sticky lg:top-20 lg:-mt-5">
+          <aside className="mt-0 space-y-4 lg:sticky lg:top-20 lg:-mt-7">
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>
               <div className="space-y-5 p-4">
@@ -342,8 +342,8 @@ export default function LaCuencaDeLosEcosPage() {
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-star-outer" d="M8 0L10 5H15L11 9L13 15L8 12L3 15L5 9L1 5H6Z" />
-                      <path id="cuenca-star-inner" d="M8 2L9 5L13 6L10 9L11 13L8 11L5 13L6 9L3 6L7 5Z" />
+                      <path id="cuenca-star-outer" d="M7 0H9V2H10V4H12V5H14V6H16V9H13V10H11V12H10V15H9V16H7V15H6V12H5V10H3V9H0V6H2V5H4V4H6V2H7Z" />
+                      <path id="cuenca-star-inner" d="M7 3H9V5H10V6H13V7H11V9H10V11H9V13H8V11H6V10H5V8H3V7H6V6H7Z" />
                       <clipPath id="cuenca-star-interior-clip">
                         <use href="#cuenca-star-inner" />
                       </clipPath>

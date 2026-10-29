@@ -254,11 +254,14 @@ export default function CuencaDeLosEcosChapterOnePage() {
   const [attempt, setAttempt] = useState(0);
   const activeQuestions = attempt % 2 === 0 ? questions : retryQuestions;
   const [choice, setChoice] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<string[]>([]);
   const [checked, setChecked] = useState(false);
   const [score, setScore] = useState(0);
   const [done, setDone] = useState(false);
   const [tutorOpen, setTutorOpen] = useState(false);
   const [reward, setReward] = useState(false);
+  const [rewardAlreadyClaimed, setRewardAlreadyClaimed] = useState(false);
+  const [rewardError, setRewardError] = useState<string | null>(null);
   const question = activeQuestions[index];
   const correct = choice === question.answer;
   const progress = view === "theory" ? 30 : view === "examples" ? 62 : done ? 100 : Math.round(62 + ((index + (checked ? 1 : 0)) / activeQuestions.length) * 38);
@@ -270,27 +273,91 @@ export default function CuencaDeLosEcosChapterOnePage() {
     void audio.play().catch(() => {});
   }
   function startPractice() {
-    setIndex(0); setChoice(null); setChecked(false); setScore(0); setDone(false); setReward(false); setView("practice");
+    setIndex(0);
+    setChoice(null);
+    setAnswers([]);
+    setChecked(false);
+    setScore(0);
+    setDone(false);
+    setReward(false);
+    setRewardAlreadyClaimed(false);
+    setRewardError(null);
+    setView("practice");
   }
+
   function restart() {
-    setAttempt((value) => value + 1); setIndex(0); setChoice(null); setChecked(false); setScore(0); setDone(false); setReward(false); setView("practice");
+    setAttempt((value) => value + 1);
+    setIndex(0);
+    setChoice(null);
+    setAnswers([]);
+    setChecked(false);
+    setScore(0);
+    setDone(false);
+    setReward(false);
+    setRewardAlreadyClaimed(false);
+    setRewardError(null);
+    setView("practice");
   }
+
   function check() {
     if (!choice || checked) return;
     setChecked(true);
+    setAnswers((previous) => {
+      const nextAnswers = [...previous];
+      nextAnswers[index] = choice;
+      return nextAnswers;
+    });
     if (correct) setScore((value) => value + 1);
   }
-  function next() {
+
+  async function next() {
     if (index < activeQuestions.length - 1) {
-      sound("navigation.mp3", 0.16); setIndex((value) => value + 1); setChoice(null); setChecked(false); return;
+      sound("navigation.mp3", 0.16);
+      setIndex((value) => value + 1);
+      setChoice(null);
+      setChecked(false);
+      return;
     }
+
     setDone(true);
-    if (score === activeQuestions.length) {
-      markCuencaChapterCompleted();
-      setReward(true);
-      sound("level-win.mp3", 0.25);
-    } else {
+    if (score !== activeQuestions.length) {
       sound("game-over.wav", 0.3);
+      return;
+    }
+
+    const completedAnswers = [...answers];
+    if (choice) completedAnswers[index] = choice;
+    markCuencaChapterCompleted();
+
+    try {
+      const response = await fetch("/api/learning/complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseKey: "cuenca-de-los-ecos-chapter-01",
+          answers: completedAnswers,
+        }),
+      });
+      const result = (await response.json()) as {
+        completed?: boolean;
+        granted?: boolean;
+        alreadyClaimed?: boolean;
+        error?: string;
+      };
+
+      if (!response.ok || result.completed !== true) {
+        setRewardError(result.error ?? "No se pudo confirmar la recompensa.");
+        return;
+      }
+
+      if (result.granted) {
+        setReward(true);
+        sound("level-win.mp3", 0.25);
+      } else if (result.alreadyClaimed) {
+        setRewardAlreadyClaimed(true);
+      }
+    } catch {
+      setRewardError("No se pudo confirmar la EXP. Tu recorrido queda guardado; vuelve a intentarlo con conexión.");
     }
   }
   const navButton = (label: string, active: boolean, onClick: () => void) => (
@@ -467,7 +534,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
         </div>
       )}
 
-      {view === "practice" && done && !reward && (
+      {view === "practice" && done && !reward && score < activeQuestions.length && (
         <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-[#04100c] px-4 py-6 sm:px-6">
           <div className="relative my-auto w-full max-w-4xl py-4 text-center">
             <div className="pixel-font flex items-center justify-center gap-1 whitespace-nowrap text-[clamp(1.8rem,7vw,5rem)] font-black text-white sm:gap-3" style={{ textShadow: "5px 5px 0 #14532d, 9px 9px 0 #08110e" }}><span>GAME</span><span className="inline-flex shrink-0 items-center"><Image src="/images/game-over/nova-dead-pixel.png" alt="Nova" width={90} height={90} className="h-auto w-[clamp(2.4rem,8vw,5.5rem)]" /></span><span>OVER</span></div>
@@ -478,6 +545,33 @@ export default function CuencaDeLosEcosChapterOnePage() {
             <div className="mt-7 flex flex-col items-center gap-3"><button type="button" onClick={restart} className="pixel-font min-h-11 px-4 py-3 text-[9px] text-emerald-100 transition hover:translate-x-1 hover:text-white">▶ REPETIR DESAFÍO</button><button type="button" onClick={() => { setDone(false); setReward(false); setView("examples"); }} className="pixel-font min-h-11 px-4 py-3 text-[9px] text-slate-300 transition hover:translate-x-1 hover:text-white">VER EJEMPLO GUIADO</button></div>
             <p className="pixel-font mt-8 text-[8px] text-white/60">PEAKSCORE · OBSERVA ANTES DE CONCLUIR</p>
           </div>
+        </div>
+      )}
+
+      {view === "practice" && done && !reward && score === activeQuestions.length && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto bg-[#04100c] px-4 py-6 sm:px-6">
+          <section className="my-auto w-full max-w-xl border border-emerald-200/20 bg-[#07140f] p-6 text-center sm:p-8">
+            <p className="pixel-font text-[9px] tracking-[.14em] text-emerald-200">
+              {rewardError ? "EXP PENDIENTE DE CONFIRMACIÓN" : "CAPÍTULO COMPLETADO"}
+            </p>
+            <h2 className="pixel-font mt-4 text-xl leading-8 text-white sm:text-2xl">
+              {rewardError ? "El desafío está completo" : "El bosque vuelve a cantar"}
+            </h2>
+            <p className="mt-4 text-sm leading-6 text-slate-300">
+              {rewardError
+                ? rewardError
+                : rewardAlreadyClaimed
+                  ? "Ya reclamaste la EXP de este capítulo. Puedes volver a estudiar las lecciones sin repetir la recompensa."
+                  : "La recompensa ya fue confirmada. Puedes repasar este capítulo cuando quieras."}
+            </p>
+            <button
+              type="button"
+              onClick={() => { window.location.href = "/aprender/la-cuenca-de-los-ecos"; }}
+              className="pixel-font mt-7 inline-flex min-h-11 items-center justify-center border-2 border-[#ffe08a] bg-[#f7c948] px-5 py-3 text-[9px] text-[#17130c] shadow-[0_4px_0_#8b681b] transition hover:-translate-y-0.5 hover:bg-[#ffda69]"
+            >
+              VOLVER A LA CUENCA
+            </button>
+          </section>
         </div>
       )}
 

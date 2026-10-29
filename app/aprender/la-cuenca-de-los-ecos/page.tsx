@@ -270,7 +270,6 @@ export default function LaCuencaDeLosEcosPage() {
 
           </div>
 
-          <aside className="mt-3 space-y-4
           <aside className="mt-3 space-y-4 lg:sticky lg:top-24 lg:mt-3">
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>

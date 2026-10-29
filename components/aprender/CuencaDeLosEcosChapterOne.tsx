@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase/client";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
-import { ArrowLeft, ArrowRight, CheckCircle2, Leaf, Lightbulb, Waves } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Leaf, Lightbulb, Plus, Waves } from "lucide-react";
 
 type Question = {
   competency: string;
@@ -107,6 +108,128 @@ const notes = [
   { title: "Población", body: "Conjunto de individuos de la misma especie en un área y periodo definidos. Los conteos deben indicar sitio y tiempo." },
   { title: "Evidencia", body: "Una asociación es una pista, no una prueba de causa. Repite mediciones y considera otras variables." },
 ];
+
+function ImageUploadSlot({ assetKey, title, description, fallbackSrc, compact = false }: { assetKey: string; title: string; description: string; fallbackSrc?: string; compact?: boolean }) {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function loadAsset() {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        let admin = false;
+        if (user) {
+          const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+          if (profileError) throw profileError;
+          admin = profile?.role === "admin";
+        }
+        if (active) setIsAdmin(admin);
+      } catch (e) {
+        if (active) setError(e instanceof Error ? e.message : "No se pudo verificar la sesión.");
+      }
+      try {
+        const { data: asset, error: assetError } = await supabase.from("lesson_media_assets").select("public_url").eq("asset_key", assetKey).maybeSingle();
+        if (assetError) throw assetError;
+        if (active && asset?.public_url) setImageUrl(asset.public_url);
+      } catch (e) {
+        if (active) setError(e instanceof Error ? e.message : "No se pudo cargar la imagen compartida.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    void loadAsset();
+    return () => { active = false; };
+  }, [assetKey]);
+
+  async function uploadSelectedFile(file?: File) {
+    if (!file || saving) return;
+    setError(null);
+    setNotice(null);
+    if (!isAdmin) { setError("Solo el administrador puede cambiar las imágenes."); return; }
+    if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) {
+      setError("Formato no válido. Usa PNG, JPG, WebP o GIF."); return;
+    }
+    if (file.size > 8 * 1024 * 1024) { setError("La imagen debe pesar máximo 8 MB."); return; }
+
+    setSaving(true);
+    let uploadedPath: string | null = null;
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) throw new Error("Inicia sesión con la cuenta administradora.");
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+      if (profileError) throw profileError;
+      if (profile?.role !== "admin") throw new Error("Solo el administrador puede gestionar estas imágenes.");
+
+      const { data: previousAsset, error: previousAssetError } = await supabase.from("lesson_media_assets").select("storage_path").eq("asset_key", assetKey).maybeSingle();
+      if (previousAssetError) throw previousAssetError;
+      const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+      const safeExtension = /^[a-z0-9]{1,8}$/.test(extension) ? extension : "png";
+      const path = assetKey + "/" + crypto.randomUUID() + "." + safeExtension;
+      const { error: uploadError } = await supabase.storage.from("lesson-atom-media").upload(path, file, { upsert: false, contentType: file.type, cacheControl: "3600" });
+      if (uploadError) throw new Error("No se pudo subir a Supabase Storage: " + uploadError.message);
+      uploadedPath = path;
+      const { data: urlData } = supabase.storage.from("lesson-atom-media").getPublicUrl(path);
+      const { error: saveError } = await supabase.from("lesson_media_assets").upsert({
+        asset_key: assetKey, public_url: urlData.publicUrl, storage_path: path, updated_by: user.id, updated_at: new Date().toISOString()
+      }, { onConflict: "asset_key" });
+      if (saveError) throw new Error("El archivo se subió, pero no se pudo guardar en la base de datos: " + saveError.message);
+      setImageUrl(urlData.publicUrl);
+      setNotice("Imagen guardada en Supabase y compartida con todos los usuarios.");
+      uploadedPath = null;
+      const previousPath = previousAsset?.storage_path;
+      if (previousPath && previousPath !== path) {
+        const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([previousPath]);
+        if (cleanupError) console.warn("La imagen anterior requiere limpieza:", cleanupError.message);
+      }
+    } catch (e) {
+      if (uploadedPath) {
+        const { error: cleanupError } = await supabase.storage.from("lesson-atom-media").remove([uploadedPath]);
+        if (cleanupError) console.warn("No se pudo limpiar la subida incompleta:", cleanupError.message);
+      }
+      setError(e instanceof Error ? e.message : "No se pudo guardar la imagen. Revisa las políticas de Supabase.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const visibleImageUrl = imageUrl || fallbackSrc || null;
+
+  return (
+    <div className={"relative flex w-full flex-col items-center justify-center gap-2 overflow-hidden bg-transparent text-center " + (compact ? "min-h-[112px]" : "min-h-[240px]")}>
+      <input ref={fileInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label={"Seleccionar imagen para " + title} className="hidden" disabled={!isAdmin || saving} onChange={e => { void uploadSelectedFile(e.currentTarget.files?.[0]); e.currentTarget.value = ""; }} />
+      {visibleImageUrl ? (
+        isAdmin ? (
+          <button type="button" onClick={() => fileInputRef.current?.click()} disabled={saving} title="Pulsa la imagen para cambiarla" aria-label={"Cambiar imagen de " + title} className="group relative flex w-full items-center justify-center bg-transparent disabled:cursor-wait">
+            <Image src={visibleImageUrl} width={1200} height={800} unoptimized alt={description} className={"w-full object-contain " + (compact ? "max-h-28" : "max-h-[400px]")} />
+            <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded border border-emerald-200/30 bg-[#04110b]/90 px-2 py-1 text-[9px] font-bold text-emerald-100 opacity-90"><Plus className="h-3 w-3" /> CAMBIAR IMAGEN</span>
+            {saving && <span className="absolute inset-x-1 bottom-1 rounded bg-slate-950/85 px-2 py-1 text-[10px] text-cyan-100">Guardando imagen…</span>}
+          </button>
+        ) : <Image src={visibleImageUrl} width={1200} height={800} unoptimized alt={description} className={"w-full object-contain " + (compact ? "max-h-28" : "max-h-[400px]")} />
+      ) : isAdmin ? (
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={saving || loading} className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4 text-cyan-100 transition hover:bg-cyan-400/[.03] disabled:cursor-wait disabled:opacity-60" title={"Añadir imagen de " + title}>
+          {saving ? <span className="animate-pulse text-sm">Subiendo…</span> : <><Plus className={(compact ? "h-7 w-7" : "h-9 w-9") + " text-cyan-200"} /><span className="pixel-font text-[9px] leading-tight">AÑADIR IMAGEN</span></>}
+          <span className="text-[10px] text-cyan-200">{saving ? "Guardando automáticamente en Supabase" : "Solo admin · pulsa para subir"}</span>
+        </button>
+      ) : (
+        <div className="flex min-h-[112px] w-full flex-col items-center justify-center gap-2 bg-transparent px-2 py-4">
+          <span className="pixel-font text-[9px] text-cyan-100">{loading ? "CARGANDO IMAGEN" : "IMAGEN EN PREPARACIÓN"}</span>
+        </div>
+      )}
+      {saving && imageUrl && <span className="text-[10px] font-bold text-cyan-200">Guardando automáticamente en Supabase…</span>}
+      {notice && <p role="status" className="text-[10px] text-emerald-300">{notice}</p>}
+      {error && <p role="alert" className="max-w-full break-words text-[10px] text-rose-300">{error}</p>}
+    </div>
+  );
+}
+
 
 export default function CuencaDeLosEcosChapterOnePage() {
   const [view, setView] = useState<"theory" | "examples" | "practice">("theory");
@@ -218,6 +341,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
                     <div className="border border-emerald-200/15 bg-[#10251d] p-4"><p className="flex items-center gap-2 text-sm font-bold text-emerald-100"><Leaf className="h-4 w-4" /> Factores bióticos</p><p className="mt-2 text-sm leading-6 text-slate-300">Plantas acuáticas, ranas, peces, insectos, hongos y microorganismos. Son organismos vivos que pueden interactuar, competir, alimentarse o servir de refugio.</p></div>
                     <div className="border border-cyan-200/15 bg-[#0d2024] p-4"><p className="flex items-center gap-2 text-sm font-bold text-cyan-100"><Waves className="h-4 w-4" /> Factores abióticos</p><p className="mt-2 text-sm leading-6 text-slate-300">Agua, luz, temperatura, oxígeno disuelto, minerales y características del suelo. Son condiciones no vivas que pueden favorecer o limitar la supervivencia.</p></div>
                   </div>
+                  <ImageUploadSlot assetKey="cuenca-de-los-ecos/ecosistema" title="Mapa de los factores del ecosistema" description="Ilustración didáctica de factores bióticos y abióticos en la cuenca." fallbackSrc="/images/aprender/cuenca-de-los-ecos/ecosistema-factores.svg" />
                   <div className="mt-4 rounded-lg border border-emerald-100/15 bg-black/20 p-3"><p className="text-xs font-bold text-emerald-100">La idea clave</p><p className="mt-1 text-sm leading-6 text-slate-300">Si cambia una condición del agua, puede afectar algunos organismos y, a través de sus relaciones, producir efectos en otras partes del ecosistema. La posibilidad debe evaluarse con evidencias, no suponerse automáticamente.</p></div>
                 </section>
 
@@ -228,6 +352,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
                     <div className="border-l-2 border-cyan-300/65 bg-cyan-300/[.04] p-3"><h3 className="text-sm font-bold text-white">Población</h3><p className="mt-1 text-sm leading-6 text-slate-300">Individuos de la misma especie que habitan un área durante un periodo. Al comparar conteos, Nova debe indicar el lugar y el momento de cada observación.</p></div>
                     <div className="border-l-2 border-amber-300/65 bg-amber-300/[.04] p-3"><h3 className="text-sm font-bold text-white">Nicho ecológico</h3><p className="mt-1 text-sm leading-6 text-slate-300">La manera en que una especie usa recursos e interactúa con el ambiente y otros organismos: qué consume, dónde se refugia, cuándo está activa y qué función cumple.</p></div>
                   </div>
+                  <ImageUploadSlot assetKey="cuenca-de-los-ecos/habitat-poblacion-nicho" title="Hábitat, población y nicho" description="Infografía para diferenciar hábitat, población y nicho ecológico." fallbackSrc="/images/aprender/cuenca-de-los-ecos/habitat-poblacion-nicho.svg" />
                   <p className="mt-4 text-sm leading-7 text-slate-300">No confundas el sitio con la función: la orilla húmeda puede ser parte del hábitat de una rana; alimentarse de insectos y servir de presa a otra especie describe parte de su nicho.</p>
                 </section>
 
@@ -239,6 +364,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
                     <div className="grid grid-cols-[1.05fr_1fr_1fr] bg-[#0a1913] text-sm text-slate-300"><span className="p-3">Ranas observadas</span><span className="border-l border-white/10 p-3">18</span><span className="border-l border-white/10 p-3">5</span></div>
                     <div className="grid grid-cols-[1.05fr_1fr_1fr] border-t border-white/[.06] bg-[#0a1913] text-sm text-slate-300"><span className="p-3">Oxígeno disuelto</span><span className="border-l border-white/10 p-3">8 mg/L</span><span className="border-l border-white/10 p-3">3 mg/L</span></div>
                   </div>
+                  <ImageUploadSlot compact assetKey="cuenca-de-los-ecos/indagacion-evidencia" title="Cómo interpretar la evidencia" description="Diagrama del proceso de indagación para comparar dos tramos del ecosistema." fallbackSrc="/images/aprender/cuenca-de-los-ecos/indagacion-evidencia.svg" />
                   <p className="mt-3 text-xs leading-6 text-slate-400">Ejemplo hipotético para aprender a interpretar datos; no es un registro real del río ni demuestra por sí solo la causa de una diferencia entre poblaciones.</p>
                 </section>
 

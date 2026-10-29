@@ -309,8 +309,8 @@ export default function LaCuencaDeLosEcosPage() {
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-heart-outer" d="M3 1H6V2H3Z M10 1H13V2H10Z M2 2H7V3H2Z M9 2H14V3H9Z M1 3H15V4H1Z M0 4H16V6H0Z M1 6H15V7H1Z M2 7H14V8H2Z M3 8H13V9H3Z M4 9H12V10H4Z M5 10H11V11H5Z M6 11H10V12H6Z M7 12H9V13H7Z" />
-                      <path id="cuenca-heart-inner" d="M3 2H6V3H3Z M10 2H13V3H10Z M2 3H7V4H2Z M9 3H14V4H9Z M1 4H15V6H1Z M2 6H14V7H2Z M3 7H13V8H3Z M4 8H12V9H4Z M5 9H11V10H5Z M6 10H10V11H6Z M7 11H9V12H7Z" />
+                      <path id="cuenca-heart-outer" d="M3 0h3v1h-3Z M10 0h3v1h-3Z M2 1h5v1h-5Z M9 1h5v1h-5Z M1 2h7v1h-7Z M8 2h7v1h-7Z M0 3h16v1h-16Z M0 4h16v1h-16Z M1 5h14v1h-14Z M2 6h12v1h-12Z M3 7h10v1h-10Z M4 8h8v1h-8Z M5 9h6v1h-6Z M6 10h4v1h-4Z M7 11h2v1h-2Z M7 12h2v1h-2Z M8 13h1v1h-1Z" />
+                      <path id="cuenca-heart-inner" d="M3 1h3v1h-3Z M10 1h3v1h-3Z M2 2h5v1h-5Z M9 2h5v1h-5Z M1 3h14v1h-14Z M1 4h14v1h-14Z M2 5h12v1h-12Z M3 6h10v1h-10Z M4 7h8v1h-8Z M5 8h6v1h-6Z M6 9h4v1h-4Z M7 10h2v1h-2Z M7 11h2v1h-2Z M8 12h1v1h-1Z" />
                       <clipPath id="cuenca-heart-interior-clip">
                         <use href="#cuenca-heart-inner" />
                       </clipPath>
@@ -342,8 +342,8 @@ export default function LaCuencaDeLosEcosPage() {
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-star-outer" d="M7 0H9V2H10V4H12V5H14V6H16V9H13V10H11V12H10V15H9V16H7V15H6V12H5V10H3V9H0V6H2V5H4V4H6V2H7Z" />
-                      <path id="cuenca-star-inner" d="M7 3H9V5H10V6H13V7H11V9H10V11H9V13H8V11H6V10H5V8H3V7H6V6H7Z" />
+                      <path id="cuenca-star-outer" d="M7 0h2v1h-2Z M7 1h2v1h-2Z M6 2h4v1h-4Z M6 3h4v1h-4Z M5 4h6v1h-6Z M4 5h8v1h-8Z M1 6h14v1h-14Z M0 7h16v1h-16Z M1 8h14v1h-14Z M3 9h10v1h-10Z M4 10h8v1h-8Z M5 11h2v1h-2Z M9 11h2v1h-2Z M4 12h3v1h-3Z M9 12h3v1h-3Z M3 13h4v1h-4Z M9 13h4v1h-4Z M2 14h5v1h-5Z M9 14h5v1h-5Z M1 15h6v1h-6Z M9 15h6v1h-6Z" />
+                      <path id="cuenca-star-inner" d="M7 2h2v1h-2Z M7 3h2v1h-2Z M6 4h4v1h-4Z M5 5h6v1h-6Z M2 6h12v1h-12Z M1 7h14v1h-14Z M2 8h12v1h-12Z M4 9h8v1h-8Z M5 10h6v1h-6Z M6 11h1v1h-1Z M9 11h1v1h-1Z M5 12h2v1h-2Z M9 12h2v1h-2Z M4 13h3v1h-3Z M9 13h3v1h-3Z M3 14h4v1h-4Z M9 14h4v1h-4Z M2 15h5v1h-5Z M9 15h5v1h-5Z" />
                       <clipPath id="cuenca-star-interior-clip">
                         <use href="#cuenca-star-inner" />
                       </clipPath>

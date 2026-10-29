@@ -52,12 +52,12 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
       href={level.href}
       className="group relative block w-[300px] max-w-full shrink-0 snap-start overflow-visible rounded-xl border border-[#252d40] bg-[#0b1020] transition duration-200 hover:-translate-y-1 hover:border-[#39445d] max-sm:w-full"
     >
-      <div className="relative h-[174px] overflow-hidden rounded-t-xl bg-[#111827]">
+      <div className="relative h-[178px] overflow-hidden rounded-t-xl bg-[#111827]">
         <Image
           src={level.image}
           alt=""
           fill
-          sizes="300px"
+          sizes="(max-width: 640px) 100vw, 300px"
           className="object-cover transition duration-500 group-hover:scale-[1.035]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#080d18]/35 via-transparent to-transparent" />
@@ -66,17 +66,17 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
         {number}
       </span>
       <div className="p-4 max-sm:p-[13px]">
-        <div className="flex items-center justify-between gap-3 text-[9px] uppercase tracking-[.13em] text-[#8394b2]">
+        <div className="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[.13em] text-[#8394b2]">
           <span className="truncate">{level.area}</span>
           <span className="flex shrink-0 items-center gap-1.5 tracking-[.08em]">
             <Clock3 className="h-3 w-3" />
             {level.duration}
           </span>
         </div>
-        <h3 className="mt-3 min-h-[42px] text-[14px] font-extrabold leading-5 text-white">
+        <h3 className="mt-3 min-h-[42px] text-[15px] font-extrabold leading-5 text-white">
           {level.title}
         </h3>
-        <p className="mt-2 min-h-[58px] text-[12px] leading-[1.65] text-[#abb3c3]">
+        <p className="mt-2 min-h-[58px] text-[13px] leading-[1.65] text-[#abb3c3]">
           {level.description}
         </p>
         <div className="mt-3">
@@ -99,10 +99,10 @@ export default function LearningCatalog(_props: LearningCatalogProps) {
 
   return (
     <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#0e111a] text-white">
-      <div className="mx-auto w-full max-w-[1072px] px-4 pb-14 pt-9 sm:px-7 sm:pt-11">
+      <div className="mx-auto w-full max-w-[1280px] px-4 pb-14 pt-11 sm:px-7 sm:pt-14">
         <header className="flex items-start justify-between gap-5">
           <div>
-            <h1 className="pixel-font text-[22px] leading-[1.8] text-[#f5f1e8] sm:text-[27px]">
+            <h1 className="pixel-font text-[28px] leading-[1.8] text-[#f5f1e8] sm:text-[34px]">
               Niveles
             </h1>
             <p className="mt-1 text-[13px] text-[#aab2c2]">
@@ -131,11 +131,11 @@ export default function LearningCatalog(_props: LearningCatalogProps) {
           </div>
         </header>
 
-        <section className="mt-8 sm:mt-9" aria-live="polite">
-          <h2 className="pixel-font max-w-4xl text-[11px] leading-[2.1] text-[#f5f1e8] sm:text-[13px]">
+        <section className="mt-9 sm:mt-10" aria-live="polite">
+          <h2 className="pixel-font max-w-4xl text-[14px] leading-[2] text-[#f5f1e8] sm:text-[18px]">
             {isRoutes ? "Tu camino hacia Saber 11 empieza aquí" : "Cursos interactivos disponibles"}
           </h2>
-          <p className="mt-1.5 max-w-3xl text-[13px] leading-6 text-[#aab2c2]">
+          <p className="mt-2 max-w-3xl text-[14px] leading-6 text-[#aab2c2]">
             {isRoutes
               ? "Avanza por los niveles disponibles, aprende los conceptos y resuelve desafíos con enfoque ICFES."
               : "Explora las dos experiencias de aprendizaje que ya están disponibles en PeakScore."}

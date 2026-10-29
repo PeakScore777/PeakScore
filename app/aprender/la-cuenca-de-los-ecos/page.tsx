@@ -2,13 +2,19 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  BookOpen,
   ChevronDown,
   ChevronRight,
+  Coins,
+  Flame,
   LockKeyhole,
+  Sparkles,
+  UserRound,
+  Zap,
 } from "lucide-react";
 
 type Lesson = {
@@ -25,6 +31,21 @@ type Chapter = {
   description: string;
   available: boolean;
   lessons: Lesson[];
+};
+
+type SidebarProfile = {
+  fullName?: string | null;
+  avatarUrl?: string | null;
+  level?: number | null;
+  xp?: number | null;
+  seasonXp?: number | null;
+  coins?: number | null;
+  streak?: number | null;
+};
+
+type ProfileApiResponse = {
+  profile?: SidebarProfile;
+  rank?: { name?: string };
 };
 
 const chapters: Chapter[] = [
@@ -80,6 +101,38 @@ const totalLessons = chapters
 
 export default function LaCuencaDeLosEcosPage() {
   const [expanded, setExpanded] = useState<string[]>(["01"]);
+  const [profile, setProfile] = useState<SidebarProfile | null>(null);
+  const [rankName, setRankName] = useState("Explorador");
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProfile() {
+      try {
+        const response = await fetch("/api/profile", { cache: "no-store" });
+        if (!response.ok) return;
+        const payload = (await response.json()) as ProfileApiResponse;
+        if (!active) return;
+        setProfile(payload.profile ?? null);
+        setRankName(payload.rank?.name ?? "Explorador");
+      } catch {
+        // El contenido de aprendizaje debe seguir disponible aunque falle el panel del perfil.
+      } finally {
+        if (active) setProfileLoading(false);
+      }
+    }
+
+    void loadProfile();
+    return () => { active = false; };
+  }, []);
+
+  const profileName = profile?.fullName?.trim() || "Explorador PeakScore";
+  const profileInitial = profileName.charAt(0).toLocaleUpperCase("es-CO");
+  const seasonXp = Math.max(0, Number(profile?.seasonXp ?? 0));
+  const coins = Math.max(0, Number(profile?.coins ?? 0));
+  const historicalXp = Math.max(0, Number(profile?.xp ?? 0));
+  const accountLevel = Math.max(1, Number(profile?.level ?? 1));
 
   const toggle = (id: string) => {
     setExpanded((current) =>
@@ -88,7 +141,7 @@ export default function LaCuencaDeLosEcosPage() {
   };
 
   return (
-    <main className="pixel-font min-h-[calc(100vh-72px)] overflow-hidden bg-[#050914] px-4 pb-16 pt-5 text-white sm:px-7 sm:pt-7">
+    <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#0e111a] px-4 pb-16 pt-5 text-white sm:px-7 sm:pt-7">
       <div className="mx-auto max-w-[1440px]">
         <Link
           href="/aprender"
@@ -98,7 +151,9 @@ export default function LaCuencaDeLosEcosPage() {
           Volver a las rutas
         </Link>
 
-        <section className="relative mt-3 overflow-hidden rounded-[22px] border border-emerald-100/10 bg-[#091817] shadow-[0_22px_70px_rgba(0,0,0,.28)]">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px] lg:items-start">
+          <div className="min-w-0">
+        <section className="relative mt-3 overflow-hidden rounded-[18px] border border-[#252d40] bg-[#091817] shadow-[0_18px_50px_rgba(0,0,0,.3)]">
           <div className="absolute inset-0">
             <Image
               src="/images/aprender/cuenca-de-los-ecos/header.svg"
@@ -124,57 +179,51 @@ export default function LaCuencaDeLosEcosPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#071511] via-transparent to-black/10" />
           </div>
 
-          <div className="relative grid min-h-[350px] items-end px-5 pb-8 pt-8 sm:min-h-[390px] sm:px-8 sm:pb-9 lg:min-h-[420px] lg:px-10">
+          <div className="relative grid min-h-[250px] items-end px-5 pb-6 pt-7 sm:min-h-[285px] sm:px-7 sm:pb-7 lg:min-h-[310px] lg:px-8">
             <div className="max-w-[610px]">
-              <div className="inline-flex items-center gap-2 border-2 border-emerald-300/50 bg-[#071710]/90 px-3 py-2 text-[9px] font-normal uppercase tracking-[.08em] text-emerald-200 [box-shadow:3px_3px_0_#163b2c]">
+              <div className="inline-flex items-center gap-2 rounded border border-emerald-300/50 bg-[#071710]/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-emerald-200 [box-shadow:3px_3px_0_#163b2c]">
                 Ruta 02 <span className="text-white/30">·</span> Biología y Ecología
               </div>
-              <h1 className="mt-5 pixel-font text-[clamp(1.25rem,2.5vw,2.5rem)] font-normal leading-[1.55] tracking-normal">
+              <h1 className="pixel-font mt-4 text-[clamp(1.45rem,2.5vw,2.35rem)] font-normal leading-[1.5] tracking-normal">
                 La Cuenca
                 <br />
                 de los <span className="bg-gradient-to-r from-emerald-200 via-teal-300 to-cyan-300 bg-clip-text text-transparent">Ecos</span>
               </h1>
-              <p className="mt-4 max-w-[530px] text-[9px] leading-[2.2] text-slate-100/80 sm:text-[10px]">
+              <p className="mt-3 max-w-[560px] text-sm leading-6 text-slate-100/85">
                 Después de estudiar los cristales del Santuario de la Materia, Nova sigue una señal hasta un bosque demasiado silencioso. Observa el agua, registra las especies y reúne evidencias antes de explicar qué cambió en el ecosistema.
               </p>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <span className="border border-emerald-200/35 bg-[#061410]/90 px-3 py-2 text-[8px] leading-5 text-emerald-100 [box-shadow:3px_3px_0_#163b2c]">{totalLessons} LECCIONES</span>
-                <span className="border border-amber-200/35 bg-[#061410]/90 px-3 py-2 text-[8px] leading-5 text-amber-100 [box-shadow:3px_3px_0_#493716]">EXP POR COMPLETAR</span>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-2 rounded border border-emerald-200/30 bg-[#061410]/90 px-3 py-2 text-[10px] font-bold text-emerald-100"><BookOpen className="h-3.5 w-3.5" /> {totalLessons} lecciones</span>
+                <span className="inline-flex items-center gap-2 rounded border border-amber-200/30 bg-[#061410]/90 px-3 py-2 text-[10px] font-bold text-amber-100"><Zap className="h-3.5 w-3.5" /> +50 XP · desafío perfecto</span>
               </div>
             </div>
-            <span className="absolute right-5 top-5 border-2 border-emerald-300/50 bg-[#062b24]/95 px-3 py-2 text-[8px] font-normal uppercase tracking-normal text-emerald-200 [box-shadow:3px_3px_0_#12453c] sm:right-8 sm:top-7">
+            <span className="absolute right-4 top-4 border border-emerald-300/50 bg-[#062b24]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-normal text-emerald-200 [box-shadow:3px_3px_0_#12453c] sm:right-6 sm:top-6">
               Nivel básico
             </span>
           </div>
 
-          <div className="relative border-t border-white/10 bg-[#071511ef] px-5 py-5 sm:px-8 lg:px-10">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="font-medium text-slate-200">Progreso de la ruta</span>
-                  <span className="font-bold tabular-nums text-white/90">0%</span>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/10">
-                  <div className="h-full w-0 rounded-full bg-gradient-to-r from-emerald-500 to-cyan-300" />
-                </div>
-                <p className="mt-2 text-xs text-slate-400">Tu avance aparecerá aquí a medida que completes las lecciones.</p>
+          <div className="relative border-t border-white/10 bg-[#071511ef] px-5 py-4 sm:px-7">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-200">
+                <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-emerald-200" /> Capítulo 01 disponible</span>
+                <span className="inline-flex items-center gap-2"><Zap className="h-4 w-4 text-amber-200" /> Recompensa anunciada: 50 XP</span>
               </div>
               <Link
                 href="/aprender/la-cuenca-de-los-ecos/leccion/1"
-                className="group inline-flex min-h-[54px] items-center justify-center gap-3 border-2 border-emerald-200 bg-[#103024] px-6 py-3 text-[9px] font-normal uppercase tracking-[.04em] text-emerald-100 [box-shadow:5px_5px_0_#03120d] transition-[transform,box-shadow,background-color] hover:translate-x-[2px] hover:translate-y-[2px] hover:bg-[#164333] hover:shadow-[3px_3px_0_#03120d] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none"
+                className="group inline-flex min-h-11 shrink-0 items-center justify-center gap-3 rounded-md border-2 border-emerald-200 bg-[#f7c948] px-5 py-3 text-[11px] font-extrabold uppercase tracking-[.03em] text-[#1b1a12] shadow-[0_4px_0_#8b681b] transition-[transform,box-shadow,background-color] hover:translate-y-[-2px] hover:bg-[#ffda69] hover:shadow-[0_6px_0_#8b681b] active:translate-y-0 active:shadow-none"
               >
-                <span className="inline-block h-2.5 w-2.5 bg-emerald-200 [clip-path:polygon(0_0,100%_50%,0_100%)]" /> INICIAR RUTA
+                Comenzar a estudiar
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
               </Link>
             </div>
           </div>
         </section>
 
-        <section className="mt-9 sm:mt-11">
-          <div className="mb-5">
-            <p className="text-[9px] font-normal uppercase tracking-[.12em] text-emerald-200">Tu recorrido</p>
-            <h2 className="mt-2 text-[clamp(1rem,1.7vw,1.5rem)] font-normal leading-[1.8] tracking-normal">Capítulos y lecciones</h2>
-            <p className="mt-2 max-w-3xl text-[9px] leading-[2.1] text-slate-300/75">
+        <section className="mt-7 sm:mt-8">
+          <div className="mb-4">
+            <p className="text-[10px] font-bold uppercase tracking-[.14em] text-emerald-200">Tu recorrido</p>
+            <h2 className="pixel-font mt-2 text-[clamp(1rem,1.7vw,1.45rem)] font-normal leading-[1.8] tracking-normal">Capítulos y lecciones</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300/75">
               Avanza paso a paso: observa las pistas, comprende las relaciones del ecosistema y resuelve desafíos de razonamiento tipo ICFES.
             </p>
           </div>
@@ -186,26 +235,26 @@ export default function LaCuencaDeLosEcosPage() {
               return (
                 <section
                   key={chapter.id}
-                  className={"overflow-hidden rounded-[17px] border shadow-[0_8px_25px_rgba(0,0,0,.12)] transition-colors " + (isAvailable ? "border-[#233d3a] bg-[linear-gradient(115deg,rgba(12,32,29,.96),rgba(7,18,19,.98)] hover:border-[#31524d]" : "border-[#26303d] bg-[linear-gradient(115deg,rgba(12,20,31,.8),rgba(7,13,23,.9)] opacity-75")}
+                  className={"overflow-hidden rounded-xl border shadow-[0_8px_25px_rgba(0,0,0,.12)] transition-colors " + (isAvailable ? "border-[#30394f] bg-[#1a2030] hover:border-[#46516d]" : "border-[#283044] bg-[#131a29] opacity-85")}
                 >
                   <button
                     type="button"
                     onClick={() => isAvailable && toggle(chapter.id)}
                     aria-expanded={isAvailable ? isOpen : false}
                     aria-disabled={!isAvailable}
-                    className="flex w-full items-center gap-3 p-3 text-left transition hover:bg-white/[.025] sm:gap-4 sm:px-5 sm:py-3.5 disabled:cursor-not-allowed"
+                    className="flex min-h-[70px] w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-white/[.035] sm:gap-4 sm:px-5 sm:py-4 disabled:cursor-not-allowed"
                     disabled={!isAvailable}
                   >
-                    <span className={"flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border text-sm font-black text-white shadow-inner sm:h-11 sm:w-11 " + (isAvailable ? "border-emerald-400/40 bg-emerald-400/15" : "border-slate-500/30 bg-slate-500/10 text-slate-400")}>{chapter.id}</span>
+                    <span className={"flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-extrabold text-white shadow-inner sm:h-11 sm:w-11 " + (isAvailable ? "border-[#46516c] bg-[#111725]" : "border-slate-500/30 bg-slate-500/10 text-slate-400")}>{Number(chapter.id)}</span>
                     <span className="min-w-0 flex-1 py-1">
-                      <span className="block text-sm font-extrabold leading-5 text-white sm:text-base">{chapter.title}</span>
+                      <span className="pixel-font block text-[10px] font-normal leading-6 text-white sm:text-[11px]">{chapter.title}</span>
                       <span className="mt-1 block text-xs leading-5 text-slate-300/80">{chapter.description}</span>
                     </span>
                     <span className="hidden shrink-0 sm:inline-flex">
                       {isAvailable ? (
-                        <span className="rounded-lg border border-emerald-300/30 bg-emerald-300/[.08] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-emerald-200">Disponible</span>
+                        <span className="rounded-md border border-emerald-300/30 bg-emerald-300/[.08] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-emerald-200">En curso</span>
                       ) : (
-                        <span className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[.025] px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-slate-400"><LockKeyhole className="h-3.5 w-3.5" /> Bloqueado</span>
+                        <span className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[.025] px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-slate-400"><LockKeyhole className="h-3.5 w-3.5" /> Próximamente</span>
                       )}
                     </span>
                     {isAvailable ? (isOpen ? <ChevronDown className="h-5 w-5 shrink-0 text-emerald-200" /> : <ChevronRight className="h-5 w-5 shrink-0 text-emerald-200" />) : <LockKeyhole className="h-4 w-4 shrink-0 text-slate-500" />}
@@ -216,11 +265,18 @@ export default function LaCuencaDeLosEcosPage() {
                       <div className="min-w-0 overflow-hidden rounded-xl border border-white/[.07]">
                         {chapter.lessons.map((lesson, lessonIndex) => {
                           const row = (
-                            <div className="group flex min-h-[51px] items-center gap-3 px-3 py-2.5 transition hover:bg-emerald-200/[.045] sm:px-4">
+                            <div className="group flex min-h-[58px] items-center gap-3 px-3 py-2.5 transition hover:bg-white/[.025] sm:px-5">
+                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#30394f] bg-[#141b2a] text-xs font-extrabold text-slate-300">{lesson.number || lessonIndex + 1}</span>
                               <span className="min-w-0 flex-1 text-sm">
-                                <span className="block leading-5 font-bold text-white">{lesson.number || lessonIndex + 1}. {lesson.title}</span>
+                                <span className="block leading-5 font-bold text-white">{lesson.title}</span>
                               </span>
-                              <ArrowRight className="h-4 w-4 shrink-0 text-emerald-200/70 transition group-hover:translate-x-1" />
+                              {lesson.available ? (
+                                <span className={"inline-flex min-w-[78px] shrink-0 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[10px] font-extrabold " + (lessonIndex === 0 ? "bg-[#f7c948] text-[#17130c] shadow-[0_3px_0_#8b681b]" : "border border-[#30394f] bg-[#151c2a] text-slate-200 group-hover:border-emerald-300/50 group-hover:text-emerald-200")}>
+                                  {lessonIndex === 0 ? "Iniciar" : "Abrir"}
+                                </span>
+                              ) : (
+                                <span className="inline-flex min-w-[78px] shrink-0 items-center justify-center gap-1.5 rounded-md border border-white/[.06] bg-[#151b28] px-3 py-2 text-[10px] font-bold text-slate-500"><LockKeyhole className="h-3 w-3" /> Bloqueada</span>
+                              )}
                             </div>
                           );
                           return lesson.available && lesson.href ? (
@@ -238,8 +294,83 @@ export default function LaCuencaDeLosEcosPage() {
           </div>
         </section>
 
-        <div className="mt-6 border border-emerald-300/20 bg-[#08130e] p-4 text-[8px] leading-[2.2] text-slate-300/75 [box-shadow:4px_4px_0_#102319]">
+        <div className="mt-5 rounded-lg border border-[#252d40] bg-[#101722] p-4 text-xs leading-6 text-slate-300/80">
           <p>La ruta combina observación, explicación de fenómenos e indagación científica. Los registros de la historia sirven para practicar interpretación de evidencias; no prueban por sí solos la causa de un cambio ambiental.</p>
+        </div>
+          </div>
+
+          <aside className="mt-3 space-y-4 lg:sticky lg:top-24 lg:mt-3">
+            <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
+              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Perfil del explorador</h2>
+              <div className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-emerald-300/25 bg-[#162a27] text-xl font-extrabold text-emerald-100 shadow-inner">
+                    {profile?.avatarUrl ? (
+                      <img src={profile.avatarUrl} alt="" className="h-full w-full rounded-lg object-cover" />
+                    ) : (
+                      <span>{profileInitial || <UserRound className="h-6 w-6" />}</span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-extrabold text-white">{profileLoading ? "Cargando perfil…" : profileName}</p>
+                    <p className="mt-1 text-xs text-slate-400">{rankName} · Nivel {accountLevel}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center gap-2 border-t border-white/[.07] pt-3 text-xs text-slate-300">
+                  <Flame className="h-4 w-4 text-amber-300" />
+                  {Math.max(0, Number(profile?.streak ?? 0))} días de racha
+                </div>
+                <Link href="/perfil" className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-md border border-emerald-200/30 bg-[#162b27] px-4 py-2 text-xs font-bold text-emerald-100 transition hover:border-emerald-200 hover:bg-[#1b3a32]">
+                  Ver perfil
+                </Link>
+              </div>
+            </section>
+
+            <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
+              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Progreso de la ruta</h2>
+              <div className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-bold text-slate-300">Capítulo 01</span>
+                  <span className="text-sm font-extrabold tabular-nums text-white">0%</span>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#252d40]">
+                  <div className="h-full w-0 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300" />
+                </div>
+                <p className="mt-2 text-xs leading-5 text-slate-400">5 lecciones disponibles en el capítulo activo.</p>
+                <div className="mt-4 border-t border-white/[.07] pt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-slate-400">EXP de temporada</span>
+                    <span className="text-xs font-extrabold tabular-nums text-slate-100">{seasonXp.toLocaleString("es-CO")} XP</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-3">
+                    <span className="inline-flex items-center gap-2 text-xs text-slate-400"><Coins className="h-4 w-4 text-amber-300" /> PeakCoins</span>
+                    <span className="text-xs font-extrabold tabular-nums text-amber-200">{coins.toLocaleString("es-CO")}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="overflow-hidden rounded-xl border border-[#30394f] bg-[#111827]">
+              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Recompensas del desafío</h2>
+              <div className="space-y-3 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/[.08] text-cyan-200"><Zap className="h-5 w-5" /></div>
+                  <div>
+                    <p className="text-sm font-extrabold text-white">+50 XP</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-400">Recompensa mostrada al superar las 3 preguntas sin errores.</p>
+                  </div>
+                </div>
+                <p className="border-t border-white/[.07] pt-3 text-[11px] leading-5 text-slate-400">Esta ruta todavía no tiene una recompensa de PeakCoins configurada.</p>
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-[#252d40] bg-[#10141e] p-4">
+              <p className="pixel-font text-[10px] text-emerald-200">MISIÓN ACTUAL</p>
+              <p className="mt-2 text-sm font-bold leading-6 text-white">Descubrir por qué el bosque dejó de cantar.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-400">Observa la cuenca, diferencia pistas de conclusiones y ayuda a Nova a reunir evidencia.</p>
+              <div className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-200"><Sparkles className="h-4 w-4" /> Ciencias Naturales</div>
+            </section>
+          </aside>
         </div>
       </div>
     </main>

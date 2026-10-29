@@ -9,7 +9,6 @@ import {
   LockKeyhole,
 } from "lucide-react";
 import {
-  CUENCA_CHAPTER_ONE_LESSON_IDS,
   CUENCA_PROGRESS_EVENT,
   markCuencaLessonVisited,
   readCuencaChapterProgress,
@@ -30,17 +29,6 @@ type Chapter = {
   description: string;
   available: boolean;
   lessons: Lesson[];
-};
-
-type CourseStatsResponse = {
-  profile?: {
-    xp?: number | null;
-    seasonXp?: number | null;
-    };
-  rank?: {
-    progress?: number | null;
-    xpToNextRank?: number | null;
-  };
 };
 
 const chapters: Chapter[] = [
@@ -92,7 +80,6 @@ const chapters: Chapter[] = [
 
 export default function LaCuencaDeLosEcosPage() {
   const [expanded, setExpanded] = useState<string[]>(["01"]);
-  const [courseStats, setCourseStats] = useState<CourseStatsResponse | null>(null);
   const [courseProgress, setCourseProgress] = useState<CuencaChapterProgress>({
     visitedLessonIds: [],
     completed: false,
@@ -109,35 +96,6 @@ export default function LaCuencaDeLosEcosPage() {
     };
   }, []);
 
-  useEffect(() => {
-    let active = true;
-
-    async function loadCourseStats() {
-      try {
-        const response = await fetch("/api/profile", { cache: "no-store" });
-        if (!response.ok) return;
-        const data = (await response.json()) as CourseStatsResponse;
-        if (active) setCourseStats(data);
-      } catch {
-        // El contenido del curso sigue funcionando si las estadísticas no están disponibles.
-      }
-    }
-
-    void loadCourseStats();
-    return () => { active = false; };
-  }, []);
-
-  const seasonXp = Math.max(0, Number(courseStats?.profile?.seasonXp ?? 0));
-  const xpToNextRank = Math.max(0, Number(courseStats?.rank?.xpToNextRank ?? 0));
-  const rankProgress = Math.min(100, Math.max(0, Number(courseStats?.rank?.progress ?? 0)));
-  const xpTarget = seasonXp + xpToNextRank;
-  const completedLessonCount = courseProgress.completed
-    ? CUENCA_CHAPTER_ONE_LESSON_IDS.length
-    : courseProgress.visitedLessonIds.length;
-  const courseProgressPercent = Math.round(
-    (completedLessonCount / CUENCA_CHAPTER_ONE_LESSON_IDS.length) * 100,
-  );
-
   const toggle = (id: string) => {
     setExpanded((current) =>
       current.includes(id) ? current.filter((item) => item !== id) : [...current, id],
@@ -146,9 +104,7 @@ export default function LaCuencaDeLosEcosPage() {
 
   return (
     <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#0e111a] px-4 pb-16 pt-5 text-white sm:px-7 sm:pt-7">
-      <div className="mx-auto max-w-[1220px]">
-        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
-          <div className="min-w-0">
+      <div className="mx-auto max-w-[1040px]">
         <section className="relative overflow-hidden rounded-[18px] border border-[#252d40] bg-[#091817] shadow-[0_18px_50px_rgba(0,0,0,.3)]">
           <div className="absolute inset-0">
             <Image
@@ -293,85 +249,6 @@ export default function LaCuencaDeLosEcosPage() {
             })}
           </div>
         </section>
-
-          </div>
-
-          <aside className="mt-0 space-y-4 lg:sticky lg:top-20 lg:-mt-7">
-            <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
-              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>
-              <div className="space-y-5 p-4">
-                <div className="flex items-start gap-3">
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 16 16"
-                    className="mt-1 h-8 w-8 shrink-0"
-                    shapeRendering="crispEdges"
-                    style={{ imageRendering: "pixelated" }}
-                  >
-                    <defs>
-                      <path id="cuenca-heart-outline" d="M3 1H6V2H7V3H9V2H10V1H13V2H14V4H15V7H16V9H15V11H14V12H13V13H12V14H11V15H5V14H4V13H3V12H2V11H1V9H0V7H1V4H2V2H3Z" />
-                      <path id="cuenca-heart-fill-shape" d="M3 2H6V3H7V4H9V3H10V2H13V3H14V6H15V8H14V10H13V11H12V12H11V13H5V12H4V11H3V10H2V8H1V6H2V3H3Z" />
-                      <clipPath id="cuenca-heart-interior">
-                        <use href="#cuenca-heart-fill-shape" />
-                      </clipPath>
-                    </defs>
-                    <use href="#cuenca-heart-outline" fill="#77796e" />
-                    <use href="#cuenca-heart-fill-shape" fill="#10141e" />
-                    <rect
-                      x="0"
-                      y="0"
-                      width={courseProgressPercent > 0 ? Math.max(1, 16 * courseProgressPercent / 100) : 0}
-                      height="16"
-                      fill="#ef3340"
-                      clipPath="url(#cuenca-heart-interior)"
-                    />
-                  </svg>
-                  <div className="min-w-0 flex-1">
-                    <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">Progreso {courseProgressPercent}%</span>
-                    <div className="mt-2 h-[18px] border-2 border-[#536071] bg-[#202833] p-[2px]" aria-label={`Progreso del curso: ${courseProgressPercent}%`}>
-                      <div className="h-full bg-[#ef4444] transition-[width] duration-300" style={{ width: `${courseProgressPercent}%` }} />
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <svg
-                    aria-hidden="true"
-                    viewBox="0 0 16 16"
-                    className="mt-1 h-8 w-8 shrink-0"
-                    shapeRendering="crispEdges"
-                    style={{ imageRendering: "pixelated" }}
-                  >
-                    <defs>
-                      <path id="cuenca-star-outline" d="M8 0L10 5H16L11 9L13 16L8 12L3 16L5 9L0 5H6Z" />
-                      <path id="cuenca-star-fill-shape" d="M8 2L9 6H13L10 9L11 13L8 11L5 13L6 9L3 6H7Z" />
-                      <clipPath id="cuenca-star-interior">
-                        <use href="#cuenca-star-fill-shape" />
-                      </clipPath>
-                    </defs>
-                    <use href="#cuenca-star-outline" fill="#77796e" />
-                    <use href="#cuenca-star-fill-shape" fill="#10141e" />
-                    <rect
-                      x="0"
-                      y="0"
-                      width={rankProgress > 0 ? Math.max(1, 16 * rankProgress / 100) : 0}
-                      height="16"
-                      fill="#facc15"
-                      clipPath="url(#cuenca-star-interior)"
-                    />
-                  </svg>
-                  <div className="min-w-0 flex-1">
-                    <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">
-                      {xpTarget > seasonXp ? `XP ${seasonXp.toLocaleString("es-CO")}/${xpTarget.toLocaleString("es-CO")}` : `XP ${seasonXp.toLocaleString("es-CO")}`}
-                    </span>
-                    <div className="mt-2 h-[18px] border-2 border-[#536071] bg-[#202833] p-[2px]" aria-label={`Progreso de experiencia de temporada: ${rankProgress}%`}>
-                      <div className="h-full bg-[#a5adb9] transition-[width] duration-300" style={{ width: `${rankProgress}%` }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </aside>
-        </div>
       </div>
     </main>
   );

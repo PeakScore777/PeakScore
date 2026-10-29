@@ -327,7 +327,6 @@ export default function CuencaDeLosEcosChapterOnePage() {
 
     const completedAnswers = [...answers];
     if (choice) completedAnswers[index] = choice;
-    markCuencaChapterCompleted();
 
     try {
       const response = await fetch("/api/learning/complete", {
@@ -349,6 +348,8 @@ export default function CuencaDeLosEcosChapterOnePage() {
         setRewardError(result.error ?? "No se pudo confirmar la recompensa.");
         return;
       }
+
+      markCuencaChapterCompleted();
 
       if (result.granted) {
         setReward(true);

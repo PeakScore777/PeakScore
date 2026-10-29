@@ -131,7 +131,7 @@ export default function LaCuencaDeLosEcosPage() {
 
   return (
     <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#0e111a] px-4 pb-16 pt-5 text-white sm:px-7 sm:pt-7">
-      <div className="mx-auto max-w-[1440px]">
+      <div className="mx-auto max-w-[1120px]">
         <Link
           href="/aprender"
           className="group inline-flex items-center gap-2 px-1 py-2 text-sm font-medium text-slate-300/80 transition hover:text-white"
@@ -140,7 +140,7 @@ export default function LaCuencaDeLosEcosPage() {
           Volver a las rutas
         </Link>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px] lg:items-start">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
           <div className="min-w-0">
         <section className="relative mt-3 overflow-hidden rounded-[18px] border border-[#252d40] bg-[#091817] shadow-[0_18px_50px_rgba(0,0,0,.3)]">
           <div className="absolute inset-0">
@@ -237,7 +237,7 @@ export default function LaCuencaDeLosEcosPage() {
                   >
                     <span className={"flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-extrabold text-white shadow-inner sm:h-11 sm:w-11 " + (isAvailable ? "border-[#46516c] bg-[#111725]" : "border-slate-500/30 bg-slate-500/10 text-slate-400")}>{Number(chapter.id)}</span>
                     <span className="min-w-0 flex-1 py-1">
-                      <span className="pixel-font block text-[10px] font-normal leading-6 text-white sm:text-[11px]">{chapter.title}</span>
+                      <span className="pixel-font block text-[12px] font-normal leading-6 text-white sm:text-[13px]">{chapter.title}</span>
                       <span className="mt-1 block text-xs leading-5 text-slate-300/80">{chapter.description}</span>
                     </span>
                     <span className="hidden shrink-0 sm:inline-flex">

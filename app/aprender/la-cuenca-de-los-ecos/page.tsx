@@ -301,14 +301,32 @@ export default function LaCuencaDeLosEcosPage() {
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>
               <div className="space-y-5 p-4">
                 <div className="flex items-start gap-3">
-                  <svg aria-hidden="true" viewBox="0 0 32 32" className="pixel-progress-icon mt-1 h-8 w-8 shrink-0" shapeRendering="crispEdges">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 16 16"
+                    className="pixel-progress-icon mt-1 h-8 w-8 shrink-0"
+                    shapeRendering="crispEdges"
+                    style={{ imageRendering: "pixelated" }}
+                  >
                     <defs>
-                      <clipPath id="cuenca-heart-progress">
-                        <rect x="0" y="0" width={32 * courseProgressPercent / 100} height="32" />
+                      <path id="cuenca-heart-shape" d="M3 1H6V2H7V3H9V2H10V1H13V2H14V4H15V7H16V9H15V11H14V12H13V13H12V14H11V15H5V14H4V13H3V12H2V11H1V9H0V7H1V4H2V2H3Z" />
+                      <clipPath id="cuenca-heart-clip">
+                        <use href="#cuenca-heart-shape" />
+                      </clipPath>
+                      <clipPath id="cuenca-heart-fill-clip">
+                        <use href="#cuenca-heart-shape" />
                       </clipPath>
                     </defs>
-                    <path d="M4 8H8V4H14V8H18V4H24V8H28V12H32V20H28V24H24V28H20V32H12V28H8V24H4V20H0V12H4Z" fill="#10141e" stroke="#7d7c72" strokeWidth="1.4" />
-                    <path d="M4 8H8V4H14V8H18V4H24V8H28V12H32V20H28V24H24V28H20V32H12V28H8V24H4V20H0V12H4Z" fill="#ef4444" clipPath="url(#cuenca-heart-progress)" />
+                    <use href="#cuenca-heart-shape" fill="#74776c" />
+                    <path d="M3 3H6V4H7V5H9V4H10V3H13V4H14V7H15V9H14V10H13V11H12V12H11V13H5V12H4V11H3V10H2V9H1V7H2V4H3Z" fill="#10141e" />
+                    <rect
+                      x="0"
+                      y="0"
+                      width={16 * Math.max(courseProgressPercent, 0) / 100}
+                      height="16"
+                      fill="#ef4444"
+                      clipPath="url(#cuenca-heart-fill-clip)"
+                    />
                   </svg>
                   <div className="min-w-0 flex-1">
                     <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">Progreso {courseProgressPercent}%</span>
@@ -318,14 +336,29 @@ export default function LaCuencaDeLosEcosPage() {
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <svg aria-hidden="true" viewBox="0 0 32 32" className="pixel-progress-icon mt-1 h-8 w-8 shrink-0" shapeRendering="crispEdges">
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 16 16"
+                    className="pixel-progress-icon mt-1 h-8 w-8 shrink-0"
+                    shapeRendering="crispEdges"
+                    style={{ imageRendering: "pixelated" }}
+                  >
                     <defs>
-                      <clipPath id="cuenca-xp-progress">
-                        <rect x="0" y="0" width={32 * rankProgress / 100} height="32" />
+                      <path id="cuenca-star-shape" d="M7 0H9V2H10V4H12V5H14V6H16V9H13V10H11V12H10V15H9V16H7V15H6V12H5V10H3V9H0V6H2V5H4V4H6V2H7Z" />
+                      <clipPath id="cuenca-star-fill-clip">
+                        <use href="#cuenca-star-shape" />
                       </clipPath>
                     </defs>
-                    <path d="M12 1H20V5H22V9H26V11H31V19H26V21H22V25H20V31H12V25H10V21H6V19H1V11H6V9H10V5H12Z" fill="#10141e" stroke="#7d7c72" strokeWidth="1.3" />
-                    <path d="M12 1H20V5H22V9H26V11H31V19H26V21H22V25H20V31H12V25H10V21H6V19H1V11H6V9H10V5H12Z" fill="#facc15" clipPath="url(#cuenca-xp-progress)" />
+                    <use href="#cuenca-star-shape" fill="#74776c" />
+                    <path d="M7 2H9V4H10V5H12V6H14V8H12V9H10V11H9V14H7V11H6V9H4V8H2V6H4V5H6V4H7Z" fill="#10141e" />
+                    <rect
+                      x="0"
+                      y="0"
+                      width={16 * rankProgress / 100}
+                      height="16"
+                      fill="#facc15"
+                      clipPath="url(#cuenca-star-fill-clip)"
+                    />
                   </svg>
                   <div className="min-w-0 flex-1">
                     <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">

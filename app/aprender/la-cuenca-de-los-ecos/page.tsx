@@ -221,7 +221,7 @@ export default function LaCuencaDeLosEcosPage() {
               return (
                 <section
                   key={chapter.id}
-                  className={"relative z-[1] overflow-hidden rounded-xl border shadow-[0_8px_25px_rgba(0,0,0,.12)] transition-colors " + (isAvailable ? "border-[#30394f] bg-[#1a2030] hover:border-[#46516d]" : "border-[#283044] bg-[#131a29] opacity-85")}
+                  className={"relative z-[1] overflow-hidden rounded-xl border shadow-[0_8px_25px_rgba(0,0,0,.12)] transition-colors " + (isAvailable ? "border-[#30394f] bg-[#1a2030] hover:border-[#46516d]" : "border-[#283044] bg-[#131a29]")}
                 >
                   <button
                     type="button"
@@ -231,7 +231,7 @@ export default function LaCuencaDeLosEcosPage() {
                     className="flex min-h-[62px] w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-white/[.035] sm:gap-4 sm:px-4 sm:py-3 disabled:cursor-not-allowed"
                     disabled={!isAvailable}
                   >
-                    <span className={"flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-extrabold text-white shadow-inner " + (isAvailable ? "border-[#46516c] bg-[#111725]" : "border-slate-500/30 bg-slate-500/10 text-slate-400")}>{Number(chapter.id)}</span>
+                    <span className={"pixel-font relative z-[2] flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-[9px] font-normal text-white " + (isAvailable ? "border-[#46516c] bg-[#111725]" : "border-[#384154] bg-[#131a29] text-slate-400")}>{Number(chapter.id)}</span>
                     <span className="min-w-0 flex-1 py-1">
                       <span className="pixel-font block text-[13px] font-normal leading-6 text-white sm:text-[14px]">{chapter.title}</span>
                       <span className="mt-1 block text-xs leading-5 text-slate-300/80">{chapter.description}</span>
@@ -243,9 +243,9 @@ export default function LaCuencaDeLosEcosPage() {
                   </button>
 
                   {isAvailable && isOpen && (
-                    <div className="relative border-t border-white/[.07] bg-[#0d121c]/65 py-1">
-                      <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[30px] top-0 w-px bg-[#30394f] sm:left-[34px]" />
-                      <div className="pl-[46px] pr-2 sm:pl-[53px] sm:pr-4">
+                    <div className="relative border-t border-white/[.07] bg-[#0d121c] py-1">
+                      <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[30px] top-0 z-0 w-px bg-[#30394f] sm:left-[34px]" />
+                      <div className="relative z-[1] pl-[46px] pr-2 sm:pl-[53px] sm:pr-4">
                         {chapter.lessons.map((lesson, lessonIndex) => {
                           const isVisited = courseProgress.completed || courseProgress.visitedLessonIds.includes(lesson.id);
                           const previousLesson = chapter.lessons[lessonIndex - 1];
@@ -258,7 +258,7 @@ export default function LaCuencaDeLosEcosPage() {
                           const row = (
                             <div className={"group flex min-h-[49px] items-center gap-4 px-3 py-2 transition-colors " + (isUnlocked ? "hover:bg-white/[.025]" : "")}>
                               <span className={"min-w-0 flex-1 text-[13px] leading-5 " + (isUnlocked || isVisited ? "font-semibold text-slate-100" : "font-medium text-slate-500")}>
-                                <span className="mr-2 text-slate-400">{lesson.number || lessonIndex + 1}.</span>{lesson.title}
+                                <span className="pixel-font mr-2 text-[9px] font-normal text-slate-400">{lesson.number || lessonIndex + 1}.</span>{lesson.title}
                               </span>
                               {isVisited ? (
                                 <span className="inline-flex min-w-[82px] shrink-0 items-center justify-center rounded-md border border-[#30394f] bg-[#151c2a] px-3 py-2 text-[10px] font-extrabold text-slate-200 transition-colors group-hover:border-emerald-300/50 group-hover:text-emerald-200">Repasar</span>
@@ -296,19 +296,19 @@ export default function LaCuencaDeLosEcosPage() {
 
           </div>
 
-          <aside className="mt-3 space-y-4 lg:sticky lg:top-24">
+          <aside className="mt-0 space-y-4 lg:sticky lg:top-20 lg:-mt-5">
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>
               <div className="space-y-5 p-4">
                 <div className="flex items-start gap-3">
-                  <svg aria-hidden="true" viewBox="0 0 16 16" className="mt-1 h-7 w-7 shrink-0" shapeRendering="crispEdges">
+                  <svg aria-hidden="true" viewBox="0 0 32 32" className="pixel-progress-icon mt-1 h-8 w-8 shrink-0" shapeRendering="crispEdges">
                     <defs>
                       <clipPath id="cuenca-heart-progress">
-                        <rect x="0" y="0" width={16 * courseProgressPercent / 100} height="16" />
+                        <rect x="0" y="0" width={32 * courseProgressPercent / 100} height="32" />
                       </clipPath>
                     </defs>
-                    <path d="M2 2H6V3H8V4H10V3H12V2H14V4H15V7H14V9H13V11H12V12H11V13H10V14H8V15H7V14H6V13H5V12H4V11H3V9H2V7H1V4H2Z" fill="#111827" stroke="#7d7c72" strokeWidth=".7" />
-                    <path d="M2 2H6V3H8V4H10V3H12V2H14V4H15V7H14V9H13V11H12V12H11V13H10V14H8V15H7V14H6V13H5V12H4V11H3V9H2V7H1V4H2Z" fill="#ef4444" clipPath="url(#cuenca-heart-progress)" />
+                    <path d="M4 8H8V4H14V8H18V4H24V8H28V12H32V20H28V24H24V28H20V32H12V28H8V24H4V20H0V12H4Z" fill="#10141e" stroke="#7d7c72" strokeWidth="1.4" />
+                    <path d="M4 8H8V4H14V8H18V4H24V8H28V12H32V20H28V24H24V28H20V32H12V28H8V24H4V20H0V12H4Z" fill="#ef4444" clipPath="url(#cuenca-heart-progress)" />
                   </svg>
                   <div className="min-w-0 flex-1">
                     <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">Progreso {courseProgressPercent}%</span>
@@ -318,8 +318,14 @@ export default function LaCuencaDeLosEcosPage() {
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <svg aria-hidden="true" viewBox="0 0 32 32" className="mt-1 h-7 w-7 shrink-0" fill="none" stroke="#7d7c72" strokeWidth="1.7" strokeLinejoin="miter" shapeRendering="crispEdges">
-                    <path d="M13 2H19V8H22V11H29V17H23V20H20V27H14V21H11V18H4V12H10V9H13V2Z" />
+                  <svg aria-hidden="true" viewBox="0 0 32 32" className="pixel-progress-icon mt-1 h-8 w-8 shrink-0" shapeRendering="crispEdges">
+                    <defs>
+                      <clipPath id="cuenca-xp-progress">
+                        <rect x="0" y="0" width={32 * rankProgress / 100} height="32" />
+                      </clipPath>
+                    </defs>
+                    <path d="M12 1H20V5H22V9H26V11H31V19H26V21H22V25H20V31H12V25H10V21H6V19H1V11H6V9H10V5H12Z" fill="#10141e" stroke="#7d7c72" strokeWidth="1.3" />
+                    <path d="M12 1H20V5H22V9H26V11H31V19H26V21H22V25H20V31H12V25H10V21H6V19H1V11H6V9H10V5H12Z" fill="#facc15" clipPath="url(#cuenca-xp-progress)" />
                   </svg>
                   <div className="min-w-0 flex-1">
                     <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">

@@ -303,14 +303,14 @@ export default function LaCuencaDeLosEcosPage() {
                 <div className="flex items-start gap-3">
                   <svg
                     aria-hidden="true"
-                    viewBox="0 0 16 16"
+                    viewBox="0 0 32 32"
                     className="pixel-progress-icon mt-1 h-8 w-8 shrink-0"
                     shapeRendering="crispEdges"
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-heart-outer" d="M3 0h3v1h-3Z M10 0h3v1h-3Z M2 1h5v1h-5Z M9 1h5v1h-5Z M1 2h7v1h-7Z M8 2h7v1h-7Z M0 3h16v1h-16Z M0 4h16v1h-16Z M1 5h14v1h-14Z M2 6h12v1h-12Z M3 7h10v1h-10Z M4 8h8v1h-8Z M5 9h6v1h-6Z M6 10h4v1h-4Z M7 11h2v1h-2Z M7 12h2v1h-2Z M8 13h1v1h-1Z" />
-                      <path id="cuenca-heart-inner" d="M3 1h3v1h-3Z M10 1h3v1h-3Z M2 2h5v1h-5Z M9 2h5v1h-5Z M1 3h14v1h-14Z M1 4h14v1h-14Z M2 5h12v1h-12Z M3 6h10v1h-10Z M4 7h8v1h-8Z M5 8h6v1h-6Z M6 9h4v1h-4Z M7 10h2v1h-2Z M7 11h2v1h-2Z M8 12h1v1h-1Z" />
+                      <path id="cuenca-heart-outer" d="M6 2h6v2h-6Z M20 2h6v2h-6Z M4 4h10v2h-10Z M18 4h10v2h-10Z M2 6h12v2h-12Z M18 6h12v2h-12Z M0 8h16v2h-16Z M16 8h16v2h-16Z M0 10h32v2h-32Z M2 12h28v2h-28Z M4 14h24v2h-24Z M6 16h20v2h-20Z M8 18h16v2h-16Z M10 20h12v2h-12Z M12 22h8v2h-8Z M14 24h4v2h-4Z" />
+                      <path id="cuenca-heart-inner" d="M6 4h6v2h-6Z M20 4h6v2h-6Z M4 6h10v2h-10Z M18 6h10v2h-10Z M2 8h12v2h-12Z M18 8h12v2h-12Z M2 10h28v2h-28Z M4 12h24v2h-24Z M6 14h20v2h-20Z M8 16h16v2h-16Z M10 18h12v2h-12Z M12 20h8v2h-8Z M14 22h4v2h-4Z" />
                       <clipPath id="cuenca-heart-interior-clip">
                         <use href="#cuenca-heart-inner" />
                       </clipPath>
@@ -320,8 +320,8 @@ export default function LaCuencaDeLosEcosPage() {
                     <rect
                       x="0"
                       y="0"
-                      width={courseProgressPercent > 0 ? Math.max(1, 16 * courseProgressPercent / 100) : 0}
-                      height="16"
+                      width={courseProgressPercent > 0 ? Math.max(1, 32 * courseProgressPercent / 100) : 0}
+                      height="32"
                       fill="#ef3340"
                       clipPath="url(#cuenca-heart-interior-clip)"
                     />
@@ -336,14 +336,14 @@ export default function LaCuencaDeLosEcosPage() {
                 <div className="flex items-start gap-3">
                   <svg
                     aria-hidden="true"
-                    viewBox="0 0 16 16"
+                    viewBox="0 0 32 32"
                     className="pixel-progress-icon mt-1 h-8 w-8 shrink-0"
                     shapeRendering="crispEdges"
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-star-outer" d="M7 0h2v1h-2Z M7 1h2v1h-2Z M6 2h4v1h-4Z M6 3h4v1h-4Z M5 4h6v1h-6Z M4 5h8v1h-8Z M1 6h14v1h-14Z M0 7h16v1h-16Z M1 8h14v1h-14Z M3 9h10v1h-10Z M4 10h8v1h-8Z M5 11h2v1h-2Z M9 11h2v1h-2Z M4 12h3v1h-3Z M9 12h3v1h-3Z M3 13h4v1h-4Z M9 13h4v1h-4Z M2 14h5v1h-5Z M9 14h5v1h-5Z M1 15h6v1h-6Z M9 15h6v1h-6Z" />
-                      <path id="cuenca-star-inner" d="M7 2h2v1h-2Z M7 3h2v1h-2Z M6 4h4v1h-4Z M5 5h6v1h-6Z M2 6h12v1h-12Z M1 7h14v1h-14Z M2 8h12v1h-12Z M4 9h8v1h-8Z M5 10h6v1h-6Z M6 11h1v1h-1Z M9 11h1v1h-1Z M5 12h2v1h-2Z M9 12h2v1h-2Z M4 13h3v1h-3Z M9 13h3v1h-3Z M3 14h4v1h-4Z M9 14h4v1h-4Z M2 15h5v1h-5Z M9 15h5v1h-5Z" />
+                      <path id="cuenca-star-outer" d="M16 1L19 10L30 11L22 18L24 29L16 23L8 29L10 18L2 11L13 10Z" />
+                      <path id="cuenca-star-inner" d="M16 5L18 12L25 13L20 18L22 25L16 21L10 25L12 18L7 13L14 12Z" />
                       <clipPath id="cuenca-star-interior-clip">
                         <use href="#cuenca-star-inner" />
                       </clipPath>
@@ -353,8 +353,8 @@ export default function LaCuencaDeLosEcosPage() {
                     <rect
                       x="0"
                       y="0"
-                      width={rankProgress > 0 ? Math.max(1, 16 * rankProgress / 100) : 0}
-                      height="16"
+                      width={rankProgress > 0 ? Math.max(1, 32 * rankProgress / 100) : 0}
+                      height="32"
                       fill="#facc15"
                       clipPath="url(#cuenca-star-interior-clip)"
                     />

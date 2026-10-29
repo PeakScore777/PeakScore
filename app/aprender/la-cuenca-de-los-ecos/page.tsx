@@ -102,12 +102,24 @@ export default function LaCuencaDeLosEcosPage() {
           <div className="absolute inset-0">
             <Image
               src="/images/aprender/cuenca-de-los-ecos/header.svg"
-              alt="Río que atraviesa el bosque de la Cuenca de los Ecos"
+              alt=""
               fill
               priority
               sizes="(max-width: 768px) 100vw, 1440px"
               className="object-cover object-[center_52%]"
             />
+            <video
+              aria-hidden="true"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster="/images/aprender/cuenca-de-los-ecos/header.svg"
+              className="absolute inset-0 h-full w-full object-cover object-[center_52%] motion-reduce:hidden"
+            >
+              <source src="/video/aprender/cuenca-de-los-ecos.mp4" type="video/mp4" />
+            </video>
             <div className="absolute inset-0 bg-[linear-gradient(90deg,#061411f5_0%,rgba(6,20,17,.96)_24%,rgba(6,20,17,.76)_48%,rgba(6,20,17,.18)_78%,rgba(6,20,17,.1)_100%)]" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#071511] via-transparent to-black/10" />
           </div>

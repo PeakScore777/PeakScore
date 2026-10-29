@@ -99,10 +99,10 @@ export default function LearningCatalog(_props: LearningCatalogProps) {
 
   return (
     <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#0e111a] text-white">
-      <div className="mx-auto w-full max-w-[1280px] px-4 pb-14 pt-11 sm:px-7 sm:pt-14">
+      <div className="mx-auto w-full max-w-[1280px] px-4 pb-14 pt-11 sm:px-8 sm:pt-14">
         <header className="flex items-start justify-between gap-5">
           <div>
-            <h1 className="pixel-font text-[28px] leading-[1.8] text-[#f5f1e8] sm:text-[34px]">
+            <h1 className="pixel-font text-[30px] leading-[1.8] text-[#f5f1e8] sm:text-[38px]">
               Niveles
             </h1>
             <p className="mt-1 text-[13px] text-[#aab2c2]">
@@ -132,16 +132,16 @@ export default function LearningCatalog(_props: LearningCatalogProps) {
         </header>
 
         <section className="mt-9 sm:mt-10" aria-live="polite">
-          <h2 className="pixel-font max-w-4xl text-[14px] leading-[2] text-[#f5f1e8] sm:text-[18px]">
+          <h2 className="pixel-font max-w-5xl text-[15px] leading-[2] text-[#f5f1e8] sm:text-[22px]">
             {isRoutes ? "Tu camino hacia Saber 11 empieza aquí" : "Cursos interactivos disponibles"}
           </h2>
-          <p className="mt-2 max-w-3xl text-[14px] leading-6 text-[#aab2c2]">
+          <p className="mt-2 max-w-3xl text-[14px] leading-6 text-[#aab2c2] sm:text-[15px]">
             {isRoutes
               ? "Avanza por los niveles disponibles, aprende los conceptos y resuelve desafíos con enfoque ICFES."
               : "Explora las dos experiencias de aprendizaje que ya están disponibles en PeakScore."}
           </p>
 
-          <div className="mt-8 flex flex-wrap items-start gap-4">
+          <div className="mt-8 flex flex-wrap items-start gap-4 sm:gap-[18px]">
             {levels.map((level, index) => (
               <LevelCard key={level.id} level={level} number={index + 1} />
             ))}

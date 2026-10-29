@@ -2,18 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
   ChevronDown,
   ChevronRight,
-  Coins,
-  Flame,
   LockKeyhole,
-  Sparkles,
-  UserRound,
   Zap,
 } from "lucide-react";
 
@@ -31,21 +27,6 @@ type Chapter = {
   description: string;
   available: boolean;
   lessons: Lesson[];
-};
-
-type SidebarProfile = {
-  fullName?: string | null;
-  avatarUrl?: string | null;
-  level?: number | null;
-  xp?: number | null;
-  seasonXp?: number | null;
-  coins?: number | null;
-  streak?: number | null;
-};
-
-type ProfileApiResponse = {
-  profile?: SidebarProfile;
-  rank?: { name?: string };
 };
 
 const chapters: Chapter[] = [
@@ -101,38 +82,6 @@ const totalLessons = chapters
 
 export default function LaCuencaDeLosEcosPage() {
   const [expanded, setExpanded] = useState<string[]>(["01"]);
-  const [profile, setProfile] = useState<SidebarProfile | null>(null);
-  const [rankName, setRankName] = useState("Explorador");
-  const [profileLoading, setProfileLoading] = useState(true);
-
-  useEffect(() => {
-    let active = true;
-
-    async function loadProfile() {
-      try {
-        const response = await fetch("/api/profile", { cache: "no-store" });
-        if (!response.ok) return;
-        const payload = (await response.json()) as ProfileApiResponse;
-        if (!active) return;
-        setProfile(payload.profile ?? null);
-        setRankName(payload.rank?.name ?? "Explorador");
-      } catch {
-        // El contenido de aprendizaje debe seguir disponible aunque falle el panel del perfil.
-      } finally {
-        if (active) setProfileLoading(false);
-      }
-    }
-
-    void loadProfile();
-    return () => { active = false; };
-  }, []);
-
-  const profileName = profile?.fullName?.trim() || "Explorador PeakScore";
-  const profileInitial = profileName.charAt(0).toLocaleUpperCase("es-CO");
-  const seasonXp = Math.max(0, Number(profile?.seasonXp ?? 0));
-  const coins = Math.max(0, Number(profile?.coins ?? 0));
-  const historicalXp = Math.max(0, Number(profile?.xp ?? 0));
-  const accountLevel = Math.max(1, Number(profile?.level ?? 1));
 
   const toggle = (id: string) => {
     setExpanded((current) =>
@@ -301,78 +250,43 @@ export default function LaCuencaDeLosEcosPage() {
 
           <aside className="mt-3 space-y-4 lg:sticky lg:top-24 lg:mt-3">
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
-              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Perfil del explorador</h2>
-              <div className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-emerald-300/25 bg-[#162a27] text-xl font-extrabold text-emerald-100 shadow-inner">
-                    {profile?.avatarUrl ? (
-                      <Image src={profile.avatarUrl} alt="" width={56} height={56} unoptimized className="h-full w-full rounded-lg object-cover" />
-                    ) : (
-                      <span>{profileInitial || <UserRound className="h-6 w-6" />}</span>
-                    )}
+              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Progreso del curso</h2>
+              <div className="space-y-4 p-4">
+                <div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold text-slate-300">Capítulo disponible</span>
+                    <span className="text-xs font-extrabold text-white">1 de 4</span>
                   </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-extrabold text-white">{profileLoading ? "Cargando perfil…" : profileName}</p>
-                    <p className="mt-1 text-xs text-slate-400">{rankName} · Nivel {accountLevel}</p>
+                  <div className="mt-3 grid grid-cols-4 gap-1.5" aria-label="Un capítulo de cuatro está disponible">
+                    <span className="h-2 rounded-sm bg-emerald-300" />
+                    <span className="h-2 rounded-sm bg-[#293043]" />
+                    <span className="h-2 rounded-sm bg-[#293043]" />
+                    <span className="h-2 rounded-sm bg-[#293043]" />
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2 border-t border-white/[.07] pt-3 text-xs text-slate-300">
-                  <Flame className="h-4 w-4 text-amber-300" />
-                  {Math.max(0, Number(profile?.streak ?? 0))} días de racha
+                <div className="border-t border-white/[.07] pt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-slate-400">Lecciones del capítulo 01</span>
+                    <span className="text-xs font-extrabold tabular-nums text-slate-100">5</span>
+                  </div>
+                  <p className="mt-2 text-[11px] leading-5 text-slate-400">El avance personal se mostrará aquí cuando la ruta registre las lecciones completadas.</p>
                 </div>
-                <Link href="/perfil" className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-md border border-emerald-200/30 bg-[#162b27] px-4 py-2 text-xs font-bold text-emerald-100 transition hover:border-emerald-200 hover:bg-[#1b3a32]">
-                  Ver perfil
-                </Link>
               </div>
             </section>
 
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
-              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Progreso de la ruta</h2>
+              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Recompensas</h2>
               <div className="p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-bold text-slate-300">Capítulo 01</span>
-                  <span className="text-sm font-extrabold tabular-nums text-white">0%</span>
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#252d40]">
-                  <div className="h-full w-0 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300" />
-                </div>
-                <p className="mt-2 text-xs leading-5 text-slate-400">El avance se reflejará aquí cuando el sistema registre las lecciones completadas.</p>
-                <div className="mt-4 border-t border-white/[.07] pt-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-slate-400">EXP acumulada</span>
-                    <span className="text-xs font-extrabold tabular-nums text-slate-100">{historicalXp.toLocaleString("es-CO")} XP</span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="text-xs text-slate-400">EXP de temporada</span>
-                    <span className="text-xs font-extrabold tabular-nums text-slate-100">{seasonXp.toLocaleString("es-CO")} XP</span>
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-2 text-xs text-slate-400"><Coins className="h-4 w-4 text-amber-300" /> PeakCoins</span>
-                    <span className="text-xs font-extrabold tabular-nums text-amber-200">{coins.toLocaleString("es-CO")}</span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="overflow-hidden rounded-xl border border-[#30394f] bg-[#111827]">
-              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Recompensas del desafío</h2>
-              <div className="space-y-3 p-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/[.08] text-cyan-200"><Zap className="h-5 w-5" /></div>
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/[.08]">
+                    <Image src="/peaky/homepage/xp.webp" alt="EXP" width={40} height={40} className="object-contain" />
+                  </div>
                   <div>
                     <p className="text-sm font-extrabold text-white">+50 XP</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-400">Recompensa mostrada al superar las 3 preguntas sin errores.</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-400">Por completar el desafío con todas las respuestas correctas.</p>
                   </div>
                 </div>
-                <p className="border-t border-white/[.07] pt-3 text-[11px] leading-5 text-slate-400">Esta ruta todavía no tiene una recompensa de PeakCoins configurada.</p>
               </div>
-            </section>
-
-            <section className="rounded-xl border border-[#252d40] bg-[#10141e] p-4">
-              <p className="pixel-font text-[10px] text-emerald-200">MISIÓN ACTUAL</p>
-              <p className="mt-2 text-sm font-bold leading-6 text-white">Descubrir por qué el bosque dejó de cantar.</p>
-              <p className="mt-2 text-xs leading-5 text-slate-400">Observa la cuenca, diferencia pistas de conclusiones y ayuda a Nova a reunir evidencia.</p>
-              <div className="mt-3 flex items-center gap-2 text-xs font-bold text-emerald-200"><Sparkles className="h-4 w-4" /> Ciencias Naturales</div>
             </section>
           </aside>
         </div>

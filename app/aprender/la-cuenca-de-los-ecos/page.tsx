@@ -206,7 +206,7 @@ export default function LaCuencaDeLosEcosPage() {
           </div>
 
           <div className="relative space-y-3">
-            <span aria-hidden="true" className="pointer-events-none absolute bottom-6 left-[30px] top-6 z-0 w-px bg-[#30394f] sm:left-[36px]" />
+            <span aria-hidden="true" className="pointer-events-none absolute bottom-6 left-[30px] top-6 z-0 w-px bg-[#30394f] sm:left-[34px]" />
             {chapters.map((chapter) => {
               const isOpen = expanded.includes(chapter.id);
               const isAvailable = chapter.available;
@@ -223,7 +223,7 @@ export default function LaCuencaDeLosEcosPage() {
                     className="flex min-h-[70px] w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-white/[.035] sm:gap-4 sm:px-5 sm:py-4 disabled:cursor-not-allowed"
                     disabled={!isAvailable}
                   >
-                    <span className={"flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-sm font-extrabold text-white shadow-inner sm:h-11 sm:w-11 " + (isAvailable ? "border-[#46516c] bg-[#111725]" : "border-slate-500/30 bg-slate-500/10 text-slate-400")}>{Number(chapter.id)}</span>
+                    <span className={"flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-extrabold text-white shadow-inner " + (isAvailable ? "border-[#46516c] bg-[#111725]" : "border-slate-500/30 bg-slate-500/10 text-slate-400")}>{Number(chapter.id)}</span>
                     <span className="min-w-0 flex-1 py-1">
                       <span className="pixel-font block text-[12px] font-normal leading-6 text-white sm:text-[13px]">{chapter.title}</span>
                       <span className="mt-1 block text-xs leading-5 text-slate-300/80">{chapter.description}</span>
@@ -241,7 +241,7 @@ export default function LaCuencaDeLosEcosPage() {
                   {isAvailable && isOpen && (
                     <div className="relative border-t border-white/[.07] bg-[#0d121c]/65 py-1">
                       <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[30px] top-0 w-px bg-[#30394f] sm:left-[36px]" />
-                      <div className="pl-[48px] pr-2 sm:pl-[57px] sm:pr-4">
+                      <div className="pl-[46px] pr-2 sm:pl-[53px] sm:pr-4">
                         {chapter.lessons.map((lesson, lessonIndex) => {
                           const row = (
                             <div className="group flex min-h-[49px] items-center gap-4 px-3 py-2 transition-colors hover:bg-white/[.025] sm:px-5">

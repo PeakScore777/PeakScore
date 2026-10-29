@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+import { ensureCurrentSeasonParticipation } from "@/lib/gamification/season-service";
 
 export const runtime = "nodejs";
 
@@ -62,9 +64,19 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data, error } = await supabase.rpc(
+  try {
+    await ensureCurrentSeasonParticipation(user.id);
+  } catch (error) {
+    console.error("[cuenca-learning-reward] No se pudo asegurar la temporada:", error instanceof Error ? error.message : "unknown");
+    return NextResponse.json(
+      { error: "No se pudo preparar la temporada para reclamar la EXP." },
+      { status: 503 },
+    );
+  }
+
+  const { data, error } = await supabaseAdmin.rpc(
     "claim_cuenca_chapter_one_reward",
-    { p_answers: answers },
+    { p_user_id: user.id, p_answers: answers },
   );
 
   if (error) {

@@ -306,7 +306,7 @@ export default function LaCuencaDeLosEcosPage() {
                 <div className="flex items-center gap-3">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-emerald-300/25 bg-[#162a27] text-xl font-extrabold text-emerald-100 shadow-inner">
                     {profile?.avatarUrl ? (
-                      <img src={profile.avatarUrl} alt="" className="h-full w-full rounded-lg object-cover" />
+                      <Image src={profile.avatarUrl} alt="" width={56} height={56} unoptimized className="h-full w-full rounded-lg object-cover" />
                     ) : (
                       <span>{profileInitial || <UserRound className="h-6 w-6" />}</span>
                     )}
@@ -336,9 +336,13 @@ export default function LaCuencaDeLosEcosPage() {
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#252d40]">
                   <div className="h-full w-0 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-300" />
                 </div>
-                <p className="mt-2 text-xs leading-5 text-slate-400">5 lecciones disponibles en el capítulo activo.</p>
+                <p className="mt-2 text-xs leading-5 text-slate-400">El avance se reflejará aquí cuando el sistema registre las lecciones completadas.</p>
                 <div className="mt-4 border-t border-white/[.07] pt-3">
                   <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-slate-400">EXP acumulada</span>
+                    <span className="text-xs font-extrabold tabular-nums text-slate-100">{historicalXp.toLocaleString("es-CO")} XP</span>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-3">
                     <span className="text-xs text-slate-400">EXP de temporada</span>
                     <span className="text-xs font-extrabold tabular-nums text-slate-100">{seasonXp.toLocaleString("es-CO")} XP</span>
                   </div>

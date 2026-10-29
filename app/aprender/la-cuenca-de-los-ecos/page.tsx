@@ -309,23 +309,21 @@ export default function LaCuencaDeLosEcosPage() {
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-heart-shape" d="M3 1H6V2H7V3H9V2H10V1H13V2H14V4H15V7H16V9H15V11H14V12H13V13H12V14H11V15H5V14H4V13H3V12H2V11H1V9H0V7H1V4H2V2H3Z" />
-                      <clipPath id="cuenca-heart-clip">
-                        <use href="#cuenca-heart-shape" />
-                      </clipPath>
-                      <clipPath id="cuenca-heart-fill-clip">
-                        <use href="#cuenca-heart-shape" />
+                      <path id="cuenca-heart-outer" d="M3 1H6V2H7V3H9V2H10V1H13V2H14V4H15V7H16V9H15V11H14V12H13V13H12V14H11V15H5V14H4V13H3V12H2V11H1V9H0V7H1V4H2V2H3Z" />
+                      <path id="cuenca-heart-inner" d="M3 2H6V3H8V4H9V3H13V4H14V7H15V9H14V10H13V11H12V12H11V13H5V12H4V11H3V10H2V9H1V7H2V4H3Z" />
+                      <clipPath id="cuenca-heart-interior-clip">
+                        <use href="#cuenca-heart-inner" />
                       </clipPath>
                     </defs>
-                    <use href="#cuenca-heart-shape" fill="#74776c" />
-                    <path d="M3 3H6V4H7V5H9V4H10V3H13V4H14V7H15V9H14V10H13V11H12V12H11V13H5V12H4V11H3V10H2V9H1V7H2V4H3Z" fill="#10141e" />
+                    <use href="#cuenca-heart-outer" fill="#77796e" />
+                    <use href="#cuenca-heart-inner" fill="#10141e" />
                     <rect
                       x="0"
                       y="0"
-                      width={16 * Math.max(courseProgressPercent, 0) / 100}
+                      width={16 * courseProgressPercent / 100}
                       height="16"
-                      fill="#ef4444"
-                      clipPath="url(#cuenca-heart-fill-clip)"
+                      fill="#ef3340"
+                      clipPath="url(#cuenca-heart-interior-clip)"
                     />
                   </svg>
                   <div className="min-w-0 flex-1">
@@ -344,20 +342,21 @@ export default function LaCuencaDeLosEcosPage() {
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-star-shape" d="M7 0H9V2H10V4H12V5H14V6H16V9H13V10H11V12H10V15H9V16H7V15H6V12H5V10H3V9H0V6H2V5H4V4H6V2H7Z" />
-                      <clipPath id="cuenca-star-fill-clip">
-                        <use href="#cuenca-star-shape" />
+                      <path id="cuenca-star-outer" d="M7 0H9V2H10V4H11V5H13V6H15V7H16V9H14V10H12V11H11V13H12V15H10V14H9V13H7V14H6V15H4V13H5V11H4V10H2V9H0V7H1V6H3V6H5V5H6V3H7V1Z" />
+                      <path id="cuenca-star-inner" d="M7 2H8V4H10V6H12V7H14V8H12V9H10V11H9V13H8V12H7V10H5V9H3V8H5V7H6V5H7Z" />
+                      <clipPath id="cuenca-star-interior-clip">
+                        <use href="#cuenca-star-inner" />
                       </clipPath>
                     </defs>
-                    <use href="#cuenca-star-shape" fill="#74776c" />
-                    <path d="M7 2H9V4H10V5H12V6H14V8H12V9H10V11H9V14H7V11H6V9H4V8H2V6H4V5H6V4H7Z" fill="#10141e" />
+                    <use href="#cuenca-star-outer" fill="#77796e" />
+                    <use href="#cuenca-star-inner" fill="#10141e" />
                     <rect
                       x="0"
                       y="0"
                       width={16 * rankProgress / 100}
                       height="16"
                       fill="#facc15"
-                      clipPath="url(#cuenca-star-fill-clip)"
+                      clipPath="url(#cuenca-star-interior-clip)"
                     />
                   </svg>
                   <div className="min-w-0 flex-1">

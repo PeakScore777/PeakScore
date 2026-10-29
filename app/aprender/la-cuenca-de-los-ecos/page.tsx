@@ -6,14 +6,11 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   ChevronDown,
   ChevronRight,
-  Coins,
   Heart,
   LockKeyhole,
   Star,
-  Zap,
 } from "lucide-react";
 
 type Lesson = {
@@ -182,29 +179,20 @@ export default function LaCuencaDeLosEcosPage() {
                 Después de estudiar los cristales del Santuario de la Materia, Nova sigue una señal hasta un bosque demasiado silencioso. Observa el agua, registra las especies y reúne evidencias antes de explicar qué cambió en el ecosistema.
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-2 rounded border border-emerald-200/30 bg-[#061410]/90 px-3 py-2 text-[10px] font-bold text-emerald-100"><BookOpen className="h-3.5 w-3.5" /> {totalLessons} lecciones</span>
-                <span className="inline-flex items-center gap-2 rounded border border-amber-200/30 bg-[#061410]/90 px-3 py-2 text-[10px] font-bold text-amber-100"><Zap className="h-3.5 w-3.5" /> +50 XP · desafío perfecto</span>
+                <span className="rounded border border-emerald-200/30 bg-[#061410]/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-100">{totalLessons} LECCIONES</span>
+                <span className="rounded border border-amber-200/30 bg-[#061410]/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-100">+50 XP · DESAFÍO PERFECTO</span>
               </div>
+              <Link
+                href="/aprender/la-cuenca-de-los-ecos/leccion/1"
+                className="group mt-5 inline-flex min-h-11 items-center justify-center gap-3 rounded-md border-2 border-[#ffe08a] bg-[#f7c948] px-5 py-3 text-[11px] font-extrabold tracking-[.02em] text-[#17130c] shadow-[0_4px_0_#8b681b] transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-[#ffda69] hover:shadow-[0_5px_0_#8b681b] active:translate-y-0 active:shadow-none"
+              >
+                Comenzar a estudiar
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
             </div>
             <span className="absolute right-4 top-4 border border-emerald-300/50 bg-[#062b24]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-normal text-emerald-200 [box-shadow:3px_3px_0_#12453c] sm:right-6 sm:top-6">
               Nivel básico
             </span>
-          </div>
-
-          <div className="relative border-t border-white/10 bg-[#071511ef] px-5 py-4 sm:px-7">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-200">
-                <span className="inline-flex items-center gap-2"><BookOpen className="h-4 w-4 text-emerald-200" /> Capítulo 01 disponible</span>
-                <span className="inline-flex items-center gap-2"><Zap className="h-4 w-4 text-amber-200" /> Recompensa anunciada: 50 XP</span>
-              </div>
-              <Link
-                href="/aprender/la-cuenca-de-los-ecos/leccion/1"
-                className="group inline-flex min-h-11 shrink-0 items-center justify-center gap-3 rounded-md border-2 border-emerald-200 bg-[#f7c948] px-5 py-3 text-[11px] font-extrabold uppercase tracking-[.03em] text-[#1b1a12] shadow-[0_4px_0_#8b681b] transition-[transform,box-shadow,background-color] hover:translate-y-[-2px] hover:bg-[#ffda69] hover:shadow-[0_6px_0_#8b681b] active:translate-y-0 active:shadow-none"
-              >
-                Comenzar a estudiar
-                <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-              </Link>
-            </div>
           </div>
         </section>
 
@@ -218,7 +206,7 @@ export default function LaCuencaDeLosEcosPage() {
           </div>
 
           <div className="relative space-y-3">
-            <span aria-hidden="true" className="pointer-events-none absolute bottom-6 left-[32px] top-6 z-0 w-px bg-[#30394f]" />
+            <span aria-hidden="true" className="pointer-events-none absolute bottom-6 left-[30px] top-6 z-0 w-px bg-[#30394f] sm:left-[36px]" />
             {chapters.map((chapter) => {
               const isOpen = expanded.includes(chapter.id);
               const isAvailable = chapter.available;
@@ -252,7 +240,7 @@ export default function LaCuencaDeLosEcosPage() {
 
                   {isAvailable && isOpen && (
                     <div className="relative border-t border-white/[.07] bg-[#0d121c]/65 py-1">
-                      <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[31px] top-0 w-px bg-[#30394f]" />
+                      <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[30px] top-0 w-px bg-[#30394f] sm:left-[36px]" />
                       <div className="pl-[48px] pr-2 sm:pl-[57px] sm:pr-4">
                         {chapter.lessons.map((lesson, lessonIndex) => {
                           const row = (
@@ -296,10 +284,8 @@ export default function LaCuencaDeLosEcosPage() {
                 <div className="flex items-start gap-3">
                   <Heart aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 stroke-[1.25] text-[#7d7c72]" />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-extrabold text-[#9ca3af]">Progreso 0%</span>
-                    </div>
-                    <div className="mt-2 h-[18px] border border-[#536071] bg-[#202833] p-[2px]">
+                    <span className="text-xs font-extrabold text-[#9ca3af]">Progreso 0%</span>
+                    <div className="mt-2 h-[18px] border border-[#536071] bg-[#202833] p-[2px]" aria-label="Progreso del curso: 0%">
                       <div className="h-full w-0 bg-[#54dfbb]" />
                     </div>
                   </div>
@@ -307,14 +293,21 @@ export default function LaCuencaDeLosEcosPage() {
                 <div className="flex items-start gap-3">
                   <Star aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 stroke-[1.25] text-[#7d7c72]" />
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-extrabold text-[#9ca3af]">
-                        {xpTarget > seasonXp ? `XP ${seasonXp.toLocaleString("es-CO")}/${xpTarget.toLocaleString("es-CO")}` : `XP ${seasonXp.toLocaleString("es-CO")}`}
-                      </span>
-                    </div>
-                    <div className="mt-2 h-[18px] border border-[#536071] bg-[#202833] p-[2px]">
+                    <span className="text-xs font-extrabold text-[#9ca3af]">
+                      {xpTarget > seasonXp ? `XP ${seasonXp.toLocaleString("es-CO")}/${xpTarget.toLocaleString("es-CO")}` : `XP ${seasonXp.toLocaleString("es-CO")}`}
+                    </span>
+                    <div className="mt-2 h-[18px] border border-[#536071] bg-[#202833] p-[2px]" aria-label={`Progreso de experiencia de temporada: ${rankProgress}%`}>
                       <div className="h-full bg-[#a5adb9] transition-[width] duration-300" style={{ width: `${rankProgress}%` }} />
                     </div>
+                  </div>
+                </div>
+                <div className="border-t border-white/[.07] pt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-slate-400">PeakCoins</span>
+                    <span className="inline-flex items-center gap-2 text-xs font-extrabold tabular-nums text-slate-100">
+                      <Image src="/images/currency/peakcoin.webp" alt="" width={18} height={18} className="h-[18px] w-[18px] object-contain" />
+                      {peakCoins.toLocaleString("es-CO")}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -322,15 +315,14 @@ export default function LaCuencaDeLosEcosPage() {
 
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Recompensas</h2>
-              <div className="grid grid-cols-3 gap-2 p-4">
-                <div title="Experiencia del desafío perfecto" className="flex min-h-[78px] flex-col items-center justify-center gap-1.5 rounded-md border border-[#3a4555] bg-[#1a202b] p-2">
-                  <Image src="/peaky/homepage/xp.webp" alt="EXP" width={42} height={42} className="h-10 w-10 object-contain" />
-                  <span className="text-[10px] font-extrabold text-slate-100">+50 XP</span>
+              <div className="p-4">
+                <div className="grid grid-cols-3 gap-2">
+                  <div title="EXP al superar el desafío perfecto" className="flex h-[68px] w-[68px] items-center justify-center rounded-md border border-[#3a4555] bg-[#1a202b] p-2">
+                    <Image src="/peaky/homepage/xp.webp" alt="EXP" width={46} height={46} className="h-11 w-11 object-contain" />
+                  </div>
                 </div>
-                <div title="Saldo actual de PeakCoins" className="flex min-h-[78px] flex-col items-center justify-center gap-1.5 rounded-md border border-[#3a4555] bg-[#1a202b] p-2">
-                  <Image src="/images/currency/peakcoin.webp" alt="PeakCoin" width={42} height={42} className="h-10 w-10 object-contain" />
-                  <span className="text-[10px] font-extrabold tabular-nums text-slate-100">{peakCoins.toLocaleString("es-CO")}</span>
-                </div>
+                <p className="mt-3 text-xs font-bold text-slate-100">Desafío perfecto</p>
+                <p className="mt-1 text-xs text-slate-400">+50 XP</p>
               </div>
             </section>
           </aside>

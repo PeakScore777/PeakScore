@@ -228,12 +228,8 @@ export default function LaCuencaDeLosEcosPage() {
                       <span className="pixel-font block text-[12px] font-normal leading-6 text-white sm:text-[13px]">{chapter.title}</span>
                       <span className="mt-1 block text-xs leading-5 text-slate-300/80">{chapter.description}</span>
                     </span>
-                    <span className="hidden shrink-0 sm:inline-flex">
-                      {isAvailable ? (
-                        <span className="rounded-md border border-emerald-300/30 bg-emerald-300/[.08] px-3 py-2 text-[10px] font-extrabold uppercase tracking-wide text-emerald-200">En curso</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-white/[.025] px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-slate-400"><LockKeyhole className="h-3.5 w-3.5" /> Próximamente</span>
-                      )}
+                    <span className={"hidden shrink-0 text-[9px] font-extrabold uppercase tracking-[.12em] sm:inline-flex " + (isAvailable ? "text-emerald-200" : "text-slate-500")}>
+                      {isAvailable ? "En curso" : "Próximamente"}
                     </span>
                     {isAvailable ? (isOpen ? <ChevronDown className="h-5 w-5 shrink-0 text-emerald-200" /> : <ChevronRight className="h-5 w-5 shrink-0 text-emerald-200" />) : <LockKeyhole className="h-4 w-4 shrink-0 text-slate-500" />}
                   </button>

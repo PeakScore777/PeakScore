@@ -56,18 +56,27 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
     >
       <div className="relative h-[178px] overflow-hidden rounded-t-xl bg-[#111827]">
         {level.video ? (
-          <video
-            aria-hidden="true"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            poster={level.image}
-            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]"
-          >
-            <source src={level.video} type="video/mp4" />
-          </video>
+          <>
+            <Image
+              src={level.image}
+              alt=""
+              fill
+              sizes="(max-width: 640px) 100vw, 300px"
+              className="object-cover"
+            />
+            <video
+              aria-hidden="true"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={level.image}
+              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.035] motion-reduce:hidden"
+            >
+              <source src={level.video} type="video/mp4" />
+            </video>
+          </>
         ) : (
           <Image
             src={level.image}

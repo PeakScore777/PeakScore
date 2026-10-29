@@ -7,6 +7,10 @@ import { supabase } from "@/lib/supabase/client";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 import XpRewardAnimation from "@/components/gamification/XpRewardAnimation";
+import {
+  markCuencaChapterCompleted,
+  markCuencaLessonVisited,
+} from "@/lib/learning-course-progress";
 import { ArrowLeft, ArrowRight, CheckCircle2, Leaf, Lightbulb, Plus, Waves } from "lucide-react";
 
 type Question = {
@@ -232,6 +236,18 @@ function ImageUploadSlot({ assetKey, title, description, fallbackSrc, compact = 
 
 
 export default function CuencaDeLosEcosChapterOnePage() {
+  useEffect(() => {
+    const markSectionFromUrl = () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      const validIds = ["ecosistema", "habitat-poblacion-nicho", "evidencia-ecosistema", "puntos-clave"];
+      markCuencaLessonVisited(validIds.includes(hash) ? hash : "historia");
+    };
+
+    markSectionFromUrl();
+    window.addEventListener("hashchange", markSectionFromUrl);
+    return () => window.removeEventListener("hashchange", markSectionFromUrl);
+  }, []);
+
   const [view, setView] = useState<"theory" | "examples" | "practice">("theory");
   const [storyOpen, setStoryOpen] = useState(true);
   const [index, setIndex] = useState(0);
@@ -269,8 +285,13 @@ export default function CuencaDeLosEcosChapterOnePage() {
       sound("navigation.mp3", 0.16); setIndex((value) => value + 1); setChoice(null); setChecked(false); return;
     }
     setDone(true);
-    if (score === activeQuestions.length) { setReward(true); sound("level-win.mp3", 0.25); }
-    else sound("game-over.wav", 0.3);
+    if (score === activeQuestions.length) {
+      markCuencaChapterCompleted();
+      setReward(true);
+      sound("level-win.mp3", 0.25);
+    } else {
+      sound("game-over.wav", 0.3);
+    }
   }
   const navButton = (label: string, active: boolean, onClick: () => void) => (
     <button type="button" onClick={onClick} className={"rounded-lg px-2 py-3 text-[11px] font-bold transition sm:text-sm " + (active ? "border border-emerald-300 bg-emerald-500/20 text-white" : "border border-transparent text-slate-300 hover:bg-white/[.04] hover:text-white")}>{label}</button>

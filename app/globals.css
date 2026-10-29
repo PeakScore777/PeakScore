@@ -1238,3 +1238,25 @@ body {
     font-size: 9px !important;
   }
 }
+
+/* GameCode-inspired animated title color on learning-level card hover. */
+.peakscore-level-card:hover .peakscore-level-title,
+.peakscore-level-card:focus-visible .peakscore-level-title {
+  animation: peakscore-level-title-color 2.8s ease-in-out infinite;
+}
+
+@keyframes peakscore-level-title-color {
+  0%, 100% { color: #55ddeb; }
+  20% { color: #8b7cff; }
+  40% { color: #f472b6; }
+  60% { color: #ffc36b; }
+  80% { color: #67e8a5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .peakscore-level-card:hover .peakscore-level-title,
+  .peakscore-level-card:focus-visible .peakscore-level-title {
+    animation: none;
+    color: #55ddeb;
+  }
+}

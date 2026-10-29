@@ -341,7 +341,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
                     <div className="border border-emerald-200/15 bg-[#10251d] p-4"><p className="flex items-center gap-2 text-sm font-bold text-emerald-100"><Leaf className="h-4 w-4" /> Factores bióticos</p><p className="mt-2 text-sm leading-6 text-slate-300">Plantas acuáticas, ranas, peces, insectos, hongos y microorganismos. Son organismos vivos que pueden interactuar, competir, alimentarse o servir de refugio.</p></div>
                     <div className="border border-cyan-200/15 bg-[#0d2024] p-4"><p className="flex items-center gap-2 text-sm font-bold text-cyan-100"><Waves className="h-4 w-4" /> Factores abióticos</p><p className="mt-2 text-sm leading-6 text-slate-300">Agua, luz, temperatura, oxígeno disuelto, minerales y características del suelo. Son condiciones no vivas que pueden favorecer o limitar la supervivencia.</p></div>
                   </div>
-                  <ImageUploadSlot assetKey="cuenca-de-los-ecos/ecosistema" title="Mapa de los factores del ecosistema" description="Ilustración didáctica de factores bióticos y abióticos en la cuenca." fallbackSrc="/images/aprender/cuenca-de-los-ecos/ecosistema-factores.svg" />
+                  <ImageUploadSlot assetKey="cuenca-de-los-ecos/ecosistema" title="Mapa de los factores del ecosistema" description="Ilustración didáctica de factores bióticos y abióticos en la cuenca." />
                   <div className="mt-4 rounded-lg border border-emerald-100/15 bg-black/20 p-3"><p className="text-xs font-bold text-emerald-100">La idea clave</p><p className="mt-1 text-sm leading-6 text-slate-300">Si cambia una condición del agua, puede afectar algunos organismos y, a través de sus relaciones, producir efectos en otras partes del ecosistema. La posibilidad debe evaluarse con evidencias, no suponerse automáticamente.</p></div>
                 </section>
 
@@ -352,7 +352,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
                     <div className="border-l-2 border-cyan-300/65 bg-cyan-300/[.04] p-3"><h3 className="text-sm font-bold text-white">Población</h3><p className="mt-1 text-sm leading-6 text-slate-300">Individuos de la misma especie que habitan un área durante un periodo. Al comparar conteos, Nova debe indicar el lugar y el momento de cada observación.</p></div>
                     <div className="border-l-2 border-amber-300/65 bg-amber-300/[.04] p-3"><h3 className="text-sm font-bold text-white">Nicho ecológico</h3><p className="mt-1 text-sm leading-6 text-slate-300">La manera en que una especie usa recursos e interactúa con el ambiente y otros organismos: qué consume, dónde se refugia, cuándo está activa y qué función cumple.</p></div>
                   </div>
-                  <ImageUploadSlot assetKey="cuenca-de-los-ecos/habitat-poblacion-nicho" title="Hábitat, población y nicho" description="Infografía para diferenciar hábitat, población y nicho ecológico." fallbackSrc="/images/aprender/cuenca-de-los-ecos/habitat-poblacion-nicho.svg" />
+                  <ImageUploadSlot assetKey="cuenca-de-los-ecos/habitat-poblacion-nicho" title="Hábitat, población y nicho" description="Infografía para diferenciar hábitat, población y nicho ecológico." />
                   <p className="mt-4 text-sm leading-7 text-slate-300">No confundas el sitio con la función: la orilla húmeda puede ser parte del hábitat de una rana; alimentarse de insectos y servir de presa a otra especie describe parte de su nicho.</p>
                 </section>
 
@@ -364,7 +364,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
                     <div className="grid grid-cols-[1.05fr_1fr_1fr] bg-[#0a1913] text-sm text-slate-300"><span className="p-3">Ranas observadas</span><span className="border-l border-white/10 p-3">18</span><span className="border-l border-white/10 p-3">5</span></div>
                     <div className="grid grid-cols-[1.05fr_1fr_1fr] border-t border-white/[.06] bg-[#0a1913] text-sm text-slate-300"><span className="p-3">Oxígeno disuelto</span><span className="border-l border-white/10 p-3">8 mg/L</span><span className="border-l border-white/10 p-3">3 mg/L</span></div>
                   </div>
-                  <ImageUploadSlot compact assetKey="cuenca-de-los-ecos/indagacion-evidencia" title="Cómo interpretar la evidencia" description="Diagrama del proceso de indagación para comparar dos tramos del ecosistema." fallbackSrc="/images/aprender/cuenca-de-los-ecos/indagacion-evidencia.svg" />
+                  <ImageUploadSlot compact assetKey="cuenca-de-los-ecos/indagacion-evidencia" title="Cómo interpretar la evidencia" description="Diagrama del proceso de indagación para comparar dos tramos del ecosistema." />
                   <p className="mt-3 text-xs leading-6 text-slate-400">Ejemplo hipotético para aprender a interpretar datos; no es un registro real del río ni demuestra por sí solo la causa de una diferencia entre poblaciones.</p>
                 </section>
 

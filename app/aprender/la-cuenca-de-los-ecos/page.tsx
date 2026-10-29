@@ -2,14 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   BookOpen,
   ChevronDown,
   ChevronRight,
+  Coins,
+  Heart,
   LockKeyhole,
+  Star,
   Zap,
 } from "lucide-react";
 
@@ -27,6 +30,18 @@ type Chapter = {
   description: string;
   available: boolean;
   lessons: Lesson[];
+};
+
+type CourseStatsResponse = {
+  profile?: {
+    xp?: number | null;
+    seasonXp?: number | null;
+    coins?: number | null;
+  };
+  rank?: {
+    progress?: number | null;
+    xpToNextRank?: number | null;
+  };
 };
 
 const chapters: Chapter[] = [
@@ -82,6 +97,31 @@ const totalLessons = chapters
 
 export default function LaCuencaDeLosEcosPage() {
   const [expanded, setExpanded] = useState<string[]>(["01"]);
+  const [courseStats, setCourseStats] = useState<CourseStatsResponse | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCourseStats() {
+      try {
+        const response = await fetch("/api/profile", { cache: "no-store" });
+        if (!response.ok) return;
+        const data = (await response.json()) as CourseStatsResponse;
+        if (active) setCourseStats(data);
+      } catch {
+        // El contenido del curso sigue funcionando si las estadísticas no están disponibles.
+      }
+    }
+
+    void loadCourseStats();
+    return () => { active = false; };
+  }, []);
+
+  const seasonXp = Math.max(0, Number(courseStats?.profile?.seasonXp ?? 0));
+  const peakCoins = Math.max(0, Number(courseStats?.profile?.coins ?? 0));
+  const xpToNextRank = Math.max(0, Number(courseStats?.rank?.xpToNextRank ?? 0));
+  const rankProgress = Math.min(100, Math.max(0, Number(courseStats?.rank?.progress ?? 0)));
+  const xpTarget = seasonXp + xpToNextRank;
 
   const toggle = (id: string) => {
     setExpanded((current) =>
@@ -177,14 +217,15 @@ export default function LaCuencaDeLosEcosPage() {
             </p>
           </div>
 
-          <div className="space-y-3">
+          <div className="relative space-y-3">
+            <span aria-hidden="true" className="pointer-events-none absolute bottom-6 left-[32px] top-6 z-0 w-px bg-[#30394f]" />
             {chapters.map((chapter) => {
               const isOpen = expanded.includes(chapter.id);
               const isAvailable = chapter.available;
               return (
                 <section
                   key={chapter.id}
-                  className={"overflow-hidden rounded-xl border shadow-[0_8px_25px_rgba(0,0,0,.12)] transition-colors " + (isAvailable ? "border-[#30394f] bg-[#1a2030] hover:border-[#46516d]" : "border-[#283044] bg-[#131a29] opacity-85")}
+                  className={"relative z-[1] overflow-hidden rounded-xl border shadow-[0_8px_25px_rgba(0,0,0,.12)] transition-colors " + (isAvailable ? "border-[#30394f] bg-[#1a2030] hover:border-[#46516d]" : "border-[#283044] bg-[#131a29] opacity-85")}
                 >
                   <button
                     type="button"
@@ -210,28 +251,28 @@ export default function LaCuencaDeLosEcosPage() {
                   </button>
 
                   {isAvailable && isOpen && (
-                    <div className="border-t border-white/[.07] bg-[#050b15]/45 p-2 sm:p-3">
-                      <div className="min-w-0 overflow-hidden rounded-xl border border-white/[.07]">
+                    <div className="relative border-t border-white/[.07] bg-[#0d121c]/65 py-1">
+                      <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[31px] top-0 w-px bg-[#30394f]" />
+                      <div className="pl-[48px] pr-2 sm:pl-[57px] sm:pr-4">
                         {chapter.lessons.map((lesson, lessonIndex) => {
                           const row = (
-                            <div className="group flex min-h-[58px] items-center gap-3 px-3 py-2.5 transition hover:bg-white/[.025] sm:px-5">
-                              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#30394f] bg-[#141b2a] text-xs font-extrabold text-slate-300">{lesson.number || lessonIndex + 1}</span>
-                              <span className="min-w-0 flex-1 text-sm">
-                                <span className="block leading-5 font-bold text-white">{lesson.title}</span>
+                            <div className="group flex min-h-[49px] items-center gap-4 px-3 py-2 transition-colors hover:bg-white/[.025] sm:px-5">
+                              <span className={"min-w-0 flex-1 text-[13px] leading-5 " + (lesson.available ? "font-semibold text-slate-100" : "font-medium text-slate-500")}>
+                                <span className="mr-2 text-slate-400">{lesson.number || lessonIndex + 1}.</span>{lesson.title}
                               </span>
                               {lesson.available ? (
-                                <span className={"inline-flex min-w-[78px] shrink-0 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-[10px] font-extrabold " + (lessonIndex === 0 ? "bg-[#f7c948] text-[#17130c] shadow-[0_3px_0_#8b681b]" : "border border-[#30394f] bg-[#151c2a] text-slate-200 group-hover:border-emerald-300/50 group-hover:text-emerald-200")}>
+                                <span className={"inline-flex min-w-[72px] shrink-0 items-center justify-center rounded-md px-3 py-2 text-[10px] font-extrabold " + (lessonIndex === 0 ? "bg-[#f7c948] text-[#17130c] shadow-[0_3px_0_#8b681b]" : "border border-[#30394f] bg-[#151c2a] text-slate-200 group-hover:border-emerald-300/50 group-hover:text-emerald-200")}>
                                   {lessonIndex === 0 ? "Iniciar" : "Abrir"}
                                 </span>
                               ) : (
-                                <span className="inline-flex min-w-[78px] shrink-0 items-center justify-center gap-1.5 rounded-md border border-white/[.06] bg-[#151b28] px-3 py-2 text-[10px] font-bold text-slate-500"><LockKeyhole className="h-3 w-3" /> Bloqueada</span>
+                                <span className="inline-flex min-w-[82px] shrink-0 items-center justify-center gap-1.5 rounded-md border border-white/[.06] bg-[#151b28] px-3 py-2 text-[10px] font-bold text-slate-500"><LockKeyhole className="h-3 w-3" /> Bloqueada</span>
                               )}
                             </div>
                           );
                           return lesson.available && lesson.href ? (
-                            <Link key={lesson.id} href={lesson.href} className="block border-b border-white/[.06] last:border-b-0">{row}</Link>
+                            <Link key={lesson.id} href={lesson.href} className="block">{row}</Link>
                           ) : (
-                            <div key={lesson.id} aria-disabled="true" className="border-b border-white/[.06] last:border-b-0 opacity-60">{row}</div>
+                            <div key={lesson.id} aria-disabled="true" className="block opacity-60">{row}</div>
                           );
                         })}
                       </div>
@@ -250,41 +291,45 @@ export default function LaCuencaDeLosEcosPage() {
 
           <aside className="mt-3 space-y-4 lg:sticky lg:top-24 lg:mt-3">
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
-              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Progreso del curso</h2>
-              <div className="space-y-4 p-4">
-                <div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-bold text-slate-300">Capítulo disponible</span>
-                    <span className="text-xs font-extrabold text-white">1 de 4</span>
-                  </div>
-                  <div className="mt-3 grid grid-cols-4 gap-1.5" aria-label="Un capítulo de cuatro está disponible">
-                    <span className="h-2 rounded-sm bg-emerald-300" />
-                    <span className="h-2 rounded-sm bg-[#293043]" />
-                    <span className="h-2 rounded-sm bg-[#293043]" />
-                    <span className="h-2 rounded-sm bg-[#293043]" />
+              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>
+              <div className="space-y-5 p-4">
+                <div className="flex items-start gap-3">
+                  <Heart aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 stroke-[1.25] text-[#7d7c72]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-extrabold text-[#9ca3af]">Progreso 0%</span>
+                    </div>
+                    <div className="mt-2 h-[18px] border border-[#536071] bg-[#202833] p-[2px]">
+                      <div className="h-full w-0 bg-[#54dfbb]" />
+                    </div>
                   </div>
                 </div>
-                <div className="border-t border-white/[.07] pt-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-slate-400">Lecciones del capítulo 01</span>
-                    <span className="text-xs font-extrabold tabular-nums text-slate-100">5</span>
+                <div className="flex items-start gap-3">
+                  <Star aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 stroke-[1.25] text-[#7d7c72]" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-extrabold text-[#9ca3af]">
+                        {xpTarget > seasonXp ? `XP ${seasonXp.toLocaleString("es-CO")}/${xpTarget.toLocaleString("es-CO")}` : `XP ${seasonXp.toLocaleString("es-CO")}`}
+                      </span>
+                    </div>
+                    <div className="mt-2 h-[18px] border border-[#536071] bg-[#202833] p-[2px]">
+                      <div className="h-full bg-[#a5adb9] transition-[width] duration-300" style={{ width: `${rankProgress}%` }} />
+                    </div>
                   </div>
-                  <p className="mt-2 text-[11px] leading-5 text-slate-400">El avance personal se mostrará aquí cuando la ruta registre las lecciones completadas.</p>
                 </div>
               </div>
             </section>
 
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
-              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[11px] font-normal text-white">Recompensas</h2>
-              <div className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-cyan-300/25 bg-cyan-300/[.08]">
-                    <Image src="/peaky/homepage/xp.webp" alt="EXP" width={40} height={40} className="object-contain" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-extrabold text-white">+50 XP</p>
-                    <p className="mt-1 text-xs leading-5 text-slate-400">Por completar el desafío con todas las respuestas correctas.</p>
-                  </div>
+              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Recompensas</h2>
+              <div className="grid grid-cols-3 gap-2 p-4">
+                <div title="Experiencia del desafío perfecto" className="flex min-h-[78px] flex-col items-center justify-center gap-1.5 rounded-md border border-[#3a4555] bg-[#1a202b] p-2">
+                  <Image src="/peaky/homepage/xp.webp" alt="EXP" width={42} height={42} className="h-10 w-10 object-contain" />
+                  <span className="text-[10px] font-extrabold text-slate-100">+50 XP</span>
+                </div>
+                <div title="Saldo actual de PeakCoins" className="flex min-h-[78px] flex-col items-center justify-center gap-1.5 rounded-md border border-[#3a4555] bg-[#1a202b] p-2">
+                  <Image src="/images/currency/peakcoin.webp" alt="PeakCoin" width={42} height={42} className="h-10 w-10 object-contain" />
+                  <span className="text-[10px] font-extrabold tabular-nums text-slate-100">{peakCoins.toLocaleString("es-CO")}</span>
                 </div>
               </div>
             </section>

@@ -303,27 +303,65 @@ export default function LaCuencaDeLosEcosPage() {
                 <div className="flex items-start gap-3">
                   <svg
                     aria-hidden="true"
-                    viewBox="0 0 32 32"
+                    viewBox="0 0 16 16"
                     className="pixel-progress-icon mt-1 h-8 w-8 shrink-0"
                     shapeRendering="crispEdges"
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-heart-outer" d="M6 2h6v2h-6Z M20 2h6v2h-6Z M4 4h10v2h-10Z M18 4h10v2h-10Z M2 6h12v2h-12Z M18 6h12v2h-12Z M0 8h16v2h-16Z M16 8h16v2h-16Z M0 10h32v2h-32Z M2 12h28v2h-28Z M4 14h24v2h-24Z M6 16h20v2h-20Z M8 18h16v2h-16Z M10 20h12v2h-12Z M12 22h8v2h-8Z M14 24h4v2h-4Z" />
-                      <path id="cuenca-heart-inner" d="M6 4h6v2h-6Z M20 4h6v2h-6Z M4 6h10v2h-10Z M18 6h10v2h-10Z M2 8h12v2h-12Z M18 8h12v2h-12Z M2 10h28v2h-28Z M4 12h24v2h-24Z M6 14h20v2h-20Z M8 16h16v2h-16Z M10 18h12v2h-12Z M12 20h8v2h-8Z M14 22h4v2h-4Z" />
-                      <clipPath id="cuenca-heart-interior-clip">
-                        <use href="#cuenca-heart-inner" />
+                      <clipPath id="cuenca-heart-interior">
+                        <rect x="3" y="2" width="3" height="1" />
+                        <rect x="10" y="2" width="3" height="1" />
+                        <rect x="2" y="3" width="5" height="1" />
+                        <rect x="9" y="3" width="5" height="1" />
+                        <rect x="1" y="4" width="14" height="1" />
+                        <rect x="1" y="5" width="14" height="1" />
+                        <rect x="2" y="6" width="12" height="1" />
+                        <rect x="3" y="7" width="10" height="1" />
+                        <rect x="4" y="8" width="8" height="1" />
+                        <rect x="5" y="9" width="6" height="1" />
+                        <rect x="6" y="10" width="4" height="1" />
+                        <rect x="7" y="11" width="2" height="1" />
                       </clipPath>
                     </defs>
-                    <use href="#cuenca-heart-outer" fill="#77796e" />
-                    <use href="#cuenca-heart-inner" fill="#10141e" />
+                    <g fill="#77796e">
+                      <rect x="3" y="1" width="3" height="1" />
+                        <rect x="10" y="1" width="3" height="1" />
+                        <rect x="2" y="2" width="5" height="1" />
+                        <rect x="9" y="2" width="5" height="1" />
+                        <rect x="1" y="3" width="7" height="1" />
+                        <rect x="8" y="3" width="7" height="1" />
+                        <rect x="0" y="4" width="16" height="1" />
+                        <rect x="0" y="5" width="16" height="1" />
+                        <rect x="1" y="6" width="14" height="1" />
+                        <rect x="2" y="7" width="12" height="1" />
+                        <rect x="3" y="8" width="10" height="1" />
+                        <rect x="4" y="9" width="8" height="1" />
+                        <rect x="5" y="10" width="6" height="1" />
+                        <rect x="6" y="11" width="4" height="1" />
+                        <rect x="7" y="12" width="2" height="1" />
+                    </g>
+                    <g fill="#10141e">
+                      <rect x="3" y="2" width="3" height="1" />
+                        <rect x="10" y="2" width="3" height="1" />
+                        <rect x="2" y="3" width="5" height="1" />
+                        <rect x="9" y="3" width="5" height="1" />
+                        <rect x="1" y="4" width="14" height="1" />
+                        <rect x="1" y="5" width="14" height="1" />
+                        <rect x="2" y="6" width="12" height="1" />
+                        <rect x="3" y="7" width="10" height="1" />
+                        <rect x="4" y="8" width="8" height="1" />
+                        <rect x="5" y="9" width="6" height="1" />
+                        <rect x="6" y="10" width="4" height="1" />
+                        <rect x="7" y="11" width="2" height="1" />
+                    </g>
                     <rect
                       x="0"
                       y="0"
-                      width={courseProgressPercent > 0 ? Math.max(1, 32 * courseProgressPercent / 100) : 0}
-                      height="32"
+                      width={courseProgressPercent > 0 ? Math.max(1, 16 * courseProgressPercent / 100) : 0}
+                      height="16"
                       fill="#ef3340"
-                      clipPath="url(#cuenca-heart-interior-clip)"
+                      clipPath="url(#cuenca-heart-interior)"
                     />
                   </svg>
                   <div className="min-w-0 flex-1">
@@ -336,27 +374,77 @@ export default function LaCuencaDeLosEcosPage() {
                 <div className="flex items-start gap-3">
                   <svg
                     aria-hidden="true"
-                    viewBox="0 0 32 32"
+                    viewBox="0 0 16 16"
                     className="pixel-progress-icon mt-1 h-8 w-8 shrink-0"
                     shapeRendering="crispEdges"
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-star-outer" d="M16 1L19 10L30 11L22 18L24 29L16 23L8 29L10 18L2 11L13 10Z" />
-                      <path id="cuenca-star-inner" d="M16 5L18 12L25 13L20 18L22 25L16 21L10 25L12 18L7 13L14 12Z" />
-                      <clipPath id="cuenca-star-interior-clip">
-                        <use href="#cuenca-star-inner" />
+                      <clipPath id="cuenca-star-interior">
+                        <rect x="7" y="3" width="2" height="1" />
+                        <rect x="6" y="4" width="4" height="1" />
+                        <rect x="5" y="5" width="6" height="1" />
+                        <rect x="3" y="6" width="10" height="1" />
+                        <rect x="2" y="7" width="12" height="1" />
+                        <rect x="1" y="8" width="14" height="1" />
+                        <rect x="2" y="9" width="12" height="1" />
+                        <rect x="4" y="10" width="8" height="1" />
+                        <rect x="5" y="11" width="2" height="1" />
+                        <rect x="9" y="11" width="2" height="1" />
+                        <rect x="4" y="12" width="3" height="1" />
+                        <rect x="9" y="12" width="3" height="1" />
+                        <rect x="3" y="13" width="4" height="1" />
+                        <rect x="9" y="13" width="4" height="1" />
+                        <rect x="2" y="14" width="5" height="1" />
+                        <rect x="9" y="14" width="5" height="1" />
                       </clipPath>
                     </defs>
-                    <use href="#cuenca-star-outer" fill="#77796e" />
-                    <use href="#cuenca-star-inner" fill="#10141e" />
+                    <g fill="#77796e">
+                      <rect x="7" y="2" width="2" height="1" />
+                        <rect x="6" y="3" width="4" height="1" />
+                        <rect x="6" y="4" width="4" height="1" />
+                        <rect x="5" y="5" width="6" height="1" />
+                        <rect x="3" y="6" width="10" height="1" />
+                        <rect x="1" y="7" width="14" height="1" />
+                        <rect x="0" y="8" width="16" height="1" />
+                        <rect x="1" y="9" width="14" height="1" />
+                        <rect x="3" y="10" width="10" height="1" />
+                        <rect x="4" y="11" width="3" height="1" />
+                        <rect x="9" y="11" width="3" height="1" />
+                        <rect x="3" y="12" width="4" height="1" />
+                        <rect x="9" y="12" width="4" height="1" />
+                        <rect x="2" y="13" width="5" height="1" />
+                        <rect x="9" y="13" width="5" height="1" />
+                        <rect x="1" y="14" width="6" height="1" />
+                        <rect x="9" y="14" width="6" height="1" />
+                        <rect x="0" y="15" width="7" height="1" />
+                        <rect x="9" y="15" width="7" height="1" />
+                    </g>
+                    <g fill="#10141e">
+                      <rect x="7" y="3" width="2" height="1" />
+                        <rect x="6" y="4" width="4" height="1" />
+                        <rect x="5" y="5" width="6" height="1" />
+                        <rect x="3" y="6" width="10" height="1" />
+                        <rect x="2" y="7" width="12" height="1" />
+                        <rect x="1" y="8" width="14" height="1" />
+                        <rect x="2" y="9" width="12" height="1" />
+                        <rect x="4" y="10" width="8" height="1" />
+                        <rect x="5" y="11" width="2" height="1" />
+                        <rect x="9" y="11" width="2" height="1" />
+                        <rect x="4" y="12" width="3" height="1" />
+                        <rect x="9" y="12" width="3" height="1" />
+                        <rect x="3" y="13" width="4" height="1" />
+                        <rect x="9" y="13" width="4" height="1" />
+                        <rect x="2" y="14" width="5" height="1" />
+                        <rect x="9" y="14" width="5" height="1" />
+                    </g>
                     <rect
                       x="0"
                       y="0"
-                      width={rankProgress > 0 ? Math.max(1, 32 * rankProgress / 100) : 0}
-                      height="32"
+                      width={rankProgress > 0 ? Math.max(1, 16 * rankProgress / 100) : 0}
+                      height="16"
                       fill="#facc15"
-                      clipPath="url(#cuenca-star-interior-clip)"
+                      clipPath="url(#cuenca-star-interior)"
                     />
                   </svg>
                   <div className="min-w-0 flex-1">

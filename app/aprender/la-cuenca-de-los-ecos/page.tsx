@@ -342,8 +342,8 @@ export default function LaCuencaDeLosEcosPage() {
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-star-outer" d="M7 0H9V2H7Z M6 2H10V4H6Z M5 4H11V5H5Z M4 5H12V6H4Z M2 6H14V7H2Z M0 7H16V8H0Z M1 8H15V9H1Z M2 9H14V10H2Z M4 10H12V11H4Z M5 11H7V12H5Z M9 11H11V12H9Z M4 12H7V13H4Z M9 12H12V13H9Z M3 13H6V14H3Z M10 13H13V14H10Z M2 14H5V15H2Z M11 14H14V15H11Z M1 15H4V16H1Z M12 15H15V16H12Z" />
-                      <path id="cuenca-star-inner" d="M7 1H9V2H7Z M6 2H10V3H6Z M6 3H10V4H6Z M5 4H11V5H5Z M4 5H12V6H4Z M2 6H14V7H2Z M1 7H15V8H1Z M2 8H14V9H2Z M3 9H13V10H3Z M5 10H11V11H5Z M6 11H7V12H6Z M9 11H10V12H9Z M5 12H6V13H5Z M10 12H11V13H10Z M4 13H5V14H4Z M11 13H12V14H11Z M3 14H4V15H3Z M12 14H13V15H12Z M2 15H3V16H2Z M13 15H14V16H13Z" />
+                      <path id="cuenca-star-outer" d="M8 0L10 5H15L11 9L13 15L8 12L3 15L5 9L1 5H6Z" />
+                      <path id="cuenca-star-inner" d="M8 2L9 5L13 6L10 9L11 13L8 11L5 13L6 9L3 6L7 5Z" />
                       <clipPath id="cuenca-star-interior-clip">
                         <use href="#cuenca-star-inner" />
                       </clipPath>

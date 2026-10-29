@@ -167,7 +167,7 @@ export default function LaCuencaDeLosEcosPage() {
 
           <div className="relative grid min-h-[250px] items-end px-5 pb-6 pt-7 sm:min-h-[285px] sm:px-7 sm:pb-7 lg:min-h-[310px] lg:px-8">
             <div className="max-w-[610px]">
-              <div className="inline-flex items-center gap-2 rounded border border-emerald-300/50 bg-[#071710]/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-emerald-200 [box-shadow:3px_3px_0_#163b2c]">
+              <div className="inline-flex items-center gap-2 rounded border-2 border-emerald-300/50 bg-[#071710]/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-emerald-200 [box-shadow:3px_3px_0_#163b2c]">
                 Ruta 02 <span className="text-white/30">·</span> Biología y Ecología
               </div>
               <h1 className="pixel-font mt-4 text-[clamp(1.45rem,2.5vw,2.35rem)] font-normal leading-[1.5] tracking-normal">
@@ -190,7 +190,7 @@ export default function LaCuencaDeLosEcosPage() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
-            <span className="absolute right-4 top-4 border border-emerald-300/50 bg-[#062b24]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-normal text-emerald-200 [box-shadow:3px_3px_0_#12453c] sm:right-6 sm:top-6">
+            <span className="absolute right-4 top-4 border-2 border-emerald-300/50 bg-[#062b24]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-normal text-emerald-200 [box-shadow:3px_3px_0_#12453c] sm:right-6 sm:top-6">
               Nivel básico
             </span>
           </div>
@@ -220,12 +220,12 @@ export default function LaCuencaDeLosEcosPage() {
                     onClick={() => isAvailable && toggle(chapter.id)}
                     aria-expanded={isAvailable ? isOpen : false}
                     aria-disabled={!isAvailable}
-                    className="flex min-h-[70px] w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-white/[.035] sm:gap-4 sm:px-5 sm:py-4 disabled:cursor-not-allowed"
+                    className="flex min-h-[62px] w-full items-center gap-3 px-3 py-2.5 text-left transition hover:bg-white/[.035] sm:gap-4 sm:px-4 sm:py-3 disabled:cursor-not-allowed"
                     disabled={!isAvailable}
                   >
                     <span className={"flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-sm font-extrabold text-white shadow-inner " + (isAvailable ? "border-[#46516c] bg-[#111725]" : "border-slate-500/30 bg-slate-500/10 text-slate-400")}>{Number(chapter.id)}</span>
                     <span className="min-w-0 flex-1 py-1">
-                      <span className="pixel-font block text-[12px] font-normal leading-6 text-white sm:text-[13px]">{chapter.title}</span>
+                      <span className="pixel-font block text-[13px] font-normal leading-6 text-white sm:text-[14px]">{chapter.title}</span>
                       <span className="mt-1 block text-xs leading-5 text-slate-300/80">{chapter.description}</span>
                     </span>
                     <span className={"hidden shrink-0 text-[9px] font-extrabold uppercase tracking-[.12em] sm:inline-flex " + (isAvailable ? "text-emerald-200" : "text-slate-500")}>
@@ -236,7 +236,7 @@ export default function LaCuencaDeLosEcosPage() {
 
                   {isAvailable && isOpen && (
                     <div className="relative border-t border-white/[.07] bg-[#0d121c]/65 py-1">
-                      <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[30px] top-0 w-px bg-[#30394f] sm:left-[36px]" />
+                      <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[30px] top-0 w-px bg-[#30394f] sm:left-[34px]" />
                       <div className="pl-[46px] pr-2 sm:pl-[53px] sm:pr-4">
                         {chapter.lessons.map((lesson, lessonIndex) => {
                           const row = (
@@ -268,11 +268,9 @@ export default function LaCuencaDeLosEcosPage() {
           </div>
         </section>
 
-        <div className="mt-5 rounded-lg border border-[#252d40] bg-[#101722] p-4 text-xs leading-6 text-slate-300/80">
-          <p>La ruta combina observación, explicación de fenómenos e indagación científica. Los registros de la historia sirven para practicar interpretación de evidencias; no prueban por sí solos la causa de un cambio ambiental.</p>
-        </div>
           </div>
 
+          <aside className="mt-3 space-y-4
           <aside className="mt-3 space-y-4 lg:sticky lg:top-24 lg:mt-3">
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>

@@ -188,9 +188,14 @@ export default function LaCuencaDeLosEcosPage() {
               </p>
               <Link
                 href="/aprender/la-cuenca-de-los-ecos/leccion/1"
-                className="group mt-5 inline-flex min-h-11 items-center justify-center gap-3 rounded-md border-2 border-[#ffe08a] bg-[#f7c948] px-5 py-3 text-[11px] font-extrabold tracking-[.02em] text-[#17130c] shadow-[0_4px_0_#8b681b] transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-[#ffda69] hover:shadow-[0_5px_0_#8b681b] active:translate-y-0 active:shadow-none"
+                className="group relative mt-5 inline-flex min-h-11 min-w-[188px] items-center justify-center rounded-md border-2 border-[#ffe08a] bg-[#f7c948] px-5 py-3 text-[11px] font-extrabold tracking-[.02em] text-[#17130c] shadow-[0_4px_0_#8b681b] transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-[#ffda69] hover:shadow-[0_5px_0_#8b681b] active:translate-y-0 active:shadow-none"
               >
-                Comenzar a estudiar
+                <span className="transition-opacity group-hover:opacity-0">
+                  {courseProgress.completed ? "Repasar" : "Comenzar a estudiar"}
+                </span>
+                <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+                  {courseProgress.completed ? "Repasar" : "+50 XP"}
+                </span>
               </Link>
             </div>
             <span className="absolute right-4 top-4 border-2 border-emerald-300/50 bg-[#062b24]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-normal text-emerald-200 [box-shadow:3px_3px_0_#12453c] sm:right-6 sm:top-6">
@@ -232,7 +237,7 @@ export default function LaCuencaDeLosEcosPage() {
                       <span className="mt-1 block text-xs leading-5 text-slate-300/80">{chapter.description}</span>
                     </span>
                     <span className={"hidden shrink-0 text-[9px] font-extrabold uppercase tracking-[.12em] sm:inline-flex " + (isAvailable ? "text-emerald-200" : "text-slate-500")}>
-                      {isAvailable ? "En curso" : "Próximamente"}
+                      {isAvailable ? (chapter.id === "01" && courseProgress.completed ? "Completado" : "En curso") : "Próximamente"}
                     </span>
                     {isAvailable ? (isOpen ? <ChevronDown className="h-5 w-5 shrink-0 text-emerald-200" /> : <ChevronRight className="h-5 w-5 shrink-0 text-emerald-200" />) : <LockKeyhole className="h-4 w-4 shrink-0 text-slate-500" />}
                   </button>

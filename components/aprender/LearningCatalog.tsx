@@ -52,7 +52,7 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
   return (
     <Link
       href={level.href}
-      className="group relative block w-[300px] max-w-full shrink-0 snap-start overflow-visible rounded-xl border border-[#252d40] bg-[#0b1020] transition-colors duration-200 hover:border-[#46536d] hover:shadow-[0_10px_30px_rgba(0,0,0,.22)] max-sm:w-full"
+      className="group relative block w-[300px] max-w-full shrink-0 snap-start overflow-visible rounded-xl border border-[#252d40] bg-[#0b1020] transition-colors duration-200 hover:border-[#3d665e] hover:bg-[#101c20] hover:shadow-[0_10px_30px_rgba(0,0,0,.22)] max-sm:w-full"
     >
       <div className="relative h-[178px] overflow-hidden rounded-t-xl bg-[#111827]">
         {level.video ? (
@@ -99,7 +99,7 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
             {level.duration}
           </span>
         </div>
-        <h3 className="mt-3 min-h-[42px] text-[15px] font-extrabold leading-5 text-white">
+        <h3 className="mt-3 min-h-[42px] text-[15px] font-extrabold leading-5 text-white transition-colors duration-200 group-hover:text-[#65e8ca]">
           {level.title}
         </h3>
         <p className="mt-2 min-h-[58px] text-[13px] leading-[1.65] text-[#abb3c3]">

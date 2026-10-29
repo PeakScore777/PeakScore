@@ -52,7 +52,7 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
   return (
     <Link
       href={level.href}
-      className="group relative block w-[300px] max-w-full shrink-0 snap-start overflow-visible rounded-xl border border-[#252d40] bg-[#0b1020] transition duration-200 hover:-translate-y-1 hover:border-[#39445d] max-sm:w-full"
+      className="group relative block w-[300px] max-w-full shrink-0 snap-start overflow-visible rounded-xl border border-[#252d40] bg-[#0b1020] transition-colors duration-200 hover:border-[#46536d] hover:shadow-[0_10px_30px_rgba(0,0,0,.22)] max-sm:w-full"
     >
       <div className="relative h-[178px] overflow-hidden rounded-t-xl bg-[#111827]">
         {level.video ? (
@@ -72,7 +72,7 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
               playsInline
               preload="metadata"
               poster={level.image}
-              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.035] motion-reduce:hidden"
+              className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
             >
               <source src={level.video} type="video/mp4" />
             </video>
@@ -83,7 +83,7 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
             alt=""
             fill
             sizes="(max-width: 640px) 100vw, 300px"
-            className="object-cover transition duration-500 group-hover:scale-[1.035]"
+            className="object-cover"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#080d18]/35 via-transparent to-transparent" />

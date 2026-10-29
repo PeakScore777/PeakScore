@@ -304,57 +304,19 @@ export default function LaCuencaDeLosEcosPage() {
                   <svg
                     aria-hidden="true"
                     viewBox="0 0 16 16"
-                    className="pixel-progress-icon mt-1 h-8 w-8 shrink-0"
+                    className="mt-1 h-8 w-8 shrink-0"
                     shapeRendering="crispEdges"
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
+                      <path id="cuenca-heart-outline" d="M3 1H6V2H7V3H9V2H10V1H13V2H14V4H15V7H16V9H15V11H14V12H13V13H12V14H11V15H5V14H4V13H3V12H2V11H1V9H0V7H1V4H2V2H3Z" />
+                      <path id="cuenca-heart-fill-shape" d="M3 2H6V3H7V4H9V3H10V2H13V3H14V6H15V8H14V10H13V11H12V12H11V13H5V12H4V11H3V10H2V8H1V6H2V3H3Z" />
                       <clipPath id="cuenca-heart-interior">
-                        <rect x="3" y="0" width="3" height="1" />
-                        <rect x="10" y="0" width="3" height="1" />
-                        <rect x="2" y="1" width="5" height="1" />
-                        <rect x="9" y="1" width="5" height="1" />
-                        <rect x="1" y="2" width="14" height="1" />
-                        <rect x="1" y="3" width="14" height="1" />
-                        <rect x="2" y="4" width="12" height="1" />
-                        <rect x="3" y="5" width="10" height="1" />
-                        <rect x="4" y="6" width="8" height="1" />
-                        <rect x="5" y="7" width="6" height="1" />
-                        <rect x="6" y="8" width="4" height="1" />
-                        <rect x="7" y="9" width="2" height="1" />
+                        <use href="#cuenca-heart-fill-shape" />
                       </clipPath>
                     </defs>
-                    <g fill="#77796e">
-                      <rect x="3" y="0" width="3" height="1" />
-                        <rect x="10" y="0" width="3" height="1" />
-                        <rect x="2" y="1" width="5" height="1" />
-                        <rect x="9" y="1" width="5" height="1" />
-                        <rect x="1" y="2" width="7" height="1" />
-                        <rect x="8" y="2" width="7" height="1" />
-                        <rect x="0" y="3" width="16" height="1" />
-                        <rect x="0" y="4" width="16" height="1" />
-                        <rect x="1" y="5" width="14" height="1" />
-                        <rect x="2" y="6" width="12" height="1" />
-                        <rect x="3" y="7" width="10" height="1" />
-                        <rect x="4" y="8" width="8" height="1" />
-                        <rect x="5" y="9" width="6" height="1" />
-                        <rect x="6" y="10" width="4" height="1" />
-                        <rect x="7" y="11" width="2" height="1" />
-                    </g>
-                    <g fill="#10141e">
-                      <rect x="3" y="0" width="3" height="1" />
-                        <rect x="10" y="0" width="3" height="1" />
-                        <rect x="2" y="1" width="5" height="1" />
-                        <rect x="9" y="1" width="5" height="1" />
-                        <rect x="1" y="2" width="14" height="1" />
-                        <rect x="1" y="3" width="14" height="1" />
-                        <rect x="2" y="4" width="12" height="1" />
-                        <rect x="3" y="5" width="10" height="1" />
-                        <rect x="4" y="6" width="8" height="1" />
-                        <rect x="5" y="7" width="6" height="1" />
-                        <rect x="6" y="8" width="4" height="1" />
-                        <rect x="7" y="9" width="2" height="1" />
-                    </g>
+                    <use href="#cuenca-heart-outline" fill="#77796e" />
+                    <use href="#cuenca-heart-fill-shape" fill="#10141e" />
                     <rect
                       x="0"
                       y="0"
@@ -375,76 +337,19 @@ export default function LaCuencaDeLosEcosPage() {
                   <svg
                     aria-hidden="true"
                     viewBox="0 0 16 16"
-                    className="pixel-progress-icon mt-1 h-8 w-8 shrink-0"
+                    className="mt-1 h-8 w-8 shrink-0"
                     shapeRendering="crispEdges"
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
+                      <path id="cuenca-star-outline" d="M8 0L10 5H16L11 9L13 16L8 12L3 16L5 9L0 5H6Z" />
+                      <path id="cuenca-star-fill-shape" d="M8 2L9 6H13L10 9L11 13L8 11L5 13L6 9L3 6H7Z" />
                       <clipPath id="cuenca-star-interior">
-                        <rect x="7" y="0" width="2" height="1" />
-                        <rect x="6" y="1" width="4" height="1" />
-                        <rect x="6" y="2" width="4" height="1" />
-                        <rect x="5" y="3" width="6" height="1" />
-                        <rect x="4" y="4" width="8" height="1" />
-                        <rect x="2" y="5" width="12" height="1" />
-                        <rect x="1" y="6" width="14" height="1" />
-                        <rect x="2" y="7" width="12" height="1" />
-                        <rect x="4" y="8" width="8" height="1" />
-                        <rect x="5" y="9" width="2" height="1" />
-                        <rect x="9" y="9" width="2" height="1" />
-                        <rect x="5" y="10" width="2" height="1" />
-                        <rect x="9" y="10" width="2" height="1" />
-                        <rect x="4" y="11" width="3" height="1" />
-                        <rect x="9" y="11" width="3" height="1" />
-                        <rect x="3" y="12" width="4" height="1" />
-                        <rect x="9" y="12" width="4" height="1" />
-                        <rect x="2" y="13" width="5" height="1" />
-                        <rect x="9" y="13" width="5" height="1" />
+                        <use href="#cuenca-star-fill-shape" />
                       </clipPath>
                     </defs>
-                    <g fill="#77796e">
-                      <rect x="7" y="0" width="2" height="1" />
-                        <rect x="7" y="1" width="2" height="1" />
-                        <rect x="6" y="2" width="4" height="1" />
-                        <rect x="6" y="3" width="4" height="1" />
-                        <rect x="5" y="4" width="6" height="1" />
-                        <rect x="4" y="5" width="8" height="1" />
-                        <rect x="1" y="6" width="14" height="1" />
-                        <rect x="0" y="7" width="16" height="1" />
-                        <rect x="1" y="8" width="14" height="1" />
-                        <rect x="3" y="9" width="10" height="1" />
-                        <rect x="4" y="10" width="3" height="1" />
-                        <rect x="9" y="10" width="3" height="1" />
-                        <rect x="4" y="11" width="3" height="1" />
-                        <rect x="9" y="11" width="3" height="1" />
-                        <rect x="3" y="12" width="4" height="1" />
-                        <rect x="9" y="12" width="4" height="1" />
-                        <rect x="2" y="13" width="5" height="1" />
-                        <rect x="9" y="13" width="5" height="1" />
-                        <rect x="1" y="14" width="6" height="1" />
-                        <rect x="9" y="14" width="6" height="1" />
-                    </g>
-                    <g fill="#10141e">
-                      <rect x="7" y="0" width="2" height="1" />
-                        <rect x="6" y="1" width="4" height="1" />
-                        <rect x="6" y="2" width="4" height="1" />
-                        <rect x="5" y="3" width="6" height="1" />
-                        <rect x="4" y="4" width="8" height="1" />
-                        <rect x="2" y="5" width="12" height="1" />
-                        <rect x="1" y="6" width="14" height="1" />
-                        <rect x="2" y="7" width="12" height="1" />
-                        <rect x="4" y="8" width="8" height="1" />
-                        <rect x="5" y="9" width="2" height="1" />
-                        <rect x="9" y="9" width="2" height="1" />
-                        <rect x="5" y="10" width="2" height="1" />
-                        <rect x="9" y="10" width="2" height="1" />
-                        <rect x="4" y="11" width="3" height="1" />
-                        <rect x="9" y="11" width="3" height="1" />
-                        <rect x="3" y="12" width="4" height="1" />
-                        <rect x="9" y="12" width="4" height="1" />
-                        <rect x="2" y="13" width="5" height="1" />
-                        <rect x="9" y="13" width="5" height="1" />
-                    </g>
+                    <use href="#cuenca-star-outline" fill="#77796e" />
+                    <use href="#cuenca-star-fill-shape" fill="#10141e" />
                     <rect
                       x="0"
                       y="0"

@@ -13,6 +13,7 @@ type Level = {
   area: string;
   description: string;
   image: string;
+  video?: string;
   href: string;
   duration: string;
 };
@@ -41,6 +42,7 @@ const levels: Level[] = [
     area: "Biología · Ecología",
     description: "Investiga el silencio del bosque y descubre cómo se conectan los seres vivos con su entorno.",
     image: "/images/aprender/cuenca-de-los-ecos/header.svg",
+    video: "/video/aprender/cuenca-de-los-ecos.mp4",
     href: "/aprender/la-cuenca-de-los-ecos",
     duration: "10–15 MIN",
   },
@@ -53,13 +55,28 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
       className="group relative block w-[300px] max-w-full shrink-0 snap-start overflow-visible rounded-xl border border-[#252d40] bg-[#0b1020] transition duration-200 hover:-translate-y-1 hover:border-[#39445d] max-sm:w-full"
     >
       <div className="relative h-[178px] overflow-hidden rounded-t-xl bg-[#111827]">
-        <Image
-          src={level.image}
-          alt=""
-          fill
-          sizes="(max-width: 640px) 100vw, 300px"
-          className="object-cover transition duration-500 group-hover:scale-[1.035]"
-        />
+        {level.video ? (
+          <video
+            aria-hidden="true"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={level.image}
+            className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.035]"
+          >
+            <source src={level.video} type="video/mp4" />
+          </video>
+        ) : (
+          <Image
+            src={level.image}
+            alt=""
+            fill
+            sizes="(max-width: 640px) 100vw, 300px"
+            className="object-cover transition duration-500 group-hover:scale-[1.035]"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-[#080d18]/35 via-transparent to-transparent" />
       </div>
       <span className="absolute -left-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-[4px] bg-[#ffd05b] text-[12px] font-extrabold text-[#17130a] shadow-sm">

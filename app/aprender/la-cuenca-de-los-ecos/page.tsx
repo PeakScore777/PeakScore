@@ -4,12 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft,
-  ArrowRight,
   ChevronDown,
   ChevronRight,
   LockKeyhole,
 } from "lucide-react";
+import {
+  CUENCA_CHAPTER_ONE_LESSON_IDS,
+  CUENCA_PROGRESS_EVENT,
+  markCuencaLessonVisited,
+  readCuencaChapterProgress,
+  type CuencaChapterProgress,
+} from "@/lib/learning-course-progress";
 
 type Lesson = {
   id: string;
@@ -88,6 +93,21 @@ const chapters: Chapter[] = [
 export default function LaCuencaDeLosEcosPage() {
   const [expanded, setExpanded] = useState<string[]>(["01"]);
   const [courseStats, setCourseStats] = useState<CourseStatsResponse | null>(null);
+  const [courseProgress, setCourseProgress] = useState<CuencaChapterProgress>({
+    visitedLessonIds: [],
+    completed: false,
+  });
+
+  useEffect(() => {
+    const syncProgress = () => setCourseProgress(readCuencaChapterProgress());
+    syncProgress();
+    window.addEventListener(CUENCA_PROGRESS_EVENT, syncProgress);
+    window.addEventListener("storage", syncProgress);
+    return () => {
+      window.removeEventListener(CUENCA_PROGRESS_EVENT, syncProgress);
+      window.removeEventListener("storage", syncProgress);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -111,6 +131,12 @@ export default function LaCuencaDeLosEcosPage() {
   const xpToNextRank = Math.max(0, Number(courseStats?.rank?.xpToNextRank ?? 0));
   const rankProgress = Math.min(100, Math.max(0, Number(courseStats?.rank?.progress ?? 0)));
   const xpTarget = seasonXp + xpToNextRank;
+  const completedLessonCount = courseProgress.completed
+    ? CUENCA_CHAPTER_ONE_LESSON_IDS.length
+    : courseProgress.visitedLessonIds.length;
+  const courseProgressPercent = Math.round(
+    (completedLessonCount / CUENCA_CHAPTER_ONE_LESSON_IDS.length) * 100,
+  );
 
   const toggle = (id: string) => {
     setExpanded((current) =>
@@ -121,17 +147,9 @@ export default function LaCuencaDeLosEcosPage() {
   return (
     <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#0e111a] px-4 pb-16 pt-5 text-white sm:px-7 sm:pt-7">
       <div className="mx-auto max-w-[1220px]">
-        <Link
-          href="/aprender"
-          className="group inline-flex items-center gap-2 px-1 py-2 text-sm font-medium text-slate-300/80 transition hover:text-white"
-        >
-          <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" />
-          Volver a las rutas
-        </Link>
-
         <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
           <div className="min-w-0">
-        <section className="relative mt-3 overflow-hidden rounded-[18px] border border-[#252d40] bg-[#091817] shadow-[0_18px_50px_rgba(0,0,0,.3)]">
+        <section className="relative overflow-hidden rounded-[18px] border border-[#252d40] bg-[#091817] shadow-[0_18px_50px_rgba(0,0,0,.3)]">
           <div className="absolute inset-0">
             <Image
               src="/images/aprender/cuenca-de-los-ecos/header.svg"
@@ -173,7 +191,6 @@ export default function LaCuencaDeLosEcosPage() {
                 className="group mt-5 inline-flex min-h-11 items-center justify-center gap-3 rounded-md border-2 border-[#ffe08a] bg-[#f7c948] px-5 py-3 text-[11px] font-extrabold tracking-[.02em] text-[#17130c] shadow-[0_4px_0_#8b681b] transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-[#ffda69] hover:shadow-[0_5px_0_#8b681b] active:translate-y-0 active:shadow-none"
               >
                 Comenzar a estudiar
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
             <span className="absolute right-4 top-4 border-2 border-emerald-300/50 bg-[#062b24]/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-normal text-emerald-200 [box-shadow:3px_3px_0_#12453c] sm:right-6 sm:top-6">
@@ -225,22 +242,40 @@ export default function LaCuencaDeLosEcosPage() {
                       <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-[30px] top-0 w-px bg-[#30394f] sm:left-[34px]" />
                       <div className="pl-[46px] pr-2 sm:pl-[53px] sm:pr-4">
                         {chapter.lessons.map((lesson, lessonIndex) => {
+                          const isVisited = courseProgress.completed || courseProgress.visitedLessonIds.includes(lesson.id);
+                          const previousLesson = chapter.lessons[lessonIndex - 1];
+                          const isUnlocked = lesson.available && (
+                            lessonIndex === 0 ||
+                            courseProgress.completed ||
+                            Boolean(previousLesson && courseProgress.visitedLessonIds.includes(previousLesson.id))
+                          );
+                          const isActive = isUnlocked && !isVisited;
                           const row = (
-                            <div className="group flex min-h-[49px] items-center gap-4 px-3 py-2 transition-colors hover:bg-white/[.025] sm:px-5">
-                              <span className={"min-w-0 flex-1 text-[13px] leading-5 " + (lesson.available ? "font-semibold text-slate-100" : "font-medium text-slate-500")}>
+                            <div className={"group flex min-h-[49px] items-center gap-4 px-3 py-2 transition-colors " + (isUnlocked ? "hover:bg-white/[.025]" : "")}>
+                              <span className={"min-w-0 flex-1 text-[13px] leading-5 " + (isUnlocked || isVisited ? "font-semibold text-slate-100" : "font-medium text-slate-500")}>
                                 <span className="mr-2 text-slate-400">{lesson.number || lessonIndex + 1}.</span>{lesson.title}
                               </span>
-                              {lesson.available ? (
-                                <span className={"inline-flex min-w-[72px] shrink-0 items-center justify-center rounded-md px-3 py-2 text-[10px] font-extrabold " + (lessonIndex === 0 ? "bg-[#f7c948] text-[#17130c] shadow-[0_3px_0_#8b681b]" : "border border-[#30394f] bg-[#151c2a] text-slate-200 group-hover:border-emerald-300/50 group-hover:text-emerald-200")}>
-                                  {lessonIndex === 0 ? "Iniciar" : "Abrir"}
+                              {isVisited ? (
+                                <span className="inline-flex min-w-[82px] shrink-0 items-center justify-center rounded-md border border-[#30394f] bg-[#151c2a] px-3 py-2 text-[10px] font-extrabold text-slate-200 transition-colors group-hover:border-emerald-300/50 group-hover:text-emerald-200">Repasar</span>
+                              ) : isActive ? (
+                                <span className="relative inline-flex min-w-[82px] shrink-0 items-center justify-center rounded-md bg-[#f7c948] px-3 py-2 text-[10px] font-extrabold text-[#17130c] shadow-[0_3px_0_#8b681b]">
+                                  <span className="transition-opacity group-hover:opacity-0">Iniciar</span>
+                                  <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">+50 XP</span>
                                 </span>
                               ) : (
-                                <span className="inline-flex min-w-[82px] shrink-0 items-center justify-center gap-1.5 rounded-md border border-white/[.06] bg-[#151b28] px-3 py-2 text-[10px] font-bold text-slate-500"><LockKeyhole className="h-3 w-3" /> Bloqueada</span>
+                                <span className="inline-flex min-w-[82px] shrink-0 items-center justify-center rounded-md border border-white/[.06] bg-[#151b28] px-3 py-2 text-[10px] font-bold text-slate-500">Bloqueada</span>
                               )}
                             </div>
                           );
-                          return lesson.available && lesson.href ? (
-                            <Link key={lesson.id} href={lesson.href} className="block">{row}</Link>
+                          return isUnlocked && lesson.href ? (
+                            <Link
+                              key={lesson.id}
+                              href={lesson.href}
+                              onClick={() => markCuencaLessonVisited(lesson.id)}
+                              className="block"
+                            >
+                              {row}
+                            </Link>
                           ) : (
                             <div key={lesson.id} aria-disabled="true" className="block opacity-60">{row}</div>
                           );
@@ -261,13 +296,19 @@ export default function LaCuencaDeLosEcosPage() {
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>
               <div className="space-y-5 p-4">
                 <div className="flex items-start gap-3">
-                  <svg aria-hidden="true" viewBox="0 0 32 32" className="mt-1 h-7 w-7 shrink-0" fill="none" stroke="#7d7c72" strokeWidth="1.7" strokeLinejoin="miter" shapeRendering="crispEdges">
-                    <path d="M7 4H12V7H15V10H17V7H20V4H25V7H28V12H30V16H26V20H22V24H18V28H14V24H10V20H6V16H2V12H4V7H7V4Z" />
+                  <svg aria-hidden="true" viewBox="0 0 16 16" className="mt-1 h-7 w-7 shrink-0" shapeRendering="crispEdges">
+                    <defs>
+                      <clipPath id="cuenca-heart-progress">
+                        <rect x="0" y="0" width={16 * courseProgressPercent / 100} height="16" />
+                      </clipPath>
+                    </defs>
+                    <path d="M2 2H6V3H8V4H10V3H12V2H14V4H15V7H14V9H13V11H12V12H11V13H10V14H8V15H7V14H6V13H5V12H4V11H3V9H2V7H1V4H2Z" fill="#111827" stroke="#7d7c72" strokeWidth=".7" />
+                    <path d="M2 2H6V3H8V4H10V3H12V2H14V4H15V7H14V9H13V11H12V12H11V13H10V14H8V15H7V14H6V13H5V12H4V11H3V9H2V7H1V4H2Z" fill="#ef4444" clipPath="url(#cuenca-heart-progress)" />
                   </svg>
                   <div className="min-w-0 flex-1">
-                    <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">Progreso 0%</span>
-                    <div className="mt-2 h-[18px] border-2 border-[#536071] bg-[#202833] p-[2px]" aria-label="Progreso del curso: 0%">
-                      <div className="h-full w-0 bg-[#54dfbb]" />
+                    <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">Progreso {courseProgressPercent}%</span>
+                    <div className="mt-2 h-[18px] border-2 border-[#536071] bg-[#202833] p-[2px]" aria-label={`Progreso del curso: ${courseProgressPercent}%`}>
+                      <div className="h-full bg-[#ef4444] transition-[width] duration-300" style={{ width: `${courseProgressPercent}%` }} />
                     </div>
                   </div>
                 </div>

@@ -309,8 +309,8 @@ export default function LaCuencaDeLosEcosPage() {
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-heart-outer" d="M3 1H6V2H7V3H9V2H10V1H13V2H14V4H15V7H16V9H15V11H14V12H13V13H12V14H11V15H5V14H4V13H3V12H2V11H1V9H0V7H1V4H2V2H3Z" />
-                      <path id="cuenca-heart-inner" d="M3 2H6V3H8V4H9V3H13V4H14V7H15V9H14V10H13V11H12V12H11V13H5V12H4V11H3V10H2V9H1V7H2V4H3Z" />
+                      <path id="cuenca-heart-outer" d="M3 1H6V2H3Z M10 1H13V2H10Z M2 2H7V3H2Z M9 2H14V3H9Z M1 3H15V4H1Z M0 4H16V6H0Z M1 6H15V7H1Z M2 7H14V8H2Z M3 8H13V9H3Z M4 9H12V10H4Z M5 10H11V11H5Z M6 11H10V12H6Z M7 12H9V13H7Z" />
+                      <path id="cuenca-heart-inner" d="M3 2H6V3H3Z M10 2H13V3H10Z M2 3H7V4H2Z M9 3H14V4H9Z M1 4H15V6H1Z M2 6H14V7H2Z M3 7H13V8H3Z M4 8H12V9H4Z M5 9H11V10H5Z M6 10H10V11H6Z M7 11H9V12H7Z" />
                       <clipPath id="cuenca-heart-interior-clip">
                         <use href="#cuenca-heart-inner" />
                       </clipPath>
@@ -320,7 +320,7 @@ export default function LaCuencaDeLosEcosPage() {
                     <rect
                       x="0"
                       y="0"
-                      width={16 * courseProgressPercent / 100}
+                      width={courseProgressPercent > 0 ? Math.max(1, 16 * courseProgressPercent / 100) : 0}
                       height="16"
                       fill="#ef3340"
                       clipPath="url(#cuenca-heart-interior-clip)"
@@ -342,8 +342,8 @@ export default function LaCuencaDeLosEcosPage() {
                     style={{ imageRendering: "pixelated" }}
                   >
                     <defs>
-                      <path id="cuenca-star-outer" d="M7 0H9V2H10V4H11V5H13V6H15V7H16V9H14V10H12V11H11V13H12V15H10V14H9V13H7V14H6V15H4V13H5V11H4V10H2V9H0V7H1V6H3V6H5V5H6V3H7V1Z" />
-                      <path id="cuenca-star-inner" d="M7 2H8V4H10V6H12V7H14V8H12V9H10V11H9V13H8V12H7V10H5V9H3V8H5V7H6V5H7Z" />
+                      <path id="cuenca-star-outer" d="M7 0H9V2H7Z M7 2H9V3H7Z M6 3H10V4H6Z M6 4H10V5H6Z M5 5H11V6H5Z M4 6H12V7H4Z M1 7H15V8H1Z M0 8H16V9H0Z M1 9H15V10H1Z M3 10H13V11H3Z M4 11H7V12H4Z M9 11H12V12H9Z M4 12H7V13H4Z M9 12H12V13H9Z M3 13H7V14H3Z M9 13H13V14H9Z M2 14H7V15H2Z M9 14H14V15H9Z M2 15H7V16H2Z M9 15H14V16H9Z" />
+                      <path id="cuenca-star-inner" d="M7 2H9V3H7Z M7 3H9V4H7Z M6 4H10V5H6Z M5 5H11V6H5Z M4 6H12V7H4Z M3 7H13V8H3Z M2 8H14V9H2Z M4 9H12V10H4Z M5 10H11V11H5Z M6 11H7V12H6Z M9 11H10V12H9Z M6 12H7V13H6Z M9 12H10V13H9Z M5 13H7V14H5Z M9 13H11V14H9Z M4 14H7V15H4Z M9 14H12V15H9Z" />
                       <clipPath id="cuenca-star-interior-clip">
                         <use href="#cuenca-star-inner" />
                       </clipPath>
@@ -353,7 +353,7 @@ export default function LaCuencaDeLosEcosPage() {
                     <rect
                       x="0"
                       y="0"
-                      width={16 * rankProgress / 100}
+                      width={rankProgress > 0 ? Math.max(1, 16 * rankProgress / 100) : 0}
                       height="16"
                       fill="#facc15"
                       clipPath="url(#cuenca-star-interior-clip)"

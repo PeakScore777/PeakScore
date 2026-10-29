@@ -8,9 +8,7 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronRight,
-  Heart,
   LockKeyhole,
-  Star,
 } from "lucide-react";
 
 type Lesson = {
@@ -33,8 +31,7 @@ type CourseStatsResponse = {
   profile?: {
     xp?: number | null;
     seasonXp?: number | null;
-    coins?: number | null;
-  };
+    };
   rank?: {
     progress?: number | null;
     xpToNextRank?: number | null;
@@ -115,7 +112,6 @@ export default function LaCuencaDeLosEcosPage() {
   }, []);
 
   const seasonXp = Math.max(0, Number(courseStats?.profile?.seasonXp ?? 0));
-  const peakCoins = Math.max(0, Number(courseStats?.profile?.coins ?? 0));
   const xpToNextRank = Math.max(0, Number(courseStats?.rank?.xpToNextRank ?? 0));
   const rankProgress = Math.min(100, Math.max(0, Number(courseStats?.rank?.progress ?? 0)));
   const xpTarget = seasonXp + xpToNextRank;
@@ -128,7 +124,7 @@ export default function LaCuencaDeLosEcosPage() {
 
   return (
     <main className="min-h-[calc(100vh-72px)] overflow-hidden bg-[#0e111a] px-4 pb-16 pt-5 text-white sm:px-7 sm:pt-7">
-      <div className="mx-auto max-w-[1120px]">
+      <div className="mx-auto max-w-[1220px]">
         <Link
           href="/aprender"
           className="group inline-flex items-center gap-2 px-1 py-2 text-sm font-medium text-slate-300/80 transition hover:text-white"
@@ -137,7 +133,7 @@ export default function LaCuencaDeLosEcosPage() {
           Volver a las rutas
         </Link>
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-start">
+        <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
           <div className="min-w-0">
         <section className="relative mt-3 overflow-hidden rounded-[18px] border border-[#252d40] bg-[#091817] shadow-[0_18px_50px_rgba(0,0,0,.3)]">
           <div className="absolute inset-0">
@@ -165,23 +161,17 @@ export default function LaCuencaDeLosEcosPage() {
             <div className="absolute inset-0 bg-gradient-to-t from-[#071511] via-transparent to-black/10" />
           </div>
 
-          <div className="relative grid min-h-[250px] items-end px-5 pb-6 pt-7 sm:min-h-[285px] sm:px-7 sm:pb-7 lg:min-h-[310px] lg:px-8">
-            <div className="max-w-[610px]">
+          <div className="relative grid min-h-[240px] items-end px-5 pb-6 pt-7 sm:min-h-[260px] sm:px-7 sm:pb-7 lg:min-h-[270px] lg:px-8">
+            <div className="max-w-[760px]">
               <div className="inline-flex items-center gap-2 rounded border-2 border-emerald-300/50 bg-[#071710]/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.08em] text-emerald-200 [box-shadow:3px_3px_0_#163b2c]">
                 Ruta 02 <span className="text-white/30">·</span> Biología y Ecología
               </div>
-              <h1 className="pixel-font mt-4 text-[clamp(1.45rem,2.5vw,2.35rem)] font-normal leading-[1.5] tracking-normal">
-                La Cuenca
-                <br />
-                de los <span className="bg-gradient-to-r from-emerald-200 via-teal-300 to-cyan-300 bg-clip-text text-transparent">Ecos</span>
+              <h1 className="pixel-font mt-4 text-[clamp(1.65rem,2.5vw,2.5rem)] font-normal leading-[1.2] tracking-normal">
+                La Cuenca de los <span className="bg-gradient-to-r from-emerald-200 via-teal-300 to-cyan-300 bg-clip-text text-transparent">Ecos</span>
               </h1>
-              <p className="mt-3 max-w-[560px] text-sm leading-6 text-slate-100/85">
+              <p className="mt-3 max-w-[680px] text-sm leading-6 text-slate-100/85">
                 Después de estudiar los cristales del Santuario de la Materia, Nova sigue una señal hasta un bosque demasiado silencioso. Observa el agua, registra las especies y reúne evidencias antes de explicar qué cambió en el ecosistema.
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded border border-emerald-200/30 bg-[#061410]/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-emerald-100">{totalLessons} LECCIONES</span>
-                <span className="rounded border border-amber-200/30 bg-[#061410]/90 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-amber-100">+50 XP · DESAFÍO PERFECTO</span>
-              </div>
               <Link
                 href="/aprender/la-cuenca-de-los-ecos/leccion/1"
                 className="group mt-5 inline-flex min-h-11 items-center justify-center gap-3 rounded-md border-2 border-[#ffe08a] bg-[#f7c948] px-5 py-3 text-[11px] font-extrabold tracking-[.02em] text-[#17130c] shadow-[0_4px_0_#8b681b] transition-[transform,box-shadow,background-color] hover:-translate-y-0.5 hover:bg-[#ffda69] hover:shadow-[0_5px_0_#8b681b] active:translate-y-0 active:shadow-none"
@@ -270,52 +260,34 @@ export default function LaCuencaDeLosEcosPage() {
 
           </div>
 
-          <aside className="mt-3 space-y-4 lg:sticky lg:top-24 lg:mt-3">
+          <aside className="space-y-4 lg:sticky lg:top-24 lg:-translate-y-10">
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>
               <div className="space-y-5 p-4">
                 <div className="flex items-start gap-3">
-                  <Heart aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 stroke-[1.25] text-[#7d7c72]" />
+                  <svg aria-hidden="true" viewBox="0 0 32 32" className="mt-1 h-7 w-7 shrink-0" fill="none" stroke="#7d7c72" strokeWidth="1.7" strokeLinejoin="miter" shapeRendering="crispEdges">
+                    <path d="M7 4H12V7H15V10H17V7H20V4H25V7H28V12H30V16H26V20H22V24H18V28H14V24H10V20H6V16H2V12H4V7H7V4Z" />
+                  </svg>
                   <div className="min-w-0 flex-1">
-                    <span className="text-xs font-extrabold text-[#9ca3af]">Progreso 0%</span>
-                    <div className="mt-2 h-[18px] border border-[#536071] bg-[#202833] p-[2px]" aria-label="Progreso del curso: 0%">
+                    <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">Progreso 0%</span>
+                    <div className="mt-2 h-[18px] border-2 border-[#536071] bg-[#202833] p-[2px]" aria-label="Progreso del curso: 0%">
                       <div className="h-full w-0 bg-[#54dfbb]" />
                     </div>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <Star aria-hidden="true" className="mt-1 h-7 w-7 shrink-0 stroke-[1.25] text-[#7d7c72]" />
+                  <svg aria-hidden="true" viewBox="0 0 32 32" className="mt-1 h-7 w-7 shrink-0" fill="none" stroke="#7d7c72" strokeWidth="1.7" strokeLinejoin="miter" shapeRendering="crispEdges">
+                    <path d="M13 2H19V8H22V11H29V17H23V20H20V27H14V21H11V18H4V12H10V9H13V2Z" />
+                  </svg>
                   <div className="min-w-0 flex-1">
-                    <span className="text-xs font-extrabold text-[#9ca3af]">
+                    <span className="pixel-font text-[10px] font-normal text-[#9ca3af] sm:text-[11px]">
                       {xpTarget > seasonXp ? `XP ${seasonXp.toLocaleString("es-CO")}/${xpTarget.toLocaleString("es-CO")}` : `XP ${seasonXp.toLocaleString("es-CO")}`}
                     </span>
-                    <div className="mt-2 h-[18px] border border-[#536071] bg-[#202833] p-[2px]" aria-label={`Progreso de experiencia de temporada: ${rankProgress}%`}>
+                    <div className="mt-2 h-[18px] border-2 border-[#536071] bg-[#202833] p-[2px]" aria-label={`Progreso de experiencia de temporada: ${rankProgress}%`}>
                       <div className="h-full bg-[#a5adb9] transition-[width] duration-300" style={{ width: `${rankProgress}%` }} />
                     </div>
                   </div>
                 </div>
-                <div className="border-t border-white/[.07] pt-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs text-slate-400">PeakCoins</span>
-                    <span className="inline-flex items-center gap-2 text-xs font-extrabold tabular-nums text-slate-100">
-                      <Image src="/images/currency/peakcoin.webp" alt="" width={18} height={18} className="h-[18px] w-[18px] object-contain" />
-                      {peakCoins.toLocaleString("es-CO")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
-              <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Recompensas</h2>
-              <div className="p-4">
-                <div className="grid grid-cols-3 gap-2">
-                  <div title="EXP al superar el desafío perfecto" className="flex h-[68px] w-[68px] items-center justify-center rounded-md border border-[#3a4555] bg-[#1a202b] p-2">
-                    <Image src="/peaky/homepage/xp.webp" alt="EXP" width={46} height={46} className="h-11 w-11 object-contain" />
-                  </div>
-                </div>
-                <p className="mt-3 text-xs font-bold text-slate-100">Desafío perfecto</p>
-                <p className="mt-1 text-xs text-slate-400">+50 XP</p>
               </div>
             </section>
           </aside>

@@ -260,7 +260,7 @@ export default function LaCuencaDeLosEcosPage() {
 
           </div>
 
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:-translate-y-10">
+          <aside className="space-y-4 lg:sticky lg:top-24">
             <section className="overflow-hidden rounded-xl border border-[#252d40] bg-[#10141e]">
               <h2 className="pixel-font border-b border-[#252d40] px-4 py-3 text-[12px] font-normal text-white">Progreso del curso</h2>
               <div className="space-y-5 p-4">

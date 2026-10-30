@@ -87,31 +87,111 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "El contenido de la grabación no coincide con su formato declarado." }, { status: 400 });
   }
 
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "La transcripción por audio aún no está configurada en el servidor." }, { status: 503 });
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const groqApiKey = process.env.GROQ_API_KEY;
+
+  if (!geminiApiKey && !groqApiKey) {
+    return NextResponse.json({
+      error: "La transcripción no está configurada. El servidor necesita al menos un proveedor de audio.",
+      code: "TRANSCRIPTION_NOT_CONFIGURED",
+    }, { status: 503 });
   }
 
-  try {
-    const ai = new GoogleGenAI({ apiKey });
-    const result = await ai.models.generateContent({
-      model: "gemini-3.1-flash-lite",
-      contents: [{
-        role: "user",
-        parts: [
-          { text: "Transcribe literalmente esta nota de voz en español. Conserva nombres, cifras y términos académicos. No respondas la pregunta ni inventes palabras. Devuelve únicamente la transcripción." },
-          { inlineData: { mimeType, data: bytes.toString("base64") } },
-        ],
-      }],
-      config: { temperature: 0, httpOptions: { timeout: 45_000 } },
-    });
-    const transcript = typeof result.text === "string" ? result.text.trim().slice(0, 1200) : "";
-    if (!transcript) return NextResponse.json({ error: "No se detectó una transcripción clara. Intenta grabar de nuevo." }, { status: 422 });
-    return NextResponse.json({ transcript }, {
-      headers: { "Cache-Control": "no-store, max-age=0" },
-    });
-  } catch (error) {
-    console.error("[Orby Audio] Transcription failed.", { errorName: error instanceof Error ? error.name : "UnknownError" });
-    return NextResponse.json({ error: "No se pudo transcribir el audio. Inténtalo de nuevo." }, { status: 503 });
+  const filenameByMime: Record<string, string> = {
+    "audio/webm": "orby-voice.webm",
+    "audio/ogg": "orby-voice.ogg",
+    "audio/wav": "orby-voice.wav",
+    "audio/mpeg": "orby-voice.mp3",
+    "audio/mp3": "orby-voice.mp3",
+    "audio/aac": "orby-voice.aac",
+    "audio/mp4": "orby-voice.mp4",
+    "audio/m4a": "orby-voice.m4a",
+    "audio/opus": "orby-voice.opus",
+  };
+  const prompt = "Transcribe literalmente esta nota de voz en español de Colombia. Conserva nombres, cifras y términos académicos. No respondas la pregunta ni inventes palabras. Devuelve únicamente la transcripción.";
+
+  const providerFailures: Array<{ provider: string; status?: number; code?: string }> = [];
+  let transcript = "";
+  let provider = "";
+
+  if (geminiApiKey) {
+    try {
+      const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+      const result = await ai.models.generateContent({
+        model: "gemini-3.1-flash-lite",
+        contents: [{
+          role: "user",
+          parts: [
+            { text: prompt },
+            { inlineData: { mimeType, data: bytes.toString("base64") } },
+          ],
+        }],
+        config: { temperature: 0, httpOptions: { timeout: 45_000 } },
+      });
+      transcript = typeof result.text === "string" ? result.text.trim().slice(0, 1200) : "";
+      if (transcript) provider = "gemini";
+      else providerFailures.push({ provider: "gemini", code: "EMPTY_TRANSCRIPT" });
+    } catch (error) {
+      const typed = error as { status?: unknown; code?: unknown; name?: unknown };
+      providerFailures.push({
+        provider: "gemini",
+        status: typeof typed.status === "number" ? typed.status : undefined,
+        code: typeof typed.code === "string" ? typed.code.slice(0, 80) : typeof typed.name === "string" ? typed.name.slice(0, 80) : "PROVIDER_ERROR",
+      });
+    }
   }
+
+  if (!transcript && groqApiKey) {
+    try {
+      const groqForm = new FormData();
+      groqForm.append("file", audio, filenameByMime[mimeType] ?? "orby-voice.webm");
+      groqForm.append("model", "whisper-large-v3-turbo");
+      groqForm.append("language", "es");
+      groqForm.append("response_format", "json");
+      groqForm.append("temperature", "0");
+      groqForm.append("prompt", "Español colombiano. Transcribe literalmente; conserva nombres propios, cifras, fórmulas y términos académicos de Saber 11. No traduzcas ni respondas la pregunta.");
+
+      const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${groqApiKey}` },
+        body: groqForm,
+        signal: AbortSignal.timeout(45_000),
+      });
+
+      const payload = await response.json().catch(() => ({})) as { text?: unknown; error?: { code?: unknown } };
+      if (!response.ok) {
+        providerFailures.push({
+          provider: "groq",
+          status: response.status,
+          code: typeof payload.error?.code === "string" ? payload.error.code.slice(0, 80) : "PROVIDER_ERROR",
+        });
+      } else {
+        transcript = typeof payload.text === "string" ? payload.text.trim().slice(0, 1200) : "";
+        if (transcript) provider = "groq";
+        else providerFailures.push({ provider: "groq", code: "EMPTY_TRANSCRIPT" });
+      }
+    } catch (error) {
+      const typed = error as { name?: unknown; code?: unknown };
+      providerFailures.push({
+        provider: "groq",
+        code: typeof typed.code === "string" ? typed.code.slice(0, 80) : typeof typed.name === "string" ? typed.name.slice(0, 80) : "PROVIDER_ERROR",
+      });
+    }
+  }
+
+  if (!transcript) {
+    console.error("[Orby Audio] All transcription providers failed.", { failures: providerFailures });
+    const wasRateLimited = providerFailures.some((failure) => failure.status === 429);
+    return NextResponse.json({
+      error: wasRateLimited
+        ? "Los proveedores gratuitos de transcripción están temporalmente saturados. Espera un momento y vuelve a intentarlo."
+        : "No pudimos transcribir el audio con los proveedores disponibles. Inténtalo otra vez o adjunta una grabación más clara.",
+      code: wasRateLimited ? "TRANSCRIPTION_RATE_LIMITED" : "TRANSCRIPTION_PROVIDERS_FAILED",
+    }, { status: wasRateLimited ? 429 : 503 });
+  }
+
+  return NextResponse.json({ transcript, provider }, {
+    headers: { "Cache-Control": "no-store, max-age=0" },
+  });
+}
 }

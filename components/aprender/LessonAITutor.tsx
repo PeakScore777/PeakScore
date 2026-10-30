@@ -1409,6 +1409,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {loading && <div role="status" className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Orby está preparando una explicación…</div>}
           </div>
         )}
+        {voiceMode && liveTranscript && <div className="mt-3 flex justify-end">
+          <article className="w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm bg-orange-600 px-4 py-3 text-white shadow-sm">
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100">Tú · transcribiendo</p>
+            <p className="break-words text-[15px] leading-7 sm:text-base">{liveTranscript}</p>
+          </article>
+        </div>}
         {error && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       </div>
 
@@ -1463,7 +1469,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <span className={isListening ? "h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-orange-600" : "h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500"} />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-semibold text-slate-700">{voiceStatus}</p>
-          {liveTranscript && <p className="mt-0.5 truncate text-[11px] text-slate-500">Tú: {liveTranscript}</p>}
+
         </div>
         <div className="flex h-6 items-center gap-[3px]" aria-hidden="true">{Array.from({length: 18}, (_, index) => <span key={index} className="w-[3px] rounded-full bg-orange-500 transition-all" style={{height: 5 + ((index * 7) % 17), opacity: isListening ? 1 : 0.4}} />)}</div>
         <button type="button" onClick={toggleVoiceMode} className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-700">Finalizar</button>

@@ -20,7 +20,6 @@ import {
   XCircle,
 } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
-import CasoCeroScene from "@/components/games/CasoCeroScene";
 import CasoCeroCinematicScene from "@/components/games/CasoCeroCinematicScene";
 import CasoCeroLoadingSkeleton from "@/components/games/CasoCeroLoadingSkeleton";
 import type { EvidenceCase } from "@/lib/games/caso-cero-bank";

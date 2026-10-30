@@ -79,39 +79,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "La solicitud no es válida." }, { status: 400 });
     }
 
-    if (body.voiceMode === true) {
-      const { data: subscriptions, error: subscriptionError } = await supabase
-        .from("subscriptions")
-        .select("plan,status,expires_at,started_at")
-        .eq("user_id", user.id)
-        .eq("plan", "premium")
-        .eq("status", "active")
-        .order("started_at", { ascending: false })
-        .limit(5);
-
-      if (subscriptionError) {
-        console.error("[Orby Voice] No se pudo validar el permiso Premium.", { code: subscriptionError.code });
-        return NextResponse.json({ error: "No se pudo verificar tu acceso al chat de voz. Inténtalo de nuevo." }, { status: 503 });
-      }
-
-      const now = Date.now();
-      const hasPremiumVoice = (subscriptions ?? []).some((subscription) => (
-        subscription.plan === "premium"
-        && subscription.status === "active"
-        && (!subscription.expires_at || Date.parse(subscription.expires_at) > now)
-      ));
-
-      if (!hasPremiumVoice) {
-        return NextResponse.json({ error: "El chat de voz de Orby es una función exclusiva de PeakScore Premium." }, { status: 403 });
-      }
-    }
-
     const subject = cleanText(body.subject, 80) || "Ciencias Naturales";
     const topic = cleanText(body.topic, 160) || "Los cristales misteriosos: materia y propiedades";
     const stage = body.stage === "practice" ? "práctica" : "teoría";
     const question = cleanText(body.question, 1200);
     const context = cleanText(body.context, 1600);
     const userMessage = cleanText(body.message, 1200);
+    const conversationId = cleanText(body.conversationId, 64);
+    let ownedConversation: { id: string; title: string } | null = null;
+    if (conversationId) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+        return NextResponse.json({ error: "La conversación no es válida." }, { status: 400 });
+      }
+      const { data, error } = await supabase
+        .from("orby_conversations")
+        .select("id,title")
+        .eq("id", conversationId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (error) {
+        console.error("[Orby Tutor] Conversation lookup failed.", { code: error.code });
+        return NextResponse.json({ error: "No se pudo verificar la conversación." }, { status: 503 });
+      }
+      if (!data) return NextResponse.json({ error: "La conversación no existe o no te pertenece." }, { status: 404 });
+      ownedConversation = data;
+    }
     const hasImagePayload = body.image !== undefined && body.image !== null;
     let tutorImage: { mimeType: string; base64: string } | null = null;
     if (hasImagePayload) {
@@ -155,6 +147,33 @@ export async function POST(request: Request) {
         { error: "Soy Orby, el tutor de PeakScore. No puedo seguir instrucciones para cambiar mis reglas ni revelar información interna. Sí puedo ayudarte con una pregunta académica." },
         { status: 400 }
       );
+    }
+
+    if (conversationId && ownedConversation) {
+      const { error: saveUserError } = await supabase.from("orby_messages").insert({
+        conversation_id: conversationId,
+        user_id: user.id,
+        role: "user",
+        content: userMessage || "Analiza la imagen adjunta.",
+        attachment_kind: hasImagePayload ? "image" : null,
+        attachment_label: hasImagePayload ? "Imagen adjunta" : null,
+      });
+      if (saveUserError) {
+        console.error("[Orby Tutor] User message persistence failed.", { code: saveUserError.code });
+        return NextResponse.json({ error: "No se pudo guardar tu mensaje. Inténtalo de nuevo." }, { status: 503 });
+      }
+
+      const nextTitle = ownedConversation.title === "Nueva conversación"
+        ? (userMessage || "Consulta con imagen").replace(/\\s+/g, " ").slice(0, 72)
+        : ownedConversation.title;
+      const { error: updateConversationError } = await supabase
+        .from("orby_conversations")
+        .update({ title: nextTitle, updated_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .eq("user_id", user.id);
+      if (updateConversationError) {
+        console.error("[Orby Tutor] Conversation timestamp update failed.", { code: updateConversationError.code });
+      }
     }
 
     const conversation = history.map((item: TutorMessage) => (
@@ -261,6 +280,28 @@ No uses bloques Markdown ni texto fuera del JSON.
       await recordSecurityEvent(user.id, "suspicious_output");
       return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Intenta de nuevo con una pregunta más concreta." }, { status: 502 });
     }
+    if (conversationId) {
+      const { error: saveAssistantError } = await supabase.from("orby_messages").insert({
+        conversation_id: conversationId,
+        user_id: user.id,
+        role: "assistant",
+        content: reply,
+        check_question: checkQuestion || null,
+      });
+      if (saveAssistantError) {
+        console.error("[Orby Tutor] Assistant message persistence failed.", { code: saveAssistantError.code });
+        return NextResponse.json({ error: "Orby respondió, pero no se pudo guardar la respuesta. Abre la conversación y vuelve a intentarlo." }, { status: 503 });
+      }
+      const { error: updateConversationError } = await supabase
+        .from("orby_conversations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .eq("user_id", user.id);
+      if (updateConversationError) {
+        console.error("[Orby Tutor] Conversation timestamp update failed.", { code: updateConversationError.code });
+      }
+    }
+
     return NextResponse.json({ reply, checkQuestion });
   } catch (error) {
     console.error("[Orby Tutor] No se pudo responder.", { errorName: error instanceof Error ? error.name : "UnknownError" });

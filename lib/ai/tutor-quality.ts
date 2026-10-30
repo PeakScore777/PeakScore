@@ -1,6 +1,6 @@
 import "server-only";
 
-import { AIProvider, generateAI } from "@/lib/ai/router";
+import { generateAI, type AIProvider } from "@/lib/ai/router";
 
 type TutorPayload = {
   reply: string;

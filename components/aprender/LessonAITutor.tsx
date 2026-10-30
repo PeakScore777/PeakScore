@@ -707,6 +707,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setPendingAttachmentMeta(null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.");
+      if (isVoiceInteraction) {
+        waitingForVoiceReplyRef.current = false;
+        voiceModeRef.current = false;
+        setVoiceMode(false);
+      }
     } finally {
       setLoading(false);
     }
@@ -743,9 +748,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     setIsListening(false);
+    stopAudioRecording();
+    setAudioConsentOpen(false);
+    setAudioConsentChecked(false);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     setSpeakingIndex(null);
     voiceModeRef.current = false;
+    waitingForVoiceReplyRef.current = false;
     setVoiceMode(false);
     setNotebookOpen(false);
     onOpenChange(false);

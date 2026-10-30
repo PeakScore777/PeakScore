@@ -88,28 +88,30 @@ export async function POST(request: Request) {
         uses: 1,
         expireTime,
         newSessionExpireTime,
-        bidiGenerateContentSetup: {
+        liveConnectConstraints: {
           model: "models/" + model,
-          systemInstruction: {
-            parts: [{ text: instructions }],
-          },
-          generationConfig: {
-            responseModalities: ["AUDIO"],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: {
-                  voiceName: "Puck",
+          config: {
+            systemInstruction: {
+              parts: [{ text: instructions }],
+            },
+            generationConfig: {
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: "Puck",
+                  },
                 },
               },
             },
-          },
-          inputAudioTranscription: {},
-          outputAudioTranscription: {},
-          realtimeInputConfig: {
-            automaticActivityDetection: {
-              disabled: false,
-              prefixPaddingMs: 250,
-              silenceDurationMs: 550,
+            inputAudioTranscription: {},
+            outputAudioTranscription: {},
+            realtimeInputConfig: {
+              automaticActivityDetection: {
+                disabled: false,
+                prefixPaddingMs: 250,
+                silenceDurationMs: 550,
+              },
             },
           },
         },

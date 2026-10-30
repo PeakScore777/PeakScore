@@ -826,6 +826,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || sendingRef.current || message.length > 1200) return;
+    if (voiceModeRef.current && voiceChannelRef.current?.readyState === "open" && message && !selectedFile) {
+      voiceUserTextRef.current = message;
+      setMessages((current) => [...current, { role: "user", content: message }]);
+      setInput("");
+      if (inputRef.current) inputRef.current.style.height = "48px";
+      voiceChannelRef.current.send(JSON.stringify({
+        type: "conversation.item.create",
+        item: { type: "message", role: "user", content: [{ type: "input_text", text: message }] },
+      }));
+      voiceChannelRef.current.send(JSON.stringify({ type: "response.create" }));
+      setVoiceStatus("Orby está pensando…");
+      return;
+    }
     sendingRef.current = true;
 
     let targetConversationId = conversationId;
@@ -940,7 +953,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       audioStreamRef.current?.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-      voiceModeRef.current = false;
+      stopRealtimeVoice();
       waitingForVoiceReplyRef.current = false;
       lastInitialPromptRef.current = null;
       activeReviewRef.current = null;
@@ -971,9 +984,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setPendingAttachmentMeta(null);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     setSpeakingIndex(null);
-    voiceModeRef.current = false;
+    stopRealtimeVoice();
     waitingForVoiceReplyRef.current = false;
-    setVoiceMode(false);
     setNotebookOpen(false);
     onOpenChange(false);
   }
@@ -999,8 +1011,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     clearAttachment();
     clearRecordedAudio();
     setPendingAttachmentMeta(null);
-    voiceModeRef.current = false;
-    setVoiceMode(false);
+    stopRealtimeVoice();
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     setIsListening(false);
@@ -1351,9 +1362,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ) : (
           <div className="space-y-4">
             {messages.map((message, index) => (
-              <article key={index} className={message.role === "user" ? `ml-auto max-w-[92%] rounded-2xl rounded-br-sm px-3 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
+              <article key={index} className={message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
-                <div className="break-words text-[13px] leading-[1.75] sm:text-sm">{renderTutorContent(message.content)}</div>
+                <div className="break-words text-[15px] leading-7 sm:text-base">{renderTutorContent(message.content)}</div>
                 {message.role === "assistant" && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index)} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
                   <Volume2 className="h-3.5 w-3.5" /> {speakingIndex === index ? "Detener audio" : "Escuchar respuesta"}
                 </button>}
@@ -1415,10 +1426,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
       </div>}
       {workspace && workspaceMode === "voice" && <div className="mx-4 mb-2 flex shrink-0 items-center gap-3 rounded-xl border border-orange-200 bg-orange-50/80 px-3 py-2 sm:mx-6" role="status" aria-live="polite">
-        <span className={isListening ? "h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-orange-600" : speakingIndex !== null ? "h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" : "h-2.5 w-2.5 shrink-0 rounded-full bg-slate-400"} />
-        <span className="min-w-0 flex-1 text-xs font-semibold text-slate-700">{speakingIndex !== null ? "Orby está hablando…" : isListening ? "Escuchando… habla con naturalidad" : loading ? "Preparando respuesta…" : "Modo de voz activo"}</span>
-        <div className="flex h-6 items-center gap-[3px]" aria-hidden="true">{Array.from({length: 18}, (_, index) => <span key={index} className="w-[3px] rounded-full bg-orange-500 transition-all" style={{height: 5 + ((index * 7) % 17), opacity: isListening || speakingIndex !== null ? 1 : 0.35}} />)}</div>
-        {speakingIndex !== null && <button type="button" onClick={() => { stopSpeaking(); toggleVoiceInput(); }} className="shrink-0 rounded-lg border border-orange-200 bg-white px-3 py-1.5 text-[11px] font-bold text-orange-700 transition hover:bg-orange-100">Interrumpir</button>}
+        <span className={isListening ? "h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-orange-600" : "h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500"} />
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold text-slate-700">{voiceStatus}</p>
+          {liveTranscript && <p className="mt-0.5 truncate text-[11px] text-slate-500">Tú: {liveTranscript}</p>}
+        </div>
+        <div className="flex h-6 items-center gap-[3px]" aria-hidden="true">{Array.from({length: 18}, (_, index) => <span key={index} className="w-[3px] rounded-full bg-orange-500 transition-all" style={{height: 5 + ((index * 7) % 17), opacity: isListening ? 1 : 0.4}} />)}</div>
         <button type="button" onClick={toggleVoiceMode} className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-700">Finalizar</button>
       </div>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">

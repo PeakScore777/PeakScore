@@ -221,7 +221,7 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     const reply = cleanText(parsed.reply, 7000);
     const checkQuestion = cleanText(parsed.checkQuestion, 500);
-    if (!reply || !isSafeTutorOutput(reply)) {
+    if (!reply || !isSafeTutorOutput(reply) || !isSafeTutorOutput(checkQuestion)) {
       return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Intenta de nuevo con una pregunta más concreta." }, { status: 502 });
     }
     return NextResponse.json({ reply, checkQuestion });

@@ -270,6 +270,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
 
   useEffect(() => {
+    const currentPreview = attachmentPreview;
+    return () => {
+      if (currentPreview.startsWith("blob:")) URL.revokeObjectURL(currentPreview);
+    };
+  }, [attachmentPreview]);
+
+  useEffect(() => {
     return () => {
       recognitionRef.current?.stop();
       recognitionRef.current = null;
@@ -282,11 +289,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       mediaRecorderRef.current = null;
       audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+      audioChunksRef.current = [];
       if (recordingTimeoutRef.current) window.clearTimeout(recordingTimeoutRef.current);
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-      if (attachmentPreview.startsWith("blob:")) URL.revokeObjectURL(attachmentPreview);
     };
-  }, [attachmentPreview]);
+  }, []);
 
   function handleAttachment(file?: File) {
     setAttachmentError("");
@@ -733,8 +741,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!open) {
       recognitionRef.current?.stop();
       recognitionRef.current = null;
+      stopAudioRecording(true);
+      audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       voiceModeRef.current = false;
+      waitingForVoiceReplyRef.current = false;
       lastInitialPromptRef.current = null;
       activeReviewRef.current = null;
       return;

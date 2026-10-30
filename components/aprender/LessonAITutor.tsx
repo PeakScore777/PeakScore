@@ -219,7 +219,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setHistoryOpen(false);
     setAttachmentError("");
     clearAttachment();
-    setRecordedAudio(null);
+    clearRecordedAudio();
     setPendingAttachmentMeta(null);
     setVoiceMode(false);
     voiceModeRef.current = false;
@@ -790,7 +790,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     recognitionRef.current = null;
     setIsListening(false);
     stopAudioRecording(true);
-    setRecordedAudio(null);
+    clearRecordedAudio();
     setAudioConsentOpen(false);
     setAudioConsentChecked(false);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -821,7 +821,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setPendingDeleteConversation(null);
     setAttachmentError("");
     clearAttachment();
-    setRecordedAudio(null);
+    clearRecordedAudio();
     setPendingAttachmentMeta(null);
     setAudioConsentOpen(false);
     setAudioConsentChecked(false);

@@ -91,26 +91,12 @@ export async function POST(request: Request) {
         liveConnectConstraints: {
           model: "models/" + model,
           config: {
-            systemInstruction: {
-              parts: [{ text: instructions }],
-            },
-            generationConfig: {
-              responseModalities: ["AUDIO"],
-              speechConfig: {
-                voiceConfig: {
-                  prebuiltVoiceConfig: {
-                    voiceName: "Puck",
-                  },
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: "Puck",
                 },
-              },
-            },
-            inputAudioTranscription: {},
-            outputAudioTranscription: {},
-            realtimeInputConfig: {
-              automaticActivityDetection: {
-                disabled: false,
-                prefixPaddingMs: 250,
-                silenceDurationMs: 550,
               },
             },
           },
@@ -143,6 +129,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ephemeralToken: token,
       model,
+      systemInstruction: instructions,
       expiresAt: payload?.expireTime ?? expireTime,
     }, {
       headers: { "Cache-Control": "no-store, max-age=0" },

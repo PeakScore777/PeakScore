@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ErrorInfo, type ReactNode } from "react";
+import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
@@ -261,7 +261,7 @@ class EvidenceImageBoundary extends Component<ImageBoundaryProps, ImageBoundaryS
     return { failed: true };
   }
 
-  componentDidCatch(error: Error, _info: ErrorInfo) {
+  componentDidCatch(error: Error) {
     console.warn("Caso Cero: no se pudo cargar una fotografía de evidencia.", error);
   }
 

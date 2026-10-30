@@ -498,13 +498,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!open) {
       recognitionRef.current?.stop();
       recognitionRef.current = null;
-      setIsListening(false);
-      stopSpeaking();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       voiceModeRef.current = false;
-      setVoiceMode(false);
       lastInitialPromptRef.current = null;
       activeReviewRef.current = null;
-      setNotebookOpen(false);
       return;
     }
     const prompt = initialPrompt?.trim();
@@ -518,6 +515,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setNotebookOpen(false);
     const prompt = `Explícame paso a paso la pregunta ${item.number}. Quiero entender por qué mi respuesta fue incorrecta o por qué se agotó el tiempo, cómo se llega a la respuesta correcta y qué idea clave debo recordar para resolver una pregunta parecida. Distingue claramente mi respuesta de la correcta, usa la explicación base como referencia y no inventes datos.`;
     void sendMessageRef.current(prompt);
+  }
+
+  function handleCloseTutor() {
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    setSpeakingIndex(null);
+    voiceModeRef.current = false;
+    setVoiceMode(false);
+    setNotebookOpen(false);
+    onOpenChange(false);
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -539,7 +548,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <p className="truncate text-xs text-slate-500">Tutor de ciencias · Saber 11</p>
           </div>
         </div>
-        <button type="button" onClick={() => onOpenChange(false)} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>
+        <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>
       </header>
 
       {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#d9c5ae] bg-[#fff9f0] px-3 py-2">

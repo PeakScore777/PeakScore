@@ -16,6 +16,7 @@ create index if not exists orby_conversations_user_updated_idx
   on public.orby_conversations (user_id, updated_at desc);
 
 alter table public.orby_conversations enable row level security;
+revoke all on public.orby_conversations from public, anon, authenticated;
 grant select, insert, update, delete on public.orby_conversations to authenticated;
 
 create policy "Users read their own Orby conversations"
@@ -63,6 +64,7 @@ create index if not exists orby_messages_user_created_idx
   on public.orby_messages (user_id, created_at desc);
 
 alter table public.orby_messages enable row level security;
+revoke all on public.orby_messages from public, anon, authenticated;
 grant select, insert, delete on public.orby_messages to authenticated;
 
 create policy "Users read their own Orby messages"

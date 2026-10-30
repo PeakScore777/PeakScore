@@ -706,7 +706,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       document.body.appendChild(audio);
       voiceAudioElementRef.current = audio;
       peer.ontrack = (event) => {
-        audio.srcObject = event.streams[0];
+        const remoteStream = event.streams[0];
+        if (!remoteStream) return;
+        audio.srcObject = remoteStream;
         void audio.play().catch(() => setVoiceError("Permite la reproducción de audio en el navegador."));
       };
 

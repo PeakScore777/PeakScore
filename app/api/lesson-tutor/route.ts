@@ -79,25 +79,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "La solicitud no es válida." }, { status: 400 });
     }
 
-    if (body.voiceMode === true) {
-      const { data: subscriptions, error: subscriptionError } = await supabase
-        .from("subscriptions")
-        .select("plan,status,expires_at,started_at")
-        .eq("user_id", user.id)
-        .eq("plan", "premium")
-        .eq("status", "active")
-        .order("started_at", { ascending: false })
-        .limit(5);
-      const hasActivePremium = !subscriptionError && (subscriptions ?? []).some((subscription) => (
-        subscription.plan === "premium"
-        && subscription.status === "active"
-        && (!subscription.expires_at || Date.parse(subscription.expires_at) > Date.now())
-      ));
-      if (!hasActivePremium) {
-        return NextResponse.json({ error: "El chat de voz completo está reservado para cuentas Premium." }, { status: subscriptionError ? 503 : 403 });
-      }
-    }
-
     const subject = cleanText(body.subject, 80) || "Ciencias Naturales";
     const topic = cleanText(body.topic, 160) || "Los cristales misteriosos: materia y propiedades";
     const stage = body.stage === "practice" ? "práctica" : "teoría";

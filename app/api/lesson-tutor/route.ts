@@ -149,33 +149,6 @@ export async function POST(request: Request) {
       );
     }
 
-    if (conversationId && ownedConversation) {
-      const { error: saveUserError } = await supabase.from("orby_messages").insert({
-        conversation_id: conversationId,
-        user_id: user.id,
-        role: "user",
-        content: userMessage || "Analiza la imagen adjunta.",
-        attachment_kind: body.attachmentKind === "audio" ? "audio" : hasImagePayload ? "image" : null,
-        attachment_label: cleanText(body.attachmentLabel, 120) || (hasImagePayload ? "Imagen adjunta" : null),
-      });
-      if (saveUserError) {
-        console.error("[Orby Tutor] User message persistence failed.", { code: saveUserError.code });
-        return NextResponse.json({ error: "No se pudo guardar tu mensaje. Inténtalo de nuevo." }, { status: 503 });
-      }
-
-      const nextTitle = ownedConversation.title === "Nueva conversación"
-        ? (userMessage || "Consulta con imagen").replace(/\s+/g, " ").slice(0, 72)
-        : ownedConversation.title;
-      const { error: updateConversationError } = await supabase
-        .from("orby_conversations")
-        .update({ title: nextTitle, updated_at: new Date().toISOString() })
-        .eq("id", conversationId)
-        .eq("user_id", user.id);
-      if (updateConversationError) {
-        console.error("[Orby Tutor] Conversation timestamp update failed.", { code: updateConversationError.code });
-      }
-    }
-
     const conversation = history.map((item: TutorMessage) => (
       item.role === "user"
         ? `<untrusted_student_message>\n${item.content}\n</untrusted_student_message>`
@@ -280,25 +253,19 @@ No uses bloques Markdown ni texto fuera del JSON.
       await recordSecurityEvent(user.id, "suspicious_output");
       return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Intenta de nuevo con una pregunta más concreta." }, { status: 502 });
     }
-    if (conversationId) {
-      const { error: saveAssistantError } = await supabase.from("orby_messages").insert({
-        conversation_id: conversationId,
-        user_id: user.id,
-        role: "assistant",
-        content: reply,
-        check_question: checkQuestion || null,
+    if (conversationId && ownedConversation) {
+      const { data: savedTurn, error: saveTurnError } = await supabaseAdmin.rpc("orby_save_turn", {
+        p_user_id: user.id,
+        p_conversation_id: conversationId,
+        p_user_content: userMessage || "Analiza la imagen adjunta.",
+        p_assistant_content: reply,
+        p_check_question: checkQuestion || null,
+        p_attachment_kind: tutorImage ? "image" : body.attachmentKind === "audio" ? "audio" : null,
+        p_attachment_label: cleanText(body.attachmentLabel, 120) || (tutorImage ? "Imagen adjunta" : null),
       });
-      if (saveAssistantError) {
-        console.error("[Orby Tutor] Assistant message persistence failed.", { code: saveAssistantError.code });
-        return NextResponse.json({ error: "Orby respondió, pero no se pudo guardar la respuesta. Abre la conversación y vuelve a intentarlo." }, { status: 503 });
-      }
-      const { error: updateConversationError } = await supabase
-        .from("orby_conversations")
-        .update({ updated_at: new Date().toISOString() })
-        .eq("id", conversationId)
-        .eq("user_id", user.id);
-      if (updateConversationError) {
-        console.error("[Orby Tutor] Conversation timestamp update failed.", { code: updateConversationError.code });
+      if (saveTurnError || !savedTurn || typeof savedTurn !== "object" || (savedTurn as { ok?: boolean }).ok !== true) {
+        console.error("[Orby Tutor] Atomic turn persistence failed.", { code: saveTurnError?.code });
+        return NextResponse.json({ error: "Orby respondió, pero no se pudo guardar el turno. Inténtalo de nuevo." }, { status: 503 });
       }
     }
 

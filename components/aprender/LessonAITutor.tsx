@@ -1064,15 +1064,41 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
       {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… {voiceMode ? "Habla con Orby. Te responderé en voz y volveré a escucharte." : "Al terminar, enviaré tu pregunta a Orby."}</p>}
+      {audioConsentOpen && <section aria-label="Consentimiento de grabación" className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-3">
+        <div className="flex items-start gap-2">
+          <Mic className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-extrabold text-slate-900">Antes de grabar tu nota de voz</p>
+            <p className="mt-1 text-[11px] leading-4 text-slate-600">El audio se enviará a Google Gemini (nivel gratuito) para convertirlo en texto. Google puede usar el contenido del nivel gratuito para mejorar sus productos. PeakScore no guarda el archivo de audio; solo se guarda la transcripción cuando la envías al chat. No grabes contraseñas ni datos personales sensibles.</p>
+            <label className="mt-2 flex items-start gap-2 text-[11px] leading-4 text-slate-700">
+              <input type="checkbox" checked={audioConsentChecked} onChange={(event) => setAudioConsentChecked(event.target.checked)} className="mt-0.5 accent-orange-600" />
+              <span>Entiendo y autorizo enviar esta grabación para transcribirla.</span>
+            </label>
+            <div className="mt-3 flex gap-2">
+              <button type="button" onClick={() => setAudioConsentOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => void startAudioRecording()} disabled={!audioConsentChecked} className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-40"><Mic className="h-3.5 w-3.5" /> Comenzar a grabar</button>
+            </div>
+          </div>
+        </div>
+      </section>}
+      {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
+        <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 60 segundos</span>
+        <button type="button" onClick={stopAudioRecording} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
+      </div>}
+      {recordedAudio && <div className="flex shrink-0 items-center gap-3 border-t border-slate-100 bg-white px-3 py-2">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700"><AudioLines className="h-5 w-5" /></div>
+        <div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-slate-800">Nota de voz lista</p><p className="text-[10px] text-slate-500">{(recordedAudio.size / 1024).toFixed(0)} KB · No se guardará el audio original</p></div>
+        <button type="button" onClick={() => void transcribeRecordedAudio()} disabled={audioTranscribing} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:opacity-50">{audioTranscribing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{audioTranscribing ? "Transcribiendo…" : "Transcribir"}</button>
+        <button type="button" onClick={() => setRecordedAudio(null)} aria-label="Descartar nota de voz" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-600"><X className="h-4 w-4" /></button>
+      </div>}
+      {pendingAttachmentMeta?.kind === "audio" && <div className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-2 text-[11px] text-orange-900">Transcripción lista. Revísala o edítala antes de enviarla a Orby.</div>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
-        <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener micrófono" : voiceMode ? "Hablar con Orby" : "Dictar pregunta a Orby"} title={isListening ? "Detener micrófono" : voiceMode ? "Hablar con Orby" : "Dictar una pregunta"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
-          {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-        </button>
-        <button type="button" onClick={toggleVoiceMode} aria-label={voiceMode ? "Detener chat de voz Premium" : "Iniciar chat de voz Premium"} title={voiceMode ? "Chat de voz activo" : "Iniciar conversación por voz"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Volume2 className="h-5 w-5" /></button>
+        <button type="button" onClick={() => { setAudioConsentChecked(false); setAudioConsentOpen(true); setRecordedAudio(null); }} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz para enviar" title="Grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
+        <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada"} title={voiceMode ? "Detener chat de voz" : "Chat de voz beta · navegador"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));

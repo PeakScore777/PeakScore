@@ -118,9 +118,9 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
           aria-modal="true"
           aria-label="Chat de estudio con Orby"
           onClick={(event) => { if (event.target === event.currentTarget) requestClose(); }}
-          className="fixed inset-0 z-[80] flex items-stretch justify-stretch bg-white"
+          className="fixed inset-x-0 bottom-0 top-[80px] z-[80] flex items-stretch justify-stretch bg-white"
         >
-          <div className="h-[100dvh] min-h-0 w-full max-w-none">
+          <div className="h-full min-h-0 w-full max-w-none">
             <LessonAITutor
               subject={page.subject}
               topic={page.topic}

@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
-const ALLOWED_AUDIO_TYPES = new Set(["audio/webm", "audio/ogg", "audio/wav", "audio/mpeg", "audio/mp3", "audio/aac", "audio/m4a", "audio/opus"]);
+const ALLOWED_AUDIO_TYPES = new Set(["audio/webm", "audio/ogg", "audio/wav", "audio/mpeg", "audio/mp3", "audio/aac", "audio/mp4", "audio/opus"]);
 
 function hasValidSignature(mimeType: string, bytes: Buffer) {
   if (mimeType === "audio/webm") {

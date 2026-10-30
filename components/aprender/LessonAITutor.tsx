@@ -272,6 +272,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return () => {
       recognitionRef.current?.stop();
       recognitionRef.current = null;
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") mediaRecorderRef.current.stop();
+      audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+      if (recordingTimeoutRef.current) window.clearTimeout(recordingTimeoutRef.current);
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       if (attachmentPreview.startsWith("blob:")) URL.revokeObjectURL(attachmentPreview);
     };
@@ -722,7 +725,118 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void sendMessage(input, true);
+    void sendMessage(input, true, false, pendingAttachmentMeta ?? undefined);
+  }
+
+  function stopAudioRecording() {
+    if (recordingTimeoutRef.current) {
+      window.clearTimeout(recordingTimeoutRef.current);
+      recordingTimeoutRef.current = null;
+    }
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+  }
+
+  async function startAudioRecording() {
+    if (!audioConsentChecked || isRecording) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setVoiceError("Este navegador no permite grabar audio aquí. Prueba con Chrome o Edge actualizado.");
+      return;
+    }
+    if (!window.isSecureContext && window.location.hostname !== "localhost") {
+      setVoiceError("La grabación requiere una conexión segura (HTTPS).");
+      return;
+    }
+
+    const supportedType = ["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4"]
+      .find((type) => MediaRecorder.isTypeSupported(type));
+    if (!supportedType) {
+      setVoiceError("Este navegador no ofrece un formato de grabación compatible. Puedes usar el chat de voz del navegador.");
+      return;
+    }
+
+    try {
+      setVoiceError("");
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+      audioStreamRef.current = stream;
+      audioChunksRef.current = [];
+      const recorder = new MediaRecorder(stream, { mimeType: supportedType });
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+      recorder.onerror = () => {
+        setVoiceError("La grabación se interrumpió. Inténtalo de nuevo.");
+        setIsRecording(false);
+      };
+      recorder.onstop = () => {
+        const type = supportedType.startsWith("audio/mp4") ? "audio/m4a" : supportedType.split(";")[0];
+        const extension = type === "audio/m4a" ? "m4a" : type === "audio/ogg" ? "ogg" : "webm";
+        const blob = new Blob(audioChunksRef.current, { type });
+        audioChunksRef.current = [];
+        stream.getTracks().forEach((track) => track.stop());
+        if (audioStreamRef.current === stream) audioStreamRef.current = null;
+        if (mediaRecorderRef.current === recorder) mediaRecorderRef.current = null;
+        setIsRecording(false);
+        if (blob.size < 1_024 || blob.size > 8 * 1024 * 1024) {
+          setVoiceError("La nota de voz debe pesar entre 1 KB y 8 MB. Graba un audio más corto.");
+          return;
+        }
+        setRecordedAudio(new File([blob], `orby-nota-de-voz.${extension}`, { type }));
+        setAudioConsentOpen(false);
+      };
+
+      recorder.start(250);
+      setIsRecording(true);
+      setAudioConsentOpen(false);
+      recordingTimeoutRef.current = window.setTimeout(() => {
+        setVoiceError("Llegaste al límite de 60 segundos. Revisa la nota de voz antes de enviarla.");
+        stopAudioRecording();
+      }, 60_000);
+    } catch (caught) {
+      audioStreamRef.current?.getTracks().forEach((track) => track.stop());
+      audioStreamRef.current = null;
+      setIsRecording(false);
+      setVoiceError(caught instanceof Error && caught.name === "NotAllowedError"
+        ? "No autorizaste el micrófono. Habilítalo en el navegador para grabar una nota."
+        : "No se pudo acceder al micrófono. Revisa que otra aplicación no lo esté usando.");
+    }
+  }
+
+  async function transcribeRecordedAudio() {
+    if (!recordedAudio || audioTranscribing) return;
+    if (attachment) {
+      setVoiceError("Envía o quita la imagen adjunta antes de preparar una nota de voz.");
+      return;
+    }
+    setAudioTranscribing(true);
+    setVoiceError("");
+    try {
+      const form = new FormData();
+      form.set("audio", recordedAudio);
+      form.set("consent", "true");
+      const response = await fetch("/api/orby/audio/transcribe", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || typeof payload.transcript !== "string" || !payload.transcript.trim()) {
+        throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
+      }
+      setInput(payload.transcript.slice(0, 1200));
+      setPendingAttachmentMeta({ kind: "audio", label: "Nota de voz transcrita" });
+      setRecordedAudio(null);
+      setError("");
+      inputRef.current?.focus();
+    } catch (caught) {
+      setVoiceError(caught instanceof Error ? caught.message : "No se pudo transcribir el audio.");
+    } finally {
+      setAudioTranscribing(false);
+    }
   }
 
   if (!open) return null;

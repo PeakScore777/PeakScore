@@ -109,7 +109,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [cropX, setCropX] = useState(5);
   const [cropY, setCropY] = useState(5);
   const [cropW, setCropW] = useState(90);
-  const [cropH, setCropH] = useState(90);\n  const [imageContrast, setImageContrast] = useState(115);\n  const [imageBrightness, setImageBrightness] = useState(105);
+  const [cropH, setCropH] = useState(90);
+  const [imageContrast, setImageContrast] = useState(115);
+  const [imageBrightness, setImageBrightness] = useState(105);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);

@@ -591,16 +591,16 @@ export default function QueEsEsaVainaGame() {
     setStartingGame(true);
     const audio = timerAudioRef.current;
 
-    const beginCountdown = (soundEnabled: boolean) => {
+    const beginCountdown = () => {
       timerDeadlineRef.current = performance.now() + QUESTION_SECONDS * 1000;
       setTimeLeft(QUESTION_SECONDS);
       setGameStarted(true);
-            setStartingGame(false);
+      setStartingGame(false);
       setTimerEpoch((value) => value + 1);
     };
 
     if (!audio) {
-      beginCountdown(false);
+      beginCountdown();
       return;
     }
     try {
@@ -608,8 +608,8 @@ export default function QueEsEsaVainaGame() {
       audio.currentTime = 0;
       audio.loop = false;
       void audio.play().then(
-        () => beginCountdown(true),
-        () => beginCountdown(false)
+        () => beginCountdown(),
+        () => beginCountdown()
       );
     } catch {
       beginCountdown(false);
@@ -625,9 +625,10 @@ export default function QueEsEsaVainaGame() {
     if (!hydrated || !gameSessionId || sessionLoading || !gameStarted || finished || revealed || timerExpiredRef.current) return;
     timerExpiredRef.current = true;
     timerDeadlineRef.current = null;
-    answeringRef.current = true;
+    const timedOutQuestion = rounds[index];
+    answeringRef.current = Boolean(timedOutQuestion);
     const revealFrame = window.requestAnimationFrame(() => {
-      setAnswering(true);
+      if (timedOutQuestion) setAnswering(true);
       setSelected(null);
       setRevealed(true);
       setServerAnswerCorrect(false);
@@ -636,7 +637,6 @@ export default function QueEsEsaVainaGame() {
         setRewardScore((value) => Math.max(0, value - WRONG_ANSWER_PENALTY));
       }
     });
-    const timedOutQuestion = rounds[index];
     if (timedOutQuestion) {
       void fetch("/api/games/answer", {
         method: "POST",
@@ -659,7 +659,6 @@ export default function QueEsEsaVainaGame() {
       });
     } else {
       answeringRef.current = false;
-      setAnswering(false);
     }
     const timerAudio = timerAudioRef.current;
     if (timerAudio) {

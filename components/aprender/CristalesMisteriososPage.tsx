@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
@@ -244,6 +245,7 @@ function ImageUploadSlot({ assetKey, title, description, compact = false }: { as
 }
 
 export default function CristalesMisteriososPage() {
+  const router = useRouter();
   const [view, setView] = useState<"theory" | "examples" | "practice">("theory");
   const [index, setIndex] = useState(0);
   const [attempt, setAttempt] = useState(0);
@@ -352,7 +354,7 @@ export default function CristalesMisteriososPage() {
         </div>
       )}
       {view === "practice" && !done && <LessonAITutor open={tutorOpen} onOpenChange={setTutorOpen} subject="Ciencias Naturales" topic={"Los cristales misteriosos: pregunta " + (index + 1) + " de " + activeQuestions.length} stage="practice" question={q.prompt} context={"Situación: " + q.context + "\nOpciones: " + q.options.map(o => o.join(") ")).join("\n") + "\nExplicación: " + q.explanation} />}
-      <XpRewardAnimation open={reward && done} xp={50} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setReward(false); window.location.href = "/aprender/santuario-de-la-materia/leccion/2"; }} />
+      <XpRewardAnimation open={reward && done} xp={50} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setReward(false); router.push("/aprender/santuario-de-la-materia/leccion/2"); }} />
       {!(view === "practice" && done && !reward) && <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)]"><div className="mx-auto grid min-h-[64px] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:gap-3 sm:px-7"><div className="min-w-0"><p className="pixel-font text-[8px] text-slate-100">NIVEL 1{view === "practice" ? " · EJERCICIOS " + (index + 1) + "/" + activeQuestions.length : view === "examples" ? " · EJEMPLOS RESUELTOS" : " · LOS CRISTALES MISTERIOSOS"}</p><span className="mt-1 inline-flex items-center gap-1.5 border border-emerald-300/20 bg-emerald-300/[.08] px-2 py-0.5 text-[9px] font-bold text-emerald-200"><Image src="/peaky/homepage/xp.webp" alt="" width={17} height={17} /> 50 XP</span></div><div className="flex justify-center">{view === "practice" && !done && <button type="button" onClick={() => setTutorOpen(true)} aria-label="Abrir asistente de inteligencia artificial" title="Pregunta a la IA" className="inline-flex min-h-10 items-center gap-1.5 border-2 border-[#ffb347] bg-[#ff9f1c] px-3 py-2 text-xs font-extrabold text-[#251300] shadow-[3px_3px_0_#9a4e00] transition hover:-translate-y-0.5 hover:bg-[#ffb84d] active:translate-y-0 active:shadow-none sm:px-4"><span aria-hidden="true">🤖</span><span className="pixel-font text-[8px]">AI</span></button>}</div><div className="flex min-w-0 justify-self-end items-center gap-2 sm:gap-3">{view === "theory" && <><Link href="/aprender/santuario-de-la-materia" className="inline-flex items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[10px] font-extrabold text-[#09200a] sm:px-4 sm:text-xs"><ArrowLeft className="h-4 w-4" /> Salir</Link><button type="button" onClick={() => setView("examples")} className="border border-cyan-300 bg-cyan-500/20 px-3 py-2 text-[10px] font-extrabold text-cyan-100 sm:px-4 sm:text-xs">Ejemplos <ArrowRight className="ml-1 inline h-4 w-4" /></button></>}{view === "examples" && <><button type="button" onClick={() => setView("theory")} className="border border-cyan-300/50 bg-[#172c43] px-3 py-2 text-[10px] font-extrabold text-cyan-100 sm:px-4 sm:text-xs"><ArrowLeft className="mr-1 inline h-4 w-4" /> Anterior</button><button type="button" onClick={() => { startPractice(); setView("practice"); }} className="border border-cyan-300 bg-cyan-500/20 px-3 py-2 text-[10px] font-extrabold text-cyan-100 sm:px-4 sm:text-xs">Desafío <ArrowRight className="ml-1 inline h-4 w-4" /></button></>}{view === "practice" && !done && <Link href="/aprender/santuario-de-la-materia" className="inline-flex items-center gap-2 border border-emerald-300/60 bg-[#75df55] px-3 py-2 text-[10px] font-extrabold text-[#09200a] sm:px-4 sm:text-xs"><ArrowLeft className="h-4 w-4" /> Salir</Link>}</div></div></footer>}
       <style jsx global>{`
         .game-over-overlay { isolation:isolate; overflow:hidden; background:linear-gradient(180deg,rgba(2,5,13,.28),rgba(2,5,13,.58)),url("/images/game-over-bg.png") center center/cover no-repeat,#020308!important; }

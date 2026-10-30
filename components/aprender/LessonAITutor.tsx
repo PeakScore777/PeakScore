@@ -457,6 +457,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   useEffect(() => {
     if (!open) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      setIsListening(false);
+      stopSpeaking();
+      voiceModeRef.current = false;
+      setVoiceMode(false);
       lastInitialPromptRef.current = null;
       activeReviewRef.current = null;
       setNotebookOpen(false);

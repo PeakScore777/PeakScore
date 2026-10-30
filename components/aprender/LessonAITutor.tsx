@@ -101,7 +101,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyOpen, setHistoryOpen] = useState(true);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState("");
   const [audioConsentOpen, setAudioConsentOpen] = useState(false);
@@ -950,7 +950,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </header>
 
       <div className={workspace ? "flex min-h-0 flex-1" : "contents"}>
-        {workspace && <aside className={historyOpen ? "absolute inset-y-0 left-0 z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-200 bg-slate-50 shadow-xl md:relative md:z-auto md:w-[270px] md:shrink-0 md:shadow-none" : "hidden"} aria-label="Historial de conversaciones">
+        {workspace && <aside className={historyOpen ? "absolute inset-y-0 left-0 z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-200 bg-slate-50 shadow-xl md:relative md:z-auto md:w-[270px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[270px] md:shrink-0 md:flex-col"} aria-label="Historial de conversaciones">
           <div className="border-b border-slate-200 p-3">
             <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 text-sm font-bold text-white transition hover:bg-slate-800"><Plus className="h-4 w-4" /> Nuevo chat</button>
             <p className="mt-4 px-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tus conversaciones</p>
@@ -1017,7 +1017,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 {message.role === "assistant" && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index)} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
                   <Volume2 className="h-3.5 w-3.5" /> {speakingIndex === index ? "Detener audio" : "Escuchar respuesta"}
                 </button>}
-                {message.attachmentName && <div className="mb-2 flex items-center gap-2 rounded-lg border border-white/25 p-2">{message.attachmentPreview ? <Image src={message.attachmentPreview} width={1200} height={800} unoptimized alt={`Adjunto: ${message.attachmentName}`} className="max-h-28 max-w-full rounded-md object-contain" /> : <FileText className="h-6 w-6 shrink-0" />}<p className="min-w-0 break-all text-[10px] opacity-80">{message.attachmentName}</p></div>}
+                {message.attachmentName && <div className="mb-2 flex items-center gap-2 rounded-lg border border-white/25 p-2">{message.attachmentPreview ? <Image src={message.attachmentPreview} width={1200} height={800} unoptimized alt={"Adjunto: " + message.attachmentName} className="max-h-28 max-w-full rounded-md object-contain" /> : message.attachmentKind === "audio" ? <AudioLines className="h-6 w-6 shrink-0" /> : <FileText className="h-6 w-6 shrink-0" />}<p className="min-w-0 break-all text-[10px] opacity-80">{message.attachmentName}</p></div>}
                 {message.checkQuestion && <div className="mt-3 rounded-lg border-l-2 border-amber-400 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-950"><strong>Comprueba lo aprendido:</strong> {message.checkQuestion}</div>}
               </article>
             ))}

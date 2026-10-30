@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Check,
@@ -100,6 +101,7 @@ const subjects = [
 export default function DashboardPreview({
   theme,
 }: DashboardPreviewProps) {
+  const router = useRouter();
   const isDark = theme === "dark";
 
   const [authGateOpen, setAuthGateOpen] =
@@ -179,7 +181,7 @@ export default function DashboardPreview({
       }
 
       if (session?.user) {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
         return;
       }
 

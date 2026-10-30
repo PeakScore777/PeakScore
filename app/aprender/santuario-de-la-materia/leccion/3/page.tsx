@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Lightbulb, Plus } from "lucide-react";
@@ -311,6 +312,7 @@ function ImageUploadSlot({ assetKey, title, description, compact=false, large=fa
 }
 
 export default function LaboratorioDeLasMezclasPage() {
+  const router = useRouter();
   const [stage, setStage] = useState<"theory" | "examples" | "practice">("theory");
   const [historyOpen, setHistoryOpen] = useState(true);
   const [index, setIndex] = useState(0);
@@ -627,7 +629,7 @@ export default function LaboratorioDeLasMezclasPage() {
           <p className="pixel-font mt-8 text-[10px] text-white">PEAKSCORE · CONTINÚA LA AVENTURA</p>
         </div>
       </div>}
-      <XpRewardAnimation open={rewardOpen && finished && !lost} xp={60} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); window.location.href = "/aprender/santuario-de-la-materia"; }} />
+      <XpRewardAnimation open={rewardOpen && finished && !lost} xp={60} nextLabel="SIGUIENTE NIVEL" onContinue={() => { setRewardOpen(false); router.push("/aprender/santuario-de-la-materia"); }} />
       {!finished && <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-[#344054] bg-[#142033]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.18)] backdrop-blur">
         <div className="mx-auto flex min-h-[62px] max-w-[1440px] items-center justify-between gap-2 px-3 sm:gap-3 sm:px-7">
           <div className="min-w-[88px]"><p className="pixel-font text-[8px] text-slate-100">NIVEL 3</p><p className="mt-1 text-[10px] text-slate-400">{stage === "theory" ? "Teoría" : stage === "examples" ? "Ejemplos resueltos" : `Pregunta ${index + 1} / ${activeQuestions.length}`}</p></div>

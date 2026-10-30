@@ -793,16 +793,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const model = configuredModel.startsWith("models/") ? configuredModel.slice("models/".length) : configuredModel;
       const socket = new WebSocket(
         "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=" +
-        encodeURIComponent(tokenPayload.ephemeralToken)
+        tokenPayload.ephemeralToken
       );
       voiceChannelRef.current = socket;
 
       const setupPromise = new Promise<void>((resolve, reject) => {
         let settled = false;
-        const timeout = window.setTimeout(() => {
+        let socketErrorSeen = false;
+        const finish = (error?: Error) => {
           if (settled) return;
           settled = true;
-          reject(new Error("Orby tardó demasiado en preparar la conversación de voz."));
+          window.clearTimeout(timeout);
+          if (error) reject(error);
+          else resolve();
+        };
+        const timeout = window.setTimeout(() => {
+          finish(new Error("Google Gemini Live no confirmó la sesión en 15 segundos."));
         }, 15000);
 
         socket.onopen = () => {
@@ -817,8 +823,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   },
                 },
               },
-              inputAudioTranscription: {},
-              outputAudioTranscription: {},
+              systemInstruction: {
+                parts: [{
+                  text: typeof tokenPayload.systemInstruction === "string"
+                    ? tokenPayload.systemInstruction
+                    : "Eres Orby, el tutor de PeakScore. Habla español colombiano natural y ayuda con rigor académico.",
+                }],
+              },
+              inputAudioTranscription: { languageCodes: ["es-CO"] },
+              outputAudioTranscription: { languageCodes: ["es-CO"] },
               realtimeInputConfig: {
                 automaticActivityDetection: {
                   disabled: false,
@@ -838,34 +851,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 ? new TextDecoder().decode(messageEvent.data)
                 : await (messageEvent.data as Blob).text();
             const event = JSON.parse(raw) as Record<string, unknown>;
-            if (event.setupComplete && !settled) {
-              settled = true;
-              window.clearTimeout(timeout);
-              resolve();
+            if (event.error && typeof event.error === "object" && !settled) {
+              const detail = event.error as { message?: unknown; status?: unknown; code?: unknown };
+              const message = typeof detail.message === "string" ? detail.message : "Google rechazó la configuración de voz.";
+              const status = typeof detail.status === "string" ? " (" + detail.status + ")" : "";
+              finish(new Error("Gemini Live" + status + ": " + message.slice(0, 240)));
+              return;
             }
+            if (event.setupComplete) finish();
             handleGeminiLiveEvent(event);
           } catch {
-            setVoiceError("Orby recibió un evento de voz que no pudo interpretar.");
+            if (!settled) finish(new Error("Gemini Live envió un mensaje inicial que no se pudo interpretar."));
+            else setVoiceError("Orby recibió un evento de voz que no pudo interpretar.");
           }
         };
 
         socket.onerror = () => {
-          if (!settled) {
-            settled = true;
-            window.clearTimeout(timeout);
-            reject(new Error("No se pudo conectar con el servicio de voz."));
-          } else {
-            setVoiceError("Se interrumpió la conexión de voz. Comprueba tu conexión.");
-          }
+          socketErrorSeen = true;
+          if (settled) setVoiceError("Se interrumpió el WebSocket de Gemini Live.");
         };
 
-        socket.onclose = () => {
+        socket.onclose = (closeEvent) => {
           if (!settled) {
-            settled = true;
-            window.clearTimeout(timeout);
-            reject(new Error("El servicio de voz cerró la conexión antes de iniciar."));
+            const reason = closeEvent.reason?.trim();
+            const detail = reason
+              ? " (" + reason.slice(0, 160) + ")"
+              : " (código " + closeEvent.code + (socketErrorSeen ? ", error de conexión" : "") + ")";
+            finish(new Error("Google Gemini Live cerró la conexión antes de completar la sesión" + detail + "."));
           } else if (voiceModeRef.current) {
-            setVoiceError("La conexión de voz se cerró. Vuelve a iniciar la conversación.");
+            setVoiceError("La conexión de voz se cerró (código " + closeEvent.code + "). Vuelve a iniciar la conversación.");
             stopRealtimeVoice();
           }
         };

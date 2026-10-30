@@ -18,14 +18,6 @@ type Level = {
   duration: string;
 };
 
-type LearningCatalogProps = {
-  firstName: string;
-  seasonName: string;
-  seasonXp: number;
-  coins: number;
-  rankName: string;
-};
-
 const levels: Level[] = [
   {
     id: "materia",

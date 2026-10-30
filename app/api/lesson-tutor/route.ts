@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { generateAI } from "@/lib/ai/router";
+import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router";
+import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 
 export const runtime = "nodejs";
@@ -236,6 +237,11 @@ No uses bloques Markdown ni texto fuera del JSON.
     ].join("\\n");
 
     let raw = "";
+    let sourceProvider: AIProvider = tutorImage
+      ? "gemini"
+      : body.voiceMode === true
+        ? "groq"
+        : getProviderForTask("tutor");
     if (tutorImage) {
       raw = await generateTutorVision(prompt, tutorImage.mimeType, tutorImage.base64);
     } else {
@@ -247,6 +253,8 @@ No uses bloques Markdown ni texto fuera del JSON.
         prompt: activePrompt,
         useFallback: true,
       });
+      const actualProvider = (result as { __peakscoreProvider?: AIProvider }).__peakscoreProvider;
+      if (actualProvider) sourceProvider = actualProvider;
       raw = typeof result.text === "string" ? result.text.trim() : "";
     }
     if (!raw) {
@@ -271,13 +279,56 @@ No uses bloques Markdown ni texto fuera del JSON.
       await recordSecurityEvent(user.id, "suspicious_output");
       return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Intenta de nuevo con una pregunta más concreta." }, { status: 502 });
     }
+
+    // Deterministic validation above applies to every response. Higher-risk
+    // academic answers additionally pass an independent model review.
+    let qualityStatus: "passed" | "corrected" | "unverified" = "unverified";
+    if (needsIndependentTutorReview({
+      message: userMessage,
+      context: [question, context].filter(Boolean).join("\\n"),
+      hasImage: Boolean(tutorImage),
+    })) {
+      const quality = await verifyTutorAnswer({
+        sourceProvider,
+        subject,
+        topic,
+        question: [question, context, userMessage].filter(Boolean).join("\\n\\n"),
+        candidate: { reply, checkQuestion },
+      });
+      qualityStatus = quality.status;
+      if (quality.status === "corrected" || quality.status === "unverified") {
+        // The quality engine only substitutes a reply when its bounded
+        // correction loop produced a result it explicitly marked as corrected.
+        // For a failed review it returns a safe abstention.
+        if (quality.reply !== reply) {
+          const safeQualityReply = cleanText(quality.reply, 7000);
+          if (!safeQualityReply || !isSafeTutorOutput(safeQualityReply)) {
+            return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Inténtalo nuevamente." }, { status: 502 });
+          }
+          // An unavailable reviewer preserves the original response and is
+          // distinguished from a failed second review by the safe abstention.
+          if (quality.status === "corrected" || quality.reply.startsWith("Quiero asegurarme")) {
+            // Use the corrected or safely withheld response.
+          }
+        }
+      }
+      if (quality.status === "corrected" || (quality.status === "unverified" && quality.reply !== reply)) {
+        // Reassign below after validation.
+        parsed.reply = quality.reply;
+        if (quality.checkQuestion) parsed.checkQuestion = quality.checkQuestion;
+      }
+    }
+
+    const finalReply = cleanText(parsed.reply, 7000);
+    const finalCheckQuestion = cleanText(parsed.checkQuestion, 500);
+
     if (conversationId && ownedConversation) {
       const { data: savedTurn, error: saveTurnError } = await supabaseAdmin.rpc("orby_save_turn", {
         p_user_id: user.id,
         p_conversation_id: conversationId,
         p_user_content: userMessage || "Analiza la imagen adjunta.",
-        p_assistant_content: reply,
-        p_check_question: checkQuestion || null,
+        p_assistant_content: finalReply,
+        p_check_question: finalCheckQuestion || null,
         p_attachment_kind: tutorImage ? "image" : body.attachmentKind === "audio" ? "audio" : null,
         p_attachment_label: cleanText(body.attachmentLabel, 120) || (tutorImage ? "Imagen adjunta" : null),
       });
@@ -287,7 +338,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       }
     }
 
-    return NextResponse.json({ reply, checkQuestion });
+    return NextResponse.json({ reply: finalReply, checkQuestion: finalCheckQuestion, verification: qualityStatus });
   } catch (error) {
     console.error("[Orby Tutor] No se pudo responder.", { errorName: error instanceof Error ? error.name : "UnknownError" });
     return NextResponse.json({ error: "Orby no está disponible en este momento. Espera unos segundos y vuelve a intentarlo." }, { status: 503 });

@@ -144,6 +144,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     setAttachment(file);
+    setOcrText("");
+    setCropMode(false);
+    setCropX(5); setCropY(5); setCropW(90); setCropH(90);
     setAttachmentPreview(file.type.startsWith("image/") ? URL.createObjectURL(file) : "");
   }
 
@@ -152,6 +155,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAttachment(null);
     setAttachmentPreview("");
     setAttachmentError("");
+    setOcrText("");
+    setCropMode(false);
+    setCropX(5); setCropY(5); setCropW(90); setCropH(90);
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   }
@@ -191,9 +197,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
         }
       }
-      const top = rowCoverage.findIndex((count) => count / width > 0.62);
+      const top = rowCoverage.findIndex((count) => count / width > 0.35);
       const bottom = rowCoverage.length - 1 - [...rowCoverage].reverse().findIndex((count) => count / width > 0.62);
-      const left = colCoverage.findIndex((count) => count / height > 0.62);
+      const left = colCoverage.findIndex((count) => count / height > 0.35);
       const right = colCoverage.length - 1 - [...colCoverage].reverse().findIndex((count) => count / height > 0.62);
       if (top < 0 || bottom <= top || left < 0 || right <= left || (right - left) / width < 0.25 || (bottom - top) / height < 0.25) {
         throw new Error("No detecté con suficiente confianza los bordes de una hoja clara. Ajusta el recorte manualmente.");
@@ -526,7 +532,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-white p-2">
               <label className="text-[10px] font-semibold text-slate-600">Contraste {imageContrast}%<input type="range" min="80" max="180" value={imageContrast} onChange={(event) => setImageContrast(Number(event.target.value))} className="block w-full" /></label>
               <label className="text-[10px] font-semibold text-slate-600">Brillo {imageBrightness}%<input type="range" min="70" max="150" value={imageBrightness} onChange={(event) => setImageBrightness(Number(event.target.value))} className="block w-full" /></label>
-              <button type="button" onClick={enhanceImage} className="col-span-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-800 hover:bg-orange-100">Mejorar nitidez y contraste</button>
+              <button type="button" onClick={enhanceImage} className="col-span-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-800 hover:bg-orange-100">Mejorar contraste y brillo</button>
             </div>
             <button type="button" onClick={detectPaperBounds} className="mt-2 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-[11px] font-bold text-orange-800 hover:bg-orange-100">Detectar bordes de la hoja</button>
             <button type="button" onClick={() => setCropMode((value) => !value)} className="mt-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">{cropMode ? "Cerrar recorte" : "Recortar pregunta"}</button>

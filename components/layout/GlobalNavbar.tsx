@@ -3,7 +3,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Bug,
   ChevronDown,
@@ -244,6 +244,7 @@ function isActivePath(pathname: string, href: string) {
 export default function GlobalNavbar({
   initialProfile = null,
 }: GlobalNavbarProps) {
+  const router = useRouter();
   const pathname = usePathname() ?? "/";
   const rootRef = useRef<HTMLElement | null>(null);
 
@@ -502,20 +503,18 @@ export default function GlobalNavbar({
           error,
         );
 
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
 
-      window.location.href = session?.user
-        ? "/simulacros"
-        : "/login";
+      router.push(session?.user ? "/simulacros" : "/login");
     } catch (error) {
       console.error(
         "[GlobalNavbar] Error al abrir simulacros:",
         error,
       );
 
-      window.location.href = "/login";
+      router.push("/login");
     } finally {
       setCheckingAuth(false);
     }
@@ -541,7 +540,7 @@ export default function GlobalNavbar({
       }
 
       setProfile(null);
-      window.location.href = "/login";
+      router.push("/login");
     } catch (error) {
       console.error(
         "[GlobalNavbar] Error inesperado al cerrar sesión:",

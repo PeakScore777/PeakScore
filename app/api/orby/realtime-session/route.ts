@@ -90,10 +90,10 @@ export async function POST(request: Request) {
         newSessionExpireTime,
         liveConnectConstraints: {
           model: "models/" + model,
-          systemInstruction: {
-            parts: [{ text: instructions }],
-          },
           config: {
+            systemInstruction: {
+              parts: [{ text: instructions }],
+            },
             responseModalities: ["AUDIO"],
             inputAudioTranscription: {},
             outputAudioTranscription: {},

@@ -145,7 +145,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!open || !workspace) return;
     let cancelled = false;
     const loadHistory = async () => {
-      setHistoryLoading(true);
       setConversationError("");
       try {
         const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store" });
@@ -515,6 +514,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function toggleVoiceMode() {
     const next = !voiceModeRef.current;
+    if (next) {
+      const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
+      if (!(speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition) || !("speechSynthesis" in window)) {
+        setVoiceError("El chat de voz beta requiere reconocimiento y reproducción de voz. Prueba Chrome o Edge actualizado.");
+        return;
+      }
+    }
     voiceModeRef.current = next;
     setVoiceMode(next);
     if (next) {
@@ -668,7 +674,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
       const assistantIndex = nextMessages.length;
       setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
-      if (isVoiceInteraction && "speechSynthesis" in window) {
+      if (isVoiceInteraction && voiceModeRef.current && "speechSynthesis" in window) {
         window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
       }
       if (workspace) {

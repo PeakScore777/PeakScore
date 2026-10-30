@@ -136,7 +136,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const audioInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }) => Promise<void>>(async () => {});
@@ -890,7 +889,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setRecordedAudio(null);
     setRecordedAudioPreviewUrl("");
     setAudioSource("recording");
-    if (audioInputRef.current) audioInputRef.current.value = "";
   }
 
   function handleAudioAttachment(file?: File) {
@@ -915,6 +913,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAudioConsentChecked(false);
     setAudioConsentOpen(true);
     setVoiceError("");
+  }
+
+  function handleComposerAttachment(file?: File) {
+    if (!file) return;
+    if (file.type.toLowerCase().startsWith("audio/")) {
+      handleAudioAttachment(file);
+      return;
+    }
+    handleAttachment(file);
   }
 
   function stopAudioRecording(discard = false) {
@@ -1238,12 +1245,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
       {pendingAttachmentMeta?.kind === "audio" && <div className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-2 text-[11px] text-orange-900">Transcripción lista. Revísala o edítala antes de enviarla a Orby.</div>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
-        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
-        <input ref={audioInputRef} type="file" accept="audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar archivo de audio" onChange={(event) => handleAudioAttachment(event.currentTarget.files?.[0])} />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar foto o archivo de audio" title="Adjuntar imagen JPG/PNG/WebP o nota de voz MP3/WAV/OGG/WebM/M4A" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
-        <button type="button" onClick={() => audioInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar archivo de audio" title="Adjuntar audio para transcribir" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><AudioLines className="h-5 w-5" /></button>
         <button type="button" onClick={() => { clearRecordedAudio(); setAudioSource("recording"); setAudioConsentChecked(false); setAudioConsentOpen(true); }} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz para enviar" title="Grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
         <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada"} title={voiceMode ? "Detener chat de voz" : "Chat de voz beta · navegador"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>

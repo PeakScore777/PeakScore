@@ -20,6 +20,21 @@ function isClearlyOutOfScopeOrInjection(text: string): boolean {
   return override.test(normalized) || exfiltration.test(normalized);
 }
 
+type SecurityEvent = "prompt_injection" | "suspicious_output" | "invalid_image_payload" | "invalid_request_payload";
+
+async function recordSecurityEvent(userId: string, eventType: SecurityEvent, metadata: Record<string, string | number | boolean | null> = {}) {
+  try {
+    const { error } = await supabaseAdmin.rpc("orby_record_security_event", {
+      p_user_id: userId,
+      p_event_type: eventType,
+      p_metadata: metadata,
+    });
+    if (error) console.error("[Orby Security] Event could not be recorded.", { code: error.code, eventType });
+  } catch {
+    console.error("[Orby Security] Event logging failed.", { eventType });
+  }
+}
+
 function isSafeTutorOutput(text: string): boolean {
   const lower = text.toLowerCase();
   return !/(sk-[a-z0-9]{16,}|AIza[0-9A-Za-z_-]{20,}|-----begin .*private key-----)/i.test(text)
@@ -60,6 +75,7 @@ export async function POST(request: Request) {
     }
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) {
+      await recordSecurityEvent(user.id, "invalid_request_payload");
       return NextResponse.json({ error: "La solicitud no es válida." }, { status: 400 });
     }
 
@@ -77,6 +93,7 @@ export async function POST(request: Request) {
       }
       const checkedImage = validateTutorImage(body.image.mimeType, body.image.base64);
       if (!checkedImage.ok) {
+        await recordSecurityEvent(user.id, "invalid_image_payload", { reason: checkedImage.error });
         return NextResponse.json({ error: checkedImage.error }, { status: 400 });
       }
       tutorImage = { mimeType: checkedImage.mimeType, base64: checkedImage.base64 };
@@ -85,6 +102,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Escribe tu duda para que Orby pueda ayudarte." }, { status: 400 });
     }
     if (userMessage && isClearlyOutOfScopeOrInjection(userMessage)) {
+      await recordSecurityEvent(user.id, "prompt_injection", { source: "latest_message" });
       return NextResponse.json({ error: "Soy Orby, el tutor de PeakScore. Solo puedo ayudarte con la teoría y el razonamiento de esta lección. ¿Qué concepto de ciencias quieres repasar?" }, { status: 400 });
     }
 
@@ -105,6 +123,7 @@ export async function POST(request: Request) {
       ...history.map((item) => item.content),
     ].join("\\n");
     if (untrustedText && isClearlyOutOfScopeOrInjection(untrustedText)) {
+      await recordSecurityEvent(user.id, "prompt_injection", { source: "context_or_history" });
       return NextResponse.json(
         { error: "Soy Orby, el tutor de PeakScore. No puedo seguir instrucciones para cambiar mis reglas ni revelar información interna. Sí puedo ayudarte con una pregunta académica." },
         { status: 400 }
@@ -212,6 +231,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     const reply = cleanText(parsed.reply, 7000);
     const checkQuestion = cleanText(parsed.checkQuestion, 500);
     if (!reply || !isSafeTutorOutput(reply) || !isSafeTutorOutput(checkQuestion)) {
+      await recordSecurityEvent(user.id, "suspicious_output");
       return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Intenta de nuevo con una pregunta más concreta." }, { status: 502 });
     }
     return NextResponse.json({ reply, checkQuestion });

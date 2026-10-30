@@ -111,6 +111,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [audioConsentChecked, setAudioConsentChecked] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
+  const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
+  const [audioSource, setAudioSource] = useState<"recording" | "upload">("recording");
   const [audioTranscribing, setAudioTranscribing] = useState(false);
   const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
@@ -134,6 +136,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }) => Promise<void>>(async () => {});
@@ -280,6 +283,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (currentPreview.startsWith("blob:")) URL.revokeObjectURL(currentPreview);
     };
   }, [attachmentPreview]);
+
+  useEffect(() => {
+    const currentPreview = recordedAudioPreviewUrl;
+    return () => {
+      if (currentPreview.startsWith("blob:")) URL.revokeObjectURL(currentPreview);
+    };
+  }, [recordedAudioPreviewUrl]);
 
   useEffect(() => {
     return () => {
@@ -876,6 +886,37 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     void sendMessage(input, true, false, pendingAttachmentMeta ?? undefined);
   }
 
+  function clearRecordedAudio() {
+    setRecordedAudio(null);
+    setRecordedAudioPreviewUrl("");
+    setAudioSource("recording");
+    if (audioInputRef.current) audioInputRef.current.value = "";
+  }
+
+  function handleAudioAttachment(file?: File) {
+    if (!file || isRecording || audioTranscribing) return;
+    const mimeType = file.type.split(";")[0].trim().toLowerCase();
+    const allowedTypes = new Set([
+      "audio/webm", "audio/ogg", "audio/wav", "audio/mpeg",
+      "audio/mp3", "audio/aac", "audio/mp4", "audio/m4a", "audio/opus",
+    ]);
+    if (!allowedTypes.has(mimeType)) {
+      setVoiceError("Formato no compatible. Adjunta audio MP3, WAV, WebM, OGG, AAC o M4A.");
+      return;
+    }
+    if (file.size < 1_024 || file.size > 8 * 1024 * 1024) {
+      setVoiceError("El audio debe pesar entre 1 KB y 8 MB.");
+      return;
+    }
+    clearRecordedAudio();
+    setRecordedAudio(file);
+    setRecordedAudioPreviewUrl(URL.createObjectURL(file));
+    setAudioSource("upload");
+    setAudioConsentChecked(false);
+    setAudioConsentOpen(true);
+    setVoiceError("");
+  }
+
   function stopAudioRecording(discard = false) {
     if (discard) discardRecordingRef.current = true;
     if (recordingTimeoutRef.current) {
@@ -946,7 +987,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           setVoiceError("La nota de voz debe pesar entre 1 KB y 8 MB. Graba un audio más corto.");
           return;
         }
-        setRecordedAudio(new File([blob], `orby-nota-de-voz.${extension}`, { type }));
+        const audioFile = new File([blob], `orby-nota-de-voz.${extension}`, { type });
+        setRecordedAudio(audioFile);
+        setRecordedAudioPreviewUrl(URL.createObjectURL(audioFile));
+        setAudioSource("recording");
         setAudioConsentOpen(false);
       };
 
@@ -969,6 +1013,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function transcribeRecordedAudio() {
     if (!recordedAudio || audioTranscribing) return;
+    if (!audioConsentChecked) {
+      setVoiceError("Confirma primero que autorizas enviar el audio a Google Gemini para transcribirlo.");
+      setAudioConsentOpen(true);
+      return;
+    }
     if (attachment) {
       setVoiceError("Envía o quita la imagen adjunta antes de preparar una nota de voz.");
       return;
@@ -978,7 +1027,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     try {
       const form = new FormData();
       form.set("audio", recordedAudio);
-      form.set("consent", "true");
+      form.set("consent", audioConsentChecked ? "true" : "false");
       const response = await fetch("/api/orby/audio/transcribe", {
         method: "POST",
         credentials: "same-origin",
@@ -989,8 +1038,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
       setInput(payload.transcript.slice(0, 1200));
-      setPendingAttachmentMeta({ kind: "audio", label: "Nota de voz transcrita" });
-      setRecordedAudio(null);
+      setPendingAttachmentMeta({ kind: "audio", label: audioSource === "upload" ? "Audio adjunto transcrito" : "Nota de voz transcrita" });
+      clearRecordedAudio();
+      setAudioConsentChecked(false);
+      setAudioConsentOpen(false);
       setError("");
       inputRef.current?.focus();
     } catch (caught) {
@@ -1147,19 +1198,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
       {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… {voiceMode ? "Habla con Orby. Te responderé en voz y volveré a escucharte." : "Al terminar, enviaré tu pregunta a Orby."}</p>}
-      {audioConsentOpen && <section aria-label="Consentimiento de grabación" className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-3">
+      {audioConsentOpen && <section aria-label="Consentimiento de audio" className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-3">
         <div className="flex items-start gap-2">
           <Mic className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-extrabold text-slate-900">Antes de grabar tu nota de voz</p>
-            <p className="mt-1 text-[11px] leading-4 text-slate-600">El audio se enviará a Google Gemini (nivel gratuito) para convertirlo en texto. Google puede usar el contenido del nivel gratuito para mejorar sus productos. PeakScore no guarda el archivo de audio; solo se guarda la transcripción cuando la envías al chat. No grabes contraseñas ni datos personales sensibles.</p>
+            <p className="text-xs font-extrabold text-slate-900">{audioSource === "upload" ? "Antes de transcribir tu audio" : "Antes de grabar tu nota de voz"}</p>
+            <p className="mt-1 text-[11px] leading-4 text-slate-600">El audio se enviará a Google Gemini (nivel gratuito) para convertirlo en texto. Google puede usar el contenido enviado desde el nivel gratuito para mejorar sus productos. PeakScore no conserva el archivo de audio: solo guarda la transcripción cuando tú la envías al chat. No grabes contraseñas ni datos personales sensibles.</p>
             <label className="mt-2 flex items-start gap-2 text-[11px] leading-4 text-slate-700">
               <input type="checkbox" checked={audioConsentChecked} onChange={(event) => setAudioConsentChecked(event.target.checked)} className="mt-0.5 accent-orange-600" />
-              <span>Entiendo y autorizo enviar esta grabación para transcribirla.</span>
+              <span>Entiendo y autorizo enviar este audio a Google Gemini para transcribirlo.</span>
             </label>
             <div className="mt-3 flex gap-2">
-              <button type="button" onClick={() => setAudioConsentOpen(false)} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
-              <button type="button" onClick={() => void startAudioRecording()} disabled={!audioConsentChecked} className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-40"><Mic className="h-3.5 w-3.5" /> Comenzar a grabar</button>
+              <button type="button" onClick={() => { setAudioConsentOpen(false); setAudioConsentChecked(false); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+              <button type="button" onClick={() => audioSource === "recording" ? void startAudioRecording() : setAudioConsentOpen(false)} disabled={!audioConsentChecked} className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-40">
+                {audioSource === "recording" ? <><Mic className="h-3.5 w-3.5" /> Comenzar a grabar</> : <><Check className="h-3.5 w-3.5" /> Autorizar y revisar audio</>}
+              </button>
             </div>
           </div>
         </div>
@@ -1168,19 +1221,30 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 60 segundos</span>
         <button type="button" onClick={stopAudioRecording} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
       </div>}
-      {recordedAudio && <div className="flex shrink-0 items-center gap-3 border-t border-slate-100 bg-white px-3 py-2">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700"><AudioLines className="h-5 w-5" /></div>
-        <div className="min-w-0 flex-1"><p className="truncate text-xs font-bold text-slate-800">Nota de voz lista</p><p className="text-[10px] text-slate-500">{(recordedAudio.size / 1024).toFixed(0)} KB · No se guardará el audio original</p></div>
-        <button type="button" onClick={() => void transcribeRecordedAudio()} disabled={audioTranscribing} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:opacity-50">{audioTranscribing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{audioTranscribing ? "Transcribiendo…" : "Transcribir"}</button>
-        <button type="button" onClick={() => setRecordedAudio(null)} aria-label="Descartar nota de voz" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-600"><X className="h-4 w-4" /></button>
+      {recordedAudio && <div className="shrink-0 space-y-2 border-t border-slate-100 bg-white px-3 py-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700"><AudioLines className="h-5 w-5" /></div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs font-bold text-slate-800">{audioSource === "upload" ? recordedAudio.name : "Nota de voz grabada"}</p>
+            <p className="text-[10px] text-slate-500">{(recordedAudio.size / 1024).toFixed(0)} KB · El archivo se elimina al terminar la transcripción</p>
+          </div>
+          <button type="button" onClick={clearRecordedAudio} aria-label="Descartar audio adjunto" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-600"><X className="h-4 w-4" /></button>
+        </div>
+        {recordedAudioPreviewUrl && <audio controls preload="metadata" src={recordedAudioPreviewUrl} className="h-10 w-full" aria-label="Escuchar audio antes de transcribir" />}
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[10px] text-slate-500">{audioConsentChecked ? "Consentimiento confirmado" : "Confirma el consentimiento para transcribir"}</span>
+          <button type="button" onClick={() => void transcribeRecordedAudio()} disabled={audioTranscribing || !audioConsentChecked} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:opacity-40">{audioTranscribing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{audioTranscribing ? "Transcribiendo…" : "Transcribir audio"}</button>
+        </div>
       </div>}
       {pendingAttachmentMeta?.kind === "audio" && <div className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-2 text-[11px] text-orange-900">Transcripción lista. Revísala o edítala antes de enviarla a Orby.</div>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
+        <input ref={audioInputRef} type="file" accept="audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar archivo de audio" onChange={(event) => handleAudioAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
-        <button type="button" onClick={() => { setAudioConsentChecked(false); setAudioConsentOpen(true); setRecordedAudio(null); }} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz para enviar" title="Grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
+        <button type="button" onClick={() => audioInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar archivo de audio" title="Adjuntar audio para transcribir" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><AudioLines className="h-5 w-5" /></button>
+        <button type="button" onClick={() => { clearRecordedAudio(); setAudioSource("recording"); setAudioConsentChecked(false); setAudioConsentOpen(true); }} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz para enviar" title="Grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
         <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada"} title={voiceMode ? "Detener chat de voz" : "Chat de voz beta · navegador"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {

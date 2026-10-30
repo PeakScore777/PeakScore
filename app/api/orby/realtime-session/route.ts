@@ -88,28 +88,28 @@ export async function POST(request: Request) {
         uses: 1,
         expireTime,
         newSessionExpireTime,
-        liveConnectConstraints: {
+        bidiGenerateContentSetup: {
           model: "models/" + model,
-          config: {
-            systemInstruction: {
-              parts: [{ text: instructions }],
-            },
+          systemInstruction: {
+            parts: [{ text: instructions }],
+          },
+          generationConfig: {
             responseModalities: ["AUDIO"],
-            inputAudioTranscription: {},
-            outputAudioTranscription: {},
-            realtimeInputConfig: {
-              automaticActivityDetection: {
-                disabled: false,
-                prefixPaddingMs: 250,
-                silenceDurationMs: 550,
-              },
-            },
             speechConfig: {
               voiceConfig: {
                 prebuiltVoiceConfig: {
                   voiceName: "Puck",
                 },
               },
+            },
+          },
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
+          realtimeInputConfig: {
+            automaticActivityDetection: {
+              disabled: false,
+              prefixPaddingMs: 250,
+              silenceDurationMs: 550,
             },
           },
         },
@@ -121,11 +121,21 @@ export async function POST(request: Request) {
     const payload = await upstream.json().catch(() => ({}));
     const token = typeof payload?.name === "string" ? payload.name : "";
     if (!upstream.ok || !token) {
+      const googleStatus = typeof payload?.error?.status === "string" ? payload.error.status : "UNKNOWN";
+      const googleMessage = typeof payload?.error?.message === "string"
+        ? payload.error.message.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").slice(0, 320)
+        : "Google no devolvió detalles del error.";
       console.error("[Orby Gemini Live] Ephemeral token creation failed.", {
         status: upstream.status,
-        errorStatus: typeof payload?.error?.status === "string" ? payload.error.status : "unknown",
+        errorStatus: googleStatus,
+        errorMessage: googleMessage,
       });
-      return NextResponse.json({ error: "No se pudo iniciar la conversación de voz. Comprueba que Gemini Live esté habilitado para la API configurada." }, { status: 502 });
+      const debugMessage = `Google Gemini API (${upstream.status} · ${googleStatus}): ${googleMessage}`;
+      return NextResponse.json({
+        error: process.env.NODE_ENV === "production"
+          ? "No se pudo iniciar la conversación de voz. El servicio de Gemini Live rechazó la solicitud."
+          : debugMessage,
+      }, { status: 502 });
     }
 
     return NextResponse.json({

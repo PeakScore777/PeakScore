@@ -1088,19 +1088,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </header>
 
       <div className={workspace ? "flex min-h-0 flex-1 bg-[#f5f7fb]" : "contents"}>
-        {workspace && <aside className={historyOpen ? "absolute bottom-0 left-0 top-[64px] z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-200 bg-slate-50 shadow-xl md:relative md:top-auto md:z-auto md:w-[270px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[270px] md:shrink-0 md:flex-col"} aria-label="Historial de conversaciones">
-          <div className="border-b border-slate-200 p-3">
-            <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 text-sm font-bold text-white transition hover:bg-slate-800"><Plus className="h-4 w-4" /> Nuevo chat</button>
+        {workspace && <aside className={historyOpen ? "absolute bottom-0 left-0 top-[64px] z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-800 bg-[#101827] text-white shadow-xl md:relative md:top-auto md:z-auto md:w-[252px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[252px] md:shrink-0 md:flex-col border-r border-slate-800 bg-[#101827] text-white"} aria-label="Historial de conversaciones">
+          <div className="border-b border-white/10 p-4">
+            <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-3 text-sm font-bold text-white transition hover:bg-orange-700"><Plus className="h-4 w-4" /> Nuevo chat</button>
             <p className="mt-4 px-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tus conversaciones</p>
           </div>
           <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
             {historyLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando historial…</div>}
             {!historyLoading && conversations.length === 0 && <p className="px-3 py-5 text-xs leading-5 text-slate-500">Aún no tienes chats guardados. Inicia uno para conservar tus preguntas y explicaciones.</p>}
-            {conversations.map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-xl border border-orange-200 bg-orange-50 px-2 py-2" : "group rounded-xl border border-transparent px-2 py-2 transition hover:border-slate-200 hover:bg-white"}>
+            {conversations.map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-xl border border-orange-400/40 bg-orange-500/10 px-2 py-2" : "group rounded-xl border border-transparent px-2 py-2 transition hover:border-white/10 hover:bg-white/5"}>
               <div className="flex items-start gap-1">
                 <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 text-left">
-                  <span className="block truncate text-xs font-bold text-slate-800">{item.title}</span>
-                  <span className="mt-1 block truncate text-[10px] text-slate-500">{item.topic || item.subject}</span>
+                  <span className="block truncate text-xs font-bold text-slate-100">{item.title}</span>
+                  <span className="mt-1 block truncate text-[10px] text-slate-400">{item.topic || item.subject}</span>
                   <span className="mt-1 block text-[9px] text-slate-400">{new Date(item.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
                 </button>
                 <button type="button" onClick={() => setPendingDeleteConversation((current) => current === item.id ? null : item.id)} aria-label={"Eliminar chat " + item.title} title="Eliminar conversación" className="rounded-md p-1.5 text-slate-400 opacity-70 transition hover:bg-rose-50 hover:text-rose-600 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -1111,7 +1111,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               </div>}
             </div>)}
           </div>
-          <div className="border-t border-slate-200 px-3 py-3 text-[10px] leading-4 text-slate-500">Los chats son privados de tu cuenta. Puedes eliminarlos cuando quieras.</div>
+          <div className="border-t border-white/10 px-3 py-3 text-[10px] leading-4 text-slate-400">Los chats son privados de tu cuenta. Puedes eliminarlos cuando quieras.</div>
         </aside>}
         <div className={workspace ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"}>
       {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#d9c5ae] bg-[#fff9f0] px-3 py-2">

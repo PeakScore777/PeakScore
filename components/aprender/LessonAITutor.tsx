@@ -104,7 +104,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [attachmentPreview, setAttachmentPreview] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
   const [ocrText, setOcrText] = useState("");
-  const [ocrLoading, setOcrLoading] = useState(false);\n  const [cropMode, setCropMode] = useState(false);\n  const [cropX, setCropX] = useState(5);\n  const [cropY, setCropY] = useState(5);\n  const [cropW, setCropW] = useState(90);\n  const [cropH, setCropH] = useState(90);
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [cropMode, setCropMode] = useState(false);
+  const [cropX, setCropX] = useState(5);
+  const [cropY, setCropY] = useState(5);
+  const [cropW, setCropW] = useState(90);
+  const [cropH, setCropH] = useState(90);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -226,7 +231,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function speakText(text: string, index: number) {\n    if (typeof window === "undefined" || !("speechSynthesis" in window)) {\n      setVoiceError("Tu navegador no tiene lectura de voz disponible.");
       return;
-    }\n    stopSpeaking();
+    }
+    stopSpeaking();
     const clean = text.replace(/\*\*/g, "").replace(/`/g, "").replace(/^[-•]\s*/gm, "").replace(/^\d+[.)]\s*/gm, "").slice(0, 5000);
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = "es-CO"; utterance.rate = 1; utterance.pitch = 1;
@@ -238,20 +244,33 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
   }
 
-  function toggleVoiceMode() {\n    const next = !voiceModeRef.current;\n    voiceModeRef.current = next;
+  function toggleVoiceMode() {\n    const next = !voiceModeRef.current;
+    voiceModeRef.current = next;
     setVoiceMode(next);
     if (!next) stopSpeaking();
   }
 
-  function toggleVoiceInput() {\n    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }\n    const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
+  function toggleVoiceInput() {\n    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
+    const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
-    if (!Recognition) { setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta."); return; }\n    setVoiceError("");
-    const recognition = new Recognition();\n    recognition.lang = "es-CO"; recognition.continuous = false; recognition.interimResults = true;\n    recognition.onresult = (event) => {\n      const results = Array.from(event.results);
+    if (!Recognition) { setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta."); return; }
+    setVoiceError("");
+    const recognition = new Recognition();
+    recognition.lang = "es-CO"; recognition.continuous = false; recognition.interimResults = true;
+    recognition.onresult = (event) => {\n      const results = Array.from(event.results);
       const transcript = results.map((result) => result[0]?.transcript ?? "").join(" ").trim();
       if (!transcript) return;
       setInput(transcript.slice(0, 1200));
       if (results.some((result) => result[0]?.isFinal)) {\n        setIsListening(false); recognitionRef.current = null;
-        void sendMessageRef.current(transcript.slice(0, 1200));\n      }\n    };\n    recognition.onerror = () => { setIsListening(false); recognitionRef.current = null; setVoiceError("No pude reconocer tu voz. Revisa el permiso del micrófono e inténtalo otra vez."); };\n    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };\n    recognitionRef.current = recognition;\n    try { recognition.start(); setIsListening(true); } catch { setIsListening(false); recognitionRef.current = null; setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo."); }\n  }\n  async function sendMessage(text: string, includeAttachment = false) {
+        void sendMessageRef.current(transcript.slice(0, 1200));
+      }
+    };
+    recognition.onerror = () => { setIsListening(false); recognitionRef.current = null; setVoiceError("No pude reconocer tu voz. Revisa el permiso del micrófono e inténtalo otra vez."); };
+    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };
+    recognitionRef.current = recognition;
+    try { recognition.start(); setIsListening(true); } catch { setIsListening(false); recognitionRef.current = null; setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo."); }
+  }
+  async function sendMessage(text: string, includeAttachment = false) {
     const message = text.trim();
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || message.length > 1200) return;
@@ -298,7 +317,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
       const assistantIndex = nextMessages.length;
       setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
-      if (voiceModeRef.current && "speechSynthesis" in window) {\n        window.setTimeout(() => speakText(data.reply, assistantIndex), 120);\n      }
+      if (voiceModeRef.current && "speechSynthesis" in window) {\n        window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
+      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.");
     } finally {
@@ -424,14 +444,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <button type="button" onClick={clearAttachment} aria-label="Quitar imagen adjunta" className="rounded-full p-2 text-slate-500 hover:bg-white"><X className="h-4 w-4" /></button>
         </div>
       </div>}
-      {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}\n      {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}\n      {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… habla ahora. Al terminar, enviaré tu pregunta a Orby.</p>}
+      {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
+      {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
+      {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… habla ahora. Al terminar, enviaré tu pregunta a Orby.</p>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />\n        <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>\n        <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
         {voiceEnabled && <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener dictado por voz" : "Hablar con Orby"} title={isListening ? "Detener dictado" : "Hablar con Orby"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
           {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </button>}
-        {voiceEnabled && <button type="button" onClick={toggleVoiceMode} aria-label={voiceMode ? "Desactivar respuestas habladas" : "Activar respuestas habladas"} title={voiceMode ? "Respuestas habladas activadas" : "Activar respuestas habladas"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Volume2 className="h-5 w-5" /></button>}\n        <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
+        {voiceEnabled && <button type="button" onClick={toggleVoiceMode} aria-label={voiceMode ? "Desactivar respuestas habladas" : "Activar respuestas habladas"} title={voiceMode ? "Respuestas habladas activadas" : "Activar respuestas habladas"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Volume2 className="h-5 w-5" /></button>}
+        <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
           if (!imageItem) return;

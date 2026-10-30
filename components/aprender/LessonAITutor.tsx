@@ -141,6 +141,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const audioStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const discardRecordingRef = useRef(false);
 
   useEffect(() => {
     if (!open || !workspace) return;
@@ -272,7 +273,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return () => {
       recognitionRef.current?.stop();
       recognitionRef.current = null;
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") mediaRecorderRef.current.stop();
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state !== "inactive") {
+        recorder.ondataavailable = null;
+        recorder.onstop = null;
+        recorder.onerror = null;
+        recorder.stop();
+      }
+      mediaRecorderRef.current = null;
       audioStreamRef.current?.getTracks().forEach((track) => track.stop());
       if (recordingTimeoutRef.current) window.clearTimeout(recordingTimeoutRef.current);
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -748,7 +756,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     recognitionRef.current?.stop();
     recognitionRef.current = null;
     setIsListening(false);
-    stopAudioRecording();
+    stopAudioRecording(true);
+    setRecordedAudio(null);
     setAudioConsentOpen(false);
     setAudioConsentChecked(false);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -769,7 +778,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function startNewConversation() {
-    stopAudioRecording();
+    stopAudioRecording(true);
     activeConversationRef.current = null;
     setConversationId(null);
     setMessages([]);
@@ -844,7 +853,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     void sendMessage(input, true, false, pendingAttachmentMeta ?? undefined);
   }
 
-  function stopAudioRecording() {
+  function stopAudioRecording(discard = false) {
+    if (discard) discardRecordingRef.current = true;
     if (recordingTimeoutRef.current) {
       window.clearTimeout(recordingTimeoutRef.current);
       recordingTimeoutRef.current = null;
@@ -878,6 +888,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
       audioStreamRef.current = stream;
       audioChunksRef.current = [];
+      discardRecordingRef.current = false;
       const recorder = new MediaRecorder(stream, { mimeType: supportedType });
       mediaRecorderRef.current = recorder;
 
@@ -887,8 +898,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       recorder.onerror = () => {
         setVoiceError("La grabación se interrumpió. Inténtalo de nuevo.");
         setIsRecording(false);
+        stream.getTracks().forEach((track) => track.stop());
+        if (audioStreamRef.current === stream) audioStreamRef.current = null;
       };
       recorder.onstop = () => {
+        if (discardRecordingRef.current) {
+          discardRecordingRef.current = false;
+          audioChunksRef.current = [];
+          stream.getTracks().forEach((track) => track.stop());
+          if (audioStreamRef.current === stream) audioStreamRef.current = null;
+          if (mediaRecorderRef.current === recorder) mediaRecorderRef.current = null;
+          setIsRecording(false);
+          return;
+        }
         const type = supportedType.startsWith("audio/mp4") ? "audio/mp4" : supportedType.split(";")[0];
         const extension = type === "audio/mp4" ? "m4a" : type === "audio/ogg" ? "ogg" : "webm";
         const blob = new Blob(audioChunksRef.current, { type });

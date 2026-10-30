@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
-const ALLOWED_AUDIO_TYPES = new Set(["audio/webm", "audio/ogg", "audio/wav", "audio/mpeg", "audio/mp3", "audio/aac", "audio/mp4", "audio/opus"]);
+const ALLOWED_AUDIO_TYPES = new Set(["audio/webm", "audio/ogg", "audio/wav", "audio/mpeg", "audio/mp3", "audio/aac", "audio/mp4", "audio/opus", "audio/m4a"]);
 
 function hasValidSignature(mimeType: string, bytes: Buffer) {
   if (mimeType === "audio/webm") {
@@ -24,7 +24,7 @@ function hasValidSignature(mimeType: string, bytes: Buffer) {
     );
   }
   if (mimeType === "audio/aac") return bytes.length >= 2 && bytes[0] === 0xff && (bytes[1] & 0xf6) === 0xf0;
-  if (mimeType === "audio/m4a") return bytes.length >= 12 && bytes.toString("ascii", 4, 8) === "ftyp";
+  if (mimeType === "audio/mp4" || mimeType === "audio/m4a") return bytes.length >= 12 && bytes.toString("ascii", 4, 8) === "ftyp";
   if (mimeType === "audio/opus") return bytes.toString("ascii").includes("OpusHead");
   return false;
 }

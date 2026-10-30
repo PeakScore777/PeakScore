@@ -889,6 +889,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setRecordedAudio(null);
     setRecordedAudioPreviewUrl("");
     setAudioSource("recording");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function handleAudioAttachment(file?: File) {
@@ -1239,8 +1240,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         {recordedAudioPreviewUrl && <audio controls preload="metadata" src={recordedAudioPreviewUrl} className="h-10 w-full" aria-label="Escuchar audio antes de transcribir" />}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] text-slate-500">{audioConsentChecked ? "Consentimiento confirmado" : "Confirma el consentimiento para transcribir"}</span>
-          <button type="button" onClick={() => void transcribeRecordedAudio()} disabled={audioTranscribing || !audioConsentChecked} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:opacity-40">{audioTranscribing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{audioTranscribing ? "Transcribiendo…" : "Transcribir audio"}</button>
+          <span className="text-[10px] text-slate-500">{audioConsentChecked ? "Consentimiento confirmado" : "Falta autorizar la transcripción"}</span>
+          {!audioConsentChecked ? (
+            <button type="button" onClick={() => setAudioConsentOpen(true)} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-[11px] font-bold text-orange-800 hover:bg-orange-100"><Check className="h-3.5 w-3.5" /> Autorizar</button>
+          ) : (
+            <button type="button" onClick={() => void transcribeRecordedAudio()} disabled={audioTranscribing} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:opacity-40">{audioTranscribing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{audioTranscribing ? "Transcribiendo…" : "Transcribir audio"}</button>
+          )}
         </div>
       </div>}
       {pendingAttachmentMeta?.kind === "audio" && <div className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-2 text-[11px] text-orange-900">Transcripción lista. Revísala o edítala antes de enviarla a Orby.</div>}

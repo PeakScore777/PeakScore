@@ -12,7 +12,7 @@ type SpeechRecognitionLike = {
   continuous: boolean;
   interimResults: boolean;
   onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string; isFinal: boolean }>> }) => void) | null;
-  onerror: (() => void) | null;
+  onerror: ((event?: { error?: string }) => void) | null;
   onend: (() => void) | null;
   start: () => void;
   stop: () => void;
@@ -130,6 +130,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   useEffect(() => {
     return () => {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       if (attachmentPreview.startsWith("blob:")) URL.revokeObjectURL(attachmentPreview);
     };
   }, [attachmentPreview]);
@@ -372,27 +375,63 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function toggleVoiceInput() {
-    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    if (recognitionRef.current) return;
+    if (!window.isSecureContext && window.location.hostname !== "localhost") {
+      setVoiceError("El micrófono requiere una conexión segura (HTTPS).");
+      return;
+    }
     const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
-    if (!Recognition) { setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta."); return; }
+    if (!Recognition) {
+      setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta.");
+      return;
+    }
     setVoiceError("");
     const recognition = new Recognition();
-    recognition.lang = "es-CO"; recognition.continuous = false; recognition.interimResults = true;
+    recognition.lang = "es-CO";
+    recognition.continuous = false;
+    recognition.interimResults = true;
     recognition.onresult = (event) => {
       const results = Array.from(event.results);
-      const transcript = results.map((result) => result[0]?.transcript ?? "").join(" ").trim();
-      if (!transcript) return;
-      setInput(transcript.slice(0, 1200));
-      if (results.some((result) => result[0]?.isFinal)) {
-        setIsListening(false); recognitionRef.current = null;
-        void sendMessageRef.current(transcript.slice(0, 1200));
+      const interim = results.filter((result) => !result[0]?.isFinal).map((result) => result[0]?.transcript ?? "").join(" ").trim();
+      const finalTranscript = results.filter((result) => result[0]?.isFinal).map((result) => result[0]?.transcript ?? "").join(" ").trim();
+      if (interim) setInput(interim.slice(0, 1200));
+      if (finalTranscript) {
+        const safeTranscript = finalTranscript.slice(0, 1200);
+        setInput(safeTranscript);
+        setIsListening(false);
+        recognitionRef.current = null;
+        void sendMessageRef.current(safeTranscript);
       }
     };
-    recognition.onerror = () => { setIsListening(false); recognitionRef.current = null; setVoiceError("No pude reconocer tu voz. Revisa el permiso del micrófono e inténtalo otra vez."); };
-    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };
+    recognition.onerror = (event) => {
+      setIsListening(false);
+      recognitionRef.current = null;
+      const message = event?.error === "not-allowed" || event?.error === "service-not-allowed"
+        ? "No hay permiso para usar el micrófono. Autorízalo en el navegador e inténtalo de nuevo."
+        : event?.error === "no-speech"
+          ? "No detecté voz. Inténtalo otra vez acercándote al micrófono."
+          : "No pude reconocer tu voz. Revisa el micrófono e inténtalo otra vez.";
+      setVoiceError(message);
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+      if (recognitionRef.current === recognition) recognitionRef.current = null;
+    };
     recognitionRef.current = recognition;
-    try { recognition.start(); setIsListening(true); } catch { setIsListening(false); recognitionRef.current = null; setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo."); }
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      setIsListening(false);
+      recognitionRef.current = null;
+      setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo.");
+    }
   }
   async function sendMessage(text: string, includeAttachment = false) {
     const message = text.trim();

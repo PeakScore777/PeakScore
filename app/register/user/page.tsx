@@ -2,6 +2,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Turnstile } from "@marsidev/react-turnstile";
 import Link from "next/link";
 import {
@@ -47,6 +48,7 @@ function GoogleIcon() {
 }
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -350,7 +352,7 @@ export default function RegisterPage() {
 
       await supabase.auth.signOut();
       window.sessionStorage.removeItem("peakscore_pending_signup_email");
-      window.location.href = "/login?verified=1";
+      router.replace("/login?verified=1");
     } catch {
       setVerificationError(
         "Ocurrió un error al verificar el código. Inténtalo nuevamente."

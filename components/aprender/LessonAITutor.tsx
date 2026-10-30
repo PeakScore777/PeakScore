@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Camera, FileText, LoaderCircle, Mic, MicOff, Paperclip, ScanText, Send, Volume2, X } from "lucide-react";
+import { Camera, FileText, LoaderCircle, LockKeyhole, Mic, MicOff, Paperclip, ScanText, Send, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
@@ -41,7 +41,6 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   initialPrompt?: string;
   accent?: "default" | "orby";
-  voiceEnabled?: boolean;
 };
 
 
@@ -87,7 +86,7 @@ const starters = [
   "No entiendo por qué una opción es incorrecta",
 ];
 
-export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], voiceEnabled = false }: Props) {
+export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [] }: Props) {
   const orbyAccent = accent === "orby";
   const [notebookOpen, setNotebookOpen] = useState(false);
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
@@ -97,6 +96,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState("");
+  const [premiumVoiceEnabled, setPremiumVoiceEnabled] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const voiceModeRef = useRef(false);
@@ -119,9 +119,34 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const sendMessageRef = useRef<(text: string, includeAttachment?: boolean) => Promise<void>>(async () => {});
+  const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean) => Promise<void>>(async () => {});
   const lastInitialPromptRef = useRef<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const controller = new AbortController();
+
+    const loadVoiceAccess = async () => {
+      try {
+        const response = await fetch("/api/orby/voice-access", {
+          method: "GET",
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error("VOICE_ACCESS_UNAVAILABLE");
+        if (!controller.signal.aborted) setPremiumVoiceEnabled(payload.enabled === true);
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+        if (!controller.signal.aborted) setPremiumVoiceEnabled(false);
+      }
+    };
+
+    void loadVoiceAccess();
+    return () => controller.abort();
+  }, [open]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -362,16 +387,28 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const voices = window.speechSynthesis.getVoices();
     const spanishVoice = voices.find((voice) => voice.lang.toLowerCase() === "es-co") ?? voices.find((voice) => voice.lang.toLowerCase().startsWith("es"));
     if (spanishVoice) utterance.voice = spanishVoice;
-    utterance.onend = () => setSpeakingIndex(null);
+    utterance.onend = () => {
+      setSpeakingIndex(null);
+      if (voiceModeRef.current) window.setTimeout(() => toggleVoiceInput(), 350);
+    };
     utterance.onerror = () => setSpeakingIndex(null);
     setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
   }
 
   function toggleVoiceMode() {
+    if (!premiumVoiceEnabled) return;
     const next = !voiceModeRef.current;
     voiceModeRef.current = next;
     setVoiceMode(next);
-    if (!next) stopSpeaking();
+    if (next) {
+      stopSpeaking();
+      window.setTimeout(() => toggleVoiceInput(), 0);
+      return;
+    }
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
+    stopSpeaking();
   }
 
   function toggleVoiceInput() {
@@ -406,7 +443,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setInput(safeTranscript);
         setIsListening(false);
         recognitionRef.current = null;
-        void sendMessageRef.current(safeTranscript);
+        void sendMessageRef.current(safeTranscript, false, true);
       }
     };
     recognition.onerror = (event) => {
@@ -433,8 +470,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo.");
     }
   }
-  async function sendMessage(text: string, includeAttachment = false) {
+  async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false) {
     const message = text.trim();
+    const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || message.length > 1200) return;
     let imagePayload: { mimeType: string; base64: string } | undefined;
@@ -471,6 +509,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           question: activeReview?.prompt ?? question,
           context: [reviewContext, ocrText ? `Texto OCR extraído localmente de la imagen (puede contener errores):\n${ocrText}` : ""].filter(Boolean).join("\n\n").slice(0, 10000),
           message,
+          voiceMode: isVoiceInteraction,
           history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
           ...(imagePayload ? { image: imagePayload } : {}),
         }),
@@ -480,7 +519,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
       const assistantIndex = nextMessages.length;
       setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
-      if (voiceModeRef.current && "speechSynthesis" in window) {
+      if (isVoiceInteraction && "speechSynthesis" in window) {
         window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
       }
     } catch (caught) {
@@ -589,7 +628,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <article key={index} className={message.role === "user" ? `ml-auto max-w-[92%] rounded-2xl rounded-br-sm px-3 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[13px] leading-[1.75] sm:text-sm">{renderTutorContent(message.content)}</div>
-                {voiceEnabled && message.role === "assistant" && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index)} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
+                {message.role === "assistant" && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index)} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
                   <Volume2 className="h-3.5 w-3.5" /> {speakingIndex === index ? "Detener audio" : "Escuchar respuesta"}
                 </button>}
                 {message.attachmentName && <div className="mb-2 flex items-center gap-2 rounded-lg border border-white/25 p-2">{message.attachmentPreview ? <Image src={message.attachmentPreview} width={1200} height={800} unoptimized alt={`Adjunto: ${message.attachmentName}`} className="max-h-28 max-w-full rounded-md object-contain" /> : <FileText className="h-6 w-6 shrink-0" />}<p className="min-w-0 break-all text-[10px] opacity-80">{message.attachmentName}</p></div>}
@@ -650,10 +689,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
-        {voiceEnabled && <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener dictado por voz" : "Hablar con Orby"} title={isListening ? "Detener dictado" : "Hablar con Orby"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
+        {premiumVoiceEnabled && <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener dictado por voz" : "Hablar con Orby"} title={isListening ? "Detener dictado" : "Hablar con Orby"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
           {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </button>}
-        {voiceEnabled && <button type="button" onClick={toggleVoiceMode} aria-label={voiceMode ? "Desactivar respuestas habladas" : "Activar respuestas habladas"} title={voiceMode ? "Respuestas habladas activadas" : "Activar respuestas habladas"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Volume2 className="h-5 w-5" /></button>}
+        {premiumVoiceEnabled && <button type="button" onClick={toggleVoiceMode} aria-label={voiceMode ? "Desactivar respuestas habladas" : "Activar respuestas habladas"} title={voiceMode ? "Respuestas habladas activadas" : "Activar respuestas habladas"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Volume2 className="h-5 w-5" /></button>}
+        {!premiumVoiceEnabled && <button type="button" disabled aria-label="Chat de voz exclusivo de Premium" title="El chat de voz está disponible con PeakScore Premium" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700 opacity-90"><LockKeyhole className="h-5 w-5" /></button>}
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));

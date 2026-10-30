@@ -127,6 +127,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceUserTextRef = useRef("");
   const voiceAssistantTextRef = useRef("");
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
+  const voiceResponseDoneRef = useRef(false);
+  const voiceTurnPersistedRef = useRef(false);
+  const voiceTurnSavingRef = useRef(false);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
@@ -559,9 +562,39 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus("Conversación finalizada");
   }
 
+  async function persistRealtimeTurnIfReady() {
+    const userContent = voiceUserTextRef.current.trim();
+    const assistantContent = voiceAssistantTextRef.current.trim();
+    const id = activeConversationRef.current;
+    if (!voiceResponseDoneRef.current || !userContent || !assistantContent || !id || voiceTurnPersistedRef.current || voiceTurnSavingRef.current) return;
+    voiceTurnSavingRef.current = true;
+    try {
+      const response = await fetch("/api/orby/realtime-turn", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId: id, userContent, assistantContent }),
+      });
+      if (!response.ok) throw new Error("No se pudo guardar el turno de voz.");
+      voiceTurnPersistedRef.current = true;
+      await refreshConversations();
+    } catch {
+      setConversationError("La respuesta se escuchó, pero no se pudo guardar en el historial.");
+    } finally {
+      voiceTurnSavingRef.current = false;
+    }
+  }
+
   function handleRealtimeEvent(event: Record<string, unknown>) {
     const type = typeof event.type === "string" ? event.type : "";
     if (type === "input_audio_buffer.speech_started") {
+      if (voiceTurnPersistedRef.current) {
+        voiceUserTextRef.current = "";
+        voiceAssistantTextRef.current = "";
+        voiceAssistantMessageIdRef.current = null;
+        voiceResponseDoneRef.current = false;
+        voiceTurnPersistedRef.current = false;
+      }
       setIsListening(true);
       setVoiceStatus("Te escucho…");
       setSpeakingIndex(null);
@@ -582,7 +615,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (transcript) {
         voiceUserTextRef.current = transcript;
         setLiveTranscript("");
-        setMessages((current) => [...current, { role: "user", content: transcript }]);
+        setMessages((current) => {
+          const assistantId = voiceAssistantMessageIdRef.current;
+          const assistantIndex = assistantId ? current.findIndex((message) => message.id === assistantId) : -1;
+          if (assistantIndex < 0) return [...current, { role: "user", content: transcript }];
+          const next = [...current];
+          next.splice(assistantIndex, 0, { role: "user", content: transcript });
+          return next;
+        });
+        void persistRealtimeTurnIfReady();
       }
       setVoiceStatus("Orby está pensando…");
       return;
@@ -608,27 +649,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceAssistantTextRef.current = transcript;
         const id = voiceAssistantMessageIdRef.current;
         if (id) setMessages((current) => current.map((message) => message.id === id ? { ...message, content: transcript } : message));
+        void persistRealtimeTurnIfReady();
       }
       return;
     }
     if (type === "response.done") {
-      const userContent = voiceUserTextRef.current.trim();
-      const assistantContent = voiceAssistantTextRef.current.trim();
-      const id = activeConversationRef.current;
-      if (userContent && assistantContent && id) {
-        void fetch("/api/orby/realtime-turn", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversationId: id, userContent, assistantContent }),
-        }).then(async (response) => {
-          if (!response.ok) throw new Error("No se pudo guardar el turno de voz.");
-          await refreshConversations();
-        }).catch(() => setConversationError("La respuesta se escuchó, pero no se pudo guardar en el historial."));
-      }
-      voiceUserTextRef.current = "";
-      voiceAssistantTextRef.current = "";
-      voiceAssistantMessageIdRef.current = null;
+      voiceResponseDoneRef.current = true;
+      void persistRealtimeTurnIfReady();
       setVoiceStatus("Te escucho…");
       setIsListening(false);
       return;
@@ -661,7 +688,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, topic, context }),
+        body: JSON.stringify({ subject, topic, context, history: messages.slice(-6).map(({ role, content }) => ({ role, content })) }),
       });
       const tokenPayload = await tokenResponse.json().catch(() => ({}));
       if (!tokenResponse.ok || typeof tokenPayload.clientSecret !== "string") {
@@ -741,6 +768,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setLiveTranscript("");
     voiceUserTextRef.current = "";
     voiceAssistantTextRef.current = "";
+    voiceResponseDoneRef.current = false;
+    voiceTurnPersistedRef.current = false;
     try {
       await startRealtimeVoice();
     } catch (error) {

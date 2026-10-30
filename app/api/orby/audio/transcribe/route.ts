@@ -61,11 +61,6 @@ export async function POST(request: Request) {
 
   const form = await request.formData().catch(() => null);
   const audio = form?.get("audio");
-  const consent = form?.get("consent");
-
-  if (consent !== "true") {
-    return NextResponse.json({ error: "Confirma que autorizas el envío del audio a Google Gemini para transcribirlo." }, { status: 400 });
-  }
   if (!(audio instanceof File)) {
     return NextResponse.json({ error: "No se recibió una grabación de audio válida." }, { status: 400 });
   }
@@ -92,7 +87,7 @@ export async function POST(request: Request) {
 
   if (!geminiApiKey && !groqApiKey) {
     return NextResponse.json({
-      error: "La transcripción no está configurada. El servidor necesita al menos un proveedor de audio.",
+      error: "La transcripción no está configurada. El servicio de transcripción no está disponible temporalmente.",
       code: "TRANSCRIPTION_NOT_CONFIGURED",
     }, { status: 503 });
   }
@@ -202,7 +197,7 @@ export async function POST(request: Request) {
     }, { status: wasRateLimited ? 429 : 503 });
   }
 
-  return NextResponse.json({ transcript, provider }, {
+  return NextResponse.json({ transcript }, {
     headers: { "Cache-Control": "no-store, max-age=0" },
   });
 }

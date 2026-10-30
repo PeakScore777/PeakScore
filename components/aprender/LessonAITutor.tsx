@@ -1080,7 +1080,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-3 text-sm font-bold text-white transition hover:bg-orange-700"><Plus className="h-4 w-4" /> Nuevo chat</button>
             <p className="mt-4 px-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tus conversaciones</p>
           </div>
-          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {historyLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando historial…</div>}
             {!historyLoading && conversations.length === 0 && <p className="px-3 py-5 text-xs leading-5 text-slate-500">Aún no tienes chats guardados. Inicia uno para conservar tus preguntas y explicaciones.</p>}
             {conversations.map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-xl border border-orange-400/40 bg-orange-500/10 px-2 py-2" : "group rounded-xl border border-transparent px-2 py-2 transition hover:border-white/10 hover:bg-white/5"}>
@@ -1119,7 +1119,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </section>}
       </div>}
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6" ref={scrollRef} aria-live="polite">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" ref={scrollRef} aria-live="polite">
         {messages.length === 0 ? (
           <div className="flex min-h-full flex-col items-center justify-center">
             <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby, tutor de PeakScore" className={`mb-2 h-28 w-28 rounded-full border-2 bg-white object-contain object-center ${orbyAccent ? "border-orange-300 shadow-[0_4px_18px_rgba(249,115,22,.18)]" : "border-sky-200 shadow-[0_4px_18px_rgba(14,165,233,.16)]"}`} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />

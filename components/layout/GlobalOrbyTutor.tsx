@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MessageCircle } from "lucide-react";
 
 import LessonAITutor from "@/components/aprender/LessonAITutor";
@@ -66,13 +66,13 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
   const [open, setOpen] = useState(false);
   const page = useMemo(() => getPageContext(pathname), [pathname]);
 
-  function requestClose() {
+  const requestClose = useCallback(() => {
     const closeButton = document.querySelector<HTMLButtonElement>(
       '#orby-tutor-panel button[aria-label="Cerrar tutor Orby"]'
     );
     if (closeButton) closeButton.click();
     else setOpen(false);
-  }
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -86,7 +86,7 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [open, requestClose]);
 
   // La landing pública queda deliberadamente libre del acceso flotante de Orby.
   if (pathname === "/" || pathname.startsWith("/landing") || pathname === "/orby") return null;

@@ -1076,7 +1076,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         {workspace && <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1" role="tablist" aria-label="Modo de conversación">
           <button type="button" role="tab" aria-selected={workspaceMode === "chat"} onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm">Chat</button>
           <button type="button" role="tab" aria-selected={workspaceMode === "voice"} disabled={!voiceAccessChecked || !premiumVoiceEnabled} onClick={() => { setWorkspaceMode("voice"); if (!voiceModeRef.current) toggleVoiceMode(); }} title={!premiumVoiceEnabled ? "Conversación por voz disponible en Premium" : "Iniciar conversación por voz"} className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40">Voz</button>
-        </div>
+        </div>}
         <div className="flex items-center gap-1">
           {workspace && <>
             <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar historial" : "Mostrar historial"} title="Historial de chats" className="rounded-lg p-2 md:hidden text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><ChevronDown className={historyOpen ? "h-4 w-4 rotate-90" : "h-4 w-4"} /></button>

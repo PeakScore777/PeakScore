@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { AudioLines, Camera, Check, ChevronDown, FileText, Headphones, LoaderCircle, Mic, MicOff, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Camera, Check, ChevronDown, FileText, Headphones, LoaderCircle, Maximize2, Mic, MicOff, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; createdAt?: string };
@@ -89,6 +90,8 @@ const starters = [
 ];
 
 export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false }: Props) {
+  const router = useRouter();
+  const pathname = usePathname() ?? "/";
   const orbyAccent = accent === "orby";
   const [notebookOpen, setNotebookOpen] = useState(false);
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
@@ -1010,12 +1013,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <div className="min-w-0">
             <p className="font-extrabold text-slate-950">Orby <span className={orbyAccent ? "text-orange-500" : "text-sky-600"}>●</span></p>
-            <p className="truncate text-xs text-slate-500">{workspace ? "Chat de estudio · Conversaciones guardadas" : "Tutor de ciencias · Saber 11"}</p>
+            <p className="truncate text-xs text-slate-500">{workspace ? "Chats guardados · Notas de voz · Estudio" : "Tutor de ciencias · Saber 11"}</p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           {workspace && <>
             <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar historial" : "Mostrar historial"} title="Historial de chats" className="rounded-lg p-2 md:hidden text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><ChevronDown className={historyOpen ? "h-4 w-4 rotate-90" : "h-4 w-4"} /></button>
+            {pathname !== "/orby" && <button type="button" onClick={() => router.push("/orby")} aria-label="Abrir espacio completo de Orby" title="Abrir espacio completo" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><Maximize2 className="h-4 w-4" /></button>}
             <button type="button" onClick={startNewConversation} aria-label="Crear nueva conversación" title="Nuevo chat" className="rounded-lg p-2 text-orange-700 transition hover:bg-orange-50"><Plus className="h-5 w-5" /></button>
           </>}
           <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>

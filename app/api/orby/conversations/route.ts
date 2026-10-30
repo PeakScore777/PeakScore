@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,10 +36,33 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const contentLength = Number(request.headers.get("content-length") || 0);
+  if (Number.isFinite(contentLength) && contentLength > 8_000) {
+    return NextResponse.json({ error: "La solicitud supera el tamaño permitido." }, { status: 413 });
+  }
+
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return NextResponse.json({ error: "Inicia sesión para crear una conversación." }, { status: 401 });
+  }
+
+  const { data: limitData, error: limitError } = await supabaseAdmin.rpc("orby_take_rate_limit", {
+    p_user_id: user.id,
+    p_bucket: "orby_conversation_create",
+    p_max_requests: 10,
+    p_window_seconds: 60,
+  });
+  if (limitError || !limitData || typeof limitData !== "object") {
+    console.error("[Orby Conversations] Rate limiter unavailable.", { code: limitError?.code });
+    return NextResponse.json({ error: "La creación de chats no está disponible temporalmente." }, { status: 503 });
+  }
+  const limit = limitData as { allowed?: boolean; retryAfter?: number };
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Has creado varios chats seguidos. Espera un momento y vuelve a intentarlo." }, {
+      status: 429,
+      headers: { "Retry-After": String(Math.max(1, Math.min(3600, Number(limit.retryAfter) || 60))) },
+    });
   }
 
   const body = await request.json().catch(() => null);

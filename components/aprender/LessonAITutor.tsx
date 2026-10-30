@@ -3,7 +3,8 @@
 import Image from "next/image";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Camera, FileText, LoaderCircle, Mic, MicOff, Paperclip, ScanText, Send, Volume2, X } from "lucide-react";\nimport { createWorker } from "tesseract.js";
+import { Camera, FileText, LoaderCircle, Mic, MicOff, Paperclip, ScanText, Send, Volume2, X } from "lucide-react";
+import { createWorker } from "tesseract.js";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
 type SpeechRecognitionLike = {
@@ -93,15 +94,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);\n  const [isListening, setIsListening] = useState(false);\n  const [voiceError, setVoiceError] = useState("");\n  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);\n  const [voiceMode, setVoiceMode] = useState(false);\n  const voiceModeRef = useRef(false);
+  const [loading, setLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const voiceModeRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
-  const [attachmentError, setAttachmentError] = useState("");\n  const [ocrText, setOcrText] = useState("");\n  const [ocrLoading, setOcrLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);\n  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [attachmentError, setAttachmentError] = useState("");
+  const [ocrText, setOcrText] = useState("");
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sendMessageRef = useRef<(text: string, includeAttachment?: boolean) => Promise<void>>(async () => {});
-  const lastInitialPromptRef = useRef<string | null>(null);\n  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const lastInitialPromptRef = useRef<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -135,7 +145,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAttachment(null);
     setAttachmentPreview("");
     setAttachmentError("");
-    if (fileInputRef.current) fileInputRef.current.value = "";\n    if (cameraInputRef.current) cameraInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
   }
 
   async function readImageText() {
@@ -176,7 +187,38 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     });
   }
 
-  function stopSpeaking() {\n    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();\n    setSpeakingIndex(null);\n  }\n\n  function speakText(text: string, index: number) {\n    if (typeof window === "undefined" || !("speechSynthesis" in window)) {\n      setVoiceError("Tu navegador no tiene lectura de voz disponible.");\n      return;\n    }\n    stopSpeaking();\n    const clean = text.replace(/\*\*/g, "").replace(/`/g, "").replace(/^[-•]\s*/gm, "").replace(/^\d+[.)]\s*/gm, "").slice(0, 5000);\n    const utterance = new SpeechSynthesisUtterance(clean);\n    utterance.lang = "es-CO"; utterance.rate = 1; utterance.pitch = 1;\n    const voices = window.speechSynthesis.getVoices();\n    const spanishVoice = voices.find((voice) => voice.lang.toLowerCase() === "es-co") ?? voices.find((voice) => voice.lang.toLowerCase().startsWith("es"));\n    if (spanishVoice) utterance.voice = spanishVoice;\n    utterance.onend = () => setSpeakingIndex(null);\n    utterance.onerror = () => setSpeakingIndex(null);\n    setSpeakingIndex(index); window.speechSynthesis.speak(utterance);\n  }\n\n  function toggleVoiceMode() {\n    const next = !voiceModeRef.current;\n    voiceModeRef.current = next;\n    setVoiceMode(next);\n    if (!next) stopSpeaking();\n  }\n\n  function toggleVoiceInput() {\n    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }\n    const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };\n    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;\n    if (!Recognition) { setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta."); return; }\n    setVoiceError("");\n    const recognition = new Recognition();\n    recognition.lang = "es-CO"; recognition.continuous = false; recognition.interimResults = true;\n    recognition.onresult = (event) => {\n      const results = Array.from(event.results);\n      const transcript = results.map((result) => result[0]?.transcript ?? "").join(" ").trim();\n      if (!transcript) return;\n      setInput(transcript.slice(0, 1200));\n      if (results.some((result) => result[0]?.isFinal)) {\n        setIsListening(false); recognitionRef.current = null;\n        void sendMessageRef.current(transcript.slice(0, 1200));\n      }\n    };\n    recognition.onerror = () => { setIsListening(false); recognitionRef.current = null; setVoiceError("No pude reconocer tu voz. Revisa el permiso del micrófono e inténtalo otra vez."); };\n    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };\n    recognitionRef.current = recognition;\n    try { recognition.start(); setIsListening(true); } catch { setIsListening(false); recognitionRef.current = null; setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo."); }\n  }\n  async function sendMessage(text: string, includeAttachment = false) {
+  function stopSpeaking() {\n    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    setSpeakingIndex(null);
+  }
+
+  function speakText(text: string, index: number) {\n    if (typeof window === "undefined" || !("speechSynthesis" in window)) {\n      setVoiceError("Tu navegador no tiene lectura de voz disponible.");
+      return;
+    }\n    stopSpeaking();
+    const clean = text.replace(/\*\*/g, "").replace(/`/g, "").replace(/^[-•]\s*/gm, "").replace(/^\d+[.)]\s*/gm, "").slice(0, 5000);
+    const utterance = new SpeechSynthesisUtterance(clean);
+    utterance.lang = "es-CO"; utterance.rate = 1; utterance.pitch = 1;
+    const voices = window.speechSynthesis.getVoices();
+    const spanishVoice = voices.find((voice) => voice.lang.toLowerCase() === "es-co") ?? voices.find((voice) => voice.lang.toLowerCase().startsWith("es"));
+    if (spanishVoice) utterance.voice = spanishVoice;
+    utterance.onend = () => setSpeakingIndex(null);
+    utterance.onerror = () => setSpeakingIndex(null);
+    setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
+  }
+
+  function toggleVoiceMode() {\n    const next = !voiceModeRef.current;\n    voiceModeRef.current = next;
+    setVoiceMode(next);
+    if (!next) stopSpeaking();
+  }
+
+  function toggleVoiceInput() {\n    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }\n    const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
+    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+    if (!Recognition) { setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta."); return; }\n    setVoiceError("");
+    const recognition = new Recognition();\n    recognition.lang = "es-CO"; recognition.continuous = false; recognition.interimResults = true;\n    recognition.onresult = (event) => {\n      const results = Array.from(event.results);
+      const transcript = results.map((result) => result[0]?.transcript ?? "").join(" ").trim();
+      if (!transcript) return;
+      setInput(transcript.slice(0, 1200));
+      if (results.some((result) => result[0]?.isFinal)) {\n        setIsListening(false); recognitionRef.current = null;
+        void sendMessageRef.current(transcript.slice(0, 1200));\n      }\n    };\n    recognition.onerror = () => { setIsListening(false); recognitionRef.current = null; setVoiceError("No pude reconocer tu voz. Revisa el permiso del micrófono e inténtalo otra vez."); };\n    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };\n    recognitionRef.current = recognition;\n    try { recognition.start(); setIsListening(true); } catch { setIsListening(false); recognitionRef.current = null; setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo."); }\n  }\n  async function sendMessage(text: string, includeAttachment = false) {
     const message = text.trim();
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || message.length > 1200) return;
@@ -221,7 +263,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Orby no está disponible por ahora.");
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
-      const assistantIndex = nextMessages.length;\n      setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);\n      if (voiceModeRef.current && "speechSynthesis" in window) {\n        window.setTimeout(() => speakText(data.reply, assistantIndex), 120);\n      }
+      const assistantIndex = nextMessages.length;
+      setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
+      if (voiceModeRef.current && "speechSynthesis" in window) {\n        window.setTimeout(() => speakText(data.reply, assistantIndex), 120);\n      }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.");
     } finally {

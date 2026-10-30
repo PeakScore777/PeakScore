@@ -702,7 +702,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const audio = document.createElement("audio");
       audio.autoplay = true;
-      audio.playsInline = true;
       audio.className = "hidden";
       document.body.appendChild(audio);
       voiceAudioElementRef.current = audio;

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { AudioLines, Camera, Check, ChevronDown, FileText, Headphones, LoaderCircle, Maximize2, Mic, MicOff, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Camera, Check, ChevronDown, FileText, Headphones, LoaderCircle, Maximize2, Mic, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; createdAt?: string };
@@ -119,7 +119,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const [premiumVoiceEnabled, setPremiumVoiceEnabled] = useState(false);
-  const [premiumVoiceLoading, setPremiumVoiceLoading] = useState(false);
+  const [voiceAccessChecked, setVoiceAccessChecked] = useState(false);
   const voiceModeRef = useRef(false);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -156,7 +156,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    setPremiumVoiceLoading(true);
     fetch("/api/orby/voice-access", { credentials: "same-origin", cache: "no-store" })
       .then(async (response) => {
         const payload = await response.json().catch(() => ({}));
@@ -164,7 +163,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (!cancelled) setPremiumVoiceEnabled(payload.enabled === true);
       })
       .catch(() => { if (!cancelled) setPremiumVoiceEnabled(false); })
-      .finally(() => { if (!cancelled) setPremiumVoiceLoading(false); });
+      .finally(() => { if (!cancelled) setVoiceAccessChecked(true); });
     return () => { cancelled = true; };
   }, [open]);
 
@@ -529,7 +528,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function toggleVoiceMode() {
     const next = !voiceModeRef.current;
     if (next && !premiumVoiceEnabled) {
-      setVoiceError(premiumVoiceLoading
+      setVoiceError(!voiceAccessChecked
         ? "Comprobando tu acceso Premium…"
         : "El chat de voz completo es una función Premium. Las notas de voz y la transcripción siguen disponibles.");
       return;
@@ -924,28 +923,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (recorder && recorder.state !== "inactive") recorder.stop();
   }
 
-  async function refreshMicrophonePermission() {
-    if (!navigator.permissions?.query) {
-      setMicrophonePermission("unknown");
-      setVoiceError("Chrome no permite consultar el estado automáticamente. Revisa el permiso del micrófono desde los controles del sitio, junto a la dirección web.");
-      return;
-    }
-    try {
-      const permission = await navigator.permissions.query({ name: "microphone" as PermissionName });
-      setMicrophonePermission(permission.state);
-      if (permission.state === "granted") {
-        setVoiceError("Permiso del micrófono concedido. Pulsa «Comenzar a grabar» para iniciar tu nota.");
-      } else if (permission.state === "prompt") {
-        setVoiceError("Chrome está listo para pedir permiso. Pulsa «Comenzar a grabar» y acepta el aviso del navegador.");
-      } else {
-        setVoiceError("Chrome todavía bloquea el micrófono. En los controles del sitio, cambia Micrófono a «Permitir» y vuelve a comprobar.");
-      }
-    } catch {
-      setMicrophonePermission("unknown");
-      setVoiceError("No pude comprobar el permiso. Revisa los controles del sitio junto a la dirección web.");
-    }
-  }
-
   async function requestMicrophonePermission() {
     if (!navigator.mediaDevices?.getUserMedia) {
       setVoiceError("Chrome no puede acceder al micrófono desde esta página. Comprueba que estás en localhost o HTTPS y que el navegador esté actualizado.");
@@ -1325,7 +1302,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar foto o archivo de audio" title="Adjuntar imagen JPG/PNG/WebP o nota de voz MP3/WAV/OGG/WebM/M4A" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
         <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Solicitar permiso del micrófono y grabar una nota de voz" title="Permitir micrófono y grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
-        <button type="button" onClick={toggleVoiceMode} disabled={loading || premiumVoiceLoading || (!premiumVoiceEnabled && !voiceMode)} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada Premium"} title={voiceMode ? "Detener chat de voz" : premiumVoiceLoading ? "Comprobando Premium…" : premiumVoiceEnabled ? "Iniciar chat de voz Premium" : "Chat de voz exclusivo Premium"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
+        <button type="button" onClick={toggleVoiceMode} disabled={loading || !voiceAccessChecked || (!premiumVoiceEnabled && !voiceMode)} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada Premium"} title={voiceMode ? "Detener chat de voz" :  !voiceAccessChecked ? "Comprobando Premium…" : premiumVoiceEnabled ? "Iniciar chat de voz Premium" : "Chat de voz exclusivo Premium"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));

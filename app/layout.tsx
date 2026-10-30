@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ReactNode } from "react";
 import { Press_Start_2P } from "next/font/google";
 
-import GlobalNavbar from "@/components/layout/GlobalNavbar";
+import GlobalNavbar from "@/components/layout/GlobalNavbar";\nimport GlobalOrbyTutor from "@/components/layout/GlobalOrbyTutor";
 import { createClient } from "@/lib/supabase/server";
 
 import "./globals.css";

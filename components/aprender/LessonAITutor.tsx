@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Camera, FileText, LoaderCircle, Mic, MicOff, Paperclip, Send, Volume2, X } from "lucide-react";
+import { Camera, FileText, LoaderCircle, Mic, MicOff, Paperclip, ScanText, Send, Volume2, X } from "lucide-react";\nimport { createWorker } from "tesseract.js";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
 type SpeechRecognitionLike = {
@@ -96,7 +96,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [loading, setLoading] = useState(false);\n  const [isListening, setIsListening] = useState(false);\n  const [voiceError, setVoiceError] = useState("");\n  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);\n  const [voiceMode, setVoiceMode] = useState(false);\n  const voiceModeRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
-  const [attachmentError, setAttachmentError] = useState("");
+  const [attachmentError, setAttachmentError] = useState("");\n  const [ocrText, setOcrText] = useState("");\n  const [ocrLoading, setOcrLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);\n  const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -136,6 +136,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAttachmentPreview("");
     setAttachmentError("");
     if (fileInputRef.current) fileInputRef.current.value = "";\n    if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
+
+  async function readImageText() {
+    if (!attachment || ocrLoading) return;
+    setOcrLoading(true);
+    setAttachmentError("");
+    let worker: Awaited<ReturnType<typeof createWorker>> | null = null;
+    try {
+      worker = await createWorker("spa");
+      const result = await worker.recognize(attachment);
+      const extracted = result.data.text.trim();
+      if (!extracted) {
+        setAttachmentError("No pude detectar texto legible. Intenta tomar la foto con mejor luz y enfoque.");
+        return;
+      }
+      setOcrText(extracted.slice(0, 6000));
+    } catch (error) {
+      console.error("[Orby OCR] Local recognition failed.", error);
+      setAttachmentError("No se pudo leer la imagen en este dispositivo. Puedes enviarla directamente a Orby.");
+    } finally {
+      if (worker) await worker.terminate();
+      setOcrLoading(false);
+    }
   }
 
   async function fileToBase64(file: File): Promise<string> {
@@ -306,7 +329,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {attachment && <div className="shrink-0 border-t border-slate-100 bg-white px-3 pt-3">
         <div className={`flex items-center gap-3 rounded-xl border p-2 ${orbyAccent ? "border-orange-200 bg-orange-50" : "border-sky-200 bg-sky-50"}`}>
           {attachmentPreview ? <Image src={attachmentPreview} width={1200} height={800} unoptimized alt="Vista previa de la imagen adjunta" className={`h-12 w-12 shrink-0 rounded-lg border bg-white object-cover ${orbyAccent ? "border-orange-100" : "border-sky-100"}`} /> : <FileText className={`ml-2 h-8 w-8 shrink-0 ${orbyAccent ? "text-orange-700" : "text-sky-700"}`} />}
-          <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Listo para analizar · {(attachment.size / 1024).toFixed(0)} KB</p><p className="text-[10px] text-slate-500">La imagen solo se envía a Orby cuando pulses enviar. Puedes quitarla antes.</p></div>
+          <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Listo para analizar · {(attachment.size / 1024).toFixed(0)} KB</p><p className="text-[10px] text-slate-500">La imagen solo se envía a Orby cuando pulses enviar. Puedes quitarla antes.</p>
+            <button type="button" onClick={readImageText} disabled={ocrLoading || !attachment || !attachment.type.startsWith("image/")} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-orange-800 transition hover:bg-orange-50 disabled:opacity-50">
+              {ocrLoading ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <ScanText className="h-3.5 w-3.5" />}
+              {ocrLoading ? "Leyendo en este dispositivo…" : ocrText ? "Volver a leer texto" : "Leer texto de la hoja"}
+            </button>
+            {ocrText && <p className="mt-2 max-h-24 overflow-y-auto whitespace-pre-wrap rounded-lg bg-white p-2 text-[10px] leading-relaxed text-slate-600">{ocrText}</p>}
+</div>
           <button type="button" onClick={clearAttachment} aria-label="Quitar imagen adjunta" className="rounded-full p-2 text-slate-500 hover:bg-white"><X className="h-4 w-4" /></button>
         </div>
       </div>}

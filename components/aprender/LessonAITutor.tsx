@@ -147,7 +147,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const stopAudioRecordingRef = useRef<(discard?: boolean) => void>(() => {});
   const audioStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const recordingTimeoutRef = useRef<number | null>(null);
   const discardRecordingRef = useRef(false);
 
   useEffect(() => {
@@ -1163,7 +1163,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </section>}
       {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 60 segundos</span>
-        <button type="button" onClick={stopAudioRecording} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
+        <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
       </div>}
       {recordedAudio && <div className="shrink-0 space-y-2 border-t border-slate-100 bg-white px-3 py-3">
         <div className="flex items-center gap-2">

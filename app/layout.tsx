@@ -66,6 +66,7 @@ export default async function RootLayout({
       <body className={pixelFont.variable}>
         <GlobalNavbar initialProfile={initialProfile} />
         {children}
+        {user ? <GlobalOrbyTutor studentName={initialProfile?.fullName ?? null} /> : null}
       </body>
     </html>
   );

@@ -198,9 +198,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
       }
       const top = rowCoverage.findIndex((count) => count / width > 0.35);
-      const bottom = rowCoverage.length - 1 - [...rowCoverage].reverse().findIndex((count) => count / width > 0.62);
+      const bottom = rowCoverage.length - 1 - [...rowCoverage].reverse().findIndex((count) => count / width > 0.35);
       const left = colCoverage.findIndex((count) => count / height > 0.35);
-      const right = colCoverage.length - 1 - [...colCoverage].reverse().findIndex((count) => count / height > 0.62);
+      const right = colCoverage.length - 1 - [...colCoverage].reverse().findIndex((count) => count / height > 0.35);
       if (top < 0 || bottom <= top || left < 0 || right <= left || (right - left) / width < 0.25 || (bottom - top) / height < 0.25) {
         throw new Error("No detecté con suficiente confianza los bordes de una hoja clara. Ajusta el recorte manualmente.");
       }

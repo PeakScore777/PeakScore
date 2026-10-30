@@ -865,23 +865,24 @@ function EvidenceCard({
 
 function CameraFraming({ mobile }: { mobile: boolean }) {
   const { camera, size, invalidate } = useThree();
+  const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
 
   useEffect(() => {
-    if (!(camera instanceof THREE.OrthographicCamera)) return;
+    cameraRef.current = camera instanceof THREE.OrthographicCamera ? camera : null;
+    const activeCamera = cameraRef.current;
+    if (!activeCamera) return;
 
-    // Match the world-space frustum to the actual canvas aspect ratio.
-    // The previous fixed [-1, 1] camera clipped the evidence cards on wide screens.
     const visibleHeight = mobile ? 2.7 : 2.75;
     const aspect = size.width / Math.max(size.height, 1);
     const visibleWidth = visibleHeight * aspect;
 
-    camera.left = -visibleWidth / 2;
-    camera.right = visibleWidth / 2;
-    camera.top = visibleHeight / 2;
-    camera.bottom = -visibleHeight / 2;
-    camera.position.set(0, 0.12, 10);
-    camera.lookAt(0, 0, 0);
-    camera.updateProjectionMatrix();
+    activeCamera.left = -visibleWidth / 2;
+    activeCamera.right = visibleWidth / 2;
+    activeCamera.top = visibleHeight / 2;
+    activeCamera.bottom = -visibleHeight / 2;
+    activeCamera.position.set(0, 0.12, 10);
+    activeCamera.lookAt(0, 0, 0);
+    activeCamera.updateProjectionMatrix();
     invalidate();
   }, [camera, size.width, size.height, mobile, invalidate]);
 
@@ -993,8 +994,10 @@ function PhotographicRoomEnvironment() {
 
 function RoomReflectionEnvironment() {
   const { scene, invalidate } = useThree();
+  const sceneRef = useRef(scene);
 
   useEffect(() => {
+    sceneRef.current = scene;
     // Generate a local, equirectangular reflection card based on Caso Cero's
     // cool rain-window and warm laboratory lamps; no external HDRI dependency.
     const canvas = document.createElement("canvas");
@@ -1056,15 +1059,15 @@ function RoomReflectionEnvironment() {
     environment.colorSpace = THREE.SRGBColorSpace;
     environment.needsUpdate = true;
 
-    const previousEnvironment = scene.environment;
-    const previousIntensity = scene.environmentIntensity;
-    scene.environment = environment;
-    scene.environmentIntensity = 0.72;
+    const previousEnvironment = sceneRef.current.environment;
+    const previousIntensity = sceneRef.current.environmentIntensity;
+    sceneRef.current.environment = environment;
+    sceneRef.current.environmentIntensity = 0.72;
     invalidate();
 
     return () => {
-      if (scene.environment === environment) scene.environment = previousEnvironment;
-      scene.environmentIntensity = previousIntensity;
+      if (sceneRef.current.environment === environment) sceneRef.current.environment = previousEnvironment;
+      sceneRef.current.environmentIntensity = previousIntensity;
       environment.dispose();
       invalidate();
     };
@@ -1175,7 +1178,15 @@ function EvidenceScene({
 
 export default function CasoCeroEvidenceClothesline() {
   const [activeEvidence, setActiveEvidence] = useState<number | null>(null);
-  const [mobile, setMobile] = useState(false);
+  const mobile = useSyncExternalStore(
+    (onChange) => {
+      const media = window.matchMedia("(max-width: 640px)");
+      media.addEventListener("change", onChange);
+      return () => media.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(max-width: 640px)").matches,
+    () => false,
+  );
   const [toolsOpen, setToolsOpen] = useState(false);
   const [activeTool, setActiveTool] = useState<EvidenceToolId | null>(null);
   const [magnifierActive, setMagnifierActive] = useState(false);
@@ -1234,17 +1245,7 @@ export default function CasoCeroEvidenceClothesline() {
   const handlePhotoPointerOut = useCallback(() => setMagnifierTarget(null), []);
 
   useEffect(() => {
-    const query = window.matchMedia("(max-width: 640px)");
-    const update = () => setMobile(query.matches);
-    update();
-    query.addEventListener("change", update);
-    return () => query.removeEventListener("change", update);
-  }, []);
-
-  useEffect(() => {
     if (!activeTool) {
-      setMagnifierTarget(null);
-      setPointerPosition(null);
       rootRef.current?.closest(".caso-cero-cinematic")?.classList.remove("caso-cero-loupe-active", "caso-cero-tool-active");
       return;
     }

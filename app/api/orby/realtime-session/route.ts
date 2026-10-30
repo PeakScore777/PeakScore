@@ -72,7 +72,8 @@ export async function POST(request: Request) {
     ].join("\\n");
 
     const now = Date.now();
-    const model = (process.env.ORBY_GEMINI_LIVE_MODEL || "gemini-3.8-live").replace(/^models\\//, "");
+    const configuredModel = process.env.ORBY_GEMINI_LIVE_MODEL || "gemini-3.8-live";
+    const model = configuredModel.startsWith("models/") ? configuredModel.slice("models/".length) : configuredModel;
     const expireTime = new Date(now + 30 * 60 * 1000).toISOString();
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 

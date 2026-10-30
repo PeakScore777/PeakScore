@@ -212,7 +212,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           topic: activeReview?.topic ?? topic,
           stage,
           question: activeReview?.prompt ?? question,
-          context: reviewContext,
+          context: [reviewContext, ocrText ? `Texto OCR extraído localmente de la imagen (puede contener errores):\n${ocrText}` : ""].filter(Boolean).join("\n\n").slice(0, 10000),
           message,
           history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
           ...(imagePayload ? { image: imagePayload } : {}),

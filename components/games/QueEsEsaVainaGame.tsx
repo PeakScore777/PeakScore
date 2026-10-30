@@ -678,14 +678,12 @@ export default function QueEsEsaVainaGame() {
   }, [hydrated, gameSessionId, sessionLoading, gameStarted, finished, revealed, timeLeft, playSfx, rounds, index, rewardCanProgress]);
 
   useEffect(() => {
-    if (!hydrated || !gameSessionId || sessionLoading || !gameStarted || finished || revealed) {
-      const existing = timerAudioRef.current;
-      if (existing) {
-        existing.pause();
-        existing.currentTime = 0;
-      }
-      const frame = window.requestAnimationFrame(() => setTimerSoundEnabled(false));
-      return () => window.cancelAnimationFrame(frame);
+    if (hydrated && gameSessionId && !sessionLoading && gameStarted && !finished && !revealed) return;
+
+    const existing = timerAudioRef.current;
+    if (existing) {
+      existing.pause();
+      existing.currentTime = 0;
     }
   }, [hydrated, gameSessionId, sessionLoading, gameStarted, finished, revealed]);
   // Los cofres se desbloquean por puntos netos: 200, 500 y 1000 (barra completa para el último).

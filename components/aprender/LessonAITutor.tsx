@@ -104,7 +104,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [attachmentPreview, setAttachmentPreview] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
   const [ocrText, setOcrText] = useState("");
-  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrLoading, setOcrLoading] = useState(false);\n  const [cropMode, setCropMode] = useState(false);\n  const [cropX, setCropX] = useState(5);\n  const [cropY, setCropY] = useState(5);\n  const [cropW, setCropW] = useState(90);\n  const [cropH, setCropH] = useState(90);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -147,6 +147,39 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAttachmentError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
+
+  async function applyImageCrop() {
+    if (!attachment || !attachmentPreview || cropW < 10 || cropH < 10) return;
+    try {
+      const image = new window.Image();
+      image.src = attachmentPreview;
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("No se pudo abrir la imagen para recortarla."));
+      });
+      const sx = Math.round((cropX / 100) * image.naturalWidth);
+      const sy = Math.round((cropY / 100) * image.naturalHeight);
+      const sw = Math.max(1, Math.round((cropW / 100) * image.naturalWidth));
+      const sh = Math.max(1, Math.round((cropH / 100) * image.naturalHeight));
+      const canvas = document.createElement("canvas");
+      canvas.width = sw;
+      canvas.height = sh;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("No se pudo preparar el recorte.");
+      ctx.drawImage(image, sx, sy, Math.min(sw, image.naturalWidth - sx), Math.min(sh, image.naturalHeight - sy), 0, 0, sw, sh);
+      const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("No se pudo generar el recorte.")), "image/jpeg", 0.9));
+      const cropped = new File([blob], "orby-pregunta-recortada.jpg", { type: "image/jpeg" });
+      if (attachmentPreview.startsWith("blob:")) URL.revokeObjectURL(attachmentPreview);
+      setAttachment(cropped);
+      setAttachmentPreview(URL.createObjectURL(cropped));
+      setOcrText("");
+      setCropMode(false);
+      setAttachmentError("");
+      setCropX(5); setCropY(5); setCropW(90); setCropH(90);
+    } catch (error) {
+      setAttachmentError(error instanceof Error ? error.message : "No se pudo recortar la imagen.");
+    }
   }
 
   async function readImageText() {
@@ -374,6 +407,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className={`flex items-center gap-3 rounded-xl border p-2 ${orbyAccent ? "border-orange-200 bg-orange-50" : "border-sky-200 bg-sky-50"}`}>
           {attachmentPreview ? <Image src={attachmentPreview} width={1200} height={800} unoptimized alt="Vista previa de la imagen adjunta" className={`h-12 w-12 shrink-0 rounded-lg border bg-white object-cover ${orbyAccent ? "border-orange-100" : "border-sky-100"}`} /> : <FileText className={`ml-2 h-8 w-8 shrink-0 ${orbyAccent ? "text-orange-700" : "text-sky-700"}`} />}
           <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Listo para analizar · {(attachment.size / 1024).toFixed(0)} KB</p><p className="text-[10px] text-slate-500">La imagen solo se envía a Orby cuando pulses enviar. Puedes quitarla antes.</p>
+            <button type="button" onClick={() => setCropMode((value) => !value)} className="mt-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">{cropMode ? "Cerrar recorte" : "Recortar pregunta"}</button>
+            {cropMode && <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-white p-2">
+              <label className="text-[10px] font-semibold text-slate-600">Izquierda {cropX}%<input type="range" min="0" max={Math.max(0, 100 - cropW)} value={cropX} onChange={(event) => setCropX(Number(event.target.value))} className="block w-full" /></label>
+              <label className="text-[10px] font-semibold text-slate-600">Arriba {cropY}%<input type="range" min="0" max={Math.max(0, 100 - cropH)} value={cropY} onChange={(event) => setCropY(Number(event.target.value))} className="block w-full" /></label>
+              <label className="text-[10px] font-semibold text-slate-600">Ancho {cropW}%<input type="range" min="10" max={100 - cropX} value={cropW} onChange={(event) => setCropW(Number(event.target.value))} className="block w-full" /></label>
+              <label className="text-[10px] font-semibold text-slate-600">Alto {cropH}%<input type="range" min="10" max={100 - cropY} value={cropH} onChange={(event) => setCropH(Number(event.target.value))} className="block w-full" /></label>
+              <button type="button" onClick={applyImageCrop} className="col-span-2 rounded-lg bg-orange-600 px-3 py-2 text-xs font-bold text-white hover:bg-orange-700">Aplicar recorte</button>
+            </div>}
             <button type="button" onClick={readImageText} disabled={ocrLoading || !attachment || !attachment.type.startsWith("image/")} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-orange-800 transition hover:bg-orange-50 disabled:opacity-50">
               {ocrLoading ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <ScanText className="h-3.5 w-3.5" />}
               {ocrLoading ? "Leyendo en este dispositivo…" : ocrText ? "Volver a leer texto" : "Leer texto de la hoja"}

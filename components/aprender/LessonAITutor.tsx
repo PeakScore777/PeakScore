@@ -1070,12 +1070,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <div className="min-w-0">
             <p className="font-extrabold text-slate-950">Orby <span className={orbyAccent ? "text-orange-500" : "text-sky-600"}>●</span></p>
-            <p className="truncate text-xs text-slate-500">{workspace ? "Chats guardados · Notas de voz · Estudio" : "Tutor de ciencias · Saber 11"}</p>
+            <p className="truncate text-xs text-slate-500">{workspace ? "Tutor inteligente · PeakScore" : "Tutor de ciencias · Saber 11"}</p>
           </div>
         </div>
         {workspace && <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1" role="tablist" aria-label="Modo de conversación">
           <button type="button" role="tab" aria-selected={workspaceMode === "chat"} onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm">Chat</button>
-          <button type="button" role="tab" aria-selected={workspaceMode === "voice"} onClick={() => { setWorkspaceMode("voice"); if (!voiceModeRef.current) toggleVoiceMode(); }} className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:text-orange-700">Voz</button>
+          <button type="button" role="tab" aria-selected={workspaceMode === "voice"} disabled={!voiceAccessChecked || !premiumVoiceEnabled} onClick={() => { setWorkspaceMode("voice"); if (!voiceModeRef.current) toggleVoiceMode(); }} title={!premiumVoiceEnabled ? "Conversación por voz disponible en Premium" : "Iniciar conversación por voz"} className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40">Voz</button>
         </div>
         <div className="flex items-center gap-1">
           {workspace && <>
@@ -1087,7 +1087,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
       </header>
 
-      <div className={workspace ? "flex min-h-0 flex-1" : "contents"}>
+      <div className={workspace ? "flex min-h-0 flex-1 bg-[#f5f7fb]" : "contents"}>
         {workspace && <aside className={historyOpen ? "absolute bottom-0 left-0 top-[64px] z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-200 bg-slate-50 shadow-xl md:relative md:top-auto md:z-auto md:w-[270px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[270px] md:shrink-0 md:flex-col"} aria-label="Historial de conversaciones">
           <div className="border-b border-slate-200 p-3">
             <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 text-sm font-bold text-white transition hover:bg-slate-800"><Plus className="h-4 w-4" /> Nuevo chat</button>
@@ -1132,7 +1132,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </section>}
       </div>}
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-[#f7f9fc] px-4 py-4" ref={scrollRef} aria-live="polite">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6" ref={scrollRef} aria-live="polite">
         {messages.length === 0 ? (
           <div className="flex min-h-full flex-col items-center justify-center">
             <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby, tutor de PeakScore" className={`mb-2 h-28 w-28 rounded-full border-2 bg-white object-contain object-center ${orbyAccent ? "border-orange-300 shadow-[0_4px_18px_rgba(249,115,22,.18)]" : "border-sky-200 shadow-[0_4px_18px_rgba(14,165,233,.16)]"}`} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />

@@ -1203,6 +1203,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <span className={isListening ? "h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-orange-600" : speakingIndex !== null ? "h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" : "h-2.5 w-2.5 shrink-0 rounded-full bg-slate-400"} />
         <span className="min-w-0 flex-1 text-xs font-semibold text-slate-700">{speakingIndex !== null ? "Orby está hablando…" : isListening ? "Escuchando… habla con naturalidad" : loading ? "Preparando respuesta…" : "Modo de voz activo"}</span>
         <div className="flex h-6 items-center gap-[3px]" aria-hidden="true">{Array.from({length: 18}, (_, index) => <span key={index} className="w-[3px] rounded-full bg-orange-500 transition-all" style={{height: 5 + ((index * 7) % 17), opacity: isListening || speakingIndex !== null ? 1 : 0.35}} />)}</div>
+        {speakingIndex !== null && <button type="button" onClick={() => { stopSpeaking(); toggleVoiceInput(); }} className="shrink-0 rounded-lg border border-orange-200 bg-white px-3 py-1.5 text-[11px] font-bold text-orange-700 transition hover:bg-orange-100">Interrumpir</button>}
         <button type="button" onClick={toggleVoiceMode} className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-700">Finalizar</button>
       </div>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">

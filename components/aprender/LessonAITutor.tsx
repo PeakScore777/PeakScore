@@ -145,9 +145,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!open || !workspace) return;
     let cancelled = false;
     const loadHistory = async () => {
-      setConversationError("");
       try {
         const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store" });
+        if (!cancelled) setConversationError("");
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.error || "No se pudo cargar el historial.");
         const items = Array.isArray(payload.conversations) ? payload.conversations as Conversation[] : [];
@@ -950,7 +950,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </header>
 
       <div className={workspace ? "flex min-h-0 flex-1" : "contents"}>
-        {workspace && <aside className={historyOpen ? "absolute inset-y-0 left-0 z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-200 bg-slate-50 shadow-xl md:relative md:z-auto md:w-[270px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[270px] md:shrink-0 md:flex-col"} aria-label="Historial de conversaciones">
+        {workspace && <aside className={historyOpen ? "absolute bottom-0 left-0 top-[64px] z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-200 bg-slate-50 shadow-xl md:relative md:top-auto md:z-auto md:w-[270px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[270px] md:shrink-0 md:flex-col"} aria-label="Historial de conversaciones">
           <div className="border-b border-slate-200 p-3">
             <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 text-sm font-bold text-white transition hover:bg-slate-800"><Plus className="h-4 w-4" /> Nuevo chat</button>
             <p className="mt-4 px-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tus conversaciones</p>

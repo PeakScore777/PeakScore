@@ -1207,44 +1207,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
-      {pendingAttachmentMeta?.kind === "audio" && <p role="status" className="shrink-0 bg-white px-3 pt-2 text-xs text-emerald-700">Transcripción lista. Revisa el texto antes de enviarlo a Orby.</p>}
       {isListening && !(workspace && workspaceMode === "voice") && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… {voiceMode ? "Habla con Orby. Te responderé en voz y volveré a escucharte." : "Al terminar, enviaré tu pregunta a Orby."}</p>}
       {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 60 segundos</span>
         <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
       </div>}
-      {recordedAudio && <div className="shrink-0 space-y-2 border-t border-slate-100 bg-white px-3 py-3">
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700"><AudioLines className="h-5 w-5" /></div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-bold text-slate-800">{audioSource === "upload" ? recordedAudio.name : "Nota de voz grabada"}</p>
-            <p className="text-[10px] text-slate-500">{(recordedAudio.size / 1024).toFixed(0)} KB · El archivo se procesa para preparar la transcripción</p>
-          </div>
-          <button type="button" onClick={clearRecordedAudio} aria-label="Descartar audio adjunto" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-600"><X className="h-4 w-4" /></button>
-        </div>
-        {recordedAudioPreviewUrl && <audio controls preload="metadata" src={recordedAudioPreviewUrl} className="h-10 w-full" aria-label="Escuchar audio antes de transcribir" />}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] text-slate-500">Audio listo para transcribir</span>
-          <button type="button" onClick={() => void transcribeRecordedAudio()} disabled={audioTranscribing} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:opacity-40">{audioTranscribing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{audioTranscribing ? "Transcribiendo…" : "Transcribir audio"}</button>
-        </div>
-      </div>}
-      {pendingAttachmentMeta?.kind === "audio" && <div className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-2 text-[11px] text-orange-900">Transcripción lista. Revísala o edítala antes de enviarla a Orby.</div>}
-      {workspace && workspaceMode === "voice" && <section className="mx-4 mb-3 flex shrink-0 flex-col items-center gap-3 rounded-2xl border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-slate-50 px-5 py-5 shadow-sm sm:mx-6" aria-label="Conversación por voz">
-        <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-orange-200 bg-white shadow-[0_8px_28px_rgba(249,115,22,.13)]">
-          <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby" className="h-16 w-16 rounded-full object-contain" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
-          <span className="absolute bottom-1 right-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-500" />
-        </div>
-        <div className="text-center">
-          <p className="text-sm font-bold text-slate-900">{speakingIndex !== null ? "Orby está respondiendo" : isListening ? "Te estoy escuchando" : loading ? "Estoy preparando tu respuesta" : voiceMode ? "Conversación por voz activa" : "Habla con Orby"}</p>
-          <p className="mt-1 max-w-md text-xs leading-5 text-slate-500">Habla con naturalidad. Puedes interrumpir, escribir o volver al chat cuando quieras.</p>
-        </div>
-        <div className="flex h-9 items-center justify-center gap-1" aria-hidden="true">{Array.from({length: 24}, (_, index) => <span key={index} className="w-1 rounded-full bg-orange-500/80" style={{height: String(7 + ((index * 13) % 23)) + "px", opacity: isListening || speakingIndex !== null ? 1 : 0.3}} />)}</div>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <button type="button" onClick={toggleVoiceInput} disabled={!voiceMode || loading || speakingIndex !== null} className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-700 transition hover:border-orange-300 hover:text-orange-700 disabled:opacity-40"><Mic className="h-4 w-4" /> {isListening ? "Pausar micrófono" : "Hablar"}</button>
-          <button type="button" onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-semibold text-white transition hover:bg-slate-800"><MessageSquare className="h-4 w-4" /> Volver al chat</button>
-          <button type="button" onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="inline-flex h-10 items-center gap-2 rounded-xl bg-orange-600 px-4 text-xs font-semibold text-white transition hover:bg-orange-700"><Square className="h-3.5 w-3.5 fill-current" /> Finalizar</button>
-        </div>
-      </section>
+      {audioTranscribing && <div role="status" className="shrink-0 px-5 py-2 text-[11px] text-slate-500"><span className="inline-flex items-center gap-2"><LoaderCircle className="h-3.5 w-3.5 animate-spin text-orange-600" /> Preparando tu mensaje…</span></div>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />

@@ -208,7 +208,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setError("");
     setConversationError("");
     setPendingDeleteConversation(null);
-    setHistoryOpen(true);
+    setHistoryOpen(false);
     setAttachmentError("");
     clearAttachment();
     setRecordedAudio(null);

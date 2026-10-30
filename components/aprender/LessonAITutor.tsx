@@ -1062,7 +1062,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   async function transcribeRecordedAudio() {
     if (!recordedAudio || audioTranscribing) return;
     if (!audioConsentChecked) {
-      setVoiceError("Confirma primero que autorizas enviar el audio a Google Gemini para transcribirlo.");
+      setVoiceError("Confirma primero que autorizas enviar el audio a los proveedores de transcripción indicados.");
       setAudioConsentOpen(true);
       return;
     }
@@ -1254,18 +1254,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <Mic className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-extrabold text-slate-900">{audioSource === "upload" ? "Antes de transcribir tu audio" : "Antes de grabar tu nota de voz"}</p>
-            <p className="mt-1 text-[11px] leading-4 text-slate-600">El audio se enviará a Google Gemini (nivel gratuito) para convertirlo en texto. Google puede usar el contenido enviado desde el nivel gratuito para mejorar sus productos. PeakScore no conserva el archivo de audio: solo guarda la transcripción cuando tú la envías al chat. No grabes contraseñas ni datos personales sensibles.</p>
+            <p className="mt-1 text-[11px] leading-4 text-slate-600">Para transcribir, PeakScore intentará primero Google Gemini y, si no está disponible, podrá usar Groq Whisper como alternativa. El audio se procesa temporalmente para generar el texto; no se guarda como archivo en tu historial de PeakScore. El tratamiento del audio también depende de las políticas del proveedor que lo procese. No grabes contraseñas ni datos personales sensibles.</p>
             <p className="mt-2 rounded-lg border border-sky-100 bg-sky-50 px-2.5 py-2 text-[11px] leading-4 text-sky-900">
               <strong>Permiso del navegador:</strong> {microphonePermission === "denied"
                 ? "Chrome tiene el micrófono bloqueado para este sitio. Abre los controles a la izquierda de localhost:3000 → Micrófono → Permitir. Después actualiza la página."
                 : microphonePermission === "granted"
                   ? "Chrome ya concedió el micrófono. Al continuar, Orby comenzará a grabar."
-                  : "Al pulsar «Comenzar a grabar», Chrome debe mostrar su propio aviso para permitir el micrófono. Ese permiso es independiente del consentimiento para Gemini."}
+                  : "Al pulsar «Comenzar a grabar», Chrome debe mostrar su propio aviso para permitir el micrófono. Ese permiso es independiente de la autorización para enviar el audio a los proveedores de transcripción."}
             </p>
             {microphonePermission === "denied" && <button type="button" onClick={() => void requestMicrophonePermission()} className="mt-2 rounded-lg border border-sky-200 bg-white px-3 py-2 text-[11px] font-bold text-sky-800 hover:bg-sky-50">Volver a solicitar permiso en Chrome</button>}
             <label className="mt-2 flex items-start gap-2 text-[11px] leading-4 text-slate-700">
               <input type="checkbox" checked={audioConsentChecked} onChange={(event) => setAudioConsentChecked(event.target.checked)} className="mt-0.5 accent-orange-600" />
-              <span>Entiendo y autorizo enviar este audio a Google Gemini para transcribirlo.</span>
+              <span>Entiendo y autorizo enviar este audio a Google Gemini o, si es necesario, a Groq Whisper para transcribirlo.</span>
             </label>
             <div className="mt-3 flex gap-2">
               <button type="button" onClick={() => { setAudioConsentOpen(false); setAudioConsentChecked(false); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>

@@ -116,6 +116,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
+  const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [premiumVoiceEnabled, setPremiumVoiceEnabled] = useState(false);
   const [voiceAccessChecked, setVoiceAccessChecked] = useState(false);
   const voiceModeRef = useRef(false);
@@ -1071,6 +1072,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <p className="font-extrabold text-slate-950">Orby <span className={orbyAccent ? "text-orange-500" : "text-sky-600"}>●</span></p>
             <p className="truncate text-xs text-slate-500">{workspace ? "Chats guardados · Notas de voz · Estudio" : "Tutor de ciencias · Saber 11"}</p>
           </div>
+        </div>
+        {workspace && <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1" role="tablist" aria-label="Modo de conversación">
+          <button type="button" role="tab" aria-selected={workspaceMode === "chat"} onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm">Chat</button>
+          <button type="button" role="tab" aria-selected={workspaceMode === "voice"} onClick={() => { setWorkspaceMode("voice"); if (!voiceModeRef.current) toggleVoiceMode(); }} className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:text-orange-700">Voz</button>
         </div>
         <div className="flex items-center gap-1">
           {workspace && <>

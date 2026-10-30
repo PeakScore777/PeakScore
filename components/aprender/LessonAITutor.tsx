@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { FileText, LoaderCircle, Mic, MicOff, Paperclip, Send, Volume2, X } from "lucide-react";
+import { Camera, FileText, LoaderCircle, Mic, MicOff, Paperclip, Send, Volume2, X } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
 type SpeechRecognitionLike = {
@@ -97,7 +97,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);\n  const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sendMessageRef = useRef<(text: string, includeAttachment?: boolean) => Promise<void>>(async () => {});
@@ -135,7 +135,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAttachment(null);
     setAttachmentPreview("");
     setAttachmentError("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (fileInputRef.current) fileInputRef.current.value = "";\n    if (cameraInputRef.current) cameraInputRef.current.value = "";
   }
 
   async function fileToBase64(file: File): Promise<string> {
@@ -306,14 +306,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {attachment && <div className="shrink-0 border-t border-slate-100 bg-white px-3 pt-3">
         <div className={`flex items-center gap-3 rounded-xl border p-2 ${orbyAccent ? "border-orange-200 bg-orange-50" : "border-sky-200 bg-sky-50"}`}>
           {attachmentPreview ? <Image src={attachmentPreview} width={1200} height={800} unoptimized alt="Vista previa de la imagen adjunta" className={`h-12 w-12 shrink-0 rounded-lg border bg-white object-cover ${orbyAccent ? "border-orange-100" : "border-sky-100"}`} /> : <FileText className={`ml-2 h-8 w-8 shrink-0 ${orbyAccent ? "text-orange-700" : "text-sky-700"}`} />}
-          <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Listo para analizar · {(attachment.size / 1024).toFixed(0)} KB</p></div>
+          <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Listo para analizar · {(attachment.size / 1024).toFixed(0)} KB</p><p className="text-[10px] text-slate-500">La imagen solo se envía a Orby cuando pulses enviar. Puedes quitarla antes.</p></div>
           <button type="button" onClick={clearAttachment} aria-label="Quitar imagen adjunta" className="rounded-full p-2 text-slate-500 hover:bg-white"><X className="h-4 w-4" /></button>
         </div>
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}\n      {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}\n      {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… habla ahora. Al terminar, enviaré tu pregunta a Orby.</p>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
-        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />\n        <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>\n        <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
         {voiceEnabled && <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener dictado por voz" : "Hablar con Orby"} title={isListening ? "Detener dictado" : "Hablar con Orby"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
           {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </button>}

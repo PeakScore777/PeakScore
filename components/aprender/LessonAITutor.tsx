@@ -117,8 +117,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
-  const [premiumVoiceEnabled, setPremiumVoiceEnabled] = useState(false);
-  const [voiceAccessChecked, setVoiceAccessChecked] = useState(false);
   const voiceModeRef = useRef(false);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -499,10 +497,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     stopSpeaking();
     const clean = text.replace(/\*\*/g, "").replace(/`/g, "").replace(/^[-•]\s*/gm, "").replace(/^\d+[.)]\s*/gm, "").slice(0, 5000);
     const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.lang = "es-CO"; utterance.rate = 1; utterance.pitch = 1;
-    const voices = window.speechSynthesis.getVoices();
-    const spanishVoice = voices.find((voice) => voice.lang.toLowerCase() === "es-co") ?? voices.find((voice) => voice.lang.toLowerCase().startsWith("es"));
-    if (spanishVoice) utterance.voice = spanishVoice;
+    utterance.lang = "es-CO";
+    utterance.rate = 1.17;
+    utterance.pitch = 1.02;
+    utterance.volume = 1;
+    const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
+    const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|google/i.test(voice.name))
+      ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
+      ?? spanishVoices.find((voice) => /natural|online|google/i.test(voice.name))
+      ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]us/i.test(voice.lang))
+      ?? spanishVoices[0];
+    if (preferredVoice) utterance.voice = preferredVoice;
     utterance.onend = () => {
       setSpeakingIndex(null);
       if (voiceModeRef.current) {
@@ -526,12 +531,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function toggleVoiceMode() {
     const next = !voiceModeRef.current;
-    if (next && !premiumVoiceEnabled) {
-      setVoiceError(!voiceAccessChecked
-        ? "Comprobando tu acceso Premium…"
-        : "El chat de voz completo es una función Premium. Las notas de voz y la transcripción siguen disponibles.");
-      return;
-    }
     if (next) {
       const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
       if (!(speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition) || !("speechSynthesis" in window)) {
@@ -542,6 +541,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceModeRef.current = next;
     waitingForVoiceReplyRef.current = false;
     setVoiceMode(next);
+    setWorkspaceMode(next ? "voice" : "chat");
+    setVoiceError("");
     if (next) {
       stopSpeaking();
       window.setTimeout(() => toggleVoiceInput(), 0);
@@ -1074,8 +1075,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
         </div>
         {workspace && <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1" role="tablist" aria-label="Modo de conversación">
-          <button type="button" role="tab" aria-selected={workspaceMode === "chat"} onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm">Chat</button>
-          <button type="button" role="tab" aria-selected={workspaceMode === "voice"} disabled={!voiceAccessChecked || !premiumVoiceEnabled} onClick={() => { setWorkspaceMode("voice"); if (!voiceModeRef.current) toggleVoiceMode(); }} title={!premiumVoiceEnabled ? "Conversación por voz disponible en Premium" : "Iniciar conversación por voz"} className="rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:text-orange-700 disabled:cursor-not-allowed disabled:opacity-40">Voz</button>
+          <button type="button" role="tab" aria-selected={workspaceMode === "chat"} onClick={() => { if (voiceModeRef.current) toggleVoiceMode(); else setWorkspaceMode("chat"); }} className={workspaceMode === "chat" ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-xs font-semibold text-white shadow-sm" : "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900"}><MessageSquare className="h-3.5 w-3.5" />Chat</button>
+          <button type="button" role="tab" aria-selected={workspaceMode === "voice"} onClick={() => { if (!voiceModeRef.current) toggleVoiceMode(); }} title="Iniciar conversación por voz" className={workspaceMode === "voice" ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-xs font-semibold text-white shadow-sm" : "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900"}><Mic className="h-3.5 w-3.5" />Voz</button>
         </div>}
         <div className="flex items-center gap-1">
           {workspace && <>
@@ -1212,24 +1213,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 60 segundos</span>
         <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
       </div>}
-      {workspace && workspaceMode === "voice" && <section className="mx-4 mb-3 flex shrink-0 flex-col items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 px-5 py-5 sm:mx-6" aria-label="Conversación por voz">
-        <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby" className="h-20 w-20 rounded-full border border-orange-200 bg-white object-contain p-1" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
-        <p className="text-sm font-bold text-slate-900">{speakingIndex !== null ? "Orby está respondiendo" : isListening ? "Te estoy escuchando" : loading ? "Preparando respuesta…" : voiceMode ? "Conversación por voz activa" : "Habla con Orby"}</p>
-        <p className="text-center text-xs text-slate-500">Habla con naturalidad. Puedes interrumpir o volver al chat cuando quieras.</p>
-        <div className="flex h-8 items-center gap-1" aria-hidden="true">{Array.from({length: 20}, (_, index) => <span key={index} className="w-1 rounded-full bg-orange-500" style={{height: String(6 + ((index * 11) % 22)) + "px", opacity: isListening || speakingIndex !== null ? 1 : 0.3}} />)}</div>
-        <div className="flex flex-wrap justify-center gap-2">
-          <button type="button" onClick={toggleVoiceInput} disabled={!voiceMode || loading || speakingIndex !== null} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 disabled:opacity-40"><Mic className="mr-1 inline h-4 w-4" />{isListening ? "Pausar" : "Hablar"}</button>
-          <button type="button" onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white"><MessageSquare className="mr-1 inline h-4 w-4" />Volver al chat</button>
-          <button type="button" onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white"><Square className="mr-1 inline h-3.5 w-3.5" />Finalizar</button>
-        </div>
-      </section>}
+      {workspace && workspaceMode === "voice" && <div className="mx-4 mb-2 flex shrink-0 items-center gap-3 rounded-xl border border-orange-200 bg-orange-50/80 px-3 py-2 sm:mx-6" role="status" aria-live="polite">
+        <span className={isListening ? "h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-orange-600" : speakingIndex !== null ? "h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" : "h-2.5 w-2.5 shrink-0 rounded-full bg-slate-400"} />
+        <span className="min-w-0 flex-1 text-xs font-semibold text-slate-700">{speakingIndex !== null ? "Orby está hablando…" : isListening ? "Escuchando… habla con naturalidad" : loading ? "Preparando respuesta…" : "Modo de voz activo"}</span>
+        <div className="flex h-6 items-center gap-[3px]" aria-hidden="true">{Array.from({length: 18}, (_, index) => <span key={index} className="w-[3px] rounded-full bg-orange-500 transition-all" style={{height: 5 + ((index * 7) % 17), opacity: isListening || speakingIndex !== null ? 1 : 0.35}} />)}</div>
+        <button type="button" onClick={toggleVoiceMode} className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-700">Finalizar</button>
+      </div>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar foto o archivo de audio" title="Adjuntar imagen JPG/PNG/WebP o nota de voz MP3/WAV/OGG/WebM/M4A" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
         <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Solicitar permiso del micrófono y grabar una nota de voz" title="Permitir micrófono y grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
-        <button type="button" onClick={toggleVoiceMode} disabled={loading || !voiceAccessChecked || (!premiumVoiceEnabled && !voiceMode)} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada Premium"} title={voiceMode ? "Detener chat de voz" :  !voiceAccessChecked ? "Comprobando Premium…" : premiumVoiceEnabled ? "Iniciar chat de voz Premium" : "Chat de voz exclusivo Premium"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
+        {!workspace && <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada"} title={voiceMode ? "Detener chat de voz" : "Iniciar chat de voz"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>}
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));

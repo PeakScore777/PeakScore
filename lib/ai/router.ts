@@ -18,7 +18,8 @@ import { GoogleGenAI } from "@google/genai";
  */
 export type AIProvider =
   | "gemini"
-  | "groq";
+  | "groq"
+  | "llm7";
 
 /* =====================================================
    TAREAS DE INTELIGENCIA ARTIFICIAL
@@ -242,14 +243,84 @@ const FALLBACK_PROVIDERS: Record<
   AIProvider,
   AIProvider[]
 > = {
-  groq: [
-    "gemini",
-  ],
-
-  gemini: [
-    "groq",
-  ],
+  llm7: ["gemini", "groq"],
+  groq: ["gemini", "llm7"],
+  gemini: ["groq", "llm7"],
 };
+
+/* =====================================================
+   LLM7 (OPENAI-COMPATIBLE)
+===================================================== */
+
+interface LLM7ChatResponse {
+  choices?: Array<{
+    message?: {
+      content?: string | null;
+    };
+    finish_reason?: string | null;
+  }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+}
+
+async function generateWithLLM7(prompt: string): Promise<{ text: string }> {
+  const apiKey = process.env.LLM7_API_KEY;
+  if (!apiKey) {
+    throw new AIServiceError("AI_CONFIGURATION");
+  }
+
+  const baseUrl = (process.env.LLM7_BASE_URL || "https://api.llm7.io/v1").replace(/\/+$/, "");
+  const model = process.env.LLM7_MODEL || "nemotron-3-nano:30b";
+
+  try {
+    const response = await fetch(baseUrl + "/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.2,
+        max_tokens: 7000,
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(60000),
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.error("[PeakScore AI] LLM7 request failed.", {
+        status: response.status,
+        model,
+      });
+      throw new AIServiceError("AI_UNAVAILABLE");
+    }
+
+    const payload = await response.json() as LLM7ChatResponse;
+    const text = payload.choices?.[0]?.message?.content;
+
+    if (typeof text !== "string" || !text.trim()) {
+      console.error("[PeakScore AI] LLM7 returned an empty or unsupported response.", {
+        model,
+        finishReason: payload.choices?.[0]?.finish_reason ?? null,
+      });
+      throw new AIServiceError("AI_INVALID_RESPONSE");
+    }
+
+    return { text: text.trim() };
+  } catch (error) {
+    if (error instanceof AIServiceError) throw error;
+    console.error("[PeakScore AI] LLM7 connection failed.", {
+      errorName: error instanceof Error ? error.name : "UnknownError",
+    });
+    throw new AIServiceError("AI_UNAVAILABLE");
+  }
+}
 
 /* =====================================================
    GEMINI
@@ -1856,6 +1927,14 @@ async function generateWithProvider(
 ) {
   switch (provider) {
     /* ===============================================
+       LLM7
+    ================================================ */
+
+    case "llm7": {
+      return await generateWithLLM7(prompt);
+    }
+
+    /* ===============================================
        GEMINI
     ================================================ */
 
@@ -1907,6 +1986,12 @@ async function generateWithProvider(
 export function getProviderForTask(
   task: AITask
 ): AIProvider {
+  // Nemotron is enabled for Orby only when a server-side LLM7 key exists.
+  // Existing tasks keep their current provider routing.
+  if (task === "tutor" && process.env.LLM7_API_KEY) {
+    return "llm7";
+  }
+
   return TASK_PROVIDERS[task];
 }
 

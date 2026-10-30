@@ -6,9 +6,7 @@ import {
   Microscope,
   Waves,
   Leaf,
-  Search,
   Check,
-  ChevronRight,
   X,
 } from "lucide-react";
 import CasoCeroAmbientBackdrop from "@/components/games/CasoCeroAmbientBackdrop";

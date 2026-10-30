@@ -612,7 +612,7 @@ export default function QueEsEsaVainaGame() {
         () => beginCountdown()
       );
     } catch {
-      beginCountdown(false);
+      beginCountdown();
     }
   }, []);
 

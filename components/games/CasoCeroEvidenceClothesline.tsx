@@ -1,6 +1,6 @@
 "use client";
 
-import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ErrorInfo, type ReactNode } from "react";
+import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ErrorInfo, type ReactNode } from "react";
 import { Canvas, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
@@ -475,9 +475,15 @@ function PhotoTexture({
   onPhotoPointerMove: (index: number, src: string, scale: number, point: PhotoPointerDetails) => void;
   onPhotoPointerOut: () => void;
 }) {
-  const texture = useLoader(THREE.TextureLoader, src);
-  const [paperMaps, setPaperMaps] = useState<PbrTextureSet | null>(null);
-  useEffect(() => setPaperMaps(getPbrTextureSet("paper")), []);
+  const loadedTexture = useLoader(THREE.TextureLoader, src);
+  const texture = useMemo(() => {
+    const clone = loadedTexture.clone();
+    clone.colorSpace = THREE.SRGBColorSpace;
+    clone.anisotropy = 8;
+    clone.needsUpdate = true;
+    return clone;
+  }, [loadedTexture]);
+  const paperMaps = useMemo(() => getPbrTextureSet("paper"), []);
   const geometry = useMemo(() => {
     const mesh = new THREE.PlaneGeometry(1.32, 1.35, 20, 20);
     const positions = mesh.getAttribute("position") as THREE.BufferAttribute;
@@ -493,11 +499,9 @@ function PhotoTexture({
     return mesh;
   }, []);
 
-  useEffect(() => {
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 8;
-    texture.needsUpdate = true;
-    return () => geometry.dispose();
+  useEffect(() => () => {
+    texture.dispose();
+    geometry.dispose();
   }, [texture, geometry]);
 
   return (
@@ -534,14 +538,12 @@ function PhotoTexture({
 }
 
 function PhotoDropShadow() {
-  const [texture, setTexture] = useState<THREE.CanvasTexture | null>(null);
-
-  useEffect(() => {
+  const texture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 256;
     canvas.height = 320;
     const context = canvas.getContext("2d");
-    if (!context) return;
+    if (!context) return null;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     const gradient = context.createRadialGradient(128, 160, 24, 128, 160, 145);
@@ -553,9 +555,9 @@ function PhotoDropShadow() {
 
     const nextTexture = new THREE.CanvasTexture(canvas);
     nextTexture.colorSpace = THREE.SRGBColorSpace;
-    setTexture(nextTexture);
-    return () => nextTexture.dispose();
+    return nextTexture;
   }, []);
+  useEffect(() => () => texture?.dispose(), [texture]);
 
   if (!texture) return null;
   return (
@@ -640,13 +642,11 @@ function BraidedRope({
   anchorY: number;
   sag: number;
 }) {
-  const [maps, setMaps] = useState<PbrTextureSet | null>(null);
+  const [externalMaps, setExternalMaps] = useState<PbrTextureSet | null>(null);
+  const fallbackMaps = useMemo(() => getPbrTextureSet("jute"), []);
+  const maps = externalMaps ?? fallbackMaps;
   const onExternalMapsLoaded = useCallback((nextMaps: PbrTextureSet) => {
-    setMaps(nextMaps);
-  }, []);
-
-  useEffect(() => {
-    setMaps(getPbrTextureSet("jute"));
+    setExternalMaps(nextMaps);
   }, []);
 
   const geometries = useMemo(() => {
@@ -699,16 +699,13 @@ function WoodenPin({
   position: [number, number, number];
   ropeAngle: number;
 }) {
-  const [woodMaps, setWoodMaps] = useState<PbrTextureSet | null>(null);
+  const woodMaps = useMemo(() => getPbrTextureSet("wood"), []);
   const jaws = useMemo(
     () => [createWoodHalf(-1), createWoodHalf(1)],
     [],
   );
 
-  useEffect(() => {
-    setWoodMaps(getPbrTextureSet("wood"));
-    return () => jaws.forEach((geometry) => geometry.dispose());
-  }, [jaws]);
+  useEffect(() => () => jaws.forEach((geometry) => geometry.dispose()), [jaws]);
 
   return (
     <group

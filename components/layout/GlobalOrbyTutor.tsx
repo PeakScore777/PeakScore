@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 import LessonAITutor from "@/components/aprender/LessonAITutor";
 
@@ -91,17 +91,8 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
       )}
 
       {open && (
-        <div className="fixed bottom-4 right-3 z-[80] flex items-center gap-2 sm:bottom-6 sm:right-6">
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            aria-label="Cerrar Orby"
-            title="Cerrar Orby"
-            className="mb-2 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-lg transition hover:bg-slate-50"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          <div className="w-[min(440px,calc(100vw-24px))]">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/65 p-2 backdrop-blur-sm sm:p-5">
+          <div className="h-[calc(100dvh-16px)] w-full max-w-[1180px] sm:h-[min(850px,calc(100dvh-40px))]">
             <LessonAITutor
               subject={page.subject}
               topic={page.topic}
@@ -110,10 +101,11 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
               open={open}
               onOpenChange={setOpen}
               accent="orby"
+              workspace
             />
           </div>
         </div>
-      )}
+      )})}
     </>
   );
 }

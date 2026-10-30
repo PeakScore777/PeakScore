@@ -109,7 +109,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [cropX, setCropX] = useState(5);
   const [cropY, setCropY] = useState(5);
   const [cropW, setCropW] = useState(90);
-  const [cropH, setCropH] = useState(90);
+  const [cropH, setCropH] = useState(90);\n  const [imageContrast, setImageContrast] = useState(115);\n  const [imageBrightness, setImageBrightness] = useState(105);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -152,6 +152,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAttachmentError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
     if (cameraInputRef.current) cameraInputRef.current.value = "";
+  }
+
+  async function enhanceImage() {
+    if (!attachment || !attachmentPreview) return;
+    try {
+      const image = new window.Image();
+      image.src = attachmentPreview;
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("No se pudo abrir la imagen para mejorarla."));
+      });
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("No se pudo preparar la mejora de imagen.");
+      ctx.filter = `contrast(${imageContrast}%) brightness(${imageBrightness}%) grayscale(100%)`;
+      ctx.drawImage(image, 0, 0);
+      ctx.filter = "none";
+      const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error("No se pudo generar la imagen mejorada.")), "image/jpeg", 0.92));
+      const enhanced = new File([blob], "orby-hoja-mejorada.jpg", { type: "image/jpeg" });
+      if (attachmentPreview.startsWith("blob:")) URL.revokeObjectURL(attachmentPreview);
+      setAttachment(enhanced);
+      setAttachmentPreview(URL.createObjectURL(enhanced));
+      setOcrText("");
+      setAttachmentError("");
+    } catch (error) {
+      setAttachmentError(error instanceof Error ? error.message : "No se pudo mejorar la imagen.");
+    }
   }
 
   async function applyImageCrop() {
@@ -435,6 +464,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className={`flex items-center gap-3 rounded-xl border p-2 ${orbyAccent ? "border-orange-200 bg-orange-50" : "border-sky-200 bg-sky-50"}`}>
           {attachmentPreview ? <Image src={attachmentPreview} width={1200} height={800} unoptimized alt="Vista previa de la imagen adjunta" className={`h-12 w-12 shrink-0 rounded-lg border bg-white object-cover ${orbyAccent ? "border-orange-100" : "border-sky-100"}`} /> : <FileText className={`ml-2 h-8 w-8 shrink-0 ${orbyAccent ? "text-orange-700" : "text-sky-700"}`} />}
           <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-slate-800">{attachment.name}</p><p className="text-[11px] text-slate-500">Listo para analizar · {(attachment.size / 1024).toFixed(0)} KB</p><p className="text-[10px] text-slate-500">La imagen solo se envía a Orby cuando pulses enviar. Puedes quitarla antes.</p>
+            <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-white p-2">
+              <label className="text-[10px] font-semibold text-slate-600">Contraste {imageContrast}%<input type="range" min="80" max="180" value={imageContrast} onChange={(event) => setImageContrast(Number(event.target.value))} className="block w-full" /></label>
+              <label className="text-[10px] font-semibold text-slate-600">Brillo {imageBrightness}%<input type="range" min="70" max="150" value={imageBrightness} onChange={(event) => setImageBrightness(Number(event.target.value))} className="block w-full" /></label>
+              <button type="button" onClick={enhanceImage} className="col-span-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-800 hover:bg-orange-100">Mejorar nitidez y contraste</button>
+            </div>
             <button type="button" onClick={() => setCropMode((value) => !value)} className="mt-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">{cropMode ? "Cerrar recorte" : "Recortar pregunta"}</button>
             {cropMode && <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-white p-2">
               <label className="text-[10px] font-semibold text-slate-600">Izquierda {cropX}%<input type="range" min="0" max={Math.max(0, 100 - cropW)} value={cropX} onChange={(event) => setCropX(Number(event.target.value))} className="block w-full" /></label>

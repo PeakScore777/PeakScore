@@ -657,7 +657,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceResponseDoneRef.current = true;
       void persistRealtimeTurnIfReady();
       setVoiceStatus("Te escucho…");
-      setIsListening(false);
+      setIsListening(true);
       return;
     }
     if (type === "error") {
@@ -857,6 +857,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;
+      voiceAssistantTextRef.current = "";
+      voiceAssistantMessageIdRef.current = null;
+      voiceResponseDoneRef.current = false;
+      voiceTurnPersistedRef.current = false;
       setMessages((current) => [...current, { role: "user", content: message }]);
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";

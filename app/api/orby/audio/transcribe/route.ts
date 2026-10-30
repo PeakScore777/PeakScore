@@ -7,14 +7,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
-const ALLOWED_AUDIO_TYPES = new Set(["audio/webm", "audio/ogg", "audio/wav", "audio/mpeg", "audio/mp3", "audio/aac", "audio/mp4", "audio/opus", "audio/m4a"]);
+const ALLOWED_AUDIO_TYPES = new Set(["audio/webm", "audio/ogg", "audio/wav", "audio/wave", "audio/x-wav", "audio/mpeg", "audio/mp3", "audio/aac", "audio/mp4", "audio/opus", "audio/m4a", "audio/x-m4a"]);
 
 function hasValidSignature(mimeType: string, bytes: Buffer) {
   if (mimeType === "audio/webm") {
     return bytes.length >= 4 && bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3;
   }
   if (mimeType === "audio/ogg") return bytes.length >= 4 && bytes.toString("ascii", 0, 4) === "OggS";
-  if (mimeType === "audio/wav") {
+  if (mimeType === "audio/wav" || mimeType === "audio/wave" || mimeType === "audio/x-wav") {
     return bytes.length >= 12 && bytes.toString("ascii", 0, 4) === "RIFF" && bytes.toString("ascii", 8, 12) === "WAVE";
   }
   if (mimeType === "audio/mpeg" || mimeType === "audio/mp3") {
@@ -24,7 +24,7 @@ function hasValidSignature(mimeType: string, bytes: Buffer) {
     );
   }
   if (mimeType === "audio/aac") return bytes.length >= 2 && bytes[0] === 0xff && (bytes[1] & 0xf6) === 0xf0;
-  if (mimeType === "audio/mp4" || mimeType === "audio/m4a") return bytes.length >= 12 && bytes.toString("ascii", 4, 8) === "ftyp";
+  if (mimeType === "audio/mp4" || mimeType === "audio/m4a" || mimeType === "audio/x-m4a") return bytes.length >= 12 && bytes.toString("ascii", 4, 8) === "ftyp";
   if (mimeType === "audio/opus") return bytes.toString("ascii").includes("OpusHead");
   return false;
 }
@@ -69,10 +69,15 @@ export async function POST(request: Request) {
   if (!(audio instanceof File)) {
     return NextResponse.json({ error: "No se recibió una grabación de audio válida." }, { status: 400 });
   }
-  const mimeType = audio.type.split(";")[0].trim().toLowerCase();
-  if (!ALLOWED_AUDIO_TYPES.has(mimeType)) {
+  const declaredMimeType = audio.type.split(";")[0].trim().toLowerCase();
+  if (!ALLOWED_AUDIO_TYPES.has(declaredMimeType)) {
     return NextResponse.json({ error: "Formato de audio no compatible. Usa la grabación desde Chrome o Edge." }, { status: 415 });
   }
+  const mimeType = declaredMimeType === "audio/wave" || declaredMimeType === "audio/x-wav"
+    ? "audio/wav"
+    : declaredMimeType === "audio/x-m4a"
+      ? "audio/m4a"
+      : declaredMimeType;
   if (audio.size < 1_024 || audio.size > MAX_AUDIO_BYTES) {
     return NextResponse.json({ error: "La grabación debe pesar entre 1 KB y 8 MB." }, { status: 413 });
   }

@@ -946,6 +946,45 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  async function requestMicrophonePermission() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setVoiceError("Chrome no puede acceder al micrófono desde esta página. Comprueba que estás en localhost o HTTPS y que el navegador esté actualizado.");
+      setAudioConsentOpen(true);
+      return;
+    }
+    if (!window.isSecureContext && window.location.hostname !== "localhost") {
+      setVoiceError("El acceso al micrófono necesita localhost o una conexión HTTPS segura.");
+      setAudioConsentOpen(true);
+      return;
+    }
+
+    try {
+      setVoiceError("");
+      const permissionStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      });
+      permissionStream.getTracks().forEach((track) => track.stop());
+      setMicrophonePermission("granted");
+      clearRecordedAudio();
+      setAudioSource("recording");
+      setAudioConsentChecked(false);
+      setAudioConsentOpen(true);
+    } catch (caught) {
+      const errorName = caught instanceof Error ? caught.name : "UnknownError";
+      setAudioConsentOpen(true);
+      if (errorName === "NotAllowedError" || errorName === "SecurityError") {
+        setMicrophonePermission("denied");
+        setVoiceError("Chrome no concedió el micrófono. En la barra de direcciones, abre los controles del sitio → Micrófono → Permitir. Si aparece «Bloquear», cámbialo a «Preguntar» o «Permitir», recarga y pulsa el micrófono otra vez.");
+      } else if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
+        setVoiceError("No se encontró un micrófono. Conecta uno y vuelve a pulsar el botón.");
+      } else if (errorName === "NotReadableError" || errorName === "TrackStartError") {
+        setVoiceError("El micrófono está ocupado por otra aplicación o no puede iniciarse. Cierra esa aplicación y vuelve a intentarlo.");
+      } else {
+        setVoiceError("No se pudo solicitar el micrófono. Comprueba los permisos del sitio y vuelve a intentarlo.");
+      }
+    }
+  }
+
   async function startAudioRecording() {
     if (!audioConsentChecked || isRecording) return;
     if (microphonePermission === "denied") {
@@ -1242,7 +1281,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   ? "Chrome ya concedió el micrófono. Al continuar, Orby comenzará a grabar."
                   : "Al pulsar «Comenzar a grabar», Chrome debe mostrar su propio aviso para permitir el micrófono. Ese permiso es independiente del consentimiento para Gemini."}
             </p>
-            {microphonePermission === "denied" && <button type="button" onClick={() => void refreshMicrophonePermission()} className="mt-2 rounded-lg border border-sky-200 bg-white px-3 py-2 text-[11px] font-bold text-sky-800 hover:bg-sky-50">Comprobar permiso otra vez</button>}
+            {microphonePermission === "denied" && <button type="button" onClick={() => void requestMicrophonePermission()} className="mt-2 rounded-lg border border-sky-200 bg-white px-3 py-2 text-[11px] font-bold text-sky-800 hover:bg-sky-50">Volver a solicitar permiso en Chrome</button>}
             <label className="mt-2 flex items-start gap-2 text-[11px] leading-4 text-slate-700">
               <input type="checkbox" checked={audioConsentChecked} onChange={(event) => setAudioConsentChecked(event.target.checked)} className="mt-0.5 accent-orange-600" />
               <span>Entiendo y autorizo enviar este audio a Google Gemini para transcribirlo.</span>
@@ -1285,7 +1324,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar foto o archivo de audio" title="Adjuntar imagen JPG/PNG/WebP o nota de voz MP3/WAV/OGG/WebM/M4A" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
-        <button type="button" onClick={() => { clearRecordedAudio(); setAudioSource("recording"); setAudioConsentChecked(false); setAudioConsentOpen(true); }} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz para enviar" title="Grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
+        <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Solicitar permiso del micrófono y grabar una nota de voz" title="Permitir micrófono y grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
         <button type="button" onClick={toggleVoiceMode} disabled={loading || premiumVoiceLoading || (!premiumVoiceEnabled && !voiceMode)} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada Premium"} title={voiceMode ? "Detener chat de voz" : premiumVoiceLoading ? "Comprobando Premium…" : premiumVoiceEnabled ? "Iniciar chat de voz Premium" : "Chat de voz exclusivo Premium"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {

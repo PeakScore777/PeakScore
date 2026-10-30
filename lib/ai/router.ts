@@ -2230,6 +2230,19 @@ export async function generateAI({
         `[PeakScore AI] Provider respondió correctamente: ${currentProvider}`
       );
 
+      // Keep the provider metadata server-side without changing the SDK response shape.
+      if (result && typeof result === "object") {
+        try {
+          Object.defineProperty(result, "__peakscoreProvider", {
+            value: currentProvider,
+            enumerable: false,
+            configurable: false,
+          });
+        } catch {
+          // Provider metadata is diagnostic only; generation remains successful.
+        }
+      }
+
       return result;
     } catch (error) {
       /**

@@ -101,6 +101,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState("");
+  const [microphonePermission, setMicrophonePermission] = useState<"unknown" | "prompt" | "granted" | "denied">("unknown");
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [historyLoading, setHistoryLoading] = useState(workspace);
@@ -165,6 +166,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       .catch(() => { if (!cancelled) setPremiumVoiceEnabled(false); })
       .finally(() => { if (!cancelled) setPremiumVoiceLoading(false); });
     return () => { cancelled = true; };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    let permissionStatus: PermissionStatus | null = null;
+
+    const readPermission = async () => {
+      if (!navigator.permissions?.query) {
+        if (active) setMicrophonePermission("unknown");
+        return;
+      }
+      try {
+        permissionStatus = await navigator.permissions.query({ name: "microphone" as PermissionName });
+        if (!active) return;
+        setMicrophonePermission(permissionStatus.state);
+        permissionStatus.onchange = () => {
+          if (active && permissionStatus) setMicrophonePermission(permissionStatus.state);
+        };
+      } catch {
+        if (active) setMicrophonePermission("unknown");
+      }
+    };
+
+    void readPermission();
+    return () => {
+      active = false;
+      if (permissionStatus) permissionStatus.onchange = null;
+    };
   }, [open]);
 
   useEffect(() => {
@@ -894,8 +924,34 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (recorder && recorder.state !== "inactive") recorder.stop();
   }
 
+  async function refreshMicrophonePermission() {
+    if (!navigator.permissions?.query) {
+      setMicrophonePermission("unknown");
+      setVoiceError("Chrome no permite consultar el estado automáticamente. Revisa el permiso del micrófono desde los controles del sitio, junto a la dirección web.");
+      return;
+    }
+    try {
+      const permission = await navigator.permissions.query({ name: "microphone" as PermissionName });
+      setMicrophonePermission(permission.state);
+      if (permission.state === "granted") {
+        setVoiceError("Permiso del micrófono concedido. Pulsa «Comenzar a grabar» para iniciar tu nota.");
+      } else if (permission.state === "prompt") {
+        setVoiceError("Chrome está listo para pedir permiso. Pulsa «Comenzar a grabar» y acepta el aviso del navegador.");
+      } else {
+        setVoiceError("Chrome todavía bloquea el micrófono. En los controles del sitio, cambia Micrófono a «Permitir» y vuelve a comprobar.");
+      }
+    } catch {
+      setMicrophonePermission("unknown");
+      setVoiceError("No pude comprobar el permiso. Revisa los controles del sitio junto a la dirección web.");
+    }
+  }
+
   async function startAudioRecording() {
     if (!audioConsentChecked || isRecording) return;
+    if (microphonePermission === "denied") {
+      setVoiceError("Chrome ya tiene bloqueado el micrófono para este sitio. Abre los controles del sitio a la izquierda de localhost:3000, entra en Micrófono y selecciona «Permitir». Después actualiza la página y vuelve a grabar.");
+      return;
+    }
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setVoiceError("Este navegador no permite grabar audio aquí. Prueba con Chrome o Edge actualizado.");
       return;
@@ -972,9 +1028,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       audioStreamRef.current?.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
       setIsRecording(false);
-      setVoiceError(caught instanceof Error && caught.name === "NotAllowedError"
-        ? "No autorizaste el micrófono. Habilítalo en el navegador para grabar una nota."
-        : "No se pudo acceder al micrófono. Revisa que otra aplicación no lo esté usando.");
+      const errorName = caught instanceof Error ? caught.name : "UnknownError";
+      if (errorName === "NotAllowedError" || errorName === "SecurityError") {
+        setMicrophonePermission("denied");
+        setVoiceError("Chrome rechazó el acceso al micrófono. Revisa el permiso del sitio en el navegador; la autorización para Gemini no sustituye este permiso.");
+      } else if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
+        setVoiceError("No se encontró un micrófono conectado. Conecta uno y vuelve a intentarlo.");
+      } else if (errorName === "NotReadableError" || errorName === "TrackStartError") {
+        setVoiceError("El micrófono está ocupado o bloqueado por otra aplicación. Cierra esa aplicación y vuelve a intentarlo.");
+      } else {
+        setVoiceError("No se pudo acceder al micrófono. Comprueba los permisos del navegador y que el dispositivo esté conectado.");
+      }
     }
   }
 
@@ -1171,6 +1235,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="min-w-0 flex-1">
             <p className="text-xs font-extrabold text-slate-900">{audioSource === "upload" ? "Antes de transcribir tu audio" : "Antes de grabar tu nota de voz"}</p>
             <p className="mt-1 text-[11px] leading-4 text-slate-600">El audio se enviará a Google Gemini (nivel gratuito) para convertirlo en texto. Google puede usar el contenido enviado desde el nivel gratuito para mejorar sus productos. PeakScore no conserva el archivo de audio: solo guarda la transcripción cuando tú la envías al chat. No grabes contraseñas ni datos personales sensibles.</p>
+            <p className="mt-2 rounded-lg border border-sky-100 bg-sky-50 px-2.5 py-2 text-[11px] leading-4 text-sky-900">
+              <strong>Permiso del navegador:</strong> {microphonePermission === "denied"
+                ? "Chrome tiene el micrófono bloqueado para este sitio. Abre los controles a la izquierda de localhost:3000 → Micrófono → Permitir. Después actualiza la página."
+                : microphonePermission === "granted"
+                  ? "Chrome ya concedió el micrófono. Al continuar, Orby comenzará a grabar."
+                  : "Al pulsar «Comenzar a grabar», Chrome debe mostrar su propio aviso para permitir el micrófono. Ese permiso es independiente del consentimiento para Gemini."}
+            </p>
+            {microphonePermission === "denied" && <button type="button" onClick={() => void refreshMicrophonePermission()} className="mt-2 rounded-lg border border-sky-200 bg-white px-3 py-2 text-[11px] font-bold text-sky-800 hover:bg-sky-50">Comprobar permiso otra vez</button>}
             <label className="mt-2 flex items-start gap-2 text-[11px] leading-4 text-slate-700">
               <input type="checkbox" checked={audioConsentChecked} onChange={(event) => setAudioConsentChecked(event.target.checked)} className="mt-0.5 accent-orange-600" />
               <span>Entiendo y autorizo enviar este audio a Google Gemini para transcribirlo.</span>

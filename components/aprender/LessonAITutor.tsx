@@ -139,6 +139,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeConversationRef = useRef<string | null>(null);
   const sendingRef = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const stopAudioRecordingRef = useRef<(discard?: boolean) => void>(() => {});
   const audioStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -741,13 +742,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   useEffect(() => {
     sendMessageRef.current = sendMessage;
+    stopAudioRecordingRef.current = stopAudioRecording;
   });
 
   useEffect(() => {
     if (!open) {
       recognitionRef.current?.stop();
       recognitionRef.current = null;
-      stopAudioRecording(true);
+      stopAudioRecordingRef.current(true);
       audioStreamRef.current?.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();

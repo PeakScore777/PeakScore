@@ -921,7 +921,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   if (!open) return null;
 
   return (
-    <aside id="orby-tutor-panel" aria-label="Tutor de inteligencia artificial Orby" className="fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]">
+    <aside id="orby-tutor-panel" aria-label="Tutor de inteligencia artificial Orby" className={workspace
+      ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)]"
+      : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <div className={`flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 bg-white ${orbyAccent ? "border-orange-400 shadow-[0_0_0_3px_rgba(249,115,22,.14)]" : "border-sky-300 shadow-[0_0_0_3px_rgba(14,165,233,.12)]"}`}>
@@ -929,12 +931,45 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <div className="min-w-0">
             <p className="font-extrabold text-slate-950">Orby <span className={orbyAccent ? "text-orange-500" : "text-sky-600"}>●</span></p>
-            <p className="truncate text-xs text-slate-500">Tutor de ciencias · Saber 11</p>
+            <p className="truncate text-xs text-slate-500">{workspace ? "Chat de estudio · Conversaciones guardadas" : "Tutor de ciencias · Saber 11"}</p>
           </div>
         </div>
-        <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>
+        <div className="flex items-center gap-1">
+          {workspace && <>
+            <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar historial" : "Mostrar historial"} title="Historial de chats" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><ChevronDown className={historyOpen ? "h-4 w-4 rotate-90" : "h-4 w-4"} /></button>
+            <button type="button" onClick={startNewConversation} aria-label="Crear nueva conversación" title="Nuevo chat" className="rounded-lg p-2 text-orange-700 transition hover:bg-orange-50"><Plus className="h-5 w-5" /></button>
+          </>}
+          <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>
+        </div>
       </header>
 
+      <div className={workspace ? "flex min-h-0 flex-1" : "contents"}>
+        {workspace && <aside className={historyOpen ? "absolute inset-y-0 left-0 z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-200 bg-slate-50 shadow-xl md:relative md:z-auto md:w-[270px] md:shrink-0 md:shadow-none" : "hidden"} aria-label="Historial de conversaciones">
+          <div className="border-b border-slate-200 p-3">
+            <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-3 text-sm font-bold text-white transition hover:bg-slate-800"><Plus className="h-4 w-4" /> Nuevo chat</button>
+            <p className="mt-4 px-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tus conversaciones</p>
+          </div>
+          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
+            {historyLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando historial…</div>}
+            {!historyLoading && conversations.length === 0 && <p className="px-3 py-5 text-xs leading-5 text-slate-500">Aún no tienes chats guardados. Inicia uno para conservar tus preguntas y explicaciones.</p>}
+            {conversations.map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-xl border border-orange-200 bg-orange-50 px-2 py-2" : "group rounded-xl border border-transparent px-2 py-2 transition hover:border-slate-200 hover:bg-white"}>
+              <div className="flex items-start gap-1">
+                <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 text-left">
+                  <span className="block truncate text-xs font-bold text-slate-800">{item.title}</span>
+                  <span className="mt-1 block truncate text-[10px] text-slate-500">{item.topic || item.subject}</span>
+                  <span className="mt-1 block text-[9px] text-slate-400">{new Date(item.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
+                </button>
+                <button type="button" onClick={() => setPendingDeleteConversation((current) => current === item.id ? null : item.id)} aria-label={"Eliminar chat " + item.title} title="Eliminar conversación" className="rounded-md p-1.5 text-slate-400 opacity-70 transition hover:bg-rose-50 hover:text-rose-600 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
+              </div>
+              {pendingDeleteConversation === item.id && <div className="mt-2 rounded-lg border border-rose-200 bg-white p-2">
+                <p className="text-[10px] leading-4 text-slate-600">¿Eliminar este chat y todos sus mensajes?</p>
+                <div className="mt-2 flex gap-2"><button type="button" onClick={() => void deleteConversation(item.id)} className="rounded-md bg-rose-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-rose-700">Eliminar</button><button type="button" onClick={() => setPendingDeleteConversation(null)} className="rounded-md px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-100">Cancelar</button></div>
+              </div>}
+            </div>)}
+          </div>
+          <div className="border-t border-slate-200 px-3 py-3 text-[10px] leading-4 text-slate-500">Los chats son privados de tu cuenta. Puedes eliminarlos cuando quieras.</div>
+        </aside>}
+        <div className={workspace ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"}>
       {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#d9c5ae] bg-[#fff9f0] px-3 py-2">
         <button type="button" onClick={() => setNotebookOpen((value) => !value)} aria-expanded={notebookOpen} className={`flex min-h-10 w-full items-center justify-between gap-3 border px-3 py-2 text-left text-xs font-extrabold transition ${notebookOpen ? "border-orange-500 bg-orange-100 text-orange-950" : "border-orange-200 bg-white text-slate-800 hover:border-orange-400 hover:bg-orange-50"}`}>
           <span className="flex items-center gap-2"><FileText className="h-4 w-4 text-orange-600"/> Cuaderno de preguntas falladas <span className="rounded-full bg-orange-600 px-2 py-0.5 text-[10px] text-white">{reviewQuestions.length}</span></span>
@@ -1050,7 +1085,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className={`min-h-12 max-h-28 flex-1 overflow-y-auto resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-5 text-slate-900 outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 ${orbyAccent ? "focus:border-orange-400 focus:ring-2 focus:ring-orange-100" : "focus:border-sky-400 focus:ring-2 focus:ring-sky-100"}`} />
         <button type="submit" disabled={(!input.trim() && !attachment) || loading} aria-label="Enviar mensaje a Orby" className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${orbyAccent ? "bg-orange-600 hover:bg-orange-700" : "bg-blue-600 hover:bg-blue-700"}`}><Send className="h-5 w-5" /></button>
       </form>
+      {conversationError && workspace && <p role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">{conversationError}</p>}
       <p className="shrink-0 bg-white px-4 pb-3 text-[10px] leading-4 text-slate-400">Orby es un apoyo de estudio; verifica siempre los datos y procedimientos de la lección.</p>
+        </div>
+      </div>
     </aside>
   );
 }

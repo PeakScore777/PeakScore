@@ -505,12 +505,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (preferredVoice) utterance.voice = preferredVoice;
     utterance.onend = () => {
       setSpeakingIndex(null);
-      if (voiceModeRef.current) {
-        waitingForVoiceReplyRef.current = false;
-        window.setTimeout(() => {
-          if (voiceModeRef.current) toggleVoiceInput();
-        }, 350);
-      }
     };
     utterance.onerror = () => {
       setSpeakingIndex(null);
@@ -636,7 +630,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       setVoiceStatus("Te escucho…");
-      setIsListening(true);
+      setIsListening(false);
       return;
     }
     if (type === "error") {
@@ -706,7 +700,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       };
       channel.onerror = () => setVoiceError("Se interrumpió el canal de voz. Comprueba tu conexión.");
       peer.onconnectionstatechange = () => {
-        if (peer.connectionState === "failed" || peer.connectionState === "disconnected") {
+        if (peer.connectionState === "failed") {
           setVoiceError("La conexión de voz se perdió. Vuelve a iniciar la conversación.");
           stopRealtimeVoice();
         }
@@ -826,7 +820,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || sendingRef.current || message.length > 1200) return;
+    if (voiceModeRef.current && voiceChannelRef.current?.readyState !== "open") {
+      setVoiceError("Orby todavía está conectando. Espera un momento y vuelve a enviar.");
+      return;
+    }
     if (voiceModeRef.current && voiceChannelRef.current?.readyState === "open" && message && !selectedFile) {
+      voiceAssistantTextRef.current = "";
+      voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;
       setMessages((current) => [...current, { role: "user", content: message }]);
       setInput("");

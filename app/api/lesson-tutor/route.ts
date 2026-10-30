@@ -13,23 +13,6 @@ function cleanText(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
-function takeRateLimit(key: string): { allowed: boolean; retryAfter: number } {
-  const now = Date.now();
-  const current = requestWindows.get(key);
-  if (!current || current.resetAt <= now) {
-    requestWindows.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    if (requestWindows.size > 5000) {
-      for (const [entry, value] of requestWindows) if (value.resetAt <= now) requestWindows.delete(entry);
-    }
-    return { allowed: true, retryAfter: 0 };
-  }
-  if (current.count >= MAX_REQUESTS_PER_WINDOW) {
-    return { allowed: false, retryAfter: Math.max(1, Math.ceil((current.resetAt - now) / 1000)) };
-  }
-  current.count += 1;
-  return { allowed: true, retryAfter: 0 };
-}
-
 function isClearlyOutOfScopeOrInjection(text: string): boolean {
   const normalized = text.normalize("NFKC").toLowerCase();
   const override = /ignore (all |any )?(previous|prior|above|system) instructions|ignora (todas las )?(instrucciones|reglas) (anteriores|previas)|forget (all )?(your|the) instructions|olvida (todas )?las instrucciones|act as (dan|an unrestricted|a different ai)|reveal (your|the) (system prompt|hidden instructions)|revela (tu|el) (prompt|instrucciones internas)|print (your|the) system prompt|muestra (tu|el) prompt del sistema|developer message|jailbreak|bypass (the|your) (safety|rules|restrictions)|desactiva (tus|las) (reglas|restricciones)/i;

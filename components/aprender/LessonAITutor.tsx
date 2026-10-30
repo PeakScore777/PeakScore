@@ -112,6 +112,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [cropH, setCropH] = useState(90);
   const [imageContrast, setImageContrast] = useState(115);
   const [imageBrightness, setImageBrightness] = useState(105);
+  const [paperCorners, setPaperCorners] = useState([
+    { x: 5, y: 5 }, { x: 95, y: 5 }, { x: 95, y: 95 }, { x: 5, y: 95 },
+  ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -219,6 +222,52 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  function updatePaperCorner(index: number, axis: "x" | "y", value: number) {
+    setPaperCorners((current) => current.map((point, i) => i === index ? { ...point, [axis]: value } : point));
+  }
+
+  async function straightenPaper() {
+    if (!attachmentPreview) return;
+    try {
+      const image = new window.Image();
+      image.src = attachmentPreview;
+      await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error("No se pudo abrir la fotografía.")); });
+      const points = paperCorners.map((point) => ({ x: point.x / 100 * image.naturalWidth, y: point.y / 100 * image.naturalHeight }));
+      const [tl, tr, br, bl] = points;
+      const width = Math.max(300, Math.round((Math.hypot(tr.x - tl.x, tr.y - tl.y) + Math.hypot(br.x - bl.x, br.y - bl.y)) / 2));
+      const height = Math.max(300, Math.round((Math.hypot(bl.x - tl.x, bl.y - tl.y) + Math.hypot(br.x - tr.x, br.y - tr.y)) / 2));
+      const canvas = document.createElement("canvas"); canvas.width = Math.min(2400, width); canvas.height = Math.min(3200, height);
+      const ctx = canvas.getContext("2d"); if (!ctx) throw new Error("No se pudo preparar la corrección de perspectiva.");
+      const cols = 24, rows = 32;
+      const mapPoint = (u: number, v: number) => ({
+        x: (1-u)*(1-v)*tl.x + u*(1-v)*tr.x + u*v*br.x + (1-u)*v*bl.x,
+        y: (1-u)*(1-v)*tl.y + u*(1-v)*tr.y + u*v*br.y + (1-u)*v*bl.y,
+      });
+      const drawTriangle = (src: Array<{x:number;y:number}>, dst: Array<{x:number;y:number}>) => {
+        const [a,b,c] = src, [A,B,C] = dst;
+        const denom = a.x*(b.y-c.y)+b.x*(c.y-a.y)+c.x*(a.y-b.y);
+        if (Math.abs(denom) < 0.0001) return;
+        const m11=(A.x*(b.y-c.y)+B.x*(c.y-a.y)+C.x*(a.y-b.y))/denom;
+        const m12=(A.y*(b.y-c.y)+B.y*(c.y-a.y)+C.y*(a.y-b.y))/denom;
+        const m21=(A.x*(c.x-b.x)+B.x*(a.x-c.x)+C.x*(b.x-a.x))/denom;
+        const m22=(A.y*(c.x-b.x)+B.y*(a.x-c.x)+C.y*(b.x-a.x))/denom;
+        const dx=A.x-m11*a.x-m21*a.y, dy=A.y-m12*a.x-m22*a.y;
+        ctx.save(); ctx.beginPath(); ctx.moveTo(A.x,A.y); ctx.lineTo(B.x,B.y); ctx.lineTo(C.x,C.y); ctx.closePath(); ctx.clip();
+        ctx.transform(m11,m12,m21,m22,dx,dy); ctx.drawImage(image,0,0); ctx.restore();
+      };
+      for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+        const u0=x/cols,u1=(x+1)/cols,v0=y/rows,v1=(y+1)/rows;
+        const p00=mapPoint(u0,v0),p10=mapPoint(u1,v0),p11=mapPoint(u1,v1),p01=mapPoint(u0,v1);
+        const d00={x:u0*canvas.width,y:v0*canvas.height},d10={x:u1*canvas.width,y:v0*canvas.height},d11={x:u1*canvas.width,y:v1*canvas.height},d01={x:u0*canvas.width,y:v1*canvas.height};
+        drawTriangle([p00,p10,p11],[d00,d10,d11]); drawTriangle([p00,p11,p01],[d00,d11,d01]);
+      }
+      const blob=await new Promise<Blob>((resolve,reject)=>canvas.toBlob((value)=>value?resolve(value):reject(new Error("No se pudo generar la hoja enderezada.")),"image/jpeg",0.92));
+      const corrected=new File([blob],"orby-hoja-enderezada.jpg",{type:"image/jpeg"});
+      if(attachmentPreview.startsWith("blob:")) URL.revokeObjectURL(attachmentPreview);
+      setAttachment(corrected); setAttachmentPreview(URL.createObjectURL(corrected)); setOcrText(""); setCropMode(false);
+      setPaperCorners([{x:5,y:5},{x:95,y:5},{x:95,y:95},{x:5,y:95}]); setAttachmentError("Hoja enderezada en este dispositivo. Revisa el resultado antes de enviarlo.");
+    } catch(error) { setAttachmentError(error instanceof Error?error.message:"No se pudo enderezar la hoja."); }
+  }
   async function enhanceImage() {
     if (!attachment || !attachmentPreview) return;
     try {
@@ -533,6 +582,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <label className="text-[10px] font-semibold text-slate-600">Contraste {imageContrast}%<input type="range" min="80" max="180" value={imageContrast} onChange={(event) => setImageContrast(Number(event.target.value))} className="block w-full" /></label>
               <label className="text-[10px] font-semibold text-slate-600">Brillo {imageBrightness}%<input type="range" min="70" max="150" value={imageBrightness} onChange={(event) => setImageBrightness(Number(event.target.value))} className="block w-full" /></label>
               <button type="button" onClick={enhanceImage} className="col-span-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-800 hover:bg-orange-100">Mejorar contraste y brillo</button>
+            </div>
+            <div className="mt-2 rounded-lg border border-orange-100 bg-white p-2">
+              <p className="mb-2 text-[10px] font-bold text-slate-700">Ajustar las cuatro esquinas (porcentaje de la imagen)</p>
+              {paperCorners.map((point, index) => <div key={index} className="mb-2 grid grid-cols-[1fr_1fr] gap-2">
+                <label className="text-[10px] text-slate-600">Esquina {index + 1} · X {point.x}%<input type="range" min="0" max="100" value={point.x} onChange={(event) => updatePaperCorner(index, "x", Number(event.target.value))} className="block w-full" /></label>
+                <label className="text-[10px] text-slate-600">Y {point.y}%<input type="range" min="0" max="100" value={point.y} onChange={(event) => updatePaperCorner(index, "y", Number(event.target.value))} className="block w-full" /></label>
+              </div>)}
+              <button type="button" onClick={straightenPaper} className="w-full rounded-lg bg-orange-600 px-3 py-2 text-xs font-bold text-white hover:bg-orange-700">Enderezar hoja con estas esquinas</button>
             </div>
             <button type="button" onClick={detectPaperBounds} className="mt-2 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-[11px] font-bold text-orange-800 hover:bg-orange-100">Detectar bordes de la hoja</button>
             <button type="button" onClick={() => setCropMode((value) => !value)} className="mt-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">{cropMode ? "Cerrar recorte" : "Recortar pregunta"}</button>

@@ -519,8 +519,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const next = !voiceModeRef.current;
     if (next) {
       const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
-      if (!(speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition) || !("speechSynthesis" in window)) {
-        setVoiceError("El chat de voz beta requiere reconocimiento y reproducción de voz. Prueba Chrome o Edge actualizado.");
+      const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+      if (!Recognition || !("speechSynthesis" in window)) {
+        setVoiceError("El chat de voz beta requiere Chrome o Edge actualizado con permisos de micrófono y voz.");
+        return;
+      }
+      if (!window.isSecureContext && window.location.hostname !== "localhost") {
+        setVoiceError("El micrófono requiere una conexión segura (HTTPS).");
         return;
       }
     }
@@ -531,7 +536,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceError("");
     if (next) {
       stopSpeaking();
-      window.setTimeout(() => toggleVoiceInput(), 0);
+      // Invoke the browser permission prompt from the user's click, not a timer.
+      toggleVoiceInput();
       return;
     }
     recognitionRef.current?.stop();

@@ -723,6 +723,85 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     onOpenChange(false);
   }
 
+  async function refreshConversations() {
+    if (!workspace) return;
+    const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "No se pudo actualizar el historial.");
+    setConversations(Array.isArray(payload.conversations) ? payload.conversations as Conversation[] : []);
+  }
+
+  function startNewConversation() {
+    stopAudioRecording();
+    activeConversationRef.current = null;
+    setConversationId(null);
+    setMessages([]);
+    setInput("");
+    setError("");
+    setConversationError("");
+    setPendingDeleteConversation(null);
+    setAttachmentError("");
+    clearAttachment();
+    setRecordedAudio(null);
+    setPendingAttachmentMeta(null);
+    setAudioConsentOpen(false);
+    setAudioConsentChecked(false);
+    voiceModeRef.current = false;
+    setVoiceMode(false);
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
+    stopSpeaking();
+    inputRef.current?.focus();
+  }
+
+  async function selectConversation(id: string) {
+    if (loading || id === activeConversationRef.current) return;
+    setHistoryLoading(true);
+    setConversationError("");
+    try {
+      const response = await fetch(`/api/orby/conversations/${id}/messages`, { credentials: "same-origin", cache: "no-store" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo abrir la conversación.");
+      activeConversationRef.current = id;
+      setConversationId(id);
+      setMessages(Array.isArray(payload.messages) ? payload.messages.map((item: Record<string, unknown>) => ({
+        id: String(item.id),
+        role: item.role === "assistant" ? "assistant" : "user",
+        content: typeof item.content === "string" ? item.content : "",
+        checkQuestion: typeof item.check_question === "string" ? item.check_question : "",
+        attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
+        attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
+        createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
+      })) : []);
+      setError("");
+      setInput("");
+      setPendingDeleteConversation(null);
+      if (window.matchMedia("(max-width: 767px)").matches) setHistoryOpen(false);
+    } catch (caught) {
+      setConversationError(caught instanceof Error ? caught.message : "No se pudo abrir la conversación.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
+  async function deleteConversation(id: string) {
+    setConversationError("");
+    try {
+      const response = await fetch(`/api/orby/conversations/${id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo eliminar el chat.");
+      setConversations((current) => current.filter((item) => item.id !== id));
+      setPendingDeleteConversation(null);
+      if (activeConversationRef.current === id) startNewConversation();
+    } catch (caught) {
+      setConversationError(caught instanceof Error ? caught.message : "No se pudo eliminar el chat.");
+    }
+  }
+
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void sendMessage(input, true, false, pendingAttachmentMeta ?? undefined);

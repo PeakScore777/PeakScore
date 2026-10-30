@@ -156,6 +156,63 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (cameraInputRef.current) cameraInputRef.current.value = "";
   }
 
+  async function detectPaperBounds() {
+    if (!attachmentPreview) return;
+    try {
+      const image = new window.Image();
+      image.src = attachmentPreview;
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve();
+        image.onerror = () => reject(new Error("No se pudo analizar la fotografía."));
+      });
+
+      // Analiza una copia pequeña para no bloquear el navegador con fotos grandes.
+      const scale = Math.min(1, 700 / Math.max(image.naturalWidth, image.naturalHeight));
+      const width = Math.max(1, Math.round(image.naturalWidth * scale));
+      const height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      if (!ctx) throw new Error("No se pudo analizar la fotografía.");
+      ctx.drawImage(image, 0, 0, width, height);
+      const pixels = ctx.getImageData(0, 0, width, height).data;
+      const rowCoverage = new Array<number>(height).fill(0);
+      const colCoverage = new Array<number>(width).fill(0);
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
+          const bright = (r + g + b) / 3 > 190;
+          const neutral = Math.max(r, g, b) - Math.min(r, g, b) < 65;
+          if (bright && neutral) {
+            rowCoverage[y]++;
+            colCoverage[x]++;
+          }
+        }
+      }
+      const top = rowCoverage.findIndex((count) => count / width > 0.62);
+      const bottom = rowCoverage.length - 1 - [...rowCoverage].reverse().findIndex((count) => count / width > 0.62);
+      const left = colCoverage.findIndex((count) => count / height > 0.62);
+      const right = colCoverage.length - 1 - [...colCoverage].reverse().findIndex((count) => count / height > 0.62);
+      if (top < 0 || bottom <= top || left < 0 || right <= left || (right - left) / width < 0.25 || (bottom - top) / height < 0.25) {
+        throw new Error("No detecté con suficiente confianza los bordes de una hoja clara. Ajusta el recorte manualmente.");
+      }
+      const padX = Math.round(width * 0.012);
+      const padY = Math.round(height * 0.012);
+      const x1 = Math.max(0, left - padX), y1 = Math.max(0, top - padY);
+      const x2 = Math.min(width, right + padX), y2 = Math.min(height, bottom + padY);
+      setCropX(Math.round((x1 / width) * 100));
+      setCropY(Math.round((y1 / height) * 100));
+      setCropW(Math.max(10, Math.round(((x2 - x1) / width) * 100)));
+      setCropH(Math.max(10, Math.round(((y2 - y1) / height) * 100)));
+      setCropMode(true);
+      setAttachmentError("Detecté un encuadre aproximado. Revisa los límites antes de aplicar el recorte.");
+    } catch (error) {
+      setAttachmentError(error instanceof Error ? error.message : "No se pudieron detectar los bordes.");
+    }
+  }
+
   async function enhanceImage() {
     if (!attachment || !attachmentPreview) return;
     try {
@@ -471,6 +528,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <label className="text-[10px] font-semibold text-slate-600">Brillo {imageBrightness}%<input type="range" min="70" max="150" value={imageBrightness} onChange={(event) => setImageBrightness(Number(event.target.value))} className="block w-full" /></label>
               <button type="button" onClick={enhanceImage} className="col-span-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-800 hover:bg-orange-100">Mejorar nitidez y contraste</button>
             </div>
+            <button type="button" onClick={detectPaperBounds} className="mt-2 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-[11px] font-bold text-orange-800 hover:bg-orange-100">Detectar bordes de la hoja</button>
             <button type="button" onClick={() => setCropMode((value) => !value)} className="mt-2 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50">{cropMode ? "Cerrar recorte" : "Recortar pregunta"}</button>
             {cropMode && <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg bg-white p-2">
               <label className="text-[10px] font-semibold text-slate-600">Izquierda {cropX}%<input type="range" min="0" max={Math.max(0, 100 - cropW)} value={cropX} onChange={(event) => setCropX(Number(event.target.value))} className="block w-full" /></label>

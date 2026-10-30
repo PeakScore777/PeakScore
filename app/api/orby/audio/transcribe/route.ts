@@ -69,7 +69,8 @@ export async function POST(request: Request) {
   if (!(audio instanceof File)) {
     return NextResponse.json({ error: "No se recibió una grabación de audio válida." }, { status: 400 });
   }
-  if (!ALLOWED_AUDIO_TYPES.has(audio.type)) {
+  const mimeType = audio.type.split(";")[0].trim().toLowerCase();
+  if (!ALLOWED_AUDIO_TYPES.has(mimeType)) {
     return NextResponse.json({ error: "Formato de audio no compatible. Usa la grabación desde Chrome o Edge." }, { status: 415 });
   }
   if (audio.size < 1_024 || audio.size > MAX_AUDIO_BYTES) {
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
   }
 
   const bytes = Buffer.from(await audio.arrayBuffer());
-  if (!hasValidSignature(audio.type, bytes)) {
+  if (!hasValidSignature(mimeType, bytes)) {
     return NextResponse.json({ error: "El contenido de la grabación no coincide con su formato declarado." }, { status: 400 });
   }
 
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
         role: "user",
         parts: [
           { text: "Transcribe literalmente esta nota de voz en español. Conserva nombres, cifras y términos académicos. No respondas la pregunta ni inventes palabras. Devuelve únicamente la transcripción." },
-          { inlineData: { mimeType: audio.type, data: bytes.toString("base64") } },
+          { inlineData: { mimeType, data: bytes.toString("base64") } },
         ],
       }],
       config: { temperature: 0, httpOptions: { timeout: 45_000 } },

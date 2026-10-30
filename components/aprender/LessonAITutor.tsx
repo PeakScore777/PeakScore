@@ -775,7 +775,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
 
       setVoiceStatus("Conectando con Orby…");
-      const model = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.8-live";
+      const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.8-live";
+      const model = configuredModel.startsWith("models/") ? configuredModel.slice("models/".length) : configuredModel;
       const socket = new WebSocket(
         "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=" +
         encodeURIComponent(tokenPayload.ephemeralToken)
@@ -831,7 +832,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           try {
             const raw = typeof messageEvent.data === "string"
               ? messageEvent.data
-              : await (messageEvent.data as Blob).text();
+              : messageEvent.data instanceof ArrayBuffer
+                ? new TextDecoder().decode(messageEvent.data)
+                : await (messageEvent.data as Blob).text();
             const event = JSON.parse(raw) as Record<string, unknown>;
             if (event.setupComplete && !settled) {
               settled = true;

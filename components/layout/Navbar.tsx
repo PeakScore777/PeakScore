@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Bell,
   Bug,
@@ -54,6 +55,7 @@ export default function Navbar({
   onThemeChange,
   initialProfile = null,
 }: NavbarProps) {
+  const router = useRouter();
   const isDark = theme === "dark";
 
   const [openDropdown, setOpenDropdown] = useState<DropdownName>(null);
@@ -250,16 +252,14 @@ export default function Navbar({
           "[Navbar] Error verificando sesión:",
           error,
         );
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
 
-      window.location.href = session?.user
-        ? "/dashboard/simulacros/new"
-        : "/login";
+      router.push(session?.user ? "/dashboard/simulacros/new" : "/login");
     } catch (error) {
       console.error("[Navbar] Error inesperado:", error);
-      window.location.href = "/login";
+      router.push("/login");
     } finally {
       setCheckingAuth(false);
     }
@@ -273,7 +273,7 @@ export default function Navbar({
     } catch (error) {
       console.error("[Navbar] Error cerrando sesión:", error);
     } finally {
-      window.location.href = "/login";
+      router.push("/login");
     }
   };
 

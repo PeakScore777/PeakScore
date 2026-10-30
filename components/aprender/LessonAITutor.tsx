@@ -137,6 +137,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const lastInitialPromptRef = useRef<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const activeConversationRef = useRef<string | null>(null);
+  const sendingRef = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -299,6 +300,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function handleAttachment(file?: File) {
     setAttachmentError("");
     if (!file) return;
+    setPendingAttachmentMeta(null);
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       setAttachmentError("Solo se permiten imágenes JPG, PNG o WebP. Los PDF no están permitidos.");
@@ -635,7 +637,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const message = text.trim();
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
-    if ((!message && !selectedFile) || loading || message.length > 1200) return;
+    if ((!message && !selectedFile) || loading || sendingRef.current || message.length > 1200) return;
+    sendingRef.current = true;
 
     let targetConversationId = conversationId;
     if (workspace && !targetConversationId) {
@@ -656,6 +659,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setConversations((current) => [createPayload.conversation as Conversation, ...current]);
       } catch (caught) {
         setConversationError(caught instanceof Error ? caught.message : "No se pudo crear el chat.");
+        sendingRef.current = false;
         return;
       }
     }
@@ -665,6 +669,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (selectedFile) imagePayload = { mimeType: selectedFile.type, base64: await fileToBase64(selectedFile) };
     } catch (caught) {
       setAttachmentError(caught instanceof Error ? caught.message : "No se pudo leer la imagen.");
+      sendingRef.current = false;
       return;
     }
     const nextMessages: Message[] = [...messages, {
@@ -729,6 +734,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceMode(false);
       }
     } finally {
+      sendingRef.current = false;
       setLoading(false);
     }
   }
@@ -1166,8 +1172,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
-        <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
+        <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
         <button type="button" onClick={() => { setAudioConsentChecked(false); setAudioConsentOpen(true); setRecordedAudio(null); }} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz para enviar" title="Grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
         <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada"} title={voiceMode ? "Detener chat de voz" : "Chat de voz beta · navegador"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
@@ -1180,7 +1186,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
           handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
         }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className={`min-h-12 max-h-28 flex-1 overflow-y-auto resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-5 text-slate-900 outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 ${orbyAccent ? "focus:border-orange-400 focus:ring-2 focus:ring-orange-100" : "focus:border-sky-400 focus:ring-2 focus:ring-sky-100"}`} />
-        <button type="submit" disabled={(!input.trim() && !attachment) || loading} aria-label="Enviar mensaje a Orby" className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${orbyAccent ? "bg-orange-600 hover:bg-orange-700" : "bg-blue-600 hover:bg-blue-700"}`}><Send className="h-5 w-5" /></button>
+        <button type="submit" disabled={(!input.trim() && !attachment) || loading || isRecording || audioTranscribing} aria-label="Enviar mensaje a Orby" className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${orbyAccent ? "bg-orange-600 hover:bg-orange-700" : "bg-blue-600 hover:bg-blue-700"}`}><Send className="h-5 w-5" /></button>
       </form>
       {conversationError && workspace && <p role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">{conversationError}</p>}
       <p className="shrink-0 bg-white px-4 pb-3 text-[10px] leading-4 text-slate-400">Orby es un apoyo de estudio; verifica siempre los datos y procedimientos de la lección.</p>

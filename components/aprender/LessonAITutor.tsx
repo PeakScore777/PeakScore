@@ -168,60 +168,34 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   async function detectPaperBounds() {
     if (!attachmentPreview) return;
     try {
-      const image = new window.Image();
-      image.src = attachmentPreview;
-      await new Promise<void>((resolve, reject) => {
-        image.onload = () => resolve();
-        image.onerror = () => reject(new Error("No se pudo analizar la fotografía."));
-      });
-
-      // Analiza una copia pequeña para no bloquear el navegador con fotos grandes.
-      const scale = Math.min(1, 700 / Math.max(image.naturalWidth, image.naturalHeight));
+      const image = new window.Image(); image.src = attachmentPreview;
+      await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error("No se pudo analizar la fotografía.")); });
+      const scale = Math.min(1, 900 / Math.max(image.naturalWidth, image.naturalHeight));
       const width = Math.max(1, Math.round(image.naturalWidth * scale));
       const height = Math.max(1, Math.round(image.naturalHeight * scale));
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
+      const canvas = document.createElement("canvas"); canvas.width = width; canvas.height = height;
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
       if (!ctx) throw new Error("No se pudo analizar la fotografía.");
       ctx.drawImage(image, 0, 0, width, height);
       const pixels = ctx.getImageData(0, 0, width, height).data;
-      const rowCoverage = new Array<number>(height).fill(0);
-      const colCoverage = new Array<number>(width).fill(0);
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const i = (y * width + x) * 4;
-          const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2];
-          const bright = (r + g + b) / 3 > 190;
-          const neutral = Math.max(r, g, b) - Math.min(r, g, b) < 65;
-          if (bright && neutral) {
-            rowCoverage[y]++;
-            colCoverage[x]++;
-          }
-        }
+      const candidates: Array<{x:number;y:number;sum:number;diff:number}> = [];
+      const step = Math.max(1, Math.floor(Math.max(width,height)/700));
+      for(let y=0;y<height;y+=step) for(let x=0;x<width;x+=step){
+        const i=(y*width+x)*4, red=pixels[i], green=pixels[i+1], blue=pixels[i+2];
+        const brightness=(red+green+blue)/3, spread=Math.max(red,green,blue)-Math.min(red,green,blue);
+        if(brightness>165 && spread<75) candidates.push({x,y,sum:x+y,diff:x-y});
       }
-      const top = rowCoverage.findIndex((count) => count / width > 0.35);
-      const bottom = rowCoverage.length - 1 - [...rowCoverage].reverse().findIndex((count) => count / width > 0.35);
-      const left = colCoverage.findIndex((count) => count / height > 0.35);
-      const right = colCoverage.length - 1 - [...colCoverage].reverse().findIndex((count) => count / height > 0.35);
-      if (top < 0 || bottom <= top || left < 0 || right <= left || (right - left) / width < 0.25 || (bottom - top) / height < 0.25) {
-        throw new Error("No detecté con suficiente confianza los bordes de una hoja clara. Ajusta el recorte manualmente.");
-      }
-      const padX = Math.round(width * 0.012);
-      const padY = Math.round(height * 0.012);
-      const x1 = Math.max(0, left - padX), y1 = Math.max(0, top - padY);
-      const x2 = Math.min(width, right + padX), y2 = Math.min(height, bottom + padY);
-      setCropX(Math.round((x1 / width) * 100));
-      setCropY(Math.round((y1 / height) * 100));
-      setCropW(Math.max(10, Math.round(((x2 - x1) / width) * 100)));
-      setCropH(Math.max(10, Math.round(((y2 - y1) / height) * 100)));
-      setCropMode(true);
-      setAttachmentError("Detecté un encuadre aproximado. Revisa los límites antes de aplicar el recorte.");
-    } catch (error) {
-      setAttachmentError(error instanceof Error ? error.message : "No se pudieron detectar los bordes.");
-    }
+      if(candidates.length < width*height/(step*step)*0.08) throw new Error("No encuentro suficiente superficie de papel clara. Prueba con más luz y un fondo contrastado.");
+      const pick=(key:"sum"|"diff",mode:"min"|"max")=>candidates.reduce((best,p)=>mode==="min"?(p[key]<best[key]?p:best):(p[key]>best[key]?p:best));
+      const corners=[pick("sum","min"),pick("diff","min"),pick("sum","max"),pick("diff","max")];
+      const normalized=corners.map(p=>({x:Math.max(0,Math.min(100,Math.round(p.x/width*100))),y:Math.max(0,Math.min(100,Math.round(p.y/height*100)))}));
+      const [tl,tr,br,bl]=normalized;
+      const area=Math.abs(tl.x*tr.y+tr.x*br.y+br.x*bl.y+bl.x*tl.y-tr.x*tl.y-br.x*tr.y-bl.x*br.y-tl.x*bl.y)/2;
+      if(area<8 || Math.hypot(tr.x-tl.x,tr.y-tl.y)<15 || Math.hypot(bl.x-tl.x,bl.y-tl.y)<15) throw new Error("La detección no encontró una hoja completa. Ajusta las esquinas manualmente.");
+      setPaperCorners(normalized); setCropMode(true);
+      setAttachmentError("Detecté cuatro esquinas aproximadas. Revisa el contorno y ajusta los puntos antes de enderezar.");
+    } catch(error) { setAttachmentError(error instanceof Error?error.message:"No se pudieron detectar las esquinas."); }
   }
-
   function updatePaperCorner(index: number, axis: "x" | "y", value: number) {
     setPaperCorners((current) => current.map((point, i) => i === index ? { ...point, [axis]: value } : point));
   }
@@ -584,6 +558,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <button type="button" onClick={enhanceImage} className="col-span-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-800 hover:bg-orange-100">Mejorar contraste y brillo</button>
             </div>
             <div className="mt-2 rounded-lg border border-orange-100 bg-white p-2">
+              <p className="mb-2 text-[10px] font-bold text-slate-700">Contorno detectado · ajusta los cuatro vértices</p>
+              <svg viewBox="0 0 100 100" className="mb-3 h-44 w-full rounded-lg bg-slate-100" role="img" aria-label="Vista esquemática de las cuatro esquinas detectadas">
+                <polygon points={paperCorners.map((point) => `${point.x},${point.y}`).join(" ")} fill="rgba(249,115,22,0.14)" stroke="#ea580c" strokeWidth="1.5" />
+                {paperCorners.map((point,index)=><g key={index}><circle cx={point.x} cy={point.y} r="3.5" fill="#ea580c" stroke="white" strokeWidth="1.2"/><text x={Math.min(91,point.x+2)} y={Math.max(8,point.y-3)} fontSize="5" fill="#9a3412">{index+1}</text></g>)}
+              </svg>
               <p className="mb-2 text-[10px] font-bold text-slate-700">Ajustar las cuatro esquinas (porcentaje de la imagen)</p>
               {paperCorners.map((point, index) => <div key={index} className="mb-2 grid grid-cols-[1fr_1fr] gap-2">
                 <label className="text-[10px] text-slate-600">Esquina {index + 1} · X {point.x}%<input type="range" min="0" max="100" value={point.x} onChange={(event) => updatePaperCorner(index, "x", Number(event.target.value))} className="block w-full" /></label>

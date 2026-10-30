@@ -3,9 +3,20 @@
 import Image from "next/image";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { FileText, LoaderCircle, Paperclip, Send, X } from "lucide-react";
+import { FileText, LoaderCircle, Mic, MicOff, Paperclip, Send, Volume2, X } from "lucide-react";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string; isFinal: boolean }>> }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 type ReviewQuestion = {
   id: string;
   number: number;
@@ -81,7 +92,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);\n  const [isListening, setIsListening] = useState(false);\n  const [voiceError, setVoiceError] = useState("");\n  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
@@ -89,7 +100,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sendMessageRef = useRef<(text: string, includeAttachment?: boolean) => Promise<void>>(async () => {});
-  const lastInitialPromptRef = useRef<string | null>(null);
+  const lastInitialPromptRef = useRef<string | null>(null);\n  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -141,7 +152,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     });
   }
 
-  async function sendMessage(text: string, includeAttachment = false) {
+  function stopSpeaking() {\n    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();\n    setSpeakingIndex(null);\n  }\n\n  function speakText(text: string, index: number) {\n    if (typeof window === "undefined" || !("speechSynthesis" in window)) {\n      setVoiceError("Tu navegador no tiene lectura de voz disponible.");\n      return;\n    }\n    stopSpeaking();\n    const clean = text.replace(/\*\*/g, "").replace(/`/g, "").replace(/^[-•]\\s*/gm, "").replace(/^\\d+[.)]\\s*/gm, "").slice(0, 5000);\n    const utterance = new SpeechSynthesisUtterance(clean);\n    utterance.lang = "es-CO"; utterance.rate = 1; utterance.pitch = 1;\n    const voices = window.speechSynthesis.getVoices();\n    const spanishVoice = voices.find((voice) => voice.lang.toLowerCase() === "es-co") ?? voices.find((voice) => voice.lang.toLowerCase().startsWith("es"));\n    if (spanishVoice) utterance.voice = spanishVoice;\n    utterance.onend = () => setSpeakingIndex(null);\n    utterance.onerror = () => setSpeakingIndex(null);\n    setSpeakingIndex(index); window.speechSynthesis.speak(utterance);\n  }\n\n  function toggleVoiceInput() {\n    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }\n    const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };\n    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;\n    if (!Recognition) { setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta."); return; }\n    setVoiceError("");\n    const recognition = new Recognition();\n    recognition.lang = "es-CO"; recognition.continuous = false; recognition.interimResults = true;\n    recognition.onresult = (event) => {\n      const results = Array.from(event.results);\n      const transcript = results.map((result) => result[0]?.transcript ?? "").join(" ").trim();\n      if (!transcript) return;\n      setInput(transcript.slice(0, 1200));\n      if (results.some((result) => result[0]?.isFinal)) {\n        setIsListening(false); recognitionRef.current = null;\n        void sendMessageRef.current(transcript.slice(0, 1200));\n      }\n    };\n    recognition.onerror = () => { setIsListening(false); recognitionRef.current = null; setVoiceError("No pude reconocer tu voz. Revisa el permiso del micrófono e inténtalo otra vez."); };\n    recognition.onend = () => { setIsListening(false); recognitionRef.current = null; };\n    recognitionRef.current = recognition;\n    try { recognition.start(); setIsListening(true); } catch { setIsListening(false); recognitionRef.current = null; setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo."); }\n  }\n  async function sendMessage(text: string, includeAttachment = false) {
     const message = text.trim();
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || message.length > 1200) return;
@@ -278,6 +289,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <article key={index} className={message.role === "user" ? `ml-auto max-w-[92%] rounded-2xl rounded-br-sm px-3 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto max-w-[96%] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[13px] leading-[1.75] sm:text-sm">{renderTutorContent(message.content)}</div>
+                {message.role === "assistant" && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index)} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
+                  <Volume2 className="h-3.5 w-3.5" /> {speakingIndex === index ? "Detener audio" : "Escuchar respuesta"}
+                </button>}
                 {message.attachmentName && <div className="mb-2 flex items-center gap-2 rounded-lg border border-white/25 p-2">{message.attachmentPreview ? <Image src={message.attachmentPreview} width={1200} height={800} unoptimized alt={`Adjunto: ${message.attachmentName}`} className="max-h-28 max-w-full rounded-md object-contain" /> : <FileText className="h-6 w-6 shrink-0" />}<p className="min-w-0 break-all text-[10px] opacity-80">{message.attachmentName}</p></div>}
                 {message.checkQuestion && <div className="mt-3 rounded-lg border-l-2 border-amber-400 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-950"><strong>Comprueba lo aprendido:</strong> {message.checkQuestion}</div>}
               </article>
@@ -295,10 +309,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <button type="button" onClick={clearAttachment} aria-label="Quitar imagen adjunta" className="rounded-full p-2 text-slate-500 hover:bg-white"><X className="h-4 w-4" /></button>
         </div>
       </div>}
-      {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
+      {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}\n      {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}\n      {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… habla ahora. Al terminar, enviaré tu pregunta a Orby.</p>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
+        <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener dictado por voz" : "Hablar con Orby"} title={isListening ? "Detener dictado" : "Hablar con Orby"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
+          {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+        </button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));

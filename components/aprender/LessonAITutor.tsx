@@ -113,6 +113,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const voiceModeRef = useRef(false);
+  const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
@@ -506,9 +507,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (spanishVoice) utterance.voice = spanishVoice;
     utterance.onend = () => {
       setSpeakingIndex(null);
-      if (voiceModeRef.current) window.setTimeout(() => toggleVoiceInput(), 350);
+      if (voiceModeRef.current) {
+        waitingForVoiceReplyRef.current = false;
+        window.setTimeout(() => {
+          if (voiceModeRef.current) toggleVoiceInput();
+        }, 350);
+      }
     };
-    utterance.onerror = () => setSpeakingIndex(null);
+    utterance.onerror = () => {
+      setSpeakingIndex(null);
+      waitingForVoiceReplyRef.current = false;
+      if (voiceModeRef.current) {
+        voiceModeRef.current = false;
+        setVoiceMode(false);
+        setVoiceError("La lectura de voz se interrumpió. Puedes volver a iniciar la conversación.");
+      }
+    };
     setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
   }
 
@@ -522,6 +536,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
     }
     voiceModeRef.current = next;
+    waitingForVoiceReplyRef.current = false;
     setVoiceMode(next);
     if (next) {
       stopSpeaking();
@@ -566,18 +581,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setInput(safeTranscript);
         setIsListening(false);
         recognitionRef.current = null;
+        if (voiceModeRef.current) waitingForVoiceReplyRef.current = true;
         void sendMessageRef.current(safeTranscript, false, true);
       }
     };
     recognition.onerror = (event) => {
       setIsListening(false);
       recognitionRef.current = null;
-      const message = event?.error === "not-allowed" || event?.error === "service-not-allowed"
+      const permissionDenied = event?.error === "not-allowed" || event?.error === "service-not-allowed";
+      const message = permissionDenied
         ? "No hay permiso para usar el micrófono. Autorízalo en el navegador e inténtalo de nuevo."
         : event?.error === "no-speech"
-          ? "No detecté voz. Inténtalo otra vez acercándote al micrófono."
+          ? "No detecté voz. Vuelve a intentarlo acercándote al micrófono."
           : "No pude reconocer tu voz. Revisa el micrófono e inténtalo otra vez.";
       setVoiceError(message);
+      if (permissionDenied && voiceModeRef.current) {
+        voiceModeRef.current = false;
+        waitingForVoiceReplyRef.current = false;
+        setVoiceMode(false);
+      }
     };
     recognition.onend = () => {
       setIsListening(false);

@@ -152,20 +152,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   useEffect(() => {
     if (!open) return;
-    let cancelled = false;
-    fetch("/api/orby/voice-access", { credentials: "same-origin", cache: "no-store" })
-      .then(async (response) => {
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(payload.error || "No se pudo verificar el acceso de voz.");
-        if (!cancelled) setPremiumVoiceEnabled(payload.enabled === true);
-      })
-      .catch(() => { if (!cancelled) setPremiumVoiceEnabled(false); })
-      .finally(() => { if (!cancelled) setVoiceAccessChecked(true); });
-    return () => { cancelled = true; };
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
     let active = true;
     let permissionStatus: PermissionStatus | null = null;
 
@@ -498,7 +484,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const clean = text.replace(/\*\*/g, "").replace(/`/g, "").replace(/^[-•]\s*/gm, "").replace(/^\d+[.)]\s*/gm, "").slice(0, 5000);
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.lang = "es-CO";
-    utterance.rate = 1.17;
+    utterance.rate = 1.22;
     utterance.pitch = 1.02;
     utterance.volume = 1;
     const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
@@ -1225,7 +1211,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar foto o archivo de audio" title="Adjuntar imagen JPG/PNG/WebP o nota de voz MP3/WAV/OGG/WebM/M4A" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
         <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Solicitar permiso del micrófono y grabar una nota de voz" title="Permitir micrófono y grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
-        {!workspace && <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada"} title={voiceMode ? "Detener chat de voz" : "Iniciar chat de voz"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>}
+        <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} title={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-500 bg-orange-600 text-white shadow-[0_4px_14px_rgba(234,88,12,.25)]" : "border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-400 hover:bg-orange-100"}`}><AudioLines className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
@@ -1241,27 +1227,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {conversationError && workspace && <p role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">{conversationError}</p>}
       <p className="shrink-0 bg-white px-4 pb-3 text-[10px] leading-4 text-slate-400">Orby es un apoyo de estudio; verifica siempre los datos y procedimientos de la lección.</p>
         </div>
-        {workspace && <aside className="hidden w-[248px] shrink-0 flex-col gap-4 border-l border-slate-200 bg-[#f8fafc] p-4 xl:flex" aria-label="Herramientas de Orby">
-          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center gap-3 border-b border-slate-100 p-4">
-              <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby" className="h-11 w-11 rounded-full border border-orange-200 bg-orange-50 object-contain" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
-              <div><p className="text-sm font-bold text-slate-900">Orby</p><p className="mt-0.5 text-[10px] text-slate-500">Tutor de PeakScore</p></div>
-            </div>
-            <p className="p-4 text-xs leading-5 text-slate-600">Tu compañero de estudio para comprender, practicar y prepararte para Saber 11.</p>
-          </section>
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-xs font-bold text-slate-900">Herramientas de estudio</h3>
-            <div className="space-y-2">
-              <button type="button" onClick={() => void sendMessage("Explícame un tema paso a paso, con un ejemplo sencillo y una pregunta para comprobar que lo entendí.")} className="flex w-full items-center gap-3 rounded-xl border border-slate-100 px-3 py-3 text-left text-xs font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50"><BookOpen className="h-4 w-4 text-orange-600" />Explicar un tema</button>
-              <button type="button" onClick={() => void sendMessage("Propón un ejercicio tipo Saber 11, espera mi respuesta y después explícame el procedimiento.")} className="flex w-full items-center gap-3 rounded-xl border border-slate-100 px-3 py-3 text-left text-xs font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50"><Check className="h-4 w-4 text-orange-600" />Practicar un ejercicio</button>
-              <button type="button" onClick={() => void sendMessage("Ayúdame a interpretar una gráfica o tabla y explícame cómo identificar la información importante.")} className="flex w-full items-center gap-3 rounded-xl border border-slate-100 px-3 py-3 text-left text-xs font-semibold text-slate-700 transition hover:border-orange-200 hover:bg-orange-50"><ScanText className="h-4 w-4 text-orange-600" />Analizar información</button>
-            </div>
-          </section>
-          <section className="rounded-2xl border border-orange-100 bg-orange-50/70 p-4">
-            <h3 className="mb-2 flex items-center gap-2 text-xs font-bold text-slate-900"><Lightbulb className="h-4 w-4 text-orange-600" />Consejo de estudio</h3>
-            <p className="text-xs leading-5 text-slate-600">Divide los temas difíciles en pasos pequeños. Comprueba lo aprendido resolviendo un ejercicio sin mirar la explicación.</p>
-          </section>
-        </aside>}
       </div>
     </aside>
   );

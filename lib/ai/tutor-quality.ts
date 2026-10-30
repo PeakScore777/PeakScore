@@ -55,6 +55,17 @@ function isConfigured(provider: AIProvider): boolean {
   }
 }
 
+const SAFE_UNVERIFIED_REPLY = "Quiero asegurarme de no enseñarte algo incorrecto. No pude verificar esta explicación con suficiente confianza. Reformulemos la pregunta o revisemos los datos del ejercicio.";
+
+function unverifiedResult(reviewer?: AIProvider): TutorQualityResult {
+  return {
+    reply: SAFE_UNVERIFIED_REPLY,
+    checkQuestion: "",
+    status: "unverified",
+    reviewer,
+  };
+}
+
 function selectIndependentReviewer(source: AIProvider): AIProvider | null {
   const candidates: AIProvider[] = source === "llm7"
     ? ["gemini", "groq"]
@@ -202,7 +213,7 @@ export async function verifyTutorAnswer(args: {
   const reviewer = selectIndependentReviewer(args.sourceProvider);
   if (!reviewer) {
     console.warn("[Orby Quality] No independent reviewer is configured.");
-    return { ...args.candidate, status: "unverified" };
+    return unverifiedResult();
   }
 
   const firstReview = await reviewCandidate({
@@ -214,13 +225,13 @@ export async function verifyTutorAnswer(args: {
   });
 
   if (!firstReview) {
-    return { ...args.candidate, status: "unverified", reviewer };
+    return unverifiedResult(reviewer);
   }
   if (firstReview.verdict === "pass") {
     return { ...args.candidate, status: "passed", reviewer };
   }
   if (firstReview.verdict !== "revise" || !firstReview.corrected_reply) {
-    return { ...args.candidate, status: "unverified", reviewer };
+    return unverifiedResult(reviewer);
   }
 
   const corrected = await reviseWithOriginalProvider({
@@ -233,7 +244,7 @@ export async function verifyTutorAnswer(args: {
   });
 
   if (!corrected) {
-    return { ...args.candidate, status: "unverified", reviewer };
+    return unverifiedResult(reviewer);
   }
 
   const secondReview = await reviewCandidate({
@@ -251,10 +262,5 @@ export async function verifyTutorAnswer(args: {
 
   // Fail closed: do not present a corrected answer as verified if the
   // independent reviewer still disagrees or cannot reach a conclusion.
-  return {
-    reply: "Quiero asegurarme de no enseñarte algo incorrecto. No pude verificar esta explicación con suficiente confianza. Reformulemos la pregunta o revisemos los datos del ejercicio.",
-    checkQuestion: "",
-    status: "unverified",
-    reviewer,
-  };
+  return unverifiedResult(reviewer);
 }

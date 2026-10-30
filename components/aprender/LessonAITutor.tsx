@@ -117,7 +117,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
+  const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
+  const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
+  const voicePeerRef = useRef<RTCPeerConnection | null>(null);
+  const voiceChannelRef = useRef<RTCDataChannel | null>(null);
+  const voiceStreamRef = useRef<MediaStream | null>(null);
+  const voiceAudioElementRef = useRef<HTMLAudioElement | null>(null);
+  const voiceUserTextRef = useRef("");
+  const voiceAssistantTextRef = useRef("");
+  const voiceAssistantMessageIdRef = useRef<string | null>(null);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
@@ -515,35 +524,235 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
   }
 
-  function toggleVoiceMode() {
-    const next = !voiceModeRef.current;
-    if (next) {
-      const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
-      const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
-      if (!Recognition || !("speechSynthesis" in window)) {
-        setVoiceError("El chat de voz beta requiere Chrome o Edge actualizado con permisos de micrófono y voz.");
-        return;
-      }
-      if (!window.isSecureContext && window.location.hostname !== "localhost") {
-        setVoiceError("El micrófono requiere una conexión segura (HTTPS).");
-        return;
-      }
+  async function ensureVoiceConversation(): Promise<string> {
+    const existing = activeConversationRef.current ?? conversationId;
+    if (existing) return existing;
+    const response = await fetch("/api/orby/conversations", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subject, topic }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.conversation?.id) {
+      throw new Error(payload.error || "No se pudo crear el chat de voz.");
     }
-    voiceModeRef.current = next;
-    waitingForVoiceReplyRef.current = false;
-    setVoiceMode(next);
-    setWorkspaceMode(next ? "voice" : "chat");
-    setVoiceError("");
-    if (next) {
-      stopSpeaking();
-      // Invoke the browser permission prompt from the user's click, not a timer.
-      toggleVoiceInput();
+    const created = payload.conversation as Conversation;
+    activeConversationRef.current = created.id;
+    setConversationId(created.id);
+    setConversations((current) => [created, ...current]);
+    return created.id;
+  }
+
+  function stopRealtimeVoice() {
+    voiceModeRef.current = false;
+    voiceChannelRef.current?.close();
+    voiceChannelRef.current = null;
+    voicePeerRef.current?.close();
+    voicePeerRef.current = null;
+    voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
+    voiceStreamRef.current = null;
+    const audio = voiceAudioElementRef.current;
+    if (audio) {
+      audio.pause();
+      audio.srcObject = null;
+      audio.remove();
+      voiceAudioElementRef.current = null;
+    }
+    setVoiceMode(false);
+    setIsListening(false);
+    setLiveTranscript("");
+    setVoiceStatus("Conversación finalizada");
+  }
+
+  function handleRealtimeEvent(event: Record<string, unknown>) {
+    const type = typeof event.type === "string" ? event.type : "";
+    if (type === "input_audio_buffer.speech_started") {
+      setIsListening(true);
+      setVoiceStatus("Te escucho…");
+      setSpeakingIndex(null);
       return;
     }
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
-    setIsListening(false);
-    stopSpeaking();
+    if (type === "input_audio_buffer.speech_stopped") {
+      setIsListening(false);
+      setVoiceStatus("Procesando lo que dijiste…");
+      return;
+    }
+    if (type === "conversation.item.input_audio_transcription.delta") {
+      const delta = typeof event.delta === "string" ? event.delta : "";
+      if (delta) setLiveTranscript((current) => current + delta);
+      return;
+    }
+    if (type === "conversation.item.input_audio_transcription.completed") {
+      const transcript = typeof event.transcript === "string" ? event.transcript.trim() : "";
+      if (transcript) {
+        voiceUserTextRef.current = transcript;
+        setLiveTranscript("");
+        setMessages((current) => [...current, { role: "user", content: transcript }]);
+      }
+      setVoiceStatus("Orby está pensando…");
+      return;
+    }
+    if (type === "response.output_audio_transcript.delta") {
+      const delta = typeof event.delta === "string" ? event.delta : "";
+      if (!delta) return;
+      voiceAssistantTextRef.current += delta;
+      const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+      voiceAssistantMessageIdRef.current = id;
+      setMessages((current) => {
+        const exists = current.some((message) => message.id === id);
+        return exists
+          ? current.map((message) => message.id === id ? { ...message, content: voiceAssistantTextRef.current } : message)
+          : [...current, { id, role: "assistant", content: voiceAssistantTextRef.current }];
+      });
+      setVoiceStatus("Orby está hablando…");
+      return;
+    }
+    if (type === "response.output_audio_transcript.done") {
+      const transcript = typeof event.transcript === "string" ? event.transcript.trim() : "";
+      if (transcript) {
+        voiceAssistantTextRef.current = transcript;
+        const id = voiceAssistantMessageIdRef.current;
+        if (id) setMessages((current) => current.map((message) => message.id === id ? { ...message, content: transcript } : message));
+      }
+      return;
+    }
+    if (type === "response.done") {
+      const userContent = voiceUserTextRef.current.trim();
+      const assistantContent = voiceAssistantTextRef.current.trim();
+      const id = activeConversationRef.current;
+      if (userContent && assistantContent && id) {
+        void fetch("/api/orby/realtime-turn", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversationId: id, userContent, assistantContent }),
+        }).then(async (response) => {
+          if (!response.ok) throw new Error("No se pudo guardar el turno de voz.");
+          await refreshConversations();
+        }).catch(() => setConversationError("La respuesta se escuchó, pero no se pudo guardar en el historial."));
+      }
+      voiceUserTextRef.current = "";
+      voiceAssistantTextRef.current = "";
+      voiceAssistantMessageIdRef.current = null;
+      setVoiceStatus("Te escucho…");
+      setIsListening(true);
+      return;
+    }
+    if (type === "error") {
+      const detail = event.error && typeof event.error === "object" ? event.error as Record<string, unknown> : {};
+      setVoiceError(typeof detail.message === "string" ? detail.message : "La conexión de voz tuvo un problema. Inténtalo de nuevo.");
+      setVoiceStatus("Error de conexión");
+    }
+  }
+
+  async function startRealtimeVoice() {
+    if (!navigator.mediaDevices?.getUserMedia || !("RTCPeerConnection" in window)) {
+      throw new Error("Este navegador no admite audio en tiempo real. Prueba Chrome o Edge actualizado.");
+    }
+    if (!window.isSecureContext && window.location.hostname !== "localhost") {
+      throw new Error("El micrófono requiere HTTPS.");
+    }
+
+    setVoiceError("");
+    setVoiceStatus("Solicitando permiso del micrófono…");
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    });
+    voiceStreamRef.current = stream;
+
+    try {
+      const activeId = await ensureVoiceConversation();
+      const tokenResponse = await fetch("/api/orby/realtime-session", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, topic, context }),
+      });
+      const tokenPayload = await tokenResponse.json().catch(() => ({}));
+      if (!tokenResponse.ok || typeof tokenPayload.clientSecret !== "string") {
+        throw new Error(tokenPayload.error || "No se pudo iniciar la sesión de voz.");
+      }
+
+      setVoiceStatus("Conectando con Orby…");
+      const peer = new RTCPeerConnection();
+      voicePeerRef.current = peer;
+      stream.getTracks().forEach((track) => peer.addTrack(track, stream));
+
+      const audio = document.createElement("audio");
+      audio.autoplay = true;
+      audio.playsInline = true;
+      audio.className = "hidden";
+      document.body.appendChild(audio);
+      voiceAudioElementRef.current = audio;
+      peer.ontrack = (event) => {
+        audio.srcObject = event.streams[0];
+        void audio.play().catch(() => setVoiceError("Permite la reproducción de audio en el navegador."));
+      };
+
+      const channel = peer.createDataChannel("oai-events");
+      voiceChannelRef.current = channel;
+      channel.onopen = () => {
+        setVoiceStatus("Te escucho…");
+        setIsListening(true);
+      };
+      channel.onmessage = (messageEvent) => {
+        try {
+          const event = JSON.parse(String(messageEvent.data)) as Record<string, unknown>;
+          handleRealtimeEvent(event);
+        } catch {
+          setVoiceError("Orby recibió un evento de voz que no pudo interpretar.");
+        }
+      };
+      channel.onerror = () => setVoiceError("Se interrumpió el canal de voz. Comprueba tu conexión.");
+      peer.onconnectionstatechange = () => {
+        if (peer.connectionState === "failed" || peer.connectionState === "disconnected") {
+          setVoiceError("La conexión de voz se perdió. Vuelve a iniciar la conversación.");
+          stopRealtimeVoice();
+        }
+      };
+
+      const offer = await peer.createOffer();
+      await peer.setLocalDescription(offer);
+      const answerResponse = await fetch("https://api.openai.com/v1/realtime/calls", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + tokenPayload.clientSecret,
+          "Content-Type": "application/sdp",
+        },
+        body: offer.sdp,
+      });
+      if (!answerResponse.ok) {
+        const details = await answerResponse.text();
+        console.error("[Orby Realtime] WebRTC negotiation failed.", answerResponse.status, details.slice(0, 500));
+        throw new Error("No se pudo establecer la conexión de voz con OpenAI.");
+      }
+      await peer.setRemoteDescription({ type: "answer", sdp: await answerResponse.text() });
+      activeConversationRef.current = activeId;
+      setConversationError("");
+    } catch (error) {
+      stopRealtimeVoice();
+      throw error;
+    }
+  }
+
+  async function toggleVoiceMode() {
+    if (voiceModeRef.current) {
+      stopRealtimeVoice();
+      return;
+    }
+    voiceModeRef.current = true;
+    setVoiceMode(true);
+    setWorkspaceMode("voice");
+    setLiveTranscript("");
+    voiceUserTextRef.current = "";
+    voiceAssistantTextRef.current = "";
+    try {
+      await startRealtimeVoice();
+    } catch (error) {
+      stopRealtimeVoice();
+      setVoiceError(error instanceof Error ? error.message : "No se pudo iniciar el chat de voz.");
+    }
   }
 
   function toggleVoiceInput() {

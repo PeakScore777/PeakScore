@@ -190,6 +190,83 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  async function refreshConversations() {
+    if (!workspace) return;
+    const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "No se pudo actualizar el historial.");
+    setConversations(Array.isArray(payload.conversations) ? payload.conversations as Conversation[] : []);
+  }
+
+  function startNewConversation() {
+    if (isRecording) stopAudioRecording();
+    activeConversationRef.current = null;
+    setConversationId(null);
+    setMessages([]);
+    setInput("");
+    setError("");
+    setConversationError("");
+    setPendingDeleteConversation(null);
+    setHistoryOpen(true);
+    setAttachmentError("");
+    clearAttachment();
+    setRecordedAudio(null);
+    setPendingAttachmentMeta(null);
+    setVoiceMode(false);
+    voiceModeRef.current = false;
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
+    stopSpeaking();
+  }
+
+  async function selectConversation(id: string) {
+    if (loading || id === activeConversationRef.current) return;
+    setHistoryLoading(true);
+    setConversationError("");
+    try {
+      const response = await fetch(`/api/orby/conversations/${id}/messages`, { credentials: "same-origin", cache: "no-store" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo abrir la conversación.");
+      activeConversationRef.current = id;
+      setConversationId(id);
+      setMessages(Array.isArray(payload.messages) ? payload.messages.map((item: Record<string, unknown>) => ({
+        id: String(item.id),
+        role: item.role === "assistant" ? "assistant" : "user",
+        content: typeof item.content === "string" ? item.content : "",
+        checkQuestion: typeof item.check_question === "string" ? item.check_question : "",
+        attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
+        attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
+        createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
+      })) : []);
+      setError("");
+      setInput("");
+      setPendingDeleteConversation(null);
+      if (window.matchMedia("(max-width: 767px)").matches) setHistoryOpen(false);
+    } catch (caught) {
+      setConversationError(caught instanceof Error ? caught.message : "No se pudo abrir la conversación.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
+  async function deleteConversation(id: string) {
+    setConversationError("");
+    try {
+      const response = await fetch(`/api/orby/conversations/${id}`, {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo eliminar el chat.");
+      setConversations((current) => current.filter((item) => item.id !== id));
+      setPendingDeleteConversation(null);
+      if (activeConversationRef.current === id) startNewConversation();
+    } catch (caught) {
+      setConversationError(caught instanceof Error ? caught.message : "No se pudo eliminar el chat.");
+    }
+  }
+
 
   useEffect(() => {
     return () => {
@@ -507,11 +584,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo.");
     }
   }
-  async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false) {
+  async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }) {
     const message = text.trim();
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || message.length > 1200) return;
+
+    let targetConversationId = conversationId;
+    if (workspace && !targetConversationId) {
+      try {
+        const createResponse = await fetch("/api/orby/conversations", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subject, topic }),
+        });
+        const createPayload = await createResponse.json().catch(() => ({}));
+        if (!createResponse.ok || !createPayload.conversation?.id) {
+          throw new Error(createPayload.error || "No se pudo crear el chat.");
+        }
+        targetConversationId = String(createPayload.conversation.id);
+        activeConversationRef.current = targetConversationId;
+        setConversationId(targetConversationId);
+        setConversations((current) => [createPayload.conversation as Conversation, ...current]);
+      } catch (caught) {
+        setConversationError(caught instanceof Error ? caught.message : "No se pudo crear el chat.");
+        return;
+      }
+    }
+
     let imagePayload: { mimeType: string; base64: string } | undefined;
     try {
       if (selectedFile) imagePayload = { mimeType: selectedFile.type, base64: await fileToBase64(selectedFile) };
@@ -519,7 +620,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setAttachmentError(caught instanceof Error ? caught.message : "No se pudo leer la imagen.");
       return;
     }
-    const nextMessages: Message[] = [...messages, { role: "user", content: message || "Analiza la imagen adjunta.", ...(selectedFile && imagePayload ? { attachmentName: selectedFile.name, attachmentPreview: selectedFile.type.startsWith("image/") ? `data:${selectedFile.type};base64,${imagePayload.base64}` : "" } : {}) }];
+    const nextMessages: Message[] = [...messages, {
+      role: "user",
+      content: message || "Analiza la imagen adjunta.",
+      ...(selectedFile && imagePayload ? { attachmentName: selectedFile.name, attachmentPreview: selectedFile.type.startsWith("image/") ? `data:${selectedFile.type};base64,${imagePayload.base64}` : "", attachmentKind: "image" as const } : {}),
+      ...(attachmentMeta ? { attachmentName: attachmentMeta.label, attachmentKind: attachmentMeta.kind } : {}),
+    }];
     setMessages(nextMessages);
     setInput("");
     if (inputRef.current) inputRef.current.style.height = "48px";
@@ -546,6 +652,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           question: activeReview?.prompt ?? question,
           context: [reviewContext, ocrText ? `Texto OCR extraído localmente de la imagen (puede contener errores):\n${ocrText}` : ""].filter(Boolean).join("\n\n").slice(0, 10000),
           message,
+          conversationId: targetConversationId,
+          attachmentKind: attachmentMeta?.kind ?? (selectedFile ? "image" : null),
+          attachmentLabel: attachmentMeta?.label ?? (selectedFile ? "Imagen adjunta" : null),
           voiceMode: isVoiceInteraction,
           history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
           ...(imagePayload ? { image: imagePayload } : {}),
@@ -559,6 +668,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (isVoiceInteraction && "speechSynthesis" in window) {
         window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
       }
+      if (workspace) {
+        void refreshConversations().catch((caught: unknown) => {
+          setConversationError(caught instanceof Error ? caught.message : "No se pudo actualizar el historial.");
+        });
+      }
+      setPendingAttachmentMeta(null);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.");
     } finally {

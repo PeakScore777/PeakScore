@@ -62,6 +62,8 @@ export default function CasoCeroCinematicScene({
   const [lightingStage, setLightingStage] = useState<LightingStage>(0);
   const [lightLayersReady, setLightLayersReady] = useState([false, false, false]);
   const [sceneReady, setSceneReady] = useState(false);
+  const sceneReadyRef = useRef(false);
+  const [baseLayerReady, leftLampLayerReady, rightLampLayerReady] = lightLayersReady;
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(true);
   const [mediaBox, setMediaBox] = useState({ left: 0, top: 0, width: IMAGE_WIDTH, height: IMAGE_HEIGHT });
 
@@ -69,12 +71,18 @@ export default function CasoCeroCinematicScene({
     setLightLayersReady((previous) =>
       previous.map((isReady, layerIndex) => layerIndex === index ? true : isReady),
     );
+
+    if (index === 0 && !sceneReadyRef.current) {
+      sceneReadyRef.current = true;
+      setSceneReady(true);
+      onSceneReady();
+    }
   };
 
   useEffect(() => {
     // Reveal the lighting sequence only when its two overlay images are ready.
     // The base scene can be shown earlier while they finish optimizing/loading.
-    if (!sceneReady || !lightLayersReady[1] || !lightLayersReady[2]) return;
+    if (!sceneReady || !leftLampLayerReady || !rightLampLayerReady) return;
 
     const firstLamp = window.setTimeout(() => setLightingStage(1), 450);
     const lampOut = window.setTimeout(() => setLightingStage(2), 1650);
@@ -84,7 +92,7 @@ export default function CasoCeroCinematicScene({
       window.clearTimeout(lampOut);
       window.clearTimeout(allLights);
     };
-  }, [sceneReady, lightLayersReady[1], lightLayersReady[2]]);
+  }, [sceneReady, leftLampLayerReady, rightLampLayerReady]);
 
   useEffect(() => {
     if (!sceneReady) return;
@@ -115,15 +123,6 @@ export default function CasoCeroCinematicScene({
     measure();
     return () => observer.disconnect();
   }, []);
-
-  useEffect(() => {
-    // Show the cinematic as soon as its base image is ready; light overlays
-    // can finish loading in the background without holding the whole scene hostage.
-    if (!sceneReady && lightLayersReady[0]) {
-      setSceneReady(true);
-      onSceneReady();
-    }
-  }, [lightLayersReady, sceneReady, onSceneReady]);
 
   const maskStyle = {
     WebkitMaskImage: WINDOW_MASK,

@@ -916,7 +916,7 @@ export default function QueEsEsaVainaGame() {
     setChestAnimation({ chestNumber: 1, xp: 5, coins: 3, phase: "opening" });
   }, [primeRewardAudioContext]);
 
-  const useHint = async (hintNumber: 1 | 2 | 3) => {
+  const handleUseHint = async (hintNumber: 1 | 2 | 3) => {
     const hintCost = HINT_COSTS[hintNumber - 1];
     if (!question || usedHints.includes(hintNumber) || hintLoading || answering || revealed || !gameStarted || !gameSessionId) return;
     setHintLoading(true);
@@ -1245,7 +1245,7 @@ export default function QueEsEsaVainaGame() {
                   const isUsed = usedHints.includes(hintNumber);
                   const cannotAfford = wallet !== null && wallet.coins < hintCost;
                   const descriptions = ["Orientación para pensar el problema", "Categoría y tema que debes aplicar", "Revelar la respuesta correcta"];
-                  return <button key={hintNumber} type="button" onClick={() => void useHint(hintNumber)} disabled={isUsed || hintLoading || answering || revealed || !gameStarted || !gameSessionId || cannotAfford} className={`flex min-h-[52px] min-w-0 items-center gap-3 border-2 p-2.5 text-left transition ${isUsed ? "border-[#8b7757] bg-[#201c17] opacity-70" : "border-[#9a7740] bg-[#171522] hover:border-[#e8b75b] hover:bg-[#292116]"} disabled:cursor-not-allowed disabled:opacity-50`}>
+                  return <button key={hintNumber} type="button" onClick={() => void handleUseHint(hintNumber)} disabled={isUsed || hintLoading || answering || revealed || !gameStarted || !gameSessionId || cannotAfford} className={`flex min-h-[52px] min-w-0 items-center gap-3 border-2 p-2.5 text-left transition ${isUsed ? "border-[#8b7757] bg-[#201c17] opacity-70" : "border-[#9a7740] bg-[#171522] hover:border-[#e8b75b] hover:bg-[#292116]"} disabled:cursor-not-allowed disabled:opacity-50`}>
                     <span className="grid h-9 w-9 shrink-0 place-items-center border-2 border-[#a77b35] bg-[#3a2812]"><Lightbulb className="h-5 w-5 text-[#ffe08a]"/></span>
                     <span className="min-w-0 flex-1"><span className="block text-xs font-black leading-5 text-[#fff0c6]">Pista {hintNumber} · {hintCost} Peak Coins</span><span className="block text-[10px] leading-4 text-[#c3cce0]">{isUsed ? "Ya utilizada" : hintLoading ? "Procesando compra…" : cannotAfford ? "Monedas insuficientes" : descriptions[hintNumber - 1]}</span></span>
                     <span className="text-[10px] font-black text-[#ffe08a]">{isUsed ? "✓" : ""}</span>
@@ -1304,7 +1304,7 @@ export default function QueEsEsaVainaGame() {
   const isUsed = usedHints.includes(hintNumber);
   const cannotAfford = wallet !== null && wallet.coins < hintCost;
   const descriptions = ["Orientación para pensar el problema", "Categoría y tema que debes aplicar", "Revelar la respuesta correcta"];
-  return <button key={hintNumber} type="button" onClick={() => void useHint(hintNumber)}
+  return <button key={hintNumber} type="button" onClick={() => void handleUseHint(hintNumber)}
     disabled={isUsed || hintLoading || answering || revealed || !gameStarted || !gameSessionId || cannotAfford}
     className={`flex items-center gap-3 border-[3px] p-3 text-left transition ${isUsed ? "border-[#8b7757] bg-[#201c17] opacity-70" : "border-[#9a7740] bg-[#171522] hover:border-[#e8b75b] hover:bg-[#292116]"} disabled:cursor-not-allowed disabled:opacity-50`}>
     <span className="grid h-9 w-9 shrink-0 place-items-center border-[3px] border-[#a77b35] bg-[#3a2812]"><Lightbulb className="h-5 w-5 text-[#ffe08a]"/></span>

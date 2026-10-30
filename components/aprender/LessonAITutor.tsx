@@ -225,11 +225,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     });
   }
 
-  function stopSpeaking() {\n    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  function stopSpeaking() {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     setSpeakingIndex(null);
   }
 
-  function speakText(text: string, index: number) {\n    if (typeof window === "undefined" || !("speechSynthesis" in window)) {\n      setVoiceError("Tu navegador no tiene lectura de voz disponible.");
+  function speakText(text: string, index: number) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setVoiceError("Tu navegador no tiene lectura de voz disponible.");
       return;
     }
     stopSpeaking();
@@ -244,24 +247,28 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
   }
 
-  function toggleVoiceMode() {\n    const next = !voiceModeRef.current;
+  function toggleVoiceMode() {
+    const next = !voiceModeRef.current;
     voiceModeRef.current = next;
     setVoiceMode(next);
     if (!next) stopSpeaking();
   }
 
-  function toggleVoiceInput() {\n    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
+  function toggleVoiceInput() {
+    if (isListening) { recognitionRef.current?.stop(); setIsListening(false); return; }
     const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
     if (!Recognition) { setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta."); return; }
     setVoiceError("");
     const recognition = new Recognition();
     recognition.lang = "es-CO"; recognition.continuous = false; recognition.interimResults = true;
-    recognition.onresult = (event) => {\n      const results = Array.from(event.results);
+    recognition.onresult = (event) => {
+      const results = Array.from(event.results);
       const transcript = results.map((result) => result[0]?.transcript ?? "").join(" ").trim();
       if (!transcript) return;
       setInput(transcript.slice(0, 1200));
-      if (results.some((result) => result[0]?.isFinal)) {\n        setIsListening(false); recognitionRef.current = null;
+      if (results.some((result) => result[0]?.isFinal)) {
+        setIsListening(false); recognitionRef.current = null;
         void sendMessageRef.current(transcript.slice(0, 1200));
       }
     };
@@ -317,7 +324,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
       const assistantIndex = nextMessages.length;
       setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
-      if (voiceModeRef.current && "speechSynthesis" in window) {\n        window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
+      if (voiceModeRef.current && "speechSynthesis" in window) {
+        window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.");
@@ -448,8 +456,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
       {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… habla ahora. Al terminar, enviaré tu pregunta a Orby.</p>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
-        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />\n        <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>\n        <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
+        <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" aria-label="Adjuntar imagen" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
+        <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
+        <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
         {voiceEnabled && <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener dictado por voz" : "Hablar con Orby"} title={isListening ? "Detener dictado" : "Hablar con Orby"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
           {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </button>}

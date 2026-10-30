@@ -119,7 +119,7 @@ function LevelCard({ level, number }: { level: Level; number: number }) {
   );
 }
 
-export default function LearningCatalog(_props: LearningCatalogProps) {
+export default function LearningCatalog() {
   const [tab, setTab] = useState<Tab>("routes");
   const isRoutes = tab === "routes";
 

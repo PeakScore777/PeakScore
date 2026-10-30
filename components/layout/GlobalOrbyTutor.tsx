@@ -66,11 +66,19 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
   const [open, setOpen] = useState(false);
   const page = useMemo(() => getPageContext(pathname), [pathname]);
 
+  function requestClose() {
+    const closeButton = document.querySelector<HTMLButtonElement>(
+      '#orby-tutor-panel button[aria-label="Cerrar tutor Orby"]'
+    );
+    if (closeButton) closeButton.click();
+    else setOpen(false);
+  }
+
   useEffect(() => {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") requestClose();
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", handleKeyDown);
@@ -109,7 +117,7 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
           role="dialog"
           aria-modal="true"
           aria-label="Chat de estudio con Orby"
-          onClick={(event) => { if (event.target === event.currentTarget) setOpen(false); }}
+          onClick={(event) => { if (event.target === event.currentTarget) requestClose(); }}
           className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/65 p-2 backdrop-blur-sm sm:p-5"
         >
           <div className="h-[calc(100dvh-16px)] w-full max-w-[1180px] sm:h-[min(850px,calc(100dvh-40px))]">

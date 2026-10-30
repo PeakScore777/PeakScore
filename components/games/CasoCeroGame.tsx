@@ -17,7 +17,6 @@ import {
   Lightbulb,
   Microscope,
   RotateCcw,
-  ShieldCheck,
   XCircle,
 } from "lucide-react";
 import LessonAITutor from "@/components/aprender/LessonAITutor";
@@ -73,7 +72,6 @@ export default function CasoCeroGame() {
   const [loadingAnswer, setLoadingAnswer] = useState(false);
   const [busyStarting, setBusyStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [bestScore, setBestScore] = useState(0);
   const [gamesCompleted, setGamesCompleted] = useState(0);
   const [orbyOpen, setOrbyOpen] = useState(false);
   const [progressSaved, setProgressSaved] = useState(false);
@@ -111,8 +109,7 @@ export default function CasoCeroGame() {
       if (!cancelled) setCases(Array.isArray(questionData.questions) ? questionData.questions as PublicCase[] : []);
       const progressData = await progressResponse.json().catch(() => ({}));
       if (!cancelled && progressResponse.ok && progressData.progress) {
-        setBestScore(Number(progressData.progress.best_score) || 0);
-        setGamesCompleted(Number(progressData.progress.games_completed) || 0);
+          setGamesCompleted(Number(progressData.progress.games_completed) || 0);
       }
       if (!cancelled) setPhase("intro");
     }).catch((cause: unknown) => {
@@ -217,8 +214,7 @@ export default function CasoCeroGame() {
       });
       const data = await response.json().catch(() => ({}));
       if (response.ok && data.progress) {
-        setBestScore(Number(data.progress.best_score) || finalScore);
-        setGamesCompleted(Number(data.progress.games_completed) || gamesCompleted + 1);
+          setGamesCompleted(Number(data.progress.games_completed) || gamesCompleted + 1);
         setProgressSaved(true);
       } else {
         setError(data.error ?? "Terminaste el expediente, pero no pudimos guardar tu progreso.");

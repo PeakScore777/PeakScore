@@ -63,7 +63,7 @@ export default function CasoCeroCinematicScene({
   const [lightLayersReady, setLightLayersReady] = useState([false, false, false]);
   const [sceneReady, setSceneReady] = useState(false);
   const sceneReadyRef = useRef(false);
-  const [baseLayerReady, leftLampLayerReady, rightLampLayerReady] = lightLayersReady;
+  const [, leftLampLayerReady, rightLampLayerReady] = lightLayersReady;
   const [showLoadingSkeleton, setShowLoadingSkeleton] = useState(true);
   const [mediaBox, setMediaBox] = useState({ left: 0, top: 0, width: IMAGE_WIDTH, height: IMAGE_HEIGHT });
 

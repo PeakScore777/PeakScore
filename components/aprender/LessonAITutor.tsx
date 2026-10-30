@@ -108,14 +108,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [historyOpen, setHistoryOpen] = useState(false);
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState("");
-  const [audioConsentOpen, setAudioConsentOpen] = useState(false);
-  const [audioConsentChecked, setAudioConsentChecked] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
   const [audioSource, setAudioSource] = useState<"recording" | "upload">("recording");
   const [audioTranscribing, setAudioTranscribing] = useState(false);
-  const [transcriptionProvider, setTranscriptionProvider] = useState<"gemini" | "groq" | null>(null);
   const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
@@ -769,8 +766,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAttachmentError("");
     setOcrText("");
     setPendingAttachmentMeta(null);
-    setAudioConsentOpen(false);
-    setAudioConsentChecked(false);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     setSpeakingIndex(null);
     voiceModeRef.current = false;
@@ -801,8 +796,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     clearAttachment();
     clearRecordedAudio();
     setPendingAttachmentMeta(null);
-    setAudioConsentOpen(false);
-    setAudioConsentChecked(false);
     voiceModeRef.current = false;
     setVoiceMode(false);
     recognitionRef.current?.stop();
@@ -900,8 +893,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setRecordedAudio(normalizedFile);
     setRecordedAudioPreviewUrl(URL.createObjectURL(normalizedFile));
     setAudioSource("upload");
-    setAudioConsentChecked(false);
-    setAudioConsentOpen(true);
     setVoiceError("");
   }
 
@@ -925,46 +916,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function requestMicrophonePermission() {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setVoiceError("Chrome no puede acceder al micrófono desde esta página. Comprueba que estás en localhost o HTTPS y que el navegador esté actualizado.");
-      setAudioConsentOpen(true);
-      return;
-    }
-    if (!window.isSecureContext && window.location.hostname !== "localhost") {
-      setVoiceError("El acceso al micrófono necesita localhost o una conexión HTTPS segura.");
-      setAudioConsentOpen(true);
-      return;
-    }
-
-    try {
-      setVoiceError("");
-      const permissionStream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      });
-      permissionStream.getTracks().forEach((track) => track.stop());
-      setMicrophonePermission("granted");
-      clearRecordedAudio();
-      setAudioSource("recording");
-      setAudioConsentChecked(false);
-      setAudioConsentOpen(true);
-    } catch (caught) {
-      const errorName = caught instanceof Error ? caught.name : "UnknownError";
-      setAudioConsentOpen(true);
-      if (errorName === "NotAllowedError" || errorName === "SecurityError") {
-        setMicrophonePermission("denied");
-        setVoiceError("Chrome no concedió el micrófono. En la barra de direcciones, abre los controles del sitio → Micrófono → Permitir. Si aparece «Bloquear», cámbialo a «Preguntar» o «Permitir», recarga y pulsa el micrófono otra vez.");
-      } else if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
-        setVoiceError("No se encontró un micrófono. Conecta uno y vuelve a pulsar el botón.");
-      } else if (errorName === "NotReadableError" || errorName === "TrackStartError") {
-        setVoiceError("El micrófono está ocupado por otra aplicación o no puede iniciarse. Cierra esa aplicación y vuelve a intentarlo.");
-      } else {
-        setVoiceError("No se pudo solicitar el micrófono. Comprueba los permisos del sitio y vuelve a intentarlo.");
-      }
-    }
+    // getUserMedia in startAudioRecording triggers the browser's native permission prompt.
+    await startAudioRecording();
   }
 
   async function startAudioRecording() {
-    if (!audioConsentChecked || isRecording) return;
+    if (isRecording) return;
     if (microphonePermission === "denied") {
       setVoiceError("Chrome ya tiene bloqueado el micrófono para este sitio. Abre los controles del sitio a la izquierda de localhost:3000, entra en Micrófono y selecciona «Permitir». Después actualiza la página y vuelve a grabar.");
       return;
@@ -1031,13 +988,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setRecordedAudio(audioFile);
         setRecordedAudioPreviewUrl(URL.createObjectURL(audioFile));
         setAudioSource("recording");
-        setAudioConsentOpen(false);
-      };
+          };
 
       recorder.start(250);
       setIsRecording(true);
-      setAudioConsentOpen(false);
-      recordingTimeoutRef.current = window.setTimeout(() => {
+        recordingTimeoutRef.current = window.setTimeout(() => {
         setVoiceError("Llegaste al límite de 60 segundos. Revisa la nota de voz antes de enviarla.");
         stopAudioRecording();
       }, 60_000);
@@ -1048,7 +1003,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const errorName = caught instanceof Error ? caught.name : "UnknownError";
       if (errorName === "NotAllowedError" || errorName === "SecurityError") {
         setMicrophonePermission("denied");
-        setVoiceError("Chrome rechazó el acceso al micrófono. Revisa el permiso del sitio en el navegador; la autorización para Gemini no sustituye este permiso.");
+        setVoiceError("Chrome no concedió el acceso al micrófono. Abre los controles del sitio junto a la dirección web, selecciona Micrófono → Permitir y vuelve a intentarlo.");
       } else if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
         setVoiceError("No se encontró un micrófono conectado. Conecta uno y vuelve a intentarlo.");
       } else if (errorName === "NotReadableError" || errorName === "TrackStartError") {
@@ -1061,22 +1016,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function transcribeRecordedAudio() {
     if (!recordedAudio || audioTranscribing) return;
-    if (!audioConsentChecked) {
-      setVoiceError("Confirma primero que autorizas enviar el audio a los proveedores de transcripción indicados.");
-      setAudioConsentOpen(true);
-      return;
-    }
     if (attachment) {
       setVoiceError("Envía o quita la imagen adjunta antes de preparar una nota de voz.");
       return;
     }
     setAudioTranscribing(true);
-    setTranscriptionProvider(null);
     setVoiceError("");
     try {
       const form = new FormData();
       form.set("audio", recordedAudio);
-      form.set("consent", audioConsentChecked ? "true" : "false");
       const response = await fetch("/api/orby/audio/transcribe", {
         method: "POST",
         credentials: "same-origin",
@@ -1087,12 +1035,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
       setInput(payload.transcript.slice(0, 1200));
-      setTranscriptionProvider(payload.provider === "groq" ? "groq" : payload.provider === "gemini" ? "gemini" : null);
       setPendingAttachmentMeta({ kind: "audio", label: audioSource === "upload" ? "Audio adjunto transcrito" : "Nota de voz transcrita" });
       clearRecordedAudio();
-      setAudioConsentChecked(false);
-      setAudioConsentOpen(false);
-      setError("");
+          setError("");
       inputRef.current?.focus();
     } catch (caught) {
       setVoiceError(caught instanceof Error ? caught.message : "No se pudo transcribir el audio.");
@@ -1247,35 +1192,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
-      {transcriptionProvider && <p role="status" className="shrink-0 bg-white px-3 pt-2 text-xs text-emerald-700">Audio transcrito con {transcriptionProvider === "gemini" ? "Google Gemini" : "Groq Whisper"}. Revisa el texto antes de enviarlo a Orby.</p>}
+      {pendingAttachmentMeta?.kind === "audio" && <p role="status" className="shrink-0 bg-white px-3 pt-2 text-xs text-emerald-700">Transcripción lista. Revisa el texto antes de enviarlo a Orby.</p>}
       {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… {voiceMode ? "Habla con Orby. Te responderé en voz y volveré a escucharte." : "Al terminar, enviaré tu pregunta a Orby."}</p>}
-      {audioConsentOpen && <section aria-label="Consentimiento de audio" className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-3">
-        <div className="flex items-start gap-2">
-          <Mic className="mt-0.5 h-4 w-4 shrink-0 text-orange-700" />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-extrabold text-slate-900">{audioSource === "upload" ? "Antes de transcribir tu audio" : "Antes de grabar tu nota de voz"}</p>
-            <p className="mt-1 text-[11px] leading-4 text-slate-600">Para transcribir, PeakScore intentará primero Google Gemini y, si no está disponible, podrá usar Groq Whisper como alternativa. El audio se procesa temporalmente para generar el texto; no se guarda como archivo en tu historial de PeakScore. El tratamiento del audio también depende de las políticas del proveedor que lo procese. No grabes contraseñas ni datos personales sensibles.</p>
-            <p className="mt-2 rounded-lg border border-sky-100 bg-sky-50 px-2.5 py-2 text-[11px] leading-4 text-sky-900">
-              <strong>Permiso del navegador:</strong> {microphonePermission === "denied"
-                ? "Chrome tiene el micrófono bloqueado para este sitio. Abre los controles a la izquierda de localhost:3000 → Micrófono → Permitir. Después actualiza la página."
-                : microphonePermission === "granted"
-                  ? "Chrome ya concedió el micrófono. Al continuar, Orby comenzará a grabar."
-                  : "Al pulsar «Comenzar a grabar», Chrome debe mostrar su propio aviso para permitir el micrófono. Ese permiso es independiente de la autorización para enviar el audio a los proveedores de transcripción."}
-            </p>
-            {microphonePermission === "denied" && <button type="button" onClick={() => void requestMicrophonePermission()} className="mt-2 rounded-lg border border-sky-200 bg-white px-3 py-2 text-[11px] font-bold text-sky-800 hover:bg-sky-50">Volver a solicitar permiso en Chrome</button>}
-            <label className="mt-2 flex items-start gap-2 text-[11px] leading-4 text-slate-700">
-              <input type="checkbox" checked={audioConsentChecked} onChange={(event) => setAudioConsentChecked(event.target.checked)} className="mt-0.5 accent-orange-600" />
-              <span>Entiendo y autorizo enviar este audio a Google Gemini o, si es necesario, a Groq Whisper para transcribirlo.</span>
-            </label>
-            <div className="mt-3 flex gap-2">
-              <button type="button" onClick={() => { setAudioConsentOpen(false); setAudioConsentChecked(false); }} className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
-              <button type="button" onClick={() => audioSource === "recording" ? void startAudioRecording() : setAudioConsentOpen(false)} disabled={!audioConsentChecked} className="inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-40">
-                {audioSource === "recording" ? <><Mic className="h-3.5 w-3.5" /> Comenzar a grabar</> : <><Check className="h-3.5 w-3.5" /> Autorizar y revisar audio</>}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>}
       {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 60 segundos</span>
         <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
@@ -1285,18 +1203,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-700"><AudioLines className="h-5 w-5" /></div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-bold text-slate-800">{audioSource === "upload" ? recordedAudio.name : "Nota de voz grabada"}</p>
-            <p className="text-[10px] text-slate-500">{(recordedAudio.size / 1024).toFixed(0)} KB · El archivo se elimina al terminar la transcripción</p>
+            <p className="text-[10px] text-slate-500">{(recordedAudio.size / 1024).toFixed(0)} KB · El archivo se procesa para preparar la transcripción</p>
           </div>
           <button type="button" onClick={clearRecordedAudio} aria-label="Descartar audio adjunto" className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-600"><X className="h-4 w-4" /></button>
         </div>
         {recordedAudioPreviewUrl && <audio controls preload="metadata" src={recordedAudioPreviewUrl} className="h-10 w-full" aria-label="Escuchar audio antes de transcribir" />}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] text-slate-500">{audioConsentChecked ? "Consentimiento confirmado" : "Falta autorizar la transcripción"}</span>
-          {!audioConsentChecked ? (
-            <button type="button" onClick={() => setAudioConsentOpen(true)} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-[11px] font-bold text-orange-800 hover:bg-orange-100"><Check className="h-3.5 w-3.5" /> Autorizar</button>
-          ) : (
-            <button type="button" onClick={() => void transcribeRecordedAudio()} disabled={audioTranscribing} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:opacity-40">{audioTranscribing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{audioTranscribing ? "Transcribiendo…" : "Transcribir audio"}</button>
-          )}
+          <span className="text-[10px] text-slate-500">Audio listo para transcribir</span>
+          <button type="button" onClick={() => void transcribeRecordedAudio()} disabled={audioTranscribing} className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-[11px] font-bold text-white hover:bg-orange-700 disabled:opacity-40">{audioTranscribing ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}{audioTranscribing ? "Transcribiendo…" : "Transcribir audio"}</button>
         </div>
       </div>}
       {pendingAttachmentMeta?.kind === "audio" && <div className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-2 text-[11px] text-orange-900">Transcripción lista. Revísala o edítala antes de enviarla a Orby.</div>}

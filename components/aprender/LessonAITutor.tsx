@@ -3,10 +3,11 @@
 import Image from "next/image";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Camera, FileText, LoaderCircle, Mic, MicOff, Paperclip, ScanText, Send, Volume2, X } from "lucide-react";
+import { AudioLines, Camera, Check, ChevronDown, FileText, Headphones, LoaderCircle, Mic, MicOff, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
-type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
+type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; createdAt?: string };
+type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type SpeechRecognitionLike = {
   lang: string;
   continuous: boolean;
@@ -41,6 +42,7 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   initialPrompt?: string;
   accent?: "default" | "orby";
+  workspace?: boolean;
 };
 
 
@@ -86,7 +88,7 @@ const starters = [
   "No entiendo por qué una opción es incorrecta",
 ];
 
-export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [] }: Props) {
+export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false }: Props) {
   const orbyAccent = accent === "orby";
   const [notebookOpen, setNotebookOpen] = useState(false);
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
@@ -96,7 +98,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState("");
-  const [premiumVoiceEnabled, setPremiumVoiceEnabled] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(true);
+  const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
+  const [conversationError, setConversationError] = useState("");
+  const [audioConsentOpen, setAudioConsentOpen] = useState(false);
+  const [audioConsentChecked, setAudioConsentChecked] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
+  const [audioTranscribing, setAudioTranscribing] = useState(false);
+  const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
   const voiceModeRef = useRef(false);
@@ -119,34 +132,59 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean) => Promise<void>>(async () => {});
+  const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }) => Promise<void>>(async () => {});
   const lastInitialPromptRef = useRef<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const activeConversationRef = useRef<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (!open) return;
-    const controller = new AbortController();
-
-    const loadVoiceAccess = async () => {
+    if (!open || !workspace) return;
+    let cancelled = false;
+    const loadHistory = async () => {
+      setHistoryLoading(true);
+      setConversationError("");
       try {
-        const response = await fetch("/api/orby/voice-access", {
-          method: "GET",
-          credentials: "same-origin",
-          cache: "no-store",
-          signal: controller.signal,
-        });
+        const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store" });
         const payload = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error("VOICE_ACCESS_UNAVAILABLE");
-        if (!controller.signal.aborted) setPremiumVoiceEnabled(payload.enabled === true);
-      } catch (error) {
-        if (error instanceof Error && error.name === "AbortError") return;
-        if (!controller.signal.aborted) setPremiumVoiceEnabled(false);
+        if (!response.ok) throw new Error(payload.error || "No se pudo cargar el historial.");
+        const items = Array.isArray(payload.conversations) ? payload.conversations as Conversation[] : [];
+        if (cancelled) return;
+        setConversations(items);
+        const first = items[0];
+        if (first) {
+          activeConversationRef.current = first.id;
+          setConversationId(first.id);
+          const messagesResponse = await fetch(`/api/orby/conversations/${first.id}/messages`, { credentials: "same-origin", cache: "no-store" });
+          const messagesPayload = await messagesResponse.json().catch(() => ({}));
+          if (!messagesResponse.ok) throw new Error(messagesPayload.error || "No se pudieron cargar los mensajes.");
+          if (cancelled) return;
+          setMessages(Array.isArray(messagesPayload.messages) ? messagesPayload.messages.map((item: Record<string, unknown>) => ({
+            id: String(item.id),
+            role: item.role === "assistant" ? "assistant" : "user",
+            content: typeof item.content === "string" ? item.content : "",
+            checkQuestion: typeof item.check_question === "string" ? item.check_question : "",
+            attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
+            attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
+            createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
+          })) : []);
+        } else {
+          activeConversationRef.current = null;
+          setConversationId(null);
+          setMessages([]);
+        }
+      } catch (caught) {
+        if (!cancelled) setConversationError(caught instanceof Error ? caught.message : "No se pudo cargar el historial.");
+      } finally {
+        if (!cancelled) setHistoryLoading(false);
       }
     };
-
-    void loadVoiceAccess();
-    return () => controller.abort();
-  }, [open]);
+    void loadHistory();
+    return () => { cancelled = true; };
+  }, [open, workspace]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -396,7 +434,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function toggleVoiceMode() {
-    if (!premiumVoiceEnabled) return;
     const next = !voiceModeRef.current;
     voiceModeRef.current = next;
     setVoiceMode(next);
@@ -689,10 +726,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading} aria-label="Adjuntar imagen o gráfico" title="Adjuntar imagen (JPG, PNG o WebP; máximo 1 MB)" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
-        {premiumVoiceEnabled && <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener micrófono" : voiceMode ? "Hablar con Orby" : "Dictar pregunta a Orby"} title={isListening ? "Detener micrófono" : voiceMode ? "Hablar con Orby" : "Dictar una pregunta"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
+        <button type="button" onClick={toggleVoiceInput} disabled={loading} aria-label={isListening ? "Detener micrófono" : voiceMode ? "Hablar con Orby" : "Dictar pregunta a Orby"} title={isListening ? "Detener micrófono" : voiceMode ? "Hablar con Orby" : "Dictar una pregunta"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${isListening ? "border-rose-300 bg-rose-50 text-rose-600 animate-pulse" : orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
           {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-        </button>}
-        {premiumVoiceEnabled && <button type="button" onClick={toggleVoiceMode} aria-label={voiceMode ? "Detener chat de voz Premium" : "Iniciar chat de voz Premium"} title={voiceMode ? "Chat de voz activo" : "Iniciar conversación por voz"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Volume2 className="h-5 w-5" /></button>}
+        </button>
+        <button type="button" onClick={toggleVoiceMode} aria-label={voiceMode ? "Detener chat de voz Premium" : "Iniciar chat de voz Premium"} title={voiceMode ? "Chat de voz activo" : "Iniciar conversación por voz"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Volume2 className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));

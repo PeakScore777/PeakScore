@@ -81,7 +81,7 @@ export default function GlobalOrbyTutor({ studentName }: Props) {
   }, [open]);
 
   // La landing pública queda deliberadamente libre del acceso flotante de Orby.
-  if (pathname === "/" || pathname.startsWith("/landing")) return null;
+  if (pathname === "/" || pathname.startsWith("/landing") || pathname === "/orby") return null;
 
   return (
     <>

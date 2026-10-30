@@ -106,6 +106,21 @@ export async function POST(request: Request) {
           .slice(-8)
           .map((item: TutorMessage): TutorMessage => ({ role: item.role, content: item.content.slice(0, 1200) }))
       : [];
+    // Evalúa también el historial, el contexto y el enunciado: pueden transportar instrucciones hostiles.
+    const untrustedText = [
+      userMessage,
+      question,
+      context,
+      topic,
+      ...history.map((item) => item.content),
+    ].join("\\n");
+    if (untrustedText && isClearlyOutOfScopeOrInjection(untrustedText)) {
+      return NextResponse.json(
+        { error: "Soy Orby, el tutor de PeakScore. No puedo seguir instrucciones para cambiar mis reglas ni revelar información interna. Sí puedo ayudarte con una pregunta académica." },
+        { status: 400 }
+      );
+    }
+
     const conversation = history.map((item: TutorMessage) => (
       item.role === "user"
         ? `<untrusted_student_message>\n${item.content}\n</untrusted_student_message>`

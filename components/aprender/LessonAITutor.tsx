@@ -100,7 +100,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceError, setVoiceError] = useState("");
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyLoading, setHistoryLoading] = useState(workspace);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState("");
@@ -858,8 +858,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setIsRecording(false);
       };
       recorder.onstop = () => {
-        const type = supportedType.startsWith("audio/mp4") ? "audio/m4a" : supportedType.split(";")[0];
-        const extension = type === "audio/m4a" ? "m4a" : type === "audio/ogg" ? "ogg" : "webm";
+        const type = supportedType.startsWith("audio/mp4") ? "audio/mp4" : supportedType.split(";")[0];
+        const extension = type === "audio/mp4" ? "m4a" : type === "audio/ogg" ? "ogg" : "webm";
         const blob = new Blob(audioChunksRef.current, { type });
         audioChunksRef.current = [];
         stream.getTracks().forEach((track) => track.stop());
@@ -942,7 +942,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <div className="flex items-center gap-1">
           {workspace && <>
-            <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar historial" : "Mostrar historial"} title="Historial de chats" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><ChevronDown className={historyOpen ? "h-4 w-4 rotate-90" : "h-4 w-4"} /></button>
+            <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar historial" : "Mostrar historial"} title="Historial de chats" className="rounded-lg p-2 md:hidden text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><ChevronDown className={historyOpen ? "h-4 w-4 rotate-90" : "h-4 w-4"} /></button>
             <button type="button" onClick={startNewConversation} aria-label="Crear nueva conversación" title="Nuevo chat" className="rounded-lg p-2 text-orange-700 transition hover:bg-orange-50"><Plus className="h-5 w-5" /></button>
           </>}
           <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>

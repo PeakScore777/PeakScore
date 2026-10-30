@@ -194,9 +194,7 @@ export default function QueEsEsaVainaGame() {
   const [finished, setFinished] = useState(false);
   const [saved, setSaved] = useState<SavedProgress>({ bestScore: 0, completedIds: [], chests: 0 });
   const [hydrated, setHydrated] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [timeLeft, setTimeLeft] = useState(QUESTION_SECONDS);
-  const [timerSoundEnabled, setTimerSoundEnabled] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
   const [startingGame, setStartingGame] = useState(false);
   const [timerEpoch, setTimerEpoch] = useState(0);
@@ -368,7 +366,10 @@ export default function QueEsEsaVainaGame() {
   }, []);
 
   useEffect(() => {
-    void refreshChestState().catch(() => undefined);
+    const initialSync = window.setTimeout(() => {
+      void refreshChestState().catch(() => undefined);
+    }, 0);
+    return () => window.clearTimeout(initialSync);
   }, [refreshChestState]);
 
   useEffect(() => {
@@ -387,10 +388,7 @@ export default function QueEsEsaVainaGame() {
   }, [chestCycleNumber]);
 
   useEffect(() => {
-    if (!chestCooldownUntil) {
-      setCooldownNow(Date.now());
-      return;
-    }
+    if (!chestCooldownUntil) return;
     const timer = window.setInterval(() => {
       const now = Date.now();
       setCooldownNow(now);
@@ -597,8 +595,7 @@ export default function QueEsEsaVainaGame() {
       timerDeadlineRef.current = performance.now() + QUESTION_SECONDS * 1000;
       setTimeLeft(QUESTION_SECONDS);
       setGameStarted(true);
-      setTimerSoundEnabled(soundEnabled);
-      setStartingGame(false);
+            setStartingGame(false);
       setTimerEpoch((value) => value + 1);
     };
 
@@ -629,14 +626,16 @@ export default function QueEsEsaVainaGame() {
     timerExpiredRef.current = true;
     timerDeadlineRef.current = null;
     answeringRef.current = true;
-    setAnswering(true);
     const revealFrame = window.requestAnimationFrame(() => {
+      setAnswering(true);
       setSelected(null);
       setRevealed(true);
+      setServerAnswerCorrect(false);
+      setScore((value) => Math.max(0, value - WRONG_ANSWER_PENALTY));
+      if (rewardCanProgress) {
+        setRewardScore((value) => Math.max(0, value - WRONG_ANSWER_PENALTY));
+      }
     });
-    setServerAnswerCorrect(false);
-    setScore((value) => Math.max(0, value - WRONG_ANSWER_PENALTY));
-    if (rewardCanProgress) setRewardScore((value) => Math.max(0, value - WRONG_ANSWER_PENALTY));
     const timedOutQuestion = rounds[index];
     if (timedOutQuestion) {
       void fetch("/api/games/answer", {
@@ -781,17 +780,15 @@ export default function QueEsEsaVainaGame() {
         bestScore: Math.max(value.bestScore, score),
         chests: Math.max(value.chests, CHEST_THRESHOLDS.filter((threshold) => rewardScore >= threshold).length),
       }));
-      setSaveStatus("saving");
-      void fetch("/api/games/progress", {
+            void fetch("/api/games/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ score, correct: correctCount }),
       })
         .then(async (response) => {
           if (!response.ok) throw new Error("No se pudo guardar el progreso de la cuenta.");
-          setSaveStatus("saved");
-        })
-        .catch(() => setSaveStatus("error"));
+                  })
+        .catch(() => undefined);
       return;
     }
     setIndex((value) => value + 1);
@@ -837,8 +834,7 @@ export default function QueEsEsaVainaGame() {
     setGameStarted(false);
     setStartingGame(false);
     timerDeadlineRef.current = null;
-    setTimerSoundEnabled(false);
-    const timerAudio = timerAudioRef.current;
+        const timerAudio = timerAudioRef.current;
     if (timerAudio) { timerAudio.pause(); timerAudio.currentTime = 0; }
     const feedbackAudio = feedbackAudioRef.current;
     if (feedbackAudio) { feedbackAudio.pause(); feedbackAudio.currentTime = 0; }
@@ -862,8 +858,7 @@ export default function QueEsEsaVainaGame() {
     setClaimingChest(null);
     setChestAnimation(null);
     setGameError(null);
-    setSaveStatus("idle");
-  }, [index, questionPool, rounds]);
+      }, [index, questionPool, rounds]);
 
   const claimChest = useCallback(async (chestNumber: number) => {
     if (!gameSessionId || claimingChest !== null || claimedChests.includes(chestNumber) || cooldownActive || sessionOutdated || chestNumber !== nextChestToClaim) return;
@@ -904,17 +899,7 @@ export default function QueEsEsaVainaGame() {
     } finally {
       setClaimingChest(null);
     }
-  }, [claimedChests, claimingChest, cooldownActive, gameSessionId, nextChestToClaim, playSfx, primeRewardAudioContext, rewardMeterScore, sessionOutdated]);
-
-  // Vista previa local: muestra el premio y reproduce los sonidos, pero no llama a Supabase.
-  const previewChestReward = useCallback(() => {
-    primeRewardAudioContext();
-    const openingAudio = new Audio("/audio/games/que-es-esa-vaina-chest-open.mp3");
-    openingAudio.volume = 0.48;
-    feedbackAudioRef.current = openingAudio;
-    void openingAudio.play().catch(() => undefined);
-    setChestAnimation({ chestNumber: 1, xp: 5, coins: 3, phase: "opening" });
-  }, [primeRewardAudioContext]);
+  }, [claimedChests, claimingChest, cooldownActive, gameSessionId, nextChestToClaim, primeRewardAudioContext, rewardMeterScore, sessionOutdated]);
 
   const handleUseHint = async (hintNumber: 1 | 2 | 3) => {
     const hintCost = HINT_COSTS[hintNumber - 1];
@@ -940,8 +925,6 @@ export default function QueEsEsaVainaGame() {
       setHintLoading(false);
     }
   };
-
-  const earnedChests = chestLevel;
 
   useEffect(() => {
     if (!finished || rounds.length === 0) return;

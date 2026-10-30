@@ -287,6 +287,7 @@ async function generateWithLLM7(prompt: string): Promise<{ text: string }> {
         messages: [{ role: "user", content: prompt }],
         temperature: 0.2,
         max_tokens: 7000,
+        response_format: { type: "json_object" },
         stream: false,
       }),
       signal: AbortSignal.timeout(60000),

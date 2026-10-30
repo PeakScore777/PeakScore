@@ -282,7 +282,7 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     // Deterministic validation above applies to every response. Higher-risk
     // academic answers additionally pass an independent model review.
-    let qualityStatus: "passed" | "corrected" | "unverified" = "unverified";
+    let qualityStatus: "not_required" | "passed" | "corrected" | "unverified" = "not_required";
     if (needsIndependentTutorReview({
       message: userMessage,
       context: [question, context].filter(Boolean).join("\\n"),
@@ -296,31 +296,22 @@ No uses bloques Markdown ni texto fuera del JSON.
         candidate: { reply, checkQuestion },
       });
       qualityStatus = quality.status;
-      if (quality.status === "corrected" || quality.status === "unverified") {
-        // The quality engine only substitutes a reply when its bounded
-        // correction loop produced a result it explicitly marked as corrected.
-        // For a failed review it returns a safe abstention.
-        if (quality.reply !== reply) {
-          const safeQualityReply = cleanText(quality.reply, 7000);
-          if (!safeQualityReply || !isSafeTutorOutput(safeQualityReply)) {
-            return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Inténtalo nuevamente." }, { status: 502 });
-          }
-          // An unavailable reviewer preserves the original response and is
-          // distinguished from a failed second review by the safe abstention.
-          if (quality.status === "corrected" || quality.reply.startsWith("Quiero asegurarme")) {
-            // Use the corrected or safely withheld response.
-          }
+      if (quality.status === "corrected" || quality.reply !== reply) {
+        const safeQualityReply = cleanText(quality.reply, 7000);
+        if (!safeQualityReply || !isSafeTutorOutput(safeQualityReply)) {
+          return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Inténtalo nuevamente." }, { status: 502 });
         }
-      }
-      if (quality.status === "corrected" || (quality.status === "unverified" && quality.reply !== reply)) {
-        // Reassign below after validation.
-        parsed.reply = quality.reply;
-        if (quality.checkQuestion) parsed.checkQuestion = quality.checkQuestion;
+        parsed.reply = safeQualityReply;
+        parsed.checkQuestion = quality.checkQuestion;
       }
     }
 
     const finalReply = cleanText(parsed.reply, 7000);
     const finalCheckQuestion = cleanText(parsed.checkQuestion, 500);
+    if (!finalReply || !isSafeTutorOutput(finalReply) || !isSafeTutorOutput(finalCheckQuestion)) {
+      await recordSecurityEvent(user.id, "suspicious_output");
+      return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Inténtalo nuevamente." }, { status: 502 });
+    }
 
     if (conversationId && ownedConversation) {
       const { data: savedTurn, error: saveTurnError } = await supabaseAdmin.rpc("orby_save_turn", {

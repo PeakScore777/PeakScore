@@ -628,7 +628,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const pcm = new Int16Array(bytes.buffer);
       if (pcm.length === 0) return;
 
-      const sampleRate = Number(mimeType?.match(/rate=(\\d+)/i)?.[1]) || 24000;
+      const sampleRate = Number(mimeType?.match(/rate=([0-9]+)/i)?.[1]) || 24000;
       const audioBuffer = audioContext.createBuffer(1, pcm.length, sampleRate);
       const channelData = audioBuffer.getChannelData(0);
       for (let i = 0; i < pcm.length; i += 1) channelData[i] = pcm[i] / 32768;
@@ -808,7 +808,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         socket.onopen = () => {
           socket.send(JSON.stringify({
             setup: {
-              model: "models/" + model.replace(/^models\\//, ""),
+              model: "models/" + model,
               generationConfig: {
                 responseModalities: ["AUDIO"],
                 speechConfig: {

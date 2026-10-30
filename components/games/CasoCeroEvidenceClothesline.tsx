@@ -760,7 +760,23 @@ function EvidenceCard({
   onPhotoPointerMove: (index: number, src: string, scale: number, point: PhotoPointerDetails) => void;
   onPhotoPointerOut: () => void;
 }) {
-  const [labelTexture, setLabelTexture] = useState<THREE.CanvasTexture | null>(null);
+  const labelTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 64;
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#433326";
+    context.font = "bold 31px Georgia, serif";
+    context.textBaseline = "middle";
+    context.fillText(photo.title, 8, 33, 495);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }, [photo.title]);
   const paperGeometry = useMemo(
     () => new THREE.ExtrudeGeometry(roundedRectangle(1.48, 1.76, 0.035), {
       depth: 0.045,
@@ -778,24 +794,7 @@ function EvidenceCard({
   const rotationY = [-0.11, 0.035, 0.09][index];
   const rotationX = [0.025, -0.035, 0.018][index];
 
-  useEffect(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 64;
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.fillStyle = "#433326";
-    context.font = "bold 31px Georgia, serif";
-    context.textBaseline = "middle";
-    context.fillText(photo.title, 8, 33, 495);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    setLabelTexture(texture);
-    return () => texture.dispose();
-  }, [photo.title]);
+  useEffect(() => () => labelTexture?.dispose(), [labelTexture]);
 
   return (
     <group
@@ -928,15 +927,15 @@ function ExternalRopeTextureMaps({ onLoaded }: { onLoaded: (maps: PbrTextureSet)
     "/api/caso-cero-pbr/rope-normal",
     "/api/caso-cero-pbr/rope-roughness",
   ]) as THREE.Texture[];
-  const [color, normal, roughness] = loaded;
-
-  useEffect(() => {
-    if (!color || !normal || !roughness) return;
+  const maps = useMemo(() => {
+    const [sourceColor, sourceNormal, sourceRoughness] = loaded;
+    const color = sourceColor.clone();
+    const normal = sourceNormal.clone();
+    const roughness = sourceRoughness.clone();
 
     color.colorSpace = THREE.SRGBColorSpace;
     normal.colorSpace = THREE.NoColorSpace;
     roughness.colorSpace = THREE.NoColorSpace;
-
     for (const texture of [color, normal, roughness]) {
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
@@ -944,9 +943,18 @@ function ExternalRopeTextureMaps({ onLoaded }: { onLoaded: (maps: PbrTextureSet)
       texture.anisotropy = 8;
       texture.needsUpdate = true;
     }
+    return { color, normal, roughness };
+  }, [loaded]);
 
-    onLoaded({ color, normal, roughness });
-  }, [color, normal, roughness, onLoaded]);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => onLoaded(maps));
+    return () => {
+      window.cancelAnimationFrame(frame);
+      maps.color.dispose();
+      maps.normal.dispose();
+      maps.roughness.dispose();
+    };
+  }, [maps, onLoaded]);
 
   return null;
 }
@@ -954,22 +962,28 @@ function ExternalRopeTextureMaps({ onLoaded }: { onLoaded: (maps: PbrTextureSet)
 
 function PhotographicRoomEnvironment() {
   const { scene, invalidate } = useThree();
-  const texture = useLoader(HDRLoader, "/api/caso-cero-hdri");
+  const sourceTexture = useLoader(HDRLoader, "/api/caso-cero-hdri");
+  const texture = useMemo(() => {
+    const clone = sourceTexture.clone();
+    clone.mapping = THREE.EquirectangularReflectionMapping;
+    clone.colorSpace = THREE.LinearSRGBColorSpace;
+    clone.needsUpdate = true;
+    return clone;
+  }, [sourceTexture]);
+  const sceneRef = useRef(scene);
 
   useEffect(() => {
-    texture.mapping = THREE.EquirectangularReflectionMapping;
-    texture.colorSpace = THREE.LinearSRGBColorSpace;
-    texture.needsUpdate = true;
-
-    const previousEnvironment = scene.environment;
-    const previousIntensity = scene.environmentIntensity;
-    scene.environment = texture;
-    scene.environmentIntensity = 0.56;
+    sceneRef.current = scene;
+    const previousEnvironment = sceneRef.current.environment;
+    const previousIntensity = sceneRef.current.environmentIntensity;
+    sceneRef.current.environment = texture;
+    sceneRef.current.environmentIntensity = 0.56;
     invalidate();
 
     return () => {
-      if (scene.environment === texture) scene.environment = previousEnvironment;
-      scene.environmentIntensity = previousIntensity;
+      if (sceneRef.current.environment === texture) sceneRef.current.environment = previousEnvironment;
+      sceneRef.current.environmentIntensity = previousIntensity;
+      texture.dispose();
       invalidate();
     };
   }, [scene, texture, invalidate]);

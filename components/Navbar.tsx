@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { supabase } from "@/lib/supabase/browser";
 
@@ -60,6 +61,7 @@ export default function Navbar({
   theme,
   onThemeChange,
 }: NavbarProps) {
+  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [bugOpen, setBugOpen] = useState(false);
   const [authGateOpen, setAuthGateOpen] = useState(false);
@@ -224,8 +226,7 @@ export default function Navbar({
       }
 
       if (session?.user) {
-        window.location.href =
-          "/dashboard/simulacros/new";
+        router.push("/dashboard/simulacros/new");
         return;
       }
 

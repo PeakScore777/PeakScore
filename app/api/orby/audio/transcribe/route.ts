@@ -181,12 +181,24 @@ export async function POST(request: Request) {
 
   if (!transcript) {
     console.error("[Orby Audio] All transcription providers failed.", { failures: providerFailures });
-    const wasRateLimited = providerFailures.some((failure) => failure.status === 429);
+    const wasRateLimited = providerFailures.some((failure) => (
+      failure.status === 429 || failure.code === "RESOURCE_EXHAUSTED"
+    ));
+    const authFailed = providerFailures.some((failure) => (
+      failure.status === 401 || failure.status === 403
+      || failure.code === "UNAUTHENTICATED" || failure.code === "PERMISSION_DENIED"
+    ));
     return NextResponse.json({
       error: wasRateLimited
         ? "Los proveedores gratuitos de transcripción están temporalmente saturados. Espera un momento y vuelve a intentarlo."
-        : "No pudimos transcribir el audio con los proveedores disponibles. Inténtalo otra vez o adjunta una grabación más clara.",
-      code: wasRateLimited ? "TRANSCRIPTION_RATE_LIMITED" : "TRANSCRIPTION_PROVIDERS_FAILED",
+        : authFailed
+          ? "Los proveedores rechazaron la autenticación. El servidor debe revisar las claves API de transcripción."
+          : "No pudimos transcribir el audio con los proveedores disponibles. Inténtalo otra vez o adjunta una grabación más clara.",
+      code: wasRateLimited
+        ? "TRANSCRIPTION_RATE_LIMITED"
+        : authFailed
+          ? "TRANSCRIPTION_PROVIDER_AUTH_FAILED"
+          : "TRANSCRIPTION_PROVIDERS_FAILED",
     }, { status: wasRateLimited ? 429 : 503 });
   }
 

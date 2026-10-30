@@ -712,6 +712,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setIsListening(false);
     stopAudioRecording(true);
     clearRecordedAudio();
+    clearAttachment();
+    setAttachmentError("");
+    setOcrText("");
+    setPendingAttachmentMeta(null);
     setAudioConsentOpen(false);
     setAudioConsentChecked(false);
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
@@ -816,12 +820,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function handleAudioAttachment(file?: File) {
     if (!file || isRecording || audioTranscribing) return;
-    const mimeType = file.type.split(";")[0].trim().toLowerCase();
     const allowedTypes = new Set([
-      "audio/webm", "audio/ogg", "audio/wav", "audio/mpeg",
-      "audio/mp3", "audio/aac", "audio/mp4", "audio/m4a", "audio/opus",
+      "audio/webm", "audio/ogg", "audio/wav", "audio/wave", "audio/x-wav",
+      "audio/mpeg", "audio/mp3", "audio/aac", "audio/mp4", "audio/m4a", "audio/x-m4a", "audio/opus",
     ]);
-    if (!allowedTypes.has(mimeType)) {
+    const extension = file.name.toLowerCase().split(".").pop() ?? "";
+    const extensionMime: Record<string, string> = {
+      webm: "audio/webm", ogg: "audio/ogg", opus: "audio/opus",
+      wav: "audio/wav", mp3: "audio/mpeg", mpeg: "audio/mpeg",
+      aac: "audio/aac", mp4: "audio/mp4", m4a: "audio/m4a",
+    };
+    const declaredMime = file.type.split(";")[0].trim().toLowerCase();
+    const mimeType = allowedTypes.has(declaredMime) ? declaredMime : extensionMime[extension];
+    if (!mimeType || !allowedTypes.has(mimeType)) {
       setVoiceError("Formato no compatible. Adjunta audio MP3, WAV, WebM, OGG, AAC o M4A.");
       return;
     }
@@ -830,8 +841,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     clearRecordedAudio();
-    setRecordedAudio(file);
-    setRecordedAudioPreviewUrl(URL.createObjectURL(file));
+    const normalizedFile = file.type.split(";")[0].trim().toLowerCase() === mimeType
+      ? file
+      : new File([file], file.name, { type: mimeType, lastModified: file.lastModified });
+    setRecordedAudio(normalizedFile);
+    setRecordedAudioPreviewUrl(URL.createObjectURL(normalizedFile));
     setAudioSource("upload");
     setAudioConsentChecked(false);
     setAudioConsentOpen(true);

@@ -115,6 +115,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
   const [audioSource, setAudioSource] = useState<"recording" | "upload">("recording");
   const [audioTranscribing, setAudioTranscribing] = useState(false);
+  const [transcriptionProvider, setTranscriptionProvider] = useState<"gemini" | "groq" | null>(null);
   const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
@@ -1070,6 +1071,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     setAudioTranscribing(true);
+    setTranscriptionProvider(null);
     setVoiceError("");
     try {
       const form = new FormData();
@@ -1085,6 +1087,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
       setInput(payload.transcript.slice(0, 1200));
+      setTranscriptionProvider(payload.provider === "groq" ? "groq" : payload.provider === "gemini" ? "gemini" : null);
       setPendingAttachmentMeta({ kind: "audio", label: audioSource === "upload" ? "Audio adjunto transcrito" : "Nota de voz transcrita" });
       clearRecordedAudio();
       setAudioConsentChecked(false);
@@ -1244,6 +1247,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
+      {transcriptionProvider && <p role="status" className="shrink-0 bg-white px-3 pt-2 text-xs text-emerald-700">Audio transcrito con {transcriptionProvider === "gemini" ? "Google Gemini" : "Groq Whisper"}. Revisa el texto antes de enviarlo a Orby.</p>}
       {isListening && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… {voiceMode ? "Habla con Orby. Te responderé en voz y volveré a escucharte." : "Al terminar, enviaré tu pregunta a Orby."}</p>}
       {audioConsentOpen && <section aria-label="Consentimiento de audio" className="shrink-0 border-t border-orange-100 bg-orange-50 px-3 py-3">
         <div className="flex items-start gap-2">

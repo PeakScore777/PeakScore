@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import LessonNotesSelection from "@/components/aprender/LessonNotesSelection";
@@ -236,6 +237,7 @@ function ImageUploadSlot({ assetKey, title, description, fallbackSrc, compact = 
 
 
 export default function CuencaDeLosEcosChapterOnePage() {
+  const router = useRouter();
   useEffect(() => {
     const markSectionFromUrl = () => {
       const hash = window.location.hash.replace(/^#/, "");
@@ -567,7 +569,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
             </p>
             <button
               type="button"
-              onClick={() => { window.location.href = "/aprender/la-cuenca-de-los-ecos"; }}
+              onClick={() => { router.push("/aprender/la-cuenca-de-los-ecos"); }}
               className="pixel-font mt-7 inline-flex min-h-11 items-center justify-center border-2 border-[#ffe08a] bg-[#f7c948] px-5 py-3 text-[9px] text-[#17130c] shadow-[0_4px_0_#8b681b] transition hover:-translate-y-0.5 hover:bg-[#ffda69]"
             >
               VOLVER A LA CUENCA
@@ -576,7 +578,7 @@ export default function CuencaDeLosEcosChapterOnePage() {
         </div>
       )}
 
-      <XpRewardAnimation open={reward && done} xp={50} nextLabel="VOLVER A LA CUENCA" onContinue={() => { setReward(false); window.location.href = "/aprender/la-cuenca-de-los-ecos"; }} />
+      <XpRewardAnimation open={reward && done} xp={50} nextLabel="VOLVER A LA CUENCA" onContinue={() => { setReward(false); router.push("/aprender/la-cuenca-de-los-ecos"); }} />
       {!(view === "practice" && done) && (
         <footer className="fixed inset-x-0 bottom-0 z-30 border-t border-emerald-100/10 bg-[#08140f]/[.98] shadow-[0_-8px_24px_rgba(0,0,0,.22)]">
           <div className="mx-auto grid min-h-[64px] max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 sm:gap-3 sm:px-7">

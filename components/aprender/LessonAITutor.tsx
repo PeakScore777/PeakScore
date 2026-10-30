@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Camera, FileText, LoaderCircle, LockKeyhole, Mic, MicOff, Paperclip, ScanText, Send, Volume2, X } from "lucide-react";
+import { Camera, FileText, LoaderCircle, Mic, MicOff, Paperclip, ScanText, Send, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
 type Message = { role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string };
@@ -693,7 +693,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           {isListening ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
         </button>}
         {premiumVoiceEnabled && <button type="button" onClick={toggleVoiceMode} aria-label={voiceMode ? "Detener chat de voz Premium" : "Iniciar chat de voz Premium"} title={voiceMode ? "Chat de voz activo" : "Iniciar conversación por voz"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Volume2 className="h-5 w-5" /></button>}
-        {!premiumVoiceEnabled && <button type="button" disabled aria-label="Chat de voz bloqueado: requiere Premium" title="Suscríbete a PeakScore Premium para usar el chat de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-700 opacity-90"><LockKeyhole className="h-5 w-5" /></button>}
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));

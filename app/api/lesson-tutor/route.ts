@@ -155,8 +155,8 @@ export async function POST(request: Request) {
         user_id: user.id,
         role: "user",
         content: userMessage || "Analiza la imagen adjunta.",
-        attachment_kind: hasImagePayload ? "image" : null,
-        attachment_label: hasImagePayload ? "Imagen adjunta" : null,
+        attachment_kind: body.attachmentKind === "audio" ? "audio" : hasImagePayload ? "image" : null,
+        attachment_label: cleanText(body.attachmentLabel, 120) || (hasImagePayload ? "Imagen adjunta" : null),
       });
       if (saveUserError) {
         console.error("[Orby Tutor] User message persistence failed.", { code: saveUserError.code });
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
       }
 
       const nextTitle = ownedConversation.title === "Nueva conversación"
-        ? (userMessage || "Consulta con imagen").replace(/\\s+/g, " ").slice(0, 72)
+        ? (userMessage || "Consulta con imagen").replace(/\s+/g, " ").slice(0, 72)
         : ownedConversation.title;
       const { error: updateConversationError } = await supabase
         .from("orby_conversations")

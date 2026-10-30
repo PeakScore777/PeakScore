@@ -253,7 +253,7 @@ No uses bloques Markdown ni texto fuera del JSON.
         prompt: activePrompt,
         useFallback: true,
       });
-      const actualProvider = (result as { __peakscoreProvider?: AIProvider }).__peakscoreProvider;
+      const actualProvider = (result as unknown as { __peakscoreProvider?: AIProvider }).__peakscoreProvider;
       if (actualProvider) sourceProvider = actualProvider;
       raw = typeof result.text === "string" ? result.text.trim() : "";
     }

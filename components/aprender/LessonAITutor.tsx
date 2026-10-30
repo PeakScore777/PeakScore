@@ -1222,7 +1222,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <button type="button" onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white"><MessageSquare className="mr-1 inline h-4 w-4" />Volver al chat</button>
           <button type="button" onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white"><Square className="mr-1 inline h-3.5 w-3.5" />Finalizar</button>
         </div>
-      </section>
+      </section>}
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />

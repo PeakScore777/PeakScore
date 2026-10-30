@@ -19,19 +19,23 @@ alter table public.orby_conversations enable row level security;
 revoke all on public.orby_conversations from public, anon, authenticated;
 grant select, insert, update, delete on public.orby_conversations to authenticated;
 
+drop policy if exists "Users read their own Orby conversations" on public.orby_conversations;
 create policy "Users read their own Orby conversations"
   on public.orby_conversations for select to authenticated
   using ((select auth.uid()) = user_id);
 
+drop policy if exists "Users create their own Orby conversations" on public.orby_conversations;
 create policy "Users create their own Orby conversations"
   on public.orby_conversations for insert to authenticated
   with check ((select auth.uid()) = user_id);
 
+drop policy if exists "Users update their own Orby conversations" on public.orby_conversations;
 create policy "Users update their own Orby conversations"
   on public.orby_conversations for update to authenticated
   using ((select auth.uid()) = user_id)
   with check ((select auth.uid()) = user_id);
 
+drop policy if exists "Users delete their own Orby conversations" on public.orby_conversations;
 create policy "Users delete their own Orby conversations"
   on public.orby_conversations for delete to authenticated
   using ((select auth.uid()) = user_id);
@@ -67,10 +71,12 @@ alter table public.orby_messages enable row level security;
 revoke all on public.orby_messages from public, anon, authenticated;
 grant select, insert, delete on public.orby_messages to authenticated;
 
+drop policy if exists "Users read their own Orby messages" on public.orby_messages;
 create policy "Users read their own Orby messages"
   on public.orby_messages for select to authenticated
   using ((select auth.uid()) = user_id);
 
+drop policy if exists "Users insert their own Orby messages" on public.orby_messages;
 create policy "Users insert their own Orby messages"
   on public.orby_messages for insert to authenticated
   with check (
@@ -83,6 +89,7 @@ create policy "Users insert their own Orby messages"
     )
   );
 
+drop policy if exists "Users delete their own Orby messages" on public.orby_messages;
 create policy "Users delete their own Orby messages"
   on public.orby_messages for delete to authenticated
   using ((select auth.uid()) = user_id);

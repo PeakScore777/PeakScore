@@ -185,10 +185,10 @@ export async function POST(request: Request) {
     ));
     return NextResponse.json({
       error: wasRateLimited
-        ? "Los proveedores gratuitos de transcripción están temporalmente saturados. Espera un momento y vuelve a intentarlo."
+        ? "El servicio de transcripción está temporalmente ocupado. Espera un momento y vuelve a intentarlo."
         : authFailed
-          ? "Los proveedores rechazaron la autenticación. El servidor debe revisar las claves API de transcripción."
-          : "No pudimos transcribir el audio con los proveedores disponibles. Inténtalo otra vez o adjunta una grabación más clara.",
+          ? "El servicio de transcripción no está disponible temporalmente. Inténtalo de nuevo más tarde."
+          : "No pudimos procesar el audio. Inténtalo de nuevo o adjunta una grabación más clara.",
       code: wasRateLimited
         ? "TRANSCRIPTION_RATE_LIMITED"
         : authFailed

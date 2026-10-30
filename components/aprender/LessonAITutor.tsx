@@ -117,6 +117,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
+  const [premiumVoiceEnabled, setPremiumVoiceEnabled] = useState(false);
+  const [premiumVoiceLoading, setPremiumVoiceLoading] = useState(false);
   const voiceModeRef = useRef(false);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -149,6 +151,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const audioChunksRef = useRef<Blob[]>([]);
   const recordingTimeoutRef = useRef<number | null>(null);
   const discardRecordingRef = useRef(false);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    setPremiumVoiceLoading(true);
+    fetch("/api/orby/voice-access", { credentials: "same-origin", cache: "no-store" })
+      .then(async (response) => {
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || "No se pudo verificar el acceso de voz.");
+        if (!cancelled) setPremiumVoiceEnabled(payload.enabled === true);
+      })
+      .catch(() => { if (!cancelled) setPremiumVoiceEnabled(false); })
+      .finally(() => { if (!cancelled) setPremiumVoiceLoading(false); });
+    return () => { cancelled = true; };
+  }, [open]);
 
   useEffect(() => {
     if (!open || !workspace) return;
@@ -481,6 +498,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function toggleVoiceMode() {
     const next = !voiceModeRef.current;
+    if (next && !premiumVoiceEnabled) {
+      setVoiceError(premiumVoiceLoading
+        ? "Comprobando tu acceso Premium…"
+        : "El chat de voz completo es una función Premium. Las notas de voz y la transcripción siguen disponibles.");
+      return;
+    }
     if (next) {
       const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
       if (!(speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition) || !("speechSynthesis" in window)) {
@@ -1191,7 +1214,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar foto o archivo de audio" title="Adjuntar imagen JPG/PNG/WebP o nota de voz MP3/WAV/OGG/WebM/M4A" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
         <button type="button" onClick={() => { clearRecordedAudio(); setAudioSource("recording"); setAudioConsentChecked(false); setAudioConsentOpen(true); }} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz para enviar" title="Grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
-        <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada"} title={voiceMode ? "Detener chat de voz" : "Chat de voz beta · navegador"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
+        <button type="button" onClick={toggleVoiceMode} disabled={loading || premiumVoiceLoading || (!premiumVoiceEnabled && !voiceMode)} aria-label={voiceMode ? "Detener conversación hablada" : "Iniciar conversación hablada Premium"} title={voiceMode ? "Detener chat de voz" : premiumVoiceLoading ? "Comprobando Premium…" : premiumVoiceEnabled ? "Iniciar chat de voz Premium" : "Chat de voz exclusivo Premium"} className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-400 bg-orange-50 text-orange-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}><Headphones className="h-5 w-5" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));

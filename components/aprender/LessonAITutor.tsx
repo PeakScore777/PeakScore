@@ -4,7 +4,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { AudioLines, Camera, Check, ChevronDown, FileText, Headphones, LoaderCircle, Maximize2, Mic, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Camera, Check, ChevronDown, FileText, Headphones, LoaderCircle, Maximize2, MessageSquare, Mic, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; createdAt?: string };
@@ -1213,6 +1213,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
       </div>}
       {audioTranscribing && <div role="status" className="shrink-0 px-5 py-2 text-[11px] text-slate-500"><span className="inline-flex items-center gap-2"><LoaderCircle className="h-3.5 w-3.5 animate-spin text-orange-600" /> Preparando tu mensaje…</span></div>}
+      {workspace && workspaceMode === "voice" && <section className="mx-4 mb-3 flex shrink-0 flex-col items-center gap-3 rounded-2xl border border-orange-100 bg-orange-50/70 px-5 py-5 sm:mx-6" aria-label="Conversación por voz">
+        <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby" className="h-20 w-20 rounded-full border border-orange-200 bg-white object-contain p-1" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
+        <p className="text-sm font-bold text-slate-900">{speakingIndex !== null ? "Orby está respondiendo" : isListening ? "Te estoy escuchando" : loading ? "Preparando respuesta…" : voiceMode ? "Conversación por voz activa" : "Habla con Orby"}</p>
+        <p className="text-center text-xs text-slate-500">Habla con naturalidad. Puedes interrumpir o volver al chat cuando quieras.</p>
+        <div className="flex h-8 items-center gap-1" aria-hidden="true">{Array.from({length: 20}, (_, index) => <span key={index} className="w-1 rounded-full bg-orange-500" style={{height: String(6 + ((index * 11) % 22)) + "px", opacity: isListening || speakingIndex !== null ? 1 : 0.3}} />)}</div>
+        <div className="flex flex-wrap justify-center gap-2">
+          <button type="button" onClick={toggleVoiceInput} disabled={!voiceMode || loading || speakingIndex !== null} className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 disabled:opacity-40"><Mic className="mr-1 inline h-4 w-4" />{isListening ? "Pausar" : "Hablar"}</button>
+          <button type="button" onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white"><MessageSquare className="mr-1 inline h-4 w-4" />Volver al chat</button>
+          <button type="button" onClick={() => { setWorkspaceMode("chat"); if (voiceModeRef.current) toggleVoiceMode(); }} className="rounded-xl bg-orange-600 px-4 py-2 text-xs font-semibold text-white"><Square className="mr-1 inline h-3.5 w-3.5" />Finalizar</button>
+        </div>
+      </section>
       <form onSubmit={onSubmit} className="flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3">
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />

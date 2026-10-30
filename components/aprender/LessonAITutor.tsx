@@ -894,6 +894,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setRecordedAudioPreviewUrl(URL.createObjectURL(normalizedFile));
     setAudioSource("upload");
     setVoiceError("");
+    void transcribeRecordedAudio(normalizedFile, "upload");
   }
 
   function handleComposerAttachment(file?: File) {
@@ -988,7 +989,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setRecordedAudio(audioFile);
         setRecordedAudioPreviewUrl(URL.createObjectURL(audioFile));
         setAudioSource("recording");
-          };
+        void transcribeRecordedAudio(audioFile, "recording");
+      };
 
       recorder.start(250);
       setIsRecording(true);
@@ -1014,8 +1016,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  async function transcribeRecordedAudio() {
-    if (!recordedAudio || audioTranscribing) return;
+  async function transcribeRecordedAudio(audioOverride?: File, sourceOverride?: "recording" | "upload") {
+    const audioToTranscribe = audioOverride ?? recordedAudio;
+    const audioOrigin = sourceOverride ?? audioSource;
+    if (!audioToTranscribe || audioTranscribing) return;
     if (attachment) {
       setVoiceError("Envía o quita la imagen adjunta antes de preparar una nota de voz.");
       return;
@@ -1024,7 +1028,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceError("");
     try {
       const form = new FormData();
-      form.set("audio", recordedAudio);
+      form.set("audio", audioToTranscribe);
       const response = await fetch("/api/orby/audio/transcribe", {
         method: "POST",
         credentials: "same-origin",
@@ -1035,9 +1039,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
       setInput(payload.transcript.slice(0, 1200));
-      setPendingAttachmentMeta({ kind: "audio", label: audioSource === "upload" ? "Audio adjunto transcrito" : "Nota de voz transcrita" });
-      clearRecordedAudio();
-          setError("");
+      setPendingAttachmentMeta({ kind: "audio", label: audioOrigin === "upload" ? "Audio adjunto transcrito" : "Nota de voz transcrita" });
+      if (audioOverride) {
+        setRecordedAudio(null);
+        setRecordedAudioPreviewUrl("");
+        setAudioSource("recording");
+      } else {
+        clearRecordedAudio();
+      }
+      setError("");
       inputRef.current?.focus();
     } catch (caught) {
       setVoiceError(caught instanceof Error ? caught.message : "No se pudo transcribir el audio.");

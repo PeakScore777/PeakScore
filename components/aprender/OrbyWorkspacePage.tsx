@@ -7,8 +7,8 @@ export default function OrbyWorkspacePage() {
   const router = useRouter();
 
   return (
-    <main className="mx-auto flex min-h-[calc(100dvh-72px)] w-full max-w-[1600px] flex-col bg-slate-950 p-2 sm:p-4 lg:p-6">
-      <div className="flex min-h-0 flex-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_24px_80px_rgba(0,0,0,.25)] sm:rounded-3xl">
+    <main className="flex h-[calc(100dvh-64px)] min-h-0 w-full flex-col overflow-hidden bg-slate-950 p-0">
+      <div className="flex min-h-0 flex-1 overflow-hidden rounded-none border-0 bg-white shadow-none">
         <LessonAITutor
           subject="Preparación Saber 11"
           topic="Estudio y aprendizaje"

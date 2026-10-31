@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router";
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
-import { classifyOutOfScopeRequest, getOutOfScopeReply, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
+import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -438,6 +438,12 @@ No uses bloques Markdown ni texto fuera del JSON.
         parsed.reply = safeQualityReply;
         parsed.checkQuestion = quality.checkQuestion;
       }
+    }
+
+    if (hasFalseOrbyCreatorAttribution(cleanText(parsed.reply, 7000))) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "false_creator_attribution" });
+      parsed.reply = ORBY_IDENTITY_REPLY;
+      parsed.checkQuestion = "";
     }
 
     const finalReply = cleanText(parsed.reply, 7000);

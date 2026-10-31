@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
         liveConnectConstraints: {
           model: "models/" + model,
           config: {
-            responseModalities: ["AUDIO"],
+            responseModalities: [Modality.AUDIO],
           },
         },
       },

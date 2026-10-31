@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
+import { containsProgrammingInstruction, hasFalseOrbyCreatorAttribution, normalizeOrbySpanishOutput, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
@@ -206,6 +207,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
   const voiceInputPolicyRef = useRef<"identity" | "programming" | "outside" | null>(null);
   const voiceForcedReplyRef = useRef<string | null>(null);
+  const voicePreflightReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
@@ -895,6 +897,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceTurnPersistedRef.current = false;
         voiceInputPolicyRef.current = null;
         voiceForcedReplyRef.current = null;
+        voicePreflightReplyRef.current = null;
         stopVoicePlayback();
         voiceSpeechPlaybackGenerationRef.current += 1;
         voiceBrowserSpeechActiveRef.current = false;
@@ -984,10 +987,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || /\bcliente\s*creo\b/i.test(normalizedTranscript);
       const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript)
         || falseCreatorClaim;
-      const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot|c\+\+|c#|nodejs|nextjs)\b/.test(normalizedTranscript)
-        || /\b(ensename|quiero aprender|ayudame a|explicame como)\b.{0,70}\b(crear|hacer|construir|desarrollar|programa|juego|pagina|aplicacion|app|bot|codigo)\b/.test(normalizedTranscript);
-      const asksOutsideScope = /\b(cocinar|cocina|receta|recetas|hornear|medicamento|diagnostico medico|invertir dinero|apuesta|consejo legal)\b/.test(normalizedTranscript);
-      voiceInputPolicyRef.current = asksIdentity ? "identity" : asksProgramming ? "programming" : asksOutsideScope ? "outside" : null;
+      const preflight = preflightOrbyRequest(voiceUserTextRef.current);
+      voiceInputPolicyRef.current = asksIdentity
+        ? "identity"
+        : !preflight.allowed && preflight.category === "programming"
+          ? "programming"
+          : !preflight.allowed
+            ? "outside"
+            : null;
+      voicePreflightReplyRef.current = preflight.allowed ? null : preflight.reply;
       voicePendingAudioChunksRef.current = [];
       setLiveTranscript("");
       setMessages((current) => {
@@ -1044,13 +1052,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai|ticescool|ticeschool)\b/.test(normalizedReply)
         && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|trained|hecho|hecha|soy|fui)\b/.test(normalizedReply)
       ) || /(?:cread[oa]|entrenad[oa]|desarrollad[oa]|hech[oa])\s*(?:por|by)\s*(?!peak[-_]?score\b)[a-z0-9]/i.test(normalizedReply);
-      const policyReply = voiceInputPolicyRef.current === "identity" || exposesProvider
-        ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
-        : voiceInputPolicyRef.current === "programming"
-          ? "Soy Orby, el tutor educativo de PeakScore, especializado exclusivamente en Saber 11. No enseño programación ni desarrollo de software. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-          : voiceInputPolicyRef.current === "outside"
-            ? "No puedo enseñar cocina ni dar instrucciones sobre actividades ajenas al ICFES. Soy Orby, el tutor de PeakScore especializado en Saber 11. Podemos trabajar Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-            : null;
+      const unsafeGeneratedContent = containsProgrammingInstruction(rawReply)
+        || hasFalseOrbyCreatorAttribution(rawReply);
+      const policyReply = voicePreflightReplyRef.current
+        ?? (voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
+          ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
+          : voiceInputPolicyRef.current === "programming" || unsafeGeneratedContent
+            ? preflightOrbyRequest("programar").reply
+            : voiceInputPolicyRef.current === "outside"
+              ? preflightOrbyRequest("cocinar").reply
+              : null);
+      voicePreflightReplyRef.current = null;
 
       // A policy response is produced locally exactly once. Never ask Gemini to
       // repeat a correction: that second Live turn caused duplicated bubbles/audio.
@@ -1445,6 +1457,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;
+      const typedPreflight = preflightOrbyRequest(message);
+      voiceInputPolicyRef.current = typedPreflight.allowed
+        ? null
+        : typedPreflight.category === "programming" ? "programming" : "outside";
+      voicePreflightReplyRef.current = typedPreflight.allowed ? null : typedPreflight.reply;
       // Typed text sent through the Live session can also produce an input
       // transcription event. Mark it as committed so it is not added twice.
       voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);

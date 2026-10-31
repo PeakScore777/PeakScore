@@ -2130,7 +2130,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         /* Compact orb preview: centered over the conversation, with soft volumetric amber mist. */
         #orby-tutor-panel .orby-mini-voice {
           width: 76px !important; height: 76px !important;
-          left: 50% !important; top: auto !important; bottom: 98px !important;
+          left: calc(50% + 143px) !important; top: auto !important; bottom: 98px !important;
           border: 0 !important; overflow: visible !important; isolation: isolate;
           box-shadow: none !important; background: transparent !important;
         }

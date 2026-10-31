@@ -158,13 +158,13 @@ export async function POST(request: Request) {
           .map((item: TutorMessage) => ({ role: item.role, content: item.content.slice(0, 1200) }))
       : [];
     const normalizedIdentityPrompt = userMessage.normalize("NFD")
-      .replace(/[\\u0300-\\u036f]/g, "")
+      .replace(/[\u0300-\u036f]/g, "")
       .toLocaleLowerCase("es-CO");
-    const recentPeakScoreContext = recentContextMessages.some((item) => /peak\\s*score/i.test(item.content))
-      && recentContextMessages.some((item) => item.role === "assistant" && /peak\\s*score|google|cread[oa]/i.test(item.content));
-    const asksWhoAreThey = /\\bquienes?\\s+son\\b/.test(normalizedIdentityPrompt);
-    const asksPeakScoreFollowUp = /\\bpeak\\s*score\\b/.test(normalizedIdentityPrompt)
-      && recentContextMessages.some((item) => /quien|cread[oa]|google|orby/i.test(item.content));
+    const recentPeakScoreContext = recentContextMessages.some((item) => /\bpeak\s*score\b/i.test(item.content))
+      && recentContextMessages.some((item) => item.role === "assistant" && /\bpeak\s*score\b|\bgoogle\b|\bcread[oa]\b/i.test(item.content));
+    const asksWhoAreThey = /\bquienes?\s+son\b/.test(normalizedIdentityPrompt);
+    const asksPeakScoreFollowUp = /\bpeak\s*score\b/.test(normalizedIdentityPrompt)
+      && recentContextMessages.some((item) => /\bquien\b|\bcread[oa]\b|\bgoogle\b|\borby\b/i.test(item.content));
     const asksOrbyIdentity = isOrbyIdentityQuestion(userMessage)
       || (asksWhoAreThey && recentPeakScoreContext)
       || asksPeakScoreFollowUp;

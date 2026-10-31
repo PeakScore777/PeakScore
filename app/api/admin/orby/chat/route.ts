@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI } from "@/lib/ai/router";
-import { normalizeIcfesSubject, ICFES_SUBJECTS, type IcfesSubject } from "@/lib/ai/orby-scope";
+import { normalizeIcfesSubject, ICFES_SUBJECTS } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

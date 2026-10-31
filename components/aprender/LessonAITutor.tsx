@@ -1,11 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, Camera, Captions, ChartNoAxesColumn, Check, ChevronDown, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -13,17 +12,6 @@ type Conversation = { id: string; title: string; subject: string; topic: string;
 type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
 type StoredImage = { name: string; path: string; signedUrl: string; createdAt: string; size: number };
-type SpeechRecognitionLike = {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((event: { results: ArrayLike<ArrayLike<{ transcript: string; isFinal: boolean }>> }) => void) | null;
-  onerror: ((event?: { error?: string }) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
-type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 type ReviewQuestion = {
   id: string;
   number: number;
@@ -94,8 +82,6 @@ const starters = [
 ];
 
 export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false }: Props) {
-  const router = useRouter();
-  const pathname = usePathname() ?? "/";
   const orbyAccent = accent === "orby";
   const [globalTheme, setGlobalTheme] = useState<"light" | "dark">("dark");
 
@@ -190,7 +176,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }) => Promise<void>>(async () => {});
   const stopRealtimeVoiceRef = useRef<(updateState?: boolean) => void>(() => {});
   const lastInitialPromptRef = useRef<string | null>(null);
-  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const activeConversationRef = useRef<string | null>(null);
   const sendingRef = useRef(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -321,14 +306,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setImageAssets(Array.isArray(payload.images) ? payload.images : []);
   }
 
-  async function refreshLearningItems() {
-    const response = await fetch("/api/orby/learning", { credentials: "same-origin", cache: "no-store" });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(payload.error || "No se pudo actualizar tu aprendizaje.");
-    setLearningItems(Array.isArray(payload.items) ? payload.items : []);
-    setLearningSignals(Array.isArray(payload.signals) ? payload.signals : []);
-  }
-
   async function saveLearningItem(kind: "note" | "topic", title: string, content: string) {
     try {
       setLearningError("");
@@ -390,8 +367,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   useEffect(() => {
     return () => {
-      recognitionRef.current?.stop();
-      recognitionRef.current = null;
       const recorder = mediaRecorderRef.current;
       if (recorder && recorder.state !== "inactive") {
         recorder.ondataavailable = null;
@@ -1174,72 +1149,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  function toggleVoiceInput() {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-    if (recognitionRef.current) return;
-    if (!window.isSecureContext && window.location.hostname !== "localhost") {
-      setVoiceError("El micrófono requiere una conexión segura (HTTPS).");
-      return;
-    }
-    const speechWindow = window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor };
-    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
-    if (!Recognition) {
-      setVoiceError("Este navegador no admite dictado por voz. Prueba con Chrome o Edge, o escribe tu pregunta.");
-      return;
-    }
-    setVoiceError("");
-    const recognition = new Recognition();
-    recognition.lang = "es-CO";
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.onresult = (event) => {
-      const results = Array.from(event.results);
-      const interim = results.filter((result) => !result[0]?.isFinal).map((result) => result[0]?.transcript ?? "").join(" ").trim();
-      const finalTranscript = results.filter((result) => result[0]?.isFinal).map((result) => result[0]?.transcript ?? "").join(" ").trim();
-      if (interim) setInput(interim.slice(0, 1200));
-      if (finalTranscript) {
-        const safeTranscript = finalTranscript.slice(0, 1200);
-        setInput(safeTranscript);
-        setIsListening(false);
-        recognitionRef.current = null;
-        if (voiceModeRef.current) waitingForVoiceReplyRef.current = true;
-        void sendMessageRef.current(safeTranscript, false, true);
-      }
-    };
-    recognition.onerror = (event) => {
-      setIsListening(false);
-      recognitionRef.current = null;
-      const permissionDenied = event?.error === "not-allowed" || event?.error === "service-not-allowed";
-      const message = permissionDenied
-        ? "No hay permiso para usar el micrófono. Autorízalo en el navegador e inténtalo de nuevo."
-        : event?.error === "no-speech"
-          ? "No detecté voz. Vuelve a intentarlo acercándote al micrófono."
-          : "No pude reconocer tu voz. Revisa el micrófono e inténtalo otra vez.";
-      setVoiceError(message);
-      if (permissionDenied && voiceModeRef.current) {
-        voiceModeRef.current = false;
-        waitingForVoiceReplyRef.current = false;
-        setVoiceMode(false);
-      }
-    };
-    recognition.onend = () => {
-      setIsListening(false);
-      if (recognitionRef.current === recognition) recognitionRef.current = null;
-    };
-    recognitionRef.current = recognition;
-    try {
-      recognition.start();
-      setIsListening(true);
-    } catch {
-      setIsListening(false);
-      recognitionRef.current = null;
-      setVoiceError("No se pudo activar el micrófono. Inténtalo de nuevo.");
-    }
-  }
   async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }) {
     const message = text.trim();
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
@@ -1390,8 +1299,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   useEffect(() => {
     if (!open) {
-      recognitionRef.current?.stop();
-      recognitionRef.current = null;
       stopAudioRecordingRef.current(true);
       audioStreamRef.current?.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
@@ -1416,8 +1323,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function handleCloseTutor() {
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
     setIsListening(false);
     stopAudioRecording(true);
     clearRecordedAudio();
@@ -1547,8 +1452,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     clearRecordedAudio();
     setPendingAttachmentMeta(null);
     stopRealtimeVoice();
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
     setIsListening(false);
     stopSpeaking();
     inputRef.current?.focus();

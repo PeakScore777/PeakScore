@@ -832,7 +832,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantMessageIdRef.current = null;
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
-      voiceTurnSavingRef.current = false;
       voiceInputPolicyRef.current = null;
       voiceForcedReplyRef.current = null;
       // Stop queued playback immediately when the student starts speaking.

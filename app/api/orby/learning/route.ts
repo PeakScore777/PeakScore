@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,16 +15,29 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return jsonError("Inicia sesión para ver tu aprendizaje.", 401);
 
-    const { data, error } = await supabase.from("orby_learning_items")
-      .select("id,kind,title,content,created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    if (error) {
-      console.error("[Orby Learning] List failed.", { code: error.code });
+    const [itemsResult, signalsResult] = await Promise.all([
+      supabase.from("orby_learning_items")
+        .select("id,kind,title,content,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabaseAdmin.from("orby_student_learning_signals")
+        .select("id,subject,topic,concept,learning_state,misconception,teaching_hint,confidence,created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
+    if (itemsResult.error) {
+      console.error("[Orby Learning] List failed.", { code: itemsResult.error.code });
       return jsonError("No se pudo cargar tu aprendizaje.", 503);
     }
-    return NextResponse.json({ items: data ?? [] }, { headers: { "Cache-Control": "private, no-store, max-age=0" } });
+    if (signalsResult.error) {
+      console.error("[Orby Learning] Adaptive progress lookup failed.", { code: signalsResult.error.code });
+    }
+    return NextResponse.json({
+      items: itemsResult.data ?? [],
+      signals: signalsResult.error ? [] : signalsResult.data ?? [],
+    }, { headers: { "Cache-Control": "private, no-store, max-age=0" } });
   } catch {
     return jsonError("No se pudo cargar tu aprendizaje.", 500);
   }

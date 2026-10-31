@@ -19,7 +19,8 @@ function jsonError(message: string, status: number) {
 }
 
 async function getAdmin() {
-  return getOrbyOwner();
+  const owner = await getOrbyOwner();
+  return { user: owner?.user ?? null };
 }
 
 function splitText(text: string, maxChars: number): string[] {

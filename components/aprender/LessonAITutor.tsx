@@ -2121,8 +2121,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         @media (prefers-reduced-motion: reduce) { #orby-tutor-panel .orby-wave-bar, #orby-tutor-panel .orby-voice-orbit { animation:none!important; } }
         /* Compact orb preview: centered over the conversation, with soft volumetric amber mist. */
         #orby-tutor-panel .orby-mini-voice {
-          width: 64px !important; height: 64px !important; left: 50% !important;
-          top: auto !important; bottom: 82px !important;
+          width: 64px !important; height: 64px !important;
+          left: calc(50% + 132px) !important; top: auto !important; bottom: 82px !important;
           border: 0 !important; overflow: visible !important; isolation: isolate;
           box-shadow: none !important; background: transparent !important;
         }
@@ -2149,14 +2149,34 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             0 0 22px rgba(242,138,24,.24), 0 0 48px rgba(242,138,24,.13) !important;
           animation: orby-orb-float 5s ease-in-out infinite;
         }
+        /* Humo interno procedural: capas de ruido suave que se desplazan dentro del volumen. */
         #orby-tutor-panel .orby-mini-voice-core::before {
-          inset: -10px !important; border-color: rgba(255,179,99,.25) !important;
-          filter: blur(1.5px); animation: orby-mini-pulse 3.4s ease-out infinite !important;
+          content: "" !important; inset: 3px !important; border: 0 !important;
+          border-radius: inherit; overflow: hidden; pointer-events: none;
+          background:
+            radial-gradient(ellipse at 28% 62%, rgba(255,226,185,.68) 0%, rgba(255,191,125,.22) 25%, transparent 52%),
+            radial-gradient(ellipse at 72% 35%, rgba(255,245,220,.55) 0%, rgba(255,177,100,.19) 29%, transparent 56%),
+            radial-gradient(ellipse at 54% 78%, rgba(255,208,157,.42) 0%, transparent 48%),
+            radial-gradient(ellipse at 42% 20%, rgba(255,255,255,.32) 0%, transparent 38%);
+          background-size: 155% 145%, 165% 155%, 145% 165%, 180% 160%;
+          background-position: 0% 55%, 100% 35%, 40% 100%, 55% 0%;
+          filter: blur(5px) saturate(1.12);
+          mix-blend-mode: screen; opacity: .82;
+          animation: orby-core-smoke 8s ease-in-out infinite alternate !important;
         }
         #orby-tutor-panel .orby-mini-voice-core::after {
           content: ""; position: absolute; inset: -3px; border-radius: inherit; pointer-events: none;
           background: radial-gradient(ellipse at 29% 23%, rgba(255,255,255,.72), rgba(255,235,208,.16) 22%, transparent 48%);
           filter: blur(1px);
+        }
+        @keyframes orby-core-smoke {
+          0% { transform: scale(1.02) rotate(-9deg); background-position: 0% 55%, 100% 35%, 40% 100%, 55% 0%; opacity: .58; }
+          35% { transform: scale(1.09) rotate(4deg); background-position: 38% 20%, 58% 72%, 12% 44%, 88% 38%; opacity: .9; }
+          70% { transform: scale(1.04) rotate(11deg); background-position: 82% 70%, 12% 18%, 78% 12%, 25% 90%; opacity: .72; }
+          100% { transform: scale(1.12) rotate(18deg); background-position: 100% 35%, 0% 80%, 55% 65%, 0% 40%; opacity: .86; }
+        }
+        @media (max-width: 768px) {
+          #orby-tutor-panel .orby-mini-voice { left: 50% !important; }
         }
         @keyframes orby-mist-drift {
           0% { transform: translate3d(-5px,3px,0) scale(.94) rotate(-5deg); opacity: .62; }

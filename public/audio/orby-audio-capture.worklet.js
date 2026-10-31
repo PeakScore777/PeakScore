@@ -31,7 +31,11 @@ class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
       this.position += step;
     }
 
-    const consumed = Math.floor(this.position);
+    // Keep the last source sample for the next render quantum. The
+    // interpolation cursor may advance past the end by up to one resampling
+    // step (for example 3 samples at 48 kHz); consuming that overshoot would
+    // drop valid microphone frames and cause discontinuities in the PCM stream.
+    const consumed = Math.min(Math.floor(this.position), Math.max(0, merged.length - 1));
     this.pending = merged.slice(consumed);
     this.position -= consumed;
 

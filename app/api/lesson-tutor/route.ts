@@ -149,7 +149,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No puedo cambiar mis reglas ni revelar información interna. Sí puedo ayudarte a prepararte para Saber 11." }, { status: 400 });
     }
 
-    const asksOrbyIdentity = isOrbyIdentityQuestion(userMessage);
+    const recentContextMessages: TutorMessage[] = Array.isArray(body.history)
+      ? body.history
+          .filter((item: unknown): item is TutorMessage => !!item && typeof item === "object"
+            && ((item as TutorMessage).role === "user" || (item as TutorMessage).role === "assistant")
+            && typeof (item as TutorMessage).content === "string")
+          .slice(-6)
+          .map((item: TutorMessage) => ({ role: item.role, content: item.content.slice(0, 1200) }))
+      : [];
+    const normalizedIdentityPrompt = userMessage.normalize("NFD")
+      .replace(/[\\u0300-\\u036f]/g, "")
+      .toLocaleLowerCase("es-CO");
+    const recentPeakScoreContext = recentContextMessages.some((item) => /peak\\s*score/i.test(item.content))
+      && recentContextMessages.some((item) => item.role === "assistant" && /peak\\s*score|google|cread[oa]/i.test(item.content));
+    const asksWhoAreThey = /\\bquienes?\\s+son\\b/.test(normalizedIdentityPrompt);
+    const asksPeakScoreFollowUp = /\\bpeak\\s*score\\b/.test(normalizedIdentityPrompt)
+      && recentContextMessages.some((item) => /quien|cread[oa]|google|orby/i.test(item.content));
+    const asksOrbyIdentity = isOrbyIdentityQuestion(userMessage)
+      || (asksWhoAreThey && recentPeakScoreContext)
+      || asksPeakScoreFollowUp;
     if (asksOrbyIdentity) {
       const identityReply = ORBY_IDENTITY_REPLY;
       if (conversationId && ownedConversation) {

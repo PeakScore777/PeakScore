@@ -805,6 +805,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
 
       let rejectSetup: ((error: Error) => void) | null = null;
+      let liveSessionEstablished = false;
+      let lastLiveSocketError = "";
+      const connectionAbort = new AbortController();
       const setupFailure = new Promise<never>((_, reject) => {
         rejectSetup = reject;
       });
@@ -812,41 +815,67 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const sessionPromise = googleAI.live.connect({
         model,
         config: {
+          abortSignal: connectionAbort.signal,
           responseModalities: [Modality.AUDIO],
+          // Start with the documented Live configuration. Audio transcription
+          // is enabled without a forced language; Gemini 3.8 Live detects it.
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
           speechConfig: {
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: "Puck" },
+              prebuiltVoiceConfig: { voiceName: "Kore" },
             },
           },
           systemInstruction: {
             parts: [{ text: systemInstruction }],
           },
-          inputAudioTranscription: { languageCodes: ["es-CO"] },
-          outputAudioTranscription: { languageCodes: ["es-CO"] },
-          realtimeInputConfig: {
-            automaticActivityDetection: {
-              disabled: false,
-              prefixPaddingMs: 250,
-              silenceDurationMs: 550,
-            },
-          },
         },
         callbacks: {
-          onopen: () => setVoiceStatus("Conectado; configurando a Orby…"),
+          onopen: () => {
+            setVoiceStatus("Conectado; esperando confirmación de Orby…");
+          },
           onmessage: (message) => {
-            handleGeminiLiveEvent(message as unknown as Record<string, unknown>);
+            const payload = message as unknown as Record<string, unknown>;
+            if (payload.error && typeof payload.error === "object") {
+              const detail = payload.error as { message?: unknown; status?: unknown; code?: unknown };
+              const messageText = typeof detail.message === "string" ? detail.message : "Google rechazó la configuración de Live.";
+              const code = typeof detail.code === "number" ? " (" + detail.code + ")" : "";
+              rejectSetup?.(new Error("Gemini Live" + code + ": " + messageText.slice(0, 240)));
+              return;
+            }
+            handleGeminiLiveEvent(payload);
           },
           onerror: (event) => {
-            const detail = event.message?.trim() || "Google notificó un error en la conexión Live.";
-            rejectSetup?.(new Error("Gemini Live: " + detail.slice(0, 240)));
+            // Browser WebSocket ErrorEvents usually omit the server reason.
+            // Keep this detail and wait for onclose, which carries the close code.
+            const rawError = event.error instanceof Error
+              ? event.error.message
+              : typeof event.message === "string" && event.message.trim()
+                ? event.message.trim()
+                : "WebSocket notificó un error sin detalle.";
+            lastLiveSocketError = rawError.slice(0, 180);
+            console.warn("[Orby Gemini Live] WebSocket error event.", {
+              message: lastLiveSocketError,
+              eventType: event.type,
+            });
+            setVoiceStatus("Recuperando detalle de conexión…");
           },
           onclose: (event) => {
-            if (!voiceModeRef.current) return;
             const reason = event.reason?.trim();
-            const detail = reason ? reason.slice(0, 160) : "código " + event.code;
-            rejectSetup?.(new Error("Gemini Live cerró la conexión (" + detail + ")."));
-            if (voiceChannelRef.current) {
-              setVoiceError("La conexión de voz se cerró (" + detail + ").");
+            const detail = [
+              "código " + event.code,
+              reason ? "razón: " + reason.slice(0, 180) : "",
+              lastLiveSocketError ? "evento previo: " + lastLiveSocketError : "",
+              event.wasClean ? "cierre limpio" : "cierre no limpio",
+            ].filter(Boolean).join(" · ");
+
+            if (!liveSessionEstablished) {
+              rejectSetup?.(new Error("Gemini Live cerró antes de confirmar el setup (" + detail + ")."));
+              return;
+            }
+
+            if (voiceModeRef.current) {
+              setVoiceError("La sesión de voz se cerró (" + detail + ").");
               stopRealtimeVoice();
             }
           },
@@ -854,19 +883,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
 
       let liveSession: Session;
+      let setupTimeoutId: number | null = null;
       try {
         liveSession = await Promise.race([
           sessionPromise,
           setupFailure,
           new Promise<never>((_, reject) => {
-            window.setTimeout(() => reject(new Error("Google Gemini Live no confirmó la configuración en 15 segundos.")), 15000);
+            setupTimeoutId = window.setTimeout(() => {
+              const previousError = lastLiveSocketError
+                ? " Último evento de red: " + lastLiveSocketError
+                : "";
+              reject(new Error("Gemini Live no confirmó el setup en 30 segundos." + previousError));
+            }, 30000);
           }),
         ]);
       } catch (error) {
+        connectionAbort.abort();
         rejectSetup = null;
         throw error;
+      } finally {
+        if (setupTimeoutId !== null) window.clearTimeout(setupTimeoutId);
       }
       rejectSetup = null;
+      liveSessionEstablished = true;
       voiceChannelRef.current = liveSession;
       setVoiceStatus("Te escucho…");
       setIsListening(true);

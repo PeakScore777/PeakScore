@@ -110,6 +110,16 @@ export function extractPlainOrbyReply(value: string): string {
   }
 }
 
+export function hasFalseOrbyCreatorAttribution(value: string): boolean {
+  const normalized = normalizeOrbyRequestText(value);
+  const match = normalized.match(/(?:cread[oa]|entrenad[oa]|desarrollad[oa]|hech[oa]|created|trained|made)\s*(?:por|by)\s*([a-z0-9][a-z0-9 ._-]{0,48})/i);
+  if (!match) return false;
+  const alleged = match[1]
+    .split(/\s+(?:para|en|con|que|y|to|for)\b/i)[0]
+    .replace(/[^a-z0-9]/gi, "");
+  return Boolean(alleged) && !/^peak[-_]?score$/i.test(alleged);
+}
+
 export function normalizeOrbySpanishOutput(value: string): string {
   return value
     .replace(/\u00a0/g, " ")

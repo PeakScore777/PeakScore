@@ -824,6 +824,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? event.voiceActivity as { type?: unknown }
       : null;
     if (voiceActivity?.type === "ACTIVITY_START") {
+      // Stop queued playback immediately when the student starts speaking.
+      stopVoicePlayback();
+      voicePendingAudioChunksRef.current = [];
       setIsListening(true);
       setVoiceStatus("Te escucho…");
     } else if (voiceActivity?.type === "ACTIVITY_END") {
@@ -863,7 +866,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : transcript;
       const normalizedTranscript = voiceUserTextRef.current.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
       const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora)\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript);
-      const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|ensename a programar|quiero aprender a programar|crear una app|hacer una pagina web|crear un sitio web)\b/.test(normalizedTranscript);
+      const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|ensename a programar|quiero aprender a programar|crear una app|hacer una pagina web|crear un sitio web|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot)\b/.test(normalizedTranscript)
+        || /\b(ensename|quiero aprender|ayudame a|explicame como)\b.{0,70}\b(crear|hacer|construir|desarrollar|programa|juego|pagina|aplicacion|app|bot|codigo)\b/.test(normalizedTranscript);
       voiceInputPolicyRef.current = asksIdentity ? "identity" : asksProgramming ? "programming" : null;
       voicePendingAudioChunksRef.current = [];
       setLiveTranscript("");

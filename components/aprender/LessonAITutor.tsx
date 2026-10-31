@@ -998,9 +998,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             const payload = message as unknown as Record<string, unknown>;
             if (payload.error && typeof payload.error === "object") {
               const detail = payload.error as { message?: unknown; status?: unknown; code?: unknown };
-              const messageText = typeof detail.message === "string" ? detail.message : "Google rechazó la configuración de Live.";
-              const code = typeof detail.code === "number" ? " (" + detail.code + ")" : "";
-              rejectSetup?.(new Error("Gemini Live" + code + ": " + messageText.slice(0, 240)));
+              console.warn("[Orby Voice] Realtime service rejected the connection.", { status: detail.status, code: detail.code });
+              rejectSetup?.(new Error("No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
               return;
             }
             handleGeminiLiveEvent(payload);
@@ -1030,13 +1029,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ].filter(Boolean).join(" · ");
 
             if (!liveSessionEstablished) {
-              console.warn("[Orby Voice] Connection closed before setup completed.", { detail });\n              rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de Orby."));
-              return;
+              console.warn("[Orby Voice] Connection closed before setup completed.", { detail });
+              rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de Orby."));
             }
 
             if (voiceModeRef.current) {
-              console.warn("[Orby Voice] Active session closed.", { detail });\n              setVoiceError("Se perdió la conexión de voz. Vuelve a iniciar la conversación.");
-              stopRealtimeVoice();
+              console.warn("[Orby Voice] Active session closed.", { detail });
+              setVoiceError("Se perdió la conexión de voz. Vuelve a iniciar la conversación.");
             }
           },
         },
@@ -1053,8 +1052,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               const previousError = lastLiveSocketError
                 ? " Último evento de red: " + lastLiveSocketError
                 : "";
-              console.warn("[Orby Voice] Setup timeout.", { previousError });\n              reject(new Error("Orby no pudo iniciar la conversación de voz a tiempo. Inténtalo de nuevo."));
-            }, 30000);
+              console.warn("[Orby Voice] Setup timeout.", { previousError });
+              reject(new Error("Orby no pudo iniciar la conversación de voz a tiempo. Inténtalo de nuevo."));
           }),
         ]);
       } catch (error) {

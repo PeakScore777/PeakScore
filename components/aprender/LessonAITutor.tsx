@@ -1107,6 +1107,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
     voiceStreamRef.current = stream;
+    stream.getAudioTracks().forEach((track) => {
+      track.onended = () => {
+        if (!voiceModeRef.current) return;
+        setVoiceError("El micrófono dejó de enviar audio. Comprueba que siga conectado y que el navegador tenga permiso.");
+        setVoiceStatus("Micrófono desconectado");
+      };
+      track.onmute = () => {
+        if (!voiceModeRef.current) return;
+        setVoiceStatus("El navegador pausó el micrófono; comprueba el permiso del sitio.");
+      };
+      track.onunmute = () => {
+        if (voiceModeRef.current) {
+          setVoiceError("");
+          setVoiceStatus("Te escucho…");
+        }
+      };
+    });
 
     try {
       // Activate capture immediately after permission is granted, before the
@@ -1157,8 +1174,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           responseModalities: [Modality.AUDIO],
           // Start with the documented Live configuration. Audio transcription
           // is enabled without a forced language; the model detects Spanish.
-          inputAudioTranscription: { languageCodes: ["es-CO"] },
-          outputAudioTranscription: { languageCodes: ["es-CO"] },
+          inputAudioTranscription: {},
+          outputAudioTranscription: {},
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: "Kore" },
@@ -1274,12 +1291,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       worklet.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
         const activeSession = voiceChannelRef.current;
         if (!activeSession || !(event.data instanceof ArrayBuffer)) return;
-        activeSession.sendRealtimeInput({
-          audio: {
-            data: pcmBufferToBase64(event.data),
-            mimeType: "audio/pcm;rate=16000",
-          },
-        });
+        try {
+          activeSession.sendRealtimeInput({
+            audio: {
+              data: pcmBufferToBase64(event.data),
+              mimeType: "audio/pcm;rate=16000",
+            },
+          });
+        } catch (error) {
+          console.error("[Orby Voice] Failed to send microphone audio.", {
+            name: error instanceof Error ? error.name : "UnknownError",
+          });
+          setVoiceError("No se pudo enviar el audio del micrófono. La conexión de voz se va a reiniciar.");
+          setVoiceStatus("Error enviando audio");
+          stopRealtimeVoice();
+        }
       };
       microphoneSource.connect(worklet);
       worklet.connect(muteGain);

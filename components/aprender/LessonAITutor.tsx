@@ -1819,7 +1819,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
       </section>}
       {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="fixed bottom-24 right-5 z-[95] flex items-center gap-3 rounded-full border border-orange-500/50 bg-[#11151c] px-3 py-2.5 text-white shadow-[0_12px_40px_rgba(249,115,22,.28)] transition hover:-translate-y-0.5 hover:border-orange-400 sm:bottom-8 sm:right-8">
-        <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-orange-400 bg-orange-500/15"><Image src="/avatars/photo_perfil/orbyp.png" width={80} height={80} alt="" className="h-full w-full object-contain" /></span>
+        <span className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border border-orange-400/50 bg-orange-500/15"><AudioLines className="h-5 w-5 text-orange-300" /></span>
         <span className="min-w-0 text-left"><span className="block text-xs font-bold">Orby · En llamada</span><span className="block text-[10px] text-orange-300">{voiceMuted ? "Micrófono silenciado" : voiceStatus}</span></span>
         <AudioLines className="h-5 w-5 text-orange-400" />
       </button>}

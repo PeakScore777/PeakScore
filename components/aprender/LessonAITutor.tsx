@@ -987,62 +987,74 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
       const rawReply = normalizeVoicePunctuation(voiceAssistantTextRef.current);
-      const compactReply = rawReply.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO").replace(/[\s\p{P}\p{S}]+/gu, "");
-      const exposesProvider = /(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)/.test(rawReply.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO"))
-        || /(?:entrenado|entrenada|trained|creado|creada|desarrollado|desarrollada|hecho|hecha)por(?:google|gemini|openai|anthropic|groq|llm7)/.test(compactReply);
-      const pendingForcedReply = voiceForcedReplyRef.current;
-      const forcedReplyMatches = !pendingForcedReply || normalizeVoiceComparison(rawReply) === normalizeVoiceComparison(pendingForcedReply);
-      const safeReply = pendingForcedReply
-        ?? (voiceInputPolicyRef.current === "identity" || exposesProvider
-          ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
-          : voiceInputPolicyRef.current === "programming"
-            ? "Soy Orby, el tutor educativo de PeakScore, especializado exclusivamente en Saber 11. No enseño programación ni desarrollo de software. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-            : rawReply);
+      const normalizedReply = rawReply.normalize("NFD").replace(/\\p{M}/gu, "").toLocaleLowerCase("es-CO");
+      const exposesProvider = /\\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\\b/.test(normalizedReply)
+        && /\\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|trained|hecho|hecha|soy|fui)\\b/.test(normalizedReply);
+      const policyReply = voiceInputPolicyRef.current === "identity" || exposesProvider
+        ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
+        : voiceInputPolicyRef.current === "programming"
+          ? "Soy Orby, el tutor educativo de PeakScore, especializado exclusivamente en Saber 11. No enseño programación ni desarrollo de software. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
+          : null;
 
-      // Do not render an untrusted first answer if a policy correction is required.
-      // Rendering before correction produced two assistant bubbles for one student turn.
-      if ((voiceInputPolicyRef.current || exposesProvider) && !pendingForcedReply) {
-        const correction = safeReply;
+      // A policy response is produced locally exactly once. Never ask Gemini to
+      // repeat a correction: that second Live turn caused duplicated bubbles/audio.
+      if (policyReply) {
         stopVoicePlayback();
         voicePendingAudioChunksRef.current = [];
-        voiceAssistantTextRef.current = "";
-        voiceAssistantMessageIdRef.current = null;
-        voiceResponseDoneRef.current = false;
-        voiceForcedReplyRef.current = correction;
-        voiceInputPolicyRef.current = null;
-        const liveSession = voiceChannelRef.current;
-        if (liveSession) {
-          liveSession.sendClientContent({
-            turns: [{ role: "user", parts: [{ text: "CONTROL DE SEGURIDAD DE PEAKSCORE: responde oralmente pronunciando exactamente este texto, sin agregar, quitar ni modificar palabras: " + correction }] }],
-            turnComplete: true,
-          });
-          setVoiceStatus("Preparando respuesta de Orby…");
-          return;
-        }
-        voiceForcedReplyRef.current = null;
-        setVoiceError("No se pudo preparar la respuesta segura de voz. Reinicia la conversación.");
-        return;
-      }
-
-      if (pendingForcedReply) voiceForcedReplyRef.current = null;
-
-      if (safeReply) {
-        voiceAssistantTextRef.current = safeReply;
+        voiceAssistantTextRef.current = policyReply;
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = id;
         setMessages((current) => {
           const exists = current.some((message) => message.id === id);
           return exists
-            ? current.map((message) => message.id === id ? { ...message, content: safeReply } : message)
-            : [...current, { id, role: "assistant", content: safeReply }];
+            ? current.map((message) => message.id === id ? { ...message, content: policyReply } : message)
+            : [...current, { id, role: "assistant", content: policyReply }];
         });
+        voiceLastAssistantOutputRef.current = policyReply;
+        voiceInputPolicyRef.current = null;
+        voiceForcedReplyRef.current = null;
+        voiceResponseDoneRef.current = true;
+        void persistRealtimeTurnIfReady();
+
+        if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(policyReply);
+          utterance.lang = "es-CO";
+          utterance.rate = 1;
+          utterance.onend = () => {
+            if (voiceModeRef.current) {
+              setVoiceStatus("Te escucho…");
+              setIsListening(true);
+            }
+          };
+          utterance.onerror = () => {
+            if (voiceModeRef.current) {
+              setVoiceError("La respuesta se mostró por escrito, pero el navegador no pudo reproducir la voz.");
+              setVoiceStatus("Te escucho…");
+              setIsListening(true);
+            }
+          };
+          window.speechSynthesis.speak(utterance);
+          setVoiceStatus("Orby está hablando…");
+        } else {
+          setVoiceError("La respuesta se mostró por escrito; este navegador no tiene lectura de voz.");
+          setVoiceStatus("Te escucho…");
+          setIsListening(true);
+        }
+        return;
       }
-      if (pendingForcedReply && !forcedReplyMatches) {
-        // Never play unverified audio for a mandatory identity/scope correction.
-        voicePendingAudioChunksRef.current = [];
-        setVoiceError("La respuesta segura se muestra por escrito; no se pudo verificar su audio.");
-      } else {
-        voiceLastAssistantOutputRef.current = safeReply;
+
+      if (rawReply) {
+        voiceAssistantTextRef.current = rawReply;
+        const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+        voiceAssistantMessageIdRef.current = id;
+        setMessages((current) => {
+          const exists = current.some((message) => message.id === id);
+          return exists
+            ? current.map((message) => message.id === id ? { ...message, content: rawReply } : message)
+            : [...current, { id, role: "assistant", content: rawReply }];
+        });
+        voiceLastAssistantOutputRef.current = rawReply;
         for (const chunk of voicePendingAudioChunksRef.current) playGeminiAudio(chunk.data, chunk.mimeType);
         const playbackContext = voiceAudioContextRef.current;
         const remainingPlaybackMs = playbackContext
@@ -1050,6 +1062,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : 0;
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + remainingPlaybackMs + 1800;
       }
+
       voicePendingAudioChunksRef.current = [];
       voiceInputPolicyRef.current = null;
       voiceResponseDoneRef.current = true;

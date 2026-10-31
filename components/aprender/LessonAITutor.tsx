@@ -1813,7 +1813,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </section>}
       </div>}
 
-      <div className={workspace && workspaceMode === "voice" ? "hidden" : "min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"} ref={scrollRef} aria-live="polite">
+      <div className={workspace && workspaceMode === "voice" ? "hidden" : `min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${workspace && voiceMode && workspaceMode === "chat" ? "pb-44" : ""}`} ref={scrollRef} aria-live="polite">
         {workspace && learningView !== "chat" ? (
           <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 sm:py-10">
             <div className="mb-7 flex flex-wrap items-end justify-between gap-4 border-b border-white/[0.08] pb-6">
@@ -2129,8 +2129,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         @media (prefers-reduced-motion: reduce) { #orby-tutor-panel .orby-wave-bar, #orby-tutor-panel .orby-voice-orbit { animation:none!important; } }
         /* Compact orb preview: centered over the conversation, with soft volumetric amber mist. */
         #orby-tutor-panel .orby-mini-voice {
-          width: 64px !important; height: 64px !important;
-          left: calc(50% + 148px) !important; top: auto !important; bottom: 82px !important;
+          width: 76px !important; height: 76px !important;
+          left: 50% !important; top: auto !important; bottom: 98px !important;
           border: 0 !important; overflow: visible !important; isolation: isolate;
           box-shadow: none !important; background: transparent !important;
         }
@@ -2162,12 +2162,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           content: "" !important; inset: 3px !important; border: 0 !important;
           border-radius: inherit; overflow: hidden; pointer-events: none;
           background:
-            radial-gradient(ellipse at 28% 62%, rgba(255,226,185,.68) 0%, rgba(255,191,125,.22) 25%, transparent 52%),
-            radial-gradient(ellipse at 72% 35%, rgba(255,245,220,.55) 0%, rgba(255,177,100,.19) 29%, transparent 56%),
-            radial-gradient(ellipse at 54% 78%, rgba(255,208,157,.42) 0%, transparent 48%),
-            radial-gradient(ellipse at 42% 20%, rgba(255,255,255,.32) 0%, transparent 38%);
-          background-size: 155% 145%, 165% 155%, 145% 165%, 180% 160%;
-          background-position: 0% 55%, 100% 35%, 40% 100%, 55% 0%;
+            radial-gradient(ellipse at 28% 62%, rgba(255,242,222,.82) 0%, rgba(255,198,139,.34) 19%, transparent 48%),
+            radial-gradient(ellipse at 72% 35%, rgba(255,248,232,.78) 0%, rgba(255,177,100,.25) 24%, transparent 54%),
+            radial-gradient(ellipse at 54% 78%, rgba(255,216,176,.58) 0%, rgba(255,151,77,.16) 32%, transparent 57%),
+            radial-gradient(ellipse at 42% 20%, rgba(255,255,255,.52) 0%, rgba(255,235,207,.14) 24%, transparent 44%),
+            radial-gradient(ellipse at 82% 78%, rgba(255,126,43,.3) 0%, transparent 45%);
+          background-size: 175% 165%, 185% 175%, 165% 185%, 190% 180%, 170% 165%;
+          background-position: 0% 55%, 100% 35%, 40% 100%, 55% 0%, 90% 80%;
           filter: url(#orby-smoke-filter) blur(5px) saturate(1.12);
           mix-blend-mode: screen; opacity: .82;
           animation: orby-core-smoke 8s ease-in-out infinite alternate !important;
@@ -2178,10 +2179,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           filter: blur(1px);
         }
         @keyframes orby-core-smoke {
-          0% { transform: scale(1.02) rotate(-9deg); background-position: 0% 55%, 100% 35%, 40% 100%, 55% 0%; opacity: .58; }
-          35% { transform: scale(1.09) rotate(4deg); background-position: 38% 20%, 58% 72%, 12% 44%, 88% 38%; opacity: .9; }
-          70% { transform: scale(1.04) rotate(11deg); background-position: 82% 70%, 12% 18%, 78% 12%, 25% 90%; opacity: .72; }
-          100% { transform: scale(1.12) rotate(18deg); background-position: 100% 35%, 0% 80%, 55% 65%, 0% 40%; opacity: .86; }
+          0% { transform: scale(1.02) rotate(-9deg); background-position: 0% 55%, 100% 35%, 40% 100%, 55% 0%, 90% 80%; opacity: .66; }
+          35% { transform: scale(1.09) rotate(4deg); background-position: 38% 20%, 58% 72%, 12% 44%, 88% 38%, 18% 24%; opacity: .96; }
+          70% { transform: scale(1.04) rotate(11deg); background-position: 82% 70%, 12% 18%, 78% 12%, 25% 90%, 72% 55%; opacity: .8; }
+          100% { transform: scale(1.12) rotate(18deg); background-position: 100% 35%, 0% 80%, 55% 65%, 0% 40%, 42% 100%; opacity: .9; }
         }
         @media (max-width: 768px) {
           #orby-tutor-panel .orby-mini-voice { left: 50% !important; }

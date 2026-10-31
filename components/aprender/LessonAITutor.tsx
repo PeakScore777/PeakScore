@@ -155,6 +155,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceTurnSavingRef = useRef(false);
   const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
   const voiceInputPolicyRef = useRef<"identity" | "programming" | null>(null);
+  const voiceForcedReplyRef = useRef<string | null>(null);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
@@ -854,14 +855,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceResponseDoneRef.current = false;
         voiceTurnPersistedRef.current = false;
       }
-      voiceUserTextRef.current = transcript;
-      const normalizedTranscript = transcript.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
-      voiceInputPolicyRef.current =
-        /\b(quien|qn)\b.{0,48}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora)\b|\b(quien|qn)\s+eres\b/.test(normalizedTranscript)
-          ? "identity"
-          : /\b(programar|programacion|programador|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo)\b/.test(normalizedTranscript)
-            ? "programming"
-            : null;
+      const previousTranscript = voiceUserTextRef.current.trim();
+      voiceUserTextRef.current = transcript.startsWith(previousTranscript)
+        ? transcript
+        : previousTranscript && !previousTranscript.endsWith(transcript)
+          ? (previousTranscript + " " + transcript).slice(-1200)
+          : transcript;
+      const normalizedTranscript = voiceUserTextRef.current.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
+      const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora)\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript);
+      const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|ensename a programar|quiero aprender a programar|crear una app|hacer una pagina web|crear un sitio web)\b/.test(normalizedTranscript);
+      voiceInputPolicyRef.current = asksIdentity ? "identity" : asksProgramming ? "programming" : null;
       voicePendingAudioChunksRef.current = [];
       setLiveTranscript("");
       setMessages((current) => {
@@ -917,12 +920,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if (serverContent.turnComplete === true || serverContent.generationComplete === true) {
       const rawReply = voiceAssistantTextRef.current.trim();
-      const exposesProvider = /\b(creado|creada|desarrollado|desarrollada)\s+por\s+(google|gemini|openai|anthropic)\b|\bsoy\s+(un\s+)?modelo\s+de\s+lenguaje\b/i.test(rawReply);
-      const safeReply = voiceInputPolicyRef.current === "identity" || exposesProvider
-        ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
-        : voiceInputPolicyRef.current === "programming"
-          ? "Soy Orby, el asistente educativo de PeakScore y mi función es ayudarte exclusivamente a preparar Saber 11. No enseño programación. Podemos trabajar Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-          : rawReply;
+      const exposesProvider = /\b(creado|creada|desarrollado|desarrollada)\s+por\s+(google|gemini|openai|anthropic|pitagoras|pitagoras corp)\b|\bsoy\s+(un\s+)?modelo\s+de\s+lenguaje\b/i.test(rawReply);
+      const pendingForcedReply = voiceForcedReplyRef.current;
+      const safeReply = pendingForcedReply
+        ?? (voiceInputPolicyRef.current === "identity" || exposesProvider
+          ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
+          : voiceInputPolicyRef.current === "programming"
+            ? "Soy Orby, el asistente educativo de PeakScore y mi función es ayudarte exclusivamente a preparar Saber 11. No enseño programación. Podemos trabajar Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
+            : rawReply);
       if (safeReply) {
         voiceAssistantTextRef.current = safeReply;
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
@@ -934,19 +939,32 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             : [...current, { id, role: "assistant", content: safeReply }];
         });
       }
-      if (voiceInputPolicyRef.current || exposesProvider) {
+      if ((voiceInputPolicyRef.current || exposesProvider) && !pendingForcedReply) {
+        const correction = safeReply;
         stopVoicePlayback();
-        if (safeReply && "speechSynthesis" in window) {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance(safeReply);
-          utterance.lang = "es-CO";
-          window.speechSynthesis.speak(utterance);
+        voicePendingAudioChunksRef.current = [];
+        voiceAssistantTextRef.current = "";
+        voiceAssistantMessageIdRef.current = null;
+        voiceResponseDoneRef.current = false;
+        voiceForcedReplyRef.current = correction;
+        voiceInputPolicyRef.current = null;
+        const liveSession = voiceChannelRef.current;
+        if (liveSession) {
+          liveSession.sendClientContent({
+            turns: [{ role: "user", parts: [{ text: "CONTROL DE SEGURIDAD DE PEAKSCORE: responde oralmente pronunciando exactamente este texto, sin agregar, quitar ni modificar palabras: " + correction }] }],
+            turnComplete: true,
+          });
+          setVoiceStatus("Preparando respuesta de Orby…");
+          return;
         }
-        voicePendingAudioChunksRef.current = [];
-      } else {
-        for (const chunk of voicePendingAudioChunksRef.current) playGeminiAudio(chunk.data, chunk.mimeType);
-        voicePendingAudioChunksRef.current = [];
+        voiceForcedReplyRef.current = null;
+        setVoiceError("No se pudo preparar la respuesta segura de voz. Reinicia la conversación.");
+        return;
       }
+
+      if (pendingForcedReply) voiceForcedReplyRef.current = null;
+      for (const chunk of voicePendingAudioChunksRef.current) playGeminiAudio(chunk.data, chunk.mimeType);
+      voicePendingAudioChunksRef.current = [];
       voiceInputPolicyRef.current = null;
       voiceResponseDoneRef.current = true;
       void persistRealtimeTurnIfReady();
@@ -1021,6 +1039,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // is enabled without a forced language; the model detects Spanish.
           inputAudioTranscription: {},
           outputAudioTranscription: {},
+          realtimeInputConfig: {
+            activityHandling: "START_OF_ACTIVITY_INTERRUPTS",
+            automaticActivityDetection: {
+              disabled: false,
+              startOfSpeechSensitivity: "START_SENSITIVITY_HIGH",
+              endOfSpeechSensitivity: "END_SENSITIVITY_HIGH",
+              prefixPaddingMs: 40,
+              silenceDurationMs: 650,
+            },
+            turnCoverage: "TURN_INCLUDES_ONLY_ACTIVITY",
+          },
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: "Kore" },

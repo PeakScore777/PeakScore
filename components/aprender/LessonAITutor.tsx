@@ -1777,9 +1777,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>)}
             <div className="mt-5 border-t border-white/[0.07] pt-4">
               <p className="px-2 pb-2 orby-pixel-label font-semibold uppercase tracking-[0.14em] text-[#777e88]">Aprendizaje</p>
-              <button type="button" onClick={() => setLearningView("notes")} className={learningView === "notes" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}><BookOpen className="h-4 w-4 text-orange-400" /> Mis apuntes <span className="ml-auto text-[10px] tabular-nums text-[#777e88]">{learningItems.filter((item) => item.kind === "note").length}</span></button>
-              <button type="button" onClick={() => setLearningView("topics")} className={learningView === "topics" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}><Bookmark className="h-4 w-4 text-orange-400" /> Temas guardados <span className="ml-auto text-[10px] tabular-nums text-[#777e88]">{learningItems.filter((item) => item.kind === "topic").length}</span></button>
-              <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}><ChartNoAxesColumn className="h-4 w-4 text-orange-400" /> Progreso de aprendizaje</button>
+              <button type="button" onClick={() => setLearningView("notes")} className={learningView === "notes" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}>Mis apuntes <span className="ml-auto text-[10px] tabular-nums text-[#777e88]">{learningItems.filter((item) => item.kind === "note").length}</span></button>
+              <button type="button" onClick={() => setLearningView("topics")} className={learningView === "topics" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}>Temas guardados <span className="ml-auto text-[10px] tabular-nums text-[#777e88]">{learningItems.filter((item) => item.kind === "topic").length}</span></button>
+              <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}>Progreso de aprendizaje</button>
             </div>
             <div className="mt-5 border-t border-white/[0.07] pt-4">
               <div className="flex items-center justify-between px-2"><p className="orby-pixel-label font-semibold uppercase tracking-[0.14em] text-[#777e88]">Almacenamiento</p><span className="text-[10px] tabular-nums text-[#a8aeb7]">{imageAssets.length}/20</span></div>
@@ -1930,6 +1930,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
       </section>}
       {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed left-1/2 top-1/2 z-[95] flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-transparent text-white transition duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
+        <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0 overflow-hidden">
+          <defs>
+            <filter id="orby-smoke-filter" x="-35%" y="-35%" width="170%" height="170%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="8" result="smokeNoise" />
+              <feDisplacementMap in="SourceGraphic" in2="smokeNoise" scale="17" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+          </defs>
+        </svg>
         <span ref={voiceMiniOrbRef} className={voiceMuted ? "orby-mini-voice-core orby-mini-voice-muted" : "orby-mini-voice-core"} />
         <span className="sr-only">Volver a la llamada de Orby. {voiceMuted ? "Micrófono silenciado." : voiceStatus}</span>
       </button>}
@@ -2122,7 +2130,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         /* Compact orb preview: centered over the conversation, with soft volumetric amber mist. */
         #orby-tutor-panel .orby-mini-voice {
           width: 64px !important; height: 64px !important;
-          left: calc(50% + 132px) !important; top: auto !important; bottom: 82px !important;
+          left: calc(50% + 148px) !important; top: auto !important; bottom: 82px !important;
           border: 0 !important; overflow: visible !important; isolation: isolate;
           box-shadow: none !important; background: transparent !important;
         }
@@ -2160,7 +2168,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             radial-gradient(ellipse at 42% 20%, rgba(255,255,255,.32) 0%, transparent 38%);
           background-size: 155% 145%, 165% 155%, 145% 165%, 180% 160%;
           background-position: 0% 55%, 100% 35%, 40% 100%, 55% 0%;
-          filter: blur(5px) saturate(1.12);
+          filter: url(#orby-smoke-filter) blur(5px) saturate(1.12);
           mix-blend-mode: screen; opacity: .82;
           animation: orby-core-smoke 8s ease-in-out infinite alternate !important;
         }

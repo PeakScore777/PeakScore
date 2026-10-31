@@ -85,21 +85,40 @@ export async function POST(request: Request) {
         "x-goog-api-key": apiKey,
       },
       body: JSON.stringify({
-        uses: 1,
-        expireTime,
-        newSessionExpireTime,
-        liveConnectConstraints: {
-          model: "models/" + model,
-          config: {
-            responseModalities: ["AUDIO"],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: {
-                  voiceName: "Puck",
+        authToken: {
+          uses: 1,
+          expireTime,
+          newSessionExpireTime,
+          bidiGenerateContentSetup: {
+            model: "models/" + model,
+            generationConfig: {
+              responseModalities: ["AUDIO"],
+              speechConfig: {
+                voiceConfig: {
+                  prebuiltVoiceConfig: {
+                    voiceName: "Puck",
+                  },
                 },
               },
             },
+            systemInstruction: {
+              parts: [{ text: instructions }],
+            },
+            inputAudioTranscription: {
+              languageCodes: ["es-CO"],
+            },
+            outputAudioTranscription: {
+              languageCodes: ["es-CO"],
+            },
+            realtimeInputConfig: {
+              automaticActivityDetection: {
+                disabled: false,
+                prefixPaddingMs: 250,
+                silenceDurationMs: 550,
+              },
+            },
           },
+          fieldMask: "model,generationConfig.responseModalities,generationConfig.speechConfig,systemInstruction,inputAudioTranscription,outputAudioTranscription,realtimeInputConfig",
         },
       }),
       cache: "no-store",
@@ -107,7 +126,11 @@ export async function POST(request: Request) {
     });
 
     const payload = await upstream.json().catch(() => ({}));
-    const token = typeof payload?.name === "string" ? payload.name : "";
+    const token = typeof payload?.name === "string"
+      ? payload.name
+      : typeof payload?.authToken?.name === "string"
+        ? payload.authToken.name
+        : "";
     if (!upstream.ok || !token) {
       const googleStatus = typeof payload?.error?.status === "string" ? payload.error.status : "UNKNOWN";
       const googleMessage = typeof payload?.error?.message === "string"
@@ -129,8 +152,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ephemeralToken: token,
       model,
-      systemInstruction: instructions,
-      expiresAt: payload?.expireTime ?? expireTime,
+      expiresAt: payload?.expireTime ?? payload?.authToken?.expireTime ?? expireTime,
     }, {
       headers: { "Cache-Control": "no-store, max-age=0" },
     });

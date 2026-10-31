@@ -41,11 +41,11 @@ const OUTSIDE_SCOPE_PATTERNS = [
 ];
 
 export function isOrbyIdentityQuestion(message: string): boolean {
-  const normalized = message.normalize("NFKC").toLocaleLowerCase("es-CO").replace(/\\s+/g, " ").trim();
-  return /\\b(?:quien|quién|qn)\\b.{0,48}\\b(?:te\\s+)?(?:creo|creó|crearon|hizo|hicieron|desarrollo|desarrolló|programo|programó)\\b/i.test(normalized)
-    || /\\b(?:quien|quién|qn)\\s+eres\\b/i.test(normalized)
-    || /\\b(?:quien|quién|qn)\\s+(?:es|fue)\\s+(?:tu\\s+)?(?:creador|creadora|autor|autora)\\b/i.test(normalized)
-    || /\\bwho\\s+(?:created|made)\\s+you\\b/i.test(normalized);
+  const normalized = message.normalize("NFKC").toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
+  return /\b(?:quien|quién|qn)\b.{0,48}\b(?:te\s+)?(?:creo|creó|crearon|hizo|hicieron|desarrollo|desarrolló|programo|programó)\b/i.test(normalized)
+    || /\b(?:quien|quién|qn)\s+eres\b/i.test(normalized)
+    || /\b(?:quien|quién|qn)\s+(?:es|fue)\s+(?:tu\s+)?(?:creador|creadora|autor|autora)\b/i.test(normalized)
+    || /\bwho\s+(?:created|made)\s+you\b/i.test(normalized);
 }
 
 export const ORBY_IDENTITY_REPLY =

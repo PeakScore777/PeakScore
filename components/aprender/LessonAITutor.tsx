@@ -4,6 +4,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Camera, Check, ChevronDown, FileText, LoaderCircle, Maximize2, MessageSquare, Mic, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
@@ -120,7 +121,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
   const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
-  const voiceChannelRef = useRef<WebSocket | null>(null);
+  const voiceChannelRef = useRef<Session | null>(null);
   const voiceStreamRef = useRef<MediaStream | null>(null);
   const voiceAudioContextRef = useRef<AudioContext | null>(null);
   const voiceMicSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -557,9 +558,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function stopRealtimeVoice() {
     voiceModeRef.current = false;
-    const socket = voiceChannelRef.current;
+    const liveSession = voiceChannelRef.current;
     voiceChannelRef.current = null;
-    if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, "Voice session ended");
+    liveSession?.close();
 
     stopVoicePlayback();
     voiceWorkletNodeRef.current?.port.close();
@@ -790,95 +791,85 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       setVoiceStatus("Conectando con Orby…");
       const configuredModel = typeof tokenPayload.model === "string" ? tokenPayload.model : "gemini-3.8-live";
-      const model = configuredModel.startsWith("models/") ? configuredModel.slice("models/".length) : configuredModel;
-      const socket = new WebSocket(
-        "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=" +
-        encodeURIComponent(tokenPayload.ephemeralToken)
-      );
-      voiceChannelRef.current = socket;
+      const model = configuredModel.startsWith("models/")
+        ? configuredModel.slice("models/".length)
+        : configuredModel;
+      const systemInstruction = typeof tokenPayload.systemInstruction === "string"
+        ? tokenPayload.systemInstruction
+        : "Eres Orby, el tutor de PeakScore. Habla español colombiano natural y ayuda con rigor académico.";
 
-      const setupPromise = new Promise<void>((resolve, reject) => {
-        let settled = false;
-        let socketErrorSeen = false;
-        const finish = (error?: Error) => {
-          if (settled) return;
-          settled = true;
-          window.clearTimeout(timeout);
-          if (error) reject(error);
-          else resolve();
-        };
-        const timeout = window.setTimeout(() => {
-          finish(new Error("Google Gemini Live no confirmó la sesión en 15 segundos."));
-        }, 15000);
-
-        socket.onopen = () => {
-          socket.send(JSON.stringify({
-            setup: {
-              model: "models/" + model,
-              generationConfig: {
-                responseModalities: ["AUDIO"],
-                speechConfig: {
-                  voiceConfig: {
-                    prebuiltVoiceConfig: { voiceName: "Puck" },
-                  },
-                },
-              },
-              inputAudioTranscription: { languageCodes: ["es-CO"] },
-              outputAudioTranscription: { languageCodes: ["es-CO"] },
-              realtimeInputConfig: {
-                automaticActivityDetection: {
-                  disabled: false,
-                  prefixPaddingMs: 250,
-                  silenceDurationMs: 550,
-                },
-              },
-            },
-          }));
-        };
-
-        socket.onmessage = async (messageEvent) => {
-          try {
-            const raw = typeof messageEvent.data === "string"
-              ? messageEvent.data
-              : messageEvent.data instanceof ArrayBuffer
-                ? new TextDecoder().decode(messageEvent.data)
-                : await (messageEvent.data as Blob).text();
-            const event = JSON.parse(raw) as Record<string, unknown>;
-            if (event.error && typeof event.error === "object" && !settled) {
-              const detail = event.error as { message?: unknown; status?: unknown; code?: unknown };
-              const message = typeof detail.message === "string" ? detail.message : "Google rechazó la configuración de voz.";
-              const status = typeof detail.status === "string" ? " (" + detail.status + ")" : "";
-              finish(new Error("Gemini Live" + status + ": " + message.slice(0, 240)));
-              return;
-            }
-            if (event.setupComplete) finish();
-            handleGeminiLiveEvent(event);
-          } catch {
-            if (!settled) finish(new Error("Gemini Live envió un mensaje inicial que no se pudo interpretar."));
-            else setVoiceError("Orby recibió un evento de voz que no pudo interpretar.");
-          }
-        };
-
-        socket.onerror = () => {
-          socketErrorSeen = true;
-          if (settled) setVoiceError("Se interrumpió el WebSocket de Gemini Live.");
-        };
-
-        socket.onclose = (closeEvent) => {
-          if (!settled) {
-            const reason = closeEvent.reason?.trim();
-            const detail = reason
-              ? " (" + reason.slice(0, 160) + ")"
-              : " (código " + closeEvent.code + (socketErrorSeen ? ", error de conexión" : "") + ")";
-            finish(new Error("Google Gemini Live cerró la conexión antes de completar la sesión" + detail + "."));
-          } else if (voiceModeRef.current) {
-            setVoiceError("La conexión de voz se cerró (código " + closeEvent.code + "). Vuelve a iniciar la conversación.");
-            stopRealtimeVoice();
-          }
-        };
+      setVoiceStatus("Conectando con Orby…");
+      const googleAI = new GoogleGenAI({
+        apiKey: tokenPayload.ephemeralToken,
+        httpOptions: { apiVersion: "v1beta" },
       });
 
-      await setupPromise;
+      let rejectSetup: ((error: Error) => void) | null = null;
+      const setupFailure = new Promise<never>((_, reject) => {
+        rejectSetup = reject;
+      });
+
+      const sessionPromise = googleAI.live.connect({
+        model,
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: "Puck" },
+            },
+          },
+          systemInstruction: {
+            parts: [{ text: systemInstruction }],
+          },
+          inputAudioTranscription: { languageCodes: ["es-CO"] },
+          outputAudioTranscription: { languageCodes: ["es-CO"] },
+          realtimeInputConfig: {
+            automaticActivityDetection: {
+              disabled: false,
+              prefixPaddingMs: 250,
+              silenceDurationMs: 550,
+            },
+          },
+        },
+        callbacks: {
+          onopen: () => setVoiceStatus("Conectado; configurando a Orby…"),
+          onmessage: (message) => {
+            handleGeminiLiveEvent(message as unknown as Record<string, unknown>);
+          },
+          onerror: (event) => {
+            const detail = event.message?.trim() || "Google notificó un error en la conexión Live.";
+            rejectSetup?.(new Error("Gemini Live: " + detail.slice(0, 240)));
+          },
+          onclose: (event) => {
+            if (!voiceModeRef.current) return;
+            const reason = event.reason?.trim();
+            const detail = reason ? reason.slice(0, 160) : "código " + event.code;
+            rejectSetup?.(new Error("Gemini Live cerró la conexión (" + detail + ")."));
+            if (voiceChannelRef.current) {
+              setVoiceError("La conexión de voz se cerró (" + detail + ").");
+              stopRealtimeVoice();
+            }
+          },
+        },
+      });
+
+      let liveSession: Session;
+      try {
+        liveSession = await Promise.race([
+          sessionPromise,
+          setupFailure,
+          new Promise<never>((_, reject) => {
+            window.setTimeout(() => reject(new Error("Google Gemini Live no confirmó la configuración en 15 segundos.")), 15000);
+          }),
+        ]);
+      } catch (error) {
+        rejectSetup = null;
+        throw error;
+      }
+      rejectSetup = null;
+      voiceChannelRef.current = liveSession;
+      setVoiceStatus("Te escucho…");
+      setIsListening(true);
 
       const audioContext = new AudioContext();
       voiceAudioContextRef.current = audioContext;
@@ -897,16 +888,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       muteGain.gain.value = 0;
       voiceMuteGainRef.current = muteGain;
       worklet.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
-        const activeSocket = voiceChannelRef.current;
-        if (!activeSocket || activeSocket.readyState !== WebSocket.OPEN || !(event.data instanceof ArrayBuffer)) return;
-        activeSocket.send(JSON.stringify({
-          realtimeInput: {
-            audio: {
-              data: pcmBufferToBase64(event.data),
-              mimeType: "audio/pcm;rate=16000",
-            },
-          },
-        }));
+        const activeSession = voiceChannelRef.current;
+        if (!activeSession || !(event.data instanceof ArrayBuffer)) return;
+        activeSession.sendRealtimeInput({
+          audio: new Blob([event.data], { type: "audio/pcm;rate=16000" }),
+        });
       };
       microphoneSource.connect(worklet);
       worklet.connect(muteGain);
@@ -1014,11 +1000,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || sendingRef.current || message.length > 1200) return;
-    if (voiceModeRef.current && voiceChannelRef.current?.readyState !== WebSocket.OPEN) {
+    if (voiceModeRef.current && !voiceChannelRef.current) {
       setVoiceError("Orby todavía está conectando. Espera un momento y vuelve a enviar.");
       return;
     }
-    if (voiceModeRef.current && voiceChannelRef.current?.readyState === WebSocket.OPEN && message && !selectedFile) {
+    if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile) {
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;
@@ -1027,9 +1013,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setMessages((current) => [...current, { role: "user", content: message }]);
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";
-      voiceChannelRef.current.send(JSON.stringify({
-        realtimeInput: { text: message },
-      }));
+      voiceChannelRef.current.sendRealtimeInput({ text: message });
       setVoiceStatus("Orby está pensando…");
       return;
     }

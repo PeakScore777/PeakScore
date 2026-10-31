@@ -2121,7 +2121,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         @media (prefers-reduced-motion: reduce) { #orby-tutor-panel .orby-wave-bar, #orby-tutor-panel .orby-voice-orbit { animation:none!important; } }
         /* Compact orb preview: centered over the conversation, with soft volumetric amber mist. */
         #orby-tutor-panel .orby-mini-voice {
-          width: 88px !important; height: 88px !important; left: 50% !important; top: 50% !important;
+          width: 64px !important; height: 64px !important; left: 50% !important;
+          top: auto !important; bottom: 82px !important;
           border: 0 !important; overflow: visible !important; isolation: isolate;
           box-shadow: none !important; background: transparent !important;
         }

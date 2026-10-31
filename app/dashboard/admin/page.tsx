@@ -8,6 +8,7 @@ import {
   Building2,
   ClipboardList,
   Gamepad2,
+  Bot,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -63,6 +64,20 @@ export default async function AdminPage() {
           </div>
 
           <div className="grid gap-5 md:grid-cols-2">
+
+            <Link
+              href="/dashboard/admin/orby"
+              className="group rounded-2xl border border-orange-300/30 bg-slate-950 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:border-orange-300/60 hover:shadow-[0_18px_45px_rgba(249,115,22,.12)]"
+            >
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-orange-300/20 bg-orange-300/10 text-orange-300">
+                <Bot size={24} />
+              </div>
+              <h3 className="text-lg font-bold text-white">Orby ICFES Lab</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-400">
+                Conversa en privado con Orby, carga material de Saber 11 y controla qué conocimiento se publica para los estudiantes.
+              </p>
+              <div className="mt-5 text-sm font-semibold text-orange-300">Abrir laboratorio →</div>
+            </Link>
 
             {/* GENERADOR IA */}
             <Link

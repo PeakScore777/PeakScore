@@ -1327,9 +1327,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;
+      // Typed text sent through the Live session can also produce an input
+      // transcription event. Mark it as committed so it is not added twice.
+      voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
-      setMessages((current) => [...current, { role: "user", content: message }]);
+      setMessages((current) => [...current, { id: "voice-user-" + Date.now(), role: "user", content: message }]);
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";
       voiceChannelRef.current.sendRealtimeInput({ text: message });

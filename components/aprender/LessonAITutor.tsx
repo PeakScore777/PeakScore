@@ -39,6 +39,45 @@ type Props = {
 };
 
 
+function normalizeVoiceComparison(value: string): string {
+  return value.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO").replace(/[\s\p{P}\p{S}]+/gu, "");
+}
+
+function mergeLiveTranscript(previous: string, incoming: string): string {
+  const incomingTrimmed = incoming.trim();
+  const previousTrimmed = previous.trim();
+  if (!incomingTrimmed) return previous;
+  if (!previousTrimmed) return incomingTrimmed;
+  if (
+    incomingTrimmed === previousTrimmed
+    || previousTrimmed.includes(incomingTrimmed)
+    || previousTrimmed.startsWith(incomingTrimmed)
+  ) return previous;
+  if (incomingTrimmed.startsWith(previousTrimmed)) return incomingTrimmed;
+
+  let overlap = Math.min(previousTrimmed.length, incomingTrimmed.length);
+  while (overlap > 0 && previousTrimmed.slice(-overlap) !== incomingTrimmed.slice(0, overlap)) {
+    overlap -= 1;
+  }
+
+  const suffix = incomingTrimmed.slice(overlap);
+  if (!suffix) return previous;
+  const left = previous.trimEnd();
+  const right = suffix.trimStart();
+  const hasBoundarySpace = /\s$/.test(previous) || /^\s/.test(suffix);
+  const needsWordSpace = /\p{L}|\p{N}$/u.test(left) && /^[\p{L}\p{N}]/u.test(right);
+  return left + (hasBoundarySpace || !needsWordSpace ? "" : " ") + suffix;
+}
+
+function normalizeVoicePunctuation(value: string): string {
+  return value
+    .replace(/\s+([,.;:!?])/g, "$1")
+    .replace(/([,;:!?])(?=\p{L})/gu, "$1 ")
+    .replace(/([.!?])(?=\p{Lu})/gu, "$1 ")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
 function renderInline(text: string) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
     part.startsWith("**") && part.endsWith("**")
@@ -156,6 +195,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
   const voiceInputPolicyRef = useRef<"identity" | "programming" | null>(null);
   const voiceForcedReplyRef = useRef<string | null>(null);
+  const voiceLastCommittedInputRef = useRef("");
+  const voiceLastAssistantOutputRef = useRef("");
+  const voiceLastAssistantPlaybackUntilRef = useRef(0);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
@@ -860,7 +902,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? serverContent.inputTranscription as { text?: unknown }
       : null;
     if (typeof inputTranscript?.text === "string" && inputTranscript.text.trim()) {
+      // inputTranscription is the finalized transcript; it can arrive separately
+      // from model output, and the same final event may be repeated by reconnects.
       const transcript = inputTranscript.text.trim().slice(0, 1200);
+      const normalizedFinal = normalizeVoiceComparison(transcript);
+      if (!normalizedFinal || normalizedFinal === voiceLastCommittedInputRef.current) return;
+
+      const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
+      const isRecentAcousticEcho = Date.now() <= voiceLastAssistantPlaybackUntilRef.current
+        && normalizedFinal.length >= 12
+        && recentAssistantText.length >= 12
+        && (recentAssistantText.includes(normalizedFinal) || normalizedFinal.includes(recentAssistantText));
+      if (isRecentAcousticEcho) {
+        console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
+        return;
+      }
+
+      voiceLastCommittedInputRef.current = normalizedFinal;
       if (voiceTurnPersistedRef.current) {
         voiceUserTextRef.current = "";
         voiceAssistantTextRef.current = "";
@@ -874,9 +932,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : previousTranscript && !previousTranscript.endsWith(transcript)
           ? (previousTranscript + " " + transcript).slice(-1200)
           : transcript;
-      const normalizedTranscript = voiceUserTextRef.current.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
-      const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora)\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript);
-      const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|ensename a programar|quiero aprender a programar|crear una app|hacer una pagina web|crear un sitio web|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot)\b/.test(normalizedTranscript)
+      const normalizedTranscript = normalizeVoiceComparison(voiceUserTextRef.current);
+      const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora)\b|\b(quien|qn)eres\b|\btucreador\b/.test(normalizedTranscript);
+      const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot|c\+\+|c#|nodejs|nextjs)\b/.test(normalizedTranscript)
         || /\b(ensename|quiero aprender|ayudame a|explicame como)\b.{0,70}\b(crear|hacer|construir|desarrollar|programa|juego|pagina|aplicacion|app|bot|codigo)\b/.test(normalizedTranscript);
       voiceInputPolicyRef.current = asksIdentity ? "identity" : asksProgramming ? "programming" : null;
       voicePendingAudioChunksRef.current = [];
@@ -884,9 +942,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setMessages((current) => {
         const assistantId = voiceAssistantMessageIdRef.current;
         const assistantIndex = assistantId ? current.findIndex((message) => message.id === assistantId) : -1;
-        if (assistantIndex < 0) return [...current, { role: "user", content: transcript }];
+        const userMessage: Message = { id: "voice-user-" + Date.now(), role: "user", content: transcript };
+        if (assistantIndex < 0) return [...current, userMessage];
         const next = [...current];
-        next.splice(assistantIndex, 0, { role: "user", content: transcript });
+        next.splice(assistantIndex, 0, userMessage);
         return next;
       });
       void persistRealtimeTurnIfReady();
@@ -898,31 +957,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? serverContent.outputTranscription as { text?: unknown }
       : null;
     if (typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
-      const transcriptChunk = outputTranscript.text.trim();
-      const previousTranscript = voiceAssistantTextRef.current.trim();
-
-      // Gemini Live may emit cumulative snapshots, repeated snapshots, or
-      // overlapping partials. Merge only the new suffix to avoid duplicated text.
-      if (!previousTranscript) {
-        voiceAssistantTextRef.current = transcriptChunk;
-      } else if (
-        transcriptChunk === previousTranscript
-        || previousTranscript.startsWith(transcriptChunk)
-        || previousTranscript.includes(transcriptChunk)
-      ) {
-        // This chunk is already represented in the transcript.
-      } else if (transcriptChunk.startsWith(previousTranscript)) {
-        voiceAssistantTextRef.current = transcriptChunk;
-      } else {
-        let overlap = Math.min(previousTranscript.length, transcriptChunk.length);
-        while (overlap > 0 && previousTranscript.slice(-overlap) !== transcriptChunk.slice(0, overlap)) {
-          overlap -= 1;
-        }
-        voiceAssistantTextRef.current = previousTranscript + transcriptChunk.slice(overlap);
-      }
-
+      voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-      // Do not expose unverified live output in the transcript before turnComplete.
       setVoiceStatus("Orby está preparando su respuesta…");
     }
 
@@ -954,11 +990,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
       const rawReply = voiceAssistantTextRef.current.trim();
       const compactReply = rawReply.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO").replace(/[\s\p{P}\p{S}]+/gu, "");
-      const exposesProvider = /(?:creado|creada|desarrollado|desarrollada)por(?:google|gemini|openai|anthropic|pitagoras|pitagorascorp)/.test(compactReply)
-        || compactReply.includes("soyunmodelodelenguaje")
-        || compactReply.includes("fuihechoporgoogle")
-        || compactReply.includes("fuidisenadoporgoogle");
+      const exposesProvider = /(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)/.test(rawReply.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO"))
+        || /(?:entrenado|entrenada|trained|creado|creada|desarrollado|desarrollada|hecho|hecha)por(?:google|gemini|openai|anthropic|groq|llm7)/.test(compactReply);
       const pendingForcedReply = voiceForcedReplyRef.current;
+      const forcedReplyMatches = !pendingForcedReply || normalizeVoiceComparison(rawReply) === normalizeVoiceComparison(pendingForcedReply);
       const safeReply = pendingForcedReply
         ?? (voiceInputPolicyRef.current === "identity" || exposesProvider
           ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
@@ -1004,7 +1039,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             : [...current, { id, role: "assistant", content: safeReply }];
         });
       }
-      for (const chunk of voicePendingAudioChunksRef.current) playGeminiAudio(chunk.data, chunk.mimeType);
+      if (pendingForcedReply && !forcedReplyMatches) {
+        // Never play unverified audio for a mandatory identity/scope correction.
+        voicePendingAudioChunksRef.current = [];
+        setVoiceError("La respuesta segura se muestra por escrito; no se pudo verificar su audio.");
+      } else {
+        voiceLastAssistantOutputRef.current = safeReply;
+        for (const chunk of voicePendingAudioChunksRef.current) playGeminiAudio(chunk.data, chunk.mimeType);
+        const playbackContext = voiceAudioContextRef.current;
+        const remainingPlaybackMs = playbackContext
+          ? Math.max(0, voiceNextPlaybackTimeRef.current - playbackContext.currentTime) * 1000
+          : 0;
+        voiceLastAssistantPlaybackUntilRef.current = Date.now() + remainingPlaybackMs + 1800;
+      }
       voicePendingAudioChunksRef.current = [];
       voiceInputPolicyRef.current = null;
       voiceResponseDoneRef.current = true;

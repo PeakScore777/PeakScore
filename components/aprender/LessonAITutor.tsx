@@ -941,27 +941,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setIsListening(true);
     }
 
-    if (serverContent.turnComplete === true || serverContent.generationComplete === true) {
+    if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
       const rawReply = voiceAssistantTextRef.current.trim();
-      const exposesProvider = /\b(creado|creada|desarrollado|desarrollada)\s+por\s+(google|gemini|openai|anthropic|pitagoras|pitagoras corp)\b|\bsoy\s+(un\s+)?modelo\s+de\s+lenguaje\b/i.test(rawReply);
+      const compactReply = rawReply.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/[\\s\\p{P}\\p{S}]+/gu, "");
+      const exposesProvider = /(?:creado|creada|desarrollado|desarrollada)por(?:google|gemini|openai|anthropic|pitagoras|pitagorascorp)/.test(compactReply)
+        || compactReply.includes("soyunmodelodelenguaje")
+        || compactReply.includes("fuihechoporgoogle")
+        || compactReply.includes("fuidisenadoporgoogle");
       const pendingForcedReply = voiceForcedReplyRef.current;
       const safeReply = pendingForcedReply
         ?? (voiceInputPolicyRef.current === "identity" || exposesProvider
           ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
           : voiceInputPolicyRef.current === "programming"
-            ? "Soy Orby, el asistente educativo de PeakScore y mi función es ayudarte exclusivamente a preparar Saber 11. No enseño programación. Podemos trabajar Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
+            ? "Soy Orby, el tutor educativo de PeakScore, especializado exclusivamente en Saber 11. No enseño programación ni desarrollo de software. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
             : rawReply);
-      if (safeReply) {
-        voiceAssistantTextRef.current = safeReply;
-        const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-        voiceAssistantMessageIdRef.current = id;
-        setMessages((current) => {
-          const exists = current.some((message) => message.id === id);
-          return exists
-            ? current.map((message) => message.id === id ? { ...message, content: safeReply } : message)
-            : [...current, { id, role: "assistant", content: safeReply }];
-        });
-      }
+
+      // Do not render an untrusted first answer if a policy correction is required.
+      // Rendering before correction produced two assistant bubbles for one student turn.
       if ((voiceInputPolicyRef.current || exposesProvider) && !pendingForcedReply) {
         const correction = safeReply;
         stopVoicePlayback();
@@ -986,6 +982,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
 
       if (pendingForcedReply) voiceForcedReplyRef.current = null;
+
+      if (safeReply) {
+        voiceAssistantTextRef.current = safeReply;
+        const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+        voiceAssistantMessageIdRef.current = id;
+        setMessages((current) => {
+          const exists = current.some((message) => message.id === id);
+          return exists
+            ? current.map((message) => message.id === id ? { ...message, content: safeReply } : message)
+            : [...current, { id, role: "assistant", content: safeReply }];
+        });
+      }
       for (const chunk of voicePendingAudioChunksRef.current) playGeminiAudio(chunk.data, chunk.mimeType);
       voicePendingAudioChunksRef.current = [];
       voiceInputPolicyRef.current = null;

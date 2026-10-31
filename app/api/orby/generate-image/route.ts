@@ -43,6 +43,9 @@ export async function POST(request: Request) {
       return jsonError("Puedo crear apoyos visuales para Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés. Indica el tema que quieres estudiar.", 400);
     }
 
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return jsonError("La generación visual no está configurada en el servidor.", 503);
+
     const limitResult = await supabaseAdmin.rpc("orby_take_rate_limit", {
       p_user_id: user.id,
       p_bucket: "orby_image_generation",
@@ -56,9 +59,6 @@ export async function POST(request: Request) {
     if (!(limitResult.data as { allowed?: boolean }).allowed) {
       return jsonError("Alcanzaste el límite diario de 3 imágenes educativas. Puedes seguir estudiando con las explicaciones de Orby y volver a generar imágenes mañana.", 429);
     }
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return jsonError("La generación visual no está configurada en el servidor.", 503);
 
     const prompt = [
       "Eres el generador visual educativo de Orby, el tutor de PeakScore para Saber 11 en Colombia.",

@@ -1847,9 +1847,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="relative z-10 flex w-full max-w-4xl flex-col items-center text-center">
           <div className="relative flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64" aria-hidden="true">
             <div className="absolute inset-2 rounded-full bg-orange-500/10 blur-2xl" />
-            <div className={voiceMuted ? "orby-voice-orb orby-voice-orb-muted" : isListening ? "orby-voice-orb orby-voice-orb-active" : "orby-voice-orb"}>
-              <div className="flex h-full items-center justify-center gap-1.5">{Array.from({length: 9}, (_, index) => <span key={index} className="orby-wave-bar w-1.5 rounded-full bg-[#ffb35c] sm:w-2" style={{height: 12 + ((index * 13) % 38), animationDelay: (index * 55) + "ms", opacity: voiceMuted ? .18 : isListening ? 1 : .55}} />)}</div>
-            </div>
+            <div className={voiceMuted ? "orby-voice-orb orby-voice-orb-muted" : isListening ? "orby-voice-orb orby-voice-orb-active" : "orby-voice-orb"} />
           </div>
           <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
@@ -1864,7 +1862,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
       </section>}
       {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed bottom-[104px] right-5 z-[95] flex h-[68px] w-[68px] items-center justify-center rounded-full border border-orange-300/70 bg-[#17100a] text-white shadow-[0_0_0_7px_rgba(242,138,24,.06),0_10px_44px_rgba(242,138,24,.32)] transition hover:-translate-y-1 hover:shadow-[0_0_0_10px_rgba(242,138,24,.08),0_12px_52px_rgba(242,138,24,.42)] sm:bottom-[104px] sm:right-8">
-        <span className={voiceMuted ? "orby-mini-voice-core orby-mini-voice-muted" : "orby-mini-voice-core"}><AudioLines className="h-6 w-6 text-[#ffd49f]" /></span>
+        <span className={voiceMuted ? "orby-mini-voice-core orby-mini-voice-muted" : "orby-mini-voice-core"} />
         <span className="sr-only">Volver a la llamada de Orby. {voiceMuted ? "Micrófono silenciado." : voiceStatus}</span>
       </button>}
       {attachment && <div className="shrink-0 border-t border-slate-100 bg-white px-3 pt-3">
@@ -1959,9 +1957,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="dark"] .orby-voice-stage { background:radial-gradient(ellipse at 50% 35%,#2a160c 0%,#11151c 45%,#090c11 100%); color:#f8fafc; }
         #orby-tutor-panel[data-orby-theme="light"] .orby-voice-stage { background:radial-gradient(ellipse at 50% 35%,#fff2e8 0%,#fff 55%,#f7f8fb 100%); color:#111827; }
         #orby-tutor-panel .orby-wave-bar { animation:orby-wave 900ms ease-in-out infinite alternate; transform-origin:center; }
-        #orby-tutor-panel .orby-voice-orb { width:100%;height:100%;border-radius:9999px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,166,73,.55);background:radial-gradient(circle at 34% 28%,#ffca83 0%,#f28a18 24%,#7e390d 54%,#17110d 78%);box-shadow:0 0 45px rgba(242,138,24,.22),inset 0 0 28px rgba(255,218,172,.28);transition:filter .25s,transform .25s; }
-        #orby-tutor-panel .orby-voice-orb-active { filter:brightness(1.18);transform:scale(1.035);box-shadow:0 0 70px rgba(242,138,24,.42),inset 0 0 30px rgba(255,218,172,.35); }
-        #orby-tutor-panel .orby-voice-orb-muted { filter:grayscale(.6) brightness(.65);box-shadow:none; }
+        #orby-tutor-panel .orby-voice-orb { position:relative;width:100%;height:100%;border-radius:9999px;border:1px solid rgba(255,183,112,.7);background:radial-gradient(circle at 34% 25%,#ffe7bd 0%,#ffc36f 13%,#ff9c2e 28%,#df7417 46%,#8c3b0d 68%,#23130a 86%);box-shadow:0 0 48px rgba(242,138,24,.28),0 0 110px rgba(242,138,24,.11),inset -18px -26px 45px rgba(31,13,3,.6),inset 10px 9px 24px rgba(255,239,210,.34);transition:filter .35s,transform .35s; }
+        #orby-tutor-panel .orby-voice-orb:before { content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 31% 22%,rgba(255,255,255,.72),rgba(255,232,196,.2) 17%,transparent 43%);filter:blur(1px); }
+        #orby-tutor-panel .orby-voice-orb-active { filter:brightness(1.12) saturate(1.08);transform:scale(1.035);box-shadow:0 0 70px rgba(242,138,24,.4),0 0 130px rgba(242,138,24,.14),inset -18px -26px 45px rgba(31,13,3,.55),inset 10px 9px 24px rgba(255,239,210,.38);animation:orby-orb-breathe 2.4s ease-in-out infinite alternate; }
+        #orby-tutor-panel .orby-voice-orb-muted { filter:grayscale(.5) brightness(.68);box-shadow:0 0 18px rgba(242,138,24,.08);animation:none; }
+        #orby-tutor-panel .orby-mini-voice-core { position:relative;display:block;width:100%;height:100%;border-radius:9999px;background:radial-gradient(circle at 34% 25%,#ffe6bd 0%,#ffc36f 13%,#ff9c2e 28%,#df7417 46%,#8c3b0d 68%,#23130a 86%);box-shadow:inset -8px -11px 17px rgba(31,13,3,.58),inset 5px 5px 12px rgba(255,239,210,.32),0 0 24px rgba(242,138,24,.28); }
+        #orby-tutor-panel .orby-mini-voice-core:after { content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 31% 22%,rgba(255,255,255,.72),rgba(255,232,196,.18) 18%,transparent 43%); }
+        #orby-tutor-panel .orby-mini-voice-core:before { content:"";position:absolute;inset:-7px;border:1px solid rgba(255,166,73,.35);border-radius:inherit;animation:orby-mini-pulse 2.2s ease-out infinite; }
+        #orby-tutor-panel .orby-mini-voice-muted { filter:grayscale(.6) brightness(.65); }
+        #orby-tutor-panel .orby-mini-voice-muted:before { animation:none;opacity:.25; }
+        @keyframes orby-orb-breathe { from {transform:scale(1)} to {transform:scale(1.035)} }
         #orby-tutor-panel .orby-mini-voice-core { position:relative;display:flex;width:100%;height:100%;align-items:center;justify-content:center;border-radius:9999px;background:radial-gradient(circle at 34% 27%,#ffd18a 0%,#fb9b2e 22%,#a34b0d 56%,#22130a 82%);box-shadow:inset 0 0 20px rgba(255,220,177,.22),0 0 24px rgba(242,138,24,.28); }
         #orby-tutor-panel .orby-mini-voice-core:before { content:"";position:absolute;inset:-6px;border:1px solid rgba(255,166,73,.35);border-radius:inherit;animation:orby-mini-pulse 2.2s ease-out infinite; }
         #orby-tutor-panel .orby-mini-voice-muted { filter:grayscale(.6) brightness(.65); }
@@ -1971,6 +1976,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-notes-card:hover { border-color:rgba(242,138,24,.35);transform:translateY(-2px);box-shadow:0 18px 40px rgba(0,0,0,.24); }
         #orby-tutor-panel .orby-notes-card:before { content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,#f28a18,rgba(242,138,24,0)); }
         @keyframes orby-mini-pulse { 0%{transform:scale(.92);opacity:.8} 75%,100%{transform:scale(1.35);opacity:0} }
+        @media (prefers-reduced-motion: reduce) { #orby-tutor-panel .orby-mini-voice-core:before,#orby-tutor-panel .orby-voice-orb-active { animation:none!important; } }
         #orby-tutor-panel .orby-voice-orbit { animation:orby-orbit 7s linear infinite; }
         #orby-tutor-panel .orby-voice-orbit-delay { animation-direction:reverse; animation-duration:10s; }
         @keyframes orby-wave { from { transform:scaleY(.35); } to { transform:scaleY(1); } }

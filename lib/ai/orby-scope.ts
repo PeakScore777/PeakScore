@@ -42,25 +42,37 @@ const OUTSIDE_SCOPE_PATTERNS = [
   /\b(diagnostico medico|recetar medicamento|tratamiento medico|invertir dinero|apuesta|consejo legal)\b/i,
 ];
 
-export function isOrbyIdentityQuestion(message: string): boolean {
-  const normalized = message.normalize("NFKD")
+function normalizeOrbyIdentityText(message: string): string {
+  return message.normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("es-CO")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function hasFalseOrbyCreatorAttribution(message: string): boolean {
+  const normalized = normalizeOrbyIdentityText(message);
+  const attribution = normalized.match(/\b(?:cread[oa]|entrenad[oa]|desarrollad[oa]|hech[oa]|created|trained|made)\s+por\s+([a-z0-9][a-z0-9 ._-]{0,48})/i);
+  if (!attribution) return false;
+
+  const allegedCreator = attribution[1]
+    .split(/\s+(?:para|en|con|que|y|to|for)\b/i)[0]
+    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .trim();
+  return Boolean(allegedCreator) && !/^peak\s*score$/i.test(allegedCreator) && !/^peakscore$/i.test(allegedCreator);
+}
+
+export function isOrbyIdentityQuestion(message: string): boolean {
+  const normalized = normalizeOrbyIdentityText(message);
   return /\b(?:quien|qn)\b.{0,48}\b(?:te\s+)?(?:creo|crearon|hizo|hicieron|desarrollo|programo)\b/i.test(normalized)
     || /\b(?:quien|qn)\s+eres\b/i.test(normalized)
     || /\b(?:quien|qn)\s+(?:es|fue)\s+(?:tu\s+)?(?:creador|creadora|autor|autora)\b/i.test(normalized)
     || /\bwho\s+(?:created|made)\s+you\b/i.test(normalized)
+    || /\bcliente\s+creo\b/i.test(normalized)
     || (/\bpeak\s*score\b/i.test(normalized)
-      && /\b(?:quien(?:es)?|que\s+es|que\s+son|de\s+que\s+trata|para\s+que\s+sirve)\b/i.test(normalized))    || (/\bpeak\s*score\b/i.test(normalized)
       && /\b(?:quien(?:es)?|que\s+es|que\s+son|de\s+que\s+trata|para\s+que\s+sirve)\b/i.test(normalized))
-    // Correct false claims about Orby's creator, not only direct questions.
-    || /\b(?:asistente|tutor|modelo|herramienta|chatbot|inteligencia artificial|ia)\b.{0,100}\bcread[oa]\s+por\s+[a-z0-9][a-z0-9._-]*/i.test(normalized)
-    || /\b(?:eres|fuiste|estas)\b.{0,80}\bcread[oa]\s+por\s+[a-z0-9][a-z0-9._-]*/i.test(normalized)
-    || /\b(?:te|lo)\s+(?:creo|hizo|desarrollo|entreno)\s+[a-z0-9][a-z0-9._-]*/i.test(normalized);
+    || hasFalseOrbyCreatorAttribution(normalized);
 }
-
 export const ORBY_IDENTITY_REPLY =
   "PeakScore es la plataforma educativa creada para apoyar a estudiantes en su preparación para las pruebas Saber 11. Yo soy Orby, su asistente educativo, y te acompaño con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.";
 

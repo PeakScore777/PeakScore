@@ -73,6 +73,43 @@ export function containsProgrammingInstruction(text: string): boolean {
     || /\b(instala|configura|ejecuta)\b.{0,70}\b(python|node\.js|npm|react|visual studio code|terminal)\b/i.test(value);
 }
 
+export function extractPlainOrbyReply(value: string): string {
+  const fence = String.fromCharCode(96).repeat(3);
+  const normalized = value
+    .replace(new RegExp("^\\s*" + fence + "(?:json)?\\s*", "i"), "")
+    .replace(new RegExp("\\s*" + fence + "\\s*$", "i"), "")
+    .trim();
+
+  try {
+    const parsed: unknown = JSON.parse(normalized);
+    if (typeof parsed === "string") return normalizeOrbySpanishOutput(parsed);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      const record = parsed as Record<string, unknown>;
+      const preferredKeys = [
+        "mensaje_respuesta", "respuesta_final", "reply", "respuesta",
+        "response", "message", "content", "text", "answer", "output",
+      ];
+      for (const key of preferredKeys) {
+        const candidate = record[key];
+        if (typeof candidate === "string" && candidate.trim()) {
+          return normalizeOrbySpanishOutput(candidate);
+        }
+      }
+      for (const candidate of Object.values(record)) {
+        if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) {
+          const nested = extractPlainOrbyReply(JSON.stringify(candidate));
+          if (nested) return nested;
+        }
+      }
+      return "";
+    }
+    return "";
+  } catch {
+    if (/^\s*[\[{]/.test(normalized)) return "";
+    return normalizeOrbySpanishOutput(normalized);
+  }
+}
+
 export function normalizeOrbySpanishOutput(value: string): string {
   return value
     .replace(/\u00a0/g, " ")

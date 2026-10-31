@@ -5,11 +5,13 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
-import { AudioLines, Camera, Check, ChevronDown, FileText, LoaderCircle, Maximize2, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Bookmark, BookOpen, Camera, Captions, ChartNoAxesColumn, Check, ChevronDown, FileText, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
+type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
+type StoredImage = { name: string; path: string; signedUrl: string; createdAt: string; size: number };
 type SpeechRecognitionLike = {
   lang: string;
   continuous: boolean;
@@ -120,6 +122,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [historyOpen, setHistoryOpen] = useState(false);
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState("");
+  const [learningView, setLearningView] = useState<"chat" | "notes" | "topics" | "progress">("chat");
+  const [learningItems, setLearningItems] = useState<LearningItem[]>([]);
+  const [learningLoading, setLearningLoading] = useState(false);
+  const [learningError, setLearningError] = useState("");
+  const [imageAssets, setImageAssets] = useState<StoredImage[]>([]);
+  const [imageAssetsLoading, setImageAssetsLoading] = useState(false);
+  const [imageStorageError, setImageStorageError] = useState("");
+  const [showVoiceTranscript, setShowVoiceTranscript] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
@@ -257,6 +267,101 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }, [messages, loading]);
 
   useEffect(() => {
+    if (!open || !workspace) return;
+    let cancelled = false;
+    const loadWorkspaceData = async () => {
+      setImageAssetsLoading(true);
+      setLearningLoading(true);
+      try {
+        const [imagesResponse, learningResponse] = await Promise.all([
+          fetch("/api/orby/images", { credentials: "same-origin", cache: "no-store" }),
+          fetch("/api/orby/learning", { credentials: "same-origin", cache: "no-store" }),
+        ]);
+        const [imagesPayload, learningPayload] = await Promise.all([
+          imagesResponse.json().catch(() => ({})),
+          learningResponse.json().catch(() => ({})),
+        ]);
+        if (!imagesResponse.ok) throw new Error(imagesPayload.error || "No se pudo cargar el almacenamiento.");
+        if (!learningResponse.ok) throw new Error(learningPayload.error || "No se pudo cargar tu aprendizaje.");
+        if (cancelled) return;
+        setImageAssets(Array.isArray(imagesPayload.images) ? imagesPayload.images : []);
+        setLearningItems(Array.isArray(learningPayload.items) ? learningPayload.items : []);
+        setImageStorageError("");
+        setLearningError("");
+      } catch (caught) {
+        if (!cancelled) {
+          const message = caught instanceof Error ? caught.message : "No se pudo cargar tu espacio de aprendizaje.";
+          setImageStorageError(message);
+          setLearningError(message);
+        }
+      } finally {
+        if (!cancelled) { setImageAssetsLoading(false); setLearningLoading(false); }
+      }
+    };
+    void loadWorkspaceData();
+    return () => { cancelled = true; };
+  }, [open, workspace]);
+
+  async function refreshImageAssets() {
+    const response = await fetch("/api/orby/images", { credentials: "same-origin", cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "No se pudo actualizar el almacenamiento.");
+    setImageAssets(Array.isArray(payload.images) ? payload.images : []);
+  }
+
+  async function refreshLearningItems() {
+    const response = await fetch("/api/orby/learning", { credentials: "same-origin", cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "No se pudo actualizar tu aprendizaje.");
+    setLearningItems(Array.isArray(payload.items) ? payload.items : []);
+  }
+
+  async function saveLearningItem(kind: "note" | "topic", title: string, content: string) {
+    try {
+      setLearningError("");
+      const response = await fetch("/api/orby/learning", {
+        method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, title, content }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo guardar.");
+      setLearningItems((current) => [payload.item as LearningItem, ...current]);
+      setLearningView(kind === "note" ? "notes" : "topics");
+    } catch (caught) {
+      setLearningError(caught instanceof Error ? caught.message : "No se pudo guardar.");
+    }
+  }
+
+  async function deleteLearningItem(id: string) {
+    try {
+      const response = await fetch("/api/orby/learning", {
+        method: "DELETE", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo eliminar.");
+      setLearningItems((current) => current.filter((item) => item.id !== id));
+    } catch (caught) {
+      setLearningError(caught instanceof Error ? caught.message : "No se pudo eliminar.");
+    }
+  }
+
+  async function deleteStoredImage(path: string) {
+    try {
+      setImageStorageError("");
+      const response = await fetch("/api/orby/images", {
+        method: "DELETE", credentials: "same-origin", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ path }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo eliminar la imagen.");
+      setImageAssets((current) => current.filter((item) => item.path !== path));
+    } catch (caught) {
+      setImageStorageError(caught instanceof Error ? caught.message : "No se pudo eliminar la imagen.");
+    }
+  }
+
+  useEffect(() => {
     const currentPreview = attachmentPreview;
     return () => {
       if (currentPreview.startsWith("blob:")) URL.revokeObjectURL(currentPreview);
@@ -301,6 +406,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
     if (file.size > 1 * 1024 * 1024) {
       setAttachmentError("La imagen debe pesar máximo 1 MB.");
+      return;
+    }
+    if (workspace && imageAssets.length >= 20) {
+      setAttachmentError("Tu almacenamiento está lleno (20 de 20 imágenes). Elimina alguna imagen para poder enviar otra.");
+      setLearningView("chat");
       return;
     }
     setAttachment(file);
@@ -1163,6 +1273,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
       const assistantIndex = nextMessages.length;
       setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
+      if (workspace && selectedFile && selectedFile.type.startsWith("image/")) {
+        try {
+          const imageForm = new FormData();
+          imageForm.set("image", selectedFile);
+          const imageResponse = await fetch("/api/orby/images", { method: "POST", credentials: "same-origin", body: imageForm });
+          const imagePayload = await imageResponse.json().catch(() => ({}));
+          if (!imageResponse.ok) throw new Error(imagePayload.error || "La imagen se envió al chat, pero no pudo guardarse en tu almacenamiento.");
+          await refreshImageAssets();
+          setImageStorageError("");
+        } catch (caught) {
+          setImageStorageError(caught instanceof Error ? caught.message : "No se pudo guardar la imagen.");
+        }
+      }
       if (isVoiceInteraction && voiceModeRef.current && "speechSynthesis" in window) {
         window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
       }
@@ -1252,6 +1375,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setError("");
     setConversationError("");
     setPendingDeleteConversation(null);
+    setLearningView("chat");
     setAttachmentError("");
     clearAttachment();
     clearRecordedAudio();
@@ -1286,6 +1410,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setError("");
       setInput("");
       setPendingDeleteConversation(null);
+      setLearningView("chat");
       if (window.matchMedia("(max-width: 767px)").matches) setHistoryOpen(false);
     } catch (caught) {
       setConversationError(caught instanceof Error ? caught.message : "No se pudo abrir la conversación.");
@@ -1548,48 +1673,55 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     <aside id="orby-tutor-panel" data-orby-theme={globalTheme} aria-label="Tutor de inteligencia artificial Orby" className={workspace
       ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
       : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
-      <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-slate-200/70 bg-white/90 px-3 py-2 backdrop-blur-xl sm:px-5">
-        <div className="flex min-w-0 items-center gap-2">
-          {workspace && <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1" role="tablist" aria-label="Modo de conversación">
-            <button type="button" role="tab" aria-selected={workspaceMode === "chat"} onClick={() => setWorkspaceMode("chat")} className={workspaceMode === "chat" ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-xs font-semibold text-white shadow-sm" : "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900"}><MessageSquare className="h-3.5 w-3.5" />Chat</button>
-            <button type="button" role="tab" aria-selected={workspaceMode === "voice"} onClick={() => { if (!voiceModeRef.current) void toggleVoiceMode(); else setWorkspaceMode("voice"); }} title="Iniciar conversación por voz" className={workspaceMode === "voice" ? "inline-flex items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-xs font-semibold text-white shadow-sm" : "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-white hover:text-slate-900"}><Mic className="h-3.5 w-3.5" />Voz</button>
-          </div>}
+      <header className="flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#25282d] bg-[#0b0d10] px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-500/25 bg-orange-500/10 text-orange-400"><AudioLines className="h-5 w-5" /></div>
+          <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-white">Orby AI</h1><span className="rounded-full border border-orange-500/25 bg-orange-500/10 px-2 py-0.5 text-[10px] font-semibold text-orange-300">Tutor ICFES</span></div><p className="mt-0.5 text-[11px] text-[#858b95]">Tu espacio de estudio</p></div>
         </div>
-        <div className="flex items-center gap-1">
-          {workspace && <>
-            <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar historial" : "Mostrar historial"} title="Historial de chats" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 md:hidden"><ChevronDown className={historyOpen ? "h-4 w-4 rotate-90" : "h-4 w-4"} /></button>
-            {pathname !== "/orby" && <button type="button" onClick={() => router.push("/orby")} aria-label="Abrir espacio completo de Orby" title="Abrir espacio completo" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><Maximize2 className="h-4 w-4" /></button>}
-            <button type="button" onClick={startNewConversation} aria-label="Crear nueva conversación" title="Nuevo chat" className="rounded-lg p-2 text-orange-700 transition hover:bg-orange-50"><Plus className="h-5 w-5" /></button>
-          </>}
-          <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>
+        <div className="flex items-center gap-1.5">
+          {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} title="Panel lateral" className="rounded-lg p-2 text-[#a3a8b0] transition hover:bg-white/5 hover:text-white md:hidden"><Search className="h-4 w-4" /></button>}
+          {workspace && <button type="button" onClick={startNewConversation} aria-label="Crear nueva conversación" title="Nuevo chat" className="inline-flex h-9 items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500 px-3 text-xs font-semibold text-white transition hover:bg-orange-400"><Plus className="h-4 w-4" /><span className="hidden sm:inline">Nuevo chat</span></button>}
+          {!workspace && <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>}
         </div>
       </header>
 
       <div className={workspace ? "flex min-h-0 flex-1 bg-[#f5f7fb]" : "contents"}>
-        {workspace && <aside className={historyOpen ? "absolute bottom-0 left-0 top-[64px] z-30 flex w-[min(82%,290px)] flex-col border-r border-slate-800 bg-[#101827] text-white shadow-xl md:relative md:top-auto md:z-auto md:w-[252px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[252px] md:shrink-0 md:flex-col border-r border-slate-800 bg-[#101827] text-white"} aria-label="Historial de conversaciones">
-          <div className="border-b border-white/10 p-4">
-            <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-3 text-sm font-bold text-white transition hover:bg-orange-700"><Plus className="h-4 w-4" /> Nuevo chat</button>
-            <p className="mt-4 px-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tus conversaciones</p>
+        {workspace && <aside className={historyOpen ? "absolute bottom-0 left-0 top-[68px] z-30 flex w-[min(86%,310px)] flex-col border-r border-[#25282d] bg-[#0d0f12] text-white shadow-2xl md:relative md:top-auto md:z-auto md:w-[286px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[286px] md:shrink-0 md:flex-col border-r border-[#25282d] bg-[#0d0f12] text-white"} aria-label="Herramientas de Orby">
+          <div className="border-b border-white/[0.07] p-4">
+            <button type="button" onClick={startNewConversation} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#f28a18] px-3 text-[13px] font-semibold text-[#17120c] transition hover:bg-[#ffa12f]"><Plus className="h-4 w-4" /> Nuevo chat</button>
+            <div className="mt-5 flex items-center justify-between px-1"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777e88]">Historial</p><span className="text-[10px] tabular-nums text-[#777e88]">{conversations.length}/50</span></div>
           </div>
-          <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {historyLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando historial…</div>}
-            {!historyLoading && conversations.length === 0 && <p className="px-3 py-5 text-xs leading-5 text-slate-500">Aún no tienes chats guardados. Inicia uno para conservar tus preguntas y explicaciones.</p>}
-            {conversations.map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-xl border border-orange-400/40 bg-orange-500/10 px-2 py-2" : "group rounded-xl border border-transparent px-2 py-2 transition hover:border-white/10 hover:bg-white/5"}>
-              <div className="flex items-start gap-1">
+          <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 [scrollbar-width:thin] [scrollbar-color:#34383e_transparent]">
+            {historyLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-[#858b95]"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando chats…</div>}
+            {!historyLoading && conversations.length === 0 && <p className="px-3 py-4 text-xs leading-5 text-[#858b95]">Tus conversaciones aparecerán aquí.</p>}
+            {conversations.map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-lg border border-orange-400/20 bg-orange-500/[0.08] px-2 py-2" : "group rounded-lg border border-transparent px-2 py-2 transition hover:bg-white/[0.04]"}>
+              <div className="flex items-center gap-1">
                 <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 text-left">
-                  <span className="block truncate text-xs font-bold text-slate-100">{item.title}</span>
-                  <span className="mt-1 block truncate text-[10px] text-slate-400">{item.topic || item.subject}</span>
-                  <span className="mt-1 block text-[9px] text-slate-400">{new Date(item.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
+                  <span className="block truncate text-[12px] font-medium text-[#e7e9ed]">{item.title}</span>
+                  <span className="mt-1 block truncate text-[10px] text-[#777e88]">{item.topic || item.subject} · {new Date(item.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
                 </button>
-                <button type="button" onClick={() => setPendingDeleteConversation((current) => current === item.id ? null : item.id)} aria-label={"Eliminar chat " + item.title} title="Eliminar conversación" className="rounded-md p-1.5 text-slate-400 opacity-70 transition hover:bg-rose-50 hover:text-rose-600 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button type="button" onClick={() => setPendingDeleteConversation((current) => current === item.id ? null : item.id)} aria-label={"Eliminar chat " + item.title} title="Eliminar conversación" className="rounded-md p-1.5 text-[#777e88] opacity-100 transition hover:bg-rose-500/10 hover:text-rose-300 md:opacity-0 md:group-hover:opacity-100"><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
-              {pendingDeleteConversation === item.id && <div className="mt-2 rounded-lg border border-rose-200 bg-white p-2">
-                <p className="text-[10px] leading-4 text-slate-600">¿Eliminar este chat y todos sus mensajes?</p>
-                <div className="mt-2 flex gap-2"><button type="button" onClick={() => void deleteConversation(item.id)} className="rounded-md bg-rose-600 px-2 py-1 text-[10px] font-bold text-white hover:bg-rose-700">Eliminar</button><button type="button" onClick={() => setPendingDeleteConversation(null)} className="rounded-md px-2 py-1 text-[10px] font-semibold text-slate-600 hover:bg-slate-100">Cancelar</button></div>
-              </div>}
+              {pendingDeleteConversation === item.id && <div className="mt-2 rounded-md border border-rose-500/20 bg-[#17191d] p-2"><p className="text-[10px] text-[#b9bec6]">¿Eliminar este chat y sus mensajes?</p><div className="mt-2 flex gap-2"><button type="button" onClick={() => void deleteConversation(item.id)} className="rounded-md bg-rose-600 px-2 py-1 text-[10px] font-semibold text-white">Eliminar</button><button type="button" onClick={() => setPendingDeleteConversation(null)} className="rounded-md px-2 py-1 text-[10px] text-[#a6acb5] hover:bg-white/5">Cancelar</button></div></div>}
             </div>)}
+            <div className="mt-5 border-t border-white/[0.07] pt-4">
+              <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777e88]">Aprendizaje</p>
+              <button type="button" onClick={() => setLearningView("notes")} className={learningView === "notes" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}><BookOpen className="h-4 w-4 text-orange-400" /> Mis apuntes <span className="ml-auto text-[10px] tabular-nums text-[#777e88]">{learningItems.filter((item) => item.kind === "note").length}</span></button>
+              <button type="button" onClick={() => setLearningView("topics")} className={learningView === "topics" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}><Bookmark className="h-4 w-4 text-orange-400" /> Temas guardados <span className="ml-auto text-[10px] tabular-nums text-[#777e88]">{learningItems.filter((item) => item.kind === "topic").length}</span></button>
+              <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-2.5 rounded-lg bg-white/[0.07] px-3 py-2.5 text-left text-[12px] font-medium text-white" : "flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[12px] text-[#a8aeb7] transition hover:bg-white/[0.04] hover:text-white"}><ChartNoAxesColumn className="h-4 w-4 text-orange-400" /> Progreso de aprendizaje</button>
+            </div>
+            <div className="mt-5 border-t border-white/[0.07] pt-4">
+              <div className="flex items-center justify-between px-2"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777e88]">Almacenamiento</p><span className="text-[10px] tabular-nums text-[#a8aeb7]">{imageAssets.length}/20</span></div>
+              <div className="mx-2 mt-2 h-1 overflow-hidden rounded-full bg-white/[0.08]"><div className="h-full rounded-full bg-[#f28a18] transition-all" style={{ width: Math.min(100, imageAssets.length / 20 * 100) + "%" }} /></div>
+              <div className="mt-3 grid grid-cols-4 gap-1.5 px-2">
+                {imageAssets.slice(0, 8).map((asset) => <div key={asset.path} className="group/image relative aspect-square overflow-hidden rounded-md border border-white/10 bg-[#17191d]"><Image src={asset.signedUrl} alt={asset.name} fill unoptimized className="object-cover" /><button type="button" onClick={() => void deleteStoredImage(asset.path)} aria-label={"Eliminar " + asset.name} title="Eliminar imagen" className="absolute inset-0 flex items-center justify-center bg-black/65 text-white opacity-0 transition group-hover/image:opacity-100 focus:opacity-100"><Trash2 className="h-4 w-4" /></button></div>)}
+                {imageAssets.length === 0 && <p className="col-span-4 py-2 text-[10px] leading-4 text-[#777e88]">{imageAssetsLoading ? "Cargando imágenes…" : "Las imágenes que envíes aparecerán aquí."}</p>}
+              </div>
+              <button type="button" onClick={() => setLearningView("progress")} className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-[11px] font-medium text-[#b4bac3] transition hover:border-orange-500/30 hover:text-white"><Images className="h-3.5 w-3.5" /> Administrar almacenamiento</button>
+              {imageStorageError && <p role="alert" className="px-2 pt-2 text-[10px] leading-4 text-rose-300">{imageStorageError}</p>}
+            </div>
           </div>
-          <div className="border-t border-white/10 px-3 py-3 text-[10px] leading-4 text-slate-400">Los chats son privados de tu cuenta. Puedes eliminarlos cuando quieras.</div>
+          <div className="border-t border-white/[0.07] px-4 py-3 text-[10px] leading-4 text-[#777e88]">Tus chats y archivos son privados de tu cuenta.</div>
         </aside>}
         <div className={workspace ? "flex min-h-0 min-w-0 flex-1 flex-col" : "contents"}>
       {reviewQuestions.length > 0 && <div className="shrink-0 border-b border-[#d9c5ae] bg-[#fff9f0] px-3 py-2">
@@ -1611,17 +1743,28 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
 
       <div className={workspace && workspaceMode === "voice" ? "hidden" : "min-h-0 flex-1 overflow-y-auto bg-white px-4 py-5 sm:px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"} ref={scrollRef} aria-live="polite">
-        {messages.length === 0 ? (
-          <div className="flex min-h-full flex-col items-center justify-center">
-            <Image src="/avatars/photo_perfil/orbyp.png" width={1200} height={800} alt="Orby, tutor de PeakScore" className={`mb-2 h-28 w-28 rounded-full border-2 bg-white object-contain object-center ${orbyAccent ? "border-orange-300 shadow-[0_4px_18px_rgba(249,115,22,.18)]" : "border-sky-200 shadow-[0_4px_18px_rgba(14,165,233,.16)]"}`} onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/orby.webp"; }} />
-            <div className="w-full rounded-2xl rounded-tl-sm border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-base font-extrabold text-slate-950">¡Hola! Soy Orby 👋</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">Te ayudo a comprender la teoría, analizar los datos y razonar tu respuesta. ¿Qué parte revisamos juntos?</p>
-            </div>
-            <div className="mt-4 grid w-full gap-2">
-              {starters.map((starter) => (
-                <button key={starter} type="button" disabled={loading} onClick={() => void sendMessage(starter)} className={`flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 text-left text-sm font-medium text-slate-700 shadow-sm transition disabled:opacity-50 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${orbyAccent ? "bg-orange-50 text-orange-600" : "bg-sky-50 text-sky-600"}`}>✦</span>{starter}</button>
-              ))}
+        {workspace && learningView !== "chat" ? (
+          <section className="mx-auto w-full max-w-4xl px-5 py-10 sm:px-8">
+            <div className="mb-8 flex items-start justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-orange-400">PeakScore · Aprendizaje</p><h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">{learningView === "notes" ? "Mis apuntes" : learningView === "topics" ? "Temas guardados" : "Tu actividad de estudio"}</h2><p className="mt-2 text-sm text-[#9299a3]">{learningView === "notes" ? "Guarda explicaciones importantes para repasarlas cuando quieras." : learningView === "topics" ? "Organiza los temas que quieres volver a estudiar." : "Un resumen de tus conversaciones y recursos guardados."}</p></div><button type="button" onClick={() => setLearningView("chat")} className="rounded-lg border border-white/10 px-3 py-2 text-xs text-[#c2c7ce] hover:bg-white/5">Volver al chat</button></div>
+            {learningError && <p role="alert" className="mb-4 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">{learningError}</p>}
+            {learningLoading ? <div className="flex items-center gap-2 py-8 text-sm text-[#8e949e]"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando…</div> : learningView === "progress" ? (
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[{label:"Conversaciones",value:conversations.length},{label:"Apuntes",value:learningItems.filter((item)=>item.kind==="note").length},{label:"Temas guardados",value:learningItems.filter((item)=>item.kind==="topic").length},{label:"Imágenes",value:imageAssets.length+" / 20"}].map((stat)=><div key={stat.label} className="rounded-xl border border-white/10 bg-[#111419] p-5"><p className="text-xs text-[#8f96a0]">{stat.label}</p><p className="mt-3 text-2xl font-semibold tabular-nums text-white">{stat.value}</p></div>)}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {learningView === "topics" && <button type="button" onClick={() => void saveLearningItem("topic", topic || "Preparación Saber 11", subject || "Tema de estudio")} className="inline-flex items-center gap-2 rounded-lg bg-[#f28a18] px-3 py-2.5 text-xs font-semibold text-[#17120c] hover:bg-[#ffa12f]"><Bookmark className="h-4 w-4" /> Guardar tema actual</button>}
+                {learningItems.filter((item) => item.kind === (learningView === "notes" ? "note" : "topic")).length === 0 ? <div className="rounded-xl border border-dashed border-white/10 px-5 py-12 text-center"><p className="text-sm font-medium text-white">{learningView === "notes" ? "Todavía no tienes apuntes" : "Todavía no has guardado temas"}</p><p className="mt-2 text-xs text-[#8f96a0]">{learningView === "notes" ? "Usa “Guardar apunte” debajo de una respuesta de Orby." : "Guarda el tema actual para tenerlo a mano en tu próxima sesión."}</p></div> : learningItems.filter((item) => item.kind === (learningView === "notes" ? "note" : "topic")).map((item) => <article key={item.id} className="rounded-xl border border-white/10 bg-[#111419] p-4"><div className="flex items-start gap-3"><div className="min-w-0 flex-1"><h3 className="text-sm font-semibold text-white">{item.title}</h3><p className="mt-1 text-[10px] text-[#818894]">{new Date(item.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</p><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-[#c4c9d1]">{item.content}</p></div><button type="button" onClick={() => void deleteLearningItem(item.id)} aria-label="Eliminar elemento guardado" className="rounded-md p-2 text-[#8c929c] hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4" /></button></div></article>)}
+              </div>
+            )}
+          </section>
+        ) : messages.length === 0 ? (
+          <div className="flex min-h-full flex-col items-center justify-center px-4 py-12 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-orange-400">PeakScore · Tutor ICFES</p>
+            <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-[2.1rem]">¿En qué podemos trabajar hoy?</h2>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-[#9299a3]">Pregunta, practica y comprende los temas que necesitas dominar para Saber 11.</p>
+            <div className="mt-9 grid w-full max-w-3xl gap-2 sm:grid-cols-2">
+              {starters.slice(0,4).map((starter) => <button key={starter} type="button" disabled={loading} onClick={() => void sendMessage(starter)} className="group flex min-h-14 items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#111419] px-4 py-3 text-left text-[13px] text-[#c9cdd3] transition hover:border-orange-500/40 hover:bg-[#17191d] disabled:opacity-50"><span>{starter}</span><span className="text-[#777e88] transition group-hover:translate-x-0.5 group-hover:text-orange-400">↗</span></button>)}
             </div>
           </div>
         ) : (
@@ -1652,27 +1795,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 sm:px-8" aria-label="Conversación de voz con Orby">
         <div className="pointer-events-none absolute inset-x-0 top-[34%] h-56 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,.13),transparent_65%)]" aria-hidden="true" />
         <div className="relative z-10 flex w-full max-w-4xl flex-col items-center text-center">
-          <div className="flex w-full max-w-3xl items-center justify-center gap-0">
-            <div className="flex h-24 w-[clamp(4.5rem,17vw,13rem)] shrink items-center justify-end gap-[3px] overflow-hidden sm:h-36 sm:gap-1" aria-hidden="true">
-              {Array.from({length: 18}, (_, index) => <span key={index} className="orby-wave-bar w-1 shrink-0 rounded-full bg-orange-500 sm:w-1.5" style={{height: 8 + ((index * 11) % 43), animationDelay: `${index * 35}ms`, opacity: voiceMuted ? .12 : isListening ? .98 : .58}} />)}
-            </div>
-            <div className="relative z-10 flex h-56 w-44 shrink-0 items-center justify-center sm:h-[22rem] sm:w-72">
-              <div className="absolute inset-5 rounded-full bg-orange-500/20 blur-3xl" />
-              <Image src="/images/orby/orby-speaking.png" width={800} height={1000} alt="Orby" className="relative z-10 h-full w-full object-contain drop-shadow-[0_12px_28px_rgba(249,115,22,.3)]" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/photo_perfil/orbyp.png"; }} />
-            </div>
-            <div className="flex h-24 w-[clamp(4.5rem,17vw,13rem)] shrink items-center justify-start gap-[3px] overflow-hidden sm:h-36 sm:gap-1" aria-hidden="true">
-              {Array.from({length: 18}, (_, index) => <span key={index} className="orby-wave-bar w-1 shrink-0 rounded-full bg-orange-500 sm:w-1.5" style={{height: 8 + (((17 - index) * 11) % 43), animationDelay: `${index * 35}ms`, opacity: voiceMuted ? .12 : isListening ? .98 : .58}} />)}
+          <div className="relative flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64" aria-hidden="true">
+            <div className="absolute inset-2 rounded-full bg-orange-500/10 blur-2xl" />
+            <div className={voiceMuted ? "orby-voice-orb orby-voice-orb-muted" : isListening ? "orby-voice-orb orby-voice-orb-active" : "orby-voice-orb"}>
+              <div className="flex h-full items-center justify-center gap-1.5">{Array.from({length: 9}, (_, index) => <span key={index} className="orby-wave-bar w-1.5 rounded-full bg-[#ffb35c] sm:w-2" style={{height: 12 + ((index * 13) % 38), animationDelay: (index * 55) + "ms", opacity: voiceMuted ? .18 : isListening ? 1 : .55}} />)}</div>
             </div>
           </div>
           <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
-          {liveTranscript && <div className="mt-4 max-h-24 w-full max-w-lg overflow-y-auto rounded-2xl border border-orange-500/20 bg-black/5 px-4 py-3 text-left text-sm leading-6">{liveTranscript}</div>}
+          {liveTranscript && showVoiceTranscript && <div className="mt-4 max-h-28 w-full max-w-lg overflow-y-auto rounded-xl border border-current/10 bg-black/10 px-4 py-3 text-left text-sm leading-6">{liveTranscript}</div>}
           {voiceError && <p role="alert" className="mt-4 max-w-lg rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{voiceError}</p>}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-5 sm:gap-8">
-            <button type="button" onClick={() => setWorkspaceMode("chat")} className="flex h-14 w-14 items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:-translate-y-0.5 hover:bg-black/10 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Minimizar llamada y abrir chat" title="Volver al chat"><MessageSquare className="h-5 w-5" /></button>
-            <button type="button" onClick={toggleVoiceMute} disabled={!voiceMode} className={`flex h-14 w-14 items-center justify-center rounded-full border transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${voiceMuted ? "border-orange-400 bg-orange-500 text-white shadow-[0_0_24px_rgba(249,115,22,.25)]" : "border-current/15 bg-black/5 text-current hover:bg-black/10"} disabled:opacity-40`} aria-label={voiceMuted ? "Activar micrófono" : "Silenciar micrófono"} title={voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button>
-            <button type="button" onClick={finishVoiceCall} className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-600 text-white shadow-[0_10px_35px_rgba(225,29,72,.3)] transition hover:scale-105 hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400" aria-label="Finalizar llamada" title="Finalizar llamada"><X className="h-7 w-7" /></button>
-            <button type="button" onClick={() => { setWorkspaceMode("chat"); window.setTimeout(() => fileInputRef.current?.click(), 80); }} disabled={!voiceMode} className="flex h-14 w-14 items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:-translate-y-0.5 hover:bg-black/10 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 disabled:opacity-40" aria-label="Enviar imagen durante la llamada" title="Enviar imagen"><Camera className="h-5 w-5" /></button>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-9">
+            <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setWorkspaceMode("chat")} className="flex h-14 w-14 items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Volver al chat"><MessageSquare className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Chat</span></div>
+            <div className="flex flex-col items-center gap-2"><button type="button" onClick={toggleVoiceMute} disabled={!voiceMode} className={`flex h-14 w-14 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${voiceMuted ? "border-orange-400 bg-orange-500 text-white" : "border-current/15 bg-black/5 text-current hover:bg-black/10"} disabled:opacity-40`} aria-label={voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button><span className="text-[11px] opacity-70">{voiceMuted ? "Activar" : "Silenciar"}</span></div>
+            <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setShowVoiceTranscript((value) => !value)} className={`flex h-14 w-14 items-center justify-center rounded-full border border-current/15 transition hover:bg-black/10 ${showVoiceTranscript ? "bg-black/10 text-orange-400" : "bg-black/5 text-current"}`} aria-label="Mostrar u ocultar transcripción"><Captions className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Transcripción</span></div>
+            <div className="flex flex-col items-center gap-2"><button type="button" onClick={finishVoiceCall} className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f28a18] text-[#17120c] shadow-[0_8px_28px_rgba(242,138,24,.2)] transition hover:bg-[#ffa12f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300" aria-label="Finalizar llamada"><X className="h-6 w-6" /></button><span className="text-[11px] opacity-70">Finalizar</span></div>
           </div>
         </div>
       </section>}
@@ -1737,13 +1874,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="flex h-6 items-center gap-[3px]" aria-hidden="true">{Array.from({length: 18}, (_, index) => <span key={index} className="w-[3px] rounded-full bg-orange-500 transition-all" style={{height: 5 + ((index * 7) % 17), opacity: isListening ? 1 : 0.4}} />)}</div>
         <button type="button" onClick={toggleVoiceMode} className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-700">Finalizar</button>
       </div>}
-      <form onSubmit={onSubmit} className={workspace && workspaceMode === "voice" ? "hidden" : "flex shrink-0 items-end gap-2 border-t border-slate-200 bg-white p-3"}>
+      <form onSubmit={onSubmit} className={workspace && (workspaceMode === "voice" || learningView !== "chat") ? "hidden" : "flex shrink-0 items-end gap-2 border-t border-[#25282d] bg-[#0b0d10] p-3 sm:px-5 sm:py-4"}>
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
-        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Adjuntar foto o archivo de audio" title="Adjuntar imagen JPG/PNG/WebP o nota de voz MP3/WAV/OGG/WebM/M4A" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition disabled:opacity-40 ${orbyAccent ? "hover:border-orange-300 hover:bg-orange-50" : "hover:border-sky-300 hover:bg-sky-50"}`}><Paperclip className="h-5 w-5" /></button>
-        <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing} aria-label="Abrir cámara para escanear una pregunta" title="Tomar foto con la cámara" className={`flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}><Camera className="h-5 w-5" /></button>
-        <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Solicitar permiso del micrófono y grabar una nota de voz" title="Permitir micrófono y grabar nota de voz" className="flex h-12 w-10 shrink-0 items-center justify-center rounded-xl border border-orange-200 text-orange-700 transition hover:bg-orange-50 disabled:opacity-40"><Mic className="h-5 w-5" /></button>
-        <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} title={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40 ${voiceMode ? "border-orange-500 bg-orange-600 text-white shadow-[0_4px_14px_rgba(234,88,12,.25)]" : "border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-400 hover:bg-orange-100"}`}><AudioLines className="h-5 w-5" /></button>
+        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Adjuntar imagen o audio" title={workspace && imageAssets.length >= 20 ? "Almacenamiento lleno: elimina una imagen para continuar" : "Adjuntar imagen o nota de voz"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>
+        <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Tomar foto" title="Tomar foto de una pregunta" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Camera className="h-[18px] w-[18px]" /></button>
+        <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz" title="Grabar una nota de voz para transcribir" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Mic className="h-[18px] w-[18px]" /></button>
+        <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} title={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition disabled:opacity-40 ${voiceMode ? "border-orange-500 bg-orange-500 text-[#17120c]" : "border-orange-500/30 bg-orange-500/10 text-orange-300 hover:border-orange-400 hover:bg-orange-500/20"}`}><AudioLines className="h-[18px] w-[18px]" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
@@ -1753,11 +1890,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           event.preventDefault();
           const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
           handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
-        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className={`min-h-12 max-h-28 flex-1 overflow-y-auto resize-none rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm leading-5 text-slate-900 outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden placeholder:text-slate-400 ${orbyAccent ? "focus:border-orange-400 focus:ring-2 focus:ring-orange-100" : "focus:border-sky-400 focus:ring-2 focus:ring-sky-100"}`} />
-        <button type="submit" disabled={(!input.trim() && !attachment) || loading || isRecording || audioTranscribing} aria-label="Enviar mensaje a Orby" className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${orbyAccent ? "bg-orange-600 hover:bg-orange-700" : "bg-blue-600 hover:bg-blue-700"}`}><Send className="h-5 w-5" /></button>
+        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className="min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
+        <button type="submit" disabled={(!input.trim() && !attachment) || loading || isRecording || audioTranscribing} aria-label="Enviar mensaje a Orby" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
       </form>
       {conversationError && workspace && <p role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">{conversationError}</p>}
-      <p className="shrink-0 bg-white px-4 pb-3 text-[10px] leading-4 text-slate-400">Orby es un apoyo de estudio; verifica siempre los datos y procedimientos de la lección.</p>
+      <p className="shrink-0 border-t border-[#25282d] bg-[#0b0d10] px-4 pb-3 pt-1 text-center text-[10px] leading-4 text-[#707782]">Orby puede cometer errores. Comprueba los datos importantes antes de usarlos.</p>
         </div>
       </div>
     </aside>
@@ -1773,10 +1910,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="dark"] .orby-voice-stage { background:radial-gradient(ellipse at 50% 35%,#2a160c 0%,#11151c 45%,#090c11 100%); color:#f8fafc; }
         #orby-tutor-panel[data-orby-theme="light"] .orby-voice-stage { background:radial-gradient(ellipse at 50% 35%,#fff2e8 0%,#fff 55%,#f7f8fb 100%); color:#111827; }
         #orby-tutor-panel .orby-wave-bar { animation:orby-wave 900ms ease-in-out infinite alternate; transform-origin:center; }
+        #orby-tutor-panel .orby-voice-orb { width:100%;height:100%;border-radius:9999px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,166,73,.55);background:radial-gradient(circle at 34% 28%,#ffca83 0%,#f28a18 24%,#7e390d 54%,#17110d 78%);box-shadow:0 0 45px rgba(242,138,24,.22),inset 0 0 28px rgba(255,218,172,.28);transition:filter .25s,transform .25s; }
+        #orby-tutor-panel .orby-voice-orb-active { filter:brightness(1.18);transform:scale(1.035);box-shadow:0 0 70px rgba(242,138,24,.42),inset 0 0 30px rgba(255,218,172,.35); }
+        #orby-tutor-panel .orby-voice-orb-muted { filter:grayscale(.6) brightness(.65);box-shadow:none; }
         #orby-tutor-panel .orby-voice-orbit { animation:orby-orbit 7s linear infinite; }
         #orby-tutor-panel .orby-voice-orbit-delay { animation-direction:reverse; animation-duration:10s; }
         @keyframes orby-wave { from { transform:scaleY(.35); } to { transform:scaleY(1); } }
         @keyframes orby-orbit { from { transform:translate(-50%,-50%) rotate(0deg); } to { transform:translate(-50%,-50%) rotate(360deg); } }
+        #orby-tutor-panel[data-orby-theme="dark"] { background:#0b0d10!important;color:#f5f6f8!important;border-color:#25282d!important; }
+        #orby-tutor-panel[data-orby-theme="dark"] > header { background:#0b0d10!important;border-color:#25282d!important; }
+        #orby-tutor-panel[data-orby-theme="dark"] [class~="bg-white"] { background-color:#111419!important; }
+        #orby-tutor-panel[data-orby-theme="dark"] [class~="text-slate-950"],#orby-tutor-panel[data-orby-theme="dark"] [class~="text-slate-900"],#orby-tutor-panel[data-orby-theme="dark"] [class~="text-slate-800"],#orby-tutor-panel[data-orby-theme="dark"] [class~="text-slate-700"] { color:#e5e7eb!important; }
+        #orby-tutor-panel[data-orby-theme="dark"] [class~="text-slate-600"],#orby-tutor-panel[data-orby-theme="dark"] [class~="text-slate-500"] { color:#9aa1ab!important; }
+        #orby-tutor-panel[data-orby-theme="dark"] [class~="border-slate-200"],#orby-tutor-panel[data-orby-theme="dark"] [class~="border-slate-100"] { border-color:#282c32!important; }
+        #orby-tutor-panel[data-orby-theme="dark"] .orby-voice-stage { background:radial-gradient(ellipse at 50% 38%,#2a190d 0%,#101216 45%,#0b0d10 100%);color:#f8fafc; }
         @media (max-width: 767px) {
           #orby-tutor-panel[data-orby-theme] { border-radius:0!important; }
           #orby-tutor-panel .orby-voice-stage img { max-height:32vh; }

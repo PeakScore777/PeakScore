@@ -57,7 +57,7 @@ export function hasFalseOrbyCreatorAttribution(message: string): boolean {
 
   const allegedCreator = attribution[1]
     .split(/\s+(?:para|en|con|que|y|to|for)\b/i)[0]
-    .replace(/[^\p{L}\p{N}\s]/gu, "")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/gi, "")
     .trim();
   return Boolean(allegedCreator) && !/^peak\s*score$/i.test(allegedCreator) && !/^peakscore$/i.test(allegedCreator);
 }

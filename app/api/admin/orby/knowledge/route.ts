@@ -31,7 +31,10 @@ function splitText(text: string, maxChars: number): string[] {
   let current = "";
   for (const paragraph of paragraphs) {
     if (paragraph.length > maxChars) {
-      if (current) chunks.push(current), current = "";
+      if (current) {
+        chunks.push(current);
+        current = "";
+      }
       for (let i = 0; i < paragraph.length; i += maxChars) chunks.push(paragraph.slice(i, i + maxChars).trim());
       continue;
     }

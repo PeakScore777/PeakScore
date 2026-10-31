@@ -95,7 +95,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const pathname = usePathname() ?? "/";
   const orbyAccent = accent === "orby";
   const [globalTheme, setGlobalTheme] = useState<"light" | "dark">("dark");
-  const isDarkTheme = globalTheme === "dark";
 
   useEffect(() => {
     const readTheme = () => { try { setGlobalTheme(window.localStorage.getItem("peakscore-theme") === "light" ? "light" : "dark"); } catch { setGlobalTheme("dark"); } };
@@ -106,12 +105,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return () => { window.removeEventListener("peakscore-theme-change", handleThemeEvent); window.removeEventListener("storage", readTheme); };
   }, []);
 
-  function toggleGlobalTheme() {
-    const nextTheme = isDarkTheme ? "light" : "dark";
-    try { window.localStorage.setItem("peakscore-theme", nextTheme); } catch { /* session-only fallback */ }
-    window.dispatchEvent(new CustomEvent("peakscore-theme-change", { detail: nextTheme }));
-    setGlobalTheme(nextTheme);
-  }
   const [notebookOpen, setNotebookOpen] = useState(false);
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");

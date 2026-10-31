@@ -980,8 +980,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? (previousTranscript + " " + transcript).slice(-1200)
           : transcript;
       const normalizedTranscript = voiceUserTextRef.current.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
-      const falseCreatorClaim = /\b(?:asistente|tutor|modelo|herramienta|chatbot|ia|inteligencia artificial)\b.{0,100}\bcread[oa]\s+por\s+(?!peak\s*score\b)[a-z0-9]/i.test(normalizedTranscript)
-        || /\bcliente\s+creo\b/i.test(normalizedTranscript);
+      const falseCreatorClaim = /(?:asistente|tutor|modelo|herramienta|chatbot|ia|inteligencia\s*artificial).{0,140}cread[oa]\s*por\s*(?!peak\s*score\b)[a-z0-9]/i.test(normalizedTranscript)
+        || /\bcliente\s*creo\b/i.test(normalizedTranscript);
       const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript)
         || falseCreatorClaim;
       const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot|c\+\+|c#|nodejs|nextjs)\b/.test(normalizedTranscript)

@@ -2019,6 +2019,59 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>
     </aside>
       <style jsx global>{`
+        /* Orby workspace uses a readable pixel typeface for controls and interface chrome.
+           Conversation bubbles and the composer deliberately keep the standard reading font. */
+        #orby-tutor-panel[data-orby-workspace="true"] {
+          font-family: var(--font-silkscreen), Arial, sans-serif;
+          letter-spacing: -0.012em;
+        }
+        #orby-tutor-panel[data-orby-workspace="true"] .orby-message,
+        #orby-tutor-panel[data-orby-workspace="true"] .orby-message *,
+        #orby-tutor-panel[data-orby-workspace="true"] .orby-composer-input {
+          font-family: Arial, Helvetica, sans-serif !important;
+          letter-spacing: normal;
+        }
+        #orby-tutor-panel[data-orby-workspace="true"] button {
+          transition: color .18s ease, background-color .18s ease, border-color .18s ease,
+            box-shadow .18s ease, transform .18s ease, opacity .18s ease, filter .18s ease;
+        }
+        #orby-tutor-panel[data-orby-workspace="true"] button:not(:disabled):hover {
+          filter: brightness(1.09);
+        }
+        #orby-tutor-panel[data-orby-workspace="true"] button:not(:disabled):active {
+          transform: translateY(1px) scale(.985);
+        }
+        #orby-tutor-panel[data-orby-workspace="true"] button:focus-visible,
+        #orby-tutor-panel[data-orby-workspace="true"] input:focus-visible,
+        #orby-tutor-panel[data-orby-workspace="true"] textarea:focus-visible {
+          outline: 2px solid rgba(255,166,73,.72);
+          outline-offset: 2px;
+        }
+        #orby-tutor-panel .orby-voice-orb,
+        #orby-tutor-panel .orby-mini-voice-core {
+          --voice-level: 0;
+          box-shadow:
+            0 0 calc(42px + var(--voice-level) * 76px) rgba(242,138,24,calc(.18 + var(--voice-level) * .35)),
+            0 0 calc(100px + var(--voice-level) * 115px) rgba(242,138,24,calc(.05 + var(--voice-level) * .17)),
+            inset -18px -26px 45px rgba(31,13,3,.58),
+            inset 10px 9px 24px rgba(255,239,210,.36);
+          will-change: transform, filter, box-shadow;
+        }
+        #orby-tutor-panel .orby-voice-orb-active {
+          animation: none;
+        }
+        #orby-tutor-panel .orby-mini-voice-core:before {
+          animation-duration: calc(2.3s - var(--voice-level) * .8s);
+          opacity: calc(.25 + var(--voice-level) * .5);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          #orby-tutor-panel[data-orby-workspace="true"] button,
+          #orby-tutor-panel .orby-mini-voice-core:before {
+            transition: none !important;
+            animation: none !important;
+          }
+        }
+
         #orby-tutor-panel[data-orby-theme="dark"] { background:#080b10!important; color:#f8fafc!important; border-color:#29313b!important; }
         #orby-tutor-panel[data-orby-theme="dark"] > header { background:#0b1017!important; border-color:#27313d!important; color:#f8fafc!important; }
         #orby-tutor-panel[data-orby-theme="dark"] [class~="bg-white"] { background-color:#0d131b!important; }

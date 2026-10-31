@@ -107,7 +107,6 @@ export async function POST(request: Request) {
 
   const providerFailures: Array<{ provider: string; status?: number; code?: string }> = [];
   let transcript = "";
-  let provider = "";
 
   if (geminiApiKey) {
     try {
@@ -124,8 +123,7 @@ export async function POST(request: Request) {
         config: { temperature: 0, httpOptions: { timeout: 45_000 } },
       });
       transcript = typeof result.text === "string" ? result.text.trim().slice(0, 1200) : "";
-      if (transcript) provider = "gemini";
-      else providerFailures.push({ provider: "gemini", code: "EMPTY_TRANSCRIPT" });
+      if (!transcript) providerFailures.push({ provider: "gemini", code: "EMPTY_TRANSCRIPT" });
     } catch (error) {
       const typed = error as { status?: unknown; code?: unknown; name?: unknown };
       providerFailures.push({
@@ -162,8 +160,7 @@ export async function POST(request: Request) {
         });
       } else {
         transcript = typeof payload.text === "string" ? payload.text.trim().slice(0, 1200) : "";
-        if (transcript) provider = "groq";
-        else providerFailures.push({ provider: "groq", code: "EMPTY_TRANSCRIPT" });
+        if (!transcript) providerFailures.push({ provider: "groq", code: "EMPTY_TRANSCRIPT" });
       }
     } catch (error) {
       const typed = error as { name?: unknown; code?: unknown };

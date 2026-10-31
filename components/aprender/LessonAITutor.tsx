@@ -209,6 +209,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLastCommittedInputRef = useRef("");
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
+  const voiceBrowserSpeechActiveRef = useRef(false);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
@@ -724,6 +725,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function stopRealtimeVoice(updateState = true) {
     voiceModeRef.current = false;
+    voiceBrowserSpeechActiveRef.current = false;
+    if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     const liveSession = voiceChannelRef.current;
     voiceChannelRef.current = null;
     liveSession?.close();
@@ -876,24 +879,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? event.voiceActivity as { type?: unknown }
       : null;
     if (voiceActivity?.type === "ACTIVITY_START") {
-      // Persist a completed turn before opening the next one. Reset per-turn
-      // state here, not only after the network save succeeds: persistence latency
-      // must never cause a later assistant response to be discarded.
-      if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
-      voiceLastCommittedInputRef.current = "";
-      voiceUserTextRef.current = "";
-      voiceAssistantTextRef.current = "";
-      voiceAssistantMessageIdRef.current = null;
-      voiceResponseDoneRef.current = false;
-      voiceTurnPersistedRef.current = false;
-      voiceInputPolicyRef.current = null;
-      voiceForcedReplyRef.current = null;
-      // Stop both Gemini PCM playback and browser speech immediately on barge-in.
-      stopVoicePlayback();
-      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-      voicePendingAudioChunksRef.current = [];
-      setIsListening(true);
-      setVoiceStatus("Te escucho…");
+      if (voiceBrowserSpeechActiveRef.current) {
+        // Wait for an interim transcript to distinguish a student's barge-in
+        // from the browser transcribing Orby's own fallback speech.
+        setVoiceStatus("Orby está hablando…");
+      } else {
+        if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
+        voiceLastCommittedInputRef.current = "";
+        voiceUserTextRef.current = "";
+        voiceAssistantTextRef.current = "";
+        voiceAssistantMessageIdRef.current = null;
+        voiceResponseDoneRef.current = false;
+        voiceTurnPersistedRef.current = false;
+        voiceInputPolicyRef.current = null;
+        voiceForcedReplyRef.current = null;
+        stopVoicePlayback();
+        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+        voicePendingAudioChunksRef.current = [];
+        setIsListening(true);
+        setVoiceStatus("Te escucho…");
+      }
     } else if (voiceActivity?.type === "ACTIVITY_END") {
       setIsListening(false);
       setVoiceStatus("Procesando lo que dijiste…");
@@ -907,8 +912,34 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? serverContent.interimInputTranscription as { text?: unknown }
       : null;
     if (typeof interimInput?.text === "string") {
-      setLiveTranscript(interimInput.text.slice(0, 1200));
-      setVoiceStatus("Te escucho…");
+      const interimText = interimInput.text.slice(0, 1200);
+      setLiveTranscript(interimText);
+      if (voiceBrowserSpeechActiveRef.current) {
+        const normalizedInterim = normalizeVoiceComparison(interimText);
+        const normalizedAssistant = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
+        const isBrowserSpeechEcho = normalizedInterim.length >= 4
+          && normalizedAssistant.length >= 8
+          && normalizedAssistant.includes(normalizedInterim);
+        if (normalizedInterim.length >= 3 && !isBrowserSpeechEcho) {
+          voiceBrowserSpeechActiveRef.current = false;
+          if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+          if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
+          voiceLastCommittedInputRef.current = "";
+          voiceUserTextRef.current = "";
+          voiceAssistantTextRef.current = "";
+          voiceAssistantMessageIdRef.current = null;
+          voiceResponseDoneRef.current = false;
+          voiceTurnPersistedRef.current = false;
+          voiceInputPolicyRef.current = null;
+          voiceForcedReplyRef.current = null;
+          stopVoicePlayback();
+          voicePendingAudioChunksRef.current = [];
+          setIsListening(true);
+          setVoiceStatus("Te escucho…");
+        }
+      } else {
+        setVoiceStatus("Te escucho…");
+      }
     }
 
     const inputTranscript = serverContent.inputTranscription && typeof serverContent.inputTranscription === "object"
@@ -944,7 +975,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? (previousTranscript + " " + transcript).slice(-1200)
           : transcript;
       const normalizedTranscript = voiceUserTextRef.current.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
-      const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript);
+      const falseCreatorClaim = /\b(?:asistente|tutor|modelo|herramienta|chatbot|ia|inteligencia artificial)\b.{0,100}\bcread[oa]\s+por\s+(?!peak\s*score\b)[a-z0-9]/i.test(normalizedTranscript)
+        || /\bcliente\s+creo\b/i.test(normalizedTranscript);
+      const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript)
+        || falseCreatorClaim;
       const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot|c\+\+|c#|nodejs|nextjs)\b/.test(normalizedTranscript)
         || /\b(ensename|quiero aprender|ayudame a|explicame como)\b.{0,70}\b(crear|hacer|construir|desarrollar|programa|juego|pagina|aplicacion|app|bot|codigo)\b/.test(normalizedTranscript);
       const asksOutsideScope = /\b(cocinar|cocina|receta|recetas|hornear|medicamento|diagnostico medico|invertir dinero|apuesta|consejo legal)\b/.test(normalizedTranscript);
@@ -1001,8 +1035,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
       const rawReply = normalizeVoicePunctuation(voiceAssistantTextRef.current);
       const normalizedReply = rawReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
-      const exposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(normalizedReply)
-        && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|trained|hecho|hecha|soy|fui)\b/.test(normalizedReply);
+      const exposesProvider = (
+        /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai|ticescool|ticeschool)\b/.test(normalizedReply)
+        && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|trained|hecho|hecha|soy|fui)\b/.test(normalizedReply)
+      ) || /\b(?:cread[oa]|entrenad[oa]|desarrollad[oa]|hech[oa])\s+por\s+(?!peak\s*score\b)[a-z0-9]/i.test(normalizedReply);
       const policyReply = voiceInputPolicyRef.current === "identity" || exposesProvider
         ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
         : voiceInputPolicyRef.current === "programming"
@@ -1032,30 +1068,48 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         void persistRealtimeTurnIfReady();
 
         if ("speechSynthesis" in window) {
-          window.speechSynthesis.cancel();
+          const speech = window.speechSynthesis;
+          speech.cancel();
           const utterance = new SpeechSynthesisUtterance(policyReply);
-          utterance.lang = "es-CO";
-          utterance.rate = 1;
-          // Mark the fallback speech window so the mic echo filter does not
-          // commit Orby's own browser speech as a new student turn.
+          const spanishVoices = speech.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
+          const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
+            ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]es/i.test(voice.lang))
+            ?? spanishVoices[0];
+          utterance.lang = preferredVoice?.lang || "es-ES";
+          if (preferredVoice) utterance.voice = preferredVoice;
+          utterance.rate = 0.96;
+          utterance.pitch = 1;
+          utterance.volume = 1;
+          voiceBrowserSpeechActiveRef.current = true;
           voiceLastAssistantPlaybackUntilRef.current = Date.now() + Math.max(2500, policyReply.length * 75);
           utterance.onend = () => {
+            voiceBrowserSpeechActiveRef.current = false;
             voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
             if (voiceModeRef.current) {
               setVoiceStatus("Te escucho…");
               setIsListening(true);
             }
           };
-          utterance.onerror = () => {
+          utterance.onerror = (event) => {
+            voiceBrowserSpeechActiveRef.current = false;
             voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
+            if (event.error === "canceled" || event.error === "interrupted") return;
             if (voiceModeRef.current) {
-              setVoiceError("La respuesta se mostró por escrito, pero el navegador no pudo reproducir la voz.");
+              setVoiceError("El navegador no pudo reproducir la voz de respaldo (" + event.error + "). La respuesta sigue disponible por escrito.");
               setVoiceStatus("Te escucho…");
               setIsListening(true);
             }
           };
-          window.speechSynthesis.speak(utterance);
-          setVoiceStatus("Orby está hablando…");
+          try {
+            speech.resume();
+            speech.speak(utterance);
+            setVoiceStatus("Orby está hablando…");
+          } catch {
+            voiceBrowserSpeechActiveRef.current = false;
+            setVoiceError("El navegador bloqueó la reproducción de voz. La respuesta sigue disponible por escrito.");
+            setVoiceStatus("Te escucho…");
+            setIsListening(true);
+          }
         } else {
           setVoiceError("La respuesta se mostró por escrito; este navegador no tiene lectura de voz.");
           setVoiceStatus("Te escucho…");

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -78,26 +79,21 @@ export async function POST(request: Request) {
     const expireTime = new Date(now + 30 * 60 * 1000).toISOString();
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 
-    const upstream = await fetch("https://generativelanguage.googleapis.com/v1beta/auth_tokens", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        authToken: {
-          uses: 1,
-          expireTime,
-          newSessionExpireTime,
-          bidiGenerateContentSetup: {
-            model: "models/" + model,
-            generationConfig: {
-              responseModalities: ["AUDIO"],
-              speechConfig: {
-                voiceConfig: {
-                  prebuiltVoiceConfig: {
-                    voiceName: "Puck",
-                  },
+    const googleAI = new GoogleGenAI({ apiKey });
+    const authToken = await googleAI.authTokens.create({
+      config: {
+        uses: 1,
+        expireTime,
+        newSessionExpireTime,
+        lockAdditionalFields: [],
+        liveConnectConstraints: {
+          model,
+          config: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: {
+                  voiceName: "Puck",
                 },
               },
             },
@@ -118,48 +114,37 @@ export async function POST(request: Request) {
               },
             },
           },
-          fieldMask: "model,generationConfig.responseModalities,generationConfig.speechConfig,systemInstruction,inputAudioTranscription,outputAudioTranscription,realtimeInputConfig",
         },
-      }),
-      cache: "no-store",
-      signal: AbortSignal.timeout(15000),
+      },
     });
 
-    const payload = await upstream.json().catch(() => ({}));
-    const token = typeof payload?.name === "string"
-      ? payload.name
-      : typeof payload?.authToken?.name === "string"
-        ? payload.authToken.name
-        : "";
-    if (!upstream.ok || !token) {
-      const googleStatus = typeof payload?.error?.status === "string" ? payload.error.status : "UNKNOWN";
-      const googleMessage = typeof payload?.error?.message === "string"
-        ? payload.error.message.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").slice(0, 320)
-        : "Google no devolvió detalles del error.";
-      console.error("[Orby Gemini Live] Ephemeral token creation failed.", {
-        status: upstream.status,
-        errorStatus: googleStatus,
-        errorMessage: googleMessage,
-      });
-      const debugMessage = `Google Gemini API (${upstream.status} · ${googleStatus}): ${googleMessage}`;
+    const token = typeof authToken.name === "string" ? authToken.name : "";
+    if (!token) {
+      console.error("[Orby Gemini Live] SDK did not return an ephemeral token.");
       return NextResponse.json({
-        error: process.env.NODE_ENV === "production"
-          ? "No se pudo iniciar la conversación de voz. El servicio de Gemini Live rechazó la solicitud."
-          : debugMessage,
+        error: "Google Gemini no devolvió un token temporal para iniciar la voz.",
       }, { status: 502 });
     }
 
     return NextResponse.json({
       ephemeralToken: token,
       model,
-      expiresAt: payload?.expireTime ?? payload?.authToken?.expireTime ?? expireTime,
+      expiresAt: authToken.expireTime ?? expireTime,
     }, {
       headers: { "Cache-Control": "no-store, max-age=0" },
     });
   } catch (error) {
+    const message = error instanceof Error
+      ? error.message.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").slice(0, 280)
+      : "UnknownError";
     console.error("[Orby Gemini Live] Session setup failed.", {
       errorName: error instanceof Error ? error.name : "UnknownError",
+      message,
     });
-    return NextResponse.json({ error: "No se pudo preparar la conversación de voz." }, { status: 500 });
+    return NextResponse.json({
+      error: process.env.NODE_ENV === "production"
+        ? "No se pudo preparar la conversación de voz."
+        : "Gemini Live: " + message,
+    }, { status: 502 });
   }
 }

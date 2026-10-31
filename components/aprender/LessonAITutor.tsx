@@ -902,23 +902,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const inputTranscript = serverContent.inputTranscription && typeof serverContent.inputTranscription === "object"
       ? serverContent.inputTranscription as { text?: unknown }
       : null;
-    if (typeof inputTranscript?.text === "string" && inputTranscript.text.trim()) {
-      // inputTranscription is the finalized transcript; it can arrive separately
-      // from model output, and the same final event may be repeated by reconnects.
-      const transcript = inputTranscript.text.trim().slice(0, 1200);
-      const normalizedFinal = normalizeVoiceComparison(transcript);
-      if (!normalizedFinal || normalizedFinal === voiceLastCommittedInputRef.current) return;
+    const transcript = typeof inputTranscript?.text === "string" ? inputTranscript.text.trim().slice(0, 1200) : "";
+    const normalizedFinal = transcript ? normalizeVoiceComparison(transcript) : "";
+    const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
+    const isRecentAcousticEcho = Date.now() <= voiceLastAssistantPlaybackUntilRef.current
+      && normalizedFinal.length >= 12
+      && recentAssistantText.length >= 12
+      && (recentAssistantText.includes(normalizedFinal) || normalizedFinal.includes(recentAssistantText));
 
-      const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
-      const isRecentAcousticEcho = Date.now() <= voiceLastAssistantPlaybackUntilRef.current
-        && normalizedFinal.length >= 12
-        && recentAssistantText.length >= 12
-        && (recentAssistantText.includes(normalizedFinal) || normalizedFinal.includes(recentAssistantText));
-      if (isRecentAcousticEcho) {
-        console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
-        return;
-      }
+    if (isRecentAcousticEcho) {
+      console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
+    }
 
+    // Never return from the whole event handler for a duplicate transcript:
+    // the same server event can also carry output audio or turnComplete.
+    if (transcript && normalizedFinal !== voiceLastCommittedInputRef.current && !isRecentAcousticEcho) {
       voiceLastCommittedInputRef.current = normalizedFinal;
       if (voiceTurnPersistedRef.current) {
         voiceUserTextRef.current = "";
@@ -953,7 +951,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Orby está pensando…");
       setIsListening(false);
     }
-
     const outputTranscript = serverContent.outputTranscription && typeof serverContent.outputTranscription === "object"
       ? serverContent.outputTranscription as { text?: unknown }
       : null;

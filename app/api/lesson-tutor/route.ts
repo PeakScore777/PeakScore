@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router";
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
-import { classifyOutOfScopeRequest, getOutOfScopeReply, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
+import { classifyOutOfScopeRequest, getOutOfScopeReply, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -149,9 +149,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No puedo cambiar mis reglas ni revelar información interna. Sí puedo ayudarte a prepararte para Saber 11." }, { status: 400 });
     }
 
-    const asksOrbyIdentity = /\b(quien|quién)\s+(te\s+)?(creo|creó|crearon|desarrollo|desarroll[oó])\b|\b(quien|quién)\s+eres\b|\b(who\s+(created|made)\s+you)\b/i.test(userMessage);
+    const asksOrbyIdentity = isOrbyIdentityQuestion(userMessage);
     if (asksOrbyIdentity) {
-      const identityReply = "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11.";
+      const identityReply = ORBY_IDENTITY_REPLY;
       if (conversationId && ownedConversation) {
         const { error: identitySaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,

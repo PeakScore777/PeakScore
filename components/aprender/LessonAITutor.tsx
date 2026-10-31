@@ -877,8 +877,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceTurnPersistedRef.current = false;
       voiceInputPolicyRef.current = null;
       voiceForcedReplyRef.current = null;
-      // Stop queued playback immediately when the student starts speaking.
+      // Stop both Gemini PCM playback and browser speech immediately on barge-in.
       stopVoicePlayback();
+      if ("speechSynthesis" in window) window.speechSynthesis.cancel();
       voicePendingAudioChunksRef.current = [];
       setIsListening(true);
       setVoiceStatus("Te escucho…");

@@ -35,12 +35,14 @@ jobs:
         shell: bash
         run: |
           npm install --package-lock-only --ignore-scripts --save-exact next@16.4.3 eslint-config-next@16.4.3
-          npm audit fix --ignore-scripts
+          npm audit fix --ignore-scripts || echo "Non-breaking automatic fixes were unavailable; the full audit gate below will report unresolved advisories."
 
       - name: Install dependencies
         run: npm ci
 
       - name: Dependency security audit
+        id: dependency_audit
+        continue-on-error: true
         shell: bash
         run: |
           npm audit --json > npm-audit.json || true
@@ -87,6 +89,13 @@ jobs:
 
       - name: ESLint
         run: npm run lint
+
+      - name: Enforce dependency audit gate
+        if: steps.dependency_audit.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "Dependency security gate failed. TypeScript and ESLint ran, but unresolved advisories must be fixed before merge."
+          exit 1
 
       - name: Commit validated dependency security updates
         if: github.ref == 'refs/heads/feat/founder-intro'

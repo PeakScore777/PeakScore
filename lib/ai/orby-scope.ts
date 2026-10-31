@@ -70,5 +70,5 @@ export function getOutOfScopeReply(kind: "programming" | "outside"): string {
   if (kind === "programming") {
     return "Soy Orby, el asistente educativo de PeakScore, especializado exclusivamente en la preparación para Saber 11. No enseño programación, desarrollo de software ni lenguajes de código. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
   }
-  return "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para Saber 11. Puedo ayudarte a comprender y practicar las cinco áreas del examen. ¿Qué tema quieres trabajar?";
+  return "No puedo enseñar cocina ni dar instrucciones sobre actividades ajenas al ICFES. Soy Orby, el tutor de PeakScore especializado en Saber 11. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
 }

@@ -62,7 +62,7 @@ stable
 set search_path = ''
 as $$
   with query_value as (
-    select pg_catalog.websearch_to_tsquery('spanish'::pg_catalog.regconfig, pg_catalog.left(pg_catalog.coalesce(p_query,''), 800)) as value
+    select pg_catalog.websearch_to_tsquery('spanish'::pg_catalog.regconfig, pg_catalog.left(coalesce(p_query,''), 800)) as value
   )
   select
     d.id,
@@ -80,7 +80,7 @@ as $$
     and pg_catalog.numnode(q.value) > 0
     and c.search_vector @@ q.value
   order by pg_catalog.ts_rank(c.search_vector, q.value) desc
-  limit pg_catalog.greatest(1, pg_catalog.least(pg_catalog.coalesce(p_limit,5),8));
+  limit greatest(1, least(coalesce(p_limit,5),8));
 $$;
 
 revoke all on function public.orby_search_published_knowledge(text,text,integer) from public, anon, authenticated;

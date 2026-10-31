@@ -1624,35 +1624,30 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>
 
       {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 sm:px-8" aria-label="Conversación de voz con Orby">
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div className="orby-voice-orbit absolute left-1/2 top-[43%] h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full border border-orange-500/20 sm:h-80 sm:w-80" />
-          <div className="orby-voice-orbit orby-voice-orbit-delay absolute left-1/2 top-[43%] h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full border border-orange-500/10 sm:h-[26rem] sm:w-[26rem]" />
-          <div className="absolute inset-x-0 top-[43%] h-40 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,.10),transparent_68%)]" />
-        </div>
-        <div className="relative z-10 flex w-full max-w-5xl flex-col items-center text-center">
-          <div className="flex w-full items-center justify-center gap-2 sm:gap-5">
-            <div className="flex h-28 min-w-0 flex-1 items-center justify-end gap-[3px] sm:h-40 sm:gap-1" aria-hidden="true">
-              {Array.from({length: 18}, (_, index) => <span key={index} className="orby-wave-bar w-1 rounded-full bg-orange-500 sm:w-1.5" style={{height: 8 + ((index * 11) % 43), animationDelay: `${index * 35}ms`, opacity: voiceMuted ? .16 : isListening ? .95 : .5}} />)}
+        <div className="pointer-events-none absolute inset-x-0 top-[34%] h-56 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,.13),transparent_65%)]" aria-hidden="true" />
+        <div className="relative z-10 flex w-full max-w-4xl flex-col items-center text-center">
+          <div className="flex w-full max-w-3xl items-center justify-center gap-0">
+            <div className="flex h-24 w-[clamp(4.5rem,17vw,13rem)] shrink items-center justify-end gap-[3px] overflow-hidden sm:h-36 sm:gap-1" aria-hidden="true">
+              {Array.from({length: 18}, (_, index) => <span key={index} className="orby-wave-bar w-1 shrink-0 rounded-full bg-orange-500 sm:w-1.5" style={{height: 8 + ((index * 11) % 43), animationDelay: `${index * 35}ms`, opacity: voiceMuted ? .12 : isListening ? .98 : .58}} />)}
             </div>
-            <div className="relative flex h-56 w-44 shrink-0 items-center justify-center sm:h-[22rem] sm:w-72">
-              <div className="absolute inset-2 rounded-full bg-orange-500/15 blur-3xl" />
-              <Image src="/images/orby/orby-speaking.png" width={800} height={1000} alt="Orby" className="relative z-10 h-full w-full object-contain drop-shadow-[0_18px_35px_rgba(249,115,22,.24)]" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/photo_perfil/orbyp.png"; }} />
+            <div className="relative z-10 flex h-56 w-44 shrink-0 items-center justify-center sm:h-[22rem] sm:w-72">
+              <div className="absolute inset-5 rounded-full bg-orange-500/20 blur-3xl" />
+              <Image src="/images/orby/orby-speaking.png" width={800} height={1000} alt="Orby" className="relative z-10 h-full w-full object-contain drop-shadow-[0_12px_28px_rgba(249,115,22,.3)]" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = "/avatars/photo_perfil/orbyp.png"; }} />
             </div>
-            <div className="flex h-28 min-w-0 flex-1 items-center justify-start gap-[3px] sm:h-40 sm:gap-1" aria-hidden="true">
-              {Array.from({length: 18}, (_, index) => <span key={index} className="orby-wave-bar w-1 rounded-full bg-orange-500 sm:w-1.5" style={{height: 8 + (((17 - index) * 11) % 43), animationDelay: `${index * 35}ms`, opacity: voiceMuted ? .16 : isListening ? .95 : .5}} />)}
+            <div className="flex h-24 w-[clamp(4.5rem,17vw,13rem)] shrink items-center justify-start gap-[3px] overflow-hidden sm:h-36 sm:gap-1" aria-hidden="true">
+              {Array.from({length: 18}, (_, index) => <span key={index} className="orby-wave-bar w-1 shrink-0 rounded-full bg-orange-500 sm:w-1.5" style={{height: 8 + (((17 - index) * 11) % 43), animationDelay: `${index * 35}ms`, opacity: voiceMuted ? .12 : isListening ? .98 : .58}} />)}
             </div>
           </div>
-          <h2 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
+          <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
           {liveTranscript && <div className="mt-4 max-h-24 w-full max-w-lg overflow-y-auto rounded-2xl border border-orange-500/20 bg-black/5 px-4 py-3 text-left text-sm leading-6">{liveTranscript}</div>}
           {voiceError && <p role="alert" className="mt-4 max-w-lg rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{voiceError}</p>}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-7">
-            <button type="button" onClick={() => setWorkspaceMode("chat")} className="flex h-14 w-14 flex-col items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:bg-black/10" aria-label="Minimizar llamada y abrir chat" title="Volver al chat"><MessageSquare className="h-5 w-5" /></button>
-            <button type="button" onClick={toggleVoiceMute} disabled={!voiceMode} className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border transition ${voiceMuted ? "border-orange-400 bg-orange-500 text-white shadow-[0_0_24px_rgba(249,115,22,.25)]" : "border-current/15 bg-black/5 text-current hover:bg-black/10"} disabled:opacity-40`} aria-label={voiceMuted ? "Activar micrófono" : "Silenciar micrófono"} title={voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button>
-            <button type="button" onClick={finishVoiceCall} className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-600 text-white shadow-[0_10px_35px_rgba(225,29,72,.3)] transition hover:scale-105 hover:bg-rose-700" aria-label="Finalizar llamada" title="Finalizar llamada"><X className="h-7 w-7" /></button>
-            <button type="button" onClick={() => { setWorkspaceMode("chat"); window.setTimeout(() => fileInputRef.current?.click(), 80); }} disabled={!voiceMode} className="flex h-14 w-14 flex-col items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:bg-black/10 disabled:opacity-40" aria-label="Enviar imagen durante la llamada" title="Enviar imagen"><Camera className="h-5 w-5" /></button>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-5 sm:gap-8">
+            <button type="button" onClick={() => setWorkspaceMode("chat")} className="flex h-14 w-14 items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:-translate-y-0.5 hover:bg-black/10 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Minimizar llamada y abrir chat" title="Volver al chat"><MessageSquare className="h-5 w-5" /></button>
+            <button type="button" onClick={toggleVoiceMute} disabled={!voiceMode} className={`flex h-14 w-14 items-center justify-center rounded-full border transition hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${voiceMuted ? "border-orange-400 bg-orange-500 text-white shadow-[0_0_24px_rgba(249,115,22,.25)]" : "border-current/15 bg-black/5 text-current hover:bg-black/10"} disabled:opacity-40`} aria-label={voiceMuted ? "Activar micrófono" : "Silenciar micrófono"} title={voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button>
+            <button type="button" onClick={finishVoiceCall} className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-600 text-white shadow-[0_10px_35px_rgba(225,29,72,.3)] transition hover:scale-105 hover:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400" aria-label="Finalizar llamada" title="Finalizar llamada"><X className="h-7 w-7" /></button>
+            <button type="button" onClick={() => { setWorkspaceMode("chat"); window.setTimeout(() => fileInputRef.current?.click(), 80); }} disabled={!voiceMode} className="flex h-14 w-14 items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:-translate-y-0.5 hover:bg-black/10 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 disabled:opacity-40" aria-label="Enviar imagen durante la llamada" title="Enviar imagen"><Camera className="h-5 w-5" /></button>
           </div>
-          <div className="mt-2 flex w-full max-w-xl justify-between px-1 text-[10px] opacity-60 sm:text-xs"><span>Chat</span><span>{voiceMuted ? "Activar" : "Silenciar"}</span><span>Finalizar</span><span>Enviar imagen</span></div>
         </div>
       </section>}
       {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="fixed bottom-24 right-5 z-[95] flex items-center gap-3 rounded-full border border-orange-500/50 bg-[#11151c] px-3 py-2.5 text-white shadow-[0_12px_40px_rgba(249,115,22,.28)] transition hover:-translate-y-0.5 hover:border-orange-400 sm:bottom-8 sm:right-8">

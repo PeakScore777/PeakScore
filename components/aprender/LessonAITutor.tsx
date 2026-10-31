@@ -891,7 +891,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const activeSession = voiceChannelRef.current;
         if (!activeSession || !(event.data instanceof ArrayBuffer)) return;
         activeSession.sendRealtimeInput({
-          audio: new Blob([event.data], { type: "audio/pcm;rate=16000" }),
+          audio: {
+            data: pcmBufferToBase64(event.data),
+            mimeType: "audio/pcm;rate=16000",
+          },
         });
       };
       microphoneSource.connect(worklet);

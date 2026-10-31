@@ -40,7 +40,7 @@ type Props = {
 
 
 function normalizeVoiceComparison(value: string): string {
-  return value.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO").replace(/[\s\p{P}\p{S}]+/gu, "");
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/[^a-z0-9\s]+/gi, "");
 }
 
 function mergeLiveTranscript(previous: string, incoming: string): string {
@@ -65,15 +65,15 @@ function mergeLiveTranscript(previous: string, incoming: string): string {
   const left = previous.trimEnd();
   const right = suffix.trimStart();
   const hasBoundarySpace = /\s$/.test(previous) || /^\s/.test(suffix);
-  const needsWordSpace = /\p{L}|\p{N}$/u.test(left) && /^[\p{L}\p{N}]/u.test(right);
+  const needsWordSpace = /[A-Za-z0-9]$/.test(left) && /^[A-Za-z0-9]/.test(right);
   return left + (hasBoundarySpace || !needsWordSpace ? "" : " ") + suffix;
 }
 
 function normalizeVoicePunctuation(value: string): string {
   return value
     .replace(/\s+([,.;:!?])/g, "$1")
-    .replace(/([,;:!?])(?=\p{L})/gu, "$1 ")
-    .replace(/([.!?])(?=\p{Lu})/gu, "$1 ")
+    .replace(/([,;:!?])(?=[A-Za-z])/gu, "$1 ")
+    .replace(/([.!?])(?=[A-Z])/gu, "$1 ")
     .replace(/[ \t]{2,}/g, " ")
     .trim();
 }
@@ -932,7 +932,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : previousTranscript && !previousTranscript.endsWith(transcript)
           ? (previousTranscript + " " + transcript).slice(-1200)
           : transcript;
-      const normalizedTranscript = voiceUserTextRef.current.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
+      const normalizedTranscript = voiceUserTextRef.current.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
       const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript);
       const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot|c\+\+|c#|nodejs|nextjs)\b/.test(normalizedTranscript)
         || /\b(ensename|quiero aprender|ayudame a|explicame como)\b.{0,70}\b(crear|hacer|construir|desarrollar|programa|juego|pagina|aplicacion|app|bot|codigo)\b/.test(normalizedTranscript);
@@ -988,7 +988,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
       const rawReply = normalizeVoicePunctuation(voiceAssistantTextRef.current);
-      const normalizedReply = rawReply.normalize("NFD").replace(/\\p{M}/gu, "").toLocaleLowerCase("es-CO");
+      const normalizedReply = rawReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
       const exposesProvider = /\\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\\b/.test(normalizedReply)
         && /\\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|trained|hecho|hecha|soy|fui)\\b/.test(normalizedReply);
       const policyReply = voiceInputPolicyRef.current === "identity" || exposesProvider

@@ -153,6 +153,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceResponseDoneRef = useRef(false);
   const voiceTurnPersistedRef = useRef(false);
   const voiceTurnSavingRef = useRef(false);
+  const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
+  const voiceInputPolicyRef = useRef<"identity" | "programming" | null>(null);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
@@ -853,6 +855,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceTurnPersistedRef.current = false;
       }
       voiceUserTextRef.current = transcript;
+      const normalizedTranscript = transcript.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
+      voiceInputPolicyRef.current =
+        /\b(quien|qn)\b.{0,48}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora)\b|\b(quien|qn)\s+eres\b/.test(normalizedTranscript)
+          ? "identity"
+          : /\b(programar|programacion|programador|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo)\b/.test(normalizedTranscript)
+            ? "programming"
+            : null;
+      voicePendingAudioChunksRef.current = [];
       setLiveTranscript("");
       setMessages((current) => {
         const assistantId = voiceAssistantMessageIdRef.current;
@@ -875,15 +885,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = transcriptChunk.startsWith(voiceAssistantTextRef.current)
         ? transcriptChunk
         : voiceAssistantTextRef.current + transcriptChunk;
-      const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-      voiceAssistantMessageIdRef.current = id;
-      setMessages((current) => {
-        const exists = current.some((message) => message.id === id);
-        return exists
-          ? current.map((message) => message.id === id ? { ...message, content: voiceAssistantTextRef.current } : message)
-          : [...current, { id, role: "assistant", content: voiceAssistantTextRef.current }];
-      });
-      setVoiceStatus("Orby está hablando…");
+      voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+      // Do not expose unverified live output in the transcript before turnComplete.
+      setVoiceStatus("Orby está preparando su respuesta…");
     }
 
     const modelTurn = serverContent.modelTurn && typeof serverContent.modelTurn === "object"
@@ -894,7 +898,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? part.inlineData as { data?: unknown; mimeType?: unknown }
         : null;
       if (typeof inlineData?.data === "string") {
-        playGeminiAudio(inlineData.data, typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined);
+        // Hold audio until the completed transcript passes Orby's policy checks.
+        voicePendingAudioChunksRef.current.push({
+          data: inlineData.data,
+          mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
+        });
       }
     }
 
@@ -908,6 +916,38 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     if (serverContent.turnComplete === true || serverContent.generationComplete === true) {
+      const rawReply = voiceAssistantTextRef.current.trim();
+      const exposesProvider = /\b(creado|creada|desarrollado|desarrollada)\s+por\s+(google|gemini|openai|anthropic)\b|\bsoy\s+(un\s+)?modelo\s+de\s+lenguaje\b/i.test(rawReply);
+      const safeReply = voiceInputPolicyRef.current === "identity" || exposesProvider
+        ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
+        : voiceInputPolicyRef.current === "programming"
+          ? "Soy Orby, el asistente educativo de PeakScore y mi función es ayudarte exclusivamente a preparar Saber 11. No enseño programación. Podemos trabajar Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
+          : rawReply;
+      if (safeReply) {
+        voiceAssistantTextRef.current = safeReply;
+        const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+        voiceAssistantMessageIdRef.current = id;
+        setMessages((current) => {
+          const exists = current.some((message) => message.id === id);
+          return exists
+            ? current.map((message) => message.id === id ? { ...message, content: safeReply } : message)
+            : [...current, { id, role: "assistant", content: safeReply }];
+        });
+      }
+      if (voiceInputPolicyRef.current || exposesProvider) {
+        stopVoicePlayback();
+        if (safeReply && "speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(safeReply);
+          utterance.lang = "es-CO";
+          window.speechSynthesis.speak(utterance);
+        }
+        voicePendingAudioChunksRef.current = [];
+      } else {
+        for (const chunk of voicePendingAudioChunksRef.current) playGeminiAudio(chunk.data, chunk.mimeType);
+        voicePendingAudioChunksRef.current = [];
+      }
+      voiceInputPolicyRef.current = null;
       voiceResponseDoneRef.current = true;
       void persistRealtimeTurnIfReady();
       setVoiceStatus("Te escucho…");

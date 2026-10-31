@@ -4,6 +4,7 @@ class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
     this.pending = new Float32Array(0);
     this.position = 0;
     this.targetRate = 16000;
+    this.pendingPcm = new Int16Array(0);
   }
 
   process(inputs) {
@@ -35,12 +36,26 @@ class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
     this.position -= consumed;
 
     if (samples.length > 0) {
-      const pcm = new Int16Array(samples.length);
+      // Gemini Live works more reliably with regular ~20 ms PCM packets.
+      // The AudioWorklet render quantum is usually only 128 frames (~2.7 ms
+      // at 48 kHz), so buffer resampled audio instead of flooding the socket
+      // with tiny messages.
+      const pending = this.pendingPcm || new Int16Array(0);
+      const next = new Int16Array(pending.length + samples.length);
+      next.set(pending);
       for (let i = 0; i < samples.length; i += 1) {
         const clamped = Math.max(-1, Math.min(1, samples[i]));
-        pcm[i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
+        next[pending.length + i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
       }
-      this.port.postMessage(pcm.buffer, [pcm.buffer]);
+
+      const packetSize = 320; // 20 ms at 16 kHz, mono, signed 16-bit PCM.
+      let offset = 0;
+      while (offset + packetSize <= next.length) {
+        const packet = next.slice(offset, offset + packetSize);
+        this.port.postMessage(packet.buffer, [packet.buffer]);
+        offset += packetSize;
+      }
+      this.pendingPcm = next.slice(offset);
     }
 
     return true;

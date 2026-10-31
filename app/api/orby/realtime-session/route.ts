@@ -80,13 +80,19 @@ export async function POST(request: Request) {
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 
     const googleAI = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta" } });
-    // Start with Google's documented minimal ephemeral-token flow.
-    // The browser SDK sends the complete Live setup after authentication.
+    // Bind the ephemeral token to the exact Live model and audio modality
+    // that the browser will use. Google requires v1beta for these tokens.
     const authToken = await googleAI.authTokens.create({
       config: {
         uses: 1,
         expireTime,
         newSessionExpireTime,
+        liveConnectConstraints: {
+          model: "models/" + model,
+          config: {
+            responseModalities: ["AUDIO"],
+          },
+        },
       },
     });
 

@@ -793,7 +793,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const model = configuredModel.startsWith("models/") ? configuredModel.slice("models/".length) : configuredModel;
       const socket = new WebSocket(
         "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained?access_token=" +
-        tokenPayload.ephemeralToken
+        encodeURIComponent(tokenPayload.ephemeralToken)
       );
       voiceChannelRef.current = socket;
 
@@ -822,13 +822,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     prebuiltVoiceConfig: { voiceName: "Puck" },
                   },
                 },
-              },
-              systemInstruction: {
-                parts: [{
-                  text: typeof tokenPayload.systemInstruction === "string"
-                    ? tokenPayload.systemInstruction
-                    : "Eres Orby, el tutor de PeakScore. Habla español colombiano natural y ayuda con rigor académico.",
-                }],
               },
               inputAudioTranscription: { languageCodes: ["es-CO"] },
               outputAudioTranscription: { languageCodes: ["es-CO"] },

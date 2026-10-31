@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
         liveConnectConstraints: {
           model,
           config: {
-            responseModalities: ["AUDIO"],
+            responseModalities: [Modality.AUDIO],
             speechConfig: {
               voiceConfig: {
                 prebuiltVoiceConfig: {
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ephemeralToken: token,
       model,
-      expiresAt: authToken.expireTime ?? expireTime,
+      expiresAt: expireTime,
     }, {
       headers: { "Cache-Control": "no-store, max-age=0" },
     });

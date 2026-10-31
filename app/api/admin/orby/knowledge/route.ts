@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { extractPdfPages } from "@/lib/pdf/extractPdfPages";
 import { ICFES_SUBJECTS, type IcfesSubject } from "@/lib/ai/orby-scope";
@@ -19,12 +19,7 @@ function jsonError(message: string, status: number) {
 }
 
 async function getAdmin() {
-  const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return { user: null };
-  const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  if (profileError || profile?.role !== "admin") return { user: null };
-  return { user };
+  return getOrbyOwner();
 }
 
 function splitText(text: string, maxChars: number): string[] {

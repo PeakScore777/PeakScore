@@ -869,6 +869,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // state here, not only after the network save succeeds: persistence latency
       // must never cause a later assistant response to be discarded.
       if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
+      voiceLastCommittedInputRef.current = "";
       voiceUserTextRef.current = "";
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
@@ -932,8 +933,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : previousTranscript && !previousTranscript.endsWith(transcript)
           ? (previousTranscript + " " + transcript).slice(-1200)
           : transcript;
-      const normalizedTranscript = normalizeVoiceComparison(voiceUserTextRef.current);
-      const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora)\b|\b(quien|qn)eres\b|\btucreador\b/.test(normalizedTranscript);
+      const normalizedTranscript = voiceUserTextRef.current.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
+      const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript);
       const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot|c\+\+|c#|nodejs|nextjs)\b/.test(normalizedTranscript)
         || /\b(ensename|quiero aprender|ayudame a|explicame como)\b.{0,70}\b(crear|hacer|construir|desarrollar|programa|juego|pagina|aplicacion|app|bot|codigo)\b/.test(normalizedTranscript);
       voiceInputPolicyRef.current = asksIdentity ? "identity" : asksProgramming ? "programming" : null;

@@ -56,7 +56,7 @@ export const ORBY_IDENTITY_REPLY =
   "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11.";
 
 export function classifyOutOfScopeRequest(message: string): "programming" | "outside" | null {
-  const normalized = message.normalize("NFKC").trim();
+  const normalized = message.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
   if (PROGRAMMING_PATTERNS.some((pattern) => pattern.test(normalized))) return "programming";
   if (OUTSIDE_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return "outside";
   return null;

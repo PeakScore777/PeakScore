@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ReactNode } from "react";
-import { Press_Start_2P } from "next/font/google";
+import { Press_Start_2P, Silkscreen } from "next/font/google";
 
 import GlobalNavbar from "@/components/layout/GlobalNavbar";
 import GlobalOrbyTutor from "@/components/layout/GlobalOrbyTutor";
@@ -15,6 +15,14 @@ const pixelFont = Press_Start_2P({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-press-start",
+  preload: false,
+});
+
+const silkscreenFont = Silkscreen({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-silkscreen",
   preload: false,
 });
 
@@ -64,7 +72,7 @@ export default async function RootLayout({
 
   return (
     <html lang="es">
-      <body className={pixelFont.variable}>
+      <body className={`${pixelFont.variable} ${silkscreenFont.variable}`}>
         <GlobalNavbar initialProfile={initialProfile} />
         {children}
         {user ? <GlobalOrbyTutor studentName={initialProfile?.fullName ?? null} /> : null}

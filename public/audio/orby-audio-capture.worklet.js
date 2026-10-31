@@ -48,7 +48,7 @@ class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
         next[pending.length + i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
       }
 
-      const packetSize = 320; // 20 ms at 16 kHz, mono, signed 16-bit PCM.
+      const packetSize = 1600; // 100 ms at 16 kHz, mono, signed 16-bit PCM.
       let offset = 0;
       while (offset + packetSize <= next.length) {
         const packet = next.slice(offset, offset + packetSize);

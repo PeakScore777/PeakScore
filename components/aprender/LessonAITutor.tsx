@@ -145,6 +145,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
   const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
+  const voiceAnalyserRef = useRef<AnalyserNode | null>(null);
+  const voiceAnimationFrameRef = useRef<number | null>(null);
+  const voiceVisualLevelRef = useRef(0);
+  const voiceStageOrbRef = useRef<HTMLDivElement | null>(null);
+  const voiceMiniOrbRef = useRef<HTMLSpanElement | null>(null);
   const voiceChannelRef = useRef<Session | null>(null);
   const voiceStreamRef = useRef<MediaStream | null>(null);
   const voiceAudioContextRef = useRef<AudioContext | null>(null);
@@ -692,6 +697,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceWorkletNodeRef.current = null;
     voiceMicSourceRef.current?.disconnect();
     voiceMicSourceRef.current = null;
+    voiceAnalyserRef.current?.disconnect();
+    voiceAnalyserRef.current = null;
+    if (voiceAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(voiceAnimationFrameRef.current);
+      voiceAnimationFrameRef.current = null;
+    }
+    voiceVisualLevelRef.current = 0;
+    [voiceStageOrbRef.current, voiceMiniOrbRef.current].forEach((orb) => {
+      if (!orb) return;
+      orb.style.transform = "";
+      orb.style.filter = "";
+      orb.style.setProperty("--voice-level", "0");
+    });
     voiceMuteGainRef.current?.disconnect();
     voiceMuteGainRef.current = null;
 
@@ -743,6 +761,39 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return window.btoa(binary);
   }
 
+  function startVoiceVisualizer(analyser: AnalyserNode) {
+    if (voiceAnimationFrameRef.current !== null) {
+      window.cancelAnimationFrame(voiceAnimationFrameRef.current);
+    }
+    const samples = new Uint8Array(analyser.fftSize);
+    const renderLevel = () => {
+      if (!voiceModeRef.current || voiceAudioContextRef.current?.state === "closed") {
+        voiceAnimationFrameRef.current = null;
+        return;
+      }
+      analyser.getByteTimeDomainData(samples);
+      let total = 0;
+      for (let index = 0; index < samples.length; index += 1) {
+        const amplitude = (samples[index] - 128) / 128;
+        total += amplitude * amplitude;
+      }
+      const rms = Math.sqrt(total / samples.length);
+      const target = Math.min(1, Math.max(0, (rms - 0.004) * 7.2));
+      const previous = voiceVisualLevelRef.current;
+      const smoothed = previous + (target - previous) * (target > previous ? 0.42 : 0.14);
+      voiceVisualLevelRef.current = smoothed;
+
+      [voiceStageOrbRef.current, voiceMiniOrbRef.current].forEach((orb) => {
+        if (!orb) return;
+        orb.style.setProperty("--voice-level", smoothed.toFixed(3));
+        orb.style.transform = `scale(${1 + smoothed * 0.16})`;
+        orb.style.filter = `brightness(${1 + smoothed * 0.34}) saturate(${1 + smoothed * 0.2})`;
+      });
+      voiceAnimationFrameRef.current = window.requestAnimationFrame(renderLevel);
+    };
+    renderLevel();
+  }
+
   function playGeminiAudio(base64Audio: string, mimeType?: string) {
     const audioContext = voiceAudioContextRef.current;
     if (!audioContext || audioContext.state === "closed") return;
@@ -762,6 +813,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const source = audioContext.createBufferSource();
       source.buffer = audioBuffer;
       source.connect(audioContext.destination);
+      if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
       const scheduledAt = Math.max(audioContext.currentTime + 0.015, voiceNextPlaybackTimeRef.current);
       source.start(scheduledAt);
       voiceNextPlaybackTimeRef.current = scheduledAt + audioBuffer.duration;
@@ -1042,6 +1094,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const microphoneSource = audioContext.createMediaStreamSource(stream);
       voiceMicSourceRef.current = microphoneSource;
+      const voiceAnalyser = audioContext.createAnalyser();
+      voiceAnalyser.fftSize = 1024;
+      voiceAnalyser.smoothingTimeConstant = 0.72;
+      voiceAnalyserRef.current = voiceAnalyser;
+      microphoneSource.connect(voiceAnalyser);
+      startVoiceVisualizer(voiceAnalyser);
       const worklet = new AudioWorkletNode(audioContext, "orby-audio-capture", {
         numberOfInputs: 1,
         numberOfOutputs: 1,
@@ -1378,6 +1436,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setConversationError("");
     setPendingDeleteConversation(null);
     setLearningView("chat");
+    setWorkspaceMode("chat");
     setAttachmentError("");
     clearAttachment();
     clearRecordedAudio();
@@ -1391,7 +1450,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function selectConversation(id: string) {
-    if (loading || id === activeConversationRef.current) return;
+    if (loading) return;
+    if (id === activeConversationRef.current) {
+      setLearningView("chat");
+      setWorkspaceMode("chat");
+      setConversationError("");
+      if (window.matchMedia("(max-width: 767px)").matches) setHistoryOpen(false);
+      return;
+    }
+    if (voiceModeRef.current) stopRealtimeVoice();
+    setWorkspaceMode("chat");
+    setLearningView("chat");
     setHistoryLoading(true);
     setConversationError("");
     try {
@@ -1672,7 +1741,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   return (
     <>
-    <aside id="orby-tutor-panel" data-orby-theme={globalTheme} aria-label="Tutor de inteligencia artificial Orby" className={workspace
+    <aside id="orby-tutor-panel" data-orby-theme={globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label="Tutor de inteligencia artificial Orby" className={workspace
       ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-none border-0 bg-white text-slate-900 shadow-none"
       : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
       <header className="flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#25282d] bg-[#0b0d10] px-4 sm:px-6">
@@ -1682,7 +1751,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <div className="flex items-center gap-1.5">
           {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} title="Panel lateral" className="rounded-lg p-2 text-[#a3a8b0] transition hover:bg-white/5 hover:text-white md:hidden"><Search className="h-4 w-4" /></button>}
-          {workspace && <button type="button" onClick={startNewConversation} aria-label="Crear nueva conversación" title="Nuevo chat" className="inline-flex h-9 items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500 px-3 text-xs font-semibold text-white transition hover:bg-orange-400"><Plus className="h-4 w-4" /><span className="hidden sm:inline">Nuevo chat</span></button>}
           {!workspace && <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>}
         </div>
       </header>
@@ -1699,7 +1767,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {!historyLoading && conversations.length === 0 && <p className="px-3 py-4 text-xs leading-5 text-[#858b95]">Tus conversaciones aparecerán aquí.</p>}
             {conversations.filter((item) => `${item.title} ${item.subject} ${item.topic}`.toLocaleLowerCase("es-CO").includes(historyQuery.trim().toLocaleLowerCase("es-CO"))).map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-lg border border-orange-400/20 bg-orange-500/[0.08] px-2 py-2" : "group rounded-lg border border-transparent px-2 py-2 transition hover:bg-white/[0.04]"}>
               <div className="flex items-center gap-1">
-                <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 text-left">
+                <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 rounded-md py-1 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-orange-400">
                   <span className="block truncate text-[12px] font-medium text-[#e7e9ed]">{item.title}</span>
                   <span className="mt-1 block truncate text-[10px] text-[#777e88]">{item.topic || item.subject} · {new Date(item.updated_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</span>
                 </button>
@@ -1819,7 +1887,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ) : (
           <div className="space-y-4">
             {messages.map((message, index) => (
-              <article key={index} className={message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}>
+              <article key={index} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[15px] leading-7 sm:text-base">{renderTutorContent(message.content)}</div>
                 {workspace && message.role === "assistant" && <button type="button" onClick={() => void saveLearningItem("note", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Apunte de Orby", message.content)} className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-medium text-[#aeb4bd] transition hover:border-orange-500/30 hover:text-orange-300"><Bookmark className="h-3.5 w-3.5"/> Guardar apunte</button>}
@@ -1847,7 +1915,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <div className="relative z-10 flex w-full max-w-4xl flex-col items-center text-center">
           <div className="relative flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64" aria-hidden="true">
             <div className="absolute inset-2 rounded-full bg-orange-500/10 blur-2xl" />
-            <div className={voiceMuted ? "orby-voice-orb orby-voice-orb-muted" : isListening ? "orby-voice-orb orby-voice-orb-active" : "orby-voice-orb"} />
+            <div ref={voiceStageOrbRef} className={voiceMuted ? "orby-voice-orb orby-voice-orb-muted" : isListening ? "orby-voice-orb orby-voice-orb-active" : "orby-voice-orb"} />
           </div>
           <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
@@ -1861,8 +1929,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
         </div>
       </section>}
-      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed bottom-[104px] right-5 z-[95] flex h-[68px] w-[68px] items-center justify-center rounded-full border border-orange-300/70 bg-[#17100a] text-white shadow-[0_0_0_7px_rgba(242,138,24,.06),0_10px_44px_rgba(242,138,24,.32)] transition hover:-translate-y-1 hover:shadow-[0_0_0_10px_rgba(242,138,24,.08),0_12px_52px_rgba(242,138,24,.42)] sm:bottom-[104px] sm:right-8">
-        <span className={voiceMuted ? "orby-mini-voice-core orby-mini-voice-muted" : "orby-mini-voice-core"} />
+      {workspace && voiceMode && workspaceMode === "chat" && learningView === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed left-1/2 top-[52%] z-[95] flex h-36 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/60 bg-transparent text-white shadow-[0_0_0_10px_rgba(242,138,24,.035),0_0_55px_rgba(242,138,24,.2)] transition duration-300 hover:shadow-[0_0_0_16px_rgba(242,138,24,.06),0_0_76px_rgba(242,138,24,.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 md:left-[calc(50%+143px)]">
+        <span ref={voiceMiniOrbRef} className={voiceMuted ? "orby-mini-voice-core orby-mini-voice-muted" : "orby-mini-voice-core"} />
         <span className="sr-only">Volver a la llamada de Orby. {voiceMuted ? "Micrófono silenciado." : voiceStatus}</span>
       </button>}
       {attachment && <div className="shrink-0 border-t border-slate-100 bg-white px-3 pt-3">
@@ -1907,7 +1975,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </div>}
       {attachmentError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{attachmentError}</p>}
       {voiceError && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
-      {isListening && !(workspace && workspaceMode === "voice") && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… {voiceMode ? "Habla con Orby. Te responderé en voz y volveré a escucharte." : "Al terminar, enviaré tu pregunta a Orby."}</p>}
+      {isListening && !(workspace && voiceMode) && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… Al terminar, enviaré tu pregunta a Orby.</p>}
       {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
         <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 60 segundos</span>
         <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
@@ -1929,7 +1997,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz" title="Grabar una nota de voz para transcribir" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Mic className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} title={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition disabled:opacity-40 ${voiceMode ? "border-orange-500 bg-orange-500 text-[#17120c]" : "border-orange-500/30 bg-orange-500/10 text-orange-300 hover:border-orange-400 hover:bg-orange-500/20"}`}><AudioLines className="h-[18px] w-[18px]" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
-        <textarea ref={inputRef} id="orby-tutor-message" value={input} onPaste={(event) => {
+        <textarea ref={inputRef} id="orby-tutor-message" value={input} onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+            event.preventDefault();
+            event.currentTarget.form?.requestSubmit();
+          }
+        }} onPaste={(event) => {
           const imageItem = Array.from(event.clipboardData.items).find((item) => item.type.startsWith("image/"));
           if (!imageItem) return;
           const pastedImage = imageItem.getAsFile();
@@ -1937,7 +2010,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           event.preventDefault();
           const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
           handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
-        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className="min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
+        }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className="orby-composer-input min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
         <button type="submit" disabled={(!input.trim() && !attachment) || loading || isRecording || audioTranscribing} aria-label="Enviar mensaje a Orby" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
       </form>
       {conversationError && workspace && <p role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">{conversationError}</p>}

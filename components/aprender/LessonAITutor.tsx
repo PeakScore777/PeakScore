@@ -989,8 +989,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
       const rawReply = normalizeVoicePunctuation(voiceAssistantTextRef.current);
       const normalizedReply = rawReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
-      const exposesProvider = /\\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\\b/.test(normalizedReply)
-        && /\\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|trained|hecho|hecha|soy|fui)\\b/.test(normalizedReply);
+      const exposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(normalizedReply)
+        && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|trained|hecho|hecha|soy|fui)\b/.test(normalizedReply);
       const policyReply = voiceInputPolicyRef.current === "identity" || exposesProvider
         ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
         : voiceInputPolicyRef.current === "programming"
@@ -1093,6 +1093,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
     voiceStreamRef.current = stream;
+
+    // Create and resume the audio context directly after the microphone
+    // permission is granted. Waiting for the token/WebSocket first can lose
+    // the browser's user-activation window and leave capture suspended.
+    const audioContext = new AudioContext();
+    voiceAudioContextRef.current = audioContext;
+    if (audioContext.state === "suspended") await audioContext.resume();
+    if (audioContext.state !== "running") {
+      throw new Error("El audio del navegador no pudo activarse. Revisa los permisos de sonido y vuelve a intentarlo.");
+    }
 
     try {
       const activeId = await ensureVoiceConversation();
@@ -1241,10 +1251,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Te escucho…");
       setIsListening(true);
 
-      const audioContext = new AudioContext();
-      voiceAudioContextRef.current = audioContext;
       await audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js");
       if (audioContext.state === "suspended") await audioContext.resume();
+      if (audioContext.state !== "running") {
+        throw new Error("El micrófono se conectó, pero el audio del navegador quedó suspendido. Vuelve a iniciar la llamada.");
+      }
 
       const microphoneSource = audioContext.createMediaStreamSource(stream);
       voiceMicSourceRef.current = microphoneSource;

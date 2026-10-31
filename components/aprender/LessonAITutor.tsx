@@ -1030,12 +1030,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ].filter(Boolean).join(" · ");
 
             if (!liveSessionEstablished) {
-              rejectSetup?.(new Error("Gemini Live cerró antes de confirmar el setup (" + detail + ")."));
+              console.warn("[Orby Voice] Connection closed before setup completed.", { detail });\n              rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de Orby."));
               return;
             }
 
             if (voiceModeRef.current) {
-              setVoiceError("La sesión de voz se cerró (" + detail + ").");
+              console.warn("[Orby Voice] Active session closed.", { detail });\n              setVoiceError("Se perdió la conexión de voz. Vuelve a iniciar la conversación.");
               stopRealtimeVoice();
             }
           },
@@ -1053,7 +1053,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               const previousError = lastLiveSocketError
                 ? " Último evento de red: " + lastLiveSocketError
                 : "";
-              reject(new Error("Gemini Live no confirmó el setup en 30 segundos." + previousError));
+              console.warn("[Orby Voice] Setup timeout.", { previousError });\n              reject(new Error("Orby no pudo iniciar la conversación de voz a tiempo. Inténtalo de nuevo."));
             }, 30000);
           }),
         ]);

@@ -1179,7 +1179,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           responseModalities: [Modality.AUDIO],
           // Start with the documented Live configuration. Audio transcription
           // is enabled without a forced language; the model detects Spanish.
-          inputAudioTranscription: {},
+          inputAudioTranscription: {
+            customVocabulary: ["PeakScore", "Orby", "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica", "Sociales y Ciudadanas", "Ciencias Naturales"],
+          },
           outputAudioTranscription: {},
           speechConfig: {
             voiceConfig: {

@@ -5,10 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, Camera, Captions, ChartNoAxesColumn, Check, ChevronDown, FileText, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Bookmark, BookOpen, Camera, Captions, ChartNoAxesColumn, Check, ChevronDown, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 
-type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; createdAt?: string };
+type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
 type StoredImage = { name: string; path: string; signedUrl: string; createdAt: string; size: number };
@@ -113,6 +113,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [imageGenerationLoading, setImageGenerationLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState("");
   const [microphonePermission, setMicrophonePermission] = useState<"unknown" | "prompt" | "granted" | "denied">("unknown");
@@ -1329,6 +1330,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           attachmentKind: attachmentMeta?.kind ?? (selectedFile ? "image" : null),
           attachmentLabel: attachmentMeta?.label ?? (selectedFile ? "Imagen adjunta" : null),
           voiceMode: isVoiceInteraction,
+          workspace,
           history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
           ...(imagePayload ? { image: imagePayload } : {}),
         }),
@@ -1421,6 +1423,96 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     waitingForVoiceReplyRef.current = false;
     setNotebookOpen(false);
     onOpenChange(false);
+  }
+
+  async function generateVisualAid() {
+    const visualPrompt = input.trim();
+    if (visualPrompt.length < 5 || loading || imageGenerationLoading || sendingRef.current) {
+      if (visualPrompt.length < 5) setError("Escribe el concepto o tema que quieres convertir en una imagen educativa.");
+      return;
+    }
+
+    setImageGenerationLoading(true);
+    setError("");
+    setAttachmentError("");
+    setInput("");
+    if (inputRef.current) inputRef.current.style.height = "48px";
+    const userContent = "Crear una imagen educativa: " + visualPrompt;
+    setMessages((current) => [...current, { role: "user", content: userContent }]);
+
+    let targetId = conversationId;
+    try {
+      if (workspace && !targetId) {
+        const createResponse = await fetch("/api/orby/conversations", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subject, topic }),
+        });
+        const createPayload = await createResponse.json().catch(() => ({}));
+        if (!createResponse.ok || !createPayload.conversation?.id) {
+          throw new Error(createPayload.error || "No se pudo iniciar la conversación.");
+        }
+        targetId = String(createPayload.conversation.id);
+        activeConversationRef.current = targetId;
+        setConversationId(targetId);
+        setConversations((current) => [createPayload.conversation as Conversation, ...current]);
+      }
+
+      const previousExplanation = messages
+        .filter((item) => item.role === "assistant")
+        .slice(-2)
+        .map((item) => item.content)
+        .join("\\n")
+        .slice(0, 1600);
+      const response = await fetch("/api/orby/generate-image", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: visualPrompt,
+          subject,
+          topic,
+          context: [context, previousExplanation].filter(Boolean).join("\\n\\n").slice(0, 1800),
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (response.status === 429) setError(payload.error || "Alcanzaste el límite diario de imágenes educativas.");
+        else throw new Error(payload.error || "No se pudo generar la imagen educativa.");
+        return;
+      }
+      if (typeof payload.imageDataUrl !== "string" || !payload.imageDataUrl.startsWith("data:image/")) {
+        throw new Error("Orby no devolvió una imagen válida. Inténtalo de nuevo.");
+      }
+
+      const caption = typeof payload.caption === "string"
+        ? payload.caption
+        : "Aquí tienes un apoyo visual para estudiar este concepto.";
+      setMessages((current) => [...current, {
+        role: "assistant",
+        content: caption,
+        generatedImage: payload.imageDataUrl,
+      }]);
+
+      if (workspace && targetId) {
+        const persistResponse = await fetch("/api/orby/realtime-turn", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversationId: targetId, userContent, assistantContent: caption }),
+        });
+        if (persistResponse.ok) {
+          void refreshConversations().catch(() => setConversationError("La imagen se generó, pero no se pudo actualizar el historial."));
+        } else {
+          setConversationError("La imagen se generó, pero no se pudo guardar su referencia en el historial. Descárgala para conservarla.");
+        }
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "No se pudo generar la imagen educativa.");
+    } finally {
+      setImageGenerationLoading(false);
+    }
   }
 
   async function refreshConversations() {
@@ -1896,6 +1988,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <article key={index} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[15px] leading-7 sm:text-base">{renderTutorContent(message.content)}</div>
+                {message.generatedImage && <figure className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
+                  <Image src={message.generatedImage} width={1600} height={900} unoptimized alt="Imagen educativa generada por Orby" className="h-auto max-h-[560px] w-full object-contain" />
+                  <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-3 py-2 text-[10px] text-[#8f96a0]">
+                    <span>Apoyo visual generado · revísalo junto con la explicación</span>
+                    <a href={message.generatedImage} download="orby-apoyo-visual.png" className="font-semibold text-orange-400 transition hover:text-orange-300">Descargar imagen</a>
+                  </figcaption>
+                </figure>}
                 {workspace && message.role === "assistant" && <button type="button" onClick={() => void saveLearningItem("note", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Apunte de Orby", message.content)} className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-medium text-[#aeb4bd] transition hover:border-orange-500/30 hover:text-orange-300"><Bookmark className="h-3.5 w-3.5"/> Guardar apunte</button>}
                 {message.role === "assistant" && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index)} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
                   <Volume2 className="h-3.5 w-3.5" /> {speakingIndex === index ? "Detener audio" : "Escuchar respuesta"}
@@ -2013,6 +2112,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Adjuntar imagen o audio" title={workspace && imageAssets.length >= 20 ? "Almacenamiento lleno: elimina una imagen para continuar" : "Adjuntar imagen o nota de voz"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Tomar foto" title="Tomar foto de una pregunta" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Camera className="h-[18px] w-[18px]" /></button>
+        <button type="button" onClick={() => void generateVisualAid()} disabled={loading || imageGenerationLoading || isRecording || audioTranscribing || input.trim().length < 5} aria-label="Generar una imagen educativa" title={imageGenerationLoading ? "Orby está creando tu imagen…" : "Crear un apoyo visual con el tema escrito"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-orange-500/25 bg-orange-500/[0.07] text-orange-300 transition hover:border-orange-400 hover:bg-orange-500/15 disabled:opacity-35"><ImagePlus className={imageGenerationLoading ? "h-[18px] w-[18px] animate-pulse" : "h-[18px] w-[18px]"} /></button>
         <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz" title="Grabar una nota de voz para transcribir" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Mic className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} title={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition disabled:opacity-40 ${voiceMode ? "border-orange-500 bg-orange-500 text-[#17120c]" : "border-orange-500/30 bg-orange-500/10 text-orange-300 hover:border-orange-400 hover:bg-orange-500/20"}`}><AudioLines className="h-[18px] w-[18px]" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>

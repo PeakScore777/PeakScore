@@ -1929,7 +1929,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
         </div>
       </section>}
-      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed left-1/2 top-[52%] z-[95] flex h-36 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/60 bg-transparent text-white shadow-[0_0_0_10px_rgba(242,138,24,.035),0_0_55px_rgba(242,138,24,.2)] transition duration-300 hover:shadow-[0_0_0_16px_rgba(242,138,24,.06),0_0_76px_rgba(242,138,24,.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 md:left-[calc(50%+143px)]">
+      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed left-1/2 top-1/2 z-[95] flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-transparent text-white transition duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
         <span ref={voiceMiniOrbRef} className={voiceMuted ? "orby-mini-voice-core orby-mini-voice-muted" : "orby-mini-voice-core"} />
         <span className="sr-only">Volver a la llamada de Orby. {voiceMuted ? "Micrófono silenciado." : voiceStatus}</span>
       </button>}
@@ -2119,6 +2119,61 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           #orby-tutor-panel .orby-voice-stage img { max-height:32vh; }
         }
         @media (prefers-reduced-motion: reduce) { #orby-tutor-panel .orby-wave-bar, #orby-tutor-panel .orby-voice-orbit { animation:none!important; } }
+        /* Compact orb preview: centered over the conversation, with soft volumetric amber mist. */
+        #orby-tutor-panel .orby-mini-voice {
+          width: 88px !important; height: 88px !important; left: 50% !important; top: 50% !important;
+          border: 0 !important; overflow: visible !important; isolation: isolate;
+          box-shadow: none !important; background: transparent !important;
+        }
+        #orby-tutor-panel .orby-mini-voice::before,
+        #orby-tutor-panel .orby-mini-voice::after {
+          content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%;
+          filter: blur(13px); mix-blend-mode: screen;
+        }
+        #orby-tutor-panel .orby-mini-voice::before {
+          inset: -35px;
+          background: radial-gradient(ellipse at 48% 50%, rgba(255,159,55,.25) 0%, rgba(231,117,26,.13) 34%, transparent 70%),
+            radial-gradient(ellipse at 25% 42%, rgba(255,207,151,.15) 0%, transparent 43%),
+            radial-gradient(ellipse at 76% 60%, rgba(186,100,43,.19) 0%, transparent 48%);
+          animation: orby-mist-drift 6.8s ease-in-out infinite alternate;
+        }
+        #orby-tutor-panel .orby-mini-voice::after {
+          inset: -22px;
+          background: radial-gradient(ellipse at 50% 50%, rgba(255,185,103,.24) 0%, rgba(242,138,24,.11) 38%, transparent 72%);
+          filter: blur(20px); animation: orby-mist-breathe 4.2s ease-in-out infinite;
+        }
+        #orby-tutor-panel .orby-mini-voice-core {
+          width: 100% !important; height: 100% !important; border: 1px solid rgba(255,194,128,.48);
+          box-shadow: inset -8px -12px 18px rgba(31,13,3,.55), inset 5px 5px 14px rgba(255,239,210,.35),
+            0 0 22px rgba(242,138,24,.24), 0 0 48px rgba(242,138,24,.13) !important;
+          animation: orby-orb-float 5s ease-in-out infinite;
+        }
+        #orby-tutor-panel .orby-mini-voice-core::before {
+          inset: -10px !important; border-color: rgba(255,179,99,.25) !important;
+          filter: blur(1.5px); animation: orby-mini-pulse 3.4s ease-out infinite !important;
+        }
+        #orby-tutor-panel .orby-mini-voice-core::after {
+          content: ""; position: absolute; inset: -3px; border-radius: inherit; pointer-events: none;
+          background: radial-gradient(ellipse at 29% 23%, rgba(255,255,255,.72), rgba(255,235,208,.16) 22%, transparent 48%);
+          filter: blur(1px);
+        }
+        @keyframes orby-mist-drift {
+          0% { transform: translate3d(-5px,3px,0) scale(.94) rotate(-5deg); opacity: .62; }
+          50% { transform: translate3d(5px,-5px,0) scale(1.06) rotate(4deg); opacity: .95; }
+          100% { transform: translate3d(-2px,4px,0) scale(1) rotate(1deg); opacity: .72; }
+        }
+        @keyframes orby-mist-breathe {
+          0%,100% { transform: scale(.9); opacity: .42; }
+          50% { transform: scale(1.12); opacity: .82; }
+        }
+        @keyframes orby-orb-float {
+          0%,100% { translate: 0 0; }
+          50% { translate: 0 -3px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          #orby-tutor-panel .orby-mini-voice::before, #orby-tutor-panel .orby-mini-voice::after,
+          #orby-tutor-panel .orby-mini-voice-core { animation: none !important; }
+        }
       `}</style>
     </>
   );

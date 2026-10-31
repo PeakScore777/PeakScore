@@ -1031,18 +1031,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             if (!liveSessionEstablished) {
               console.warn("[Orby Voice] Connection closed before setup completed.", { detail });
               rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de Orby."));
+              return;
             }
 
             if (voiceModeRef.current) {
               console.warn("[Orby Voice] Active session closed.", { detail });
               setVoiceError("Se perdió la conexión de voz. Vuelve a iniciar la conversación.");
+              stopRealtimeVoice();
             }
-          },
-        },
-      });
-
-      let liveSession: Session;
-      let setupTimeoutId: number | null = null;
       try {
         liveSession = await Promise.race([
           sessionPromise,

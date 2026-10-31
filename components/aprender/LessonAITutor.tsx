@@ -1237,6 +1237,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || loading || sendingRef.current || message.length > 1200) return;
+    if (workspace && selectedFile?.type.startsWith("image/") && imageAssets.length >= 20) {
+      setAttachmentError("Tu almacenamiento llegó al límite de 20 imágenes. Elimina una desde «Administrar almacenamiento» para poder enviar otra.");
+      setImageStorageError("Almacenamiento completo · 20 de 20 imágenes. Libera espacio para continuar.");
+      return;
+    }
     if (voiceModeRef.current && !voiceChannelRef.current) {
       setVoiceError("Orby todavía está conectando. Espera un momento y vuelve a enviar.");
       return;
@@ -1751,6 +1756,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <div className="flex items-center gap-1.5">
           {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} title="Panel lateral" className="rounded-lg p-2 text-[#a3a8b0] transition hover:bg-white/5 hover:text-white md:hidden"><Search className="h-4 w-4" /></button>}
+          {workspace && <button type="button" onClick={handleCloseTutor} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-500/35 bg-rose-500/10 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-rose-300 transition duration-200 hover:border-rose-400 hover:bg-rose-600 hover:text-white hover:shadow-[0_5px_22px_rgba(225,29,72,.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">Salir <X className="h-3.5 w-3.5" /></button>}
           {!workspace && <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>}
         </div>
       </header>
@@ -1996,6 +2002,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <div className="flex h-6 items-center gap-[3px]" aria-hidden="true">{Array.from({length: 18}, (_, index) => <span key={index} className="w-[3px] rounded-full bg-orange-500 transition-all" style={{height: 5 + ((index * 7) % 17), opacity: isListening ? 1 : 0.4}} />)}</div>
         <button type="button" onClick={toggleVoiceMode} className="shrink-0 rounded-lg bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-slate-700">Finalizar</button>
+      </div>}
+      {workspace && workspaceMode === "chat" && learningView === "chat" && imageAssets.length >= 20 && <div role="status" className="flex shrink-0 items-start gap-3 border-t border-amber-500/20 bg-amber-500/[0.07] px-4 py-3 text-left">
+        <Images className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+        <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-amber-100">Almacenamiento de imágenes completo · 20/20</p><p className="mt-0.5 text-[11px] leading-5 text-amber-100/65">Para enviar otra imagen, elimina una de tu biblioteca en «Administrar almacenamiento».</p></div>
+        <button type="button" onClick={() => setLearningView("storage")} className="shrink-0 rounded-md border border-amber-300/25 px-2.5 py-1.5 text-[10px] font-semibold text-amber-100 transition hover:border-amber-200 hover:bg-amber-300/10">Liberar espacio</button>
       </div>}
       <form onSubmit={onSubmit} className={workspace && (workspaceMode === "voice" || learningView !== "chat") ? "hidden" : "flex shrink-0 items-end gap-2 border-t border-[#25282d] bg-[#0b0d10] p-3 sm:px-5 sm:py-4"}>
         <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,audio/webm,audio/ogg,audio/wav,audio/mpeg,audio/mp3,audio/aac,audio/mp4,audio/m4a,audio/opus" className="hidden" aria-label="Adjuntar imagen o audio" onChange={(event) => { handleComposerAttachment(event.currentTarget.files?.[0]); event.currentTarget.value = ""; }} />

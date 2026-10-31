@@ -734,7 +734,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } catch {
       setConversationError("La respuesta se escuchó, pero no se pudo guardar en el historial.");
     } finally {
-      voiceTurnSavingRef.current = false;
     }
   }
 

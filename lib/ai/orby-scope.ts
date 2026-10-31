@@ -53,7 +53,12 @@ export function isOrbyIdentityQuestion(message: string): boolean {
     || /\b(?:quien|qn)\s+(?:es|fue)\s+(?:tu\s+)?(?:creador|creadora|autor|autora)\b/i.test(normalized)
     || /\bwho\s+(?:created|made)\s+you\b/i.test(normalized)
     || (/\bpeak\s*score\b/i.test(normalized)
-      && /\b(?:quien(?:es)?|que\s+es|que\s+son|de\s+que\s+trata|para\s+que\s+sirve)\b/i.test(normalized));
+      && /\b(?:quien(?:es)?|que\s+es|que\s+son|de\s+que\s+trata|para\s+que\s+sirve)\b/i.test(normalized))    || (/\bpeak\s*score\b/i.test(normalized)
+      && /\b(?:quien(?:es)?|que\s+es|que\s+son|de\s+que\s+trata|para\s+que\s+sirve)\b/i.test(normalized))
+    // Correct false claims about Orby's creator, not only direct questions.
+    || /\b(?:asistente|tutor|modelo|herramienta|chatbot|inteligencia artificial|ia)\b.{0,100}\bcread[oa]\s+por\s+[a-z0-9][a-z0-9._-]*/i.test(normalized)
+    || /\b(?:eres|fuiste|estas)\b.{0,80}\bcread[oa]\s+por\s+[a-z0-9][a-z0-9._-]*/i.test(normalized)
+    || /\b(?:te|lo)\s+(?:creo|hizo|desarrollo|entreno)\s+[a-z0-9][a-z0-9._-]*/i.test(normalized);
 }
 
 export const ORBY_IDENTITY_REPLY =

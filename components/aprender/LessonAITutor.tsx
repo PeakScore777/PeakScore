@@ -1511,6 +1511,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   if (!open) return null;
 
   return (
+    <>
     <aside id="orby-tutor-panel" data-orby-theme={globalTheme} aria-label="Tutor de inteligencia artificial Orby" className={workspace
       ? "relative z-[80] flex h-full min-h-0 w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)]"
       : "fixed inset-x-3 bottom-[76px] z-[60] flex max-h-[min(720px,calc(100dvh-100px))] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-[0_24px_90px_rgba(0,0,0,.5)] sm:inset-x-auto sm:right-5 sm:top-[88px] sm:bottom-[82px] sm:w-[390px] lg:right-7 lg:w-[410px]"}>
@@ -1748,6 +1749,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
         @media (prefers-reduced-motion: reduce) { #orby-tutor-panel .orby-wave-bar, #orby-tutor-panel .orby-voice-orbit { animation:none!important; } }
       `}</style>
+    </>
   );
 }
 

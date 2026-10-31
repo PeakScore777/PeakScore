@@ -53,7 +53,7 @@ function normalizeOrbyIdentityText(message: string): string {
 export function hasFalseOrbyCreatorAttribution(message: string): boolean {
   const normalized = normalizeOrbyIdentityText(message);
   // Accept missing spaces because speech transcripts sometimes concatenate words.
-  const attribution = normalized.match(/\b(?:cread[oa]|entrenad[oa]|desarrollad[oa]|hech[oa]|created|trained|made)\s*(?:por|by)\s*([a-z0-9][a-z0-9._-]{0,40})/i);
+  const attribution = normalized.match(/(?:cread[oa]|entrenad[oa]|desarrollad[oa]|hech[oa]|created|trained|made)\s*(?:por|by)\s*([a-z0-9][a-z0-9._-]{0,40})/i);
   if (!attribution) return false;
 
   const allegedCreator = attribution[1].replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, "");

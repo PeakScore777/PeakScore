@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     const expireTime = new Date(now + 30 * 60 * 1000).toISOString();
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 
-    const googleAI = new GoogleGenAI({ apiKey });
+    const googleAI = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1alpha" } });
     // Start with Google's documented minimal ephemeral-token flow.
     // The browser SDK sends the complete Live setup after authentication.
     const authToken = await googleAI.authTokens.create({

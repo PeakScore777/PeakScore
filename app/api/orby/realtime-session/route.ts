@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { classifyOutOfScopeRequest, getOutOfScopeReply, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
+import { classifyOutOfScopeRequest, getOutOfScopeReply, isOrbyIdentityQuestion, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       : [];
 
     const latestUserText = [...history].reverse().find((item) => item.role === "user")?.content ?? "";
-    const asksOrbyIdentity = /(quien|quién)\s+(te\s+)?(creo|creó|crearon|desarrollo|desarrolló)|(quien|quién)\s+eres|who\s+(created|made)\s+you/i.test(latestUserText);
+    const asksOrbyIdentity = isOrbyIdentityQuestion(latestUserText);
     const outOfScope = asksOrbyIdentity ? null : classifyOutOfScopeRequest(latestUserText);
     if (outOfScope) {
       return NextResponse.json({ error: getOutOfScopeReply(outOfScope) }, { status: 400 });

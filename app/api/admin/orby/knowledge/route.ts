@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { extractPdfPages } from "@/lib/pdf/extractPdfPages";
-import { ICFES_SUBJECTS, type IcfesSubject } from "@/lib/ai/orby-scope";
+import type { IcfesSubject } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,7 +12,8 @@ const MAX_PDF_BYTES = 20 * 1024 * 1024;
 const MAX_CHUNKS = 300;
 const MAX_CHUNK_CHARS = 2100;
 
-type ChunkDraft = { subject: IcfesSubject; topic: string; page_number: number; chunk_index: number; content: string };
+type KnowledgeSubject = IcfesSubject | "Preparación Saber 11";
+type ChunkDraft = { subject: KnowledgeSubject; topic: string; page_number: number; chunk_index: number; content: string };
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
@@ -78,11 +79,17 @@ export async function POST(request: Request) {
     if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) return jsonError("Solo se admiten documentos PDF.", 415);
     if (file.size < 1 || file.size > MAX_PDF_BYTES) return jsonError("El PDF debe pesar como máximo 20 MB.", 413);
 
-    const subject = form.get("subject");
-    if (typeof subject !== "string" || !ICFES_SUBJECTS.includes(subject as IcfesSubject)) return jsonError("Selecciona una de las cinco áreas de Saber 11.", 400);
-    const title = String(form.get("title") ?? file.name.replace(/\.pdf$/i, "")).trim().slice(0, 180);
-    const topic = String(form.get("topic") ?? "").trim().slice(0, 180);
-    if (!title || !topic) return jsonError("Indica un título y un tema para clasificar el documento.", 400);
+    // The Lab accepts general theory, study routes, guides and multi-area PDFs.
+    // Keep them in the transversal Saber 11 collection instead of forcing a
+    // false single subject/topic classification.
+    const subject: KnowledgeSubject = "Preparación Saber 11";
+    const title = file.name
+      .replace(/\.pdf$/i, "")
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 180) || "Material general de estudio";
+    const topic = "Material general de preparación Saber 11";
 
     const buffer = Buffer.from(await file.arrayBuffer());
     let extracted: Awaited<ReturnType<typeof extractPdfPages>>;
@@ -97,7 +104,7 @@ export async function POST(request: Request) {
     const drafts: Omit<ChunkDraft, "chunk_index">[] = [];
     for (const page of extracted.pages) {
       for (const content of splitText(page.text, MAX_CHUNK_CHARS)) {
-        if (content.length >= 40) drafts.push({ subject: subject as IcfesSubject, topic, page_number: page.pageNumber, content });
+        if (content.length >= 40) drafts.push({ subject, topic, page_number: page.pageNumber, content });
         if (drafts.length > MAX_CHUNKS) return jsonError("El documento supera el máximo de 300 fragmentos. Divide el material en archivos más pequeños.", 413);
       }
     }

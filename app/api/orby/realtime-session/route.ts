@@ -63,7 +63,8 @@ export async function POST(request: Request) {
       : [];
 
     const latestUserText = [...history].reverse().find((item) => item.role === "user")?.content ?? "";
-    const asksOrbyIdentity = /\b(quien|quién)\s+(te\s+)?(creo|creó|crearon|desarrollo|desarroll[oó])\b|\b(quien|quién)\s+eres\b|\b(who\s+(created|made)\s+you)\b/i.test(latestUserText);\n    const outOfScope = asksOrbyIdentity ? null : classifyOutOfScopeRequest(latestUserText);
+    const asksOrbyIdentity = /(quien|quién)\s+(te\s+)?(creo|creó|crearon|desarrollo|desarrolló)|(quien|quién)\s+eres|who\s+(created|made)\s+you/i.test(latestUserText);
+    const outOfScope = asksOrbyIdentity ? null : classifyOutOfScopeRequest(latestUserText);
     if (outOfScope) {
       return NextResponse.json({ error: getOutOfScopeReply(outOfScope) }, { status: 400 });
     }

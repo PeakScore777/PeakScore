@@ -5,6 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
+import { containsProgrammingInstruction, normalizeOrbySpanishOutput, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -195,15 +196,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: identityReply, checkQuestion: "", verification: "not_required", sources: [] });
     }
 
-    const programmingRequest = isNonIcfesProgrammingRequest(userMessage)
-      || isNonIcfesProgrammingRequest(question);
-    const outOfScope = programmingRequest
-      ? "programming"
-      : classifyOutOfScopeRequest([userMessage, question].filter(Boolean).join(" "));
-    if (outOfScope) {
-      const refusal = programmingRequest
-        ? "Soy Orby, el tutor de PeakScore especializado exclusivamente en las cinco áreas de Saber 11. No puedo enseñar programación ni desarrollo de software. Si quieres, seguimos con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-        : getOutOfScopeReply(outOfScope, userMessage);
+    const preflight = preflightOrbyRequest([userMessage, question].filter(Boolean).join(" "));
+    const legacyOutOfScope = preflight.allowed
+      ? classifyOutOfScopeRequest([userMessage, question].filter(Boolean).join(" "))
+      : null;
+    if (!preflight.allowed || legacyOutOfScope) {
+      if (preflight.category === "prompt_injection") {
+        await recordSecurityEvent(user.id, "prompt_injection", { source: "preflight_filter" });
+      }
+      const refusal = preflight.allowed
+        ? getOutOfScopeReply(legacyOutOfScope as "programming" | "outside", userMessage)
+        : preflight.reply;
       if (conversationId && ownedConversation) {
         const { error: refusalSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,
@@ -420,7 +423,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       return NextResponse.json({ error: "No pude interpretar la respuesta. Inténtalo de nuevo." }, { status: 502 });
     }
 
-    const reply = cleanText(parsed.reply, 7000);
+    const reply = cleanText(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000)), 7000);
     const checkQuestion = cleanText(parsed.checkQuestion, 500);
     if (!reply || !isSafeTutorOutput(reply) || !isSafeTutorOutput(checkQuestion)) {
       await recordSecurityEvent(user.id, "suspicious_output");
@@ -459,7 +462,16 @@ No uses bloques Markdown ni texto fuera del JSON.
       parsed.checkQuestion = "";
     }
 
-    const finalReply = cleanText(parsed.reply, 7000);
+    const modelReply = normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000));
+    if (containsProgrammingInstruction(modelReply)) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "out_of_scope_programming_output" });
+      parsed.reply = preflightOrbyRequest("programar").reply;
+      parsed.checkQuestion = "";
+    } else {
+      parsed.reply = modelReply;
+    }
+
+    const finalReply = cleanText(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000)), 7000);
     const finalCheckQuestion = cleanText(parsed.checkQuestion, 500);
     if (!finalReply || !isSafeTutorOutput(finalReply) || !isSafeTutorOutput(finalCheckQuestion)) {
       await recordSecurityEvent(user.id, "suspicious_output");

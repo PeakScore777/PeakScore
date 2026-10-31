@@ -70,8 +70,8 @@ export function getOutOfScopeReply(kind: "programming" | "outside", message = ""
   if (kind === "programming") {
     return "Soy Orby, el asistente educativo de PeakScore, especializado exclusivamente en la preparación para Saber 11. No enseño programación, desarrollo de software ni lenguajes de código. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
   }
-  const normalized = message.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO");
-  if (/\\b(cocina|cocinar|receta|recetas|hornear)\\b/.test(normalized)) {
+  const normalized = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
+  if (/\b(cocina|cocinar|receta|recetas|hornear)\b/.test(normalized)) {
     return "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
   }
   return "Esa solicitud está fuera del alcance educativo de Orby. Estoy especializado en la preparación para Saber 11 y puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";

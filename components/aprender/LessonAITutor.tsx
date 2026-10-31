@@ -1036,13 +1036,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           const utterance = new SpeechSynthesisUtterance(policyReply);
           utterance.lang = "es-CO";
           utterance.rate = 1;
+          // Mark the fallback speech window so the mic echo filter does not
+          // commit Orby's own browser speech as a new student turn.
+          voiceLastAssistantPlaybackUntilRef.current = Date.now() + Math.max(2500, policyReply.length * 75);
           utterance.onend = () => {
+            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
             if (voiceModeRef.current) {
               setVoiceStatus("Te escucho…");
               setIsListening(true);
             }
           };
           utterance.onerror = () => {
+            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
             if (voiceModeRef.current) {
               setVoiceError("La respuesta se mostró por escrito, pero el navegador no pudo reproducir la voz.");
               setVoiceStatus("Te escucho…");
@@ -1231,8 +1236,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             if (voiceModeRef.current) {
               console.warn("[Orby Voice] Active session closed.", { detail });
               stopRealtimeVoice();
+              setWorkspaceMode("chat");
               setVoiceStatus("Conexión interrumpida");
-              setVoiceError("La conexión de voz se cerró inesperadamente (código " + event.code + "). Comprueba la conexión y vuelve a iniciar la llamada.");
+              setVoiceError("La conexión de voz se cerró inesperadamente (código " + event.code + "). Volví al chat para que puedas reintentar.");
             }
           },
         },
@@ -1302,9 +1308,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           console.error("[Orby Voice] Failed to send microphone audio.", {
             name: error instanceof Error ? error.name : "UnknownError",
           });
-          setVoiceError("No se pudo enviar el audio del micrófono. La conexión de voz se va a reiniciar.");
+          setVoiceError("No se pudo enviar el audio del micrófono. Volví al chat para que puedas reintentar.");
           setVoiceStatus("Error enviando audio");
           stopRealtimeVoice();
+          setWorkspaceMode("chat");
         }
       };
       microphoneSource.connect(worklet);
@@ -1350,6 +1357,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       await startRealtimeVoice();
     } catch (error) {
       stopRealtimeVoice();
+      setWorkspaceMode("chat");
       setVoiceStatus("No se pudo conectar");
       setVoiceError(error instanceof Error ? error.message : "No se pudo iniciar el chat de voz.");
     }

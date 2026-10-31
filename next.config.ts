@@ -72,6 +72,8 @@ const securityHeaders = [
         posthogOrigin,
         "https://us-assets.i.posthog.com",
         "https://challenges.cloudflare.com",
+        "https://generativelanguage.googleapis.com",
+        "wss://generativelanguage.googleapis.com",
       ]
         .filter(Boolean)
         .join(" "),

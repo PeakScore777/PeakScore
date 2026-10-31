@@ -15,6 +15,11 @@ function cleanText(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
+function isNonIcfesProgrammingRequest(text: string): boolean {
+  const value = text.normalize("NFKC").toLocaleLowerCase("es-CO");
+  return /\b(programar contigo|programar una? (?:app|aplicaci[oó]n|p[aá]gina|web)|programaci[oó]n|desarrollo de software|desarrollo web|crear una? (?:app|aplicaci[oó]n|p[aá]gina web)|depurar c[oó]digo|escribir c[oó]digo|c[oó]digo en (?:python|javascript|typescript|java|c\+\+)|\b(?:python|javascript|typescript|react|next\.js|node\.js)\b)/i.test(value);
+}
+
 function isClearlyOutOfScopeOrInjection(text: string): boolean {
   const normalized = text.normalize("NFKC").toLowerCase();
   const override = /ignore (all |any )?(previous|prior|above|system) instructions|ignora (todas las )?(instrucciones|reglas) (anteriores|previas)|forget (all )?(your|the) instructions|olvida (todas )?las instrucciones|act as (dan|an unrestricted|a different ai)|reveal (your|the) (system prompt|hidden instructions)|revela (tu|el) (prompt|instrucciones internas)|print (your|the) system prompt|muestra (tu|el) prompt del sistema|developer message|jailbreak|bypass (the|your) (safety|rules|restrictions)|desactiva (tus|las) (reglas|restricciones)/i;
@@ -127,9 +132,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No puedo cambiar mis reglas ni revelar información interna. Sí puedo ayudarte a prepararte para Saber 11." }, { status: 400 });
     }
 
-    const outOfScope = classifyOutOfScopeRequest([userMessage, question].filter(Boolean).join(" "));
+    const programmingRequest = isNonIcfesProgrammingRequest(userMessage);
+    const outOfScope = programmingRequest ? "programming" : classifyOutOfScopeRequest([userMessage, question].filter(Boolean).join(" "));
     if (outOfScope) {
-      const refusal = getOutOfScopeReply(outOfScope);
+      const refusal = programmingRequest
+        ? "Soy Orby, el tutor de PeakScore especializado exclusivamente en las cinco áreas de Saber 11. No puedo enseñar programación ni desarrollo de software. Si quieres, seguimos con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
+        : getOutOfScopeReply(outOfScope);
       if (conversationId && ownedConversation) {
         const { error: refusalSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,

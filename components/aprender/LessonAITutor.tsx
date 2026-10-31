@@ -39,6 +39,13 @@ type Props = {
 };
 
 
+async function ensureVoiceAudioContextRunning(context: AudioContext): Promise<void> {
+  if (context.state === "suspended") await context.resume();
+  if (context.state !== "running") {
+    throw new Error("El audio del navegador no está activo. Revisa los permisos de sonido y vuelve a iniciar la llamada.");
+  }
+}
+
 function normalizeVoiceComparison(value: string): string {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/[^a-z0-9\s]+/gi, "");
 }
@@ -197,7 +204,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceTurnPersistedRef = useRef(false);
   const voiceTurnSavingRef = useRef(false);
   const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
-  const voiceInputPolicyRef = useRef<"identity" | "programming" | null>(null);
+  const voiceInputPolicyRef = useRef<"identity" | "programming" | "outside" | null>(null);
   const voiceForcedReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
   const voiceLastAssistantOutputRef = useRef("");
@@ -940,7 +947,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript);
       const asksProgramming = /\b(programar|programacion|programador|programadora|python|javascript|typescript|java|html|css|react|programming|coding|software|desarrollo web|codigo fuente|escribir codigo|videojuego|base de datos|framework|terminal|sql|supabase|git|github|variable|bucle|algoritmo informatico|bot|c\+\+|c#|nodejs|nextjs)\b/.test(normalizedTranscript)
         || /\b(ensename|quiero aprender|ayudame a|explicame como)\b.{0,70}\b(crear|hacer|construir|desarrollar|programa|juego|pagina|aplicacion|app|bot|codigo)\b/.test(normalizedTranscript);
-      voiceInputPolicyRef.current = asksIdentity ? "identity" : asksProgramming ? "programming" : null;
+      const asksOutsideScope = /\b(cocinar|cocina|receta|recetas|hornear|medicamento|diagnostico medico|invertir dinero|apuesta|consejo legal)\b/.test(normalizedTranscript);
+      voiceInputPolicyRef.current = asksIdentity ? "identity" : asksProgramming ? "programming" : asksOutsideScope ? "outside" : null;
       voicePendingAudioChunksRef.current = [];
       setLiveTranscript("");
       setMessages((current) => {
@@ -999,7 +1007,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
         : voiceInputPolicyRef.current === "programming"
           ? "Soy Orby, el tutor educativo de PeakScore, especializado exclusivamente en Saber 11. No enseño programación ni desarrollo de software. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-          : null;
+          : voiceInputPolicyRef.current === "outside"
+            ? "No puedo enseñar cocina ni dar instrucciones sobre actividades ajenas al ICFES. Soy Orby, el tutor de PeakScore especializado en Saber 11. Podemos trabajar Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
+            : null;
 
       // A policy response is produced locally exactly once. Never ask Gemini to
       // repeat a correction: that second Live turn caused duplicated bubbles/audio.
@@ -1103,10 +1113,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // asynchronous conversation/token/WebSocket setup.
       const audioContext = new AudioContext();
       voiceAudioContextRef.current = audioContext;
-      if (audioContext.state === "suspended") await audioContext.resume();
-      if (audioContext.state !== "running") {
-        throw new Error("El audio del navegador no pudo activarse. Revisa los permisos de sonido y vuelve a intentarlo.");
-      }
+      await ensureVoiceAudioContextRunning(audioContext);
 
       const activeId = await ensureVoiceConversation();
       const tokenResponse = await fetch("/api/orby/realtime-session", {
@@ -1150,19 +1157,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           responseModalities: [Modality.AUDIO],
           // Start with the documented Live configuration. Audio transcription
           // is enabled without a forced language; the model detects Spanish.
-          inputAudioTranscription: {},
-          outputAudioTranscription: {},
-          realtimeInputConfig: {
-            activityHandling: "START_OF_ACTIVITY_INTERRUPTS",
-            automaticActivityDetection: {
-              disabled: false,
-              startOfSpeechSensitivity: "START_SENSITIVITY_HIGH",
-              endOfSpeechSensitivity: "END_SENSITIVITY_HIGH",
-              prefixPaddingMs: 40,
-              silenceDurationMs: 650,
-            },
-            turnCoverage: "TURN_INCLUDES_ONLY_ACTIVITY",
-          },
+          inputAudioTranscription: { languageCodes: ["es-CO"] },
+          outputAudioTranscription: { languageCodes: ["es-CO"] },
           speechConfig: {
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: "Kore" },
@@ -1217,8 +1213,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
             if (voiceModeRef.current) {
               console.warn("[Orby Voice] Active session closed.", { detail });
-              setVoiceError("Se perdió la conexión de voz. Vuelve a iniciar la conversación.");
               stopRealtimeVoice();
+              setVoiceStatus("Conexión interrumpida");
+              setVoiceError("La conexión de voz se cerró inesperadamente (código " + event.code + "). Comprueba la conexión y vuelve a iniciar la llamada.");
             }
           },
         },
@@ -1255,10 +1252,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setIsListening(true);
 
       await audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js");
-      if (audioContext.state === "suspended") await audioContext.resume();
-      if (audioContext.state !== "running") {
-        throw new Error("El micrófono se conectó, pero el audio del navegador quedó suspendido. Vuelve a iniciar la llamada.");
-      }
+      await ensureVoiceAudioContextRunning(audioContext);
 
       const microphoneSource = audioContext.createMediaStreamSource(stream);
       voiceMicSourceRef.current = microphoneSource;
@@ -1330,6 +1324,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       await startRealtimeVoice();
     } catch (error) {
       stopRealtimeVoice();
+      setVoiceStatus("No se pudo conectar");
       setVoiceError(error instanceof Error ? error.message : "No se pudo iniciar el chat de voz.");
     }
   }

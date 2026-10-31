@@ -17,16 +17,15 @@ function cleanText(value: unknown, maxLength: number): string {
 
 function isNonIcfesProgrammingRequest(text: string): boolean {
   const value = text.normalize("NFKD")
-    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("es-CO")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
-  // Reject even a one-word request such as "programar". The previous
-  // expression only matched longer phrases and let this through to the model.
-  const directProgrammingIntent = /\\b(?:programar|programacion|programador|programadora|codificar|coding|programming)\\b/i;
-  const softwareIntent = /\\b(?:python|javascript|typescript|java|c\\+\\+|c#|html|css|react|next\\.js|node\\.js|sql|postgresql|supabase|git|github|terminal|powershell|bash|framework|desarrollo de software|desarrollo web|codigo fuente|escribir codigo|depurar codigo)\\b/i;
-  const creationIntent = /\\b(?:crear|hacer|construir|desarrollar|programar)\\s+(?:un|una|el|la)?\\s*(?:app|aplicacion|pagina|web|sitio|software|programa|bot|videojuego)\\b/i;
+  // Block programming requests even when they consist of a single word.
+  const directProgrammingIntent = /\b(?:programar|programacion|programador|programadora|codificar|coding|programming)\b/i;
+  const softwareIntent = /\b(?:python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|terminal|powershell|bash|framework|desarrollo de software|desarrollo web|codigo fuente|escribir codigo|depurar codigo)\b/i;
+  const creationIntent = /\b(?:crear|hacer|construir|desarrollar|programar)\s+(?:un|una|el|la)?\s*(?:app|aplicacion|pagina|web|sitio|software|programa|bot|videojuego)\b/i;
 
   return directProgrammingIntent.test(value) || softwareIntent.test(value) || creationIntent.test(value);
 }

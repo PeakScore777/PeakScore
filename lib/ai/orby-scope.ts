@@ -51,11 +51,13 @@ export function isOrbyIdentityQuestion(message: string): boolean {
   return /\b(?:quien|qn)\b.{0,48}\b(?:te\s+)?(?:creo|crearon|hizo|hicieron|desarrollo|programo)\b/i.test(normalized)
     || /\b(?:quien|qn)\s+eres\b/i.test(normalized)
     || /\b(?:quien|qn)\s+(?:es|fue)\s+(?:tu\s+)?(?:creador|creadora|autor|autora)\b/i.test(normalized)
-    || /\bwho\s+(?:created|made)\s+you\b/i.test(normalized);
+    || /\bwho\s+(?:created|made)\s+you\b/i.test(normalized)
+    || (/\bpeak\s*score\b/i.test(normalized)
+      && /\b(?:quien(?:es)?|que\s+es|que\s+son|de\s+que\s+trata|para\s+que\s+sirve)\b/i.test(normalized));
 }
 
 export const ORBY_IDENTITY_REPLY =
-  "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11.";
+  "PeakScore es la plataforma educativa creada para apoyar a estudiantes en su preparación para las pruebas Saber 11. Yo soy Orby, su asistente educativo, y te acompaño con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.";
 
 export function classifyOutOfScopeRequest(message: string): "programming" | "outside" | null {
   const normalized = message.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();

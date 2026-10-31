@@ -210,6 +210,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
   const voiceBrowserSpeechActiveRef = useRef(false);
+  const voiceSpeechPlaybackGenerationRef = useRef(0);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
@@ -725,6 +726,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function stopRealtimeVoice(updateState = true) {
     voiceModeRef.current = false;
+    voiceSpeechPlaybackGenerationRef.current += 1;
     voiceBrowserSpeechActiveRef.current = false;
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     const liveSession = voiceChannelRef.current;
@@ -894,6 +896,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceInputPolicyRef.current = null;
         voiceForcedReplyRef.current = null;
         stopVoicePlayback();
+        voiceSpeechPlaybackGenerationRef.current += 1;
+        voiceBrowserSpeechActiveRef.current = false;
         if ("speechSynthesis" in window) window.speechSynthesis.cancel();
         voicePendingAudioChunksRef.current = [];
         setIsListening(true);
@@ -921,6 +925,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           && normalizedAssistant.length >= 8
           && normalizedAssistant.includes(normalizedInterim);
         if (normalizedInterim.length >= 3 && !isBrowserSpeechEcho) {
+          voiceSpeechPlaybackGenerationRef.current += 1;
           voiceBrowserSpeechActiveRef.current = false;
           if ("speechSynthesis" in window) window.speechSynthesis.cancel();
           if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
@@ -1069,6 +1074,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
         if ("speechSynthesis" in window) {
           const speech = window.speechSynthesis;
+          const speechGeneration = ++voiceSpeechPlaybackGenerationRef.current;
           speech.cancel();
           const utterance = new SpeechSynthesisUtterance(policyReply);
           const spanishVoices = speech.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
@@ -1083,6 +1089,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           voiceBrowserSpeechActiveRef.current = true;
           voiceLastAssistantPlaybackUntilRef.current = Date.now() + Math.max(2500, policyReply.length * 75);
           utterance.onend = () => {
+            if (speechGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
             voiceBrowserSpeechActiveRef.current = false;
             voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
             if (voiceModeRef.current) {
@@ -1091,6 +1098,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             }
           };
           utterance.onerror = (event) => {
+            if (speechGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
             voiceBrowserSpeechActiveRef.current = false;
             voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
             if (event.error === "canceled" || event.error === "interrupted") return;

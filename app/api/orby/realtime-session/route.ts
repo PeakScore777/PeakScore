@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -80,41 +80,13 @@ export async function POST(request: Request) {
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 
     const googleAI = new GoogleGenAI({ apiKey });
+    // Start with Google's documented minimal ephemeral-token flow.
+    // The browser SDK sends the complete Live setup after authentication.
     const authToken = await googleAI.authTokens.create({
       config: {
         uses: 1,
         expireTime,
         newSessionExpireTime,
-        lockAdditionalFields: [],
-        liveConnectConstraints: {
-          model,
-          config: {
-            responseModalities: [Modality.AUDIO],
-            speechConfig: {
-              voiceConfig: {
-                prebuiltVoiceConfig: {
-                  voiceName: "Puck",
-                },
-              },
-            },
-            systemInstruction: {
-              parts: [{ text: instructions }],
-            },
-            inputAudioTranscription: {
-              languageCodes: ["es-CO"],
-            },
-            outputAudioTranscription: {
-              languageCodes: ["es-CO"],
-            },
-            realtimeInputConfig: {
-              automaticActivityDetection: {
-                disabled: false,
-                prefixPaddingMs: 250,
-                silenceDurationMs: 550,
-              },
-            },
-          },
-        },
       },
     });
 
@@ -129,6 +101,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ephemeralToken: token,
       model,
+      systemInstruction: instructions,
       expiresAt: expireTime,
     }, {
       headers: { "Cache-Control": "no-store, max-age=0" },

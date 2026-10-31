@@ -3,6 +3,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, isOrbyIdentityQuestion, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
+import { preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,9 +65,13 @@ export async function POST(request: Request) {
 
     const latestUserText = [...history].reverse().find((item) => item.role === "user")?.content ?? "";
     const asksOrbyIdentity = isOrbyIdentityQuestion(latestUserText);
-    const outOfScope = asksOrbyIdentity ? null : classifyOutOfScopeRequest(latestUserText);
-    if (outOfScope) {
-      return NextResponse.json({ error: getOutOfScopeReply(outOfScope, latestUserText) }, { status: 400 });
+    const preflight = preflightOrbyRequest(latestUserText);
+    const legacyOutOfScope = preflight.allowed ? classifyOutOfScopeRequest(latestUserText) : null;
+    if (!asksOrbyIdentity && (!preflight.allowed || legacyOutOfScope)) {
+      const refusal = preflight.allowed
+        ? getOutOfScopeReply(legacyOutOfScope as "programming" | "outside", latestUserText)
+        : preflight.reply;
+      return NextResponse.json({ error: refusal }, { status: 400 });
     }
 
     const detectedSubject = normalizeIcfesSubject(subject, [topic, latestUserText].filter(Boolean).join(" "));

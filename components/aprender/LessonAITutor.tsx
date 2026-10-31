@@ -989,7 +989,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
-      const rawReply = voiceAssistantTextRef.current.trim();
+      const rawReply = normalizeVoicePunctuation(voiceAssistantTextRef.current);
       const compactReply = rawReply.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO").replace(/[\s\p{P}\p{S}]+/gu, "");
       const exposesProvider = /(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)/.test(rawReply.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO"))
         || /(?:entrenado|entrenada|trained|creado|creada|desarrollado|desarrollada|hecho|hecha)por(?:google|gemini|openai|anthropic|groq|llm7)/.test(compactReply);

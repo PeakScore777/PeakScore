@@ -887,11 +887,30 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const outputTranscript = serverContent.outputTranscription && typeof serverContent.outputTranscription === "object"
       ? serverContent.outputTranscription as { text?: unknown }
       : null;
-    if (typeof outputTranscript?.text === "string" && outputTranscript.text) {
-      const transcriptChunk = outputTranscript.text;
-      voiceAssistantTextRef.current = transcriptChunk.startsWith(voiceAssistantTextRef.current)
-        ? transcriptChunk
-        : voiceAssistantTextRef.current + transcriptChunk;
+    if (typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
+      const transcriptChunk = outputTranscript.text.trim();
+      const previousTranscript = voiceAssistantTextRef.current.trim();
+
+      // Gemini Live may emit cumulative snapshots, repeated snapshots, or
+      // overlapping partials. Merge only the new suffix to avoid duplicated text.
+      if (!previousTranscript) {
+        voiceAssistantTextRef.current = transcriptChunk;
+      } else if (
+        transcriptChunk === previousTranscript
+        || previousTranscript.startsWith(transcriptChunk)
+        || previousTranscript.includes(transcriptChunk)
+      ) {
+        // This chunk is already represented in the transcript.
+      } else if (transcriptChunk.startsWith(previousTranscript)) {
+        voiceAssistantTextRef.current = transcriptChunk;
+      } else {
+        let overlap = Math.min(previousTranscript.length, transcriptChunk.length);
+        while (overlap > 0 && previousTranscript.slice(-overlap) !== transcriptChunk.slice(0, overlap)) {
+          overlap -= 1;
+        }
+        voiceAssistantTextRef.current = previousTranscript + transcriptChunk.slice(overlap);
+      }
+
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
       // Do not expose unverified live output in the transcript before turnComplete.
       setVoiceStatus("Orby está preparando su respuesta…");

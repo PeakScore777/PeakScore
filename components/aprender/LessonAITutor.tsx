@@ -1486,6 +1486,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setAudioTranscribing(true);
     setVoiceError("");
     try {
+      // Validate the actual captured speech before asking an AI to transcribe it.
+      // Short utterances such as "ok" must never become long hallucinated sentences.
+      const decoder = new AudioContext();
+      let activeSpeechSeconds = 0;
+      try {
+        const decoded = await decoder.decodeAudioData(await audioToTranscribe.arrayBuffer());
+        const channel = decoded.getChannelData(0);
+        const windowSize = Math.max(1, Math.floor(decoded.sampleRate * 0.02));
+        for (let offset = 0; offset < channel.length; offset += windowSize) {
+          const end = Math.min(channel.length, offset + windowSize);
+          let energy = 0;
+          for (let index = offset; index < end; index += 1) energy += channel[index] * channel[index];
+          const rms = Math.sqrt(energy / Math.max(1, end - offset));
+          if (rms > 0.012) activeSpeechSeconds += (end - offset) / decoded.sampleRate;
+        }
+      } finally {
+        await decoder.close().catch(() => undefined);
+      }
+      if (activeSpeechSeconds < 0.12) {
+        throw new Error("No detecté voz clara. No voy a inventar una transcripción; vuelve a grabar hablando cerca del micrófono.");
+      }
       const form = new FormData();
       form.set("audio", audioToTranscribe);
       const response = await fetch("/api/orby/audio/transcribe", {
@@ -1497,7 +1518,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!response.ok || typeof payload.transcript !== "string" || !payload.transcript.trim()) {
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
-      setInput(payload.transcript.slice(0, 1200));
+      const transcript = payload.transcript.trim().slice(0, 1200);
+      const plausibleCharacterLimit = Math.max(32, Math.ceil(activeSpeechSeconds * 34 + 18));
+      if (transcript.length > plausibleCharacterLimit) {
+        throw new Error("La transcripción no coincide con la duración de tu voz. La descarté para evitar texto inventado; graba de nuevo.");
+      }
+      setInput(transcript);
       setPendingAttachmentMeta({ kind: "audio", label: audioOrigin === "upload" ? "Audio adjunto transcrito" : "Nota de voz transcrita" });
       if (audioOverride) {
         setRecordedAudio(null);

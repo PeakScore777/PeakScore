@@ -40,7 +40,13 @@ export default function OrbyKnowledgeStudio() {
     setMessages(Array.isArray(chatPayload.messages)?chatPayload.messages:[]);
   }
 
-  useEffect(()=>{ void loadAll().catch(e=>setError(e instanceof Error?e.message:"No se pudo cargar el laboratorio.")); },[]);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve().then(() => loadAll()).catch((e) => {
+      if (!cancelled) setError(e instanceof Error ? e.message : "No se pudo cargar el laboratorio.");
+    });
+    return () => { cancelled = true; };
+  }, []);
   useEffect(()=>{ messagesEndRef.current?.scrollIntoView({behavior:"smooth",block:"end"}); },[messages,loading]);
 
   async function uploadDocument(event:React.FormEvent<HTMLFormElement>) {

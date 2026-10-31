@@ -86,21 +86,31 @@ export function needsIndependentTutorReview(input: {
   context: string;
   hasImage: boolean;
 }): boolean {
-  // Image understanding must be independently multimodal before it can be reviewed here.
+  // Image understanding follows the dedicated vision path and is not double-reviewed here.
   if (input.hasImage) return false;
 
-  const text = `${input.message}\n${input.context}`.toLowerCase();
+  // Casual conversation must never be routed through the academic verifier.
+  // Static lesson metadata must not turn a short greeting into a high-risk request.
+  const message = input.message.normalize("NFKC").trim().toLocaleLowerCase("es-CO");
+  if (!message) return false;
+  if (/^(hola|holi|hey|buenas(?: tardes| noches| días)?|qué más|que más|cómo estás|como estas|gracias|muchas gracias|ok|okay|listo|jaja+|jeje+|buen día|buen dia)[.!?\\s]*$/i.test(message)) {
+    return false;
+  }
+
   const highRiskPatterns = [
-    /\b(calcula|calcular|resuelve|resolver|demuestra|justifica|interpreta|compara|analiza|evalúa)\b/,
-    /\b(porcentaje|puntos porcentuales|probabilidad|estadística|ecuación|función|derivada|integral)\b/,
-    /\b(experimento|hipótesis|causalidad|variables|gráfica|tabla|datos|evidencia)\b/,
-    /\b(genética|meiosis|mitosis|fototropismo|evolución|termodinámica|estequiometría)\b/,
-    /\b(correcta|incorrecta|respuesta|opciones|distractores|saber 11|icfes)\b/,
+    /\\b(calcula|calcular|resuelve|resolver|demuestra|justifica|interpreta|compara|analiza|evalúa|explica|explícame|explicame|define|describe)\\b/,
+    /\\b(porcentaje|puntos porcentuales|probabilidad|estadística|ecuación|función|derivada|integral|fracción|proporción)\\b/,
+    /\\b(experimento|hipótesis|causalidad|variables|gráfica|tabla|datos|evidencia|ecosistema|organismo|célula|fuerza|energía)\\b/,
+    /\\b(genética|meiosis|mitosis|fototropismo|evolución|termodinámica|estequiometría|materia|densidad|velocidad|aceleración)\\b/,
+    /\\b(correcta|incorrecta|respuesta|opciones|distractores|saber 11|icfes|pregunta|ejercicio|problema)\\b/,
+    /\\b(qué es|que es|por qué|porque|cómo funciona|como funciona|cuánto|cuanto|cuál es|cual es)\\b/,
   ];
 
-  return text.length > 220
-    || /\d/.test(text)
-    || highRiskPatterns.some((pattern) => pattern.test(text));
+  // Review the student's actual message, not the length of context or topic metadata.
+  const hasAcademicSignal = highRiskPatterns.some((pattern) => pattern.test(message));
+  const hasNumericalWork = /\\d/.test(message)
+    && /[=+*/%<>-]|\\b(metros?|segundos?|gramos?|litros?|cm|kg|km|m\\/s)\\b/i.test(message);
+  return hasAcademicSignal || hasNumericalWork || message.length > 420;
 }
 
 async function reviewCandidate(args: {

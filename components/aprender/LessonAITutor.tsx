@@ -188,6 +188,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }) => Promise<void>>(async () => {});
+  const stopRealtimeVoiceRef = useRef<(updateState?: boolean) => void>(() => {});
   const lastInitialPromptRef = useRef<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const activeConversationRef = useRef<string | null>(null);
@@ -690,7 +691,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceNextPlaybackTimeRef.current = audioContext?.currentTime ?? 0;
   }
 
-  function stopRealtimeVoice() {
+  function stopRealtimeVoice(updateState = true) {
     voiceModeRef.current = false;
     const liveSession = voiceChannelRef.current;
     voiceChannelRef.current = null;
@@ -727,11 +728,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       void audioContext.close().catch(() => undefined);
     }
 
-    setVoiceMode(false);
-    setVoiceMuted(false);
-    setIsListening(false);
-    setLiveTranscript("");
-    setVoiceStatus("Conversación finalizada");
+    if (updateState) {
+      setVoiceMode(false);
+      setVoiceMuted(false);
+      setIsListening(false);
+      setLiveTranscript("");
+      setVoiceStatus("Conversación finalizada");
+    }
   }
 
   async function persistRealtimeTurnIfReady() {
@@ -1382,6 +1385,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   useEffect(() => {
     sendMessageRef.current = sendMessage;
     stopAudioRecordingRef.current = stopAudioRecording;
+    stopRealtimeVoiceRef.current = stopRealtimeVoice;
   });
 
   useEffect(() => {
@@ -1392,7 +1396,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       audioStreamRef.current?.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
       if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-      stopRealtimeVoice();
+      stopRealtimeVoiceRef.current(false);
       waitingForVoiceReplyRef.current = false;
       lastInitialPromptRef.current = null;
       activeReviewRef.current = null;

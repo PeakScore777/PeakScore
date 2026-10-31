@@ -107,7 +107,7 @@ create index if not exists orby_student_learning_signals_user_subject_idx
 
 alter table public.orby_student_learning_signals enable row level security;
 revoke all on public.orby_student_learning_signals from public, anon, authenticated;
-grant select, insert, delete on public.orby_student_learning_signals to service_role;
+grant select, insert, update, delete on public.orby_student_learning_signals to service_role;
 
 create table if not exists public.orby_admin_chat_messages (
   id uuid primary key default gen_random_uuid(),
@@ -123,7 +123,7 @@ create index if not exists orby_admin_chat_messages_owner_recent_idx
 
 alter table public.orby_admin_chat_messages enable row level security;
 revoke all on public.orby_admin_chat_messages from public, anon, authenticated;
-grant select, insert, delete on public.orby_admin_chat_messages to service_role;
+grant select, insert, update, delete on public.orby_admin_chat_messages to service_role;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('orby-knowledge', 'orby-knowledge', false, 20971520, array['application/pdf'])

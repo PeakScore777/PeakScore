@@ -123,6 +123,23 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: checkedImage.error }, { status: 400 });
       }
       tutorImage = { mimeType: checkedImage.mimeType, base64: checkedImage.base64 };
+      if (body.workspace === true) {
+        const { count: storedImages, error: imageCountError } = await supabaseAdmin
+          .from("orby_image_assets")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        if (imageCountError) {
+          console.error("[Orby Images] Quota check failed.", { code: imageCountError.code });
+          return NextResponse.json({ error: "No se pudo verificar tu almacenamiento. Inténtalo de nuevo." }, { status: 503 });
+        }
+        if ((storedImages ?? 0) >= 20) {
+          return NextResponse.json({
+            error: "Tu almacenamiento llegó al límite de 20 imágenes. Elimina una desde «Administrar almacenamiento» para poder enviar otra.",
+            code: "ORBY_IMAGE_QUOTA_REACHED",
+            limit: 20,
+          }, { status: 409 });
+        }
+      }
     }
     if (!userMessage && !tutorImage) {
       return NextResponse.json({ error: "Escribe tu duda para que Orby pueda ayudarte." }, { status: 400 });

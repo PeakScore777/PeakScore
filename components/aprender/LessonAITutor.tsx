@@ -978,7 +978,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           abortSignal: connectionAbort.signal,
           responseModalities: [Modality.AUDIO],
           // Start with the documented Live configuration. Audio transcription
-          // is enabled without a forced language; Gemini 3.8 Live detects it.
+          // is enabled without a forced language; the model detects Spanish.
           inputAudioTranscription: {},
           outputAudioTranscription: {},
           speechConfig: {
@@ -1005,15 +1005,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             handleGeminiLiveEvent(payload);
           },
           onerror: (event) => {
-            // Browser WebSocket ErrorEvents usually omit the server reason.
-            // Keep this detail and wait for onclose, which carries the close code.
+            // Keep transport details in the developer console, never in student-facing messages.
             const rawError = event.error instanceof Error
               ? event.error.message
               : typeof event.message === "string" && event.message.trim()
                 ? event.message.trim()
                 : "WebSocket notificó un error sin detalle.";
             lastLiveSocketError = rawError.slice(0, 180);
-            console.warn("[Orby Gemini Live] WebSocket error event.", {
+            console.warn("[Orby Voice] WebSocket error event.", {
               message: lastLiveSocketError,
               eventType: event.type,
             });
@@ -1039,6 +1038,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               setVoiceError("Se perdió la conexión de voz. Vuelve a iniciar la conversación.");
               stopRealtimeVoice();
             }
+          },
+        },
+      });
+
+      let liveSession: Session;
+      let setupTimeoutId: number | null = null;
       try {
         liveSession = await Promise.race([
           sessionPromise,
@@ -1050,8 +1055,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 : "";
               console.warn("[Orby Voice] Setup timeout.", { previousError });
               reject(new Error("Orby no pudo iniciar la conversación de voz a tiempo. Inténtalo de nuevo."));
+            }, 30000);
           }),
         ]);
+
       } catch (error) {
         connectionAbort.abort();
         rejectSetup = null;

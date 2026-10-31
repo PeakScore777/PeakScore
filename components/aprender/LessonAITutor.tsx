@@ -65,8 +65,12 @@ function mergeLiveTranscript(previous: string, incoming: string): string {
   const left = previous.trimEnd();
   const right = suffix.trimStart();
   const hasBoundarySpace = /\s$/.test(previous) || /^\s/.test(suffix);
-  const needsWordSpace = /[A-Za-z0-9]$/.test(left) && /^[A-Za-z0-9]/.test(right);
-  return left + (hasBoundarySpace || !needsWordSpace ? "" : " ") + suffix;
+  // Live transcription chunks may end in punctuation or begin with a capital
+  // letter. Separate every independent word chunk, not only alphanumeric pairs.
+  const startsWithPunctuation = /^[,.;:!?)}\]]/.test(right);
+  const endsWithOpeningPunctuation = /[([{¿¡]$/.test(left);
+  const needsSeparator = !hasBoundarySpace && !startsWithPunctuation && !endsWithOpeningPunctuation;
+  return left + (needsSeparator ? " " : "") + suffix;
 }
 
 function normalizeVoicePunctuation(value: string): string {
@@ -1094,17 +1098,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     });
     voiceStreamRef.current = stream;
 
-    // Create and resume the audio context directly after the microphone
-    // permission is granted. Waiting for the token/WebSocket first can lose
-    // the browser's user-activation window and leave capture suspended.
-    const audioContext = new AudioContext();
-    voiceAudioContextRef.current = audioContext;
-    if (audioContext.state === "suspended") await audioContext.resume();
-    if (audioContext.state !== "running") {
-      throw new Error("El audio del navegador no pudo activarse. Revisa los permisos de sonido y vuelve a intentarlo.");
-    }
-
     try {
+      // Activate capture immediately after permission is granted, before the
+      // asynchronous conversation/token/WebSocket setup.
+      const audioContext = new AudioContext();
+      voiceAudioContextRef.current = audioContext;
+      if (audioContext.state === "suspended") await audioContext.resume();
+      if (audioContext.state !== "running") {
+        throw new Error("El audio del navegador no pudo activarse. Revisa los permisos de sonido y vuelve a intentarlo.");
+      }
+
       const activeId = await ensureVoiceConversation();
       const tokenResponse = await fetch("/api/orby/realtime-session", {
         method: "POST",

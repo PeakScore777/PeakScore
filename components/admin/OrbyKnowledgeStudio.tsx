@@ -27,7 +27,7 @@ export default function OrbyKnowledgeStudio() {
   const [notice,setNotice] = useState("");
   const messagesEndRef = useRef<HTMLDivElement|null>(null);
 
-  async function loadAll() {
+  async function loadAll(isActive: () => boolean = () => true) {
     const [docsResponse,chatResponse] = await Promise.all([
       fetch("/api/admin/orby/knowledge",{credentials:"same-origin",cache:"no-store"}),
       fetch("/api/admin/orby/chat",{credentials:"same-origin",cache:"no-store"}),
@@ -36,13 +36,14 @@ export default function OrbyKnowledgeStudio() {
     const chatPayload = await chatResponse.json().catch(()=>({}));
     if(!docsResponse.ok) throw new Error(docsPayload.error||"No se pudo cargar la biblioteca.");
     if(!chatResponse.ok) throw new Error(chatPayload.error||"No se pudo cargar el chat privado.");
+    if (!isActive()) return;
     setDocuments(Array.isArray(docsPayload.documents)?docsPayload.documents:[]);
     setMessages(Array.isArray(chatPayload.messages)?chatPayload.messages:[]);
   }
 
   useEffect(() => {
     let cancelled = false;
-    Promise.resolve().then(() => loadAll()).catch((e) => {
+    Promise.resolve().then(() => loadAll(() => !cancelled)).catch((e) => {
       if (!cancelled) setError(e instanceof Error ? e.message : "No se pudo cargar el laboratorio.");
     });
     return () => { cancelled = true; };

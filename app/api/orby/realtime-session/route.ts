@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     const asksOrbyIdentity = isOrbyIdentityQuestion(latestUserText);
     const outOfScope = asksOrbyIdentity ? null : classifyOutOfScopeRequest(latestUserText);
     if (outOfScope) {
-      return NextResponse.json({ error: getOutOfScopeReply(outOfScope) }, { status: 400 });
+      return NextResponse.json({ error: getOutOfScopeReply(outOfScope, latestUserText) }, { status: 400 });
     }
 
     const detectedSubject = normalizeIcfesSubject(subject, [topic, latestUserText].filter(Boolean).join(" "));

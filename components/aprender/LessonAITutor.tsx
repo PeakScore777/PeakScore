@@ -824,6 +824,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? event.voiceActivity as { type?: unknown }
       : null;
     if (voiceActivity?.type === "ACTIVITY_START") {
+      // Persist a completed turn before opening the next one. Reset per-turn
+      // state here, not only after the network save succeeds: persistence latency
+      // must never cause a later assistant response to be discarded.
+      if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
+      voiceUserTextRef.current = "";
+      voiceAssistantTextRef.current = "";
+      voiceAssistantMessageIdRef.current = null;
+      voiceResponseDoneRef.current = false;
+      voiceTurnPersistedRef.current = false;
+      voiceTurnSavingRef.current = false;
+      voiceInputPolicyRef.current = null;
+      voiceForcedReplyRef.current = null;
       // Stop queued playback immediately when the student starts speaking.
       stopVoicePlayback();
       voicePendingAudioChunksRef.current = [];
@@ -943,7 +955,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
       const rawReply = voiceAssistantTextRef.current.trim();
-      const compactReply = rawReply.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/[\\s\\p{P}\\p{S}]+/gu, "");
+      const compactReply = rawReply.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("es-CO").replace(/[\s\p{P}\p{S}]+/gu, "");
       const exposesProvider = /(?:creado|creada|desarrollado|desarrollada)por(?:google|gemini|openai|anthropic|pitagoras|pitagorascorp)/.test(compactReply)
         || compactReply.includes("soyunmodelodelenguaje")
         || compactReply.includes("fuihechoporgoogle")

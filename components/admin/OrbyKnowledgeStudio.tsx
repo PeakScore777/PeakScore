@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, BookOpen, Bot, Check, FileUp, LoaderCircle, MessageSquare, Plus, Send, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
+import { ArrowLeft, BookOpen, Bot, Check, LoaderCircle, MessageSquare, Plus, Send, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
 
 type KnowledgeDocument = {
   id: string; title: string; original_name: string; subject: string; topic: string;

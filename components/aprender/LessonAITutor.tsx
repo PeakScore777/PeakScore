@@ -1929,7 +1929,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
         </div>
       </section>}
-      {workspace && voiceMode && workspaceMode === "chat" && learningView === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed left-1/2 top-[52%] z-[95] flex h-36 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/60 bg-transparent text-white shadow-[0_0_0_10px_rgba(242,138,24,.035),0_0_55px_rgba(242,138,24,.2)] transition duration-300 hover:shadow-[0_0_0_16px_rgba(242,138,24,.06),0_0_76px_rgba(242,138,24,.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 md:left-[calc(50%+143px)]">
+      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed left-1/2 top-[52%] z-[95] flex h-36 w-36 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-orange-300/60 bg-transparent text-white shadow-[0_0_0_10px_rgba(242,138,24,.035),0_0_55px_rgba(242,138,24,.2)] transition duration-300 hover:shadow-[0_0_0_16px_rgba(242,138,24,.06),0_0_76px_rgba(242,138,24,.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300 md:left-[calc(50%+143px)]">
         <span ref={voiceMiniOrbRef} className={voiceMuted ? "orby-mini-voice-core orby-mini-voice-muted" : "orby-mini-voice-core"} />
         <span className="sr-only">Volver a la llamada de Orby. {voiceMuted ? "Micrófono silenciado." : voiceStatus}</span>
       </button>}

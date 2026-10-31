@@ -120,6 +120,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [historyLoading, setHistoryLoading] = useState(workspace);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyQuery, setHistoryQuery] = useState("");
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState("");
   const [learningView, setLearningView] = useState<"chat" | "notes" | "topics" | "progress" | "storage">("chat");
@@ -1690,11 +1691,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="border-b border-white/[0.07] p-4">
             <button type="button" onClick={startNewConversation} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[#f28a18] px-3 text-[13px] font-semibold text-[#17120c] transition hover:bg-[#ffa12f]"><Plus className="h-4 w-4" /> Nuevo chat</button>
             <div className="mt-5 flex items-center justify-between px-1"><p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#777e88]">Historial</p><span className="text-[10px] tabular-nums text-[#777e88]">{conversations.length}/50</span></div>
+            <label className="mt-2 flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5"><Search className="h-3.5 w-3.5 shrink-0 text-[#777e88]"/><input value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} placeholder="Buscar conversación…" aria-label="Buscar conversación" className="min-w-0 flex-1 bg-transparent text-[11px] text-white outline-none placeholder:text-[#737a84]"/></label>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 [scrollbar-width:thin] [scrollbar-color:#34383e_transparent]">
             {historyLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-[#858b95]"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando chats…</div>}
             {!historyLoading && conversations.length === 0 && <p className="px-3 py-4 text-xs leading-5 text-[#858b95]">Tus conversaciones aparecerán aquí.</p>}
-            {conversations.map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-lg border border-orange-400/20 bg-orange-500/[0.08] px-2 py-2" : "group rounded-lg border border-transparent px-2 py-2 transition hover:bg-white/[0.04]"}>
+            {conversations.filter((item) => `${item.title} ${item.subject} ${item.topic}`.toLocaleLowerCase("es-CO").includes(historyQuery.trim().toLocaleLowerCase("es-CO"))).map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-lg border border-orange-400/20 bg-orange-500/[0.08] px-2 py-2" : "group rounded-lg border border-transparent px-2 py-2 transition hover:bg-white/[0.04]"}>
               <div className="flex items-center gap-1">
                 <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 text-left">
                   <span className="block truncate text-[12px] font-medium text-[#e7e9ed]">{item.title}</span>

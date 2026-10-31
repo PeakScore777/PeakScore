@@ -16,8 +16,19 @@ function cleanText(value: unknown, maxLength: number): string {
 }
 
 function isNonIcfesProgrammingRequest(text: string): boolean {
-  const value = text.normalize("NFKC").toLocaleLowerCase("es-CO");
-  return /\b(programar contigo|programar una? (?:app|aplicaci[oó]n|p[aá]gina|web)|programaci[oó]n|desarrollo de software|desarrollo web|crear una? (?:app|aplicaci[oó]n|p[aá]gina web)|depurar c[oó]digo|escribir c[oó]digo|c[oó]digo en (?:python|javascript|typescript|java|c\+\+)|\b(?:python|javascript|typescript|react|next\.js|node\.js)\b)/i.test(value);
+  const value = text.normalize("NFKD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .toLocaleLowerCase("es-CO")
+    .replace(/\\s+/g, " ")
+    .trim();
+
+  // Reject even a one-word request such as "programar". The previous
+  // expression only matched longer phrases and let this through to the model.
+  const directProgrammingIntent = /\\b(?:programar|programacion|programador|programadora|codificar|coding|programming)\\b/i;
+  const softwareIntent = /\\b(?:python|javascript|typescript|java|c\\+\\+|c#|html|css|react|next\\.js|node\\.js|sql|postgresql|supabase|git|github|terminal|powershell|bash|framework|desarrollo de software|desarrollo web|codigo fuente|escribir codigo|depurar codigo)\\b/i;
+  const creationIntent = /\\b(?:crear|hacer|construir|desarrollar|programar)\\s+(?:un|una|el|la)?\\s*(?:app|aplicacion|pagina|web|sitio|software|programa|bot|videojuego)\\b/i;
+
+  return directProgrammingIntent.test(value) || softwareIntent.test(value) || creationIntent.test(value);
 }
 
 function isClearlyOutOfScopeOrInjection(text: string): boolean {
@@ -185,8 +196,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: identityReply, checkQuestion: "", verification: "not_required", sources: [] });
     }
 
-    const programmingRequest = isNonIcfesProgrammingRequest(userMessage);
-    const outOfScope = programmingRequest ? "programming" : classifyOutOfScopeRequest([userMessage, question].filter(Boolean).join(" "));
+    const programmingRequest = isNonIcfesProgrammingRequest(userMessage)
+      || isNonIcfesProgrammingRequest(question);
+    const outOfScope = programmingRequest
+      ? "programming"
+      : classifyOutOfScopeRequest([userMessage, question].filter(Boolean).join(" "));
     if (outOfScope) {
       const refusal = programmingRequest
         ? "Soy Orby, el tutor de PeakScore especializado exclusivamente en las cinco áreas de Saber 11. No puedo enseñar programación ni desarrollo de software. Si quieres, seguimos con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."

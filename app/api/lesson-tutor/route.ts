@@ -190,7 +190,7 @@ export async function POST(request: Request) {
     if (outOfScope) {
       const refusal = programmingRequest
         ? "Soy Orby, el tutor de PeakScore especializado exclusivamente en las cinco áreas de Saber 11. No puedo enseñar programación ni desarrollo de software. Si quieres, seguimos con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-        : getOutOfScopeReply(outOfScope);
+        : getOutOfScopeReply(outOfScope, userMessage);
       if (conversationId && ownedConversation) {
         const { error: refusalSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,

@@ -3,6 +3,7 @@ import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI } from "@/lib/ai/router";
+import { extractOrbyChecklistRows } from "@/lib/pdf/extract-orby-checklist-rows";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
@@ -165,75 +166,6 @@ function normalizedConceptKey(value: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 120);
 }
-
-type ExtractedChecklistRow = {
-  name: string;
-  parent_concept: string;
-  page: number;
-};
-
-function extractChecklistRows(chunks: OrbyKnowledgeChunk[]): ExtractedChecklistRow[] {
-  const rows = new Map<string, ExtractedChecklistRow>();
-  const boilerplate = /^(?:somos consultores|te damos la llave|check\s*list|a continuaci[oó]n|al finalizar|para que lleves tu control|contenidos?$|ok|bloque\s+[ivxlcdm0-9]+(?:\s*[-.:].*)?)$/i;
-
-  for (const chunk of chunks) {
-    const lines = chunk.content
-      .replace(/\r/g, "\n")
-      .split("\n")
-      .map((line) => line.replace(/^\s*(?:[•●▪◦*–—-]|\d+[.)])\s*/, "").replace(/\s+/g, " ").trim())
-      .filter(Boolean);
-
-    let parent = "Contenidos del documento";
-    let checklistMode = /\b(?:CONTENIDOS|CHECK\s*LIST|TEMARIO|LISTA DE TEMAS)\b/i.test(chunk.content);
-    let pendingContinuation = "";
-
-    const addRow = (raw: string) => {
-      const name = raw.replace(/^[|\s]+|[|\s]+$/g, "").replace(/[|]+/g, " ").trim().replace(/[.;:]$/, "");
-      if (name.length < 7 || name.length > 260 || boilerplate.test(name)) return;
-      if (/^(?:p[aá]gina\s+\d+|preparaci[oó]n saber|qu[ií]mica|matem[aá]ticas|ciencias naturales)$/i.test(name)) return;
-      if (/^(?:área|asignatura|tema|subtema|unidad|contenido|estado)$/i.test(name)) return;
-      const key = chunk.page_number + "|" + normalizedConceptKey(name);
-      if (!rows.has(key)) rows.set(key, { name, parent_concept: parent, page: chunk.page_number });
-    };
-
-    for (const line of lines) {
-      const block = line.match(/^BLOQUE\s+[IVXLCDM0-9]+\s*[.:–—-]?\s*(.+)$/i);
-      if (block) {
-        if (pendingContinuation) {
-          addRow(pendingContinuation);
-          pendingContinuation = "";
-        }
-        parent = block[1].replace(/[.;:]$/, "").trim() || "Contenidos del documento";
-        checklistMode = true;
-        continue;
-      }
-
-      if (/^(?:CONTENIDOS?|TEMAS|SUBTEMAS)\b/i.test(line)) {
-        checklistMode = true;
-        continue;
-      }
-      if (/^(?:OK|✓|✗|ESTADO)$/i.test(line)) continue;
-      if (/^(?:SOMOS CONSULTORES|TE DAMOS LA LLAVE|CHECK\s*LIST|A CONTINUACI[ÓO]N|AL FINALIZAR)/i.test(line)) continue;
-      if (/^(?:INGENYUS|QU[IÍ]MICA|MATEM[AÁ]TICAS|F[IÍ]SICA|BIOLOG[IÍ]A)$/i.test(line)) continue;
-
-      const hasListMarker = /^(?:[•●▪◦*–—-]|\d+[.)])\s*/.test(line);
-      if (!checklistMode && !hasListMarker) continue;
-
-      // Join only genuine wrapped lines. A new checklist item may begin in
-      // lowercase (for example, "pH"), so lowercase alone is not continuation.
-      if (pendingContinuation && /[,:;([]$/.test(pendingContinuation)) {
-        pendingContinuation += " " + line;
-        continue;
-      }
-      if (pendingContinuation) addRow(pendingContinuation);
-      pendingContinuation = line;
-    }
-    if (pendingContinuation) addRow(pendingContinuation);
-  }
-
-  return [...rows.values()];
-}
-
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -507,7 +439,7 @@ export async function generateOrbyKnowledgeProfile(
       }];
     }) : [];
 
-    const checklistRows = extractChecklistRows(batch);
+    const checklistRows = extractOrbyChecklistRows(batch);
     const modelChecklistItems = Array.isArray(parsed.checklist_items)
       ? parsed.checklist_items.flatMap((raw) => {
           const value = asRecord(raw);
@@ -526,16 +458,21 @@ export async function generateOrbyKnowledgeProfile(
 
     // Source-derived rows are authoritative for coverage. The model may add
     // deeper child concepts, but it cannot silently drop an independent row.
+    const getConceptIdentity = (name: string, area: string, parent: string) => [
+      normalizedConceptKey(area),
+      normalizedConceptKey(parent),
+      normalizedConceptKey(name),
+    ].join("|");
     const conceptsByName = new Map(concepts.map((concept) => [
-      normalizedConceptKey(concept.name),
+      getConceptIdentity(concept.name, concept.area, concept.parent_concept),
       concept,
     ]));
     for (const row of checklistRows) {
-      const key = normalizedConceptKey(row.name);
+      const key = getConceptIdentity(row.name, row.area, row.parent_concept);
       if (conceptsByName.has(key)) continue;
       conceptsByName.set(key, {
         name: row.name,
-        area: /qu[ií]mica/i.test(pageText) ? "Química" : "Transversal",
+        area: row.area,
         parent_concept: row.parent_concept,
         aliases: [],
         evidence_pages: [row.page],
@@ -549,9 +486,13 @@ export async function generateOrbyKnowledgeProfile(
     // a source row, so the model cannot manufacture additional checklist rows.
     for (const item of modelChecklistItems) {
       const key = normalizedConceptKey(item.name);
-      const sourceRow = checklistRows.find((row) => normalizedConceptKey(row.name) === key);
+      const sourceRow = checklistRows.find((row) =>
+        normalizedConceptKey(row.name) === key
+        && (!item.parent_concept || normalizedConceptKey(row.parent_concept) === normalizedConceptKey(item.parent_concept))
+      );
       if (!sourceRow) continue;
-      const existing = conceptsByName.get(key);
+      const conceptKey = getConceptIdentity(sourceRow.name, sourceRow.area, sourceRow.parent_concept);
+      const existing = conceptsByName.get(conceptKey);
       if (existing) {
         existing.evidence_pages = [...new Set([...existing.evidence_pages, ...item.evidence_pages, sourceRow.page])];
         if (item.evidence && !existing.evidence.includes(item.evidence)) {
@@ -624,7 +565,7 @@ export async function generateOrbyKnowledgeProfile(
     summary: summaries.join(" ") .slice(0, 5000),
     areas: allAreas,
     topics: allTopics,
-    concepts: allConcepts.slice(0, 240),
+    concepts: allConcepts.slice(0, 600),
     competencies: [...allCompetencies.values()].slice(0, 100),
     study_strategies: strategies,
     gaps_observed: gaps,

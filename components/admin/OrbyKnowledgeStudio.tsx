@@ -559,7 +559,7 @@ export default function OrbyKnowledgeStudio() {
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Reintentos</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.retrying ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Con error</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.failed ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Completados</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.completed ?? "—"}</p></div>
-              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Ciclos IA globales hoy</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.settings.ai_cycles_used ?? "—"}/10</p></div>
+              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Ciclos automáticos hoy</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.settings.ai_cycles_used ?? "—"}/10</p></div>
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-[9px] text-slate-500">{automation?.settings.last_tick_at ? "Última revisión: " + new Date(automation.settings.last_tick_at).toLocaleString("es-CO") : "Aún no se registra una revisión automática."}</p>

@@ -24,7 +24,7 @@ export async function GET() {
 
   const [settingsResult, queued, running, retrying, failed, completed, recent, workerConfiguration] = await Promise.all([
     supabaseAdmin.from("orby_knowledge_automation_settings")
-      .select("enabled,last_tick_at,last_job_started_at,updated_at")
+      .select("enabled,last_tick_at,last_job_started_at,ai_cycle_date,ai_cycles_used,updated_at")
       .eq("id", 1).maybeSingle(),
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "queued"),
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "running"),
@@ -46,7 +46,7 @@ export async function GET() {
   const documentIds = [...new Set(recentJobs.map((job) => job.document_id))];
   const { data: recentDocuments, error: recentDocumentsError } = documentIds.length
     ? await supabaseAdmin.from("orby_knowledge_documents")
-        .select("id,title,embedded_chunk_count,chunk_count")
+        .select("id,title,embedded_chunk_count,chunk_count,ingestion_status,coverage_percent,visual_pages_total,visual_pages_reviewed,auto_review_count,next_review_at,concept_count")
         .in("id", documentIds)
     : { data: [], error: null };
   if (recentDocumentsError) return jsonError("No se pudo consultar el avance de los documentos.", 503);
@@ -64,8 +64,17 @@ export async function GET() {
     detected_concept_count: number;
     detected_topic_count: number;
     detected_competency_count: number;
+    teaching_method_count: number;
+    worked_example_count: number;
+    question_pattern_count: number;
+    solving_method_count: number;
+    study_path_count: number;
+    exercise_blueprint_count: number;
+    visual_element_count: number;
     detected_areas: string[];
     concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
+    question_pattern_preview: Array<{ archetype: string; stimulus_type: string; task: string; evidence_pages: number[] }>;
+    teaching_method_preview: Array<{ concept: string; student_level_zero: string; evidence_pages: number[] }>;
   }>();
 
   for (const job of recentJobs) {
@@ -74,6 +83,13 @@ export async function GET() {
     const topics = new Set<string>();
     const competencies = new Set<string>();
     const areas = new Set<string>();
+    const teachingMethods = new Map<string, { concept: string; student_level_zero: string; evidence_pages: number[] }>();
+    const workedExamples = new Set<string>();
+    const questionPatterns = new Map<string, { archetype: string; stimulus_type: string; task: string; evidence_pages: number[] }>();
+    const solvingMethods = new Set<string>();
+    const studyPaths = new Set<string>();
+    const exerciseBlueprints = new Set<string>();
+    const visualElements = new Set<string>();
 
     for (const row of rows) {
       const result = row.result && typeof row.result === "object" ? row.result as Record<string, unknown> : {};
@@ -90,6 +106,72 @@ export async function GET() {
           }
         }
       }
+      const pedagogy = result.pedagogical_knowledge && typeof result.pedagogical_knowledge === "object"
+        ? result.pedagogical_knowledge as Record<string, unknown>
+        : {};
+      if (Array.isArray(pedagogy.teaching_methods)) {
+        for (const method of pedagogy.teaching_methods) {
+          if (!method || typeof method !== "object") continue;
+          const item = method as Record<string, unknown>;
+          const concept = typeof item.concept === "string" ? item.concept.trim() : "";
+          const explanation = typeof item.student_level_zero === "string" ? item.student_level_zero.trim() : "";
+          if (!concept || !explanation) continue;
+          const key = normalizeProfileIdentity(concept);
+          teachingMethods.set(key, {
+            concept,
+            student_level_zero: explanation,
+            evidence_pages: Array.isArray(item.evidence_pages) ? item.evidence_pages.filter((page: unknown): page is number => typeof page === "number") : [],
+          });
+        }
+      }
+      if (Array.isArray(pedagogy.worked_examples)) {
+        for (const item of pedagogy.worked_examples) {
+          const value = item && typeof item === "object" ? item as Record<string, unknown> : {};
+          if (typeof value.topic === "string") workedExamples.add(normalizeProfileIdentity(value.topic + "|" + String(value.problem_summary ?? "")));
+        }
+      }
+      if (Array.isArray(pedagogy.question_patterns)) {
+        for (const pattern of pedagogy.question_patterns) {
+          if (!pattern || typeof pattern !== "object") continue;
+          const item = pattern as Record<string, unknown>;
+          const archetype = typeof item.archetype === "string" ? item.archetype.trim() : "";
+          const stimulus = typeof item.stimulus_type === "string" ? item.stimulus_type.trim() : "";
+          const task = typeof item.task === "string" ? item.task.trim() : "";
+          if (!archetype || !task) continue;
+          const key = normalizeProfileIdentity(archetype + "|" + stimulus + "|" + task);
+          questionPatterns.set(key, {
+            archetype,
+            stimulus_type: stimulus,
+            task,
+            evidence_pages: Array.isArray(item.evidence_pages) ? item.evidence_pages.filter((page: unknown): page is number => typeof page === "number") : [],
+          });
+        }
+      }
+      if (Array.isArray(pedagogy.solving_methods)) {
+        for (const item of pedagogy.solving_methods) {
+          const value = item && typeof item === "object" ? item as Record<string, unknown> : {};
+          if (typeof value.name === "string") solvingMethods.add(normalizeProfileIdentity(value.name));
+        }
+      }
+      if (Array.isArray(pedagogy.study_paths)) {
+        for (const item of pedagogy.study_paths) {
+          const value = item && typeof item === "object" ? item as Record<string, unknown> : {};
+          if (typeof value.goal === "string") studyPaths.add(normalizeProfileIdentity(value.goal));
+        }
+      }
+      if (Array.isArray(pedagogy.exercise_blueprints)) {
+        for (const item of pedagogy.exercise_blueprints) {
+          const value = item && typeof item === "object" ? item as Record<string, unknown> : {};
+          if (typeof value.topic === "string" && typeof value.pattern === "string") exerciseBlueprints.add(normalizeProfileIdentity(value.topic + "|" + value.pattern));
+        }
+      }
+      if (Array.isArray(pedagogy.visual_elements)) {
+        for (const item of pedagogy.visual_elements) {
+          const value = item && typeof item === "object" ? item as Record<string, unknown> : {};
+          if (typeof value.element_type === "string" && typeof value.description === "string") visualElements.add(normalizeProfileIdentity(value.element_type + "|" + value.description));
+        }
+      }
+
       if (Array.isArray(result.concepts)) {
         for (const concept of result.concepts) {
           if (!concept || typeof concept !== "object" || !("name" in concept) || typeof concept.name !== "string") continue;
@@ -118,8 +200,17 @@ export async function GET() {
       detected_concept_count: concepts.size,
       detected_topic_count: topics.size,
       detected_competency_count: competencies.size,
+      teaching_method_count: teachingMethods.size,
+      worked_example_count: workedExamples.size,
+      question_pattern_count: questionPatterns.size,
+      solving_method_count: solvingMethods.size,
+      study_path_count: studyPaths.size,
+      exercise_blueprint_count: exerciseBlueprints.size,
+      visual_element_count: visualElements.size,
       detected_areas: [...areas].slice(0, 12),
       concept_preview: [...concepts.values()].slice(0, 8),
+      question_pattern_preview: [...questionPatterns.values()].slice(0, 5),
+      teaching_method_preview: [...teachingMethods.values()].slice(0, 5),
     });
   }
 
@@ -131,12 +222,28 @@ export async function GET() {
       document_title: document?.title ?? "Documento eliminado",
       embedded_chunk_count: document?.embedded_chunk_count ?? 0,
       chunk_count: document?.chunk_count ?? 0,
+      ingestion_status: document?.ingestion_status ?? "queued",
+      coverage_percent: document?.coverage_percent ?? 0,
+      visual_pages_total: document?.visual_pages_total ?? 0,
+      visual_pages_reviewed: document?.visual_pages_reviewed ?? 0,
+      auto_review_count: document?.auto_review_count ?? 0,
+      next_review_at: document?.next_review_at ?? null,
+      concept_count: document?.concept_count ?? 0,
       stored_profile_batches: stats?.stored_profile_batches ?? 0,
       detected_concept_count: stats?.detected_concept_count ?? 0,
       detected_topic_count: stats?.detected_topic_count ?? 0,
       detected_competency_count: stats?.detected_competency_count ?? 0,
+      teaching_method_count: stats?.teaching_method_count ?? 0,
+      worked_example_count: stats?.worked_example_count ?? 0,
+      question_pattern_count: stats?.question_pattern_count ?? 0,
+      solving_method_count: stats?.solving_method_count ?? 0,
+      study_path_count: stats?.study_path_count ?? 0,
+      exercise_blueprint_count: stats?.exercise_blueprint_count ?? 0,
+      visual_element_count: stats?.visual_element_count ?? 0,
       detected_areas: stats?.detected_areas ?? [],
       concept_preview: stats?.concept_preview ?? [],
+      question_pattern_preview: stats?.question_pattern_preview ?? [],
+      teaching_method_preview: stats?.teaching_method_preview ?? [],
     };
   });
 

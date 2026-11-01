@@ -22,7 +22,9 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const before = url.searchParams.get("before");
-  if (before && !Number.isFinite(Date.parse(before))) {
+  const beforeId = url.searchParams.get("beforeId");
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (before && (!Number.isFinite(Date.parse(before)) || !beforeId || !uuidPattern.test(beforeId))) {
     return jsonError("El punto de consulta del historial no es válido.", 400);
   }
 
@@ -34,7 +36,9 @@ export async function GET(request: Request) {
     .order("id", { ascending: false })
     .limit(pageSize + 1);
 
-  if (before) query = query.lt("created_at", before);
+  if (before && beforeId) {
+    query = query.or("created_at.lt." + before + ",and(created_at.eq." + before + ",id.lt." + beforeId + ")");
+  }
 
   const { data, error } = await query;
   if (error) return jsonError("No se pudo cargar el historial privado.", 503);
@@ -119,15 +123,16 @@ export async function POST(request: Request) {
     }
     if (!reply) return jsonError("Orby no pudo preparar una respuesta. Inténtalo de nuevo.", 502);
     const sourceList = references.map((source)=>({documentId:source.document_id,title:source.title,subject:source.subject,topic:source.topic,page:source.page_number}));
-    const { error: saveError } = await supabaseAdmin.from("orby_admin_chat_messages").insert([
-      { admin_user_id:admin.user.id, role:"user", content:message, sources:[] },
-      { admin_user_id:admin.user.id, role:"assistant", content:reply, sources:sourceList },
-    ]);
-    if (saveError) {
-      console.error("[Orby Admin Chat] Persistence failed.", { code:saveError.code });
+    const now = Date.now();
+    const { data: savedMessages, error: saveError } = await supabaseAdmin.from("orby_admin_chat_messages").insert([
+      { admin_user_id:admin.user.id, role:"user", content:message, sources:[], created_at:new Date(now).toISOString() },
+      { admin_user_id:admin.user.id, role:"assistant", content:reply, sources:sourceList, created_at:new Date(now + 1).toISOString() },
+    ]).select("id,role,content,sources,created_at");
+    if (saveError || !savedMessages) {
+      console.error("[Orby Admin Chat] Persistence failed.", { code:saveError?.code });
       return jsonError("Orby respondió, pero no se pudo guardar el chat privado.", 503);
     }
-    return NextResponse.json({ reply, sources:sourceList }, { headers: { "Cache-Control":"private, no-store" } });
+    return NextResponse.json({ reply, sources:sourceList, messages:savedMessages }, { headers: { "Cache-Control":"private, no-store" } });
   } catch (error) {
     console.error("[Orby Admin Chat] Generation failed.", { name:error instanceof Error?error.name:"UnknownError" });
     return jsonError("Orby no está disponible temporalmente en el laboratorio privado.", 503);

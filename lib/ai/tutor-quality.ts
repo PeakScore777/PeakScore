@@ -12,6 +12,7 @@ type ReviewPayload = {
   corrected_reply?: string;
   corrected_check_question?: string;
   issue_code?: string;
+  note?: string;
 };
 
 export type TutorQualityResult = {

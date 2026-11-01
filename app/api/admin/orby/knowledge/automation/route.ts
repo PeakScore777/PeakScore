@@ -82,6 +82,8 @@ export async function GET() {
       problem_summary: string;
       candidate_option: string | null;
       answer_basis: string;
+      answer_key_comparison: string;
+      reasoning_steps: string[];
       confidence: number;
       evidence_pages: number[];
     }>;
@@ -197,6 +199,12 @@ export async function GET() {
             problem_summary: summary.slice(0, 300),
             candidate_option: option,
             answer_basis: basis,
+            answer_key_comparison: ["matches","conflicts","not_available","not_applicable"].includes(String(item.answer_key_comparison))
+              ? String(item.answer_key_comparison)
+              : "not_available",
+            reasoning_steps: Array.isArray(item.reasoning_steps)
+              ? item.reasoning_steps.filter((step: unknown): step is string => typeof step === "string" && step.trim().length > 0).slice(0, 5).map((step) => step.trim().slice(0, 220))
+              : [],
             confidence,
             evidence_pages: [...new Set(pages)].slice(0, 8),
           });

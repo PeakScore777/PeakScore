@@ -49,14 +49,19 @@ export async function loadOrbyKnowledgeChunks(documentId: string): Promise<OrbyK
 export async function enqueueNextPendingOrbyKnowledgeDocument(): Promise<boolean> {
   const { data: documents, error } = await supabaseAdmin
     .from("orby_knowledge_documents")
-    .select("id")
+    .select("id,knowledge_pipeline_version,knowledge_profile_status,knowledge_profile_version,embedded_chunk_count,chunk_count")
     .in("status", ["draft", "published"])
-    .or("knowledge_pipeline_version.lt." + ORBY_KNOWLEDGE_PIPELINE_VERSION + ",knowledge_profile_status.neq.ready,embedded_chunk_count.lt.chunk_count")
     .order("created_at", { ascending: true })
     .limit(100);
   if (error) throw new Error("No se pudieron detectar documentos pendientes: " + error.code);
 
   for (const document of documents ?? []) {
+    const stale = Number(document.knowledge_pipeline_version ?? 0) < ORBY_KNOWLEDGE_PIPELINE_VERSION
+      || document.knowledge_profile_status !== "ready"
+      || Number(document.knowledge_profile_version ?? 0) < 2
+      || Number(document.embedded_chunk_count ?? 0) < Number(document.chunk_count ?? 0);
+    if (!stale) continue;
+
     const chunks = await loadOrbyKnowledgeChunks(document.id);
     if (!chunks.length) continue;
     const result = await enqueueOrbyKnowledgeDocument(document.id, chunks);

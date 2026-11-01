@@ -350,12 +350,13 @@ export async function verifyOrbyKnowledgeAnswer(args: {
   ].join("\n")).join("\n\n");
 
   const markers = resolveKnowledgeEvidenceMarkers(args.candidate, args.evidence);
-  const requiresCitations = /\\b(compara|comparar|coincidencias|diferencias|fuentes|p[aá]ginas|documentos|materiales|biblioteca|seg[uú]n el material|qu[eé] documento)\\b/i.test(args.question);
+  const requiresCitations = /\b(compara|comparar|coincidencias|diferencias|fuentes|p[aá]ginas|documentos|materiales|biblioteca|seg[uú]n el material|qu[eé] documento)\b/i.test(args.question);
   const missingRequiredCitations = requiresCitations && markers.used.length === 0;
   const prompt = [
     "Revisa la calidad de este análisis académico para el laboratorio privado de Orby.",
     "Separa los hechos que se atribuyen a documentos de las explicaciones académicas generales y de las propuestas pedagógicas originales.",
     "Las afirmaciones atribuidas a documentos deben coincidir con los fragmentos, sus títulos y páginas. Verifica también los recuentos de documentos, coincidencias, diferencias y vacíos. En comparaciones, resúmenes de biblioteca y solicitudes de evidencia, utiliza marcadores [E001], [E002] junto a las afirmaciones documentales; cada marcador debe existir en las fuentes que recibiste.",
+    missingRequiredCitations ? "La solicitud requiere referencias verificables y la respuesta candidata no contiene ninguna. No devuelvas pass: devuelve revise y agrega los marcadores [E###] correctos junto a cada afirmación documental respaldada." : "",
     "No exijas que una ruta de estudio, ejemplo nuevo, ejercicio original o actividad pedagógica aparezca literalmente en los documentos. Conserva esas propuestas cuando sean coherentes y estén claramente presentadas como propuestas de enseñanza.",
     "No infieras autoría común, dependencia entre documentos, oficialidad ni vigencia del examen por una mera coincidencia temática.",
     "Si hay una afirmación factual incorrecta o no respaldada, corrígela o limita su alcance. Mantén el valor educativo y no sustituyas una propuesta útil por una negativa genérica.",

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, BookOpen, Bot, Check, LoaderCircle, MessageSquare, Plus, Send, ShieldCheck, Trash2, UploadCloud } from "lucide-react";
+import { ArrowLeft, BookOpen, Bot, Check, LoaderCircle, MessageSquare, Plus, Send, ShieldCheck, Sparkles, Trash2, UploadCloud } from "lucide-react";
 
 type KnowledgeDocument = {
   id: string; title: string; original_name: string; subject: string; topic: string;
   page_count: number; chunk_count: number; status: "draft" | "published" | "archived"; created_at: string;
+  embedded_chunk_count: number; knowledge_profile_status: "pending" | "ready" | "failed"; concept_count: number;
 };
 type Source = { documentId: string; title: string; subject: string; topic: string; page: number };
 type ChatMessage = { id?: string; role: "user" | "assistant"; content: string; sources?: Source[]; created_at?: string };
@@ -37,6 +38,7 @@ export default function OrbyKnowledgeStudio() {
   const [draft,setDraft] = useState("");
   const [loading,setLoading] = useState(false);
   const [uploading,setUploading] = useState(false);
+  const [enrichingDocument,setEnrichingDocument] = useState<string|null>(null);
   const [error,setError] = useState("");
   const [notice,setNotice] = useState("");
   const messagesEndRef = useRef<HTMLDivElement|null>(null);
@@ -132,6 +134,30 @@ export default function OrbyKnowledgeStudio() {
     finally{setUploading(false);}
   }
 
+  async function enrichKnowledge(doc?: KnowledgeDocument) {
+    setEnrichingDocument(doc?.id ?? "all");
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/orby/knowledge/enrich", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(doc ? { documentId: doc.id } : {}),
+      });
+      const payload = await response.json().catch(()=>({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo enriquecer el conocimiento.");
+      const successCount = Number(payload.succeeded ?? 0);
+      const failureCount = Number(payload.failed ?? 0);
+      setNotice(payload.message || ("Documentos enriquecidos: " + successCount + "; pendientes: " + failureCount + "."));
+      await loadAll();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo enriquecer el documento.");
+    } finally {
+      setEnrichingDocument(null);
+    }
+  }
+
   async function changeStatus(doc:KnowledgeDocument,status:"published"|"archived"|"draft") {
     setError("");setNotice("");
     try{
@@ -201,8 +227,9 @@ export default function OrbyKnowledgeStudio() {
           <div className="mt-6 flex items-center justify-between"><h3 className="text-sm font-semibold">Biblioteca ({documents.length})</h3><span className="text-[10px] text-slate-500">Solo documentos publicados alimentan el chat estudiantil</span></div>
           <div className="mt-3 space-y-2">
             {documents.map(doc=><article key={doc.id} className="rounded-xl border border-white/[.08] bg-black/15 p-3.5">
-              <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-xs font-semibold text-white">{doc.title}</p><span className={doc.status==="published"?"rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold text-emerald-300":doc.status==="archived"?"rounded-full bg-slate-500/15 px-2 py-1 text-[9px] font-bold text-slate-400":"rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300"}>{doc.status==="published"?"PUBLICADO":doc.status==="archived"?"ARCHIVADO":"BORRADOR"}</span></div><p className="mt-1 text-[10px] text-slate-500">{doc.subject} · {doc.page_count} páginas · {doc.chunk_count} fragmentos</p></div><button type="button" onClick={()=>void deleteDocument(doc)} aria-label={"Eliminar "+doc.title} className="rounded-md p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
-              <div className="mt-3 flex flex-wrap gap-2">{doc.status!=="published"?<button type="button" onClick={()=>void changeStatus(doc,"published")} className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-emerald-300 transition hover:bg-emerald-500/20"><Check className="h-3.5 w-3.5"/> Publicar para Orby</button>:<button type="button" onClick={()=>void changeStatus(doc,"archived")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 transition hover:border-amber-400/30 hover:text-amber-200">Archivar</button>}<button type="button" onClick={()=>void changeStatus(doc,"draft")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-400 transition hover:text-white">Volver a borrador</button></div>
+              <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-xs font-semibold text-white">{doc.title}</p><span className={doc.status==="published"?"rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold text-emerald-300":doc.status==="archived"?"rounded-full bg-slate-500/15 px-2 py-1 text-[9px] font-bold text-slate-400":"rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300"}>{doc.status==="published"?"PUBLICADO":doc.status==="archived"?"ARCHIVADO":"BORRADOR"}</span></div><p className="mt-1 text-[10px] text-slate-500">{doc.subject} · {doc.page_count} páginas · {doc.chunk_count} fragmentos</p><p className="mt-1 text-[10px] text-slate-500">{doc.knowledge_profile_status==="ready"&&doc.embedded_chunk_count>=doc.chunk_count?<span className="text-emerald-300">Conocimiento semántico listo · {doc.concept_count} conceptos · {doc.embedded_chunk_count}/{doc.chunk_count} vectores</span>:<span className={doc.knowledge_profile_status==="failed"?"text-rose-300":"text-amber-300"}>{doc.knowledge_profile_status==="failed"?"Enriquecimiento pendiente de reintento":"Conocimiento pendiente"} · {doc.embedded_chunk_count??0}/{doc.chunk_count} vectores</span>}</p></div><button type="button" onClick={()=>void deleteDocument(doc)} aria-label={"Eliminar "+doc.title} className="rounded-md p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(doc.knowledge_profile_status!=="ready" || doc.embedded_chunk_count<doc.chunk_count)&&<button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge(doc)} className="inline-flex items-center gap-1.5 rounded-md border border-orange-400/25 bg-orange-400/10 px-2.5 py-1.5 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument===doc.id?<LoaderCircle className="h-3 w-3 animate-spin"/>:<Sparkles className="h-3 w-3"/>}{enrichingDocument===doc.id?"Enriqueciendo…":"Generar conocimiento"}</button>}{doc.status!=="published"?<button type="button" onClick={()=>void changeStatus(doc,"published")} className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-emerald-300 transition hover:bg-emerald-500/20"><Check className="h-3.5 w-3.5"/> Publicar para Orby</button>:<button type="button" onClick={()=>void changeStatus(doc,"archived")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 transition hover:border-amber-400/30 hover:text-amber-200">Archivar</button>}<button type="button" onClick={()=>void changeStatus(doc,"draft")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-400 transition hover:text-white">Volver a borrador</button></div>
             </article>)}
             {documents.length===0&&<div className="rounded-xl border border-dashed border-white/10 p-8 text-center"><p className="text-xs font-semibold text-slate-300">La biblioteca está vacía</p><p className="mt-1 text-[10px] text-slate-500">Carga tu primer material para empezar a construir el conocimiento curado de Orby.</p></div>}
           </div>

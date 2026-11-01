@@ -1800,7 +1800,9 @@ async function generateWithGroq(
 
          config: {
            ...(task === "tutor" ? {} : { responseMimeType: "application/json" }),
-
+           // Academic profile extraction can contain many page-grounded concepts.
+           // The previous implicit output budget could truncate otherwise valid JSON.
+           maxOutputTokens: task === "analysis" ? 16000 : 8192,
            httpOptions: {
              timeout: 60000,
            },

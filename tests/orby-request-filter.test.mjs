@@ -159,3 +159,21 @@ test("extrae listas numeradas aunque el PDF no diga temario ni checklist", () =>
   assert.equal(rows.filter((row) => row.area === "Ciencias Sociales").length, 2);
   assert.ok(rows.some((row) => row.name === "Cartografía" && row.page === 2));
 });
+
+test("conserva etiquetas entre corchetes y numeración separada del texto", () => {
+  const rows = checklist.extractOrbyChecklistRows([{
+    page_number: 5,
+    content: [
+      "Física",
+      "Física 1 [MECÁNICA CLÁSICA]",
+      "1.",
+      "Operaciones con vectores [gráfico]",
+      "2.",
+      "Análisis dimensional",
+    ].join("\\n"),
+  }]);
+
+  assert.equal(rows.length, 2);
+  assert.ok(rows.some((row) => row.name === "Operaciones con vectores [gráfico]"));
+  assert.ok(rows.every((row) => row.area === "Física"));
+});

@@ -24,6 +24,13 @@ type AutomationStatus = {
     document_title: string;
     embedded_chunk_count: number;
     chunk_count: number;
+    ingestion_status: string;
+    coverage_percent: number;
+    visual_pages_total: number;
+    visual_pages_reviewed: number;
+    auto_review_count: number;
+    next_review_at: string | null;
+    concept_count: number;
     status: string;
     stage: string;
     next_batch_index: number;
@@ -32,8 +39,17 @@ type AutomationStatus = {
     detected_concept_count: number;
     detected_topic_count: number;
     detected_competency_count: number;
+    teaching_method_count: number;
+    worked_example_count: number;
+    question_pattern_count: number;
+    solving_method_count: number;
+    study_path_count: number;
+    exercise_blueprint_count: number;
+    visual_element_count: number;
     detected_areas: string[];
     concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
+    question_pattern_preview: Array<{ archetype: string; stimulus_type: string; task: string; evidence_pages: number[] }>;
+    teaching_method_preview: Array<{ concept: string; student_level_zero: string; evidence_pages: number[] }>;
     attempt_count: number;
     last_error: string | null;
     updated_at: string;
@@ -41,6 +57,9 @@ type AutomationStatus = {
 };
 
 function publicationBlockReason(document: KnowledgeDocument): string | null {
+  if (document.ingestion_status === "attention_required") return "Orby detectó páginas que no pudo verificar con suficiente confianza. Revisa el detalle antes de publicar.";
+  if (document.ingestion_status !== "completed") return "Orby todavía está leyendo y verificando todas las páginas.";
+  if (document.coverage_percent < 95 || document.visual_pages_reviewed < Math.ceil(document.visual_pages_total * 0.95)) return "La cobertura visual todavía es inferior al 95%.";
   if (document.chunk_count < 1) return "El documento todavía no tiene fragmentos indexados.";
   if (document.embedded_chunk_count < document.chunk_count) return "Faltan embeddings: " + document.embedded_chunk_count + "/" + document.chunk_count + ".";
   if (document.knowledge_profile_status !== "ready") return "El perfil académico todavía no terminó o necesita reintento.";
@@ -489,7 +508,8 @@ export default function OrbyKnowledgeStudio() {
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-semibold">Biblioteca ({documents.length})</h3><span className="text-[10px] text-slate-500">Solo documentos publicados alimentan el chat estudiantil</span></div>{documents.some(doc=>doc.knowledge_profile_status!=="ready"||doc.knowledge_profile_version<2||doc.knowledge_pipeline_version<3||doc.embedded_chunk_count<doc.chunk_count)&&<button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge()} className="inline-flex items-center gap-2 rounded-lg border border-orange-400/25 bg-orange-400/10 px-3 py-2 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument==="all"?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<Sparkles className="h-3.5 w-3.5"/>}{enrichingDocument==="all"?"Añadiendo a la cola…":"Encolar pendientes"}</button>}</div>
           <div className="mt-3 space-y-2">
             {documents.map(doc=><article key={doc.id} className="rounded-xl border border-white/[.08] bg-black/15 p-3.5">
-              <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-xs font-semibold text-white">{doc.title}</p><span className={doc.status==="published"?"rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold text-emerald-300":doc.status==="archived"?"rounded-full bg-slate-500/15 px-2 py-1 text-[9px] font-bold text-slate-400":"rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300"}>{doc.status==="published"?"PUBLICADO":doc.status==="archived"?"ARCHIVADO":"BORRADOR"}</span></div><p className="mt-1 text-[10px] text-slate-500">{doc.subject} · {doc.page_count} páginas · {doc.chunk_count} fragmentos</p><p className="mt-1 text-[10px] text-slate-500">{doc.knowledge_profile_status==="ready"&&doc.knowledge_profile_version>=2&&doc.knowledge_pipeline_version>=3&&doc.embedded_chunk_count>=doc.chunk_count?<span className="text-emerald-300">Motor v{doc.knowledge_pipeline_version} listo · {doc.concept_count} conceptos · {doc.embedded_chunk_count}/{doc.chunk_count} vectores</span>:<span className={doc.knowledge_profile_status==="failed"?"text-rose-300":"text-amber-300"}>{doc.knowledge_profile_status==="failed"?"Enriquecimiento pendiente de reintento":doc.knowledge_pipeline_version<3?"Actualización al motor v3 pendiente":"Conocimiento pendiente"} · {doc.embedded_chunk_count??0}/{doc.chunk_count} vectores</span>}</p></div><button type="button" onClick={()=>void deleteDocument(doc)} aria-label={"Eliminar "+doc.title} className="rounded-md p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
+              <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-xs font-semibold text-white">{doc.title}</p><span className={doc.status==="published"?"rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold text-emerald-300":doc.status==="archived"?"rounded-full bg-slate-500/15 px-2 py-1 text-[9px] font-bold text-slate-400":"rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300"}>{doc.status==="published"?"PUBLICADO":doc.status==="archived"?"ARCHIVADO":"BORRADOR"}</span></div><p className="mt-1 text-[10px] text-slate-500">{doc.subject} · {doc.page_count} páginas · {doc.chunk_count} fragmentos</p>
+              <p className="mt-1 text-[9px] text-slate-500">Lectura visual: {doc.visual_pages_reviewed}/{doc.visual_pages_total} páginas · Revisiones IA de hoy: {doc.auto_review_count}/10{doc.next_review_at && doc.ingestion_status!=="completed" ? " · Próxima revisión: " + new Date(doc.next_review_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}) : ""}</p><p className="mt-1 text-[10px] text-slate-500">{doc.ingestion_status==="completed"?<span className="text-emerald-300">Motor v4 completado · {doc.concept_count} conceptos · {doc.coverage_percent.toFixed(1)}% cobertura · {doc.embedded_chunk_count}/{doc.chunk_count} vectores</span>:doc.ingestion_status==="attention_required"?<span className="text-amber-300">Atención requerida · {doc.visual_pages_reviewed}/{doc.visual_pages_total} páginas verificadas · {doc.concept_count} conceptos</span>:<span className={doc.knowledge_profile_status==="failed"?"text-rose-300":"text-amber-300"}>{doc.knowledge_profile_status==="failed"?"Enriquecimiento pendiente de reintento":"Aprendizaje multimodal en curso"} · {doc.visual_pages_reviewed}/{doc.visual_pages_total} páginas · {doc.coverage_percent.toFixed(1)}% · {doc.embedded_chunk_count??0}/{doc.chunk_count} vectores</span>}</p></div><button type="button" onClick={()=>void deleteDocument(doc)} aria-label={"Eliminar "+doc.title} className="rounded-md p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
               {automation?.recent.find(job=>job.document_id===doc.id) && (() => {
                 const job = automation.recent.find(item=>item.document_id===doc.id)!;
                 return <div className="mt-3 rounded-lg border border-white/[.07] bg-white/[.025] p-3">
@@ -499,20 +519,31 @@ export default function OrbyKnowledgeStudio() {
                   </div>
                   <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Vectores</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.embedded_chunk_count}/{job.chunk_count}</p></div>
-                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Lotes IA</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.stored_profile_batches}/{job.total_batches}</p></div>
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Páginas verificadas</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.visual_pages_reviewed}/{job.visual_pages_total}</p></div>
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Conceptos únicos</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.detected_concept_count}</p></div>
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Temas / competencias</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.detected_topic_count} / {job.detected_competency_count}</p></div>
                   </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Métodos docentes</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.teaching_method_count}</p></div>
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Ejemplos trabajados</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.worked_example_count}</p></div>
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Patrones ICFES</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.question_pattern_count}</p></div>
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Rutas de estudio</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.study_path_count}</p></div>
+                  </div>
                   {job.detected_areas.length>0 && <p className="mt-2 text-[9px] leading-4 text-slate-400">Áreas detectadas: {job.detected_areas.join(" · ")}</p>}
-                  {job.concept_preview.length>0
-                    ? <div className="mt-2 border-t border-white/[.07] pt-2">
-                        <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Muestra de conceptos encontrados</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {job.concept_preview.slice(0,6).map((concept,index)=><span key={index} title={(concept.parent_concept?concept.parent_concept+" · ":"")+concept.area+(concept.evidence_pages.length?" · p. "+concept.evidence_pages.join(", "):"")} className="rounded-md border border-white/10 bg-black/20 px-2 py-1 text-[9px] text-slate-300">{concept.name}</span>)}
-                        </div>
-                      </div>
-                    : <p className="mt-2 text-[9px] leading-4 text-slate-500">{job.stage==="embeddings"?"Los embeddings representan los fragmentos para búsqueda; los conceptos aparecerán cuando empiece el perfilado académico.":"El lote está pendiente de guardar su primer resultado conceptual."}</p>}
-                  <p className="mt-2 text-[9px] text-amber-300">Estos resultados son provisionales. Orby los consolida y valida al completar todos los lotes; todavía no alimentan el chat estudiantil.</p>
+                  {job.concept_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
+                    <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Conceptos identificados</p>
+                    <div className="flex flex-wrap gap-1.5">{job.concept_preview.slice(0,6).map((concept,index)=><span key={index} title={(concept.parent_concept?concept.parent_concept+" · ":"")+concept.area+(concept.evidence_pages.length?" · p. "+concept.evidence_pages.join(", "):"")} className="rounded-md border border-white/10 bg-black/20 px-2 py-1 text-[9px] text-slate-300">{concept.name}</span>)}</div>
+                  </div>}
+                  {job.question_pattern_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
+                    <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Patrones de pregunta aprendidos</p>
+                    {job.question_pattern_preview.slice(0,3).map((pattern,index)=><p key={index} className="text-[9px] leading-4 text-slate-400">• {pattern.archetype} · {pattern.stimulus_type} · {pattern.task} · p. {pattern.evidence_pages.join(", ")}</p>)}
+                  </div>}
+                  {job.teaching_method_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
+                    <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Cómo enseñarlo desde cero</p>
+                    {job.teaching_method_preview.slice(0,3).map((method,index)=><p key={index} className="text-[9px] leading-4 text-slate-400">• {method.concept}: {method.student_level_zero}</p>)}
+                  </div>}
+                  {job.stored_profile_batches===0 && <p className="mt-2 text-[9px] leading-4 text-slate-500">El perfilado académico empezará después del lote de embeddings; todavía no hay conceptos o métodos de enseñanza guardados.</p>}
+                  <p className="mt-2 text-[9px] text-amber-300">Resultados provisionales con páginas de evidencia. No alimentan al alumnado hasta completar la lectura multimodal, el perfil y la publicación manual.</p>
                   <p className="mt-1 text-[9px] leading-4 text-slate-500">Los vectores permiten buscar fragmentos; los conceptos, temas y competencias describen lo que el perfil académico identificó en el documento.</p>
                 </div>;
               })()}

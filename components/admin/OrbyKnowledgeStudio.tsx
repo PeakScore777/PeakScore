@@ -172,21 +172,58 @@ export default function OrbyKnowledgeStudio() {
   const preserveScrollRef = useRef<{height:number;top:number}|null>(null);
 
   async function loadAll(isActive: () => boolean = () => true) {
-    const [docsResponse,chatResponse,automationResponse] = await Promise.all([
-      fetch("/api/admin/orby/knowledge",{credentials:"same-origin",cache:"no-store"}),
-      fetch("/api/admin/orby/chat",{credentials:"same-origin",cache:"no-store"}),
-      fetch("/api/admin/orby/knowledge/automation",{credentials:"same-origin",cache:"no-store"}),
+    type EndpointResult = {
+      payload: Record<string, unknown> | null;
+      error: string | null;
+    };
+
+    async function requestJson(path: string, label: string): Promise<EndpointResult> {
+      try {
+        const response = await fetch(path, {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        const payload = await response.json().catch(() => null) as Record<string, unknown> | null;
+        if (!response.ok) {
+          const apiMessage = typeof payload?.error === "string" ? payload.error : "El servidor respondió HTTP " + response.status + ".";
+          return { payload, error: label + " (" + path + "): " + apiMessage };
+        }
+        return { payload, error: null };
+      } catch (cause) {
+        const rawMessage = cause instanceof Error ? cause.message : "Error de red desconocido.";
+        const detail = /failed to fetch|networkerror|load failed/i.test(rawMessage)
+          ? "El navegador no pudo alcanzar esta ruta. Comprueba que el servidor Next.js siga activo y que la URL no esté bloqueada por la red o la política CSP."
+          : rawMessage;
+        return { payload: null, error: label + " (" + path + "): " + detail };
+      }
+    }
+
+    const [docsResult, chatResult, automationResult] = await Promise.all([
+      requestJson("/api/admin/orby/knowledge", "Biblioteca"),
+      requestJson("/api/admin/orby/chat", "Chat privado"),
+      requestJson("/api/admin/orby/knowledge/automation", "Autopilot"),
     ]);
-    const docsPayload = await docsResponse.json().catch(()=>({}));
-    const chatPayload = await chatResponse.json().catch(()=>({}));
-    const automationPayload = await automationResponse.json().catch(()=>({}));
-    if(!docsResponse.ok) throw new Error(docsPayload.error||"No se pudo cargar la biblioteca.");
-    if(!chatResponse.ok) throw new Error(chatPayload.error||"No se pudo cargar el chat privado.");
+
     if (!isActive()) return;
-    setDocuments(Array.isArray(docsPayload.documents)?docsPayload.documents:[]);
-    setMessages(Array.isArray(chatPayload.messages)?chatPayload.messages:[]);
-    setHasOlderMessages(Boolean(chatPayload.hasMore));
-    if (automationResponse.ok) setAutomation(automationPayload as AutomationStatus);
+
+    const failures = [docsResult.error, chatResult.error, automationResult.error].filter(
+      (value): value is string => Boolean(value)
+    );
+
+    if (docsResult.payload && Array.isArray(docsResult.payload.documents)) {
+      setDocuments(docsResult.payload.documents as KnowledgeDocument[]);
+    }
+    if (chatResult.payload && Array.isArray(chatResult.payload.messages)) {
+      setMessages(chatResult.payload.messages as ChatMessage[]);
+      setHasOlderMessages(Boolean(chatResult.payload.hasMore));
+    }
+    if (automationResult.payload) {
+      setAutomation(automationResult.payload as unknown as AutomationStatus);
+    }
+
+    setError(failures.length
+      ? "No se pudo completar la carga del laboratorio:\\n" + failures.join("\\n")
+      : "");
   }
 
   useEffect(() => {

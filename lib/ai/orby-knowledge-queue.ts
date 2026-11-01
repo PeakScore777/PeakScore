@@ -92,16 +92,28 @@ export async function enqueueOrbyKnowledgeDocument(
     && Number(document.knowledge_profile_version ?? 0) >= 2
     && Number(document.embedded_chunk_count ?? 0) >= Number(document.chunk_count ?? 0)
   ) {
-    const { data: completedJob } = await supabaseAdmin
-      .from("orby_knowledge_jobs")
-      .select("*")
-      .eq("document_id", documentId)
-      .eq("pipeline_version", ORBY_KNOWLEDGE_PIPELINE_VERSION)
-      .eq("content_hash", contentHash)
-      .maybeSingle();
-    if (completedJob?.status === "completed") {
-      return { job: completedJob as OrbyKnowledgeJob, created: false, alreadyCurrent: true };
-    }
+    // The document's current content/profile versions are authoritative. A
+    // completed queue row is not required for documents promoted from the
+    // already-validated v2 index during the v3 orchestration rollout.
+    return {
+      job: {
+        id: "current:" + documentId,
+        document_id: documentId,
+        pipeline_version: ORBY_KNOWLEDGE_PIPELINE_VERSION,
+        content_hash: contentHash,
+        stage: "finalize",
+        status: "completed",
+        total_batches: Math.ceil(chunks.length / 2),
+        next_batch_index: Math.ceil(chunks.length / 2),
+        embedded_chunk_count: Number(document.embedded_chunk_count ?? 0),
+        attempt_count: 0,
+        max_attempts: 8,
+        locked_by: null,
+        lease_expires_at: null,
+      } as OrbyKnowledgeJob,
+      created: false,
+      alreadyCurrent: true,
+    };
   }
 
   const { data: existing, error: existingError } = await supabaseAdmin

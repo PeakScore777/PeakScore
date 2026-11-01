@@ -42,6 +42,7 @@ type AutomationStatus = {
     teaching_method_count: number;
     worked_example_count: number;
     question_pattern_count: number;
+    question_solution_count: number;
     solving_method_count: number;
     study_path_count: number;
     exercise_blueprint_count: number;
@@ -49,6 +50,16 @@ type AutomationStatus = {
     detected_areas: string[];
     concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
     question_pattern_preview: Array<{ archetype: string; stimulus_type: string; task: string; evidence_pages: number[] }>;
+    question_solution_preview: Array<{
+      question_number: number | null;
+      area: string;
+      skill: string;
+      problem_summary: string;
+      candidate_option: string | null;
+      answer_basis: string;
+      confidence: number;
+      evidence_pages: number[];
+    }>;
     teaching_method_preview: Array<{ concept: string; student_level_zero: string; evidence_pages: number[] }>;
     attempt_count: number;
     last_error: string | null;
@@ -529,6 +540,7 @@ export default function OrbyKnowledgeStudio() {
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Métodos docentes</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.teaching_method_count}</p></div>
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Ejemplos trabajados</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.worked_example_count}</p></div>
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Patrones ICFES</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.question_pattern_count}</p></div>
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Preguntas analizadas</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.question_solution_count}</p></div>
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Rutas de estudio</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.study_path_count}</p></div>
                   </div>
                   {job.detected_areas.length>0 && <p className="mt-2 text-[9px] leading-4 text-slate-400">Áreas detectadas: {job.detected_areas.join(" · ")}</p>}
@@ -539,6 +551,11 @@ export default function OrbyKnowledgeStudio() {
                   {job.question_pattern_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
                     <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Patrones de pregunta aprendidos</p>
                     {job.question_pattern_preview.slice(0,3).map((pattern,index)=><p key={index} className="text-[9px] leading-4 text-slate-400">• {pattern.archetype} · {pattern.stimulus_type} · {pattern.task} · p. {pattern.evidence_pages.join(", ")}</p>)}
+                  </div>}
+                  {job.question_solution_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
+                    <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Métodos de resolución analizados</p>
+                    {job.question_solution_preview.slice(0,3).map((solution,index)=><p key={index} className="text-[9px] leading-4 text-slate-400">• {solution.area}{solution.skill?" · "+solution.skill:""}: {solution.problem_summary}{solution.candidate_option?" · Candidata "+solution.candidate_option+" (no verificada)":""} · confianza {Math.round(solution.confidence*100)}% · p. {solution.evidence_pages.join(", ")}</p>)}
+                    <p className="mt-1 text-[9px] text-slate-500">Las letras candidatas no son claves oficiales; requieren verificación independiente.</p>
                   </div>}
                   {job.teaching_method_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
                     <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Cómo enseñarlo desde cero</p>

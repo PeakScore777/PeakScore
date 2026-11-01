@@ -17,6 +17,25 @@ function cleanText(value: unknown, maxLength: number): string {
 }
 
 
+function redactPrivateKnowledgeTitles(
+  reply: string,
+  sources: Array<{ title: string }>
+): string {
+  let safeReply = reply;
+  const candidates = new Set<string>();
+  for (const source of sources) {
+    const title = typeof source.title === "string" ? source.title.trim() : "";
+    if (title.length >= 12) candidates.add(title);
+    const withoutNumber = title.replace(/^\\s*\\d+[\\s._:-]+/, "").trim();
+    if (withoutNumber.length >= 12) candidates.add(withoutNumber);
+  }
+  for (const title of candidates) {
+    const escaped = title.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\function isClearlyOutOfScopeOrInjection(text: string): boolean {");
+    safeReply = safeReply.replace(new RegExp(escaped, "gi"), "el material de referencia");
+  }
+  return safeReply;
+}
+
 function isClearlyOutOfScopeOrInjection(text: string): boolean {
   const normalized = text.normalize("NFKC").toLowerCase();
   const override = /ignore (all |any )?(previous|prior|above|system) instructions|ignora (todas las )?(instrucciones|reglas) (anteriores|previas)|forget (all )?(your|the) instructions|olvida (todas )?las instrucciones|act as (dan|an unrestricted|a different ai)|reveal (your|the) (system prompt|hidden instructions)|revela (tu|el) (prompt|instrucciones internas)|print (your|the) system prompt|muestra (tu|el) prompt del sistema|developer message|jailbreak|bypass (the|your) (safety|rules|restrictions)|desactiva (tus|las) (reglas|restricciones)/i;
@@ -461,7 +480,9 @@ No uses bloques Markdown ni texto fuera del JSON.
       parsed.reply = modelReply;
     }
 
-    const finalReply = cleanText(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000)), 7000);
+    const normalizedFinalReply = cleanText(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000)), 7000);
+    // Defense in depth: never echo the private PDF title to a student if the model repeats it.
+    const finalReply = cleanText(redactPrivateKnowledgeTitles(normalizedFinalReply, knowledgeSources), 7000);
     const finalCheckQuestion = cleanText(parsed.checkQuestion, 500);
     if (!finalReply || !isSafeTutorOutput(finalReply) || !isSafeTutorOutput(finalCheckQuestion)) {
       await recordSecurityEvent(user.id, "suspicious_output");

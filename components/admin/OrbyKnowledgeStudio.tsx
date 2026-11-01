@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, BookOpen, Bot, Check, LoaderCircle, MessageSquare, Plus, Send, ShieldCheck, Sparkles, Trash2, UploadCloud, Play } from "lucide-react";
-import { supabase } from "@/lib/supabase/client";
+import { uploadOrbyPdfResumable } from "@/lib/supabase/orby-resumable-upload";
 
 type KnowledgeDocument = {
   id: string; title: string; original_name: string; subject: string; topic: string;
@@ -122,6 +122,7 @@ export default function OrbyKnowledgeStudio() {
   const [draft,setDraft] = useState("");
   const [loading,setLoading] = useState(false);
   const [uploading,setUploading] = useState(false);
+  const [uploadProgress,setUploadProgress] = useState(0);
   const [enrichingDocument,setEnrichingDocument] = useState<string|null>(null);
   const [error,setError] = useState("");
   const [notice,setNotice] = useState("");
@@ -254,8 +255,8 @@ export default function OrbyKnowledgeStudio() {
   async function uploadDocument(event:React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!file) return;
-    if (file.size < 1 || file.size > 20 * 1024 * 1024) {
-      setError("El PDF debe pesar como máximo 20 MB.");
+    if (file.size < 1 || file.size > 50_000_000) {
+      setError("El PDF debe pesar como máximo 50 MB.");
       return;
     }
     if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) {
@@ -278,26 +279,29 @@ export default function OrbyKnowledgeStudio() {
         }),
       });
       const signed = await signResponse.json().catch(() => ({}));
-      if (!signResponse.ok || !signed.path || !signed.token || !signed.documentId) {
+      if (!signResponse.ok || !signed.path || !signed.token || !signed.documentId || !signed.tusEndpoint || !signed.bucketName) {
         throw new Error(signed.error || "No se pudo preparar la subida privada.");
       }
 
-      const { error: uploadError } = await supabase.storage
-        .from("orby-knowledge")
-        .uploadToSignedUrl(signed.path, signed.token, file, {
-          contentType: "application/pdf",
-          cacheControl: "3600",
-        });
-      if (uploadError) {
-        throw new Error("No se pudo subir el PDF directamente a Supabase: " + uploadError.message);
-      }
+      setUploadProgress(0);
+      const uploaded = await uploadOrbyPdfResumable({
+        endpoint: signed.tusEndpoint,
+        token: signed.token,
+        apiKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+        bucketName: signed.bucketName,
+        objectName: signed.path,
+        file,
+        onProgress: (uploadedBytes, totalBytes) => {
+          setUploadProgress(totalBytes > 0 ? Math.min(100, Math.round(uploadedBytes * 100 / totalBytes)) : 0);
+        },
+      });
 
       const finalizeResponse = await fetch("/api/admin/orby/knowledge", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          documentId: signed.documentId,
+          documentId: uploaded.documentId,
           fileName: file.name,
         }),
       });
@@ -308,6 +312,7 @@ export default function OrbyKnowledgeStudio() {
 
       setNotice(payload.message || "PDF guardado como borrador y añadido a la cola de Orby.");
       setFile(null);
+      setUploadProgress(0);
       const input = document.getElementById("orby-knowledge-file") as HTMLInputElement | null;
       if (input) input.value = "";
       await loadAll();
@@ -315,6 +320,7 @@ export default function OrbyKnowledgeStudio() {
       setError(e instanceof Error ? e.message : "No se pudo cargar el material.");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   }
 
@@ -433,13 +439,13 @@ export default function OrbyKnowledgeStudio() {
         <section className="rounded-2xl border border-white/10 bg-[#11161c] p-5 sm:p-6">
           <div className="mb-5 flex items-center justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-orange-400">01 / KNOWLEDGE BASE</p><h2 className="mt-2 text-xl font-semibold">Material de referencia</h2><p className="mt-1 text-xs text-slate-400">PDFs privados · clasificación transversal automática · publicación manual</p></div><BookOpen className="h-6 w-6 text-orange-400"/></div>
           <form onSubmit={uploadDocument} className="space-y-3 rounded-xl border border-white/10 bg-black/20 p-4">
-            <label className="block text-xs font-semibold text-slate-300">Archivo PDF (máximo 20 MB)</label>
-            <label htmlFor="orby-knowledge-file" className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/[0.025] p-4 transition hover:border-orange-400/45 hover:bg-orange-500/[0.04]"><UploadCloud className="h-5 w-5 shrink-0 text-orange-400"/><span className="min-w-0"><span className="block truncate text-xs font-medium text-white">{file?file.name:"Seleccionar documento PDF"}</span><span className="mt-1 block text-[10px] text-slate-500">{file?(file.size/1024/1024).toFixed(2)+" MB":"PDF de hasta 20 MB con texto seleccionable. Los PDF escaneados no se admiten."}</span></span><input id="orby-knowledge-file" type="file" accept="application/pdf,.pdf" className="sr-only" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
+            <label className="block text-xs font-semibold text-slate-300">Archivo PDF (máximo 50 MB · carga reanudable)</label>
+            <label htmlFor="orby-knowledge-file" className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-white/15 bg-white/[0.025] p-4 transition hover:border-orange-400/45 hover:bg-orange-500/[0.04]"><UploadCloud className="h-5 w-5 shrink-0 text-orange-400"/><span className="min-w-0"><span className="block truncate text-xs font-medium text-white">{file?file.name:"Seleccionar documento PDF"}</span><span className="mt-1 block text-[10px] text-slate-500">{file?(file.size/1024/1024).toFixed(2)+" MB":"PDF de hasta 50 MB. Orby analiza texto, imágenes, tablas y páginas escaneadas."}</span></span><input id="orby-knowledge-file" type="file" accept="application/pdf,.pdf" className="sr-only" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
             <div className="rounded-lg border border-orange-500/15 bg-orange-500/[0.05] px-3 py-3">
               <p className="text-xs font-semibold text-orange-200">Clasificación automática</p>
               <p className="mt-1 text-[10px] leading-5 text-slate-400">Orby guardará el PDF como material transversal de preparación Saber 11. El título se toma del nombre del archivo; no necesitas asignar materia ni tema.</p>
             </div>
-            <button disabled={!file||uploading} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 text-xs font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-40">{uploading?<><LoaderCircle className="h-4 w-4 animate-spin"/> Subiendo y preparando PDF…</>:<><Plus className="h-4 w-4"/> Cargar y analizar material</>}</button>
+            <button disabled={!file||uploading} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 text-xs font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-40">{uploading?<><LoaderCircle className="h-4 w-4 animate-spin"/> Subiendo PDF… {uploadProgress}%</>:<><Plus className="h-4 w-4"/> Subir a Orby y aprender</>}</button>
           </form>
           <section className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">

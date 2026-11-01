@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint --max-warnings=0",
     "prepare": "husky",
-    "test:orby": "node --experimental-strip-types --test tests/orby-request-filter.test.ts"
+    "test:orby": "node --conditions=react-server --experimental-strip-types --test tests/orby-request-filter.test.ts"
   },
   "dependencies": {
     "@cos-design/photo-clothesline": "^3.7.4",

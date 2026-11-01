@@ -93,6 +93,7 @@ export async function createOrbyEmbeddings(
       contents,
       config: {
         taskType: "RETRIEVAL_DOCUMENT",
+        title: title.slice(0, 180),
         outputDimensionality: EMBEDDING_DIMENSIONS,
       },
     });

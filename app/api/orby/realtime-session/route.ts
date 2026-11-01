@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     const subject = clean(body?.subject, 80, "Preparación Saber 11");
     const topic = clean(body?.topic, 160, "Estudio y aprendizaje");
     const context = clean(body?.context, 1200, "Ayuda al estudiante con sus dudas académicas.");
-    const history = Array.isArray(body?.history)
+    const history: Array<{ role: "user" | "assistant"; content: string }> = Array.isArray(body?.history)
       ? body.history.slice(-6).filter((item: unknown) => !!item && typeof item === "object"
         && ((item as { role?: unknown }).role === "user" || (item as { role?: unknown }).role === "assistant")
         && typeof (item as { content?: unknown }).content === "string")

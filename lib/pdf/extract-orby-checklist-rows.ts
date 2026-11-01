@@ -45,9 +45,8 @@ export function extractOrbyChecklistRows(
   const addPending = () => {
     if (!pending) return;
     const name = pending.name
-      .replace(/^[|\s]+|[|\s]+$/g, "")
-      .replace(/[|]+/g, " ")
-      .replace(/\s+/g, " ")
+      .replace(/^\\s+|\\s+$/g, "")
+      .replace(/\\s+/g, " ")
       .trim()
       .replace(/[.;:]$/, "");
     pending = null;

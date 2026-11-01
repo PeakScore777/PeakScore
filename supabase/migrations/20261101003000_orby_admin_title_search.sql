@@ -29,7 +29,7 @@ as $$
     select distinct lower(regexp_replace(token, '[^[:alnum:]áéíóúüñ]', '', 'g')) as term
     from pg_catalog.regexp_split_to_table(
       pg_catalog.left(coalesce(p_query, ''), 800),
-      '\\s+'
+      '\s+'
     ) as tokens(token)
     where pg_catalog.length(regexp_replace(token, '[^[:alnum:]áéíóúüñ]', '', 'g')) >= 4
       and lower(regexp_replace(token, '[^[:alnum:]áéíóúüñ]', '', 'g')) not in (

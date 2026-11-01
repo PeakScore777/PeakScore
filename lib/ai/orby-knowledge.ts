@@ -278,6 +278,10 @@ export async function generateOrbyKnowledgeProfile(
     batches.push(orderedChunks.slice(index, index + 2));
   }
 
+  // Extract numbered rows once across the full document so subject/unit
+  // context survives page and AI-batch boundaries.
+  const documentChecklistRows = extractOrbyChecklistRows(orderedChunks);
+
   // Process one extraction batch at a time. Parallel profile requests were
   // exhausting transient Gemini capacity on long PDFs and caused the entire
   // document profile to fail even though its embeddings were already stored.
@@ -439,7 +443,7 @@ export async function generateOrbyKnowledgeProfile(
       }];
     }) : [];
 
-    const checklistRows = extractOrbyChecklistRows(batch);
+    const checklistRows = documentChecklistRows.filter((row) => allowedPages.has(row.page));
     const modelChecklistItems = Array.isArray(parsed.checklist_items)
       ? parsed.checklist_items.flatMap((raw) => {
           const value = asRecord(raw);

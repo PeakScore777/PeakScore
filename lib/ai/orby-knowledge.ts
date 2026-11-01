@@ -3,7 +3,7 @@ import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI } from "@/lib/ai/router";
-import { extractOrbyChecklistRows } from "@/lib/pdf/extract-orby-checklist-rows";
+import { extractOrbyChecklistRows, type ExtractedChecklistRow } from "@/lib/pdf/extract-orby-checklist-rows";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
@@ -260,32 +260,22 @@ export async function createOrbyEmbeddings(
   return saved;
 }
 
-export async function generateOrbyKnowledgeProfile(
-  documentId: string,
-  chunks: OrbyKnowledgeChunk[]
-): Promise<OrbyKnowledgeProfile> {
-  const orderedChunks = [...chunks].sort((a, b) =>
-    a.page_number - b.page_number || a.chunk_index - b.chunk_index
-  );
-  if (!orderedChunks.length) throw new Error("The document has no extracted text chunks.");
+type OrbyKnowledgeBatchProfile = Pick<
+  OrbyKnowledgeProfile,
+  "summary" | "areas" | "topics" | "concepts" | "competencies" | "study_strategies" | "gaps_observed" | "keywords" | "search_text"
+>;
 
-  // Four-page batches keep the extraction focused and prevent a long PDF from
-  // being reduced to only a handful of generic concepts in a single response.
-  const batches: OrbyKnowledgeChunk[][] = [];
-  // Two chunks per extraction request keeps JSON output below provider limits,
-  // especially for dense chemistry/physics pages with many named concepts.
-  for (let index = 0; index < orderedChunks.length; index += 2) {
-    batches.push(orderedChunks.slice(index, index + 2));
-  }
+export function getOrbyKnowledgeProfileBatchCount(chunks: OrbyKnowledgeChunk[]): number {
+  return Math.ceil(chunks.length / 2);
+}
 
-  // Extract numbered rows once across the full document so subject/unit
-  // context survives page and AI-batch boundaries.
-  const documentChecklistRows = extractOrbyChecklistRows(orderedChunks);
-
-  // Process one extraction batch at a time. Parallel profile requests were
-  // exhausting transient Gemini capacity on long PDFs and caused the entire
-  // document profile to fail even though its embeddings were already stored.
-  const batchProfiles = await mapWithConcurrency(batches, 1, async (batch, batchIndex) => {
+/** Generate one resumable two-chunk profile batch. */
+export async function generateOrbyKnowledgeProfileBatch(
+  batch: OrbyKnowledgeChunk[],
+  batchIndex: number,
+  totalBatches: number,
+  documentChecklistRows: ExtractedChecklistRow[]
+): Promise<OrbyKnowledgeBatchProfile> {
     const allowedPages = new Set(batch.map((chunk) => chunk.page_number));
     const pageText = batch.map((chunk) =>
       "[Página " + chunk.page_number + "]\n" + chunk.content.slice(0, 6500)
@@ -341,7 +331,7 @@ export async function generateOrbyKnowledgeProfile(
       "<source_pages>",
       pageText,
       "</source_pages>",
-      "Identificador de lote interno: " + (batchIndex + 1) + "/" + batches.length,
+      "Identificador de lote interno: " + (batchIndex + 1) + "/" + totalBatches,
     ].join("\n\n");
 
     let parsed: Record<string, unknown> | null = null;
@@ -371,7 +361,7 @@ export async function generateOrbyKnowledgeProfile(
             + ").";
           console.warn("[Orby Knowledge] Profile response was not valid JSON.", {
             batch: batchIndex + 1,
-            totalBatches: batches.length,
+            totalBatches: totalBatches,
             attempt,
             provider: useGroqDirectly ? "groq" : "auto",
             finishReason,
@@ -385,7 +375,7 @@ export async function generateOrbyKnowledgeProfile(
         lastBatchError = error instanceof Error ? error.message.slice(0, 350) : "Error desconocido del proveedor.";
         console.warn("[Orby Knowledge] Profile batch failed; preserving vectors and retrying.", {
           batch: batchIndex + 1,
-          totalBatches: batches.length,
+          totalBatches: totalBatches,
           attempt,
           reason: lastBatchError,
         });
@@ -397,10 +387,10 @@ export async function generateOrbyKnowledgeProfile(
     if (!parsed) {
       console.error("[Orby Knowledge] Profile batch exhausted retries.", {
         batch: batchIndex + 1,
-        totalBatches: batches.length,
+        totalBatches: totalBatches,
         reason: lastBatchError,
       });
-      throw new Error("Bloque " + (batchIndex + 1) + "/" + batches.length + ": " + lastBatchError);
+      throw new Error("Bloque " + (batchIndex + 1) + "/" + totalBatches + ": " + lastBatchError);
     }
 
     // TypeScript cannot preserve property narrowing for an object assigned
@@ -518,7 +508,12 @@ export async function generateOrbyKnowledgeProfile(
     };
   });
 
-  // Dedupe equivalent terms while keeping concepts from different areas/families distinct.
+}
+
+/** Merge persisted batch results only after every batch is complete. */
+export function combineOrbyKnowledgeProfileBatches(
+  batchProfiles: OrbyKnowledgeBatchProfile[]
+): OrbyKnowledgeProfile {
   const conceptMap = new Map<string, OrbyKnowledgeProfile["concepts"][number]>();
   for (const batch of batchProfiles) {
     for (const concept of batch.concepts) {
@@ -576,6 +571,28 @@ export async function generateOrbyKnowledgeProfile(
     keywords,
     search_text: searchText.slice(0, 20000),
   };
+}
+
+}
+
+export async function generateOrbyKnowledgeProfile(
+  documentId: string,
+  chunks: OrbyKnowledgeChunk[]
+): Promise<OrbyKnowledgeProfile> {
+  void documentId;
+  const orderedChunks = [...chunks].sort((a, b) =>
+    a.page_number - b.page_number || a.chunk_index - b.chunk_index
+  );
+  if (!orderedChunks.length) throw new Error("The document has no extracted text chunks.");
+  const batches: OrbyKnowledgeChunk[][] = [];
+  for (let index = 0; index < orderedChunks.length; index += 2) {
+    batches.push(orderedChunks.slice(index, index + 2));
+  }
+  const documentChecklistRows = extractOrbyChecklistRows(orderedChunks);
+  const batchProfiles = await mapWithConcurrency(batches, 1, async (batch, batchIndex) =>
+    generateOrbyKnowledgeProfileBatch(batch, batchIndex, batches.length, documentChecklistRows)
+  );
+  return combineOrbyKnowledgeProfileBatches(batchProfiles);
 }
 
 export async function saveOrbyKnowledgeProfile(documentId: string, profile: OrbyKnowledgeProfile): Promise<number> {

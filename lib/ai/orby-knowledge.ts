@@ -843,7 +843,7 @@ export async function generateOrbyKnowledgePageBatch(
       name: String(item.name).slice(0, 180),
       area: typeof item.area === "string" ? item.area.slice(0, 80) : "Transversal",
       evidence: String(item.evidence).slice(0, 1000),
-      evidence_pages: numberListForKnowledge(item.evidence_pages, allowedPages),
+      evidence_pages: Array.isArray(item.evidence_pages) ? item.evidence_pages as number[] : [],
       provenance: item.provenance === "pedagogical_inference" ? "pedagogical_inference" as const : "source" as const,
     }));
 

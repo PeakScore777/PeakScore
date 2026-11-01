@@ -90,6 +90,15 @@ jobs:
       - name: ESLint
         run: npm run lint
 
+      - name: Next.js production build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          # Build-only placeholders: no secrets or production credentials.
+          NEXT_PUBLIC_SUPABASE_URL: https://build-check.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-check-anon-placeholder
+          SUPABASE_SERVICE_ROLE_KEY: build-check-service-placeholder
+
       - name: Enforce dependency audit gate
         if: steps.dependency_audit.outcome == 'failure'
         shell: bash

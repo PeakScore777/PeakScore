@@ -79,11 +79,12 @@ function storeUpload(key: string, value: StoredUpload): void {
   }
 }
 
-async function getUploadOffset(uploadUrl: string, apiKey: string): Promise<number> {
+async function getUploadOffset(uploadUrl: string, apiKey: string, signature: string): Promise<number> {
   const response = await fetch(uploadUrl, {
     method: "HEAD",
     headers: {
       "Tus-Resumable": TUS_VERSION,
+      "x-signature": signature,
       apikey: apiKey,
     },
     cache: "no-store",
@@ -150,7 +151,7 @@ export async function uploadOrbyPdfResumable(options: OrbyResumableUploadOptions
   if (stored && stored.objectName === options.objectName) {
     try {
       uploadUrl = stored.uploadUrl;
-      const offset = await getUploadOffset(uploadUrl, options.apiKey);
+      const offset = await getUploadOffset(uploadUrl, options.apiKey, options.token);
       options.onProgress?.(offset, options.file.size);
     } catch {
       stored = null;
@@ -170,7 +171,7 @@ export async function uploadOrbyPdfResumable(options: OrbyResumableUploadOptions
     storeUpload(key, stored);
   }
 
-  let offset = await getUploadOffset(uploadUrl, options.apiKey);
+  let offset = await getUploadOffset(uploadUrl, options.apiKey, options.token);
   options.onProgress?.(offset, options.file.size);
   let retryIndex = 0;
   const retryDelays = [0, 3000, 5000, 10000, 20000];
@@ -184,6 +185,7 @@ export async function uploadOrbyPdfResumable(options: OrbyResumableUploadOptions
           "Tus-Resumable": TUS_VERSION,
           "Upload-Offset": String(offset),
           "Content-Type": "application/offset+octet-stream",
+          "x-signature": options.token,
           apikey: options.apiKey,
         },
         body: options.file.slice(offset, nextOffset),
@@ -193,7 +195,7 @@ export async function uploadOrbyPdfResumable(options: OrbyResumableUploadOptions
 
       if (response.status !== 204) {
         if (response.status === 409) {
-          offset = await getUploadOffset(uploadUrl, options.apiKey);
+          offset = await getUploadOffset(uploadUrl, options.apiKey, options.token);
           options.onProgress?.(offset, options.file.size);
           continue;
         }
@@ -214,7 +216,7 @@ export async function uploadOrbyPdfResumable(options: OrbyResumableUploadOptions
       }
       const delay = retryDelays[++retryIndex];
       await new Promise((resolve) => window.setTimeout(resolve, delay));
-      offset = await getUploadOffset(uploadUrl, options.apiKey);
+      offset = await getUploadOffset(uploadUrl, options.apiKey, options.token);
       options.onProgress?.(offset, options.file.size);
     }
   }

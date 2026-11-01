@@ -20,6 +20,7 @@ export async function POST(request: Request) {
   const fileName = typeof body?.fileName === "string" ? body.fileName.trim() : "";
   const size = Number(body?.size);
   const contentType = typeof body?.contentType === "string" ? body.contentType : "";
+  const requestedDocumentId = typeof body?.documentId === "string" ? body.documentId : "";
 
   if (!fileName || fileName.length > 180 || !fileName.toLowerCase().endsWith(".pdf")) {
     return jsonError("Selecciona un archivo PDF válido.", 400);
@@ -29,8 +30,19 @@ export async function POST(request: Request) {
     return jsonError("El PDF debe pesar como máximo 50 MB.", 413);
   }
 
-  const documentId = crypto.randomUUID();
+  const isValidDocumentId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(requestedDocumentId);
+  if (!isValidDocumentId) return jsonError("La sesión de carga no tiene un identificador válido.", 400);
+  const documentId = requestedDocumentId;
   const path = owner.user.id + "/" + documentId + ".pdf";
+
+  const { data: existingDocument, error: existingDocumentError } = await supabaseAdmin
+    .from("orby_knowledge_documents")
+    .select("id")
+    .eq("id", documentId)
+    .eq("uploaded_by", owner.user.id)
+    .maybeSingle();
+  if (existingDocumentError) return jsonError("No se pudo comprobar si el documento ya existe.", 503);
+  if (existingDocument) return jsonError("Este PDF ya fue registrado. Actualiza la biblioteca; no se duplicó.", 409);
   const configuredStorageUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!configuredStorageUrl) return jsonError("El almacenamiento de Orby no está configurado.", 503);
   let tusEndpoint: string;
@@ -46,7 +58,7 @@ export async function POST(request: Request) {
   }
   const { data, error } = await supabaseAdmin.storage
     .from(BUCKET)
-    .createSignedUploadUrl(path, { upsert: false });
+    .createSignedUploadUrl(path, { upsert: true });
 
   if (error || !data?.token) {
     console.error("[Orby Knowledge] Signed upload URL creation failed.", { message: error?.message });

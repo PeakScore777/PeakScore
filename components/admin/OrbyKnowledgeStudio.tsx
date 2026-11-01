@@ -57,6 +57,8 @@ type AutomationStatus = {
       problem_summary: string;
       candidate_option: string | null;
       answer_basis: string;
+      answer_key_comparison: string;
+      reasoning_steps: string[];
       confidence: number;
       evidence_pages: number[];
     }>;
@@ -574,7 +576,7 @@ export default function OrbyKnowledgeStudio() {
                   </div>}
                   {job.question_solution_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
                     <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Métodos de resolución analizados</p>
-                    {job.question_solution_preview.slice(0,3).map((solution,index)=><p key={index} className="text-[9px] leading-4 text-slate-400">• {solution.area}{solution.skill?" · "+solution.skill:""}: {solution.problem_summary}{solution.candidate_option?" · Candidata "+solution.candidate_option+" (no verificada)":""} · confianza {Math.round(solution.confidence*100)}% · p. {solution.evidence_pages.join(", ")}</p>)}
+                    {job.question_solution_preview.slice(0,3).map((solution,index)=><div key={index} className="mb-2 text-[9px] leading-4 text-slate-400"><p>• {solution.area}{solution.skill?" · "+solution.skill:""}: {solution.problem_summary}{solution.candidate_option?" · Candidata "+solution.candidate_option+" (no verificada)":""} · confianza {Math.round(solution.confidence*100)}% · p. {solution.evidence_pages.join(", ")}</p>{solution.reasoning_steps.length>0&&<p className="mt-1 pl-3 text-slate-500">Razonamiento: {solution.reasoning_steps.join(" → ")}</p>}<p className="pl-3 text-slate-500">Comparación con clave: {solution.answer_key_comparison==="matches"?"coincide":solution.answer_key_comparison==="conflicts"?"no coincide":solution.answer_key_comparison==="not_applicable"?"no aplica":"no disponible"} · base: {solution.answer_basis==="explicit_key"?"clave visible":solution.answer_basis==="independent_reasoning"?"razonamiento independiente":"evidencia insuficiente"}</p></div>)}
                     <p className="mt-1 text-[9px] text-slate-500">Las letras candidatas no son claves oficiales; requieren verificación independiente.</p>
                   </div>}
                   {job.teaching_method_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">

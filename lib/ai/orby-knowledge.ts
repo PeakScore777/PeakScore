@@ -40,6 +40,12 @@ export type OrbyKnowledgeProfile = {
   search_text: string;
 };
 
+
+export type OrbyKnowledgeBatchProfile = Pick<
+  OrbyKnowledgeProfile,
+  "summary" | "areas" | "topics" | "concepts" | "competencies" | "study_strategies" | "gaps_observed" | "keywords" | "search_text"
+>;
+
 function getEmbeddingClient() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");

@@ -70,6 +70,74 @@ function normalizedConceptKey(value: string): string {
     .slice(0, 120);
 }
 
+type ExtractedChecklistRow = {
+  name: string;
+  parent_concept: string;
+  page: number;
+};
+
+function extractChecklistRows(chunks: OrbyKnowledgeChunk[]): ExtractedChecklistRow[] {
+  const rows = new Map<string, ExtractedChecklistRow>();
+  const boilerplate = /^(?:somos consultores|te damos la llave|check\s*list|a continuaci[oó]n|al finalizar|para que lleves tu control|contenidos?$|ok|bloque\s+[ivxlcdm0-9]+(?:\s*[-.:].*)?)$/i;
+
+  for (const chunk of chunks) {
+    const lines = chunk.content
+      .replace(/\r/g, "\n")
+      .split("\n")
+      .map((line) => line.replace(/^\s*(?:[•●▪◦*–—-]|\d+[.)])\s*/, "").replace(/\s+/g, " ").trim())
+      .filter(Boolean);
+
+    let parent = "Contenidos del documento";
+    let checklistMode = /\b(?:CONTENIDOS|CHECK\s*LIST|TEMARIO|LISTA DE TEMAS)\b/i.test(chunk.content);
+    let pendingContinuation = "";
+
+    const addRow = (raw: string) => {
+      const name = raw.replace(/^[|\s]+|[|\s]+$/g, "").replace(/[|]+/g, " ").trim().replace(/[.;:]$/, "");
+      if (name.length < 7 || name.length > 260 || boilerplate.test(name)) return;
+      if (/^(?:p[aá]gina\s+\d+|preparaci[oó]n saber|qu[ií]mica|matem[aá]ticas|ciencias naturales)$/i.test(name)) return;
+      if (/^(?:área|asignatura|tema|subtema|unidad|contenido|estado)$/i.test(name)) return;
+      const key = chunk.page_number + "|" + normalizedConceptKey(name);
+      if (!rows.has(key)) rows.set(key, { name, parent_concept: parent, page: chunk.page_number });
+    };
+
+    for (const line of lines) {
+      const block = line.match(/^BLOQUE\s+[IVXLCDM0-9]+\s*[.:–—-]?\s*(.+)$/i);
+      if (block) {
+        if (pendingContinuation) {
+          addRow(pendingContinuation);
+          pendingContinuation = "";
+        }
+        parent = block[1].replace(/[.;:]$/, "").trim() || "Contenidos del documento";
+        checklistMode = true;
+        continue;
+      }
+
+      if (/^(?:CONTENIDOS?|TEMAS|SUBTEMAS)\b/i.test(line)) {
+        checklistMode = true;
+        continue;
+      }
+      if (/^(?:OK|✓|✗|ESTADO)$/i.test(line)) continue;
+      if (/^(?:SOMOS CONSULTORES|TE DAMOS LA LLAVE|CHECK\s*LIST|A CONTINUACI[ÓO]N|AL FINALIZAR)/i.test(line)) continue;
+      if (/^(?:INGENYUS|QU[IÍ]MICA|MATEM[AÁ]TICAS|F[IÍ]SICA|BIOLOG[IÍ]A)$/i.test(line)) continue;
+
+      const hasListMarker = /^(?:[•●▪◦*–—-]|\d+[.)])\s*/.test(line);
+      const likelyContinuation = /^[a-záéíóúñ(]/.test(line);
+      if (!checklistMode && !hasListMarker) continue;
+
+      if (pendingContinuation && (/[,:;([]$/.test(pendingContinuation) || likelyContinuation)) {
+        pendingContinuation += " " + line;
+        continue;
+      }
+      if (pendingContinuation) addRow(pendingContinuation);
+      pendingContinuation = line;
+    }
+    if (pendingContinuation) addRow(pendingContinuation);
+  }
+
+  return [...rows.values()];
+}
+
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -204,6 +272,12 @@ export async function generateOrbyKnowledgeProfile(
         importance: 3,
         evidence: "qué dice el material sobre el concepto, sin añadir datos externos"
       }],
+      checklist_items: [{
+        name: "nombre fiel de un renglón independiente del temario o checklist",
+        parent_concept: "encabezado del bloque al que pertenece",
+        evidence_pages: [1],
+        evidence: "descripción fiel del renglón"
+      }],
       competencies: [{
         name: "habilidad o competencia explícita",
         area: "área",
@@ -222,6 +296,8 @@ export async function generateOrbyKnowledgeProfile(
       "EXTRACCIÓN GRANULAR: identifica conceptos y subtemas concretos que realmente aparezcan en estas páginas. No agrupes una lista larga bajo una etiqueta amplia. Por ejemplo, si aparecen ley de Ohm, resistencia, corriente y circuitos en serie/paralelo, regístralos como conceptos separados y relaciónalos bajo una familia común.",
       "COBERTURA DE LISTAS, TEMARIOS Y CHECKLISTS (REGLA OBLIGATORIA): cuando la página tenga una tabla de contenidos, checklist, temario, guía o lista de estudio, crea al menos una entrada de concepto separada por cada renglón de contenido que describa un objetivo o tema enseñable independiente. No conviertas cinco o diez renglones distintos en una sola etiqueta general. Los encabezados de bloque (por ejemplo, 'La materia' o 'Reacciones químicas') deben funcionar como parent_concept, no sustituir los renglones que aparecen debajo. Conserva el nombre del renglón con terminología fiel al material. Si un renglón enumera ejemplos, métodos, tipos o componentes, conserva el renglón como concepto principal y añade los subtemas como conceptos hijos cuando sean enseñables por separado; no los escondas únicamente en evidence o aliases. Antes de responder, cuenta mentalmente los renglones enseñables visibles en cada página y comprueba que cada uno tenga una entrada.",
       "COBERTURA: busca definiciones, procesos, leyes, fórmulas, métodos, clasificaciones, estructuras, eventos históricos, términos gramaticales, habilidades, tipos de texto, procedimientos y ejemplos. Incluye conceptos pequeños si son académicamente útiles. En páginas de temario/checklist, la cantidad de entradas debe cubrir los renglones independientes visibles; en páginas narrativas, extrae los conceptos útiles sin rellenar cuotas. Prioriza los conceptos que ayuden a explicar, organizar rutas y diseñar ejercicios.",
+      "LISTA PARA VALIDACIÓN: si el bloque contiene un checklist, tabla o temario, devuelve también checklist_items con una entrada literal por cada renglón independiente identificado. No resumas dos filas en una sola entrada. Este campo es obligatorio si detectas renglones de contenido. Mantén los encabezados como parent_concept y conserva evidence_pages. El servidor contrastará tu lista con los renglones detectados en el texto fuente y añadirá cualquier fila que hayas omitido.",
+
       "EVIDENCIA: cada concepto debe tener una o más páginas reales del bloque y una descripción breve de lo que allí se menciona. Usa solo números incluidos en el bloque. Si no puedes identificar una página, no inventes el número.",
       "JERARQUÍA: parent_concept debe ser la unidad o familia que agrupa el concepto (por ejemplo, 'Cinemática', 'Ecuaciones', 'Estructura celular', 'Argumentación'). Mantén la misma familia cuando proceda en diferentes páginas/documentos.",
       "ALIAS: incluye solo sinónimos o variantes equivalentes de verdad. No agregues conceptos asociados pero distintos como alias.",
@@ -301,7 +377,7 @@ export async function generateOrbyKnowledgeProfile(
       throw new Error("El perfil del bloque " + (batchIndex + 1) + " no contiene un resumen válido.");
     }
 
-    const concepts = Array.isArray(parsed.concepts) ? parsed.concepts.slice(0, 100).flatMap((raw) => {
+    const concepts = Array.isArray(parsed.concepts) ? parsed.concepts.slice(0, 160).flatMap((raw) => {
       const value = asRecord(raw);
       if (!value || typeof value.name !== "string" || value.name.trim().length < 2) return [];
       const pages = Array.isArray(value.evidence_pages)
@@ -334,11 +410,64 @@ export async function generateOrbyKnowledgeProfile(
       }];
     }) : [];
 
+    const checklistRows = extractChecklistRows(batch);
+    const modelChecklistItems = Array.isArray(parsed.checklist_items)
+      ? parsed.checklist_items.flatMap((raw) => {
+          const value = asRecord(raw);
+          if (!value || typeof value.name !== "string" || value.name.trim().length < 5) return [];
+          const requestedPages = Array.isArray(value.evidence_pages)
+            ? value.evidence_pages.filter((page): page is number => Number.isInteger(page) && allowedPages.has(page))
+            : [];
+          return [{
+            name: value.name.trim().slice(0, 180),
+            parent_concept: typeof value.parent_concept === "string" ? value.parent_concept.trim().slice(0, 180) : "",
+            evidence_pages: requestedPages,
+            evidence: typeof value.evidence === "string" ? value.evidence.trim().slice(0, 700) : "",
+          }];
+        })
+      : [];
+
+    // Source-derived rows are authoritative for coverage. The model may add
+    // deeper child concepts, but it cannot silently drop an independent row.
+    const conceptsByName = new Map(concepts.map((concept) => [
+      normalizedConceptKey(concept.name),
+      concept,
+    ]));
+    for (const row of checklistRows) {
+      const key = normalizedConceptKey(row.name);
+      if (conceptsByName.has(key)) continue;
+      conceptsByName.set(key, {
+        name: row.name,
+        area: /qu[ií]mica/i.test(pageText) ? "Química" : "Transversal",
+        parent_concept: row.parent_concept,
+        aliases: [],
+        evidence_pages: [row.page],
+        confidence: 1,
+        importance: 4,
+        evidence: "Renglón de contenido identificado directamente en la tabla o checklist de la página " + row.page + ": " + row.name,
+      });
+    }
+
+    // A model-created checklist item is accepted only when its label matches
+    // a source row, so the model cannot manufacture additional checklist rows.
+    for (const item of modelChecklistItems) {
+      const key = normalizedConceptKey(item.name);
+      const sourceRow = checklistRows.find((row) => normalizedConceptKey(row.name) === key);
+      if (!sourceRow) continue;
+      const existing = conceptsByName.get(key);
+      if (existing) {
+        existing.evidence_pages = [...new Set([...existing.evidence_pages, ...item.evidence_pages, sourceRow.page])];
+        if (item.evidence && !existing.evidence.includes(item.evidence)) {
+          existing.evidence = (existing.evidence + " " + item.evidence).slice(0, 1000);
+        }
+      }
+    }
+
     return {
       summary: parsedSummary.slice(0, 1200),
       areas: cleanStringArray(parsed.areas, 12, 80),
       topics: cleanStringArray(parsed.topics, 100, 180),
-      concepts,
+      concepts: [...conceptsByName.values()],
       competencies,
       study_strategies: cleanStringArray(parsed.study_strategies, 30, 300),
       gaps_observed: cleanStringArray(parsed.gaps_observed, 20, 300),

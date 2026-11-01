@@ -175,6 +175,7 @@ async function upsertDerivedPageChunks(
       chunk_index: item.chunk_index,
       page_number: item.page_number,
       content: item.content,
+      content_origin: item.content_origin,
     })),
   ].sort((a, b) => a.chunk_index - b.chunk_index);
 }

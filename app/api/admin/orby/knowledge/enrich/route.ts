@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   let query = supabaseAdmin.from("orby_knowledge_documents")
     .select("id,title,chunk_count,embedded_chunk_count,knowledge_profile_status")
     .order("created_at", { ascending: false })
-    .limit(documentId ? 1 : 20);
+    .limit(documentId ? 1 : 100);
 
   if (documentId) query = query.eq("id", documentId);
 

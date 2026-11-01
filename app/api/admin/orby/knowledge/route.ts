@@ -230,10 +230,10 @@ export async function PATCH(request: Request) {
     return jsonError("La solicitud de publicación no es válida.", 400);
   }
   const { data: existing, error: lookupError } = await supabaseAdmin.from("orby_knowledge_documents")
-    .select("id,chunk_count,embedded_chunk_count,knowledge_profile_status,knowledge_profile_version,knowledge_pipeline_version,concept_count").eq("id", id).maybeSingle();
+    .select("id,chunk_count,embedded_chunk_count,knowledge_profile_status,knowledge_profile_version,knowledge_pipeline_version,concept_count,ingestion_status,coverage_percent,visual_pages_total,visual_pages_reviewed").eq("id", id).maybeSingle();
   if (lookupError || !existing) return jsonError("No se encontró el documento.", 404);
   if (status === "published" && !isOrbyKnowledgePublicationReady(existing)) {
-    return jsonError("No se puede publicar todavía. Completa el perfil académico v2, el motor v3, todos los embeddings y al menos un concepto indexado antes de publicar el material para estudiantes.", 409);
+    return jsonError("No se puede publicar todavía. Completa la lectura multimodal v4, todos los embeddings, el perfil pedagógico, al menos un concepto y un 95% de cobertura visual antes de publicar el material para estudiantes.", 409);
   }
   const { data, error } = await supabaseAdmin.from("orby_knowledge_documents").update({
     status, updated_at: new Date().toISOString(),

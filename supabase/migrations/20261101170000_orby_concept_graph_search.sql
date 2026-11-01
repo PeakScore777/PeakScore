@@ -113,10 +113,15 @@ as $$
       + (r.exact_match * 2.0)
       + (greatest(1, least(5, r.importance)) * 0.04)
       + (greatest(0, least(1, r.confidence)) * 0.03)
+      + case
+          when p_subject is not null and p_subject <> ''
+            and lower(coalesce(e.subject,'')) like '%' || lower(p_subject) || '%'
+            then 0.18
+          else 0
+        end
     )::real
   from ranked r
   join eligible e on e.id = r.document_id
-  where p_subject is null or p_subject = '' or e.subject = p_subject
   order by 13 desc, e.title asc, r.concept_name asc
   limit greatest(1, least(coalesce(p_limit, 24), 60));
 $$;

@@ -949,6 +949,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             found: result.found === true,
             subject: typeof result.subject === "string" ? result.subject : requestedSubject,
             excerpts: Array.isArray(result.excerpts) ? result.excerpts.slice(0, 6) : [],
+            concepts: Array.isArray(result.concepts) ? result.concepts.slice(0, 24) : [],
             profiles: Array.isArray(result.profiles) ? result.profiles.slice(0, 4) : [],
             related: Array.isArray(result.related) ? result.related.slice(0, 3) : [],
             guidance: typeof result.guidance === "string" ? result.guidance.slice(0, 700) : "",

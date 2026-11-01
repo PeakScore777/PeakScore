@@ -84,10 +84,13 @@ export function extractOrbyChecklistRows(
         continue;
       }
 
-      const bracketHeading = line.match(/^(.+?)\s+\[([^\]]+)\]$/);
+      // Only module/area headings should change the current section.
+      // Numbered content such as "Operaciones con vectores [gráfico]" is a
+      // syllabus row, not a heading.
+      const bracketHeading = line.match(/^(?:Matemáticas(?:\s+\d+(?:\s+y\s+\d+)?)?|Física(?:\s+\d+(?:\s+y\s+\d+)?)?|Biología(?:\s+\d+)?|Química(?:\s+\d+(?:\s+y\s+\d+)?)?|Sociales(?:\s+\d+)?|Imagen(?:\s+\d+)?|Análisis\s+Textual|Análisis\s+de\s+la\s+Imagen)\s+\[([^\]]+)\]$/i);
       if (bracketHeading) {
         addPending();
-        const prefix = bracketHeading[1].trim();
+        const prefix = line.slice(0, line.indexOf("[")).trim();
         currentArea = detectAcademicArea(prefix) ?? currentArea;
         currentParent = line.slice(0, 180);
         continue;
@@ -108,7 +111,17 @@ export function extractOrbyChecklistRows(
         continue;
       }
 
-      const numbered = line.match(/^\s*(?:\d+[.)])\s*(.+)$/);
+      // Some PDF extractors return "1." and its label as separate lines.
+      // Keep the page/number context until the label arrives.
+      const standaloneNumber = line.match(/^\s*\d+[.)]\s*$/);
+      if (standaloneNumber) {
+        addPending();
+        pending = { name: "", page: chunk.page_number };
+        pendingPage = chunk.page_number;
+        continue;
+      }
+
+      const numbered = line.match(/^\s*\d+[.)]\s*(.+)$/);
       const bulleted = line.match(/^\s*[•●▪◦*–—-]\s*(.+)$/);
       const item = numbered ?? bulleted;
 
@@ -121,6 +134,12 @@ export function extractOrbyChecklistRows(
 
       if (/^(?:p[aá]gina\s+\d+|check\s*list|contenidos?|temas|subtemas|área|asignatura|estado)$/i.test(line)) {
         addPending();
+        continue;
+      }
+
+      // If the list marker was detached from its text, this is its label.
+      if (pending && !pending.name) {
+        pending.name = line;
         continue;
       }
 

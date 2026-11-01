@@ -506,8 +506,6 @@ export async function generateOrbyKnowledgeProfileBatch(
       keywords: cleanStringArray(parsed.keywords, 60, 100),
       search_text: typeof parsed.search_text === "string" ? parsed.search_text.slice(0, 8000) : "",
     };
-  });
-
 }
 
 /** Merge persisted batch results only after every batch is complete. */
@@ -571,8 +569,6 @@ export function combineOrbyKnowledgeProfileBatches(
     keywords,
     search_text: searchText.slice(0, 20000),
   };
-}
-
 }
 
 export async function generateOrbyKnowledgeProfile(

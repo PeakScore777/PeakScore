@@ -18,6 +18,7 @@ async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = 
 
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
 const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServerOnly: true });
+const publication = await loadTypeScriptModule("../lib/ai/orby-publication.ts");
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {
   const prompts = [
@@ -68,4 +69,25 @@ test("el filtro de salida no marca una explicación de velocidad terminal como p
 
 test("mantiene el rechazo de solicitudes claramente ajenas a Saber 11", () => {
   assert.equal(filter.preflightOrbyRequest("Dame una receta para hornear pan.").category, "outside");
+});
+
+test("solo permite publicar cuando el perfil v2 y todos los embeddings están listos", () => {
+  assert.equal(publication.isOrbyKnowledgePublicationReady({
+    chunk_count: 8,
+    embedded_chunk_count: 8,
+    knowledge_profile_status: "ready",
+    knowledge_profile_version: 2,
+  }), true);
+
+  const blockedStates = [
+    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "pending", knowledge_profile_version: 2 },
+    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "failed", knowledge_profile_version: 2 },
+    { chunk_count: 8, embedded_chunk_count: 7, knowledge_profile_status: "ready", knowledge_profile_version: 2 },
+    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 1 },
+    { chunk_count: 0, embedded_chunk_count: 0, knowledge_profile_status: "ready", knowledge_profile_version: 2 },
+  ];
+
+  for (const state of blockedStates) {
+    assert.equal(publication.isOrbyKnowledgePublicationReady(state), false, JSON.stringify(state));
+  }
 });

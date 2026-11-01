@@ -106,6 +106,8 @@ export async function GET() {
       problem_summary: string;
       candidate_option: string | null;
       answer_basis: string;
+      answer_key_comparison: string;
+      reasoning_steps: string[];
       confidence: number;
       evidence_pages: number[];
     }>();

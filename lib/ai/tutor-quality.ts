@@ -344,23 +344,25 @@ export async function verifyOrbyKnowledgeAnswer(args: {
     };
   }
 
-  const evidenceContext = args.evidence.slice(0, 16).map((item) => [
+  const evidenceContext = args.evidence.slice(0, 64).map((item) => [
     "[" + item.id + "] " + item.title + " | " + item.subject + " | " + item.topic + " | página " + item.page,
-    item.content.slice(0, 1700),
+    item.content.slice(0, 1400),
   ].join("\\n")).join("\\n\\n");
 
   const markers = resolveKnowledgeEvidenceMarkers(args.candidate, args.evidence);
+  const requiresCitations = /\\b(compara|comparar|coincidencias|diferencias|fuentes|p[aá]ginas|documentos|materiales|biblioteca|seg[uú]n el material|qu[eé] documento)\\b/i.test(args.question);
+  const missingRequiredCitations = requiresCitations && markers.used.length === 0;
   const prompt = [
     "Revisa la calidad de este análisis académico para el laboratorio privado de Orby.",
     "Separa los hechos que se atribuyen a documentos de las explicaciones académicas generales y de las propuestas pedagógicas originales.",
-    "Las afirmaciones atribuidas a documentos deben coincidir con los fragmentos, sus títulos y páginas. Verifica también los recuentos de documentos, coincidencias, diferencias y vacíos.",
+    "Las afirmaciones atribuidas a documentos deben coincidir con los fragmentos, sus títulos y páginas. Verifica también los recuentos de documentos, coincidencias, diferencias y vacíos. En comparaciones, resúmenes de biblioteca y solicitudes de evidencia, utiliza marcadores [E001], [E002] junto a las afirmaciones documentales; cada marcador debe existir en las fuentes que recibiste.",
     "No exijas que una ruta de estudio, ejemplo nuevo, ejercicio original o actividad pedagógica aparezca literalmente en los documentos. Conserva esas propuestas cuando sean coherentes y estén claramente presentadas como propuestas de enseñanza.",
     "No infieras autoría común, dependencia entre documentos, oficialidad ni vigencia del examen por una mera coincidencia temática.",
     "Si hay una afirmación factual incorrecta o no respaldada, corrígela o limita su alcance. Mantén el valor educativo y no sustituyas una propuesta útil por una negativa genérica.",
     "Responde solo con un objeto JSON con verdict (pass, revise o uncertain), corrected_reply (respuesta completa si hay correcciones) y issue_code (texto breve). No incluyas análisis privado.",
     "Solicitud original: " + args.question.slice(0, 3500),
     "Respuesta candidata:\\n" + args.candidate.slice(0, 11000),
-    "Marcadores de evidencia usados y marcadores inexistentes: " + JSON.stringify({ used: markers.used, invalid: markers.invalid }),
+    "Marcadores de evidencia usados, inexistentes y requeridos: " + JSON.stringify({ used: markers.used, invalid: markers.invalid, missingRequiredCitations }),
     "Fragmentos disponibles:\\n" + evidenceContext,
   ].join("\\n\\n");
 
@@ -375,7 +377,7 @@ export async function verifyOrbyKnowledgeAnswer(args: {
     });
   }
 
-  if (first?.verdict === "pass" && markers.invalid.length === 0) {
+  if (first?.verdict === "pass" && markers.invalid.length === 0 && !missingRequiredCitations) {
     return { reply: markers.reply, status: "passed" };
   }
 
@@ -393,7 +395,7 @@ export async function verifyOrbyKnowledgeAnswer(args: {
       const second = parseKnowledgeReview(extractText(result));
       if (second?.verdict === "pass") {
         const resolved = resolveKnowledgeEvidenceMarkers(first.corrected_reply, args.evidence);
-        if (!resolved.invalid.length) {
+        if (!resolved.invalid.length && (!missingRequiredCitations || resolved.used.length > 0)) {
           return {
             reply: resolved.reply,
             status: "corrected",

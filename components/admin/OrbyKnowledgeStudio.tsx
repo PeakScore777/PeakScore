@@ -425,7 +425,7 @@ export default function OrbyKnowledgeStudio() {
               </div>
               <span className={automation?.settings.enabled ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300" : "rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] font-bold text-slate-400"}>{automation?.settings.enabled ? "MOTOR ACTIVO" : "MOTOR PAUSADO"}</span>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">En cola</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.queued ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Procesando</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.running ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Reintentos</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.retrying ?? "—"}</p></div>

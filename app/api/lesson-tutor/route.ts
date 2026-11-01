@@ -216,9 +216,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: identityReply, checkQuestion: "", verification: "not_required", sources: [] });
     }
 
-    const preflight = preflightOrbyRequest([userMessage, question, context].filter(Boolean).join(" "));
+    const currentRequestContext = [subject, topic, userMessage, question, context].filter(Boolean).join(" ");
+    const preflight = preflightOrbyRequest(currentRequestContext);
     const legacyOutOfScope = preflight.allowed
-      ? classifyOutOfScopeRequest([userMessage, question].filter(Boolean).join(" "))
+      ? classifyOutOfScopeRequest([subject, topic, userMessage, question].filter(Boolean).join(" "))
       : null;
     if (!preflight.allowed || legacyOutOfScope) {
       if (preflight.category === "prompt_injection") {

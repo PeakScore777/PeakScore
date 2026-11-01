@@ -1996,7 +1996,7 @@ export function getProviderForTask(
 ): AIProvider {
   // LLM7 is only enabled when both credentials and a model explicitly
   // selected by the project owner are present. Never guess a model name.
-  if (task === "tutor" && process.env.LLM7_API_KEY && process.env.LLM7_MODEL?.trim()) {
+  if (task === "tutor" && process.env.LLM7_ENABLED === "true" && process.env.LLM7_API_KEY && process.env.LLM7_MODEL?.trim()) {
     return "llm7";
   }
 
@@ -2068,7 +2068,7 @@ function buildProviderChain(
     // LLM7 returned HTTP 400 for the implicit Nemotron default in production.
     // Keep it out of every fallback chain unless the model is explicitly set.
     if (candidate === "llm7") {
-      return Boolean(process.env.LLM7_API_KEY && process.env.LLM7_MODEL?.trim());
+      return Boolean(process.env.LLM7_ENABLED === "true" && process.env.LLM7_API_KEY && process.env.LLM7_MODEL?.trim());
     }
     return true;
   });

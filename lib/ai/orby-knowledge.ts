@@ -899,7 +899,7 @@ export function combineOrbyKnowledgePageBatches(
   for (const category of keys) {
     const unique = new Map<string, Record<string, unknown>>();
     for (const item of batchProfiles.flatMap((batch) => batch.pedagogical_knowledge[category] ?? [])) {
-      const fields = ["area","concept","topic","goal","name","archetype","stimulus_type","task","misconception","pattern","element_type","item_number","source_type"];
+      const fields = ["area","concept","topic","goal","name","archetype","stimulus_type","task","misconception","pattern","element_type","item_number","source_type","question_number","skill","problem_summary"];
       const identity = fields.map((field) => {
         const value = item[field];
         return typeof value === "string" || typeof value === "number" ? String(value) : "";

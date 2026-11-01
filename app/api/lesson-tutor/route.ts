@@ -26,8 +26,15 @@ function redactPrivateKnowledgeTitles(
   for (const source of sources) {
     const title = typeof source.title === "string" ? source.title.trim() : "";
     if (title.length >= 12) candidates.add(title);
+    const startsWithNumber = /^\s*\d+[\s._:-]+/.test(title);
     const withoutNumber = title.replace(/^\s*\d+[\s._:-]+/, "").trim();
     if (withoutNumber.length >= 12) candidates.add(withoutNumber);
+    // Also redact a meaningful subtitle after a numbered filename prefix (for example, "Clases con Juan").
+    if (startsWithNumber) {
+      const words = withoutNumber.split(/\s+/);
+      const subtitle = words.slice(1).join(" ").trim();
+      if (subtitle.length >= 12) candidates.add(subtitle);
+    }
   }
   for (const title of candidates) {
     const needle = title.toLocaleLowerCase("es-CO");

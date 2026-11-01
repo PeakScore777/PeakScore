@@ -1400,16 +1400,18 @@ async function generateWithGroq(
               // Solo la generación individual de preguntas utiliza este esquema.
               // Aplicarlo al tutor provocaba que el fallback devolviera un objeto
               // de preguntas en vez de { reply, checkQuestion }.
-              response_format: task === "question_generation"
-                ? {
-                    type: "json_schema",
-                    json_schema: {
-                      name: "peakscore_questions",
-                      strict: true,
-                      schema: GROQ_QUESTION_SCHEMA,
-                    },
-                  }
-                : { type: "json_object" },
+              ...(task === "tutor" ? {} : {
+                response_format: task === "question_generation"
+                  ? {
+                      type: "json_schema",
+                      json_schema: {
+                        name: "peakscore_questions",
+                        strict: true,
+                        schema: GROQ_QUESTION_SCHEMA,
+                      },
+                    }
+                  : { type: "json_object" },
+              }),
             }),
           }
         );

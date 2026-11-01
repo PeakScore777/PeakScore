@@ -23,6 +23,11 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
 }
 
+async function removePrivateUpload(path: string) {
+  const { error } = await supabaseAdmin.storage.from(BUCKET).remove([path]);
+  if (error) console.warn("[Orby Knowledge] Could not clean rejected upload.", { code: error.name });
+}
+
 async function getAdmin() {
   const owner = await getOrbyOwner();
   return { user: owner?.user ?? null };
@@ -78,6 +83,7 @@ export async function POST(request: Request) {
     return jsonError("No se encontró el PDF subido. Vuelve a cargarlo e inténtalo de nuevo.", 404);
   }
   if (file.size < 8 || file.size > MAX_PDF_BYTES) {
+    await removePrivateUpload(storagePath);
     return jsonError("El PDF debe pesar entre 1 byte y 20 MB.", 413);
   }
 
@@ -104,9 +110,11 @@ export async function POST(request: Request) {
       name: error instanceof Error ? error.name : "Unknown",
       message: error instanceof Error ? error.message.slice(0, 250) : "unknown",
     });
+    await removePrivateUpload(storagePath);
     return jsonError("No se pudo leer este PDF. Comprueba que no esté dañado, protegido o escaneado.", 422);
   }
   if (!extracted.hasExtractableText) {
+    await removePrivateUpload(storagePath);
     return jsonError("El PDF parece escaneado o no contiene texto seleccionable. Convierte el documento a PDF con texto antes de cargarlo.", 422);
   }
 
@@ -115,11 +123,15 @@ export async function POST(request: Request) {
     for (const content of splitOrbyText(page.text, MAX_CHUNK_CHARS)) {
       if (content.length >= 40) drafts.push({ subject, topic, page_number: page.pageNumber, content });
       if (drafts.length > MAX_CHUNKS) {
+        await removePrivateUpload(storagePath);
         return jsonError("El documento supera el máximo de 300 fragmentos. Divide el material en archivos más pequeños.", 413);
       }
     }
   }
-  if (!drafts.length) return jsonError("No se pudo extraer suficiente texto útil del PDF.", 422);
+  if (!drafts.length) {
+    await removePrivateUpload(storagePath);
+    return jsonError("No se pudo extraer suficiente texto útil del PDF.", 422);
+  }
 
   const { data: document, error: documentError } = await supabaseAdmin.from("orby_knowledge_documents").insert({
     id: documentId,
@@ -143,6 +155,7 @@ export async function POST(request: Request) {
   const { error: chunkError } = await supabaseAdmin.from("orby_knowledge_chunks").insert(chunks);
   if (chunkError) {
     await supabaseAdmin.from("orby_knowledge_documents").delete().eq("id", documentId);
+    await removePrivateUpload(storagePath);
     console.error("[Orby Knowledge] Chunk indexing failed.", { code: chunkError.code });
     return jsonError("No se pudo indexar el contenido. El documento no se publicó.", 503);
   }

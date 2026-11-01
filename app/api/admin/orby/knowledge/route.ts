@@ -7,6 +7,7 @@ import type { IcfesSubject } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 300;
 
 const BUCKET = "orby-knowledge";
 const MAX_PDF_BYTES = 20 * 1024 * 1024;

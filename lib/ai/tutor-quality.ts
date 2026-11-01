@@ -301,9 +301,9 @@ function resolveKnowledgeEvidenceMarkers(
   evidence: OrbyKnowledgeEvidence[]
 ): { reply: string; invalid: string[]; used: string[] } {
   const byId = new Map(evidence.map((item) => [item.id, item]));
-  const used = [...new Set([...reply.matchAll(/\[(E\d{2,3})\]/g)].map((match) => match[1]))];
+  const used = [...new Set([...reply.matchAll(/\[(E\d{1,4})\]/g)].map((match) => match[1]))];
   const invalid = used.filter((id) => !byId.has(id));
-  const normalized = reply.replace(/\[(E\d{2,3})\]/g, (marker, id: string) => {
+  const normalized = reply.replace(/\[(E\d{1,4})\]/g, (marker, id: string) => {
     const source = byId.get(id);
     return source ? "[" + source.title + " · p. " + source.page + "]" : "";
   });

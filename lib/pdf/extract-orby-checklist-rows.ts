@@ -211,6 +211,11 @@ export function extractOrbyChecklistRows(
         continue;
       }
 
+      if (pending && !pending.name) {
+        pending.name = line;
+        continue;
+      }
+
       if (pending) {
         const startsLikeContinuation = /^[a-záéíóúñ(]/.test(line);
         const previousNeedsContinuation = /[-,:;(/[\]]$/.test(pending.name);

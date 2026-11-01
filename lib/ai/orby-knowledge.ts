@@ -737,3 +737,64 @@ export async function getOrbyRelatedKnowledge(
   }
   return Array.isArray(data) ? data : [];
 }
+
+
+export type OrbyKnowledgeConceptHit = {
+  document_id: string;
+  title: string;
+  subject: string;
+  topic: string;
+  concept_name: string;
+  area: string;
+  parent_concept: string;
+  aliases: string[];
+  evidence_pages: number[];
+  confidence: number;
+  importance: number;
+  evidence_summary: string;
+  rank: number;
+};
+
+export async function searchOrbyKnowledgeConcepts(options: {
+  query: string;
+  subject?: string | null;
+  visibility: "admin" | "published";
+  limit?: number;
+}): Promise<OrbyKnowledgeConceptHit[]> {
+  const query = options.query.trim().slice(0, 1200);
+  if (!query) return [];
+  const { data, error } = await supabaseAdmin.rpc("orby_search_knowledge_concepts", {
+    p_query: query,
+    p_subject: options.subject ?? null,
+    p_visibility: options.visibility,
+    p_limit: options.limit ?? 24,
+  });
+  if (error) {
+    console.error("[Orby Knowledge] Concept graph search failed.", { code: error.code });
+    return [];
+  }
+  if (!Array.isArray(data)) return [];
+  return data.flatMap((raw) => {
+    const value = asRecord(raw);
+    if (!value || typeof value.concept_name !== "string" || !value.concept_name.trim()) return [];
+    const pages = Array.isArray(value.evidence_pages)
+      ? [...new Set(value.evidence_pages.filter((page): page is number => Number.isInteger(page) && page > 0))].slice(0, 30)
+      : [];
+    if (!pages.length) return [];
+    return [{
+      document_id: String(value.document_id ?? ""),
+      title: String(value.title ?? ""),
+      subject: String(value.subject ?? "Transversal"),
+      topic: String(value.topic ?? ""),
+      concept_name: value.concept_name.trim().slice(0, 180),
+      area: String(value.area ?? "Transversal").slice(0, 80),
+      parent_concept: String(value.parent_concept ?? "").slice(0, 180),
+      aliases: cleanStringArray(value.aliases, 8, 100),
+      evidence_pages: pages,
+      confidence: Number.isFinite(Number(value.confidence)) ? Math.max(0, Math.min(1, Number(value.confidence))) : 0.65,
+      importance: Number.isFinite(Number(value.importance)) ? Math.max(1, Math.min(5, Math.round(Number(value.importance)))) : 3,
+      evidence_summary: String(value.evidence_summary ?? "").slice(0, 900),
+      rank: Number.isFinite(Number(value.rank)) ? Number(value.rank) : 0,
+    }];
+  });
+}

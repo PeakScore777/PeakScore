@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { extractPdfPages } from "@/lib/pdf/extractPdfPages";
+import { splitOrbyText } from "@/lib/pdf/split-orby-text";
 import { enrichOrbyKnowledgeDocument } from "@/lib/ai/orby-knowledge";
 import type { IcfesSubject } from "@/lib/ai/orby-scope";
 import { isOrbyKnowledgePublicationReady } from "@/lib/ai/orby-publication";
@@ -27,30 +28,6 @@ async function getAdmin() {
   return { user: owner?.user ?? null };
 }
 
-function splitText(text: string, maxChars: number): string[] {
-  const normalized = text.replace(/\r/g, "").replace(/[\t ]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
-  if (!normalized) return [];
-  const paragraphs = normalized.split(/\n\s*\n/).map((part) => part.trim()).filter(Boolean);
-  const chunks: string[] = [];
-  let current = "";
-  for (const paragraph of paragraphs) {
-    if (paragraph.length > maxChars) {
-      if (current) {
-        chunks.push(current);
-        current = "";
-      }
-      for (let i = 0; i < paragraph.length; i += maxChars) chunks.push(paragraph.slice(i, i + maxChars).trim());
-      continue;
-    }
-    const candidate = current ? current + "\n\n" + paragraph : paragraph;
-    if (candidate.length > maxChars && current) {
-      chunks.push(current);
-      current = paragraph;
-    } else current = candidate;
-  }
-  if (current) chunks.push(current);
-  return chunks;
-}
 
 export async function GET() {
   const { user } = await getAdmin();
@@ -103,7 +80,7 @@ export async function POST(request: Request) {
 
     const drafts: Omit<ChunkDraft, "chunk_index">[] = [];
     for (const page of extracted.pages) {
-      for (const content of splitText(page.text, MAX_CHUNK_CHARS)) {
+      for (const content of splitOrbyText(page.text, MAX_CHUNK_CHARS)) {
         if (content.length >= 40) drafts.push({ subject, topic, page_number: page.pageNumber, content });
         if (drafts.length > MAX_CHUNKS) return jsonError("El documento supera el máximo de 300 fragmentos. Divide el material en archivos más pequeños.", 413);
       }

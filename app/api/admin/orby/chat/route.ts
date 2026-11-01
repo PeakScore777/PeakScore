@@ -129,8 +129,8 @@ export async function POST(request: Request) {
   type KnowledgeReference = { document_id:string; title:string; subject:string; topic:string; page_number:number; content:string; rank:number };
   let references: KnowledgeReference[] = [];
 
-  const isWholeLibraryRequest = /\\b(compara|comparar|todos los documentos|los cuatro documentos|toda la biblioteca|biblioteca completa|materiales publicados|todos los materiales|relaciona los documentos|contrasta los materiales)\\b/i.test(message);
-  const needsSourceReview = /\\b(compara|comparar|analiza|analizar|resumen|resume|coincidencias|diferencias|vac[ií]os|fuentes|p[aá]ginas|documentos|materiales|biblioteca|competencias|temas|contradicciones|ruta de estudio|plan de estudio)\\b/i.test(message);
+  const isWholeLibraryRequest = /\b(compara|comparar|todos los documentos|los cuatro documentos|toda la biblioteca|biblioteca completa|materiales publicados|todos los materiales|relaciona los documentos|contrasta los materiales)\b/i.test(message);
+  const needsSourceReview = /\b(compara|comparar|analiza|analizar|resumen|resume|coincidencias|diferencias|vac[ií]os|fuentes|p[aá]ginas|documentos|materiales|biblioteca|competencias|temas|contradicciones|ruta de estudio|plan de estudio)\b/i.test(message);
 
   // Resolve conversational references to the newest PDF instead of searching the phrase itself.
   if (latestUploadIntent) {
@@ -189,36 +189,47 @@ export async function POST(request: Request) {
       .select("id,title,subject,topic")
       .in("status", ["draft", "published"])
       .order("created_at", { ascending: false })
-      .limit(30);
+      .limit(100);
     if (libraryError) {
       console.error("[Orby Admin Chat] Full library lookup failed.", { code: libraryError.code });
       return jsonError("No se pudo consultar la biblioteca completa.", 503);
     }
 
-    const chunkResults = await Promise.all((libraryDocuments ?? []).map(async (document) => {
-      const { data: chunks, error } = await supabaseAdmin
-        .from("orby_knowledge_chunks")
-        .select("page_number,chunk_index,content")
-        .eq("document_id", document.id)
-        .order("page_number", { ascending: true })
-        .order("chunk_index", { ascending: true })
-        .limit(300);
-      if (error) throw new Error("full_library_chunks_" + error.code);
-      return (chunks ?? []).map((chunk) => ({
-        document_id: document.id,
-        title: document.title,
-        subject: document.subject,
-        topic: document.topic,
-        page_number: chunk.page_number,
-        content: chunk.content,
-        rank: 1,
+    if (!(libraryDocuments ?? []).length) {
+      return jsonError("La biblioteca no contiene documentos disponibles para comparar.", 409);
+    }
+    if ((libraryDocuments ?? []).length >= 100) {
+      return jsonError("La biblioteca supera el límite de comparación completa en una sola solicitud. Reduce la comparación a un grupo de documentos.", 413);
+    }
+
+    let chunkResults: KnowledgeReference[][];
+    try {
+      chunkResults = await Promise.all((libraryDocuments ?? []).map(async (document) => {
+        const { data: chunks, error } = await supabaseAdmin
+          .from("orby_knowledge_chunks")
+          .select("page_number,chunk_index,content")
+          .eq("document_id", document.id)
+          .order("page_number", { ascending: true })
+          .order("chunk_index", { ascending: true })
+          .limit(300);
+        if (error) throw new Error("full_library_chunks_" + error.code);
+        if (!chunks?.length) throw new Error("document_without_searchable_chunks");
+        return chunks.map((chunk) => ({
+          document_id: document.id,
+          title: document.title,
+          subject: document.subject,
+          topic: document.topic,
+          page_number: chunk.page_number,
+          content: chunk.content,
+          rank: 1,
+        }));
       }));
-    }).map((promise) => promise.catch((error) => {
+    } catch (error) {
       console.error("[Orby Admin Chat] Full library document read failed.", {
         name: error instanceof Error ? error.name : "UnknownError",
       });
-      return [] as KnowledgeReference[];
-    })));
+      return jsonError("No se pudo leer el contenido de todos los documentos. No haré una comparación incompleta; inténtalo nuevamente.", 503);
+    }
     references = chunkResults.flat();
   }
 

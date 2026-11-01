@@ -751,32 +751,19 @@ export async function generateOrbyKnowledgePageBatch(
   ].join("\n\n");
 
   const client = getEmbeddingClient();
-  let parsed: Record<string, unknown> | null = null;
-  let lastError = "Gemini no devolvió un perfil académico válido.";
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const response = await client.models.generateContent({
-        model: process.env.ORBY_KNOWLEDGE_PROFILE_MODEL || "gemini-3.1-flash-lite",
-        contents: [
-          { fileData: { fileUri: pdfFileUri, mimeType: "application/pdf" } },
-          { text: prompt },
-        ],
-        config: { responseMimeType: "application/json", temperature: 0.2, maxOutputTokens: 8192 },
-      });
-      const raw = typeof response.text === "string" ? response.text : "";
-      const candidate = parseJsonObject(raw);
-      if (typeof candidate.summary === "string" && candidate.summary.trim().length >= 8) {
-        parsed = candidate;
-        break;
-      }
-      lastError = "Gemini devolvió un JSON incompleto o sin resumen.";
-    } catch (error) {
-      lastError = error instanceof Error ? error.message.slice(0, 350) : "Error multimodal desconocido.";
-      console.warn("[Orby Knowledge] Multimodal page batch failed.", { batch: batchIndex + 1, totalBatches, attempt, reason: lastError });
-    }
-    if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+  const response = await client.models.generateContent({
+    model: process.env.ORBY_KNOWLEDGE_PROFILE_MODEL || "gemini-3.1-flash-lite",
+    contents: [
+      { fileData: { fileUri: pdfFileUri, mimeType: "application/pdf" } },
+      { text: prompt },
+    ],
+    config: { responseMimeType: "application/json", temperature: 0.2, maxOutputTokens: 8192 },
+  });
+  const raw = typeof response.text === "string" ? response.text : "";
+  const parsed = parseJsonObject(raw);
+  if (typeof parsed.summary !== "string" || parsed.summary.trim().length < 8) {
+    throw new Error("Gemini devolvió un perfil visual incompleto o sin resumen. El ciclo quedó disponible para reintento.");
   }
-  if (!parsed) throw new Error("Lote visual " + (batchIndex + 1) + "/" + totalBatches + ": " + lastError);
 
   const concepts = Array.isArray(parsed.concepts) ? parsed.concepts.slice(0, 180).flatMap((raw) => {
     const item = asRecord(raw);
@@ -865,7 +852,7 @@ export async function generateOrbyKnowledgePageBatch(
 
 export function combineOrbyKnowledgePageBatches(
   batchProfiles: OrbyKnowledgePageBatchProfile[]
-): OrbyKnowledgeProfile {
+): OrbyKnowledgeProfile & { page_results: OrbyKnowledgePageResult[] } {
   const base = combineOrbyKnowledgeProfileBatches(batchProfiles);
   const keys = Object.keys(EMPTY_ORBY_PEDAGOGICAL_KNOWLEDGE) as Array<keyof OrbyPedagogicalKnowledge>;
   const pedagogical = { ...EMPTY_ORBY_PEDAGOGICAL_KNOWLEDGE };
@@ -894,7 +881,18 @@ export function combineOrbyKnowledgePageBatches(
     pedagogical[category] = [...unique.values()].slice(0, 800);
   }
 
-  return { ...base, pedagogical_knowledge: pedagogical };
+  const latestPageResults = new Map<number, OrbyKnowledgePageResult>();
+  for (const batch of batchProfiles) {
+    for (const page of batch.page_results ?? []) {
+      latestPageResults.set(page.page_number, page);
+    }
+  }
+
+  return {
+    ...base,
+    pedagogical_knowledge: pedagogical,
+    page_results: [...latestPageResults.values()].sort((a, b) => a.page_number - b.page_number),
+  };
 }
 
 export async function generateOrbyKnowledgeProfile(

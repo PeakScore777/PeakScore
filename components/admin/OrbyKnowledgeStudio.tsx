@@ -44,6 +44,7 @@ function publicationBlockReason(document: KnowledgeDocument): string | null {
   if (document.knowledge_profile_status !== "ready") return "El perfil académico todavía no terminó o necesita reintento.";
   if (document.knowledge_profile_version < 2) return "Falta completar el perfil académico v2.";
   if (document.knowledge_pipeline_version < 3) return "Falta finalizar y validar el motor de conocimiento v3.";
+  if (document.concept_count < 1) return "El perfil todavía no tiene conceptos académicos indexados.";
   return null;
 }
 

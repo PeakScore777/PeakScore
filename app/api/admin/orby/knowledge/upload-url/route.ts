@@ -52,7 +52,10 @@ export async function POST(request: Request) {
       return jsonError("El endpoint privado de almacenamiento no es válido.", 503);
     }
     const projectRef = projectUrl.hostname.split(".")[0];
-    tusEndpoint = "https://" + projectRef + ".storage.supabase.co/storage/v1/upload/resumable";
+    // Signed TUS uploads must use Supabase Storage's dedicated /sign route.
+    // The regular /upload/resumable route ignores x-signature and evaluates the
+    // anonymous role against storage.objects RLS, causing HTTP 403.
+    tusEndpoint = "https://" + projectRef + ".storage.supabase.co/storage/v1/upload/resumable/sign";
   } catch {
     return jsonError("No se pudo preparar el endpoint de carga.", 503);
   }

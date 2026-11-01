@@ -13,7 +13,7 @@ const supabaseStorageOrigin = (() => {
 
   try {
     const hostname = new URL(configuredUrl).hostname;
-    const projectRef = hostname.match(/^([a-z0-9-]+)\\.supabase\\.co$/i)?.[1];
+    const projectRef = hostname.match(/^([a-z0-9-]+)\.supabase\.co$/i)?.[1];
     return projectRef ? `https://${projectRef}.storage.supabase.co` : "";
   } catch {
     return "";

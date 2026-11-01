@@ -7,16 +7,23 @@ import { ArrowLeft, BookOpen, Bot, Check, LoaderCircle, MessageSquare, Plus, Sen
 type KnowledgeDocument = {
   id: string; title: string; original_name: string; subject: string; topic: string;
   page_count: number; chunk_count: number; status: "draft" | "published" | "archived"; created_at: string;
-  embedded_chunk_count: number; knowledge_profile_status: "pending" | "ready" | "failed"; knowledge_profile_version: number; concept_count: number;
+  embedded_chunk_count: number; knowledge_profile_status: "pending" | "ready" | "failed"; knowledge_profile_version: number; knowledge_pipeline_version: number; concept_count: number;
 };
 type Source = { documentId: string; title: string; subject: string; topic: string; page: number };
 type ChatMessage = { id?: string; role: "user" | "assistant"; content: string; sources?: Source[]; verification?: "not_required" | "passed" | "corrected" | "unverified"; created_at?: string };
+type AutomationStatus = {
+  settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null };
+  configured: boolean;
+  counts: { queued: number; running: number; retrying: number; failed: number; completed: number };
+  recent: Array<{ id: string; document_id: string; status: string; stage: string; next_batch_index: number; total_batches: number; attempt_count: number; last_error: string | null; updated_at: string }>;
+};
 
 function isReadyForPublication(document: KnowledgeDocument): boolean {
   return document.chunk_count > 0
     && document.embedded_chunk_count >= document.chunk_count
     && document.knowledge_profile_status === "ready"
-    && document.knowledge_profile_version >= 2;
+    && document.knowledge_profile_version >= 2
+    && document.knowledge_pipeline_version >= 3;
 }
 
 function formatAdminReply(content: string): string {
@@ -84,23 +91,28 @@ export default function OrbyKnowledgeStudio() {
   const [enrichingDocument,setEnrichingDocument] = useState<string|null>(null);
   const [error,setError] = useState("");
   const [notice,setNotice] = useState("");
+  const [automation,setAutomation] = useState<AutomationStatus|null>(null);
+  const [changingAutomation,setChangingAutomation] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement|null>(null);
   const messagesContainerRef = useRef<HTMLDivElement|null>(null);
   const preserveScrollRef = useRef<{height:number;top:number}|null>(null);
 
   async function loadAll(isActive: () => boolean = () => true) {
-    const [docsResponse,chatResponse] = await Promise.all([
+    const [docsResponse,chatResponse,automationResponse] = await Promise.all([
       fetch("/api/admin/orby/knowledge",{credentials:"same-origin",cache:"no-store"}),
       fetch("/api/admin/orby/chat",{credentials:"same-origin",cache:"no-store"}),
+      fetch("/api/admin/orby/knowledge/automation",{credentials:"same-origin",cache:"no-store"}),
     ]);
     const docsPayload = await docsResponse.json().catch(()=>({}));
     const chatPayload = await chatResponse.json().catch(()=>({}));
+    const automationPayload = await automationResponse.json().catch(()=>({}));
     if(!docsResponse.ok) throw new Error(docsPayload.error||"No se pudo cargar la biblioteca.");
     if(!chatResponse.ok) throw new Error(chatPayload.error||"No se pudo cargar el chat privado.");
     if (!isActive()) return;
     setDocuments(Array.isArray(docsPayload.documents)?docsPayload.documents:[]);
     setMessages(Array.isArray(chatPayload.messages)?chatPayload.messages:[]);
     setHasOlderMessages(Boolean(chatPayload.hasMore));
+    if (automationResponse.ok) setAutomation(automationPayload as AutomationStatus);
   }
 
   useEffect(() => {
@@ -110,6 +122,51 @@ export default function OrbyKnowledgeStudio() {
     });
     return () => { cancelled = true; };
   }, []);
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      fetch("/api/admin/orby/knowledge/automation", { credentials: "same-origin", cache: "no-store" })
+        .then(async (response) => {
+          if (!response.ok) return null;
+          return response.json();
+        })
+        .then((payload) => {
+          if (payload) setAutomation(payload as AutomationStatus);
+        })
+        .catch(() => undefined);
+      fetch("/api/admin/orby/knowledge", { credentials: "same-origin", cache: "no-store" })
+        .then(async (response) => response.ok ? response.json() : null)
+        .then((payload) => {
+          if (payload && Array.isArray(payload.documents)) setDocuments(payload.documents);
+        })
+        .catch(() => undefined);
+    }, 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  async function toggleAutomation() {
+    if (!automation || changingAutomation) return;
+    setChangingAutomation(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/orby/knowledge/automation", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: !automation.settings.enabled }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo actualizar el motor automático.");
+      setAutomation((current) => current ? { ...current, settings: payload.settings } : current);
+      setNotice(payload.message || "Se actualizó el motor automático.");
+      await loadAll();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo actualizar el motor automático.");
+    } finally {
+      setChangingAutomation(false);
+    }
+  }
+
   useEffect(()=>{
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -189,28 +246,19 @@ export default function OrbyKnowledgeStudio() {
         body: JSON.stringify(doc ? { documentId: doc.id } : {}),
       });
       const payload = await response.json().catch(()=>({}));
-      if (!response.ok) throw new Error(payload.error || "No se pudo enriquecer el conocimiento.");
-      const successCount = Number(payload.succeeded ?? 0);
-      const failureCount = Number(payload.failed ?? 0);
-      const failures = Array.isArray(payload.results)
-        ? payload.results.filter((item: { success?: boolean }) => item?.success === false)
-        : [];
-      if (failureCount > 0) {
-        const details = failures.slice(0, 3).map((item: { title?: string; reason?: string }) =>
-          (item.title || "Documento") + ": " + (item.reason || "Enriquecimiento pendiente.")
-        );
-        setError(
-          "No se completó el perfil de " + failureCount + " documento(s). "
-          + (details.join(" ") || "Los documentos y sus vectores se conservaron.")
-        );
-        if (successCount > 0) setNotice("Perfiles actualizados correctamente: " + successCount + ". Los demás pueden reintentarse sin volver a subir los PDF.");
-      } else {
-        setNotice((payload.message || "Terminó el enriquecimiento de la biblioteca.")
-          + " Perfiles actualizados: " + successCount + ".");
+      if (!response.ok) throw new Error(payload.error || "No se pudo añadir el documento a la cola.");
+      if (Number(payload.failed ?? 0) > 0) {
+        const failures = Array.isArray(payload.results)
+          ? payload.results.filter((item: { success?: boolean }) => item?.success === false)
+          : [];
+        setError(failures.slice(0, 3).map((item: { title?: string; reason?: string }) =>
+          (item.title || "Documento") + ": " + (item.reason || "No se pudo programar.")
+        ).join(" "));
       }
+      setNotice(payload.message || "Tarea añadida a la cola de Orby.");
       await loadAll();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo enriquecer el documento.");
+      setError(e instanceof Error ? e.message : "No se pudo programar el documento.");
     } finally {
       setEnrichingDocument(null);
     }
@@ -282,10 +330,35 @@ export default function OrbyKnowledgeStudio() {
             </div>
             <button disabled={!file||uploading} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 text-xs font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-40">{uploading?<><LoaderCircle className="h-4 w-4 animate-spin"/> Analizando PDF…</>:<><Plus className="h-4 w-4"/> Cargar y analizar material</>}</button>
           </form>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-semibold">Biblioteca ({documents.length})</h3><span className="text-[10px] text-slate-500">Solo documentos publicados alimentan el chat estudiantil</span></div>{documents.some(doc=>doc.knowledge_profile_status!=="ready"||doc.knowledge_profile_version<2||doc.embedded_chunk_count<doc.chunk_count)&&<button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge()} className="inline-flex items-center gap-2 rounded-lg border border-orange-400/25 bg-orange-400/10 px-3 py-2 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument==="all"?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<Sparkles className="h-3.5 w-3.5"/>}{enrichingDocument==="all"?"Enriqueciendo biblioteca…":"Actualizar conocimiento v2"}</button>}</div>
+          <section className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[.18em] text-orange-400">03 / AUTONOMOUS KNOWLEDGE</p>
+                <h3 className="mt-1 text-sm font-semibold">Orby Autopilot</h3>
+                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">Cada minuto revisa la cola y avanza un lote pendiente. No vuelve a procesar documentos cuya versión y contenido ya están actualizados.</p>
+              </div>
+              <span className={automation?.settings.enabled ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300" : "rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] font-bold text-slate-400"}>{automation?.settings.enabled ? "MOTOR ACTIVO" : "MOTOR PAUSADO"}</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">En cola</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.queued ?? "—"}</p></div>
+              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Procesando</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.running ?? "—"}</p></div>
+              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Reintentos</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.retrying ?? "—"}</p></div>
+              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Con error</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.failed ?? "—"}</p></div>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[9px] text-slate-500">{automation?.settings.last_tick_at ? "Última revisión: " + new Date(automation.settings.last_tick_at).toLocaleString("es-CO") : "Aún no se registra una revisión automática."}</p>
+              <button type="button" disabled={!automation?.configured || changingAutomation} onClick={()=>void toggleAutomation()} className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-[10px] font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-35">
+                {changingAutomation && <LoaderCircle className="h-3.5 w-3.5 animate-spin"/>}
+                {automation?.settings.enabled ? "Pausar motor" : "Activar motor"}
+              </button>
+            </div>
+            {!automation?.configured && <p className="mt-2 text-[9px] text-amber-300">Falta configurar el secreto seguro del trabajador. El motor no se puede activar todavía.</p>}
+            {automation?.recent?.[0] && <p className="mt-2 truncate text-[9px] text-slate-500">Última tarea: {automation.recent[0].status} · {automation.recent[0].stage} · {automation.recent[0].next_batch_index}/{automation.recent[0].total_batches} lotes</p>}
+          </section>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-semibold">Biblioteca ({documents.length})</h3><span className="text-[10px] text-slate-500">Solo documentos publicados alimentan el chat estudiantil</span></div>{documents.some(doc=>doc.knowledge_profile_status!=="ready"||doc.knowledge_profile_version<2||doc.knowledge_pipeline_version<3||doc.embedded_chunk_count<doc.chunk_count)&&<button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge()} className="inline-flex items-center gap-2 rounded-lg border border-orange-400/25 bg-orange-400/10 px-3 py-2 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument==="all"?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<Sparkles className="h-3.5 w-3.5"/>}{enrichingDocument==="all"?"Añadiendo a la cola…":"Procesar pendientes"}</button>}</div>
           <div className="mt-3 space-y-2">
             {documents.map(doc=><article key={doc.id} className="rounded-xl border border-white/[.08] bg-black/15 p-3.5">
-              <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-xs font-semibold text-white">{doc.title}</p><span className={doc.status==="published"?"rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold text-emerald-300":doc.status==="archived"?"rounded-full bg-slate-500/15 px-2 py-1 text-[9px] font-bold text-slate-400":"rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300"}>{doc.status==="published"?"PUBLICADO":doc.status==="archived"?"ARCHIVADO":"BORRADOR"}</span></div><p className="mt-1 text-[10px] text-slate-500">{doc.subject} · {doc.page_count} páginas · {doc.chunk_count} fragmentos</p><p className="mt-1 text-[10px] text-slate-500">{doc.knowledge_profile_status==="ready"&&doc.knowledge_profile_version>=2&&doc.embedded_chunk_count>=doc.chunk_count?<span className="text-emerald-300">Conocimiento v{doc.knowledge_profile_version} listo · {doc.concept_count} conceptos · {doc.embedded_chunk_count}/{doc.chunk_count} vectores</span>:<span className={doc.knowledge_profile_status==="failed"?"text-rose-300":"text-amber-300"}>{doc.knowledge_profile_status==="failed"?"Enriquecimiento pendiente de reintento":"Conocimiento pendiente"} · {doc.embedded_chunk_count??0}/{doc.chunk_count} vectores</span>}</p></div><button type="button" onClick={()=>void deleteDocument(doc)} aria-label={"Eliminar "+doc.title} className="rounded-md p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
+              <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-xs font-semibold text-white">{doc.title}</p><span className={doc.status==="published"?"rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold text-emerald-300":doc.status==="archived"?"rounded-full bg-slate-500/15 px-2 py-1 text-[9px] font-bold text-slate-400":"rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300"}>{doc.status==="published"?"PUBLICADO":doc.status==="archived"?"ARCHIVADO":"BORRADOR"}</span></div><p className="mt-1 text-[10px] text-slate-500">{doc.subject} · {doc.page_count} páginas · {doc.chunk_count} fragmentos</p><p className="mt-1 text-[10px] text-slate-500">{doc.knowledge_profile_status==="ready"&&doc.knowledge_profile_version>=2&&doc.knowledge_pipeline_version>=3&&doc.embedded_chunk_count>=doc.chunk_count?<span className="text-emerald-300">Motor v{doc.knowledge_pipeline_version} listo · {doc.concept_count} conceptos · {doc.embedded_chunk_count}/{doc.chunk_count} vectores</span>:<span className={doc.knowledge_profile_status==="failed"?"text-rose-300":"text-amber-300"}>{doc.knowledge_profile_status==="failed"?"Enriquecimiento pendiente de reintento":doc.knowledge_pipeline_version<3?"Actualización al motor v3 pendiente":"Conocimiento pendiente"} · {doc.embedded_chunk_count??0}/{doc.chunk_count} vectores</span>}</p></div><button type="button" onClick={()=>void deleteDocument(doc)} aria-label={"Eliminar "+doc.title} className="rounded-md p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge(doc)} className="inline-flex items-center gap-1.5 rounded-md border border-orange-400/25 bg-orange-400/10 px-2.5 py-1.5 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument===doc.id?<LoaderCircle className="h-3 w-3 animate-spin"/>:<Sparkles className="h-3 w-3"/>}{enrichingDocument===doc.id?"Reprocesando…":doc.knowledge_profile_status==="ready"&&doc.embedded_chunk_count>=doc.chunk_count?"Reprocesar cobertura":"Generar conocimiento"}</button>{doc.status!=="published"?<button type="button" disabled={!isReadyForPublication(doc)} title={!isReadyForPublication(doc)?"Completa el perfil académico v2 y todos los embeddings antes de publicar.":undefined} onClick={()=>void changeStatus(doc,"published")} className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-35"><Check className="h-3.5 w-3.5"/> {isReadyForPublication(doc)?"Publicar para Orby":"Completa enriquecimiento"}</button>:<button type="button" onClick={()=>void changeStatus(doc,"archived")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 transition hover:border-amber-400/30 hover:text-amber-200">Archivar</button>}<button type="button" onClick={()=>void changeStatus(doc,"draft")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-400 transition hover:text-white">Volver a borrador</button></div>
             </article>)}

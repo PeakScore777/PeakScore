@@ -259,11 +259,11 @@ as $$
   ),
   semantic as (
     select c.id as chunk_id,
-      row_number() over (order by c.embedding <=> p_embedding) as semantic_position
+      row_number() over (order by c.embedding OPERATOR(extensions.<=>) p_embedding) as semantic_position
     from public.orby_knowledge_chunks c
     join eligible e on e.id=c.document_id
     where p_embedding is not null and c.embedding is not null
-    order by c.embedding <=> p_embedding
+    order by c.embedding OPERATOR(extensions.<=>) p_embedding
     limit greatest(16, least(coalesce(p_limit,8),16)*8)
   ),
   candidates as (

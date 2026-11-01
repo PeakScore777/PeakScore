@@ -9,6 +9,15 @@ function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
 }
 
+function normalizeProfileIdentity(value: unknown): string {
+  return (typeof value === "string" ? value : "")
+    .normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .toLocaleLowerCase("es-CO")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export async function GET() {
   const owner = await getOrbyOwner();
   if (!owner) return jsonError("Acceso reservado al administrador.", 403);
@@ -24,7 +33,7 @@ export async function GET() {
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "completed"),
     supabaseAdmin.from("orby_knowledge_jobs")
       .select("id,document_id,status,stage,next_batch_index,total_batches,attempt_count,last_error,updated_at,completed_at")
-      .order("updated_at", { ascending: false }).limit(8),
+      .order("updated_at", { ascending: false }).limit(20),
     supabaseAdmin.rpc("orby_knowledge_autopilot_is_configured"),
   ]);
 
@@ -42,13 +51,92 @@ export async function GET() {
     : { data: [], error: null };
   if (recentDocumentsError) return jsonError("No se pudo consultar el avance de los documentos.", 503);
   const documentById = new Map((recentDocuments ?? []).map((document) => [document.id, document]));
+  const { data: savedBatches, error: savedBatchesError } = recentJobs.length
+    ? await supabaseAdmin.from("orby_knowledge_job_batches")
+        .select("job_id,batch_index,result")
+        .in("job_id", recentJobs.map((job) => job.id))
+        .order("batch_index", { ascending: true })
+    : { data: [], error: null };
+  if (savedBatchesError) return jsonError("No se pudieron consultar los resultados parciales del perfil.", 503);
+
+  const profileStats = new Map<string, {
+    stored_profile_batches: number;
+    detected_concept_count: number;
+    detected_topic_count: number;
+    detected_competency_count: number;
+    detected_areas: string[];
+    concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
+  }>();
+
+  for (const job of recentJobs) {
+    const rows = (savedBatches ?? []).filter((row) => row.job_id === job.id);
+    const concepts = new Map<string, { name: string; area: string; parent_concept: string; evidence_pages: number[] }>();
+    const topics = new Set<string>();
+    const competencies = new Set<string>();
+    const areas = new Set<string>();
+
+    for (const row of rows) {
+      const result = row.result && typeof row.result === "object" ? row.result as Record<string, unknown> : {};
+      if (Array.isArray(result.topics)) {
+        for (const topic of result.topics) if (typeof topic === "string" && topic.trim()) topics.add(normalizeProfileIdentity(topic));
+      }
+      if (Array.isArray(result.areas)) {
+        for (const area of result.areas) if (typeof area === "string" && area.trim()) areas.add(area.trim());
+      }
+      if (Array.isArray(result.competencies)) {
+        for (const competency of result.competencies) {
+          if (competency && typeof competency === "object" && "name" in competency && typeof competency.name === "string") {
+            competencies.add(normalizeProfileIdentity(competency.name));
+          }
+        }
+      }
+      if (Array.isArray(result.concepts)) {
+        for (const concept of result.concepts) {
+          if (!concept || typeof concept !== "object" || !("name" in concept) || typeof concept.name !== "string") continue;
+          const name = concept.name.trim();
+          if (!name) continue;
+          const area = "area" in concept && typeof concept.area === "string" ? concept.area.trim() : "Transversal";
+          const parent = "parent_concept" in concept && typeof concept.parent_concept === "string" ? concept.parent_concept.trim() : "";
+          const key = [normalizeProfileIdentity(area), normalizeProfileIdentity(parent), normalizeProfileIdentity(name)].join("|");
+          const pages = "evidence_pages" in concept && Array.isArray(concept.evidence_pages)
+            ? concept.evidence_pages.filter((page): page is number => typeof page === "number" && Number.isInteger(page) && page > 0).slice(0, 10)
+            : [];
+          const existing = concepts.get(key);
+          concepts.set(key, {
+            name,
+            area,
+            parent_concept: parent,
+            evidence_pages: [...new Set([...(existing?.evidence_pages ?? []), ...pages])].slice(0, 10),
+          });
+          areas.add(area);
+        }
+      }
+    }
+
+    profileStats.set(job.id, {
+      stored_profile_batches: rows.length,
+      detected_concept_count: concepts.size,
+      detected_topic_count: topics.size,
+      detected_competency_count: competencies.size,
+      detected_areas: [...areas].slice(0, 12),
+      concept_preview: [...concepts.values()].slice(0, 8),
+    });
+  }
+
   const recentWithDocuments = recentJobs.map((job) => {
     const document = documentById.get(job.document_id);
+    const stats = profileStats.get(job.id);
     return {
       ...job,
       document_title: document?.title ?? "Documento eliminado",
       embedded_chunk_count: document?.embedded_chunk_count ?? 0,
       chunk_count: document?.chunk_count ?? 0,
+      stored_profile_batches: stats?.stored_profile_batches ?? 0,
+      detected_concept_count: stats?.detected_concept_count ?? 0,
+      detected_topic_count: stats?.detected_topic_count ?? 0,
+      detected_competency_count: stats?.detected_competency_count ?? 0,
+      detected_areas: stats?.detected_areas ?? [],
+      concept_preview: stats?.concept_preview ?? [],
     };
   });
 

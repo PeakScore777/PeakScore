@@ -68,8 +68,11 @@ export function containsProgrammingInstruction(text: string): boolean {
   if (!value) return false;
 
   const containsCode = text.includes(String.fromCharCode(96).repeat(3))
-    || /\bconsole\.log\s*\(|\bfunction\s+[a-z_$][\w$]*\s*\(|\bconst\s+[a-z_$][\w$]*\s*=|\blet\s+[a-z_$][\w$]*\s*=|\bdef\s+[a-z_]\w*\s*\(|\bimport\s+(?:\w|{|\*)|\bSELECT\s+[\w* ,]+\s+FROM\s+\w+/i.test(text)
-    || /\b(aqui tienes|escribe|copia|ejecuta|pega)\b.{0,70}\b(codigo|script|programa|comando)\b/i.test(value)
+    || /(?:^|[\s:])(?:print|console\.log|function|const|let|var|def|class|import|export)\s*(?:\(|[a-z_$][\w$]*\s*=|\{)/im.test(text)
+    || /\b(?:for|while)\s*\([^)]{0,100}\)\s*\{/i.test(text)
+    || /\bconsole\.log\s*\(|\bprint\s*\(|\bfunction\s+[a-z_$][\w$]*\s*\(|\bconst\s+[a-z_$][\w$]*\s*=|\blet\s+[a-z_$][\w$]*\s*=|\bdef\s+[a-z_]\w*\s*\(|\bimport\s+(?:\w|{|\*)|\bSELECT\s+[\w* ,]+\s+FROM\s+\w+/i.test(text)
+    || (text.includes(String.fromCharCode(96)) && text.split(String.fromCharCode(96)).length >= 3)
+    || /\b(aqui tienes|escribe|copia|ejecuta|pega)\b.{0,70}\b(codigo|script|programa|comando|print|console\.log)\b/i.test(value)
     || /\b(instala|configura|ejecuta)\b.{0,70}\b(python|node\.js|npm|react|visual studio code|terminal)\b/i.test(value);
 
   const mentionsProgramming = PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(value));
@@ -93,8 +96,8 @@ export function extractPlainOrbyReply(value: string): string {
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
       const record = parsed as Record<string, unknown>;
       const preferredKeys = [
-        "mensaje_respuesta", "respuesta_final", "reply", "respuesta",
-        "response", "message", "content", "text", "answer", "output",
+        "mensaje_respuesta", "message_response", "respuesta_final", "respuesta_usuario", "reply", "respuesta", "mensaje",
+        "response", "message", "content", "contenido", "text", "answer", "output",
       ];
       for (const key of preferredKeys) {
         const candidate = record[key];

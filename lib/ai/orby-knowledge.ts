@@ -3,7 +3,12 @@ import "server-only";
 import { GoogleGenAI } from "@google/genai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI } from "@/lib/ai/router";
-import { extractOrbyChecklistRows, type ExtractedChecklistRow } from "@/lib/pdf/extract-orby-checklist-rows";
+import {
+  extractOrbyChecklistRows,
+  extractOrbyCompetencyRows,
+  type ExtractedChecklistRow,
+  type ExtractedCompetencyRow,
+} from "@/lib/pdf/extract-orby-checklist-rows";
 import { toStudentSafeQuestionSolution } from "@/lib/ai/orby-question-solution";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
@@ -78,6 +83,7 @@ export type OrbyKnowledgeProfile = {
     evidence: string;
     evidence_pages?: number[];
     provenance?: "source" | "pedagogical_inference";
+    question_count?: number;
   }>;
   study_strategies: string[];
   gaps_observed: string[];
@@ -838,7 +844,7 @@ export async function generateOrbyKnowledgePageBatch(
     });
   }
 
-  const competencies = cleanPageEvidenceItems(parsed.competencies, allowedPages, 50, ["name", "evidence"])
+  const modelCompetencies = cleanPageEvidenceItems(parsed.competencies, allowedPages, 50, ["name", "evidence"])
     .map((item) => ({
       name: String(item.name).slice(0, 180),
       area: typeof item.area === "string" ? item.area.slice(0, 80) : "Transversal",
@@ -846,6 +852,30 @@ export async function generateOrbyKnowledgePageBatch(
       evidence_pages: Array.isArray(item.evidence_pages) ? item.evidence_pages as number[] : [],
       provenance: item.provenance === "pedagogical_inference" ? "pedagogical_inference" as const : "source" as const,
     }));
+
+  // Explicit competency tables are read from the source text so that their
+  // names and question weights are not lost in a free-form model summary.
+  const sourceCompetencies = extractOrbyCompetencyRows(orderedPages.map((page) => ({
+    page_number: page.page_number,
+    content: page.page_text,
+  })));
+  const competenciesByIdentity = new Map<string, OrbyKnowledgeProfile["competencies"][number]>();
+  for (const item of modelCompetencies) {
+    const key = normalizedConceptKey(item.area) + "|" + normalizedConceptKey(item.name);
+    competenciesByIdentity.set(key, item);
+  }
+  for (const item of sourceCompetencies) {
+    const key = normalizedConceptKey(item.area) + "|" + normalizedConceptKey(item.name);
+    competenciesByIdentity.set(key, {
+      name: item.name,
+      area: item.area,
+      evidence: item.evidence + " — " + item.question_count + " preguntas (tabla de la fuente).",
+      evidence_pages: [item.page],
+      provenance: "source",
+      question_count: item.question_count,
+    });
+  }
+  const competencies = [...competenciesByIdentity.values()];
 
 
 

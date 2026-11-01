@@ -34,6 +34,7 @@ export async function GET() {
 
   return NextResponse.json({
     settings: settingsResult.data,
+    configured: Boolean(process.env.CRON_SECRET),
     counts: {
       queued: queued.count ?? 0,
       running: running.count ?? 0,
@@ -51,6 +52,8 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => null);
   if (typeof body?.enabled !== "boolean") return jsonError("Indica si deseas activar o pausar el motor.", 400);
+
+  if (body.enabled && !process.env.CRON_SECRET) return jsonError("Falta configurar el secreto del trabajador antes de activar el motor.", 409);
 
   const now = new Date().toISOString();
   const { data, error } = await supabaseAdmin.from("orby_knowledge_automation_settings")

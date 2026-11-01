@@ -28,7 +28,6 @@ export function hashOrbyKnowledgeChunks(chunks: OrbyKnowledgeChunk[]): string {
     .map((chunk) => [
       String(chunk.chunk_index),
       String(chunk.page_number),
-      chunk.content_origin ?? "text",
       chunk.content.length + ":" + chunk.content,
     ].join("|"))
     .join("\n");

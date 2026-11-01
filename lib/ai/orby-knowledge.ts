@@ -699,7 +699,7 @@ export async function generateOrbyKnowledgePageBatch(
         area: "área ICFES", archetype: "forma abstracta", stimulus_type: "texto, tabla, gráfica, diagrama, experimento, aviso",
         task: "qué debe hacer", reasoning_required: "razonamiento", distractor_logic: ["error de razonamiento"],
         visual_requirements: ["elemento visual"], solving_strategy: ["estrategia"], difficulty: "básica, intermedia o avanzada",
-        provenance: "source", evidence_pages: [1], confidence: 0.9,
+        provenance: "source o pedagogical_inference", evidence_pages: [1], confidence: 0.9,
       }],
       question_solutions: [{
         question_number: 1, area: "área", skill: "habilidad evaluada",
@@ -751,7 +751,7 @@ export async function generateOrbyKnowledgePageBatch(
     "PEDAGOGÍA: construye explicaciones para alguien que empieza desde cero, pasos graduales, analogías, ejemplos parafraseados, comprobaciones de comprensión, errores frecuentes y formas de corregirlos. Distingue rigurosamente lo encontrado en la fuente (provenance=source) de una propuesta didáctica creada por ti (provenance=pedagogical_inference). Nunca presentes una analogía, método o ejemplo inventado como si el PDF lo enseñara.",
     "TEMARIOS Y LISTAS NUMERADAS: conserva cada renglón independiente del temario como concepto atómico y específico. No agrupes diez temas bajo el encabezado general. El servidor contrastará tu extracción con una lectura determinista de las filas del texto y añadirá las filas omitidas; usa encabezados solo como parent_concept.",
     "COMPETENCIAS: una competencia oficial o explícita solo se registra si el documento la nombra o describe inequívocamente. Si propones una habilidad inferida para organizar la enseñanza, marca provenance=pedagogical_inference y aporta las páginas que permiten inferirla. Nunca presentes inferencias como competencias oficiales del ICFES.",
-    "SABER 11: aprende arquetipos abstractos de preguntas, estímulo, tarea cognitiva, competencia, razonamiento, tipo de distractor, recursos visuales y estrategia. No copies literalmente preguntas, opciones, textos protegidos ni solucionarios; resume su estructura y diseña patrones para producir variantes originales.",
+    "SABER 11: aprende arquetipos abstractos de preguntas, estímulo, tarea cognitiva, competencia, razonamiento, tipo de distractor, recursos visuales y estrategia. No copies literalmente preguntas, opciones, textos protegidos ni solucionarios; resume su estructura y diseña patrones para producir variantes originales. Usa provenance=source solo si la página contiene una pregunta o estímulo realmente visible; si deduces un patrón desde un tema o temario, usa provenance=pedagogical_inference y no lo presentes como formato observado del ICFES.",
     "SOLUCIÓN INDIVIDUAL DE PREGUNTAS: cuando una página contenga preguntas numeradas legibles, intenta resolver cada una, no solo clasificar su formato. Registra question_solutions con número de pregunta, habilidad, resumen parafraseado, pasos esenciales de razonamiento, opción candidata solo si se puede deducir y resultado resumido. Si existe clave visible, resuelve primero por tu cuenta y compara: marca matches o conflicts; si no hay clave, not_available. Si faltan datos, la imagen es ilegible o hay ambigüedad, usa insufficient_information, baja la confianza y explica la incertidumbre. No inventes letras ni afirmes que una candidata es oficial. Nunca copies enunciados, opciones, textos de lectura ni solucionarios.",
     "RESPUESTAS: si hay clave explícita, registra explicit_answer_key con verification_status=needs_independent_check. Si deduces una opción, usa reasoned_candidate. Nunca la llames oficial o verificada. No adivines.",
     "INGLÉS: identifica formatos, partes y habilidades que aparezcan realmente en estas páginas. No inventes número de partes ni contenidos no visibles.",
@@ -851,17 +851,33 @@ export async function generateOrbyKnowledgePageBatch(
 
   const rawPedagogy = asRecord(parsed.pedagogical_knowledge) ?? {};
   const pedagogicalKnowledge: OrbyPedagogicalKnowledge = {
-    teaching_methods: cleanPageEvidenceItems(rawPedagogy.teaching_methods, allowedPages, 50, ["concept","student_level_zero"]).map((item) => ({
-      ...item,
-      provenance: item.provenance === "source" ? "source" : "pedagogical_inference",
-    })),
-    worked_examples: cleanPageEvidenceItems(rawPedagogy.worked_examples, allowedPages, 60, ["topic","problem_summary"]),
-    question_patterns: cleanPageEvidenceItems(rawPedagogy.question_patterns, allowedPages, 80, ["archetype","task"]).map((item) => ({
-      ...item,
-      difficulty: ["básica","intermedia","avanzada"].includes(String(item.difficulty)) ? item.difficulty : "intermedia",
-      provenance: "source",
-      confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.65,
-    })),
+    teaching_methods: cleanPageEvidenceItems(rawPedagogy.teaching_methods, allowedPages, 50, ["concept","student_level_zero"])
+      .filter((item) =>
+        String(item.student_level_zero).trim().length >= 60
+        && Array.isArray(item.explanation_steps)
+        && item.explanation_steps.filter((step) => typeof step === "string" && step.trim().length >= 8).length >= 2
+      )
+      .map((item) => ({
+        ...item,
+        provenance: item.provenance === "source" ? "source" : "pedagogical_inference",
+      })),
+    worked_examples: cleanPageEvidenceItems(rawPedagogy.worked_examples, allowedPages, 60, ["topic","problem_summary"])
+      .filter((item) =>
+        typeof item.result_summary === "string" && item.result_summary.trim().length >= 5
+        && Array.isArray(item.reasoning_steps)
+        && item.reasoning_steps.filter((step) => typeof step === "string" && step.trim().length >= 8).length >= 2
+      )
+      .map((item) => ({
+        ...item,
+        provenance: item.provenance === "source" ? "source" : "pedagogical_inference",
+      })),
+    question_patterns: cleanPageEvidenceItems(rawPedagogy.question_patterns, allowedPages, 80, ["archetype","task","reasoning_required"])
+      .map((item) => ({
+        ...item,
+        difficulty: ["básica","intermedia","avanzada"].includes(String(item.difficulty)) ? item.difficulty : "intermedia",
+        provenance: item.provenance === "source" ? "source" : "pedagogical_inference",
+        confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.65,
+      })),
     question_solutions: cleanPageEvidenceItems(rawPedagogy.question_solutions, allowedPages, 120, ["area","problem_summary","answer_basis"]).map((item) => ({
       ...item,
       question_number: Number.isInteger(Number(item.question_number)) && Number(item.question_number) > 0 ? Number(item.question_number) : null,

@@ -170,7 +170,7 @@ test("conserva etiquetas entre corchetes y numeración separada del texto", () =
       "Operaciones con vectores [gráfico]",
       "2.",
       "Análisis dimensional",
-    ].join("\\n"),
+    ].join("\n"),
   }]);
 
   assert.equal(rows.length, 2);

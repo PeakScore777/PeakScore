@@ -16,20 +16,6 @@ function cleanText(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
-function isNonIcfesProgrammingRequest(text: string): boolean {
-  const value = text.normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLocaleLowerCase("es-CO")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  // Block programming requests even when they consist of a single word.
-  const directProgrammingIntent = /\b(?:programar|programacion|programador|programadora|codificar|coding|programming)\b/i;
-  const softwareIntent = /\b(?:python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|terminal|powershell|bash|framework|desarrollo de software|desarrollo web|codigo fuente|escribir codigo|depurar codigo)\b/i;
-  const creationIntent = /\b(?:crear|hacer|construir|desarrollar|programar)\s+(?:un|una|el|la)?\s*(?:app|aplicacion|pagina|web|sitio|software|programa|bot|videojuego)\b/i;
-
-  return directProgrammingIntent.test(value) || softwareIntent.test(value) || creationIntent.test(value);
-}
 
 function isClearlyOutOfScopeOrInjection(text: string): boolean {
   const normalized = text.normalize("NFKC").toLowerCase();
@@ -196,7 +182,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: identityReply, checkQuestion: "", verification: "not_required", sources: [] });
     }
 
-    const preflight = preflightOrbyRequest([userMessage, question].filter(Boolean).join(" "));
+    const preflight = preflightOrbyRequest([userMessage, question, context].filter(Boolean).join(" "));
     const legacyOutOfScope = preflight.allowed
       ? classifyOutOfScopeRequest([userMessage, question].filter(Boolean).join(" "))
       : null;

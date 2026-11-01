@@ -11,6 +11,22 @@ type KnowledgeDocument = {
 type Source = { documentId: string; title: string; subject: string; topic: string; page: number };
 type ChatMessage = { id?: string; role: "user" | "assistant"; content: string; sources?: Source[]; created_at?: string };
 
+function formatAdminReply(content: string): string {
+  return content
+    .replace(/\\\\([\\\\\\x60*_{}\\[\\]()#+.!|>~-])/g, "$1")
+    .replace(/\\\\n/g, "\\n")
+    .replace(/<br\\s*\\/?\\s*>/gi, "\\n")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/^\\s*\\|?[-:\\s|]+\\|?\\s*$/gm, "")
+    .replace(/^\\s*\\|([^\\n]+)\\|\\s*$/gm, (_line, cells: string) =>
+      cells.split("|").map((cell: string) => cell.trim()).filter(Boolean).join(" · ")
+    )
+    .replace(/\\*\\*(.*?)\\*\\*/g, "$1")
+    .replace(/(^|\\n)\\s*[-*]\\s+/g, "$1• ")
+    .replace(/\\n{3,}/g, "\\n\\n")
+    .trim();
+}
+
 
 export default function OrbyKnowledgeStudio() {
   const [documents,setDocuments] = useState<KnowledgeDocument[]>([]);
@@ -196,7 +212,7 @@ export default function OrbyKnowledgeStudio() {
           <div ref={messagesContainerRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4 sm:p-5">
             {hasOlderMessages&&<div className="sticky top-0 z-10 flex justify-center pb-1"><button type="button" onClick={()=>void loadOlderMessages()} disabled={loadingOlder} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#11161c]/95 px-3 py-2 text-[10px] font-semibold text-slate-300 shadow-lg transition hover:border-orange-400/35 hover:text-white disabled:opacity-50">{loadingOlder&&<LoaderCircle className="h-3 w-3 animate-spin"/>}{loadingOlder?"Cargando mensajes…":"Cargar mensajes anteriores"}</button></div>}
             {messages.length===0&&<div className="flex min-h-[380px] flex-col items-center justify-center text-center"><div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-500/25 bg-orange-500/10 text-orange-300"><MessageSquare className="h-6 w-6"/></div><h3 className="mt-4 text-sm font-semibold">Laboratorio privado listo</h3><p className="mt-2 max-w-sm text-xs leading-5 text-slate-400">Puedes revisar competencias, pedir síntesis de un documento o diseñar material didáctico original. Publica los PDFs desde la biblioteca cuando los hayas revisado.</p></div>}
-            {messages.map((message,index)=><article key={message.id??index} className={message.role==="user"?"ml-auto max-w-[90%] rounded-2xl rounded-br-sm bg-orange-500 px-4 py-3 text-sm text-[#17100a]":"max-w-[95%] rounded-2xl rounded-tl-sm border border-white/10 bg-[#0c1117] px-4 py-3 text-sm text-slate-200"}><p className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] opacity-65">{message.role==="user"?"Administrador":"Orby · ICFES Lab"}</p><div className="whitespace-pre-wrap text-[12px] leading-6">{message.content}</div>{message.sources&&message.sources.length>0&&<div className="mt-3 border-t border-white/10 pt-2"><p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-orange-300">Fuentes consultadas</p>{message.sources.map((source,i)=><p key={i} className="text-[10px] leading-5 text-slate-400">{source.title} · {source.subject} · p. {source.page}</p>)}</div>}</article>)}
+            {messages.map((message,index)=><article key={message.id??index} className={message.role==="user"?"ml-auto max-w-[90%] rounded-2xl rounded-br-sm bg-orange-500 px-4 py-3 text-sm text-[#17100a]":"max-w-[95%] rounded-2xl rounded-tl-sm border border-white/10 bg-[#0c1117] px-4 py-3 text-sm text-slate-200"}><p className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] opacity-65">{message.role==="user"?"Administrador":"Orby · ICFES Lab"}</p><div className="whitespace-pre-wrap text-[12px] leading-6">{message.role === "assistant" ? formatAdminReply(message.content) : message.content}</div>{message.sources&&message.sources.length>0&&<div className="mt-3 border-t border-white/10 pt-2"><p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-orange-300">Fuentes consultadas</p>{message.sources.map((source,i)=><p key={i} className="text-[10px] leading-5 text-slate-400">{source.title} · {source.subject} · p. {source.page}</p>)}</div>}</article>)}
             {loading&&<div className="flex items-center gap-2 text-xs text-slate-400"><LoaderCircle className="h-4 w-4 animate-spin text-orange-400"/> Orby está revisando el material…</div>}
             <div ref={messagesEndRef}/>
           </div>

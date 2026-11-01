@@ -26,12 +26,19 @@ function redactPrivateKnowledgeTitles(
   for (const source of sources) {
     const title = typeof source.title === "string" ? source.title.trim() : "";
     if (title.length >= 12) candidates.add(title);
-    const withoutNumber = title.replace(/^\\s*\\d+[\\s._:-]+/, "").trim();
+    const withoutNumber = title.replace(/^\s*\d+[\s._:-]+/, "").trim();
     if (withoutNumber.length >= 12) candidates.add(withoutNumber);
   }
   for (const title of candidates) {
-    const escaped = title.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\function isClearlyOutOfScopeOrInjection(text: string): boolean {");
-    safeReply = safeReply.replace(new RegExp(escaped, "gi"), "el material de referencia");
+    const needle = title.toLocaleLowerCase("es-CO");
+    let cursor = 0;
+    while (cursor < safeReply.length) {
+      const index = safeReply.toLocaleLowerCase("es-CO").indexOf(needle, cursor);
+      if (index < 0) break;
+      const replacement = "el material de referencia";
+      safeReply = safeReply.slice(0, index) + replacement + safeReply.slice(index + title.length);
+      cursor = index + replacement.length;
+    }
   }
   return safeReply;
 }

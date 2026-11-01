@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, BookOpen, Bot, Check, LoaderCircle, MessageSquare, Plus, Send, ShieldCheck, Sparkles, Trash2, UploadCloud } from "lucide-react";
+import { ArrowLeft, BookOpen, Bot, Check, LoaderCircle, MessageSquare, Plus, Send, ShieldCheck, Sparkles, Trash2, UploadCloud, Play } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
 
 type KnowledgeDocument = {
   id: string; title: string; original_name: string; subject: string; topic: string;
@@ -101,6 +102,7 @@ export default function OrbyKnowledgeStudio() {
   const [notice,setNotice] = useState("");
   const [automation,setAutomation] = useState<AutomationStatus|null>(null);
   const [changingAutomation,setChangingAutomation] = useState(false);
+  const [manualProcessing,setManualProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement|null>(null);
   const messagesContainerRef = useRef<HTMLDivElement|null>(null);
   const preserveScrollRef = useRef<{height:number;top:number}|null>(null);
@@ -226,20 +228,92 @@ export default function OrbyKnowledgeStudio() {
 
   async function uploadDocument(event:React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if(!file) return;
-    setUploading(true);setError("");setNotice("");
+    if (!file) return;
+    if (file.size < 1 || file.size > 20 * 1024 * 1024) {
+      setError("El PDF debe pesar como máximo 20 MB.");
+      return;
+    }
+    if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) {
+      setError("Selecciona un archivo PDF válido.");
+      return;
+    }
+
+    setUploading(true);
+    setError("");
+    setNotice("");
     try {
-      const form = new FormData();
-      form.set("file",file);
-      const response=await fetch("/api/admin/orby/knowledge",{method:"POST",credentials:"same-origin",body:form});
-      const payload=await response.json().catch(()=>({}));
-      if(!response.ok) throw new Error(payload.error||"No se pudo analizar el PDF.");
-      setNotice(payload.message||"Documento cargado como borrador.");
+      const signResponse = await fetch("/api/admin/orby/knowledge/upload-url", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: file.name,
+          size: file.size,
+          contentType: file.type,
+        }),
+      });
+      const signed = await signResponse.json().catch(() => ({}));
+      if (!signResponse.ok || !signed.path || !signed.token || !signed.documentId) {
+        throw new Error(signed.error || "No se pudo preparar la subida privada.");
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from("orby-knowledge")
+        .uploadToSignedUrl(signed.path, signed.token, file, {
+          contentType: "application/pdf",
+          cacheControl: "3600",
+        });
+      if (uploadError) {
+        throw new Error("No se pudo subir el PDF directamente a Supabase: " + uploadError.message);
+      }
+
+      const finalizeResponse = await fetch("/api/admin/orby/knowledge", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentId: signed.documentId,
+          fileName: file.name,
+        }),
+      });
+      const payload = await finalizeResponse.json().catch(() => ({}));
+      if (!finalizeResponse.ok) {
+        throw new Error(payload.error || "El PDF se subió, pero no se pudo registrar en la biblioteca.");
+      }
+
+      setNotice(payload.message || "PDF guardado como borrador y añadido a la cola de Orby.");
       setFile(null);
-      const input=document.getElementById("orby-knowledge-file") as HTMLInputElement|null;if(input)input.value="";
+      const input = document.getElementById("orby-knowledge-file") as HTMLInputElement | null;
+      if (input) input.value = "";
       await loadAll();
-    } catch(e){setError(e instanceof Error?e.message:"No se pudo cargar el material.");}
-    finally{setUploading(false);}
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo cargar el material.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function runKnowledgeBatch() {
+    if (manualProcessing) return;
+    setManualProcessing(true);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/admin/orby/knowledge/automation/run", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "No se pudo ejecutar el siguiente lote.");
+      setNotice(payload.message || "Se ejecutó una etapa del motor de conocimiento.");
+      await loadAll();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo procesar el siguiente lote.");
+    } finally {
+      setManualProcessing(false);
+    }
   }
 
   async function enrichKnowledge(doc?: KnowledgeDocument) {
@@ -336,7 +410,7 @@ export default function OrbyKnowledgeStudio() {
               <p className="text-xs font-semibold text-orange-200">Clasificación automática</p>
               <p className="mt-1 text-[10px] leading-5 text-slate-400">Orby guardará el PDF como material transversal de preparación Saber 11. El título se toma del nombre del archivo; no necesitas asignar materia ni tema.</p>
             </div>
-            <button disabled={!file||uploading} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 text-xs font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-40">{uploading?<><LoaderCircle className="h-4 w-4 animate-spin"/> Analizando PDF…</>:<><Plus className="h-4 w-4"/> Cargar y analizar material</>}</button>
+            <button disabled={!file||uploading} className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-orange-500 px-4 text-xs font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-40">{uploading?<><LoaderCircle className="h-4 w-4 animate-spin"/> Subiendo y preparando PDF…</>:<><Plus className="h-4 w-4"/> Cargar y analizar material</>}</button>
           </form>
           <section className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -355,15 +429,21 @@ export default function OrbyKnowledgeStudio() {
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-[9px] text-slate-500">{automation?.settings.last_tick_at ? "Última revisión: " + new Date(automation.settings.last_tick_at).toLocaleString("es-CO") : "Aún no se registra una revisión automática."}</p>
-              <button type="button" disabled={!automation?.configured || changingAutomation} onClick={()=>void toggleAutomation()} className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-[10px] font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-35">
-                {changingAutomation && <LoaderCircle className="h-3.5 w-3.5 animate-spin"/>}
-                {automation?.settings.enabled ? "Pausar motor" : "Activar motor"}
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={manualProcessing || (automation?.counts.running ?? 0) > 0} onClick={()=>void runKnowledgeBatch()} className="inline-flex items-center gap-2 rounded-lg border border-orange-400/30 bg-orange-400/10 px-3 py-2 text-[10px] font-bold text-orange-200 transition hover:bg-orange-400/15 disabled:cursor-not-allowed disabled:opacity-40">
+                  {manualProcessing?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<Play className="h-3.5 w-3.5"/>}
+                  {manualProcessing ? "Procesando lote…" : "Procesar un lote ahora"}
+                </button>
+                <button type="button" disabled={!automation?.configured || changingAutomation} onClick={()=>void toggleAutomation()} className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-[10px] font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-35">
+                  {changingAutomation && <LoaderCircle className="h-3.5 w-3.5 animate-spin"/>}
+                  {automation?.settings.enabled ? "Pausar motor" : "Activar motor"}
+                </button>
+              </div>
             </div>
             {!automation?.configured && <p className="mt-2 text-[9px] text-amber-300">Falta configurar el secreto seguro del trabajador. El motor no se puede activar todavía.</p>}
             {automation?.recent?.[0] && <p className="mt-2 truncate text-[9px] text-slate-500">Última tarea: {automation.recent[0].status} · {automation.recent[0].stage} · {automation.recent[0].next_batch_index}/{automation.recent[0].total_batches} lotes</p>}
           </section>
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-semibold">Biblioteca ({documents.length})</h3><span className="text-[10px] text-slate-500">Solo documentos publicados alimentan el chat estudiantil</span></div>{documents.some(doc=>doc.knowledge_profile_status!=="ready"||doc.knowledge_profile_version<2||doc.knowledge_pipeline_version<3||doc.embedded_chunk_count<doc.chunk_count)&&<button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge()} className="inline-flex items-center gap-2 rounded-lg border border-orange-400/25 bg-orange-400/10 px-3 py-2 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument==="all"?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<Sparkles className="h-3.5 w-3.5"/>}{enrichingDocument==="all"?"Añadiendo a la cola…":"Procesar pendientes"}</button>}</div>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-semibold">Biblioteca ({documents.length})</h3><span className="text-[10px] text-slate-500">Solo documentos publicados alimentan el chat estudiantil</span></div>{documents.some(doc=>doc.knowledge_profile_status!=="ready"||doc.knowledge_profile_version<2||doc.knowledge_pipeline_version<3||doc.embedded_chunk_count<doc.chunk_count)&&<button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge()} className="inline-flex items-center gap-2 rounded-lg border border-orange-400/25 bg-orange-400/10 px-3 py-2 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument==="all"?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<Sparkles className="h-3.5 w-3.5"/>}{enrichingDocument==="all"?"Añadiendo a la cola…":"Encolar pendientes"}</button>}</div>
           <div className="mt-3 space-y-2">
             {documents.map(doc=><article key={doc.id} className="rounded-xl border border-white/[.08] bg-black/15 p-3.5">
               <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-xs font-semibold text-white">{doc.title}</p><span className={doc.status==="published"?"rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold text-emerald-300":doc.status==="archived"?"rounded-full bg-slate-500/15 px-2 py-1 text-[9px] font-bold text-slate-400":"rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300"}>{doc.status==="published"?"PUBLICADO":doc.status==="archived"?"ARCHIVADO":"BORRADOR"}</span></div><p className="mt-1 text-[10px] text-slate-500">{doc.subject} · {doc.page_count} páginas · {doc.chunk_count} fragmentos</p><p className="mt-1 text-[10px] text-slate-500">{doc.knowledge_profile_status==="ready"&&doc.knowledge_profile_version>=2&&doc.knowledge_pipeline_version>=3&&doc.embedded_chunk_count>=doc.chunk_count?<span className="text-emerald-300">Motor v{doc.knowledge_pipeline_version} listo · {doc.concept_count} conceptos · {doc.embedded_chunk_count}/{doc.chunk_count} vectores</span>:<span className={doc.knowledge_profile_status==="failed"?"text-rose-300":"text-amber-300"}>{doc.knowledge_profile_status==="failed"?"Enriquecimiento pendiente de reintento":doc.knowledge_pipeline_version<3?"Actualización al motor v3 pendiente":"Conocimiento pendiente"} · {doc.embedded_chunk_count??0}/{doc.chunk_count} vectores</span>}</p></div><button type="button" onClick={()=>void deleteDocument(doc)} aria-label={"Eliminar "+doc.title} className="rounded-md p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>

@@ -88,8 +88,9 @@ export async function POST(request: Request) {
 
     const latestUserText = [...history].reverse().find((item) => item.role === "user")?.content ?? "";
     const asksOrbyIdentity = isOrbyIdentityQuestion(latestUserText);
-    const preflight = preflightOrbyRequest(latestUserText);
-    const legacyOutOfScope = preflight.allowed ? classifyOutOfScopeRequest(latestUserText) : null;
+    const currentRequestContext = [subject, topic, latestUserText].filter(Boolean).join(" ");
+    const preflight = preflightOrbyRequest(currentRequestContext);
+    const legacyOutOfScope = preflight.allowed ? classifyOutOfScopeRequest(currentRequestContext) : null;
     if (!asksOrbyIdentity && (!preflight.allowed || legacyOutOfScope)) {
       const refusal = preflight.allowed
         ? getOutOfScopeReply(legacyOutOfScope as "programming" | "outside", latestUserText)

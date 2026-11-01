@@ -30,6 +30,30 @@ export async function POST() {
 
   try {
     const queued = await enqueueNextPendingOrbyKnowledgeDocument();
+
+    // A manual admin action means "run now", not "wait for the next
+    // five-minute autopilot slot". Promote only the oldest queued job while
+    // holding the global worker lock; the worker still enforces the shared
+    // daily AI-cycle limit and all document/publication checks.
+    const { data: nextQueuedJob, error: queuedJobError } = await supabaseAdmin
+      .from("orby_knowledge_jobs")
+      .select("id")
+      .eq("status", "queued")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (queuedJobError) throw new Error("No se pudo consultar la siguiente tarea de la cola.");
+
+    if (nextQueuedJob?.id) {
+      const readyAt = new Date().toISOString();
+      const { error: promoteError } = await supabaseAdmin
+        .from("orby_knowledge_jobs")
+        .update({ available_at: readyAt, updated_at: readyAt })
+        .eq("id", nextQueuedJob.id)
+        .eq("status", "queued");
+      if (promoteError) throw new Error("No se pudo adelantar la tarea manual.");
+    }
+
     const result = await processNextOrbyKnowledgeJob();
     const now = new Date().toISOString();
     await supabaseAdmin.from("orby_knowledge_automation_settings")
@@ -44,7 +68,9 @@ export async function POST() {
       ...result,
       queuedPendingDocument: queued,
       message: result.state === "idle"
-        ? "No hay tareas pendientes. Los documentos ya están al día."
+        ? nextQueuedJob
+          ? "El documento continúa en cola; comprueba si se alcanzó el límite diario de 10 ciclos IA."
+          : result.message || "No hay tareas pendientes. Los documentos ya están al día."
         : result.message ?? "Se procesó una etapa de la cola.",
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {

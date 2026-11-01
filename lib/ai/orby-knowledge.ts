@@ -896,6 +896,49 @@ export function combineOrbyKnowledgePageBatches(
   };
 }
 
+export function selectOrbyRelevantPedagogy(
+  rawKnowledge: unknown,
+  query: string,
+  perCategoryLimit = 4
+): OrbyPedagogicalKnowledge {
+  const raw = asRecord(rawKnowledge);
+  if (!raw) return { ...EMPTY_ORBY_PEDAGOGICAL_KNOWLEDGE };
+
+  const normalize = (value: string) => value.normalize("NFD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .toLocaleLowerCase("es-CO")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  const stopwords = new Set([
+    "para","como","cuando","donde","cual","cuales","porque","sobre","desde","hasta",
+    "quiero","puedes","explica","explicame","ayuda","tema","temas","saber","once",
+    "icfes","orby","que","del","las","los","una","uno","con","sin","por","sus",
+    "esto","esta","este","eso","esa","ese","hay","ser","son","muy","mas","menos",
+    "tambien","hacer","hace","dime","estudiar","aprender","explicar"
+  ]);
+  const queryTokens = [...new Set(normalize(query).split(/\\s+/).filter((token) =>
+    token.length > 2 && !stopwords.has(token)
+  ))];
+  const output = { ...EMPTY_ORBY_PEDAGOGICAL_KNOWLEDGE };
+  const categories = Object.keys(EMPTY_ORBY_PEDAGOGICAL_KNOWLEDGE) as Array<keyof OrbyPedagogicalKnowledge>;
+
+  for (const category of categories) {
+    const source = Array.isArray(raw[category]) ? raw[category] as unknown[] : [];
+    const ranked = source.flatMap((entry, index) => {
+      const item = asRecord(entry);
+      if (!item) return [];
+      const searchable = normalize(JSON.stringify(item));
+      const score = queryTokens.reduce((total, token) => total + (searchable.includes(token) ? 1 : 0), 0);
+      return score > 0 ? [{ item, score, index }] : [];
+    }).sort((a, b) => b.score - a.score || a.index - b.index);
+
+    const limit = category === "visual_elements" ? Math.max(4, perCategoryLimit) : perCategoryLimit;
+    output[category] = ranked.slice(0, limit).map((entry) => entry.item);
+  }
+
+  return output;
+}
+
 export async function generateOrbyKnowledgeProfile(
   documentId: string,
   chunks: OrbyKnowledgeChunk[]

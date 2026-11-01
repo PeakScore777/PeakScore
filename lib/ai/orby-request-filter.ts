@@ -32,11 +32,16 @@ const INJECTION_PATTERNS = [
   /\b(jailbreak|bypass|desactiva tus reglas|actua sin restricciones)\b/i,
 ];
 
+export function containsOrbyPromptInjection(message: string): boolean {
+  const normalized = normalizeOrbyRequestText(message);
+  return Boolean(normalized) && INJECTION_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
 export function preflightOrbyRequest(message: string): OrbyPreflightResult {
   const normalized = normalizeOrbyRequestText(message);
   if (!normalized) return { allowed: true, category: null, reply: "" };
 
-  if (INJECTION_PATTERNS.some((pattern) => pattern.test(normalized))) {
+  if (containsOrbyPromptInjection(normalized)) {
     return {
       allowed: false,
       category: "prompt_injection",

@@ -4,6 +4,22 @@ const supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
   ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
   : "";
 
+// Resumable Orby uploads use Supabase's dedicated Storage hostname rather
+// than the project's REST/Auth hostname. Keep this exact origin in the CSP
+// instead of broadly allowing every Supabase subdomain.
+const supabaseStorageOrigin = (() => {
+  const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!configuredUrl) return "";
+
+  try {
+    const hostname = new URL(configuredUrl).hostname;
+    const projectRef = hostname.match(/^([a-z0-9-]+)\\.supabase\\.co$/i)?.[1];
+    return projectRef ? `https://${projectRef}.storage.supabase.co` : "";
+  } catch {
+    return "";
+  }
+})();
+
 const posthogOrigin = process.env.NEXT_PUBLIC_POSTHOG_HOST
   ? new URL(process.env.NEXT_PUBLIC_POSTHOG_HOST).origin
   : "";
@@ -69,6 +85,7 @@ const securityHeaders = [
         "connect-src",
         "'self'",
         supabaseOrigin,
+        supabaseStorageOrigin,
         posthogOrigin,
         "https://us-assets.i.posthog.com",
         "https://challenges.cloudflare.com",

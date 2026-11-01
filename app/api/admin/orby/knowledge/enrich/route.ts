@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { enrichOrbyKnowledgeDocument } from "@/lib/ai/orby-knowledge";
+import {
+  enqueueOrbyKnowledgeDocument,
+  loadOrbyKnowledgeChunks,
+} from "@/lib/ai/orby-knowledge-queue";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
@@ -22,82 +24,63 @@ export async function POST(request: Request) {
   }
 
   let query = supabaseAdmin.from("orby_knowledge_documents")
-    .select("id,title,chunk_count,embedded_chunk_count,knowledge_profile_status,knowledge_profile_version")
-    .order("created_at", { ascending: false })
+    .select("id,title")
+    .order("created_at", { ascending: true })
     .limit(documentId ? 1 : 100);
 
   if (documentId) query = query.eq("id", documentId);
+  else query = query.in("status", ["draft", "published"]);
 
-  const { data: allDocuments, error } = await query;
-  if (error) {
-    console.error("[Orby Knowledge Enrichment] Document lookup failed.", { code: error.code });
-    return jsonError("No se pudieron consultar los documentos pendientes de enriquecimiento.", 503);
-  }
-  if (documentId && !allDocuments?.length) return jsonError("No se encontró el documento solicitado.", 404);
-  const documents = documentId
-    ? allDocuments ?? []
-    : (allDocuments ?? []).filter((item) =>
-        item.knowledge_profile_status !== "ready"
-        || Number(item.knowledge_profile_version ?? 1) < 2
-        || Number(item.embedded_chunk_count ?? 0) < Number(item.chunk_count ?? 0)
-      );
+  const { data: documents, error } = await query;
+  if (error) return jsonError("No se pudieron consultar los documentos de la biblioteca.", 503);
+  if (documentId && !documents?.length) return jsonError("No se encontró el documento solicitado.", 404);
 
-  const results: Array<{ id: string; title: string; embedded: number; concepts: number; success: boolean; reason?: string }> = [];
+  const results: Array<{
+    id: string;
+    title: string;
+    jobId?: string;
+    state?: string;
+    success: boolean;
+    alreadyCurrent?: boolean;
+    reason?: string;
+  }> = [];
+
   for (const document of documents ?? []) {
     try {
-      const { data: chunks, error: chunksError } = await supabaseAdmin.from("orby_knowledge_chunks")
-        .select("chunk_index,page_number,content")
-        .eq("document_id", document.id)
-        .order("page_number", { ascending: true })
-        .order("chunk_index", { ascending: true })
-        .limit(300);
-      if (chunksError) throw new Error("chunk_read_" + chunksError.code);
-      if (!chunks?.length) throw new Error("no_extracted_chunks");
-
-      const result = await enrichOrbyKnowledgeDocument(
-        { id: document.id, title: document.title },
-        chunks
-      );
+      const chunks = await loadOrbyKnowledgeChunks(document.id);
+      if (!chunks.length) throw new Error("El documento no tiene fragmentos para procesar.");
+      const result = await enqueueOrbyKnowledgeDocument(document.id, chunks, { retryFailed: true });
       results.push({
         id: document.id,
         title: document.title,
-        embedded: result.embedded,
-        concepts: result.concepts,
+        jobId: result.job.id,
+        state: result.job.status,
         success: true,
+        alreadyCurrent: result.alreadyCurrent,
       });
     } catch (error) {
-      const { count: retainedVectors } = await supabaseAdmin.from("orby_knowledge_chunks")
-        .select("chunk_index", { count: "exact", head: true })
-        .eq("document_id", document.id)
-        .not("embedding", "is", null);
-      await supabaseAdmin.from("orby_knowledge_documents")
-        .update({ knowledge_profile_status: "failed", updated_at: new Date().toISOString() })
-        .eq("id", document.id);
-      const failureReason = error instanceof Error
-        ? error.message.slice(0, 420)
-        : "Error desconocido durante el enriquecimiento.";
-      console.error("[Orby Knowledge Enrichment] Document enrichment failed.", {
-        documentId: document.id,
-        reason: failureReason,
-      });
       results.push({
         id: document.id,
         title: document.title,
-        embedded: Number(retainedVectors ?? document.embedded_chunk_count ?? 0),
-        concepts: 0,
         success: false,
-        reason: failureReason + " Se conservaron " + Number(retainedVectors ?? document.embedded_chunk_count ?? 0) + " vectores existentes de " + document.chunk_count + "; no necesitas volver a subir el PDF.",
-
+        reason: error instanceof Error ? error.message.slice(0, 350) : "No se pudo programar la tarea.",
       });
     }
   }
 
+  const queued = results.filter((item) => item.success && !item.alreadyCurrent).length;
+  const alreadyCurrent = results.filter((item) => item.success && item.alreadyCurrent).length;
+  const failed = results.filter((item) => !item.success).length;
+
   return NextResponse.json({
     results,
-    succeeded: results.filter((item) => item.success).length,
-    failed: results.filter((item) => !item.success).length,
-    message: results.length
-      ? "Terminó el proceso de enriquecimiento de la biblioteca."
-      : "Todos los documentos ya tienen un perfil académico y su índice semántico actualizado.",
+    queued,
+    alreadyCurrent,
+    failed,
+    message: queued
+      ? "Se añadieron " + queued + " documento(s) a la cola. El motor automático continuará por lotes."
+      : alreadyCurrent
+        ? "El conocimiento ya está actualizado; no se repitieron llamadas de IA."
+        : "No había documentos nuevos para procesar.",
   }, { headers: { "Cache-Control": "private, no-store" } });
 }

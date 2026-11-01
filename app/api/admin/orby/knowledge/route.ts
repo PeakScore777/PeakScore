@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { extractPdfPages } from "@/lib/pdf/extractPdfPages";
+import { enrichOrbyKnowledgeDocument } from "@/lib/ai/orby-knowledge";
 import type { IcfesSubject } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
@@ -53,7 +54,7 @@ export async function GET() {
   const { user } = await getAdmin();
   if (!user) return jsonError("Acceso reservado al administrador.", 403);
   const { data, error } = await supabaseAdmin.from("orby_knowledge_documents")
-    .select("id,title,original_name,subject,topic,page_count,chunk_count,status,created_at,updated_at")
+    .select("id,title,original_name,subject,topic,page_count,chunk_count,status,embedded_chunk_count,knowledge_profile_status,concept_count,created_at,updated_at")
     .order("created_at", { ascending: false }).limit(100);
   if (error) {
     console.error("[Orby Knowledge] List failed.", { code: error.code });
@@ -139,7 +140,28 @@ export async function POST(request: Request) {
       return jsonError("No se pudo indexar el contenido. El documento no se publicó.", 503);
     }
 
-    return NextResponse.json({ document, message: "Material analizado y guardado como borrador. Revísalo antes de publicarlo para Orby." }, {
+    let enrichmentMessage = "El PDF se guardó como borrador. ";
+    try {
+      const enrichment = await enrichOrbyKnowledgeDocument(
+        { id, title },
+        chunks.map((chunk) => ({
+          chunk_index: chunk.chunk_index,
+          page_number: chunk.page_number,
+          content: chunk.content,
+        }))
+      );
+      enrichmentMessage += "Orby generó representaciones semánticas y un perfil académico con " + enrichment.concepts + " conceptos relacionados. Revísalo antes de publicarlo.";
+    } catch (enrichmentError) {
+      await supabaseAdmin.from("orby_knowledge_documents")
+        .update({ knowledge_profile_status: "failed", updated_at: new Date().toISOString() })
+        .eq("id", id);
+      console.error("[Orby Knowledge] Semantic enrichment failed; original text remains safely indexed.", {
+        name: enrichmentError instanceof Error ? enrichmentError.name : "UnknownError",
+      });
+      enrichmentMessage += "El texto quedó indexado y seguro, pero el enriquecimiento semántico quedó pendiente. Puedes reintentarlo desde la biblioteca sin volver a cargar el PDF.";
+    }
+
+    return NextResponse.json({ document, message: enrichmentMessage }, {
       status: 201, headers: { "Cache-Control": "no-store" },
     });
   } catch {

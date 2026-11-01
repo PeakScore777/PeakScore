@@ -16,7 +16,7 @@ type AutomationStatus = {
   settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null };
   configured: boolean;
   counts: { queued: number; running: number; retrying: number; failed: number; completed: number };
-  recent: Array<{ id: string; document_id: string; status: string; stage: string; next_batch_index: number; total_batches: number; attempt_count: number; last_error: string | null; updated_at: string }>;
+  recent: Array<{ id: string; document_id: string; document_title: string; embedded_chunk_count: number; chunk_count: number; status: string; stage: string; next_batch_index: number; total_batches: number; attempt_count: number; last_error: string | null; updated_at: string }>;
 };
 
 function isReadyForPublication(document: KnowledgeDocument): boolean {
@@ -446,7 +446,7 @@ export default function OrbyKnowledgeStudio() {
               </div>
             </div>
             {!automation?.configured && <p className="mt-2 text-[9px] text-amber-300">Falta configurar el secreto seguro del trabajador. El motor no se puede activar todavía.</p>}
-            {automation?.recent?.[0] && <p className="mt-2 truncate text-[9px] text-slate-500">Última tarea: {automation.recent[0].status} · {automation.recent[0].stage} · {automation.recent[0].next_batch_index}/{automation.recent[0].total_batches} lotes</p>}
+            {automation?.recent?.[0] && <div className="mt-2 space-y-1 text-[9px] text-slate-500"><p className="truncate">Último documento de la cola: <span className="font-semibold text-slate-300">{automation.recent[0].document_title}</span></p><p>Estado: {automation.recent[0].status} · Etapa: {automation.recent[0].stage === "embeddings" ? "embeddings" : automation.recent[0].stage === "profile" ? "perfilado académico" : automation.recent[0].stage === "finalize" ? "consolidación" : automation.recent[0].stage} · {automation.recent[0].next_batch_index}/{automation.recent[0].total_batches} lotes de perfil</p><p>Vectores del documento: {automation.recent[0].embedded_chunk_count}/{automation.recent[0].chunk_count}</p></div>}
           </section>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-semibold">Biblioteca ({documents.length})</h3><span className="text-[10px] text-slate-500">Solo documentos publicados alimentan el chat estudiantil</span></div>{documents.some(doc=>doc.knowledge_profile_status!=="ready"||doc.knowledge_profile_version<2||doc.knowledge_pipeline_version<3||doc.embedded_chunk_count<doc.chunk_count)&&<button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge()} className="inline-flex items-center gap-2 rounded-lg border border-orange-400/25 bg-orange-400/10 px-3 py-2 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument==="all"?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<Sparkles className="h-3.5 w-3.5"/>}{enrichingDocument==="all"?"Añadiendo a la cola…":"Encolar pendientes"}</button>}</div>
           <div className="mt-3 space-y-2">

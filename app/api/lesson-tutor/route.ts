@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsProgrammingInstruction, normalizeOrbySpanishOutput, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsProgrammingInstruction, normalizeOrbySpanishOutput, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -300,7 +300,7 @@ export async function POST(request: Request) {
 
     // Private source metadata stays server-side. Students receive only the educational substance.
     const knowledgeContext = knowledgeSources.map((source, index) =>
-      "[Referencia académica interna " + (index + 1) + "]\n" + source.content.slice(0, 2200)
+      "[Referencia académica interna " + (index + 1) + "]\n" + sanitizeOrbyKnowledgeExcerpt(source.content, source.title).slice(0, 2200)
     ).join("\n\n");
     const learningContext = studentSignals.map((signal) =>
       "- Tema: " + signal.topic + "; concepto: " + signal.concept + "; estado observado: " + signal.learning_state

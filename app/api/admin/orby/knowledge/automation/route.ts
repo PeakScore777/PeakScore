@@ -74,7 +74,7 @@ export async function GET() {
     visual_element_count: number;
     detected_areas: string[];
     concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
-    question_pattern_preview: Array<{ archetype: string; stimulus_type: string; task: string; evidence_pages: number[] }>;
+    question_pattern_preview: Array<{ archetype: string; stimulus_type: string; task: string; provenance: "source" | "pedagogical_inference"; evidence_pages: number[] }>;
     question_solution_preview: Array<{
       question_number: number | null;
       area: string;
@@ -87,7 +87,7 @@ export async function GET() {
       confidence: number;
       evidence_pages: number[];
     }>;
-    teaching_method_preview: Array<{ concept: string; student_level_zero: string; evidence_pages: number[] }>;
+    teaching_method_preview: Array<{ concept: string; student_level_zero: string; provenance: "source" | "pedagogical_inference"; evidence_pages: number[] }>;
   }>();
 
   for (const job of recentJobs) {
@@ -96,9 +96,9 @@ export async function GET() {
     const topics = new Set<string>();
     const competencies = new Set<string>();
     const areas = new Set<string>();
-    const teachingMethods = new Map<string, { concept: string; student_level_zero: string; evidence_pages: number[] }>();
+    const teachingMethods = new Map<string, { concept: string; student_level_zero: string; provenance: "source" | "pedagogical_inference"; evidence_pages: number[] }>();
     const workedExamples = new Set<string>();
-    const questionPatterns = new Map<string, { archetype: string; stimulus_type: string; task: string; evidence_pages: number[] }>();
+    const questionPatterns = new Map<string, { archetype: string; stimulus_type: string; task: string; provenance: "source" | "pedagogical_inference"; evidence_pages: number[] }>();
     const questionSolutions = new Map<string, {
       question_number: number | null;
       area: string;
@@ -145,6 +145,7 @@ export async function GET() {
           teachingMethods.set(key, {
             concept,
             student_level_zero: explanation,
+            provenance: item.provenance === "source" ? "source" : "pedagogical_inference",
             evidence_pages: Array.isArray(item.evidence_pages) ? item.evidence_pages.filter((page: unknown): page is number => typeof page === "number") : [],
           });
         }
@@ -168,6 +169,7 @@ export async function GET() {
             archetype,
             stimulus_type: stimulus,
             task,
+            provenance: item.provenance === "source" ? "source" : "pedagogical_inference",
             evidence_pages: Array.isArray(item.evidence_pages) ? item.evidence_pages.filter((page: unknown): page is number => typeof page === "number") : [],
           });
         }

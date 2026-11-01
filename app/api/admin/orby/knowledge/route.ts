@@ -55,7 +55,7 @@ export async function GET() {
   const { user } = await getAdmin();
   if (!user) return jsonError("Acceso reservado al administrador.", 403);
   const { data, error } = await supabaseAdmin.from("orby_knowledge_documents")
-    .select("id,title,original_name,subject,topic,page_count,chunk_count,status,embedded_chunk_count,knowledge_profile_status,concept_count,created_at,updated_at")
+    .select("id,title,original_name,subject,topic,page_count,chunk_count,status,embedded_chunk_count,knowledge_profile_status,knowledge_profile_version,concept_count,created_at,updated_at")
     .order("created_at", { ascending: false }).limit(100);
   if (error) {
     console.error("[Orby Knowledge] List failed.", { code: error.code });

@@ -52,7 +52,7 @@ function cleanStringArray(value: unknown, maxItems = 40, maxLength = 180): strin
   for (const item of value) {
     if (typeof item !== "string") continue;
     const clean = item.trim().slice(0, maxLength);
-    const key = clean.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO");
+    const key = clean.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
     if (clean.length < 2 || seen.has(key)) continue;
     seen.add(key);
     output.push(clean);
@@ -63,7 +63,7 @@ function cleanStringArray(value: unknown, maxItems = 40, maxLength = 180): strin
 
 function normalizedConceptKey(value: string): string {
   return value.normalize("NFD")
-    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("es-CO")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")

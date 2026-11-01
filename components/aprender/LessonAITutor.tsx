@@ -7,6 +7,7 @@ import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 import { containsProgrammingInstruction, hasFalseOrbyCreatorAttribution, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
@@ -872,6 +873,113 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  async function handleOrbyLiveKnowledgeTool(toolCall: unknown) {
+    const session = voiceChannelRef.current;
+    if (!session || !toolCall || typeof toolCall !== "object") return;
+
+    const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
+    if (!Array.isArray(calls) || calls.length === 0) return;
+
+    setVoiceStatus("Orby está consultando conocimiento académico…");
+    const responses: Array<{ id: string; name: string; response: Record<string, unknown> }> = [];
+
+    for (const rawCall of calls.slice(0, 3)) {
+      if (!rawCall || typeof rawCall !== "object") continue;
+      const call = rawCall as { id?: unknown; name?: unknown; args?: unknown };
+      const id = typeof call.id === "string" ? call.id : "";
+      const name = typeof call.name === "string" ? call.name : "";
+      if (!id || !name) continue;
+
+      if (name !== "search_orby_learning_knowledge") {
+        responses.push({ id, name, response: { error: "Herramienta no disponible." } });
+        continue;
+      }
+
+      let args: Record<string, unknown> = {};
+      if (call.args && typeof call.args === "object" && !Array.isArray(call.args)) {
+        args = call.args as Record<string, unknown>;
+      } else if (typeof call.args === "string") {
+        try {
+          const parsed = JSON.parse(call.args);
+          if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) args = parsed as Record<string, unknown>;
+        } catch {
+          args = {};
+        }
+      }
+
+      const toolQuery = typeof args.query === "string" ? args.query.trim().slice(0, 1600) : "";
+      if (toolQuery.length < 3) {
+        responses.push({ id, name, response: { found: false, error: "No se recibió un tema académico claro." } });
+        continue;
+      }
+
+      const currentTranscript = voiceUserTextRef.current.trim().slice(0, 500);
+      const query = [toolQuery, currentTranscript && !toolQuery.toLowerCase().includes(currentTranscript.toLowerCase()) ? currentTranscript : ""]
+        .filter(Boolean)
+        .join(" ")
+        .slice(0, 2000);
+      const requestedSubject = typeof args.subject === "string" ? args.subject.slice(0, 80) : subject;
+
+      try {
+        const response = await fetch("/api/orby/knowledge-search", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query, subject: requestedSubject }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          responses.push({
+            id,
+            name,
+            response: {
+              found: false,
+              guidance: typeof result.error === "string"
+                ? result.error.slice(0, 240)
+                : "No se pudo consultar el material en este turno.",
+            },
+          });
+          continue;
+        }
+
+        responses.push({
+          id,
+          name,
+          response: {
+            found: result.found === true,
+            subject: typeof result.subject === "string" ? result.subject : requestedSubject,
+            excerpts: Array.isArray(result.excerpts) ? result.excerpts.slice(0, 6) : [],
+            profiles: Array.isArray(result.profiles) ? result.profiles.slice(0, 4) : [],
+            related: Array.isArray(result.related) ? result.related.slice(0, 3) : [],
+            guidance: typeof result.guidance === "string" ? result.guidance.slice(0, 700) : "",
+          },
+        });
+      } catch {
+        responses.push({
+          id,
+          name,
+          response: { found: false, guidance: "La búsqueda no estuvo disponible en este turno. Continúa con una explicación académica segura y no inventes que consultaste fuentes." },
+        });
+      }
+    }
+
+    try {
+      const toolSession = session as unknown as {
+        sendToolResponse: (payload: {
+          functionResponses: Array<{ id: string; name: string; response: Record<string, unknown> }>;
+        }) => void;
+      };
+      if (responses.length) toolSession.sendToolResponse({ functionResponses: responses });
+      setVoiceStatus("Te escucho…");
+    } catch (error) {
+      console.error("[Orby Voice] Tool response could not be sent.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+      setVoiceError("Orby no pudo incorporar el material en este turno. Puedes repetir la pregunta.");
+      setVoiceStatus("Consulta académica interrumpida");
+    }
+  }
+
   function handleGeminiLiveEvent(event: Record<string, unknown>) {
     if (event.setupComplete) {
       setVoiceStatus("Te escucho…");
@@ -1251,6 +1359,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         config: {
           abortSignal: connectionAbort.signal,
           responseModalities: [Modality.AUDIO],
+          tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
           // Start with the documented Live configuration. Audio transcription
           // is enabled without a forced language; the model detects Spanish.
           inputAudioTranscription: {
@@ -1276,6 +1385,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               const detail = payload.error as { message?: unknown; status?: unknown; code?: unknown };
               console.warn("[Orby Voice] Realtime service rejected the connection.", { status: detail.status, code: detail.code });
               rejectSetup?.(new Error("No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
+              return;
+            }
+            if (payload.toolCall && typeof payload.toolCall === "object") {
+              void handleOrbyLiveKnowledgeTool(payload.toolCall);
               return;
             }
             handleGeminiLiveEvent(payload);

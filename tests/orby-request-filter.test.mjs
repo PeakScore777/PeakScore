@@ -19,6 +19,7 @@ async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = 
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
 const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServerOnly: true });
 const publication = await loadTypeScriptModule("../lib/ai/orby-publication.ts");
+const chunking = await loadTypeScriptModule("../lib/pdf/split-orby-text.ts");
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {
   const prompts = [
@@ -90,4 +91,22 @@ test("solo permite publicar cuando el perfil v2 y todos los embeddings están li
   for (const state of blockedStates) {
     assert.equal(publication.isOrbyKnowledgePublicationReady(state), false, JSON.stringify(state));
   }
+});
+
+test("fragmenta párrafos largos en límites naturales sin cortar palabras", () => {
+  const source = Array.from({ length: 36 }, (_, index) => "concepto" + String(index).padStart(2, "0")).join(" ");
+  const chunks = chunking.splitOrbyText(source, 80);
+
+  assert.ok(chunks.length > 1);
+  assert.ok(chunks.every((part) => part.length <= 80));
+  assert.equal(chunks.join(" "), source);
+});
+
+test("prioriza el cierre de una oración cuando está cerca del límite", () => {
+  const source = "La velocidad terminal aparece cuando la fuerza de arrastre equilibra el peso del objeto. Después el movimiento continúa con rapidez constante y aceleración neta nula.";
+  const chunks = chunking.splitOrbyText(source, 90);
+
+  assert.ok(chunks.length > 1);
+  assert.match(chunks[0], /[.!?]$/);
+  assert.equal(chunks.join(" "), source);
 });

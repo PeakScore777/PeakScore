@@ -30,6 +30,29 @@ function getFingerprint(file: File): string {
   return [file.name, file.size, file.lastModified].join(":");
 }
 
+function getPendingDocumentKey(file: File): string {
+  return "orby-document:" + getFingerprint(file);
+}
+
+export function getOrbyPendingDocumentId(file: File): string {
+  const key = getPendingDocumentKey(file);
+  try {
+    const existing = window.sessionStorage.getItem(key);
+    if (existing && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(existing)) {
+      return existing;
+    }
+  } catch {
+    // Continue with a fresh ID when session storage is unavailable.
+  }
+  const id = window.crypto.randomUUID();
+  try { window.sessionStorage.setItem(key, id); } catch { /* best effort */ }
+  return id;
+}
+
+export function clearOrbyPendingDocumentId(file: File): void {
+  try { window.sessionStorage.removeItem(getPendingDocumentKey(file)); } catch { /* best effort */ }
+}
+
 function getStoredUpload(file: File, key: string): StoredUpload | null {
   try {
     const raw = window.sessionStorage.getItem(key);

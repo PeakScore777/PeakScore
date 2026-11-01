@@ -73,9 +73,12 @@ export async function POST(request: Request) {
       await supabaseAdmin.from("orby_knowledge_documents")
         .update({ knowledge_profile_status: "failed", updated_at: new Date().toISOString() })
         .eq("id", document.id);
+      const failureReason = error instanceof Error
+        ? error.message.slice(0, 420)
+        : "Error desconocido durante el enriquecimiento.";
       console.error("[Orby Knowledge Enrichment] Document enrichment failed.", {
         documentId: document.id,
-        name: error instanceof Error ? error.name : "UnknownError",
+        reason: failureReason,
       });
       results.push({
         id: document.id,
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
         embedded: Number(retainedVectors ?? document.embedded_chunk_count ?? 0),
         concepts: 0,
         success: false,
-        reason: "Falló la extracción del perfil académico. Se conservaron " + Number(retainedVectors ?? document.embedded_chunk_count ?? 0) + " vectores existentes de " + document.chunk_count + "; no necesitas volver a subir el PDF.",
+        reason: failureReason + " Se conservaron " + Number(retainedVectors ?? document.embedded_chunk_count ?? 0) + " vectores existentes de " + document.chunk_count + "; no necesitas volver a subir el PDF.",
 
       });
     }

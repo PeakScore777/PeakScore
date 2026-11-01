@@ -18,11 +18,11 @@ async function getAdmin() {
 
 function normalizeAdminReplyText(value: string): string {
   return normalizeOrbySpanishOutput(value)
-    .replace(/\\\\([\\\\\\x60*_{}\\[\\]()#+.!|>~-])/g, "$1")
-    .replace(/\\\\n/g, "\\n")
-    .replace(/<br\\s*\\/?\\s*>/gi, "\\n")
+    .replace(/\\([\\\x60*_{}\[\]()#+.!|>~-])/g, "$1")
+    .replace(/\\n/g, "\n")
+    .replace(/<br\s*\/?\s*>/gi, "\n")
     .replace(/&nbsp;/gi, " ")
-    .replace(/\\n{3,}/g, "\\n\\n")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 

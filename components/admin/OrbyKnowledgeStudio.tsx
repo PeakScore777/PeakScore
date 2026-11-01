@@ -16,15 +16,39 @@ type AutomationStatus = {
   settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null };
   configured: boolean;
   counts: { queued: number; running: number; retrying: number; failed: number; completed: number };
-  recent: Array<{ id: string; document_id: string; document_title: string; embedded_chunk_count: number; chunk_count: number; status: string; stage: string; next_batch_index: number; total_batches: number; attempt_count: number; last_error: string | null; updated_at: string }>;
+  recent: Array<{
+    id: string;
+    document_id: string;
+    document_title: string;
+    embedded_chunk_count: number;
+    chunk_count: number;
+    status: string;
+    stage: string;
+    next_batch_index: number;
+    total_batches: number;
+    stored_profile_batches: number;
+    detected_concept_count: number;
+    detected_topic_count: number;
+    detected_competency_count: number;
+    detected_areas: string[];
+    concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
+    attempt_count: number;
+    last_error: string | null;
+    updated_at: string;
+  }>;
 };
 
+function publicationBlockReason(document: KnowledgeDocument): string | null {
+  if (document.chunk_count < 1) return "El documento todavía no tiene fragmentos indexados.";
+  if (document.embedded_chunk_count < document.chunk_count) return "Faltan embeddings: " + document.embedded_chunk_count + "/" + document.chunk_count + ".";
+  if (document.knowledge_profile_status !== "ready") return "El perfil académico todavía no terminó o necesita reintento.";
+  if (document.knowledge_profile_version < 2) return "Falta completar el perfil académico v2.";
+  if (document.knowledge_pipeline_version < 3) return "Falta finalizar y validar el motor de conocimiento v3.";
+  return null;
+}
+
 function isReadyForPublication(document: KnowledgeDocument): boolean {
-  return document.chunk_count > 0
-    && document.embedded_chunk_count >= document.chunk_count
-    && document.knowledge_profile_status === "ready"
-    && document.knowledge_profile_version >= 2
-    && document.knowledge_pipeline_version >= 3;
+  return publicationBlockReason(document) === null;
 }
 
 function isCurrentKnowledgePipeline(document: KnowledgeDocument): boolean {
@@ -452,8 +476,33 @@ export default function OrbyKnowledgeStudio() {
           <div className="mt-3 space-y-2">
             {documents.map(doc=><article key={doc.id} className="rounded-xl border border-white/[.08] bg-black/15 p-3.5">
               <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="truncate text-xs font-semibold text-white">{doc.title}</p><span className={doc.status==="published"?"rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold text-emerald-300":doc.status==="archived"?"rounded-full bg-slate-500/15 px-2 py-1 text-[9px] font-bold text-slate-400":"rounded-full bg-amber-500/10 px-2 py-1 text-[9px] font-bold text-amber-300"}>{doc.status==="published"?"PUBLICADO":doc.status==="archived"?"ARCHIVADO":"BORRADOR"}</span></div><p className="mt-1 text-[10px] text-slate-500">{doc.subject} · {doc.page_count} páginas · {doc.chunk_count} fragmentos</p><p className="mt-1 text-[10px] text-slate-500">{doc.knowledge_profile_status==="ready"&&doc.knowledge_profile_version>=2&&doc.knowledge_pipeline_version>=3&&doc.embedded_chunk_count>=doc.chunk_count?<span className="text-emerald-300">Motor v{doc.knowledge_pipeline_version} listo · {doc.concept_count} conceptos · {doc.embedded_chunk_count}/{doc.chunk_count} vectores</span>:<span className={doc.knowledge_profile_status==="failed"?"text-rose-300":"text-amber-300"}>{doc.knowledge_profile_status==="failed"?"Enriquecimiento pendiente de reintento":doc.knowledge_pipeline_version<3?"Actualización al motor v3 pendiente":"Conocimiento pendiente"} · {doc.embedded_chunk_count??0}/{doc.chunk_count} vectores</span>}</p></div><button type="button" onClick={()=>void deleteDocument(doc)} aria-label={"Eliminar "+doc.title} className="rounded-md p-2 text-slate-500 transition hover:bg-rose-500/10 hover:text-rose-300"><Trash2 className="h-4 w-4"/></button></div>
+              {automation?.recent.find(job=>job.document_id===doc.id) && (() => {
+                const job = automation.recent.find(item=>item.document_id===doc.id)!;
+                return <div className="mt-3 rounded-lg border border-white/[.07] bg-white/[.025] p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-[10px] font-semibold text-slate-200">Aprendizaje detectado</p>
+                    <span className={job.stored_profile_batches>0?"text-[9px] font-semibold text-emerald-300":"text-[9px] text-slate-500"}>{job.stored_profile_batches>0?"Resultados parciales guardados":"Esperando el primer análisis académico"}</span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Vectores</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.embedded_chunk_count}/{job.chunk_count}</p></div>
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Lotes IA</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.stored_profile_batches}/{job.total_batches}</p></div>
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Conceptos únicos</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.detected_concept_count}</p></div>
+                    <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Temas / competencias</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.detected_topic_count} / {job.detected_competency_count}</p></div>
+                  </div>
+                  {job.detected_areas.length>0 && <p className="mt-2 text-[9px] leading-4 text-slate-400">Áreas detectadas: {job.detected_areas.join(" · ")}</p>}
+                  {job.concept_preview.length>0
+                    ? <div className="mt-2 border-t border-white/[.07] pt-2">
+                        <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Muestra de conceptos encontrados</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {job.concept_preview.slice(0,6).map((concept,index)=><span key={index} title={(concept.parent_concept?concept.parent_concept+" · ":"")+concept.area+(concept.evidence_pages.length?" · p. "+concept.evidence_pages.join(", "):"")} className="rounded-md border border-white/10 bg-black/20 px-2 py-1 text-[9px] text-slate-300">{concept.name}</span>)}
+                        </div>
+                      </div>
+                    : <p className="mt-2 text-[9px] leading-4 text-slate-500">{job.stage==="embeddings"?"Los embeddings representan los fragmentos para búsqueda; los conceptos aparecerán cuando empiece el perfilado académico.":"El lote está pendiente de guardar su primer resultado conceptual."}</p>}
+                  <p className="mt-2 text-[9px] text-amber-300">Estos resultados son provisionales. Orby los consolida y valida al completar todos los lotes; todavía no alimentan el chat estudiantil.</p>
+                </div>;
+              })()}
               <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" disabled={enrichingDocument!==null||isCurrentKnowledgePipeline(doc)} onClick={()=>void enrichKnowledge(doc)} title={isCurrentKnowledgePipeline(doc)?"El conocimiento ya está actualizado.":"Añadir el documento a la cola incremental."} className="inline-flex items-center gap-1.5 rounded-md border border-orange-400/25 bg-orange-400/10 px-2.5 py-1.5 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:cursor-not-allowed disabled:opacity-45">{enrichingDocument===doc.id?<LoaderCircle className="h-3 w-3 animate-spin"/>:<Sparkles className="h-3 w-3"/>}{enrichingDocument===doc.id?"Añadiendo a la cola…":isCurrentKnowledgePipeline(doc)?"Cobertura actualizada":doc.knowledge_profile_status==="ready"&&doc.embedded_chunk_count>=doc.chunk_count?"Encolar reprocesamiento":"Encolar conocimiento"}</button>{doc.status!=="published"?<button type="button" disabled={!isReadyForPublication(doc)} title={!isReadyForPublication(doc)?"Completa el perfil académico v2 y todos los embeddings antes de publicar.":undefined} onClick={()=>void changeStatus(doc,"published")} className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-35"><Check className="h-3.5 w-3.5"/> {isReadyForPublication(doc)?"Publicar para Orby":"Completa enriquecimiento"}</button>:<button type="button" onClick={()=>void changeStatus(doc,"archived")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 transition hover:border-amber-400/30 hover:text-amber-200">Archivar</button>}<button type="button" onClick={()=>void changeStatus(doc,"draft")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-400 transition hover:text-white">Volver a borrador</button></div>
+                <button type="button" disabled={enrichingDocument!==null||isCurrentKnowledgePipeline(doc)} onClick={()=>void enrichKnowledge(doc)} title={isCurrentKnowledgePipeline(doc)?"El conocimiento ya está actualizado.":"Añadir el documento a la cola incremental."} className="inline-flex items-center gap-1.5 rounded-md border border-orange-400/25 bg-orange-400/10 px-2.5 py-1.5 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:cursor-not-allowed disabled:opacity-45">{enrichingDocument===doc.id?<LoaderCircle className="h-3 w-3 animate-spin"/>:<Sparkles className="h-3 w-3"/>}{enrichingDocument===doc.id?"Añadiendo a la cola…":isCurrentKnowledgePipeline(doc)?"Cobertura actualizada":doc.knowledge_profile_status==="ready"&&doc.embedded_chunk_count>=doc.chunk_count?"Encolar reprocesamiento":"Encolar conocimiento"}</button>{doc.status!=="published"?<button type="button" disabled={!isReadyForPublication(doc)} title={publicationBlockReason(doc) ?? "Publicar este material para el chat estudiantil."} onClick={()=>void changeStatus(doc,"published")} className="inline-flex items-center gap-1.5 rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-[10px] font-semibold text-emerald-300 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-35"><Check className="h-3.5 w-3.5"/> {isReadyForPublication(doc)?"Publicar para Orby":"Completa enriquecimiento"}</button>:<button type="button" onClick={()=>void changeStatus(doc,"archived")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-300 transition hover:border-amber-400/30 hover:text-amber-200">Archivar</button>}<button type="button" onClick={()=>void changeStatus(doc,"draft")} className="rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-semibold text-slate-400 transition hover:text-white">Volver a borrador</button></div>
             </article>)}
             {documents.length===0&&<div className="rounded-xl border border-dashed border-white/10 p-8 text-center"><p className="text-xs font-semibold text-slate-300">La biblioteca está vacía</p><p className="mt-1 text-[10px] text-slate-500">Carga tu primer material para empezar a construir el conocimiento curado de Orby.</p></div>}
           </div>

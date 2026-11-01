@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   combineOrbyKnowledgeProfileBatches,
@@ -56,10 +56,10 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
   progress?: number;
   message?: string;
 }> {
-  const workerId = crypto.randomUUID();
+  const workerId = randomUUID();
   const { data: claimed, error: claimError } = await supabaseAdmin.rpc("orby_claim_knowledge_job", {
     p_worker_id: workerId,
-    p_lease_seconds: 240,
+    p_lease_seconds: 600,
   });
   if (claimError) throw new Error("No se pudo reclamar una tarea: " + claimError.code);
   if (!claimed || typeof claimed !== "object") return { state: "idle", message: "No hay tareas pendientes." };
@@ -199,8 +199,8 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
         .eq("job_id", job.id)
         .order("batch_index", { ascending: true });
       if (batchesError) throw new Error("No se pudieron recuperar los lotes del perfil.");
-      if (!batches || batches.length !== totalBatches) {
-        throw new Error("El perfil todavía no tiene todos los lotes: " + (batches?.length ?? 0) + "/" + totalBatches + ".");
+      if (!batches || batches.length !== totalBatches || batches.some((item, index) => item.batch_index !== index)) {
+        throw new Error("El perfil todavía no tiene todos los lotes en orden: " + (batches?.length ?? 0) + "/" + totalBatches + ".");
       }
 
       const profile = combineOrbyKnowledgeProfileBatches(

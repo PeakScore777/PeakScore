@@ -179,7 +179,10 @@ export async function generateOrbyKnowledgeProfile(
     batches.push(orderedChunks.slice(index, index + 4));
   }
 
-  const batchProfiles = await mapWithConcurrency(batches, 2, async (batch, batchIndex) => {
+  // Process one extraction batch at a time. Parallel profile requests were
+  // exhausting transient Gemini capacity on long PDFs and caused the entire
+  // document profile to fail even though its embeddings were already stored.
+  const batchProfiles = await mapWithConcurrency(batches, 1, async (batch, batchIndex) => {
     const allowedPages = new Set(batch.map((chunk) => chunk.page_number));
     const pageText = batch.map((chunk) =>
       "[Página " + chunk.page_number + "]\n" + chunk.content.slice(0, 6500)
@@ -229,10 +232,37 @@ export async function generateOrbyKnowledgeProfile(
       "Identificador de lote interno: " + (batchIndex + 1) + "/" + batches.length,
     ].join("\n\n");
 
-    const result = await generateAI({ task: "analysis", prompt, useFallback: true });
-    const parsed = parseJsonObject(typeof result.text === "string" ? result.text : "");
-    if (typeof parsed.summary !== "string" || parsed.summary.trim().length < 10) {
-      throw new Error("Granular profile extraction returned an incomplete batch " + (batchIndex + 1) + ".");
+    let parsed: Record<string, unknown> | null = null;
+    let lastBatchError: unknown = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const result = await generateAI({ task: "analysis", prompt, useFallback: true });
+        const candidate = parseJsonObject(typeof result.text === "string" ? result.text : "");
+        if (typeof candidate.summary !== "string" || candidate.summary.trim().length < 10) {
+          throw new Error("The provider returned an incomplete academic profile.");
+        }
+        parsed = candidate;
+        break;
+      } catch (error) {
+        lastBatchError = error;
+        console.warn("[Orby Knowledge] Profile batch failed; preserving vectors and retrying the batch.", {
+          batch: batchIndex + 1,
+          totalBatches: batches.length,
+          attempt,
+          errorName: error instanceof Error ? error.name : "UnknownError",
+        });
+        if (attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, attempt * 1800));
+        }
+      }
+    }
+    if (!parsed) {
+      console.error("[Orby Knowledge] Profile batch exhausted retries.", {
+        batch: batchIndex + 1,
+        totalBatches: batches.length,
+        errorName: lastBatchError instanceof Error ? lastBatchError.name : "UnknownError",
+      });
+      throw new Error("No se pudo extraer el bloque " + (batchIndex + 1) + " de " + batches.length + " después de tres intentos.");
     }
 
     const concepts = Array.isArray(parsed.concepts) ? parsed.concepts.slice(0, 100).flatMap((raw) => {

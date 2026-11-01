@@ -67,10 +67,17 @@ export function containsProgrammingInstruction(text: string): boolean {
   const value = normalizeOrbyRequestText(text);
   if (!value) return false;
 
-  return text.includes(String.fromCharCode(96).repeat(3))
+  const containsCode = text.includes(String.fromCharCode(96).repeat(3))
     || /\bconsole\.log\s*\(|\bfunction\s+[a-z_$][\w$]*\s*\(|\bconst\s+[a-z_$][\w$]*\s*=|\blet\s+[a-z_$][\w$]*\s*=|\bdef\s+[a-z_]\w*\s*\(|\bimport\s+(?:\w|{|\*)|\bSELECT\s+[\w* ,]+\s+FROM\s+\w+/i.test(text)
     || /\b(aqui tienes|escribe|copia|ejecuta|pega)\b.{0,70}\b(codigo|script|programa|comando)\b/i.test(value)
     || /\b(instala|configura|ejecuta)\b.{0,70}\b(python|node\.js|npm|react|visual studio code|terminal)\b/i.test(value);
+
+  const mentionsProgramming = PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(value));
+  const isExplicitRefusal = /\b(no enseno|no puedo ensenar|no puedo ayudarte con|no doy clases de|fuera del alcance|mi funcion es preparar|especializado exclusivamente en saber 11)\b/i.test(value);
+
+  // Catch general enthusiasm/advice about programming languages too, not just
+  // source code snippets. Allow a clear refusal so Orby can explain its scope.
+  return containsCode || (mentionsProgramming && !isExplicitRefusal);
 }
 
 export function extractPlainOrbyReply(value: string): string {

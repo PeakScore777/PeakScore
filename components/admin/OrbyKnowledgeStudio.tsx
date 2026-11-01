@@ -13,17 +13,17 @@ type ChatMessage = { id?: string; role: "user" | "assistant"; content: string; s
 
 function formatAdminReply(content: string): string {
   return content
-    .replace(/\\\\([\\\\\\x60*_{}\\[\\]()#+.!|>~-])/g, "$1")
-    .replace(/\\\\n/g, "\\n")
-    .replace(/<br\\s*\\/?\\s*>/gi, "\\n")
+    .replace(/\\([\\\x60*_{}\[\]()#+.!|>~-])/g, "$1")
+    .replace(/\\n/g, "\n")
+    .replace(/<br\s*\/?\s*>/gi, "\n")
     .replace(/&nbsp;/gi, " ")
-    .replace(/^\\s*\\|?[-:\\s|]+\\|?\\s*$/gm, "")
-    .replace(/^\\s*\\|([^\\n]+)\\|\\s*$/gm, (_line, cells: string) =>
+    .replace(/^\s*\|?[-:\s|]+\|?\s*$/gm, "")
+    .replace(/^\s*\|([^\n]+)\|\s*$/gm, (_line, cells: string) =>
       cells.split("|").map((cell: string) => cell.trim()).filter(Boolean).join(" · ")
     )
-    .replace(/\\*\\*(.*?)\\*\\*/g, "$1")
-    .replace(/(^|\\n)\\s*[-*]\\s+/g, "$1• ")
-    .replace(/\\n{3,}/g, "\\n\\n")
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/(^|\n)\s*[-*]\s+/g, "$1• ")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 

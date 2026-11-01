@@ -3,6 +3,24 @@
 alter table public.orby_knowledge_profiles
   add column if not exists pedagogical_knowledge jsonb not null default '{}'::jsonb;
 
+alter table public.orby_knowledge_automation_settings
+  add column if not exists ai_cycle_date date,
+  add column if not exists ai_cycles_used smallint not null default 0;
+
+alter table public.orby_knowledge_automation_settings
+  drop constraint if exists orby_knowledge_automation_ai_cycles_check;
+alter table public.orby_knowledge_automation_settings
+  add constraint orby_knowledge_automation_ai_cycles_check
+  check (ai_cycles_used between 0 and 10);
+
+alter table public.orby_knowledge_chunks
+  add column if not exists content_origin text not null default 'text';
+alter table public.orby_knowledge_chunks
+  drop constraint if exists orby_knowledge_chunks_content_origin_check;
+alter table public.orby_knowledge_chunks
+  add constraint orby_knowledge_chunks_content_origin_check
+  check (content_origin in ('text','ocr','visual_placeholder'));
+
 alter table public.orby_knowledge_documents
   add column if not exists source_sha256 text,
   add column if not exists ingestion_status text not null default 'queued',
@@ -35,7 +53,9 @@ create table if not exists public.orby_knowledge_document_pages (
   document_id uuid not null references public.orby_knowledge_documents(id) on delete cascade,
   page_number integer not null check (page_number > 0),
   text_char_count integer not null default 0 check (text_char_count >= 0),
+  page_text text not null default '',
   has_selectable_text boolean not null default false,
+  visual_asset_path text,
   visual_status text not null default 'pending'
     check (visual_status in ('pending','reviewed','needs_review','failed')),
   coverage_score numeric(4,3) not null default 0
@@ -43,6 +63,8 @@ create table if not exists public.orby_knowledge_document_pages (
   concept_count integer not null default 0 check (concept_count >= 0),
   question_pattern_count integer not null default 0 check (question_pattern_count >= 0),
   visual_summary text not null default '',
+  pedagogical_artifacts jsonb not null default '{}'::jsonb
+    check (jsonb_typeof(pedagogical_artifacts) = 'object'),
   unresolved_items jsonb not null default '[]'::jsonb
     check (jsonb_typeof(unresolved_items) = 'array'),
   ocr_text text not null default '',
@@ -62,12 +84,13 @@ grant select, insert, update, delete on public.orby_knowledge_document_pages to 
 -- Backfill a page manifest for documents already in the Lab. Existing vectors
 -- are retained; v4 will only enrich their teaching and visual understanding.
 insert into public.orby_knowledge_document_pages (
-  document_id, page_number, text_char_count, has_selectable_text, visual_status
+  document_id, page_number, text_char_count, page_text, has_selectable_text, visual_status
 )
 select
   d.id,
   page_no,
   coalesce(sum(length(c.content)), 0)::integer,
+  coalesce(string_agg(c.content, E'\\n\\n' order by c.chunk_index), ''),
   coalesce(bool_or(c.chunk_index is not null), false),
   'pending'
 from public.orby_knowledge_documents d
@@ -108,7 +131,7 @@ where b.job_id = j.id
 
 update public.orby_knowledge_jobs j
 set pipeline_version = 4,
-    stage = 'profile',
+    stage = case when d.embedded_chunk_count < d.chunk_count then 'embeddings' else 'profile' end,
     status = 'queued',
     total_batches = greatest(1, ceil(d.page_count::numeric / 4)::integer),
     next_batch_index = 0,
@@ -135,60 +158,6 @@ where exists (
     and j.status in ('queued','running','retrying')
 );
 
-create or replace function public.orby_reserve_knowledge_ai_cycle(
-  p_document_id uuid,
-  p_daily_limit integer default 10
-)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $function$
-declare
-  v_count integer;
-  v_next timestamptz;
-begin
-  update public.orby_knowledge_documents
-  set auto_review_count = case
-        when auto_review_date = current_date then auto_review_count + 1
-        else 1
-      end,
-      auto_review_date = current_date,
-      next_review_at = now() + interval '5 minutes',
-      ingestion_status = case
-        when ingestion_status in ('queued','attention_required') then 'processing'
-        else ingestion_status
-      end,
-      updated_at = now()
-  where id = p_document_id
-    and (
-      auto_review_date is distinct from current_date
-      or auto_review_count < greatest(1, least(10, coalesce(p_daily_limit, 10)))
-    )
-  returning auto_review_count, next_review_at into v_count, v_next;
-
-  if not found then
-    select auto_review_count, next_review_at into v_count, v_next
-    from public.orby_knowledge_documents
-    where id = p_document_id;
-    return jsonb_build_object(
-      'allowed', false,
-      'cycles_used', coalesce(v_count, 0),
-      'next_available_at', date_trunc('day', now()) + interval '1 day'
-    );
-  end if;
-
-  return jsonb_build_object(
-    'allowed', true,
-    'cycles_used', v_count,
-    'next_available_at', v_next
-  );
-end;
-$function$;
-
-revoke all on function public.orby_reserve_knowledge_ai_cycle(uuid, integer) from public, anon, authenticated;
-grant execute on function public.orby_reserve_knowledge_ai_cycle(uuid, integer) to service_role;
-
 create or replace function public.orby_claim_knowledge_job(
   p_worker_id uuid,
   p_lease_seconds integer default 240
@@ -199,22 +168,40 @@ set search_path = ''
 as $function$
 declare
   v_job public.orby_knowledge_jobs%rowtype;
+  v_today date := (now() at time zone 'America/Bogota')::date;
+  v_cycles smallint;
 begin
   if p_worker_id is null then raise exception 'worker_id_required'; end if;
+
+  -- One shared daily budget for automatic and manual worker invocations.
+  -- The settings row lock makes the ten-cycle ceiling atomic across workers.
+  select ai_cycles_used into v_cycles
+  from public.orby_knowledge_automation_settings
+  where id = 1
+  for update;
+
+  if not found then raise exception 'knowledge_automation_settings_missing'; end if;
+
+  update public.orby_knowledge_automation_settings
+  set ai_cycles_used = case when ai_cycle_date is distinct from v_today then 0 else ai_cycles_used end,
+      ai_cycle_date = v_today,
+      updated_at = now()
+  where id = 1
+  returning ai_cycles_used into v_cycles;
+
+  if coalesce(v_cycles, 0) >= 10 then return null; end if;
 
   with candidate as (
     select j.id
     from public.orby_knowledge_jobs j
-    join public.orby_knowledge_documents d on d.id = j.document_id
     where j.attempt_count < j.max_attempts
       and j.available_at <= now()
-      and (d.auto_review_date is distinct from current_date or d.auto_review_count < 10)
       and (
         j.status in ('queued','retrying')
         or (j.status = 'running' and j.lease_expires_at < now())
       )
     order by j.available_at asc, j.created_at asc
-    for update of j skip locked
+    for update skip locked
     limit 1
   )
   update public.orby_knowledge_jobs j
@@ -228,9 +215,27 @@ begin
   returning j.* into v_job;
 
   if not found then return null; end if;
+
+  update public.orby_knowledge_automation_settings
+  set ai_cycles_used = ai_cycles_used + 1,
+      ai_cycle_date = v_today,
+      updated_at = now()
+  where id = 1;
+
+  update public.orby_knowledge_documents
+  set auto_review_count = case when auto_review_date is distinct from v_today then 1 else least(10, auto_review_count + 1) end,
+      auto_review_date = v_today,
+      next_review_at = now() + interval '5 minutes',
+      ingestion_status = case when ingestion_status in ('queued','attention_required') then 'processing' else ingestion_status end,
+      updated_at = now()
+  where id = v_job.document_id;
+
   return to_jsonb(v_job);
 end;
 $function$;
+
+revoke all on function public.orby_claim_knowledge_job(uuid, integer) from public, anon, authenticated;
+grant execute on function public.orby_claim_knowledge_job(uuid, integer) to service_role;
 
 create or replace function public.orby_release_knowledge_job(
   p_job_id uuid,
@@ -244,6 +249,8 @@ returns boolean
 language plpgsql
 set search_path = ''
 as $function$
+declare
+  v_document_id uuid;
 begin
   if p_stage not in ('embeddings','profile','finalize') then
     raise exception 'invalid_job_stage';
@@ -261,19 +268,71 @@ begin
       available_at = now() + interval '5 minutes',
       last_error = null,
       updated_at = now()
-  where id = p_job_id and locked_by = p_worker_id and status = 'running';
+  where id = p_job_id and locked_by = p_worker_id and status = 'running'
+  returning document_id into v_document_id;
 
   if not found then return false; end if;
 
   update public.orby_knowledge_documents
   set next_review_at = now() + interval '5 minutes',
       updated_at = now()
-  where id = (select document_id from public.orby_knowledge_jobs where id = p_job_id);
+  where id = v_document_id;
 
   return true;
 end;
 $function$;
 
-update cron.job
-set schedule = '*/5 * * * *'
-where jobname = 'orby-knowledge-worker';
+revoke all on function public.orby_release_knowledge_job(uuid, uuid, text, integer, integer, integer) from public, anon, authenticated;
+grant execute on function public.orby_release_knowledge_job(uuid, uuid, text, integer, integer, integer) to service_role;
+
+create or replace function public.orby_complete_knowledge_job(
+  p_job_id uuid,
+  p_worker_id uuid
+)
+returns boolean
+language plpgsql
+set search_path = ''
+as $function$
+declare
+  v_document_id uuid;
+begin
+  update public.orby_knowledge_jobs
+  set status = 'completed',
+      stage = 'finalize',
+      locked_by = null,
+      locked_at = null,
+      lease_expires_at = null,
+      last_error = null,
+      completed_at = now(),
+      updated_at = now()
+  where id = p_job_id and locked_by = p_worker_id and status = 'running'
+  returning document_id into v_document_id;
+
+  if not found then return false; end if;
+
+  update public.orby_knowledge_documents d
+  set ingestion_status = case
+        when d.knowledge_profile_status = 'ready'
+          and d.knowledge_profile_version >= 2
+          and d.concept_count > 0
+          and d.coverage_percent >= 95
+          then 'completed'
+        else 'attention_required'
+      end,
+      next_review_at = case
+        when d.knowledge_profile_status = 'ready'
+          and d.knowledge_profile_version >= 2
+          and d.concept_count > 0
+          and d.coverage_percent >= 95
+          then null
+        else now() + interval '5 minutes'
+      end,
+      updated_at = now()
+  where d.id = v_document_id;
+
+  return true;
+end;
+$function$;
+
+revoke all on function public.orby_complete_knowledge_job(uuid, uuid) from public, anon, authenticated;
+grant execute on function public.orby_complete_knowledge_job(uuid, uuid) to service_role;

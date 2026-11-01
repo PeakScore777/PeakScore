@@ -80,7 +80,7 @@ export async function POST(request: Request) {
 
   const inferredSubject = normalizeIcfesSubject(null, message);
   const { data: sources, error: sourceError } = await supabaseAdmin.rpc("orby_search_admin_knowledge", {
-    p_query: message, p_subject: inferredSubject, p_limit: 8,
+    p_query: message, p_subject: inferredSubject, p_limit: 12,
   });
   if (sourceError) {
     console.error("[Orby Admin Chat] Knowledge search failed.", { code: sourceError.code });

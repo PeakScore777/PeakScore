@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   }
   if (contentType !== "application/pdf") return jsonError("El archivo debe ser un PDF.", 415);
   if (!Number.isInteger(size) || size < 1 || size > MAX_PDF_BYTES) {
-    return jsonError("El PDF debe pesar como máximo 20 MB.", 413);
+    return jsonError("El PDF debe pesar como máximo 50 MB.", 413);
   }
 
   const documentId = crypto.randomUUID();

@@ -33,8 +33,8 @@ export async function POST() {
 
     // A manual admin action means "run now", not "wait for the next
     // five-minute autopilot slot". Promote only the oldest queued job while
-    // holding the global worker lock; the worker still enforces the shared
-    // daily AI-cycle limit and all document/publication checks.
+    // holding the global worker lock. Manual runs bypass the automatic daily
+    // AI budget but still obey retry limits and publication safeguards.
     const { data: nextQueuedJob, error: queuedJobError } = await supabaseAdmin
       .from("orby_knowledge_jobs")
       .select("id,status")

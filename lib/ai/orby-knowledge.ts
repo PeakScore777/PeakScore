@@ -182,8 +182,8 @@ export async function generateOrbyKnowledgeProfile(
   const batchProfiles = await mapWithConcurrency(batches, 2, async (batch, batchIndex) => {
     const allowedPages = new Set(batch.map((chunk) => chunk.page_number));
     const pageText = batch.map((chunk) =>
-      "[Página " + chunk.page_number + "]\\n" + chunk.content.slice(0, 6500)
-    ).join("\\n\\n");
+      "[Página " + chunk.page_number + "]\n" + chunk.content.slice(0, 6500)
+    ).join("\n\n");
 
     const schema = {
       summary: "síntesis literal de este bloque, 2-4 frases",
@@ -227,7 +227,7 @@ export async function generateOrbyKnowledgeProfile(
       pageText,
       "</source_pages>",
       "Identificador de lote interno: " + (batchIndex + 1) + "/" + batches.length,
-    ].join("\\n\\n");
+    ].join("\n\n");
 
     const result = await generateAI({ task: "analysis", prompt, useFallback: true });
     const parsed = parseJsonObject(typeof result.text === "string" ? result.text : "");

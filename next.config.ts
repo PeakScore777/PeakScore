@@ -88,12 +88,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // proxy.ts buffers the request before it reaches the Route Handler.
-    // PDFs are limited to 20 MB; leave room for multipart/form-data overhead.
-    proxyClientMaxBodySize: "25mb",
-  },
-
   serverExternalPackages: [
     "pdf-parse",
     "@napi-rs/canvas",

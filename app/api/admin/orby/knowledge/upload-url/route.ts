@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const BUCKET = "orby-knowledge";
-const MAX_PDF_BYTES = 20 * 1024 * 1024;
+const MAX_PDF_BYTES = 50_000_000;
 
 function jsonError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status, headers: { "Cache-Control": "private, no-store" } });
@@ -31,6 +31,19 @@ export async function POST(request: Request) {
 
   const documentId = crypto.randomUUID();
   const path = owner.user.id + "/" + documentId + ".pdf";
+  const configuredStorageUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!configuredStorageUrl) return jsonError("El almacenamiento de Orby no está configurado.", 503);
+  let tusEndpoint: string;
+  try {
+    const projectUrl = new URL(configuredStorageUrl);
+    if (projectUrl.protocol !== "https:" || !projectUrl.hostname.endsWith(".supabase.co")) {
+      return jsonError("El endpoint privado de almacenamiento no es válido.", 503);
+    }
+    const projectRef = projectUrl.hostname.split(".")[0];
+    tusEndpoint = "https://" + projectRef + ".storage.supabase.co/storage/v1/upload/resumable";
+  } catch {
+    return jsonError("No se pudo preparar el endpoint de carga.", 503);
+  }
   const { data, error } = await supabaseAdmin.storage
     .from(BUCKET)
     .createSignedUploadUrl(path, { upsert: false });
@@ -44,6 +57,8 @@ export async function POST(request: Request) {
     documentId,
     path,
     token: data.token,
-    message: "Conexión privada preparada. El archivo se enviará directamente a Supabase Storage.",
+    tusEndpoint,
+    bucketName: BUCKET,
+    message: "Conexión privada preparada. El archivo se enviará en bloques reanudables directamente a Supabase Storage.",
   }, { headers: { "Cache-Control": "private, no-store" } });
 }

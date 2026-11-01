@@ -279,7 +279,7 @@ export async function getOrbyRelatedKnowledge(
   visibility: "admin" | "published" = "published",
   limit = 5
 ) {
-  const ids = [...new Set(documentIds.filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))].slice(0, 8);
+  const ids = [...new Set(documentIds.filter((id) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)))].slice(0, 8);
   if (!ids.length) return [];
   const { data, error } = await supabaseAdmin.rpc("orby_get_related_knowledge", {
     p_document_ids: ids,

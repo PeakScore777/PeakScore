@@ -80,7 +80,7 @@ test("solo permite publicar cuando el perfil v2 y todos los embeddings están li
     embedded_chunk_count: 8,
     knowledge_profile_status: "ready",
     knowledge_profile_version: 2,
-    knowledge_pipeline_version: 4,
+    knowledge_pipeline_version: 6,
     concept_count: 12,
     ingestion_status: "completed",
     coverage_percent: 100,
@@ -94,9 +94,9 @@ test("solo permite publicar cuando el perfil v2 y todos los embeddings están li
     { chunk_count: 8, embedded_chunk_count: 7, knowledge_profile_status: "ready", knowledge_profile_version: 2 },
     { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 1, knowledge_pipeline_version: 3 },
     { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 2, knowledge_pipeline_version: 2, concept_count: 12 },
-    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 2, knowledge_pipeline_version: 4, concept_count: 0, ingestion_status: "completed", coverage_percent: 100, visual_pages_total: 10, visual_pages_reviewed: 10 },
-    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 2, knowledge_pipeline_version: 4, concept_count: 12, ingestion_status: "attention_required", coverage_percent: 90, visual_pages_total: 10, visual_pages_reviewed: 9 },
-    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 2, knowledge_pipeline_version: 3, concept_count: 12, ingestion_status: "completed", coverage_percent: 100, visual_pages_total: 10, visual_pages_reviewed: 10 },
+    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 2, knowledge_pipeline_version: 6, concept_count: 0, ingestion_status: "completed", coverage_percent: 100, visual_pages_total: 10, visual_pages_reviewed: 10 },
+    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 2, knowledge_pipeline_version: 6, concept_count: 12, ingestion_status: "attention_required", coverage_percent: 90, visual_pages_total: 10, visual_pages_reviewed: 9 },
+    { chunk_count: 8, embedded_chunk_count: 8, knowledge_profile_status: "ready", knowledge_profile_version: 2, knowledge_pipeline_version: 5, concept_count: 12, ingestion_status: "completed", coverage_percent: 100, visual_pages_total: 10, visual_pages_reviewed: 10 },
     { chunk_count: 0, embedded_chunk_count: 0, knowledge_profile_status: "ready", knowledge_profile_version: 2 },
   ];
 

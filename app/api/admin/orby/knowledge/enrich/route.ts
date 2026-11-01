@@ -38,6 +38,7 @@ export async function POST(request: Request) {
     ? allDocuments ?? []
     : (allDocuments ?? []).filter((item) =>
         item.knowledge_profile_status !== "ready"
+        || Number(item.knowledge_profile_version ?? 1) < 2
         || Number(item.embedded_chunk_count ?? 0) < Number(item.chunk_count ?? 0)
       );
 

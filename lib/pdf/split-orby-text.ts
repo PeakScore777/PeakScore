@@ -37,13 +37,8 @@ export function splitOrbyText(text: string, maxChars: number): string[] {
           end = start + sentenceBoundary + 1;
         } else {
           const whitespaceBoundary = window.lastIndexOf(" ");
-          if (whitespaceBoundary >= minimumPreferredBoundary - start) {
+          if (whitespaceBoundary > 0) {
             end = start + whitespaceBoundary;
-          } else {
-            const nextWhitespace = paragraph.indexOf(" ", end);
-            if (nextWhitespace > end && nextWhitespace <= start + safeLimit + 80) {
-              end = nextWhitespace;
-            }
           }
         }
       }

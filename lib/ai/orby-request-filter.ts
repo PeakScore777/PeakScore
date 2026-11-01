@@ -27,7 +27,7 @@ const OUTSIDE_SCOPE_PATTERNS = [
 ];
 
 const INJECTION_PATTERNS = [
-  /\b(ignore|ignora|olvida)\b.{0,60}\b(instrucciones|reglas|restricciones|previous instructions|system prompt)\b/i,
+  /\b(ignore|ignora|olvida|forget|disregard)\b.{0,80}\b(instrucciones|instructions|rules|reglas|restricciones|restrictions|previous instructions|prior instructions|system prompt|prompt del sistema)\b/i,
   /\b(revela|muestra|imprime|exporta|show|reveal|print|dump|disclose)\b.{0,60}\b(prompt del sistema|system prompt|hidden prompt|instrucciones internas|hidden instructions|api.?key|secretos?|secrets?|credenciales|credentials?|variables de entorno|environment variables|private key|access token)\b/i,
   /\b(jailbreak|bypass|desactiva tus reglas|actua sin restricciones)\b/i,
   /\b(?:developer mode|modo desarrollador|do anything now|dan mode)\b/i,

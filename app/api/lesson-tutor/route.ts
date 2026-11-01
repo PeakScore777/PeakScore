@@ -341,9 +341,9 @@ export async function POST(request: Request) {
       .map((source) => [source.document_id, source])).values()]
       .map((source) => [
         typeof source.profile_summary === "string" ? source.profile_summary : "",
-        "Temas relacionados: " + JSON.stringify(source.profile_topics ?? []),
-        "Conceptos identificados: " + JSON.stringify(source.profile_concepts ?? []),
-        "Competencias descritas: " + JSON.stringify(source.profile_competencies ?? []),
+        "Temas relacionados: " + JSON.stringify(Array.isArray(source.profile_topics) ? source.profile_topics.slice(0, 20) : []),
+        "Conceptos identificados: " + JSON.stringify(Array.isArray(source.profile_concepts) ? source.profile_concepts.slice(0, 24) : []),
+        "Competencias descritas: " + JSON.stringify(Array.isArray(source.profile_competencies) ? source.profile_competencies.slice(0, 16) : []),
       ].join("\n"))
       .join("\n\n");
     const relatedKnowledgeContext = relatedKnowledge.map((item) => [

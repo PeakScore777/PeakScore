@@ -37,12 +37,6 @@ function hashPageBatch(pages: OrbyKnowledgePageInput[], sourceSha256: string): s
     .digest("hex");
 }
 
-function record(value: unknown): Record<string, unknown> {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown>
-    : {};
-}
-
 function numberList(value: unknown): number[] {
   return Array.isArray(value)
     ? value.filter((item): item is number => typeof item === "number" && Number.isInteger(item) && item > 0)
@@ -212,7 +206,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
     const [chunks, documentResult] = await Promise.all([
       loadOrbyKnowledgeChunks(job.document_id),
       supabaseAdmin.from("orby_knowledge_documents")
-        .select("id,title,storage_path,page_count,source_sha256,embedded_chunk_count,chunk_count,ingestion_status")
+        .select("id,title,storage_path,page_count,source_sha256,embedded_chunk_count,chunk_count,ingestion_status,gemini_file_name")
         .eq("id", job.document_id)
         .single(),
     ]);
@@ -543,7 +537,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
         .eq("id", job.document_id);
       if (clearFileError) console.warn("[Orby Knowledge] Could not clear the temporary Gemini file reference.");
 
-      try { await deleteOrbyGeminiDocumentFile(cachedGeminiFileName); } catch { /* best effort */ }
+      try { await deleteOrbyGeminiDocumentFile(cachedGeminiFileName ?? document.gemini_file_name); } catch { /* best effort */ }
 
       return {
         state: "completed",

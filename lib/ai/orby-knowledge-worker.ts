@@ -3,28 +3,75 @@ import "server-only";
 import { createHash, randomUUID } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
-  combineOrbyKnowledgeProfileBatches,
+  combineOrbyKnowledgePageBatches,
   createOrbyEmbeddings,
-  generateOrbyKnowledgeProfileBatch,
+  generateOrbyKnowledgePageBatch,
   saveOrbyKnowledgeProfile,
-  type OrbyKnowledgeBatchProfile,
   type OrbyKnowledgeChunk,
+  type OrbyKnowledgePageBatchProfile,
+  type OrbyKnowledgePageInput,
+  type OrbyPedagogicalKnowledge,
 } from "@/lib/ai/orby-knowledge";
-import { extractOrbyChecklistRows } from "@/lib/pdf/extract-orby-checklist-rows";
 import {
-  hashOrbyKnowledgeChunks,
+  hashOrbyKnowledgeDocumentContent,
   loadOrbyKnowledgeChunks,
   type OrbyKnowledgeJob,
 } from "@/lib/ai/orby-knowledge-queue";
+import { ensureOrbyGeminiDocumentFile, deleteOrbyGeminiDocumentFile } from "@/lib/ai/orby-gemini-file";
+import { splitOrbyText } from "@/lib/pdf/split-orby-text";
 
 const EMBEDDING_BATCH_SIZE = 16;
+const PAGE_BATCH_SIZE = 4;
+const MAX_PAGE_REVIEWS = 10;
+const REVIEW_THRESHOLD = 0.85;
 
-function hashBatch(chunks: OrbyKnowledgeChunk[]): string {
-  const canonical = [...chunks]
-    .sort((a, b) => a.chunk_index - b.chunk_index)
-    .map((chunk) => chunk.chunk_index + "|" + chunk.page_number + "|" + chunk.content.length + ":" + chunk.content)
-    .join("\n");
-  return createHash("sha256").update(canonical, "utf8").digest("hex");
+function hashPageBatch(pages: OrbyKnowledgePageInput[], sourceSha256: string): string {
+  return createHash("sha256")
+    .update(sourceSha256, "utf8")
+    .update(JSON.stringify(pages.map((page) => ({
+      page_number: page.page_number,
+      page_text: page.page_text,
+      has_selectable_text: page.has_selectable_text,
+      review_attempts: page.review_attempts,
+    }))), "utf8")
+    .digest("hex");
+}
+
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function numberList(value: unknown): number[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is number => typeof item === "number" && Number.isInteger(item) && item > 0)
+    : [];
+}
+
+function makePageArtifacts(
+  pedagogical: OrbyPedagogicalKnowledge,
+  pageNumber: number
+): Record<string, unknown> {
+  const output: Record<string, unknown> = {};
+  for (const [key, values] of Object.entries(pedagogical)) {
+    output[key] = values.filter((item) => numberList(item.evidence_pages).includes(pageNumber));
+  }
+  return output;
+}
+
+function makePageSearchContent(
+  pageNumber: number,
+  visualSummary: string,
+  pageConcepts: string[],
+  pagePatterns: string[]
+): string {
+  return [
+    "Representación visual académica de la página " + pageNumber + ".",
+    visualSummary.trim(),
+    pageConcepts.length ? "Conceptos identificados: " + pageConcepts.join("; ") + "." : "",
+    pagePatterns.length ? "Patrones abstractos de pregunta: " + pagePatterns.join("; ") + "." : "",
+  ].filter(Boolean).join("\n").slice(0, 2100);
 }
 
 async function releaseJob(
@@ -45,7 +92,93 @@ async function releaseJob(
     p_embedded_chunk_count: values.embeddedChunkCount,
     p_total_batches: values.totalBatches,
   });
-  if (error) throw new Error("No se pudo liberar la tarea: " + error.code);
+  if (error) throw new Error("No se pudo liberar la tarea de Orby: " + error.code);
+}
+
+async function refreshDocumentContentHash(
+  job: OrbyKnowledgeJob,
+  workerId: string,
+  sourceSha256: string,
+  chunks: OrbyKnowledgeChunk[]
+): Promise<string> {
+  const contentHash = hashOrbyKnowledgeDocumentContent(chunks, sourceSha256);
+  const { error } = await supabaseAdmin
+    .from("orby_knowledge_jobs")
+    .update({ content_hash: contentHash, updated_at: new Date().toISOString() })
+    .eq("id", job.id)
+    .eq("locked_by", workerId)
+    .eq("status", "running");
+  if (error) throw new Error("No se pudo actualizar la huella del contenido aprendido.");
+  return contentHash;
+}
+
+async function getChunkCounts(documentId: string): Promise<{ total: number; embedded: number; missing: number }> {
+  const [total, embedded, missing] = await Promise.all([
+    supabaseAdmin.from("orby_knowledge_chunks").select("id", { count: "exact", head: true }).eq("document_id", documentId),
+    supabaseAdmin.from("orby_knowledge_chunks").select("id", { count: "exact", head: true }).eq("document_id", documentId).not("embedding", "is", null),
+    supabaseAdmin.from("orby_knowledge_chunks").select("id", { count: "exact", head: true }).eq("document_id", documentId).is("embedding", null),
+  ]);
+  if (total.error || embedded.error || missing.error) throw new Error("No se pudo consultar la cobertura semántica del documento.");
+  return {
+    total: total.count ?? 0,
+    embedded: embedded.count ?? 0,
+    missing: missing.count ?? 0,
+  };
+}
+
+async function upsertDerivedPageChunks(
+  documentId: string,
+  pageResult: { page_number: number; ocr_text: string; visual_summary: string },
+  documentChunks: OrbyKnowledgeChunk[],
+  concepts: Array<{ name: string; evidence_pages: number[] }>,
+  patterns: Array<{ archetype: string; evidence_pages: number[] }>
+): Promise<OrbyKnowledgeChunk[]> {
+  const pageNumber = pageResult.page_number;
+  const pageConcepts = concepts.filter((item) => item.evidence_pages.includes(pageNumber)).map((item) => item.name);
+  const pagePatterns = patterns.filter((item) => item.evidence_pages.includes(pageNumber)).map((item) => item.archetype);
+  const drafts: Array<{ content: string; content_origin: "ocr" | "visual" }> = [];
+
+  for (const content of splitOrbyText(pageResult.ocr_text, 2000)) {
+    if (content.trim().length >= 40) drafts.push({ content, content_origin: "ocr" });
+  }
+
+  const visualContent = makePageSearchContent(pageNumber, pageResult.visual_summary, pageConcepts, pagePatterns);
+  if (visualContent.length >= 80) drafts.push({ content: visualContent, content_origin: "visual" });
+
+  const { error: deleteError } = await supabaseAdmin
+    .from("orby_knowledge_chunks")
+    .delete()
+    .eq("document_id", documentId)
+    .eq("page_number", pageNumber)
+    .in("content_origin", ["ocr", "visual"]);
+  if (deleteError) throw new Error("No se pudo reemplazar la representación visual anterior de la página " + pageNumber + ".");
+
+  if (!drafts.length) {
+    return documentChunks.filter((chunk) => chunk.page_number !== pageNumber);
+  }
+
+  const maxIndex = documentChunks.reduce((max, chunk) => Math.max(max, chunk.chunk_index), -1);
+  const inserts = drafts.map((draft, index) => ({
+    document_id: documentId,
+    page_number: pageNumber,
+    subject: "Preparación Saber 11",
+    topic: "Lectura multimodal de página",
+    chunk_index: maxIndex + index + 1,
+    content: draft.content,
+    content_origin: draft.content_origin,
+  }));
+  const { error: insertError } = await supabaseAdmin.from("orby_knowledge_chunks").insert(inserts);
+  if (insertError) throw new Error("No se pudo guardar el texto visual de la página " + pageNumber + ": " + insertError.code);
+
+  const retained = documentChunks.filter((chunk) => chunk.page_number !== pageNumber);
+  return [
+    ...retained,
+    ...inserts.map((item) => ({
+      chunk_index: item.chunk_index,
+      page_number: item.page_number,
+      content: item.content,
+    })),
+  ].sort((a, b) => a.chunk_index - b.chunk_index);
 }
 
 export async function processNextOrbyKnowledgeJob(): Promise<{
@@ -63,28 +196,30 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
     p_lease_seconds: 600,
   });
   if (claimError) throw new Error("No se pudo reclamar una tarea: " + claimError.code);
-  if (!claimed || typeof claimed !== "object") return { state: "idle", message: "No hay tareas pendientes." };
+  if (!claimed || typeof claimed !== "object") {
+    return { state: "idle", message: "No hay tareas disponibles o se alcanzó el límite global de 10 ciclos IA de hoy." };
+  }
 
   const job = claimed as unknown as OrbyKnowledgeJob;
   let documentTitle = job.document_id;
+  let cachedGeminiFileName: string | null = null;
+
   try {
     const [chunks, documentResult] = await Promise.all([
       loadOrbyKnowledgeChunks(job.document_id),
       supabaseAdmin.from("orby_knowledge_documents")
-        .select("title")
+        .select("id,title,storage_path,page_count,source_sha256,embedded_chunk_count,chunk_count,ingestion_status")
         .eq("id", job.document_id)
         .single(),
     ]);
-    if (!chunks.length) throw new Error("El documento ya no contiene fragmentos.");
     if (documentResult.error || !documentResult.data) throw new Error("No se encontró el documento de la tarea.");
-    documentTitle = documentResult.data.title as string;
-
-    const currentHash = hashOrbyKnowledgeChunks(chunks);
+    const document = documentResult.data;
+    documentTitle = document.title as string;
+    const totalBatches = Math.max(1, Math.ceil(Number(document.page_count ?? 0) / PAGE_BATCH_SIZE));
+    const currentHash = hashOrbyKnowledgeDocumentContent(chunks, document.source_sha256);
     if (currentHash !== job.content_hash) {
-      throw new Error("El contenido del documento cambió mientras se procesaba. Se requiere crear una nueva tarea.");
+      throw new Error("El PDF o sus fragmentos cambiaron durante el aprendizaje. Se requiere crear una nueva tarea.");
     }
-
-    const totalBatches = Math.ceil(chunks.length / 2);
 
     if (job.stage === "embeddings") {
       const { data: missing, error: missingError } = await supabaseAdmin
@@ -99,150 +234,323 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
       if (missing?.length) {
         const indexes = missing.map((item) => item.chunk_index);
         const batch = chunks.filter((chunk) => indexes.includes(chunk.chunk_index));
+        if (!batch.length) throw new Error("Los fragmentos pendientes de embedding no están disponibles.");
         await createOrbyEmbeddings(job.document_id, documentTitle, batch);
       }
 
-      const [{ count: embeddedCount, error: countError }, { count: missingCount, error: pendingError }] = await Promise.all([
-        supabaseAdmin.from("orby_knowledge_chunks")
-          .select("chunk_index", { count: "exact", head: true })
-          .eq("document_id", job.document_id)
-          .not("embedding", "is", null),
-        supabaseAdmin.from("orby_knowledge_chunks")
-          .select("chunk_index", { count: "exact", head: true })
-          .eq("document_id", job.document_id)
-          .is("embedding", null),
-      ]);
-      if (countError || pendingError) throw new Error("No se pudo comprobar el avance de los embeddings.");
-      const embedded = Number(embeddedCount ?? 0);
-      const remaining = Number(missingCount ?? 0);
-
-      const { error: updateError } = await supabaseAdmin
-        .from("orby_knowledge_documents")
-        .update({ embedded_chunk_count: embedded, updated_at: new Date().toISOString() })
+      const counts = await getChunkCounts(job.document_id);
+      const nextStage = counts.missing > 0
+        ? "embeddings"
+        : job.next_batch_index >= totalBatches ? "finalize" : "profile";
+      const { error: countUpdateError } = await supabaseAdmin.from("orby_knowledge_documents")
+        .update({
+          embedded_chunk_count: counts.embedded,
+          chunk_count: counts.total,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", job.document_id);
-      if (updateError) throw new Error("No se pudo actualizar el contador de embeddings.");
+      if (countUpdateError) throw new Error("No se pudo actualizar el contador de embeddings.");
 
-      const nextStage = remaining > 0 ? "embeddings" : "profile";
       await releaseJob(job, workerId, {
         stage: nextStage,
-        nextBatchIndex: 0,
-        embeddedChunkCount: embedded,
+        nextBatchIndex: job.next_batch_index >= totalBatches ? totalBatches : 0,
+        embeddedChunkCount: counts.embedded,
         totalBatches,
       });
+
       return {
         state: "progress",
         jobId: job.id,
         documentId: job.document_id,
         documentTitle,
         stage: nextStage,
-        progress: embedded,
-        message: remaining > 0
-          ? documentTitle + ": " + embedded + "/" + chunks.length + " embeddings listos; quedan " + remaining + " fragmentos."
-          : documentTitle + ": " + embedded + "/" + chunks.length + " embeddings listos. Comienza el perfilado académico.",
+        progress: counts.embedded,
+        message: counts.missing > 0
+          ? documentTitle + ": " + counts.embedded + "/" + counts.total + " vectores listos; quedan " + counts.missing + "."
+          : documentTitle + ": embeddings completos; continúa la lectura visual y el perfilado académico.",
       };
     }
 
     if (job.stage === "profile") {
-      if (job.next_batch_index >= totalBatches) {
+      const reviewOnly = job.next_batch_index > totalBatches;
+      const batchIndex = reviewOnly ? job.next_batch_index - totalBatches - 1 : job.next_batch_index;
+      if (!reviewOnly && batchIndex >= totalBatches) {
         await releaseJob(job, workerId, {
           stage: "finalize",
           nextBatchIndex: totalBatches,
           embeddedChunkCount: job.embedded_chunk_count,
           totalBatches,
         });
-        return { state: "progress", jobId: job.id, documentId: job.document_id, documentTitle, stage: "finalize", message: documentTitle + ": todos los lotes académicos están listos; falta consolidar el perfil." };
+        return { state: "progress", jobId: job.id, documentId: job.document_id, documentTitle, stage: "finalize", message: documentTitle + ": terminó la primera lectura de páginas; verificando cobertura." };
+      }
+      if (batchIndex < 0 || batchIndex >= totalBatches) throw new Error("Índice de lote visual inválido.");
+
+      const pageStart = batchIndex * PAGE_BATCH_SIZE + 1;
+      const pageEnd = Math.min(Number(document.page_count), pageStart + PAGE_BATCH_SIZE - 1);
+      const { data: storedPages, error: pagesError } = await supabaseAdmin
+        .from("orby_knowledge_document_pages")
+        .select("page_number,page_text,has_selectable_text,review_attempts,visual_status,coverage_score,unresolved_items")
+        .eq("document_id", job.document_id)
+        .gte("page_number", pageStart)
+        .lte("page_number", pageEnd)
+        .order("page_number", { ascending: true });
+      if (pagesError) throw new Error("No se pudo recuperar el manifiesto de páginas.");
+      let pageRows = storedPages ?? [];
+      if (reviewOnly) {
+        pageRows = pageRows.filter((page) => {
+          const unresolved = Array.isArray(page.unresolved_items) ? page.unresolved_items.length > 0 : false;
+          return Number(page.review_attempts ?? 0) < MAX_PAGE_REVIEWS
+            && (page.visual_status !== "reviewed" || Number(page.coverage_score ?? 0) < REVIEW_THRESHOLD || unresolved);
+        });
+      }
+      if (!pageRows.length) {
+        await releaseJob(job, workerId, {
+          stage: "finalize",
+          nextBatchIndex: totalBatches,
+          embeddedChunkCount: job.embedded_chunk_count,
+          totalBatches,
+        });
+        return { state: "progress", jobId: job.id, documentId: job.document_id, documentTitle, stage: "finalize", message: documentTitle + ": no quedan páginas que revisar en ese lote." };
       }
 
-      const batchIndex = job.next_batch_index;
-      const batch = chunks.slice(batchIndex * 2, batchIndex * 2 + 2);
-      if (!batch.length) throw new Error("El lote solicitado no contiene fragmentos.");
-      const inputHash = hashBatch(batch);
-      const { data: storedBatch, error: batchReadError } = await supabaseAdmin
+      const file = await ensureOrbyGeminiDocumentFile(job.document_id, document.storage_path as string, documentTitle);
+      cachedGeminiFileName = file.name;
+      const pageInputs: OrbyKnowledgePageInput[] = pageRows.map((page) => ({
+        page_number: page.page_number,
+        page_text: typeof page.page_text === "string" ? page.page_text : "",
+        has_selectable_text: Boolean(page.has_selectable_text),
+        review_attempts: Number(page.review_attempts ?? 0),
+      }));
+      const result = await generateOrbyKnowledgePageBatch(file.uri, pageInputs, batchIndex, totalBatches);
+
+      const inputHash = hashPageBatch(pageInputs, document.source_sha256 ?? "");
+      const { data: previousBatch, error: previousBatchError } = await supabaseAdmin
         .from("orby_knowledge_job_batches")
-        .select("input_hash,result")
+        .select("result")
         .eq("job_id", job.id)
         .eq("batch_index", batchIndex)
         .maybeSingle();
-      if (batchReadError) throw new Error("No se pudo consultar el resultado del lote.");
-
-      if (!storedBatch || storedBatch.input_hash !== inputHash) {
-        const checklistRows = extractOrbyChecklistRows(chunks);
-        const result = await generateOrbyKnowledgeProfileBatch(batch, batchIndex, totalBatches, checklistRows);
-        const { error: saveBatchError } = await supabaseAdmin
-          .from("orby_knowledge_job_batches")
-          .upsert({
-            job_id: job.id,
-            batch_index: batchIndex,
-            input_hash: inputHash,
-            result,
-          }, { onConflict: "job_id,batch_index" });
-        if (saveBatchError) throw new Error("No se pudo guardar el resultado del lote: " + saveBatchError.code);
+      if (previousBatchError) throw new Error("No se pudo recuperar la memoria parcial del lote.");
+      let mergedBatch = result;
+      if (previousBatch?.result && typeof previousBatch.result === "object") {
+        mergedBatch = combineOrbyKnowledgePageBatches([
+          previousBatch.result as unknown as OrbyKnowledgePageBatchProfile,
+          result,
+        ]);
       }
 
-      const nextIndex = batchIndex + 1;
-      const nextStage = nextIndex >= totalBatches ? "finalize" : "profile";
+      for (const pageResult of result.page_results) {
+        const originalPage = pageRows.find((page) => page.page_number === pageResult.page_number);
+        if (!originalPage) continue;
+        const attempts = Number(originalPage.review_attempts ?? 0) + 1;
+        const unresolved = pageResult.unresolved_items;
+        const reviewed = pageResult.coverage_score >= REVIEW_THRESHOLD && unresolved.length === 0;
+        const { error: pageUpdateError } = await supabaseAdmin
+          .from("orby_knowledge_document_pages")
+          .update({
+            ocr_text: pageResult.ocr_text,
+            visual_summary: pageResult.visual_summary,
+            coverage_score: pageResult.coverage_score,
+            unresolved_items: unresolved,
+            visual_status: reviewed ? "reviewed" : "needs_review",
+            review_attempts: attempts,
+            concept_count: result.concepts.filter((concept) => concept.evidence_pages.includes(pageResult.page_number)).length,
+            question_pattern_count: result.pedagogical_knowledge.question_patterns.filter((pattern) =>
+              numberList(pattern.evidence_pages).includes(pageResult.page_number)
+            ).length,
+            pedagogical_artifacts: makePageArtifacts(result.pedagogical_knowledge, pageResult.page_number),
+            last_reviewed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("document_id", job.document_id)
+          .eq("page_number", pageResult.page_number);
+        if (pageUpdateError) throw new Error("No se pudo guardar la revisión visual de la página " + pageResult.page_number + ".");
+
+        chunks.splice(0, chunks.length, ...await upsertDerivedPageChunks(
+          job.document_id,
+          pageResult,
+          chunks,
+          result.concepts,
+          result.pedagogical_knowledge.question_patterns as Array<{ archetype: string; evidence_pages: number[] }>
+        ));
+      }
+
+      const counts = await getChunkCounts(job.document_id);
+      const { count: reviewedCount, error: reviewedError } = await supabaseAdmin
+        .from("orby_knowledge_document_pages")
+        .select("page_number", { count: "exact", head: true })
+        .eq("document_id", job.document_id)
+        .eq("visual_status", "reviewed");
+      if (reviewedError) throw new Error("No se pudo calcular la cobertura visual del documento.");
+      const coveragePercent = Number(document.page_count) > 0
+        ? Number(((Number(reviewedCount ?? 0) / Number(document.page_count)) * 100).toFixed(2))
+        : 0;
+      const { error: docUpdateError } = await supabaseAdmin.from("orby_knowledge_documents")
+        .update({
+          chunk_count: counts.total,
+          embedded_chunk_count: counts.embedded,
+          visual_pages_reviewed: reviewedCount ?? 0,
+          coverage_percent: coveragePercent,
+          ingestion_status: "processing",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", job.document_id);
+      if (docUpdateError) throw new Error("No se pudo actualizar la cobertura de aprendizaje del documento.");
+
+      await supabaseAdmin.from("orby_knowledge_job_batches")
+        .upsert({
+          job_id: job.id,
+          batch_index: batchIndex,
+          input_hash: inputHash,
+          result: mergedBatch,
+        }, { onConflict: "job_id,batch_index" });
+
+      const updatedChunks = await loadOrbyKnowledgeChunks(job.document_id);
+      await refreshDocumentContentHash(job, workerId, document.source_sha256 ?? "", updatedChunks);
+
+      const nextStage = reviewOnly
+        ? counts.missing > 0 ? "embeddings" : "finalize"
+        : batchIndex + 1 >= totalBatches ? counts.missing > 0 ? "embeddings" : "finalize" : "profile";
+      const nextIndex = reviewOnly ? totalBatches : batchIndex + 1;
       await releaseJob(job, workerId, {
         stage: nextStage,
         nextBatchIndex: nextIndex,
-        embeddedChunkCount: job.embedded_chunk_count,
+        embeddedChunkCount: counts.embedded,
         totalBatches,
       });
+
       return {
         state: "progress",
         jobId: job.id,
         documentId: job.document_id,
         documentTitle,
         stage: nextStage,
-        progress: nextIndex,
-        message: documentTitle + ": lote académico " + nextIndex + "/" + totalBatches + " guardado.",
+        progress: batchIndex + 1,
+        message: reviewOnly
+          ? documentTitle + ": relectura de páginas " + pageStart + "–" + pageEnd + " guardada; cobertura " + coveragePercent + "%."
+          : documentTitle + ": páginas " + pageStart + "–" + pageEnd + " analizadas; cobertura " + coveragePercent + "%.",
       };
     }
 
     if (job.stage === "finalize") {
-      const { data: batches, error: batchesError } = await supabaseAdmin
-        .from("orby_knowledge_job_batches")
-        .select("batch_index,input_hash,result")
-        .eq("job_id", job.id)
-        .order("batch_index", { ascending: true });
-      if (batchesError) throw new Error("No se pudieron recuperar los lotes del perfil.");
-      if (!batches || batches.length !== totalBatches || batches.some((item, index) => item.batch_index !== index)) {
-        throw new Error("El perfil todavía no tiene todos los lotes en orden: " + (batches?.length ?? 0) + "/" + totalBatches + ".");
+      const { data: allPages, error: allPagesError } = await supabaseAdmin
+        .from("orby_knowledge_document_pages")
+        .select("page_number,visual_status,coverage_score,unresolved_items,review_attempts")
+        .eq("document_id", job.document_id)
+        .order("page_number", { ascending: true });
+      if (allPagesError) throw new Error("No se pudo comprobar la cobertura completa por página.");
+      const weakPages = (allPages ?? []).filter((page) => {
+        const unresolved = Array.isArray(page.unresolved_items) ? page.unresolved_items.length > 0 : false;
+        return Number(page.review_attempts ?? 0) < MAX_PAGE_REVIEWS
+          && (page.visual_status !== "reviewed" || Number(page.coverage_score ?? 0) < REVIEW_THRESHOLD || unresolved);
+      });
+
+      if (weakPages.length) {
+        const targetGroup = Math.floor((weakPages[0].page_number - 1) / PAGE_BATCH_SIZE);
+        await releaseJob(job, workerId, {
+          stage: "profile",
+          nextBatchIndex: totalBatches + 1 + targetGroup,
+          embeddedChunkCount: job.embedded_chunk_count,
+          totalBatches,
+        });
+        return {
+          state: "progress",
+          jobId: job.id,
+          documentId: job.document_id,
+          documentTitle,
+          stage: "profile",
+          progress: Number((allPages ?? []).filter((page) => page.visual_status === "reviewed").length),
+          message: documentTitle + ": detecté " + weakPages.length + " páginas que necesitan una revisión adicional. Releyendo la página " + weakPages[0].page_number + ".",
+        };
       }
 
-      const profile = combineOrbyKnowledgeProfileBatches(
-        batches.map((item) => item.result as unknown as OrbyKnowledgeBatchProfile)
+      const counts = await getChunkCounts(job.document_id);
+      if (counts.missing > 0) {
+        await releaseJob(job, workerId, {
+          stage: "embeddings",
+          nextBatchIndex: totalBatches,
+          embeddedChunkCount: counts.embedded,
+          totalBatches,
+        });
+        return {
+          state: "progress",
+          jobId: job.id,
+          documentId: job.document_id,
+          documentTitle,
+          stage: "embeddings",
+          progress: counts.embedded,
+          message: documentTitle + ": el análisis visual generó " + counts.missing + " fragmentos nuevos para indexar.",
+        };
+      }
+
+      const { data: batches, error: batchesError } = await supabaseAdmin
+        .from("orby_knowledge_job_batches")
+        .select("batch_index,result")
+        .eq("job_id", job.id)
+        .order("batch_index", { ascending: true });
+      if (batchesError) throw new Error("No se pudieron recuperar los perfiles pedagógicos guardados.");
+      const initialBatches = (batches ?? []).filter((item) => item.batch_index >= 0 && item.batch_index < totalBatches);
+      if (initialBatches.length !== totalBatches || initialBatches.some((item, index) => item.batch_index !== index)) {
+        throw new Error("El perfil todavía no contiene todos los lotes de páginas: " + initialBatches.length + "/" + totalBatches + ".");
+      }
+
+      const profile = combineOrbyKnowledgePageBatches(
+        initialBatches.map((item) => item.result as unknown as OrbyKnowledgePageBatchProfile)
       );
-      const concepts = await saveOrbyKnowledgeProfile(job.document_id, profile);
+      const conceptCount = await saveOrbyKnowledgeProfile(job.document_id, profile);
+      const coverage = Number((allPages ?? []).filter((page) => page.visual_status === "reviewed").length)
+        / Math.max(1, Number(document.page_count)) * 100;
+      const ingestionStatus = coverage >= 95 && conceptCount > 0 ? "completed" : "attention_required";
       const { error: documentUpdateError } = await supabaseAdmin
         .from("orby_knowledge_documents")
         .update({
           knowledge_pipeline_version: job.pipeline_version,
-          embedded_chunk_count: chunks.length,
-          concept_count: concepts,
+          knowledge_profile_version: 2,
+          embedded_chunk_count: counts.embedded,
+          chunk_count: counts.total,
+          concept_count: conceptCount,
           knowledge_profile_status: "ready",
+          visual_pages_reviewed: (allPages ?? []).filter((page) => page.visual_status === "reviewed").length,
+          coverage_percent: Number(coverage.toFixed(2)),
+          ingestion_status: ingestionStatus,
+          next_review_at: null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", job.document_id);
-      if (documentUpdateError) throw new Error("Se guardó el perfil, pero no se pudo marcar el motor actualizado.");
+      if (documentUpdateError) throw new Error("Se guardó el perfil, pero no se pudo cerrar el estado del documento.");
 
       const { error: completeError } = await supabaseAdmin.rpc("orby_complete_knowledge_job", {
         p_job_id: job.id,
         p_worker_id: workerId,
       });
-      if (completeError) throw new Error("No se pudo cerrar la tarea: " + completeError.code);
+      if (completeError) throw new Error("No se pudo completar el ciclo de aprendizaje: " + completeError.code);
+
+      const { error: clearFileError } = await supabaseAdmin.from("orby_knowledge_documents")
+        .update({
+          gemini_file_uri: null,
+          gemini_file_name: null,
+          gemini_file_expires_at: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", job.document_id);
+      if (clearFileError) console.warn("[Orby Knowledge] Could not clear the temporary Gemini file reference.");
+
+      try { await deleteOrbyGeminiDocumentFile(cachedGeminiFileName); } catch { /* best effort */ }
 
       return {
-        state: "completed",
+        state: ingestionStatus === "completed" ? "completed" : "failed",
         jobId: job.id,
         documentId: job.document_id,
         documentTitle,
         stage: "completed",
-        progress: concepts,
-        message: documentTitle + ": perfil actualizado y validado con " + concepts + " conceptos.",
+        progress: conceptCount,
+        message: ingestionStatus === "completed"
+          ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%."
+          : documentTitle + ": llegó al límite de revisiones con " + conceptCount + " conceptos, pero quedó con atención requerida (" + coverage.toFixed(1) + "%). Revisa las páginas pendientes antes de publicar.",
       };
     }
 
-    throw new Error("Etapa de procesamiento desconocida.");
+    throw new Error("Etapa de aprendizaje desconocida.");
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Error desconocido.";
     const { error: failError } = await supabaseAdmin.rpc("orby_fail_knowledge_job", {
@@ -253,7 +561,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
     if (failError) {
       console.error("[Orby Autopilot] Could not release failed job.", { jobId: job.id, code: failError.code });
     }
-    console.error("[Orby Autopilot] Job batch failed.", { jobId: job.id, stage: job.stage, reason });
+    console.error("[Orby Autopilot] Job cycle failed.", { jobId: job.id, stage: job.stage, reason });
     return {
       state: "failed",
       jobId: job.id,

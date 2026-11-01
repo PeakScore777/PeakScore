@@ -52,6 +52,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
   state: "idle" | "progress" | "completed" | "failed";
   jobId?: string;
   documentId?: string;
+  documentTitle?: string;
   stage?: string;
   progress?: number;
   message?: string;
@@ -66,8 +67,16 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
 
   const job = claimed as unknown as OrbyKnowledgeJob;
   try {
-    const chunks = await loadOrbyKnowledgeChunks(job.document_id);
+    const [chunks, documentResult] = await Promise.all([
+      loadOrbyKnowledgeChunks(job.document_id),
+      supabaseAdmin.from("orby_knowledge_documents")
+        .select("title")
+        .eq("id", job.document_id)
+        .single(),
+    ]);
     if (!chunks.length) throw new Error("El documento ya no contiene fragmentos.");
+    if (documentResult.error || !documentResult.data) throw new Error("No se encontró el documento de la tarea.");
+    const documentTitle = documentResult.data.title as string;
 
     const currentHash = hashOrbyKnowledgeChunks(chunks);
     if (currentHash !== job.content_hash) {
@@ -89,13 +98,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
       if (missing?.length) {
         const indexes = missing.map((item) => item.chunk_index);
         const batch = chunks.filter((chunk) => indexes.includes(chunk.chunk_index));
-        const { data: document, error: documentError } = await supabaseAdmin
-          .from("orby_knowledge_documents")
-          .select("title")
-          .eq("id", job.document_id)
-          .single();
-        if (documentError || !document) throw new Error("No se encontró el título del documento.");
-        await createOrbyEmbeddings(job.document_id, document.title, batch);
+        await createOrbyEmbeddings(job.document_id, documentTitle, batch);
       }
 
       const [{ count: embeddedCount, error: countError }, { count: missingCount, error: pendingError }] = await Promise.all([
@@ -129,11 +132,12 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
         state: "progress",
         jobId: job.id,
         documentId: job.document_id,
+        documentTitle,
         stage: nextStage,
         progress: embedded,
         message: remaining > 0
-          ? "Se generó un lote de embeddings; quedan " + remaining + " fragmentos."
-          : "Todos los embeddings están listos. Comienza el perfilado académico.",
+          ? documentTitle + ": " + embedded + "/" + chunks.length + " embeddings listos; quedan " + remaining + " fragmentos."
+          : documentTitle + ": " + embedded + "/" + chunks.length + " embeddings listos. Comienza el perfilado académico.",
       };
     }
 
@@ -145,7 +149,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
           embeddedChunkCount: job.embedded_chunk_count,
           totalBatches,
         });
-        return { state: "progress", jobId: job.id, documentId: job.document_id, stage: "finalize" };
+        return { state: "progress", jobId: job.id, documentId: job.document_id, documentTitle, stage: "finalize", message: documentTitle + ": todos los lotes académicos están listos; falta consolidar el perfil." };
       }
 
       const batchIndex = job.next_batch_index;
@@ -186,9 +190,10 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
         state: "progress",
         jobId: job.id,
         documentId: job.document_id,
+        documentTitle,
         stage: nextStage,
         progress: nextIndex,
-        message: "Lote académico " + nextIndex + "/" + totalBatches + " guardado.",
+        message: documentTitle + ": lote académico " + nextIndex + "/" + totalBatches + " guardado.",
       };
     }
 
@@ -229,9 +234,10 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
         state: "completed",
         jobId: job.id,
         documentId: job.document_id,
+        documentTitle,
         stage: "completed",
         progress: concepts,
-        message: "Perfil actualizado y validado con " + concepts + " conceptos.",
+        message: documentTitle + ": perfil actualizado y validado con " + concepts + " conceptos.",
       };
     }
 
@@ -251,8 +257,9 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
       state: "failed",
       jobId: job.id,
       documentId: job.document_id,
+      documentTitle,
       stage: job.stage,
-      message: reason.slice(0, 500),
+      message: documentTitle + ": " + reason.slice(0, 450),
     };
   }
 }

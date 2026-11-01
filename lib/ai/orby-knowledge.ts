@@ -699,7 +699,7 @@ export async function generateOrbyKnowledgePageBatch(
       question_solutions: [{
         question_number: 1, area: "área", skill: "habilidad evaluada",
         problem_summary: "resumen parafraseado, nunca copiar el enunciado ni las opciones",
-        reasoning_steps: ["paso 1"], candidate_option: "A, B, C, D o null",
+        reasoning_steps: ["paso 1"], candidate_option: "A-H, valor numérico breve o null",
         candidate_result: "resultado expresado brevemente", answer_basis: "independent_reasoning, explicit_key o insufficient_information",
         answer_key_comparison: "matches, conflicts, not_available o not_applicable",
         confidence: 0.8, uncertainties: [], evidence_pages: [1],
@@ -842,7 +842,7 @@ export async function generateOrbyKnowledgePageBatch(
     exercise_blueprints: cleanPageEvidenceItems(rawPedagogy.exercise_blueprints, allowedPages, 60, ["topic","pattern"]),
     answer_key_observations: cleanPageEvidenceItems(rawPedagogy.answer_key_observations, allowedPages, 80, ["source_type","reasoning_summary"]).map((item) => ({
       ...item,
-      selected_option: ["A","B","C","D"].includes(String(item.selected_option).toUpperCase()) ? String(item.selected_option).toUpperCase() : null,
+      selected_option: ["A","B","C","D","E","F","G","H"].includes(String(item.selected_option).toUpperCase()) ? String(item.selected_option).toUpperCase() : null,
       source_type: ["explicit_answer_key","reasoned_candidate"].includes(String(item.source_type)) ? item.source_type : "reasoned_candidate",
       verification_status: "needs_independent_check",
       confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.5,

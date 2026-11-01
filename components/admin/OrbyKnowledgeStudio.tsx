@@ -185,7 +185,22 @@ export default function OrbyKnowledgeStudio() {
       if (!response.ok) throw new Error(payload.error || "No se pudo enriquecer el conocimiento.");
       const successCount = Number(payload.succeeded ?? 0);
       const failureCount = Number(payload.failed ?? 0);
-      setNotice((payload.message || "Terminó el enriquecimiento de la biblioteca.") + " Correctos: " + successCount + "; pendientes o con error: " + failureCount + ".");
+      const failures = Array.isArray(payload.results)
+        ? payload.results.filter((item: { success?: boolean }) => item?.success === false)
+        : [];
+      if (failureCount > 0) {
+        const details = failures.slice(0, 3).map((item: { title?: string; reason?: string }) =>
+          (item.title || "Documento") + ": " + (item.reason || "Enriquecimiento pendiente.")
+        );
+        setError(
+          "No se completó el perfil de " + failureCount + " documento(s). "
+          + (details.join(" ") || "Los documentos y sus vectores se conservaron.")
+        );
+        if (successCount > 0) setNotice("Perfiles actualizados correctamente: " + successCount + ". Los demás pueden reintentarse sin volver a subir los PDF.");
+      } else {
+        setNotice((payload.message || "Terminó el enriquecimiento de la biblioteca.")
+          + " Perfiles actualizados: " + successCount + ".");
+      }
       await loadAll();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo enriquecer el documento.");

@@ -71,7 +71,7 @@ export async function ensureOrbyGeminiDocumentFile(
   const uploaded = await client.files.upload({
     file: fileBlob,
     config: {
-      displayName: ("Orby-" + displayName).slice(0, 180),
+      displayName: ("Orby-Document-" + documentId).slice(0, 180),
       mimeType: "application/pdf",
     },
   });

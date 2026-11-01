@@ -49,8 +49,7 @@ function formatAdminReply(content: string): string {
       continue;
     }
     if (/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line)) continue;
-    const isTableRow = line.includes("|")
-      && (line.startsWith("|") || line.endsWith("|") || line.split("|").length >= 3);
+    const isTableRow = line.includes("|");
     if (isTableRow) {
       const cells = line.split("|").map((cell) => cell.trim()).filter(Boolean);
       if (cells.length >= 2) {

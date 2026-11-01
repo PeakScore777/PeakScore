@@ -99,7 +99,7 @@ export async function GET() {
           const parent = "parent_concept" in concept && typeof concept.parent_concept === "string" ? concept.parent_concept.trim() : "";
           const key = [normalizeProfileIdentity(area), normalizeProfileIdentity(parent), normalizeProfileIdentity(name)].join("|");
           const pages = "evidence_pages" in concept && Array.isArray(concept.evidence_pages)
-            ? concept.evidence_pages.filter((page): page is number => typeof page === "number" && Number.isInteger(page) && page > 0).slice(0, 10)
+            ? concept.evidence_pages.filter((page: unknown): page is number => typeof page === "number" && Number.isInteger(page) && page > 0).slice(0, 10)
             : [];
           const existing = concepts.get(key);
           concepts.set(key, {

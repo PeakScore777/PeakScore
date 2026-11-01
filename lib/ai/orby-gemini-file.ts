@@ -21,8 +21,7 @@ function getClient(): GoogleGenAI {
 
 export async function ensureOrbyGeminiDocumentFile(
   documentId: string,
-  storagePath: string,
-  displayName: string
+  storagePath: string
 ): Promise<OrbyGeminiDocumentFile> {
   const { data: current, error: lookupError } = await supabaseAdmin
     .from("orby_knowledge_documents")

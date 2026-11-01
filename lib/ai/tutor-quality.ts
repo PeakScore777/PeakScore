@@ -338,7 +338,7 @@ export async function verifyOrbyKnowledgeAnswer(args: {
   if (!reviewer) {
     const resolved = resolveKnowledgeEvidenceMarkers(args.candidate, args.evidence);
     return {
-      reply: resolved.reply,
+      reply: resolved.reply + "\n\nNota de verificación: esta respuesta conserva sus propuestas pedagógicas, pero no recibió una revisión independiente de sus afirmaciones documentales.",
       status: "unverified",
       note: "La respuesta quedó como borrador porque no hay un proveedor independiente disponible para contrastar las fuentes.",
     };

@@ -48,7 +48,9 @@ function parseJson<T>(raw: string): T | null {
 function isConfigured(provider: AIProvider): boolean {
   switch (provider) {
     case "llm7":
-      return Boolean(process.env.LLM7_API_KEY);
+      return process.env.LLM7_ENABLED === "true"
+        && Boolean(process.env.LLM7_API_KEY)
+        && Boolean(process.env.LLM7_MODEL?.trim());
     case "gemini":
       return Boolean(process.env.GEMINI_API_KEY);
     case "groq":

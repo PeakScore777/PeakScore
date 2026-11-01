@@ -48,6 +48,7 @@ type AutomationStatus = {
     exercise_blueprint_count: number;
     visual_element_count: number;
     detected_areas: string[];
+    competency_preview: Array<{ name: string; area: string; evidence_pages: number[]; provenance: "source" | "pedagogical_inference"; question_count: number | null }>;
     concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
     question_pattern_preview: Array<{ archetype: string; stimulus_type: string; task: string; provenance: "source" | "pedagogical_inference"; evidence_pages: number[] }>;
     question_solution_preview: Array<{
@@ -603,6 +604,10 @@ export default function OrbyKnowledgeStudio() {
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Rutas de estudio</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.study_path_count}</p></div>
                   </div>
                   {job.detected_areas.length>0 && <p className="mt-2 text-[9px] leading-4 text-slate-400">Áreas detectadas: {job.detected_areas.join(" · ")}</p>}
+                  {job.competency_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
+                    <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Competencias y distribución de preguntas</p>
+                    {job.competency_preview.slice(0,5).map((competency,index)=><p key={index} className="text-[9px] leading-4 text-slate-400">• {competency.name} · {competency.area}{competency.question_count!==null?" · "+competency.question_count+" preguntas":""} · {competency.provenance==="source"?"tabla del documento":"inferencia didáctica"} · p. {competency.evidence_pages.join(", ")}</p>)}
+                  </div>}
                   {job.concept_preview.length>0 && <div className="mt-2 border-t border-white/[.07] pt-2">
                     <p className="mb-1 text-[9px] font-semibold uppercase tracking-wide text-orange-300">Conceptos identificados</p>
                     <div className="flex flex-wrap gap-1.5">{job.concept_preview.slice(0,6).map((concept,index)=><span key={index} title={(concept.parent_concept?concept.parent_concept+" · ":"")+concept.area+(concept.evidence_pages.length?" · p. "+concept.evidence_pages.join(", "):"")} className="rounded-md border border-white/10 bg-black/20 px-2 py-1 text-[9px] text-slate-300">{concept.name}</span>)}</div>

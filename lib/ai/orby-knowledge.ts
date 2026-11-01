@@ -121,10 +121,11 @@ function extractChecklistRows(chunks: OrbyKnowledgeChunk[]): ExtractedChecklistR
       if (/^(?:INGENYUS|QU[IÍ]MICA|MATEM[AÁ]TICAS|F[IÍ]SICA|BIOLOG[IÍ]A)$/i.test(line)) continue;
 
       const hasListMarker = /^(?:[•●▪◦*–—-]|\d+[.)])\s*/.test(line);
-      const likelyContinuation = /^[a-záéíóúñ(]/.test(line);
       if (!checklistMode && !hasListMarker) continue;
 
-      if (pendingContinuation && (/[,:;([]$/.test(pendingContinuation) || likelyContinuation)) {
+      // Join only genuine wrapped lines. A new checklist item may begin in
+      // lowercase (for example, "pH"), so lowercase alone is not continuation.
+      if (pendingContinuation && /[,:;([]$/.test(pendingContinuation)) {
         pendingContinuation += " " + line;
         continue;
       }

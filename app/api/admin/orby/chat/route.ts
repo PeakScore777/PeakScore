@@ -118,7 +118,7 @@ export async function POST(request: Request) {
 
   const inferredSubject = normalizeIcfesSubject(null, message);
   const normalizedMessage = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const uploadReferencePhrases = ["ya subi otro", "ya subi un", "acabo de subir", "nuevo material", "nuevo documento", "mira el nuevo", "revisa el nuevo", "analiza el nuevo", "el que subi", "lo que subi", "el otro documento", "revisa este material", "temas para estudiar"];
+  const uploadReferencePhrases = ["subi uno nuevo", "subi un nuevo", "subi uno", "subi otro", "subi una", "ya subi otro", "ya subi un", "acabo de subir", "acabo de cargar", "cargue uno nuevo", "cargue otro", "publique uno nuevo", "nuevo material", "nuevo documento", "mira el nuevo", "revisa el nuevo", "analiza el nuevo", "el que subi", "lo que subi", "el otro documento", "revisa este material", "temas para estudiar"];
   const currentUploadReference = uploadReferencePhrases.some((phrase) => normalizedMessage.includes(phrase));
   const recentUploadReference = history.slice(-6).some((item) => item.role === "user" && uploadReferencePhrases.some((phrase) => item.content.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().includes(phrase)));
   const isDocumentFollowUp = /^(mira(?: a ver)?|revisa(?: de nuevo)?|analiza(?:lo)?|lee(?:lo)?|estudia(?:lo)?|continua|continúa|y ahora|a ver|dale|ese|ese mismo|el documento|el material|el pdf|temas para estudiar)[\\s,.!?]*$/i.test(normalizedMessage)

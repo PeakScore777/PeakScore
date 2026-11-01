@@ -71,7 +71,15 @@ as $$
           then pg_catalog.ts_rank_cd(i.search_vector, q.value)
         else 0::real
       end as lexical_rank,
-      case when lower(i.concept_name) = lower(pg_catalog.btrim(p_query)) then 1 else 0 end as exact_match
+      case
+        when lower(i.concept_name) = lower(pg_catalog.btrim(p_query)) then 1
+        when exists (
+          select 1
+          from unnest(coalesce(i.aliases, '{}'::text[])) as alias(value)
+          where lower(alias.value) = lower(pg_catalog.btrim(p_query))
+        ) then 1
+        else 0
+      end as exact_match
     from indexed i
     cross join query_value q
     where
@@ -79,12 +87,12 @@ as $$
         pg_catalog.numnode(q.value) > 0
         and i.search_vector @@ q.value
       )
-      or (
-        pg_catalog.numnode(q.value) = 0
-        and (
-          lower(i.concept_name) like '%' || lower(pg_catalog.btrim(p_query)) || '%'
-          or lower(coalesce(i.parent_concept,'')) like '%' || lower(pg_catalog.btrim(p_query)) || '%'
-        )
+      or lower(i.concept_name) like '%' || lower(pg_catalog.btrim(p_query)) || '%'
+      or lower(coalesce(i.parent_concept,'')) like '%' || lower(pg_catalog.btrim(p_query)) || '%'
+      or exists (
+        select 1
+        from unnest(coalesce(i.aliases, '{}'::text[])) as alias(value)
+        where lower(alias.value) like '%' || lower(pg_catalog.btrim(p_query)) || '%'
       )
   )
   select

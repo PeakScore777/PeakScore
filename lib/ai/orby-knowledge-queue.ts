@@ -28,6 +28,7 @@ export function hashOrbyKnowledgeChunks(chunks: OrbyKnowledgeChunk[]): string {
     .map((chunk) => [
       String(chunk.chunk_index),
       String(chunk.page_number),
+      chunk.content_origin ?? "text",
       chunk.content.length + ":" + chunk.content,
     ].join("|"))
     .join("\n");
@@ -47,7 +48,7 @@ export function hashOrbyKnowledgeDocumentContent(chunks: OrbyKnowledgeChunk[], s
 export async function loadOrbyKnowledgeChunks(documentId: string): Promise<OrbyKnowledgeChunk[]> {
   const { data, error } = await supabaseAdmin
     .from("orby_knowledge_chunks")
-    .select("chunk_index,page_number,content")
+    .select("chunk_index,page_number,content,content_origin")
     .eq("document_id", documentId)
     .order("page_number", { ascending: true })
     .order("chunk_index", { ascending: true })

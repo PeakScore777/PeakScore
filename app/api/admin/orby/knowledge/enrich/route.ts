@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   }
 
   let query = supabaseAdmin.from("orby_knowledge_documents")
-    .select("id,title,chunk_count,embedded_chunk_count,knowledge_profile_status")
+    .select("id,title,chunk_count,embedded_chunk_count,knowledge_profile_status,knowledge_profile_version")
     .order("created_at", { ascending: false })
     .limit(documentId ? 1 : 100);
 

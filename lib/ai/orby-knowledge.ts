@@ -721,7 +721,7 @@ export async function generateOrbyKnowledgePageBatch(
         answer_check: "comprobación", evidence_pages: [1],
       }],
       answer_key_observations: [{
-        item_number: 1, selected_option: "A, B, C, D o null",
+        item_number: 1, selected_option: "A-H o null, según el formato de la parte",
         source_type: "explicit_answer_key o reasoned_candidate", reasoning_summary: "resumen",
         confidence: 0.8, verification_status: "needs_independent_check", evidence_pages: [1],
       }],

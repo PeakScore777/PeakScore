@@ -27,14 +27,19 @@ export async function POST(request: Request) {
     .limit(documentId ? 1 : 20);
 
   if (documentId) query = query.eq("id", documentId);
-  else query = query.or("knowledge_profile_status.neq.ready,embedded_chunk_count.lt.chunk_count");
 
-  const { data: documents, error } = await query;
+  const { data: allDocuments, error } = await query;
   if (error) {
     console.error("[Orby Knowledge Enrichment] Document lookup failed.", { code: error.code });
     return jsonError("No se pudieron consultar los documentos pendientes de enriquecimiento.", 503);
   }
-  if (documentId && !documents?.length) return jsonError("No se encontró el documento solicitado.", 404);
+  if (documentId && !allDocuments?.length) return jsonError("No se encontró el documento solicitado.", 404);
+  const documents = documentId
+    ? allDocuments ?? []
+    : (allDocuments ?? []).filter((item) =>
+        item.knowledge_profile_status !== "ready"
+        || Number(item.embedded_chunk_count ?? 0) < Number(item.chunk_count ?? 0)
+      );
 
   const results: Array<{ id: string; title: string; embedded: number; concepts: number; success: boolean; reason?: string }> = [];
   for (const document of documents ?? []) {

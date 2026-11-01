@@ -4,6 +4,7 @@ export type OrbyKnowledgePublicationState = {
   knowledge_profile_status?: unknown;
   knowledge_profile_version?: unknown;
   knowledge_pipeline_version?: unknown;
+  concept_count?: unknown;
 };
 
 /**
@@ -17,6 +18,7 @@ export function isOrbyKnowledgePublicationReady(
   const embedded = Number(document.embedded_chunk_count);
   const profileVersion = Number(document.knowledge_profile_version);
   const pipelineVersion = Number(document.knowledge_pipeline_version);
+  const conceptCount = Number(document.concept_count);
 
   return Number.isInteger(chunks)
     && chunks > 0
@@ -26,5 +28,7 @@ export function isOrbyKnowledgePublicationReady(
     && Number.isInteger(profileVersion)
     && profileVersion >= 2
     && Number.isInteger(pipelineVersion)
-    && pipelineVersion >= 3;
+    && pipelineVersion >= 3
+    && Number.isInteger(conceptCount)
+    && conceptCount > 0;
 }

@@ -66,6 +66,10 @@ export async function POST(request: Request) {
         success: true,
       });
     } catch (error) {
+      const { count: retainedVectors } = await supabaseAdmin.from("orby_knowledge_chunks")
+        .select("chunk_index", { count: "exact", head: true })
+        .eq("document_id", document.id)
+        .not("embedding", "is", null);
       await supabaseAdmin.from("orby_knowledge_documents")
         .update({ knowledge_profile_status: "failed", updated_at: new Date().toISOString() })
         .eq("id", document.id);
@@ -76,10 +80,11 @@ export async function POST(request: Request) {
       results.push({
         id: document.id,
         title: document.title,
-        embedded: 0,
+        embedded: Number(retainedVectors ?? document.embedded_chunk_count ?? 0),
         concepts: 0,
         success: false,
-        reason: "No se pudo completar el enriquecimiento. El texto y el índice anterior se conservaron.",
+        reason: "Falló la extracción del perfil académico. Se conservaron " + Number(retainedVectors ?? document.embedded_chunk_count ?? 0) + " vectores existentes de " + document.chunk_count + "; no necesitas volver a subir el PDF.",
+
       });
     }
   }

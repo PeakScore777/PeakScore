@@ -266,7 +266,7 @@ interface LLM7ChatResponse {
   };
 }
 
-async function generateWithLLM7(prompt: string): Promise<{ text: string }> {
+async function generateWithLLM7(prompt: string, task?: AITask): Promise<{ text: string }> {
   const apiKey = process.env.LLM7_API_KEY;
   if (!apiKey) {
     throw new AIServiceError("AI_CONFIGURATION");
@@ -287,7 +287,7 @@ async function generateWithLLM7(prompt: string): Promise<{ text: string }> {
         messages: [{ role: "user", content: prompt }],
         temperature: 0.2,
         max_tokens: 7000,
-        response_format: { type: "json_object" },
+        ...(task === "tutor" ? {} : { response_format: { type: "json_object" } }),
         stream: false,
       }),
       signal: AbortSignal.timeout(60000),
@@ -1771,7 +1771,8 @@ async function generateWithGroq(
  }
 
  async function generateWithGemini(
-   prompt: string
+   prompt: string,
+   task?: AITask
  ) {
    const MAX_GEMINI_RETRIES = 2;
 
@@ -1792,8 +1793,7 @@ async function generateWithGroq(
            prompt,
 
          config: {
-           responseMimeType:
-             "application/json",
+           ...(task === "tutor" ? {} : { responseMimeType: "application/json" }),
 
            httpOptions: {
              timeout: 60000,
@@ -1932,7 +1932,7 @@ async function generateWithProvider(
     ================================================ */
 
     case "llm7": {
-      return await generateWithLLM7(prompt);
+      return await generateWithLLM7(prompt, task);
     }
 
     /* ===============================================
@@ -1941,7 +1941,8 @@ async function generateWithProvider(
 
     case "gemini": {
       return await generateWithGemini(
-        prompt
+        prompt,
+        task
       );
     }
 

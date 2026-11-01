@@ -201,7 +201,7 @@ test("no cambia de materia por menciones de redes sociales o texto promocional",
       "- Niveles de información",
       "o Información explícita",
       "o Información implícita",
-    ].join("\\n"),
+    ].join("\n"),
   }]);
 
   assert.ok(rows.length >= 3);
@@ -223,7 +223,7 @@ test("conserva la jerarquía y asigna correctamente Química dentro de Ciencias 
       "• Protones, electrones y neutrones",
       "o Tabla periódica",
       "§ Configuración electrónica",
-    ].join("\\n"),
+    ].join("\n"),
   }]);
 
   assert.ok(rows.length >= 6);
@@ -250,7 +250,7 @@ test("extrae competencias y pesos de las tablas sin confundirlos con temas", () 
         "evaluar su contenido. 14",
         "3. Estructura",
         "MATEMÁTICAS",
-      ].join("\\n"),
+      ].join("\n"),
     },
     {
       page_number: 3,
@@ -262,7 +262,7 @@ test("extrae competencias y pesos de las tablas sin confundirlos con temas", () 
         "Formulación y ejecución 22",
         "Argumentación 11",
         "3. Estructura",
-      ].join("\\n"),
+      ].join("\n"),
     },
   ]);
 

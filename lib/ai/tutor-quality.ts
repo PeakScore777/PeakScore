@@ -274,3 +274,144 @@ export async function verifyTutorAnswer(args: {
   // independent reviewer still disagrees or cannot reach a conclusion.
   return unverifiedResult(reviewer);
 }
+
+
+export type OrbyKnowledgeEvidence = {
+  id: string;
+  documentId: string;
+  title: string;
+  subject: string;
+  topic: string;
+  page: number;
+  content: string;
+};
+
+export type OrbyKnowledgeReviewResult = {
+  reply: string;
+  status: "passed" | "corrected" | "unverified";
+  note?: string;
+};
+
+function parseKnowledgeReview(raw: string): ReviewPayload | null {
+  return parseJson<ReviewPayload>(raw);
+}
+
+function resolveKnowledgeEvidenceMarkers(
+  reply: string,
+  evidence: OrbyKnowledgeEvidence[]
+): { reply: string; invalid: string[]; used: string[] } {
+  const byId = new Map(evidence.map((item) => [item.id, item]));
+  const used = [...new Set([...reply.matchAll(/\\[(E\\d{2,3})\\]/g)].map((match) => match[1]))];
+  const invalid = used.filter((id) => !byId.has(id));
+  const normalized = reply.replace(/\\[(E\\d{2,3})\\]/g, (marker, id: string) => {
+    const source = byId.get(id);
+    return source ? "[" + source.title + " · p. " + source.page + "]" : "";
+  });
+  return {
+    reply: normalized.replace(/[ \\t]{2,}/g, " ").replace(/\\n{3,}/g, "\\n\\n").trim(),
+    invalid,
+    used,
+  };
+}
+
+/**
+ * Review document-grounded claims without suppressing original teaching work.
+ * Facts attributed to a source need evidence; examples, routes and exercises
+ * may be original pedagogical proposals and should remain useful.
+ */
+export async function verifyOrbyKnowledgeAnswer(args: {
+  question: string;
+  candidate: string;
+  evidence: OrbyKnowledgeEvidence[];
+  sourceProvider?: AIProvider;
+}): Promise<OrbyKnowledgeReviewResult> {
+  if (!args.evidence.length) {
+    return {
+      reply: args.candidate,
+      status: "unverified",
+      note: "No se recuperaron fragmentos para validar afirmaciones documentales.",
+    };
+  }
+
+  const sourceProvider = args.sourceProvider ?? "gemini";
+  const reviewer = selectIndependentReviewer(sourceProvider);
+  if (!reviewer) {
+    const resolved = resolveKnowledgeEvidenceMarkers(args.candidate, args.evidence);
+    return {
+      reply: resolved.reply,
+      status: "unverified",
+      note: "La respuesta quedó como borrador porque no hay un proveedor independiente disponible para contrastar las fuentes.",
+    };
+  }
+
+  const evidenceContext = args.evidence.slice(0, 16).map((item) => [
+    "[" + item.id + "] " + item.title + " | " + item.subject + " | " + item.topic + " | página " + item.page,
+    item.content.slice(0, 1700),
+  ].join("\\n")).join("\\n\\n");
+
+  const markers = resolveKnowledgeEvidenceMarkers(args.candidate, args.evidence);
+  const prompt = [
+    "Revisa la calidad de este análisis académico para el laboratorio privado de Orby.",
+    "Separa los hechos que se atribuyen a documentos de las explicaciones académicas generales y de las propuestas pedagógicas originales.",
+    "Las afirmaciones atribuidas a documentos deben coincidir con los fragmentos, sus títulos y páginas. Verifica también los recuentos de documentos, coincidencias, diferencias y vacíos.",
+    "No exijas que una ruta de estudio, ejemplo nuevo, ejercicio original o actividad pedagógica aparezca literalmente en los documentos. Conserva esas propuestas cuando sean coherentes y estén claramente presentadas como propuestas de enseñanza.",
+    "No infieras autoría común, dependencia entre documentos, oficialidad ni vigencia del examen por una mera coincidencia temática.",
+    "Si hay una afirmación factual incorrecta o no respaldada, corrígela o limita su alcance. Mantén el valor educativo y no sustituyas una propuesta útil por una negativa genérica.",
+    "Responde solo con un objeto JSON con verdict (pass, revise o uncertain), corrected_reply (respuesta completa si hay correcciones) y issue_code (texto breve). No incluyas análisis privado.",
+    "Solicitud original: " + args.question.slice(0, 3500),
+    "Respuesta candidata:\\n" + args.candidate.slice(0, 11000),
+    "Marcadores de evidencia usados y marcadores inexistentes: " + JSON.stringify({ used: markers.used, invalid: markers.invalid }),
+    "Fragmentos disponibles:\\n" + evidenceContext,
+  ].join("\\n\\n");
+
+  let first: ReviewPayload | null = null;
+  try {
+    const result = await generateAI({ provider: reviewer, task: "analysis", prompt, useFallback: false });
+    first = parseKnowledgeReview(extractText(result));
+  } catch (error) {
+    console.error("[Orby Knowledge Quality] Review unavailable.", {
+      reviewer,
+      name: error instanceof Error ? error.name : "UnknownError",
+    });
+  }
+
+  if (first?.verdict === "pass" && markers.invalid.length === 0) {
+    return { reply: markers.reply, status: "passed" };
+  }
+
+  if (first?.verdict === "revise" && first.corrected_reply) {
+    const secondPrompt = [
+      "Comprueba esta respuesta corregida contra los fragmentos disponibles.",
+      "Revisa que los títulos, páginas, recuentos y afirmaciones atribuidas a documentos estén respaldados. Las rutas, ejercicios y ejemplos originales pueden ser propuestas pedagógicas.",
+      "Devuelve únicamente JSON válido: verdict (pass o revise) y corrected_reply (vacío si pasa).",
+      "Solicitud: " + args.question.slice(0, 3000),
+      "Respuesta corregida:\\n" + first.corrected_reply.slice(0, 11000),
+      "Fuentes:\\n" + evidenceContext,
+    ].join("\\n\\n");
+    try {
+      const result = await generateAI({ provider: reviewer, task: "analysis", prompt: secondPrompt, useFallback: false });
+      const second = parseKnowledgeReview(extractText(result));
+      if (second?.verdict === "pass") {
+        const resolved = resolveKnowledgeEvidenceMarkers(first.corrected_reply, args.evidence);
+        if (!resolved.invalid.length) {
+          return {
+            reply: resolved.reply,
+            status: "corrected",
+            note: "Se ajustaron afirmaciones documentales para alinearlas con los fragmentos recuperados.",
+          };
+        }
+      }
+    } catch (error) {
+      console.error("[Orby Knowledge Quality] Correction review unavailable.", {
+        reviewer,
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+    }
+  }
+
+  return {
+    reply: markers.reply + "\\n\\nNota de verificación: este análisis es un borrador pedagógico. Algunas afirmaciones documentales no pudieron confirmarse de forma independiente; conviene limitar las conclusiones a las páginas recuperadas.",
+    status: "unverified",
+    note: first?.note || first?.issue_code || "No se confirmó toda la evidencia documental.",
+  };
+}

@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const BUCKET = "orby-knowledge";
-const MAX_PDF_BYTES = 20 * 1024 * 1024;
+const MAX_PDF_BYTES = 50_000_000;
 const MAX_CHUNKS = 300;
 const MAX_CHUNK_CHARS = 2100;
 

@@ -3,7 +3,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, isOrbyIdentityQuestion, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
-import { preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { containsOrbyPromptInjection, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
@@ -64,6 +64,27 @@ export async function POST(request: Request) {
           content: item.content.slice(0, 500),
         }))
       : [];
+
+    // The browser supplies history and lesson metadata. Treat every field as
+    // untrusted data and reject instruction overrides before issuing a Live token.
+    const untrustedSessionContext = [subject, topic, context, ...history.map((item) => item.content)].join("\n");
+    if (containsOrbyPromptInjection(untrustedSessionContext)) {
+      try {
+        const { error: securityEventError } = await supabaseAdmin.rpc("orby_record_security_event", {
+          p_user_id: user.id,
+          p_event_type: "prompt_injection",
+          p_metadata: { source: "voice_session_context" },
+        });
+        if (securityEventError) {
+          console.error("[Orby Voice] Security event could not be recorded.", { code: securityEventError.code });
+        }
+      } catch {
+        console.error("[Orby Voice] Security event logging failed.");
+      }
+      return NextResponse.json({
+        error: "No puedo cambiar mis reglas ni revelar información interna. Sí puedo ayudarte con la preparación para Saber 11.",
+      }, { status: 400 });
+    }
 
     const latestUserText = [...history].reverse().find((item) => item.role === "user")?.content ?? "";
     const asksOrbyIdentity = isOrbyIdentityQuestion(latestUserText);

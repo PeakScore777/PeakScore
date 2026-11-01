@@ -108,7 +108,12 @@ export async function POST(request: Request) {
 
   const inferredSubject = normalizeIcfesSubject(null, message);
   const normalizedMessage = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const latestUploadIntent = ["ya subi otro", "ya subi un", "acabo de subir", "nuevo material", "nuevo documento", "mira el nuevo", "revisa el nuevo", "analiza el nuevo", "el que subi", "lo que subi", "el otro documento", "revisa este material"].some((phrase) => normalizedMessage.includes(phrase));
+  const uploadReferencePhrases = ["ya subi otro", "ya subi un", "acabo de subir", "nuevo material", "nuevo documento", "mira el nuevo", "revisa el nuevo", "analiza el nuevo", "el que subi", "lo que subi", "el otro documento", "revisa este material", "temas para estudiar"];
+  const currentUploadReference = uploadReferencePhrases.some((phrase) => normalizedMessage.includes(phrase));
+  const recentUploadReference = history.slice(-6).some((item) => item.role === "user" && uploadReferencePhrases.some((phrase) => item.content.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().includes(phrase)));
+  const isDocumentFollowUp = /^(mira|revisa|analiza|lee|estudia|continua|continúa|y ahora|a ver|dale|ese|ese mismo|el documento|el material|el pdf|temas para estudiar)[\\s,.!?]*$/i.test(normalizedMessage)
+    || normalizedMessage.includes("temas para estudiar");
+  const latestUploadIntent = currentUploadReference || (recentUploadReference && isDocumentFollowUp);
   type KnowledgeReference = { document_id:string; title:string; subject:string; topic:string; page_number:number; content:string; rank:number };
   let references: KnowledgeReference[] = [];
 
@@ -166,7 +171,7 @@ export async function POST(request: Request) {
 
   const sourceContext = references.map((source,index)=>[
     "[Documento privado "+(index+1)+"] "+source.title+" | Área: "+source.subject+" | Tema: "+source.topic+" | página "+source.page_number,
-    source.content.slice(0,2200),
+    source.content.slice(0,4000),
   ].join("\n")).join("\n\n");
 
   const prompt = [

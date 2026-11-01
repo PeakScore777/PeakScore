@@ -54,7 +54,7 @@ export async function POST() {
       if (promoteError) throw new Error("No se pudo adelantar la tarea manual.");
     }
 
-    const result = await processNextOrbyKnowledgeJob();
+    const result = await processNextOrbyKnowledgeJob({ origin: "manual" });
     const now = new Date().toISOString();
     await supabaseAdmin.from("orby_knowledge_automation_settings")
       .update({

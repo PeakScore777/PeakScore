@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { searchOrbyKnowledge, getOrbyRelatedKnowledge } from "@/lib/ai/orby-knowledge";
+import { searchOrbyKnowledge, getOrbyRelatedKnowledge, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { classifyOutOfScopeRequest, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
 import { preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 
@@ -74,8 +74,25 @@ export async function POST(request: Request) {
       profile_topics?: unknown;
     }>;
 
-    const documentIds = [...new Set(fragments.map((item) => item.document_id))];
-    const related = await getOrbyRelatedKnowledge(documentIds, "published", 3);
+    const [conceptHits, related] = await Promise.all([
+      searchOrbyKnowledgeConcepts({
+        query,
+        subject,
+        visibility: "published",
+        limit: 32,
+      }),
+      getOrbyRelatedKnowledge([...new Set(fragments.map((item) => item.document_id))], "published", 3),
+    ]);
+
+    const concepts = conceptHits.slice(0, 24).map((item) => ({
+      name: item.concept_name,
+      area: item.area || item.subject || "Transversal",
+      family: item.parent_concept || "",
+      aliases: item.aliases.slice(0, 6),
+      evidence: sanitizeOrbyKnowledgeExcerpt(item.evidence_summary, item.title).slice(0, 650),
+      confidence: item.confidence,
+      importance: item.importance,
+    }));
 
     const excerpts = fragments.map((item) => ({
       area: item.subject || "Transversal",
@@ -87,7 +104,7 @@ export async function POST(request: Request) {
       .filter((item) => item.profile_summary || item.profile_concepts)
       .map((item) => [item.document_id, item])).values()]
       .map((item) => ({
-        summary: (item.profile_summary || "").slice(0, 700),
+        summary: sanitizeOrbyKnowledgeExcerpt(item.profile_summary || "", item.title).slice(0, 700),
         topics: Array.isArray(item.profile_topics) ? item.profile_topics.slice(0, 12) : [],
         concepts: Array.isArray(item.profile_concepts) ? item.profile_concepts.slice(0, 18) : [],
         competencies: Array.isArray(item.profile_competencies) ? item.profile_competencies.slice(0, 10) : [],
@@ -101,9 +118,10 @@ export async function POST(request: Request) {
     }));
 
     return NextResponse.json({
-      found: excerpts.length > 0,
+      found: excerpts.length > 0 || concepts.length > 0,
       subject,
       excerpts,
+      concepts,
       profiles,
       related: relatedContext,
       guidance: excerpts.length

@@ -17,7 +17,7 @@ const PROGRAMMING_REQUEST_PATTERNS = [
   /\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|terminal|powershell|bash|framework|api rest|codigo fuente|escribir codigo|depurar codigo|debuggear)\b/i,
   /\b(aprender|estudiar|ensename|ayudame|explicame|quiero aprender|me ensenas|me ayudas)\b.{0,80}\b(programar|programacion|python|javascript|typescript|java|codificar|crear una app|hacer una pagina web)\b/i,
   /\b(crear|hacer|construir|desarrollar|disenar)\s+(?:un|una|el|la)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|videojuego|juego digital|bot|robot virtual)\b/i,
-  /\b(variable|bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
+  /\b(bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
 ];
 
 const OUTSIDE_SCOPE_PATTERNS = [

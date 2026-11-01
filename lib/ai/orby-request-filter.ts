@@ -14,7 +14,7 @@ export function normalizeOrbyRequestText(value: string): string {
 
 const PROGRAMMING_REQUEST_PATTERNS = [
   /\b(programar|programacion|programador|programadora|codificar|coding|programming|desarrollo de software|desarrollo web)\b/i,
-  /\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|terminal|powershell|bash|framework|api rest|codigo fuente|escribir codigo|depurar codigo|debuggear)\b/i,
+  /\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|codigo fuente|escribir codigo|depurar codigo|debuggear)\b/i,
   /\b(aprender|estudiar|ensename|ayudame|explicame|quiero aprender|me ensenas|me ayudas)\b.{0,80}\b(programar|programacion|python|javascript|typescript|java|codificar|crear una app|hacer una pagina web)\b/i,
   /\b(crear|hacer|construir|desarrollar|disenar)\s+(?:un|una|el|la)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|videojuego|juego digital|bot|robot virtual)\b/i,
   /\b(bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
@@ -28,8 +28,10 @@ const OUTSIDE_SCOPE_PATTERNS = [
 
 const INJECTION_PATTERNS = [
   /\b(ignore|ignora|olvida)\b.{0,60}\b(instrucciones|reglas|restricciones|previous instructions|system prompt)\b/i,
-  /\b(revela|muestra|imprime|exporta)\b.{0,60}\b(prompt del sistema|instrucciones internas|api.?key|secretos|credenciales|variables de entorno)\b/i,
+  /\b(revela|muestra|imprime|exporta|show|reveal|print|dump|disclose)\b.{0,60}\b(prompt del sistema|system prompt|hidden prompt|instrucciones internas|hidden instructions|api.?key|secretos?|secrets?|credenciales|credentials?|variables de entorno|environment variables|private key|access token)\b/i,
   /\b(jailbreak|bypass|desactiva tus reglas|actua sin restricciones)\b/i,
+  /\b(?:developer mode|modo desarrollador|do anything now|dan mode)\b/i,
+  /\b(?:act as|pretend to be|you are now)\b.{0,60}\b(?:unrestricted|unfiltered|another ai|a different ai|dan)\b/i,
 ];
 
 export function containsOrbyPromptInjection(message: string): boolean {

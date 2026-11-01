@@ -20,6 +20,7 @@ const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
 const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServerOnly: true });
 const publication = await loadTypeScriptModule("../lib/ai/orby-publication.ts");
 const chunking = await loadTypeScriptModule("../lib/pdf/split-orby-text.ts");
+const checklist = await loadTypeScriptModule("../lib/pdf/extract-orby-checklist-rows.ts");
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {
   const prompts = [
@@ -109,4 +110,52 @@ test("prioriza el cierre de una oración cuando está cerca del límite", () => 
   assert.ok(chunks.length > 1);
   assert.match(chunks[0], /[.!?]$/);
   assert.equal(chunks.join(" "), source);
+});
+
+test("extrae listas numeradas aunque el PDF no diga temario ni checklist", () => {
+  const chunks = [
+    {
+      page_number: 1,
+      content: [
+        "Matemáticas UNAL",
+        "Matemáticas 1 [REPASO DE ARITMÉTICA]",
+        "1. Valor absoluto |X|.",
+        "2. Fraccionarios.",
+        "3. Exponenciación.",
+        "Matemáticas 2 [LÓGICA, CONJUNTOS Y CUANTIFICADORES]",
+        "1. Proposiciones.",
+        "2. Negación, conjunción y disyunción.",
+        "Física",
+        "Física 1 [MECÁNICA CLÁSICA]",
+        "1. Magnitudes físicas.",
+        "2. Análisis dimensional.",
+      ].join("\\n"),
+    },
+    {
+      page_number: 2,
+      content: [
+        "Biología",
+        "Biología 2 [ÁMBITO CELULAR]",
+        "1. Biomoléculas.",
+        "2. Carbohidratos.",
+        "Química",
+        "Química 1 y 2 [INTRODUCCIÓN A LA QUÍMICA]",
+        "1. Clasificación de la materia.",
+        "2. Estados de la materia.",
+        "Ciencias Sociales",
+        "Sociales 1 [GEOGRAFÍA Y CARTOGRAFÍA]",
+        "1. Geografía.",
+        "2. Cartografía.",
+      ].join("\\n"),
+    },
+  ];
+
+  const rows = checklist.extractOrbyChecklistRows(chunks);
+  assert.equal(rows.length, 16);
+  assert.equal(rows.filter((row) => row.area === "Matemáticas").length, 6);
+  assert.equal(rows.filter((row) => row.area === "Física").length, 2);
+  assert.equal(rows.filter((row) => row.area === "Biología").length, 2);
+  assert.equal(rows.filter((row) => row.area === "Química").length, 2);
+  assert.equal(rows.filter((row) => row.area === "Ciencias Sociales").length, 2);
+  assert.ok(rows.some((row) => row.name === "Cartografía" && row.page === 2));
 });

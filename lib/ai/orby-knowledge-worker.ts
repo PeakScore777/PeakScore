@@ -312,7 +312,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
         return { state: "progress", jobId: job.id, documentId: job.document_id, documentTitle, stage: "finalize", message: documentTitle + ": no quedan páginas que revisar en ese lote." };
       }
 
-      const file = await ensureOrbyGeminiDocumentFile(job.document_id, document.storage_path as string, documentTitle);
+      const file = await ensureOrbyGeminiDocumentFile(job.document_id, document.storage_path as string);
       cachedGeminiFileName = file.name;
       const pageInputs: OrbyKnowledgePageInput[] = pageRows.map((page) => ({
         page_number: page.page_number,

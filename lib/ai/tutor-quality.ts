@@ -301,14 +301,14 @@ function resolveKnowledgeEvidenceMarkers(
   evidence: OrbyKnowledgeEvidence[]
 ): { reply: string; invalid: string[]; used: string[] } {
   const byId = new Map(evidence.map((item) => [item.id, item]));
-  const used = [...new Set([...reply.matchAll(/\\[(E\\d{2,3})\\]/g)].map((match) => match[1]))];
+  const used = [...new Set([...reply.matchAll(/\[(E\d{2,3})\]/g)].map((match) => match[1]))];
   const invalid = used.filter((id) => !byId.has(id));
-  const normalized = reply.replace(/\\[(E\\d{2,3})\\]/g, (marker, id: string) => {
+  const normalized = reply.replace(/\[(E\d{2,3})\]/g, (marker, id: string) => {
     const source = byId.get(id);
     return source ? "[" + source.title + " · p. " + source.page + "]" : "";
   });
   return {
-    reply: normalized.replace(/[ \\t]{2,}/g, " ").replace(/\\n{3,}/g, "\\n\\n").trim(),
+    reply: normalized.replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim(),
     invalid,
     used,
   };
@@ -347,7 +347,7 @@ export async function verifyOrbyKnowledgeAnswer(args: {
   const evidenceContext = args.evidence.slice(0, 64).map((item) => [
     "[" + item.id + "] " + item.title + " | " + item.subject + " | " + item.topic + " | página " + item.page,
     item.content.slice(0, 1400),
-  ].join("\\n")).join("\\n\\n");
+  ].join("\n")).join("\n\n");
 
   const markers = resolveKnowledgeEvidenceMarkers(args.candidate, args.evidence);
   const requiresCitations = /\\b(compara|comparar|coincidencias|diferencias|fuentes|p[aá]ginas|documentos|materiales|biblioteca|seg[uú]n el material|qu[eé] documento)\\b/i.test(args.question);
@@ -364,7 +364,7 @@ export async function verifyOrbyKnowledgeAnswer(args: {
     "Respuesta candidata:\\n" + args.candidate.slice(0, 11000),
     "Marcadores de evidencia usados, inexistentes y requeridos: " + JSON.stringify({ used: markers.used, invalid: markers.invalid, missingRequiredCitations }),
     "Fragmentos disponibles:\\n" + evidenceContext,
-  ].join("\\n\\n");
+  ].join("\n\n");
 
   let first: ReviewPayload | null = null;
   try {
@@ -389,7 +389,7 @@ export async function verifyOrbyKnowledgeAnswer(args: {
       "Solicitud: " + args.question.slice(0, 3000),
       "Respuesta corregida:\\n" + first.corrected_reply.slice(0, 11000),
       "Fuentes:\\n" + evidenceContext,
-    ].join("\\n\\n");
+    ].join("\n\n");
     try {
       const result = await generateAI({ provider: reviewer, task: "analysis", prompt: secondPrompt, useFallback: false });
       const second = parseKnowledgeReview(extractText(result));
@@ -412,7 +412,7 @@ export async function verifyOrbyKnowledgeAnswer(args: {
   }
 
   return {
-    reply: markers.reply + "\\n\\nNota de verificación: este análisis es un borrador pedagógico. Algunas afirmaciones documentales no pudieron confirmarse de forma independiente; conviene limitar las conclusiones a las páginas recuperadas.",
+    reply: markers.reply + "\n\nNota de verificación: este análisis es un borrador pedagógico. Algunas afirmaciones documentales no pudieron confirmarse de forma independiente; conviene limitar las conclusiones a las páginas recuperadas.",
     status: "unverified",
     note: first?.note || first?.issue_code || "No se confirmó toda la evidencia documental.",
   };

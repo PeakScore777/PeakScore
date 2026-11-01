@@ -46,102 +46,131 @@ export async function POST(request: Request) {
   const { user } = await getAdmin();
   if (!user) return jsonError("Acceso reservado al administrador.", 403);
 
+  const body = await request.json().catch(() => null);
+  const documentId = typeof body?.documentId === "string" ? body.documentId : "";
+  const originalName = typeof body?.fileName === "string" ? body.fileName.trim() : "";
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(documentId)) {
+    return jsonError("Identificador de carga no válido.", 400);
+  }
+  if (!originalName || originalName.length > 180 || !originalName.toLowerCase().endsWith(".pdf")) {
+    return jsonError("Nombre de PDF no válido.", 400);
+  }
+
+  const storagePath = user.id + "/" + documentId + ".pdf";
+  const { data: existing } = await supabaseAdmin
+    .from("orby_knowledge_documents")
+    .select("id,title,status,chunk_count")
+    .eq("id", documentId)
+    .maybeSingle();
+  if (existing) {
+    return NextResponse.json({
+      document: existing,
+      message: "Este PDF ya fue registrado. No se duplicó la biblioteca.",
+      alreadyFinalized: true,
+    }, { headers: { "Cache-Control": "no-store" } });
+  }
+
+  const { data: file, error: downloadError } = await supabaseAdmin.storage
+    .from(BUCKET)
+    .download(storagePath);
+  if (downloadError || !file) {
+    return jsonError("No se encontró el PDF subido. Vuelve a cargarlo e inténtalo de nuevo.", 404);
+  }
+  if (file.size < 8 || file.size > MAX_PDF_BYTES) {
+    return jsonError("El PDF debe pesar entre 1 byte y 20 MB.", 413);
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  if (buffer.subarray(0, 5).toString("ascii") !== "%PDF-") {
+    await supabaseAdmin.storage.from(BUCKET).remove([storagePath]);
+    return jsonError("El archivo no tiene una cabecera PDF válida.", 415);
+  }
+
+  const subject: KnowledgeSubject = "Preparación Saber 11";
+  const title = originalName
+    .replace(/\.pdf$/i, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 180) || "Material general de estudio";
+  const topic = "Material general de preparación Saber 11";
+
+  let extracted: Awaited<ReturnType<typeof extractPdfPages>>;
   try {
-    // The authenticated Orby Lab owner may upload multiple reference PDFs.
-    // Keep file validation, size limits and storage controls; the private admin
-    // upload workflow is not subject to student-facing message throttling.
-    const form = await request.formData();
-    const file = form.get("file");
-    if (!(file instanceof File)) return jsonError("Selecciona un archivo PDF.", 400);
-    if (file.type !== "application/pdf" || !file.name.toLowerCase().endsWith(".pdf")) return jsonError("Solo se admiten documentos PDF.", 415);
-    if (file.size < 1 || file.size > MAX_PDF_BYTES) return jsonError("El PDF debe pesar como máximo 20 MB.", 413);
+    extracted = await extractPdfPages(buffer);
+  } catch (error) {
+    console.error("[Orby Knowledge] PDF extraction failed.", {
+      name: error instanceof Error ? error.name : "Unknown",
+      message: error instanceof Error ? error.message.slice(0, 250) : "unknown",
+    });
+    return jsonError("No se pudo leer este PDF. Comprueba que no esté dañado, protegido o escaneado.", 422);
+  }
+  if (!extracted.hasExtractableText) {
+    return jsonError("El PDF parece escaneado o no contiene texto seleccionable. Convierte el documento a PDF con texto antes de cargarlo.", 422);
+  }
 
-    // The Lab accepts general theory, study routes, guides and multi-area PDFs.
-    // Keep them in the transversal Saber 11 collection instead of forcing a
-    // false single subject/topic classification.
-    const subject: KnowledgeSubject = "Preparación Saber 11";
-    const title = file.name
-      .replace(/\.pdf$/i, "")
-      .replace(/[_-]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 180) || "Material general de estudio";
-    const topic = "Material general de preparación Saber 11";
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    let extracted: Awaited<ReturnType<typeof extractPdfPages>>;
-    try {
-      extracted = await extractPdfPages(buffer);
-    } catch (error) {
-      console.error("[Orby Knowledge] PDF extraction failed.", { name: error instanceof Error ? error.name : "Unknown" });
-      return jsonError("No se pudo leer este PDF. Comprueba que no esté dañado o protegido.", 422);
-    }
-    if (!extracted.hasExtractableText) return jsonError("El PDF parece escaneado o no contiene texto seleccionable. Convierte el documento a PDF con texto antes de cargarlo.", 422);
-
-    const drafts: Omit<ChunkDraft, "chunk_index">[] = [];
-    for (const page of extracted.pages) {
-      for (const content of splitOrbyText(page.text, MAX_CHUNK_CHARS)) {
-        if (content.length >= 40) drafts.push({ subject, topic, page_number: page.pageNumber, content });
-        if (drafts.length > MAX_CHUNKS) return jsonError("El documento supera el máximo de 300 fragmentos. Divide el material en archivos más pequeños.", 413);
+  const drafts: Omit<ChunkDraft, "chunk_index">[] = [];
+  for (const page of extracted.pages) {
+    for (const content of splitOrbyText(page.text, MAX_CHUNK_CHARS)) {
+      if (content.length >= 40) drafts.push({ subject, topic, page_number: page.pageNumber, content });
+      if (drafts.length > MAX_CHUNKS) {
+        return jsonError("El documento supera el máximo de 300 fragmentos. Divide el material en archivos más pequeños.", 413);
       }
     }
-    if (!drafts.length) return jsonError("No se pudo extraer suficiente texto útil del PDF.", 422);
-
-    const id = crypto.randomUUID();
-    const extensionPath = user.id + "/" + id + ".pdf";
-    const { error: uploadError } = await supabaseAdmin.storage.from(BUCKET).upload(extensionPath, buffer, {
-      contentType: "application/pdf", cacheControl: "3600", upsert: false,
-    });
-    if (uploadError) {
-      console.error("[Orby Knowledge] Private PDF upload failed.", { message: uploadError.message });
-      return jsonError("No se pudo almacenar el documento privado.", 503);
-    }
-
-    const { data: document, error: documentError } = await supabaseAdmin.from("orby_knowledge_documents").insert({
-      id, uploaded_by: user.id, title, original_name: file.name.slice(0, 180), subject, topic,
-      storage_path: extensionPath, page_count: extracted.totalPages, chunk_count: drafts.length, status: "draft",
-    }).select("id,title,subject,topic,page_count,chunk_count,status,created_at").single();
-    if (documentError || !document) {
-      await supabaseAdmin.storage.from(BUCKET).remove([extensionPath]);
-      console.error("[Orby Knowledge] Document record failed.", { code: documentError?.code });
-      return jsonError("No se pudo registrar el documento.", 503);
-    }
-
-    const chunks = drafts.map((item, chunk_index) => ({ ...item, document_id: id, chunk_index }));
-    const { error: chunkError } = await supabaseAdmin.from("orby_knowledge_chunks").insert(chunks);
-    if (chunkError) {
-      await supabaseAdmin.from("orby_knowledge_documents").delete().eq("id", id);
-      await supabaseAdmin.storage.from(BUCKET).remove([extensionPath]);
-      console.error("[Orby Knowledge] Chunk indexing failed.", { code: chunkError.code });
-      return jsonError("No se pudo indexar el contenido. El documento no se publicó.", 503);
-    }
-
-    let enrichmentMessage = "El PDF se guardó como borrador. ";
-    try {
-      const queued = await enqueueOrbyKnowledgeDocument(
-        id,
-        chunks.map((chunk) => ({
-          chunk_index: chunk.chunk_index,
-          page_number: chunk.page_number,
-          content: chunk.content,
-        }))
-      );
-      enrichmentMessage += queued.alreadyCurrent
-        ? "El conocimiento ya está actualizado."
-        : "Orby lo añadió a la cola automática. El perfilado avanzará por lotes sin repetir el trabajo ya completado.";
-    } catch (queueError) {
-      console.error("[Orby Knowledge] Could not enqueue uploaded document.", {
-        name: queueError instanceof Error ? queueError.name : "UnknownError",
-      });
-      enrichmentMessage += "El archivo y sus fragmentos quedaron guardados; el motor automático lo detectará en el siguiente ciclo.";
-    }
-
-    return NextResponse.json({ document, message: enrichmentMessage }, {
-      status: 201, headers: { "Cache-Control": "no-store" },
-    });
-  } catch {
-    return jsonError("No se pudo procesar el documento.", 500);
   }
+  if (!drafts.length) return jsonError("No se pudo extraer suficiente texto útil del PDF.", 422);
+
+  const { data: document, error: documentError } = await supabaseAdmin.from("orby_knowledge_documents").insert({
+    id: documentId,
+    uploaded_by: user.id,
+    title,
+    original_name: originalName.slice(0, 180),
+    subject,
+    topic,
+    storage_path: storagePath,
+    page_count: extracted.totalPages,
+    chunk_count: drafts.length,
+    status: "draft",
+  }).select("id,title,subject,topic,page_count,chunk_count,status,created_at").single();
+
+  if (documentError || !document) {
+    console.error("[Orby Knowledge] Document record failed.", { code: documentError?.code });
+    return jsonError("No se pudo registrar el documento en la biblioteca.", 503);
+  }
+
+  const chunks = drafts.map((item, chunk_index) => ({ ...item, document_id: documentId, chunk_index }));
+  const { error: chunkError } = await supabaseAdmin.from("orby_knowledge_chunks").insert(chunks);
+  if (chunkError) {
+    await supabaseAdmin.from("orby_knowledge_documents").delete().eq("id", documentId);
+    console.error("[Orby Knowledge] Chunk indexing failed.", { code: chunkError.code });
+    return jsonError("No se pudo indexar el contenido. El documento no se publicó.", 503);
+  }
+
+  let enrichmentMessage = "PDF extraído: " + extracted.totalPages + " páginas y " + drafts.length + " fragmentos. ";
+  try {
+    const queued = await enqueueOrbyKnowledgeDocument(
+      documentId,
+      chunks.map((chunk) => ({
+        chunk_index: chunk.chunk_index,
+        page_number: chunk.page_number,
+        content: chunk.content,
+      }))
+    );
+    enrichmentMessage += queued.alreadyCurrent
+      ? "El conocimiento ya está actualizado."
+      : "Orby lo añadió a la cola incremental. Puedes procesar un lote ahora o dejarlo para el autopiloto.";
+  } catch (queueError) {
+    console.error("[Orby Knowledge] Could not enqueue uploaded document.", {
+      name: queueError instanceof Error ? queueError.name : "UnknownError",
+    });
+    enrichmentMessage += "El PDF y sus fragmentos quedaron guardados; el botón de pendientes podrá programarlos.";
+  }
+
+  return NextResponse.json({ document, message: enrichmentMessage }, {
+    status: 201,
+    headers: { "Cache-Control": "no-store" },
+  });
 }
 
 export async function PATCH(request: Request) {

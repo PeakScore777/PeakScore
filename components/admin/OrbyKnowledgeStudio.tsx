@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, BookOpen, Bot, Check, LoaderCircle, MessageSquare, Plus, Send, ShieldCheck, Sparkles, Trash2, UploadCloud, Play } from "lucide-react";
-import { uploadOrbyPdfResumable } from "@/lib/supabase/orby-resumable-upload";
+import { clearOrbyPendingDocumentId, getOrbyPendingDocumentId, uploadOrbyPdfResumable } from "@/lib/supabase/orby-resumable-upload";
 
 type KnowledgeDocument = {
   id: string; title: string; original_name: string; subject: string; topic: string;
@@ -65,8 +65,6 @@ function publicationBlockReason(document: KnowledgeDocument): string | null {
   if (document.knowledge_profile_status !== "ready") return "El perfil académico todavía no terminó o necesita reintento.";
   if (document.knowledge_profile_version < 2) return "Falta completar el perfil académico v2.";
   if (document.knowledge_pipeline_version < 4) return "Falta finalizar la lectura multimodal del motor v4.";
-  if (document.ingestion_status !== "completed") return "El documento todavía no ha completado su lectura y revisión visual.";
-  if (document.coverage_percent < 95 || document.visual_pages_reviewed < Math.ceil(document.visual_pages_total * 0.95)) return "La cobertura visual todavía es inferior al 95%.";
   if (document.concept_count < 1) return "El perfil todavía no tiene conceptos académicos indexados.";
   return null;
 }
@@ -82,7 +80,9 @@ function isCurrentKnowledgePipeline(document: KnowledgeDocument): boolean {
     && document.knowledge_profile_version >= 2
     && document.knowledge_pipeline_version >= 4
     && document.ingestion_status === "completed"
-    && document.coverage_percent >= 95;
+    && document.coverage_percent >= 95
+    && document.visual_pages_reviewed >= Math.ceil(document.visual_pages_total * 0.95)
+    && document.concept_count > 0;
 }
 
 function formatAdminReply(content: string): string {
@@ -299,6 +299,7 @@ export default function OrbyKnowledgeStudio() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileName: file.name,
+          documentId: getOrbyPendingDocumentId(file),
           size: file.size,
           contentType: file.type,
         }),
@@ -335,6 +336,7 @@ export default function OrbyKnowledgeStudio() {
         throw new Error(payload.error || "El PDF se subió, pero no se pudo registrar en la biblioteca.");
       }
 
+      clearOrbyPendingDocumentId(file);
       setNotice(payload.message || "PDF guardado como borrador y añadido a la cola de Orby.");
       setFile(null);
       setUploadProgress(0);

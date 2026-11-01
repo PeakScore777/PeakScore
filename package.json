@@ -49,5 +49,8 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": "eslint"
+  },
+  "overrides": {
+    "minimatch": "11.0.3"
   }
 }

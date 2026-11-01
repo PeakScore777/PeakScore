@@ -6,6 +6,7 @@ import { generateAI } from "@/lib/ai/router";
 import {
   extractOrbyChecklistRows,
   extractOrbyCompetencyRows,
+  type ExtractedChecklistRow,
 } from "@/lib/pdf/extract-orby-checklist-rows";
 import { toStudentSafeQuestionSolution } from "@/lib/ai/orby-question-solution";
 

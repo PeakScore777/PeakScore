@@ -266,11 +266,6 @@ export async function createOrbyEmbeddings(
   return saved;
 }
 
-type OrbyKnowledgeBatchProfile = Pick<
-  OrbyKnowledgeProfile,
-  "summary" | "areas" | "topics" | "concepts" | "competencies" | "study_strategies" | "gaps_observed" | "keywords" | "search_text"
->;
-
 export function getOrbyKnowledgeProfileBatchCount(chunks: OrbyKnowledgeChunk[]): number {
   return Math.ceil(chunks.length / 2);
 }

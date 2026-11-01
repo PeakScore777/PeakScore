@@ -4,6 +4,7 @@ import { GoogleGenAI } from "@google/genai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI } from "@/lib/ai/router";
 import { extractOrbyChecklistRows, type ExtractedChecklistRow } from "@/lib/pdf/extract-orby-checklist-rows";
+import { toStudentSafeQuestionSolution } from "@/lib/ai/orby-question-solution";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
@@ -975,7 +976,13 @@ export function selectOrbyRelevantPedagogy(
     }).sort((a, b) => b.score - a.score || a.index - b.index);
 
     const limit = category === "visual_elements" ? Math.max(4, perCategoryLimit) : perCategoryLimit;
-    output[category] = ranked.slice(0, limit).map((entry) => entry.item);
+    output[category] = ranked.slice(0, limit).flatMap((entry) => {
+      if (category === "question_solutions") {
+        const safeSolution = toStudentSafeQuestionSolution(entry.item);
+        return safeSolution ? [safeSolution] : [];
+      }
+      return [entry.item];
+    });
   }
 
   return output;

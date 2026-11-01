@@ -801,14 +801,31 @@ export async function generateOrbyKnowledgePageBatch(
 
   const rawPedagogy = asRecord(parsed.pedagogical_knowledge) ?? {};
   const pedagogicalKnowledge: OrbyPedagogicalKnowledge = {
-    teaching_methods: cleanPageEvidenceItems(rawPedagogy.teaching_methods, allowedPages, 50, ["concept","student_level_zero"]),
+    teaching_methods: cleanPageEvidenceItems(rawPedagogy.teaching_methods, allowedPages, 50, ["concept","student_level_zero"]).map((item) => ({
+      ...item,
+      provenance: item.provenance === "source" ? "source" : "pedagogical_inference",
+    })),
     worked_examples: cleanPageEvidenceItems(rawPedagogy.worked_examples, allowedPages, 60, ["topic","problem_summary"]),
-    question_patterns: cleanPageEvidenceItems(rawPedagogy.question_patterns, allowedPages, 80, ["archetype","task"]),
+    question_patterns: cleanPageEvidenceItems(rawPedagogy.question_patterns, allowedPages, 80, ["archetype","task"]).map((item) => ({
+      ...item,
+      difficulty: ["básica","intermedia","avanzada"].includes(String(item.difficulty)) ? item.difficulty : "intermedia",
+      provenance: "source",
+      confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.65,
+    })),
     solving_methods: cleanPageEvidenceItems(rawPedagogy.solving_methods, allowedPages, 50, ["name","applies_to"]),
-    study_paths: cleanPageEvidenceItems(rawPedagogy.study_paths, allowedPages, 50, ["goal"]),
+    study_paths: cleanPageEvidenceItems(rawPedagogy.study_paths, allowedPages, 50, ["goal"]).map((item) => ({
+      ...item,
+      provenance: item.provenance === "source" ? "source" : "pedagogical_inference",
+    })),
     common_misconceptions: cleanPageEvidenceItems(rawPedagogy.common_misconceptions, allowedPages, 60, ["concept","misconception","correction"]),
     exercise_blueprints: cleanPageEvidenceItems(rawPedagogy.exercise_blueprints, allowedPages, 60, ["topic","pattern"]),
-    answer_key_observations: cleanPageEvidenceItems(rawPedagogy.answer_key_observations, allowedPages, 80, ["source_type","reasoning_summary"]),
+    answer_key_observations: cleanPageEvidenceItems(rawPedagogy.answer_key_observations, allowedPages, 80, ["source_type","reasoning_summary"]).map((item) => ({
+      ...item,
+      selected_option: ["A","B","C","D"].includes(String(item.selected_option).toUpperCase()) ? String(item.selected_option).toUpperCase() : null,
+      source_type: ["explicit_answer_key","reasoned_candidate"].includes(String(item.source_type)) ? item.source_type : "reasoned_candidate",
+      verification_status: "needs_independent_check",
+      confidence: Number.isFinite(Number(item.confidence)) ? Math.max(0, Math.min(1, Number(item.confidence))) : 0.5,
+    })),
     visual_elements: cleanPageEvidenceItems(rawPedagogy.visual_elements, allowedPages, 100, ["element_type","description"]),
   };
 
@@ -899,7 +916,8 @@ export function combineOrbyKnowledgePageBatches(
 export function selectOrbyRelevantPedagogy(
   rawKnowledge: unknown,
   query: string,
-  perCategoryLimit = 4
+  perCategoryLimit = 4,
+  includeUnverifiedAnswerObservations = false
 ): OrbyPedagogicalKnowledge {
   const raw = asRecord(rawKnowledge);
   if (!raw) return { ...EMPTY_ORBY_PEDAGOGICAL_KNOWLEDGE };
@@ -923,6 +941,10 @@ export function selectOrbyRelevantPedagogy(
   const categories = Object.keys(EMPTY_ORBY_PEDAGOGICAL_KNOWLEDGE) as Array<keyof OrbyPedagogicalKnowledge>;
 
   for (const category of categories) {
+    if (category === "answer_key_observations" && !includeUnverifiedAnswerObservations) {
+      output[category] = [];
+      continue;
+    }
     const source = Array.isArray(raw[category]) ? raw[category] as unknown[] : [];
     const ranked = source.flatMap((entry, index) => {
       const item = asRecord(entry);

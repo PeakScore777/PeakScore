@@ -190,6 +190,89 @@ test("conserva etiquetas entre corchetes y numeración separada del texto", () =
   assert.ok(rows.every((row) => row.area === "Física"));
 });
 
+test("no cambia de materia por menciones de redes sociales o texto promocional", () => {
+  const rows = checklist.extractOrbyChecklistRows([{
+    page_number: 1,
+    content: [
+      "TEMARIO - CLASES CON JUAN (ICFES)",
+      "A continuación encontrarás un temario y nuestras redes sociales.",
+      "LECTURA CRÍTICA",
+      "1. Temario",
+      "- Niveles de información",
+      "o Información explícita",
+      "o Información implícita",
+    ].join("\\n"),
+  }]);
+
+  assert.ok(rows.length >= 3);
+  assert.ok(rows.every((row) => row.area === "Lectura Crítica"));
+  assert.ok(rows.some((row) => row.name === "Niveles de información"));
+  assert.ok(rows.some((row) => row.name === "Información explícita" && row.parent_concept === "Niveles de información"));
+});
+
+test("conserva la jerarquía y asigna correctamente Química dentro de Ciencias Naturales", () => {
+  const rows = checklist.extractOrbyChecklistRows([{
+    page_number: 4,
+    content: [
+      "CIENCIAS NATURALES",
+      "1. Temario",
+      "1.1 Química",
+      "- Propiedades de la materia",
+      "o El átomo",
+      "§ Estructura atómica",
+      "• Protones, electrones y neutrones",
+      "o Tabla periódica",
+      "§ Configuración electrónica",
+    ].join("\\n"),
+  }]);
+
+  assert.ok(rows.length >= 6);
+  assert.ok(rows.every((row) => row.area === "Química"));
+  assert.ok(rows.some((row) => row.name === "Estructura atómica" && row.parent_concept === "El átomo"));
+  assert.ok(rows.some((row) => row.name === "Protones, electrones y neutrones" && row.parent_concept === "Estructura atómica"));
+  assert.ok(rows.some((row) => row.name === "Configuración electrónica" && row.parent_concept === "Tabla periódica"));
+});
+
+test("extrae competencias y pesos de las tablas sin confundirlos con temas", () => {
+  const rows = checklist.extractOrbyCompetencyRows([
+    {
+      page_number: 2,
+      content: [
+        "LECTURA CRÍTICA",
+        "2. Competencias",
+        "Competencia Preguntas",
+        "Identificar y entender los contenidos locales",
+        "que conforman un texto. 10",
+        "Comprender cómo se articulan las",
+        "partes de un texto para darle un",
+        "sentido global. 17",
+        "Reflexionar a partir de un texto y",
+        "evaluar su contenido. 14",
+        "3. Estructura",
+        "MATEMÁTICAS",
+      ].join("\\n"),
+    },
+    {
+      page_number: 3,
+      content: [
+        "2. Competencias",
+        "Competencia Preguntas",
+        "Interpretación y representación",
+        "17",
+        "Formulación y ejecución 22",
+        "Argumentación 11",
+        "3. Estructura",
+      ].join("\\n"),
+    },
+  ]);
+
+  assert.equal(rows.length, 6);
+  assert.ok(rows.some((row) => row.name === "Identificar y entender los contenidos locales que conforman un texto" && row.area === "Lectura Crítica" && row.question_count === 10));
+  assert.ok(rows.some((row) => row.name === "Comprender cómo se articulan las partes de un texto para darle un sentido global" && row.question_count === 17));
+  assert.ok(rows.some((row) => row.name === "Interpretación y representación" && row.area === "Matemáticas" && row.question_count === 17));
+  assert.ok(rows.some((row) => row.name === "Argumentación" && row.question_count === 11));
+});
+
 test("no revela al estudiante claves candidatas ni números de preguntas de materiales privados", () => {
   const safe = questionSolutions.toStudentSafeQuestionSolution({
     question_number: 17,

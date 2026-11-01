@@ -293,6 +293,13 @@ export async function generateOrbyKnowledgeProfile(
       throw new Error("Bloque " + (batchIndex + 1) + "/" + batches.length + ": " + lastBatchError);
     }
 
+    // TypeScript cannot preserve property narrowing for an object assigned
+    // inside the retry loop, so narrow the summary again after the loop.
+    const parsedSummary = typeof parsed.summary === "string" ? parsed.summary.trim() : "";
+    if (parsedSummary.length < 10) {
+      throw new Error("El perfil del bloque " + (batchIndex + 1) + " no contiene un resumen válido.");
+    }
+
     const concepts = Array.isArray(parsed.concepts) ? parsed.concepts.slice(0, 100).flatMap((raw) => {
       const value = asRecord(raw);
       if (!value || typeof value.name !== "string" || value.name.trim().length < 2) return [];
@@ -327,7 +334,7 @@ export async function generateOrbyKnowledgeProfile(
     }) : [];
 
     return {
-      summary: parsed.summary.trim().slice(0, 1200),
+      summary: parsedSummary.slice(0, 1200),
       areas: cleanStringArray(parsed.areas, 12, 80),
       topics: cleanStringArray(parsed.topics, 100, 180),
       concepts,

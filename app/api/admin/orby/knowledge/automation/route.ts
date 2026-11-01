@@ -73,6 +73,7 @@ export async function GET() {
     exercise_blueprint_count: number;
     visual_element_count: number;
     detected_areas: string[];
+    competency_preview: Array<{ name: string; area: string; evidence_pages: number[]; provenance: "source" | "pedagogical_inference"; question_count: number | null }>;
     concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
     question_pattern_preview: Array<{ archetype: string; stimulus_type: string; task: string; provenance: "source" | "pedagogical_inference"; evidence_pages: number[] }>;
     question_solution_preview: Array<{
@@ -95,6 +96,13 @@ export async function GET() {
     const concepts = new Map<string, { name: string; area: string; parent_concept: string; evidence_pages: number[] }>();
     const topics = new Set<string>();
     const competencies = new Set<string>();
+    const competencyDetails = new Map<string, {
+      name: string;
+      area: string;
+      evidence_pages: number[];
+      provenance: "source" | "pedagogical_inference";
+      question_count: number | null;
+    }>();
     const areas = new Set<string>();
     const teachingMethods = new Map<string, { concept: string; student_level_zero: string; provenance: "source" | "pedagogical_inference"; evidence_pages: number[] }>();
     const workedExamples = new Set<string>();
@@ -126,9 +134,24 @@ export async function GET() {
       }
       if (Array.isArray(result.competencies)) {
         for (const competency of result.competencies) {
-          if (competency && typeof competency === "object" && "name" in competency && typeof competency.name === "string") {
-            competencies.add(normalizeProfileIdentity(competency.name));
-          }
+          if (!competency || typeof competency !== "object") continue;
+          const item = competency as Record<string, unknown>;
+          const name = typeof item.name === "string" ? item.name.trim() : "";
+          const area = typeof item.area === "string" ? item.area.trim() : "Transversal";
+          if (!name) continue;
+          const key = normalizeProfileIdentity(area + "|" + name);
+          competencies.add(key);
+          competencyDetails.set(key, {
+            name,
+            area,
+            evidence_pages: Array.isArray(item.evidence_pages)
+              ? item.evidence_pages.filter((page: unknown): page is number => typeof page === "number" && Number.isInteger(page) && page > 0).slice(0, 8)
+              : [],
+            provenance: item.provenance === "pedagogical_inference" ? "pedagogical_inference" : "source",
+            question_count: Number.isInteger(Number(item.question_count)) && Number(item.question_count) >= 0
+              ? Number(item.question_count)
+              : null,
+          });
         }
       }
       const pedagogy = result.pedagogical_knowledge && typeof result.pedagogical_knowledge === "object"
@@ -276,6 +299,7 @@ export async function GET() {
       exercise_blueprint_count: exerciseBlueprints.size,
       visual_element_count: visualElements.size,
       detected_areas: [...areas].slice(0, 12),
+      competency_preview: [...competencyDetails.values()].slice(0, 8),
       concept_preview: [...concepts.values()].slice(0, 8),
       question_pattern_preview: [...questionPatterns.values()].slice(0, 5),
       question_solution_preview: [...questionSolutions.values()].slice(0, 5),
@@ -311,6 +335,7 @@ export async function GET() {
       exercise_blueprint_count: stats?.exercise_blueprint_count ?? 0,
       visual_element_count: stats?.visual_element_count ?? 0,
       detected_areas: stats?.detected_areas ?? [],
+      competency_preview: stats?.competency_preview ?? [],
       concept_preview: stats?.concept_preview ?? [],
       question_pattern_preview: stats?.question_pattern_preview ?? [],
       question_solution_preview: stats?.question_solution_preview ?? [],

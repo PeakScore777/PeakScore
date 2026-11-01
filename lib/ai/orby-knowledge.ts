@@ -61,6 +61,102 @@ function cleanStringArray(value: unknown, maxItems = 40, maxLength = 180): strin
   return output;
 }
 
+export type OrbyTeachingConcept = {
+  name: string;
+  area: string;
+  parent_concept: string;
+  aliases: string[];
+  evidence_pages: number[];
+  confidence: number;
+  importance: number;
+  evidence: string;
+};
+
+/**
+ * Select profile concepts by relevance to the student's actual question.
+ * Profiles are indexes, not model training: only concepts with source evidence
+ * are returned, and source wording/evidence is preserved.
+ */
+export function selectOrbyRelevantConcepts(
+  rawConcepts: unknown,
+  query: string,
+  limit = 24
+): OrbyTeachingConcept[] {
+  if (!Array.isArray(rawConcepts)) return [];
+  const stopwords = new Set([
+    "para","como","cuando","donde","cual","cuales","porque","sobre","desde","hasta",
+    "quiero","puedes","explica","explicame","ayuda","tema","temas","saber","once",
+    "icfes","orby","peakscore","que","del","las","los","una","uno","unos","unas",
+    "con","sin","por","sus","esto","esta","este","eso","esa","ese","hay","ser",
+    "son","muy","mas","más","menos","tambien","también","hacer","hace","dime"
+  ]);
+  const normalize = (value: string) => value.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es-CO")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+  const queryText = normalize(query);
+  const queryTokens = new Set(queryText.split(/\s+/).filter((token) => token.length > 2 && !stopwords.has(token)));
+  const candidates: Array<{ concept: OrbyTeachingConcept; score: number; index: number }> = [];
+  const seen = new Set<string>();
+
+  for (let index = 0; index < rawConcepts.length; index++) {
+    const raw = asRecord(rawConcepts[index]);
+    if (!raw || typeof raw.name !== "string" || raw.name.trim().length < 2) continue;
+    const name = raw.name.trim().slice(0, 180);
+    const area = typeof raw.area === "string" ? raw.area.trim().slice(0, 80) : "Transversal";
+    const parent = typeof raw.parent_concept === "string" ? raw.parent_concept.trim().slice(0, 180) : "";
+    const aliases = cleanStringArray(raw.aliases, 8, 100);
+    const evidencePages = Array.isArray(raw.evidence_pages)
+      ? [...new Set(raw.evidence_pages.filter((page): page is number => Number.isInteger(page) && page > 0))].slice(0, 20)
+      : [];
+    const evidence = typeof raw.evidence === "string" ? raw.evidence.trim().slice(0, 700) : "";
+    if (!evidencePages.length || !evidence) continue;
+
+    const key = normalizedConceptKey(name) + "|" + normalizedConceptKey(parent);
+    if (seen.has(key)) continue;
+    seen.add(key);
+
+    const nameText = normalize(name);
+    const parentText = normalize(parent);
+    const aliasText = normalize(aliases.join(" "));
+    const evidenceText = normalize(evidence);
+    let score = 0;
+    if (queryText.length >= 3 && (queryText.includes(nameText) || nameText.includes(queryText))) score += 12;
+    if (queryText.length >= 3 && parentText && (queryText.includes(parentText) || parentText.includes(queryText))) score += 6;
+    for (const token of queryTokens) {
+      if (nameText.split(" ").includes(token)) score += 5;
+      else if (parentText.split(" ").includes(token)) score += 3;
+      else if (aliasText.split(" ").includes(token)) score += 2;
+      else if (evidenceText.includes(token)) score += 1;
+    }
+    const importance = Number(raw.importance);
+    const confidence = Number(raw.confidence);
+    score += (Number.isFinite(importance) ? Math.max(1, Math.min(5, importance)) : 3) * 0.35;
+    score += (Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0.65) * 0.5;
+
+    candidates.push({
+      index,
+      score,
+      concept: {
+        name,
+        area,
+        parent_concept: parent,
+        aliases,
+        evidence_pages: evidencePages,
+        confidence: Number.isFinite(confidence) ? Math.max(0, Math.min(1, confidence)) : 0.65,
+        importance: Number.isFinite(importance) ? Math.max(1, Math.min(5, Math.round(importance))) : 3,
+        evidence,
+      },
+    });
+  }
+
+  return candidates
+    .sort((a, b) => b.score - a.score || b.concept.importance - a.concept.importance || a.index - b.index)
+    .slice(0, Math.max(1, Math.min(48, limit)))
+    .map((item) => item.concept);
+}
+
 function normalizedConceptKey(value: string): string {
   return value.normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")

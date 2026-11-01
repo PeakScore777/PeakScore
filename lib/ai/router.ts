@@ -273,7 +273,11 @@ async function generateWithLLM7(prompt: string, task?: AITask): Promise<{ text: 
   }
 
   const baseUrl = (process.env.LLM7_BASE_URL || "https://api.llm7.io/v1").replace(/\/+$/, "");
-  const model = process.env.LLM7_MODEL || "nemotron-3-nano:30b";
+  const model = process.env.LLM7_MODEL?.trim();
+  if (!model) {
+    console.warn("[PeakScore AI] LLM7 omitido: configura LLM7_MODEL con un modelo habilitado antes de activarlo.");
+    throw new AIServiceError("AI_CONFIGURATION");
+  }
 
   try {
     const response = await fetch(baseUrl + "/chat/completions", {
@@ -1990,9 +1994,9 @@ async function generateWithProvider(
 export function getProviderForTask(
   task: AITask
 ): AIProvider {
-  // Nemotron is enabled for Orby only when a server-side LLM7 key exists.
-  // Existing tasks keep their current provider routing.
-  if (task === "tutor" && process.env.LLM7_API_KEY) {
+  // LLM7 is only enabled when both credentials and a model explicitly
+  // selected by the project owner are present. Never guess a model name.
+  if (task === "tutor" && process.env.LLM7_API_KEY && process.env.LLM7_MODEL?.trim()) {
     return "llm7";
   }
 
@@ -2060,9 +2064,14 @@ function buildProviderChain(
         primaryProvider,
       ];
 
-  return Array.from(
-    new Set(providers)
-  );
+  return Array.from(new Set(providers)).filter((candidate) => {
+    // LLM7 returned HTTP 400 for the implicit Nemotron default in production.
+    // Keep it out of every fallback chain unless the model is explicitly set.
+    if (candidate === "llm7") {
+      return Boolean(process.env.LLM7_API_KEY && process.env.LLM7_MODEL?.trim());
+    }
+    return true;
+  });
 }
 
 /* =====================================================

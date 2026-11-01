@@ -69,12 +69,9 @@ export async function POST(request: Request) {
   if (!user) return jsonError("Acceso reservado al administrador.", 403);
 
   try {
-    const limitResult = await supabaseAdmin.rpc("orby_take_rate_limit", {
-      p_user_id: user.id, p_bucket: "orby_admin_knowledge_upload", p_max_requests: 8, p_window_seconds: 86400,
-    });
-    if (limitResult.error || !limitResult.data || typeof limitResult.data !== "object") return jsonError("El control de carga no está disponible.", 503);
-    if (!(limitResult.data as { allowed?: boolean }).allowed) return jsonError("Alcanzaste el límite diario de cargas. Inténtalo mañana.", 429);
-
+    // The authenticated Orby Lab owner may upload multiple reference PDFs.
+    // Keep file validation, size limits and storage controls; the private admin
+    // upload workflow is not subject to student-facing message throttling.
     const form = await request.formData();
     const file = form.get("file");
     if (!(file instanceof File)) return jsonError("Selecciona un archivo PDF.", 400);

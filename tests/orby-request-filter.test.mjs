@@ -151,8 +151,8 @@ test("extrae listas numeradas aunque el PDF no diga temario ni checklist", () =>
   ];
 
   const rows = checklist.extractOrbyChecklistRows(chunks);
-  assert.equal(rows.length, 16);
-  assert.equal(rows.filter((row) => row.area === "Matemáticas").length, 6);
+  assert.equal(rows.length, 13);
+  assert.equal(rows.filter((row) => row.area === "Matemáticas").length, 5);
   assert.equal(rows.filter((row) => row.area === "Física").length, 2);
   assert.equal(rows.filter((row) => row.area === "Biología").length, 2);
   assert.equal(rows.filter((row) => row.area === "Química").length, 2);

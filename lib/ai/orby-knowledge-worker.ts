@@ -180,7 +180,9 @@ async function upsertDerivedPageChunks(
   ].sort((a, b) => a.chunk_index - b.chunk_index);
 }
 
-export async function processNextOrbyKnowledgeJob(): Promise<{
+export async function processNextOrbyKnowledgeJob(options: {
+  origin: "automatic" | "manual";
+}): Promise<{
   state: "idle" | "progress" | "completed" | "failed";
   jobId?: string;
   documentId?: string;
@@ -190,13 +192,20 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
   message?: string;
 }> {
   const workerId = randomUUID();
+  const countsTowardAutomaticBudget = options.origin === "automatic";
   const { data: claimed, error: claimError } = await supabaseAdmin.rpc("orby_claim_knowledge_job", {
     p_worker_id: workerId,
     p_lease_seconds: 600,
+    p_count_toward_auto_budget: countsTowardAutomaticBudget,
   });
   if (claimError) throw new Error("No se pudo reclamar una tarea: " + claimError.code);
   if (!claimed || typeof claimed !== "object") {
-    return { state: "idle", message: "No hay tareas disponibles o se alcanzó el límite global de 10 ciclos IA de hoy." };
+    return {
+      state: "idle",
+      message: countsTowardAutomaticBudget
+        ? "No hay tareas disponibles o se alcanzó el límite de 10 ciclos automáticos de hoy."
+        : "No hay tareas manuales disponibles para procesar.",
+    };
   }
 
   const job = claimed as unknown as OrbyKnowledgeJob;

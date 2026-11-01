@@ -129,7 +129,7 @@ test("extrae listas numeradas aunque el PDF no diga temario ni checklist", () =>
         "Física 1 [MECÁNICA CLÁSICA]",
         "1. Magnitudes físicas.",
         "2. Análisis dimensional.",
-      ].join("\\n"),
+      ].join("\n"),
     },
     {
       page_number: 2,
@@ -146,7 +146,7 @@ test("extrae listas numeradas aunque el PDF no diga temario ni checklist", () =>
         "Sociales 1 [GEOGRAFÍA Y CARTOGRAFÍA]",
         "1. Geografía.",
         "2. Cartografía.",
-      ].join("\\n"),
+      ].join("\n"),
     },
   ];
 

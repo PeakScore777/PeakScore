@@ -21,12 +21,20 @@ export async function GET(request: Request) {
   if (!admin) return jsonError("Acceso reservado al administrador.", 403);
 
   const url = new URL(request.url);
-  const before = url.searchParams.get("before");
+  const beforeParam = url.searchParams.get("before");
   const beforeId = url.searchParams.get("beforeId");
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  if (before && (!Number.isFinite(Date.parse(before)) || !beforeId || !uuidPattern.test(beforeId))) {
+  const parsedBefore = beforeParam ? new Date(beforeParam) : null;
+  if (beforeParam && (
+    !parsedBefore
+    || !Number.isFinite(parsedBefore.getTime())
+    || !beforeId
+    || !uuidPattern.test(beforeId)
+  )) {
     return jsonError("El punto de consulta del historial no es válido.", 400);
   }
+  // Normalize the cursor to a server-parsed ISO timestamp before using it in a PostgREST OR filter.
+  const before = parsedBefore?.toISOString() ?? null;
 
   const pageSize = 50;
   let query = supabaseAdmin.from("orby_admin_chat_messages")

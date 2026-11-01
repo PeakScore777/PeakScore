@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       message: error instanceof Error ? error.message.slice(0, 250) : "unknown",
     });
     await removePrivateUpload(storagePath);
-    return jsonError("No se pudo leer este PDF. Comprueba que no esté dañado, protegido o escaneado.", 422);
+    return jsonError("No se pudo leer este PDF. Comprueba que no esté dañado o protegido.", 422);
   }
   if (extracted.totalPages < 1 || extracted.totalPages > 1000) {
     await removePrivateUpload(storagePath);

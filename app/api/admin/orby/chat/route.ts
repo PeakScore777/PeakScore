@@ -16,15 +16,36 @@ async function getAdmin() {
   return getOrbyOwner();
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const admin = await getAdmin();
   if (!admin) return jsonError("Acceso reservado al administrador.", 403);
-  const { data, error } = await supabaseAdmin.from("orby_admin_chat_messages")
+
+  const url = new URL(request.url);
+  const before = url.searchParams.get("before");
+  if (before && !Number.isFinite(Date.parse(before))) {
+    return jsonError("El punto de consulta del historial no es válido.", 400);
+  }
+
+  const pageSize = 50;
+  let query = supabaseAdmin.from("orby_admin_chat_messages")
     .select("id,role,content,sources,created_at")
     .eq("admin_user_id", admin.user.id)
-    .order("created_at", { ascending: true }).limit(100);
-  if (error) return jsonError("No se pudo cargar el chat privado.", 503);
-  return NextResponse.json({ messages: data ?? [], adminName: admin.label }, { headers: { "Cache-Control": "private, no-store" } });
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(pageSize + 1);
+
+  if (before) query = query.lt("created_at", before);
+
+  const { data, error } = await query;
+  if (error) return jsonError("No se pudo cargar el historial privado.", 503);
+
+  const rows = data ?? [];
+  const hasMore = rows.length > pageSize;
+  const messages = rows.slice(0, pageSize).reverse();
+  return NextResponse.json(
+    { messages, hasMore, adminName: admin.label },
+    { headers: { "Cache-Control": "private, no-store" } }
+  );
 }
 
 export async function POST(request: Request) {
@@ -55,7 +76,7 @@ export async function POST(request: Request) {
 
   const inferredSubject = normalizeIcfesSubject(null, message);
   const { data: sources, error: sourceError } = await supabaseAdmin.rpc("orby_search_admin_knowledge", {
-    p_query: message, p_subject: inferredSubject, p_limit: 6,
+    p_query: message, p_subject: inferredSubject, p_limit: 8,
   });
   if (sourceError) {
     console.error("[Orby Admin Chat] Knowledge search failed.", { code: sourceError.code });

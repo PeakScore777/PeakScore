@@ -307,7 +307,11 @@ export default function OrbyKnowledgeStudio() {
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "No se pudo ejecutar el siguiente lote.");
-      setNotice(payload.message || "Se ejecutó una etapa del motor de conocimiento.");
+      if (payload.state === "failed") {
+        setError(payload.message || "El lote falló y quedó programado para reintento.");
+      } else {
+        setNotice(payload.message || "Se ejecutó una etapa del motor de conocimiento.");
+      }
       await loadAll();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo procesar el siguiente lote.");

@@ -51,7 +51,7 @@ export async function enqueueNextPendingOrbyKnowledgeDocument(): Promise<boolean
     .from("orby_knowledge_documents")
     .select("id")
     .in("status", ["draft", "published"])
-    .or("knowledge_pipeline_version.lt." + ORBY_KNOWLEDGE_PIPELINE_VERSION + ",knowledge_profile_status.neq.ready")
+    .or("knowledge_pipeline_version.lt." + ORBY_KNOWLEDGE_PIPELINE_VERSION + ",knowledge_profile_status.neq.ready,embedded_chunk_count.lt.chunk_count")
     .order("created_at", { ascending: true })
     .limit(100);
   if (error) throw new Error("No se pudieron detectar documentos pendientes: " + error.code);

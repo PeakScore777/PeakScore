@@ -13,19 +13,56 @@ type Source = { documentId: string; title: string; subject: string; topic: strin
 type ChatMessage = { id?: string; role: "user" | "assistant"; content: string; sources?: Source[]; verification?: "not_required" | "passed" | "corrected" | "unverified"; created_at?: string };
 
 function formatAdminReply(content: string): string {
-  return content
+  const normalized = content
     .replace(/\\([\\\x60*_{}\[\]()#+.!|>~-])/g, "$1")
     .replace(/\\n/g, "\n")
     .replace(/<br\s*\/?\s*>/gi, "\n")
     .replace(/&nbsp;/gi, " ")
-    .replace(/^\s*\|?[-:\s|]+\|?\s*$/gm, "")
-    .replace(/^\s*\|([^\n]+)\|\s*$/gm, (_line, cells: string) =>
-      cells.split("|").map((cell: string) => cell.trim()).filter(Boolean).join(" · ")
-    )
     .replace(/\*\*(.*?)\*\*/g, "$1")
-    .replace(/(^|\n)\s*[-*]\s+/g, "$1• ")
-    .replace(/\n{3,}/g, "\n\n")
+    .replace(/^\s{0,3}#{1,6}\s+/gm, "")
     .trim();
+
+  const output: string[] = [];
+  let tableRows: string[][] = [];
+  const flushTable = () => {
+    if (!tableRows.length) return;
+    if (tableRows.length === 1) {
+      output.push(tableRows[0].join(" · "));
+    } else {
+      const headers = tableRows[0];
+      for (const row of tableRows.slice(1)) {
+        const cells = row.map((cell, index) => headers[index]
+          ? headers[index] + ": " + cell
+          : cell
+        ).filter(Boolean);
+        if (cells.length) output.push("• " + cells.join(" · "));
+      }
+    }
+    tableRows = [];
+  };
+
+  for (const rawLine of normalized.split("\n")) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushTable();
+      output.push("");
+      continue;
+    }
+    if (/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(line)) continue;
+    const isTableRow = line.includes("|")
+      && (line.startsWith("|") || line.endsWith("|") || line.split("|").length >= 3);
+    if (isTableRow) {
+      const cells = line.split("|").map((cell) => cell.trim()).filter(Boolean);
+      if (cells.length >= 2) {
+        tableRows.push(cells);
+        continue;
+      }
+    }
+    flushTable();
+    output.push(line.replace(/(^|\n)\s*[-*]\s+/g, "$1• "));
+  }
+  flushTable();
+  return output.join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 

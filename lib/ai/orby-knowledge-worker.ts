@@ -66,6 +66,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
   if (!claimed || typeof claimed !== "object") return { state: "idle", message: "No hay tareas pendientes." };
 
   const job = claimed as unknown as OrbyKnowledgeJob;
+  let documentTitle = job.document_id;
   try {
     const [chunks, documentResult] = await Promise.all([
       loadOrbyKnowledgeChunks(job.document_id),
@@ -76,7 +77,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
     ]);
     if (!chunks.length) throw new Error("El documento ya no contiene fragmentos.");
     if (documentResult.error || !documentResult.data) throw new Error("No se encontró el documento de la tarea.");
-    const documentTitle = documentResult.data.title as string;
+    documentTitle = documentResult.data.title as string;
 
     const currentHash = hashOrbyKnowledgeChunks(chunks);
     if (currentHash !== job.content_hash) {

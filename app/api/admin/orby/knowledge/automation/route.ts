@@ -67,6 +67,7 @@ export async function GET() {
     teaching_method_count: number;
     worked_example_count: number;
     question_pattern_count: number;
+    question_solution_count: number;
     solving_method_count: number;
     study_path_count: number;
     exercise_blueprint_count: number;
@@ -74,6 +75,16 @@ export async function GET() {
     detected_areas: string[];
     concept_preview: Array<{ name: string; area: string; parent_concept: string; evidence_pages: number[] }>;
     question_pattern_preview: Array<{ archetype: string; stimulus_type: string; task: string; evidence_pages: number[] }>;
+    question_solution_preview: Array<{
+      question_number: number | null;
+      area: string;
+      skill: string;
+      problem_summary: string;
+      candidate_option: string | null;
+      answer_basis: string;
+      confidence: number;
+      evidence_pages: number[];
+    }>;
     teaching_method_preview: Array<{ concept: string; student_level_zero: string; evidence_pages: number[] }>;
   }>();
 
@@ -86,6 +97,16 @@ export async function GET() {
     const teachingMethods = new Map<string, { concept: string; student_level_zero: string; evidence_pages: number[] }>();
     const workedExamples = new Set<string>();
     const questionPatterns = new Map<string, { archetype: string; stimulus_type: string; task: string; evidence_pages: number[] }>();
+    const questionSolutions = new Map<string, {
+      question_number: number | null;
+      area: string;
+      skill: string;
+      problem_summary: string;
+      candidate_option: string | null;
+      answer_basis: string;
+      confidence: number;
+      evidence_pages: number[];
+    }>();
     const solvingMethods = new Set<string>();
     const studyPaths = new Set<string>();
     const exerciseBlueprints = new Set<string>();
@@ -147,6 +168,40 @@ export async function GET() {
           });
         }
       }
+      if (Array.isArray(pedagogy.question_solutions)) {
+        for (const solution of pedagogy.question_solutions) {
+          if (!solution || typeof solution !== "object") continue;
+          const item = solution as Record<string, unknown>;
+          const summary = typeof item.problem_summary === "string" ? item.problem_summary.trim() : "";
+          const area = typeof item.area === "string" ? item.area.trim() : "";
+          const skill = typeof item.skill === "string" ? item.skill.trim() : "";
+          const basis = typeof item.answer_basis === "string" ? item.answer_basis : "insufficient_information";
+          const pages = Array.isArray(item.evidence_pages)
+            ? item.evidence_pages.filter((page: unknown): page is number => typeof page === "number" && Number.isInteger(page) && page > 0)
+            : [];
+          if (!summary || !area || !pages.length) continue;
+          const number = Number.isInteger(Number(item.question_number)) && Number(item.question_number) > 0
+            ? Number(item.question_number)
+            : null;
+          const option = ["A","B","C","D"].includes(String(item.candidate_option).toUpperCase())
+            ? String(item.candidate_option).toUpperCase()
+            : null;
+          const confidence = Number.isFinite(Number(item.confidence))
+            ? Math.max(0, Math.min(1, Number(item.confidence)))
+            : 0;
+          const key = normalizeProfileIdentity(area + "|" + skill + "|" + String(number ?? "") + "|" + summary);
+          questionSolutions.set(key, {
+            question_number: number,
+            area,
+            skill,
+            problem_summary: summary.slice(0, 300),
+            candidate_option: option,
+            answer_basis: basis,
+            confidence,
+            evidence_pages: [...new Set(pages)].slice(0, 8),
+          });
+        }
+      }
       if (Array.isArray(pedagogy.solving_methods)) {
         for (const item of pedagogy.solving_methods) {
           const value = item && typeof item === "object" ? item as Record<string, unknown> : {};
@@ -203,6 +258,7 @@ export async function GET() {
       teaching_method_count: teachingMethods.size,
       worked_example_count: workedExamples.size,
       question_pattern_count: questionPatterns.size,
+      question_solution_count: questionSolutions.size,
       solving_method_count: solvingMethods.size,
       study_path_count: studyPaths.size,
       exercise_blueprint_count: exerciseBlueprints.size,
@@ -210,6 +266,7 @@ export async function GET() {
       detected_areas: [...areas].slice(0, 12),
       concept_preview: [...concepts.values()].slice(0, 8),
       question_pattern_preview: [...questionPatterns.values()].slice(0, 5),
+      question_solution_preview: [...questionSolutions.values()].slice(0, 5),
       teaching_method_preview: [...teachingMethods.values()].slice(0, 5),
     });
   }
@@ -236,6 +293,7 @@ export async function GET() {
       teaching_method_count: stats?.teaching_method_count ?? 0,
       worked_example_count: stats?.worked_example_count ?? 0,
       question_pattern_count: stats?.question_pattern_count ?? 0,
+      question_solution_count: stats?.question_solution_count ?? 0,
       solving_method_count: stats?.solving_method_count ?? 0,
       study_path_count: stats?.study_path_count ?? 0,
       exercise_blueprint_count: stats?.exercise_blueprint_count ?? 0,
@@ -243,6 +301,7 @@ export async function GET() {
       detected_areas: stats?.detected_areas ?? [],
       concept_preview: stats?.concept_preview ?? [],
       question_pattern_preview: stats?.question_pattern_preview ?? [],
+      question_solution_preview: stats?.question_solution_preview ?? [],
       teaching_method_preview: stats?.teaching_method_preview ?? [],
     };
   });

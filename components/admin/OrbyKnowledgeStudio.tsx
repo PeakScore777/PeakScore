@@ -9,11 +9,13 @@ type KnowledgeDocument = {
   id: string; title: string; original_name: string; subject: string; topic: string;
   page_count: number; chunk_count: number; status: "draft" | "published" | "archived"; created_at: string;
   embedded_chunk_count: number; knowledge_profile_status: "pending" | "ready" | "failed"; knowledge_profile_version: number; knowledge_pipeline_version: number; concept_count: number;
+  ingestion_status: "queued" | "processing" | "completed" | "attention_required" | "failed";
+  coverage_percent: number; visual_pages_total: number; visual_pages_reviewed: number; auto_review_count: number; next_review_at: string | null;
 };
 type Source = { documentId: string; title: string; subject: string; topic: string; page: number };
 type ChatMessage = { id?: string; role: "user" | "assistant"; content: string; sources?: Source[]; verification?: "not_required" | "passed" | "corrected" | "unverified"; created_at?: string };
 type AutomationStatus = {
-  settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null };
+  settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null; ai_cycles_used: number; ai_cycle_date: string | null };
   configured: boolean;
   counts: { queued: number; running: number; retrying: number; failed: number; completed: number };
   recent: Array<{
@@ -43,7 +45,9 @@ function publicationBlockReason(document: KnowledgeDocument): string | null {
   if (document.embedded_chunk_count < document.chunk_count) return "Faltan embeddings: " + document.embedded_chunk_count + "/" + document.chunk_count + ".";
   if (document.knowledge_profile_status !== "ready") return "El perfil académico todavía no terminó o necesita reintento.";
   if (document.knowledge_profile_version < 2) return "Falta completar el perfil académico v2.";
-  if (document.knowledge_pipeline_version < 3) return "Falta finalizar y validar el motor de conocimiento v3.";
+  if (document.knowledge_pipeline_version < 4) return "Falta finalizar la lectura multimodal del motor v4.";
+  if (document.ingestion_status !== "completed") return "El documento todavía no ha completado su lectura y revisión visual.";
+  if (document.coverage_percent < 95 || document.visual_pages_reviewed < Math.ceil(document.visual_pages_total * 0.95)) return "La cobertura visual todavía es inferior al 95%.";
   if (document.concept_count < 1) return "El perfil todavía no tiene conceptos académicos indexados.";
   return null;
 }
@@ -57,7 +61,9 @@ function isCurrentKnowledgePipeline(document: KnowledgeDocument): boolean {
     && document.embedded_chunk_count >= document.chunk_count
     && document.knowledge_profile_status === "ready"
     && document.knowledge_profile_version >= 2
-    && document.knowledge_pipeline_version >= 3;
+    && document.knowledge_pipeline_version >= 4
+    && document.ingestion_status === "completed"
+    && document.coverage_percent >= 95;
 }
 
 function formatAdminReply(content: string): string {
@@ -452,16 +458,17 @@ export default function OrbyKnowledgeStudio() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-orange-400">03 / AUTONOMOUS KNOWLEDGE</p>
                 <h3 className="mt-1 text-sm font-semibold">Orby Autopilot</h3>
-                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">Cada minuto revisa la cola y avanza un lote pendiente. No vuelve a procesar documentos cuya versión y contenido ya están actualizados.</p>
+                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">Cada cinco minutos lee cuatro páginas, extrae conceptos, métodos para enseñar desde cero, ejemplos, arquetipos Saber 11 y rutas de estudio. Solo relee páginas incompletas; el límite compartido es de 10 ciclos IA diarios.</p>
               </div>
               <span className={automation?.settings.enabled ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300" : "rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] font-bold text-slate-400"}>{automation?.settings.enabled ? "MOTOR ACTIVO" : "MOTOR PAUSADO"}</span>
             </div>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-6">
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">En cola</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.queued ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Procesando</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.running ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Reintentos</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.retrying ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Con error</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.failed ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Completados</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.completed ?? "—"}</p></div>
+              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Ciclos IA hoy</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.settings.ai_cycles_used ?? "—"}/10</p></div>
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-[9px] text-slate-500">{automation?.settings.last_tick_at ? "Última revisión: " + new Date(automation.settings.last_tick_at).toLocaleString("es-CO") : "Aún no se registra una revisión automática."}</p>

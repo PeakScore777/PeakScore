@@ -292,6 +292,12 @@ export function extractOrbyCompetencyRows(
       }
       if (/^(?:competencia\s+preguntas|competencia|preguntas)$/i.test(line)) continue;
 
+      const standaloneCount = line.match(/^(\d{1,3})$/);
+      if (standaloneCount && pendingLines.length) {
+        flushCompetency(chunk.page_number, Number(standaloneCount[1]));
+        continue;
+      }
+
       const withCount = line.match(/^(.+?)\s+(\d{1,3})\s*(?:preguntas?)?$/i);
       if (withCount) {
         if (withCount[1].trim()) pendingLines.push(withCount[1].trim());

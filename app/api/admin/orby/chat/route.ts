@@ -16,6 +16,20 @@ async function getAdmin() {
   return getOrbyOwner();
 }
 
+function normalizeAdminHistoryReply(value: string): string {
+  const plain = extractPlainOrbyReply(value);
+  if (!plain) return "Esta respuesta anterior quedó guardada en un formato que no se pudo mostrar. Vuelve a formular la pregunta para obtener una respuesta limpia.";
+
+  const unsupportedExternalSearchClaim =
+    /\\b(?:directorios|niveles de almacenamiento|repositorio|ruta de carga|subcarpeta|carpetas del sistema)\\b/i.test(plain)
+    && /\\b(?:revisi[oó]n exhaustiva|revisi[oó]n minuciosa|b[uú]squeda exhaustiva|rastreo|inspecci[oó]n|no se ha encontrado|no existe ninguna|no aparece en la base)\\b/i.test(plain);
+
+  if (unsupportedExternalSearchClaim) {
+    return "Esta respuesta anterior no fue fiable: Orby afirmó haber inspeccionado directorios o repositorios externos, algo que no puede hacer. La búsqueda actual consulta la biblioteca privada indexada y ya permite localizar documentos por título y contenido.";
+  }
+  return plain;
+}
+
 export async function GET(request: Request) {
   const admin = await getAdmin();
   if (!admin) return jsonError("Acceso reservado al administrador.", 403);
@@ -55,11 +69,7 @@ export async function GET(request: Request) {
   const hasMore = rows.length > pageSize;
   const messages = rows.slice(0, pageSize).reverse().map((item) => {
     if (item.role !== "assistant") return item;
-    const plain = extractPlainOrbyReply(item.content);
-    return {
-      ...item,
-      content: plain || "Esta respuesta anterior quedó guardada en un formato que no se pudo mostrar. Vuelve a formular la pregunta para obtener una respuesta limpia.",
-    };
+    return { ...item, content: normalizeAdminHistoryReply(item.content) };
   });
   return NextResponse.json(
     { messages, hasMore, adminName: admin.label },
@@ -93,11 +103,7 @@ export async function POST(request: Request) {
   if (historyResult.error) return jsonError("No se pudo recuperar el contexto del chat.", 503);
   const history = (historyResult.data ?? []).reverse().map((item) => {
     if (item.role !== "assistant") return item;
-    const plain = extractPlainOrbyReply(item.content);
-    return {
-      ...item,
-      content: plain || "La respuesta anterior no se pudo recuperar en formato conversacional.",
-    };
+    return { ...item, content: normalizeAdminHistoryReply(item.content) };
   });
 
   const inferredSubject = normalizeIcfesSubject(null, message);

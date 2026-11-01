@@ -13,6 +13,7 @@ export type OrbyKnowledgeChunk = {
   chunk_index: number;
   page_number: number;
   content: string;
+  content_origin?: "text" | "ocr" | "visual" | "visual_placeholder";
 };
 
 export type OrbyPedagogicalKnowledge = {

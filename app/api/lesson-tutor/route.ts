@@ -6,7 +6,7 @@ import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-q
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
 import { containsProgrammingInstruction, normalizeOrbySpanishOutput, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
-import { searchOrbyKnowledge, getOrbyRelatedKnowledge } from "@/lib/ai/orby-knowledge";
+import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts } from "@/lib/ai/orby-knowledge";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -275,6 +275,13 @@ export async function POST(request: Request) {
 
     // Retrieve only knowledge that an administrator has explicitly published.
     const detectedSubject = normalizeIcfesSubject(subject, [topic, question, userMessage].filter(Boolean).join(" "));
+    const learningQuery = [
+      userMessage,
+      question,
+      topic,
+      context,
+      ...history.filter((item) => item.role === "user").slice(-4).map((item) => item.content),
+    ].filter(Boolean).join(" ").slice(0, 4000);
     type StudentKnowledgeSource = {
       document_id: string;
       title: string;
@@ -299,14 +306,8 @@ export async function POST(request: Request) {
       topics: unknown;
     }> = [];
     try {
-      const retrievalQuery = [
-        userMessage,
-        question,
-        topic,
-        ...recentContextMessages.filter((item) => item.role === "user").slice(-3).map((item) => item.content),
-      ].filter(Boolean).join(" ").slice(0, 4000);
       const knowledgeResult = await searchOrbyKnowledge({
-        query: retrievalQuery,
+        query: learningQuery,
         subject: detectedSubject,
         visibility: "published",
         limit: 7,
@@ -339,12 +340,15 @@ export async function POST(request: Request) {
     const profileContext = [...new Map(knowledgeSources
       .filter((source) => source.profile_summary || source.profile_concepts)
       .map((source) => [source.document_id, source])).values()]
-      .map((source) => [
-        typeof source.profile_summary === "string" ? source.profile_summary : "",
-        "Temas relacionados: " + JSON.stringify(Array.isArray(source.profile_topics) ? source.profile_topics.slice(0, 20) : []),
-        "Conceptos identificados: " + JSON.stringify(Array.isArray(source.profile_concepts) ? source.profile_concepts.slice(0, 24) : []),
-        "Competencias descritas: " + JSON.stringify(Array.isArray(source.profile_competencies) ? source.profile_competencies.slice(0, 16) : []),
-      ].join("\n"))
+      .map((source) => {
+        const relevantConcepts = selectOrbyRelevantConcepts(source.profile_concepts, learningQuery, 20);
+        return [
+          typeof source.profile_summary === "string" ? source.profile_summary.slice(0, 900) : "",
+          "Temas relacionados: " + JSON.stringify(Array.isArray(source.profile_topics) ? source.profile_topics.slice(0, 16) : []),
+          "Conceptos relevantes para esta pregunta (seleccionados por coincidencia temática y evidencia): " + JSON.stringify(relevantConcepts),
+          "Competencias descritas: " + JSON.stringify(Array.isArray(source.profile_competencies) ? source.profile_competencies.slice(0, 12) : []),
+        ].join("\n");
+      })
       .join("\n\n");
     const relatedKnowledgeContext = relatedKnowledge.map((item) => [
       "Conceptos compartidos entre materiales: " + JSON.stringify(item.shared_concepts ?? []),

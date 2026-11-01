@@ -46,6 +46,26 @@ export async function loadOrbyKnowledgeChunks(documentId: string): Promise<OrbyK
   return (data ?? []) as OrbyKnowledgeChunk[];
 }
 
+export async function enqueueNextPendingOrbyKnowledgeDocument(): Promise<boolean> {
+  const { data: documents, error } = await supabaseAdmin
+    .from("orby_knowledge_documents")
+    .select("id")
+    .in("status", ["draft", "published"])
+    .or("knowledge_pipeline_version.lt." + ORBY_KNOWLEDGE_PIPELINE_VERSION + ",knowledge_profile_status.neq.ready")
+    .order("created_at", { ascending: true })
+    .limit(100);
+  if (error) throw new Error("No se pudieron detectar documentos pendientes: " + error.code);
+
+  for (const document of documents ?? []) {
+    const chunks = await loadOrbyKnowledgeChunks(document.id);
+    if (!chunks.length) continue;
+    const result = await enqueueOrbyKnowledgeDocument(document.id, chunks);
+    if (result.job.status === "failed" || result.alreadyCurrent) continue;
+    return true;
+  }
+  return false;
+}
+
 export async function enqueueOrbyKnowledgeDocument(
   documentId: string,
   chunks: OrbyKnowledgeChunk[],

@@ -37,8 +37,8 @@ export async function POST() {
     // daily AI-cycle limit and all document/publication checks.
     const { data: nextQueuedJob, error: queuedJobError } = await supabaseAdmin
       .from("orby_knowledge_jobs")
-      .select("id")
-      .eq("status", "queued")
+      .select("id,status")
+      .in("status", ["queued", "retrying"])
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
@@ -50,26 +50,17 @@ export async function POST() {
         .from("orby_knowledge_jobs")
         .update({ available_at: readyAt, updated_at: readyAt })
         .eq("id", nextQueuedJob.id)
-        .eq("status", "queued");
+        .in("status", ["queued", "retrying"]);
       if (promoteError) throw new Error("No se pudo adelantar la tarea manual.");
     }
 
     const result = await processNextOrbyKnowledgeJob({ origin: "manual" });
-    const now = new Date().toISOString();
-    await supabaseAdmin.from("orby_knowledge_automation_settings")
-      .update({
-        last_tick_at: now,
-        ...(result.state !== "idle" ? { last_job_started_at: now } : {}),
-        updated_at: now,
-      })
-      .eq("id", 1);
-
     return NextResponse.json({
       ...result,
       queuedPendingDocument: queued,
       message: result.state === "idle"
         ? nextQueuedJob
-          ? "El documento continúa en cola; comprueba si se alcanzó el límite diario de 10 ciclos IA."
+          ? "La siguiente tarea no pudo reclamarse. Revisa los intentos máximos o el estado del trabajador; el presupuesto automático no limita las ejecuciones manuales."
           : result.message || "No hay tareas pendientes. Los documentos ya están al día."
         : result.message ?? "Se procesó una etapa de la cola.",
     }, { headers: { "Cache-Control": "private, no-store" } });

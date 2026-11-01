@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI } from "@/lib/ai/router";
 import { hasFalseOrbyCreatorAttribution, normalizeIcfesSubject, ICFES_SUBJECTS, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
 import { containsProgrammingInstruction, extractPlainOrbyReply, normalizeOrbySpanishOutput, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
-import { searchOrbyKnowledge, getOrbyRelatedKnowledge, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
+import { searchOrbyKnowledge, getOrbyRelatedKnowledge, searchOrbyKnowledgeConcepts, selectOrbyRelevantPedagogy } from "@/lib/ai/orby-knowledge";
 import { verifyOrbyKnowledgeAnswer, type OrbyKnowledgeEvidence } from "@/lib/ai/tutor-quality";
 
 export const runtime = "nodejs";
@@ -274,7 +274,7 @@ export async function POST(request: Request) {
   const [{ data: documentProfiles, error: profileError }, relatedDocuments, conceptGraphHits] = await Promise.all([
     referencedDocumentIds.length
       ? supabaseAdmin.from("orby_knowledge_profiles")
-          .select("document_id,summary,areas,topics,concepts,competencies,study_strategies,gaps_observed")
+          .select("document_id,summary,areas,topics,concepts,competencies,study_strategies,gaps_observed,pedagogical_knowledge")
           .in("document_id", referencedDocumentIds)
       : Promise.resolve({ data: [], error: null }),
     getOrbyRelatedKnowledge(referencedDocumentIds, "admin", 6),
@@ -294,6 +294,13 @@ export async function POST(request: Request) {
     "Competencias: " + JSON.stringify(Array.isArray(profile.competencies) ? profile.competencies.slice(0, 20) : []),
     "Estrategias: " + JSON.stringify(Array.isArray(profile.study_strategies) ? profile.study_strategies.slice(0, 20) : []),
     "Vacíos explícitos observados: " + JSON.stringify(profile.gaps_observed ?? []),
+    "Métodos para enseñar desde cero: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 8).teaching_methods),
+    "Ejemplos trabajados: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).worked_examples),
+    "Patrones abstractos Saber 11: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 8).question_patterns),
+    "Métodos de solución: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).solving_methods),
+    "Rutas de estudio: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).study_paths),
+    "Errores frecuentes y correcciones: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).common_misconceptions),
+    "Estructuras para ejercicios originales: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).exercise_blueprints),
   ].join("\n")).join("\n\n");
   const relatedDocumentContext = relatedDocuments.map((document) => [
     "Documento relacionado: " + document.title,

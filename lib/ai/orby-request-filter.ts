@@ -92,7 +92,16 @@ export function extractPlainOrbyReply(value: string): string {
 
   try {
     const parsed: unknown = JSON.parse(normalized);
-    if (typeof parsed === "string") return normalizeOrbySpanishOutput(parsed);
+    if (typeof parsed === "string") {
+      const inner = parsed.trim();
+      // Some providers wrap a JSON response object inside a JSON string.
+      // Parse the inner payload again so only the intended reply is rendered.
+      if (/^[\\[{]/.test(inner) && inner !== normalized) {
+        const unwrapped = extractPlainOrbyReply(inner);
+        if (unwrapped) return unwrapped;
+      }
+      return normalizeOrbySpanishOutput(parsed);
+    }
     if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
       const record = parsed as Record<string, unknown>;
       const preferredKeys = [

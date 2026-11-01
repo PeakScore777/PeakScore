@@ -158,6 +158,7 @@ test("extrae listas numeradas aunque el PDF no diga temario ni checklist", () =>
   assert.equal(rows.filter((row) => row.area === "Química").length, 2);
   assert.equal(rows.filter((row) => row.area === "Ciencias Sociales").length, 2);
   assert.ok(rows.some((row) => row.name === "Cartografía" && row.page === 2));
+  assert.ok(rows.some((row) => row.name === "Valor absoluto |X|" && row.area === "Matemáticas"));
 });
 
 test("conserva etiquetas entre corchetes y numeración separada del texto", () => {

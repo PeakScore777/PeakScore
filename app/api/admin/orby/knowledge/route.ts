@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { extractPdfPages } from "@/lib/pdf/extractPdfPages";
 import { enrichOrbyKnowledgeDocument } from "@/lib/ai/orby-knowledge";
 import type { IcfesSubject } from "@/lib/ai/orby-scope";
+import { isOrbyKnowledgePublicationReady } from "@/lib/ai/orby-publication";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -177,9 +178,11 @@ export async function PATCH(request: Request) {
     return jsonError("La solicitud de publicación no es válida.", 400);
   }
   const { data: existing, error: lookupError } = await supabaseAdmin.from("orby_knowledge_documents")
-    .select("id,chunk_count").eq("id", id).maybeSingle();
+    .select("id,chunk_count,embedded_chunk_count,knowledge_profile_status,knowledge_profile_version").eq("id", id).maybeSingle();
   if (lookupError || !existing) return jsonError("No se encontró el documento.", 404);
-  if (status === "published" && existing.chunk_count < 1) return jsonError("No se puede publicar un documento sin contenido indexado.", 409);
+  if (status === "published" && !isOrbyKnowledgePublicationReady(existing)) {
+    return jsonError("No se puede publicar todavía. Completa el perfil académico v2 y genera los embeddings de todos los fragmentos antes de enviar el material a los estudiantes.", 409);
+  }
   const { data, error } = await supabaseAdmin.from("orby_knowledge_documents").update({
     status, updated_at: new Date().toISOString(),
   }).eq("id", id).select("id,status,updated_at").single();

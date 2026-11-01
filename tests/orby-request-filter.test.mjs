@@ -21,6 +21,7 @@ const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServe
 const publication = await loadTypeScriptModule("../lib/ai/orby-publication.ts");
 const chunking = await loadTypeScriptModule("../lib/pdf/split-orby-text.ts");
 const checklist = await loadTypeScriptModule("../lib/pdf/extract-orby-checklist-rows.ts");
+const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {
   const prompts = [
@@ -187,4 +188,36 @@ test("conserva etiquetas entre corchetes y numeración separada del texto", () =
   assert.equal(rows.length, 2);
   assert.ok(rows.some((row) => row.name === "Operaciones con vectores [gráfico]"));
   assert.ok(rows.every((row) => row.area === "Física"));
+});
+
+test("no revela al estudiante claves candidatas ni números de preguntas de materiales privados", () => {
+  const safe = questionSolutions.toStudentSafeQuestionSolution({
+    question_number: 17,
+    area: "Matemáticas",
+    skill: "Interpretación de gráficas",
+    problem_summary: "Relacionar una variación lineal con su representación gráfica.",
+    reasoning_steps: ["Identificar variables y unidades.", "Comparar pendientes y cambios."],
+    candidate_option: "C",
+    candidate_result: "La pendiente es positiva.",
+    answer_basis: "independent_reasoning",
+    answer_key_comparison: "not_available",
+    confidence: 0.72,
+    uncertainties: [],
+    evidence_pages: [4],
+  });
+
+  assert.equal(safe.area, "Matemáticas");
+  assert.equal(safe.skill, "Interpretación de gráficas");
+  assert.equal(safe.problem_summary, "Relacionar una variación lineal con su representación gráfica.");
+  assert.equal("question_number" in safe, false);
+  assert.equal("candidate_option" in safe, false);
+  assert.equal("candidate_result" in safe, false);
+  assert.equal("evidence_pages" in safe, false);
+  assert.equal(safe.reasoning_steps.length, 2);
+  assert.equal(safe.confidence, 0.72);
+});
+
+test("descarta soluciones sin resumen académico o área verificable", () => {
+  assert.equal(questionSolutions.toStudentSafeQuestionSolution({ area: "Física" }), null);
+  assert.equal(questionSolutions.toStudentSafeQuestionSolution({ problem_summary: "Un resumen" }), null);
 });

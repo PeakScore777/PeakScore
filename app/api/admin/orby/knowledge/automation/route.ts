@@ -183,7 +183,7 @@ export async function GET() {
           const number = Number.isInteger(Number(item.question_number)) && Number(item.question_number) > 0
             ? Number(item.question_number)
             : null;
-          const option = ["A","B","C","D"].includes(String(item.candidate_option).toUpperCase())
+          const option = ["A","B","C","D","E","F","G","H"].includes(String(item.candidate_option).toUpperCase())
             ? String(item.candidate_option).toUpperCase()
             : null;
           const confidence = Number.isFinite(Number(item.confidence))

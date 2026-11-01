@@ -299,6 +299,7 @@ export async function POST(request: Request) {
     "Patrones abstractos Saber 11: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 8).question_patterns),
     "Métodos de solución: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).solving_methods),
     "Rutas de estudio: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).study_paths),
+    "Observaciones de claves no verificadas (solo auditoría del administrador; nunca presentarlas como oficiales): " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 8, true).answer_key_observations),
     "Errores frecuentes y correcciones: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).common_misconceptions),
     "Estructuras para ejercicios originales: " + JSON.stringify(selectOrbyRelevantPedagogy(profile.pedagogical_knowledge, message, 6).exercise_blueprints),
   ].join("\n")).join("\n\n");

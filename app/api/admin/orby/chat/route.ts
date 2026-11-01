@@ -190,10 +190,15 @@ export async function POST(request: Request) {
     }
   }
 
-  const sourceContext = references.map((source,index)=>[
-    "[Documento privado "+(index+1)+"] "+source.title+" | Área: "+source.subject+" | Tema: "+source.topic+" | página "+source.page_number,
-    source.content.slice(0,4000),
-  ].join("\n")).join("\n\n");
+  let sourceContext = "";
+  for (const [index, source] of references.entries()) {
+    const entry = [
+      "[Documento privado "+(index+1)+"] "+source.title+" | Área: "+source.subject+" | Tema: "+source.topic+" | página "+source.page_number,
+      source.content.slice(0, 2400),
+    ].join("\n");
+    if (sourceContext.length + entry.length > 72000) break;
+    sourceContext += (sourceContext ? "\n\n" : "") + entry;
+  }
 
   const referencedDocumentIds = [...new Set(references.map((source) => source.document_id))];
   const [{ data: documentProfiles, error: profileError }, relatedDocuments] = await Promise.all([
@@ -209,9 +214,9 @@ export async function POST(request: Request) {
     "Síntesis académica: " + profile.summary,
     "Áreas: " + JSON.stringify(profile.areas ?? []),
     "Temas: " + JSON.stringify(profile.topics ?? []),
-    "Conceptos: " + JSON.stringify(profile.concepts ?? []),
-    "Competencias: " + JSON.stringify(profile.competencies ?? []),
-    "Estrategias: " + JSON.stringify(profile.study_strategies ?? []),
+    "Conceptos: " + JSON.stringify(Array.isArray(profile.concepts) ? profile.concepts.slice(0, 30) : []),
+    "Competencias: " + JSON.stringify(Array.isArray(profile.competencies) ? profile.competencies.slice(0, 20) : []),
+    "Estrategias: " + JSON.stringify(Array.isArray(profile.study_strategies) ? profile.study_strategies.slice(0, 20) : []),
     "Vacíos explícitos observados: " + JSON.stringify(profile.gaps_observed ?? []),
   ].join("\n")).join("\n\n");
   const relatedDocumentContext = relatedDocuments.map((document) => [

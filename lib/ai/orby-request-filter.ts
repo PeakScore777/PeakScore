@@ -63,6 +63,31 @@ export function preflightOrbyRequest(message: string): OrbyPreflightResult {
   return { allowed: true, category: null, reply: "" };
 }
 
+export function sanitizeOrbyKnowledgeExcerpt(content: string, title: string): string {
+  let safe = content.replace(/\\r/g, "").replace(/https?:\\/\\/[^\\s)]+|www\\.[^\\s)]+/gi, " ");
+  const normalizedTitle = title
+    .replace(/^\\s*\\d+[\\s._:-]+/, "")
+    .replace(/\\.pdf$/i, "")
+    .replace(/[_-]+/g, " ")
+    .trim();
+  const titleParts = normalizedTitle.split(/\\s+/).filter(Boolean);
+  const aliases = new Set<string>();
+  if (normalizedTitle.length >= 10) aliases.add(normalizedTitle);
+  if (titleParts.length > 1) {
+    const withoutLead = titleParts.slice(1).join(" ").trim();
+    if (withoutLead.length >= 10) aliases.add(withoutLead);
+  }
+  for (const alias of aliases) {
+    const escaped = alias.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\export function containsProgrammingInstruction(text: string): boolean {");
+    safe = safe.replace(new RegExp(escaped, "gi"), "contenido académico");
+  }
+  safe = safe
+    .split("\\n")
+    .filter((line) => !/(?:realizado|elaborado|preparado|producido|diseñado)\\s+por\\b|síguenos|redes sociales|facebook|instagram|youtube|canal oficial|visita nuestra|encuentra más herramientas|página web|sitio web|derechos reservados|copyright|contacto comercial/i.test(line))
+    .join("\\n");
+  return safe.replace(/[ \\t]{2,}/g, " ").replace(/\\n{3,}/g, "\\n\\n").trim();
+}
+
 export function containsProgrammingInstruction(text: string): boolean {
   const value = normalizeOrbyRequestText(text);
   if (!value) return false;

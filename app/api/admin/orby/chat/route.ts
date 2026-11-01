@@ -246,6 +246,10 @@ export async function POST(request: Request) {
     }
   }
 
+  if (isWholeLibraryRequest && references.length > 64) {
+    return jsonError("La biblioteca tiene más de 64 fragmentos para esta comparación. Divide la solicitud por área o compara un grupo menor para que cada afirmación pueda verificarse contra todas las páginas incluidas.", 413);
+  }
+
   const evidence: OrbyKnowledgeEvidence[] = references.slice(0, 64).map((source, index) => ({
     id: "E" + String(index + 1).padStart(3, "0"),
     documentId: source.document_id,
@@ -260,9 +264,9 @@ export async function POST(request: Request) {
   for (const source of evidence) {
     const entry = [
       "[" + source.id + "] Documento: " + source.title + " | Área: " + source.subject + " | Tema: " + source.topic + " | página " + source.page,
-      source.content.slice(0, 1800),
+      source.content.slice(0, 1200),
     ].join("\n");
-    if (sourceContext.length + entry.length > 72000) break;
+    if (sourceContext.length + entry.length > 78000) break;
     sourceContext += (sourceContext ? "\n\n" : "") + entry;
   }
 

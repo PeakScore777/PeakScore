@@ -33,6 +33,25 @@ export async function GET() {
     return jsonError("No se pudo consultar el estado de la cola de Orby.", 503);
   }
 
+  const recentJobs = recent.data ?? [];
+  const documentIds = [...new Set(recentJobs.map((job) => job.document_id))];
+  const { data: recentDocuments, error: recentDocumentsError } = documentIds.length
+    ? await supabaseAdmin.from("orby_knowledge_documents")
+        .select("id,title,embedded_chunk_count,chunk_count")
+        .in("id", documentIds)
+    : { data: [], error: null };
+  if (recentDocumentsError) return jsonError("No se pudo consultar el avance de los documentos.", 503);
+  const documentById = new Map((recentDocuments ?? []).map((document) => [document.id, document]));
+  const recentWithDocuments = recentJobs.map((job) => {
+    const document = documentById.get(job.document_id);
+    return {
+      ...job,
+      document_title: document?.title ?? "Documento eliminado",
+      embedded_chunk_count: document?.embedded_chunk_count ?? 0,
+      chunk_count: document?.chunk_count ?? 0,
+    };
+  });
+
   return NextResponse.json({
     settings: settingsResult.data,
     configured: Boolean(process.env.CRON_SECRET) && workerConfiguration.data === true,
@@ -43,7 +62,7 @@ export async function GET() {
       failed: failed.count ?? 0,
       completed: completed.count ?? 0,
     },
-    recent: recent.data ?? [],
+    recent: recentWithDocuments,
   }, { headers: { "Cache-Control": "private, no-store" } });
 }
 

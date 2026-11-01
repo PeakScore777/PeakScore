@@ -154,7 +154,9 @@ async function upsertDerivedPageChunks(
   if (deleteError) throw new Error("No se pudo reemplazar la representación visual anterior de la página " + pageNumber + ".");
 
   if (!drafts.length) {
-    return documentChunks.filter((chunk) => chunk.page_number !== pageNumber);
+    return documentChunks.filter((chunk) =>
+      !(chunk.page_number === pageNumber && (chunk.content_origin === "ocr" || chunk.content_origin === "visual"))
+    );
   }
 
   const maxIndex = documentChunks.reduce((max, chunk) => Math.max(max, chunk.chunk_index), -1);
@@ -170,7 +172,9 @@ async function upsertDerivedPageChunks(
   const { error: insertError } = await supabaseAdmin.from("orby_knowledge_chunks").insert(inserts);
   if (insertError) throw new Error("No se pudo guardar el texto visual de la página " + pageNumber + ": " + insertError.code);
 
-  const retained = documentChunks.filter((chunk) => chunk.page_number !== pageNumber);
+  const retained = documentChunks.filter((chunk) =>
+    !(chunk.page_number === pageNumber && (chunk.content_origin === "ocr" || chunk.content_origin === "visual"))
+  );
   return [
     ...retained,
     ...inserts.map((item) => ({
@@ -410,8 +414,12 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
 
       const nextStage = reviewOnly
         ? counts.missing > 0 ? "embeddings" : "finalize"
-        : batchIndex + 1 >= totalBatches ? counts.missing > 0 ? "embeddings" : "finalize" : "profile";
-      const nextIndex = reviewOnly ? totalBatches : batchIndex + 1;
+        : batchIndex + 1 >= totalBatches
+          ? counts.missing > 0 ? "embeddings" : "finalize"
+          : "profile";
+      const nextIndex = reviewOnly || batchIndex + 1 >= totalBatches
+        ? totalBatches
+        : batchIndex + 1;
       await releaseJob(job, workerId, {
         stage: nextStage,
         nextBatchIndex: nextIndex,
@@ -538,7 +546,7 @@ export async function processNextOrbyKnowledgeJob(): Promise<{
       try { await deleteOrbyGeminiDocumentFile(cachedGeminiFileName); } catch { /* best effort */ }
 
       return {
-        state: ingestionStatus === "completed" ? "completed" : "failed",
+        state: "completed",
         jobId: job.id,
         documentId: job.document_id,
         documentTitle,

@@ -348,11 +348,31 @@ export default function OrbyKnowledgeStudio() {
       }
 
       clearOrbyPendingDocumentId(file);
-      setNotice(payload.message || "PDF guardado como borrador y añadido a la cola de Orby.");
       setFile(null);
       setUploadProgress(0);
       const input = document.getElementById("orby-knowledge-file") as HTMLInputElement | null;
       if (input) input.value = "";
+
+      // The upload action also starts one real worker cycle. If another
+      // document is older in the shared FIFO queue, it continues first.
+      const kickoffResponse = await fetch("/api/admin/orby/knowledge/automation/run", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const kickoff = await kickoffResponse.json().catch(() => ({}));
+      const uploadMessage = payload.message || "PDF guardado y añadido a la cola de Orby.";
+      if (kickoffResponse.ok && kickoff.state === "failed") {
+        setError(kickoff.message || "El PDF quedó guardado, pero el primer ciclo requiere reintento.");
+        setNotice(uploadMessage);
+      } else if (kickoffResponse.ok && kickoff.state !== "idle") {
+        setNotice(uploadMessage + " Primer ciclo iniciado: " + (kickoff.message || "Orby comenzó el procesamiento de la cola."));
+      } else if (kickoffResponse.status === 409) {
+        setNotice(uploadMessage + " Orby ya está ocupado; el documento quedó en cola y continuará cuando se libere el trabajador.");
+      } else {
+        setNotice(uploadMessage + " El documento quedó en cola; el primer ciclo está pendiente de disponibilidad o del límite diario.");
+      }
       await loadAll();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo cargar el material.");

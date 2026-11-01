@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
   try {
     await enqueueNextPendingOrbyKnowledgeDocument();
-    const result = await processNextOrbyKnowledgeJob();
+    const result = await processNextOrbyKnowledgeJob({ origin: "automatic" });
     if (result.state !== "idle") {
       await supabaseAdmin.from("orby_knowledge_automation_settings")
         .update({ last_job_started_at: tickAt, updated_at: tickAt })

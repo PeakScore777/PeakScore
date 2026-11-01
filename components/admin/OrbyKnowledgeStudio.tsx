@@ -149,7 +149,7 @@ export default function OrbyKnowledgeStudio() {
       if (!response.ok) throw new Error(payload.error || "No se pudo enriquecer el conocimiento.");
       const successCount = Number(payload.succeeded ?? 0);
       const failureCount = Number(payload.failed ?? 0);
-      setNotice(payload.message || ("Documentos enriquecidos: " + successCount + "; pendientes: " + failureCount + "."));
+      setNotice((payload.message || "Terminó el enriquecimiento de la biblioteca.") + " Correctos: " + successCount + "; pendientes o con error: " + failureCount + ".");
       await loadAll();
     } catch (e) {
       setError(e instanceof Error ? e.message : "No se pudo enriquecer el documento.");

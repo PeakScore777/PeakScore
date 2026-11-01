@@ -64,13 +64,13 @@ export function preflightOrbyRequest(message: string): OrbyPreflightResult {
 }
 
 export function sanitizeOrbyKnowledgeExcerpt(content: string, title: string): string {
-  let safe = content.replace(/\\r/g, "").replace(/https?:\\/\\/[^\\s)]+|www\\.[^\\s)]+/gi, " ");
+  let safe = content.replace(/\r/g, "").replace(/https?:\/\/[^\s)]+|www\.[^\s)]+/gi, " ");
   const normalizedTitle = title
-    .replace(/^\\s*\\d+[\\s._:-]+/, "")
-    .replace(/\\.pdf$/i, "")
+    .replace(/^\s*\d+[\s._:-]+/, "")
+    .replace(/\.pdf$/i, "")
     .replace(/[_-]+/g, " ")
     .trim();
-  const titleParts = normalizedTitle.split(/\\s+/).filter(Boolean);
+  const titleParts = normalizedTitle.split(/\s+/).filter(Boolean);
   const aliases = new Set<string>();
   if (normalizedTitle.length >= 10) aliases.add(normalizedTitle);
   if (titleParts.length > 1) {
@@ -78,16 +78,21 @@ export function sanitizeOrbyKnowledgeExcerpt(content: string, title: string): st
     if (withoutLead.length >= 10) aliases.add(withoutLead);
   }
   for (const alias of aliases) {
-    const escaped = alias.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\export function containsProgrammingInstruction(text: string): boolean {");
-    safe = safe.replace(new RegExp(escaped, "gi"), "contenido académico");
+    const needle = alias.toLocaleLowerCase("es-CO");
+    let cursor = 0;
+    while (cursor < safe.length) {
+      const index = safe.toLocaleLowerCase("es-CO").indexOf(needle, cursor);
+      if (index < 0) break;
+      const replacement = "contenido académico";
+      safe = safe.slice(0, index) + replacement + safe.slice(index + alias.length);
+      cursor = index + replacement.length;
+    }
   }
-  safe = safe
-    .split("\\n")
-    .filter((line) => !/(?:realizado|elaborado|preparado|producido|diseñado)\\s+por\\b|síguenos|redes sociales|facebook|instagram|youtube|canal oficial|visita nuestra|encuentra más herramientas|página web|sitio web|derechos reservados|copyright|contacto comercial/i.test(line))
-    .join("\\n");
-  return safe.replace(/[ \\t]{2,}/g, " ").replace(/\\n{3,}/g, "\\n\\n").trim();
+  safe = safe.split("\n")
+    .filter((line) => !/(?:realizado|elaborado|preparado|producido|diseñado)\s+por\b|síguenos|redes sociales|facebook|instagram|youtube|canal oficial|visita nuestra|encuentra más herramientas|página web|sitio web|derechos reservados|copyright|contacto comercial/i.test(line))
+    .join("\n");
+  return safe.replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
-
 export function containsProgrammingInstruction(text: string): boolean {
   const value = normalizeOrbyRequestText(text);
   if (!value) return false;

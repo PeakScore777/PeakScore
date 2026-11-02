@@ -20,6 +20,7 @@ export type OrbyKnowledgeJob = {
   max_attempts: number;
   locked_by: string | null;
   lease_expires_at: string | null;
+  automatic_review_pending?: boolean;
 };
 
 export function hashOrbyKnowledgeChunks(chunks: OrbyKnowledgeChunk[]): string {
@@ -157,6 +158,7 @@ export async function enqueueOrbyKnowledgeDocument(
           locked_by: null,
           locked_at: null,
           lease_expires_at: null,
+          automatic_review_pending: false,
           last_error: null,
           updated_at: new Date().toISOString(),
         })

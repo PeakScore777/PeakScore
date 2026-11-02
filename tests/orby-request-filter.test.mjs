@@ -65,8 +65,12 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(realtimeSessionSource, /No recomiendes, compares, promociones/);
   assert.match(lessonTutorSource, /internalSpeechInstruction/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(internalSpeechInstruction\)/);
+  assert.match(lessonTutorSource, /voiceInternalPolicyTextRef\.current = policyReply/);
+  assert.match(lessonTutorSource, /isInternalPolicySpeechEcho/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
   assert.match(lessonTutorSource, /voiceTurnSavingRef\.current = false/);
+  assert.match(lessonTutorSource, /waitingForVoiceReplyRef\.current = true/);
+  assert.match(lessonTutorSource, /La cola de Orby está llena\. Espera a que termine la respuesta de voz\./);
 });
 
 test("el chat procesa solicitudes pendientes en orden y limita peticiones bloqueadas", () => {

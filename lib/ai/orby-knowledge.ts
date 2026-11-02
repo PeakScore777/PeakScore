@@ -7,6 +7,7 @@ import {
   extractOrbyChecklistRows,
   extractOrbyCompetencyRows,
   type ExtractedChecklistRow,
+  type OrbyChecklistSourceChunk,
 } from "@/lib/pdf/extract-orby-checklist-rows";
 import { toStudentSafeQuestionSolution } from "@/lib/ai/orby-question-solution";
 import {

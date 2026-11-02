@@ -1780,7 +1780,7 @@ async function generateWithGroq(
    prompt: string,
    task?: AITask
  ) {
-   const MAX_GEMINI_RETRIES = 2;
+   const MAX_GEMINI_RETRIES = task === "tutor" ? 0 : 2;
 
    for (
      let attempt = 0;
@@ -1802,9 +1802,9 @@ async function generateWithGroq(
            ...(task === "tutor" ? {} : { responseMimeType: "application/json" }),
            // Academic profile extraction can contain many page-grounded concepts.
            // The previous implicit output budget could truncate otherwise valid JSON.
-           maxOutputTokens: task === "analysis" ? 16000 : 8192,
+           maxOutputTokens: task === "analysis" ? 16000 : task === "tutor" ? 2200 : 8192,
            httpOptions: {
-             timeout: 60000,
+             timeout: task === "tutor" ? 22000 : 60000,
            },
          },
        });

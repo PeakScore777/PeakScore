@@ -78,7 +78,7 @@ function publicationBlockReason(document: KnowledgeDocument): string | null {
   if (document.embedded_chunk_count < document.chunk_count) return "Faltan embeddings: " + document.embedded_chunk_count + "/" + document.chunk_count + ".";
   if (document.knowledge_profile_status !== "ready") return "El perfil académico todavía no terminó o necesita reintento.";
   if (document.knowledge_profile_version < 2) return "Falta completar el perfil académico v2.";
-  if (document.knowledge_pipeline_version < 6) return "Falta finalizar el perfil académico del motor v6.";
+  if (document.knowledge_pipeline_version < 7) return "Falta finalizar el perfil académico del motor v6.";
   if (document.concept_count < 1) return "El perfil todavía no tiene conceptos académicos indexados.";
   return null;
 }

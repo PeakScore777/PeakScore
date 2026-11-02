@@ -44,8 +44,8 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
   assert.match(cloudflareVoiceSource, /import "server-only"/);
   assert.match(cloudflareVoiceSource, /CLOUDFLARE_ACCOUNT_ID/);
   assert.match(cloudflareVoiceSource, /CLOUDFLARE_API_TOKEN/);
-  assert.match(cloudflareVoiceSource, /@cf\\/openai\\/whisper-large-v3-turbo/);
-  assert.match(cloudflareVoiceSource, /@cf\\/meta\\/llama-3\\.3-70b-instruct-fp8-fast/);
+  assert.match(cloudflareVoiceSource, /@cf\/openai\/whisper-large-v3-turbo/);
+  assert.match(cloudflareVoiceSource, /@cf\/meta\/llama-3\.3-70b-instruct-fp8-fast/);
   assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\(bytes\)/);
   assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\(activePrompt\)/);
   assert.match(cloudflareTutorRoute, /containsProgrammingInstruction\(modelReply\)/);

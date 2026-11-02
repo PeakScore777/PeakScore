@@ -296,9 +296,13 @@ export async function GET() {
           const pages = "evidence_pages" in concept && Array.isArray(concept.evidence_pages)
             ? concept.evidence_pages.filter((page: unknown): page is number => typeof page === "number" && Number.isInteger(page) && page > 0).slice(0, 10)
             : [];
-          const sourceMatches = [...new Map(
-            pages.flatMap((page) => sourceRowsByNamePage.get(conceptIdentity + "|" + page) ?? [])
-              .map((source) => [normalizeProfileIdentity(source.area), source])
+          const sourceMatches = [...new Map<string, { area: string; parent_concept: string }>(
+            pages.flatMap((page: number): Array<{ area: string; parent_concept: string }> =>
+              sourceRowsByNamePage.get(conceptIdentity + "|" + page) ?? []
+            ).map((source: { area: string; parent_concept: string }): [string, { area: string; parent_concept: string }] => [
+              normalizeProfileIdentity(source.area),
+              source,
+            ])
           ).values()];
           if (sourceMatches.length === 1) {
             area = sourceMatches[0].area;

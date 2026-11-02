@@ -290,6 +290,10 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /learningSignalsPromise/);
   assert.match(realtimeSessionSource, /biblioteca de conocimiento ICFES.*bajo demanda/);
   assert.match(realtimeSessionSource, /authTokens\.create/);
+  assert.match(realtimeSessionSource, /const safeHistory = history\.filter/);
+  assert.match(realtimeSessionSource, /preflightOrbyRequest\(item\.content\)\.allowed/);
+  assert.doesNotMatch(realtimeSessionSource, /const latestUserText/);
+  assert.doesNotMatch(realtimeSessionSource, /const legacyOutOfScope/);
 });
 
 test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {

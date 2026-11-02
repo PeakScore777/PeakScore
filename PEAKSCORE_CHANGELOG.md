@@ -211,3 +211,10 @@
 - Cuando una ejecución manual termina un borrador que cumple todos los criterios de calidad, deja una revisión final reservada al trabajador automático. El Autopilot consume un ciclo de su presupuesto para verificar y publicar si vuelve a superar los controles.
 - Las tareas pendientes de revisión automática no pueden ser reclamadas por el carril manual.
 - El carril manual sigue siendo ilimitado y no consume los 100 ciclos automáticos por ventana móvil de siete horas.
+
+### Refinamiento — prioridad del lote manual y sincronización con Autopilot
+- Al pulsar "Procesar un lote ahora", la cola reserva temporalmente el trabajo seleccionado para el carril manual; el automático no puede adelantarse ni reclamar esa misma tarea.
+- Al terminar el lote, la prioridad manual se retira y la tarea vuelve a la cola compartida para que el Autopilot continúe desde la etapa y los datos persistidos.
+- Los lotes manuales no consumen el presupuesto de 100 ciclos automáticos por ventana móvil de siete horas.
+- Se añaden pruebas de regresión para los carriles independientes, el lease documental y la prioridad manual.
+- El Autopilot permanece habilitado; el cron cada tres minutos recoge los trabajos compartidos mientras el administrador sigue pudiendo ejecutar lotes manuales.

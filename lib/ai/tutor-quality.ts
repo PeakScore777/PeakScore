@@ -101,17 +101,17 @@ export function needsIndependentTutorReview(input: {
   }
 
   const highRiskPatterns = [
-    /\\b(calcula|calcular|resuelve|resolver|demuestra|justifica|evalua|evaluar|contrasta|verifica|comprueba|determina|compara|analiza)\\b/,
-    /\\b(porcentaje|puntos porcentuales|probabilidad|estadistica inferencial|ecuacion|funcion|derivada|integral|fraccion|proporcion|regla de tres|conversion de unidades)\\b/,
-    /\\b(experimento|hipotesis|causalidad|variable independiente|variable dependiente|grafica|tabla de datos|evidencia|interpretacion de datos)\\b/,
-    /\\b(correcta|incorrecta|opcion correcta|respuesta correcta|distractores|demuestra que|justifica por que)\\b/,
+    /\b(calcula|calcular|resuelve|resolver|demuestra|justifica|evalua|evaluar|contrasta|verifica|comprueba|determina|compara|analiza)\b/,
+    /\b(porcentaje|puntos porcentuales|probabilidad|estadistica inferencial|ecuacion|funcion|derivada|integral|fraccion|proporcion|regla de tres|conversion de unidades)\b/,
+    /\b(experimento|hipotesis|causalidad|variable independiente|variable dependiente|grafica|tabla de datos|evidencia|interpretacion de datos)\b/,
+    /\b(correcta|incorrecta|opcion correcta|respuesta correcta|distractores|demuestra que|justifica por que)\b/,
   ];
 
   // Review the student's actual message, not the length of context or topic metadata.
   const hasAcademicSignal = highRiskPatterns.some((pattern) => pattern.test(message));
   const hasNumericalWork = /\d/.test(message)
     && (/[=+*%<>-]/.test(message) || message.includes("/") || /\b(metros?|segundos?|gramos?|litros?|cm|kg|km|m\/s)\b/i.test(message));
-  return hasAcademicSignal || hasNumericalWork || message.length > 420;
+  return hasAcademicSignal || hasNumericalWork || message.length > 650;
 }
 
 async function reviewCandidate(args: {

@@ -211,6 +211,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceForcedReplyRef = useRef<string | null>(null);
   const voicePreflightReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
+  const voiceInternalPolicyTextRef = useRef<string | null>(null);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
   const voiceBrowserSpeechActiveRef = useRef(false);
@@ -1072,6 +1073,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       && normalizedFinal.length >= 12
       && recentAssistantText.length >= 12
       && (recentAssistantText.includes(normalizedFinal) || normalizedFinal.includes(recentAssistantText));
+    const internalPolicyText = normalizeVoiceComparison(voiceInternalPolicyTextRef.current ?? "");
+    const isInternalPolicySpeechEcho = Boolean(
+      internalPolicyText.length >= 12
+      && (normalizedFinal === internalPolicyText
+        || normalizedFinal.includes(internalPolicyText)
+        || internalPolicyText.includes(normalizedFinal)),
+    );
 
     if (isRecentAcousticEcho) {
       console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
@@ -1079,7 +1087,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     // Never return from the whole event handler for a duplicate transcript:
     // the same server event can also carry output audio or turnComplete.
-    if (transcript && normalizedFinal !== voiceLastCommittedInputRef.current && !isRecentAcousticEcho) {
+    if (transcript && normalizedFinal !== voiceLastCommittedInputRef.current && !isRecentAcousticEcho && !isInternalPolicySpeechEcho) {
+      voiceInternalPolicyTextRef.current = null;
+      waitingForVoiceReplyRef.current = true;
       voiceLastCommittedInputRef.current = normalizedFinal;
       if (voiceTurnPersistedRef.current) {
         voiceUserTextRef.current = "";
@@ -1205,9 +1215,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voicePreflightReplyRef.current = null;
         voiceForcedReplyRef.current = policyReply;
         voiceResponseDoneRef.current = false;
+        waitingForVoiceReplyRef.current = true;
         const activeSession = voiceChannelRef.current;
         if (!activeSession) {
           voiceForcedReplyRef.current = null;
+          voiceInternalPolicyTextRef.current = null;
+          waitingForVoiceReplyRef.current = false;
           voiceAssistantTextRef.current = policyReply;
           voiceResponseDoneRef.current = true;
           void persistRealtimeTurnIfReady();
@@ -1218,13 +1231,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
         try {
           const internalSpeechInstruction = "Lee exactamente este texto en español colombiano, sin añadir, quitar ni cambiar ninguna palabra: " + policyReply;
-          // Mark the internal speech instruction as committed so a Live input
-          // transcript cannot become a duplicate user bubble or saved user turn.
+          // Suppress both the internal instruction and policy text if Live emits
+          // input transcription for its own speech-generation request.
+          voiceInternalPolicyTextRef.current = policyReply;
           voiceLastCommittedInputRef.current = normalizeVoiceComparison(internalSpeechInstruction);
           activeSession.sendRealtimeInput({ text: internalSpeechInstruction });
           setVoiceStatus("Orby está hablando…");
         } catch {
           voiceForcedReplyRef.current = null;
+          voiceInternalPolicyTextRef.current = null;
+          waitingForVoiceReplyRef.current = false;
           voiceAssistantTextRef.current = policyReply;
           voiceResponseDoneRef.current = true;
           void persistRealtimeTurnIfReady();
@@ -1260,7 +1276,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceForcedReplyRef.current = null;
       voiceResponseDoneRef.current = true;
       waitingForVoiceReplyRef.current = false;
+      voiceInternalPolicyTextRef.current = null;
       void persistRealtimeTurnIfReady();
+      drainPendingMessageQueue();
       setVoiceStatus("Te escucho…");
       setIsListening(true);
     }
@@ -1583,6 +1601,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile) {
+      if (waitingForVoiceReplyRef.current) {
+        if (pendingMessagesRef.current.length >= 4) {
+          setError("La cola de Orby está llena. Espera a que termine la respuesta de voz.");
+          return;
+        }
+        pendingMessagesRef.current.push({ text: message, attachmentMeta });
+        setQueuedMessageCount(pendingMessagesRef.current.length);
+        setInput("");
+        setError("");
+        return;
+      }
+      waitingForVoiceReplyRef.current = true;
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;
@@ -1595,13 +1625,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : typedPreflight.allowed ? null : typedPreflight.reply;
       // Typed text sent through the Live session can also produce an input
       // transcription event. Mark it as committed so it is not added twice.
+      voiceInternalPolicyTextRef.current = null;
       voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
       setMessages((current) => [...current, { id: "voice-user-" + Date.now(), role: "user", content: message }]);
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";
-      voiceChannelRef.current.sendRealtimeInput({ text: message });
+      try {
+        voiceChannelRef.current.sendRealtimeInput({ text: message });
+      } catch {
+        waitingForVoiceReplyRef.current = false;
+        setVoiceError("No se pudo enviar el mensaje al canal de voz. Vuelve a intentarlo.");
+        setVoiceStatus("Te escucho…");
+        setIsListening(true);
+        return;
+      }
       setVoiceStatus("Orby está pensando…");
       return;
     }

@@ -2660,6 +2660,41 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > div > div > p:last-child {
           border-color:#e2e8f0!important;background:#ffffff!important;color:#64748b!important;
         }
+        /* Light mode also restyles learning archive cards, not only chat bubbles. */
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="bg-[#0b"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="bg-[#0d"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="bg-[#10"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="bg-[#11"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="bg-[#12"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="bg-[#15"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="bg-[#17"] {
+          background-color:#ffffff!important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="border-white"] { border-color:#e2e8f0!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class~="text-white"] { color:#1e293b!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="text-[#7"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="text-[#8"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="text-[#9"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="text-[#a"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [class*="text-[#b"] { color:#64748b!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message.bg-orange-600,
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message.bg-orange-600 * { color:#ffffff!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message:not(.bg-orange-600) {
+          background:#ffffff!important;border-color:#dbe2ea!important;color:#1e293b!important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card {
+          background:linear-gradient(145deg,#ffffff,#f8fafc)!important;
+          border-color:#dbe2ea!important;box-shadow:0 8px 24px rgba(15,23,42,.055)!important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card h3,
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card p,
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-notes-card div { color:#334155; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] {
+          background:#ffffff!important;color:#263445!important;border-color:#dbe2ea!important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-composer-input {
+          background:#f8fafc!important;color:#17212f!important;border-color:#d5dde7!important;
+        }
         @media (prefers-reduced-motion: reduce) { #orby-tutor-panel .orby-wave-bar, #orby-tutor-panel .orby-voice-orbit { animation:none!important; } }
         /* Compact orb preview: centered over the conversation, with soft volumetric amber mist. */
         #orby-tutor-panel .orby-mini-voice {

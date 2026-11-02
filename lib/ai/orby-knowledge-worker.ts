@@ -19,10 +19,6 @@ import {
 } from "@/lib/ai/orby-knowledge-queue";
 import { ensureOrbyGeminiDocumentFile, deleteOrbyGeminiDocumentFile } from "@/lib/ai/orby-gemini-file";
 import { splitOrbyText } from "@/lib/pdf/split-orby-text";
-import {
-  extractOrbyChecklistRows,
-  extractOrbyCompetencyRows,
-} from "@/lib/pdf/extract-orby-checklist-rows";
 
 const EMBEDDING_BATCH_SIZE = 16;
 const PAGE_BATCH_SIZE = 4;

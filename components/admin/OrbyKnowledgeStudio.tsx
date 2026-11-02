@@ -550,7 +550,7 @@ export default function OrbyKnowledgeStudio() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-orange-400">03 / AUTONOMOUS KNOWLEDGE</p>
                 <h3 className="mt-1 text-sm font-semibold">Orby Autopilot</h3>
-                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">Cada cinco minutos lee cuatro páginas, extrae conceptos, métodos para enseñar desde cero, ejemplos, arquetipos Saber 11 y rutas de estudio. El Autopilot se inicia automáticamente y tiene un cupo de 10 ciclos IA por ventana móvil de 7 horas. Tus ejecuciones manuales son ilimitadas y no consumen ese presupuesto; puedes pausar el motor cuando quieras.</p>
+                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">Cada cinco minutos lee cuatro páginas, extrae conceptos, métodos para enseñar desde cero, ejemplos, arquetipos Saber 11 y rutas de estudio. El Autopilot se inicia automáticamente y tiene un cupo de 10 ciclos IA por ventana móvil de 7 horas. Tus ejecuciones manuales son ilimitadas y no consumen ese presupuesto; puedes pausar el motor cuando quieras. Cuando un ciclo automático finaliza, publica para el alumnado los borradores que superan todos los controles de calidad; los demás permanecen en borrador.</p>
               </div>
               <span className={automation?.settings.enabled ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300" : "rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] font-bold text-slate-400"}>{automation?.settings.enabled ? "MOTOR ACTIVO" : "MOTOR PAUSADO"}</span>
             </div>

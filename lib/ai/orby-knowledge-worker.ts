@@ -1,4 +1,5 @@
 import "server-only";
+import { shouldAutomaticallyPublishOrbyKnowledge } from "@/lib/ai/orby-publication";
 
 import { createHash, randomUUID } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -226,7 +227,7 @@ export async function processNextOrbyKnowledgeJob(options: {
     const [chunks, documentResult] = await Promise.all([
       loadOrbyKnowledgeChunks(job.document_id),
       supabaseAdmin.from("orby_knowledge_documents")
-        .select("id,title,storage_path,page_count,source_sha256,embedded_chunk_count,chunk_count,ingestion_status,gemini_file_name")
+        .select("id,title,status,storage_path,page_count,visual_pages_total,source_sha256,embedded_chunk_count,chunk_count,ingestion_status,gemini_file_name")
         .eq("id", job.document_id)
         .single(),
     ]);
@@ -550,16 +551,34 @@ export async function processNextOrbyKnowledgeJob(options: {
       const coverage = Number((allPages ?? []).filter((page) => page.visual_status === "reviewed").length)
         / Math.max(1, Number(document.page_count)) * 100;
       const ingestionStatus = coverage >= 95 && conceptCount > 0 ? "completed" : "attention_required";
+      const reviewedPages = (allPages ?? []).filter((page) => page.visual_status === "reviewed").length;
+      const publicationReady = shouldAutomaticallyPublishOrbyKnowledge({
+        origin: options.origin,
+        currentStatus: document.status,
+        document: {
+          chunk_count: counts.total,
+          embedded_chunk_count: counts.embedded,
+          knowledge_profile_status: "ready",
+          knowledge_profile_version: 2,
+          knowledge_pipeline_version: job.pipeline_version,
+          concept_count: conceptCount,
+          ingestion_status: ingestionStatus,
+          coverage_percent: Number(coverage.toFixed(2)),
+          visual_pages_total: Number(document.visual_pages_total ?? document.page_count),
+          visual_pages_reviewed: reviewedPages,
+        },
+      });
       const { error: documentUpdateError } = await supabaseAdmin
         .from("orby_knowledge_documents")
         .update({
+          ...(publicationReady ? { status: "published" } : {}),
           knowledge_pipeline_version: job.pipeline_version,
           knowledge_profile_version: 2,
           embedded_chunk_count: counts.embedded,
           chunk_count: counts.total,
           concept_count: conceptCount,
           knowledge_profile_status: "ready",
-          visual_pages_reviewed: (allPages ?? []).filter((page) => page.visual_status === "reviewed").length,
+          visual_pages_reviewed: reviewedPages,
           coverage_percent: Number(coverage.toFixed(2)),
           ingestion_status: ingestionStatus,
           next_review_at: null,
@@ -593,9 +612,11 @@ export async function processNextOrbyKnowledgeJob(options: {
         documentTitle,
         stage: "completed",
         progress: conceptCount,
-        message: ingestionStatus === "completed"
-          ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%."
-          : documentTitle + ": llegó al límite de revisiones con " + conceptCount + " conceptos, pero quedó con atención requerida (" + coverage.toFixed(1) + "%). Revisa las páginas pendientes antes de publicar.",
+        message: publicationReady
+          ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%. Publicado automáticamente para el alumnado."
+          : ingestionStatus === "completed"
+            ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%. Sigue como borrador para revisión administrativa."
+            : documentTitle + ": llegó al límite de revisiones con " + conceptCount + " conceptos, pero quedó con atención requerida (" + coverage.toFixed(1) + "%). Revisa las páginas pendientes antes de publicar.",
       };
     }
 

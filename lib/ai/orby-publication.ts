@@ -46,3 +46,19 @@ export function isOrbyKnowledgePublicationReady(
     && Number.isInteger(visualPagesReviewed)
     && visualPagesReviewed >= Math.ceil(visualPagesTotal * 0.95);
 }
+
+
+/**
+ * Only automatic worker completion may publish a draft, and only when the
+ * exact same quality gate used by the administrator publication action passes.
+ * Archived documents remain archived; manual runs never publish implicitly.
+ */
+export function shouldAutomaticallyPublishOrbyKnowledge(input: {
+  origin: "automatic" | "manual";
+  currentStatus: unknown;
+  document: OrbyKnowledgePublicationState;
+}): boolean {
+  return input.origin === "automatic"
+    && input.currentStatus === "draft"
+    && isOrbyKnowledgePublicationReady(input.document);
+}

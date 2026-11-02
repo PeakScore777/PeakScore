@@ -1278,8 +1278,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceResponseDoneRef.current = true;
       waitingForVoiceReplyRef.current = false;
       voiceInternalPolicyTextRef.current = null;
-      void persistRealtimeTurnIfReady();
-      drainPendingMessageQueue();
+      // Save this turn before starting the next queued voice message. This
+      // avoids overlapping history writes and lost turns when several prompts
+      // arrive in quick succession.
+      void persistRealtimeTurnIfReady().finally(() => drainPendingMessageQueue());
       setVoiceStatus("Te escucho…");
       setIsListening(true);
     }

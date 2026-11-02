@@ -671,9 +671,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function speakText(text: string, index: number) {
     const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
+    const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       setVoiceError("Tu navegador no tiene lectura de voz disponible. La respuesta también está visible por escrito.");
-      if (isLocalVoiceTurn) finishLocalVoiceReply();
+      if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
       return;
     }
     stopSpeaking();
@@ -692,13 +693,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (preferredVoice) utterance.voice = preferredVoice;
     utterance.onend = () => {
       setSpeakingIndex(null);
-      if (isLocalVoiceTurn) finishLocalVoiceReply();
+      if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
     };
     utterance.onerror = () => {
       setSpeakingIndex(null);
       if (isLocalVoiceTurn) {
         setVoiceError("No se pudo reproducir el audio de esta respuesta. El texto quedó disponible.");
-        finishLocalVoiceReply();
+        finishLocalVoiceReply(localVoiceMessageId);
       }
     };
     setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
@@ -822,7 +823,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  function finishLocalVoiceReply() {
+  function finishLocalVoiceReply(expectedMessageId?: string | null) {
+    if (expectedMessageId && voiceAssistantMessageIdRef.current !== expectedMessageId) return;
     clearVoiceResponseWatchdog();
     waitingForVoiceReplyRef.current = false;
     setVoiceStatus("Te escucho…");
@@ -1501,6 +1503,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         },
         callbacks: {
           onopen: () => {
+            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
             setVoiceStatus("Conectado; esperando confirmación de Orby…");
           },
           onmessage: (message) => {

@@ -283,7 +283,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     let cancelled = false;
     const loadHistory = async () => {
       try {
-        const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store" });
+        const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(12_000) });
         if (!cancelled) setConversationError("");
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.error || "No se pudo cargar el historial.");
@@ -790,6 +790,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(15_000),
         body: JSON.stringify({ conversationId: id, userContent, assistantContent }),
       });
       if (!response.ok) throw new Error("No se pudo guardar el turno de voz.");
@@ -1653,6 +1654,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(12_000),
           body: JSON.stringify({ subject, topic }),
         });
         const createPayload = await createResponse.json().catch(() => ({}));

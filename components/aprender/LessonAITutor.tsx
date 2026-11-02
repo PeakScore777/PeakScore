@@ -674,53 +674,67 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setSpeakingIndex(null);
   }
 
-  function speakText(text: string, index: number) {
-    const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
-    const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setVoiceError("Tu navegador no tiene lectura de voz disponible. La respuesta también está visible por escrito.");
-      if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
-      return;
-    }
-    stopSpeaking();
-    const clean = text.replace(/\*\*/g, "").replace(/`/g, "").replace(/^[-•]\s*/gm, "").replace(/^\d+[.)]\s*/gm, "").slice(0, 5000);
-    const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.lang = "es-CO";
-    utterance.rate = 1.22;
-    utterance.pitch = 1.02;
-    utterance.volume = 1;
-    const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-    const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|google/i.test(voice.name))
-      ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
-      ?? spanishVoices.find((voice) => /natural|online|google/i.test(voice.name))
-      ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]us/i.test(voice.lang))
-      ?? spanishVoices[0];
-    if (preferredVoice) utterance.voice = preferredVoice;
-    utterance.onend = () => {
-      setSpeakingIndex(null);
-      if (isLocalVoiceTurn) {
-        voiceBrowserSpeechActiveRef.current = false;
-        voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
-        finishLocalVoiceReply(localVoiceMessageId);
+  function speakText(text: string, index: number): Promise<void> {
+    return new Promise((resolve) => {
+      const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
+      const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
+      const settle = () => resolve();
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+        setVoiceError("Tu navegador no tiene lectura de voz disponible. La respuesta también está visible por escrito.");
+        if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
+        settle();
+        return;
       }
-    };
-    utterance.onerror = () => {
-      setSpeakingIndex(null);
+
+      stopSpeaking();
+      const clean = text
+        .replace(/\*\*/g, "")
+        .replace(/\`/g, "")
+        .replace(/^[-•]\s*/gm, "")
+        .replace(/^\d+[.)]\s*/gm, "")
+        .slice(0, 5000);
+      const utterance = new SpeechSynthesisUtterance(clean);
+      utterance.lang = "es-CO";
+      utterance.rate = 1.1;
+      utterance.pitch = 1.02;
+      utterance.volume = 1;
+      const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
+      const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|google/i.test(voice.name))
+        ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
+        ?? spanishVoices.find((voice) => /natural|online|google/i.test(voice.name))
+        ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]us/i.test(voice.lang))
+        ?? spanishVoices[0];
+      if (preferredVoice) utterance.voice = preferredVoice;
+
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        setSpeakingIndex(null);
+        if (isLocalVoiceTurn) {
+          voiceBrowserSpeechActiveRef.current = false;
+          voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
+          finishLocalVoiceReply(localVoiceMessageId);
+        }
+        settle();
+      };
+      utterance.onend = finish;
+      utterance.onerror = () => {
+        if (isLocalVoiceTurn) {
+          voiceBrowserSpeechActiveRef.current = false;
+          setVoiceError("No se pudo reproducir el audio de esta respuesta. El texto quedó disponible.");
+        }
+        finish();
+      };
+
       if (isLocalVoiceTurn) {
-        voiceBrowserSpeechActiveRef.current = false;
-        setVoiceError("No se pudo reproducir el audio de esta respuesta. El texto quedó disponible.");
-        finishLocalVoiceReply(localVoiceMessageId);
+        voiceBrowserSpeechActiveRef.current = true;
+        voiceLastAssistantOutputRef.current = clean;
+        voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 55;
       }
-    };
-    if (isLocalVoiceTurn) {
-      voiceBrowserSpeechActiveRef.current = true;
-      voiceLastAssistantOutputRef.current = clean;
-      // A conservative playback window lets the VAD/transcription layer
-      // recognize Orby's own local TTS and avoid treating it as student input.
-      voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 55;
-    }
-    setSpeakingIndex(index);
-    window.speechSynthesis.speak(utterance);
+      setSpeakingIndex(index);
+      window.speechSynthesis.speak(utterance);
+    });
   }
 
   async function ensureVoiceConversation(startupSignal?: AbortSignal): Promise<string> {
@@ -1145,6 +1159,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceBrowserSpeechActiveRef.current = false;
         if ("speechSynthesis" in window) window.speechSynthesis.cancel();
         voicePendingAudioChunksRef.current = [];
+        voiceRealtimeAudioChunkCountRef.current = 0;
+        voiceOutputAudioBlockedRef.current = false;
         setIsListening(true);
         setVoiceStatus("Te escucho…");
       }
@@ -1370,6 +1386,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (policyReply) {
         stopVoicePlayback();
         voicePendingAudioChunksRef.current = [];
+        voiceRealtimeAudioChunkCountRef.current = 0;
+        voiceOutputAudioBlockedRef.current = false;
         voiceAssistantTextRef.current = "";
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = id;

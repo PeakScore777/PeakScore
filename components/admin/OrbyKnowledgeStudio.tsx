@@ -15,7 +15,7 @@ type KnowledgeDocument = {
 type Source = { documentId: string; title: string; subject: string; topic: string; page: number };
 type ChatMessage = { id?: string; role: "user" | "assistant"; content: string; sources?: Source[]; verification?: "not_required" | "passed" | "corrected" | "unverified"; created_at?: string };
 type AutomationStatus = {
-  settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null; ai_cycles_used: number; ai_cycle_date: string | null };
+  settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null; ai_cycles_used: number; ai_cycle_date: string | null; ai_cycle_window_started_at: string | null };
   configured: boolean;
   counts: { queued: number; running: number; retrying: number; failed: number; completed: number };
   recent: Array<{
@@ -411,7 +411,7 @@ export default function OrbyKnowledgeStudio() {
       } else if (kickoffResponse.status === 409) {
         setNotice(uploadMessage + " Orby ya está ocupado; el documento quedó en cola y continuará cuando se libere el trabajador.");
       } else {
-        setNotice(uploadMessage + " El documento quedó en cola; el primer ciclo está pendiente de disponibilidad o del límite diario.");
+        setNotice(uploadMessage + " El documento quedó en cola; continuará cuando el trabajador esté disponible.");
       }
       await loadAll();
     } catch (e) {
@@ -550,7 +550,7 @@ export default function OrbyKnowledgeStudio() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-orange-400">03 / AUTONOMOUS KNOWLEDGE</p>
                 <h3 className="mt-1 text-sm font-semibold">Orby Autopilot</h3>
-                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">Cada cinco minutos lee cuatro páginas, extrae conceptos, métodos para enseñar desde cero, ejemplos, arquetipos Saber 11 y rutas de estudio. Solo el Autopilot tiene un cupo de 10 ciclos IA diarios; tus ejecuciones manuales no consumen ese límite.</p>
+                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">Cada cinco minutos lee cuatro páginas, extrae conceptos, métodos para enseñar desde cero, ejemplos, arquetipos Saber 11 y rutas de estudio. El Autopilot se inicia automáticamente y tiene un cupo de 10 ciclos IA por ventana móvil de 7 horas. Tus ejecuciones manuales son ilimitadas y no consumen ese presupuesto; puedes pausar el motor cuando quieras.</p>
               </div>
               <span className={automation?.settings.enabled ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300" : "rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] font-bold text-slate-400"}>{automation?.settings.enabled ? "MOTOR ACTIVO" : "MOTOR PAUSADO"}</span>
             </div>
@@ -560,7 +560,7 @@ export default function OrbyKnowledgeStudio() {
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Reintentos</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.retrying ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Con error</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.failed ?? "—"}</p></div>
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Completados</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.completed ?? "—"}</p></div>
-              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Ciclos automáticos hoy</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.settings.ai_cycles_used ?? "—"}/10</p></div>
+              <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">Ciclos automáticos · ventana 7 h</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.settings.ai_cycles_used ?? "—"}/10</p><p className="mt-1 text-[8px] text-slate-500">{automation?.settings.ai_cycle_window_started_at ? "Reinicio: " + new Date(new Date(automation.settings.ai_cycle_window_started_at).getTime() + 7 * 60 * 60 * 1000).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}) : "La ventana inicia con el primer ciclo."}</p></div>
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               <p className="text-[9px] text-slate-500">{automation?.settings.last_tick_at ? "Última revisión: " + new Date(automation.settings.last_tick_at).toLocaleString("es-CO") : "Aún no se registra una revisión automática."}</p>
@@ -571,7 +571,7 @@ export default function OrbyKnowledgeStudio() {
                 </button>
                 <button type="button" disabled={!automation?.configured || changingAutomation} onClick={()=>void toggleAutomation()} className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-[10px] font-bold text-[#1a1008] transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-35">
                   {changingAutomation && <LoaderCircle className="h-3.5 w-3.5 animate-spin"/>}
-                  {automation?.settings.enabled ? "Pausar motor" : "Activar motor"}
+                  {automation?.settings.enabled ? "Pausar motor" : "Reanudar motor"}
                 </button>
               </div>
             </div>

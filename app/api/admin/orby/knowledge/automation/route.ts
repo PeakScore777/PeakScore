@@ -24,7 +24,7 @@ export async function GET() {
 
   const [settingsResult, queued, running, retrying, failed, completed, recent, workerConfiguration] = await Promise.all([
     supabaseAdmin.from("orby_knowledge_automation_settings")
-      .select("enabled,last_tick_at,last_job_started_at,ai_cycle_date,ai_cycles_used,updated_at")
+      .select("enabled,last_tick_at,last_job_started_at,ai_cycle_date,ai_cycles_used,ai_cycle_window_started_at,updated_at")
       .eq("id", 1).maybeSingle(),
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "queued"),
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "running"),
@@ -417,7 +417,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabaseAdmin.from("orby_knowledge_automation_settings")
     .update({ enabled: body.enabled, updated_at: now })
     .eq("id", 1)
-    .select("enabled,last_tick_at,last_job_started_at,updated_at")
+    .select("enabled,last_tick_at,last_job_started_at,ai_cycle_window_started_at,updated_at")
     .single();
 
   if (error || !data) return jsonError("No se pudo actualizar el motor automático.", 503);

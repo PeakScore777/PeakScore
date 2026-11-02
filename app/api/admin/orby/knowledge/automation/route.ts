@@ -24,7 +24,7 @@ export async function GET() {
 
   const [settingsResult, queued, running, retrying, failed, completed, recent, workerConfiguration] = await Promise.all([
     supabaseAdmin.from("orby_knowledge_automation_settings")
-      .select("enabled,last_tick_at,last_job_started_at,ai_cycle_date,ai_cycles_used,ai_cycle_window_started_at,updated_at")
+      .select("enabled,last_tick_at,last_job_started_at,ai_cycle_date,ai_cycles_used,ai_cycle_window_started_at,automatic_worker_lock_expires_at,manual_worker_lock_expires_at,updated_at")
       .eq("id", 1).maybeSingle(),
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "queued"),
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "running"),
@@ -32,7 +32,7 @@ export async function GET() {
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "failed"),
     supabaseAdmin.from("orby_knowledge_jobs").select("id", { count: "exact", head: true }).eq("status", "completed"),
     supabaseAdmin.from("orby_knowledge_jobs")
-      .select("id,document_id,status,stage,next_batch_index,total_batches,attempt_count,last_error,updated_at,completed_at")
+      .select("id,document_id,status,stage,next_batch_index,total_batches,attempt_count,last_error,automatic_review_pending,updated_at,completed_at")
       .order("updated_at", { ascending: false }).limit(20),
     supabaseAdmin.rpc("orby_knowledge_autopilot_is_configured"),
   ]);
@@ -388,6 +388,12 @@ export async function GET() {
 
   return NextResponse.json({
     settings: settingsResult.data,
+    workers: {
+      automaticBusy: Boolean(settingsResult.data.automatic_worker_lock_expires_at
+        && new Date(settingsResult.data.automatic_worker_lock_expires_at).getTime() > Date.now()),
+      manualBusy: Boolean(settingsResult.data.manual_worker_lock_expires_at
+        && new Date(settingsResult.data.manual_worker_lock_expires_at).getTime() > Date.now()),
+    },
     configured: Boolean(process.env.CRON_SECRET) && workerConfiguration.data === true,
     counts: {
       queued: queued.count ?? 0,

@@ -1,5 +1,5 @@
 import "server-only";
-import { shouldAutomaticallyPublishOrbyKnowledge } from "@/lib/ai/orby-publication";
+import { isOrbyKnowledgePublicationReady, shouldAutomaticallyPublishOrbyKnowledge } from "@/lib/ai/orby-publication";
 
 import { createHash, randomUUID } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -552,22 +552,28 @@ export async function processNextOrbyKnowledgeJob(options: {
         / Math.max(1, Number(document.page_count)) * 100;
       const ingestionStatus = coverage >= 95 && conceptCount > 0 ? "completed" : "attention_required";
       const reviewedPages = (allPages ?? []).filter((page) => page.visual_status === "reviewed").length;
+      const publicationState = {
+        chunk_count: counts.total,
+        embedded_chunk_count: counts.embedded,
+        knowledge_profile_status: "ready",
+        knowledge_profile_version: 2,
+        knowledge_pipeline_version: job.pipeline_version,
+        concept_count: conceptCount,
+        ingestion_status: ingestionStatus,
+        coverage_percent: Number(coverage.toFixed(2)),
+        visual_pages_total: Number(document.visual_pages_total ?? document.page_count),
+        visual_pages_reviewed: reviewedPages,
+      };
       const publicationReady = shouldAutomaticallyPublishOrbyKnowledge({
         origin: options.origin,
         currentStatus: document.status,
-        document: {
-          chunk_count: counts.total,
-          embedded_chunk_count: counts.embedded,
-          knowledge_profile_status: "ready",
-          knowledge_profile_version: 2,
-          knowledge_pipeline_version: job.pipeline_version,
-          concept_count: conceptCount,
-          ingestion_status: ingestionStatus,
-          coverage_percent: Number(coverage.toFixed(2)),
-          visual_pages_total: Number(document.visual_pages_total ?? document.page_count),
-          visual_pages_reviewed: reviewedPages,
-        },
+        document: publicationState,
       });
+      // A manually completed, quality-ready draft is handed to the automatic
+      // lane for its final publish gate. The manual lane never publishes.
+      const awaitingAutomaticReview = options.origin === "manual"
+        && document.status === "draft"
+        && isOrbyKnowledgePublicationReady(publicationState);
       const { error: documentUpdateError } = await supabaseAdmin
         .from("orby_knowledge_documents")
         .update({
@@ -590,15 +596,17 @@ export async function processNextOrbyKnowledgeJob(options: {
         p_job_id: job.id,
         p_worker_id: workerId,
         p_publish_if_ready: publicationReady,
+        p_require_automatic_review: awaitingAutomaticReview,
       });
       if (completeError) throw new Error("No se pudo completar el ciclo de aprendizaje: " + completeError.code);
       const completion = completionResult && typeof completionResult === "object"
-        ? completionResult as { completed?: unknown; published?: unknown }
+        ? completionResult as { completed?: unknown; published?: unknown; awaiting_automatic_review?: unknown }
         : null;
       if (!completion || completion.completed !== true) {
         throw new Error("El trabajador perdió la propiedad de la tarea antes de confirmar su finalización.");
       }
       const automaticallyPublished = completion.published === true;
+      const handedToAutomaticReview = completion.awaiting_automatic_review === true;
 
       const { error: clearFileError } = await supabaseAdmin.from("orby_knowledge_documents")
         .update({
@@ -621,9 +629,11 @@ export async function processNextOrbyKnowledgeJob(options: {
         progress: conceptCount,
         message: automaticallyPublished
           ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%. Publicado automáticamente para el alumnado."
-          : ingestionStatus === "completed"
-            ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%. Sigue como borrador para revisión administrativa."
-            : documentTitle + ": llegó al límite de revisiones con " + conceptCount + " conceptos, pero quedó con atención requerida (" + coverage.toFixed(1) + "%). Revisa las páginas pendientes antes de publicar.",
+          : handedToAutomaticReview
+            ? documentTitle + ": lote manual completo y sincronizado con la biblioteca compartida. El Autopilot hará la validación final y publicará el material si supera todos los controles."
+            : ingestionStatus === "completed"
+              ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%. Sigue como borrador para revisión administrativa."
+              : documentTitle + ": llegó al límite de revisiones con " + conceptCount + " conceptos, pero quedó con atención requerida (" + coverage.toFixed(1) + "%). Revisa las páginas pendientes antes de publicar.",
       };
     }
 

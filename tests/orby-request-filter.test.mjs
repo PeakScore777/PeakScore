@@ -23,6 +23,10 @@ const chunking = await loadTypeScriptModule("../lib/pdf/split-orby-text.ts");
 const checklist = await loadTypeScriptModule("../lib/pdf/extract-orby-checklist-rows.ts");
 const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowledge-normalization.ts");
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
+const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
+const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
+const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
+const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {
   const prompts = [
@@ -162,6 +166,23 @@ test("el lote manual apto se entrega al Autopilot para validación final", () =>
   assert.equal(publication.shouldHandOffManualOrbyKnowledgeForAutomaticReview({
     origin: "manual", currentStatus: "archived", document: readyDocument,
   }), false);
+});
+
+test("manual y Autopilot usan carriles separados y un bloqueo por documento", () => {
+  assert.match(manualWorkerRoute, /p_worker_lane:\s*"manual"/);
+  assert.match(automaticWorkerRoute, /p_worker_lane:\s*"automatic"/);
+  assert.match(parallelWorkersMigration, /automatic_worker_lock_owner/);
+  assert.match(parallelWorkersMigration, /manual_worker_lock_owner/);
+  assert.match(parallelWorkersMigration, /for update of j, d skip locked/i);
+  assert.match(parallelWorkersMigration, /worker_lock_expires_at/);
+});
+
+test("el Autopilot recibe el lote manual terminado sin robar la prioridad manual", () => {
+  assert.match(manualPriorityMigration, /manual_priority\s*=\s*true/);
+  assert.match(manualPriorityMigration, /manual_priority\s*=\s*false/);
+  assert.match(manualPriorityMigration, /p_count_toward_auto_budget and j\.manual_priority = false/);
+  assert.match(manualPriorityMigration, /not p_count_toward_auto_budget and j\.manual_priority = true/);
+  assert.match(manualPriorityMigration, /automatic_review_pending/);
 });
 
 test("fragmenta párrafos largos en límites naturales sin cortar palabras", () => {

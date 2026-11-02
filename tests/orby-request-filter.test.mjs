@@ -37,6 +37,16 @@ const routerSource = await readFile(new URL("../lib/ai/router.ts", import.meta.u
 const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 
+test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
+  for (const greeting of ["hola", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito"]) {
+    assert.equal(filter.isOrbyGreetingRequest(greeting), true, greeting);
+  }
+  assert.equal(filter.isOrbyGreetingRequest("Hola, explícame la fotosíntesis"), false);
+  assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
+  assert.match(lessonTutorRouteSource, /isOrbyGreetingRequest\(userMessage\)/);
+  assert.match(lessonTutorSource, /const greetingReply = isOrbyGreetingRequest\(message\)/);
+});
+
 test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas en inglés se bloquean", () => {
   assert.equal(filter.isGenericIcfesEnglishRequest("inglés"), true);
   assert.equal(filter.isGenericIcfesEnglishRequest("quiero estudiar English"), true);
@@ -280,8 +290,9 @@ test("los filtros deterministas no consumen el cupo de llamadas al modelo", () =
   const rateLimitIndex = lessonTutorRouteSource.indexOf('p_bucket: "lesson_tutor"');
   const preflightIndex = lessonTutorRouteSource.indexOf("const preflight = preflightOrbyRequest(currentRequestContext)");
   const outOfScopeIndex = lessonTutorRouteSource.indexOf("if (!preflight.allowed || legacyOutOfScope)");
-  assert.ok(preflightIndex >= 0 && outOfScopeIndex > preflightIndex && rateLimitIndex > outOfScopeIndex,
-    "las negativas locales deben ocurrir antes de reservar cuota de IA");
+  const greetingIndex = lessonTutorRouteSource.indexOf("if (!tutorImage && isOrbyGreetingRequest(userMessage))");
+  assert.ok(preflightIndex >= 0 && outOfScopeIndex > preflightIndex && greetingIndex > outOfScopeIndex && rateLimitIndex > greetingIndex,
+    "filtros y saludos locales deben ocurrir antes de reservar cuota de IA");
 });
 
 test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca", () => {

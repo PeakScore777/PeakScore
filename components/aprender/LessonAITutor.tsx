@@ -188,6 +188,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
   const voiceStartupAbortRef = useRef<AbortController | null>(null);
+  const voiceSessionGenerationRef = useRef(0);
+  const voiceResponseWatchdogRef = useRef<number | null>(null);
   const voiceAnalyserRef = useRef<AnalyserNode | null>(null);
   const voiceAnimationFrameRef = useRef<number | null>(null);
   const voiceVisualLevelRef = useRef(0);
@@ -237,7 +239,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }) => Promise<void>>(async () => {});
+  const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }, appendUserMessage?: boolean) => Promise<void>>(async () => {});
   const stopRealtimeVoiceRef = useRef<(updateState?: boolean) => void>(() => {});
   const lastInitialPromptRef = useRef<string | null>(null);
   const activeConversationRef = useRef<string | null>(null);
@@ -734,7 +736,40 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceNextPlaybackTimeRef.current = audioContext?.currentTime ?? 0;
   }
 
+  function clearVoiceResponseWatchdog() {
+    if (voiceResponseWatchdogRef.current !== null) {
+      window.clearTimeout(voiceResponseWatchdogRef.current);
+      voiceResponseWatchdogRef.current = null;
+    }
+  }
+
+  function fallbackVoiceTurnToText(reason: string) {
+    clearVoiceResponseWatchdog();
+    const pendingUserText = voiceUserTextRef.current.trim();
+    const shouldFallback = voiceModeRef.current && Boolean(pendingUserText) && !voiceResponseDoneRef.current;
+    stopRealtimeVoice();
+    setWorkspaceMode("chat");
+    setVoiceStatus("Continuando por texto…");
+    setVoiceError(reason);
+    if (shouldFallback) {
+      void sendMessageRef.current(pendingUserText, false, false, undefined, false)
+        .finally(() => drainPendingMessageQueue());
+    } else {
+      drainPendingMessageQueue();
+    }
+  }
+
+  function armVoiceResponseWatchdog() {
+    clearVoiceResponseWatchdog();
+    voiceResponseWatchdogRef.current = window.setTimeout(() => {
+      voiceResponseWatchdogRef.current = null;
+      fallbackVoiceTurnToText("La voz tardó demasiado en responder. Continué esta misma pregunta por el chat para que no tengas que repetirla.");
+    }, 22_000);
+  }
+
   function stopRealtimeVoice(updateState = true) {
+    clearVoiceResponseWatchdog();
+    voiceSessionGenerationRef.current += 1;
     voiceStartupAbortRef.current?.abort();
     voiceStartupAbortRef.current = null;
     voiceModeRef.current = false;
@@ -1003,6 +1038,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? event.voiceActivity as { type?: unknown }
       : null;
     if (voiceActivity?.type === "ACTIVITY_START") {
+      clearVoiceResponseWatchdog();
       if (voiceBrowserSpeechActiveRef.current) {
         // Wait for an interim transcript to distinguish a student's barge-in
         // from the browser transcribing Orby's own fallback speech.
@@ -1029,6 +1065,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } else if (voiceActivity?.type === "ACTIVITY_END") {
       setIsListening(false);
       setVoiceStatus("Procesando lo que dijiste…");
+      armVoiceResponseWatchdog();
     }
 
     const serverContent = event.serverContent && typeof event.serverContent === "object"
@@ -1139,6 +1176,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return next;
       });
       void persistRealtimeTurnIfReady();
+      armVoiceResponseWatchdog();
       setVoiceStatus("Orby está pensando…");
       setIsListening(false);
     }
@@ -1168,15 +1206,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     if (serverContent.interrupted === true) {
-      // Gemini VAD reports barge-in; silence queued audio immediately.
+      // Barge-in cancels this response. Clear its watchdog so the next spoken
+      // turn receives a fresh deadline instead of inheriting a stuck timer.
+      clearVoiceResponseWatchdog();
       stopVoicePlayback();
       voiceResponseDoneRef.current = true;
+      waitingForVoiceReplyRef.current = false;
       void persistRealtimeTurnIfReady();
       setVoiceStatus("Te escucho…");
       setIsListening(true);
     }
 
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
+      clearVoiceResponseWatchdog();
       const forcedLiveReply = voiceForcedReplyRef.current;
       const rawReply = forcedLiveReply ?? normalizeVoicePunctuation(voiceAssistantTextRef.current);
       voiceForcedReplyRef.current = null;
@@ -1294,12 +1336,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if (event.error && typeof event.error === "object") {
       const detail = event.error as { message?: unknown };
-      setVoiceError(typeof detail.message === "string" ? detail.message : "La conexión de voz tuvo un problema. Inténtalo de nuevo.");
-      setVoiceStatus("Error de conexión");
+      fallbackVoiceTurnToText(typeof detail.message === "string"
+        ? "La voz tuvo un problema. Continué esta misma pregunta por el chat."
+        : "La voz tuvo un problema. Continué esta misma pregunta por el chat.");
     }
   }
 
   async function startRealtimeVoice(startupSignal: AbortSignal) {
+    const sessionGeneration = ++voiceSessionGenerationRef.current;
     if (!navigator.mediaDevices?.getUserMedia || !("WebSocket" in window) || !("AudioWorkletNode" in window)) {
       throw new Error("Este navegador no admite conversación de voz en tiempo real. Prueba Chrome o Edge actualizado.");
     }
@@ -1436,6 +1480,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             setVoiceStatus("Conectado; esperando confirmación de Orby…");
           },
           onmessage: (message) => {
+            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
             const payload = message as unknown as Record<string, unknown>;
             if (payload.error && typeof payload.error === "object") {
               const detail = payload.error as { message?: unknown; status?: unknown; code?: unknown };
@@ -1451,6 +1496,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             handleGeminiLiveEvent(payload);
           },
           onerror: (event) => {
+            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
             // Keep transport details in the developer console, never in student-facing messages.
             const rawError = event.error instanceof Error
               ? event.error.message
@@ -1465,6 +1511,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             setVoiceStatus("Recuperando detalle de conexión…");
           },
           onclose: (event) => {
+            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
             const reason = event.reason?.trim();
             const detail = [
               "código " + event.code,
@@ -1481,10 +1528,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
             if (voiceModeRef.current) {
               console.warn("[Orby Voice] Active session closed.", { detail });
-              stopRealtimeVoice();
-              setWorkspaceMode("chat");
-              setVoiceStatus("Conexión interrumpida");
-              setVoiceError("La conexión de voz se cerró inesperadamente (código " + event.code + "). Volví al chat para que puedas reintentar.");
+              fallbackVoiceTurnToText("La conexión de voz se interrumpió. Continué esta misma pregunta por el chat.");
             }
           },
         },
@@ -1572,6 +1616,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       muteGain.gain.value = 0;
       voiceMuteGainRef.current = muteGain;
       worklet.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
+        if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
         const activeSession = voiceChannelRef.current;
         if (!activeSession || !(event.data instanceof ArrayBuffer)) return;
         try {
@@ -1585,10 +1630,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           console.error("[Orby Voice] Failed to send microphone audio.", {
             name: error instanceof Error ? error.name : "UnknownError",
           });
-          setVoiceError("No se pudo enviar el audio del micrófono. Volví al chat para que puedas reintentar.");
-          setVoiceStatus("Error enviando audio");
-          stopRealtimeVoice();
-          setWorkspaceMode("chat");
+          fallbackVoiceTurnToText("No se pudo enviar el audio. Continué esta misma pregunta por el chat.");
         }
       };
       microphoneSource.connect(worklet);
@@ -1661,7 +1703,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }, 0);
   }
 
-  async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }) {
+  async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }, appendUserMessage = true) {
     const message = text.trim();
     let isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
@@ -1707,6 +1749,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setError("");
         return;
       }
+      const typedPreflight = preflightOrbyRequest(message);
+      const englishReply = isGenericIcfesEnglishRequest(message) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : null;
+      const localReply = englishReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
+      if (localReply) {
+        voiceUserTextRef.current = message;
+        voiceAssistantTextRef.current = localReply;
+        voiceAssistantMessageIdRef.current = "voice-policy-" + Date.now();
+        voiceResponseDoneRef.current = true;
+        voiceTurnPersistedRef.current = false;
+        voiceInputPolicyRef.current = null;
+        voicePreflightReplyRef.current = null;
+        voiceForcedReplyRef.current = null;
+        voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
+        const userId = "voice-user-" + Date.now();
+        const assistantId = voiceAssistantMessageIdRef.current;
+        setMessages((current) => [
+          ...current,
+          { id: userId, role: "user", content: message },
+          { id: assistantId, role: "assistant", content: localReply },
+        ]);
+        setInput("");
+        setVoiceStatus("Orby está respondiendo…");
+        setIsListening(false);
+        waitingForVoiceReplyRef.current = true;
+        void persistRealtimeTurnIfReady();
+        speakText(localReply, messages.length + 1);
+        armVoiceResponseWatchdog();
+        return;
+      }
       waitingForVoiceReplyRef.current = true;
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
@@ -1737,6 +1808,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
       setVoiceStatus("Orby está pensando…");
+      armVoiceResponseWatchdog();
       return;
     }
     sendingRef.current = true;
@@ -1776,13 +1848,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       drainPendingMessageQueue();
       return;
     }
-    const nextMessages: Message[] = [...messages, {
+    const nextMessages: Message[] = appendUserMessage ? [...messages, {
       role: "user",
       content: message || "Analiza la imagen adjunta.",
       ...(selectedFile && imagePayload ? { attachmentName: selectedFile.name, attachmentPreview: selectedFile.type.startsWith("image/") ? `data:${selectedFile.type};base64,${imagePayload.base64}` : "", attachmentKind: "image" as const } : {}),
       ...(attachmentMeta ? { attachmentName: attachmentMeta.label, attachmentKind: attachmentMeta.kind } : {}),
-    }];
-    setMessages(nextMessages);
+    }] : messages;
+    if (appendUserMessage) setMessages(nextMessages);
     setInput("");
     if (inputRef.current) inputRef.current.style.height = "48px";
     if (selectedFile) clearAttachment();

@@ -214,7 +214,7 @@ export async function processNextOrbyKnowledgeJob(options: {
     return {
       state: "idle",
       message: countsTowardAutomaticBudget
-        ? "No hay tareas disponibles o se alcanzó el límite de 10 ciclos automáticos de hoy."
+        ? "No hay tareas disponibles o se alcanzó el límite de 100 ciclos automáticos de la ventana móvil de 7 horas."
         : "No hay tareas manuales disponibles para procesar.",
     };
   }

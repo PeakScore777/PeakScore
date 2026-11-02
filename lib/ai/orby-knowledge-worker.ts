@@ -1,5 +1,5 @@
 import "server-only";
-import { isOrbyKnowledgePublicationReady, shouldAutomaticallyPublishOrbyKnowledge } from "@/lib/ai/orby-publication";
+import { shouldHandOffManualOrbyKnowledgeForAutomaticReview, shouldAutomaticallyPublishOrbyKnowledge } from "@/lib/ai/orby-publication";
 
 import { createHash, randomUUID } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -571,9 +571,11 @@ export async function processNextOrbyKnowledgeJob(options: {
       });
       // A manually completed, quality-ready draft is handed to the automatic
       // lane for its final publish gate. The manual lane never publishes.
-      const awaitingAutomaticReview = options.origin === "manual"
-        && document.status === "draft"
-        && isOrbyKnowledgePublicationReady(publicationState);
+      const awaitingAutomaticReview = shouldHandOffManualOrbyKnowledgeForAutomaticReview({
+        origin: options.origin,
+        currentStatus: document.status,
+        document: publicationState,
+      });
       const { error: documentUpdateError } = await supabaseAdmin
         .from("orby_knowledge_documents")
         .update({

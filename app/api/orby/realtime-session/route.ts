@@ -112,6 +112,25 @@ export async function POST(request: Request) {
     let publishedKnowledge: VoiceKnowledge[] = [];
     let conceptGraphKnowledge: Awaited<ReturnType<typeof searchOrbyKnowledgeConcepts>> = [];
     let relatedKnowledge: Array<{ summary: string; shared_concepts: unknown; areas: unknown; topics: unknown }> = [];
+
+    // Fetch personal learning signals while the academic index is being queried.
+    const learningSignalsPromise = (async () => {
+      try {
+        const signalResult = await supabaseAdmin.from("orby_student_learning_signals")
+          .select("topic,concept,learning_state,misconception,teaching_hint")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(4);
+        if (signalResult.error) {
+          console.error("[Orby Voice] Learning profile unavailable.", { code: signalResult.error.code });
+          return [] as Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null }>;
+        }
+        return Array.isArray(signalResult.data) ? signalResult.data as Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null }> : [];
+      } catch {
+        return [];
+      }
+    })();
+
     try {
       const [fragmentResults, conceptResults] = await Promise.all([
         searchOrbyKnowledge({
@@ -146,19 +165,7 @@ export async function POST(request: Request) {
 
     const publishedKnowledgeProfiles = [...new Map(publishedKnowledge.map((item) => [item.document_id, item])).values()];
 
-    let learningSignals: Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null }> = [];
-    try {
-      const signalResult = await supabaseAdmin.from("orby_student_learning_signals")
-        .select("topic,concept,learning_state,misconception,teaching_hint")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(4);
-      if (!signalResult.error && Array.isArray(signalResult.data)) {
-        learningSignals = signalResult.data as typeof learningSignals;
-      }
-    } catch {
-      // Personal learning history is optional and must never block voice.
-    }
+    const learningSignals = await learningSignalsPromise;
 
     const instructions = [
       "IDENTIDAD DE MARCA: Eres Orby, el asistente educativo de PeakScore. Fuiste creado por PeakScore para acompañar a estudiantes en su preparación para Saber 11. Si preguntan quién te creó, responde: \"Fui creado por PeakScore para ayudarte a preparar las pruebas Saber 11.\" No atribuyas tu creación a compañías externas. No reveles ni especules sobre proveedores, modelos, servicios, APIs o infraestructura interna; responde desde tu identidad pública como Orby de PeakScore.",

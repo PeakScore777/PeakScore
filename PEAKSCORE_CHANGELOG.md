@@ -194,3 +194,12 @@
 - Se añade "Juegos" al panel administrativo, con rutas server-side protegidas.
 - La generación no publica automáticamente: todo lote aprobado por las validaciones queda en estado borrador para revisión del administrador.
 - Validación pendiente: no se ha ejecutado npm run lint ni npm run build en un checkout local de esta rama.
+
+## 2026-11-02 — Orby Autopilot: 100 ciclos por 7 horas y frecuencia de 3 minutos
+- Se amplía el presupuesto automático de 10 a 100 ciclos por ventana móvil de siete horas.
+- El cron protegido de Supabase pasa de ejecutarse cada cinco a cada tres minutos.
+- Cada ciclo continúa reclamando como máximo una tarea/etapa; en la etapa de perfilado visual se procesan cuatro páginas por lote.
+- La cola y la telemetría de revisión vuelven a habilitar la tarea a los tres minutos, alineadas con la frecuencia del cron.
+- Las ejecuciones manuales siguen sin consumir el presupuesto automático.
+- Se conserva el contador y el estado actual del motor; esta actualización no activa ni pausa el Autopilot.
+- La publicación automática continúa sujeta a los controles de calidad existentes.

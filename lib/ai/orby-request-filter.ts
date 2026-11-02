@@ -29,7 +29,7 @@ const OUTSIDE_SCOPE_PATTERNS = [
 const EXTERNAL_PREICFES_REQUEST_PATTERNS = [
   /\bgrupo\s*500\b/i,
   /\bmilton\s+ochoa\b|\binstruimos\b|\bpreicfes\s*\.\s*net\b/i,
-  /\b(?:otro|otra|otros|otras|mejor|mejores|recomiend[ae]|recomendar|compara|comparar|comparame|compare|opiniones|reseñas|precios|inscribirme|matricularme)\b.{0,70}\b(?:pre[\s-]?icfes|pre[\s-]?saber|academia|instituto|plataforma|curso)\b/i,
+  /\b(?:otro|otra|otros|otras|mejor|mejores|recomiend[ae]|recomendar|compara|comparar|comparame|compare|opiniones|reseñas|precios|inscribirme|matricularme)\b.{0,70}\b(?:pre[\s-]?icfes|pre[\s-]?saber|academias?|institutos?|plataformas?|cursos?)\b/i,
   /\b(?:pre[\s-]?icfes|pre[\s-]?saber|academia|instituto|plataforma|curso)\b.{0,70}\b(?:recomiend[ae]|recomendar|mejor|mejores|compara|comparar|compare|opiniones|reseñas|precios|inscribirme|matricularme|promociona)\b/i,
 ];
 
@@ -72,7 +72,7 @@ export function containsExternalPreIcfesPromotion(text: string): boolean {
 
   const namesExternalProvider = /\bgrupo\s*500\b|\bmilton\s+ochoa\b|\binstruimos\b|\bpreicfes\s*\.\s*net\b/.test(normalized);
   const promotionalVerb = /\b(?:te recomiendo|recomiendo|puedes inscribirte|inscribete|matriculate|visita|contacta|contrata|elige|prueba|compra|la mejor opcion|una buena opcion|te sugiero|consulta sus cursos)\b/.test(normalized);
-  const externalCategory = /\b(?:academia|instituto|plataforma|curso|pre[\s-]?icfes|pre[\s-]?saber)\b/.test(normalized);
+  const externalCategory = /\b(?:academias?|institutos?|plataformas?|cursos?|pre[\s-]?icfes|pre[\s-]?saber)\b/.test(normalized);
   return namesExternalProvider || promotionalVerb && externalCategory;
 }
 

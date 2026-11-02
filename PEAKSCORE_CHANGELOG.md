@@ -203,3 +203,11 @@
 - Las ejecuciones manuales siguen sin consumir el presupuesto automático.
 - Se conserva el contador y el estado actual del motor; esta actualización no activa ni pausa el Autopilot.
 - La publicación automática continúa sujeta a los controles de calidad existentes.
+
+## 2026-11-02 — Orby: carriles manual y automático en paralelo
+- Se separan los bloqueos de ejecución manual y automática; ambos trabajadores pueden avanzar simultáneamente sobre documentos distintos.
+- La reclamación de tareas bloquea también la fila del documento y evita que dos trabajadores procesen el mismo documento a la vez, aunque existan trabajos con huellas de contenido diferentes.
+- Los dos carriles comparten la misma cola, fragmentos, embeddings, perfiles académicos y biblioteca; las actualizaciones manuales quedan disponibles al Autopilot sin copiar ni duplicar el conocimiento.
+- Cuando una ejecución manual termina un borrador que cumple todos los criterios de calidad, deja una revisión final reservada al trabajador automático. El Autopilot consume un ciclo de su presupuesto para verificar y publicar si vuelve a superar los controles.
+- Las tareas pendientes de revisión automática no pueden ser reclamadas por el carril manual.
+- El carril manual sigue siendo ilimitado y no consume los 100 ciclos automáticos por ventana móvil de siete horas.

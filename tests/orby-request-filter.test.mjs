@@ -32,6 +32,7 @@ const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowle
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const routerSource = await readFile(new URL("../lib/ai/router.ts", import.meta.url), "utf8");
 const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
@@ -271,6 +272,42 @@ test("el Autopilot recibe el lote manual terminado sin robar la prioridad manual
   assert.match(manualPriorityMigration, /p_count_toward_auto_budget and j\.manual_priority = false/);
   assert.match(manualPriorityMigration, /not p_count_toward_auto_budget and j\.manual_priority = true/);
   assert.match(manualPriorityMigration, /automatic_review_pending/);
+});
+
+test("los filtros deterministas no consumen el cupo de llamadas al modelo", () => {
+  const rateLimitIndex = lessonTutorRouteSource.indexOf('p_bucket: "lesson_tutor"');
+  const preflightIndex = lessonTutorRouteSource.indexOf("const preflight = preflightOrbyRequest(currentRequestContext)");
+  const outOfScopeIndex = lessonTutorRouteSource.indexOf("if (!preflight.allowed || legacyOutOfScope)");
+  assert.ok(preflightIndex >= 0 && outOfScopeIndex > preflightIndex && rateLimitIndex > outOfScopeIndex,
+    "las negativas locales deben ocurrir antes de reservar cuota de IA");
+});
+
+test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca", () => {
+  assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledge\(/);
+  assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledgeConcepts\(/);
+  assert.doesNotMatch(realtimeSessionSource, /learningSignalsPromise/);
+  assert.match(realtimeSessionSource, /biblioteca de conocimiento ICFES.*bajo demanda/);
+  assert.match(realtimeSessionSource, /authTokens\.create/);
+});
+
+test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {
+  assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
+  assert.match(lessonTutorSource, /22_000/);
+  assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
+  assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, false, undefined, false\)/);
+  assert.match(lessonTutorSource, /appendUserMessage = true/);
+  assert.match(lessonTutorSource, /sessionGeneration !== voiceSessionGenerationRef\.current/);
+  assert.match(lessonTutorSource, /finishLocalVoiceReply/);
+  assert.match(lessonTutorSource, /void refreshConversations\(\)\.catch/);
+});
+
+test("los filtros escritos dentro de voz se contestan localmente antes de Gemini Live", () => {
+  const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
+  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
+  const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
+  assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart && sendRealtimeIndex > localFilterIndex);
+  assert.match(lessonTutorSource, /speakText\(localReply/);
+  assert.match(lessonTutorSource, /setMessages\(\(current\) => \[/);
 });
 
 test("el motor conserva los lotes visuales al volver a indexar fragmentos OCR", () => {

@@ -571,7 +571,6 @@ export async function processNextOrbyKnowledgeJob(options: {
       const { error: documentUpdateError } = await supabaseAdmin
         .from("orby_knowledge_documents")
         .update({
-          ...(publicationReady ? { status: "published" } : {}),
           knowledge_pipeline_version: job.pipeline_version,
           knowledge_profile_version: 2,
           embedded_chunk_count: counts.embedded,
@@ -587,11 +586,19 @@ export async function processNextOrbyKnowledgeJob(options: {
         .eq("id", job.document_id);
       if (documentUpdateError) throw new Error("Se guardó el perfil, pero no se pudo cerrar el estado del documento.");
 
-      const { error: completeError } = await supabaseAdmin.rpc("orby_complete_knowledge_job", {
+      const { data: completionResult, error: completeError } = await supabaseAdmin.rpc("orby_complete_knowledge_job", {
         p_job_id: job.id,
         p_worker_id: workerId,
+        p_publish_if_ready: publicationReady,
       });
       if (completeError) throw new Error("No se pudo completar el ciclo de aprendizaje: " + completeError.code);
+      const completion = completionResult && typeof completionResult === "object"
+        ? completionResult as { completed?: unknown; published?: unknown }
+        : null;
+      if (!completion || completion.completed !== true) {
+        throw new Error("El trabajador perdió la propiedad de la tarea antes de confirmar su finalización.");
+      }
+      const automaticallyPublished = completion.published === true;
 
       const { error: clearFileError } = await supabaseAdmin.from("orby_knowledge_documents")
         .update({
@@ -612,7 +619,7 @@ export async function processNextOrbyKnowledgeJob(options: {
         documentTitle,
         stage: "completed",
         progress: conceptCount,
-        message: publicationReady
+        message: automaticallyPublished
           ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%. Publicado automáticamente para el alumnado."
           : ingestionStatus === "completed"
             ? documentTitle + ": aprendizaje completo. " + conceptCount + " conceptos indexados; cobertura visual " + coverage.toFixed(1) + "%. Sigue como borrador para revisión administrativa."

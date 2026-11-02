@@ -191,6 +191,40 @@ test("conserva etiquetas entre corchetes y numeración separada del texto", () =
   assert.ok(rows.every((row) => row.area === "Física"));
 });
 
+test("la jerarquía explícita de la fuente corrige el área inferida por el modelo", () => {
+  const concepts = [
+    {
+      name: "Estructura atómica", area: "Ciencias Naturales", parent_concept: "Química",
+      aliases: [], evidence_pages: [4], confidence: 0.9, importance: 4,
+      evidence: "El modelo identificó estructura atómica en la página 4.",
+    },
+    {
+      name: "Estructura atómica", area: "Química", parent_concept: "El átomo",
+      aliases: [], evidence_pages: [4], confidence: 1, importance: 4,
+      evidence: "Renglón extraído directamente del texto fuente en la página 4: Estructura atómica",
+    },
+    {
+      name: "Estructura atómica", area: "Análisis Textual", parent_concept: "Lectura de símbolos",
+      aliases: [], evidence_pages: [2], confidence: 0.8, importance: 2,
+      evidence: "Uso de la expresión como analogía en un ejercicio textual.",
+    },
+  ];
+
+  const merged = knowledgeNormalization.deduplicateOrbyKnowledgeConcepts(concepts);
+  assert.equal(merged.length, 2);
+
+  const chemistry = merged.find((item) => item.area === "Química");
+  assert.ok(chemistry);
+  assert.equal(chemistry.parent_concept, "El átomo");
+  assert.deepEqual(chemistry.evidence_pages, [4]);
+  assert.ok(chemistry.evidence.includes("Renglón extraído directamente del texto fuente"));
+
+  const textual = merged.find((item) => item.area === "Análisis Textual");
+  assert.ok(textual);
+  assert.equal(textual.parent_concept, "Lectura de símbolos");
+  assert.deepEqual(textual.evidence_pages, [2]);
+});
+
 test("separa subtemas aplanados por guiones y conserva su jerarquía", () => {
   const rows = checklist.extractOrbyChecklistRows([{
     page_number: 1,

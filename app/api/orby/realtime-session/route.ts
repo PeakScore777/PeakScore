@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { classifyOutOfScopeRequest, getOutOfScopeReply, isOrbyIdentityQuestion } from "@/lib/ai/orby-scope";
-import { containsOrbyPromptInjection, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsOrbyPromptInjection } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 export const runtime = "nodejs";
@@ -64,15 +63,15 @@ export async function POST(request: Request) {
         }))
       : [];
 
-    // The browser supplies history and lesson metadata. Treat every field as
-    // untrusted data and reject instruction overrides before issuing a Live token.
-    const untrustedSessionContext = [subject, topic, context, ...history.map((item) => item.content)].join("\n");
-    if (containsOrbyPromptInjection(untrustedSessionContext)) {
+    // Only session metadata is checked as a new instruction source. Previous
+    // turns are historical context, not a fresh request: a past filtered message
+    // (for example, a programming request) must never prevent a new voice session.
+    if (containsOrbyPromptInjection([subject, topic, context].join("\n"))) {
       try {
         const { error: securityEventError } = await supabaseAdmin.rpc("orby_record_security_event", {
           p_user_id: user.id,
           p_event_type: "prompt_injection",
-          p_metadata: { source: "voice_session_context" },
+          p_metadata: { source: "voice_session_metadata" },
         });
         if (securityEventError) {
           console.error("[Orby Voice] Security event could not be recorded.", { code: securityEventError.code });
@@ -83,18 +82,6 @@ export async function POST(request: Request) {
       return NextResponse.json({
         error: "No puedo cambiar mis reglas ni revelar información interna. Sí puedo ayudarte con la preparación para Saber 11.",
       }, { status: 400 });
-    }
-
-    const latestUserText = [...history].reverse().find((item) => item.role === "user")?.content ?? "";
-    const asksOrbyIdentity = isOrbyIdentityQuestion(latestUserText);
-    const currentRequestContext = [subject, topic, latestUserText].filter(Boolean).join(" ");
-    const preflight = preflightOrbyRequest(currentRequestContext);
-    const legacyOutOfScope = preflight.allowed ? classifyOutOfScopeRequest(currentRequestContext) : null;
-    if (!asksOrbyIdentity && (!preflight.allowed || legacyOutOfScope)) {
-      const refusal = preflight.allowed
-        ? getOutOfScopeReply(legacyOutOfScope as "programming" | "outside", latestUserText)
-        : preflight.reply;
-      return NextResponse.json({ error: refusal }, { status: 400 });
     }
 
     const instructions = [

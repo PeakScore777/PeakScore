@@ -340,7 +340,7 @@ test("hereda la materia del encabezado anterior sin devolver conceptos de págin
         "CIENCIAS NATURALES",
         "1.1 Química",
         "- Propiedades de la materia",
-      ].join("\\n"),
+      ].join("\n"),
     },
   ];
   const rows = checklist.extractOrbyChecklistRows([
@@ -351,7 +351,7 @@ test("hereda la materia del encabezado anterior sin devolver conceptos de págin
         "o Medición de pH",
         "1.2 Biología",
         "- La célula",
-      ].join("\\n"),
+      ].join("\n"),
     },
   ], context);
 
@@ -372,7 +372,7 @@ test("la tabla de competencias de página 7 conserva Ciencias Naturales como ár
         "1.2 Biología",
         "1.3 Física",
         "1.4 Ciencia, Tecnología y Sociedad",
-      ].join("\\n"),
+      ].join("\n"),
     },
   ];
   const rows = checklist.extractOrbyCompetencyRows([
@@ -385,7 +385,7 @@ test("la tabla de competencias de página 7 conserva Ciencias Naturales como ár
         "Uso comprensivo del conocimiento científico 17",
         "Indagar 24",
         "3. Estructura",
-      ].join("\\n"),
+      ].join("\n"),
     },
   ], context);
 

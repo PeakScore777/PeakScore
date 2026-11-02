@@ -92,7 +92,7 @@ function isCurrentKnowledgePipeline(document: KnowledgeDocument): boolean {
     && document.embedded_chunk_count >= document.chunk_count
     && document.knowledge_profile_status === "ready"
     && document.knowledge_profile_version >= 2
-    && document.knowledge_pipeline_version >= 6
+    && document.knowledge_pipeline_version >= 7
     && document.ingestion_status === "completed"
     && document.coverage_percent >= 95
     && document.visual_pages_reviewed >= Math.ceil(document.visual_pages_total * 0.95)

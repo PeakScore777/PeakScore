@@ -332,6 +332,69 @@ test("conserva la jerarquía y asigna correctamente Química dentro de Ciencias 
   assert.ok(rows.some((row) => row.name === "Configuración electrónica" && row.parent_concept === "Tabla periódica"));
 });
 
+test("hereda la materia del encabezado anterior sin devolver conceptos de páginas de contexto", () => {
+  const context = [
+    {
+      page_number: 4,
+      content: [
+        "CIENCIAS NATURALES",
+        "1.1 Química",
+        "- Propiedades de la materia",
+      ].join("\\n"),
+    },
+  ];
+  const rows = checklist.extractOrbyChecklistRows([
+    {
+      page_number: 5,
+      content: [
+        "- Acidez y alcalinidad",
+        "o Medición de pH",
+        "1.2 Biología",
+        "- La célula",
+      ].join("\\n"),
+    },
+  ], context);
+
+  assert.deepEqual(rows.map((row) => row.page), [5, 5, 5]);
+  assert.ok(rows.some((row) => row.name === "Acidez y alcalinidad" && row.area === "Química"));
+  assert.ok(rows.some((row) => row.name === "Medición de pH" && row.area === "Química"));
+  assert.ok(rows.some((row) => row.name === "La célula" && row.area === "Biología"));
+  assert.ok(rows.every((row) => row.area !== "Transversal"));
+});
+
+test("la tabla de competencias de página 7 conserva Ciencias Naturales como área principal", () => {
+  const context = [
+    {
+      page_number: 4,
+      content: [
+        "CIENCIAS NATURALES",
+        "1.1 Química",
+        "1.2 Biología",
+        "1.3 Física",
+        "1.4 Ciencia, Tecnología y Sociedad",
+      ].join("\\n"),
+    },
+  ];
+  const rows = checklist.extractOrbyCompetencyRows([
+    {
+      page_number: 7,
+      content: [
+        "2. Competencias",
+        "Competencia Preguntas",
+        "Explicación de fenómenos 17",
+        "Uso comprensivo del conocimiento científico 17",
+        "Indagar 24",
+        "3. Estructura",
+      ].join("\\n"),
+    },
+  ], context);
+
+  assert.equal(rows.length, 3);
+  assert.ok(rows.every((row) => row.area === "Ciencias Naturales"));
+  assert.deepEqual(rows.map((row) => row.question_count).sort((a, b) => a - b), [17, 17, 24]);
+  assert.ok(rows.every((row) => row.page === 7));
+});
+
 test("extrae competencias y pesos de las tablas sin confundirlos con temas", () => {
   const rows = checklist.extractOrbyCompetencyRows([
     {

@@ -666,7 +666,7 @@ export async function processNextOrbyKnowledgeJob(options: {
     if (job.stage === "profile" && sourceSha256 !== undefined) {
       try {
         const partialChunks = await loadOrbyKnowledgeChunks(job.document_id);
-        await refreshDocumentContentHash(job, workerId, sourceSha256, partialChunks);
+        await refreshDocumentContentHash(job, workerId, sourceSha256 ?? "", partialChunks);
       } catch (fingerprintError) {
         console.error("[Orby Autopilot] Could not synchronize the partial content fingerprint.", {
           jobId: job.id,

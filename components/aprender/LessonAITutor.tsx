@@ -1832,7 +1832,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
         voiceUserTextRef.current = message;
-        voiceAssistantTextRef.current = "";
+        // Keep the trusted local answer ready for persistence even if the
+        // student interrupts Live audio before generationComplete arrives.
+        voiceAssistantTextRef.current = localReply;
         voiceAssistantMessageIdRef.current = "voice-policy-" + Date.now();
         voiceResponseDoneRef.current = false;
         voiceTurnPersistedRef.current = false;

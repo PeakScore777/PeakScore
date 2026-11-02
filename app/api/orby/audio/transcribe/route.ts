@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isCloudflareWorkersAIConfigured, transcribeWithCloudflare } from "@/lib/ai/cloudflare-workers-ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const groqApiKey = process.env.GROQ_API_KEY;
 
-  if (!geminiApiKey && !groqApiKey) {
+  if (!geminiApiKey && !groqApiKey && !isCloudflareWorkersAIConfigured()) {
     return NextResponse.json({
       error: "La transcripción no está configurada. El servicio de transcripción no está disponible temporalmente.",
       code: "TRANSCRIPTION_NOT_CONFIGURED",
@@ -166,6 +167,19 @@ export async function POST(request: Request) {
       const typed = error as { name?: unknown; code?: unknown };
       providerFailures.push({
         provider: "groq",
+        code: typeof typed.code === "string" ? typed.code.slice(0, 80) : typeof typed.name === "string" ? typed.name.slice(0, 80) : "PROVIDER_ERROR",
+      });
+    }
+  }
+
+  if (!transcript && isCloudflareWorkersAIConfigured()) {
+    try {
+      transcript = await transcribeWithCloudflare(bytes);
+    } catch (error) {
+      const typed = error as { status?: unknown; code?: unknown; name?: unknown };
+      providerFailures.push({
+        provider: "cloudflare",
+        status: typeof typed.status === "number" ? typed.status : undefined,
         code: typeof typed.code === "string" ? typed.code.slice(0, 80) : typeof typed.name === "string" ? typed.name.slice(0, 80) : "PROVIDER_ERROR",
       });
     }

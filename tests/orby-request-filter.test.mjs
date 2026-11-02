@@ -32,6 +32,7 @@ const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/r
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const routerSource = await readFile(new URL("../lib/ai/router.ts", import.meta.url), "utf8");
 const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
+const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 
 test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas en inglés se bloquean", () => {
   assert.equal(filter.isGenericIcfesEnglishRequest("inglés"), true);
@@ -79,7 +80,7 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
 test("el chat procesa solicitudes pendientes en orden y limita peticiones bloqueadas", () => {
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.push/);
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.shift\(\)/);
-  assert.match(lessonTutorSource, /AbortSignal\.timeout\(90_000\)/);
+  assert.match(lessonTutorSource, /AbortSignal\.timeout\(60_000\)/);
   assert.match(lessonTutorRouteSource, /containsExternalPreIcfesPromotion/);
   assert.match(lessonTutorRouteSource, /isLikelyEnglishOnlyOrbyReply/);
   assert.match(lessonTutorSource, /Accessible light workspace/);
@@ -108,6 +109,9 @@ test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la d
   assert.match(qualityBlock, /evidencia/);
   assert.doesNotMatch(qualityBlock, /explica|densidad|que es|pregunta/);
   assert.match(tutorQualitySource, /message.length > 650/);
+  assert.match(orbyKnowledgeSource, /Query embedding timed out/);
+  assert.match(orbyKnowledgeSource, /4_500/);
+  assert.match(orbyKnowledgeSource, /lexical retrieval continues/);
 });
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {

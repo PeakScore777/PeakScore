@@ -30,6 +30,8 @@ const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowle
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+const routerSource = await readFile(new URL("../lib/ai/router.ts", import.meta.url), "utf8");
+const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 
 test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas en inglés se bloquean", () => {
   assert.equal(filter.isGenericIcfesEnglishRequest("inglés"), true);
@@ -81,6 +83,31 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorRouteSource, /containsExternalPreIcfesPromotion/);
   assert.match(lessonTutorRouteSource, /isLikelyEnglishOnlyOrbyReply/);
   assert.match(lessonTutorSource, /Accessible light workspace/);
+});
+
+test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones tienen timeout", () => {
+  assert.match(
+    lessonTutorSource,
+    /if \(voiceModeRef\.current && !voiceChannelRef\.current\) \{\s*stopRealtimeVoice\(\);\s*setWorkspaceMode\("chat"\)/,
+  );
+  assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
+  assert.match(lessonTutorSource, /La conexión de voz está tardando demasiado/);
+  assert.match(lessonTutorSource, /ownsStartup/);
+  assert.match(lessonTutorSource, /startupSignal\.addEventListener\("abort"/);
+});
+
+test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la doble revisión", () => {
+  assert.match(routerSource, /tutor:\s*"groq"/);
+  assert.match(routerSource, /task === "tutor" \? 22000 : 60000/);
+  assert.match(routerSource, /MAX_GEMINI_RETRIES = task === "tutor" \? 0 : 2/);
+  const qualityBlock = tutorQualitySource.slice(
+    tutorQualitySource.indexOf("const highRiskPatterns = ["),
+    tutorQualitySource.indexOf("// Review the student's actual message"),
+  );
+  assert.match(qualityBlock, /calcula/);
+  assert.match(qualityBlock, /evidencia/);
+  assert.doesNotMatch(qualityBlock, /explica|densidad|que es|pregunta/);
+  assert.match(tutorQualitySource, /message.length > 650/);
 });
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {

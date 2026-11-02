@@ -27,6 +27,56 @@ const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
 const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
 const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
+const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+
+test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas en inglés se bloquean", () => {
+  assert.equal(filter.isGenericIcfesEnglishRequest("inglés"), true);
+  assert.equal(filter.isGenericIcfesEnglishRequest("quiero estudiar English"), true);
+  assert.equal(filter.isGenericIcfesEnglishRequest("Explícame la parte 4 del cuadernillo de Inglés"), false);
+  assert.equal(
+    filter.isLikelyEnglishOnlyOrbyReply("Certainly! How can I help you with English today?"),
+    true,
+  );
+  assert.equal(
+    filter.isLikelyEnglishOnlyOrbyReply("¡Claro! Vamos a estudiar el componente de Inglés de Saber 11."),
+    false,
+  );
+});
+
+test("Orby no promociona ni recomienda academias u otros preICFES", () => {
+  for (const prompt of [
+    "Recomiéndame otro preICFES.",
+    "¿Qué tal es Grupo 500?",
+    "Compara academias para prepararme para el ICFES.",
+    "Quiero inscribirme en un curso preSaber.",
+  ]) {
+    assert.equal(filter.preflightOrbyRequest(prompt).allowed, false, prompt);
+    assert.equal(filter.preflightOrbyRequest(prompt).category, "outside", prompt);
+  }
+  assert.equal(filter.containsExternalPreIcfesPromotion("Te recomiendo inscribirte en un curso preICFES."), true);
+  assert.equal(filter.containsExternalPreIcfesPromotion("No recomiendo ni promociono academias externas."), false);
+  assert.match(filter.ORBY_EXTERNAL_PREICFES_REPLY, /no recomiendo, comparo ni promociono/i);
+});
+
+test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz para negativas", () => {
+  assert.match(realtimeSessionSource, /Cuando el estudiante diga únicamente Inglés/);
+  assert.match(realtimeSessionSource, /No recomiendes, compares, promociones/);
+  assert.match(lessonTutorSource, /internalSpeechInstruction/);
+  assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(internalSpeechInstruction\)/);
+  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
+  assert.match(lessonTutorSource, /voiceTurnSavingRef\.current = false/);
+});
+
+test("el chat procesa solicitudes pendientes en orden y limita peticiones bloqueadas", () => {
+  assert.match(lessonTutorSource, /pendingMessagesRef\.current\.push/);
+  assert.match(lessonTutorSource, /pendingMessagesRef\.current\.shift\(\)/);
+  assert.match(lessonTutorSource, /AbortSignal\.timeout\(90_000\)/);
+  assert.match(lessonTutorRouteSource, /containsExternalPreIcfesPromotion/);
+  assert.match(lessonTutorRouteSource, /isLikelyEnglishOnlyOrbyReply/);
+  assert.match(lessonTutorSource, /Accessible light workspace/);
+});
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {
   const prompts = [

@@ -764,7 +764,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function fallbackVoiceTurnToText(reason: string) {
     clearVoiceResponseWatchdog();
     const pendingUserText = voiceUserTextRef.current.trim();
+    const forcedPolicyReply = voiceForcedReplyRef.current;
     const shouldFallback = voiceModeRef.current && Boolean(pendingUserText) && !voiceResponseDoneRef.current;
+    if (forcedPolicyReply && shouldFallback) {
+      // Deterministic filters already have their trusted answer. Do not call a
+      // model again just because Live audio failed; keep the visible answer,
+      // save it once, and release the pending text queue.
+      voiceForcedReplyRef.current = null;
+      voiceInternalPolicyTextRef.current = null;
+      stopRealtimeVoice();
+      setWorkspaceMode("chat");
+      setVoiceStatus("Respuesta disponible por escrito");
+      setVoiceError("La voz se interrumpió; la respuesta filtrada quedó disponible por escrito.");
+      voiceAssistantTextRef.current = forcedPolicyReply;
+      voiceResponseDoneRef.current = true;
+      voiceTurnPersistedRef.current = false;
+      void persistRealtimeTurnIfReady();
+      drainPendingMessageQueue();
+      return;
+    }
     stopRealtimeVoice();
     setWorkspaceMode("chat");
     setVoiceStatus("Continuando por texto…");
@@ -1814,28 +1832,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
         voiceUserTextRef.current = message;
-        voiceAssistantTextRef.current = localReply;
+        voiceAssistantTextRef.current = "";
         voiceAssistantMessageIdRef.current = "voice-policy-" + Date.now();
-        voiceResponseDoneRef.current = true;
+        voiceResponseDoneRef.current = false;
         voiceTurnPersistedRef.current = false;
         voiceInputPolicyRef.current = null;
         voicePreflightReplyRef.current = null;
-        voiceForcedReplyRef.current = null;
-        voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
-        voiceLastAssistantOutputRef.current = localReply;
+        voiceForcedReplyRef.current = localReply;
+        voiceInternalPolicyTextRef.current = localReply;
         const userId = "voice-user-" + Date.now();
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => [
           ...current,
           { id: userId, role: "user", content: message },
+          // Show the deterministic answer immediately. Live supplies only the
+          // matching Orby voice; it is not asked to reinterpret the policy.
           { id: assistantId, role: "assistant", content: localReply },
         ]);
         setInput("");
         setVoiceStatus("Orby está respondiendo…");
         setIsListening(false);
         waitingForVoiceReplyRef.current = true;
-        void persistRealtimeTurnIfReady();
-        speakText(localReply, messages.length + 1);
+        const internalSpeechInstruction = "Lee exactamente este texto en español colombiano, sin añadir, quitar ni cambiar ninguna palabra: " + localReply;
+        voiceLastCommittedInputRef.current = normalizeVoiceComparison(internalSpeechInstruction);
+        try {
+          voiceChannelRef.current.sendRealtimeInput({ text: internalSpeechInstruction });
+          armVoiceResponseWatchdog();
+        } catch {
+          fallbackVoiceTurnToText("La voz no pudo leer la respuesta. El texto quedó disponible.");
+        }
         return;
       }
       waitingForVoiceReplyRef.current = true;

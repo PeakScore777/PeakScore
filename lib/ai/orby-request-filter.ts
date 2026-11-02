@@ -39,6 +39,15 @@ export const ORBY_EXTERNAL_PREICFES_REPLY =
 export const ORBY_ICFES_ENGLISH_INTRO_REPLY =
   "¡Claro! Vamos a estudiar el componente de Inglés de Saber 11, no una conversación general en inglés. Practicaremos comprensión de textos, avisos y diálogos, vocabulario en contexto e interpretación de la intención comunicativa. Te explicaré en español y usaremos ejercicios originales tipo ICFES. ¿Empezamos con una pregunta de práctica?";
 
+export const ORBY_GREETING_REPLY =
+  "¡Hola! Qué gusto tenerte por aquí. Soy Orby, tu tutor de PeakScore. ¿Qué vamos a preparar hoy: Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés?";
+
+export function isOrbyGreetingRequest(message: string): boolean {
+  const normalized = normalizeOrbyRequestText(message).replace(/[¿?¡!.,;:]+/g, "").trim();
+  if (!normalized || normalized.length > 48) return false;
+  return /^(?:hola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized);
+}
+
 const ENGLISH_ONLY_OPENINGS = [
   /^(?:certainly|sure|of course|absolutely|hello|hi there|how can i help|i can help|let me help|what would you like|today we can|great,? let.s|great!|yes,? i can)\b/i,
   /^(?:i(?:'m| am) happy to help|we can practice|let.s practice|here is how)\b/i,

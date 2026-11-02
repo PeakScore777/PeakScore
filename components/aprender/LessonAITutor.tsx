@@ -1794,7 +1794,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;
-      const typedPreflight = preflightOrbyRequest(message);
       voiceInputPolicyRef.current = typedPreflight.allowed
         ? null
         : typedPreflight.category === "programming" ? "programming" : "outside";

@@ -44,17 +44,50 @@ function uniqueStrings(values: string[], limit: number, maxLength: number): stri
 export function deduplicateOrbyKnowledgeConcepts<T extends OrbyKnowledgeConcept>(concepts: T[]): T[] {
   const merged = new Map<string, T>();
 
+  // Deterministic source rows outrank the model's broad area label when the
+  // same concept is evidenced on the same page. This reconciles, for example,
+  // a model label "Ciencias Naturales / Estructura atómica" with the explicit
+  // source hierarchy "Ciencias Naturales > Química > Estructura atómica".
+  const sourceRowsByNamePage = new Map<string, T[]>();
+  for (const concept of concepts) {
+    if (!concept.evidence.includes("Renglón extraído directamente del texto fuente")) continue;
+    const nameKey = normalizeOrbyConceptIdentity(concept.name);
+    for (const page of concept.evidence_pages ?? []) {
+      if (!Number.isInteger(page) || page < 1) continue;
+      const sourceKey = nameKey + "|" + page;
+      const rows = sourceRowsByNamePage.get(sourceKey) ?? [];
+      rows.push(concept);
+      sourceRowsByNamePage.set(sourceKey, rows);
+    }
+  }
+
   for (const concept of concepts) {
     const name = concept.name.trim().slice(0, 180);
-    const area = concept.area.trim().slice(0, 80) || "Transversal";
+    let area = concept.area.trim().slice(0, 80) || "Transversal";
+    let parentConcept = concept.parent_concept.trim().slice(0, 180);
     if (!name) continue;
+
+    const matchedSourceRows = [...new Map(
+      (concept.evidence_pages ?? []).flatMap((page) =>
+        sourceRowsByNamePage.get(normalizeOrbyConceptIdentity(name) + "|" + page) ?? []
+      ).map((row) => [
+        normalizeOrbyConceptIdentity(row.area),
+        row,
+      ])
+    ).values()];
+
+    if (matchedSourceRows.length === 1) {
+      const sourceRow = matchedSourceRows[0];
+      area = sourceRow.area.trim().slice(0, 80) || area;
+      parentConcept = sourceRow.parent_concept.trim().slice(0, 180) || parentConcept;
+    }
 
     const key = normalizeOrbyConceptIdentity(area) + "|" + normalizeOrbyConceptIdentity(name);
     const incoming = {
       ...concept,
       name,
       area,
-      parent_concept: concept.parent_concept.trim().slice(0, 180),
+      parent_concept: parentConcept,
       aliases: Array.isArray(concept.aliases) ? concept.aliases : [],
       evidence_pages: Array.isArray(concept.evidence_pages) ? concept.evidence_pages : [],
     } as T;

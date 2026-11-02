@@ -187,6 +187,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
   const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
+  const voiceStartupAbortRef = useRef<AbortController | null>(null);
   const voiceAnalyserRef = useRef<AnalyserNode | null>(null);
   const voiceAnimationFrameRef = useRef<number | null>(null);
   const voiceVisualLevelRef = useRef(0);
@@ -700,13 +701,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
   }
 
-  async function ensureVoiceConversation(): Promise<string> {
+  async function ensureVoiceConversation(startupSignal?: AbortSignal): Promise<string> {
     const existing = activeConversationRef.current ?? conversationId;
     if (existing) return existing;
     const response = await fetch("/api/orby/conversations", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json" },
+      signal: startupSignal
+        ? AbortSignal.any([startupSignal, AbortSignal.timeout(12_000)])
+        : AbortSignal.timeout(12_000),
       body: JSON.stringify({ subject, topic }),
     });
     const payload = await response.json().catch(() => ({}));
@@ -731,6 +735,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function stopRealtimeVoice(updateState = true) {
+    voiceStartupAbortRef.current?.abort();
+    voiceStartupAbortRef.current = null;
     voiceModeRef.current = false;
     voiceSpeechPlaybackGenerationRef.current += 1;
     voiceBrowserSpeechActiveRef.current = false;
@@ -1293,7 +1299,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  async function startRealtimeVoice() {
+  async function startRealtimeVoice(startupSignal: AbortSignal) {
     if (!navigator.mediaDevices?.getUserMedia || !("WebSocket" in window) || !("AudioWorkletNode" in window)) {
       throw new Error("Este navegador no admite conversación de voz en tiempo real. Prueba Chrome o Edge actualizado.");
     }
@@ -1303,9 +1309,42 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     setVoiceError("");
     setVoiceStatus("Solicitando permiso del micrófono…");
-    const stream = await navigator.mediaDevices.getUserMedia({
+    const permissionRequest = navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
+    let permissionTimedOut = false;
+    let permissionTimeoutId: number | null = null;
+    let abortPermission: (() => void) | null = null;
+    void permissionRequest.then((lateStream) => {
+      if (permissionTimedOut || startupSignal.aborted || !voiceModeRef.current) {
+        lateStream.getTracks().forEach((track) => track.stop());
+      }
+    }).catch(() => undefined);
+    const permissionAbort = new Promise<never>((_, reject) => {
+      abortPermission = () => reject(new DOMException("La conexión de voz fue cancelada.", "AbortError"));
+      if (startupSignal.aborted) abortPermission();
+      else startupSignal.addEventListener("abort", abortPermission, { once: true });
+    });
+    let stream: MediaStream;
+    try {
+      stream = await Promise.race([
+        permissionRequest,
+        permissionAbort,
+        new Promise<never>((_, reject) => {
+          permissionTimeoutId = window.setTimeout(() => {
+            permissionTimedOut = true;
+            reject(new Error("El permiso del micrófono tardó demasiado. Puedes continuar escribiendo en el chat."));
+          }, 12_000);
+        }),
+      ]);
+    } finally {
+      if (permissionTimeoutId !== null) window.clearTimeout(permissionTimeoutId);
+      if (abortPermission) startupSignal.removeEventListener("abort", abortPermission);
+    }
+    if (startupSignal.aborted || !voiceModeRef.current) {
+      stream.getTracks().forEach((track) => track.stop());
+      throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
+    }
     voiceStreamRef.current = stream;
     stream.getAudioTracks().forEach((track) => {
       track.onended = () => {
@@ -1332,11 +1371,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAudioContextRef.current = audioContext;
       await ensureVoiceAudioContextRunning(audioContext);
 
-      const activeId = await ensureVoiceConversation();
+      const activeId = await ensureVoiceConversation(startupSignal);
       const tokenResponse = await fetch("/api/orby/realtime-session", {
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
         body: JSON.stringify({ subject, topic, context, history: messages.slice(-6).map(({ role, content }) => ({ role, content })) }),
       });
       const tokenPayload = await tokenResponse.json().catch(() => ({}));
@@ -1360,17 +1400,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
 
       let rejectSetup: ((error: Error) => void) | null = null;
+      let resolveSetupComplete: (() => void) | null = null;
       let liveSessionEstablished = false;
       let lastLiveSocketError = "";
-      const connectionAbort = new AbortController();
       const setupFailure = new Promise<never>((_, reject) => {
         rejectSetup = reject;
+      });
+      const setupComplete = new Promise<void>((resolve) => {
+        resolveSetupComplete = resolve;
       });
 
       const sessionPromise = googleAI.live.connect({
         model,
         config: {
-          abortSignal: connectionAbort.signal,
+          abortSignal: startupSignal,
           responseModalities: [Modality.AUDIO],
           tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
           // Start with the documented Live configuration. Audio transcription
@@ -1400,6 +1443,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               rejectSetup?.(new Error("No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
               return;
             }
+            if (payload.setupComplete) resolveSetupComplete?.();
             if (payload.toolCall && typeof payload.toolCall === "object") {
               void handleOrbyLiveKnowledgeTool(payload.toolCall);
               return;
@@ -1447,28 +1491,36 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
 
       let liveSession: Session;
-      let setupTimeoutId: number | null = null;
+      let connectTimeoutId: number | null = null;
+      let acknowledgementTimeoutId: number | null = null;
       try {
         liveSession = await Promise.race([
           sessionPromise,
           setupFailure,
           new Promise<never>((_, reject) => {
-            setupTimeoutId = window.setTimeout(() => {
+            connectTimeoutId = window.setTimeout(() => {
               const previousError = lastLiveSocketError
                 ? " Último evento de red: " + lastLiveSocketError
                 : "";
-              console.warn("[Orby Voice] Setup timeout.", { previousError });
-              reject(new Error("Orby no pudo iniciar la conversación de voz a tiempo. Inténtalo de nuevo."));
-            }, 30000);
+              console.warn("[Orby Voice] WebSocket setup timeout.", { previousError });
+              reject(new Error("La conexión de voz está tardando demasiado. Puedes seguir estudiando por texto."));
+            }, 15_000);
           }),
         ]);
-
-      } catch (error) {
-        connectionAbort.abort();
-        rejectSetup = null;
-        throw error;
+        if (startupSignal.aborted) throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
+        await Promise.race([
+          setupComplete,
+          setupFailure,
+          new Promise<never>((_, reject) => {
+            acknowledgementTimeoutId = window.setTimeout(
+              () => reject(new Error("Orby no confirmó la conexión de voz. Continúa por el chat de texto.")),
+              8_000,
+            );
+          }),
+        ]);
       } finally {
-        if (setupTimeoutId !== null) window.clearTimeout(setupTimeoutId);
+        if (connectTimeoutId !== null) window.clearTimeout(connectTimeoutId);
+        if (acknowledgementTimeoutId !== null) window.clearTimeout(acknowledgementTimeoutId);
       }
       rejectSetup = null;
       liveSessionEstablished = true;
@@ -1476,7 +1528,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Te escucho…");
       setIsListening(true);
 
-      await audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js");
+      if (startupSignal.aborted) throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
+      await Promise.race([
+        audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js"),
+        new Promise<never>((_, reject) => window.setTimeout(
+          () => reject(new Error("El micrófono tardó demasiado en prepararse. Puedes continuar por texto.")),
+          8_000,
+        )),
+      ]);
       await ensureVoiceAudioContextRunning(audioContext);
 
       const microphoneSource = audioContext.createMediaStreamSource(stream);
@@ -1525,7 +1584,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Te escucho…");
       setIsListening(true);
     } catch (error) {
-      stopRealtimeVoice();
       throw error;
     }
   }
@@ -1547,21 +1605,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       finishVoiceCall();
       return;
     }
+    const startupController = new AbortController();
+    voiceStartupAbortRef.current = startupController;
     voiceModeRef.current = true;
     setVoiceMode(true);
     setWorkspaceMode("voice");
     setLiveTranscript("");
+    setVoiceError("");
     voiceUserTextRef.current = "";
     voiceAssistantTextRef.current = "";
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
     try {
-      await startRealtimeVoice();
+      await startRealtimeVoice(startupController.signal);
     } catch (error) {
+      const wasCancelled = startupController.signal.aborted;
       stopRealtimeVoice();
       setWorkspaceMode("chat");
-      setVoiceStatus("No se pudo conectar");
-      setVoiceError(error instanceof Error ? error.message : "No se pudo iniciar el chat de voz.");
+      if (!wasCancelled) {
+        setVoiceStatus("Voz no disponible");
+        setVoiceError(error instanceof Error ? error.message : "No se pudo iniciar el chat de voz. Puedes continuar por texto.");
+      }
+    } finally {
+      if (voiceStartupAbortRef.current === startupController) voiceStartupAbortRef.current = null;
     }
   }
 
@@ -1576,9 +1642,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }) {
     const message = text.trim();
-    const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
+    let isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || message.length > 1200) return;
+    // Voice startup must never lock the text composer. Cancel an unfinished
+    // microphone/WebSocket attempt and continue with the fast text pipeline.
+    if (voiceModeRef.current && !voiceChannelRef.current) {
+      stopRealtimeVoice();
+      setWorkspaceMode("chat");
+      setVoiceError("");
+      setVoiceStatus("Seguimos por chat de texto");
+      isVoiceInteraction = false;
+    }
     if ((loading || sendingRef.current) && !isVoiceInteraction) {
       if (!message || selectedFile) {
         setError("Termina la solicitud actual antes de adjuntar otro archivo.");
@@ -1597,10 +1672,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (workspace && selectedFile?.type.startsWith("image/") && imageAssets.length >= 20) {
       setAttachmentError("Tu almacenamiento llegó al límite de 20 imágenes. Elimina una desde «Administrar almacenamiento» para poder enviar otra.");
       setImageStorageError("Almacenamiento completo · 20 de 20 imágenes. Libera espacio para continuar.");
-      return;
-    }
-    if (voiceModeRef.current && !voiceChannelRef.current) {
-      setVoiceError("Orby todavía está conectando. Espera un momento y vuelve a enviar.");
       return;
     }
     if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile) {
@@ -1732,17 +1803,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const assistantIndex = nextMessages.length;
       setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
       if (workspace && selectedFile && selectedFile.type.startsWith("image/")) {
-        try {
-          const imageForm = new FormData();
-          imageForm.set("image", selectedFile);
-          const imageResponse = await fetch("/api/orby/images", { method: "POST", credentials: "same-origin", body: imageForm });
-          const imagePayload = await imageResponse.json().catch(() => ({}));
-          if (!imageResponse.ok) throw new Error(imagePayload.error || "La imagen se envió al chat, pero no pudo guardarse en tu almacenamiento.");
-          await refreshImageAssets();
-          setImageStorageError("");
-        } catch (caught) {
-          setImageStorageError(caught instanceof Error ? caught.message : "No se pudo guardar la imagen.");
-        }
+        // Persist the optional gallery copy after the answer is visible. Storage
+        // maintenance must not hold the send lock or delay the next study turn.
+        void (async () => {
+          try {
+            const imageForm = new FormData();
+            imageForm.set("image", selectedFile);
+            const imageResponse = await fetch("/api/orby/images", {
+              method: "POST",
+              credentials: "same-origin",
+              signal: AbortSignal.timeout(12_000),
+              body: imageForm,
+            });
+            const imagePayload = await imageResponse.json().catch(() => ({}));
+            if (!imageResponse.ok) throw new Error(imagePayload.error || "La imagen se envió al chat, pero no pudo guardarse en tu almacenamiento.");
+            await refreshImageAssets();
+            setImageStorageError("");
+          } catch (caught) {
+            setImageStorageError(caught instanceof Error ? caught.message : "No se pudo guardar la imagen.");
+          }
+        })();
       }
       if (isVoiceInteraction && voiceModeRef.current && "speechSynthesis" in window) {
         window.setTimeout(() => speakText(data.reply, assistantIndex), 120);

@@ -348,7 +348,11 @@ test("los filtros escritos dentro de voz se contestan localmente antes de Gemini
   const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
   assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart && sendRealtimeIndex > localFilterIndex);
-  assert.match(lessonTutorSource, /speakText\(localReply/);
+  assert.match(lessonTutorSource, /voiceForcedReplyRef\.current = localReply/);
+  assert.match(lessonTutorSource, /Lee exactamente este texto en español colombiano/);
+  assert.match(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
+  assert.doesNotMatch(lessonTutorSource, /speakText\(localReply/);
+  assert.match(lessonTutorSource, /La voz se interrumpió; la respuesta filtrada quedó disponible por escrito/);
   assert.match(lessonTutorSource, /setMessages\(\(current\) => \[/);
 });
 

@@ -21,7 +21,7 @@ begin
   end if;
 
   profile_search_text := concat_ws(
-    E'\\n',
+    E'\n',
     coalesce(p_profile ->> 'summary',''),
     coalesce(p_profile ->> 'search_text',''),
     coalesce((select string_agg(value, ' ') from jsonb_array_elements_text(coalesce(p_profile -> 'topics','[]'::jsonb))), ''),
@@ -82,7 +82,7 @@ begin
         )),
         trim(both '-' from regexp_replace(
           translate(
-            lower(regexp_replace(coalesce(item ->> 'name',''), '\\|[^|]{1,32}\\|', ' ', 'g')),
+            lower(regexp_replace(coalesce(item ->> 'name',''), '\|[^|]{1,32}\|', ' ', 'g')),
             'áéíóúüñ', 'aeiouun'
           ),
           '[^a-z0-9]+', '-', 'g'

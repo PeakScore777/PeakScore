@@ -753,8 +753,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus("Continuando por texto…");
     setVoiceError(reason);
     if (shouldFallback) {
-      void sendMessageRef.current(pendingUserText, false, false, undefined, false)
-        .finally(() => drainPendingMessageQueue());
+      // sendMessage owns the queue-drain step in its finally block.
+      void sendMessageRef.current(pendingUserText, false, false, undefined, false);
     } else {
       drainPendingMessageQueue();
     }
@@ -1308,6 +1308,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           voiceLastCommittedInputRef.current = normalizeVoiceComparison(internalSpeechInstruction);
           activeSession.sendRealtimeInput({ text: internalSpeechInstruction });
           setVoiceStatus("Orby está hablando…");
+          armVoiceResponseWatchdog();
         } catch {
           voiceForcedReplyRef.current = null;
           voiceInternalPolicyTextRef.current = null;
@@ -1679,6 +1680,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function finishVoiceCall() {
     stopRealtimeVoice();
     setWorkspaceMode("chat");
+    drainPendingMessageQueue();
   }
 
   async function toggleVoiceMode() {

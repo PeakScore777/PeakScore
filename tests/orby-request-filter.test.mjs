@@ -199,7 +199,7 @@ test("separa subtemas aplanados por guiones y conserva su jerarquía", () => {
       "1. Temario",
       "- Noción de conjunto. - Tipos de conjunto - Inclusión - Operaciones entre conjuntos. - Intersección y diferencia",
       "- Evento aleatorio - Espacio muestral",
-    ].join("\\n"),
+    ].join("\n"),
   }]);
 
   const byName = new Map(rows.map((row) => [row.name, row]));

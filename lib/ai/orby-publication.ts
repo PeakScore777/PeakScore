@@ -35,7 +35,7 @@ export function isOrbyKnowledgePublicationReady(
     && Number.isInteger(profileVersion)
     && profileVersion >= 2
     && Number.isInteger(pipelineVersion)
-    && pipelineVersion >= 6
+    && pipelineVersion >= 7
     && Number.isInteger(conceptCount)
     && conceptCount > 0
     && document.ingestion_status === "completed"

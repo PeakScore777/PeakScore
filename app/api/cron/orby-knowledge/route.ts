@@ -45,16 +45,17 @@ export async function POST(request: Request) {
   }
 
   const workerLockOwner = randomUUID();
-  const { data: acquired, error: lockError } = await supabaseAdmin.rpc("orby_acquire_knowledge_worker_lock", {
+  const { data: acquired, error: lockError } = await supabaseAdmin.rpc("orby_acquire_knowledge_worker_lane", {
     p_worker_id: workerLockOwner,
     p_lease_seconds: 600,
+    p_worker_lane: "automatic",
   });
   if (lockError) {
     console.error("[Orby Autopilot] Global lock check failed.", { code: lockError.code });
     return NextResponse.json({ error: "No se pudo comprobar el bloqueo del trabajador." }, { status: 503 });
   }
   if (!acquired) {
-    return NextResponse.json({ state: "busy", message: "Orby ya está procesando otra tarea." }, {
+    return NextResponse.json({ state: "busy", message: "El trabajador automático ya está ejecutando otro ciclo." }, {
       headers: { "Cache-Control": "no-store" },
     });
   }
@@ -75,8 +76,9 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ state: "failed", error: "Falló el ciclo automático de Orby." }, { status: 500 });
   } finally {
-    const { error: releaseError } = await supabaseAdmin.rpc("orby_release_knowledge_worker_lock", {
+    const { error: releaseError } = await supabaseAdmin.rpc("orby_release_knowledge_worker_lane", {
       p_worker_id: workerLockOwner,
+      p_worker_lane: "automatic",
     });
     if (releaseError) {
       console.error("[Orby Autopilot] Global worker lock release failed.", { code: releaseError.code });

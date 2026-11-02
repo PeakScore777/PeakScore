@@ -84,7 +84,8 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(lessonTutorSource, /voiceInternalPolicyTextRef\.current = policyReply/);
   assert.match(lessonTutorSource, /isInternalPolicySpeechEcho/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
-  assert.match(lessonTutorSource, /voiceTurnSavingRef\.current = false/);
+  assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
+  assert.match(lessonTutorSource, /const turn = \{ conversationId: id, userContent, assistantContent \}/);
   assert.match(lessonTutorSource, /waitingForVoiceReplyRef\.current = true/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
   assert.match(lessonTutorSource, /const turn = \{ conversationId: id, userContent, assistantContent \}/);

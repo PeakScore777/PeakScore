@@ -21,6 +21,7 @@ const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServe
 const publication = await loadTypeScriptModule("../lib/ai/orby-publication.ts");
 const chunking = await loadTypeScriptModule("../lib/pdf/split-orby-text.ts");
 const checklist = await loadTypeScriptModule("../lib/pdf/extract-orby-checklist-rows.ts");
+const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowledge-normalization.ts");
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {
@@ -188,6 +189,70 @@ test("conserva etiquetas entre corchetes y numeración separada del texto", () =
   assert.equal(rows.length, 2);
   assert.ok(rows.some((row) => row.name === "Operaciones con vectores [gráfico]"));
   assert.ok(rows.every((row) => row.area === "Física"));
+});
+
+test("separa subtemas aplanados por guiones y conserva su jerarquía", () => {
+  const rows = checklist.extractOrbyChecklistRows([{
+    page_number: 1,
+    content: [
+      "MATEMÁTICAS",
+      "1. Temario",
+      "- Noción de conjunto. - Tipos de conjunto - Inclusión - Operaciones entre conjuntos. - Intersección y diferencia",
+      "- Evento aleatorio - Espacio muestral",
+    ].join("\\n"),
+  }]);
+
+  const byName = new Map(rows.map((row) => [row.name, row]));
+  assert.ok(byName.has("Noción de conjunto"));
+  assert.equal(byName.get("Tipos de conjunto")?.parent_concept, "Noción de conjunto");
+  assert.equal(byName.get("Inclusión")?.parent_concept, "Noción de conjunto");
+  assert.equal(byName.get("Operaciones entre conjuntos")?.parent_concept, "Noción de conjunto");
+  assert.equal(byName.get("Intersección y diferencia")?.parent_concept, "Noción de conjunto");
+  assert.ok(byName.has("Evento aleatorio"));
+  assert.equal(byName.get("Espacio muestral")?.parent_concept, "Evento aleatorio");
+  assert.ok(rows.every((row) => row.area === "Matemáticas"));
+});
+
+test("fusiona conceptos repetidos sin perder páginas, nombres alternativos ni materia", () => {
+  const concepts = [
+    {
+      name: "Valor absoluto", area: "Matemáticas", parent_concept: "Aritmética",
+      aliases: [], evidence_pages: [1], confidence: 0.8, importance: 3, evidence: "Valor absoluto",
+    },
+    {
+      name: "Valor absoluto |X|", area: "Matemáticas", parent_concept: "Matemáticas 1 [REPASO DE ARITMÉTICA]",
+      aliases: [], evidence_pages: [2], confidence: 1, importance: 4, evidence: "Valor absoluto de X",
+    },
+    {
+      name: "Proposiciones", area: "Matemáticas", parent_concept: "Lógica",
+      aliases: [], evidence_pages: [1], confidence: 0.9, importance: 3, evidence: "Proposiciones lógicas",
+    },
+    {
+      name: "Proposiciones", area: "Matemáticas", parent_concept: "Matemáticas 2 [LÓGICA Y CONJUNTOS]",
+      aliases: [], evidence_pages: [2], confidence: 1, importance: 4, evidence: "Proposiciones del temario",
+    },
+    {
+      name: "Proposiciones", area: "Análisis Textual", parent_concept: "Gramática",
+      aliases: [], evidence_pages: [3], confidence: 1, importance: 3, evidence: "Proposiciones en el análisis textual",
+    },
+  ];
+
+  const merged = knowledgeNormalization.deduplicateOrbyKnowledgeConcepts(concepts);
+  assert.equal(merged.length, 3);
+
+  const absoluteValue = merged.find((item) => item.area === "Matemáticas" && item.name.includes("Valor absoluto"));
+  assert.ok(absoluteValue);
+  assert.deepEqual(absoluteValue.evidence_pages, [1, 2]);
+  assert.equal(absoluteValue.parent_concept, "Matemáticas 1 [REPASO DE ARITMÉTICA]");
+  assert.ok(absoluteValue.aliases.includes("Valor absoluto"));
+
+  const mathPropositions = merged.find((item) => item.area === "Matemáticas" && item.name === "Proposiciones");
+  assert.ok(mathPropositions);
+  assert.deepEqual(mathPropositions.evidence_pages, [1, 2]);
+
+  const textPropositions = merged.find((item) => item.area === "Análisis Textual" && item.name === "Proposiciones");
+  assert.ok(textPropositions);
+  assert.deepEqual(textPropositions.evidence_pages, [3]);
 });
 
 test("no cambia de materia por menciones de redes sociales o texto promocional", () => {

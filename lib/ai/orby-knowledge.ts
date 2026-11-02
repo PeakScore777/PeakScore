@@ -345,8 +345,13 @@ export async function createOrbyEmbeddings(
     }
 
     if (!vectors.length) {
-      if (geminiFailure instanceof Error) throw geminiFailure;
-      throw new Error("No embedding provider is configured for Orby.");
+      if (geminiFailure instanceof Error) {
+        console.warn("[Orby RAG] Gemini embedding request failed and Cloudflare is not configured.", {
+          name: geminiFailure.name,
+        });
+        throw new Error("No se pudo generar el vector académico. Gemini no está disponible y Cloudflare no está configurado.");
+      }
+      throw new Error("No hay un proveedor de embeddings configurado para Orby.");
     }
     if (vectors.length !== batch.length) throw new Error("The embedding provider returned an incomplete batch.");
 
@@ -1295,7 +1300,7 @@ export async function searchOrbyKnowledge(options: {
   limit?: number;
 }) {
   const embedding = await createOrbyQueryEmbedding(options.query);
-  const { data, error } = await supabaseAdmin.rpc("orby_search_knowledge_hybrid", {
+  const { data, error } = await supabaseAdmin.rpc("orby_search_knowledge_hybrid_v2", {
     p_query: options.query,
     p_embedding: embedding ? "[" + embedding.values.join(",") + "]" : null,
     p_subject: options.subject ?? null,

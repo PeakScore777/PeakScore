@@ -46,12 +46,12 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
   assert.match(cloudflareVoiceSource, /CLOUDFLARE_API_TOKEN/);
   assert.match(cloudflareVoiceSource, /@cf\\/openai\\/whisper-large-v3-turbo/);
   assert.match(cloudflareVoiceSource, /@cf\\/meta\\/llama-3\\.3-70b-instruct-fp8-fast/);
-  assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\\(bytes\\)/);
-  assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\\(activePrompt\\)/);
-  assert.match(cloudflareTutorRoute, /containsProgrammingInstruction\\(modelReply\\)/);
-  assert.match(cloudflareTutorRoute, /containsExternalPreIcfesPromotion\\(modelReply\\)/);
-  assert.match(lessonTutorSource, /sendMessageRef\\.current\\(pendingUserText, false, true, undefined, false\\)/);
-  assert.match(lessonTutorSource, /if \\(isVoiceInteraction && "speechSynthesis" in window\\)/);
+  assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\(bytes\)/);
+  assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\(activePrompt\)/);
+  assert.match(cloudflareTutorRoute, /containsProgrammingInstruction\(modelReply\)/);
+  assert.match(cloudflareTutorRoute, /containsExternalPreIcfesPromotion\(modelReply\)/);
+  assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
+  assert.match(lessonTutorSource, /if \(isVoiceInteraction && "speechSynthesis" in window\)/);
 });
 
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
@@ -341,7 +341,7 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
   assert.match(lessonTutorSource, /22_000/);
   assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
-  assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, false, undefined, false\)/);
+  assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
   assert.match(lessonTutorSource, /appendUserMessage = true/);
   assert.match(lessonTutorSource, /sessionGeneration !== voiceSessionGenerationRef\.current/);
   assert.match(lessonTutorSource, /finishLocalVoiceReply/);

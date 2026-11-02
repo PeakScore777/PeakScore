@@ -62,3 +62,19 @@ export function shouldAutomaticallyPublishOrbyKnowledge(input: {
     && input.currentStatus === "draft"
     && isOrbyKnowledgePublicationReady(input.document);
 }
+
+
+/**
+ * A manual worker never publishes. When it completes a draft that passes the
+ * exact publication gate, it hands that same queue job to Autopilot for a
+ * separate automatic final review and publication decision.
+ */
+export function shouldHandOffManualOrbyKnowledgeForAutomaticReview(input: {
+  origin: "automatic" | "manual";
+  currentStatus: unknown;
+  document: OrbyKnowledgePublicationState;
+}): boolean {
+  return input.origin === "manual"
+    && input.currentStatus === "draft"
+    && isOrbyKnowledgePublicationReady(input.document);
+}

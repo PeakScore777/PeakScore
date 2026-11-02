@@ -27,10 +27,10 @@ const OUTSIDE_SCOPE_PATTERNS = [
 ];
 
 const EXTERNAL_PREICFES_REQUEST_PATTERNS = [
-  /\\bgrupo\\s*500\\b/i,
-  /\\bmilton\\s+ochoa\\b|\\binstruimos\\b|\\bpreicfes\\s*\\.\\s*net\\b/i,
-  /\\b(?:otro|otra|otros|otras|mejor|mejores|recomiend[ae]|recomendar|comparar|comparame|opiniones|reseñas|precios|inscribirme|matricularme)\\b.{0,70}\\b(?:pre[\\s-]?icfes|pre[\\s-]?saber|academia|instituto|plataforma|curso)\\b/i,
-  /\\b(?:pre[\\s-]?icfes|pre[\\s-]?saber|academia|instituto|plataforma|curso)\\b.{0,70}\\b(?:recomiend[ae]|recomendar|mejor|mejores|comparar|opiniones|reseñas|precios|inscribirme|matricularme|promociona)\\b/i,
+  /\bgrupo\s*500\b/i,
+  /\bmilton\s+ochoa\b|\binstruimos\b|\bpreicfes\s*\.\s*net\b/i,
+  /\b(?:otro|otra|otros|otras|mejor|mejores|recomiend[ae]|recomendar|comparar|comparame|opiniones|reseñas|precios|inscribirme|matricularme)\b.{0,70}\b(?:pre[\s-]?icfes|pre[\s-]?saber|academia|instituto|plataforma|curso)\b/i,
+  /\b(?:pre[\s-]?icfes|pre[\s-]?saber|academia|instituto|plataforma|curso)\b.{0,70}\b(?:recomiend[ae]|recomendar|mejor|mejores|comparar|opiniones|reseñas|precios|inscribirme|matricularme|promociona)\b/i,
 ];
 
 export const ORBY_EXTERNAL_PREICFES_REPLY =
@@ -40,39 +40,39 @@ export const ORBY_ICFES_ENGLISH_INTRO_REPLY =
   "¡Claro! Vamos a estudiar el componente de Inglés de Saber 11, no una conversación general en inglés. Practicaremos comprensión de textos, avisos y diálogos, vocabulario en contexto e interpretación de la intención comunicativa. Te explicaré en español y usaremos ejercicios originales tipo ICFES. ¿Empezamos con una pregunta de práctica?";
 
 const ENGLISH_ONLY_OPENINGS = [
-  /^(?:certainly|sure|of course|absolutely|hello|hi there|how can i help|i can help|let me help|what would you like|today we can|great,? let.s|great!|yes,? i can)\\b/i,
-  /^(?:i(?:'m| am) happy to help|we can practice|let.s practice|here is how)\\b/i,
+  /^(?:certainly|sure|of course|absolutely|hello|hi there|how can i help|i can help|let me help|what would you like|today we can|great,? let.s|great!|yes,? i can)\b/i,
+  /^(?:i(?:'m| am) happy to help|we can practice|let.s practice|here is how)\b/i,
 ];
 
 export function isGenericIcfesEnglishRequest(message: string): boolean {
   const normalized = normalizeOrbyRequestText(message);
   if (!normalized || normalized.length > 100) return false;
-  const mentionsEnglish = /\\b(?:ingles|english)\\b/.test(normalized);
+  const mentionsEnglish = /\b(?:ingles|english)\b/.test(normalized);
   if (!mentionsEnglish) return false;
-  return /^(?:(?:ayudame|ayuda|quiero estudiar|quiero aprender|vamos a estudiar|practiquemos|estudiemos|help me with|can you help me with)\\s+)?(?:el )?(?:ingles|english)(?: de saber 11| del icfes)?[.!? ]*$/i.test(normalized)
-    || /^(?:quiero|necesito|puedo|vamos a)\\s+(?:estudiar|aprender|practicar|repasar|ver)\\s+(?:ingles|english)(?: de saber 11| del icfes)?[.!? ]*$/i.test(normalized);
+  return /^(?:(?:ayudame|ayuda|quiero estudiar|quiero aprender|vamos a estudiar|practiquemos|estudiemos|help me with|can you help me with)\s+)?(?:el )?(?:ingles|english)(?: de saber 11| del icfes)?[.!? ]*$/i.test(normalized)
+    || /^(?:quiero|necesito|puedo|vamos a)\s+(?:estudiar|aprender|practicar|repasar|ver)\s+(?:ingles|english)(?: de saber 11| del icfes)?[.!? ]*$/i.test(normalized);
 }
 
 export function isLikelyEnglishOnlyOrbyReply(reply: string): boolean {
   const value = reply.trim().replace(/^["'“”]+|["'“”]+$/g, "");
   if (!value || value.length < 18) return false;
   const normalized = normalizeOrbyRequestText(value);
-  const spanishSignals = /\\b(?:el|la|los|las|de|del|que|para|con|por|una|un|puedo|puedes|vamos|tema|estudiar|explicar|respuesta|pregunta|saber|prueba|ingl[eé]s)\\b/.test(normalized)
+  const spanishSignals = /\b(?:el|la|los|las|de|del|que|para|con|por|una|un|puedo|puedes|vamos|tema|estudiar|explicar|respuesta|pregunta|saber|prueba|ingl[eé]s)\b/.test(normalized)
     || /[áéíóúñ¿¡]/i.test(value);
   if (spanishSignals) return false;
   return ENGLISH_ONLY_OPENINGS.some((pattern) => pattern.test(value))
-    || /^(?:certainly|sure|of course|how can i help you|i can help you)\\b/i.test(value);
+    || /^(?:certainly|sure|of course|how can i help you|i can help you)\b/i.test(value);
 }
 
 export function containsExternalPreIcfesPromotion(text: string): boolean {
   const normalized = normalizeOrbyRequestText(text);
   if (!normalized) return false;
-  const explicitRefusal = /\\b(?:no (?:te )?recomiendo|no recomiendo|no promociono|no puedo recomendar|no voy a promocionar|no mencionare|no menciono)\\b/.test(normalized);
+  const explicitRefusal = /\b(?:no (?:te )?recomiendo|no recomiendo|no promociono|no puedo recomendar|no voy a promocionar|no mencionare|no menciono)\b/.test(normalized);
   if (explicitRefusal) return false;
 
-  const namesExternalProvider = /\\bgrupo\\s*500\\b|\\bmilton\\s+ochoa\\b|\\binstruimos\\b|\\bpreicfes\\s*\\.\\s*net\\b/.test(normalized);
-  const promotionalVerb = /\\b(?:te recomiendo|recomiendo|puedes inscribirte|inscribete|matriculate|visita|contacta|contrata|elige|prueba|compra|la mejor opcion|una buena opcion|te sugiero|consulta sus cursos)\\b/.test(normalized);
-  const externalCategory = /\\b(?:academia|instituto|plataforma|curso|pre[\\s-]?icfes|pre[\\s-]?saber)\\b/.test(normalized);
+  const namesExternalProvider = /\bgrupo\s*500\b|\bmilton\s+ochoa\b|\binstruimos\b|\bpreicfes\s*\.\s*net\b/.test(normalized);
+  const promotionalVerb = /\b(?:te recomiendo|recomiendo|puedes inscribirte|inscribete|matriculate|visita|contacta|contrata|elige|prueba|compra|la mejor opcion|una buena opcion|te sugiero|consulta sus cursos)\b/.test(normalized);
+  const externalCategory = /\b(?:academia|instituto|plataforma|curso|pre[\s-]?icfes|pre[\s-]?saber)\b/.test(normalized);
   return namesExternalProvider && (promotionalVerb || externalCategory)
     || promotionalVerb && externalCategory;
 }

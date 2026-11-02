@@ -1544,6 +1544,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  function drainPendingMessageQueue() {
+    const nextQueuedMessage = pendingMessagesRef.current.shift();
+    setQueuedMessageCount(pendingMessagesRef.current.length);
+    if (!nextQueuedMessage) return;
+    window.setTimeout(() => {
+      void sendMessageRef.current(nextQueuedMessage.text, false, false, nextQueuedMessage.attachmentMeta);
+    }, 0);
+  }
+
   async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }) {
     const message = text.trim();
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
@@ -1581,7 +1590,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceInputPolicyRef.current = typedPreflight.allowed
         ? null
         : typedPreflight.category === "programming" ? "programming" : "outside";
-      voicePreflightReplyRef.current = typedPreflight.allowed ? null : typedPreflight.reply;
+      voicePreflightReplyRef.current = isGenericIcfesEnglishRequest(message)
+        ? ORBY_ICFES_ENGLISH_INTRO_REPLY
+        : typedPreflight.allowed ? null : typedPreflight.reply;
       // Typed text sent through the Live session can also produce an input
       // transcription event. Mark it as committed so it is not added twice.
       voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
@@ -1616,6 +1627,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       } catch (caught) {
         setConversationError(caught instanceof Error ? caught.message : "No se pudo crear el chat.");
         sendingRef.current = false;
+        drainPendingMessageQueue();
         return;
       }
     }
@@ -1626,6 +1638,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } catch (caught) {
       setAttachmentError(caught instanceof Error ? caught.message : "No se pudo leer la imagen.");
       sendingRef.current = false;
+      drainPendingMessageQueue();
       return;
     }
     const nextMessages: Message[] = [...messages, {
@@ -1707,13 +1720,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } finally {
       sendingRef.current = false;
       setLoading(false);
-      const nextQueuedMessage = pendingMessagesRef.current.shift();
-      setQueuedMessageCount(pendingMessagesRef.current.length);
-      if (nextQueuedMessage) {
-        window.setTimeout(() => {
-          void sendMessageRef.current(nextQueuedMessage.text, false, false, nextQueuedMessage.attachmentMeta);
-        }, 0);
-      }
+      drainPendingMessageQueue();
     }
   }
 

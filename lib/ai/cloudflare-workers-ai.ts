@@ -2,6 +2,7 @@ import "server-only";
 
 const WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo";
 const TUTOR_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+export const CLOUDFLARE_EMBEDDING_MODEL = "@cf/google/embeddinggemma-300m";
 
 type CloudflareRunEnvelope<T> = {
   success?: boolean;
@@ -73,6 +74,39 @@ async function runModel<T>(
   }
 
   return envelope.result;
+}
+
+export async function createCloudflareEmbeddings(texts: string[]): Promise<number[][]> {
+  const normalized = texts.map((text) => text.trim().slice(0, 6000)).filter(Boolean);
+  if (!normalized.length || normalized.length !== texts.length || normalized.length > 16) {
+    throw new CloudflareWorkersAIError("INVALID_EMBEDDING_INPUT");
+  }
+
+  const result = await runModel<{
+    shape?: unknown;
+    data?: unknown;
+    embeddings?: unknown;
+  }>(
+    CLOUDFLARE_EMBEDDING_MODEL,
+    { text: normalized },
+    25_000,
+  );
+
+  const rawVectors = Array.isArray(result.data)
+    ? result.data
+    : Array.isArray(result.embeddings)
+      ? result.embeddings
+      : [];
+  if (rawVectors.length !== normalized.length) {
+    throw new CloudflareWorkersAIError("INVALID_EMBEDDING_RESPONSE");
+  }
+
+  return rawVectors.map((raw) => {
+    if (!Array.isArray(raw) || raw.length !== 768 || !raw.every((value) => typeof value === "number" && Number.isFinite(value))) {
+      throw new CloudflareWorkersAIError("INVALID_EMBEDDING_DIMENSIONS");
+    }
+    return raw as number[];
+  });
 }
 
 export async function transcribeWithCloudflare(audio: Buffer): Promise<string> {

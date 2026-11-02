@@ -213,7 +213,7 @@ export function extractOrbyChecklistRows(
         // Preserve the first item as the parent and split only explicit
         // spaced dash separators (including the common ".- " PDF variant).
         const inlineItems = marker.text
-          .split(/(?:\\s+-\\s+|\\.\\s*-\\s+)/)
+          .split(/\s+-\s+|\.\s*-\s+/)
           .map(cleanLine)
           .filter(Boolean);
         if (inlineItems.length > 1) {

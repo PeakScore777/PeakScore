@@ -128,9 +128,12 @@ function listMarker(value: string): { level: number; text: string } | null {
  * headings, never by ordinary prose that happens to contain a subject word.
  */
 export function extractOrbyChecklistRows(
-  chunks: OrbyChecklistSourceChunk[]
+  chunks: OrbyChecklistSourceChunk[],
+  contextChunks: OrbyChecklistSourceChunk[] = []
 ): ExtractedChecklistRow[] {
   const rows = new Map<string, ExtractedChecklistRow>();
+  const currentPages = new Set(chunks.map((chunk) => chunk.page_number));
+  const orderedChunks = [...contextChunks, ...chunks].sort((a, b) => a.page_number - b.page_number);
   let currentArea = "Transversal";
   let currentSection = "Contenidos del documento";
   const hierarchy: string[] = [];
@@ -165,7 +168,7 @@ export function extractOrbyChecklistRows(
     hierarchy[level] = name;
   };
 
-  for (const chunk of [...chunks].sort((a, b) => a.page_number - b.page_number)) {
+  for (const chunk of orderedChunks) {
     const lines = chunk.content
       .replace(/\r/g, "\n")
       .split("\n")
@@ -250,7 +253,7 @@ export function extractOrbyChecklistRows(
     flushPending();
   }
 
-  return [...rows.values()];
+  return [...rows.values()].filter((row) => currentPages.has(row.page));
 }
 
 /**
@@ -259,9 +262,12 @@ export function extractOrbyChecklistRows(
  * evidence instead of depending solely on free-form model extraction.
  */
 export function extractOrbyCompetencyRows(
-  chunks: OrbyChecklistSourceChunk[]
+  chunks: OrbyChecklistSourceChunk[],
+  contextChunks: OrbyChecklistSourceChunk[] = []
 ): ExtractedCompetencyRow[] {
   const output = new Map<string, ExtractedCompetencyRow>();
+  const currentPages = new Set(chunks.map((chunk) => chunk.page_number));
+  const orderedChunks = [...contextChunks, ...chunks].sort((a, b) => a.page_number - b.page_number);
   let currentArea = "Transversal";
   let inCompetencyTable = false;
   let pendingLines: string[] = [];
@@ -283,7 +289,7 @@ export function extractOrbyCompetencyRows(
     });
   };
 
-  for (const chunk of [...chunks].sort((a, b) => a.page_number - b.page_number)) {
+  for (const chunk of orderedChunks) {
     const lines = chunk.content
       .replace(/\r/g, "\n")
       .split("\n")
@@ -291,7 +297,10 @@ export function extractOrbyCompetencyRows(
       .filter(Boolean);
 
     for (const line of lines) {
-      const heading = detectAreaHeading(line, "");
+      // Competency tables belong to the parent exam area. Nested labels
+      // such as "1.4 Ciencia, Tecnología y Sociedad" are subsections of
+      // Ciencias Naturales and must not steal the parent competency table.
+      const heading = exactAreaHeading(line) ?? moduleHeading(line);
       if (heading) {
         if (inCompetencyTable) {
           pendingLines = [];
@@ -332,5 +341,5 @@ export function extractOrbyCompetencyRows(
     }
   }
 
-  return [...output.values()];
+  return [...output.values()].filter((row) => currentPages.has(row.page));
 }

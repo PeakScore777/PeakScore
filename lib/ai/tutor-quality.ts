@@ -101,12 +101,10 @@ export function needsIndependentTutorReview(input: {
   }
 
   const highRiskPatterns = [
-    /\b(calcula|calcular|resuelve|resolver|demuestra|justifica|interpreta|compara|analiza|evalúa|explica|explícame|explicame|define|describe)\b/,
-    /\b(porcentaje|puntos porcentuales|probabilidad|estadística|ecuación|función|derivada|integral|fracción|proporción)\b/,
-    /\b(experimento|hipótesis|causalidad|variables|gráfica|tabla|datos|evidencia|ecosistema|organismo|célula|fuerza|energía)\b/,
-    /\b(genética|meiosis|mitosis|fototropismo|evolución|termodinámica|estequiometría|materia|densidad|velocidad|aceleración)\b/,
-    /\b(correcta|incorrecta|respuesta|opciones|distractores|saber 11|icfes|pregunta|ejercicio|problema)\b/,
-    /\b(qué es|que es|por qué|porque|cómo funciona|como funciona|cuánto|cuanto|cuál es|cual es)\b/,
+    /\\b(calcula|calcular|resuelve|resolver|demuestra|justifica|evalua|evaluar|contrasta|verifica|comprueba|determina|compara|analiza)\\b/,
+    /\\b(porcentaje|puntos porcentuales|probabilidad|estadistica inferencial|ecuacion|funcion|derivada|integral|fraccion|proporcion|regla de tres|conversion de unidades)\\b/,
+    /\\b(experimento|hipotesis|causalidad|variable independiente|variable dependiente|grafica|tabla de datos|evidencia|interpretacion de datos)\\b/,
+    /\\b(correcta|incorrecta|opcion correcta|respuesta correcta|distractores|demuestra que|justifica por que)\\b/,
   ];
 
   // Review the student's actual message, not the length of context or topic metadata.

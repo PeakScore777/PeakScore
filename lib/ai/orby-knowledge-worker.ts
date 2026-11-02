@@ -223,6 +223,7 @@ export async function processNextOrbyKnowledgeJob(options: {
   const job = claimed as unknown as OrbyKnowledgeJob;
   let documentTitle = job.document_id;
   let cachedGeminiFileName: string | null = null;
+  let sourceSha256: string | null | undefined;
 
   try {
     const [chunks, documentResult] = await Promise.all([
@@ -234,6 +235,7 @@ export async function processNextOrbyKnowledgeJob(options: {
     ]);
     if (documentResult.error || !documentResult.data) throw new Error("No se encontró el documento de la tarea.");
     const document = documentResult.data;
+    sourceSha256 = typeof document.source_sha256 === "string" ? document.source_sha256 : null;
     documentTitle = document.title as string;
     const totalBatches = Math.max(1, Math.ceil(Number(document.page_count ?? 0) / PAGE_BATCH_SIZE));
     const currentHash = hashOrbyKnowledgeDocumentContent(chunks, document.source_sha256);
@@ -427,7 +429,7 @@ export async function processNextOrbyKnowledgeJob(options: {
       // change. Later counter or batch-metadata failures can then safely retry
       // without invalidating all previously completed page analysis.
       const updatedChunks = await loadOrbyKnowledgeChunks(job.document_id);
-      await refreshDocumentContentHash(job, workerId, document.source_sha256 ?? "", updatedChunks);
+      await refreshDocumentContentHash(job, workerId, sourceSha256 ?? "", updatedChunks);
 
       const counts = await getChunkCounts(job.document_id);
       if (counts.total > MAX_DOCUMENT_CHUNKS) {
@@ -658,6 +660,20 @@ export async function processNextOrbyKnowledgeJob(options: {
     throw new Error("Etapa de aprendizaje desconocida.");
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Error desconocido.";
+    // A profile batch can persist some page/OCR changes before a later write fails.
+    // Synchronize the fingerprint before releasing the job so the next attempt
+    // resumes the saved work instead of rejecting it as a changed source.
+    if (job.stage === "profile" && sourceSha256 !== undefined) {
+      try {
+        const partialChunks = await loadOrbyKnowledgeChunks(job.document_id);
+        await refreshDocumentContentHash(job, workerId, sourceSha256, partialChunks);
+      } catch (fingerprintError) {
+        console.error("[Orby Autopilot] Could not synchronize the partial content fingerprint.", {
+          jobId: job.id,
+          name: fingerprintError instanceof Error ? fingerprintError.name : "UnknownError",
+        });
+      }
+    }
     const { error: failError } = await supabaseAdmin.rpc("orby_fail_knowledge_job", {
       p_job_id: job.id,
       p_worker_id: workerId,

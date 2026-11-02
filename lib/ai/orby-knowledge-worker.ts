@@ -343,13 +343,14 @@ export async function processNextOrbyKnowledgeJob(options: {
         has_selectable_text: Boolean(page.has_selectable_text),
         review_attempts: Number(page.review_attempts ?? 0),
       }));
-      const contextStart = Math.max(1, pageStart - PAGE_BATCH_SIZE);
+      const firstInputPage = pageInputs[0]?.page_number ?? pageStart;
+      const contextStart = Math.max(1, firstInputPage - PAGE_BATCH_SIZE);
       const { data: contextRows, error: contextError } = await supabaseAdmin
         .from("orby_knowledge_document_pages")
         .select("page_number,page_text,has_selectable_text,review_attempts")
         .eq("document_id", job.document_id)
         .gte("page_number", contextStart)
-        .lt("page_number", pageStart)
+        .lt("page_number", firstInputPage)
         .order("page_number", { ascending: true });
       if (contextError) throw new Error("No se pudo recuperar el contexto de continuidad de las páginas anteriores.");
       const contextInputs: OrbyKnowledgePageInput[] = (contextRows ?? []).map((page) => ({

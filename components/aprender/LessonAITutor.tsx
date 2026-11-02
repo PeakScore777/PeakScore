@@ -212,6 +212,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceTurnPersistedRef = useRef(false);
   const voiceTurnPersistenceChainRef = useRef<Promise<void>>(Promise.resolve());
   const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
+  const voiceRealtimeAudioChunkCountRef = useRef(0);
+  const voiceOutputAudioBlockedRef = useRef(false);
   const voiceInputPolicyRef = useRef<"identity" | "programming" | "outside" | null>(null);
   const voiceForcedReplyRef = useRef<string | null>(null);
   const voicePreflightReplyRef = useRef<string | null>(null);
@@ -944,6 +946,30 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     renderLevel();
   }
 
+  function finishRealtimeVoicePlayback() {
+    if (!voiceResponseDoneRef.current || !waitingForVoiceReplyRef.current) return;
+    if (voiceAudioSourcesRef.current.size > 0) {
+      setVoiceStatus("Orby está hablando…");
+      setIsListening(false);
+      return;
+    }
+    waitingForVoiceReplyRef.current = false;
+    setVoiceStatus("Te escucho…");
+    setIsListening(true);
+    void persistRealtimeTurnIfReady();
+    drainPendingMessageQueue();
+  }
+
+  function flushPendingGeminiAudio() {
+    if (voiceOutputAudioBlockedRef.current) {
+      voicePendingAudioChunksRef.current = [];
+      return;
+    }
+    const pending = voicePendingAudioChunksRef.current;
+    voicePendingAudioChunksRef.current = [];
+    for (const chunk of pending) playGeminiAudio(chunk.data, chunk.mimeType);
+  }
+
   function playGeminiAudio(base64Audio: string, mimeType?: string) {
     const audioContext = voiceAudioContextRef.current;
     if (!audioContext || audioContext.state === "closed") return;
@@ -968,9 +994,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       source.start(scheduledAt);
       voiceNextPlaybackTimeRef.current = scheduledAt + audioBuffer.duration;
       voiceAudioSourcesRef.current.add(source);
+      voiceRealtimeAudioChunkCountRef.current += 1;
       source.onended = () => {
         voiceAudioSourcesRef.current.delete(source);
         source.disconnect();
+        finishRealtimeVoicePlayback();
       };
     } catch {
       setVoiceError("No se pudo reproducir una parte de la respuesta de voz.");
@@ -1223,6 +1251,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? ORBY_ICFES_ENGLISH_INTRO_REPLY
         : preflight.allowed ? null : preflight.reply;
       voicePendingAudioChunksRef.current = [];
+      voiceRealtimeAudioChunkCountRef.current = 0;
+      voiceOutputAudioBlockedRef.current = false;
       setLiveTranscript("");
       setMessages((current) => {
         const assistantId = voiceAssistantMessageIdRef.current;
@@ -1243,8 +1273,32 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     if (typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
       voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
+      const partialReply = voiceAssistantTextRef.current.trim();
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-      setVoiceStatus("Orby está preparando su respuesta…");
+      const partialNormalized = partialReply.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO");
+      const partialExposesProvider = /\\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\\b/.test(partialNormalized)
+        && /\\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|hecho|hecha|soy|fui)\\b/.test(partialNormalized);
+      const partialUnsafe = containsProgrammingInstruction(partialReply)
+        || containsExternalPreIcfesPromotion(partialReply)
+        || isLikelyEnglishOnlyOrbyReply(partialReply)
+        || hasFalseOrbyCreatorAttribution(partialReply)
+        || partialExposesProvider;
+
+      if (partialUnsafe) {
+        voiceOutputAudioBlockedRef.current = true;
+        voicePendingAudioChunksRef.current = [];
+        stopVoicePlayback();
+      } else {
+        const assistantId = voiceAssistantMessageIdRef.current;
+        setMessages((current) => {
+          const exists = current.some((message) => message.id === assistantId);
+          return exists
+            ? current.map((message) => message.id === assistantId ? { ...message, content: partialReply } : message)
+            : [...current, { id: assistantId, role: "assistant", content: partialReply }];
+        });
+        flushPendingGeminiAudio();
+      }
+      setVoiceStatus("Orby está hablando…");
     }
 
     const modelTurn = serverContent.modelTurn && typeof serverContent.modelTurn === "object"
@@ -1254,12 +1308,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const inlineData = part.inlineData && typeof part.inlineData === "object"
         ? part.inlineData as { data?: unknown; mimeType?: unknown }
         : null;
-      if (typeof inlineData?.data === "string") {
-        // Hold audio until the completed transcript passes Orby's policy checks.
-        voicePendingAudioChunksRef.current.push({
+      if (typeof inlineData?.data === "string" && !voiceOutputAudioBlockedRef.current) {
+        const chunk = {
           data: inlineData.data,
           mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
-        });
+        };
+        if (voiceAssistantTextRef.current.trim()) {
+          playGeminiAudio(chunk.data, chunk.mimeType);
+        } else if (voicePendingAudioChunksRef.current.length < 96) {
+          voicePendingAudioChunksRef.current.push(chunk);
+        } else {
+          console.warn("[Orby Voice] Discarding excessive pre-transcript audio buffering.");
+        }
       }
     }
 
@@ -1268,6 +1328,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // turn receives a fresh deadline instead of inheriting a stuck timer.
       clearVoiceResponseWatchdog();
       stopVoicePlayback();
+      voicePendingAudioChunksRef.current = [];
+      voiceRealtimeAudioChunkCountRef.current = 0;
       voiceResponseDoneRef.current = true;
       waitingForVoiceReplyRef.current = false;
       void persistRealtimeTurnIfReady();
@@ -1370,7 +1432,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             : [...current, { id, role: "assistant", content: rawReply }];
         });
         voiceLastAssistantOutputRef.current = rawReply;
-        for (const chunk of voicePendingAudioChunksRef.current) playGeminiAudio(chunk.data, chunk.mimeType);
+        if (!voiceOutputAudioBlockedRef.current) flushPendingGeminiAudio();
         const playbackContext = voiceAudioContextRef.current;
         const remainingPlaybackMs = playbackContext
           ? Math.max(0, voiceNextPlaybackTimeRef.current - playbackContext.currentTime) * 1000
@@ -1383,15 +1445,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voicePreflightReplyRef.current = null;
       voiceForcedReplyRef.current = null;
       voiceResponseDoneRef.current = true;
-      waitingForVoiceReplyRef.current = false;
       voiceInternalPolicyTextRef.current = null;
-      // Save this turn before starting the next queued voice message. This
-      // avoids overlapping history writes and lost turns when several prompts
-      // arrive in quick succession.
-      void persistRealtimeTurnIfReady();
-      drainPendingMessageQueue();
-      setVoiceStatus("Te escucho…");
-      setIsListening(true);
+      voiceOutputAudioBlockedRef.current = false;
+
+      // Keep the turn locked until all scheduled audio has actually played.
+      // If Live returns text without audio, read it with the browser's Spanish voice.
+      if (voiceRealtimeAudioChunkCountRef.current === 0 && rawReply.trim() && "speechSynthesis" in window) {
+        const id = voiceAssistantMessageIdRef.current;
+        const messageIndex = messages.findIndex((message) => message.id === id);
+        speakText(rawReply, messageIndex >= 0 ? messageIndex : messages.length);
+        return;
+      }
+      finishRealtimeVoicePlayback();
     }
 
     if (event.error && typeof event.error === "object") {
@@ -1832,6 +1897,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
         voiceUserTextRef.current = message;
+        voiceRealtimeAudioChunkCountRef.current = 0;
+        voiceOutputAudioBlockedRef.current = false;
+        voicePendingAudioChunksRef.current = [];
         // Keep the trusted local answer ready for persistence even if the
         // student interrupts Live audio before generationComplete arrives.
         voiceAssistantTextRef.current = localReply;
@@ -1866,6 +1934,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
       waitingForVoiceReplyRef.current = true;
+      voiceRealtimeAudioChunkCountRef.current = 0;
+      voiceOutputAudioBlockedRef.current = false;
+      voicePendingAudioChunksRef.current = [];
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;

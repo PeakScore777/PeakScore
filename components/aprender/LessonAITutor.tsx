@@ -666,6 +666,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function stopSpeaking() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    voiceBrowserSpeechActiveRef.current = false;
     setSpeakingIndex(null);
   }
 
@@ -693,16 +694,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (preferredVoice) utterance.voice = preferredVoice;
     utterance.onend = () => {
       setSpeakingIndex(null);
-      if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
+      if (isLocalVoiceTurn) {
+        voiceBrowserSpeechActiveRef.current = false;
+        voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
+        finishLocalVoiceReply(localVoiceMessageId);
+      }
     };
     utterance.onerror = () => {
       setSpeakingIndex(null);
       if (isLocalVoiceTurn) {
+        voiceBrowserSpeechActiveRef.current = false;
         setVoiceError("No se pudo reproducir el audio de esta respuesta. El texto quedó disponible.");
         finishLocalVoiceReply(localVoiceMessageId);
       }
     };
-    setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
+    if (isLocalVoiceTurn) {
+      voiceBrowserSpeechActiveRef.current = true;
+      voiceLastAssistantOutputRef.current = clean;
+      // A conservative playback window lets the VAD/transcription layer
+      // recognize Orby's own local TTS and avoid treating it as student input.
+      voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 55;
+    }
+    setSpeakingIndex(index);
+    window.speechSynthesis.speak(utterance);
   }
 
   async function ensureVoiceConversation(startupSignal?: AbortSignal): Promise<string> {
@@ -1791,6 +1805,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voicePreflightReplyRef.current = null;
         voiceForcedReplyRef.current = null;
         voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
+        voiceLastAssistantOutputRef.current = localReply;
         const userId = "voice-user-" + Date.now();
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => [

@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsProgrammingInstruction, hasFalseOrbyCreatorAttribution, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -152,6 +152,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [messages, setMessages] = useState<Message[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [queuedMessageCount, setQueuedMessageCount] = useState(0);
   const [imageGenerationLoading, setImageGenerationLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voiceError, setVoiceError] = useState("");
@@ -239,6 +240,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const lastInitialPromptRef = useRef<string | null>(null);
   const activeConversationRef = useRef<string | null>(null);
   const sendingRef = useRef(false);
+  const pendingMessagesRef = useRef<Array<{ text: string; attachmentMeta?: { kind: "image" | "audio"; label: string } }>>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const stopAudioRecordingRef = useRef<(discard?: boolean) => void>(() => {});
   const audioStreamRef = useRef<MediaStream | null>(null);
@@ -1104,7 +1106,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : !preflight.allowed
             ? "outside"
             : null;
-      voicePreflightReplyRef.current = preflight.allowed ? null : preflight.reply;
+      voicePreflightReplyRef.current = isGenericIcfesEnglishRequest(voiceUserTextRef.current)
+        ? ORBY_ICFES_ENGLISH_INTRO_REPLY
+        : preflight.allowed ? null : preflight.reply;
       voicePendingAudioChunksRef.current = [];
       setLiveTranscript("");
       setMessages((current) => {
@@ -1155,7 +1159,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
-      const rawReply = normalizeVoicePunctuation(voiceAssistantTextRef.current);
+      const forcedLiveReply = voiceForcedReplyRef.current;
+      const rawReply = forcedLiveReply ?? normalizeVoicePunctuation(voiceAssistantTextRef.current);
+      voiceForcedReplyRef.current = null;
       const normalizedReply = rawReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
       const exposesProvider = (
         /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai|ticescool|ticeschool)\b/.test(normalizedReply)
@@ -1163,22 +1169,28 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ) || /(?:cread[oa]|entrenad[oa]|desarrollad[oa]|hech[oa])\s*(?:por|by)\s*(?!peak[-_]?score\b)[a-z0-9]/i.test(normalizedReply);
       const unsafeGeneratedContent = containsProgrammingInstruction(rawReply)
         || hasFalseOrbyCreatorAttribution(rawReply);
-      const policyReply = voicePreflightReplyRef.current
-        ?? (voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
-          ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
-          : voiceInputPolicyRef.current === "programming" || unsafeGeneratedContent
-            ? preflightOrbyRequest("programar").reply
-            : voiceInputPolicyRef.current === "outside"
-              ? preflightOrbyRequest("cocinar").reply
-              : null);
+      const policyReply = forcedLiveReply
+        ? null
+        : voicePreflightReplyRef.current
+          ?? (voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
+            ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
+            : containsExternalPreIcfesPromotion(rawReply)
+              ? ORBY_EXTERNAL_PREICFES_REPLY
+              : isLikelyEnglishOnlyOrbyReply(rawReply)
+                ? isGenericIcfesEnglishRequest(voiceUserTextRef.current) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : "Soy Orby, tu tutor de PeakScore especializado en Saber 11. Te responderé en español colombiano y puedo ayudarte con las cinco áreas del examen."
+                : voiceInputPolicyRef.current === "programming" || unsafeGeneratedContent
+                  ? preflightOrbyRequest("programar").reply
+                  : voiceInputPolicyRef.current === "outside"
+                    ? preflightOrbyRequest("cocinar").reply
+                    : null);
       voicePreflightReplyRef.current = null;
 
-      // A policy response is produced locally exactly once. Never ask Gemini to
-      // repeat a correction: that second Live turn caused duplicated bubbles/audio.
+      // Policy replies use the same Live voice as normal Orby answers.
+      // The browser's fallback TTS used to switch voices exactly on filtered turns.
       if (policyReply) {
         stopVoicePlayback();
         voicePendingAudioChunksRef.current = [];
-        voiceAssistantTextRef.current = policyReply;
+        voiceAssistantTextRef.current = "";
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = id;
         setMessages((current) => {
@@ -1189,58 +1201,31 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         });
         voiceLastAssistantOutputRef.current = policyReply;
         voiceInputPolicyRef.current = null;
-        voiceForcedReplyRef.current = null;
-        voiceResponseDoneRef.current = true;
-        void persistRealtimeTurnIfReady();
-
-        if ("speechSynthesis" in window) {
-          const speech = window.speechSynthesis;
-          const speechGeneration = ++voiceSpeechPlaybackGenerationRef.current;
-          speech.cancel();
-          const utterance = new SpeechSynthesisUtterance(policyReply);
-          const spanishVoices = speech.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-          const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
-            ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]es/i.test(voice.lang))
-            ?? spanishVoices[0];
-          utterance.lang = preferredVoice?.lang || "es-ES";
-          if (preferredVoice) utterance.voice = preferredVoice;
-          utterance.rate = 0.96;
-          utterance.pitch = 1;
-          utterance.volume = 1;
-          voiceBrowserSpeechActiveRef.current = true;
-          voiceLastAssistantPlaybackUntilRef.current = Date.now() + Math.max(2500, policyReply.length * 75);
-          utterance.onend = () => {
-            if (speechGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
-            voiceBrowserSpeechActiveRef.current = false;
-            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
-            if (voiceModeRef.current) {
-              setVoiceStatus("Te escucho…");
-              setIsListening(true);
-            }
-          };
-          utterance.onerror = (event) => {
-            if (speechGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
-            voiceBrowserSpeechActiveRef.current = false;
-            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
-            if (event.error === "canceled" || event.error === "interrupted") return;
-            if (voiceModeRef.current) {
-              setVoiceError("El navegador no pudo reproducir la voz de respaldo (" + event.error + "). La respuesta sigue disponible por escrito.");
-              setVoiceStatus("Te escucho…");
-              setIsListening(true);
-            }
-          };
-          try {
-            speech.resume();
-            speech.speak(utterance);
-            setVoiceStatus("Orby está hablando…");
-          } catch {
-            voiceBrowserSpeechActiveRef.current = false;
-            setVoiceError("El navegador bloqueó la reproducción de voz. La respuesta sigue disponible por escrito.");
-            setVoiceStatus("Te escucho…");
-            setIsListening(true);
-          }
-        } else {
-          setVoiceError("La respuesta se mostró por escrito; este navegador no tiene lectura de voz.");
+        voicePreflightReplyRef.current = null;
+        voiceForcedReplyRef.current = policyReply;
+        voiceResponseDoneRef.current = false;
+        const activeSession = voiceChannelRef.current;
+        if (!activeSession) {
+          voiceForcedReplyRef.current = null;
+          voiceAssistantTextRef.current = policyReply;
+          voiceResponseDoneRef.current = true;
+          void persistRealtimeTurnIfReady();
+          setVoiceError("La respuesta quedó disponible por escrito porque la conexión de voz se interrumpió.");
+          setVoiceStatus("Te escucho…");
+          setIsListening(true);
+          return;
+        }
+        try {
+          activeSession.sendRealtimeInput({
+            text: "Lee exactamente este texto en español colombiano, sin añadir, quitar ni cambiar ninguna palabra: " + policyReply,
+          });
+          setVoiceStatus("Orby está hablando…");
+        } catch {
+          voiceForcedReplyRef.current = null;
+          voiceAssistantTextRef.current = policyReply;
+          voiceResponseDoneRef.current = true;
+          void persistRealtimeTurnIfReady();
+          setVoiceError("La respuesta quedó disponible por escrito; no se pudo iniciar su audio.");
           setVoiceStatus("Te escucho…");
           setIsListening(true);
         }
@@ -1268,7 +1253,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       voicePendingAudioChunksRef.current = [];
       voiceInputPolicyRef.current = null;
+      voicePreflightReplyRef.current = null;
+      voiceForcedReplyRef.current = null;
       voiceResponseDoneRef.current = true;
+      waitingForVoiceReplyRef.current = false;
       void persistRealtimeTurnIfReady();
       setVoiceStatus("Te escucho…");
       setIsListening(true);
@@ -1557,7 +1545,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const message = text.trim();
     const isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
-    if ((!message && !selectedFile) || loading || sendingRef.current || message.length > 1200) return;
+    if ((!message && !selectedFile) || message.length > 1200) return;
+    if ((loading || sendingRef.current) && !isVoiceInteraction) {
+      if (!message || selectedFile) {
+        setError("Termina la solicitud actual antes de adjuntar otro archivo.");
+        return;
+      }
+      if (pendingMessagesRef.current.length >= 4) {
+        setError("La cola de Orby está llena. Espera a que responda antes de enviar otra pregunta.");
+        return;
+      }
+      pendingMessagesRef.current.push({ text: message, attachmentMeta });
+      setQueuedMessageCount(pendingMessagesRef.current.length);
+      setInput("");
+      setError("");
+      return;
+    }
     if (workspace && selectedFile?.type.startsWith("image/") && imageAssets.length >= 20) {
       setAttachmentError("Tu almacenamiento llegó al límite de 20 imágenes. Elimina una desde «Administrar almacenamiento» para poder enviar otra.");
       setImageStorageError("Almacenamiento completo · 20 de 20 imágenes. Libera espacio para continuar.");
@@ -1647,6 +1650,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
+        signal: AbortSignal.timeout(90_000),
         body: JSON.stringify({
           subject: activeReview?.subject ?? subject,
           topic: activeReview?.topic ?? topic,
@@ -1700,6 +1704,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } finally {
       sendingRef.current = false;
       setLoading(false);
+      const nextQueuedMessage = pendingMessagesRef.current.shift();
+      setQueuedMessageCount(pendingMessagesRef.current.length);
+      if (nextQueuedMessage) {
+        window.setTimeout(() => {
+          void sendMessageRef.current(nextQueuedMessage.text, false, false, nextQueuedMessage.attachmentMeta);
+        }, 0);
+      }
     }
   }
 
@@ -1849,6 +1860,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function startNewConversation() {
+    pendingMessagesRef.current = [];
+    setQueuedMessageCount(0);
     stopAudioRecording(true);
     activeConversationRef.current = null;
     setConversationId(null);
@@ -1887,6 +1900,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const response = await fetch(`/api/orby/conversations/${id}/messages`, { credentials: "same-origin", cache: "no-store" });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "No se pudo abrir la conversación.");
+      pendingMessagesRef.current = [];
+      setQueuedMessageCount(0);
       activeConversationRef.current = id;
       setConversationId(id);
       setMessages(Array.isArray(payload.messages) ? payload.messages.map((item: Record<string, unknown>) => ({
@@ -2476,8 +2491,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
           handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
         }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className="orby-composer-input min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
-        <button type="submit" disabled={(!input.trim() && !attachment) || loading || isRecording || audioTranscribing} aria-label="Enviar mensaje a Orby" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
+        <button type="submit" disabled={(!input.trim() && !attachment) || isRecording || audioTranscribing} aria-label="Enviar mensaje a Orby" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
       </form>
+      {queuedMessageCount > 0 && <p className="shrink-0 border-t border-orange-500/15 bg-orange-500/[0.06] px-4 py-1.5 text-[11px] text-orange-200" role="status">{queuedMessageCount} pregunta{queuedMessageCount === 1 ? "" : "s"} en cola; Orby las responderá en orden.</p>}
       {conversationError && workspace && <p role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">{conversationError}</p>}
       <p className="shrink-0 border-t border-[#25282d] bg-[#0b0d10] px-4 pb-3 pt-1 text-center text-[10px] leading-4 text-[#707782]">Orby puede cometer errores. Comprueba los datos importantes antes de usarlos.</p>
         </div>
@@ -2582,6 +2598,57 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         @media (max-width: 767px) {
           #orby-tutor-panel[data-orby-theme] { border-radius:0!important; }
           #orby-tutor-panel .orby-voice-stage img { max-height:32vh; }
+        }
+        /* Accessible light workspace: remove the dark hard-coded surfaces without
+           changing the orange brand bubbles or the dark theme. */
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] {
+          background:#f4f6fa!important;
+          color:#17212f!important;
+          border-color:#dbe2ea!important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > header {
+          background:#ffffff!important;
+          border-color:#dbe2ea!important;
+          color:#17212f!important;
+          box-shadow:0 1px 3px rgba(15,23,42,.04);
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > header h1 { color:#111827!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > header p { color:#64748b!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > div { background:#f4f6fa!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] {
+          background:#ffffff!important;color:#263445!important;border-color:#dbe2ea!important;
+          box-shadow:2px 0 12px rgba(15,23,42,.035);
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] .border-white\/\[0\.07\],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] .border-white\/10 { border-color:#e2e8f0!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#777"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#858"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#a8"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#b4"] { color:#64748b!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class*="text-[#e7"],
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] [class~="text-white"] { color:#17212f!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] input {
+          color:#17212f!important;background:#f8fafc!important;border-color:#dbe2ea!important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] [aria-label="Herramientas de Orby"] input::placeholder { color:#94a3b8!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message[role="article"] { box-shadow:0 2px 9px rgba(15,23,42,.045)!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message:not(.bg-orange-600) {
+          background:#ffffff!important;color:#1e293b!important;border-color:#dbe2ea!important;
+          box-shadow:0 3px 12px rgba(15,23,42,.055)!important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message:not(.bg-orange-600) [class*="text-[#"] { color:#64748b!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message:not(.bg-orange-600) .text-slate-800 { color:#1e293b!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-message:not(.bg-orange-600) .border-white\/10 { border-color:#e2e8f0!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] form {
+          background:#ffffff!important;border-color:#dbe2ea!important;
+          box-shadow:0 -3px 14px rgba(15,23,42,.035);
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-composer-input {
+          color:#17212f!important;background:#f8fafc!important;border-color:#d5dde7!important;
+        }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] .orby-composer-input::placeholder { color:#94a3b8!important; }
+        #orby-tutor-panel[data-orby-theme="light"][data-orby-workspace="true"] > div > div > p:last-child {
+          border-color:#e2e8f0!important;background:#ffffff!important;color:#64748b!important;
         }
         @media (prefers-reduced-motion: reduce) { #orby-tutor-panel .orby-wave-bar, #orby-tutor-panel .orby-voice-orbit { animation:none!important; } }
         /* Compact orb preview: centered over the conversation, with soft volumetric amber mist. */

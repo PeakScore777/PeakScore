@@ -189,6 +189,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceModeRef = useRef(false);
   const voiceStartupAbortRef = useRef<AbortController | null>(null);
   const voiceSessionGenerationRef = useRef(0);
+  const voiceSessionResumeHandleRef = useRef<string | null>(null);
+  const voiceSessionResumeConversationRef = useRef<string | null>(null);
   const voiceResponseWatchdogRef = useRef<number | null>(null);
   const voiceAnalyserRef = useRef<AnalyserNode | null>(null);
   const voiceAnimationFrameRef = useRef<number | null>(null);
@@ -1499,6 +1501,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         config: {
           abortSignal: startupSignal,
           responseModalities: [Modality.AUDIO],
+          contextWindowCompression: { slidingWindow: {} },
+          sessionResumption: {
+            ...(voiceSessionResumeConversationRef.current === activeConversationRef.current
+              && voiceSessionResumeHandleRef.current
+              ? { handle: voiceSessionResumeHandleRef.current }
+              : {}),
+          },
           tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
           // Start with the documented Live configuration. Audio transcription
           // is enabled without a forced language; the model detects Spanish.
@@ -1523,6 +1532,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           onmessage: (message) => {
             if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
             const payload = message as unknown as Record<string, unknown>;
+            if (payload.sessionResumptionUpdate && typeof payload.sessionResumptionUpdate === "object") {
+              const update = payload.sessionResumptionUpdate as { resumable?: unknown; newHandle?: unknown };
+              if (update.resumable === true && typeof update.newHandle === "string"
+                && update.newHandle.length > 20 && update.newHandle.length <= 8192) {
+                voiceSessionResumeHandleRef.current = update.newHandle;
+                voiceSessionResumeConversationRef.current = activeConversationRef.current;
+              }
+            }
             if (payload.error && typeof payload.error === "object") {
               const detail = payload.error as { message?: unknown; status?: unknown; code?: unknown };
               console.warn("[Orby Voice] Realtime service rejected the connection.", { status: detail.status, code: detail.code });
@@ -2130,6 +2147,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function startNewConversation() {
     pendingMessagesRef.current = [];
     setQueuedMessageCount(0);
+    voiceSessionResumeHandleRef.current = null;
+    voiceSessionResumeConversationRef.current = null;
     stopAudioRecording(true);
     activeConversationRef.current = null;
     setConversationId(null);
@@ -2160,6 +2179,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (voiceModeRef.current) stopRealtimeVoice();
+    voiceSessionResumeHandleRef.current = null;
+    voiceSessionResumeConversationRef.current = null;
     setWorkspaceMode("chat");
     setLearningView("chat");
     setHistoryLoading(true);

@@ -81,7 +81,7 @@ test("solo permite publicar cuando el perfil v2 y todos los embeddings están li
     embedded_chunk_count: 8,
     knowledge_profile_status: "ready",
     knowledge_profile_version: 2,
-    knowledge_pipeline_version: 6,
+    knowledge_pipeline_version: 7,
     concept_count: 12,
     ingestion_status: "completed",
     coverage_percent: 100,

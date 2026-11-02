@@ -1529,13 +1529,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setIsListening(true);
 
       if (startupSignal.aborted) throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
-      await Promise.race([
-        audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js"),
-        new Promise<never>((_, reject) => window.setTimeout(
-          () => reject(new Error("El micrófono tardó demasiado en prepararse. Puedes continuar por texto.")),
-          8_000,
-        )),
-      ]);
+      let workletTimeoutId: number | null = null;
+      let abortWorkletSetup: (() => void) | null = null;
+      const workletAbort = new Promise<never>((_, reject) => {
+        abortWorkletSetup = () => reject(new DOMException("La conexión de voz fue cancelada.", "AbortError"));
+        if (startupSignal.aborted) abortWorkletSetup();
+        else startupSignal.addEventListener("abort", abortWorkletSetup, { once: true });
+      });
+      try {
+        await Promise.race([
+          audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js"),
+          workletAbort,
+          new Promise<never>((_, reject) => {
+            workletTimeoutId = window.setTimeout(
+              () => reject(new Error("El micrófono tardó demasiado en prepararse. Puedes continuar por texto.")),
+              8_000,
+            );
+          }),
+        ]);
+      } finally {
+        if (workletTimeoutId !== null) window.clearTimeout(workletTimeoutId);
+        if (abortWorkletSetup) startupSignal.removeEventListener("abort", abortWorkletSetup);
+      }
+      if (startupSignal.aborted) throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
       await ensureVoiceAudioContextRunning(audioContext);
 
       const microphoneSource = audioContext.createMediaStreamSource(stream);
@@ -1620,11 +1636,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       await startRealtimeVoice(startupController.signal);
     } catch (error) {
       const wasCancelled = startupController.signal.aborted;
-      stopRealtimeVoice();
-      setWorkspaceMode("chat");
-      if (!wasCancelled) {
-        setVoiceStatus("Voz no disponible");
-        setVoiceError(error instanceof Error ? error.message : "No se pudo iniciar el chat de voz. Puedes continuar por texto.");
+      const ownsStartup = voiceStartupAbortRef.current === startupController;
+      // A late failure from an old, cancelled startup must never tear down a
+      // newer voice session created after the student retried.
+      if (ownsStartup) {
+        stopRealtimeVoice();
+        setWorkspaceMode("chat");
+        if (!wasCancelled) {
+          setVoiceStatus("Voz no disponible");
+          setVoiceError(error instanceof Error ? error.message : "No se pudo iniciar el chat de voz. Puedes continuar por texto.");
+        }
       }
     } finally {
       if (voiceStartupAbortRef.current === startupController) voiceStartupAbortRef.current = null;

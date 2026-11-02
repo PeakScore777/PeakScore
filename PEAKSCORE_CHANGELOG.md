@@ -218,3 +218,13 @@
 - Los lotes manuales no consumen el presupuesto de 100 ciclos automáticos por ventana móvil de siete horas.
 - Se añaden pruebas de regresión para los carriles independientes, el lease documental y la prioridad manual.
 - El Autopilot permanece habilitado; el cron cada tres minutos recoge los trabajos compartidos mientras el administrador sigue pudiendo ejecutar lotes manuales.
+
+
+## 2026-11-02 — Orby Voice: primer respaldo Cloudflare
+- Añadido adaptador server-only para Workers AI con Whisper Large V3 Turbo (transcripción) y Llama 3.3 70B (respaldo de tutor).
+- La ruta de transcripción conserva Gemini → Groq y añade Cloudflare como tercer intento cuando las credenciales están configuradas.
+- La ruta del tutor conserva el router actual y recurre a Cloudflare únicamente cuando fallan los proveedores anteriores. El texto de Cloudflare no evita los controles de seguridad y calidad existentes.
+- Si Gemini Live se interrumpe tras recibir una transcripción, la respuesta de respaldo se puede leer con la síntesis del navegador.
+- No se creó clave ni integración de OpenRouter; no se añadieron pagos ni dependencias npm.
+- Commits: `53283bc`, `3adc805`, `ec7b201`, `7bd6cda`.
+- Pendiente: ejecutar validaciones en el entorno local de la rama y pruebas de extremo a extremo con audio real. No habilitar para estudiantes ni desplegar a producción todavía.

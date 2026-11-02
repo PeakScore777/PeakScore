@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsProgrammingInstruction, normalizeOrbySpanishOutput, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 
 export const runtime = "nodejs";
@@ -218,6 +218,24 @@ export async function POST(request: Request) {
 
     const currentRequestContext = [subject, topic, userMessage, question, context].filter(Boolean).join(" ");
     const preflight = preflightOrbyRequest(currentRequestContext);
+
+    // "Inglés" is an ICFES subject, not an invitation to start a general English conversation.
+    if (isGenericIcfesEnglishRequest(userMessage)) {
+      const englishReply = ORBY_ICFES_ENGLISH_INTRO_REPLY;
+      if (conversationId && ownedConversation) {
+        const { error: saveError } = await supabaseAdmin.rpc("orby_save_turn", {
+          p_user_id: user.id,
+          p_conversation_id: conversationId,
+          p_user_content: userMessage,
+          p_assistant_content: englishReply,
+          p_check_question: null,
+          p_attachment_kind: null,
+          p_attachment_label: null,
+        });
+        if (saveError) console.error("[Orby English Scope] Reply persistence failed.", { code: saveError.code });
+      }
+      return NextResponse.json({ reply: englishReply, checkQuestion: "", verification: "not_required", sources: [] });
+    }
     const legacyOutOfScope = preflight.allowed
       ? classifyOutOfScopeRequest([subject, topic, userMessage, question].filter(Boolean).join(" "))
       : null;
@@ -409,7 +427,7 @@ export async function POST(request: Request) {
     const prompt = `
 IDENTIDAD Y OBJETIVO
 Eres Orby, el asistente educativo de PeakScore, creado por PeakScore y especializado EXCLUSIVAMENTE en la preparación para Saber 11 del ICFES en Colombia. Enseñas solo cinco áreas: Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés. No eres un asistente general.
-Responde SIEMPRE en español colombiano, aunque el estudiante escriba en inglés. En el área de Inglés puedes incluir frases y vocabulario en inglés, pero explica en español.
+Responde SIEMPRE en español colombiano, aunque el estudiante escriba en inglés. En el área de Inglés puedes incluir frases y vocabulario en inglés, pero explica en español. "Inglés" significa exclusivamente el componente de Inglés de Saber 11: comprensión de avisos, diálogos, textos, vocabulario en contexto e intención comunicativa; nunca inicies una conversación general de práctica oral en inglés cuando se mencione la materia.
 No enseñes programación, desarrollo de software, lenguajes de código, creación de páginas web o aplicaciones, bases de datos, depuración ni temas ajenos a las cinco áreas ICFES. Si el estudiante pide algo fuera de ese alcance, rechaza brevemente y ofrécele ayuda con una de las cinco áreas.
 Responde la pregunta actual dentro de ese alcance, con rigor y una enseñanza adaptada al nivel demostrado por el estudiante. No inventes el área de una pregunta si no hay evidencia.
 
@@ -437,7 +455,7 @@ JERARQUÍA Y SEGURIDAD (OBLIGATORIO)
 - Puedes combinar conceptos que aparezcan respaldados en varios fragmentos o documentos. Cuando relaciones ideas, comprueba que los materiales realmente compartan el concepto; no infieras que uno cita o depende del otro.
 - Distingue evidencia explícita, explicación académica general e inferencia pedagógica. Nunca presentes un perfil generado automáticamente como una afirmación oficial del ICFES.
 - Si dos fuentes difieren, explica la diferencia y evita elegir una como correcta sin evidencia suficiente.
-- Nunca menciones, identifiques, cites ni insinúes el origen de esos fragmentos. No nombres archivos, títulos, autores, docentes, academias, cursos, marcas, otros preICFES, instituciones ni plataformas externas de preparación. Tampoco digas “según el documento”, “en el PDF”, “el material consultado” ni que estás usando una biblioteca privada.
+- Nunca menciones, identifiques, cites ni insinúes el origen de esos fragmentos. No nombres, recomiendes, compares, promociones ni envíes a otros preICFES, academias, cursos, instituciones o plataformas externas de preparación; no incluyas marcas, enlaces, precios, descuentos ni llamadas comerciales. Orby solo representa la experiencia educativa ICFES de PeakScore. Tampoco digas “según el documento”, “en el PDF”, “el material consultado” ni que estás usando una biblioteca privada.
 - Extrae únicamente los conceptos, procedimientos, estrategias y criterios académicos pertinentes a Saber 11. Explícalos con redacción pedagógica propia y ejemplos originales. No reproduzcas preguntas, opciones de respuesta, párrafos extensos, solucionarios ni expresiones distintivas protegidas de los materiales.
 - Si el estudiante pregunta por el origen de una explicación, responde sobre el fundamento académico del concepto y ofrece explicarlo; no reveles metadatos ni procedencia de referencias internas.
 - Las señales pedagógicas del estudiante son tentativas: úsalas para adaptar ejemplos y ritmo, nunca para etiquetar a la persona ni bajar sus expectativas.
@@ -605,16 +623,27 @@ No uses bloques Markdown ni texto fuera del JSON.
       parsed.checkQuestion = "";
     }
 
-    const modelReply = normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000));
-    if (containsProgrammingInstruction(modelReply)) {
-      await recordSecurityEvent(user.id, "suspicious_output", { reason: "out_of_scope_programming_output" });
-      parsed.reply = preflightOrbyRequest("programar").reply;
+    let modelReply = normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000));
+    if (containsExternalPreIcfesPromotion(modelReply)) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "external_preicfes_promotion" });
+      modelReply = ORBY_EXTERNAL_PREICFES_REPLY;
       parsed.checkQuestion = "";
-    } else {
-      parsed.reply = modelReply;
+    } else if (isLikelyEnglishOnlyOrbyReply(modelReply)) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "english_only_reply" });
+      modelReply = isGenericIcfesEnglishRequest(userMessage)
+        ? ORBY_ICFES_ENGLISH_INTRO_REPLY
+        : "Soy Orby, tu tutor de PeakScore especializado en Saber 11. Te responderé en español colombiano. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.";
+      parsed.checkQuestion = "";
     }
 
-    const normalizedFinalReply = cleanText(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000)), 7000);
+    if (containsProgrammingInstruction(modelReply)) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "out_of_scope_programming_output" });
+      modelReply = preflightOrbyRequest("programar").reply;
+      parsed.checkQuestion = "";
+    }
+    parsed.reply = modelReply;
+
+    const normalizedFinalReply = cleanText(normalizeOrbySpanishOutput(modelReply), 7000);
     // Defense in depth: never echo the private PDF title to a student if the model repeats it.
     const finalReply = cleanText(redactPrivateKnowledgeTitles(normalizedFinalReply, knowledgeSources), 7000);
     const finalCheckQuestion = cleanText(parsed.checkQuestion, 500);

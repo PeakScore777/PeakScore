@@ -9,6 +9,10 @@ import {
   type ExtractedChecklistRow,
 } from "@/lib/pdf/extract-orby-checklist-rows";
 import { toStudentSafeQuestionSolution } from "@/lib/ai/orby-question-solution";
+import {
+  deduplicateOrbyKnowledgeConcepts,
+  normalizeOrbyConceptIdentity,
+} from "@/lib/ai/orby-knowledge-normalization";
 
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
@@ -176,7 +180,7 @@ export function selectOrbyRelevantConcepts(
     const evidence = typeof raw.evidence === "string" ? raw.evidence.trim().slice(0, 700) : "";
     if (!evidencePages.length || !evidence) continue;
 
-    const key = normalizedConceptKey(name) + "|" + normalizedConceptKey(parent);
+    const key = normalizeOrbyConceptIdentity(area) + "|" + normalizeOrbyConceptIdentity(name);
     if (seen.has(key)) continue;
     seen.add(key);
 
@@ -569,30 +573,9 @@ export async function generateOrbyKnowledgeProfileBatch(
 export function combineOrbyKnowledgeProfileBatches(
   batchProfiles: OrbyKnowledgeBatchProfile[]
 ): OrbyKnowledgeProfile {
-  const conceptMap = new Map<string, OrbyKnowledgeProfile["concepts"][number]>();
-  for (const batch of batchProfiles) {
-    for (const concept of batch.concepts) {
-      const key = [
-        normalizedConceptKey(concept.area),
-        normalizedConceptKey(concept.parent_concept),
-        normalizedConceptKey(concept.name),
-      ].join("|");
-      const existing = conceptMap.get(key);
-      if (!existing) {
-        conceptMap.set(key, { ...concept });
-        continue;
-      }
-      existing.evidence_pages = [...new Set([...existing.evidence_pages, ...concept.evidence_pages])].sort((a,b)=>a-b);
-      existing.aliases = cleanStringArray([...existing.aliases, ...concept.aliases], 10, 100);
-      existing.confidence = Math.max(existing.confidence, concept.confidence);
-      existing.importance = Math.max(existing.importance, concept.importance);
-      if (concept.evidence && !existing.evidence.includes(concept.evidence)) {
-        existing.evidence = (existing.evidence + " " + concept.evidence).slice(0, 1000);
-      }
-    }
-  }
-
-  const allConcepts = [...conceptMap.values()].sort((a,b) =>
+  const allConcepts = deduplicateOrbyKnowledgeConcepts(
+    batchProfiles.flatMap((batch) => batch.concepts)
+  ).sort((a,b) =>
     normalizedConceptKey(a.area).localeCompare(normalizedConceptKey(b.area))
     || normalizedConceptKey(a.parent_concept).localeCompare(normalizedConceptKey(b.parent_concept))
     || a.name.localeCompare(b.name, "es")
@@ -822,26 +805,17 @@ export async function generateOrbyKnowledgePageBatch(
     page_number: page.page_number,
     content: page.page_text,
   })));
-  const conceptIdentity = (name: string, area: string, parent: string) =>
-    [normalizedConceptKey(area), normalizedConceptKey(parent), normalizedConceptKey(name)].join("|");
-  const conceptsByIdentity = new Map(concepts.map((item) => [
-    conceptIdentity(item.name, item.area, item.parent_concept),
-    item,
-  ]));
-  for (const row of sourceChecklistRows) {
-    const key = conceptIdentity(row.name, row.area, row.parent_concept);
-    if (conceptsByIdentity.has(key)) continue;
-    conceptsByIdentity.set(key, {
-      name: row.name,
-      area: row.area,
-      parent_concept: row.parent_concept,
-      aliases: [],
-      evidence_pages: [row.page],
-      confidence: 1,
-      importance: 4,
-      evidence: "Renglón extraído directamente del texto fuente en la página " + row.page + ": " + row.name,
-    });
-  }
+  const sourceConcepts = sourceChecklistRows.map((row) => ({
+    name: row.name,
+    area: row.area,
+    parent_concept: row.parent_concept,
+    aliases: [],
+    evidence_pages: [row.page],
+    confidence: 1,
+    importance: 4,
+    evidence: "Renglón extraído directamente del texto fuente en la página " + row.page + ": " + row.name,
+  }));
+  const reconciledConcepts = deduplicateOrbyKnowledgeConcepts([...concepts, ...sourceConcepts]);
 
   const modelCompetencies = cleanPageEvidenceItems(parsed.competencies, allowedPages, 50, ["name", "evidence"])
     .map((item) => ({
@@ -961,7 +935,7 @@ export async function generateOrbyKnowledgePageBatch(
     summary: typeof parsed.summary === "string" ? parsed.summary.trim().slice(0, 1200) : "",
     areas: cleanStringArray(parsed.areas, 16, 80),
     topics: cleanStringArray(parsed.topics, 120, 180),
-    concepts: [...conceptsByIdentity.values()],
+    concepts: reconciledConcepts,
     competencies,
     study_strategies: cleanStringArray(parsed.study_strategies, 50, 300),
     gaps_observed: cleanStringArray(parsed.gaps_observed, 30, 300),

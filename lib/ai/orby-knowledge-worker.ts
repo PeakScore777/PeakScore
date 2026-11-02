@@ -19,21 +19,35 @@ import {
 } from "@/lib/ai/orby-knowledge-queue";
 import { ensureOrbyGeminiDocumentFile, deleteOrbyGeminiDocumentFile } from "@/lib/ai/orby-gemini-file";
 import { splitOrbyText } from "@/lib/pdf/split-orby-text";
+import {
+  extractOrbyChecklistRows,
+  extractOrbyCompetencyRows,
+} from "@/lib/pdf/extract-orby-checklist-rows";
 
 const EMBEDDING_BATCH_SIZE = 16;
 const PAGE_BATCH_SIZE = 4;
 const MAX_PAGE_REVIEWS = 10;
 const REVIEW_THRESHOLD = 0.85;
 
-function hashPageBatch(pages: OrbyKnowledgePageInput[], sourceSha256: string): string {
+function hashPageBatch(
+  pages: OrbyKnowledgePageInput[],
+  sourceSha256: string,
+  contextPages: OrbyKnowledgePageInput[] = []
+): string {
   return createHash("sha256")
     .update(sourceSha256, "utf8")
-    .update(JSON.stringify(pages.map((page) => ({
-      page_number: page.page_number,
-      page_text: page.page_text,
-      has_selectable_text: page.has_selectable_text,
-      review_attempts: page.review_attempts,
-    }))), "utf8")
+    .update(JSON.stringify({
+      context_pages: contextPages.map((page) => ({
+        page_number: page.page_number,
+        page_text: page.page_text,
+      })),
+      pages: pages.map((page) => ({
+        page_number: page.page_number,
+        page_text: page.page_text,
+        has_selectable_text: page.has_selectable_text,
+        review_attempts: page.review_attempts,
+      })),
+    }), "utf8")
     .digest("hex");
 }
 
@@ -329,9 +343,30 @@ export async function processNextOrbyKnowledgeJob(options: {
         has_selectable_text: Boolean(page.has_selectable_text),
         review_attempts: Number(page.review_attempts ?? 0),
       }));
-      const result = await generateOrbyKnowledgePageBatch(file.uri, pageInputs, batchIndex, totalBatches);
+      const contextStart = Math.max(1, pageStart - PAGE_BATCH_SIZE);
+      const { data: contextRows, error: contextError } = await supabaseAdmin
+        .from("orby_knowledge_document_pages")
+        .select("page_number,page_text,has_selectable_text,review_attempts")
+        .eq("document_id", job.document_id)
+        .gte("page_number", contextStart)
+        .lt("page_number", pageStart)
+        .order("page_number", { ascending: true });
+      if (contextError) throw new Error("No se pudo recuperar el contexto de continuidad de las páginas anteriores.");
+      const contextInputs: OrbyKnowledgePageInput[] = (contextRows ?? []).map((page) => ({
+        page_number: page.page_number,
+        page_text: typeof page.page_text === "string" ? page.page_text : "",
+        has_selectable_text: Boolean(page.has_selectable_text),
+        review_attempts: Number(page.review_attempts ?? 0),
+      }));
+      const result = await generateOrbyKnowledgePageBatch(
+        file.uri,
+        pageInputs,
+        batchIndex,
+        totalBatches,
+        contextInputs
+      );
 
-      const inputHash = hashPageBatch(pageInputs, document.source_sha256 ?? "");
+      const inputHash = hashPageBatch(pageInputs, document.source_sha256 ?? "", contextInputs);
       const { data: previousBatch, error: previousBatchError } = await supabaseAdmin
         .from("orby_knowledge_job_batches")
         .select("result")
@@ -447,7 +482,7 @@ export async function processNextOrbyKnowledgeJob(options: {
     if (job.stage === "finalize") {
       const { data: allPages, error: allPagesError } = await supabaseAdmin
         .from("orby_knowledge_document_pages")
-        .select("page_number,visual_status,coverage_score,unresolved_items,review_attempts")
+        .select("page_number,page_text,visual_status,coverage_score,unresolved_items,review_attempts")
         .eq("document_id", job.document_id)
         .order("page_number", { ascending: true });
       if (allPagesError) throw new Error("No se pudo comprobar la cobertura completa por página.");
@@ -506,8 +541,13 @@ export async function processNextOrbyKnowledgeJob(options: {
         throw new Error("El perfil todavía no contiene todos los lotes de páginas: " + initialBatches.length + "/" + totalBatches + ".");
       }
 
+      const sourcePages = (allPages ?? []).map((page) => ({
+        page_number: Number(page.page_number),
+        content: typeof page.page_text === "string" ? page.page_text : "",
+      }));
       const profile = combineOrbyKnowledgePageBatches(
-        initialBatches.map((item) => item.result as unknown as OrbyKnowledgePageBatchProfile)
+        initialBatches.map((item) => item.result as unknown as OrbyKnowledgePageBatchProfile),
+        sourcePages
       );
       const conceptCount = await saveOrbyKnowledgeProfile(job.document_id, profile);
       const coverage = Number((allPages ?? []).filter((page) => page.visual_status === "reviewed").length)

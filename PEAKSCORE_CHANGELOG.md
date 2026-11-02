@@ -199,7 +199,7 @@
 - Se amplía el presupuesto automático de 10 a 100 ciclos por ventana móvil de siete horas.
 - El cron protegido de Supabase pasa de ejecutarse cada cinco a cada tres minutos.
 - Cada ciclo continúa reclamando como máximo una tarea/etapa; en la etapa de perfilado visual se procesan cuatro páginas por lote.
-- La cola y la telemetría de revisión vuelven a habilitar la tarea a los tres minutos, alineadas con la frecuencia del cron.
+- Al terminar un lote, la cola lo deja inmediatamente disponible; el siguiente tick del cron (cada tres minutos) lo recoge sin añadir una segunda espera. La telemetría de revisión sigue mostrando una ventana de tres minutos.
 - Las ejecuciones manuales siguen sin consumir el presupuesto automático.
 - Se conserva el contador y el estado actual del motor; esta actualización no activa ni pausa el Autopilot.
 - La publicación automática continúa sujeta a los controles de calidad existentes.

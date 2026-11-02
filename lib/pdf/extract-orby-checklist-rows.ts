@@ -207,7 +207,25 @@ export function extractOrbyChecklistRows(
           hierarchy.length = 0;
           continue;
         }
-        pending = { name: marker.text, level: marker.level, page: chunk.page_number };
+
+        // Some PDF extractors flatten nested syllabus items into one line:
+        // "Noción de conjunto. - Tipos - Inclusión - Operaciones".
+        // Preserve the first item as the parent and split only explicit
+        // spaced dash separators (including the common ".- " PDF variant).
+        const inlineItems = marker.text
+          .split(/(?:\\s+-\\s+|\\.\\s*-\\s+)/)
+          .map(cleanLine)
+          .filter(Boolean);
+        if (inlineItems.length > 1) {
+          pending = { name: inlineItems[0], level: marker.level, page: chunk.page_number };
+          flushPending();
+          for (const child of inlineItems.slice(1)) {
+            pending = { name: child, level: marker.level + 1, page: chunk.page_number };
+            flushPending();
+          }
+        } else {
+          pending = { name: marker.text, level: marker.level, page: chunk.page_number };
+        }
         continue;
       }
 

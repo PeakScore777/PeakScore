@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 
 export const runtime = "nodejs";
@@ -200,6 +200,26 @@ export async function POST(request: Request) {
 
     const currentRequestContext = [subject, topic, userMessage, question, context].filter(Boolean).join(" ");
     const preflight = preflightOrbyRequest(currentRequestContext);
+
+    // Greetings are deterministic UX turns. Never wake the model or consume
+    // its quota for "hola" after a refusal or a new conversation.
+    if (!tutorImage && isOrbyGreetingRequest(userMessage)) {
+      if (conversationId && ownedConversation) {
+        const { error: greetingSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
+          p_user_id: user.id,
+          p_conversation_id: conversationId,
+          p_user_content: userMessage,
+          p_assistant_content: ORBY_GREETING_REPLY,
+          p_check_question: null,
+          p_attachment_kind: null,
+          p_attachment_label: null,
+        });
+        if (greetingSaveError) console.error("[Orby Greeting] Reply persistence failed.", { code: greetingSaveError.code });
+      }
+      return NextResponse.json({ reply: ORBY_GREETING_REPLY, checkQuestion: "", verification: "not_required", sources: [] }, {
+        headers: { "Cache-Control": "private, no-store" },
+      });
+    }
 
     // "Inglés" is an ICFES subject, not an invitation to start a general English conversation.
     if (isGenericIcfesEnglishRequest(userMessage)) {

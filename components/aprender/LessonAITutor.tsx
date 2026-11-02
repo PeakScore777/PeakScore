@@ -2092,8 +2092,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
         })();
       }
-      if (isVoiceInteraction && "speechSynthesis" in window) {
-        window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
+      if (isVoiceInteraction) {
+        if ("speechSynthesis" in window) {
+          await new Promise<void>((resolve) => window.setTimeout(resolve, 120));
+          await speakText(data.reply, assistantIndex);
+        } else {
+          setVoiceError("El navegador no tiene lectura de voz disponible. La respuesta quedó visible por escrito.");
+        }
       }
       if (workspace) {
         void refreshConversations().catch((caught: unknown) => {

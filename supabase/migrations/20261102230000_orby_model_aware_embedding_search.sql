@@ -39,9 +39,8 @@ as $$
     from public.orby_knowledge_documents d
     left join public.orby_knowledge_profiles p on p.document_id = d.id
     where (
-      p_visibility = 'admin' and d.status in ('draft', 'published')
-    ) or (
-      p_visibility = 'published' and d.status = 'published'
+      (p_visibility = 'admin' and d.status in ('draft', 'published'))
+      or (p_visibility = 'published' and d.status = 'published')
     )
     and (p_subject is null or d.subject = p_subject)
   ),

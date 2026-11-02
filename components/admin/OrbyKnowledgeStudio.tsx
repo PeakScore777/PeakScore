@@ -596,6 +596,24 @@ export default function OrbyKnowledgeStudio() {
                     <p className="text-[10px] font-semibold text-slate-200">Aprendizaje detectado</p>
                     <span className={job.stored_profile_batches>0?"text-[9px] font-semibold text-emerald-300":"text-[9px] text-slate-500"}>{job.stored_profile_batches>0?"Resultados parciales guardados":"Esperando el primer análisis académico"}</span>
                   </div>
+                  {(() => {
+                    const embeddingStage = job.stage === "embeddings";
+                    const progressTotal = embeddingStage ? job.chunk_count : job.visual_pages_total;
+                    const progressDone = embeddingStage ? job.embedded_chunk_count : job.visual_pages_reviewed;
+                    const progressPercent = progressTotal > 0 ? Math.min(100, Math.round(progressDone / progressTotal * 100)) : 0;
+                    const stageLabel = embeddingStage
+                      ? "Indexación semántica"
+                      : job.stage === "profile" ? "Lectura visual y perfil académico" : "Consolidación del perfil";
+                    return <div className="mt-2 rounded-md bg-black/20 px-2.5 py-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-[9px] font-semibold text-slate-300">{stageLabel}</p>
+                        <p className="text-[9px] tabular-nums text-slate-400">{progressDone}/{progressTotal} {embeddingStage ? "fragmentos vectorizados" : "páginas revisadas"} · {progressPercent}%</p>
+                      </div>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <div className="h-full rounded-full bg-orange-400 transition-[width] duration-500" style={{ width: progressPercent + "%" }}/>
+                      </div>
+                    </div>;
+                  })()}
                   <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Vectores</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.embedded_chunk_count}/{job.chunk_count}</p></div>
                     <div className="rounded-md bg-black/20 px-2 py-1.5"><p className="text-[9px] text-slate-500">Páginas verificadas</p><p className="mt-0.5 text-xs font-semibold tabular-nums text-white">{job.visual_pages_reviewed}/{job.visual_pages_total}</p></div>

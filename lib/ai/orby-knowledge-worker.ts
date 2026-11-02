@@ -22,6 +22,7 @@ import { ensureOrbyGeminiDocumentFile, deleteOrbyGeminiDocumentFile } from "@/li
 import { splitOrbyText } from "@/lib/pdf/split-orby-text";
 
 const EMBEDDING_BATCH_SIZE = 16;
+const MAX_DOCUMENT_CHUNKS = 2000;
 const PAGE_BATCH_SIZE = 4;
 const MAX_PAGE_REVIEWS = 10;
 const REVIEW_THRESHOLD = 0.85;
@@ -258,9 +259,15 @@ export async function processNextOrbyKnowledgeJob(options: {
       }
 
       const counts = await getChunkCounts(job.document_id);
+      if (counts.total > MAX_DOCUMENT_CHUNKS) {
+        throw new Error("El documento supera el límite seguro de " + MAX_DOCUMENT_CHUNKS + " fragmentos indexables.");
+      }
+      // Preserve completed visual batches when the job must finish its embeddings
+      // later. Resetting this index to zero caused the same pages to be read again.
+      const resumeBatchIndex = Math.max(0, Math.min(totalBatches, Number(job.next_batch_index) || 0));
       const nextStage = counts.missing > 0
         ? "embeddings"
-        : job.next_batch_index >= totalBatches ? "finalize" : "profile";
+        : resumeBatchIndex >= totalBatches ? "finalize" : "profile";
       const { error: countUpdateError } = await supabaseAdmin.from("orby_knowledge_documents")
         .update({
           embedded_chunk_count: counts.embedded,
@@ -268,11 +275,11 @@ export async function processNextOrbyKnowledgeJob(options: {
           updated_at: new Date().toISOString(),
         })
         .eq("id", job.document_id);
-      if (countUpdateError) throw new Error("No se pudo actualizar el contador de embeddings.");
+      if (countUpdateError) throw new Error("No se pudo actualizar el contador de embeddings: " + countUpdateError.code);
 
       await releaseJob(job, workerId, {
         stage: nextStage,
-        nextBatchIndex: job.next_batch_index >= totalBatches ? totalBatches : 0,
+        nextBatchIndex: resumeBatchIndex,
         embeddedChunkCount: counts.embedded,
         totalBatches,
       });
@@ -416,7 +423,16 @@ export async function processNextOrbyKnowledgeJob(options: {
         ));
       }
 
+      // Persist the new content fingerprint immediately after OCR/visual chunks
+      // change. Later counter or batch-metadata failures can then safely retry
+      // without invalidating all previously completed page analysis.
+      const updatedChunks = await loadOrbyKnowledgeChunks(job.document_id);
+      await refreshDocumentContentHash(job, workerId, document.source_sha256 ?? "", updatedChunks);
+
       const counts = await getChunkCounts(job.document_id);
+      if (counts.total > MAX_DOCUMENT_CHUNKS) {
+        throw new Error("El documento supera el límite seguro de " + MAX_DOCUMENT_CHUNKS + " fragmentos indexables.");
+      }
       const { count: reviewedCount, error: reviewedError } = await supabaseAdmin
         .from("orby_knowledge_document_pages")
         .select("page_number", { count: "exact", head: true })
@@ -436,18 +452,18 @@ export async function processNextOrbyKnowledgeJob(options: {
           updated_at: new Date().toISOString(),
         })
         .eq("id", job.document_id);
-      if (docUpdateError) throw new Error("No se pudo actualizar la cobertura de aprendizaje del documento.");
+      if (docUpdateError) throw new Error("No se pudo actualizar la cobertura de aprendizaje del documento: " + docUpdateError.code);
 
-      await supabaseAdmin.from("orby_knowledge_job_batches")
+      const { error: batchSaveError } = await supabaseAdmin.from("orby_knowledge_job_batches")
         .upsert({
           job_id: job.id,
           batch_index: batchIndex,
           input_hash: inputHash,
           result: mergedBatch,
         }, { onConflict: "job_id,batch_index" });
-
-      const updatedChunks = await loadOrbyKnowledgeChunks(job.document_id);
-      await refreshDocumentContentHash(job, workerId, document.source_sha256 ?? "", updatedChunks);
+      if (batchSaveError) {
+        throw new Error("No se pudo guardar la memoria del lote " + batchIndex + ": " + batchSaveError.code);
+      }
 
       const nextStage = reviewOnly
         ? counts.missing > 0 ? "embeddings" : "finalize"

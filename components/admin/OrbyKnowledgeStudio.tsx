@@ -16,6 +16,7 @@ type Source = { documentId: string; title: string; subject: string; topic: strin
 type ChatMessage = { id?: string; role: "user" | "assistant"; content: string; sources?: Source[]; verification?: "not_required" | "passed" | "corrected" | "unverified"; created_at?: string };
 type AutomationStatus = {
   settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null; ai_cycles_used: number; ai_cycle_date: string | null; ai_cycle_window_started_at: string | null };
+  workers: { automaticBusy: boolean; manualBusy: boolean };
   configured: boolean;
   counts: { queued: number; running: number; retrying: number; failed: number; completed: number };
   recent: Array<{
@@ -33,6 +34,7 @@ type AutomationStatus = {
     concept_count: number;
     status: string;
     stage: string;
+    automatic_review_pending: boolean;
     next_batch_index: number;
     total_batches: number;
     stored_profile_batches: number;
@@ -550,9 +552,13 @@ export default function OrbyKnowledgeStudio() {
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[.18em] text-orange-400">03 / AUTONOMOUS KNOWLEDGE</p>
                 <h3 className="mt-1 text-sm font-semibold">Orby Autopilot</h3>
-                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">El trabajador se ejecuta cada tres minutos y procesa un lote por ciclo; en la etapa de lectura visual, cada lote analiza cuatro páginas y extrae conceptos, métodos para enseñar desde cero, ejemplos, arquetipos Saber 11 y rutas de estudio. El Autopilot tiene un cupo de 100 ciclos IA por ventana móvil de 7 horas. Tus ejecuciones manuales son ilimitadas y no consumen ese presupuesto; puedes pausar el motor cuando quieras. Cuando un ciclo automático finaliza, publica para el alumnado los borradores que superan todos los controles de calidad; los demás permanecen en borrador.</p>
+                <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">El Autopilot ejecuta un ciclo cada tres minutos (máximo 100 por ventana móvil de 7 horas) y procesa un lote de cuatro páginas visuales por ciclo. El trabajador manual y el automático funcionan en carriles independientes y pueden avanzar a la vez en documentos distintos; comparten la misma cola, embeddings, conceptos y biblioteca, y nunca reclaman simultáneamente el mismo documento. Tus ejecuciones manuales son ilimitadas y no consumen el presupuesto automático. Al terminar manualmente un borrador apto, el Autopilot recibe esa misma tarea para una validación final y lo publica solo si supera todos los controles. Puedes pausar el carril automático sin detener el manual.</p>
               </div>
               <span className={automation?.settings.enabled ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300" : "rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] font-bold text-slate-400"}>{automation?.settings.enabled ? "MOTOR ACTIVO" : "MOTOR PAUSADO"}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2 text-[9px] font-semibold">
+              <span className={automation?.workers.automaticBusy ? "rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-300" : "rounded-md bg-white/[.04] px-2 py-1 text-slate-500"}>{automation?.workers.automaticBusy ? "AUTOPILOT TRABAJANDO" : "AUTOPILOT DISPONIBLE"}</span>
+              <span className={automation?.workers.manualBusy ? "rounded-md bg-orange-500/10 px-2 py-1 text-orange-200" : "rounded-md bg-white/[.04] px-2 py-1 text-slate-500"}>{automation?.workers.manualBusy ? "MANUAL TRABAJANDO" : "MANUAL DISPONIBLE"}</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-6">
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">En cola</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.queued ?? "—"}</p></div>
@@ -576,7 +582,7 @@ export default function OrbyKnowledgeStudio() {
               </div>
             </div>
             {!automation?.configured && <p className="mt-2 text-[9px] leading-4 text-amber-300">Falta conectar el trabajador protegido: CRON_SECRET en Preview de Vercel y URL, secreto de cron y bypass de SSO en Supabase Vault. La subida puede iniciar el primer lote; la continuación desatendida espera esa conexión.</p>}
-            {automation?.recent?.[0] && <div className="mt-2 space-y-1 text-[9px] text-slate-500"><p className="truncate">Último documento de la cola: <span className="font-semibold text-slate-300">{automation.recent[0].document_title}</span></p><p>Estado: {automation.recent[0].status} · Etapa: {automation.recent[0].stage === "embeddings" ? "embeddings" : automation.recent[0].stage === "profile" ? "perfilado académico" : automation.recent[0].stage === "finalize" ? "consolidación" : automation.recent[0].stage} · {automation.recent[0].next_batch_index}/{automation.recent[0].total_batches} lotes de perfil</p><p>Vectores del documento: {automation.recent[0].embedded_chunk_count}/{automation.recent[0].chunk_count}</p></div>}
+            {automation?.recent?.[0] && <div className="mt-2 space-y-1 text-[9px] text-slate-500"><p className="truncate">Último documento de la cola: <span className="font-semibold text-slate-300">{automation.recent[0].document_title}</span></p><p>Estado: {automation.recent[0].status} · Etapa: {automation.recent[0].stage === "embeddings" ? "embeddings" : automation.recent[0].stage === "profile" ? "perfilado académico" : automation.recent[0].stage === "finalize" ? "consolidación" : automation.recent[0].stage} · {automation.recent[0].next_batch_index}/{automation.recent[0].total_batches} lotes de perfil{automation.recent[0].automatic_review_pending ? " · revisión automática final pendiente" : ""}</p><p>Vectores del documento: {automation.recent[0].embedded_chunk_count}/{automation.recent[0].chunk_count}</p></div>}
           </section>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-semibold">Biblioteca ({documents.length})</h3><span className="text-[10px] text-slate-500">Solo documentos publicados alimentan el chat estudiantil</span></div>{documents.some(doc=>doc.knowledge_profile_status!=="ready"||doc.knowledge_profile_version<2||doc.knowledge_pipeline_version<7||doc.embedded_chunk_count<doc.chunk_count)&&<button type="button" disabled={enrichingDocument!==null} onClick={()=>void enrichKnowledge()} className="inline-flex items-center gap-2 rounded-lg border border-orange-400/25 bg-orange-400/10 px-3 py-2 text-[10px] font-semibold text-orange-200 transition hover:bg-orange-400/15 disabled:opacity-50">{enrichingDocument==="all"?<LoaderCircle className="h-3.5 w-3.5 animate-spin"/>:<Sparkles className="h-3.5 w-3.5"/>}{enrichingDocument==="all"?"Añadiendo a la cola…":"Encolar pendientes"}</button>}</div>
           <div className="mt-3 space-y-2">

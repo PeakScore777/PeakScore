@@ -321,6 +321,15 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /void refreshConversations\(\)\.catch/);
 });
 
+test("el endpoint de persistencia de voz autentica al alumno y guarda turnos atómicos", () => {
+  assert.match(realtimeTurnSource, /supabase\.auth\.getUser\(\)/);
+  assert.match(realtimeTurnSource, /\.slice\(0, 8000\)/);
+  assert.match(realtimeTurnSource, /supabaseAdmin\.rpc\("orby_save_turn"/);
+  assert.match(realtimeTurnSource, /p_user_id: user\.id/);
+  assert.match(realtimeTurnSource, /p_conversation_id: conversationId/);
+  assert.match(realtimeTurnSource, /Cache-Control": "no-store"/);
+});
+
 test("los filtros escritos dentro de voz se contestan localmente antes de Gemini Live", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
   const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);

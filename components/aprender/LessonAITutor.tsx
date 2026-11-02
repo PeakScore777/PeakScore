@@ -670,8 +670,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function speakText(text: string, index: number) {
+    const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setVoiceError("Tu navegador no tiene lectura de voz disponible.");
+      setVoiceError("Tu navegador no tiene lectura de voz disponible. La respuesta también está visible por escrito.");
+      if (isLocalVoiceTurn) finishLocalVoiceReply();
       return;
     }
     stopSpeaking();
@@ -690,14 +692,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (preferredVoice) utterance.voice = preferredVoice;
     utterance.onend = () => {
       setSpeakingIndex(null);
+      if (isLocalVoiceTurn) finishLocalVoiceReply();
     };
     utterance.onerror = () => {
       setSpeakingIndex(null);
-      waitingForVoiceReplyRef.current = false;
-      if (voiceModeRef.current) {
-        voiceModeRef.current = false;
-        setVoiceMode(false);
-        setVoiceError("La lectura de voz se interrumpió. Puedes volver a iniciar la conversación.");
+      if (isLocalVoiceTurn) {
+        setVoiceError("No se pudo reproducir el audio de esta respuesta. El texto quedó disponible.");
+        finishLocalVoiceReply();
       }
     };
     setSpeakingIndex(index); window.speechSynthesis.speak(utterance);
@@ -811,6 +812,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       void audioContext.close().catch(() => undefined);
     }
 
+    waitingForVoiceReplyRef.current = false;
     if (updateState) {
       setVoiceMode(false);
       setVoiceMuted(false);
@@ -818,6 +820,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setLiveTranscript("");
       setVoiceStatus("Conversación finalizada");
     }
+  }
+
+  function finishLocalVoiceReply() {
+    clearVoiceResponseWatchdog();
+    waitingForVoiceReplyRef.current = false;
+    setVoiceStatus("Te escucho…");
+    setIsListening(true);
+    void persistRealtimeTurnIfReady().finally(() => drainPendingMessageQueue());
   }
 
   async function persistRealtimeTurnIfReady() {
@@ -836,7 +846,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
       if (!response.ok) throw new Error("No se pudo guardar el turno de voz.");
       voiceTurnPersistedRef.current = true;
-      await refreshConversations();
+      void refreshConversations().catch((caught: unknown) => {
+        setConversationError(caught instanceof Error ? caught.message : "No se pudo actualizar el historial.");
+      });
     } catch {
       setConversationError("La respuesta se escuchó, pero no se pudo guardar en el historial.");
     } finally {

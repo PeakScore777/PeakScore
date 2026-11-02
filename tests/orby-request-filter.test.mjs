@@ -76,7 +76,9 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
   assert.match(lessonTutorSource, /voiceTurnSavingRef\.current = false/);
   assert.match(lessonTutorSource, /waitingForVoiceReplyRef\.current = true/);
-  assert.match(lessonTutorSource, /persistRealtimeTurnIfReady\(\)\.finally\(\(\) => drainPendingMessageQueue\(\)\)/);
+  assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
+  assert.match(lessonTutorSource, /const turn = \{ conversationId: id, userContent, assistantContent \}/);
+  assert.match(lessonTutorSource, /void persistRealtimeTurnIfReady\(\);\s*drainPendingMessageQueue\(\)/);
   assert.match(lessonTutorSource, /La cola de Orby está llena\. Espera a que termine la respuesta de voz\./);
 });
 

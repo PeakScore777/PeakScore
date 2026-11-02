@@ -1194,25 +1194,33 @@ export async function enrichOrbyKnowledgeDocument(
 export async function createOrbyQueryEmbedding(query: string): Promise<number[] | null> {
   const text = query.trim().slice(0, 4000);
   if (!text || !process.env.GEMINI_API_KEY) return null;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
   try {
     const client = getEmbeddingClient();
-    const response = await client.models.embedContent({
-      model: EMBEDDING_MODEL,
-      contents: text,
-      config: {
-        taskType: "RETRIEVAL_QUERY",
-        outputDimensionality: EMBEDDING_DIMENSIONS,
-      },
-    });
+    const response = await Promise.race([
+      client.models.embedContent({
+        model: EMBEDDING_MODEL,
+        contents: text,
+        config: {
+          taskType: "RETRIEVAL_QUERY",
+          outputDimensionality: EMBEDDING_DIMENSIONS,
+        },
+      }),
+      new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("Query embedding timed out.")), 4_500);
+      }),
+    ]);
     const values = response.embeddings?.[0]?.values;
     return Array.isArray(values) && values.length === EMBEDDING_DIMENSIONS && values.every(Number.isFinite)
       ? values
       : null;
   } catch (error) {
-    console.error("[Orby RAG] Query embedding failed; lexical fallback will be used.", {
+    console.warn("[Orby RAG] Query embedding unavailable; lexical retrieval continues.", {
       name: error instanceof Error ? error.name : "UnknownError",
     });
     return null;
+  } finally {
+    if (timeoutId !== null) clearTimeout(timeoutId);
   }
 }
 

@@ -308,6 +308,15 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /const legacyOutOfScope/);
 });
 
+test("Gemini Live comprime el contexto y conserva el handle de reanudación por conversación", () => {
+  assert.match(lessonTutorSource, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
+  assert.match(lessonTutorSource, /sessionResumption:\s*\{/);
+  assert.match(lessonTutorSource, /voiceSessionResumeHandleRef\.current = update\.newHandle/);
+  assert.match(lessonTutorSource, /voiceSessionResumeConversationRef\.current = activeConversationRef\.current/);
+  assert.match(lessonTutorSource, /voiceSessionResumeConversationRef\.current === activeConversationRef\.current/);
+  assert.match(lessonTutorSource, /voiceSessionResumeHandleRef\.current = null/);
+});
+
 test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
   assert.match(lessonTutorSource, /22_000/);

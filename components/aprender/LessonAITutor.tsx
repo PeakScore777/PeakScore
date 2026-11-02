@@ -1801,7 +1801,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        signal: AbortSignal.timeout(90_000),
+        signal: AbortSignal.timeout(60_000),
         body: JSON.stringify({
           subject: activeReview?.subject ?? subject,
           topic: activeReview?.topic ?? topic,

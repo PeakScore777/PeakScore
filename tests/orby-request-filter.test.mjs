@@ -135,6 +135,35 @@ test("la publicación automática solo ocurre al completar un ciclo automático 
   }), false);
 });
 
+test("el lote manual apto se entrega al Autopilot para validación final", () => {
+  const readyDocument = {
+    chunk_count: 8,
+    embedded_chunk_count: 8,
+    knowledge_profile_status: "ready",
+    knowledge_profile_version: 2,
+    knowledge_pipeline_version: 7,
+    concept_count: 12,
+    ingestion_status: "completed",
+    coverage_percent: 100,
+    visual_pages_total: 10,
+    visual_pages_reviewed: 10,
+  };
+
+  assert.equal(publication.shouldHandOffManualOrbyKnowledgeForAutomaticReview({
+    origin: "manual", currentStatus: "draft", document: readyDocument,
+  }), true);
+  assert.equal(publication.shouldHandOffManualOrbyKnowledgeForAutomaticReview({
+    origin: "manual", currentStatus: "draft",
+    document: { ...readyDocument, coverage_percent: 90 },
+  }), false);
+  assert.equal(publication.shouldHandOffManualOrbyKnowledgeForAutomaticReview({
+    origin: "automatic", currentStatus: "draft", document: readyDocument,
+  }), false);
+  assert.equal(publication.shouldHandOffManualOrbyKnowledgeForAutomaticReview({
+    origin: "manual", currentStatus: "archived", document: readyDocument,
+  }), false);
+});
+
 test("fragmenta párrafos largos en límites naturales sin cortar palabras", () => {
   const source = Array.from({ length: 36 }, (_, index) => "concepto" + String(index).padStart(2, "0")).join(" ");
   const chunks = chunking.splitOrbyText(source, 80);

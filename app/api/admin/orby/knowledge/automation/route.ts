@@ -269,15 +269,22 @@ export async function GET() {
           if (!name) continue;
           const area = "area" in concept && typeof concept.area === "string" ? concept.area.trim() : "Transversal";
           const parent = "parent_concept" in concept && typeof concept.parent_concept === "string" ? concept.parent_concept.trim() : "";
-          const key = [normalizeProfileIdentity(area), normalizeProfileIdentity(parent), normalizeProfileIdentity(name)].join("|");
+          const key = normalizeProfileIdentity(area) + "|" + normalizeProfileIdentity(name.replace(/\|[^|]{1,32}\|/g, " "));
           const pages = "evidence_pages" in concept && Array.isArray(concept.evidence_pages)
             ? concept.evidence_pages.filter((page: unknown): page is number => typeof page === "number" && Number.isInteger(page) && page > 0).slice(0, 10)
             : [];
           const existing = concepts.get(key);
+          const preferredParent = existing?.parent_concept
+            && existing.parent_concept.length >= parent.length
+            ? existing.parent_concept
+            : parent;
+          const preferredName = existing?.name && existing.name.length >= name.length
+            ? existing.name
+            : name;
           concepts.set(key, {
-            name,
+            name: preferredName,
             area,
-            parent_concept: parent,
+            parent_concept: preferredParent,
             evidence_pages: [...new Set([...(existing?.evidence_pages ?? []), ...pages])].slice(0, 10),
           });
           areas.add(area);

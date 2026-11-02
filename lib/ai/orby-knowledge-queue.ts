@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { OrbyKnowledgeChunk } from "@/lib/ai/orby-knowledge";
 
-export const ORBY_KNOWLEDGE_PIPELINE_VERSION = 6;
+export const ORBY_KNOWLEDGE_PIPELINE_VERSION = 7;
 
 export type OrbyKnowledgeJob = {
   id: string;

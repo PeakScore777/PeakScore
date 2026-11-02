@@ -1341,7 +1341,7 @@ async function generateWithGroq(
    *      ↓
    * router → Gemini
    */
-  const MAX_RETRIES = task === "tutor" ? 1 : 2;
+  const MAX_RETRIES = task === "tutor" ? 0 : 2;
 
   for (
     let attempt = 1;
@@ -1366,7 +1366,7 @@ async function generateWithGroq(
           {
             method: "POST",
 
-            signal: AbortSignal.timeout(task === "tutor" ? 22000 : 60000),
+            signal: AbortSignal.timeout(task === "tutor" ? 12000 : 60000),
 
             headers: {
               "Content-Type":
@@ -1804,7 +1804,7 @@ async function generateWithGroq(
            // The previous implicit output budget could truncate otherwise valid JSON.
            maxOutputTokens: task === "analysis" ? 16000 : task === "tutor" ? 2200 : 8192,
            httpOptions: {
-             timeout: task === "tutor" ? 22000 : 60000,
+             timeout: task === "tutor" ? 15000 : 60000,
            },
          },
        });

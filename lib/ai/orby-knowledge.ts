@@ -1,6 +1,7 @@
 import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
+import { createCloudflareEmbeddings, CLOUDFLARE_EMBEDDING_MODEL, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI } from "@/lib/ai/router";
 import {
@@ -285,7 +286,6 @@ export async function createOrbyEmbeddings(
   chunks: OrbyKnowledgeChunk[]
 ): Promise<number> {
   if (!chunks.length) return 0;
-  const client = getEmbeddingClient();
   let saved = 0;
 
   for (let offset = 0; offset < chunks.length; offset += EMBEDDING_BATCH_SIZE) {
@@ -295,21 +295,62 @@ export async function createOrbyEmbeddings(
       + "\nPágina: " + chunk.page_number
       + "\nContenido académico:\n" + chunk.content.slice(0, 4200)
     );
-    const response = await client.models.embedContent({
-      model: EMBEDDING_MODEL,
-      contents,
-      config: {
-        taskType: "RETRIEVAL_DOCUMENT",
-        title: title.slice(0, 180),
-        outputDimensionality: EMBEDDING_DIMENSIONS,
-      },
-    });
 
-    const vectors = response.embeddings ?? [];
+    let vectors: number[][] = [];
+    let usedModel = EMBEDDING_MODEL;
+    let geminiFailure: unknown = null;
+
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const response = await getEmbeddingClient().models.embedContent({
+          model: EMBEDDING_MODEL,
+          contents,
+          config: {
+            taskType: "RETRIEVAL_DOCUMENT",
+            title: title.slice(0, 180),
+            outputDimensionality: EMBEDDING_DIMENSIONS,
+            httpOptions: { timeout: 18_000 },
+          },
+        });
+        const returned = response.embeddings ?? [];
+        if (returned.length !== batch.length) throw new Error("Gemini returned an incomplete embedding batch.");
+        vectors = returned.map((item) => {
+          const values = item.values;
+          if (!Array.isArray(values) || values.length !== EMBEDDING_DIMENSIONS || values.some((value) => !Number.isFinite(value))) {
+            throw new Error("Gemini returned an invalid embedding vector.");
+          }
+          return values;
+        });
+      } catch (error) {
+        geminiFailure = error;
+        console.warn("[Orby RAG] Gemini document embeddings unavailable; trying Cloudflare.", {
+          name: error instanceof Error ? error.name : "UnknownError",
+        });
+      }
+    }
+
+    if (!vectors.length && isCloudflareWorkersAIConfigured()) {
+      try {
+        vectors = await createCloudflareEmbeddings(contents);
+        usedModel = CLOUDFLARE_EMBEDDING_MODEL;
+      } catch (error) {
+        console.error("[Orby RAG] Cloudflare document embeddings unavailable.", {
+          name: error instanceof Error ? error.name : "UnknownError",
+        });
+        if (geminiFailure) {
+          throw new Error("Gemini and Cloudflare embeddings are both unavailable. The saved batches remain intact; retry the same job later.");
+        }
+        throw error;
+      }
+    }
+
+    if (!vectors.length) {
+      if (geminiFailure instanceof Error) throw geminiFailure;
+      throw new Error("No embedding provider is configured for Orby.");
+    }
     if (vectors.length !== batch.length) throw new Error("The embedding provider returned an incomplete batch.");
 
-    const payload = vectors.map((embedding, index) => {
-      const values = embedding.values;
+    const payload = vectors.map((values, index) => {
       if (!Array.isArray(values) || values.length !== EMBEDDING_DIMENSIONS || values.some((value) => !Number.isFinite(value))) {
         throw new Error("The embedding provider returned an invalid vector.");
       }
@@ -319,7 +360,7 @@ export async function createOrbyEmbeddings(
     const { data, error } = await supabaseAdmin.rpc("orby_save_chunk_embeddings", {
       p_document_id: documentId,
       p_embeddings: payload,
-      p_model: EMBEDDING_MODEL,
+      p_model: usedModel,
     });
     if (error) throw new Error("Could not save semantic vectors: " + error.code);
     saved += Number(data) || 0;
@@ -1191,37 +1232,60 @@ export async function enrichOrbyKnowledgeDocument(
   return { embedded, concepts };
 }
 
-export async function createOrbyQueryEmbedding(query: string): Promise<number[] | null> {
-  const text = query.trim().slice(0, 4000);
-  if (!text || !process.env.GEMINI_API_KEY) return null;
+export type OrbyQueryEmbedding = { values: number[]; model: string };
+
+export async function createOrbyQueryEmbedding(query: string): Promise<OrbyQueryEmbedding | null> {
+  const text = query.trim().slice(0, 1800);
+  if (!text) return null;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  try {
-    const client = getEmbeddingClient();
-    const response = await Promise.race([
-      client.models.embedContent({
-        model: EMBEDDING_MODEL,
-        contents: text,
-        config: {
-          taskType: "RETRIEVAL_QUERY",
-          outputDimensionality: EMBEDDING_DIMENSIONS,
-        },
-      }),
-      new Promise<never>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error("Query embedding timed out.")), 4_500);
-      }),
-    ]);
-    const values = response.embeddings?.[0]?.values;
-    return Array.isArray(values) && values.length === EMBEDDING_DIMENSIONS && values.every(Number.isFinite)
-      ? values
-      : null;
-  } catch (error) {
-    console.warn("[Orby RAG] Query embedding unavailable; lexical retrieval continues.", {
-      name: error instanceof Error ? error.name : "UnknownError",
-    });
-    return null;
-  } finally {
-    if (timeoutId !== null) clearTimeout(timeoutId);
+  let geminiFailure: unknown = null;
+
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const response = await Promise.race([
+        getEmbeddingClient().models.embedContent({
+          model: EMBEDDING_MODEL,
+          contents: text,
+          config: {
+            taskType: "RETRIEVAL_QUERY",
+            outputDimensionality: EMBEDDING_DIMENSIONS,
+            httpOptions: { timeout: 4_000 },
+          },
+        }),
+        new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => reject(new Error("Gemini query embedding timed out.")), 4_500);
+        }),
+      ]);
+      const values = response.embeddings?.[0]?.values;
+      if (Array.isArray(values) && values.length === EMBEDDING_DIMENSIONS && values.every(Number.isFinite)) {
+        return { values, model: EMBEDDING_MODEL };
+      }
+      geminiFailure = new Error("Gemini returned an invalid query embedding.");
+    } catch (error) {
+      geminiFailure = error;
+      console.warn("[Orby RAG] Gemini query embedding unavailable; trying Cloudflare.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+    } finally {
+      if (timeoutId !== null) clearTimeout(timeoutId);
+    }
   }
+
+  if (isCloudflareWorkersAIConfigured()) {
+    try {
+      const [values] = await createCloudflareEmbeddings([text]);
+      return { values, model: CLOUDFLARE_EMBEDDING_MODEL };
+    } catch (error) {
+      console.warn("[Orby RAG] Cloudflare query embedding unavailable; lexical retrieval continues.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+    }
+  }
+
+  if (geminiFailure) {
+    console.warn("[Orby RAG] No semantic embedding provider completed this query; lexical retrieval remains active.");
+  }
+  return null;
 }
 
 export async function searchOrbyKnowledge(options: {
@@ -1233,10 +1297,11 @@ export async function searchOrbyKnowledge(options: {
   const embedding = await createOrbyQueryEmbedding(options.query);
   const { data, error } = await supabaseAdmin.rpc("orby_search_knowledge_hybrid", {
     p_query: options.query,
-    p_embedding: embedding ? "[" + embedding.join(",") + "]" : null,
+    p_embedding: embedding ? "[" + embedding.values.join(",") + "]" : null,
     p_subject: options.subject ?? null,
     p_limit: options.limit ?? 8,
     p_visibility: options.visibility,
+    p_embedding_model: embedding?.model ?? null,
   });
   if (error) {
     console.error("[Orby RAG] Hybrid search failed; using lexical fallback.", { code: error.code });

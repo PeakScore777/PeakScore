@@ -32,10 +32,27 @@ const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowle
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
+const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const routerSource = await readFile(new URL("../lib/ai/router.ts", import.meta.url), "utf8");
 const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
+
+test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de Orby", () => {
+  assert.match(cloudflareVoiceSource, /import "server-only"/);
+  assert.match(cloudflareVoiceSource, /CLOUDFLARE_ACCOUNT_ID/);
+  assert.match(cloudflareVoiceSource, /CLOUDFLARE_API_TOKEN/);
+  assert.match(cloudflareVoiceSource, /@cf\\/openai\\/whisper-large-v3-turbo/);
+  assert.match(cloudflareVoiceSource, /@cf\\/meta\\/llama-3\\.3-70b-instruct-fp8-fast/);
+  assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\\(bytes\\)/);
+  assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\\(activePrompt\\)/);
+  assert.match(cloudflareTutorRoute, /containsProgrammingInstruction\\(modelReply\\)/);
+  assert.match(cloudflareTutorRoute, /containsExternalPreIcfesPromotion\\(modelReply\\)/);
+  assert.match(lessonTutorSource, /sendMessageRef\\.current\\(pendingUserText, false, true, undefined, false\\)/);
+  assert.match(lessonTutorSource, /if \\(isVoiceInteraction && "speechSynthesis" in window\\)/);
+});
 
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
   for (const greeting of ["hola", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito"]) {

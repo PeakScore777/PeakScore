@@ -93,6 +93,29 @@ export async function GET() {
 
   for (const job of recentJobs) {
     const rows = (savedBatches ?? []).filter((row) => row.job_id === job.id);
+    const sourceRowsByNamePage = new Map<string, Array<{ area: string; parent_concept: string }>>();
+    for (const row of rows) {
+      const batch = row.result && typeof row.result === "object" ? row.result as Record<string, unknown> : {};
+      if (!Array.isArray(batch.concepts)) continue;
+      for (const raw of batch.concepts) {
+        if (!raw || typeof raw !== "object") continue;
+        const item = raw as Record<string, unknown>;
+        const name = typeof item.name === "string" ? item.name.trim() : "";
+        const evidence = typeof item.evidence === "string" ? item.evidence : "";
+        if (!name || !evidence.includes("Renglón extraído directamente del texto fuente")) continue;
+        const area = typeof item.area === "string" ? item.area.trim() : "Transversal";
+        const parent = typeof item.parent_concept === "string" ? item.parent_concept.trim() : "";
+        const pages = Array.isArray(item.evidence_pages)
+          ? item.evidence_pages.filter((page: unknown): page is number => typeof page === "number" && Number.isInteger(page) && page > 0)
+          : [];
+        for (const page of pages) {
+          const key = normalizeProfileIdentity(name.replace(/\|[^|]{1,32}\|/g, " ")) + "|" + page;
+          const matches = sourceRowsByNamePage.get(key) ?? [];
+          matches.push({ area, parent_concept: parent });
+          sourceRowsByNamePage.set(key, matches);
+        }
+      }
+    }
     const concepts = new Map<string, { name: string; area: string; parent_concept: string; evidence_pages: number[] }>();
     const topics = new Set<string>();
     const competencies = new Set<string>();
@@ -267,12 +290,21 @@ export async function GET() {
           if (!concept || typeof concept !== "object" || !("name" in concept) || typeof concept.name !== "string") continue;
           const name = concept.name.trim();
           if (!name) continue;
-          const area = "area" in concept && typeof concept.area === "string" ? concept.area.trim() : "Transversal";
-          const parent = "parent_concept" in concept && typeof concept.parent_concept === "string" ? concept.parent_concept.trim() : "";
-          const key = normalizeProfileIdentity(area) + "|" + normalizeProfileIdentity(name.replace(/\|[^|]{1,32}\|/g, " "));
+          let area = "area" in concept && typeof concept.area === "string" ? concept.area.trim() : "Transversal";
+          let parent = "parent_concept" in concept && typeof concept.parent_concept === "string" ? concept.parent_concept.trim() : "";
+          const conceptIdentity = normalizeProfileIdentity(name.replace(/\|[^|]{1,32}\|/g, " "));
           const pages = "evidence_pages" in concept && Array.isArray(concept.evidence_pages)
             ? concept.evidence_pages.filter((page: unknown): page is number => typeof page === "number" && Number.isInteger(page) && page > 0).slice(0, 10)
             : [];
+          const sourceMatches = [...new Map(
+            pages.flatMap((page) => sourceRowsByNamePage.get(conceptIdentity + "|" + page) ?? [])
+              .map((source) => [normalizeProfileIdentity(source.area), source])
+          ).values()];
+          if (sourceMatches.length === 1) {
+            area = sourceMatches[0].area;
+            parent = sourceMatches[0].parent_concept || parent;
+          }
+          const key = normalizeProfileIdentity(area) + "|" + conceptIdentity;
           const existing = concepts.get(key);
           const preferredParent = existing?.parent_concept
             && existing.parent_concept.length >= parent.length

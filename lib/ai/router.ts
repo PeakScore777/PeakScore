@@ -201,7 +201,7 @@ const TASK_PROVIDERS: Record<
 
   complete_simulation: "gemini",
 
-  tutor: "gemini",
+  tutor: "groq",
 
   support: "gemini",
 
@@ -1341,7 +1341,7 @@ async function generateWithGroq(
    *      ↓
    * router → Gemini
    */
-  const MAX_RETRIES = 2;
+  const MAX_RETRIES = task === "tutor" ? 1 : 2;
 
   for (
     let attempt = 1;
@@ -1366,7 +1366,7 @@ async function generateWithGroq(
           {
             method: "POST",
 
-            signal: AbortSignal.timeout(60000),
+            signal: AbortSignal.timeout(task === "tutor" ? 22000 : 60000),
 
             headers: {
               "Content-Type":
@@ -1395,7 +1395,7 @@ async function generateWithGroq(
               // explanation + visual_data, por lo que 4096
               // tokens puede truncar el JSON antes de cerrarlo.
               max_completion_tokens:
-                7000,
+                task === "tutor" ? 1800 : 7000,
 
               // Obliga a Groq a devolver JSON válido.
               // La validación detallada de la estructura

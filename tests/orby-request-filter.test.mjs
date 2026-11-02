@@ -25,6 +25,8 @@ const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowle
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
+const chunkCapacityMigration = await readFile(new URL("../supabase/migrations/20261102220000_orby_knowledge_chunk_capacity.sql", import.meta.url), "utf8");
+const knowledgeWorkerSource = await readFile(new URL("../lib/ai/orby-knowledge-worker.ts", import.meta.url), "utf8");
 const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
 const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
@@ -269,6 +271,24 @@ test("el Autopilot recibe el lote manual terminado sin robar la prioridad manual
   assert.match(manualPriorityMigration, /p_count_toward_auto_budget and j\.manual_priority = false/);
   assert.match(manualPriorityMigration, /not p_count_toward_auto_budget and j\.manual_priority = true/);
   assert.match(manualPriorityMigration, /automatic_review_pending/);
+});
+
+test("el motor conserva los lotes visuales al volver a indexar fragmentos OCR", () => {
+  assert.match(chunkCapacityMigration, /chunk_count\s*<=\s*2000/i);
+  assert.match(knowledgeWorkerSource, /const MAX_DOCUMENT_CHUNKS = 2000/);
+  assert.match(knowledgeWorkerSource, /const resumeBatchIndex = Math\.max\(0, Math\.min\(totalBatches, Number\(job\.next_batch_index\) \|\| 0\)\)/);
+  assert.match(knowledgeWorkerSource, /nextBatchIndex:\s*resumeBatchIndex/);
+
+  const visualFingerprintRefresh = knowledgeWorkerSource.indexOf(
+    "const updatedChunks = await loadOrbyKnowledgeChunks(job.document_id);",
+  );
+  const coveragePersistence = knowledgeWorkerSource.indexOf(
+    'const { error: docUpdateError } = await supabaseAdmin.from("orby_knowledge_documents")',
+  );
+  assert.ok(visualFingerprintRefresh >= 0 && coveragePersistence > visualFingerprintRefresh,
+    "la huella debe quedar sincronizada antes de guardar contadores y metadatos posteriores");
+  assert.match(knowledgeWorkerSource, /batchSaveError/);
+  assert.match(knowledgeWorkerSource, /countUpdateError\.code/);
 });
 
 test("fragmenta párrafos largos en límites naturales sin cortar palabras", () => {

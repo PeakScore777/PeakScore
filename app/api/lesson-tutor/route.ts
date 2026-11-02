@@ -7,6 +7,7 @@ import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
 import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
+import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -590,15 +591,26 @@ No uses bloques Markdown ni texto fuera del JSON.
     } else {
       const isVoiceRequest = body.voiceMode === true;
       const activePrompt = isVoiceRequest ? voicePrompt : prompt;
-      const result = await generateAI({
-        task: "tutor",
-        provider: isVoiceRequest ? "groq" : undefined,
-        prompt: activePrompt,
-        useFallback: true,
-      });
-      const actualProvider = (result as unknown as { __peakscoreProvider?: AIProvider }).__peakscoreProvider;
-      if (actualProvider) sourceProvider = actualProvider;
-      raw = typeof result.text === "string" ? result.text.trim() : "";
+      try {
+        const result = await generateAI({
+          task: "tutor",
+          provider: isVoiceRequest ? "groq" : undefined,
+          prompt: activePrompt,
+          useFallback: true,
+        });
+        const actualProvider = (result as unknown as { __peakscoreProvider?: AIProvider }).__peakscoreProvider;
+        if (actualProvider) sourceProvider = actualProvider;
+        raw = typeof result.text === "string" ? result.text.trim() : "";
+      } catch (primaryError) {
+        if (!isCloudflareWorkersAIConfigured()) throw primaryError;
+        console.warn("[Orby Tutor] Gemini/Groq/LLM7 unavailable; trying Cloudflare Workers AI.");
+        const fallback = await generateWithCloudflareTutor(activePrompt);
+        raw = fallback.text.trim();
+        // Cloudflare is not part of the independent-review provider enum.
+        // Mark Gemini as the source sentinel so the quality layer only selects
+        // a separately configured Groq or LLM7 reviewer.
+        sourceProvider = "gemini";
+      }
     }
     if (!raw) {
       return NextResponse.json({ error: "No pude preparar una respuesta esta vez. Inténtalo de nuevo en unos segundos." }, { status: 503 });

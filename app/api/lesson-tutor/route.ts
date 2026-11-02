@@ -327,19 +327,37 @@ export async function POST(request: Request) {
       areas: unknown;
       topics: unknown;
     }> = [];
+
+    // Fetch adaptive signals alongside knowledge retrieval instead of making
+    // the student wait for a second serial database round-trip.
+    const studentSignalsPromise = (async () => {
+      try {
+        const signalResult = await supabaseAdmin.from("orby_student_learning_signals")
+          .select("topic,concept,learning_state,misconception,teaching_hint,confidence,created_at")
+          .eq("user_id", user.id).order("created_at", { ascending: false }).limit(5);
+        if (signalResult.error) {
+          console.error("[Orby Tutor] Learning profile unavailable.", { code: signalResult.error.code });
+          return [] as Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string }>;
+        }
+        return Array.isArray(signalResult.data) ? signalResult.data as Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string }> : [];
+      } catch {
+        return [];
+      }
+    })();
+
     try {
       const [knowledgeResult, conceptResult] = await Promise.all([
         searchOrbyKnowledge({
           query: learningQuery,
           subject: detectedSubject,
           visibility: "published",
-          limit: 7,
+          limit: 5,
         }),
         searchOrbyKnowledgeConcepts({
           query: learningQuery,
           subject: detectedSubject,
           visibility: "published",
-          limit: 32,
+          limit: 20,
         }),
       ]);
       knowledgeSources = knowledgeResult as StudentKnowledgeSource[];
@@ -349,7 +367,7 @@ export async function POST(request: Request) {
         ...conceptGraphHits.map((concept) => concept.document_id),
       ])];
       const [relatedResult, pedagogyResult] = await Promise.all([
-        getOrbyRelatedKnowledge(documentIds, "published", 4),
+        getOrbyRelatedKnowledge(documentIds, "published", 3),
         documentIds.length
           ? supabaseAdmin.from("orby_knowledge_profiles")
               .select("document_id,pedagogical_knowledge")
@@ -370,36 +388,27 @@ export async function POST(request: Request) {
       });
     }
 
-    let studentSignals: Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string }> = [];
-    try {
-      const signalResult = await supabaseAdmin.from("orby_student_learning_signals")
-        .select("topic,concept,learning_state,misconception,teaching_hint,confidence,created_at")
-        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(8);
-      if (signalResult.error) console.error("[Orby Tutor] Learning profile unavailable.", { code: signalResult.error.code });
-      else if (Array.isArray(signalResult.data)) studentSignals = signalResult.data as typeof studentSignals;
-    } catch {
-      // Adaptive memory is optional and must never block a tutor answer.
-    }
+    const studentSignals = await studentSignalsPromise;
 
     // Private source metadata stays server-side. Students receive only the educational substance.
     const knowledgeContext = knowledgeSources.map((source, index) =>
       "[Referencia académica interna " + (index + 1) + "]\n"
-      + sanitizeOrbyKnowledgeExcerpt(source.content, source.title).slice(0, 2200)
+      + sanitizeOrbyKnowledgeExcerpt(source.content, source.title).slice(0, 1800)
     ).join("\n\n");
     const profileContext = [...new Map(knowledgeSources
       .filter((source) => source.profile_summary || source.profile_concepts)
       .map((source) => [source.document_id, source])).values()]
       .map((source) => {
-        const relevantConcepts = selectOrbyRelevantConcepts(source.profile_concepts, learningQuery, 20);
+        const relevantConcepts = selectOrbyRelevantConcepts(source.profile_concepts, learningQuery, 12);
         return [
           typeof source.profile_summary === "string" ? source.profile_summary.slice(0, 900) : "",
-          "Temas relacionados: " + JSON.stringify(Array.isArray(source.profile_topics) ? source.profile_topics.slice(0, 16) : []),
+          "Temas relacionados: " + JSON.stringify(Array.isArray(source.profile_topics) ? source.profile_topics.slice(0, 10) : []),
           "Conceptos relevantes para esta pregunta (seleccionados por coincidencia temática y evidencia): " + JSON.stringify(relevantConcepts),
-          "Competencias descritas: " + JSON.stringify(Array.isArray(source.profile_competencies) ? source.profile_competencies.slice(0, 12) : []),
+          "Competencias descritas: " + JSON.stringify(Array.isArray(source.profile_competencies) ? source.profile_competencies.slice(0, 8) : []),
           "Memoria pedagógica relevante: " + JSON.stringify(selectOrbyRelevantPedagogy(
             pedagogicalProfilesByDocument.get(source.document_id) ?? source.profile_pedagogical_knowledge,
             learningQuery,
-            4
+            3
           )),
         ].join("\n");
       })
@@ -411,11 +420,11 @@ export async function POST(request: Request) {
       "Síntesis académica relacionada: " + item.summary,
     ].join("\n"))
     .join("\n\n");
-    const conceptGraphContext = conceptGraphHits.slice(0, 28).map((item) => [
+    const conceptGraphContext = conceptGraphHits.slice(0, 18).map((item) => [
       "Concepto: " + item.concept_name,
       "Área: " + item.area + (item.parent_concept ? "; familia: " + item.parent_concept : ""),
       "Variantes equivalentes: " + JSON.stringify(item.aliases.slice(0, 5)),
-      "Evidencia académica: " + sanitizeOrbyKnowledgeExcerpt(item.evidence_summary, item.title).slice(0, 500),
+      "Evidencia académica: " + sanitizeOrbyKnowledgeExcerpt(item.evidence_summary, item.title).slice(0, 350),
       "Confianza documental: " + item.confidence.toFixed(2),
     ].join("\n")).join("\n\n");
     const learningContext = studentSignals.map((signal) =>

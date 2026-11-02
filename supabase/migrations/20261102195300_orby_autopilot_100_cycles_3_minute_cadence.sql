@@ -91,7 +91,7 @@ begin
     update public.orby_knowledge_documents
     set auto_review_count = case
           when auto_review_date is distinct from v_today then 1
-          else auto_review_count + 1
+          else least(10, auto_review_count + 1)
         end,
         auto_review_date = v_today,
         next_review_at = v_now + interval '3 minutes',

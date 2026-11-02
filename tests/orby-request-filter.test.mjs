@@ -289,6 +289,7 @@ test("el motor conserva los lotes visuales al volver a indexar fragmentos OCR", 
     "la huella debe quedar sincronizada antes de guardar contadores y metadatos posteriores");
   assert.match(knowledgeWorkerSource, /batchSaveError/);
   assert.match(knowledgeWorkerSource, /countUpdateError\.code/);
+  assert.match(knowledgeWorkerSource, /Could not synchronize the partial content fingerprint/);
 });
 
 test("fragmenta párrafos largos en límites naturales sin cortar palabras", () => {

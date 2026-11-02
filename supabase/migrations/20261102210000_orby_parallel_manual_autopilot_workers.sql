@@ -148,7 +148,7 @@ begin
       j.status in ('queued','retrying')
       or (j.status = 'running' and j.lease_expires_at < v_now)
     )
-    and (d.worker_lock_owner is null or d.worker_lock_expires_at < v_now)
+    and (d.worker_lock_owner is null or d.worker_lock_expires_at is null or d.worker_lock_expires_at < v_now)
     and (
       p_count_toward_auto_budget
       or coalesce(j.automatic_review_pending, false) = false
@@ -178,7 +178,7 @@ begin
       end,
       updated_at = v_now
   where id = v_job.document_id
-    and (worker_lock_owner is null or worker_lock_expires_at < v_now);
+    and (worker_lock_owner is null or worker_lock_expires_at is null or worker_lock_expires_at < v_now);
 
   if not found then return null; end if;
 
@@ -313,6 +313,23 @@ $function$;
 
 revoke all on function public.orby_complete_knowledge_job(uuid, uuid, boolean, boolean) from public, anon, authenticated;
 grant execute on function public.orby_complete_knowledge_job(uuid, uuid, boolean, boolean) to service_role;
+
+create or replace function public.orby_claim_knowledge_job(
+  p_worker_id uuid,
+  p_lease_seconds integer default 240
+)
+returns jsonb
+language sql
+security invoker
+set search_path = ''
+as $function$
+  -- Legacy two-argument worker calls are treated as automatic and still
+  -- respect the 100-cycle rolling budget and the document lease.
+  select public.orby_claim_knowledge_job(p_worker_id, p_lease_seconds, true);
+$function$;
+
+revoke all on function public.orby_claim_knowledge_job(uuid, integer) from public, anon, authenticated;
+grant execute on function public.orby_claim_knowledge_job(uuid, integer) to service_role;
 
 create or replace function public.orby_complete_knowledge_job(
   p_job_id uuid,

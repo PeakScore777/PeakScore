@@ -789,7 +789,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceError(reason);
     if (shouldFallback) {
       // sendMessage owns the queue-drain step in its finally block.
-      void sendMessageRef.current(pendingUserText, false, false, undefined, false);
+      void sendMessageRef.current(pendingUserText, false, true, undefined, false);
     } else {
       drainPendingMessageQueue();
     }
@@ -2003,7 +2003,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
         })();
       }
-      if (isVoiceInteraction && voiceModeRef.current && "speechSynthesis" in window) {
+      if (isVoiceInteraction && "speechSynthesis" in window) {
         window.setTimeout(() => speakText(data.reply, assistantIndex), 120);
       }
       if (workspace) {

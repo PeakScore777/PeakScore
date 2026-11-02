@@ -31,36 +31,21 @@ export async function POST() {
   try {
     const queued = await enqueueNextPendingOrbyKnowledgeDocument();
 
-    // A manual admin action means "run now", not "wait for the next
-    // five-minute autopilot slot". Promote only the oldest queued job while
-    // holding the global worker lock. Manual runs bypass the automatic daily
-    // AI budget but still obey retry limits and publication safeguards.
-    const { data: nextQueuedJob, error: queuedJobError } = await supabaseAdmin
-      .from("orby_knowledge_jobs")
-      .select("id,status")
-      .in("status", ["queued", "retrying"])
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (queuedJobError) throw new Error("No se pudo consultar la siguiente tarea de la cola.");
-
-    if (nextQueuedJob?.id) {
-      const readyAt = new Date().toISOString();
-      const { error: promoteError } = await supabaseAdmin
-        .from("orby_knowledge_jobs")
-        .update({ available_at: readyAt, updated_at: readyAt })
-        .eq("id", nextQueuedJob.id)
-        .in("status", ["queued", "retrying"]);
-      if (promoteError) throw new Error("No se pudo adelantar la tarea manual.");
-    }
+    // The database promotes the oldest eligible queued job using its own clock.
+    // This avoids a Vercel/Postgres clock-skew race at the instant we claim it.
+    // Manual runs bypass the automatic seven-hour budget but still respect retries.
+    const { data: promotedJobId, error: promoteError } = await supabaseAdmin.rpc(
+      "orby_promote_next_manual_knowledge_job"
+    );
+    if (promoteError) throw new Error("No se pudo preparar la siguiente tarea manual: " + promoteError.code);
 
     const result = await processNextOrbyKnowledgeJob({ origin: "manual" });
     return NextResponse.json({
       ...result,
       queuedPendingDocument: queued,
       message: result.state === "idle"
-        ? nextQueuedJob
-          ? "La siguiente tarea no pudo reclamarse. Revisa los intentos máximos o el estado del trabajador; el presupuesto automático no limita las ejecuciones manuales."
+        ? promotedJobId
+          ? "La tarea se preparó para ejecución manual, pero el trabajador no pudo reclamarla en este intento. El presupuesto automático no afecta esta ejecución; vuelve a intentarlo."
           : result.message || "No hay tareas pendientes. Los documentos ya están al día."
         : result.message ?? "Se procesó una etapa de la cola.",
     }, { headers: { "Cache-Control": "private, no-store" } });

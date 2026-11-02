@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -1779,7 +1779,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       const typedPreflight = preflightOrbyRequest(message);
       const englishReply = isGenericIcfesEnglishRequest(message) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : null;
-      const localReply = englishReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
+      const greetingReply = isOrbyGreetingRequest(message) ? ORBY_GREETING_REPLY : null;
+      const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
         voiceUserTextRef.current = message;
         voiceAssistantTextRef.current = localReply;

@@ -292,7 +292,8 @@ test("los filtros deterministas no consumen el cupo de llamadas al modelo", () =
   const preflightIndex = lessonTutorRouteSource.indexOf("const preflight = preflightOrbyRequest(currentRequestContext)");
   const outOfScopeIndex = lessonTutorRouteSource.indexOf("if (!preflight.allowed || legacyOutOfScope)");
   const greetingIndex = lessonTutorRouteSource.indexOf("if (!tutorImage && isOrbyGreetingRequest(userMessage))");
-  assert.ok(preflightIndex >= 0 && outOfScopeIndex > preflightIndex && greetingIndex > outOfScopeIndex && rateLimitIndex > greetingIndex,
+  assert.ok(preflightIndex >= 0 && outOfScopeIndex > preflightIndex
+    && greetingIndex > preflightIndex && rateLimitIndex > outOfScopeIndex && rateLimitIndex > greetingIndex,
     "filtros y saludos locales deben ocurrir antes de reservar cuota de IA");
 });
 
@@ -342,7 +343,7 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos atÃ
 
 test("los filtros escritos dentro de voz se contestan localmente antes de Gemini Live", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
-  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
+  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
   assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart && sendRealtimeIndex > localFilterIndex);
   assert.match(lessonTutorSource, /speakText\(localReply/);

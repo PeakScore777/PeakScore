@@ -93,24 +93,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Inicia sesión para conversar con Orby." }, { status: 401 });
     }
 
-    const { data: limitData, error: limitError } = await supabaseAdmin.rpc("orby_take_rate_limit", {
-      p_user_id: user.id,
-      p_bucket: "lesson_tutor",
-      p_max_requests: 12,
-      p_window_seconds: 60,
-    });
-    if (limitError || !limitData || typeof limitData !== "object") {
-      console.error("[Orby Tutor] Shared rate limiter unavailable.", { code: limitError?.code });
-      return NextResponse.json({ error: "Orby no está disponible temporalmente. Inténtalo de nuevo en unos segundos." }, { status: 503 });
-    }
-    const limit = limitData as { allowed?: boolean; retryAfter?: number };
-    if (!limit.allowed) {
-      const retryAfter = Math.max(1, Math.min(3600, Number(limit.retryAfter) || 60));
-      return NextResponse.json({ error: "Has enviado varias preguntas muy rápido. Espera un momento y vuelve a intentarlo." }, {
-        status: 429,
-        headers: { "Retry-After": String(retryAfter) },
-      });
-    }
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) {
       await recordSecurityEvent(user.id, "invalid_request_payload");
@@ -259,6 +241,27 @@ export async function POST(request: Request) {
         if (refusalSaveError) console.error("[Orby Scope] Refusal persistence failed.", { code: refusalSaveError.code });
       }
       return NextResponse.json({ reply: refusal, checkQuestion: "", verification: "not_required", sources: [] });
+    }
+
+    // Deterministic identity, English-intent and out-of-scope replies above do
+    // not invoke a model. They must not consume the student's expensive AI quota.
+    const { data: limitData, error: limitError } = await supabaseAdmin.rpc("orby_take_rate_limit", {
+      p_user_id: user.id,
+      p_bucket: "lesson_tutor",
+      p_max_requests: 12,
+      p_window_seconds: 60,
+    });
+    if (limitError || !limitData || typeof limitData !== "object") {
+      console.error("[Orby Tutor] Shared rate limiter unavailable.", { code: limitError?.code });
+      return NextResponse.json({ error: "Orby no está disponible temporalmente. Inténtalo de nuevo en unos segundos." }, { status: 503 });
+    }
+    const limit = limitData as { allowed?: boolean; retryAfter?: number };
+    if (!limit.allowed) {
+      const retryAfter = Math.max(1, Math.min(3600, Number(limit.retryAfter) || 60));
+      return NextResponse.json({ error: "Has enviado varias preguntas muy rápido. Espera un momento y vuelve a intentarlo." }, {
+        status: 429,
+        headers: { "Retry-After": String(retryAfter) },
+      });
     }
 
     const history: TutorMessage[] = Array.isArray(body.history)

@@ -13,6 +13,10 @@ alter table public.orby_knowledge_automation_settings
 alter table public.orby_knowledge_jobs
   add column if not exists automatic_review_pending boolean not null default false;
 
+alter table public.orby_knowledge_documents
+  add column if not exists worker_lock_owner uuid,
+  add column if not exists worker_lock_expires_at timestamptz;
+
 create or replace function public.orby_acquire_knowledge_worker_lane(
   p_worker_id uuid,
   p_lease_seconds integer,
@@ -109,11 +113,14 @@ declare
   v_job public.orby_knowledge_jobs%rowtype;
   v_now timestamptz := now();
   v_today date := (now() at time zone 'America/Bogota')::date;
+  v_lease_expires_at timestamptz;
   v_cycles smallint;
   v_window_started_at timestamptz;
   v_start_new_window boolean := false;
 begin
   if p_worker_id is null then raise exception 'worker_id_required'; end if;
+
+  v_lease_expires_at := v_now + make_interval(secs => greatest(60, least(600, coalesce(p_lease_seconds, 240))));
 
   if p_count_toward_auto_budget then
     select ai_cycles_used, ai_cycle_window_started_at
@@ -121,7 +128,6 @@ begin
     from public.orby_knowledge_automation_settings
     where id = 1
     for update;
-
     if not found then raise exception 'knowledge_automation_settings_missing'; end if;
 
     v_start_new_window := v_window_started_at is null
@@ -130,43 +136,71 @@ begin
     if coalesce(v_cycles, 0) >= 100 then return null; end if;
   end if;
 
-  with candidate as (
-    select j.id
-    from public.orby_knowledge_jobs j
-    join public.orby_knowledge_documents d on d.id = j.document_id
-    where j.attempt_count < j.max_attempts
-      and j.available_at <= v_now
-      and (
-        j.status in ('queued','retrying')
-        or (j.status = 'running' and j.lease_expires_at < v_now)
-      )
-      and (
-        p_count_toward_auto_budget
-        or coalesce(j.automatic_review_pending, false) = false
-      )
-      and not exists (
-        select 1
-        from public.orby_knowledge_jobs active
-        where active.document_id = j.document_id
-          and active.id <> j.id
-          and active.status = 'running'
-          and (active.lease_expires_at is null or active.lease_expires_at >= v_now)
-      )
-    order by j.available_at asc, j.created_at asc
-    for update of j, d skip locked
-    limit 1
-  )
-  update public.orby_knowledge_jobs j
+  -- Lock the queue row and document row, then persist the document lease across
+  -- transactions so the two worker lanes can process different PDFs safely.
+  select j.*
+  into v_job
+  from public.orby_knowledge_jobs j
+  join public.orby_knowledge_documents d on d.id = j.document_id
+  where j.attempt_count < j.max_attempts
+    and j.available_at <= v_now
+    and (
+      j.status in ('queued','retrying')
+      or (j.status = 'running' and j.lease_expires_at < v_now)
+    )
+    and (d.worker_lock_owner is null or d.worker_lock_expires_at < v_now)
+    and (
+      p_count_toward_auto_budget
+      or coalesce(j.automatic_review_pending, false) = false
+    )
+  order by
+    case when p_count_toward_auto_budget and j.automatic_review_pending then 0 else 1 end,
+    j.available_at asc,
+    j.created_at asc
+  for update of j, d skip locked
+  limit 1;
+
+  if not found then return null; end if;
+
+  update public.orby_knowledge_documents
+  set worker_lock_owner = p_worker_id,
+      worker_lock_expires_at = v_lease_expires_at,
+      auto_review_count = case
+        when p_count_toward_auto_budget and auto_review_date is distinct from v_today then 1
+        when p_count_toward_auto_budget then least(10, auto_review_count + 1)
+        else auto_review_count
+      end,
+      auto_review_date = case when p_count_toward_auto_budget then v_today else auto_review_date end,
+      next_review_at = case when p_count_toward_auto_budget then v_now + interval '3 minutes' else next_review_at end,
+      ingestion_status = case
+        when ingestion_status in ('queued','attention_required') then 'processing'
+        else ingestion_status
+      end,
+      updated_at = v_now
+  where id = v_job.document_id
+    and (worker_lock_owner is null or worker_lock_expires_at < v_now);
+
+  if not found then return null; end if;
+
+  update public.orby_knowledge_jobs
   set status = 'running',
       locked_by = p_worker_id,
       locked_at = v_now,
-      lease_expires_at = v_now + make_interval(secs => greatest(60, least(600, coalesce(p_lease_seconds, 240)))),
+      lease_expires_at = v_lease_expires_at,
       updated_at = v_now
-  from candidate
-  where j.id = candidate.id
-  returning j.* into v_job;
+  where id = v_job.id
+    and (
+      status in ('queued','retrying')
+      or (status = 'running' and lease_expires_at < v_now)
+    )
+  returning * into v_job;
 
-  if not found then return null; end if;
+  if not found then
+    update public.orby_knowledge_documents
+    set worker_lock_owner = null, worker_lock_expires_at = null, updated_at = now()
+    where id = v_job.document_id and worker_lock_owner = p_worker_id;
+    return null;
+  end if;
 
   if p_count_toward_auto_budget then
     update public.orby_knowledge_automation_settings
@@ -175,28 +209,6 @@ begin
         ai_cycle_date = v_today,
         updated_at = v_now
     where id = 1;
-
-    update public.orby_knowledge_documents
-    set auto_review_count = case
-          when auto_review_date is distinct from v_today then 1
-          else least(10, auto_review_count + 1)
-        end,
-        auto_review_date = v_today,
-        next_review_at = v_now + interval '3 minutes',
-        ingestion_status = case
-          when ingestion_status in ('queued','attention_required') then 'processing'
-          else ingestion_status
-        end,
-        updated_at = v_now
-    where id = v_job.document_id;
-  else
-    update public.orby_knowledge_documents
-    set ingestion_status = case
-          when ingestion_status in ('queued','attention_required') then 'processing'
-          else ingestion_status
-        end,
-        updated_at = v_now
-    where id = v_job.document_id;
   end if;
 
   return to_jsonb(v_job);
@@ -248,6 +260,12 @@ begin
 
     if not found then raise exception 'knowledge_job_handoff_race'; end if;
 
+    update public.orby_knowledge_documents
+    set worker_lock_owner = null,
+        worker_lock_expires_at = null,
+        updated_at = now()
+    where id = v_job.document_id and worker_lock_owner = p_worker_id;
+
     return jsonb_build_object('completed', true, 'published', false, 'awaiting_automatic_review', true);
   end if;
 
@@ -283,6 +301,12 @@ begin
 
   if not found then raise exception 'knowledge_job_completion_race'; end if;
 
+  update public.orby_knowledge_documents
+  set worker_lock_owner = null,
+      worker_lock_expires_at = null,
+      updated_at = now()
+  where id = v_job.document_id and worker_lock_owner = p_worker_id;
+
   return jsonb_build_object('completed', true, 'published', v_published, 'awaiting_automatic_review', false);
 end;
 $function$;
@@ -305,6 +329,105 @@ $function$;
 
 revoke all on function public.orby_complete_knowledge_job(uuid, uuid, boolean) from public, anon, authenticated;
 grant execute on function public.orby_complete_knowledge_job(uuid, uuid, boolean) to service_role;
+
+create or replace function public.orby_release_knowledge_job(
+  p_job_id uuid,
+  p_worker_id uuid,
+  p_stage text,
+  p_next_batch_index integer,
+  p_embedded_chunk_count integer,
+  p_total_batches integer
+)
+returns boolean
+language plpgsql
+set search_path = ''
+as $function$
+declare
+  v_document_id uuid;
+begin
+  if p_stage not in ('embeddings','profile','finalize') then raise exception 'invalid_job_stage'; end if;
+
+  update public.orby_knowledge_jobs
+  set stage = p_stage,
+      status = 'queued',
+      next_batch_index = greatest(0, coalesce(p_next_batch_index, 0)),
+      embedded_chunk_count = greatest(0, coalesce(p_embedded_chunk_count, 0)),
+      total_batches = greatest(0, coalesce(p_total_batches, 0)),
+      locked_by = null,
+      locked_at = null,
+      lease_expires_at = null,
+      available_at = now(),
+      last_error = null,
+      updated_at = now()
+  where id = p_job_id and locked_by = p_worker_id and status = 'running'
+  returning document_id into v_document_id;
+
+  if not found then return false; end if;
+
+  update public.orby_knowledge_documents
+  set worker_lock_owner = null,
+      worker_lock_expires_at = null,
+      next_review_at = now() + interval '3 minutes',
+      updated_at = now()
+  where id = v_document_id and worker_lock_owner = p_worker_id;
+
+  return true;
+end;
+$function$;
+
+revoke all on function public.orby_release_knowledge_job(uuid, uuid, text, integer, integer, integer) from public, anon, authenticated;
+grant execute on function public.orby_release_knowledge_job(uuid, uuid, text, integer, integer, integer) to service_role;
+
+create or replace function public.orby_fail_knowledge_job(
+  p_job_id uuid,
+  p_worker_id uuid,
+  p_error text
+)
+returns jsonb
+language plpgsql
+set search_path = ''
+as $function$
+declare
+  v_job public.orby_knowledge_jobs%rowtype;
+  v_attempt integer;
+  v_status text;
+  v_delay_seconds integer;
+begin
+  select * into v_job
+  from public.orby_knowledge_jobs
+  where id = p_job_id and locked_by = p_worker_id and status = 'running'
+  for update;
+
+  if not found then return null; end if;
+
+  v_attempt := v_job.attempt_count + 1;
+  v_status := case when v_attempt >= v_job.max_attempts then 'failed' else 'retrying' end;
+  v_delay_seconds := least(3600, (30 * power(2, greatest(0, v_attempt - 1)))::integer);
+
+  update public.orby_knowledge_jobs
+  set status = v_status,
+      attempt_count = v_attempt,
+      available_at = now() + make_interval(secs => v_delay_seconds),
+      locked_by = null,
+      locked_at = null,
+      lease_expires_at = null,
+      last_error = left(coalesce(p_error, 'unknown_error'), 1000),
+      updated_at = now()
+  where id = p_job_id
+  returning * into v_job;
+
+  update public.orby_knowledge_documents
+  set worker_lock_owner = null,
+      worker_lock_expires_at = null,
+      updated_at = now()
+  where id = v_job.document_id and worker_lock_owner = p_worker_id;
+
+  return to_jsonb(v_job);
+end;
+$function$;
+
+revoke all on function public.orby_fail_knowledge_job(uuid, uuid, text) from public, anon, authenticated;
+grant execute on function public.orby_fail_knowledge_job(uuid, uuid, text) to service_role;
 
 create or replace function public.orby_promote_next_manual_knowledge_job()
 returns uuid

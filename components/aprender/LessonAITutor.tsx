@@ -797,6 +797,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } catch {
       setConversationError("La respuesta se escuchó, pero no se pudo guardar en el historial.");
     } finally {
+      voiceTurnSavingRef.current = false;
     }
   }
 
@@ -1216,9 +1217,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           return;
         }
         try {
-          activeSession.sendRealtimeInput({
-            text: "Lee exactamente este texto en español colombiano, sin añadir, quitar ni cambiar ninguna palabra: " + policyReply,
-          });
+          const internalSpeechInstruction = "Lee exactamente este texto en español colombiano, sin añadir, quitar ni cambiar ninguna palabra: " + policyReply;
+          // Mark the internal speech instruction as committed so a Live input
+          // transcript cannot become a duplicate user bubble or saved user turn.
+          voiceLastCommittedInputRef.current = normalizeVoiceComparison(internalSpeechInstruction);
+          activeSession.sendRealtimeInput({ text: internalSpeechInstruction });
           setVoiceStatus("Orby está hablando…");
         } catch {
           voiceForcedReplyRef.current = null;

@@ -422,6 +422,9 @@ test("Orby permite respuestas cortas para continuar una invitación de estudio",
   assert.equal(filter.preflightOrbyRequest("¿Qué es el realismo mágico?", "Área de estudio: Lectura Crítica").allowed, true);
   assert.equal(filter.preflightOrbyRequest("Analiza este texto de Lectura Crítica: el personaje menciona un carro y una película.").allowed, true);
   assert.equal(filter.containsExplicitNonIcfesTopic("En el texto de Lectura Crítica se menciona un carro y una película."), false);
+  const englishDialogueContext = "Área de estudio: Inglés. Analiza este diálogo para Saber 11.";
+  assert.equal(filter.preflightOrbyRequest("¿Qué película me recomiendas?", englishDialogueContext).allowed, true);
+  assert.equal(filter.containsExplicitNonIcfesTopic("¿Qué película me recomiendas?", englishDialogueContext), false);
   assert.equal(filter.containsCookingInstruction("El texto menciona una receta tradicional de la región."), false);
 });
 

@@ -1,7 +1,7 @@
 import "server-only";
 
 const WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo";
-const TUTOR_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const TUTOR_MODEL = "@cf/google/gemma-4-26b-a4b-it";
 export const CLOUDFLARE_EMBEDDING_MODEL = "@cf/google/embeddinggemma-300m";
 
 type CloudflareRunEnvelope<T> = {

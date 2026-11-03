@@ -123,6 +123,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /containsUnsupportedSpanishScript\(item\.content\)/);
   assert.match(lessonTutorSource, /languageCodes: \["es-ES"\]/);
   assert.match(lessonTutorSource, /mode: "SMART"/);
+  assert.match(lessonTutorSource, /speechConfig: \\{\\s*languageCode: "es"/);
   assert.match(lessonTutorSource, /"Oye Orby"/);
   assert.match(lessonTutorSource, /unsupportedInputScript/);
   assert.match(lessonTutorSource, /ORBY_SPANISH_ONLY_REPLY/);
@@ -137,6 +138,10 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /!voiceOutputTranscriptValidatedRef\.current/);
   assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(partialReply\)/);
   assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(rawReply\)/);
+  assert.match(lessonTutorSource, /unsupportedInterimScript/);
+  assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
+  assert.match(lessonTutorSource, /normalizedForcedExpected\.startsWith\(partialNormalized\)/);
+  assert.match(lessonTutorSource, /visibleReply = forcedExpected \\|\\| partialReply/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current/);
   assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
   assert.match(lessonTutorSource, /forcedSpeechMismatch/);
@@ -246,7 +251,11 @@ test("permite contenido científico legítimo que contiene vocabulario ambiguo",
   }
 });
 
-test("rechaza solicitudes explícitas de programación", () => {
+test("rechaza solicitudes explícitas de programación con una redirección breve", () => {
+  const refusal = filter.preflightOrbyRequest("Enséñame Python desde cero.");
+  assert.equal(refusal.category, "programming");
+  assert.match(refusal.reply, /Ese tema no lo trabajo aquí/);
+  assert.doesNotMatch(refusal.reply, /Soy Orby/);
   for (const prompt of [
     "Enséñame Python desde cero.",
     "¿Cómo creo una página web con React?",

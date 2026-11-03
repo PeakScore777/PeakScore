@@ -1728,7 +1728,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // complete sentence and passes every deterministic output filter.
         // Later unsafe continuations still cancel the not-yet-played audio.
         const hasCompleteSafeSentence = partialReply.length >= 24
-          && /[.!?]["'”’)}\\]]*\\s*$/.test(partialReply);
+          && /[.!?]["'”’)}\]]*\s*$/.test(partialReply);
         voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;

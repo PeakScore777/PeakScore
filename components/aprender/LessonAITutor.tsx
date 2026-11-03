@@ -1230,6 +1230,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const scheduledAt = Math.max(audioContext.currentTime + 0.015, voiceNextPlaybackTimeRef.current);
       source.start(scheduledAt);
       voiceNextPlaybackTimeRef.current = scheduledAt + audioBuffer.duration;
+      voiceLastAssistantPlaybackUntilRef.current = Date.now()
+        + Math.max(0, voiceNextPlaybackTimeRef.current - audioContext.currentTime) * 1000
+        + 1_800;
       voiceAudioSourcesRef.current.add(source);
       voiceRealtimeAudioChunkCountRef.current += 1;
       source.onended = () => {
@@ -1365,9 +1368,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     if (voiceActivity?.type === "ACTIVITY_START") {
       clearVoiceResponseWatchdog();
-      if (voiceBrowserSpeechActiveRef.current) {
-        // Wait for an interim transcript to distinguish a student's barge-in
-        // from the browser transcribing Orby's own fallback speech.
+      const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
+        || voiceAudioSourcesRef.current.size > 0
+        || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current;
+      if (assistantAudioInFlight) {
+        // Do not mistake the microphone hearing Gemini's own Live audio for
+        // a new student turn. Wait for the interim transcript to detect a
+        // genuine barge-in before interrupting playback.
         setVoiceStatus("Orby está hablando…");
       } else {
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
@@ -1421,12 +1428,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const unsupportedInterimScript = containsUnsupportedSpanishLanguage(interimText);
       voiceUnsupportedInputDetectedRef.current = unsupportedInterimScript;
       setLiveTranscript(unsupportedInterimScript ? "" : interimText);
-      if (!unsupportedInterimScript && voiceBrowserSpeechActiveRef.current) {
+      const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
+        || voiceAudioSourcesRef.current.size > 0
+        || Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
+      if (!unsupportedInterimScript && assistantAudioInFlight) {
         const normalizedInterim = normalizeVoiceComparison(interimText);
-        const isBrowserSpeechEcho = isLikelyVoicePlaybackEcho(interimText, voiceLastAssistantOutputRef.current);
+        const assistantSpeech = voiceAssistantTextRef.current || voiceLastAssistantOutputRef.current;
+        const isBrowserSpeechEcho = isLikelyVoicePlaybackEcho(interimText, assistantSpeech);
         if (normalizedInterim.length >= 3 && isBrowserSpeechEcho) {
-          // The browser is hearing Orby's own local voice. Keep speaking and
-          // never turn this transcript into a fresh student request.
+          // Ignore both browser TTS and Gemini Live echo. Do not pass an
+          // assistant transcript back to the Live model as a new user turn.
           setLiveTranscript("");
         } else if (normalizedInterim.length >= 3) {
           interruptCurrentVoiceOutput();
@@ -1457,8 +1468,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : rawTranscript;
     const normalizedFinal = transcript ? normalizeVoiceComparison(transcript) : "";
     const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
-    const isRecentAcousticEcho = (voiceBrowserSpeechActiveRef.current
-      || Date.now() <= voiceLastAssistantPlaybackUntilRef.current + 1_800)
+    const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
+      || voiceAudioSourcesRef.current.size > 0
+      || Date.now() <= voiceLastAssistantPlaybackUntilRef.current + 1_800;
+    const isRecentAcousticEcho = assistantAudioInFlight
       && isLikelyVoicePlaybackEcho(normalizedFinal, recentAssistantText);
     if (isRecentAcousticEcho) {
       console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
@@ -1550,6 +1563,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
+      // Maintain a reference transcript for acoustic echo suppression in both
+      // Gemini Live and browser TTS playback paths.
+      voiceLastAssistantOutputRef.current = partialReply;
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
       const partialNormalized = normalizeVoiceComparison(partialReply);
       const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)

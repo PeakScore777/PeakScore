@@ -183,3 +183,10 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - La ruta escrita también rechaza una respuesta del modelo en una escritura no española. Los prompts de voz y de tutor recuerdan ortografía, puntuación, tildes y que no deben repetir el branding/rechazo en cada turno.
 - La negativa de programación es ahora breve y redirige a una materia ICFES, evitando el “Soy Orby…” repetido después de cada mención de Python.
 - **Validación pendiente en PC:** hacer pull de `feat/founder-intro`; correr `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build`; después probar “Oye Orby”, “Enséñame Python”, insistir con “Python”, interrumpir la voz y confirmar que hay una única burbuja por turno y una única reproducción. No desplegar a `main` antes de esas pruebas.
+
+
+### Ajustes posteriores: fallback sin mensaje y voz canónica
+- El ASR de salida de Live se configura con `languageCodes: ["es"]` y `mode: "SMART"`; la voz nativa usa `speechConfig.languageCode: "es"`. El ASR de entrada usa `es-ES` y vocabulario ICFES/PeakScore.
+- Si se detecta interim en otra escritura y no llega la transcripción final, el watchdog crea un solo turno `Audio no reconocido.` y pide repetir en español. No deja el chat vacío ni persiste texto Hindi.
+- Para respuestas deterministas de filtros, la burbuja conserva el texto canónico. La transcripción de la voz nativa debe corresponder a esa frase; si el modelo se presenta otra vez, reformula o cambia de idioma, el audio se detiene y se usa lectura alternativa del texto aprobado.
+- El fallback de voz ahora se decide con el estado de validación y bloqueo de audio, además del contador de chunks, para no quedarse solo en texto después de cancelar audio inválido.

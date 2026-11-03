@@ -140,7 +140,7 @@ test("Orby reconoce sus llamadas y no acepta transcripciones en escrituras ajena
 
 test("Gemini Live usa español como pista de transcripción y sanitiza audio no reconocido", () => {
   assert.match(realtimeSessionSource, /REGLA PRIORITARIA DE IDIOMA/);
-  assert.match(realtimeSessionSource, /containsUnsupportedSpanishScript\(item\.content\)/);
+  assert.match(realtimeSessionSource, /containsUnsupportedSpanishLanguage\(item\.content\)/);
   assert.match(realtimeSessionSource, /containsProgrammingInstruction\(item\.content\)/);
   assert.match(realtimeSessionSource, /containsCookingInstruction\(item\.content\)/);
   assert.match(realtimeSessionSource, /containsExternalPreIcfesPromotion\(item\.content\)/);
@@ -163,7 +163,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
 });
 
 test("el chat de texto también rechaza escrituras ajenas al español antes de llamar al modelo", () => {
-  assert.match(lessonTutorRouteSource, /containsUnsupportedSpanishScript\(userMessage\)/);
+  assert.match(lessonTutorRouteSource, /containsUnsupportedSpanishLanguage\(userMessage\)/);
   assert.match(lessonTutorRouteSource, /reply: ORBY_SPANISH_ONLY_REPLY/);
 });
 

@@ -480,8 +480,8 @@ test("Gemini Live comprime el contexto y conserva el handle de reanudación por 
 });
 
 test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext suspendido", () => {
-  assert.match(lessonTutorSource, /voiceSpeechPlaybackGenerationRef\\.current \\+= 1/);
-  assert.match(lessonTutorSource, /playbackGeneration !== voiceSpeechPlaybackGenerationRef.current/);
+  assert.match(lessonTutorSource, /voiceSpeechPlaybackGenerationRef\.current \+= 1/);
+  assert.match(lessonTutorSource, /playbackGeneration !== voiceSpeechPlaybackGenerationRef\.current/);
   assert.match(lessonTutorSource, /audioContext.state === "suspended"/);
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);

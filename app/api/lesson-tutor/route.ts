@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -157,6 +157,17 @@ export async function POST(request: Request) {
     }
     if (!userMessage && !tutorImage) {
       return NextResponse.json({ error: "Escribe tu duda para que Orby pueda ayudarte." }, { status: 400 });
+    }
+    // Text chat follows the same Spanish-only input policy as voice.
+    // Never pass foreign-script ASR or typed text to a model that might answer
+    // in that language; ask for a Spanish retry deterministically.
+    if (userMessage && containsUnsupportedSpanishScript(userMessage)) {
+      return NextResponse.json({
+        reply: ORBY_SPANISH_ONLY_REPLY,
+        checkQuestion: "",
+        verification: "not_required",
+        sources: [],
+      }, { headers: { "Cache-Control": "private, no-store" } });
     }
     if (userMessage && isClearlyOutOfScopeOrInjection(userMessage)) {
       await recordSecurityEvent(user.id, "prompt_injection", { source: "latest_message" });

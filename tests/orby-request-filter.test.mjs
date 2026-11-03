@@ -308,6 +308,7 @@ test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la d
   assert.match(orbyKnowledgeSource, /query embedding timed out/i);
   assert.match(orbyKnowledgeSource, /4_500/);
   assert.match(orbyKnowledgeSource, /lexical retrieval continues/);
+  assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
 });
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {

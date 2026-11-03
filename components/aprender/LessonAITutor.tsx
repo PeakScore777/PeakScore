@@ -1525,7 +1525,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
             : containsCookingInstruction(rawReply)
               ? "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-              : containsExternalPreIcfesPromotion(rawReply)
+              : containsExplicitNonIcfesTopic(rawReply)
+                ? ORBY_ICFES_SCOPE_REPLY
+                : containsExternalPreIcfesPromotion(rawReply)
                 ? ORBY_EXTERNAL_PREICFES_REPLY
               : isLikelyEnglishOnlyOrbyReply(rawReply)
                 ? isGenericIcfesEnglishRequest(voiceUserTextRef.current) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : "Soy Orby, tu tutor de PeakScore especializado en Saber 11. Te responderé en español colombiano y puedo ayudarte con las cinco áreas del examen."

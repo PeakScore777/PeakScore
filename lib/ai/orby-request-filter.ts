@@ -215,8 +215,8 @@ function isScopeRefusalContext(value: string): boolean {
  */
 export function isIcfesScopedRequest(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message)
-    .replace(/^[¿¡\\s]+/, "")
-    .replace(/[?!.;:,\\s]+$/, "")
+    .replace(/^[¿¡\s]+/, "")
+    .replace(/[?!.;:,\s]+$/, "")
     .trim();
   if (!normalized) return false;
   if (isOrbyGreetingRequest(message) || isGenericIcfesEnglishRequest(message)) return true;

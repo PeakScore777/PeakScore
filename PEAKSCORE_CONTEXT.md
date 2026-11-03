@@ -316,3 +316,9 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - El prompt de voz exige ortografía, tildes, concordancia y puntuación correctas, sin abreviaturas de chat y sin muletillas repetidas.
 - La suite `npm run test:orby` contiene ahora 44 pruebas automatizadas (41 anteriores + 3 nuevas de idioma/voz y aserciones ampliadas). Deben ejecutarse en el PC después de hacer pull; no se declara compilación ni prueba local aprobada hasta recibir ese resultado.
 - No se modificó `main` ni se desplegó a estudiantes. Pendiente: confirmar que la versión local de `@google/genai 2.17.1` acepta toda la configuración, pasar tests/typecheck/lint/build y probar con micrófono real en Chrome/Edge.
+
+
+- La transcripción del audio generado por Gemini Live ahora se configura también con idioma `es` y modo `SMART`; la síntesis nativa declara `speechConfig.languageCode: "es"`. El reconocimiento de entrada mantiene pista `es-ES` y vocabulario de PeakScore.
+- Se corrigió la recuperación cuando solo llega un interim no español y nunca llega el evento final: Orby muestra un turno único `Audio no reconocido.`, solicita repetir en español y lo pronuncia, sin guardar devanagari.
+- Las respuestas deterministas (saludo, identidad, rechazo) se mantienen canónicas en la burbuja; la salida de voz solo se acepta si la transcripción coincide progresivamente con ese texto. Una reformulación, presentación repetida o cambio de idioma activa voz alternativa para el texto aprobado.
+- Se reforzó la negativa breve para programación y el prompt hablado contra repeticiones de marca, muletillas y faltas de ortografía.

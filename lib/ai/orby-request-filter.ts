@@ -93,8 +93,23 @@ export function isLikelyEnglishOnlyOrbyReply(reply: string): boolean {
   if (!value || value.length < 12) return false;
 
   const normalized = normalizeOrbyRequestText(value);
-  const spanishSignals = /\b(?:el|la|los|las|de|del|que|para|con|por|una|un|puedo|puedes|vamos|tema|estudiar|explicar|respuesta|pregunta|saber|prueba|ingl[eé]s|porque|tambien|esta|este|son|como|cuando|donde|cual|primero|segundo)\b/.test(normalized)
-    || /[áéíóúñ¿¡]/i.test(value);
+  // Use distinctive Spanish markers rather than shared Romance-language
+  // articles/prepositions (for example "la", "de", "que", "una").
+  const spanishSignals = /\b(?:puedo|puedes|podemos|vamos|tema|estudiar|explicar|explicame|respuesta|pregunta|saber|prueba|ingles|porque|tambien|esta|estan|estoy|somos|eres|soy|quieres|necesitas|debes|deberias|cual|cuando|donde|primero|segundo|tercero|correcta|opcion|lectura|matematicas|ciencias|sociales|ciudadanas|colombia|icfes|estudiante|profesor|tutor)\b/.test(normalized)
+    || /[áíóúñ¿¡]/i.test(value);
+
+  if (spanishSignals) return false;
+
+  const foreignLanguageSignals = [
+    /\b(?:bonjour|comment|puis|je|vous|nous|avec|pour|dans|une|des|est|sont|pouvez|aider|expliquer|apprendre|aujourd|merci|votre|mais|parce|cette|cela|voici)\b/g,
+    /\b(?:ol[aá]|voce|voces|você|vocês|posso|podemos|ajudar|explicar|estudar|hoje|obrigado|obrigada|porque|como|qual|este|esta|estao|estão|nao|não|mas|tambem|também|muito|para|com|uma|umas|uns)\b/g,
+    /\b(?:hallo|guten|morgen|natürlich|ich|du|sie|wir|ist|sind|mit|für|auf|wie|was|warum|kann|können|helfen|erklären|lernen|heute|bitte|nicht|eine|einer|aber|oder|auch)\b/g,
+    /\b(?:ciao|buongiorno|posso|siamo|aiutare|spiegare|studiare|oggi|come|quale|questo|questa|grazie|anche|perche|perché|sono|della|degli|delle|con|non|ma|molto|vorrei)\b/g,
+  ];
+  for (const pattern of foreignLanguageSignals) {
+    const signals = normalized.match(pattern) ?? [];
+    if (signals.length >= 3 && signals.length / Math.max(1, words.length) >= 0.3) return true;
+  }
 
   // English ICFES excerpts are allowed inside a Spanish explanation. The
   // filter only rejects a response whose overall wording is English and has
@@ -107,7 +122,7 @@ export function isLikelyEnglishOnlyOrbyReply(reply: string): boolean {
   }
 
   const words = normalized.match(/[a-z]+(?:'[a-z]+)?/g) ?? [];
-  if (words.length < 4) return false;
+  if (words.length < 3) return false;
   const englishSignals = normalized.match(/\b(?:the|this|that|these|those|you|your|we|they|their|is|are|was|were|because|which|what|when|where|why|how|with|from|into|about|would|could|should|can|will|have|has|does|did|first|second|therefore|however|answer|question|please|here|there|and|but|for|to|of|in|on|as|at|by|be|been|it|its|my|our|let's|solve|together|example|means|given|find|choose|select|correct|option|passage|statement|according|since|next|then|also)\b/g) ?? [];
 
   // Three common English function/content words in a short answer are a

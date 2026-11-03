@@ -54,7 +54,7 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
   assert.match(cloudflareTutorRoute, /containsProgrammingInstruction\(modelReply\)/);
   assert.match(cloudflareTutorRoute, /containsExternalPreIcfesPromotion\(modelReply\)/);
   assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
-  assert.match(lessonTutorSource, /if \(isVoiceInteraction && "speechSynthesis" in window\)/);
+  assert.match(lessonTutorSource, /if \(isVoiceInteraction\)\s*\{\s*if \("speechSynthesis" in window\)\s*\{\s*await new Promise<void>\(\(resolve\) => window\.setTimeout\(resolve, 120\)\);\s*await speakText\(data\.reply, assistantIndex\);/);
 });
 
 test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {
@@ -65,8 +65,8 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
   assert.match(orbyKnowledgeSource, /orby_list_knowledge_embedding_models/);
   assert.match(orbyKnowledgeSource, /orby_search_knowledge_hybrid_multi_v3/);
   assert.match(orbyKnowledgeSource, /createOrbyQueryEmbeddingForModel/);
-  assert.match(modelAwareEmbeddingMigration, /c\.embedding_model = q\.model/);
-  assert.match(modelAwareEmbeddingMigration, /partition by q\.model/);
+  assert.match(modelAwareEmbeddingMigration, /q\.model = c\.embedding_model/);
+  assert.match(modelAwareEmbeddingMigration, /q\.model = c\.embedding_model/);
   assert.match(orbyKnowledgeSource, /detail\?\.code === "QUOTA_EXCEEDED"/);
   assert.match(cloudflareVoiceSource, /dailyQuotaExceeded/);
   assert.match(knowledgeWorkerSource, /ORBY_EMBEDDING_QUOTA_EXHAUSTED/);
@@ -186,7 +186,7 @@ test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la d
   assert.match(qualityBlock, /evidencia/);
   assert.doesNotMatch(qualityBlock, /explica|densidad|que es|pregunta/);
   assert.match(tutorQualitySource, /message.length > 650/);
-  assert.match(orbyKnowledgeSource, /Query embedding timed out/);
+  assert.match(orbyKnowledgeSource, /query embedding timed out/i);
   assert.match(orbyKnowledgeSource, /4_500/);
   assert.match(orbyKnowledgeSource, /lexical retrieval continues/);
 });

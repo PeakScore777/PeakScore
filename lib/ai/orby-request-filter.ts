@@ -63,6 +63,12 @@ const SHORT_ACADEMIC_FOLLOW_UP_PATTERNS = [
 export const ORBY_ICFES_SCOPE_REPLY =
   "Ese tema no corresponde a Saber 11. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés. ¿Qué área trabajamos?";
 
+export const ORBY_COOKING_REPLY =
+  "No puedo compartir recetas ni instrucciones para cocinar. Podemos conversar de otro tema o volver a practicar Saber 11.";
+
+export const ORBY_SAFETY_REPLY =
+  "No puedo ayudar con instrucciones que puedan causar daño, facilitar delitos o comprometer la seguridad o privacidad de alguien. Puedo ofrecer información general y segura.";
+
 const EXTERNAL_PREICFES_REQUEST_PATTERNS = [
   /\bgrupo\s*500\b/i,
   /\bmilton\s+ochoa\b|\binstruimos\b|\bpreicfes\s*\.\s*net\b/i,
@@ -329,7 +335,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     return {
       allowed: false,
       category: "outside",
-      reply: "No puedo compartir recetas ni instrucciones para cocinar. Podemos hablar de otros temas o volver a practicar Saber 11.",
+      reply: ORBY_COOKING_REPLY,
     };
   }
 
@@ -337,7 +343,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     return {
       allowed: false,
       category: "outside",
-      reply: "No puedo ayudar con instrucciones que puedan causar daño, facilitar delitos o comprometer la seguridad o privacidad de alguien. Puedo ofrecer información general y segura.",
+      reply: ORBY_SAFETY_REPLY,
     };
   }
 

@@ -14,7 +14,9 @@ permissions:
 
 concurrency:
   group: peakscore-checks-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel an active validation run on branch pushes. A newer commit
+  # may queue another run, but each SHA must receive an actual build result.
+  cancel-in-progress: false
 
 jobs:
   validate:

@@ -237,6 +237,13 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
   const prior = normalizeOrbyRequestText(previousContext);
   const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
     || ORBY_STUDY_INVITATION_PATTERN.test(prior);
+  const hasAcademicMaterialContext = hasCurriculumContext
+    && /\\b(?:texto|lectura|fragmento|pasaje|dialogo|aviso|enunciado|ejercicio|pregunta|grafica|tabla|experimento|passage|text|dialogue|notice|question|exercise|chart|table)\\b/i.test(prior);
+  const isNaturalQuestionContinuation = normalized.length <= 180
+    && /^(?:que|quien|quienes|donde|cuando|por que|como|cual|cuales|what|who|where|when|why|how|which|whose|do|does|did|can|could|would|will|is|are|was|were)\\b/i.test(normalized);
+  // In an active reading/dialogue exercise, the student's next line may be
+  // the exact dialogue sentence rather than a meta-question about it.
+  if (hasAcademicMaterialContext && isNaturalQuestionContinuation) return true;
   return hasCurriculumContext;
 }
 

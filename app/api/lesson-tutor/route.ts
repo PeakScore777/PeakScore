@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -702,6 +702,11 @@ No uses bloques Markdown ni texto fuera del JSON.
     if (containsProgrammingInstruction(modelReply)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "out_of_scope_programming_output" });
       modelReply = preflightOrbyRequest("programar").reply;
+      parsed.checkQuestion = "";
+    }
+    if (containsCookingInstruction(modelReply)) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "out_of_scope_cooking_output" });
+      modelReply = "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
       parsed.checkQuestion = "";
     }
     parsed.reply = modelReply;

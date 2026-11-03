@@ -302,3 +302,17 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - La entrada de micrófono Live usa paquetes PCM de 40 ms (antes 100 ms) para reducir el retardo de captura sin inundar el WebSocket.
 - Se conserva la transcripción provisional del alumno para recuperar el mismo turno si Live se cierra antes de emitir la transcripción final; el control por turno evita añadir dos veces el mensaje del alumno.
 - Se distingue la finalización normal de la cancelación de SpeechSynthesis para que cerrar/interrumpir el tutor no reactive indebidamente el estado de escucha.
+
+
+## Orby Voice Spanish-first stabilization — 2026-11-02
+- La voz principal continúa siendo Gemini Live; los filtros de alcance y la identidad pública de PeakScore se mantienen en la aplicación.
+- El reconocimiento de audio Live se configura con la pista BCP-47 `es-ES`, modo `SMART` y vocabulario de dominio con “Oye Orby”, “Hey Orby”, “Orby AI”, PeakScore e ICFES.
+- La síntesis de voz nativa se configura con `speechConfig.languageCode = "es"`; las instrucciones de sesión refuerzan español colombiano y alfabeto latino.
+- Se agregó `containsUnsupportedSpanishScript` para bloquear escrituras incompatibles con español (incluida devanagari/hindi) en historial, transcripciones de entrada, transcripción de salida y la respuesta final del tutor escrito.
+- Una transcripción final no española se sustituye por una petición breve de repetir en español. Las transcripciones provisionales con esas escrituras no se muestran ni se guardan.
+- La reproducción de audio Live queda bloqueada hasta que exista transcripción aceptable en español. Para una respuesta determinista (saludo, rechazo de programación, identidad), el texto visible permanece canónico; el audio nativo solo se reproduce si su transcripción coincide con el texto aprobado. Si no coincide o la voz queda sin verificar, se descarta el audio y se usa SpeechSynthesis como respaldo.
+- Si se cancela el audio validado, el flujo ahora comprueba el estado real del audio y no un contador histórico de fragmentos para decidir si necesita la voz alternativa.
+- Los rechazos de programación se hacen breves y conversacionales: no se vuelve a presentar Orby ni se repite una explicación larga en cada turno.
+- El prompt de voz exige ortografía, tildes, concordancia y puntuación correctas, sin abreviaturas de chat y sin muletillas repetidas.
+- La suite `npm run test:orby` contiene ahora 44 pruebas automatizadas (41 anteriores + 3 nuevas de idioma/voz y aserciones ampliadas). Deben ejecutarse en el PC después de hacer pull; no se declara compilación ni prueba local aprobada hasta recibir ese resultado.
+- No se modificó `main` ni se desplegó a estudiantes. Pendiente: confirmar que la versión local de `@google/genai 2.17.1` acepta toda la configuración, pasar tests/typecheck/lint/build y probar con micrófono real en Chrome/Edge.

@@ -111,6 +111,10 @@ test("Orby reconoce sus llamadas y no acepta transcripciones en escrituras ajena
     assert.equal(filter.isOrbyGreetingRequest(phrase), true, phrase);
   }
   assert.equal(filter.containsUnsupportedSpanishScript("जी बिल्कुल, आप क्या जानना चाहते हैं?"), true);
+  assert.equal(filter.containsUnsupportedSpanishScript("नमस्ते"), true);
+  assert.equal(filter.containsUnsupportedSpanishScript("مرحبا"), true);
+  assert.equal(filter.containsUnsupportedSpanishScript("Привет"), true);
+  assert.equal(filter.containsUnsupportedSpanishScript("こんにちは"), true);
   assert.equal(filter.containsUnsupportedSpanishScript("¡Claro! ¿Qué tema de Saber 11 quieres estudiar?"), false);
   assert.equal(filter.containsUnsupportedSpanishScript("Let's practice the ICFES English reading section."), false);
   assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
@@ -131,7 +135,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)/);
   assert.match(lessonTutorRouteSource, /IDIOMA PRIORITARIO/);
   assert.match(lessonTutorRouteSource, /ORTOGRAFÍA/);
-  assert.match(lessonTutorRouteSource, /no repitas toda tu presentación/);
+  assert.match(lessonTutorRouteSource, /sin repetir toda tu presentación/);
 });
 
 test("la voz nunca reproduce audio antes de validar su transcripción y bloquea escrituras no españolas", () => {

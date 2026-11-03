@@ -429,11 +429,14 @@ test("Orby permite respuestas cortas para continuar una invitación de estudio",
   assert.equal(filter.preflightOrbyRequest("Analiza este texto de Lectura Crítica: el personaje menciona un carro y una película.").allowed, true);
   assert.equal(filter.containsExplicitNonIcfesTopic("En el texto de Lectura Crítica se menciona un carro y una película."), false);
   const englishDialogueContext = "Área de estudio: Inglés. Analiza este diálogo para Saber 11.";
-  assert.equal(filter.preflightOrbyRequest("¿Qué película me recomiendas?", englishDialogueContext).allowed, true);
-  assert.equal(filter.preflightOrbyRequest("What movie should I watch?", englishDialogueContext).allowed, true);
+  const quotedMovieDialogue = "En este diálogo de Inglés aparece: 'What movie should I watch?'. Analiza la intención comunicativa de esa pregunta.";
+  assert.equal(filter.preflightOrbyRequest(quotedMovieDialogue, englishDialogueContext).allowed, true);
+  assert.equal(filter.preflightOrbyRequest("¿Qué película me recomiendas?", englishDialogueContext).allowed, false);
+  assert.equal(filter.preflightOrbyRequest("What movie should I watch?", englishDialogueContext).allowed, false);
   assert.equal(filter.preflightOrbyRequest("En este diálogo de Inglés, además recomiéndame una película.", englishDialogueContext).allowed, false);
   assert.equal(filter.preflightOrbyRequest("What movie should I watch after the ICFES?").allowed, false);
-  assert.equal(filter.containsExplicitNonIcfesTopic("¿Qué película me recomiendas?", englishDialogueContext), false);
+  assert.equal(filter.containsExplicitNonIcfesTopic(quotedMovieDialogue, englishDialogueContext), false);
+  assert.equal(filter.containsExplicitNonIcfesTopic("¿Qué película me recomiendas?", englishDialogueContext), true);
   assert.equal(filter.containsCookingInstruction("El texto menciona una receta tradicional de la región."), false);
 });
 
@@ -675,7 +678,7 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos at�
 
 test("los filtros escritos dentro de voz se contestan localmente antes de Gemini Live", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
-  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
+  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? greetingReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
   assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart && sendRealtimeIndex > localFilterIndex);
   assert.match(lessonTutorSource, /voiceForcedReplyRef\.current = localReply/);

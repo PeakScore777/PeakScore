@@ -1721,8 +1721,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               : {}),
           },
           tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
-          // Start with the documented Live configuration. Audio transcription
-          // is enabled without a forced language; the model detects Spanish.
+          // Bias speech recognition toward Spanish. languageCodes is a hint,
+          // not a hard lock; the local foreign-script guard remains required.
           inputAudioTranscription: {
             // Spanish hint reduces accidental cross-language recognition. It
             // remains a hint, so the local script guard is still required.

@@ -112,7 +112,7 @@ function isProviderQuotaExceeded(error: unknown): boolean {
   const message = error instanceof Error
     ? error.name + " " + error.message
     : String(error ?? "");
-  return /RESOURCE_EXHAUSTED|quota.?exceeded|rate.?limit|too many requests|\\b429\\b/i.test(message);
+  return /RESOURCE_EXHAUSTED|quota.?exceeded|rate.?limit|too many requests|\b429\b/i.test(message);
 }
 
 function throwEmbeddingQuotaExceeded(): never {

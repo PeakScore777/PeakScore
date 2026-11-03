@@ -107,7 +107,7 @@ test("el audio Live se reproduce progresivamente y la cola espera al final de la
   assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
 });
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
-  for (const greeting of ["hola", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito"]) {
+  for (const greeting of ["hola", "ola", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito"]) {
     assert.equal(filter.isOrbyGreetingRequest(greeting), true, greeting);
   }
   assert.equal(filter.isOrbyGreetingRequest("Hola, explícame la fotosíntesis"), false);
@@ -248,8 +248,11 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(lessonTutorSource, /utterance\.rate = 1\.18/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
-  assert.match(lessonTutorSource, /internalSpeechInstruction/);
-  assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(internalSpeechInstruction\)/);
+  assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean\)/);
+  assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
+  assert.match(lessonTutorSource, /turnComplete: false/);
+  assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
+  assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(cleanUserText\)/);
   assert.match(lessonTutorSource, /voiceInternalPolicyTextRef\.current = policyReply/);
   assert.match(lessonTutorSource, /isInternalPolicySpeechEcho/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
@@ -676,18 +679,25 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos at�
   assert.match(realtimeTurnSource, /Cache-Control": "no-store"/);
 });
 
-test("los filtros escritos dentro de voz se contestan localmente antes de Gemini Live", () => {
+test("los filtros escritos dentro de voz se contestan localmente y sincronizan Live sin generar otra respuesta", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
   const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? greetingReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
+  const localReplyIndex = lessonTutorSource.indexOf("respondToVoiceLocally(message, localReply, true)", typedVoiceStart);
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
-  assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart && sendRealtimeIndex > localFilterIndex);
-  assert.match(lessonTutorSource, /voiceForcedReplyRef\.current = localReply/);
-  assert.match(lessonTutorSource, /voiceAssistantTextRef\.current = localReply/);
-  assert.match(lessonTutorSource, /Lee exactamente este texto en español colombiano/);
-  assert.match(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
-  assert.doesNotMatch(lessonTutorSource, /speakText\(localReply/);
-  assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
-  assert.match(lessonTutorSource, /setMessages\(\(current\) => \[/);
+  const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");
+  assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart
+    && localReplyIndex > localFilterIndex && sendRealtimeIndex > localReplyIndex
+    && localHelperIndex >= 0 && localHelperIndex < typedVoiceStart);
+  assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
+  assert.match(lessonTutorSource, /voiceAssistantTextRef\.current = cleanReply/);
+  assert.match(lessonTutorSource, /sendClientContent\(/);
+  assert.match(lessonTutorSource, /turnComplete: false/);
+  assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
+  assert.doesNotMatch(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
+  assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*respondToVoiceLocally\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
+  assert.match(lessonTutorSource, /!voiceLocalReplyInFlightRef\.current && typeof outputTranscript/);
+  assert.match(lessonTutorSource, /!voiceLocalReplyInFlightRef\.current && !voiceOutputAudioBlockedRef\.current/);
+  assert.match(lessonTutorSource, /serverContent\.interrupted === true && !voiceLocalReplyInFlightRef\.current/);
 });
 
 test("el motor conserva los lotes visuales al volver a indexar fragmentos OCR", () => {

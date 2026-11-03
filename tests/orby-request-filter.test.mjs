@@ -297,6 +297,12 @@ test("bloquea programación y cocina aunque la petición llegue en inglés o tra
     "I want to learn programming in Python.",
     "Mujhe coding sikhao.",
     "Quiero aprender JavaScript.",
+    "Apprends-moi à programmer.",
+    "Je veux apprendre à coder.",
+    "Quero aprender a programar.",
+    "Ensina-me programação.",
+    "Ich möchte programmieren lernen.",
+    "Imparare a programmare.",
   ];
   for (const prompt of programming) {
     assert.equal(filter.preflightOrbyRequest(prompt).category, "programming", prompt);
@@ -307,6 +313,10 @@ test("bloquea programación y cocina aunque la petición llegue en inglés o tra
     "Teach me how to cook pasta.",
     "Mujhe khana banana sikhao.",
     "Dame una receta para hacer arepas.",
+    "Je veux une recette de gâteau.",
+    "Quero cozinhar massa.",
+    "Ich möchte kochen.",
+    "Voglio una ricetta.",
   ];
   for (const prompt of cooking) {
     assert.equal(filter.preflightOrbyRequest(prompt).category, "outside", prompt);
@@ -314,6 +324,8 @@ test("bloquea programación y cocina aunque la petición llegue en inglés o tra
 
   assert.equal(filter.containsCookingInstruction("Here is a recipe for pasta."), true);
   assert.equal(filter.containsCookingInstruction("No puedo enseñar cocina; mi función es preparar Saber 11."), false);
+  assert.equal(filter.containsCookingInstruction("Je peux partager une recette de gâteau."), true);
+  assert.equal(filter.containsCookingInstruction("Ich zeige dir, wie man kocht."), true);
   assert.match(lessonTutorSource, /containsCookingInstruction\(partialReply\)/);
   assert.match(lessonTutorSource, /containsCookingInstruction\(rawReply\)/);
   assert.match(lessonTutorRouteSource, /containsCookingInstruction\(modelReply\)/);

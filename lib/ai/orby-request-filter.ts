@@ -21,7 +21,7 @@ const PROGRAMMING_REQUEST_PATTERNS = [
   /\b(crear|hacer|construir|desarrollar|disenar|build|create|make|develop)\s+(?:un|una|el|la|a|an|the)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|videojuego|juego digital|bot|robot virtual|website|application|mobile app|software|game|bot)\b/i,
   /\b(?:como|how)\b.{0,55}\b(?:creo|crear|hago|hacer|construyo|construir|desarrollo|desarrollar|build|create|make|develop)\b.{0,45}\b(?:sitio|pagina|web|app|aplicacion|software|bot|website|application|programa)\b/i,
   /\b(mujhe|main|mai)\b.{0,50}\b(coding|programming|code|python|javascript)\b|\b(coding|programming|code|python)\b.{0,50}\b(sikhao|sikh[aou]|sikhna|karna|kaise)\b/i,
-  /\b(apprendre a coder|apprendre a programmer|apprends?[- ]moi.{0,20}\b(?:a )?programmer|je veux apprendre a coder|je veux apprendre a programmer|coder|programmieren|programmierung|softwareentwicklung|webentwicklung|code schreiben|imparare a programmare|scrivere codice|sviluppo software|sviluppo web|ensina[- ]me.{0,20}(?:a programar|programacao)|quero aprender a programar|escrever codigo|desenvolvimento de software|desenvolvimento web)\b/i,
+  /\b(?:je veux apprendre a coder|je veux apprendre a programmer|apprendre a coder|apprendre a programmer|apprends?[- ]moi.{0,20}\b(?:a )?programmer|programmieren lernen|ich mochte programmieren|code schreiben lernen|imparare a programmare|voglio imparare a programmare|quero aprender a programar|ensina[- ]me.{0,20}(?:a programar|programacao)|i want to learn to code|i want to learn programming|softwareentwicklung lernen|webentwicklung lernen)\b/i,
   /\b(bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
 ];
 
@@ -407,12 +407,26 @@ export function containsProgrammingInstruction(text: string): boolean {
   return containsCode || (mentionsProgramming && !isExplicitRefusal);
 }
 
-export function containsCookingInstruction(text: string): boolean {
+export function containsCookingInstruction(text: string, previousContext = ""): boolean {
   const value = normalizeOrbyRequestText(text);
   if (!value) return false;
   const explicitRefusal = /\b(?:no (?:puedo|voy a|debo) (?:ensenar|explicar|compartir|dar)|no enseno|no doy clases de|fuera del alcance|mi funcion es preparar|no puedo ayudarte con)\b.{0,100}\b(?:cocina|cocinar|receta|recetas|cooking|cook|recipe|recipes|baking)\b/i.test(value);
   if (explicitRefusal) return false;
-  return /\b(?:aqui tienes|te comparto|te doy|puedes preparar|para preparar|prepara|cocina|cocinar|hornea|a recipe for|here is a recipe|how to cook|teach you to cook|share a recipe|je peux partager|ich zeige dir|voglio una ricetta|dammi una ricetta|give me a recipe|dame una receta)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|recipe|recipes|cake|food|meal|cook|cooking|bake|baking|kochen|gateau|ricetta|receita|recette|rezept)\b|\b(?:recipe for|a recipe|recette de|una receta de|ricetta per|ricetta di|ricetta|receita de|rezept fur)\b|\b(?:ich zeige dir|ich kann dir zeigen)\b.{0,70}\b(?:kochen|kocht|kochst|backen|backt)\b/i.test(value);
+
+  const cookingInstruction = /\b(?:aqui tienes|te comparto|te doy|puedes preparar|prepara|cocina|cocinar|hornea|a recipe for|here is a recipe|how to cook|teach you to cook|share a recipe|je peux partager|ich zeige dir|voglio una ricetta|dammi una ricetta|give me a recipe|dame una receta)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|recipe|recipes|cake|food|meal|cook|cooking|bake|baking|kochen|gateau|ricetta|receita|recette|rezept)\b|\b(?:recipe for|a recipe|recette de|una receta de|ricetta per|ricetta di|ricetta|receita de|rezept fur)\b|\b(?:ich zeige dir|ich kann dir zeigen)\b.{0,70}\b(?:kochen|kocht|kochst|backen|backt)\b/i.test(value);
+  if (!cookingInstruction) return false;
+
+  // A recipe can be mentioned in a passage or question. Only reject actual
+  // cooking assistance when the surrounding exchange is an ICFES exercise.
+  const context = normalizeOrbyRequestText(previousContext);
+  const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(context))
+    || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(value));
+  const academicFrame = /\b(?:en el texto|en la lectura|en el fragmento|en el pasaje|en el dialogo|en el enunciado|la frase|el ejercicio|la pregunta|analiza|interpreta|traduce|the passage|the text|the dialogue|this sentence|this question|in the passage|in this text)\b/i;
+  if (hasCurriculumContext && (academicFrame.test(value) || academicFrame.test(context))) {
+    const directInstruction = /\b(?:aqui tienes|te comparto|te doy|puedes preparar|prepara para ti|haz esta receta|here is a recipe|i can share a recipe|je peux partager une recette|ich zeige dir, wie man)\b/i.test(value);
+    return directInstruction;
+  }
+  return true;
 }
 
 export function extractPlainOrbyReply(value: string): string {

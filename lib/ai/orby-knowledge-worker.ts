@@ -700,6 +700,25 @@ export async function processNextOrbyKnowledgeJob(options: {
         .eq("status", "running");
       if (deferError) throw new Error("No se pudo pausar la tarea hasta el reinicio de la cuota: " + deferError.code);
 
+      // The embedding allowance is shared by the account. Park the remaining
+      // queued embedding jobs too, otherwise every cron tick would claim a new
+      // document, hit the same exhausted quota and burn automatic cycles.
+      const { error: parkQueueError } = await supabaseAdmin
+        .from("orby_knowledge_jobs")
+        .update({
+          available_at: resumeAt.toISOString(),
+          last_error: "Shared free embedding quota exhausted; deferred until next daily reset.",
+          updated_at: now.toISOString(),
+        })
+        .eq("stage", "embeddings")
+        .in("status", ["queued", "retrying"])
+        .neq("id", job.id);
+      if (parkQueueError) {
+        console.warn("[Orby Autopilot] Could not defer all queued embedding jobs.", {
+          code: parkQueueError.code,
+        });
+      }
+
       const documentPatch: Record<string, unknown> = {
         next_review_at: resumeAt.toISOString(),
         ingestion_status: "processing",

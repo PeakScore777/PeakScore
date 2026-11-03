@@ -34,6 +34,30 @@ const OUTSIDE_SCOPE_PATTERNS = [
   /\b(invertir dinero|comprar acciones|criptomonedas|apuesta|apuestas|consejo legal|demanda judicial)\b/i,
 ];
 
+/**
+ * Positive scope allowlist. A request must mention an ICFES area, an exam
+ * competency, or a recognizable curricular concept. Unknown subjects fail
+ * closed instead of being sent to a general-purpose model.
+ */
+const ICFES_SCOPE_PATTERNS = [
+  /\\b(?:saber\\s*11|icfes|prueba de estado|examen de estado|pregunta tipo icfes|simulacro|cuadernillo de preguntas)\\b/i,
+  /\\b(?:matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuaciones?|inecuaciones?|fracciones?|porcentajes?|razones y proporciones|proporcionalidad|funcion lineal|funcion cuadratica|plano cartesiano|pendiente de una recta|polinomios?|logaritmos?|potencias?|raiz cuadrada|teorema de pitagoras|perimetro|area de un triangulo|volumen de un|media aritmetica|mediana|moda estadistica|secuencia numerica|sucesion numerica|variable independiente|variable dependiente)\\b/i,
+  /\\b(?:lectura critica|comprension lectora|comprension de textos|texto argumentativo|intencion del autor|idea principal|tesis del texto|argumento central|inferir|inferencia|conclusion del texto|conectores logicos|parrafo|narrador|figura retorica|figura literaria|genero textual|proposito comunicativo|punto de vista del autor|postura del autor|analisis de texto)\\b/i,
+  /\\b(?:sociales y ciudadanas|ciencias sociales|historia de colombia|historia universal|geografia|democracia|constitucion politica|derechos humanos|ciudadania|estado colombiano|ramas del poder|participacion politica|conflicto armado|guerra fria|independencia de colombia|colonizacion|revolucion francesa|revolucion industrial|globalizacion|oferta y demanda|desigualdad social|migracion|territorio colombiano|desarrollo sostenible|organizacion del estado)\\b/i,
+  /\\b(?:ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|respiracion celular|evolucion biologica|seleccion natural|reaccion quimica|atomo|molecula|tabla periodica|enlace quimico|energia|fuerza|densidad|termodinamica|materia|presion atmosferica|velocidad terminal|leyes de newton|circuito electrico|electricidad|magnetismo|ondas sonoras|acido|base|escala de ph|variable independiente|variable dependiente|variable de control|experimento|hipotesis|metodo cientifico|contaminacion|cambio climatico|biodiversidad|cadena alimentaria)\\b/i,
+  /\\b(?:ingles|english|reading comprehension|vocabulary in context|grammar|present simple|past simple|past continuous|present perfect|modal verbs|phrasal verbs|verb tenses|part [1-7] of the icfes|parte [1-7] del examen de ingles|avisos publicitarios|dialogos en ingles|comprension de lectura en ingles)\\b/i,
+];
+
+const ICFES_CURRICULUM_CONTEXT_PATTERNS = ICFES_SCOPE_PATTERNS.slice(1);
+
+const SHORT_ACADEMIC_FOLLOW_UP_PATTERNS = [
+  /^(?:y )?(?:por que|como asi|que significa|que quiere decir|explicame mas|explica mas|amplia la explicacion|no entiendo|no comprendi|puedes repetir|repite por favor|dame otro ejemplo|otro ejemplo|un ejemplo mas|continua|continua por favor|siguiente|sigamos|y eso|y ese|y esa|cual es la respuesta|la opcion [a-d]|opcion [a-d]|la [a-d]|respuesta [a-d]|el siguiente paso)[.!? ]*$/i,
+  /^(?:si|no|ok|vale|listo|entiendo|de acuerdo)[.!? ]*$/i,
+];
+
+export const ORBY_ICFES_SCOPE_REPLY =
+  "Esa solicitud no corresponde a los contenidos de Saber 11. Soy Orby, tutor de PeakScore, y solo puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés del ICFES. Elige un tema de una de esas áreas y seguimos.";
+
 const EXTERNAL_PREICFES_REQUEST_PATTERNS = [
   /\bgrupo\s*500\b/i,
   /\bmilton\s+ochoa\b|\binstruimos\b|\bpreicfes\s*\.\s*net\b/i,
@@ -177,7 +201,32 @@ export function containsOrbyPromptInjection(message: string): boolean {
   return Boolean(normalized) && INJECTION_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
-export function preflightOrbyRequest(message: string): OrbyPreflightResult {
+function isScopeRefusalContext(value: string): boolean {
+  return /\\b(?:fuera del alcance|no corresponde a los contenidos|no puedo ayudarte con esa solicitud|no puedo trabajar ese tema|esa solicitud esta fuera)\\b/i.test(
+    normalizeOrbyRequestText(value),
+  );
+}
+
+/**
+ * The only non-explicit allowance is a short follow-up to a recent, clearly
+ * curricular exchange. Greeting and identity turns remain deterministic UX
+ * exceptions; conversation history can never turn an unrelated topic green.
+ */
+export function isIcfesScopedRequest(message: string, previousContext = ""): boolean {
+  const normalized = normalizeOrbyRequestText(message);
+  if (!normalized) return false;
+  if (isOrbyGreetingRequest(message) || isGenericIcfesEnglishRequest(message)) return true;
+  if (/^(?:quien eres|quien te creo|quien te creo|quien te creo|quien te creo|quien te creo|quien te creo|quien es tu creador|quien te creo|quien te creo|who created you|who made you)[.!? ]*$/i.test(normalized)) return true;
+  if (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
+
+  const isShortFollowUp = normalized.length <= 90
+    && SHORT_ACADEMIC_FOLLOW_UP_PATTERNS.some((pattern) => pattern.test(normalized));
+  if (!isShortFollowUp || !previousContext.trim() || isScopeRefusalContext(previousContext)) return false;
+  const prior = normalizeOrbyRequestText(previousContext);
+  return ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior));
+}
+
+export function preflightOrbyRequest(message: string, previousContext = ""): OrbyPreflightResult {
   const normalized = normalizeOrbyRequestText(message);
   if (!normalized) return { allowed: true, category: null, reply: "" };
 
@@ -209,8 +258,12 @@ export function preflightOrbyRequest(message: string): OrbyPreflightResult {
     return {
       allowed: false,
       category: "outside",
-      reply: "Esa solicitud está fuera del alcance de Orby. Mi función es acompañarte en la preparación para Saber 11. Podemos trabajar Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.",
+      reply: ORBY_ICFES_SCOPE_REPLY,
     };
+  }
+
+  if (!isIcfesScopedRequest(normalized, previousContext)) {
+    return { allowed: false, category: "outside", reply: ORBY_ICFES_SCOPE_REPLY };
   }
 
   return { allowed: true, category: null, reply: "" };

@@ -311,7 +311,9 @@ test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones 
 
 test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la doble revisión", () => {
   assert.match(routerSource, /tutor:\s*"groq"/);
-  assert.match(routerSource, /MAX_RETRIES = task === "tutor" \? 0 : 2/);
+  assert.match(routerSource, /MAX_ATTEMPTS = task === "tutor" \\? 1 : 2/);
+  assert.match(routerSource, /attempt <= MAX_ATTEMPTS/);
+  assert.match(routerSource, /attempt < MAX_ATTEMPTS/);
   assert.match(routerSource, /AbortSignal\.timeout\(task === "tutor" \? 12000 : 60000\)/);
   assert.match(routerSource, /timeout: task === "tutor" \? 15000 : 60000/);
   assert.match(routerSource, /MAX_GEMINI_RETRIES = task === "tutor" \? 0 : 2/);

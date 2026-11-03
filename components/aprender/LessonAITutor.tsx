@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -215,6 +215,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
   const voiceRealtimeAudioChunkCountRef = useRef(0);
   const voiceOutputAudioBlockedRef = useRef(false);
+  const voiceOutputTranscriptValidatedRef = useRef(false);
   const voiceInputPolicyRef = useRef<"identity" | "programming" | "outside" | null>(null);
   const voiceForcedReplyRef = useRef<string | null>(null);
   const voicePreflightReplyRef = useRef<string | null>(null);
@@ -1016,6 +1017,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voicePendingAudioChunksRef.current = [];
       return;
     }
+    if (!voiceOutputTranscriptValidatedRef.current) return;
     const pending = voicePendingAudioChunksRef.current;
     voicePendingAudioChunksRef.current = [];
     for (const chunk of pending) playGeminiAudio(chunk.data, chunk.mimeType);
@@ -1201,6 +1203,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if ("speechSynthesis" in window) window.speechSynthesis.cancel();
         voicePendingAudioChunksRef.current = [];
         voiceRealtimeAudioChunkCountRef.current = 0;
+        voiceOutputTranscriptValidatedRef.current = false;
         voiceOutputAudioBlockedRef.current = false;
         setIsListening(true);
         setVoiceStatus("Te escucho…");
@@ -1262,7 +1265,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const inputTranscript = serverContent.inputTranscription && typeof serverContent.inputTranscription === "object"
       ? serverContent.inputTranscription as { text?: unknown }
       : null;
-    const transcript = typeof inputTranscript?.text === "string" ? inputTranscript.text.trim().slice(0, 1200) : "";
+    const rawTranscript = typeof inputTranscript?.text === "string" ? inputTranscript.text.trim().slice(0, 1200) : "";
+    const unsupportedInputScript = Boolean(rawTranscript && containsUnsupportedSpanishScript(rawTranscript));
+    // Never display, persist or send a foreign-script ASR hallucination as the
+    // student's actual words. Replace it with a clear Spanish retry turn.
+    const transcript = unsupportedInputScript
+      ? "No se reconoció la frase en español."
+      : rawTranscript;
     const normalizedFinal = transcript ? normalizeVoiceComparison(transcript) : "";
     const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
     const isRecentAcousticEcho = Date.now() <= voiceLastAssistantPlaybackUntilRef.current
@@ -1314,12 +1323,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : !preflight.allowed
             ? "outside"
             : null;
-      voicePreflightReplyRef.current = isGenericIcfesEnglishRequest(voiceUserTextRef.current)
-        ? ORBY_ICFES_ENGLISH_INTRO_REPLY
-        : preflight.allowed ? null : preflight.reply;
+      voicePreflightReplyRef.current = unsupportedInputScript
+        ? ORBY_SPANISH_ONLY_REPLY
+        : isGenericIcfesEnglishRequest(voiceUserTextRef.current)
+          ? ORBY_ICFES_ENGLISH_INTRO_REPLY
+          : isOrbyGreetingRequest(voiceUserTextRef.current)
+            ? ORBY_GREETING_REPLY
+            : preflight.allowed ? null : preflight.reply;
       voicePendingAudioChunksRef.current = [];
       voiceRealtimeAudioChunkCountRef.current = 0;
-      voiceOutputAudioBlockedRef.current = false;
+      voiceOutputTranscriptValidatedRef.current = false;
+      voiceOutputAudioBlockedRef.current = Boolean(voicePreflightReplyRef.current);
+      voiceOutputTranscriptValidatedRef.current = false;
+      if (voicePreflightReplyRef.current) stopVoicePlayback();
       setLiveTranscript("");
       setMessages((current) => {
         const assistantId = voiceAssistantMessageIdRef.current;
@@ -1346,17 +1362,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const partialNormalized = partialReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
       const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)
         && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|hecho|hecha|soy|fui)\b/.test(partialNormalized);
-      const partialUnsafe = containsProgrammingInstruction(partialReply)
+      const partialUnsafe = containsUnsupportedSpanishScript(partialReply)
+        || containsProgrammingInstruction(partialReply)
         || containsExternalPreIcfesPromotion(partialReply)
         || isLikelyEnglishOnlyOrbyReply(partialReply)
         || hasFalseOrbyCreatorAttribution(partialReply)
         || partialExposesProvider;
 
       if (partialUnsafe) {
+        voiceOutputTranscriptValidatedRef.current = false;
         voiceOutputAudioBlockedRef.current = true;
         voicePendingAudioChunksRef.current = [];
         stopVoicePlayback();
       } else {
+        voiceOutputTranscriptValidatedRef.current = true;
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => {
           const exists = current.some((message) => message.id === assistantId);
@@ -1382,7 +1401,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           data: inlineData.data,
           mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
         };
-        if (voiceAssistantTextRef.current.trim()) {
+        if (voiceAssistantTextRef.current.trim() && voiceOutputTranscriptValidatedRef.current) {
           playGeminiAudio(chunk.data, chunk.mimeType);
         } else if (voicePendingAudioChunksRef.current.length < 96) {
           voicePendingAudioChunksRef.current.push(chunk);
@@ -1399,6 +1418,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       stopVoicePlayback();
       voicePendingAudioChunksRef.current = [];
       voiceRealtimeAudioChunkCountRef.current = 0;
+      voiceOutputTranscriptValidatedRef.current = false;
       voiceResponseDoneRef.current = true;
       waitingForVoiceReplyRef.current = false;
       void persistRealtimeTurnIfReady();
@@ -1421,7 +1441,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const policyReply = forcedLiveReply
         ? null
         : voicePreflightReplyRef.current
-          ?? (voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
+          ?? (containsUnsupportedSpanishScript(rawReply)
+            ? ORBY_SPANISH_OUTPUT_FALLBACK
+            : voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
             ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
             : containsExternalPreIcfesPromotion(rawReply)
               ? ORBY_EXTERNAL_PREICFES_REPLY
@@ -1431,7 +1453,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   ? preflightOrbyRequest("programar").reply
                   : voiceInputPolicyRef.current === "outside"
                     ? preflightOrbyRequest("cocinar").reply
-                    : null);
+                    : null));
       voicePreflightReplyRef.current = null;
 
       // Policy replies use the same Live voice as normal Orby answers.
@@ -1440,7 +1462,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         stopVoicePlayback();
         voicePendingAudioChunksRef.current = [];
         voiceRealtimeAudioChunkCountRef.current = 0;
+        voiceOutputTranscriptValidatedRef.current = false;
         voiceOutputAudioBlockedRef.current = false;
+        voiceOutputTranscriptValidatedRef.current = false;
         voiceAssistantTextRef.current = "";
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = id;
@@ -1503,7 +1527,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             : [...current, { id, role: "assistant", content: rawReply }];
         });
         voiceLastAssistantOutputRef.current = rawReply;
-        if (!voiceOutputAudioBlockedRef.current) flushPendingGeminiAudio();
+        if (!voiceOutputAudioBlockedRef.current && voiceOutputTranscriptValidatedRef.current) {
+          flushPendingGeminiAudio();
+        } else {
+          // Do not trust untranscribed or unsupported-language audio. The
+          // validated Spanish text is read by the browser fallback below.
+          voicePendingAudioChunksRef.current = [];
+        }
         const playbackContext = voiceAudioContextRef.current;
         const remainingPlaybackMs = playbackContext
           ? Math.max(0, voiceNextPlaybackTimeRef.current - playbackContext.currentTime) * 1000
@@ -1518,6 +1548,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceResponseDoneRef.current = true;
       voiceInternalPolicyTextRef.current = null;
       voiceOutputAudioBlockedRef.current = false;
+      voiceOutputTranscriptValidatedRef.current = false;
 
       if (!rawReply.trim() && voiceUserTextRef.current.trim()) {
         // Live occasionally completes without usable text. Ask the existing
@@ -1640,7 +1671,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : configuredModel;
       const systemInstruction = typeof tokenPayload.systemInstruction === "string"
         ? tokenPayload.systemInstruction
-        : "Eres Orby, el tutor de PeakScore. Habla español colombiano natural y ayuda con rigor académico.";
+        : "Eres Orby, el tutor de PeakScore. Responde exclusivamente en español colombiano y alfabeto latino. Nunca cambies a hindi ni a otro idioma. Si no entiendes, pide repetir en español. Ayuda únicamente con Saber 11.";
 
       setVoiceStatus("Conectando con Orby…");
       const googleAI = new GoogleGenAI({
@@ -1675,7 +1706,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // Start with the documented Live configuration. Audio transcription
           // is enabled without a forced language; the model detects Spanish.
           inputAudioTranscription: {
-            customVocabulary: ["PeakScore", "Orby", "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica", "Sociales y Ciudadanas", "Ciencias Naturales"],
+            // Spanish hint reduces accidental cross-language recognition. It
+            // remains a hint, so the local script guard is still required.
+            languageCodes: ["es-ES"],
+            mode: "SMART",
+            customVocabulary: [
+              "Orby", "Oye Orby", "Hey Orby", "Orby AI", "PeakScore",
+              "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica",
+              "Sociales y Ciudadanas", "Ciencias Naturales",
+            ],
           },
           outputAudioTranscription: {},
           speechConfig: {
@@ -1979,6 +2018,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (localReply) {
         voiceUserTextRef.current = message;
         voiceRealtimeAudioChunkCountRef.current = 0;
+        voiceOutputTranscriptValidatedRef.current = false;
         voiceOutputAudioBlockedRef.current = false;
         voicePendingAudioChunksRef.current = [];
         // Keep the trusted local answer ready for persistence even if the
@@ -2017,6 +2057,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       waitingForVoiceReplyRef.current = true;
       voiceRealtimeAudioChunkCountRef.current = 0;
+      voiceOutputTranscriptValidatedRef.current = false;
       voiceOutputAudioBlockedRef.current = false;
       voicePendingAudioChunksRef.current = [];
       voiceAssistantTextRef.current = "";

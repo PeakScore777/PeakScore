@@ -162,3 +162,12 @@ La prioridad actual pasó temporalmente de los niveles a estabilizar Orby Voice 
 5. Comprobar que el documento que tenía 80/110 vectores continúa desde los que faltan y conserva los vectores ya guardados.
 
 No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
+
+
+### Últimos ajustes de robustez de voz
+- El motor de respaldo de texto de Cloudflare usa `@cf/google/gemma-4-26b-a4b-it` para aprovechar mejor el cupo gratuito que Llama 3.3 70B.
+- El capturador de micrófono envía paquetes PCM de 40 ms (16 kHz, mono) en lugar de 100 ms.
+- El watchdog se renueva mientras Live envía fragmentos de audio/transcripción y solo cambia al respaldo cuando deja de llegar actividad.
+- Si Live termina sin texto utilizable, se reenvía la misma pregunta al tutor filtrado; si se desconecta antes de la transcripción final, se usa la transcripción provisional y se agrega al historial solo si ese turno aún no tenía mensaje del alumno.
+- Las cancelaciones voluntarias de voz ya no se interpretan como finalización normal ni reactivan el micrófono.
+- Se añadió prueba de regresión para eco de la voz alternativa y paquetes PCM de 40 ms.

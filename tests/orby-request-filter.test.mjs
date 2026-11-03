@@ -476,7 +476,7 @@ test("Gemini Live comprime el contexto y conserva el handle de reanudación por 
 
 test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
-  assert.match(lessonTutorSource, /22_000/);
+  assert.match(lessonTutorSource, /18_000/);
   assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
   assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
   assert.match(lessonTutorSource, /appendUserMessage = true/);

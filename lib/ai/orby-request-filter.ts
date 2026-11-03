@@ -32,6 +32,7 @@ const OUTSIDE_SCOPE_PATTERNS = [
   /\b(khana banana|khana pakana|mujhe khana|recipe do|recipe batao|khana banane)\b/i,
   /\b(diagnostico medico|recetar medicamento|tratamiento medico|medicamentos|sintomas de enfermedad|medical diagnosis|prescribe medication|medical treatment)\b/i,
   /\b(invertir dinero|comprar acciones|criptomonedas|apuesta|apuestas|consejo legal|demanda judicial)\b/i,
+  /\b(?:carros?|automoviles?|vehiculos?|llantas?|mantenimiento de vehiculos|mecanica automotriz|motos?|peliculas?|series de television|videojuegos?|chistes?|clima de manana|pronostico del tiempo)\b/i,
 ];
 
 /**

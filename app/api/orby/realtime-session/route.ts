@@ -2,7 +2,16 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI, Modality } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { containsOrbyPromptInjection, containsUnsupportedSpanishScript, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import {
+  containsCookingInstruction,
+  containsExternalPreIcfesPromotion,
+  containsOrbyPromptInjection,
+  containsProgrammingInstruction,
+  containsUnsupportedSpanishScript,
+  hasFalseOrbyCreatorAttribution,
+  isLikelyEnglishOnlyOrbyReply,
+  preflightOrbyRequest,
+} from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 export const runtime = "nodejs";
@@ -65,11 +74,19 @@ export async function POST(request: Request) {
 
     // Old out-of-scope user prompts and injection attempts are omitted from the
     // new session context. They never reject the session or become fresh requests.
-    const safeHistory = history.filter((item) =>
-      !containsOrbyPromptInjection(item.content)
-      && !containsUnsupportedSpanishScript(item.content)
-      && (item.role !== "user" || preflightOrbyRequest(item.content).allowed)
-    ).slice(-4);
+    const safeHistory = history.filter((item) => {
+      if (containsOrbyPromptInjection(item.content) || containsUnsupportedSpanishScript(item.content)) return false;
+      if (item.role === "user") return preflightOrbyRequest(item.content).allowed;
+
+      // Prior assistant turns are untrusted context too. Do not let an
+      // accidental language switch, unsafe lesson, external promotion, or
+      // false creator claim become an instruction in the next Live session.
+      return !containsProgrammingInstruction(item.content)
+        && !containsCookingInstruction(item.content)
+        && !containsExternalPreIcfesPromotion(item.content)
+        && !isLikelyEnglishOnlyOrbyReply(item.content)
+        && !hasFalseOrbyCreatorAttribution(item.content);
+    }).slice(-4);
 
     // Only session metadata is checked as a new instruction source. Previous
     // turns are historical context, not a fresh request: a past filtered message

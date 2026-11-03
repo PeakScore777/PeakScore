@@ -127,6 +127,9 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorSource, /unsupportedInputScript/);
   assert.match(lessonTutorSource, /ORBY_SPANISH_ONLY_REPLY/);
   assert.match(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)/);
+  assert.match(lessonTutorRouteSource, /IDIOMA PRIORITARIO/);
+  assert.match(lessonTutorRouteSource, /ORTOGRAFÍA/);
+  assert.match(lessonTutorRouteSource, /no repitas toda tu presentación/);
 });
 
 test("la voz nunca reproduce audio antes de validar su transcripción y bloquea escrituras no españolas", () => {
@@ -134,8 +137,13 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /!voiceOutputTranscriptValidatedRef\.current/);
   assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(partialReply\)/);
   assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(rawReply\)/);
+  assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current/);
+  assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
+  assert.match(lessonTutorSource, /forcedSpeechMismatch/);
+  assert.match(lessonTutorSource, /const visibleReply = forcedExpected \|\| partialReply/);
   assert.match(lessonTutorRouteSource, /containsUnsupportedSpanishScript\(modelReply\)/);
   assert.match(lessonTutorRouteSource, /ORBY_SPANISH_OUTPUT_FALLBACK/);
+  assert.match(lessonTutorRouteSource, /ORTOGRAFÍA/);
 });
 
 test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas en inglés se bloquean", () => {

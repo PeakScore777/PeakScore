@@ -1364,7 +1364,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const partialNormalized = partialReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
       const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)
         && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|hecho|hecha|soy|fui)\b/.test(partialNormalized);
+      const forcedExpected = voiceForcedReplyRef.current?.trim() ?? "";
+      const normalizedForcedExpected = normalizeVoiceComparison(forcedExpected);
+      const forcedSpeechMismatch = Boolean(
+        forcedExpected
+        && partialNormalized.length >= 8
+        && !(
+          normalizedForcedExpected.startsWith(partialNormalized)
+          || partialNormalized.startsWith(normalizedForcedExpected)
+          || normalizedForcedExpected.includes(partialNormalized)
+          || partialNormalized.includes(normalizedForcedExpected)
+        ),
+      );
       const partialUnsafe = voiceOutputAudioBlockedRef.current
+        || forcedSpeechMismatch
         || containsUnsupportedSpanishScript(partialReply)
         || containsProgrammingInstruction(partialReply)
         || containsExternalPreIcfesPromotion(partialReply)
@@ -1379,12 +1392,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         stopVoicePlayback();
       } else {
         voiceOutputTranscriptValidatedRef.current = true;
+        const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => {
           const exists = current.some((message) => message.id === assistantId);
           return exists
-            ? current.map((message) => message.id === assistantId ? { ...message, content: partialReply } : message)
-            : [...current, { id: assistantId, role: "assistant", content: partialReply }];
+            ? current.map((message) => message.id === assistantId ? { ...message, content: visibleReply } : message)
+            : [...current, { id: assistantId, role: "assistant", content: visibleReply }];
         });
         flushPendingGeminiAudio();
       }

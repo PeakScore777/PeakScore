@@ -335,7 +335,8 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "la decisión de usar voz alternativa debe ocurrir después de vaciar los fragmentos de audio Live");
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
-  assert.ok(realtimeSessionSource.includes('const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina"'));
+  assert.ok(orbyVoiceConfigSource.includes('const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina"'));
+  assert.ok(realtimeSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));
   assert.match(realtimeSessionSource, /voiceName: ORBY_LIVE_VOICE_NAME/);
   assert.ok(lessonTutorSource.includes('const configuredVoiceName = typeof tokenPayload.voiceName === "string"'));
   assert.ok(lessonTutorSource.includes("prebuiltVoiceConfig: { voiceName: configuredVoiceName }"));
@@ -373,7 +374,7 @@ test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones 
 
 test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la doble revisión", () => {
   assert.match(routerSource, /tutor:\s*"groq"/);
-  assert.match(routerSource, /MAX_ATTEMPTS = task === "tutor" \\? 1 : 2/);
+  assert.ok(routerSource.includes('const MAX_ATTEMPTS = task === "tutor" ? 1 : 2;'));
   assert.match(routerSource, /attempt <= MAX_ATTEMPTS/);
   assert.match(routerSource, /attempt < MAX_ATTEMPTS/);
   assert.match(routerSource, /AbortSignal\.timeout\(task === "tutor" \? 12000 : 60000\)/);

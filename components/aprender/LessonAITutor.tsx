@@ -1712,14 +1712,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAudioContextRef.current = audioContext;
       await ensureVoiceAudioContextRunning(audioContext);
 
-      const activeId = await ensureVoiceConversation(startupSignal);
-      const tokenResponse = await fetch("/api/orby/realtime-session", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
-        body: JSON.stringify({ subject, topic, context, history: messages.slice(-6).map(({ role, content }) => ({ role, content })) }),
-      });
+      // Conversation creation and ephemeral-token issuance are independent.
+      // Run them together so voice startup does not pay both network round trips.
+      const [activeId, tokenResponse] = await Promise.all([
+        ensureVoiceConversation(startupSignal),
+        fetch("/api/orby/realtime-session", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
+          body: JSON.stringify({ subject, topic, context, history: messages.slice(-6).map(({ role, content }) => ({ role, content })) }),
+        }),
+      ]);
       const tokenPayload = await tokenResponse.json().catch(() => ({}));
       if (!tokenResponse.ok || typeof tokenPayload.ephemeralToken !== "string") {
         throw new Error(tokenPayload.error || "No se pudo iniciar la sesión de voz.");

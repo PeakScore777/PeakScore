@@ -48,7 +48,7 @@ export const ORBY_SPANISH_ONLY_REPLY =
 export const ORBY_SPANISH_OUTPUT_FALLBACK =
   "Quiero explicártelo correctamente en español. Repite tu pregunta en una frase breve y continuamos con tu preparación para Saber 11.";
 
-const UNSUPPORTED_SPANISH_SCRIPT_PATTERN = /[\\p{Script=Devanagari}\\p{Script=Arabic}\\p{Script=Cyrillic}\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}\\p{Script=Thai}\\p{Script=Bengali}\\p{Script=Gurmukhi}\\p{Script=Gujarati}\\p{Script=Tamil}\\p{Script=Telugu}\\p{Script=Kannada}\\p{Script=Malayalam}\\p{Script=Sinhala}\\p{Script=Myanmar}\\p{Script=Ethiopic}]/u;
+const UNSUPPORTED_SPANISH_SCRIPT_PATTERN = /[\p{Script=Devanagari}\p{Script=Arabic}\p{Script=Cyrillic}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Myanmar}\p{Script=Ethiopic}]/u;
 
 /**
  * Orby is a Spanish-first Saber 11 tutor. Reject foreign writing systems in

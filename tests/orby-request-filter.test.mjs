@@ -183,6 +183,10 @@ test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Because the text describes the author's opinion."), true);
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Let's solve this question together."), true);
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("You can find the correct answer in the passage."), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Je peux vous aider avec cette question aujourd'hui."), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Ich kann dir heute bei dieser Frage helfen."), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Posso te ajudar a estudar este assunto hoje."), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Posso aiutarti a studiare questa domanda oggi."), true);
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("La respuesta es B porque el texto presenta la opinión del autor."), false);
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("En el texto aparece: 'The answer is B'. La opción correcta es B."), false);
 });

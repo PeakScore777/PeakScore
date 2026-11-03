@@ -139,7 +139,7 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
   assert.match(knowledgeWorkerSource, /00:05 UTC/);
 });
 
-test("el audio Live se reproduce progresivamente y la cola espera al final de la reproducción", () => {
+test("el audio Live comienza tras la primera oración segura y la cola espera al fin de la reproducción", () => {
   assert.match(lessonTutorSource, /flushPendingGeminiAudio/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.length < 512/);
   assert.match(lessonTutorSource, /finishRealtimeVoicePlayback/);
@@ -155,20 +155,24 @@ test("el audio Live se reproduce progresivamente y la cola espera al final de la
   assert.doesNotMatch(voiceWorkletSource, /const packetSize = 1600/);
   assert.match(lessonTutorSource, /safetyTimer = window\.setTimeout/);
   assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const partialReply/);
+
   const partialTranscriptStart = lessonTutorSource.indexOf("const outputTranscript");
   const modelAudioStart = lessonTutorSource.indexOf("const modelTurn", partialTranscriptStart);
+  const firstSafeFlush = lessonTutorSource.indexOf("if (hasCompleteSafeSentence) flushPendingGeminiAudio()", partialTranscriptStart);
   assert.ok(partialTranscriptStart >= 0 && modelAudioStart > partialTranscriptStart);
-  assert.doesNotMatch(
-    lessonTutorSource.slice(partialTranscriptStart, modelAudioStart),
-    /flushPendingGeminiAudio\(\)/,
-    "el audio no se reproduce hasta validar la respuesta completa",
-  );
-  assert.match(lessonTutorSource, /complete safety decision/);
-  assert.match(voiceWorkletSource, /const packetSize = 640/);
-  assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const chunk/);
+  assert.ok(firstSafeFlush > partialTranscriptStart && firstSafeFlush < modelAudioStart);
+  assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 24/);
+  assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = hasCompleteSafeSentence/);
+  assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
+  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.push\(chunk\)/);
+  assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current = true/);
   assert.match(lessonTutorSource, /Gemini Live finalizó sin entregar una transcripción utilizable/);
-  // Filtered Live output is replaced and spoken locally; do not ask Gemini
-  // to generate a second audio response for a deterministic policy message.
+
+  const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
+  const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);
+  assert.ok(finalAudioValidationIndex >= 0 && finalTranscriptIndex > finalAudioValidationIndex);
+
+  // Filtered Live output is replaced and spoken locally; no second model call.
   assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
@@ -176,6 +180,7 @@ test("el audio Live se reproduce progresivamente y la cola espera al final de la
   assert.doesNotMatch(lessonTutorSource, /internalSpeechInstruction/);
   assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
 });
+ 
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
   for (const greeting of ["hola", "ola", "oe", "oee", "oye", "ey", "epa", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito"]) {
     assert.equal(filter.isOrbyGreetingRequest(greeting), true, greeting);
@@ -360,7 +365,7 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorSource, /AbortSignal\.timeout\(60_000\)/);
   assert.match(lessonTutorRouteSource, /containsExternalPreIcfesPromotion/);
   assert.match(lessonTutorRouteSource, /isLikelyEnglishOnlyOrbyReply/);
-  assert.match(lessonTutorRouteSource, /const curriculumContextSignals =/);
+  assert.match(lessonTutorRouteSource, /shouldRetrieveOrbyAcademicKnowledge\(\{/);
   assert.match(lessonTutorRouteSource, /shouldRetrieveOrbyAcademicKnowledge\(\{/);
   assert.doesNotMatch(lessonTutorRouteSource, /Los cristales misteriosos: materia y propiedades/);
   assert.match(lessonTutorRouteSource, /const conversationalPrompt =/);

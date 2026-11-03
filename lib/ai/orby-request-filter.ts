@@ -77,8 +77,8 @@ export function containsUnsupportedSpanishLanguage(value: string): boolean {
   const words = normalized.match(/[a-z]+/g) ?? [];
   if (words.length < 3) return false;
   const signals = normalized.match(ROMANIZED_HINDI_SIGNALS) ?? [];
-  if (/^(?:namaste|namaskar)\\b/.test(normalized)) return true;
-  const hasDistinctiveHindiMarker = /\\b(?:mujhe|sikhao|sikhaye|namaste|namaskar|dhanyavaad|shukriya|kripya|bataiye)\\b/.test(normalized);
+  if (/^(?:namaste|namaskar)\b/.test(normalized)) return true;
+  const hasDistinctiveHindiMarker = /\b(?:mujhe|sikhao|sikhaye|namaste|namaskar|dhanyavaad|shukriya|kripya|bataiye)\b/.test(normalized);
   return (signals.length >= 3 || (signals.length >= 2 && hasDistinctiveHindiMarker))
     && signals.length / words.length >= 0.3;
 }

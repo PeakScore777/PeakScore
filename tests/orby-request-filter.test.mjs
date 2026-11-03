@@ -152,8 +152,9 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /containsExternalPreIcfesPromotion\(item\.content\)/);
   assert.match(realtimeSessionSource, /isLikelyEnglishOnlyOrbyReply\(item\.content\)/);
   assert.match(realtimeSessionSource, /hasFalseOrbyCreatorAttribution\(item\.content\)/);
-  assert.match(realtimeSessionSource, /ALCANCE ICFES CON CRITERIO Y CONTEXTO/);
-  assert.match(realtimeSessionSource, /no bloquees por palabras aisladas/);
+  assert.match(realtimeSessionSource, /ALCANCE NATURAL Y SEGURIDAD/);
+  assert.match(realtimeSessionSource, /No bloquees palabras aisladas/);
+  assert.match(realtimeSessionSource, /Las preguntas cotidianas seguras, los saludos, el humor y las conversaciones normales se permiten/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-4\)/);
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
@@ -249,8 +250,8 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
   assert.match(realtimeSessionSource, /PROTECCIÓN DE PEAKSCORE/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
-  assert.match(realtimeSessionSource, /usa la materia, el tema, el ejercicio y los turnos anteriores/);
   assert.match(realtimeSessionSource, /Evalúa la intención real/);
+  assert.match(realtimeSessionSource, /Si la intención es ambigua, pregunta brevemente en vez de rechazar/);
   assert.match(lessonTutorSource, /utterance\.rate = 1\.22/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
@@ -379,6 +380,9 @@ test("bloquea programación y cocina aunque la petición llegue en inglés o tra
     "Give me a recipe for chocolate cake.",
     "Teach me how to cook pasta.",
     "Mujhe khana banana sikhao.",
+    "Khana banana sikhao.",
+    "Mujhe khana pakana sikhao.",
+    "Recipe do, mujhe khana banana hai.",
     "Dame una receta para hacer arepas.",
     "Je veux une recette de gâteau.",
     "Quero cozinhar massa.",

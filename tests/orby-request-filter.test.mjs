@@ -303,6 +303,12 @@ test("bloquea programación y cocina aunque la petición llegue en inglés o tra
     assert.equal(filter.preflightOrbyRequest(prompt).category, "outside", prompt);
   }
 
+  assert.equal(filter.containsCookingInstruction("Here is a recipe for pasta."), true);
+  assert.equal(filter.containsCookingInstruction("No puedo enseñar cocina; mi función es preparar Saber 11."), false);
+  assert.match(lessonTutorSource, /containsCookingInstruction\(partialReply\)/);
+  assert.match(lessonTutorSource, /containsCookingInstruction\(rawReply\)/);
+  assert.match(lessonTutorRouteSource, /containsCookingInstruction\(modelReply\)/);
+
   assert.equal(filter.preflightOrbyRequest("Explícame un aviso publicitario del examen de Inglés.").allowed, true);
 });
 

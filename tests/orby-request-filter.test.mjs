@@ -108,6 +108,7 @@ test("Orby neural Spanish TTS shares the Live voice and returns WAV audio", asyn
     assert.ok(lessonTutorSource.includes("decodeAudioData(audioBytes.slice(0))"));
     assert.ok(lessonTutorSource.includes("voiceAudioSourcesRef.current.add(source)"));
     assert.ok(lessonTutorSource.includes("voiceSpeechCancelRef.current = cancelPlayback"));
+    assert.ok(lessonTutorSource.includes("La voz neural no estuvo disponible; se está usando la voz de respaldo del navegador."));
     assert.ok(liveSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));
     assert.ok(neuralSpeechSource.includes('const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts"'));
     assert.ok(orbyVoiceConfigSource.includes('export const ORBY_VOICE_NAME'));
@@ -341,6 +342,9 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(orbyVoiceConfigSource.includes('const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina"'));
   assert.ok(realtimeSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));
   assert.match(realtimeSessionSource, /voiceName: ORBY_LIVE_VOICE_NAME/);
+  assert.match(realtimeSessionSource, /Server-Timing/);
+  assert.match(realtimeSessionSource, /tokenMs/);
+  assert.match(realtimeSessionSource, /X-Orby-Session-Setup-Ms/);
   assert.ok(lessonTutorSource.includes('const configuredVoiceName = typeof tokenPayload.voiceName === "string"'));
   assert.ok(lessonTutorSource.includes("prebuiltVoiceConfig: { voiceName: configuredVoiceName }"));
   assert.match(realtimeSessionSource, /speechConfig:\s*\{\s*voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{ voiceName: ORBY_LIVE_VOICE_NAME/);
@@ -388,6 +392,8 @@ test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la d
   assert.match(lessonTutorRouteSource, /generationMs/);
   assert.match(lessonTutorRouteSource, /persistenceMs/);
   assert.match(lessonTutorRouteSource, /X-Orby-Response-Time-Ms/);
+  assert.match(lessonTutorRouteSource, /review;dur=/);
+  assert.match(lessonTutorRouteSource, /retrievedAcademicKnowledge/);
   const qualityBlock = tutorQualitySource.slice(
     tutorQualitySource.indexOf("const highRiskPatterns = ["),
     tutorQualitySource.indexOf("// Review the student's actual message"),

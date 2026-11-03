@@ -40,12 +40,27 @@ export const ORBY_ICFES_ENGLISH_INTRO_REPLY =
   "¡Claro! Vamos a estudiar el componente de Inglés de Saber 11, no una conversación general en inglés. Practicaremos comprensión de textos, avisos y diálogos, vocabulario en contexto e interpretación de la intención comunicativa. Te explicaré en español y usaremos ejercicios originales tipo ICFES. ¿Empezamos con una pregunta de práctica?";
 
 export const ORBY_GREETING_REPLY =
-  "¡Hola! Qué gusto tenerte por aquí. Soy Orby, tu tutor de PeakScore. ¿Qué vamos a preparar hoy: Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés?";
+  "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
+
+export const ORBY_SPANISH_ONLY_REPLY =
+  "No alcancé a reconocer tu frase en español. ¿Puedes repetirla, por favor?";
+
+const UNSUPPORTED_SPANISH_SCRIPT_PATTERN = /[\\p{Script=Devanagari}\\p{Script=Arabic}\\p{Script=Cyrillic}\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}\\p{Script=Thai}\\p{Script=Bengali}\\p{Script=Gurmukhi}\\p{Script=Gujarati}\\p{Script=Tamil}\\p{Script=Telugu}\\p{Script=Kannada}\\p{Script=Malayalam}\\p{Script=Sinhala}\\p{Script=Myanmar}\\p{Script=Ethiopic}]/u;
+
+/**
+ * Orby is a Spanish-first Saber 11 tutor. Reject foreign writing systems in
+ * model output and ASR transcripts instead of rendering or speaking gibberish.
+ * Latin-script English terms remain valid for the ICFES English subject.
+ */
+export function containsUnsupportedSpanishScript(value: string): boolean {
+  return UNSUPPORTED_SPANISH_SCRIPT_PATTERN.test(value);
+}
 
 export function isOrbyGreetingRequest(message: string): boolean {
   const normalized = normalizeOrbyRequestText(message).replace(/[¿?¡!.,;:]+/g, "").trim();
   if (!normalized || normalized.length > 48) return false;
-  return /^(?:hola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized);
+  return /^(?:(?:oye|oe|ey|hey) )?orby(?: ai)?$/.test(normalized)
+    || /^(?:hola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized);
 }
 
 const ENGLISH_ONLY_OPENINGS = [
@@ -122,7 +137,7 @@ export function preflightOrbyRequest(message: string): OrbyPreflightResult {
     return {
       allowed: false,
       category: "programming",
-      reply: "Soy Orby, el tutor de PeakScore especializado exclusivamente en Saber 11. No enseño programación ni desarrollo de software. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.",
+      reply: "Ese tema no lo trabajo aquí; mi función es ayudarte con Saber 11. Podemos seguir con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés. ¿Cuál prefieres?",
     };
   }
 

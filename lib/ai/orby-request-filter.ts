@@ -227,6 +227,30 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
   return ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior));
 }
 
+/**
+ * Refuse obvious off-curriculum domains even when a user mixes them with an
+ * ICFES keyword. This same detector is applied to model output before display
+ * or audio playback.
+ */
+export function containsExplicitNonIcfesTopic(value: string): boolean {
+  const normalized = normalizeOrbyRequestText(value);
+  if (!normalized) return false;
+  if (/\\b(?:fuera del alcance|no corresponde a los contenidos|no puedo ayudarte con esa solicitud|no puedo trabajar ese tema|esa solicitud esta fuera|solo puedo ayudarte con las cinco areas)\\b/i.test(normalized)) {
+    return false;
+  }
+  return OUTSIDE_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
+/** Previous assistant text is trusted as context only when the exchange itself
+ * is anchored to a curriculum concept and is not a deterministic refusal. */
+export function isIcfesScopedAssistantTurn(message: string, previousContext = ""): boolean {
+  const normalized = normalizeOrbyRequestText(message);
+  if (!normalized || isScopeRefusalContext(normalized)) return false;
+  if (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
+  const prior = normalizeOrbyRequestText(previousContext);
+  return Boolean(prior) && ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(prior));
+}
+
 export function preflightOrbyRequest(message: string, previousContext = ""): OrbyPreflightResult {
   const normalized = normalizeOrbyRequestText(message);
   if (!normalized) return { allowed: true, category: null, reply: "" };

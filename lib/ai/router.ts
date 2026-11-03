@@ -1341,11 +1341,14 @@ async function generateWithGroq(
    *      ↓
    * router → Gemini
    */
-  const MAX_RETRIES = task === "tutor" ? 0 : 2;
+  // Tutor requests must get one real Groq attempt, then immediately
+  // fall back to Gemini if needed. MAX_RETRIES=0 with an attempt counter
+  // starting at 1 skipped Groq entirely (the previous production bug).
+  const MAX_ATTEMPTS = task === "tutor" ? 1 : 3;
 
   for (
     let attempt = 1;
-    attempt <= MAX_RETRIES;
+    attempt <= MAX_ATTEMPTS;
     attempt++
   ) {
     try {
@@ -1551,7 +1554,7 @@ async function generateWithGroq(
         const jitterMs = Math.floor(Math.random() * 300);
         const waitMs = Math.max(providerWaitMs, 900) + jitterMs;
 
-        if (attempt < MAX_RETRIES) {
+        if (attempt < MAX_ATTEMPTS) {
           console.warn(
             `[PeakScore AI] Groq devolvió 429. Reintento corto en ${waitMs}ms.`
           );
@@ -1642,9 +1645,9 @@ async function generateWithGroq(
        * esperamos y volvemos a intentar Groq
        * antes de activar el fallback.
        */
-      if (attempt < MAX_RETRIES) {
+      if (attempt < MAX_ATTEMPTS) {
         console.warn(
-          `[PeakScore AI] Groq falló en el intento ${attempt}/${MAX_RETRIES}. Reintentando...`
+          `[PeakScore AI] Groq falló en el intento ${attempt}/${MAX_ATTEMPTS}. Reintentando...`
         );
 
         await sleep(

@@ -792,7 +792,9 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 24/);
   assert.match(lessonTutorSource, /hasCompleteSafeSentence\) flushPendingGeminiAudio\(\)/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
-  assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = true;\\s*voiceAssistantTextRef\.current = rawReply/);
+  const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
+  const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);
+  assert.ok(finalAudioValidationIndex >= 0 && finalTranscriptIndex > finalAudioValidationIndex);
   assert.match(lessonTutorSource, /partialUnsafe/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current = \[\]/);
 });

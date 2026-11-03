@@ -235,7 +235,7 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
   assert.match(realtimeSessionSource, /No recomiendes, compares, promociones|No recomiendes, compares, promociones/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
-  assert.match(realtimeSessionSource, /No enseñes programación, desarrollo de software, cocina, recetas/);
+  assert.match(realtimeSessionSource, /No enseñes programación, desarrollo de software, cocina, recetas/);\n  assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);\n  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\\(-4\\)/);
   assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
   assert.match(lessonTutorSource, /internalSpeechInstruction/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(internalSpeechInstruction\)/);
@@ -385,6 +385,55 @@ test("el filtro de salida no marca una explicación de velocidad terminal como p
 
 test("mantiene el rechazo de solicitudes claramente ajenas a Saber 11", () => {
   assert.equal(filter.preflightOrbyRequest("Dame una receta para hornear pan.").category, "outside");
+});
+
+test("el filtro ICFES funciona en modo allowlist y rechaza conversaciones cotidianas", () => {
+  const outOfScope = [
+    "carros",
+    "¿Qué te gustaría saber sobre los carros?",
+    "Se me pinchó una llanta.",
+    "¿Qué modelo de carro me recomiendas?",
+    "Dame consejos para el mantenimiento de mi vehículo.",
+    "¿Qué película me recomiendas?",
+    "Cuéntame un chiste.",
+    "¿Cómo preparo una arepa?",
+    "¿Qué hago si tengo fiebre?",
+    "¿Cuál es el clima de mañana?",
+  ];
+  for (const prompt of outOfScope) {
+    const result = filter.preflightOrbyRequest(prompt);
+    assert.equal(result.allowed, false, prompt);
+    assert.equal(result.category, "outside", prompt);
+    assert.match(result.reply, /solo puedo ayudarte con/i);
+  }
+
+  const icfesRequests = [
+    "Resuelve esta ecuación de segundo grado.",
+    "Explícame la fotosíntesis.",
+    "¿Cuál es la intención del autor en este párrafo?",
+    "Compara el centralismo y el federalismo en Colombia.",
+    "¿Cómo se resuelve una pregunta de probabilidad del ICFES?",
+    "Practiquemos una lectura en inglés tipo Saber 11.",
+    "¿Qué es la presión atmosférica en Física?",
+    "Explica la variable de control de este experimento de química.",
+  ];
+  for (const prompt of icfesRequests) {
+    assert.equal(filter.preflightOrbyRequest(prompt).allowed, true, prompt);
+  }
+
+  assert.equal(filter.preflightOrbyRequest("hola").allowed, true);
+  assert.equal(
+    filter.preflightOrbyRequest("¿Y por qué?", "La fotosíntesis transforma la energía lumínica en energía química.").allowed,
+    true,
+  );
+  assert.equal(
+    filter.preflightOrbyRequest("¿Y por qué?", "Esa solicitud no corresponde a los contenidos de Saber 11. Puedo ayudarte con Matemáticas o Ciencias Naturales.").allowed,
+    false,
+  );
+  assert.equal(
+    filter.preflightOrbyRequest("Se me pinchó una llanta.", "La presión atmosférica es un concepto de Física.").allowed,
+    false,
+  );
 });
 
 test("solo permite publicar cuando el perfil v2 y todos los embeddings están listos", () => {

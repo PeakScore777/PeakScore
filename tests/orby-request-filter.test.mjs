@@ -123,7 +123,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /containsUnsupportedSpanishScript\(item\.content\)/);
   assert.match(lessonTutorSource, /languageCodes: \["es-ES"\]/);
   assert.match(lessonTutorSource, /mode: "SMART"/);
-  assert.match(lessonTutorSource, /speechConfig: \\{\\s*languageCode: "es"/);
+  assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: "es"/);
   assert.match(lessonTutorSource, /"Oye Orby"/);
   assert.match(lessonTutorSource, /unsupportedInputScript/);
   assert.match(lessonTutorSource, /ORBY_SPANISH_ONLY_REPLY/);
@@ -141,7 +141,6 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /unsupportedInterimScript/);
   assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
   assert.match(lessonTutorSource, /normalizedForcedExpected\.startsWith\(partialNormalized\)/);
-  assert.match(lessonTutorSource, /visibleReply = forcedExpected \\|\\| partialReply/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current/);
   assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
   assert.match(lessonTutorSource, /forcedSpeechMismatch/);

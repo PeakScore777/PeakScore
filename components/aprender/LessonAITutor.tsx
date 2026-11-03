@@ -1313,6 +1313,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     if (typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
       voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
+      armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
       const partialNormalized = partialReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
@@ -1349,6 +1350,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? part.inlineData as { data?: unknown; mimeType?: unknown }
         : null;
       if (typeof inlineData?.data === "string" && !voiceOutputAudioBlockedRef.current) {
+        armVoiceResponseWatchdog();
         const chunk = {
           data: inlineData.data,
           mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
@@ -1489,6 +1491,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceResponseDoneRef.current = true;
       voiceInternalPolicyTextRef.current = null;
       voiceOutputAudioBlockedRef.current = false;
+
+      if (!rawReply.trim() && voiceUserTextRef.current.trim()) {
+        // Live occasionally completes without usable text. Ask the existing
+        // filtered tutor route to recover this same turn instead of silently
+        // releasing the listening state with no answer.
+        voiceResponseDoneRef.current = false;
+        fallbackVoiceTurnToText("Gemini Live finalizó sin entregar una transcripción utilizable. Continuaré esta misma pregunta con el motor de respaldo.");
+        return;
+      }
 
       // Keep the turn locked until all scheduled audio has actually played.
       // If Live returns text without audio, read it with the browser's Spanish voice.

@@ -252,6 +252,7 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
+  assert.match(lessonTutorSource, /Math\.min\(45_000, Math\.max\(8_000, clean\.length \* 70\)\)/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(cleanUserText\)/);
   assert.match(lessonTutorSource, /voiceInternalPolicyTextRef\.current = policyReply/);
   assert.match(lessonTutorSource, /isInternalPolicySpeechEcho/);
@@ -658,7 +659,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
 
 test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
-  assert.match(lessonTutorSource, /18_000/);
+  assert.match(lessonTutorSource, /12_000/);
   assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
   assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
   assert.match(lessonTutorSource, /appendUserMessage = true/);

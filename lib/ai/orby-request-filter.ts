@@ -264,7 +264,7 @@ const POTENTIALLY_HARMFUL_REQUEST_PATTERNS = [
   // remain allowed.
   /\b(?:como|how (?:do i|can i|to))\b.{0,55}\b(?:fabricar|construir|hacer|preparar|make|build|create)\b.{0,45}\b(?:una bomba|explosivo|explosivos|veneno|arma casera|bomba casera|bomb|explosive|poison|improvised weapon)\b/i,
   /\b(?:como|how to)\b.{0,55}\b(?:matar|asesinar|envenenar|herir|hacer dano|kill|murder|poison|hurt|injure)\b.{0,55}\b(?:a alguien|una persona|mi companero|myself|someone|a person|someone else)\b/i,
-  /\b(?:como suicidarme|metodo para suicidarme|como hacerme dano|how to kill myself|how to commit suicide|best way to self harm|how to self[- ]?harm)\b/i,
+  /\b(?:como suicidarme|metodo para suicidarme|como (?:puedo )?hacerme dano|how to kill myself|how to commit suicide|how (?:can i|do i) self[- ]?harm|best way to self harm)\b/i,
   // Cyber abuse: exclude credential theft, phishing, malware and unauthorized
   // account/system intrusion, while allowing general cybersecurity education.
   /\b(?:robar|robo|hurtar|hurto|obtener|steal|capture)\b.{0,55}\b(?:contrasenas?|credenciales|passwords?|credentials|tokens? de acceso|access tokens?)\b/i,

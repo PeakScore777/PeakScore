@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       // false creator claim become an instruction in the next Live session.
       const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\n");
       const safeAssistantTurn = !containsProgrammingInstruction(item.content)
-        && !containsCookingInstruction(item.content)
+        && !containsCookingInstruction(item.content, priorContext)
         && !containsExplicitNonIcfesTopic(item.content, priorContext)
         && !containsExternalPreIcfesPromotion(item.content)
         && !containsUnsupportedSpanishLanguage(item.content)

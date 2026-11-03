@@ -53,6 +53,9 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
   assert.match(cloudflareVoiceSource, /CLOUDFLARE_API_TOKEN/);
   assert.match(cloudflareVoiceSource, /@cf\/openai\/whisper-large-v3-turbo/);
   assert.match(cloudflareVoiceSource, /@cf\/google\/gemma-4-26b-a4b-it/);
+  assert.match(cloudflareVoiceSource, /conversar con naturalidad sobre cualquier tema seguro/);
+  assert.match(cloudflareVoiceSource, /No rechaces saludos ni preguntas cotidianas seguras por no ser ICFES/);
+  assert.match(cloudflareVoiceSource, /ortografía, tildes, concordancia y puntuación cuidadas/);
   assert.match(cloudflareVoiceSource, /QUOTA_EXCEEDED/);
   assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\(bytes\)/);
   assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\(activePrompt\)/);

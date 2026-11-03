@@ -210,6 +210,14 @@ export function containsProgrammingInstruction(text: string): boolean {
   return containsCode || (mentionsProgramming && !isExplicitRefusal);
 }
 
+export function containsCookingInstruction(text: string): boolean {
+  const value = normalizeOrbyRequestText(text);
+  if (!value) return false;
+  const explicitRefusal = /\b(?:no (?:puedo|voy a|debo) (?:ensenar|explicar|compartir|dar)|no enseno|no doy clases de|fuera del alcance|mi funcion es preparar|no puedo ayudarte con)\b.{0,80}\b(?:cocina|cocinar|receta|recetas|cooking|cook|recipe|recipes|baking)\b/i.test(value);
+  if (explicitRefusal) return false;
+  return OUTSIDE_SCOPE_PATTERNS[0].test(value);
+}
+
 export function extractPlainOrbyReply(value: string): string {
   const fence = String.fromCharCode(96).repeat(3);
   const normalized = value

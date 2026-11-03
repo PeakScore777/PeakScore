@@ -63,7 +63,7 @@ const UNSUPPORTED_SPANISH_SCRIPT_PATTERN = /[\p{Script=Devanagari}\p{Script=Arab
  * model output and ASR transcripts instead of rendering or speaking gibberish.
  * Latin-script English terms remain valid for the ICFES English subject.
  */
-const ROMANIZED_HINDI_SIGNALS = /\\b(?:namaste|namaskar|aap|kaise|hain|hai|ho|kya|kyun|kyunki|kripya|dhanyavaad|shukriya|mera|meri|mujhe|hum|aapka|aapki|chahiye|bataye|bataiye|samajh|sakte|sakti|raha|rahi|hoon|nahi|nahin|accha|theek|bilkul|kijiye|padhai|seekhna|sikhaye|sikhao)\\b/g;
+const ROMANIZED_HINDI_SIGNALS = /\b(?:namaste|namaskar|aap|kaise|hain|hai|ho|kya|kyun|kyunki|kripya|dhanyavaad|shukriya|mera|meri|mujhe|hum|aapka|aapki|chahiye|bataye|bataiye|samajh|sakte|sakti|raha|rahi|hoon|nahi|nahin|accha|theek|bilkul|kijiye|padhai|seekhna|sikhaye|sikhao)\b/g;
 
 /**
  * Reject non-Spanish ASR/model language, including Hindi written in Latin

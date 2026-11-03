@@ -170,8 +170,8 @@ test("el chat de texto también rechaza escrituras ajenas al español antes de l
 test("la voz nunca reproduce audio antes de validar su transcripción y bloquea escrituras no españolas", () => {
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef/);
   assert.match(lessonTutorSource, /!voiceOutputTranscriptValidatedRef\.current/);
-  assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(partialReply\)/);
-  assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(rawReply\)/);
+  assert.match(lessonTutorSource, /containsUnsupportedSpanishLanguage\(partialReply\)/);
+  assert.match(lessonTutorSource, /containsUnsupportedSpanishLanguage\(rawReply\)/);
   assert.match(lessonTutorSource, /unsupportedInterimScript/);
   assert.match(lessonTutorSource, /voiceUnsupportedInputDetectedRef/);
   assert.match(lessonTutorSource, /if \(!pendingUserText && voiceUnsupportedInputDetectedRef\.current && voiceModeRef\.current\)/);
@@ -183,7 +183,7 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
   assert.match(lessonTutorSource, /forcedSpeechMismatch/);
   assert.match(lessonTutorSource, /const visibleReply = forcedExpected \|\| partialReply/);
-  assert.match(lessonTutorRouteSource, /containsUnsupportedSpanishScript\(modelReply\)/);
+  assert.match(lessonTutorRouteSource, /containsUnsupportedSpanishLanguage\(modelReply\)/);
   assert.match(lessonTutorRouteSource, /ORBY_SPANISH_OUTPUT_FALLBACK/);
   assert.match(lessonTutorRouteSource, /ORTOGRAFÍA/);
 });

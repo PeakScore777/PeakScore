@@ -256,13 +256,13 @@ const POTENTIALLY_HARMFUL_REQUEST_PATTERNS = [
   // Explicit instructions to harm a person, create weapons/explosives/poisons,
   // or facilitate self-harm. Neutral discussion, prevention and school science
   // remain allowed.
-  /\b(?:como|how to)\b.{0,55}\b(?:fabricar|construir|hacer|preparar|make|build|create)\b.{0,45}\b(?:una bomba|explosivo|explosivos|veneno|arma casera|bomba casera|bomb|explosive|poison|improvised weapon)\b/i,
+  /\b(?:como|how (?:do i|can i|to))\b.{0,55}\b(?:fabricar|construir|hacer|preparar|make|build|create)\b.{0,45}\b(?:una bomba|explosivo|explosivos|veneno|arma casera|bomba casera|bomb|explosive|poison|improvised weapon)\b/i,
   /\b(?:como|how to)\b.{0,55}\b(?:matar|asesinar|envenenar|herir|hacer dano|kill|murder|poison|hurt|injure)\b.{0,55}\b(?:a alguien|una persona|mi companero|myself|someone|a person|someone else)\b/i,
   /\b(?:como suicidarme|metodo para suicidarme|como hacerme dano|how to kill myself|how to commit suicide|best way to self harm|how to self[- ]?harm)\b/i,
   // Cyber abuse: exclude credential theft, phishing, malware and unauthorized
   // account/system intrusion, while allowing general cybersecurity education.
-  /\b(?:robar|hurtar|obtener|steal|capture)\b.{0,55}\b(?:contrasenas?|credenciales|passwords?|credentials|tokens? de acceso|access tokens?)\b/i,
-  /\b(?:crear|hacer|programar|deploy|build|write|make)\b.{0,55}\b(?:malware|ransomware|keylogger|phishing kit|credential stealer|virus informatico)\b/i,
+  /\b(?:robar|robo|hurtar|hurto|obtener|steal|capture)\b.{0,55}\b(?:contrasenas?|credenciales|passwords?|credentials|tokens? de acceso|access tokens?)\b/i,
+  /\b(?:crear|hacer|programar|deploy|build|write|make|create)\b.{0,55}\b(?:malware|ransomware|keylogger|phishing kit|credential stealer|virus informatico)\b/i,
   /\b(?:hackear|hack|entrar|acceder|bypassear|bypass)\b.{0,65}\b(?:cuenta ajena|cuenta de otra persona|sistema ajeno|servidor ajeno|sin permiso|una cuenta|someone else's account|an account|a server|without permission)\b/i,
   // Fraud, theft and doxxing requests must not be converted into how-to guides.
   /\b(?:como|how to)\b.{0,50}\b(?:estafar|engañar para robar|falsificar documentos|robar una cuenta|cometer fraude|scam someone|commit fraud|forge documents|steal an account)\b/i,

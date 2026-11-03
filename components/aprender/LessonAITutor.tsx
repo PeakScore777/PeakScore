@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -1421,6 +1421,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || forcedSpeechMismatch
         || containsUnsupportedSpanishScript(partialReply)
         || containsProgrammingInstruction(partialReply)
+        || containsCookingInstruction(partialReply)
         || containsExternalPreIcfesPromotion(partialReply)
         || isLikelyEnglishOnlyOrbyReply(partialReply)
         || hasFalseOrbyCreatorAttribution(partialReply)
@@ -1503,8 +1504,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? ORBY_SPANISH_OUTPUT_FALLBACK
             : voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
             ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
-            : containsExternalPreIcfesPromotion(rawReply)
-              ? ORBY_EXTERNAL_PREICFES_REPLY
+            : containsCookingInstruction(rawReply)
+              ? "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
+              : containsExternalPreIcfesPromotion(rawReply)
+                ? ORBY_EXTERNAL_PREICFES_REPLY
               : isLikelyEnglishOnlyOrbyReply(rawReply)
                 ? isGenericIcfesEnglishRequest(voiceUserTextRef.current) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : "Soy Orby, tu tutor de PeakScore especializado en Saber 11. Te responderé en español colombiano y puedo ayudarte con las cinco áreas del examen."
                 : voiceInputPolicyRef.current === "programming" || unsafeGeneratedContent

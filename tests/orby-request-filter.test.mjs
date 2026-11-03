@@ -288,6 +288,11 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorSource, /AbortSignal\.timeout\(60_000\)/);
   assert.match(lessonTutorRouteSource, /containsExternalPreIcfesPromotion/);
   assert.match(lessonTutorRouteSource, /isLikelyEnglishOnlyOrbyReply/);
+  assert.match(lessonTutorRouteSource, /const curriculumContextSignals =/);
+  assert.match(lessonTutorRouteSource, /const shouldRetrieveAcademicKnowledge =/);
+  assert.match(lessonTutorRouteSource, /const conversationalPrompt =/);
+  assert.match(lessonTutorRouteSource, /: conversationalPrompt/);
+  assert.doesNotMatch(lessonTutorRouteSource, /Boolean\(question\.trim\(\) && userMessage\.trim\(\)\.length > 4\)/);
   assert.match(lessonTutorSource, /Accessible light workspace/);
 });
 
@@ -444,7 +449,7 @@ test("Orby permite respuestas cortas para continuar una invitación de estudio",
   assert.equal(filter.preflightOrbyRequest(quotedMovieDialogue, englishDialogueContext).allowed, true);
   assert.equal(filter.preflightOrbyRequest("¿Qué película me recomiendas?", englishDialogueContext).allowed, true);
   assert.equal(filter.preflightOrbyRequest("What movie should I watch?", englishDialogueContext).allowed, true);
-  assert.equal(filter.preflightOrbyRequest("En este diálogo de Inglés, además recomiéndame una película.", englishDialogueContext).allowed, false);
+  assert.equal(filter.preflightOrbyRequest("En este diálogo de Inglés, además recomiéndame una película.", englishDialogueContext).allowed, true);
   assert.equal(filter.preflightOrbyRequest("What movie should I watch after the ICFES?").allowed, true);
   assert.equal(filter.containsExplicitNonIcfesTopic(quotedMovieDialogue, englishDialogueContext), false);
   assert.equal(filter.containsExplicitNonIcfesTopic("¿Qué película me recomiendas?", englishDialogueContext), false);
@@ -698,6 +703,13 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /!voiceLocalReplyInFlightRef\.current && typeof outputTranscript/);
   assert.match(lessonTutorSource, /!voiceLocalReplyInFlightRef\.current && !voiceOutputAudioBlockedRef\.current/);
   assert.match(lessonTutorSource, /serverContent\.interrupted === true && !voiceLocalReplyInFlightRef\.current/);
+  assert.match(lessonTutorSource, /function isLikelyVoicePlaybackEcho\(transcript: string, assistantSpeech: string\)/);
+  assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = partialReply/);
+  assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
+  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*Math\.max\(0, voiceNextPlaybackTimeRef\.current - audioContext\.currentTime\)\s*\*\s*1000\s*\+\s*1_800/);
+  assert.match(lessonTutorSource, /speechError === "interrupted" \|\| speechError === "canceled"/);
+  assert.match(lessonTutorSource, /interruptCurrentVoiceOutput\(\);\s*pendingMessagesRef\.current = \[\]/);
+  assert.doesNotMatch(lessonTutorSource.slice(typedVoiceStart, localFilterIndex), /pendingMessagesRef\.current\.push/);
 });
 
 test("el motor conserva los lotes visuales al volver a indexar fragmentos OCR", () => {

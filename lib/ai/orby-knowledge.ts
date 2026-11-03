@@ -108,6 +108,17 @@ export type OrbyKnowledgePageBatchProfile = OrbyKnowledgeBatchProfile & {
   page_results: OrbyKnowledgePageResult[];
 };
 
+function isProviderQuotaExceeded(error: unknown): boolean {
+  const message = error instanceof Error
+    ? error.name + " " + error.message
+    : String(error ?? "");
+  return /RESOURCE_EXHAUSTED|quota.?exceeded|rate.?limit|too many requests|\\b429\\b/i.test(message);
+}
+
+function throwEmbeddingQuotaExceeded(): never {
+  throw new Error("ORBY_EMBEDDING_QUOTA_EXHAUSTED: Los proveedores gratuitos alcanzaron su cuota. El aprendizaje se reanudará en el próximo reinicio diario.");
+}
+
 function getEmbeddingClient() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
@@ -337,8 +348,11 @@ export async function createOrbyEmbeddings(
         console.error("[Orby RAG] Cloudflare document embeddings unavailable.", {
           name: error instanceof Error ? error.name : "UnknownError",
         });
-        if (geminiFailure) {
-          throw new Error("Gemini and Cloudflare embeddings are both unavailable. The saved batches remain intact; retry the same job later.");
+        if (isProviderQuotaExceeded(geminiFailure) && isProviderQuotaExceeded(error)) {
+          throwEmbeddingQuotaExceeded();
+        }
+        if (isProviderQuotaExceeded(error) && !geminiFailure) {
+          throwEmbeddingQuotaExceeded();
         }
         throw error;
       }
@@ -346,6 +360,7 @@ export async function createOrbyEmbeddings(
 
     if (!vectors.length) {
       if (geminiFailure instanceof Error) {
+        if (isProviderQuotaExceeded(geminiFailure)) throwEmbeddingQuotaExceeded();
         console.warn("[Orby RAG] Gemini embedding request failed and Cloudflare is not configured.", {
           name: geminiFailure.name,
         });

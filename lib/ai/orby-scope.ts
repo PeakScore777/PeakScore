@@ -76,9 +76,18 @@ export const ORBY_IDENTITY_REPLY =
 
 export function classifyOutOfScopeRequest(message: string): "programming" | "outside" | null {
   const normalized = message.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  if (PROGRAMMING_PATTERNS.some((pattern) => pattern.test(normalized))) return "programming";
-  if (OUTSIDE_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return "outside";
-  return null;
+  const explicitProgrammingRequest = [
+    /\b(?:ensename|quiero aprender|quiero programar|ayudame a|explicame como|como puedo|how do i|how to|teach me|help me|learn to)\b.{0,90}\b(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|c\+\+|c#|html|css|react|node\.js|sql|crear una app|hacer una pagina web|code)\b/i,
+    /\b(?:crear|hacer|construir|desarrollar|build|create|make|develop)\s+(?:un|una|el|la|a|an|the)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|website|application|mobile app|bot)\b/i,
+  ];
+  if (explicitProgrammingRequest.some((pattern) => pattern.test(normalized))) return "programming";
+
+  const explicitOutsideRequest = [
+    /^(?:receta|cocina|cocinar|pelicula|peliculas|carro|carros|vehiculo|vehiculos|clima|chiste|chistes)[.!? ]*$/i,
+    /\b(?:dame|hazme|quiero|necesito|comparte|ensename|como preparo|como cocino|give me|teach me|how to cook|voglio una ricetta|quero uma receita|je veux une recette)\b.{0,80}\b(?:receta|recetas|arepa|pan|pasta|recipe|cake|food|cook|cooking|ricetta|receita|recette|rezept)\b/i,
+    /\b(?:recomiendame|que pelicula me recomiendas|what movie should i watch|which movie should i watch|which car should i buy|what car should i buy|what should i eat|how is the weather|what is the weather|que hago si tengo fiebre|que medicamento)\b/i,
+  ];
+  return explicitOutsideRequest.some((pattern) => pattern.test(normalized)) ? "outside" : null;
 }
 
 export function getOutOfScopeReply(kind: "programming" | "outside", message = ""): string {

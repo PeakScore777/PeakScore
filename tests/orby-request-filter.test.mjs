@@ -30,6 +30,7 @@ const knowledgeWorkerSource = await readFile(new URL("../lib/ai/orby-knowledge-w
 const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
 const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-capture.worklet.js", import.meta.url), "utf8");
 const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
@@ -82,6 +83,12 @@ test("el audio Live se reproduce progresivamente y la cola espera al final de la
   assert.match(lessonTutorSource, /voiceRealtimeAudioChunkCountRef\.current === 0/);
   assert.match(lessonTutorSource, /speakText\(rawReply/);
   assert.match(lessonTutorSource, /voiceSpeechCancelRef/);
+  assert.match(lessonTutorSource, /cancelSpeech = \(\) => finish\(true\)/);
+  assert.match(lessonTutorSource, /if \(!cancelled\) \{/);
+  assert.match(lessonTutorSource, /voiceUserMessageVisibleRef/);
+  assert.match(lessonTutorSource, /isBrowserSpeechEcho/);
+  assert.match(voiceWorkletSource, /const packetSize = 640/);
+  assert.doesNotMatch(voiceWorkletSource, /const packetSize = 1600/);
   assert.match(lessonTutorSource, /safetyTimer = window\.setTimeout/);
   assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const partialReply/);
   assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const chunk/);

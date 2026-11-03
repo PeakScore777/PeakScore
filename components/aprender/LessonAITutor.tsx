@@ -741,48 +741,47 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
 
   async function speakText(text: string, index: number): Promise<void> {
-    const clean = text.trim().slice(0, 1800);
+    const clean = text.trim().replace(/\\s+/g, " ").slice(0, 1800);
+    if (!clean) return;
+
     const isLocalLiveTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
-    if (!clean || !isLocalLiveTurn) {
-      await speakWithBrowserFallback(text, index);
-      return;
-    }
-
-    const messageId = voiceAssistantMessageIdRef.current;
-    const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
+    const messageId = isLocalLiveTurn ? voiceAssistantMessageIdRef.current : null;
     const abortController = new AbortController();
-    let source: AudioBufferSourceNode | null = null;
+    let audioElement: HTMLAudioElement | null = null;
+    let objectUrl: string | null = null;
     let finished = false;
-    let settled = false;
     let resolvePlayback: (() => void) | null = null;
+    let safetyTimer: number | null = null;
+    const playbackPromise = new Promise<void>((resolve) => { resolvePlayback = resolve; });
 
-    const playbackPromise = new Promise<void>((resolve) => {
-      resolvePlayback = resolve;
-    });
     const finish = (cancelled: boolean) => {
       if (finished) return;
       finished = true;
+      if (safetyTimer !== null) window.clearTimeout(safetyTimer);
       if (voiceSpeechCancelRef.current === cancelPlayback) voiceSpeechCancelRef.current = null;
-      if (source) {
-        voiceAudioSourcesRef.current.delete(source);
-        source.onended = null;
-        try { source.disconnect(); } catch { /* Already disconnected. */ }
+      if (audioElement) {
+        audioElement.onended = null;
+        audioElement.onerror = null;
+        audioElement.onloadedmetadata = null;
+        audioElement.pause();
+        audioElement.removeAttribute("src");
+        audioElement.load();
+        audioElement = null;
       }
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
+      voiceBrowserSpeechActiveRef.current = false;
+      setSpeakingIndex(null);
       if (!cancelled && isLocalLiveTurn) {
-        voiceBrowserSpeechActiveRef.current = false;
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + 1_800;
         finishLocalVoiceReply(messageId);
       }
-      if (!settled) {
-        settled = true;
-        resolvePlayback?.();
-      }
+      resolvePlayback?.();
     };
     const cancelPlayback = () => {
       abortController.abort();
-      if (source) {
-        try { source.stop(); } catch { /* Playback may already have ended. */ }
-      }
       finish(true);
     };
     voiceSpeechCancelRef.current = cancelPlayback;
@@ -792,40 +791,37 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         method: "POST",
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.any([abortController.signal, AbortSignal.timeout(22_000)]),
+        signal: AbortSignal.any([abortController.signal, AbortSignal.timeout(20_000)]),
         body: JSON.stringify({ text: clean }),
       });
-      if (!response.ok) throw new Error("Neural voice unavailable.");
-      const audioBytes = await response.arrayBuffer();
-      if (audioBytes.byteLength < 256 || audioBytes.byteLength > 4 * 1024 * 1024) {
-        throw new Error("Neural voice audio had an invalid size.");
+      if (!response.ok) throw new Error("Neural speech endpoint unavailable.");
+      const audioBlob = await response.blob();
+      if (audioBlob.size < 256 || audioBlob.size > 4 * 1024 * 1024) {
+        throw new Error("Neural speech audio has an invalid size.");
       }
-
-      const audioContext = voiceAudioContextRef.current;
-      if (!audioContext || audioContext.state === "closed") throw new Error("Voice audio context is unavailable.");
-      await ensureVoiceAudioContextRunning(audioContext);
-      const audioBuffer = await audioContext.decodeAudioData(audioBytes.slice(0));
-      if (abortController.signal.aborted || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
+      if (abortController.signal.aborted) {
         finish(true);
-        return playbackPromise;
+        return;
       }
 
-      source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
-      if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
-      voiceAudioSourcesRef.current.add(source);
+      objectUrl = URL.createObjectURL(audioBlob);
+      audioElement = new Audio(objectUrl);
+      audioElement.preload = "auto";
+      audioElement.volume = 1;
+      audioElement.onloadedmetadata = () => {
+        const duration = Number.isFinite(audioElement?.duration) ? audioElement.duration : clean.length * 0.055;
+        voiceLastAssistantPlaybackUntilRef.current = Date.now() + duration * 1000 + 1_800;
+        safetyTimer = window.setTimeout(finish, Math.min(60_000, Math.max(8_000, duration * 1000 + 5_000)));
+      };
+      audioElement.onended = () => finish(false);
+      audioElement.onerror = () => finish(true);
+
       voiceBrowserSpeechActiveRef.current = true;
       voiceLastAssistantOutputRef.current = clean;
-      voiceLastAssistantPlaybackUntilRef.current = Date.now() + audioBuffer.duration * 1000 + 1_800;
+      voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 55;
       setSpeakingIndex(index);
-      setVoiceStatus("Orby está hablando…");
-      source.onended = () => {
-        if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
-        finish(false);
-        setSpeakingIndex(null);
-      };
-      source.start(audioContext.currentTime + 0.015);
+      if (isLocalLiveTurn) setVoiceStatus("Orby está hablando…");
+      await audioElement.play();
       await playbackPromise;
     } catch (error) {
       const cancelled = abortController.signal.aborted
@@ -834,8 +830,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         finish(true);
         return;
       }
-      if (voiceSpeechCancelRef.current === cancelPlayback) voiceSpeechCancelRef.current = null;
-      voiceBrowserSpeechActiveRef.current = false;
+      finish(true);
       console.warn("[Orby Voice] Neural Spanish TTS unavailable; using browser fallback.", {
         name: error instanceof Error ? error.name : "UnknownError",
       });

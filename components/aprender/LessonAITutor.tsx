@@ -823,6 +823,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus("Continuando por texto…");
     setVoiceError(reason);
     if (shouldFallback) {
+      const normalizedPending = normalizeVoiceComparison(pendingUserText);
+      const alreadyVisible = messages.some((message) =>
+        message.role === "user"
+        && normalizeVoiceComparison(message.content) === normalizedPending
+      );
+      if (!alreadyVisible) {
+        setMessages((current) => [
+          ...current,
+          { id: "voice-user-recovery-" + Date.now(), role: "user", content: pendingUserText },
+        ]);
+      }
       // sendMessage owns the queue-drain step in its finally block.
       void sendMessageRef.current(pendingUserText, false, true, undefined, false);
     } else {
@@ -1190,6 +1201,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceStatus("Te escucho…");
       }
     } else if (voiceActivity?.type === "ACTIVITY_END") {
+      waitingForVoiceReplyRef.current = true;
       setIsListening(false);
       setVoiceStatus("Procesando lo que dijiste…");
       armVoiceResponseWatchdog();
@@ -1204,6 +1216,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     if (typeof interimInput?.text === "string") {
       const interimText = interimInput.text.slice(0, 1200);
+      const previousInterim = voiceUserTextRef.current.trim();
+      if (!previousInterim || interimText.startsWith(previousInterim) || previousInterim.startsWith(interimText)) {
+        voiceUserTextRef.current = interimText;
+      }
       setLiveTranscript(interimText);
       if (voiceBrowserSpeechActiveRef.current) {
         const normalizedInterim = normalizeVoiceComparison(interimText);

@@ -123,6 +123,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /containsUnsupportedSpanishScript\(item\.content\)/);
   assert.match(lessonTutorSource, /languageCodes: \["es-ES"\]/);
   assert.match(lessonTutorSource, /mode: "SMART"/);
+  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: \["es"\],\s*mode: "SMART"/);
   assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: "es"/);
   assert.match(lessonTutorSource, /"Oye Orby"/);
   assert.match(lessonTutorSource, /unsupportedInputScript/);

@@ -86,7 +86,7 @@ export function classifyOutOfScopeRequest(message: string): "programming" | "out
 
 export function getOutOfScopeReply(kind: "programming" | "outside", message = ""): string {
   if (kind === "programming") {
-    return "Soy Orby, el asistente educativo de PeakScore, especializado exclusivamente en la preparación para Saber 11. No enseño programación, desarrollo de software ni lenguajes de código. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
+    return "No puedo enseñar programación ni desarrollo de software. Sí puedo ayudarte con Saber 11 y conversar contigo sobre otros temas seguros.";
   }
   const normalized = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
   if (/\b(cocina|cocinar|receta|recetas|hornear)\b/.test(normalized)) {

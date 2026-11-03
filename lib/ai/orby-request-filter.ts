@@ -239,9 +239,9 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
   const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
     || ORBY_STUDY_INVITATION_PATTERN.test(prior);
   const hasAcademicMaterialContext = hasCurriculumContext
-    && /\\b(?:texto|lectura|fragmento|pasaje|dialogo|aviso|enunciado|ejercicio|pregunta|grafica|tabla|experimento|passage|text|dialogue|notice|question|exercise|chart|table)\\b/i.test(prior);
+    && /\b(?:texto|lectura|fragmento|pasaje|dialogo|aviso|enunciado|ejercicio|pregunta|grafica|tabla|experimento|passage|text|dialogue|notice|question|exercise|chart|table)\b/i.test(prior);
   const isNaturalQuestionContinuation = normalized.length <= 180
-    && /^(?:que|quien|quienes|donde|cuando|por que|como|cual|cuales|what|who|where|when|why|how|which|whose|do|does|did|can|could|would|will|is|are|was|were)\\b/i.test(normalized);
+    && /^(?:que|quien|quienes|donde|cuando|por que|como|cual|cuales|what|who|where|when|why|how|which|whose|do|does|did|can|could|would|will|is|are|was|were)\b/i.test(normalized);
   // In an active reading/dialogue exercise, the student's next line may be
   // the exact dialogue sentence rather than a meta-question about it.
   if (hasAcademicMaterialContext && isNaturalQuestionContinuation) return true;
@@ -296,8 +296,8 @@ export function containsExplicitNonIcfesTopic(value: string, previousContext = "
   const academicContentFramePattern = /\b(?:en el texto|en este texto|en la lectura|en este fragmento|en el fragmento|en el pasaje|en el dialogo|en este dialogo|en el aviso|en el enunciado|la frase|esta frase|la oracion|esta oracion|el ejercicio|esta pregunta|la pregunta|el texto dice|el personaje pregunta|analiza|interpreta|traduce|que significa|que quiere decir|comprension de lectura|the passage|the text|the dialogue|this sentence|this phrase|this question|in the passage|in this text|what does .{1,70} mean|what is the meaning of)\b/i;
   const academicContentFrame = academicContentFramePattern.test(normalized)
     || academicContentFramePattern.test(context);
-  const explicitExternalAction = /\b(?:recomiendame|recomiendas|recomiendes|recommend|recommends?)\b.{0,80}\b(?:peliculas?|series|movie|movies|film|films|show|shows|carros?|autos?|automoviles?|vehiculos?)\b|\b(?:dame|hazme|comparte|comparteme|ensename|give me|tell me|make me|share|teach me)\b.{0,80}\b(?:receta|recetas|recipe|recipes|arepas?|cocinar|cook|cooking|vehiculo|carro|llanta)\b|\b(?:se me pincho|arreglar|reparar|comprar|elegir|mantenimiento de)\b.{0,80}\b(?:llantas?|carros?|vehiculos?|tires?|tyres?|car|vehicle)\b|\b(?:que medicamento|que hago si tengo fiebre|medical diagnosis|how to invest|legal advice)\b/i.test(normalized);
-  if (hasCurriculumContext && academicContentFrame && !explicitExternalAction) return false;
+  const analysesQuotedContent = /\b(?:analiza|interpreta|traduce|que intencion|intencion comunicativa|que significa|que quiere decir|cual es el proposito|what is the intent|what does .{1,70} mean|what does .{1,70} communicate)\b/i.test(normalized);
+  if (hasCurriculumContext && academicContentFrame && (!explicitExternalAction || analysesQuotedContent)) return false;
 
   return NON_ICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
 }

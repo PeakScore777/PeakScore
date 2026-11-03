@@ -105,7 +105,7 @@ export function isLikelyEnglishOnlyOrbyReply(reply: string): boolean {
 
   const words = normalized.match(/[a-z]+(?:'[a-z]+)?/g) ?? [];
   if (words.length < 4) return false;
-  const englishSignals = normalized.match(/\b(?:the|this|that|these|those|you|your|we|they|their|is|are|was|were|because|which|what|when|where|why|how|with|from|into|about|would|could|should|can|will|have|has|does|did|first|second|therefore|however|answer|question|please|here|there|and|but|for|to|of|in|on|as|at|by|be|been|it|its|my|our)\b/g) ?? [];
+  const englishSignals = normalized.match(/\b(?:the|this|that|these|those|you|your|we|they|their|is|are|was|were|because|which|what|when|where|why|how|with|from|into|about|would|could|should|can|will|have|has|does|did|first|second|therefore|however|answer|question|please|here|there|and|but|for|to|of|in|on|as|at|by|be|been|it|its|my|our|let's|solve|together|example|means|given|find|choose|select|correct|option|passage|statement|according|since|next|then|also)\b/g) ?? [];
 
   // Three common English function/content words in a short answer are a
   // strong signal that the model switched languages (e.g. "The answer is B").

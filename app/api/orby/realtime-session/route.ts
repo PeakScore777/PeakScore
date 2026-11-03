@@ -8,7 +8,6 @@ import {
   containsOrbyPromptInjection,
   containsProgrammingInstruction,
   containsUnsupportedSpanishLanguage,
-  containsUnsupportedSpanishScript,
   hasFalseOrbyCreatorAttribution,
   isLikelyEnglishOnlyOrbyReply,
   preflightOrbyRequest,

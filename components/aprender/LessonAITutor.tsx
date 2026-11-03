@@ -891,7 +891,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
       voiceResponseWatchdogRef.current = null;
       fallbackVoiceTurnToText("La voz tardó demasiado en responder. Continué esta misma pregunta por el chat para que no tengas que repetirla.");
-    }, 22_000);
+    }, 18_000);
   }
 
   function stopRealtimeVoice(updateState = true) {

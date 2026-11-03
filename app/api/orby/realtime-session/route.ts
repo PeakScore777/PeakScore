@@ -15,17 +15,13 @@ import {
   preflightOrbyRequest,
 } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
+import { ORBY_VOICE_NAME } from "@/lib/ai/orby-voice-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Despina is Google's smooth prebuilt voice; keep the session token and
-// browser LiveConnectConfig bound to the exact same voice.
-const ORBY_ALLOWED_LIVE_VOICES = new Set([
-  "Despina", "Aoede", "Sulafat", "Achird", "Leda", "Kore", "Zephyr",
-]);
-const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina";
-const ORBY_LIVE_VOICE_NAME = ORBY_ALLOWED_LIVE_VOICES.has(requestedVoice) ? requestedVoice : "Despina";
+// Shared voice identity also powers the local TTS path.
+const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME;
 
 function clean(value: unknown, max: number, fallback: string) {
   return typeof value === "string" ? value.trim().slice(0, max) || fallback : fallback;

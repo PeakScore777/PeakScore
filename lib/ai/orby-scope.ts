@@ -70,12 +70,18 @@ export function classifyOutOfScopeRequest(message: string): "programming" | "out
   ];
   if (explicitProgrammingRequest.some((pattern) => pattern.test(normalized))) return "programming";
 
-  const explicitOutsideRequest = [
-    /^(?:receta|cocina|cocinar|pelicula|peliculas|carro|carros|vehiculo|vehiculos|clima|chiste|chistes)[.!? ]*$/i,
-    /\b(?:dame|hazme|quiero|necesito|comparte|ensename|como preparo|como cocino|give me|teach me|how to cook|voglio una ricetta|quero uma receita|je veux une recette)\b.{0,80}\b(?:receta|recetas|arepa|pan|pasta|recipe|cake|food|cook|cooking|ricetta|receita|recette|rezept)\b/i,
-    /\b(?:recomiendame|que pelicula me recomiendas|what movie should i watch|which movie should i watch|which car should i buy|what car should i buy|what should i eat|how is the weather|what is the weather|que hago si tengo fiebre|que medicamento)\b/i,
+  const harmfulOrCookingRequest = [
+    /\b(?:dame|hazme|pasame|comparteme|quiero|necesito|ensename|como preparo|como cocino|como horneo|preparar|cocinar|hornear|give me|make me|share|teach me|show me|how to cook|how do i cook|i want to cook|i need a recipe)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|comida|recipe|recipes|cake|food|meal|cook|cooking|bake|baking)\b/i,
+    /\b(?:receta|recipe|ricetta|receita|recette|rezept)\s+(?:de|para|for|of)\b/i,
+    /\b(?:como|how to)\b.{0,55}\b(?:fabricar|construir|hacer|preparar|make|build|create)\b.{0,45}\b(?:una bomba|explosivo|explosivos|veneno|arma casera|bomb|explosive|poison|improvised weapon)\b/i,
+    /\b(?:como suicidarme|metodo para suicidarme|como hacerme dano|how to kill myself|how to commit suicide|how to self[- ]?harm)\b/i,
+    /\b(?:robar|hurtar|obtener|steal|capture)\b.{0,55}\b(?:contrasenas?|credenciales|passwords?|credentials|tokens? de acceso|access tokens?)\b/i,
+    /\b(?:crear|hacer|programar|deploy|build|write|make)\b.{0,55}\b(?:malware|ransomware|keylogger|phishing kit|credential stealer|virus informatico)\b/i,
+    /\b(?:hackear|hack|entrar|acceder|bypassear|bypass)\b.{0,65}\b(?:cuenta ajena|cuenta de otra persona|sistema ajeno|servidor ajeno|sin permiso|una cuenta|someone else's account|an account|a server|without permission)\b/i,
+    /\b(?:estafar|falsificar documentos|cometer fraude|scam someone|commit fraud|forge documents|steal an account)\b/i,
+    /\b(?:doxxear|doxing|publicar la direccion privada|encontrar la direccion de casa de|find someone's home address|expose private information)\b/i,
   ];
-  return explicitOutsideRequest.some((pattern) => pattern.test(normalized)) ? "outside" : null;
+  return harmfulOrCookingRequest.some((pattern) => pattern.test(normalized)) ? "outside" : null;
 }
 
 export function getOutOfScopeReply(kind: "programming" | "outside", message = ""): string {
@@ -84,7 +90,7 @@ export function getOutOfScopeReply(kind: "programming" | "outside", message = ""
   }
   const normalized = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
   if (/\b(cocina|cocinar|receta|recetas|hornear)\b/.test(normalized)) {
-    return "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
+    return "No puedo compartir recetas ni instrucciones para cocinar. Podemos conversar de otro tema o volver a practicar Saber 11.";
   }
-  return "Esa solicitud está fuera del alcance educativo de Orby. Estoy especializado en la preparación para Saber 11 y puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
+  return "No puedo ayudar con instrucciones que puedan causar daño, facilitar delitos o comprometer la seguridad o privacidad de alguien. Puedo ofrecer información general y segura.";
 }

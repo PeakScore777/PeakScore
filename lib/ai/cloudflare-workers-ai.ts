@@ -62,13 +62,20 @@ async function runModel<T>(
   const envelope = await response.json().catch(() => null) as CloudflareRunEnvelope<T> | null;
   if (!response.ok || !envelope || envelope.success === false || envelope.result === undefined) {
     const providerCode = envelope?.errors?.[0]?.code;
+    const providerMessage = typeof envelope?.errors?.[0]?.message === "string"
+      ? envelope.errors[0].message
+      : "";
+    const dailyQuotaExceeded = /daily|quota|neurons|usage limit/i.test(providerMessage);
     console.error("[Orby Cloudflare] Inference request rejected.", {
       status: response.status,
       code: typeof providerCode === "number" ? providerCode : undefined,
       model,
+      dailyQuotaExceeded,
     });
     throw new CloudflareWorkersAIError(
-      response.status === 429 ? "RATE_LIMITED" : response.status === 401 || response.status === 403 ? "AUTH_FAILED" : "INFERENCE_FAILED",
+      response.status === 429
+        ? dailyQuotaExceeded ? "QUOTA_EXCEEDED" : "RATE_LIMITED"
+        : response.status === 401 || response.status === 403 ? "AUTH_FAILED" : "INFERENCE_FAILED",
       response.status,
     );
   }

@@ -46,7 +46,8 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
   assert.match(cloudflareVoiceSource, /CLOUDFLARE_ACCOUNT_ID/);
   assert.match(cloudflareVoiceSource, /CLOUDFLARE_API_TOKEN/);
   assert.match(cloudflareVoiceSource, /@cf\/openai\/whisper-large-v3-turbo/);
-  assert.match(cloudflareVoiceSource, /@cf\/meta\/llama-3\.3-70b-instruct-fp8-fast/);
+  assert.match(cloudflareVoiceSource, /@cf\/google\/gemma-4-26b-a4b-it/);
+  assert.match(cloudflareVoiceSource, /QUOTA_EXCEEDED/);
   assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\(bytes\)/);
   assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\(activePrompt\)/);
   assert.match(cloudflareTutorRoute, /containsProgrammingInstruction\(modelReply\)/);
@@ -65,8 +66,11 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
   assert.match(orbyKnowledgeSource, /createOrbyQueryEmbeddingForModel/);
   assert.match(modelAwareEmbeddingMigration, /c\.embedding_model = q\.model/);
   assert.match(modelAwareEmbeddingMigration, /partition by q\.model/);
+  assert.match(orbyKnowledgeSource, /detail\?\.code === "QUOTA_EXCEEDED"/);
+  assert.match(cloudflareVoiceSource, /dailyQuotaExceeded/);
   assert.match(knowledgeWorkerSource, /ORBY_EMBEDDING_QUOTA_EXHAUSTED/);
   assert.match(knowledgeWorkerSource, /available_at: resumeAt\.toISOString\(\)/);
+  assert.match(knowledgeWorkerSource, /Park the remaining/);
   assert.match(knowledgeWorkerSource, /00:05 UTC/);
 });
 
@@ -79,6 +83,9 @@ test("el audio Live se reproduce progresivamente y la cola espera al final de la
   assert.match(lessonTutorSource, /speakText\(rawReply/);
   assert.match(lessonTutorSource, /voiceSpeechCancelRef/);
   assert.match(lessonTutorSource, /safetyTimer = window\.setTimeout/);
+  assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const partialReply/);
+  assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const chunk/);
+  assert.match(lessonTutorSource, /Gemini Live finalizó sin entregar una transcripción utilizable/);
   assert.match(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
   assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
 });

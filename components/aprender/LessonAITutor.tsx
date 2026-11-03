@@ -52,6 +52,19 @@ function normalizeVoiceComparison(value: string): string {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/[^a-z0-9\s]+/gi, "");
 }
 
+function isLikelyVoicePlaybackEcho(transcript: string, assistantSpeech: string): boolean {
+  const incoming = normalizeVoiceComparison(transcript).trim();
+  const spoken = normalizeVoiceComparison(assistantSpeech).trim();
+  if (!incoming || !spoken || incoming.length < 3 || spoken.length < 6) return false;
+  if (spoken.includes(incoming) || incoming.includes(spoken)) return true;
+  const incomingWords = incoming.split(/\s+/).filter((word) => word.length >= 2);
+  if (incomingWords.length < 2) return false;
+  const spokenWords = new Set(spoken.split(/\s+/).filter((word) => word.length >= 2));
+  const overlap = incomingWords.filter((word) => spokenWords.has(word)).length;
+  return overlap >= 2 && overlap / incomingWords.length >= 0.72;
+}
+
+
 function mergeLiveTranscript(previous: string, incoming: string): string {
   const incomingTrimmed = incoming.trim();
   const previousTrimmed = previous.trim();
@@ -681,6 +694,39 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setSpeakingIndex(null);
   }
 
+  // Cancel only the current response, keeping the Live session and mic alive.
+  // A new user turn always takes priority over audio that is still playing.
+  function interruptCurrentVoiceOutput() {
+    if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
+    clearVoiceResponseWatchdog();
+    voiceLocalReplyInFlightRef.current = false;
+    voiceBrowserSpeechActiveRef.current = false;
+    const cancelSpeech = voiceSpeechCancelRef.current;
+    voiceSpeechCancelRef.current = null;
+    cancelSpeech?.();
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    stopVoicePlayback();
+    voicePendingAudioChunksRef.current = [];
+    voiceRealtimeAudioChunkCountRef.current = 0;
+    voiceOutputTranscriptValidatedRef.current = false;
+    voiceOutputAudioBlockedRef.current = false;
+    voiceForcedReplyRef.current = null;
+    voicePreflightReplyRef.current = null;
+    voiceInputPolicyRef.current = null;
+    voiceAssistantTextRef.current = "";
+    voiceAssistantMessageIdRef.current = null;
+    voiceResponseDoneRef.current = false;
+    voiceTurnPersistedRef.current = false;
+    waitingForVoiceReplyRef.current = false;
+    voiceLastCommittedInputRef.current = "";
+    setLiveTranscript("");
+    setVoiceError("");
+    setSpeakingIndex(null);
+    setVoiceStatus("Te escucho…");
+    setIsListening(true);
+  }
+
+
   function speakText(text: string, index: number): Promise<void> {
     return new Promise((resolve) => {
       const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
@@ -739,12 +785,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         Math.min(45_000, Math.max(8_000, clean.length * 70)),
       );
       utterance.onend = () => finish(false);
-      utterance.onerror = () => {
+      utterance.onerror = (event) => {
+        const speechError = (event as SpeechSynthesisErrorEvent).error;
+        // Chromium emits "interrupted" or "canceled" when a newer turn replaces
+        // this utterance. That is a normal barge-in, not a playback failure.
+        if (finished || speechError === "interrupted" || speechError === "canceled") {
+          finish(true);
+          return;
+        }
         if (isLocalVoiceTurn) {
           voiceBrowserSpeechActiveRef.current = false;
           setVoiceError("No se pudo reproducir el audio de esta respuesta. El texto quedó disponible.");
         }
-        finish();
+        finish(false);
       };
 
       if (isLocalVoiceTurn) {
@@ -1340,10 +1393,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceStatus("Te escucho…");
       }
     } else if (voiceActivity?.type === "ACTIVITY_END") {
-      waitingForVoiceReplyRef.current = true;
-      setIsListening(false);
-      setVoiceStatus("Procesando lo que dijiste…");
-      armVoiceResponseWatchdog();
+      // While local TTS is active, this is usually the mic hearing Orby's
+      // speaker output. A real barge-in is handled by a non-echo interim.
+      if (!voiceBrowserSpeechActiveRef.current) {
+        waitingForVoiceReplyRef.current = true;
+        setIsListening(false);
+        setVoiceStatus("Procesando lo que dijiste…");
+        armVoiceResponseWatchdog();
+      }
     }
 
     const serverContent = event.serverContent && typeof event.serverContent === "object"
@@ -1359,33 +1416,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceUnsupportedInputDetectedRef.current = unsupportedInterimScript;
       setLiveTranscript(unsupportedInterimScript ? "" : interimText);
       if (!unsupportedInterimScript && voiceBrowserSpeechActiveRef.current) {
-        const normalizedInterim = normalizeVoiceComparison(interimText);
-        const normalizedAssistant = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
-        const isBrowserSpeechEcho = normalizedInterim.length >= 4
-          && normalizedAssistant.length >= 8
-          && normalizedAssistant.includes(normalizedInterim);
-        if (normalizedInterim.length >= 3 && !isBrowserSpeechEcho) {
-          voiceLocalReplyInFlightRef.current = false;
-          voiceSpeechPlaybackGenerationRef.current += 1;
-          voiceBrowserSpeechActiveRef.current = false;
-          const cancelSpeech = voiceSpeechCancelRef.current;
-          voiceSpeechCancelRef.current = null;
-          cancelSpeech?.();
-          if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-          if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
-          voiceLastCommittedInputRef.current = "";
+        const isBrowserSpeechEcho = isLikelyVoicePlaybackEcho(interimText, voiceLastAssistantOutputRef.current);
+        if (normalizedInterim.length >= 3 && isBrowserSpeechEcho) {
+          // The browser is hearing Orby's own local voice. Keep speaking and
+          // never turn this transcript into a fresh student request.
+          setLiveTranscript("");
+        } else if (normalizedInterim.length >= 3) {
+          interruptCurrentVoiceOutput();
           voiceUserTextRef.current = interimText;
           voiceUserMessageVisibleRef.current = false;
-          voiceAssistantTextRef.current = "";
-          voiceAssistantMessageIdRef.current = null;
-          voiceResponseDoneRef.current = false;
-          voiceTurnPersistedRef.current = false;
-          voiceInputPolicyRef.current = null;
-          voiceForcedReplyRef.current = null;
-          stopVoicePlayback();
-          voicePendingAudioChunksRef.current = [];
-          setIsListening(true);
-          setVoiceStatus("Te escucho…");
         }
       } else if (!unsupportedInterimScript) {
         const previousInterim = voiceUserTextRef.current.trim();
@@ -1411,10 +1450,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : rawTranscript;
     const normalizedFinal = transcript ? normalizeVoiceComparison(transcript) : "";
     const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
-    const isRecentAcousticEcho = Date.now() <= voiceLastAssistantPlaybackUntilRef.current
-      && normalizedFinal.length >= 12
-      && recentAssistantText.length >= 12
-      && (recentAssistantText.includes(normalizedFinal) || normalizedFinal.includes(recentAssistantText));
+    const isRecentAcousticEcho = (voiceBrowserSpeechActiveRef.current
+      || Date.now() <= voiceLastAssistantPlaybackUntilRef.current + 1_800)
+      && isLikelyVoicePlaybackEcho(normalizedFinal, recentAssistantText);
     if (isRecentAcousticEcho) {
       console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
     }
@@ -2154,17 +2192,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile) {
-      if (waitingForVoiceReplyRef.current) {
-        if (pendingMessagesRef.current.length >= 4) {
-          setError("La cola de Orby está llena. Espera a que termine la respuesta de voz.");
-          return;
-        }
-        pendingMessagesRef.current.push({ text: message, attachmentMeta });
-        setQueuedMessageCount(pendingMessagesRef.current.length);
-        setInput("");
-        setError("");
-        return;
-      }
+      // Typed text is an explicit barge-in: stop the previous answer now,
+      // discard stale audio chunks, and process the new turn immediately.
+      interruptCurrentVoiceOutput();
+      pendingMessagesRef.current = [];
+      setQueuedMessageCount(0);
       const typedVoiceContext = [
         voiceLastAssistantOutputRef.current,
         "Área de estudio: " + subject,

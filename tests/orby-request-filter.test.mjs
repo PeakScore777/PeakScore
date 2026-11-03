@@ -239,7 +239,7 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
   assert.match(realtimeSessionSource, /No recomiendes, compares, promociones|No recomiendes, compares, promociones/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
-  assert.match(realtimeSessionSource, /No enseñes programación, desarrollo de software, cocina, recetas/);
+  assert.match(realtimeSessionSource, /No conviertas preguntas cotidianas, personales, de entretenimiento/);
   assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
@@ -562,7 +562,7 @@ test("el Autopilot recibe el lote manual terminado sin robar la prioridad manual
 
 test("los filtros deterministas no consumen el cupo de llamadas al modelo", () => {
   const rateLimitIndex = lessonTutorRouteSource.indexOf('p_bucket: "lesson_tutor"');
-  const preflightIndex = lessonTutorRouteSource.indexOf("const preflight = preflightOrbyRequest(currentRequestContext)");
+  const preflightIndex = lessonTutorRouteSource.indexOf("const scopePreflight = preflightOrbyRequest(scopeRequestText, recentScopeContext)");
   const outOfScopeIndex = lessonTutorRouteSource.indexOf("if (!preflight.allowed || legacyOutOfScope)");
   const greetingIndex = lessonTutorRouteSource.indexOf("if (!tutorImage && isOrbyGreetingRequest(userMessage))");
   assert.ok(preflightIndex >= 0 && outOfScopeIndex > preflightIndex

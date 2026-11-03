@@ -430,6 +430,7 @@ test("Orby permite respuestas cortas para continuar una invitación de estudio",
   const englishDialogueContext = "Área de estudio: Inglés. Analiza este diálogo para Saber 11.";
   assert.equal(filter.preflightOrbyRequest("¿Qué película me recomiendas?", englishDialogueContext).allowed, true);
   assert.equal(filter.preflightOrbyRequest("What movie should I watch?", englishDialogueContext).allowed, true);
+  assert.equal(filter.preflightOrbyRequest("En este diálogo de Inglés, además recomiéndame una película.", englishDialogueContext).allowed, false);
   assert.equal(filter.preflightOrbyRequest("What movie should I watch after the ICFES?").allowed, false);
   assert.equal(filter.containsExplicitNonIcfesTopic("¿Qué película me recomiendas?", englishDialogueContext), false);
   assert.equal(filter.containsCookingInstruction("El texto menciona una receta tradicional de la región."), false);

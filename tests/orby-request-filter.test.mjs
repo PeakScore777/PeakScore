@@ -34,6 +34,8 @@ const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-ca
 const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+const cloudflareVoice = await loadTypeScriptModule("../lib/ai/cloudflare-workers-ai.ts", { stripServerOnly: true });
+const neuralVoiceRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
@@ -55,6 +57,50 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
   assert.match(cloudflareTutorRoute, /containsExternalPreIcfesPromotion\(modelReply\)/);
   assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
   assert.match(lessonTutorSource, /if \(isVoiceInteraction\)\s*\{\s*if \("speechSynthesis" in window\)\s*\{\s*await new Promise<void>\(\(resolve\) => window\.setTimeout\(resolve, 120\)\);\s*await speakText\(data\.reply, assistantIndex\);/);
+});
+
+test("Orby neural Spanish TTS uses the server-side Aura-2 model and returns MP3 bytes", async () => {
+  const previousAccount = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const previousToken = process.env.CLOUDFLARE_API_TOKEN;
+  const originalFetch = globalThis.fetch;
+  const expectedAudio = Buffer.from("ID3\\u0004\\u0000mock-orby-audio");
+  let capturedUrl = "";
+  let capturedBody = {};
+  try {
+    process.env.CLOUDFLARE_ACCOUNT_ID = "a".repeat(32);
+    process.env.CLOUDFLARE_API_TOKEN = "test-only-token";
+    globalThis.fetch = async (input, init) => {
+      capturedUrl = String(input);
+      capturedBody = JSON.parse(String(init?.body ?? "{}"));
+      return new Response(JSON.stringify({
+        success: true,
+        result: expectedAudio.toString("base64"),
+      }), { status: 200, headers: { "Content-Type": "application/json" } });
+    };
+    const audio = await cloudflareVoice.synthesizeOrbySpeechWithCloudflare("¡Hola! Vamos a estudiar juntos.");
+    assert.deepEqual(audio, expectedAudio);
+    assert.match(capturedUrl, /@cf\\/deepgram\\/aura-2-es$/);
+    assert.equal(capturedBody.speaker, "celeste");
+    assert.equal(capturedBody.encoding, "mp3");
+    assert.equal(capturedBody.container, "none");
+    assert.equal(capturedBody.text, "¡Hola! Vamos a estudiar juntos.");
+    assert.match(neuralVoiceRouteSource, /createClient\\(\\)/);
+    assert.match(neuralVoiceRouteSource, /orby_take_rate_limit/);
+    assert.match(neuralVoiceRouteSource, /synthesizeOrbySpeechWithCloudflare\\(text\\)/);
+    assert.match(neuralVoiceRouteSource, /Content-Type": "audio\\/mpeg"/);
+    assert.match(lessonTutorSource, /fetch\\("\\/api\\/orby\\/voice-speech"/);
+    assert.match(lessonTutorSource, /decodeAudioData\\(audioBytes\\.slice\\(0\\)\\)/);
+    assert.match(lessonTutorSource, /voiceAudioSourcesRef\\.current\\.add\\(source\\)/);
+    assert.match(lessonTutorSource, /voiceSpeechCancelRef\\.current = cancelPlayback/);
+    assert.match(realtimeSessionSource, /ORBY_LIVE_VOICE_NAME = ORBY_ALLOWED_LIVE_VOICES\\.has\\(requestedVoice\\) \\? requestedVoice : "Despina"/);
+    assert.match(lessonTutorSource, /prebuiltVoiceConfig: \\{ voiceName: configuredVoiceName \\}/);
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (previousAccount === undefined) delete process.env.CLOUDFLARE_ACCOUNT_ID;
+    else process.env.CLOUDFLARE_ACCOUNT_ID = previousAccount;
+    if (previousToken === undefined) delete process.env.CLOUDFLARE_API_TOKEN;
+    else process.env.CLOUDFLARE_API_TOKEN = previousToken;
+  }
 });
 
 test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {
@@ -275,8 +321,10 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "la decisión de usar voz alternativa debe ocurrir después de vaciar los fragmentos de audio Live");
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
-  assert.match(realtimeSessionSource, /const ORBY_LIVE_VOICE_NAME = "Kore"/);
-  assert.match(lessonTutorSource, /prebuiltVoiceConfig:\s*\{ voiceName: "Kore" \}/);
+  assert.match(realtimeSessionSource, /const requestedVoice = process\\.env\\.ORBY_LIVE_VOICE_NAME\\?\\.trim\\(\\) \\|\\| "Despina"/);
+  assert.match(realtimeSessionSource, /voiceName: ORBY_LIVE_VOICE_NAME/);
+  assert.match(lessonTutorSource, /const configuredVoiceName = typeof tokenPayload\\.voiceName === "string"/);
+  assert.match(lessonTutorSource, /prebuiltVoiceConfig: \\{ voiceName: configuredVoiceName \\}/);
   assert.match(realtimeSessionSource, /speechConfig:\s*\{\s*voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{ voiceName: ORBY_LIVE_VOICE_NAME/);
   assert.match(realtimeSessionSource, /VOZ DE ORBY: mantén una voz femenina cálida y natural/);
   assert.match(lessonTutorSource, /void persistRealtimeTurnIfReady\(\);\s*drainPendingMessageQueue\(\)/);

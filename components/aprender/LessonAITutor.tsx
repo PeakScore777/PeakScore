@@ -222,7 +222,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLocalReplyInFlightRef = useRef(false);
   const voicePreflightReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
-  const voiceInternalPolicyTextRef = useRef<string | null>(null);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
   const voiceBrowserSpeechActiveRef = useRef(false);
@@ -846,7 +845,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // save it once, and release the pending text queue.
       voiceForcedReplyRef.current = null;
       voicePreflightReplyRef.current = null;
-      voiceInternalPolicyTextRef.current = null;
       voiceUnsupportedInputDetectedRef.current = false;
       stopRealtimeVoice();
       setWorkspaceMode("chat");
@@ -991,7 +989,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceInputPolicyRef.current = null;
     voicePreflightReplyRef.current = null;
     voiceForcedReplyRef.current = null;
-    voiceInternalPolicyTextRef.current = null;
     voiceUnsupportedInputDetectedRef.current = false;
     voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanUserText);
 
@@ -1414,22 +1411,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       && normalizedFinal.length >= 12
       && recentAssistantText.length >= 12
       && (recentAssistantText.includes(normalizedFinal) || normalizedFinal.includes(recentAssistantText));
-    const internalPolicyText = normalizeVoiceComparison(voiceInternalPolicyTextRef.current ?? "");
-    const isInternalPolicySpeechEcho = Boolean(
-      internalPolicyText.length >= 12
-      && (normalizedFinal === internalPolicyText
-        || normalizedFinal.includes(internalPolicyText)
-        || internalPolicyText.includes(normalizedFinal)),
-    );
-
     if (isRecentAcousticEcho) {
       console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
     }
 
     // Never return from the whole event handler for a duplicate transcript:
     // the same server event can also carry output audio or turnComplete.
-    if (transcript && normalizedFinal !== voiceLastCommittedInputRef.current && !isRecentAcousticEcho && !isInternalPolicySpeechEcho) {
-      voiceInternalPolicyTextRef.current = null;
+    if (transcript && normalizedFinal !== voiceLastCommittedInputRef.current && !isRecentAcousticEcho) {
       waitingForVoiceReplyRef.current = true;
       voiceLastCommittedInputRef.current = normalizedFinal;
       if (voiceTurnPersistedRef.current) {
@@ -1702,7 +1690,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voicePreflightReplyRef.current = null;
       voiceForcedReplyRef.current = null;
       voiceResponseDoneRef.current = true;
-      voiceInternalPolicyTextRef.current = null;
       voiceOutputAudioBlockedRef.current = false;
       voiceOutputTranscriptValidatedRef.current = false;
 
@@ -2207,7 +2194,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : typedPreflight.allowed ? null : typedPreflight.reply;
       // Typed text sent through the Live session can also produce an input
       // transcription event. Mark it as committed so it is not added twice.
-      voiceInternalPolicyTextRef.current = null;
       voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;

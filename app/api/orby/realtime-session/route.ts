@@ -28,9 +28,15 @@ function clean(value: unknown, max: number, fallback: string) {
 }
 
 export async function POST(request: Request) {
+  const startedAt = performance.now();
+  let authMs = 0;
+  let rateLimitMs = 0;
+  let tokenMs = 0;
   try {
+    const authStartedAt = performance.now();
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    authMs = performance.now() - authStartedAt;
     if (authError || !user) {
       return NextResponse.json({ error: "Inicia sesión para hablar con Orby." }, { status: 401 });
     }
@@ -42,6 +48,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "La conversación de voz está temporalmente desactivada mientras terminamos su configuración de privacidad." }, { status: 503 });
     }
 
+    const rateLimitStartedAt = performance.now();
     const { data: limitData, error: limitError } = await supabaseAdmin.rpc("orby_take_rate_limit", {
       p_user_id: user.id,
       p_bucket: "orby_realtime_session",
@@ -52,6 +59,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "El servicio de voz no está disponible temporalmente." }, { status: 503 });
     }
     const limit = limitData as { allowed?: boolean; retryAfter?: number };
+    rateLimitMs = performance.now() - rateLimitStartedAt;
     if (!limit.allowed) {
       return NextResponse.json({ error: "Has iniciado varias sesiones de voz. Espera un momento e inténtalo de nuevo." }, {
         status: 429,
@@ -151,6 +159,7 @@ export async function POST(request: Request) {
     const googleAI = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta" } });
     // Bind the ephemeral token to the exact Live model and audio modality
     // that the browser will use. Google requires v1beta for these tokens.
+    const tokenStartedAt = performance.now();
     const authToken = await googleAI.authTokens.create({
       config: {
         uses: 1,
@@ -171,6 +180,7 @@ export async function POST(request: Request) {
       },
     });
 
+    tokenMs = performance.now() - tokenStartedAt;
     const token = typeof authToken.name === "string" ? authToken.name : "";
     if (!token) {
       console.error("[Orby Gemini Live] SDK did not return an ephemeral token.");
@@ -179,6 +189,15 @@ export async function POST(request: Request) {
       }, { status: 502 });
     }
 
+    const totalMs = performance.now() - startedAt;
+    const serverTiming = `auth;dur=${authMs.toFixed(1)}, rate-limit;dur=${rateLimitMs.toFixed(1)}, token;dur=${tokenMs.toFixed(1)}, total;dur=${totalMs.toFixed(1)}`;
+    console.info("[Orby Live] Session startup timing.", {
+      authMs: Math.round(authMs),
+      rateLimitMs: Math.round(rateLimitMs),
+      tokenMs: Math.round(tokenMs),
+      totalMs: Math.round(totalMs),
+      historyTurns: boundedSafeHistory.length,
+    });
     return NextResponse.json({
       ephemeralToken: token,
       model,
@@ -186,7 +205,11 @@ export async function POST(request: Request) {
       voiceName: ORBY_LIVE_VOICE_NAME,
       expiresAt: expireTime,
     }, {
-      headers: { "Cache-Control": "no-store, max-age=0" },
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+        "Server-Timing": serverTiming,
+        "X-Orby-Session-Setup-Ms": String(Math.round(totalMs)),
+      },
     });
   } catch (error) {
     const message = error instanceof Error

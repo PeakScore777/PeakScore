@@ -380,6 +380,11 @@ test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la d
   assert.match(routerSource, /AbortSignal\.timeout\(task === "tutor" \? 12000 : 60000\)/);
   assert.match(routerSource, /timeout: task === "tutor" \? 15000 : 60000/);
   assert.match(routerSource, /MAX_GEMINI_RETRIES = task === "tutor" \? 0 : 2/);
+  assert.match(lessonTutorRouteSource, /Server-Timing/);
+  assert.match(lessonTutorRouteSource, /retrievalMs/);
+  assert.match(lessonTutorRouteSource, /generationMs/);
+  assert.match(lessonTutorRouteSource, /persistenceMs/);
+  assert.match(lessonTutorRouteSource, /X-Orby-Response-Time-Ms/);
   const qualityBlock = tutorQualitySource.slice(
     tutorQualitySource.indexOf("const highRiskPatterns = ["),
     tutorQualitySource.indexOf("// Review the student's actual message"),

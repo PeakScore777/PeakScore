@@ -703,7 +703,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .slice(0, 5000);
       const utterance = new SpeechSynthesisUtterance(clean);
       utterance.lang = "es-CO";
-      utterance.rate = 1.18;
+      utterance.rate = 1.22;
       utterance.pitch = 1.02;
       utterance.volume = 1;
       const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
@@ -894,7 +894,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
       voiceResponseWatchdogRef.current = null;
       fallbackVoiceTurnToText("La voz tardó demasiado en responder. Continué esta misma pregunta por el chat para que no tengas que repetirla.");
-    }, 18_000);
+    }, 12_000);
   }
 
   function stopRealtimeVoice(updateState = true) {

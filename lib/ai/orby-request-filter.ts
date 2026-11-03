@@ -79,7 +79,7 @@ export const ORBY_GREETING_REPLY =
   "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
 
 export const ORBY_STUDY_GUIDANCE_REPLY =
-  "No pasa nada. Te recomiendo empezar por Ciencias Naturales con la fotosíntesis: es un tema visual y nos permite practicar cómo interpretar información y conceptos. También podemos hacer un diagnóstico corto para descubrir qué área necesitas reforzar. ¿Empezamos con fotosíntesis?";
+  "No pasa nada. Te ayudo a elegir: podemos hacer un diagnóstico breve de Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés para descubrir qué conviene reforzar. ¿Con cuál empezamos?";
 
 export const ORBY_SPANISH_ONLY_REPLY =
   "No alcancé a reconocer tu frase en español. ¿Puedes repetirla, por favor?";

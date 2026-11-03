@@ -56,29 +56,29 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
 });
 
 test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {
-  assert.match(cloudflareVoiceSource, /@cf\\/google\\/embeddinggemma-300m/);
+  assert.match(cloudflareVoiceSource, /@cf\/google\/embeddinggemma-300m/);
   assert.match(cloudflareVoiceSource, /rawVectors.length !== normalized.length/);
   assert.match(cloudflareVoiceSource, /raw.length !== 768/);
   assert.match(orbyKnowledgeSource, /p_model: usedModel/);
   assert.match(orbyKnowledgeSource, /orby_list_knowledge_embedding_models/);
   assert.match(orbyKnowledgeSource, /orby_search_knowledge_hybrid_multi_v3/);
   assert.match(orbyKnowledgeSource, /createOrbyQueryEmbeddingForModel/);
-  assert.match(modelAwareEmbeddingMigration, /c\\.embedding_model = q\\.model/);
-  assert.match(modelAwareEmbeddingMigration, /partition by q\\.model/);
+  assert.match(modelAwareEmbeddingMigration, /c\.embedding_model = q\.model/);
+  assert.match(modelAwareEmbeddingMigration, /partition by q\.model/);
   assert.match(knowledgeWorkerSource, /ORBY_EMBEDDING_QUOTA_EXHAUSTED/);
-  assert.match(knowledgeWorkerSource, /available_at: resumeAt\\.toISOString\\(\\)/);
+  assert.match(knowledgeWorkerSource, /available_at: resumeAt\.toISOString\(\)/);
   assert.match(knowledgeWorkerSource, /00:05 UTC/);
 });
 
 test("el audio Live se reproduce progresivamente y la cola espera al final de la reproducción", () => {
   assert.match(lessonTutorSource, /flushPendingGeminiAudio/);
-  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\\.current\\.length < 96/);
+  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.length < 96/);
   assert.match(lessonTutorSource, /finishRealtimeVoicePlayback/);
-  assert.match(lessonTutorSource, /voiceAudioSourcesRef\\.current\\.size > 0/);
-  assert.match(lessonTutorSource, /voiceRealtimeAudioChunkCountRef\\.current === 0/);
-  assert.match(lessonTutorSource, /speakText\\(rawReply/);
+  assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
+  assert.match(lessonTutorSource, /voiceRealtimeAudioChunkCountRef\.current === 0/);
+  assert.match(lessonTutorSource, /speakText\(rawReply/);
   assert.match(lessonTutorSource, /voiceSpeechCancelRef/);
-  assert.match(lessonTutorSource, /safetyTimer = window\\.setTimeout/);
+  assert.match(lessonTutorSource, /safetyTimer = window\.setTimeout/);
   assert.match(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
   assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
 });

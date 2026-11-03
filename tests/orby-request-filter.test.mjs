@@ -175,6 +175,10 @@ test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas
     filter.isLikelyEnglishOnlyOrbyReply("Certainly! How can I help you with English today?"),
     true,
   );
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Bonjour!"), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Ciao!"), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Hello!"), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("¡Hola!"), false);
   assert.equal(
     filter.isLikelyEnglishOnlyOrbyReply("¡Claro! Vamos a estudiar el componente de Inglés de Saber 11."),
     false,

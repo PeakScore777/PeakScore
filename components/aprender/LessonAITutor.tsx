@@ -1444,6 +1444,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voicePendingAudioChunksRef.current = [];
         stopVoicePlayback();
       } else {
+        // A partial transcript is not a complete safety decision. Keep the
+        // text visible, but do not release any audio until turnComplete has
+        // validated the entire answer.
         voiceOutputTranscriptValidatedRef.current = true;
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;
@@ -1453,7 +1456,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? current.map((message) => message.id === assistantId ? { ...message, content: visibleReply } : message)
             : [...current, { id: assistantId, role: "assistant", content: visibleReply }];
         });
-        flushPendingGeminiAudio();
       }
       setVoiceStatus("Orby está hablando…");
     }
@@ -1471,12 +1473,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           data: inlineData.data,
           mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
         };
-        if (voiceAssistantTextRef.current.trim() && voiceOutputTranscriptValidatedRef.current) {
-          playGeminiAudio(chunk.data, chunk.mimeType);
-        } else if (voicePendingAudioChunksRef.current.length < 96) {
+        // Buffer every audio chunk until the complete transcript passes the
+        // final safety gate. Playing on a "safe so far" partial transcript
+        // could leak a later programming or off-topic continuation.
+        if (voicePendingAudioChunksRef.current.length < 512) {
           voicePendingAudioChunksRef.current.push(chunk);
         } else {
-          console.warn("[Orby Voice] Discarding excessive pre-transcript audio buffering.");
+          voiceOutputAudioBlockedRef.current = true;
+          voicePendingAudioChunksRef.current = [];
+          console.warn("[Orby Voice] Audio buffer limit reached; switching this turn to validated text speech.");
         }
       }
     }

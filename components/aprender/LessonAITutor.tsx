@@ -1736,6 +1736,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           },
           outputAudioTranscription: {},
           speechConfig: {
+            languageCode: "es",
             voiceConfig: {
               prebuiltVoiceConfig: { voiceName: "Kore" },
             },

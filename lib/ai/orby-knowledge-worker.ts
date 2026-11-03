@@ -541,7 +541,7 @@ export async function processNextOrbyKnowledgeJob(options: {
           documentId: job.document_id,
           documentTitle,
           stage: "embeddings",
-          progress: counts.embedded,
+          progress: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
           message: documentTitle + ": el análisis visual generó " + counts.missing + " fragmentos nuevos para indexar.",
         };
       }
@@ -717,8 +717,8 @@ export async function processNextOrbyKnowledgeJob(options: {
       console.warn("[Orby Autopilot] Free embedding quota exhausted; job deferred until daily reset.", {
         jobId: job.id,
         resumeAt: resumeAt.toISOString(),
-        embedded: counts.embedded,
-        total: counts.total,
+        embedded: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
+        total: counts?.total ?? null,
       });
       return {
         state: "progress",

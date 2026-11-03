@@ -707,6 +707,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       utterance.volume = 1;
       const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
       const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|google/i.test(voice.name))
+        ?? spanishVoices.find((voice) => /sabina|helena|paulina|sofia|laura|lucia|monica|catalina|female|mujer/i.test(voice.name))
         ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
         ?? spanishVoices.find((voice) => /natural|online|google/i.test(voice.name))
         ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]us/i.test(voice.lang))
@@ -992,8 +993,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceUnsupportedInputDetectedRef.current = false;
     voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanUserText);
 
-    const assistantIndex = previousAssistantId
-      ? Math.max(0, messages.findIndex((message) => message.id === previousAssistantId))
+    const previousAssistantIndex = previousAssistantId
+      ? messages.findIndex((message) => message.id === previousAssistantId)
+      : -1;
+    const assistantIndex = previousAssistantIndex >= 0
+      ? previousAssistantIndex
       : messages.length + (appendUserMessage ? 1 : 0);
     setMessages((current) => {
       const hasExistingAssistant = Boolean(previousAssistantId)
@@ -1647,8 +1651,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     : null);
       voicePreflightReplyRef.current = null;
 
-      // Policy replies use the same Live voice as normal Orby answers.
-      // The browser's fallback TTS used to switch voices exactly on filtered turns.
+      // Deterministic safety replies use the selected Spanish browser voice
+      // immediately; Live is synchronized silently for the next student turn.
       if (policyReply) {
         // Never ask Live to read a deterministic filter response. Replace the
         // partial unsafe bubble and speak the trusted local answer immediately.

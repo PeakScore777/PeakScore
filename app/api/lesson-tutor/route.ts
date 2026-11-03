@@ -345,7 +345,7 @@ export async function POST(request: Request) {
         !containsProgrammingInstruction(item.content)
         && !containsCookingInstruction(item.content)
         && !containsExternalPreIcfesPromotion(item.content)
-        && !containsExplicitNonIcfesTopic(item.content)
+        && !containsExplicitNonIcfesTopic(item.content, priorContext)
         && !isLikelyEnglishOnlyOrbyReply(item.content)
         && isIcfesScopedAssistantTurn(item.content, priorContext)
       ) history.push(item);
@@ -753,7 +753,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       modelReply = "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
       parsed.checkQuestion = "";
     }
-    if (containsExplicitNonIcfesTopic(modelReply)) {
+    if (containsExplicitNonIcfesTopic(modelReply, recentScopeContext)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "explicit_non_icfes_output" });
       modelReply = ORBY_ICFES_SCOPE_REPLY;
       parsed.checkQuestion = "";

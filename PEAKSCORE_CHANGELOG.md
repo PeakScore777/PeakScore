@@ -243,3 +243,11 @@
 
 ### Ajuste de cuota gratuita
 - Se selecciona `@cf/google/gemma-4-26b-a4b-it` como respaldo de tutor en Cloudflare, en lugar de Llama 3.3 70B, para consumir menos Neurons por respuesta.
+
+
+### Ajustes finales de tiempo de respuesta y robustez
+- Se reduce el buffer de captura PCM de micrófono de 100 ms a 40 ms.
+- El watchdog de respuesta se renueva con cada fragmento de texto/audio de Gemini Live; una respuesta larga activa no se corta por el timeout inicial.
+- Se conserva el texto provisional del alumno para reintentar el mismo turno ante desconexiones antes de la transcripción final, con un indicador explícito de si el mensaje ya fue añadido al historial.
+- Se separa cancelación de síntesis de voz frente a finalización correcta para no reactivar la escucha al cerrar o interrumpir.
+- Se evita guardar como pregunta del alumno el eco de la voz local de Orby.

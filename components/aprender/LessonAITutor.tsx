@@ -1378,7 +1378,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         "Tema de estudio: " + topic,
         question,
         context,
-      ].filter(Boolean).join("\\n").slice(0, 1800);
+      ].filter(Boolean).join("\n").slice(0, 1800);
       const preflight = preflightOrbyRequest(voiceUserTextRef.current, voiceScopeContext);
       voiceInputPolicyRef.current = asksIdentity
         ? "identity"
@@ -2116,7 +2116,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         "Tema de estudio: " + topic,
         question,
         context,
-      ].filter(Boolean).join("\\n").slice(0, 1800);
+      ].filter(Boolean).join("\n").slice(0, 1800);
       const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);
       const englishReply = isGenericIcfesEnglishRequest(message) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : null;
       const greetingReply = isOrbyGreetingRequest(message) ? ORBY_GREETING_REPLY : null;

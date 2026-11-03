@@ -737,7 +737,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         finish,
         Math.min(120_000, Math.max(10_000, clean.length * 120)),
       );
-      utterance.onend = finish;
+      utterance.onend = () => finish(false);
       utterance.onerror = () => {
         if (isLocalVoiceTurn) {
           voiceBrowserSpeechActiveRef.current = false;

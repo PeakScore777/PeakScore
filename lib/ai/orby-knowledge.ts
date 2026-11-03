@@ -109,10 +109,19 @@ export type OrbyKnowledgePageBatchProfile = OrbyKnowledgeBatchProfile & {
 };
 
 function isProviderQuotaExceeded(error: unknown): boolean {
-  const message = error instanceof Error
-    ? error.name + " " + error.message
-    : String(error ?? "");
-  return /RESOURCE_EXHAUSTED|quota.?exceeded|rate.?limit|too many requests|\b429\b/i.test(message);
+  if (!error) return false;
+  const detail = error && typeof error === "object"
+    ? error as { name?: unknown; message?: unknown; code?: unknown; status?: unknown }
+    : null;
+  const message = [
+    detail?.name,
+    detail?.message,
+    detail?.code,
+    detail?.status,
+    typeof error === "string" ? error : "",
+  ].filter((value) => value !== undefined && value !== null).join(" ");
+  return detail?.status === 429
+    || /RESOURCE_EXHAUSTED|quota.?exceeded|rate.?limit|too many requests|\b429\b/i.test(message);
 }
 
 function throwEmbeddingQuotaExceeded(): never {

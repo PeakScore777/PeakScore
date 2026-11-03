@@ -77,7 +77,7 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
 
 test("el audio Live se reproduce progresivamente y la cola espera al final de la reproducción", () => {
   assert.match(lessonTutorSource, /flushPendingGeminiAudio/);
-  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.length < 96/);
+  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\\.current\\.length < 512/);
   assert.match(lessonTutorSource, /finishRealtimeVoicePlayback/);
   assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
   assert.match(lessonTutorSource, /voiceRealtimeAudioChunkCountRef\.current === 0/);
@@ -91,6 +91,16 @@ test("el audio Live se reproduce progresivamente y la cola espera al final de la
   assert.doesNotMatch(voiceWorkletSource, /const packetSize = 1600/);
   assert.match(lessonTutorSource, /safetyTimer = window\.setTimeout/);
   assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const partialReply/);
+  const partialTranscriptStart = lessonTutorSource.indexOf("const outputTranscript");
+  const modelAudioStart = lessonTutorSource.indexOf("const modelTurn", partialTranscriptStart);
+  assert.ok(partialTranscriptStart >= 0 && modelAudioStart > partialTranscriptStart);
+  assert.doesNotMatch(
+    lessonTutorSource.slice(partialTranscriptStart, modelAudioStart),
+    /flushPendingGeminiAudio\(\)/,
+    "el audio no se reproduce hasta validar la respuesta completa",
+  );
+  assert.match(lessonTutorSource, /complete safety decision/);
+  assert.match(lessonTutorSource, /const packetSize = 640/);
   assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const chunk/);
   assert.match(lessonTutorSource, /Gemini Live finalizó sin entregar una transcripción utilizable/);
   assert.match(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);

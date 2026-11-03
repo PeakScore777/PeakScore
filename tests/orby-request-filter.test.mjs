@@ -258,7 +258,8 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "la decisión de usar voz alternativa debe ocurrir después de vaciar los fragmentos de audio Live");
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
-  assert.match(realtimeSessionSource, /const ORBY_LIVE_VOICE_NAME = "Aoede"/);
+  assert.match(realtimeSessionSource, /const ORBY_LIVE_VOICE_NAME = "Kore"/);
+  assert.match(lessonTutorSource, /prebuiltVoiceConfig:\s*\{ voiceName: "Kore" \}/);
   assert.match(realtimeSessionSource, /speechConfig:\s*\{\s*voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{ voiceName: ORBY_LIVE_VOICE_NAME/);
   assert.match(realtimeSessionSource, /VOZ DE ORBY: mantén una voz femenina cálida y natural/);
   assert.match(lessonTutorSource, /void persistRealtimeTurnIfReady\(\);\s*drainPendingMessageQueue\(\)/);

@@ -235,7 +235,7 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
   assert.match(realtimeSessionSource, /No recomiendes, compares, promociones|No recomiendes, compares, promociones/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
-  assert.match(realtimeSessionSource, /No enseñes programación, desarrollo de software, cocina, recetas/);\n  assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);\n  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\\(-4\\)/);
+  assert.match(realtimeSessionSource, /No enseñes programación, desarrollo de software, cocina, recetas/);\n  assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);\n  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
   assert.match(lessonTutorSource, /internalSpeechInstruction/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(internalSpeechInstruction\)/);

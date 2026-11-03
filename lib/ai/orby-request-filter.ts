@@ -248,7 +248,11 @@ export function containsExplicitNonIcfesTopic(value: string): boolean {
  * is anchored to a curriculum concept and is not a deterministic refusal. */
 export function isIcfesScopedAssistantTurn(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message);
-  if (!normalized || isScopeRefusalContext(normalized)) return false;
+  if (
+    !normalized
+    || isScopeRefusalContext(normalized)
+    || containsExplicitNonIcfesTopic(normalized)
+  ) return false;
   if (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
   const prior = normalizeOrbyRequestText(previousContext);
   return Boolean(prior) && ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(prior));

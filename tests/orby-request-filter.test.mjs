@@ -179,6 +179,10 @@ test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas
     filter.isLikelyEnglishOnlyOrbyReply("¡Claro! Vamos a estudiar el componente de Inglés de Saber 11."),
     false,
   );
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("The answer is B."), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Because the text describes the author's opinion."), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("La respuesta es B porque el texto presenta la opinión del autor."), false);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("En el texto aparece: 'The answer is B'. La opción correcta es B."), false);
 });
 
 test("Orby no promociona ni recomienda academias u otros preICFES", () => {

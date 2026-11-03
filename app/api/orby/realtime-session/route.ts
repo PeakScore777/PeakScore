@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   containsCookingInstruction,
+  containsExplicitNonIcfesTopic,
+  isIcfesScopedAssistantTurn,
   containsExternalPreIcfesPromotion,
   containsOrbyPromptInjection,
   containsProgrammingInstruction,
@@ -86,12 +88,15 @@ export async function POST(request: Request) {
       // Prior assistant turns are untrusted context too. Do not let an
       // accidental language switch, unsafe lesson, external promotion, or
       // false creator claim become an instruction in the next Live session.
+      const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\\n");
       const safeAssistantTurn = !containsProgrammingInstruction(item.content)
         && !containsCookingInstruction(item.content)
+        && !containsExplicitNonIcfesTopic(item.content)
         && !containsExternalPreIcfesPromotion(item.content)
         && !containsUnsupportedSpanishLanguage(item.content)
         && !isLikelyEnglishOnlyOrbyReply(item.content)
-        && !hasFalseOrbyCreatorAttribution(item.content);
+        && !hasFalseOrbyCreatorAttribution(item.content)
+        && isIcfesScopedAssistantTurn(item.content, priorContext);
       if (safeAssistantTurn) safeHistory.push(item);
     }
     const boundedSafeHistory = safeHistory.slice(-4);

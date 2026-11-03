@@ -104,10 +104,10 @@ export function isLikelyEnglishOnlyOrbyReply(reply: string): boolean {
   if (spanishSignals) return false;
 
   const foreignLanguageSignals = [
-    /\b(?:bonjour|comment|puis|je|vous|nous|avec|pour|dans|une|des|est|sont|pouvez|aider|expliquer|apprendre|aujourd|merci|votre|mais|parce|cette|cela|voici)\b/g,
-    /\b(?:ol[aá]|voce|voces|você|vocês|posso|podemos|ajudar|explicar|estudar|hoje|obrigado|obrigada|porque|como|qual|este|esta|estao|estão|nao|não|mas|tambem|também|muito|para|com|uma|umas|uns)\b/g,
+    /\b(?:bonjour|comment|puis|je|vous|nous|avec|pour|dans|une|des|est|sont|pouvez|peux|aider|aidez|expliquer|apprendre|aujourd|merci|votre|mais|parce|cette|cela|voici|reponse|bonne|correcte)\b/g,
+    /\b(?:ol[aá]|voce|voces|você|vocês|posso|podemos|ajudar|ajudo|explicar|estudar|hoje|obrigado|obrigada|porque|como|qual|este|esta|estao|estão|nao|não|mas|tambem|também|muito|para|com|uma|umas|uns|te)\b/g,
     /\b(?:hallo|guten|morgen|natürlich|ich|du|sie|wir|ist|sind|mit|für|auf|wie|was|warum|kann|können|helfen|erklären|lernen|heute|bitte|nicht|eine|einer|aber|oder|auch)\b/g,
-    /\b(?:ciao|buongiorno|posso|siamo|aiutare|spiegare|studiare|oggi|come|quale|questo|questa|grazie|anche|perche|perché|sono|della|degli|delle|con|non|ma|molto|vorrei)\b/g,
+    /\b(?:ciao|buongiorno|posso|siamo|aiutare|aiutarti|spiegare|spiegarti|studiare|oggi|come|quale|questo|questa|grazie|anche|perche|perché|sono|della|degli|delle|con|non|ma|molto|vorrei)\b/g,
   ];
   for (const pattern of foreignLanguageSignals) {
     const signals = normalized.match(pattern) ?? [];

@@ -139,6 +139,10 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(partialReply\)/);
   assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(rawReply\)/);
   assert.match(lessonTutorSource, /unsupportedInterimScript/);
+  assert.match(lessonTutorSource, /voiceUnsupportedInputDetectedRef/);
+  assert.match(lessonTutorSource, /if \(!pendingUserText && voiceUnsupportedInputDetectedRef\.current && voiceModeRef\.current\)/);
+  assert.match(lessonTutorSource, /Audio no reconocido\./);
+  assert.match(lessonTutorSource, /No pude reconocer la frase\. Puedes repetirla en español/);
   assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
   assert.match(lessonTutorSource, /normalizedForcedExpected\.startsWith\(partialNormalized\)/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current/);

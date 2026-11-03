@@ -247,7 +247,7 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
   const prior = normalizeOrbyRequestText(previousContext);
   const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
     || ORBY_STUDY_INVITATION_PATTERN.test(prior);
-  const isClearlyEducationalFollowUp = /^(?:que es|que son|define|explicame|como funciona|como se resuelve|por que|cual es|cuales son|diferencia entre|que significa|analiza|compara|resuelve|ayudame con|quiero entender|no entiendo|puedes explicar|me explicas)\\b/i.test(normalized);
+  const isClearlyEducationalFollowUp = /^(?:que es|que son|define|explicame|como funciona|como se resuelve|por que|cual es|cuales son|diferencia entre|que significa|analiza|compara|resuelve|ayudame con|quiero entender|no entiendo|puedes explicar|me explicas)\b/i.test(normalized);
   if (hasCurriculumContext && isClearlyEducationalFollowUp) return true;
   return hasCurriculumContext;
 }

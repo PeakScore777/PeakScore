@@ -146,6 +146,10 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /containsExternalPreIcfesPromotion\(item\.content\)/);
   assert.match(realtimeSessionSource, /isLikelyEnglishOnlyOrbyReply\(item\.content\)/);
   assert.match(realtimeSessionSource, /hasFalseOrbyCreatorAttribution\(item\.content\)/);
+  assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);
+  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-4\)/);
+  assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
+  assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceLastAssistantOutputRef\.current\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \["es-ES"\]/);
@@ -235,7 +239,9 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
   assert.match(realtimeSessionSource, /No recomiendes, compares, promociones|No recomiendes, compares, promociones/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
-  assert.match(realtimeSessionSource, /No enseñes programación, desarrollo de software, cocina, recetas/);\n  assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);\n  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
+  assert.match(realtimeSessionSource, /No enseñes programación, desarrollo de software, cocina, recetas/);
+  assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);
+  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
   assert.match(lessonTutorSource, /internalSpeechInstruction/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(internalSpeechInstruction\)/);
@@ -400,6 +406,13 @@ test("el filtro ICFES funciona en modo allowlist y rechaza conversaciones cotidi
     "¿Qué hago si tengo fiebre?",
     "¿Cuál es el clima de mañana?",
   ];
+  for (const prompt of [
+    "Explícame la fotosíntesis y dime cómo cambiar una llanta.",
+    "Quiero estudiar probabilidad y que me recomiendes un carro.",
+  ]) {
+    assert.equal(filter.preflightOrbyRequest(prompt).allowed, false, prompt);
+  }
+
   for (const prompt of outOfScope) {
     const result = filter.preflightOrbyRequest(prompt);
     assert.equal(result.allowed, false, prompt);

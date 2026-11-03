@@ -124,6 +124,11 @@ test("Orby reconoce sus llamadas y no acepta transcripciones en escrituras ajena
   assert.equal(filter.containsUnsupportedSpanishScript("नमस्ते"), true);
   assert.equal(filter.containsUnsupportedSpanishScript("مرحبا"), true);
   assert.equal(filter.containsUnsupportedSpanishScript("Привет"), true);
+  assert.equal(filter.containsUnsupportedSpanishLanguage("Namaste, aap kaise hain?"), true);
+  assert.equal(filter.containsUnsupportedSpanishLanguage("Aap mujhe bataiye kya karna hai"), true);
+  assert.equal(filter.containsUnsupportedSpanishLanguage("¡Claro! ¿Qué tema de Saber 11 quieres estudiar?"), false);
+  assert.equal(filter.containsUnsupportedSpanishLanguage("Let's practice the ICFES English reading section."), false);
+  assert.equal(filter.containsUnsupportedSpanishLanguage("Mujhe coding sikhao."), false);
   assert.equal(filter.containsUnsupportedSpanishScript("こんにちは"), true);
   assert.equal(filter.containsUnsupportedSpanishScript("¡Claro! ¿Qué tema de Saber 11 quieres estudiar?"), false);
   assert.equal(filter.containsUnsupportedSpanishScript("Let's practice the ICFES English reading section."), false);

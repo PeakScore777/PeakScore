@@ -139,6 +139,44 @@ export async function transcribeWithCloudflare(audio: Buffer): Promise<string> {
   return transcript;
 }
 
+const ORBY_AURA_TTS_MODEL = "@cf/deepgram/aura-2-es";
+const ORBY_AURA_TTS_SPEAKER = "celeste";
+
+/**
+ * Neural Spanish TTS for deterministic/local voice replies. Keep this server
+ * side so the Cloudflare token never reaches the browser.
+ */
+export async function synthesizeOrbySpeechWithCloudflare(text: string): Promise<Buffer> {
+  const normalized = text.replace(/\\s+/g, " ").trim().slice(0, 1800);
+  if (!normalized) throw new CloudflareWorkersAIError("EMPTY_TTS_TEXT");
+
+  const result = await runModel<string | { audio?: unknown }>(
+    ORBY_AURA_TTS_MODEL,
+    {
+      text: normalized,
+      speaker: ORBY_AURA_TTS_SPEAKER,
+      encoding: "mp3",
+      container: "none",
+    },
+    20_000,
+  );
+
+  const encoded = typeof result === "string"
+    ? result
+    : result && typeof result.audio === "string"
+      ? result.audio
+      : "";
+  if (!encoded || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) {
+    throw new CloudflareWorkersAIError("INVALID_TTS_RESPONSE");
+  }
+
+  const audio = Buffer.from(encoded, "base64");
+  if (audio.byteLength < 256 || audio.byteLength > 4 * 1024 * 1024) {
+    throw new CloudflareWorkersAIError("INVALID_TTS_AUDIO_SIZE");
+  }
+  return audio;
+}
+
 export async function generateWithCloudflareTutor(prompt: string): Promise<{ text: string }> {
   const result = await runModel<{ response?: unknown; text?: unknown }>(
     TUTOR_MODEL,

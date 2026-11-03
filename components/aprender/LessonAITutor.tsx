@@ -1221,10 +1221,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     if (typeof interimInput?.text === "string") {
       const interimText = interimInput.text.slice(0, 1200);
-      const previousInterim = voiceUserTextRef.current.trim();
-      if (!previousInterim || interimText.startsWith(previousInterim) || previousInterim.startsWith(interimText)) {
-        voiceUserTextRef.current = interimText;
-      }
       setLiveTranscript(interimText);
       if (voiceBrowserSpeechActiveRef.current) {
         const normalizedInterim = normalizeVoiceComparison(interimText);
@@ -1241,7 +1237,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if ("speechSynthesis" in window) window.speechSynthesis.cancel();
           if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
           voiceLastCommittedInputRef.current = "";
-          voiceUserTextRef.current = "";
+          voiceUserTextRef.current = interimText;
+          voiceUserMessageVisibleRef.current = false;
           voiceAssistantTextRef.current = "";
           voiceAssistantMessageIdRef.current = null;
           voiceResponseDoneRef.current = false;
@@ -1254,6 +1251,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           setVoiceStatus("Te escucho…");
         }
       } else {
+        const previousInterim = voiceUserTextRef.current.trim();
+        if (!previousInterim || interimText.startsWith(previousInterim) || previousInterim.startsWith(interimText)) {
+          voiceUserTextRef.current = interimText;
+        }
         setVoiceStatus("Te escucho…");
       }
     }

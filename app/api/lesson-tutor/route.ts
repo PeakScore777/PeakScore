@@ -381,7 +381,7 @@ export async function POST(request: Request) {
       topic,
       context,
       ...history.filter((item) => item.role === "user").slice(-4).map((item) => item.content),
-    ].filter(Boolean).join(" ").slice(0, 4000);
+    ].filter(Boolean).join(" ").slice(0, 2400);
     type StudentKnowledgeSource = {
       document_id: string;
       title: string;
@@ -432,13 +432,13 @@ export async function POST(request: Request) {
           query: learningQuery,
           subject: detectedSubject,
           visibility: "published",
-          limit: 5,
+          limit: 4,
         }),
         searchOrbyKnowledgeConcepts({
           query: learningQuery,
           subject: detectedSubject,
           visibility: "published",
-          limit: 20,
+          limit: 12,
         }),
       ]);
       knowledgeSources = knowledgeResult as StudentKnowledgeSource[];
@@ -448,7 +448,7 @@ export async function POST(request: Request) {
         ...conceptGraphHits.map((concept) => concept.document_id),
       ])];
       const [relatedResult, pedagogyResult] = await Promise.all([
-        getOrbyRelatedKnowledge(documentIds, "published", 3),
+        getOrbyRelatedKnowledge(documentIds, "published", 2),
         documentIds.length
           ? supabaseAdmin.from("orby_knowledge_profiles")
               .select("document_id,pedagogical_knowledge")
@@ -474,15 +474,15 @@ export async function POST(request: Request) {
     // Private source metadata stays server-side. Students receive only the educational substance.
     const knowledgeContext = knowledgeSources.map((source, index) =>
       "[Referencia académica interna " + (index + 1) + "]\n"
-      + sanitizeOrbyKnowledgeExcerpt(source.content, source.title).slice(0, 1800)
+      + sanitizeOrbyKnowledgeExcerpt(source.content, source.title).slice(0, 1400)
     ).join("\n\n");
     const profileContext = [...new Map(knowledgeSources
       .filter((source) => source.profile_summary || source.profile_concepts)
       .map((source) => [source.document_id, source])).values()]
       .map((source) => {
-        const relevantConcepts = selectOrbyRelevantConcepts(source.profile_concepts, learningQuery, 12);
+        const relevantConcepts = selectOrbyRelevantConcepts(source.profile_concepts, learningQuery, 8);
         return [
-          typeof source.profile_summary === "string" ? source.profile_summary.slice(0, 900) : "",
+          typeof source.profile_summary === "string" ? source.profile_summary.slice(0, 750) : "",
           "Temas relacionados: " + JSON.stringify(Array.isArray(source.profile_topics) ? source.profile_topics.slice(0, 10) : []),
           "Conceptos relevantes para esta pregunta (seleccionados por coincidencia temática y evidencia): " + JSON.stringify(relevantConcepts),
           "Competencias descritas: " + JSON.stringify(Array.isArray(source.profile_competencies) ? source.profile_competencies.slice(0, 8) : []),
@@ -501,7 +501,7 @@ export async function POST(request: Request) {
       "Síntesis académica relacionada: " + item.summary,
     ].join("\n"))
     .join("\n\n");
-    const conceptGraphContext = conceptGraphHits.slice(0, 18).map((item) => [
+    const conceptGraphContext = conceptGraphHits.slice(0, 10).map((item) => [
       "Concepto: " + item.concept_name,
       "Área: " + item.area + (item.parent_concept ? "; familia: " + item.parent_concept : ""),
       "Variantes equivalentes: " + JSON.stringify(item.aliases.slice(0, 5)),

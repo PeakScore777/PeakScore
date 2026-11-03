@@ -1371,9 +1371,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && partialNormalized.length >= 8
         && !(
           normalizedForcedExpected.startsWith(partialNormalized)
-          || partialNormalized.startsWith(normalizedForcedExpected)
-          || normalizedForcedExpected.includes(partialNormalized)
-          || partialNormalized.includes(normalizedForcedExpected)
+          || partialNormalized === normalizedForcedExpected
         ),
       );
       const partialUnsafe = voiceOutputAudioBlockedRef.current

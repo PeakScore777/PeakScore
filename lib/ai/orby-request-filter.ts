@@ -122,7 +122,7 @@ export function shouldRetrieveOrbyAcademicKnowledge(input: {
   const message = normalizeOrbyRequestText(currentText);
   if (!message || isOrbyGreetingRequest(currentText)) return false;
 
-  const explicitAcademicTopic = /\\b(?:saber\\s*11|icfes|matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuaciones?|fracciones?|porcentajes?|lectura critica|comprension lectora|texto argumentativo|intencion del autor|sociales y ciudadanas|historia de colombia|geografia|democracia|constitucion politica|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|reaccion quimica|atomo|molecula|tabla periodica|energia|fuerza|densidad|termodinamica|ingles|english|vocabulario en contexto|reading comprehension)\\b/i.test(message)
+  const explicitAcademicTopic = /\b(?:saber\s*11|icfes|matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuaciones?|fracciones?|porcentajes?|lectura critica|comprension lectora|texto argumentativo|intencion del autor|sociales y ciudadanas|historia de colombia|geografia|democracia|constitucion politica|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|reaccion quimica|atomo|molecula|tabla periodica|energia|fuerza|densidad|termodinamica|ingles|english|vocabulario en contexto|reading comprehension|astronomia|estrella(?:s)? de neutrones|agujero negro|sistema solar|orbita|gravedad)\b/i.test(message)
     || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(message));
   if (explicitAcademicTopic) return true;
 
@@ -137,8 +137,8 @@ export function shouldRetrieveOrbyAcademicKnowledge(input: {
     && !/^(?:preparacion saber 11|saber 11|preparacion icfes|icfes|estudio y aprendizaje)$/.test(normalizedSubject);
   const hasAcademicLessonContext = hasSpecificLessonSubject
     || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedLessonContext))
-    || /\\b(?:area de estudio|tema de estudio|competencia icfes|ejercicio de saber 11)\\b/i.test(normalizedLessonContext);
-  const isFollowUpOrStudyIntent = /\\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|diferencia entre|por que ocurre|por que|como asi|otro ejemplo|dame otro ejemplo|continua|siguiente)\\b/i.test(message);
+    || /\b(?:area de estudio|tema de estudio|competencia icfes|ejercicio de saber 11)\b/i.test(normalizedLessonContext);
+  const isFollowUpOrStudyIntent = /\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|diferencia entre|por que ocurre|por que|como asi|otro ejemplo|dame otro ejemplo|continua|siguiente)\b/i.test(message);
   return hasAcademicLessonContext && isFollowUpOrStudyIntent;
 }
 

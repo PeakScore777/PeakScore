@@ -239,7 +239,7 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
   assert.match(filter.ORBY_EXTERNAL_PREICFES_REPLY, /no recomiendo, comparo ni promociono/i);
 });
 
-test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz para negativas", () => {
+test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra generación Live", () => {
   assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
   assert.match(realtimeSessionSource, /No recomiendes, compares, promociones|No recomiendes, compares, promociones/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
@@ -248,14 +248,15 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(lessonTutorSource, /utterance\.rate = 1\.22/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
-  assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean\)/);
+  assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false\)/);
   assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
   assert.match(lessonTutorSource, /Math\.min\(45_000, Math\.max\(8_000, clean\.length \* 70\)\)/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(cleanUserText\)/);
-  assert.match(lessonTutorSource, /voiceInternalPolicyTextRef\.current = policyReply/);
-  assert.match(lessonTutorSource, /isInternalPolicySpeechEcho/);
+  assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
+  assert.match(lessonTutorSource, /hasExistingAssistant/);
+  assert.doesNotMatch(lessonTutorSource, /voiceInternalPolicyTextRef|isInternalPolicySpeechEcho/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
   assert.match(lessonTutorSource, /const turn = \{ conversationId: id, userContent, assistantContent \}/);

@@ -361,7 +361,8 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorRouteSource, /containsExternalPreIcfesPromotion/);
   assert.match(lessonTutorRouteSource, /isLikelyEnglishOnlyOrbyReply/);
   assert.match(lessonTutorRouteSource, /const curriculumContextSignals =/);
-  assert.match(lessonTutorRouteSource, /const shouldRetrieveAcademicKnowledge =/);
+  assert.match(lessonTutorRouteSource, /shouldRetrieveOrbyAcademicKnowledge\(\{/);
+  assert.doesNotMatch(lessonTutorRouteSource, /Los cristales misteriosos: materia y propiedades/);
   assert.match(lessonTutorRouteSource, /const conversationalPrompt =/);
   assert.match(lessonTutorRouteSource, /: conversationalPrompt/);
   assert.doesNotMatch(lessonTutorRouteSource, /Boolean\(question\.trim\(\) && userMessage\.trim\(\)\.length > 4\)/);
@@ -607,6 +608,35 @@ test("Orby permite conversación segura y solo bloquea programación, cocina y s
     filter.preflightOrbyRequest("¿Y por qué?", "Esa solicitud no corresponde a los contenidos de Saber 11. Puedo ayudarte con Matemáticas o Ciencias Naturales.").allowed,
     true,
   );
+});
+
+test("Orby evita RAG en conversación casual y lo activa para temas y seguimientos ICFES", () => {
+  const retrieve = filter.shouldRetrieveOrbyAcademicKnowledge;
+  assert.equal(retrieve({ message: "oe" }), false);
+  assert.equal(retrieve({ message: "¿Qué película me recomiendas?" }), false);
+  assert.equal(retrieve({ message: "Explícame qué es una estrella de neutrones." }), false);
+  assert.equal(retrieve({ message: "Se me pinchó una llanta." }), false);
+  assert.equal(retrieve({ message: "Explícame la fotosíntesis." }), true);
+  assert.equal(retrieve({ message: "¿Qué es una ecuación cuadrática?" }), true);
+  assert.equal(retrieve({
+    message: "¿Por qué?",
+    subject: "Ciencias Naturales",
+    topic: "Fotosíntesis",
+  }), true);
+  assert.equal(retrieve({
+    message: "No entiendo",
+    subject: "Preparación Saber 11",
+  }), false);
+  assert.equal(retrieve({
+    message: "",
+    question: "Analiza la intención comunicativa de este diálogo de Inglés.",
+    subject: "Inglés",
+  }), true);
+  assert.equal(retrieve({
+    message: "¿Qué película me recomiendas?",
+    subject: "Lectura Crítica",
+    topic: "Comprensión lectora",
+  }), false);
 });
 
 test("solo permite publicar cuando el perfil v2 y todos los embeddings están listos", () => {

@@ -1442,7 +1442,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || containsUnsupportedSpanishLanguage(partialReply)
         || containsProgrammingInstruction(partialReply)
         || containsCookingInstruction(partialReply)
-        || containsExplicitNonIcfesTopic(partialReply)
+        || containsExplicitNonIcfesTopic(partialReply, [
+          voiceUserTextRef.current,
+          voiceLastAssistantOutputRef.current,
+          "Área de estudio: " + subject,
+          "Tema de estudio: " + topic,
+          question,
+          context,
+        ].filter(Boolean).join("\n").slice(0, 1800))
         || containsExternalPreIcfesPromotion(partialReply)
         || isLikelyEnglishOnlyOrbyReply(partialReply)
         || hasFalseOrbyCreatorAttribution(partialReply)
@@ -1532,7 +1539,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
             : containsCookingInstruction(rawReply)
               ? "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés."
-              : containsExplicitNonIcfesTopic(rawReply)
+              : containsExplicitNonIcfesTopic(rawReply, [
+          voiceUserTextRef.current,
+          voiceLastAssistantOutputRef.current,
+          "Área de estudio: " + subject,
+          "Tema de estudio: " + topic,
+          question,
+          context,
+        ].filter(Boolean).join("\n").slice(0, 1800))
                 ? ORBY_ICFES_SCOPE_REPLY
                 : containsExternalPreIcfesPromotion(rawReply)
                 ? ORBY_EXTERNAL_PREICFES_REPLY

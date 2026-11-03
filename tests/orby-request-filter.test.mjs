@@ -100,7 +100,7 @@ test("el audio Live se reproduce progresivamente y la cola espera al final de la
     "el audio no se reproduce hasta validar la respuesta completa",
   );
   assert.match(lessonTutorSource, /complete safety decision/);
-  assert.match(lessonTutorSource, /const packetSize = 640/);
+  assert.match(voiceWorkletSource, /const packetSize = 640/);
   assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const chunk/);
   assert.match(lessonTutorSource, /Gemini Live finalizó sin entregar una transcripción utilizable/);
   assert.match(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);

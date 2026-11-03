@@ -343,7 +343,7 @@ export async function POST(request: Request) {
       }
       if (
         !containsProgrammingInstruction(item.content)
-        && !containsCookingInstruction(item.content)
+        && !containsCookingInstruction(item.content, priorContext)
         && !containsExternalPreIcfesPromotion(item.content)
         && !containsExplicitNonIcfesTopic(item.content, priorContext)
         && !isLikelyEnglishOnlyOrbyReply(item.content)
@@ -748,7 +748,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       modelReply = preflightOrbyRequest("programar").reply;
       parsed.checkQuestion = "";
     }
-    if (containsCookingInstruction(modelReply)) {
+    if (containsCookingInstruction(modelReply, recentScopeContext)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "out_of_scope_cooking_output" });
       modelReply = "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
       parsed.checkQuestion = "";

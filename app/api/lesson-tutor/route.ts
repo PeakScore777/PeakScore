@@ -373,7 +373,10 @@ export async function POST(request: Request) {
     )).join("\n");
 
 
-    // Retrieve only knowledge that an administrator has explicitly published.
+    // Academic retrieval is the expensive part of a tutor turn. Do not wake
+    // vector search, concept graph and student-profile queries for greetings or
+    // safe everyday conversation; fetch them only when the current request needs
+    // an explanation, exercise, or an identifiable Saber 11 concept.
     const detectedSubject = normalizeIcfesSubject(subject, [topic, question, userMessage].filter(Boolean).join(" "));
     const learningQuery = [
       userMessage,
@@ -382,6 +385,12 @@ export async function POST(request: Request) {
       context,
       ...history.filter((item) => item.role === "user").slice(-4).map((item) => item.content),
     ].filter(Boolean).join(" ").slice(0, 2400);
+    const currentStudySignals = [userMessage, question].filter(Boolean).join(" ");
+    const hasExplicitAcademicTopic = /\b(?:saber\\s*11|icfes|matematicas?|algebra|geometria|estadistica|lectura critica|comprension lectora|sociales y ciudadanas|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|reaccion quimica|tabla periodica|ingles|english|ecosistema|termodinamica|leyes de newton|constitucion|democracia|historia de colombia|geografia|revolucion industrial|revolucion francesa|globalizacion|probabilidad|funcion cuadratica|ecuaciones?|fracciones?|porcentajes?|densidad|energia|fuerza|velocidad terminal)\b/i.test(currentStudySignals);
+    const hasAcademicTaskIntent = /\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|diferencia entre|por que ocurre)\b/i.test(userMessage)
+      && Boolean(question.trim() || context.trim() || /\b(?:saber\\s*11|icfes|matematicas?|lectura critica|sociales|ciencias naturales|ingles|fisica|quimica|biologia)\b/i.test([subject, topic].join(" ")));
+    const shouldRetrieveAcademicKnowledge = !isOrbyGreetingRequest(userMessage)
+      && (hasExplicitAcademicTopic || hasAcademicTaskIntent || Boolean(question.trim() && userMessage.trim().length > 4));
     type StudentKnowledgeSource = {
       document_id: string;
       title: string;
@@ -409,64 +418,69 @@ export async function POST(request: Request) {
       topics: unknown;
     }> = [];
 
-    // Fetch adaptive signals alongside knowledge retrieval instead of making
-    // the student wait for a second serial database round-trip.
-    const studentSignalsPromise = (async () => {
-      try {
-        const signalResult = await supabaseAdmin.from("orby_student_learning_signals")
-          .select("topic,concept,learning_state,misconception,teaching_hint,confidence,created_at")
-          .eq("user_id", user.id).order("created_at", { ascending: false }).limit(5);
-        if (signalResult.error) {
-          console.error("[Orby Tutor] Learning profile unavailable.", { code: signalResult.error.code });
-          return [] as Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string }>;
-        }
-        return Array.isArray(signalResult.data) ? signalResult.data as Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string }> : [];
-      } catch {
-        return [];
-      }
-    })();
+    const emptyStudentSignals: Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string }> = [];
+    const studentSignalsPromise: Promise<typeof emptyStudentSignals> = shouldRetrieveAcademicKnowledge
+      ? (async () => {
+          try {
+            const signalResult = await supabaseAdmin.from("orby_student_learning_signals")
+              .select("topic,concept,learning_state,misconception,teaching_hint,confidence,created_at")
+              .eq("user_id", user.id).order("created_at", { ascending: false }).limit(3);
+            if (signalResult.error) {
+              console.error("[Orby Tutor] Learning profile unavailable.", { code: signalResult.error.code });
+              return emptyStudentSignals;
+            }
+            return Array.isArray(signalResult.data)
+              ? signalResult.data as typeof emptyStudentSignals
+              : emptyStudentSignals;
+          } catch {
+            return emptyStudentSignals;
+          }
+        })()
+      : Promise.resolve(emptyStudentSignals);
 
-    try {
-      const [knowledgeResult, conceptResult] = await Promise.all([
-        searchOrbyKnowledge({
-          query: learningQuery,
-          subject: detectedSubject,
-          visibility: "published",
-          limit: 4,
-        }),
-        searchOrbyKnowledgeConcepts({
-          query: learningQuery,
-          subject: detectedSubject,
-          visibility: "published",
-          limit: 12,
-        }),
-      ]);
-      knowledgeSources = knowledgeResult as StudentKnowledgeSource[];
-      conceptGraphHits = conceptResult;
-      const documentIds = [...new Set([
-        ...knowledgeSources.map((source) => source.document_id),
-        ...conceptGraphHits.map((concept) => concept.document_id),
-      ])];
-      const [relatedResult, pedagogyResult] = await Promise.all([
-        getOrbyRelatedKnowledge(documentIds, "published", 2),
-        documentIds.length
-          ? supabaseAdmin.from("orby_knowledge_profiles")
+    if (shouldRetrieveAcademicKnowledge) {
+      try {
+        const [knowledgeResult, conceptResult] = await Promise.all([
+          searchOrbyKnowledge({
+            query: learningQuery,
+            subject: detectedSubject,
+            visibility: "published",
+            limit: 3,
+          }),
+          searchOrbyKnowledgeConcepts({
+            query: learningQuery,
+            subject: detectedSubject,
+            visibility: "published",
+            limit: 8,
+          }),
+        ]);
+        knowledgeSources = knowledgeResult as StudentKnowledgeSource[];
+        conceptGraphHits = conceptResult;
+        const documentIds = [...new Set([
+          ...knowledgeSources.map((source) => source.document_id),
+          ...conceptGraphHits.map((concept) => concept.document_id),
+        ])];
+        if (documentIds.length) {
+          const [relatedResult, pedagogyResult] = await Promise.all([
+            getOrbyRelatedKnowledge(documentIds, "published", 1),
+            supabaseAdmin.from("orby_knowledge_profiles")
               .select("document_id,pedagogical_knowledge")
-              .in("document_id", documentIds)
-          : Promise.resolve({ data: [], error: null }),
-      ]);
-      relatedKnowledge = relatedResult;
-      if (pedagogyResult.error) {
-        console.error("[Orby Tutor] Pedagogical memory lookup unavailable.", { code: pedagogyResult.error.code });
-      } else {
-        pedagogicalProfilesByDocument = new Map(
-          (pedagogyResult.data ?? []).map((profile) => [profile.document_id, profile.pedagogical_knowledge])
-        );
+              .in("document_id", documentIds),
+          ]);
+          relatedKnowledge = relatedResult;
+          if (pedagogyResult.error) {
+            console.error("[Orby Tutor] Pedagogical memory lookup unavailable.", { code: pedagogyResult.error.code });
+          } else {
+            pedagogicalProfilesByDocument = new Map(
+              (pedagogyResult.data ?? []).map((profile) => [profile.document_id, profile.pedagogical_knowledge])
+            );
+          }
+        }
+      } catch (error) {
+        console.error("[Orby Tutor] Hybrid knowledge retrieval unavailable.", {
+          name: error instanceof Error ? error.name : "UnknownError",
+        });
       }
-    } catch (error) {
-      console.error("[Orby Tutor] Hybrid knowledge retrieval unavailable.", {
-        name: error instanceof Error ? error.name : "UnknownError",
-      });
     }
 
     const studentSignals = await studentSignalsPromise;

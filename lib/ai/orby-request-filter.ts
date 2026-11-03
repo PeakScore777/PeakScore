@@ -235,7 +235,7 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
 export function containsExplicitNonIcfesTopic(value: string): boolean {
   const normalized = normalizeOrbyRequestText(value);
   if (!normalized) return false;
-  if (/\\b(?:fuera del alcance|no corresponde a los contenidos|no puedo ayudarte con esa solicitud|no puedo trabajar ese tema|esa solicitud esta fuera|solo puedo ayudarte con las cinco areas)\\b/i.test(normalized)) {
+  if (/\\b(?:fuera del alcance|no corresponde a los contenidos|no puedo ayudarte con esa solicitud|no puedo trabajar ese tema|esa solicitud esta fuera|solo puedo ayudarte con las cinco areas|no puedo ensenar cocina|no puedo compartir recetas|no enseno cocina|no doy clases de cocina)\\b/i.test(normalized)) {
     return false;
   }
   return OUTSIDE_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized));

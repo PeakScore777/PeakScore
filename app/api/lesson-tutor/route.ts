@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -300,14 +300,31 @@ export async function POST(request: Request) {
       });
     }
 
-    const history: TutorMessage[] = Array.isArray(body.history)
+    const rawHistory: TutorMessage[] = Array.isArray(body.history)
       ? body.history
           .filter((item: unknown): item is TutorMessage => !!item && typeof item === "object"
             && ((item as TutorMessage).role === "user" || (item as TutorMessage).role === "assistant")
             && typeof (item as TutorMessage).content === "string")
-          .slice(-8)
+          .slice(-12)
           .map((item: TutorMessage): TutorMessage => ({ role: item.role, content: item.content.slice(0, 1200) }))
       : [];
+    const history: TutorMessage[] = [];
+    for (const item of rawHistory) {
+      if (containsUnsupportedSpanishLanguage(item.content) || isClearlyOutOfScopeOrInjection(item.content)) continue;
+      const priorContext = history.slice(-2).map((message) => message.content).join("\\n");
+      if (item.role === "user") {
+        if (preflightOrbyRequest(item.content, priorContext).allowed) history.push(item);
+        continue;
+      }
+      if (
+        !containsProgrammingInstruction(item.content)
+        && !containsCookingInstruction(item.content)
+        && !containsExternalPreIcfesPromotion(item.content)
+        && !containsExplicitNonIcfesTopic(item.content)
+        && !isLikelyEnglishOnlyOrbyReply(item.content)
+        && isIcfesScopedAssistantTurn(item.content, priorContext)
+      ) history.push(item);
+    }
     // Evalúa también el historial, el contexto y el enunciado: pueden transportar instrucciones hostiles.
     const untrustedText = [
       userMessage,
@@ -711,6 +728,11 @@ No uses bloques Markdown ni texto fuera del JSON.
     if (containsCookingInstruction(modelReply)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "out_of_scope_cooking_output" });
       modelReply = "No puedo enseñar cocina ni compartir recetas porque mi función es acompañarte en la preparación para Saber 11. Sí puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés.";
+      parsed.checkQuestion = "";
+    }
+    if (containsExplicitNonIcfesTopic(modelReply)) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "explicit_non_icfes_output" });
+      modelReply = ORBY_ICFES_SCOPE_REPLY;
       parsed.checkQuestion = "";
     }
     parsed.reply = modelReply;

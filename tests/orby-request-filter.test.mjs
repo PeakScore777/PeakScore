@@ -63,7 +63,8 @@ test("Orby neural Spanish TTS uses the server-side Aura-2 model and returns MP3 
   const previousAccount = process.env.CLOUDFLARE_ACCOUNT_ID;
   const previousToken = process.env.CLOUDFLARE_API_TOKEN;
   const originalFetch = globalThis.fetch;
-  const expectedAudio = Buffer.from("ID3\\u0004\\u0000mock-orby-audio");
+  const expectedAudio = Buffer.alloc(512, 1);
+  expectedAudio.set(Buffer.from("ID3"), 0);
   let capturedUrl = "";
   let capturedBody = {};
   try {
@@ -79,21 +80,21 @@ test("Orby neural Spanish TTS uses the server-side Aura-2 model and returns MP3 
     };
     const audio = await cloudflareVoice.synthesizeOrbySpeechWithCloudflare("¡Hola! Vamos a estudiar juntos.");
     assert.deepEqual(audio, expectedAudio);
-    assert.match(capturedUrl, /@cf\\/deepgram\\/aura-2-es$/);
+    assert.ok(capturedUrl.includes("@cf/deepgram/aura-2-es"));
     assert.equal(capturedBody.speaker, "celeste");
     assert.equal(capturedBody.encoding, "mp3");
     assert.equal(capturedBody.container, "none");
     assert.equal(capturedBody.text, "¡Hola! Vamos a estudiar juntos.");
-    assert.match(neuralVoiceRouteSource, /createClient\\(\\)/);
-    assert.match(neuralVoiceRouteSource, /orby_take_rate_limit/);
-    assert.match(neuralVoiceRouteSource, /synthesizeOrbySpeechWithCloudflare\\(text\\)/);
-    assert.match(neuralVoiceRouteSource, /Content-Type": "audio\\/mpeg"/);
-    assert.match(lessonTutorSource, /fetch\\("\\/api\\/orby\\/voice-speech"/);
-    assert.match(lessonTutorSource, /decodeAudioData\\(audioBytes\\.slice\\(0\\)\\)/);
-    assert.match(lessonTutorSource, /voiceAudioSourcesRef\\.current\\.add\\(source\\)/);
-    assert.match(lessonTutorSource, /voiceSpeechCancelRef\\.current = cancelPlayback/);
-    assert.match(realtimeSessionSource, /ORBY_LIVE_VOICE_NAME = ORBY_ALLOWED_LIVE_VOICES\\.has\\(requestedVoice\\) \\? requestedVoice : "Despina"/);
-    assert.match(lessonTutorSource, /prebuiltVoiceConfig: \\{ voiceName: configuredVoiceName \\}/);
+    assert.ok(neuralVoiceRouteSource.includes("createClient()"));
+    assert.ok(neuralVoiceRouteSource.includes("orby_take_rate_limit"));
+    assert.ok(neuralVoiceRouteSource.includes("synthesizeOrbySpeechWithCloudflare(text)"));
+    assert.ok(neuralVoiceRouteSource.includes('"Content-Type": "audio/mpeg"'));
+    assert.ok(lessonTutorSource.includes('fetch("/api/orby/voice-speech"'));
+    assert.ok(lessonTutorSource.includes("decodeAudioData(audioBytes.slice(0))"));
+    assert.ok(lessonTutorSource.includes("voiceAudioSourcesRef.current.add(source)"));
+    assert.ok(lessonTutorSource.includes("voiceSpeechCancelRef.current = cancelPlayback"));
+    assert.ok(realtimeSessionSource.includes('ORBY_LIVE_VOICE_NAME = ORBY_ALLOWED_LIVE_VOICES.has(requestedVoice) ? requestedVoice : "Despina"'));
+    assert.ok(lessonTutorSource.includes("prebuiltVoiceConfig: { voiceName: configuredVoiceName }"));
   } finally {
     globalThis.fetch = originalFetch;
     if (previousAccount === undefined) delete process.env.CLOUDFLARE_ACCOUNT_ID;

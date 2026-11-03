@@ -78,7 +78,7 @@ export async function POST(request: Request) {
     for (const item of history) {
       if (containsOrbyPromptInjection(item.content) || containsUnsupportedSpanishLanguage(item.content)) continue;
       if (item.role === "user") {
-        const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\\n");
+        const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\n");
         if (preflightOrbyRequest(item.content, priorContext).allowed) safeHistory.push(item);
         continue;
       }

@@ -1374,7 +1374,9 @@ export async function searchOrbyKnowledge(options: {
     ? [...new Set(modelRows
       .map((row) => row && typeof row.embedding_model === "string" ? row.embedding_model : "")
       .filter((model) => model.length > 0))]
-      .slice(0, 4)
+      // Two query embeddings keep hybrid retrieval fast without dropping
+      // the second indexed vector space as a semantic fallback.
+      .slice(0, 2)
     : [];
 
   const embeddingEntries = await Promise.all(indexedModels.map(async (model) => {

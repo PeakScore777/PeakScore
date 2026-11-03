@@ -103,7 +103,13 @@ test("el audio Live se reproduce progresivamente y la cola espera al final de la
   assert.match(voiceWorkletSource, /const packetSize = 640/);
   assert.match(lessonTutorSource, /armVoiceResponseWatchdog\(\);\s*const chunk/);
   assert.match(lessonTutorSource, /Gemini Live finalizó sin entregar una transcripción utilizable/);
-  assert.match(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
+  // Filtered Live output is replaced and spoken locally; do not ask Gemini
+  // to generate a second audio response for a deterministic policy message.
+  assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
+  assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
+  assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
+  assert.doesNotMatch(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
+  assert.doesNotMatch(lessonTutorSource, /internalSpeechInstruction/);
   assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
 });
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {

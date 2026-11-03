@@ -120,8 +120,8 @@ function isProviderQuotaExceeded(error: unknown): boolean {
     detail?.status,
     typeof error === "string" ? error : "",
   ].filter((value) => value !== undefined && value !== null).join(" ");
-  return detail?.status === 429
-    || /RESOURCE_EXHAUSTED|quota.?exceeded|rate.?limit|too many requests|\b429\b/i.test(message);
+  return detail?.code === "QUOTA_EXCEEDED"
+    || /RESOURCE_EXHAUSTED|quota.?exceeded|daily.?limit|neurons?.{0,30}(exceeded|limit)|usage.?limit.?exceeded/i.test(message);
 }
 
 function throwEmbeddingQuotaExceeded(): never {

@@ -1774,7 +1774,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             // Spanish hint reduces accidental cross-language recognition. It
             // remains a hint, so the local script guard is still required.
             languageCodes: ["es-ES"],
-            mode: "SMART",
             customVocabulary: [
               "Orby", "Oye Orby", "Hey Orby", "Orby AI", "PeakScore",
               "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica",
@@ -1783,7 +1782,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           },
           outputAudioTranscription: {
             languageCodes: ["es"],
-            mode: "SMART",
           },
           speechConfig: {
             languageCode: "es",

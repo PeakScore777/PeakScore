@@ -1,3 +1,29 @@
+create or replace function public.orby_list_knowledge_embedding_models(
+  p_visibility text default 'published',
+  p_subject text default null
+)
+returns table (embedding_model text)
+language sql
+stable
+set search_path = ''
+as $$
+  select distinct c.embedding_model
+  from public.orby_knowledge_chunks c
+  join public.orby_knowledge_documents d on d.id = c.document_id
+  where c.embedding is not null
+    and c.embedding_model is not null
+    and (
+      (p_visibility = 'admin' and d.status in ('draft', 'published'))
+      or (p_visibility = 'published' and d.status = 'published')
+    )
+    and (p_subject is null or d.subject = p_subject)
+  order by c.embedding_model
+  limit 4;
+$$;
+
+revoke all on function public.orby_list_knowledge_embedding_models(text, text) from public, anon, authenticated;
+grant execute on function public.orby_list_knowledge_embedding_models(text, text) to service_role;
+
 -- Model-aware Orby hybrid search.
 -- Each query vector is compared only with document vectors from the same embedding model.
 -- Lexical retrieval remains model-agnostic and always participates in the ranking.

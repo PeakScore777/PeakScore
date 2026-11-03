@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, containsUnsupportedSpanishScript, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -1276,7 +1276,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     if (typeof interimInput?.text === "string") {
       const interimText = interimInput.text.slice(0, 1200);
-      const unsupportedInterimScript = containsUnsupportedSpanishScript(interimText);
+      const unsupportedInterimScript = containsUnsupportedSpanishLanguage(interimText);
       voiceUnsupportedInputDetectedRef.current = unsupportedInterimScript;
       setLiveTranscript(unsupportedInterimScript ? "" : interimText);
       if (!unsupportedInterimScript && voiceBrowserSpeechActiveRef.current) {
@@ -1322,7 +1322,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? serverContent.inputTranscription as { text?: unknown }
       : null;
     const rawTranscript = typeof inputTranscript?.text === "string" ? inputTranscript.text.trim().slice(0, 1200) : "";
-    const unsupportedInputScript = Boolean(rawTranscript && containsUnsupportedSpanishScript(rawTranscript));
+    const unsupportedInputScript = Boolean(rawTranscript && containsUnsupportedSpanishLanguage(rawTranscript));
     if (rawTranscript) voiceUnsupportedInputDetectedRef.current = unsupportedInputScript;
     // Never display, persist or send a foreign-script ASR hallucination as the
     // student's actual words. Replace it with a clear Spanish retry turn.
@@ -1430,7 +1430,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       );
       const partialUnsafe = voiceOutputAudioBlockedRef.current
         || forcedSpeechMismatch
-        || containsUnsupportedSpanishScript(partialReply)
+        || containsUnsupportedSpanishLanguage(partialReply)
         || containsProgrammingInstruction(partialReply)
         || containsCookingInstruction(partialReply)
         || containsExternalPreIcfesPromotion(partialReply)
@@ -1516,7 +1516,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const policyReply = forcedLiveReply
         ? null
         : voicePreflightReplyRef.current
-          ?? (containsUnsupportedSpanishScript(rawReply)
+          ?? (containsUnsupportedSpanishLanguage(rawReply)
             ? ORBY_SPANISH_OUTPUT_FALLBACK
             : voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
             ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."

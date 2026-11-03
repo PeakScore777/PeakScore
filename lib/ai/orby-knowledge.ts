@@ -1293,23 +1293,86 @@ export async function createOrbyQueryEmbedding(query: string): Promise<OrbyQuery
   return null;
 }
 
+async function createOrbyQueryEmbeddingForModel(
+  query: string,
+  model: string,
+): Promise<number[] | null> {
+  const text = query.trim().slice(0, 1800);
+  if (!text) return null;
+
+  try {
+    if (model === CLOUDFLARE_EMBEDDING_MODEL) {
+      const [values] = await createCloudflareEmbeddings([text]);
+      return values ?? null;
+    }
+
+    if (model === EMBEDDING_MODEL && process.env.GEMINI_API_KEY) {
+      const response = await getEmbeddingClient().models.embedContent({
+        model: EMBEDDING_MODEL,
+        contents: text,
+        config: {
+          taskType: "RETRIEVAL_QUERY",
+          outputDimensionality: EMBEDDING_DIMENSIONS,
+          httpOptions: { timeout: 4_500 },
+        },
+      });
+      const values = response.embeddings?.[0]?.values;
+      return Array.isArray(values)
+        && values.length === EMBEDDING_DIMENSIONS
+        && values.every(Number.isFinite)
+        ? values
+        : null;
+    }
+  } catch (error) {
+    console.warn("[Orby RAG] Query embedding provider unavailable.", {
+      model,
+      name: error instanceof Error ? error.name : "UnknownError",
+    });
+  }
+  return null;
+}
+
 export async function searchOrbyKnowledge(options: {
   query: string;
   subject?: string | null;
   visibility: "admin" | "published";
   limit?: number;
 }) {
-  const embedding = await createOrbyQueryEmbedding(options.query);
-  const { data, error } = await supabaseAdmin.rpc("orby_search_knowledge_hybrid_v2", {
+  const { data: modelRows, error: modelError } = await supabaseAdmin.rpc(
+    "orby_list_knowledge_embedding_models",
+    {
+      p_visibility: options.visibility,
+      p_subject: options.subject ?? null,
+    },
+  );
+
+  const indexedModels = !modelError && Array.isArray(modelRows)
+    ? [...new Set(modelRows
+      .map((row) => row && typeof row.embedding_model === "string" ? row.embedding_model : "")
+      .filter((model) => model.length > 0))]
+      .slice(0, 4)
+    : [];
+
+  const embeddingEntries = await Promise.all(indexedModels.map(async (model) => {
+    const values = await createOrbyQueryEmbeddingForModel(options.query, model);
+    return values ? { model, values } : null;
+  }));
+  const embeddings = embeddingEntries.filter(
+    (entry): entry is { model: string; values: number[] } => entry !== null,
+  );
+
+  const { data, error } = await supabaseAdmin.rpc("orby_search_knowledge_hybrid_multi_v3", {
     p_query: options.query,
-    p_embedding: embedding ? "[" + embedding.values.join(",") + "]" : null,
+    p_embeddings: embeddings,
     p_subject: options.subject ?? null,
     p_limit: options.limit ?? 8,
     p_visibility: options.visibility,
-    p_embedding_model: embedding?.model ?? null,
   });
   if (error) {
-    console.error("[Orby RAG] Hybrid search failed; using lexical fallback.", { code: error.code });
+    console.error("[Orby RAG] Multi-model hybrid search failed; using lexical fallback.", {
+      code: error.code,
+      availableEmbeddingModels: indexedModels.length,
+    });
     const rpcName = options.visibility === "admin" ? "orby_search_admin_knowledge" : "orby_search_published_knowledge";
     const fallback = await supabaseAdmin.rpc(rpcName, {
       p_query: options.query,

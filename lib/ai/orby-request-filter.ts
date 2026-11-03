@@ -118,8 +118,9 @@ export function shouldRetrieveOrbyAcademicKnowledge(input: {
   question?: string;
   context?: string;
 }): boolean {
-  const message = normalizeOrbyRequestText(input.message);
-  if (!message || isOrbyGreetingRequest(input.message)) return false;
+  const currentText = [input.message, input.question].filter(Boolean).join(" ");
+  const message = normalizeOrbyRequestText(currentText);
+  if (!message || isOrbyGreetingRequest(currentText)) return false;
 
   const explicitAcademicTopic = /\\b(?:saber\\s*11|icfes|matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuaciones?|fracciones?|porcentajes?|lectura critica|comprension lectora|texto argumentativo|intencion del autor|sociales y ciudadanas|historia de colombia|geografia|democracia|constitucion politica|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|reaccion quimica|atomo|molecula|tabla periodica|energia|fuerza|densidad|termodinamica|ingles|english|vocabulario en contexto|reading comprehension)\\b/i.test(message)
     || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(message));

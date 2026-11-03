@@ -211,7 +211,7 @@ export async function POST(request: Request) {
     }
 
     const scopeRequestText = [userMessage, question].filter(Boolean).join(" ").trim();
-    const recentScopeContext = recentContextMessages.slice(-2).map((item) => item.content).join("\\n");
+    const recentScopeContext = recentContextMessages.slice(-2).map((item) => item.content).join("\n");
     const scopePreflight = preflightOrbyRequest(scopeRequestText, recentScopeContext);
     const preflight = tutorImage && !scopeRequestText
       ? { allowed: false as const, category: "outside" as const, reply: ORBY_ICFES_SCOPE_REPLY }
@@ -315,7 +315,7 @@ export async function POST(request: Request) {
       context,
       topic,
       ...history.map((item) => item.content),
-    ].join("\\n");
+    ].join("\n");
     if (untrustedText && isClearlyOutOfScopeOrInjection(untrustedText)) {
       await recordSecurityEvent(user.id, "prompt_injection", { source: "context_or_history" });
       return NextResponse.json(
@@ -597,7 +597,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       "Adapta la explicación cuando el estudiante demuestre una dificultad: cambia el ejemplo, baja un paso o usa una representación diferente. No des por aprendido un concepto sin comprobarlo.",
       "No hagas preguntas genéricas; termina con una pregunta corta solo cuando ayude a continuar la conversación.",
       "Devuelve exclusivamente JSON válido: {\"reply\":\"respuesta oral pedagógica\",\"checkQuestion\":\"\"}. No incluyas Markdown ni texto fuera del JSON.",
-    ].join("\\n");
+    ].join("\n");
 
     let raw = "";
     let sourceProvider: AIProvider = tutorImage
@@ -659,7 +659,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     let qualityStatus: "not_required" | "passed" | "corrected" | "unverified" = "not_required";
     if (needsIndependentTutorReview({
       message: userMessage,
-      context: [question, context].filter(Boolean).join("\\n"),
+      context: [question, context].filter(Boolean).join("\n"),
       hasImage: Boolean(tutorImage),
     })) {
       const quality = await verifyTutorAnswer({

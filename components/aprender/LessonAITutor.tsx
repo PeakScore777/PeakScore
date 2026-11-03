@@ -1315,9 +1315,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
       const partialReply = voiceAssistantTextRef.current.trim();
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-      const partialNormalized = partialReply.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO");
-      const partialExposesProvider = /\\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\\b/.test(partialNormalized)
-        && /\\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|hecho|hecha|soy|fui)\\b/.test(partialNormalized);
+      const partialNormalized = partialReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
+      const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)
+        && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|hecho|hecha|soy|fui)\b/.test(partialNormalized);
       const partialUnsafe = containsProgrammingInstruction(partialReply)
         || containsExternalPreIcfesPromotion(partialReply)
         || isLikelyEnglishOnlyOrbyReply(partialReply)

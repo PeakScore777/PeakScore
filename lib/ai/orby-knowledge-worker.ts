@@ -292,7 +292,7 @@ export async function processNextOrbyKnowledgeJob(options: {
         documentId: job.document_id,
         documentTitle,
         stage: nextStage,
-        progress: counts.embedded,
+        progress: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
         message: counts.missing > 0
           ? documentTitle + ": " + counts.embedded + "/" + counts.total + " vectores listos; quedan " + counts.missing + "."
           : documentTitle + ": embeddings completos; continúa la lectura visual y el perfilado académico.",
@@ -673,17 +673,21 @@ export async function processNextOrbyKnowledgeJob(options: {
         5,
         0,
       ));
-      const counts = await getChunkCounts(job.document_id).catch(() => ({
-        total: Number(documentTitle ? 0 : 0),
-        embedded: Number(job.embedded_chunk_count ?? 0),
-        missing: 0,
-      }));
+      let counts: { total: number; embedded: number; missing: number } | null = null;
+      try {
+        counts = await getChunkCounts(job.document_id);
+      } catch (countError) {
+        console.warn("[Orby Autopilot] Could not refresh vector counts while deferring the job.", {
+          jobId: job.id,
+          name: countError instanceof Error ? countError.name : "UnknownError",
+        });
+      }
       const { error: deferError } = await supabaseAdmin
         .from("orby_knowledge_jobs")
         .update({
           status: "queued",
           stage: "embeddings",
-          embedded_chunk_count: counts.embedded,
+          embedded_chunk_count: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
           available_at: resumeAt.toISOString(),
           locked_by: null,
           locked_at: null,
@@ -696,15 +700,18 @@ export async function processNextOrbyKnowledgeJob(options: {
         .eq("status", "running");
       if (deferError) throw new Error("No se pudo pausar la tarea hasta el reinicio de la cuota: " + deferError.code);
 
+      const documentPatch: Record<string, unknown> = {
+        next_review_at: resumeAt.toISOString(),
+        ingestion_status: "processing",
+        updated_at: now.toISOString(),
+      };
+      if (counts) {
+        documentPatch.embedded_chunk_count = counts.embedded;
+        documentPatch.chunk_count = counts.total;
+      }
       await supabaseAdmin
         .from("orby_knowledge_documents")
-        .update({
-          embedded_chunk_count: counts.embedded,
-          chunk_count: counts.total,
-          next_review_at: resumeAt.toISOString(),
-          ingestion_status: "processing",
-          updated_at: now.toISOString(),
-        })
+        .update(documentPatch)
         .eq("id", job.document_id);
 
       console.warn("[Orby Autopilot] Free embedding quota exhausted; job deferred until daily reset.", {

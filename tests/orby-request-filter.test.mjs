@@ -181,6 +181,8 @@ test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas
   );
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("The answer is B."), true);
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Because the text describes the author's opinion."), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("Let's solve this question together."), true);
+  assert.equal(filter.isLikelyEnglishOnlyOrbyReply("You can find the correct answer in the passage."), true);
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("La respuesta es B porque el texto presenta la opinión del autor."), false);
   assert.equal(filter.isLikelyEnglishOnlyOrbyReply("En el texto aparece: 'The answer is B'. La opción correcta es B."), false);
 });

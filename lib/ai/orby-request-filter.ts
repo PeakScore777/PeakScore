@@ -255,6 +255,8 @@ export function isOrbyStudyGuidanceRequest(message: string, previousContext = ""
 const COOKING_REQUEST_PATTERNS = [
   /\b(?:dame|hazme|pasame|comparteme|quiero|necesito|ensename|como preparo|como hago|como hacer|como cocino|como horneo|preparar|cocinar|hornear|give me|make me|share|teach me|show me|how to cook|how do i cook|how do i make|how to make|i want to cook|i need a recipe|can you cook)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|comida|recipe|recipes|cake|food|meal|cook|cooking|bake|baking)\b/i,
   /\b(?:receta|recipe|ricetta|receita|recette|rezept)\s+(?:de|para|for|of)\b/i,
+  // Italian recipe requests often omit the preposition: "Voglio una ricetta".
+  /\b(?:voglio|vorrei|dammi|desidero)\s+(?:una?\s+)?ricetta\b/i,
   // Hindi/Urdu written in Latin transliteration (ASR often produces this).
   /\b(?:mujhe|main|mai)\b.{0,65}\b(?:khana|khana banana|khana pakana|recipe|rasoi)\b.{0,45}\b(?:sikhao|sikhaye|batao|bataiye|banana|pakana|kaise)\b/i,
   /\b(?:khana banana|khana pakana)\b.{0,45}\b(?:sikhao|sikhaye|batao|bataiye|kaise|recipe)\b/i,

@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   validate:
-    name: TypeScript and ESLint
+    name: Orby tests, TypeScript, ESLint and production build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -85,6 +85,9 @@ jobs:
           path: npm-audit.json
           retention-days: 7
           if-no-files-found: ignore
+
+      - name: Orby regression tests
+        run: npm run test:orby
 
       - name: TypeScript
         run: npx tsc --noEmit

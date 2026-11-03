@@ -578,8 +578,8 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
   assert.match(realtimeSessionSource, /tools: ORBY_LIVE_KNOWLEDGE_TOOLS/);
   assert.match(realtimeSessionSource, /authTokens\.create/);
-  assert.match(realtimeSessionSource, /const safeHistory = history\.filter/);
-  assert.match(realtimeSessionSource, /preflightOrbyRequest\(item\.content\)\.allowed/);
+  assert.match(realtimeSessionSource, /const safeHistory: Array/);
+  assert.match(realtimeSessionSource, /preflightOrbyRequest\(item\.content, priorContext\)\.allowed/);
   assert.doesNotMatch(realtimeSessionSource, /const latestUserText/);
   assert.doesNotMatch(realtimeSessionSource, /const legacyOutOfScope/);
 });

@@ -90,7 +90,11 @@ export function isGenericIcfesEnglishRequest(message: string): boolean {
 
 export function isLikelyEnglishOnlyOrbyReply(reply: string): boolean {
   const value = reply.trim().replace(/^["'“”]+|["'“”]+$/g, "");
-  if (!value || value.length < 12) return false;
+  if (!value) return false;
+  // Catch short language switches too; the general classifier below needs
+  // enough context to avoid guessing from one ambiguous word.
+  if (/^(?:hello|hi|bonjour|salut|hallo|guten tag|ciao|buongiorno|ol[aá]|obrigad[oa]|danke|merci|oui|sim|sure|yes)(?:[.!?,\s]|$)/i.test(value)) return true;
+  if (value.length < 12) return false;
 
   const normalized = normalizeOrbyRequestText(value);
   const words = normalized.match(/[a-z]+(?:'[a-z]+)?/g) ?? [];

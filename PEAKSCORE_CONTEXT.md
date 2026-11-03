@@ -285,3 +285,16 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Variables locales requeridas: `CLOUDFLARE_ACCOUNT_ID` y `CLOUDFLARE_API_TOKEN`. Ambas deben existir solo en `.env.local` / variables privadas del entorno; `.env*` permanece ignorado por Git.
 - No se añadieron dependencias npm ni se modificaron `main`, Vercel, Supabase o migraciones.
 - Pendiente de prueba local: confirmar las credenciales, el modelo Whisper y el modelo Llama en la cuenta Workers AI; probar fallos 401/403/429/timeout, la transcripción de audio WebM/Opus y la ruta completa de tutor. No declarar estable ni lanzar a estudiantes hasta ejecutar build, lint y pruebas manuales.
+
+
+## Orby Voice + Knowledge Recovery — refinamiento 2026-11-02
+- La rama continúa siendo `feat/founder-intro`. No se modificó `main` ni se hizo un despliegue de estudiantes.
+- Gemini Live sigue siendo el transporte principal de voz en tiempo real. `LessonAITutor.tsx` ahora renderiza la transcripción progresivamente, libera fragmentos de audio a medida que se validan, mantiene bloqueada la cola hasta que termina la reproducción y usa SpeechSynthesis como alternativa si Gemini completa texto sin entregar audio.
+- Se añadió cancelación controlada y un límite de seguridad para la síntesis del navegador. Las respuestas filtradas también intentan reproducirse por voz cuando se pierde la conexión Live.
+- Las pruebas anteriores mostraron 39/39 tests de Orby aprobados en el PC del usuario antes de este último conjunto de cambios. Los nuevos tests se han ampliado, pero todavía deben ejecutarse localmente.
+- Embeddings: Gemini `gemini-embedding-001` permanece como primer intento. Si su cuota falla, Cloudflare Workers AI puede usar `@cf/google/embeddinggemma-300m` (768 dimensiones). Cada fragmento conserva el campo `embedding_model`; no se comparan vectores de modelos diferentes.
+- La búsqueda consulta todos los espacios vectoriales disponibles, calcula similitud dentro de cada modelo y fusiona resultados con la búsqueda léxica. Se añadió la migración `supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql` (RPCs `orby_list_knowledge_embedding_models` y `orby_search_knowledge_hybrid_multi_v3`).
+- Si Gemini y Cloudflare alcanzan realmente sus cuotas gratuitas de embeddings, el trabajo se estaciona hasta las 00:05 UTC del siguiente día, sin consumir todos los reintentos fallidos. La cuota de Workers AI Free documentada por Cloudflare es de 10.000 Neurons/día y las peticiones fallan al agotarla; no habilitar Workers Paid para estas pruebas.
+- Cloudflare Whisper y Llama siguen como respaldo de transcripción y tutor, siempre del lado servidor. La voz alternativa de emergencia del navegador no es equivalente a voz full-duplex.
+- Pendiente de validación local: aplicar la nueva migración SQL en Supabase; ejecutar `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build`; probar el micrófono y los casos de interrupción/fallo real con Gemini; confirmar que Workers AI acepta el token y los modelos en esa cuenta.
+- El último estado de Vercel observado fue `failure` por `build-rate-limit` del plan, no evidencia de un error de TypeScript. No declarar esto estable ni habilitarlo a estudiantes hasta completar pruebas locales y end-to-end.

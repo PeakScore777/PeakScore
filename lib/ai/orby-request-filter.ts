@@ -111,6 +111,36 @@ export function containsUnsupportedSpanishScript(value: string): boolean {
   return UNSUPPORTED_SPANISH_SCRIPT_PATTERN.test(value);
 }
 
+export function shouldRetrieveOrbyAcademicKnowledge(input: {
+  message: string;
+  subject?: string;
+  topic?: string;
+  question?: string;
+  context?: string;
+}): boolean {
+  const message = normalizeOrbyRequestText(input.message);
+  if (!message || isOrbyGreetingRequest(input.message)) return false;
+
+  const explicitAcademicTopic = /\\b(?:saber\\s*11|icfes|matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuaciones?|fracciones?|porcentajes?|lectura critica|comprension lectora|texto argumentativo|intencion del autor|sociales y ciudadanas|historia de colombia|geografia|democracia|constitucion politica|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|reaccion quimica|atomo|molecula|tabla periodica|energia|fuerza|densidad|termodinamica|ingles|english|vocabulario en contexto|reading comprehension)\\b/i.test(message)
+    || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(message));
+  if (explicitAcademicTopic) return true;
+
+  const normalizedSubject = normalizeOrbyRequestText(input.subject ?? "");
+  const normalizedLessonContext = normalizeOrbyRequestText([
+    input.subject,
+    input.topic,
+    input.question,
+    input.context,
+  ].filter(Boolean).join(" "));
+  const hasSpecificLessonSubject = Boolean(normalizedSubject)
+    && !/^(?:preparacion saber 11|saber 11|preparacion icfes|icfes|estudio y aprendizaje)$/.test(normalizedSubject);
+  const hasAcademicLessonContext = hasSpecificLessonSubject
+    || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedLessonContext))
+    || /\\b(?:area de estudio|tema de estudio|competencia icfes|ejercicio de saber 11)\\b/i.test(normalizedLessonContext);
+  const isFollowUpOrStudyIntent = /\\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|diferencia entre|por que ocurre|por que|como asi|otro ejemplo|dame otro ejemplo|continua|siguiente)\\b/i.test(message);
+  return hasAcademicLessonContext && isFollowUpOrStudyIntent;
+}
+
 export function isOrbyGreetingRequest(message: string): boolean {
   const normalized = normalizeOrbyRequestText(message).replace(/[¿?¡!.,;:]+/g, "").trim();
   if (!normalized || normalized.length > 48) return false;

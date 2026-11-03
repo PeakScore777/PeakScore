@@ -208,6 +208,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceUserTextRef = useRef("");
   const voiceAssistantTextRef = useRef("");
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
+  const voiceUserMessageVisibleRef = useRef(false);
   const voiceResponseDoneRef = useRef(false);
   const voiceTurnPersistedRef = useRef(false);
   const voiceTurnPersistenceChainRef = useRef<Promise<void>>(Promise.resolve());
@@ -799,6 +800,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const forcedPolicyReply = voiceForcedReplyRef.current;
     const shouldFallback = voiceModeRef.current && Boolean(pendingUserText) && !voiceResponseDoneRef.current;
     if (forcedPolicyReply && shouldFallback) {
+      if (!voiceUserMessageVisibleRef.current && pendingUserText) {
+        setMessages((current) => [
+          ...current,
+          { id: "voice-user-recovery-" + Date.now(), role: "user", content: pendingUserText },
+        ]);
+        voiceUserMessageVisibleRef.current = true;
+      }
       // Deterministic filters already have their trusted answer. Do not call a
       // model again just because Live audio failed; keep the visible answer,
       // save it once, and release the pending text queue.
@@ -823,16 +831,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus("Continuando por texto…");
     setVoiceError(reason);
     if (shouldFallback) {
-      const normalizedPending = normalizeVoiceComparison(pendingUserText);
-      const alreadyVisible = messages.some((message) =>
-        message.role === "user"
-        && normalizeVoiceComparison(message.content) === normalizedPending
-      );
-      if (!alreadyVisible) {
+      if (!voiceUserMessageVisibleRef.current) {
         setMessages((current) => [
           ...current,
           { id: "voice-user-recovery-" + Date.now(), role: "user", content: pendingUserText },
         ]);
+        voiceUserMessageVisibleRef.current = true;
       }
       // sendMessage owns the queue-drain step in its finally block.
       void sendMessageRef.current(pendingUserText, false, true, undefined, false);
@@ -1180,6 +1184,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
         voiceLastCommittedInputRef.current = "";
         voiceUserTextRef.current = "";
+        voiceUserMessageVisibleRef.current = false;
         voiceAssistantTextRef.current = "";
         voiceAssistantMessageIdRef.current = null;
         voiceResponseDoneRef.current = false;
@@ -1299,6 +1304,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || /\bcliente\s*creo\b/i.test(normalizedTranscript);
       const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript)
         || falseCreatorClaim;
+      voiceUserMessageVisibleRef.current = true;
       const preflight = preflightOrbyRequest(voiceUserTextRef.current);
       voiceInputPolicyRef.current = asksIdentity
         ? "identity"
@@ -1886,6 +1892,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setLiveTranscript("");
     setVoiceError("");
     voiceUserTextRef.current = "";
+    voiceUserMessageVisibleRef.current = false;
     voiceAssistantTextRef.current = "";
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
@@ -1984,6 +1991,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceForcedReplyRef.current = localReply;
         voiceInternalPolicyTextRef.current = localReply;
         const userId = "voice-user-" + Date.now();
+        voiceUserMessageVisibleRef.current = true;
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => [
           ...current,
@@ -2025,6 +2033,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
+      voiceUserMessageVisibleRef.current = true;
       setMessages((current) => [...current, { id: "voice-user-" + Date.now(), role: "user", content: message }]);
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";

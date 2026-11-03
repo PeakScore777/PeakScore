@@ -82,7 +82,7 @@ export function classifyOutOfScopeRequest(message: string): "programming" | "out
     /\b(?:como|how (?:do i|to))\b.{0,55}\b(?:golpear|pegar|agredir|atacar|beat up|assault|attack|hurt|injure)\b.{0,60}\b(?:a alguien|una persona|mi companero|someone|a person|my classmate)\b/i,
     /\b(?:estafar|falsificar documentos|cometer fraude|scam someone|commit fraud|forge documents|steal an account)\b/i,
     /\b(?:doxxear|doxing|publicar la direccion privada|encontrar la direccion de casa de|find someone's home address|expose private information)\b/i,
-  ];;
+  ];
   return harmfulOrCookingRequest.some((pattern) => pattern.test(normalized)) ? "outside" : null;
 }
 

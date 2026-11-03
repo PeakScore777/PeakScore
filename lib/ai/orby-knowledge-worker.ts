@@ -726,7 +726,7 @@ export async function processNextOrbyKnowledgeJob(options: {
         documentId: job.document_id,
         documentTitle,
         stage: "embeddings",
-        progress: counts.embedded,
+        progress: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
         message: documentTitle + ": cuota diaria gratuita agotada. El aprendizaje quedó pausado y se reanudará después de las 00:05 UTC.",
       };
     }

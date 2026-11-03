@@ -13,15 +13,13 @@ export function normalizeOrbyRequestText(value: string): string {
 }
 
 const PROGRAMMING_REQUEST_PATTERNS = [
-  // Block actual requests to learn or perform software development, not a
-  // programming-related word quoted inside an ICFES reading passage.
-  /\b(programar|programacion|programador|programadora|codificar|coding|programming|desarrollo de software|desarrollo web|software development|web development|software engineering|programming language|learn to code|teach me to code|how to code|write code|coding tutorial|app development)\b/i,
-  /\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|codigo fuente|escribir codigo|depurar codigo|debuggear)\b.{0,70}\b(ensename|ayudame|explicame|quiero aprender|quiero usar|como se usa|para que sirve|teach me|learn|show me|help me|how do i|what is|explain)\b|\b(ensename|ayudame|explicame|quiero aprender|quiero usar|como se usa|para que sirve|teach me|learn|show me|help me|how do i|what is|explain)\b.{0,70}\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest)\b/i,
-  /\b(aprender|estudiar|ensename|ayudame|explicame|quiero aprender|me ensenas|me ayudas|teach me|learn|show me|help me)\b.{0,80}\b(programar|programacion|python|javascript|typescript|java|codificar|coding|programming|code|crear una app|hacer una pagina web)\b/i,
+  // Match an explicit request to learn/use software tools, not a passing
+  // mention of a programming term in a reading passage or scientific example.
+  /\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|como se usa|como usar|quiero usar|teach me|help me|show me|how do i|how to|learn to)\b.{0,90}\b(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|crear una app|hacer una pagina web|write code|code)\b/i,
+  /\b(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest)\b.{0,90}\b(?:desde cero|tutorial|aprender|ensenar|ensename|ayudame|explicame|how to|teach me|learn|tutorial|build|create|debug|program)\b/i,
+  /\b(?:teach me to code|learn to code|how to code|write code|coding tutorial|software development|web development|software engineering|app development|desarrollo de software|desarrollo web|escribir codigo|codigo fuente|depurar codigo|debuggear|debugging)\b/i,
   /\b(crear|hacer|construir|desarrollar|disenar|build|create|make|develop)\s+(?:un|una|el|la|a|an|the)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|videojuego|juego digital|bot|robot virtual|website|application|mobile app|software|game|bot)\b/i,
   /\b(mujhe|main|mai)\b.{0,50}\b(coding|programming|code|python|javascript)\b|\b(coding|programming|code|python)\b.{0,50}\b(sikhao|sikh[aou]|sikhna|karna|kaise)\b/i,
-  // French, Portuguese, German and Italian variants. Accents are removed
-  // before matching by normalizeOrbyRequestText.
   /\b(apprendre a coder|apprendre a programmer|apprends?[- ]moi.{0,20}\b(?:a )?programmer|je veux apprendre a coder|je veux apprendre a programmer|coder|programmieren|programmierung|softwareentwicklung|webentwicklung|code schreiben|imparare a programmare|scrivere codice|sviluppo software|sviluppo web|ensina[- ]me.{0,20}(?:a programar|programacao)|quero aprender a programar|escrever codigo|desenvolvimento de software|desenvolvimento web)\b/i,
   /\b(bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
 ];
@@ -263,16 +261,21 @@ export function isOrbyStudyGuidanceRequest(message: string, previousContext = ""
  * or audio playback.
  */
 const NON_ICFES_REQUEST_PATTERNS = [
-  // A standalone topic is an unrelated conversation; a passing mention inside
-  // a reading passage or exam question is not enough to trigger a refusal.
-  /^(?:carros?|automoviles?|vehiculos?|llantas?|motos?|peliculas?|series|videojuegos?|juegos|chistes?|clima|weather|forecast)[.!? ]*$/i,
+  // A standalone topic or a direct unrelated request is out of scope.
+  // A passing word inside a reading passage, graph, example or exam question
+  // is not sufficient to block a valid ICFES exercise.
+  /^(?:carros?|automoviles?|vehiculos?|llantas?|motos?|peliculas?|series|videojuegos?|juegos?|chistes?|clima|weather|forecast)[.!? ]*$/i,
   /\b(?:que te gustaria saber|que quieres saber|hablame de|cuentame sobre)\b.{0,80}\b(?:carros?|automoviles?|vehiculos?|motos?|peliculas?|series|videojuegos?)\b/i,
-  /\b(?:recomiendame|que pelicula|what movie|which movie|what show|which show|what game|which game|cuentame un chiste|tell me a joke|what should i watch)\b.{0,90}\b(?:peliculas?|series|videojuegos?|juegos|movie|movies|show|shows|game|games)\b|\b(?:peliculas?|series|videojuegos?|juegos|movie|movies|show|shows|game|games)\b.{0,90}\b(?:recomiendame|watch|should i watch|recommend|play)\b/i,
+  /\b(?:que pelicula me recomiendas|recomiendame (?:una )?pelicula|que serie me recomiendas|cuentame un chiste|tell me a joke|what movie should i watch|which movie should i watch|what show should i watch|what should i watch)\b/i,
+  /\b(?:recomiendame|recommend|which|what)\b.{0,60}\b(?:peliculas?|series|videojuegos?|juegos|movie|movies|film|films|show|shows|game|games)\b/i,
   /\b(?:se me pincho|se pincho|mi carro|mi vehiculo|mi moto|cambiar|arreglar|reparar|comprar|elegir|que modelo|which car|what car|buy a car|flat tire|car repair|car maintenance|mantenimiento de)\b.{0,90}\b(?:llantas?|carros?|automoviles?|vehiculos?|motos?|tires?|tyres?|car|vehicle)\b|\b(?:which car|what car|what vehicle|what motorcycle)\b.{0,60}\b(?:buy|should|recommend|choose)\b/i,
+  /\b(?:which car|what car|which vehicle|what vehicle|what motorcycle)\b.{0,90}\b(?:buy|should|recommend|choose)\b/i,
   /\b(?:dame|hazme|quiero|necesito|busco|comparte|comparteme|ensename|como preparo|como hago|como cocino|preparar|cocinar|hornear|give me|make me|share|teach me|how to cook|how do i make|what should i eat)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|comida|recipe|recipes|cake|food|meal|cook|cooking|bake|baking)\b|\b(?:recipe|receta|recetas)\b.{0,90}\b(?:para|for|de|of|cook|cocinar|prepare|hacer|preparar)\b/i,
+  /\b(?:vogli(?:o|amo)|je veux|quero|quiero|ich mochte|ich möchte)\b.{0,50}\b(?:una? )?(?:ricetta|ricette|receita|receitas|recette|recettes|rezept|rezepte)\b|\b(?:voglio una ricetta|voulez une recette|quero uma receita)\b/i,
+  /\b(?:what should i eat|what to eat|que debo comer|que deberia comer)\b/i,
   /\b(?:que hago|que puedo tomar|que medicamento|que deberia tomar|tengo fiebre|me duele|what should i do|what medicine|medical diagnosis|prescribe|my symptoms)\b.{0,90}\b(?:fiebre|dolor|sintomas?|medicamento|medicina|enfermedad|fever|pain|symptoms?|medicine|medication)\b|\b(?:fiebre|fever|pain|symptoms?)\b.{0,70}\b(?:what should i do|que hago|what medicine|que medicamento)\b/i,
   /\b(?:invertir dinero|donde invertir|que accion comprar|recomiendame acciones|criptomonedas|apuestas?|consejo legal|demanda judicial|contratar un abogado|how to invest|which stock|crypto advice|legal advice|file a lawsuit)\b/i,
-  /\b(?:cual es el clima|clima de manana|pronostico del tiempo|que tiempo hara|weather today|weather tomorrow|forecast|will it rain)\b/i,
+  /\b(?:cual es el clima|clima de manana|pronostico del tiempo|que tiempo hara|weather today|weather tomorrow|how is the weather|what is the weather|what's the weather|weather on|forecast|will it rain)\b/i,
 ];
 
 export function containsExplicitNonIcfesTopic(value: string): boolean {

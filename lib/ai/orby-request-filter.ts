@@ -63,6 +63,23 @@ const UNSUPPORTED_SPANISH_SCRIPT_PATTERN = /[\p{Script=Devanagari}\p{Script=Arab
  * model output and ASR transcripts instead of rendering or speaking gibberish.
  * Latin-script English terms remain valid for the ICFES English subject.
  */
+const ROMANIZED_HINDI_SIGNALS = /\\b(?:namaste|namaskar|aap|kaise|hain|hai|ho|kya|kyun|kyunki|kripya|dhanyavaad|shukriya|mera|meri|mujhe|hum|aapka|aapki|chahiye|bataye|bataiye|samajh|sakte|sakti|raha|rahi|hoon|nahi|nahin|accha|theek|bilkul|kijiye|padhai|seekhna|sikhaye|sikhao)\\b/g;
+
+/**
+ * Reject non-Spanish ASR/model language, including Hindi written in Latin
+ * transliteration. Three independent Hindi signals are required so isolated
+ * names or shared short words do not block valid ICFES English content.
+ */
+export function containsUnsupportedSpanishLanguage(value: string): boolean {
+  if (UNSUPPORTED_SPANISH_SCRIPT_PATTERN.test(value)) return true;
+  const normalized = normalizeOrbyRequestText(value);
+  if (!normalized) return false;
+  const words = normalized.match(/[a-z]+/g) ?? [];
+  if (words.length < 3) return false;
+  const signals = normalized.match(ROMANIZED_HINDI_SIGNALS) ?? [];
+  return signals.length >= 3 && signals.length / words.length >= 0.3;
+}
+
 export function containsUnsupportedSpanishScript(value: string): boolean {
   return UNSUPPORTED_SPANISH_SCRIPT_PATTERN.test(value);
 }

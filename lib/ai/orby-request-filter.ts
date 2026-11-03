@@ -28,7 +28,7 @@ const PROGRAMMING_REQUEST_PATTERNS = [
 
 const OUTSIDE_SCOPE_PATTERNS = [
   // Cooking requests in Spanish, English and common Latin-script variants.
-  /\b(receta|recetas|cocinar|cocina|hornear|gastronomia|cook|cooking|recipe|recipes|bake|baking|cuisine|food preparation|recette|recettes|cuisiner|cozinhar|receita|receitas|cucinare|ricetta|ricette|kochen|rezept|rezepte)\b/i,
+  /\b(receta|recetas|cocinar|cocina|hornear|gastronomia|cook|cooking|recipe|recipes|bake|baking|cuisine|food preparation|recette|recettes|cuisiner|cozinhar|receita|receitas|cucinare|ricetta|ricette|kochen|kocht|kochst|gekocht|rezept|rezepte)\b/i,
   /\b(khana banana|khana pakana|mujhe khana|recipe do|recipe batao|khana banane)\b/i,
   /\b(diagnostico medico|recetar medicamento|tratamiento medico|medicamentos|sintomas de enfermedad|medical diagnosis|prescribe medication|medical treatment)\b/i,
   /\b(invertir dinero|comprar acciones|criptomonedas|apuesta|apuestas|consejo legal|demanda judicial)\b/i,

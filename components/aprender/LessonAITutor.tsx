@@ -1998,6 +1998,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const systemInstruction = typeof tokenPayload.systemInstruction === "string"
         ? tokenPayload.systemInstruction
         : "Eres Orby, el tutor de PeakScore. Responde exclusivamente en español colombiano y alfabeto latino. Nunca cambies a hindi ni a otro idioma. Si no entiendes, pide repetir en español. Ayuda únicamente con Saber 11.";
+      const configuredVoiceName = typeof tokenPayload.voiceName === "string"
+        && /^[A-Za-z]{3,24}$/.test(tokenPayload.voiceName)
+        ? tokenPayload.voiceName
+        : "Despina";
 
       setVoiceStatus("Conectando con Orby…");
       const googleAI = new GoogleGenAI({
@@ -2047,7 +2051,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           speechConfig: {
             languageCode: "es",
             voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: "Kore" },
+              prebuiltVoiceConfig: { voiceName: configuredVoiceName },
             },
           },
           systemInstruction: {

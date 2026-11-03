@@ -375,7 +375,7 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /finishLocalVoiceReply/);
   assert.match(lessonTutorSource, /voiceBrowserSpeechActiveRef\.current = true/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = clean/);
-  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ 500/);
+  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ clean\.length \* 55/);
   assert.match(lessonTutorSource, /void refreshConversations\(\)\.catch/);
 });
 

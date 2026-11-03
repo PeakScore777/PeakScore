@@ -271,12 +271,23 @@ const NON_ICFES_REQUEST_PATTERNS = [
   /\b(?:cual es el clima|clima de manana|pronostico del tiempo|que tiempo hara|weather today|weather tomorrow|how is the weather|what is the weather|what's the weather|weather on|forecast|will it rain)\b/i,
 ];
 
-export function containsExplicitNonIcfesTopic(value: string): boolean {
+export function containsExplicitNonIcfesTopic(value: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(value);
   if (!normalized) return false;
   if (/\b(?:fuera del alcance|no corresponde a los contenidos|no puedo ayudarte con esa solicitud|no puedo trabajar ese tema|esa solicitud esta fuera|solo puedo ayudarte con las cinco areas|no puedo ensenar cocina|no puedo compartir recetas|no enseno cocina|no doy clases de cocina)\b/i.test(normalized)) {
     return false;
   }
+
+  // A quoted prompt, dialogue, reading passage or exam exercise can mention
+  // unrelated everyday topics without asking Orby to help with those topics.
+  // Only apply this exception when the lesson/current request is already
+  // anchored to an ICFES curriculum area; it must not whitelist mixed requests.
+  const context = normalizeOrbyRequestText(previousContext);
+  const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(context))
+    || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized));
+  const academicContentFrame = /\b(?:en el texto|en este texto|en la lectura|en este fragmento|en el fragmento|en el pasaje|en el dialogo|en este dialogo|en el aviso|en el enunciado|la frase|esta frase|la oracion|esta oracion|el ejercicio|esta pregunta|la pregunta|el texto dice|el personaje pregunta|analiza|interpreta|traduce|que significa|que quiere decir|comprension de lectura|the passage|the text|the dialogue|this sentence|this phrase|this question|in the passage|in this text|what does .{1,70} mean|what is the meaning of)\b/i.test(normalized);
+  if (hasCurriculumContext && academicContentFrame) return false;
+
   return NON_ICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
@@ -287,7 +298,7 @@ export function isIcfesScopedAssistantTurn(message: string, previousContext = ""
   if (
     !normalized
     || isScopeRefusalContext(normalized)
-    || containsExplicitNonIcfesTopic(normalized)
+    || containsExplicitNonIcfesTopic(normalized, previousContext)
   ) return false;
   if (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
   const prior = normalizeOrbyRequestText(previousContext);
@@ -322,7 +333,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  if (containsExplicitNonIcfesTopic(normalized)) {
+  if (containsExplicitNonIcfesTopic(normalized, previousContext)) {
     return {
       allowed: false,
       category: "outside",

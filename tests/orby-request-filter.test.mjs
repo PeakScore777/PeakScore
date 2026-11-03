@@ -410,6 +410,10 @@ test("el filtro ICFES funciona en modo allowlist y rechaza conversaciones cotidi
     "¿Cómo preparo una arepa?",
     "¿Qué hago si tengo fiebre?",
     "¿Cuál es el clima de mañana?",
+    "What movie should I watch after the ICFES?",
+    "Which car should I buy before Saber 11?",
+    "What should I eat before the ICFES?",
+    "How is the weather on exam day for Saber 11?",
   ];
   for (const prompt of [
     "Explícame la fotosíntesis y dime cómo cambiar una llanta.",
@@ -434,6 +438,9 @@ test("el filtro ICFES funciona en modo allowlist y rechaza conversaciones cotidi
     "Practiquemos una lectura en inglés tipo Saber 11.",
     "¿Qué es la presión atmosférica en Física?",
     "Explica la variable de control de este experimento de química.",
+    "¿Qué evalúa el ICFES en Saber 11?",
+    "What does Saber 11 assess?",
+    "Help me prepare for the ICFES.",
   ];
   for (const prompt of icfesRequests) {
     assert.equal(filter.preflightOrbyRequest(prompt).allowed, true, prompt);

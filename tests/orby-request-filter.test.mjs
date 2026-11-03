@@ -146,10 +146,13 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /containsExternalPreIcfesPromotion\(item\.content\)/);
   assert.match(realtimeSessionSource, /isLikelyEnglishOnlyOrbyReply\(item\.content\)/);
   assert.match(realtimeSessionSource, /hasFalseOrbyCreatorAttribution\(item\.content\)/);
-  assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);
+  assert.match(realtimeSessionSource, /ALCANCE ICFES CON CRITERIO Y CONTEXTO/);
+  assert.match(realtimeSessionSource, /no bloquees por palabras aisladas/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-4\)/);
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
-  assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceLastAssistantOutputRef\.current\)/);
+  assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
+  assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.18/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \["es-ES"\]/);
@@ -239,8 +242,9 @@ test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz par
   assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
   assert.match(realtimeSessionSource, /No recomiendes, compares, promociones|No recomiendes, compares, promociones/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
-  assert.match(realtimeSessionSource, /No conviertas preguntas cotidianas, personales, de entretenimiento/);
-  assert.match(realtimeSessionSource, /ALCANCE INNEGOCIABLE Y CERRADO/);
+  assert.match(realtimeSessionSource, /usa la materia, el tema, el ejercicio y los turnos anteriores/);
+  assert.match(realtimeSessionSource, /intención principal sea claramente ajena/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.18/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
   assert.match(lessonTutorSource, /internalSpeechInstruction/);
@@ -405,6 +409,19 @@ test("el filtro de salida no marca una explicación de velocidad terminal como p
 
 test("mantiene el rechazo de solicitudes claramente ajenas a Saber 11", () => {
   assert.equal(filter.preflightOrbyRequest("Dame una receta para hornear pan.").category, "outside");
+});
+
+test("Orby permite respuestas cortas para continuar una invitación de estudio", () => {
+  const invitation = "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
+  assert.equal(filter.isOrbyStudyGuidanceRequest("no sé", invitation), true);
+  assert.equal(filter.preflightOrbyRequest("no sé", invitation).allowed, true);
+  assert.equal(filter.preflightOrbyRequest("ni idea", invitation).allowed, true);
+  assert.equal(filter.isOrbyStudyGuidanceRequest("no sé", "Esa solicitud está fuera del alcance de Orby."), false);
+  assert.equal(filter.preflightOrbyRequest("no sé", "Esa solicitud está fuera del alcance de Orby.").allowed, false);
+  assert.equal(filter.preflightOrbyRequest("¿Qué es el realismo mágico?", "Área de estudio: Lectura Crítica").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("Analiza este texto de Lectura Crítica: el personaje menciona un carro y una película.").allowed, true);
+  assert.equal(filter.containsExplicitNonIcfesTopic("En el texto de Lectura Crítica se menciona un carro y una película."), false);
+  assert.equal(filter.containsCookingInstruction("El texto menciona una receta tradicional de la región."), false);
 });
 
 test("el filtro ICFES funciona en modo allowlist y rechaza conversaciones cotidianas", () => {
@@ -579,7 +596,10 @@ test("el Autopilot recibe el lote manual terminado sin robar la prioridad manual
 test("los filtros deterministas no consumen el cupo de llamadas al modelo", () => {
   const rateLimitIndex = lessonTutorRouteSource.indexOf('p_bucket: "lesson_tutor"');
   const preflightIndex = lessonTutorRouteSource.indexOf("const scopePreflight = preflightOrbyRequest(scopeRequestText, recentScopeContext)");
-  const outOfScopeIndex = lessonTutorRouteSource.indexOf("if (!preflight.allowed || legacyOutOfScope)");
+  const outOfScopeIndex = lessonTutorRouteSource.indexOf("if (!preflight.allowed)");
+  assert.doesNotMatch(lessonTutorRouteSource, /legacyOutOfScope|classifyOutOfScopeRequest/);
+  assert.match(lessonTutorRouteSource, /isOrbyStudyGuidanceRequest\(userMessage, recentScopeContext\)/);
+  assert.match(lessonTutorRouteSource, /ORBY_STUDY_GUIDANCE_REPLY/);
   const greetingIndex = lessonTutorRouteSource.indexOf("if (!tutorImage && isOrbyGreetingRequest(userMessage))");
   assert.ok(preflightIndex >= 0 && outOfScopeIndex > preflightIndex
     && greetingIndex > preflightIndex && rateLimitIndex > outOfScopeIndex && rateLimitIndex > greetingIndex,

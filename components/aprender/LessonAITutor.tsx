@@ -1372,7 +1372,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript)
         || falseCreatorClaim;
       voiceUserMessageVisibleRef.current = true;
-      const preflight = preflightOrbyRequest(voiceUserTextRef.current);
+      const preflight = preflightOrbyRequest(voiceUserTextRef.current, voiceLastAssistantOutputRef.current);
       voiceInputPolicyRef.current = asksIdentity
         ? "identity"
         : !preflight.allowed && preflight.category === "programming"

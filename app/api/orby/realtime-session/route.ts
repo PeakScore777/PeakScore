@@ -19,7 +19,8 @@ import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ORBY_LIVE_VOICE_NAME = "Aoede";
+// Keep this in sync with the browser LiveConnectConfig voice in LessonAITutor.tsx.
+const ORBY_LIVE_VOICE_NAME = "Kore";
 
 function clean(value: unknown, max: number, fallback: string) {
   return typeof value === "string" ? value.trim().slice(0, max) || fallback : fallback;

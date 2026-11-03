@@ -39,6 +39,7 @@ const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn
 const routerSource = await readFile(new URL("../lib/ai/router.ts", import.meta.url), "utf8");
 const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
+const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
 test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de Orby", () => {
   assert.match(cloudflareVoiceSource, /import "server-only"/);
@@ -54,6 +55,33 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
   assert.match(lessonTutorSource, /if \(isVoiceInteraction && "speechSynthesis" in window\)/);
 });
 
+test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {
+  assert.match(cloudflareVoiceSource, /@cf\\/google\\/embeddinggemma-300m/);
+  assert.match(cloudflareVoiceSource, /rawVectors.length !== normalized.length/);
+  assert.match(cloudflareVoiceSource, /raw.length !== 768/);
+  assert.match(orbyKnowledgeSource, /p_model: usedModel/);
+  assert.match(orbyKnowledgeSource, /orby_list_knowledge_embedding_models/);
+  assert.match(orbyKnowledgeSource, /orby_search_knowledge_hybrid_multi_v3/);
+  assert.match(orbyKnowledgeSource, /createOrbyQueryEmbeddingForModel/);
+  assert.match(modelAwareEmbeddingMigration, /c\\.embedding_model = q\\.model/);
+  assert.match(modelAwareEmbeddingMigration, /partition by q\\.model/);
+  assert.match(knowledgeWorkerSource, /ORBY_EMBEDDING_QUOTA_EXHAUSTED/);
+  assert.match(knowledgeWorkerSource, /available_at: resumeAt\\.toISOString\\(\\)/);
+  assert.match(knowledgeWorkerSource, /00:05 UTC/);
+});
+
+test("el audio Live se reproduce progresivamente y la cola espera al final de la reproducción", () => {
+  assert.match(lessonTutorSource, /flushPendingGeminiAudio/);
+  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\\.current\\.length < 96/);
+  assert.match(lessonTutorSource, /finishRealtimeVoicePlayback/);
+  assert.match(lessonTutorSource, /voiceAudioSourcesRef\\.current\\.size > 0/);
+  assert.match(lessonTutorSource, /voiceRealtimeAudioChunkCountRef\\.current === 0/);
+  assert.match(lessonTutorSource, /speakText\\(rawReply/);
+  assert.match(lessonTutorSource, /voiceSpeechCancelRef/);
+  assert.match(lessonTutorSource, /safetyTimer = window\\.setTimeout/);
+  assert.match(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
+  assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
+});
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
   for (const greeting of ["hola", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito"]) {
     assert.equal(filter.isOrbyGreetingRequest(greeting), true, greeting);
@@ -347,7 +375,7 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /finishLocalVoiceReply/);
   assert.match(lessonTutorSource, /voiceBrowserSpeechActiveRef\.current = true/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = clean/);
-  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ clean\.length \* 55/);
+  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ 500/);
   assert.match(lessonTutorSource, /void refreshConversations\(\)\.catch/);
 });
 
@@ -370,7 +398,7 @@ test("los filtros escritos dentro de voz se contestan localmente antes de Gemini
   assert.match(lessonTutorSource, /Lee exactamente este texto en español colombiano/);
   assert.match(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
   assert.doesNotMatch(lessonTutorSource, /speakText\(localReply/);
-  assert.match(lessonTutorSource, /La voz se interrumpió; la respuesta filtrada quedó disponible por escrito/);
+  assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
   assert.match(lessonTutorSource, /setMessages\(\(current\) => \[/);
 });
 

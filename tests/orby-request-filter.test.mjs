@@ -106,6 +106,38 @@ test("los saludos cortos se responden localmente sin invocar proveedores de IA",
   assert.match(lessonTutorSource, /const greetingReply = isOrbyGreetingRequest\(message\)/);
 });
 
+test("Orby reconoce sus llamadas y no acepta transcripciones en escrituras ajenas al español", () => {
+  for (const phrase of ["Oye Orby", "oye, orby", "Hey Orby", "Orby AI"]) {
+    assert.equal(filter.isOrbyGreetingRequest(phrase), true, phrase);
+  }
+  assert.equal(filter.containsUnsupportedSpanishScript("जी बिल्कुल, आप क्या जानना चाहते हैं?"), true);
+  assert.equal(filter.containsUnsupportedSpanishScript("¡Claro! ¿Qué tema de Saber 11 quieres estudiar?"), false);
+  assert.equal(filter.containsUnsupportedSpanishScript("Let's practice the ICFES English reading section."), false);
+  assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
+  assert.match(filter.ORBY_SPANISH_ONLY_REPLY, /repetirla/);
+  assert.match(filter.ORBY_SPANISH_OUTPUT_FALLBACK, /español/);
+});
+
+test("Gemini Live usa español como pista de transcripción y sanitiza audio no reconocido", () => {
+  assert.match(realtimeSessionSource, /REGLA PRIORITARIA DE IDIOMA/);
+  assert.match(realtimeSessionSource, /containsUnsupportedSpanishScript\(item\.content\)/);
+  assert.match(lessonTutorSource, /languageCodes: \["es-ES"\]/);
+  assert.match(lessonTutorSource, /mode: "SMART"/);
+  assert.match(lessonTutorSource, /"Oye Orby"/);
+  assert.match(lessonTutorSource, /unsupportedInputScript/);
+  assert.match(lessonTutorSource, /ORBY_SPANISH_ONLY_REPLY/);
+  assert.match(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)/);
+});
+
+test("la voz nunca reproduce audio antes de validar su transcripción y bloquea escrituras no españolas", () => {
+  assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef/);
+  assert.match(lessonTutorSource, /!voiceOutputTranscriptValidatedRef\.current/);
+  assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(partialReply\)/);
+  assert.match(lessonTutorSource, /containsUnsupportedSpanishScript\(rawReply\)/);
+  assert.match(lessonTutorRouteSource, /containsUnsupportedSpanishScript\(modelReply\)/);
+  assert.match(lessonTutorRouteSource, /ORBY_SPANISH_OUTPUT_FALLBACK/);
+});
+
 test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas en inglés se bloquean", () => {
   assert.equal(filter.isGenericIcfesEnglishRequest("inglés"), true);
   assert.equal(filter.isGenericIcfesEnglishRequest("quiero estudiar English"), true);

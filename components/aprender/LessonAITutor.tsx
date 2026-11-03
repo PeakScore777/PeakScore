@@ -1511,7 +1511,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   ? preflightOrbyRequest("programar").reply
                   : voiceInputPolicyRef.current === "outside"
                     ? preflightOrbyRequest("cocinar").reply
-                    : null));
+                    : null);
       voicePreflightReplyRef.current = null;
 
       // Policy replies use the same Live voice as normal Orby answers.

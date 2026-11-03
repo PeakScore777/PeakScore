@@ -88,7 +88,7 @@ export async function POST(request: Request) {
       // Prior assistant turns are untrusted context too. Do not let an
       // accidental language switch, unsafe lesson, external promotion, or
       // false creator claim become an instruction in the next Live session.
-      const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\\n");
+      const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\n");
       const safeAssistantTurn = !containsProgrammingInstruction(item.content)
         && !containsCookingInstruction(item.content)
         && !containsExplicitNonIcfesTopic(item.content)

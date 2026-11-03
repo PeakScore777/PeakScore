@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     }
 
     const subject = cleanText(body.subject, 80) || "Preparación Saber 11";
-    const topic = cleanText(body.topic, 160) || "Los cristales misteriosos: materia y propiedades";
+    const topic = cleanText(body.topic, 160);
     const stage = body.stage === "practice" ? "práctica" : "teoría";
     const question = cleanText(body.question, 1200);
     const context = cleanText(body.context, 1600);
@@ -391,13 +391,13 @@ export async function POST(request: Request) {
     // Only the student's current words count as an explicit topic. Lesson
     // prompt/history is used to resolve short academic follow-ups, not to turn
     // an unrelated casual question into an unnecessary vector search.
-    const currentStudySignals = userMessage;
-    const curriculumContextSignals = /\b(?:saber\s*11|icfes|matematicas?|algebra|geometria|estadistica|lectura critica|comprension lectora|sociales|ciencias naturales|fisica|quimica|biologia|ingles|english|constitucion|democracia|historia|geografia|probabilidad|densidad|fotosintesis|energia|gravedad|ecosistema|genetica|reaccion quimica|tabla periodica|leyes de newton)\b/i.test([subject, topic, question, context].join(" "));
-    const hasExplicitAcademicTopic = /\b(?:saber\s*11|icfes|matematicas?|algebra|geometria|estadistica|lectura critica|comprension lectora|sociales y ciudadanas|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|reaccion quimica|tabla periodica|ingles|english|termodinamica|leyes de newton|constitucion|democracia|historia de colombia|geografia|revolucion industrial|revolucion francesa|globalizacion|probabilidad|funcion cuadratica|ecuaciones?|fracciones?|porcentajes?|densidad|energia|fuerza|velocidad terminal|gravedad|masa|presion atmosferica)\b/i.test(currentStudySignals);
-    const hasAcademicTaskIntent = /\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|diferencia entre|por que ocurre|por que|como asi|otro ejemplo|dame otro ejemplo|continua)\b/i.test(userMessage)
-      && curriculumContextSignals;
-    const shouldRetrieveAcademicKnowledge = !isOrbyGreetingRequest(userMessage)
-      && (hasExplicitAcademicTopic || hasAcademicTaskIntent);
+    const shouldRetrieveAcademicKnowledge = shouldRetrieveOrbyAcademicKnowledge({
+      message: userMessage,
+      subject: subject === "Preparación Saber 11" ? "" : subject,
+      topic,
+      question,
+      context,
+    });
     type StudentKnowledgeSource = {
       document_id: string;
       title: string;

@@ -197,8 +197,11 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
 });
 
 test("la voz comparte alcance ICFES, evita marketing y mantiene una sola voz para negativas", () => {
-  assert.match(realtimeSessionSource, /Cuando el estudiante diga únicamente Inglés/);
-  assert.match(realtimeSessionSource, /No recomiendes, compares, promociones/);
+  assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
+  assert.match(realtimeSessionSource, /No recomiendes, compares, promociones|No recomiendes, compares, promociones/);
+  assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
+  assert.match(realtimeSessionSource, /No enseñes programación, desarrollo de software, cocina, recetas/);
+  assert.match(realtimeSessionSource, /exclusivamente en español colombiano natural/);
   assert.match(lessonTutorSource, /internalSpeechInstruction/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(internalSpeechInstruction\)/);
   assert.match(lessonTutorSource, /voiceInternalPolicyTextRef\.current = policyReply/);

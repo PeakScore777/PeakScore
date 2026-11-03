@@ -19,8 +19,13 @@ import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Keep this in sync with the browser LiveConnectConfig voice in LessonAITutor.tsx.
-const ORBY_LIVE_VOICE_NAME = "Kore";
+// Despina is Google's smooth prebuilt voice; keep the session token and
+// browser LiveConnectConfig bound to the exact same voice.
+const ORBY_ALLOWED_LIVE_VOICES = new Set([
+  "Despina", "Aoede", "Sulafat", "Achird", "Leda", "Kore", "Zephyr",
+]);
+const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina";
+const ORBY_LIVE_VOICE_NAME = ORBY_ALLOWED_LIVE_VOICES.has(requestedVoice) ? requestedVoice : "Despina";
 
 function clean(value: unknown, max: number, fallback: string) {
   return typeof value === "string" ? value.trim().slice(0, max) || fallback : fallback;
@@ -182,6 +187,7 @@ export async function POST(request: Request) {
       ephemeralToken: token,
       model,
       systemInstruction: instructions,
+      voiceName: ORBY_LIVE_VOICE_NAME,
       expiresAt: expireTime,
     }, {
       headers: { "Cache-Control": "no-store, max-age=0" },

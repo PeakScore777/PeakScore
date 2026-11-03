@@ -415,7 +415,7 @@ export function containsCookingInstruction(text: string, previousContext = ""): 
   const explicitRefusal = /\b(?:no (?:puedo|voy a|debo) (?:ensenar|explicar|compartir|dar)|no enseno|no doy clases de|fuera del alcance|mi funcion es preparar|no puedo ayudarte con)\b.{0,100}\b(?:cocina|cocinar|receta|recetas|cooking|cook|recipe|recipes|baking)\b/i.test(value);
   if (explicitRefusal) return false;
 
-  const cookingInstruction = /\b(?:aqui tienes|te comparto|te doy|puedes preparar|prepara|cocina|cocinar|hornea|a recipe for|here is a recipe|how to cook|teach you to cook|share a recipe|je peux partager|ich zeige dir|voglio una ricetta|dammi una ricetta|give me a recipe|dame una receta)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|recipe|recipes|cake|food|meal|cook|cooking|bake|baking|kochen|gateau|ricetta|receita|recette|rezept)\b|\b(?:recipe for|a recipe|recette de|una receta de|ricetta per|ricetta di|ricetta|receita de|rezept fur)\b|\b(?:ich zeige dir|ich kann dir zeigen)\b.{0,70}\b(?:kochen|kocht|kochst|backen|backt)\b/i.test(value);
+  const cookingInstruction = /\b(?:aqui tienes|te comparto|te doy|puedes preparar|prepara|cocina|cocinar|hornea|a recipe for|here is a recipe|how to cook|teach you to cook|share a recipe|je peux partager|ich zeige dir|voglio una ricetta|dammi una ricetta|give me a recipe|dame una receta|quero cozinhar|je veux cuisiner|voglio cucinare|ich mochte kochen)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|recipe|recipes|cake|food|meal|cook|cooking|bake|baking|kochen|gateau|ricetta|receita|recette|rezept)\b|\b(?:recipe for|a recipe|recette de|una receta de|ricetta per|ricetta di|ricetta|receita de|rezept fur)\b|\b(?:ich zeige dir|ich kann dir zeigen)\b.{0,70}\b(?:kochen|kocht|kochst|backen|backt)\b/i.test(value);
   if (!cookingInstruction) return false;
 
   // A recipe can be mentioned in a passage or question. Only reject actual
@@ -425,7 +425,7 @@ export function containsCookingInstruction(text: string, previousContext = ""): 
     || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(value));
   const academicFrame = /\b(?:en el texto|en la lectura|en el fragmento|en el pasaje|en el dialogo|en el enunciado|la frase|el ejercicio|la pregunta|analiza|interpreta|traduce|the passage|the text|the dialogue|this sentence|this question|in the passage|in this text)\b/i;
   if (hasCurriculumContext && (academicFrame.test(value) || academicFrame.test(context))) {
-    const directInstruction = /\b(?:aqui tienes|te comparto|te doy|puedes preparar|prepara para ti|haz esta receta|here is a recipe|i can share a recipe|je peux partager une recette|ich zeige dir, wie man)\b/i.test(value);
+    const directInstruction = /\b(?:aqui tienes|te comparto|te doy|puedes preparar|prepara para ti|haz esta receta|dame una receta|give me a recipe|tell me a recipe|how to cook|teach you to cook|quero cozinhar|je veux cuisiner|voglio cucinare|ich mochte kochen|here is a recipe|i can share a recipe|je peux partager une recette|ich zeige dir, wie man)\b/i.test(value);
     return directInstruction;
   }
   return true;

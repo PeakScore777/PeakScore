@@ -61,7 +61,7 @@ const SHORT_ACADEMIC_FOLLOW_UP_PATTERNS = [
 ];
 
 export const ORBY_ICFES_SCOPE_REPLY =
-  "Esa solicitud no corresponde a los contenidos de Saber 11. Soy Orby, tutor de PeakScore, y solo puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés del ICFES. Elige un tema de una de esas áreas y seguimos.";
+  "Ese tema no corresponde a Saber 11. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés. ¿Qué área trabajamos?";
 
 const EXTERNAL_PREICFES_REQUEST_PATTERNS = [
   /\bgrupo\s*500\b/i,

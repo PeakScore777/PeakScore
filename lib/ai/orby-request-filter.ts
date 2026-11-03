@@ -13,10 +13,10 @@ export function normalizeOrbyRequestText(value: string): string {
 }
 
 const PROGRAMMING_REQUEST_PATTERNS = [
-  // Spanish, English and common transliterated requests. Foreign scripts are
-  // rejected separately; these patterns cover users who transliterate them.
+  // Block actual requests to learn or perform software development, not a
+  // programming-related word quoted inside an ICFES reading passage.
   /\b(programar|programacion|programador|programadora|codificar|coding|programming|desarrollo de software|desarrollo web|software development|web development|software engineering|programming language|learn to code|teach me to code|how to code|write code|coding tutorial|app development)\b/i,
-  /\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|codigo fuente|escribir codigo|depurar codigo|debuggear)\b/i,
+  /\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|codigo fuente|escribir codigo|depurar codigo|debuggear)\b.{0,70}\b(ensename|ayudame|explicame|quiero aprender|quiero usar|como se usa|para que sirve|teach me|learn|show me|help me|how do i|what is|explain)\b|\b(ensename|ayudame|explicame|quiero aprender|quiero usar|como se usa|para que sirve|teach me|learn|show me|help me|how do i|what is|explain)\b.{0,70}\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest)\b/i,
   /\b(aprender|estudiar|ensename|ayudame|explicame|quiero aprender|me ensenas|me ayudas|teach me|learn|show me|help me)\b.{0,80}\b(programar|programacion|python|javascript|typescript|java|codificar|coding|programming|code|crear una app|hacer una pagina web)\b/i,
   /\b(crear|hacer|construir|desarrollar|disenar|build|create|make|develop)\s+(?:un|una|el|la|a|an|the)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|videojuego|juego digital|bot|robot virtual|website|application|mobile app|software|game|bot)\b/i,
   /\b(mujhe|main|mai)\b.{0,50}\b(coding|programming|code|python|javascript)\b|\b(coding|programming|code|python)\b.{0,50}\b(sikhao|sikh[aou]|sikhna|karna|kaise)\b/i,
@@ -57,8 +57,18 @@ const ICFES_SCOPE_PATTERNS = [
 
 const ICFES_CURRICULUM_CONTEXT_PATTERNS = ICFES_SCOPE_PATTERNS.slice(1);
 
+// A study invitation is valid context even before a specific subject or concept
+// has been named (for example, Orby asking "¿Qué tema de Saber 11 quieres trabajar?").
+const ORBY_STUDY_INVITATION_PATTERN =
+  /\b(?:que tema|que area|que quieres estudiar|que te gustaria estudiar|por donde empezamos|con que empezamos|elige un tema|elige un area)\b.{0,100}\b(?:saber\s*11|icfes|estudiar|trabajar|repasar|practicar|empezar)\b/i;
+
+const STUDY_GUIDANCE_FOLLOW_UP_PATTERNS = [
+  /^(?:no se|no lo se|ni idea|no tengo claro|no se que (?:estudiar|tema|area)|ayudame a elegir|ayudame a decidir|por donde empiezo|no se por donde empezar|que me recomiendas para empezar|elige por mi)[.!? ]*$/i,
+];
+
 const SHORT_ACADEMIC_FOLLOW_UP_PATTERNS = [
   /^(?:y )?(?:por que|como asi|que significa|que quiere decir|explicame mas|explica mas|amplia la explicacion|no entiendo|no comprendi|puedes repetir|repite por favor|dame otro ejemplo|otro ejemplo|un ejemplo mas|continua|continua por favor|siguiente|sigamos|y eso|y ese|y esa|cual es la respuesta|la opcion [a-d]|opcion [a-d]|la [a-d]|respuesta [a-d]|el siguiente paso)[.!? ]*$/i,
+  ...STUDY_GUIDANCE_FOLLOW_UP_PATTERNS,
   /^(?:si|no|ok|vale|listo|entiendo|de acuerdo)[.!? ]*$/i,
 ];
 
@@ -80,6 +90,9 @@ export const ORBY_ICFES_ENGLISH_INTRO_REPLY =
 
 export const ORBY_GREETING_REPLY =
   "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
+
+export const ORBY_STUDY_GUIDANCE_REPLY =
+  "No pasa nada. Te recomiendo empezar por Ciencias Naturales con la fotosíntesis: es un tema visual y nos permite practicar cómo interpretar información y conceptos. También podemos hacer un diagnóstico corto para descubrir qué área necesitas reforzar. ¿Empezamos con fotosíntesis?";
 
 export const ORBY_SPANISH_ONLY_REPLY =
   "No alcancé a reconocer tu frase en español. ¿Puedes repetirla, por favor?";
@@ -234,7 +247,14 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
     && SHORT_ACADEMIC_FOLLOW_UP_PATTERNS.some((pattern) => pattern.test(normalized));
   if (!isShortFollowUp || !previousContext.trim() || isScopeRefusalContext(previousContext)) return false;
   const prior = normalizeOrbyRequestText(previousContext);
-  return ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior));
+  return ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
+    || ORBY_STUDY_INVITATION_PATTERN.test(prior);
+}
+
+export function isOrbyStudyGuidanceRequest(message: string, previousContext = ""): boolean {
+  const normalized = normalizeOrbyRequestText(message);
+  return STUDY_GUIDANCE_FOLLOW_UP_PATTERNS.some((pattern) => pattern.test(normalized))
+    && ORBY_STUDY_INVITATION_PATTERN.test(normalizeOrbyRequestText(previousContext));
 }
 
 /**
@@ -242,13 +262,26 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
  * ICFES keyword. This same detector is applied to model output before display
  * or audio playback.
  */
+const NON_ICFES_REQUEST_PATTERNS = [
+  // A standalone topic is an unrelated conversation; a passing mention inside
+  // a reading passage or exam question is not enough to trigger a refusal.
+  /^(?:carros?|automoviles?|vehiculos?|llantas?|motos?|peliculas?|series|videojuegos?|juegos|chistes?|clima|weather|forecast)[.!? ]*$/i,
+  /\b(?:que te gustaria saber|que quieres saber|hablame de|cuentame sobre)\b.{0,80}\b(?:carros?|automoviles?|vehiculos?|motos?|peliculas?|series|videojuegos?)\b/i,
+  /\b(?:recomiendame|que pelicula|what movie|which movie|what show|which show|what game|which game|cuentame un chiste|tell me a joke|what should i watch)\b.{0,90}\b(?:peliculas?|series|videojuegos?|juegos|movie|movies|show|shows|game|games)\b|\b(?:peliculas?|series|videojuegos?|juegos|movie|movies|show|shows|game|games)\b.{0,90}\b(?:recomiendame|watch|should i watch|recommend|play)\b/i,
+  /\b(?:se me pincho|se pincho|mi carro|mi vehiculo|mi moto|cambiar|arreglar|reparar|comprar|elegir|que modelo|which car|what car|buy a car|flat tire|car repair|car maintenance|mantenimiento de)\b.{0,90}\b(?:llantas?|carros?|automoviles?|vehiculos?|motos?|tires?|tyres?|car|vehicle)\b|\b(?:which car|what car|what vehicle|what motorcycle)\b.{0,60}\b(?:buy|should|recommend|choose)\b/i,
+  /\b(?:dame|hazme|quiero|necesito|busco|comparte|comparteme|ensename|como preparo|como hago|como cocino|preparar|cocinar|hornear|give me|make me|share|teach me|how to cook|how do i make|what should i eat)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|comida|recipe|recipes|cake|food|meal|cook|cooking|bake|baking)\b|\b(?:recipe|receta|recetas)\b.{0,90}\b(?:para|for|de|of|cook|cocinar|prepare|hacer|preparar)\b/i,
+  /\b(?:que hago|que puedo tomar|que medicamento|que deberia tomar|tengo fiebre|me duele|what should i do|what medicine|medical diagnosis|prescribe|my symptoms)\b.{0,90}\b(?:fiebre|dolor|sintomas?|medicamento|medicina|enfermedad|fever|pain|symptoms?|medicine|medication)\b|\b(?:fiebre|fever|pain|symptoms?)\b.{0,70}\b(?:what should i do|que hago|what medicine|que medicamento)\b/i,
+  /\b(?:invertir dinero|donde invertir|que accion comprar|recomiendame acciones|criptomonedas|apuestas?|consejo legal|demanda judicial|contratar un abogado|how to invest|which stock|crypto advice|legal advice|file a lawsuit)\b/i,
+  /\b(?:cual es el clima|clima de manana|pronostico del tiempo|que tiempo hara|weather today|weather tomorrow|forecast|will it rain)\b/i,
+];
+
 export function containsExplicitNonIcfesTopic(value: string): boolean {
   const normalized = normalizeOrbyRequestText(value);
   if (!normalized) return false;
   if (/\b(?:fuera del alcance|no corresponde a los contenidos|no puedo ayudarte con esa solicitud|no puedo trabajar ese tema|esa solicitud esta fuera|solo puedo ayudarte con las cinco areas|no puedo ensenar cocina|no puedo compartir recetas|no enseno cocina|no doy clases de cocina)\b/i.test(normalized)) {
     return false;
   }
-  return OUTSIDE_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized));
+  return NON_ICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
 /** Previous assistant text is trusted as context only when the exchange itself
@@ -293,7 +326,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  if (OUTSIDE_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) {
+  if (containsExplicitNonIcfesTopic(normalized)) {
     return {
       allowed: false,
       category: "outside",
@@ -361,9 +394,9 @@ export function containsProgrammingInstruction(text: string): boolean {
 export function containsCookingInstruction(text: string): boolean {
   const value = normalizeOrbyRequestText(text);
   if (!value) return false;
-  const explicitRefusal = /\b(?:no (?:puedo|voy a|debo) (?:ensenar|explicar|compartir|dar)|no enseno|no doy clases de|fuera del alcance|mi funcion es preparar|no puedo ayudarte con)\b.{0,80}\b(?:cocina|cocinar|receta|recetas|cooking|cook|recipe|recipes|baking)\b/i.test(value);
+  const explicitRefusal = /\b(?:no (?:puedo|voy a|debo) (?:ensenar|explicar|compartir|dar)|no enseno|no doy clases de|fuera del alcance|mi funcion es preparar|no puedo ayudarte con)\b.{0,100}\b(?:cocina|cocinar|receta|recetas|cooking|cook|recipe|recipes|baking)\b/i.test(value);
   if (explicitRefusal) return false;
-  return OUTSIDE_SCOPE_PATTERNS[0].test(value);
+  return /\b(?:aqui tienes|te comparto|te doy|puedes preparar|para preparar|prepara|cocina|cocinar|hornea|a recipe for|here is a recipe|how to cook|teach you to cook|share a recipe|je peux partager|ich zeige dir)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|recipe|recipes|cake|food|meal|cook|cooking|bake|baking|kochen|gateau)\b|\b(?:recipe for|a recipe|recette de|una receta de)\b/i.test(value);
 }
 
 export function extractPlainOrbyReply(value: string): string {

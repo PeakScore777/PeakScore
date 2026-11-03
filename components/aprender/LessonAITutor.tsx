@@ -712,20 +712,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       let finished = false;
       let safetyTimer: number | null = null;
-      const finish = () => {
+      let cancelSpeech: (() => void) | null = null;
+      const finish = (cancelled = false) => {
         if (finished) return;
         finished = true;
         if (safetyTimer !== null) window.clearTimeout(safetyTimer);
-        if (voiceSpeechCancelRef.current === finish) voiceSpeechCancelRef.current = null;
+        if (voiceSpeechCancelRef.current === cancelSpeech) voiceSpeechCancelRef.current = null;
         setSpeakingIndex(null);
         if (isLocalVoiceTurn) {
           voiceBrowserSpeechActiveRef.current = false;
-          voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
-          finishLocalVoiceReply(localVoiceMessageId);
+          if (!cancelled) {
+            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
+            finishLocalVoiceReply(localVoiceMessageId);
+          }
         }
         settle();
       };
-      voiceSpeechCancelRef.current = finish;
+      cancelSpeech = () => finish(true);
+      voiceSpeechCancelRef.current = cancelSpeech;
       safetyTimer = window.setTimeout(
         finish,
         Math.min(120_000, Math.max(10_000, clean.length * 120)),

@@ -219,6 +219,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceOutputTranscriptValidatedRef = useRef(false);
   const voiceInputPolicyRef = useRef<"identity" | "programming" | "outside" | null>(null);
   const voiceForcedReplyRef = useRef<string | null>(null);
+  const voiceLocalReplyInFlightRef = useRef(false);
   const voicePreflightReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
   const voiceInternalPolicyTextRef = useRef<string | null>(null);
@@ -735,7 +736,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceSpeechCancelRef.current = cancelSpeech;
       safetyTimer = window.setTimeout(
         finish,
-        Math.min(120_000, Math.max(10_000, clean.length * 120)),
+        Math.min(45_000, Math.max(8_000, clean.length * 70)),
       );
       utterance.onend = () => finish(false);
       utterance.onerror = () => {
@@ -944,6 +945,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     waitingForVoiceReplyRef.current = false;
+    voiceLocalReplyInFlightRef.current = false;
     if (updateState) {
       setVoiceMode(false);
       setVoiceMuted(false);
@@ -956,11 +958,74 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function finishLocalVoiceReply(expectedMessageId?: string | null) {
     if (expectedMessageId && voiceAssistantMessageIdRef.current !== expectedMessageId) return;
     clearVoiceResponseWatchdog();
+    voiceLocalReplyInFlightRef.current = false;
+    voiceOutputAudioBlockedRef.current = false;
     waitingForVoiceReplyRef.current = false;
     setVoiceStatus("Te escucho…");
     setIsListening(true);
     void persistRealtimeTurnIfReady();
     drainPendingMessageQueue();
+  }
+
+  function respondToVoiceLocally(userText: string, reply: string, appendUserMessage: boolean) {
+    const cleanUserText = userText.trim().slice(0, 1200);
+    const cleanReply = reply.trim();
+    if (!cleanUserText || !cleanReply || !voiceModeRef.current) return;
+
+    clearVoiceResponseWatchdog();
+    stopVoicePlayback();
+    voicePendingAudioChunksRef.current = [];
+    voiceRealtimeAudioChunkCountRef.current = 0;
+    voiceOutputTranscriptValidatedRef.current = false;
+    voiceOutputAudioBlockedRef.current = true;
+    voiceLocalReplyInFlightRef.current = true;
+    waitingForVoiceReplyRef.current = true;
+    voiceUserTextRef.current = cleanUserText;
+    voiceAssistantTextRef.current = cleanReply;
+    voiceAssistantMessageIdRef.current = "voice-local-" + Date.now();
+    voiceUserMessageVisibleRef.current = true;
+    voiceResponseDoneRef.current = true;
+    voiceTurnPersistedRef.current = false;
+    voiceInputPolicyRef.current = null;
+    voicePreflightReplyRef.current = null;
+    voiceForcedReplyRef.current = null;
+    voiceInternalPolicyTextRef.current = null;
+    voiceUnsupportedInputDetectedRef.current = false;
+    voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanUserText);
+
+    const assistantId = voiceAssistantMessageIdRef.current;
+    const assistantIndex = messages.length + (appendUserMessage ? 1 : 0);
+    setMessages((current) => [
+      ...current,
+      ...(appendUserMessage ? [{
+        id: "voice-user-" + Date.now(),
+        role: "user" as const,
+        content: cleanUserText,
+      }] : []),
+      { id: assistantId, role: "assistant" as const, content: cleanReply },
+    ]);
+    setInput("");
+    setLiveTranscript("");
+    setIsListening(false);
+    setVoiceStatus("Orby está respondiendo…");
+
+    // Interrupt an in-flight Live answer and append the exact local exchange
+    // without requesting a new model response.
+    try {
+      voiceChannelRef.current?.sendClientContent({
+        turns: [
+          { role: "user", parts: [{ text: cleanUserText }] },
+          { role: "model", parts: [{ text: cleanReply }] },
+        ],
+        turnComplete: false,
+      });
+    } catch (error) {
+      console.warn("[Orby Voice] Could not sync local reply to Live context.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+    }
+
+    void speakText(cleanReply, assistantIndex);
   }
 
   function persistRealtimeTurnIfReady(): Promise<void> {
@@ -1235,6 +1300,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceStatus("Orby está hablando…");
       } else {
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
+        voiceLocalReplyInFlightRef.current = false;
         voiceLastCommittedInputRef.current = "";
         voiceUserTextRef.current = "";
         voiceUnsupportedInputDetectedRef.current = false;
@@ -1286,6 +1352,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           && normalizedAssistant.length >= 8
           && normalizedAssistant.includes(normalizedInterim);
         if (normalizedInterim.length >= 3 && !isBrowserSpeechEcho) {
+          voiceLocalReplyInFlightRef.current = false;
           voiceSpeechPlaybackGenerationRef.current += 1;
           voiceBrowserSpeechActiveRef.current = false;
           const cancelSpeech = voiceSpeechCancelRef.current;
@@ -1387,6 +1454,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : !preflight.allowed
             ? "outside"
             : null;
+      const studyGuidanceReply = isOrbyStudyGuidanceRequest(voiceUserTextRef.current, voiceScopeContext)
+        ? ORBY_STUDY_GUIDANCE_REPLY
+        : null;
       voicePreflightReplyRef.current = asksIdentity
         ? null
         : unsupportedInputScript
@@ -1395,7 +1465,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? ORBY_ICFES_ENGLISH_INTRO_REPLY
           : isOrbyGreetingRequest(voiceUserTextRef.current)
             ? ORBY_GREETING_REPLY
-            : preflight.allowed ? null : preflight.reply;
+            : studyGuidanceReply ?? (preflight.allowed ? null : preflight.reply);
       voicePendingAudioChunksRef.current = [];
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
@@ -1411,6 +1481,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         next.splice(assistantIndex, 0, userMessage);
         return next;
       });
+      if (voicePreflightReplyRef.current) {
+        respondToVoiceLocally(voiceUserTextRef.current, voicePreflightReplyRef.current, false);
+        return;
+      }
       void persistRealtimeTurnIfReady();
       armVoiceResponseWatchdog();
       setVoiceStatus("Orby está pensando…");
@@ -1419,7 +1493,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const outputTranscript = serverContent.outputTranscription && typeof serverContent.outputTranscription === "object"
       ? serverContent.outputTranscription as { text?: unknown }
       : null;
-    if (typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
+    if (!voiceLocalReplyInFlightRef.current && typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
       voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
@@ -1491,7 +1565,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const inlineData = part.inlineData && typeof part.inlineData === "object"
         ? part.inlineData as { data?: unknown; mimeType?: unknown }
         : null;
-      if (typeof inlineData?.data === "string" && !voiceOutputAudioBlockedRef.current) {
+      if (typeof inlineData?.data === "string" && !voiceLocalReplyInFlightRef.current && !voiceOutputAudioBlockedRef.current) {
         armVoiceResponseWatchdog();
         const chunk = {
           data: inlineData.data,
@@ -1510,7 +1584,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
     }
 
-    if (serverContent.interrupted === true) {
+    if (serverContent.interrupted === true && !voiceLocalReplyInFlightRef.current) {
       // Barge-in cancels this response. Clear its watchdog so the next spoken
       // turn receives a fresh deadline instead of inheriting a stuck timer.
       clearVoiceResponseWatchdog();
@@ -2151,44 +2225,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(message, typedVoiceContext) ? ORBY_STUDY_GUIDANCE_REPLY : null;
       const localReply = englishReply ?? greetingReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
-        voiceUserTextRef.current = message;
-        voiceUnsupportedInputDetectedRef.current = false;
-        voiceRealtimeAudioChunkCountRef.current = 0;
-        voiceOutputTranscriptValidatedRef.current = false;
-        voiceOutputAudioBlockedRef.current = false;
-        voicePendingAudioChunksRef.current = [];
-        // Keep the trusted local answer ready for persistence even if the
-        // student interrupts Live audio before generationComplete arrives.
-        voiceAssistantTextRef.current = localReply;
-        voiceAssistantMessageIdRef.current = "voice-policy-" + Date.now();
-        voiceResponseDoneRef.current = false;
-        voiceTurnPersistedRef.current = false;
-        voiceInputPolicyRef.current = null;
-        voicePreflightReplyRef.current = null;
-        voiceForcedReplyRef.current = localReply;
-        voiceInternalPolicyTextRef.current = localReply;
-        const userId = "voice-user-" + Date.now();
-        voiceUserMessageVisibleRef.current = true;
-        const assistantId = voiceAssistantMessageIdRef.current;
-        setMessages((current) => [
-          ...current,
-          { id: userId, role: "user", content: message },
-          // Show the deterministic answer immediately. Live supplies only the
-          // matching Orby voice; it is not asked to reinterpret the policy.
-          { id: assistantId, role: "assistant", content: localReply },
-        ]);
-        setInput("");
-        setVoiceStatus("Orby está respondiendo…");
-        setIsListening(false);
-        waitingForVoiceReplyRef.current = true;
-        const internalSpeechInstruction = "Lee exactamente este texto en español colombiano, sin añadir, quitar ni cambiar ninguna palabra: " + localReply;
-        voiceLastCommittedInputRef.current = normalizeVoiceComparison(internalSpeechInstruction);
-        try {
-          voiceChannelRef.current.sendRealtimeInput({ text: internalSpeechInstruction });
-          armVoiceResponseWatchdog();
-        } catch {
-          fallbackVoiceTurnToText("La voz no pudo leer la respuesta. El texto quedó disponible.");
-        }
+        respondToVoiceLocally(message, localReply, true);
         return;
       }
       waitingForVoiceReplyRef.current = true;

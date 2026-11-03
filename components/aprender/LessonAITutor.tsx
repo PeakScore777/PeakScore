@@ -839,6 +839,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       console.warn("[Orby Voice] Neural Spanish TTS unavailable; using browser fallback.", {
         name: error instanceof Error ? error.name : "UnknownError",
       });
+      if (voiceModeRef.current) {
+        setVoiceError("La voz neural no estuvo disponible; se está usando la voz de respaldo del navegador.");
+      }
       await speakWithBrowserFallback(text, index);
     }
   }

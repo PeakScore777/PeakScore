@@ -741,7 +741,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
 
   async function speakText(text: string, index: number): Promise<void> {
-    const clean = text.trim().replace(/\\s+/g, " ").slice(0, 1800);
+    const clean = text.trim().replace(/\s+/g, " ").slice(0, 1800);
     const audioContext = voiceAudioContextRef.current;
     const isLocalLiveTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
     if (!clean || !voiceModeRef.current || !audioContext || audioContext.state === "closed") {
@@ -771,6 +771,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       if (!cancelled) {
         voiceBrowserSpeechActiveRef.current = false;
+        setSpeakingIndex(null);
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + 1_800;
         if (isLocalLiveTurn) finishLocalVoiceReply(messageId);
         else finishRealtimeVoicePlayback();

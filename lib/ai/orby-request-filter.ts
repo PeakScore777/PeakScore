@@ -263,6 +263,8 @@ const NON_ICFES_REQUEST_PATTERNS = [
   /\b(?:which car|what car|which vehicle|what vehicle|what motorcycle)\b.{0,90}\b(?:buy|should|recommend|choose)\b/i,
   /\b(?:dame|hazme|quiero|necesito|busco|comparte|comparteme|ensename|como preparo|como hago|como cocino|preparar|cocinar|hornear|give me|make me|share|teach me|how to cook|how do i make|what should i eat)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|comida|recipe|recipes|cake|food|meal|cook|cooking|bake|baking)\b|\b(?:recipe|receta|recetas)\b.{0,90}\b(?:para|for|de|of|cook|cocinar|prepare|hacer|preparar)\b/i,
   /\b(?:vogli(?:o|amo)|je veux|quero|quiero|ich mochte|ich möchte)\b.{0,50}\b(?:una? )?(?:ricetta|ricette|receita|receitas|recette|recettes|rezept|rezepte)\b|\b(?:voglio una ricetta|voulez une recette|quero uma receita)\b/i,
+  /\b(?:mujhe khana banana|khana pakana|recipe do|recipe batao|khana banane)\b/i,
+  /\b(?:quero cozinhar|je veux cuisiner|voglio cucinare|ich mochte kochen|ich mochte backen)\b(?:.{0,45}\b(?:massa|pasta|comida|meal|essen|kochen|backen)\b)?/i,
   /\b(?:what should i eat|what to eat|que debo comer|que deberia comer)\b/i,
   /\b(?:que hago|que puedo tomar|que medicamento|que deberia tomar|tengo fiebre|me duele|what should i do|what medicine|medical diagnosis|prescribe|my symptoms)\b.{0,90}\b(?:fiebre|dolor|sintomas?|medicamento|medicina|enfermedad|fever|pain|symptoms?|medicine|medication)\b|\b(?:fiebre|fever|pain|symptoms?)\b.{0,70}\b(?:what should i do|que hago|what medicine|que medicamento)\b/i,
   /\b(?:invertir dinero|donde invertir|que accion comprar|recomiendame acciones|criptomonedas|apuestas?|consejo legal|demanda judicial|contratar un abogado|how to invest|which stock|crypto advice|legal advice|file a lawsuit)\b/i,

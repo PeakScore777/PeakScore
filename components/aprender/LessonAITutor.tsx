@@ -1597,10 +1597,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
 
-      const needsBrowserSpeechFallback = voiceOutputAudioBlockedRef.current
-        || !voiceOutputTranscriptValidatedRef.current
-        || voiceRealtimeAudioChunkCountRef.current === 0;
-
       if (rawReply) {
         voiceAssistantTextRef.current = rawReply;
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
@@ -1625,6 +1621,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : 0;
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + remainingPlaybackMs + 1800;
       }
+
+      const needsBrowserSpeechFallback = voiceOutputAudioBlockedRef.current
+        || !voiceOutputTranscriptValidatedRef.current
+        || voiceRealtimeAudioChunkCountRef.current === 0;
 
       voicePendingAudioChunksRef.current = [];
       voiceInputPolicyRef.current = null;
@@ -2967,7 +2967,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   </figcaption>
                 </figure>}
                 {workspace && message.role === "assistant" && <button type="button" onClick={() => void saveLearningItem("note", message.content.trim().split("\n").find((line) => line.trim())?.replace(/\*\*/g,"").slice(0,72) || "Apunte de Orby", message.content)} className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-white/10 px-2.5 py-1.5 text-[10px] font-medium text-[#aeb4bd] transition hover:border-orange-500/30 hover:text-orange-300"><Bookmark className="h-3.5 w-3.5"/> Guardar apunte</button>}
-                {message.role === "assistant" && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index)} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
+                {message.role === "assistant" && !voiceMode && <button type="button" onClick={() => speakingIndex === index ? stopSpeaking() : speakText(message.content, index)} className={`mt-3 inline-flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-[11px] font-bold transition ${orbyAccent ? "border-orange-200 text-orange-700 hover:bg-orange-50" : "border-sky-200 text-sky-700 hover:bg-sky-50"}`}>
                   <Volume2 className="h-3.5 w-3.5" /> {speakingIndex === index ? "Detener audio" : "Escuchar respuesta"}
                 </button>}
                 {message.attachmentName && <div className="mb-2 flex items-center gap-2 rounded-lg border border-white/25 p-2">{message.attachmentPreview ? <Image src={message.attachmentPreview} width={1200} height={800} unoptimized alt={"Adjunto: " + message.attachmentName} className="max-h-28 max-w-full rounded-md object-contain" /> : message.attachmentKind === "audio" ? <AudioLines className="h-6 w-6 shrink-0" /> : <FileText className="h-6 w-6 shrink-0" />}<p className="min-w-0 break-all text-[10px] opacity-80">{message.attachmentName}</p></div>}

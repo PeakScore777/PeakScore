@@ -171,3 +171,15 @@ No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.
 - Si Live termina sin texto utilizable, se reenvía la misma pregunta al tutor filtrado; si se desconecta antes de la transcripción final, se usa la transcripción provisional y se agrega al historial solo si ese turno aún no tenía mensaje del alumno.
 - Las cancelaciones voluntarias de voz ya no se interpretan como finalización normal ni reactivan el micrófono.
 - Se añadió prueba de regresión para eco de la voz alternativa y paquetes PCM de 40 ms.
+
+
+### Orby Voice: español, rechazos fluidos y sincronización (2026-11-02)
+- Mantener Gemini Live como voz principal y los filtros de PeakScore como autoridad. La IA no decide si una solicitud de programación puede enseñarse: el preflight local produce una respuesta canónica.
+- El reconocimiento recibe `languageCodes: ["es-ES"]`, `mode: "SMART"` y vocabulario que incluye “Oye Orby”, “Hey Orby”, “Orby AI”, PeakScore, Saber 11 e ICFES. Es una pista de idioma, no una garantía; por eso se mantiene el filtro local.
+- La síntesis nativa Live declara `speechConfig.languageCode: "es"`. El prompt de sesión exige español colombiano, alfabeto latino y pedir repetición cuando la frase no se entienda.
+- El filtro Unicode `containsUnsupportedSpanishScript` bloquea devanagari/hindi y otros alfabetos no latinos en historial, transcripción provisional/final de entrada y transcripción de salida. Los fragmentos provisionales no españoles se ocultan; los finales se reemplazan por una petición de repetir en español.
+- La reproducción de audio Live solo se permite después de validar la transcripción española. Para saludos y rechazos deterministas, la interfaz conserva la respuesta aprobada exacta. Si Gemini añade una presentación, cambia la frase o cambia de idioma, el audio se descarta y se usa voz alternativa para ese texto canónico.
+- El fallback de voz determina si hubo audio válido usando el bloqueo/validación del turno, no solo el contador histórico de chunks. Esto corrige el caso donde se canceló el primer audio y no se activó la voz alternativa.
+- La ruta escrita también rechaza una respuesta del modelo en una escritura no española. Los prompts de voz y de tutor recuerdan ortografía, puntuación, tildes y que no deben repetir el branding/rechazo en cada turno.
+- La negativa de programación es ahora breve y redirige a una materia ICFES, evitando el “Soy Orby…” repetido después de cada mención de Python.
+- **Validación pendiente en PC:** hacer pull de `feat/founder-intro`; correr `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build`; después probar “Oye Orby”, “Enséñame Python”, insistir con “Python”, interrumpir la voz y confirmar que hay una única burbuja por turno y una única reproducción. No desplegar a `main` antes de esas pruebas.

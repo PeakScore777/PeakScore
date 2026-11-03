@@ -20,6 +20,9 @@ const PROGRAMMING_REQUEST_PATTERNS = [
   /\b(aprender|estudiar|ensename|ayudame|explicame|quiero aprender|me ensenas|me ayudas|teach me|learn|show me|help me)\b.{0,80}\b(programar|programacion|python|javascript|typescript|java|codificar|coding|programming|code|crear una app|hacer una pagina web)\b/i,
   /\b(crear|hacer|construir|desarrollar|disenar|build|create|make|develop)\s+(?:un|una|el|la|a|an|the)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|videojuego|juego digital|bot|robot virtual|website|application|mobile app|software|game|bot)\b/i,
   /\b(mujhe|main|mai)\b.{0,50}\b(coding|programming|code|python|javascript)\b|\b(coding|programming|code|python)\b.{0,50}\b(sikhao|sikh[aou]|sikhna|karna|kaise)\b/i,
+  // French, Portuguese, German and Italian variants. Accents are removed
+  // before matching by normalizeOrbyRequestText.
+  /\b(apprendre a coder|apprendre a programmer|coder|programmieren|programmierung|softwareentwicklung|webentwicklung|code schreiben|imparare a programmare|scrivere codice|sviluppo software|sviluppo web|ensina me a programar|ensina me programacao|quero aprender a programar|escrever codigo|desenvolvimento de software|desenvolvimento web)\b/i,
   /\b(bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
 ];
 

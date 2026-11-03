@@ -967,7 +967,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     drainPendingMessageQueue();
   }
 
-  function respondToVoiceLocally(userText: string, reply: string, appendUserMessage: boolean) {
+  function respondToVoiceLocally(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false) {
     const cleanUserText = userText.trim().slice(0, 1200);
     const cleanReply = reply.trim();
     if (!cleanUserText || !cleanReply || !voiceModeRef.current) return;
@@ -982,7 +982,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     waitingForVoiceReplyRef.current = true;
     voiceUserTextRef.current = cleanUserText;
     voiceAssistantTextRef.current = cleanReply;
-    voiceAssistantMessageIdRef.current = "voice-local-" + Date.now();
+    const previousAssistantId = replaceAssistantMessage ? voiceAssistantMessageIdRef.current : null;
+    const assistantId = previousAssistantId ?? ("voice-local-" + Date.now());
+    voiceAssistantMessageIdRef.current = assistantId;
     voiceUserMessageVisibleRef.current = true;
     voiceResponseDoneRef.current = true;
     voiceTurnPersistedRef.current = false;
@@ -993,17 +995,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceUnsupportedInputDetectedRef.current = false;
     voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanUserText);
 
-    const assistantId = voiceAssistantMessageIdRef.current;
-    const assistantIndex = messages.length + (appendUserMessage ? 1 : 0);
-    setMessages((current) => [
-      ...current,
-      ...(appendUserMessage ? [{
-        id: "voice-user-" + Date.now(),
-        role: "user" as const,
-        content: cleanUserText,
-      }] : []),
-      { id: assistantId, role: "assistant" as const, content: cleanReply },
-    ]);
+    const assistantIndex = previousAssistantId
+      ? Math.max(0, messages.findIndex((message) => message.id === previousAssistantId))
+      : messages.length + (appendUserMessage ? 1 : 0);
+    setMessages((current) => {
+      const hasExistingAssistant = Boolean(previousAssistantId)
+        && current.some((message) => message.id === previousAssistantId);
+      const next = [
+        ...current,
+        ...(appendUserMessage ? [{
+          id: "voice-user-" + Date.now(),
+          role: "user" as const,
+          content: cleanUserText,
+        }] : []),
+      ];
+      if (hasExistingAssistant && previousAssistantId) {
+        return next.map((message) => message.id === previousAssistantId
+          ? { ...message, role: "assistant" as const, content: cleanReply }
+          : message);
+      }
+      return [...next, { id: assistantId, role: "assistant" as const, content: cleanReply }];
+    });
     setInput("");
     setLiveTranscript("");
     setIsListening(false);
@@ -1650,59 +1662,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Policy replies use the same Live voice as normal Orby answers.
       // The browser's fallback TTS used to switch voices exactly on filtered turns.
       if (policyReply) {
-        stopVoicePlayback();
-        voicePendingAudioChunksRef.current = [];
-        voiceRealtimeAudioChunkCountRef.current = 0;
-        voiceOutputTranscriptValidatedRef.current = false;
-        voiceOutputAudioBlockedRef.current = false;
-        voiceAssistantTextRef.current = "";
-        const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-        voiceAssistantMessageIdRef.current = id;
-        setMessages((current) => {
-          const exists = current.some((message) => message.id === id);
-          return exists
-            ? current.map((message) => message.id === id ? { ...message, content: policyReply } : message)
-            : [...current, { id, role: "assistant", content: policyReply }];
-        });
-        voiceLastAssistantOutputRef.current = policyReply;
-        voiceInputPolicyRef.current = null;
-        voicePreflightReplyRef.current = null;
-        voiceForcedReplyRef.current = policyReply;
-        voiceResponseDoneRef.current = false;
-        waitingForVoiceReplyRef.current = true;
-        const activeSession = voiceChannelRef.current;
-        if (!activeSession) {
-          voiceForcedReplyRef.current = null;
-          voiceInternalPolicyTextRef.current = null;
-          voiceAssistantTextRef.current = policyReply;
-          voiceResponseDoneRef.current = true;
-          void persistRealtimeTurnIfReady();
-          setVoiceError("La voz en tiempo real no estuvo disponible; reproduciendo con la voz alternativa.");
-          setVoiceStatus("Orby está hablando…");
-          setIsListening(false);
-          void speakText(policyReply, messages.length);
-          return;
-        }
-        try {
-          const internalSpeechInstruction = "Lee exactamente este texto en español colombiano, sin añadir, quitar ni cambiar ninguna palabra: " + policyReply;
-          // Suppress both the internal instruction and policy text if Live emits
-          // input transcription for its own speech-generation request.
-          voiceInternalPolicyTextRef.current = policyReply;
-          voiceLastCommittedInputRef.current = normalizeVoiceComparison(internalSpeechInstruction);
-          activeSession.sendRealtimeInput({ text: internalSpeechInstruction });
-          setVoiceStatus("Orby está hablando…");
-          armVoiceResponseWatchdog();
-        } catch {
-          voiceForcedReplyRef.current = null;
-          voiceInternalPolicyTextRef.current = null;
-          voiceAssistantTextRef.current = policyReply;
-          voiceResponseDoneRef.current = true;
-          void persistRealtimeTurnIfReady();
-          setVoiceError("Gemini no pudo leer la respuesta; usando la voz alternativa.");
-          setVoiceStatus("Orby está hablando…");
-          setIsListening(false);
-          void speakText(policyReply, messages.length);
-        }
+        // Never ask Live to read a deterministic filter response. Replace the
+        // partial unsafe bubble and speak the trusted local answer immediately.
+        respondToVoiceLocally(voiceUserTextRef.current, policyReply, false, true);
         return;
       }
 

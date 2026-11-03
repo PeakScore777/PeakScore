@@ -33,6 +33,9 @@ const OUTSIDE_SCOPE_PATTERNS = [
   /\b(diagnostico medico|recetar medicamento|tratamiento medico|medicamentos|sintomas de enfermedad|medical diagnosis|prescribe medication|medical treatment)\b/i,
   /\b(invertir dinero|comprar acciones|criptomonedas|apuesta|apuestas|consejo legal|demanda judicial)\b/i,
   /\b(?:carros?|automoviles?|vehiculos?|llantas?|mantenimiento de vehiculos|mecanica automotriz|motos?|peliculas?|series de television|videojuegos?|chistes?|clima de manana|pronostico del tiempo)\b/i,
+  /\b(?:cars?|automobiles?|vehicles?|tires?|tyres?|flat tire|car maintenance|car repair|motorcycles?)\b/i,
+  /\b(?:movies?|films?|tv shows?|television series|video games?|gaming|jokes?|weather|forecast)\b/i,
+  /\b(?:what should i eat|meal plan|restaurant|breakfast|lunch|dinner|snack)\b/i,
 ];
 
 /**
@@ -40,8 +43,11 @@ const OUTSIDE_SCOPE_PATTERNS = [
  * competency, or a recognizable curricular concept. Unknown subjects fail
  * closed instead of being sent to a general-purpose model.
  */
+const ICFES_EXAM_REFERENCE_PATTERN = /\b(?:saber\s*11|icfes|prueba de estado|examen de estado)\b/i;
+const ICFES_EXAM_LEARNING_INTENT_PATTERN = /\b(?:pregunta|preguntas|ejercicio|ejercicios|contenido|contenidos|tema|temas|competencia|competencias|componente|componentes|simulacro|cuadernillo|estructura|formato|areas|preparar|preparacion|estudiar|estudio|aprender|repasar|practicar|practica|resolver|resuelve|explicar|explica|explicame|evaluar|evalua|evaluan|que es|que son|what is|what are|what does|assess|evaluate|prepare|preparation|study|learn|practice|question|questions|exercise|exercises|topics|competencies|structure|format)\b/i;
+
 const ICFES_SCOPE_PATTERNS = [
-  /\b(?:saber\s*11|icfes|prueba de estado|examen de estado|pregunta tipo icfes|simulacro|cuadernillo de preguntas)\b/i,
+  /\b(?:pregunta tipo icfes|simulacro(?: de saber\s*11| del icfes)?|cuadernillo de preguntas)\b/i,
   /\b(?:matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuacion(?:es)?|inecuacion(?:es)?|fracciones?|porcentajes?|razones y proporciones|proporcionalidad|funcion lineal|funcion cuadratica|plano cartesiano|pendiente de una recta|polinomios?|logaritmos?|potencias?|raiz cuadrada|teorema de pitagoras|perimetro|area de un triangulo|volumen de un|media aritmetica|mediana|moda estadistica|secuencia numerica|sucesion numerica|variable independiente|variable dependiente)\b/i,
   /\b(?:lectura critica|comprension lectora|comprension de textos|texto argumentativo|intencion del autor|idea principal|tesis del texto|argumento central|inferir|inferencia|conclusion del texto|conectores logicos|parrafo|narrador|figura retorica|figura literaria|genero textual|proposito comunicativo|punto de vista del autor|postura del autor|analisis de texto)\b/i,
   /\b(?:sociales y ciudadanas|ciencias sociales|historia de colombia|historia universal|geografia|democracia|constitucion politica|derechos humanos|ciudadania|estado colombiano|ramas del poder|participacion politica|conflicto armado|guerra fria|independencia de colombia|colonizacion|revolucion francesa|revolucion industrial|globalizacion|oferta y demanda|desigualdad social|migracion|territorio colombiano|desarrollo sostenible|organizacion del estado|centralismo|federalismo|poder ejecutivo|poder legislativo|poder judicial|sistema politico)\b/i,
@@ -220,8 +226,9 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
     .trim();
   if (!normalized) return false;
   if (isOrbyGreetingRequest(message) || isGenericIcfesEnglishRequest(message)) return true;
-  if (/^(?:quien eres|quien te creo|quien te creo|quien te creo|quien te creo|quien te creo|quien te creo|quien es tu creador|quien te creo|quien te creo|who created you|who made you)[.!? ]*$/i.test(normalized)) return true;
+  if (/^(?:quien eres|quien te creo|quien es tu creador|who created you|who made you)[.!? ]*$/i.test(normalized)) return true;
   if (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
+  if (ICFES_EXAM_REFERENCE_PATTERN.test(normalized) && ICFES_EXAM_LEARNING_INTENT_PATTERN.test(normalized)) return true;
 
   const isShortFollowUp = normalized.length <= 90
     && SHORT_ACADEMIC_FOLLOW_UP_PATTERNS.some((pattern) => pattern.test(normalized));

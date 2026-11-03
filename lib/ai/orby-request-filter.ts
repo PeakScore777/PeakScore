@@ -122,10 +122,9 @@ export function containsUnsupportedSpanishScript(value: string): boolean {
 export function isOrbyGreetingRequest(message: string): boolean {
   const normalized = normalizeOrbyRequestText(message).replace(/[¿?¡!.,;:]+/g, "").trim();
   if (!normalized || normalized.length > 48) return false;
-  return /^(?:(?:oye|oe|ey|hey) )?orby(?: ai)?$/.test(normalized)
-    // Speech recognition frequently drops the silent initial "h" in "hola".
-    // Accept "ola" only as a standalone short greeting, never inside a sentence.
-    || /^(?:hola|ola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized);
+  // Colombian conversational greetings and wake words, including common ASR variants.
+  return /^(?:(?:oye|oe|oee|ey|eii|hey) )?orby(?: ai)?$/.test(normalized)
+    || /^(?:oye|oe|oee|ey|eii|epa|hola|ola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized);
 }
 
 const ENGLISH_ONLY_OPENINGS = [
@@ -222,32 +221,18 @@ function isScopeRefusalContext(value: string): boolean {
  * curricular exchange. Greeting and identity turns remain deterministic UX
  * exceptions; conversation history can never turn an unrelated topic green.
  */
+/**
+ * Orby is Saber 11-first, not a strict allowlist chatbot. Natural, harmless
+ * conversation is allowed; only protected categories are denied.
+ */
 export function isIcfesScopedRequest(message: string, previousContext = ""): boolean {
-  const normalized = normalizeOrbyRequestText(message)
-    .replace(/^[¿¡\s]+/, "")
-    .replace(/[?!.;:, \s]+$/, "")
-    .trim();
-  if (!normalized) return false;
-  if (isOrbyGreetingRequest(message) || isGenericIcfesEnglishRequest(message)) return true;
-  if (/^(?:quien eres|quien te creo|quien es tu creador|who created you|who made you)[.!? ]*$/i.test(normalized)) return true;
-  if (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
-  if (ICFES_EXAM_REFERENCE_PATTERN.test(normalized) && ICFES_EXAM_LEARNING_INTENT_PATTERN.test(normalized)) return true;
-
-  const isShortFollowUp = normalized.length <= 90
-    && SHORT_ACADEMIC_FOLLOW_UP_PATTERNS.some((pattern) => pattern.test(normalized));
-  const isEducationalAsk = /^(?:que es|que son|define|explicame|como funciona|como se resuelve|por que|cual es|cuales son|diferencia entre|que significa|analiza|compara|resuelve|ayudame con|quiero entender|no entiendo|puedes explicar|me explicas)\b/i.test(normalized);
-  if ((!isShortFollowUp && !isEducationalAsk) || !previousContext.trim() || isScopeRefusalContext(previousContext)) return false;
-  const prior = normalizeOrbyRequestText(previousContext);
-  const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
-    || ORBY_STUDY_INVITATION_PATTERN.test(prior);
-  const hasAcademicMaterialContext = hasCurriculumContext
-    && /\b(?:texto|lectura|fragmento|pasaje|dialogo|aviso|enunciado|ejercicio|pregunta|grafica|tabla|experimento|passage|text|dialogue|notice|question|exercise|chart|table)\b/i.test(prior);
-  const isNaturalQuestionContinuation = normalized.length <= 180
-    && /^(?:que|quien|quienes|donde|cuando|por que|como|cual|cuales|what|who|where|when|why|how|which|whose|do|does|did|can|could|would|will|is|are|was|were)\b/i.test(normalized);
-  // In an active reading/dialogue exercise, the student's next line may be
-  // the exact dialogue sentence rather than a meta-question about it.
-  if (hasAcademicMaterialContext && isNaturalQuestionContinuation) return true;
-  return hasCurriculumContext;
+  const normalized = normalizeOrbyRequestText(message);
+  if (!normalized) return true;
+  return !containsOrbyPromptInjection(normalized)
+    && !EXTERNAL_PREICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))
+    && !PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))
+    && !containsCookingRequest(normalized)
+    && !containsExplicitNonIcfesTopic(normalized, previousContext);
 }
 
 export function isOrbyStudyGuidanceRequest(message: string, previousContext = ""): boolean {
@@ -261,62 +246,55 @@ export function isOrbyStudyGuidanceRequest(message: string, previousContext = ""
  * ICFES keyword. This same detector is applied to model output before display
  * or audio playback.
  */
-const NON_ICFES_REQUEST_PATTERNS = [
-  // A standalone topic or a direct unrelated request is out of scope.
-  // A passing word inside a reading passage, graph, example or exam question
-  // is not sufficient to block a valid ICFES exercise.
-  /^(?:carros?|automoviles?|vehiculos?|llantas?|motos?|peliculas?|series|videojuegos?|juegos?|chistes?|clima|weather|forecast)[.!? ]*$/i,
-  /\b(?:que te gustaria saber|que quieres saber|hablame de|cuentame sobre)\b.{0,80}\b(?:carros?|automoviles?|vehiculos?|motos?|peliculas?|series|videojuegos?)\b/i,
-  /\b(?:que pelicula me recomiendas|recomiendame (?:una )?pelicula|que serie me recomiendas|cuentame un chiste|tell me a joke|what movie should i watch|which movie should i watch|what show should i watch|what should i watch)\b/i,
-  /\b(?:recomiendame|recomiendas|recomiendes|recommend|which|what)\b.{0,60}\b(?:peliculas?|series|videojuegos?|juegos|movie|movies|film|films|show|shows|game|games|carros?|autos?|automoviles?|vehiculos?)\b/i,
-  /\b(?:se me pincho|se pincho|mi carro|mi vehiculo|mi moto|cambiar|arreglar|reparar|comprar|elegir|que modelo|which car|what car|buy a car|flat tire|car repair|car maintenance|mantenimiento de)\b.{0,90}\b(?:llantas?|carros?|automoviles?|vehiculos?|motos?|tires?|tyres?|car|vehicle)\b|\b(?:which car|what car|what vehicle|what motorcycle)\b.{0,60}\b(?:buy|should|recommend|choose)\b/i,
-  /\b(?:which car|what car|which vehicle|what vehicle|what motorcycle)\b.{0,90}\b(?:buy|should|recommend|choose)\b/i,
-  /\b(?:dame|hazme|quiero|necesito|busco|comparte|comparteme|ensename|como preparo|como hago|como cocino|preparar|cocinar|hornear|give me|make me|share|teach me|how to cook|how do i make|what should i eat)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|comida|recipe|recipes|cake|food|meal|cook|cooking|bake|baking)\b|\b(?:recipe|receta|recetas)\b.{0,90}\b(?:para|for|de|of|cook|cocinar|prepare|hacer|preparar)\b/i,
-  /\b(?:vogli(?:o|amo)|je veux|quero|quiero|ich mochte|ich möchte)\b.{0,50}\b(?:una? )?(?:ricetta|ricette|receita|receitas|recette|recettes|rezept|rezepte)\b|\b(?:voglio una ricetta|voulez une recette|quero uma receita)\b/i,
-  /\b(?:mujhe khana banana|khana pakana|recipe do|recipe batao|khana banane)\b/i,
-  /\b(?:quero cozinhar|je veux cuisiner|voglio cucinare|ich mochte kochen|ich mochte backen)\b(?:.{0,45}\b(?:massa|pasta|comida|meal|essen|kochen|backen)\b)?/i,
-  /\b(?:what should i eat|what to eat|que debo comer|que deberia comer)\b/i,
-  /\b(?:que hago|que puedo tomar|que medicamento|que deberia tomar|tengo fiebre|me duele|what should i do|what medicine|medical diagnosis|prescribe|my symptoms)\b.{0,90}\b(?:fiebre|dolor|sintomas?|medicamento|medicina|enfermedad|fever|pain|symptoms?|medicine|medication)\b|\b(?:fiebre|fever|pain|symptoms?)\b.{0,70}\b(?:what should i do|que hago|what medicine|que medicamento)\b/i,
-  /\b(?:invertir dinero|donde invertir|que accion comprar|recomiendame acciones|criptomonedas|apuestas?|consejo legal|demanda judicial|contratar un abogado|how to invest|which stock|crypto advice|legal advice|file a lawsuit)\b/i,
-  /\b(?:cual es el clima|clima de manana|pronostico del tiempo|que tiempo hara|weather today|weather tomorrow|how is the weather|what is the weather|what's the weather|weather on|forecast|will it rain)\b/i,
+const COOKING_REQUEST_PATTERNS = [
+  /\b(?:dame|hazme|pasame|comparteme|quiero|necesito|ensename|como preparo|como cocino|como horneo|preparar|cocinar|hornear|give me|make me|share|teach me|show me|how to cook|how do i cook|i want to cook|i need a recipe|can you cook)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|comida|recipe|recipes|cake|food|meal|cook|cooking|bake|baking)\b/i,
+  /\b(?:receta|recipe|ricetta|receita|recette|rezept)\s+(?:de|para|for|of)\b/i,
+  /\b(?:quero cozinhar|je veux cuisiner|voglio cucinare|ich mochte kochen|ich mochte backen|how to make a cake|how to bake)\b/i,
 ];
 
-export function containsExplicitNonIcfesTopic(value: string, previousContext = ""): boolean {
+const POTENTIALLY_HARMFUL_REQUEST_PATTERNS = [
+  // Explicit instructions to harm a person, create weapons/explosives/poisons,
+  // or facilitate self-harm. Neutral discussion, prevention and school science
+  // remain allowed.
+  /\b(?:como|how to)\b.{0,55}\b(?:fabricar|construir|hacer|preparar|make|build|create)\b.{0,45}\b(?:una bomba|explosivo|explosivos|veneno|arma casera|bomba casera|bomb|explosive|poison|improvised weapon)\b/i,
+  /\b(?:como|how to)\b.{0,55}\b(?:matar|asesinar|envenenar|herir|hacer dano|kill|murder|poison|hurt|injure)\b.{0,55}\b(?:a alguien|una persona|mi companero|myself|someone|a person|someone else)\b/i,
+  /\b(?:como suicidarme|metodo para suicidarme|como hacerme dano|how to kill myself|how to commit suicide|best way to self harm|how to self[- ]?harm)\b/i,
+  // Cyber abuse: exclude credential theft, phishing, malware and unauthorized
+  // account/system intrusion, while allowing general cybersecurity education.
+  /\b(?:robar|hurtar|obtener|steal|capture)\b.{0,55}\b(?:contrasenas?|credenciales|passwords?|credentials|tokens? de acceso|access tokens?)\b/i,
+  /\b(?:crear|hacer|programar|deploy|build|write|make)\b.{0,55}\b(?:malware|ransomware|keylogger|phishing kit|credential stealer|virus informatico)\b/i,
+  /\b(?:hackear|hack|entrar|acceder|bypassear|bypass)\b.{0,65}\b(?:cuenta ajena|cuenta de otra persona|sistema ajeno|servidor ajeno|sin permiso|una cuenta|someone else's account|an account|a server|without permission)\b/i,
+  // Fraud, theft and doxxing requests must not be converted into how-to guides.
+  /\b(?:como|how to)\b.{0,50}\b(?:estafar|engañar para robar|falsificar documentos|robar una cuenta|cometer fraude|scam someone|commit fraud|forge documents|steal an account)\b/i,
+  /\b(?:doxxear|doxing|publicar la direccion privada|encontrar la direccion de casa de|find someone's home address|expose private information)\b/i,
+];
+
+export function containsCookingRequest(value: string): boolean {
   const normalized = normalizeOrbyRequestText(value);
-  if (!normalized) return false;
-  if (/\b(?:fuera del alcance|no corresponde a los contenidos|no puedo ayudarte con esa solicitud|no puedo trabajar ese tema|esa solicitud esta fuera|solo puedo ayudarte con las cinco areas|no puedo ensenar cocina|no puedo compartir recetas|no enseno cocina|no doy clases de cocina)\b/i.test(normalized)) {
-    return false;
-  }
+  return Boolean(normalized) && COOKING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
+}
 
-  // A quoted prompt, dialogue, reading passage or exam exercise can mention
-  // unrelated everyday topics without asking Orby to help with those topics.
-  // Only apply this exception when the lesson/current request is already
-  // anchored to an ICFES curriculum area; it must not whitelist mixed requests.
-  const context = normalizeOrbyRequestText(previousContext);
-  const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(context))
-    || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized));
-  const academicContentFramePattern = /\b(?:en el texto|en este texto|en la lectura|en este fragmento|en el fragmento|en el pasaje|en el dialogo|en este dialogo|en el aviso|en el enunciado|la frase|esta frase|la oracion|esta oracion|el ejercicio|esta pregunta|la pregunta|el texto dice|el personaje pregunta|analiza|interpreta|traduce|que significa|que quiere decir|comprension de lectura|the passage|the text|the dialogue|this sentence|this phrase|this question|in the passage|in this text|what does .{1,70} mean|what is the meaning of)\b/i;
-  const academicContentFrame = academicContentFramePattern.test(normalized)
-    || academicContentFramePattern.test(context);
-  const explicitExternalAction = /\b(?:que pelicula me recomiendas|que serie me recomiendas|what movie should i watch|which movie should i watch|what show should i watch|what should i watch|tell me a joke)\b|\b(?:recomiendame|recomiendas|recomiendes|recommend|recommends?)\b.{0,80}\b(?:peliculas?|series|movie|movies|film|films|show|shows|carros?|autos?|automoviles?|vehiculos?)\b|\b(?:dame|hazme|comparte|comparteme|ensename|give me|tell me|make me|share|teach me)\b.{0,80}\b(?:receta|recetas|recipe|recipes|arepas?|cocinar|cook|cooking|vehiculo|carro|llanta)\b|\b(?:se me pincho|arreglar|reparar|comprar|elegir|mantenimiento de)\b.{0,80}\b(?:llantas?|carros?|vehiculos?|tires?|tyres?|car|vehicle)\b|\b(?:que medicamento|que hago si tengo fiebre|medical diagnosis|how to invest|legal advice)\b/i.test(normalized);
-  const analysesQuotedContent = /\b(?:analiza|interpreta|traduce|que intencion|intencion comunicativa|que significa|que quiere decir|cual es el proposito|what is the intent|what does .{1,70} mean|what does .{1,70} communicate)\b/i.test(normalized);
-  if (hasCurriculumContext && academicContentFrame && (!explicitExternalAction || analysesQuotedContent)) return false;
-
-  return NON_ICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
+/**
+ * Backward-compatible name used by older client/output guards. It now detects
+ * only potentially harmful instructions, never ordinary non-ICFES subjects.
+ */
+export function containsExplicitNonIcfesTopic(value: string, _previousContext = ""): boolean {
+  const normalized = normalizeOrbyRequestText(value);
+  return Boolean(normalized) && POTENTIALLY_HARMFUL_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
 /** Previous assistant text is trusted as context only when the exchange itself
  * is anchored to a curriculum concept and is not a deterministic refusal. */
 export function isIcfesScopedAssistantTurn(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message);
-  if (
-    !normalized
-    || isScopeRefusalContext(normalized)
-    || containsExplicitNonIcfesTopic(normalized, previousContext)
-  ) return false;
-  if (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
-  const prior = normalizeOrbyRequestText(previousContext);
-  return Boolean(prior) && ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(prior));
+  if (!normalized || containsOrbyPromptInjection(normalized)) return false;
+  return !containsProgrammingInstruction(message)
+    && !containsCookingInstruction(message, previousContext)
+    && !containsExplicitNonIcfesTopic(message, previousContext)
+    && !containsExternalPreIcfesPromotion(message)
+    && !containsUnsupportedSpanishLanguage(message)
+    && !isLikelyEnglishOnlyOrbyReply(message)
+    && !hasFalseOrbyCreatorAttribution(message);
 }
 
 export function preflightOrbyRequest(message: string, previousContext = ""): OrbyPreflightResult {
@@ -327,7 +305,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     return {
       allowed: false,
       category: "prompt_injection",
-      reply: "No puedo cambiar mis reglas ni revelar información interna. Puedo ayudarte con la preparación para Saber 11.",
+      reply: "No puedo cambiar mis reglas ni revelar información interna. Puedo conversar contigo y ayudarte a estudiar de forma segura.",
     };
   }
 
@@ -339,11 +317,19 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  if (PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))) {
+  if (PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized)) || containsProgrammingInstruction(message)) {
     return {
       allowed: false,
       category: "programming",
-      reply: "Ese tema no lo trabajo aquí; mi función es ayudarte con Saber 11. Podemos seguir con Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés. ¿Cuál prefieres?",
+      reply: "No puedo enseñar programación ni desarrollo de software. Sí puedo ayudarte con tus dudas de Saber 11 y conversar contigo sobre otros temas seguros.",
+    };
+  }
+
+  if (containsCookingRequest(normalized)) {
+    return {
+      allowed: false,
+      category: "outside",
+      reply: "No puedo compartir recetas ni instrucciones para cocinar. Podemos hablar de otros temas o volver a practicar Saber 11.",
     };
   }
 
@@ -351,14 +337,13 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     return {
       allowed: false,
       category: "outside",
-      reply: ORBY_ICFES_SCOPE_REPLY,
+      reply: "No puedo ayudar con instrucciones que puedan causar daño, facilitar delitos o comprometer la seguridad o privacidad de alguien. Puedo ofrecer información general y segura.",
     };
   }
 
-  if (!isIcfesScopedRequest(normalized, previousContext)) {
-    return { allowed: false, category: "outside", reply: ORBY_ICFES_SCOPE_REPLY };
-  }
-
+  // Conversation is allowed by default. The ICFES curriculum remains Orby's
+  // specialty, but a harmless question does not become an error just because
+  // it is not an exam exercise.
   return { allowed: true, category: null, reply: "" };
 }
 

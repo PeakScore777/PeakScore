@@ -77,7 +77,7 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
 
 test("el audio Live se reproduce progresivamente y la cola espera al final de la reproducción", () => {
   assert.match(lessonTutorSource, /flushPendingGeminiAudio/);
-  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\\.current\\.length < 512/);
+  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.length < 512/);
   assert.match(lessonTutorSource, /finishRealtimeVoicePlayback/);
   assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
   assert.match(lessonTutorSource, /voiceRealtimeAudioChunkCountRef\.current === 0/);

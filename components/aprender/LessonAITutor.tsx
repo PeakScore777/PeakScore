@@ -1777,7 +1777,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               "Sociales y Ciudadanas", "Ciencias Naturales",
             ],
           },
-          outputAudioTranscription: {},
+          outputAudioTranscription: {
+            languageCodes: ["es"],
+            mode: "SMART",
+          },
           speechConfig: {
             languageCode: "es",
             voiceConfig: {

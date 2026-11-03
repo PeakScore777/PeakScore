@@ -125,9 +125,12 @@ test("Orby reconoce sus llamadas y no acepta transcripciones en escrituras ajena
 test("Gemini Live usa español como pista de transcripción y sanitiza audio no reconocido", () => {
   assert.match(realtimeSessionSource, /REGLA PRIORITARIA DE IDIOMA/);
   assert.match(realtimeSessionSource, /containsUnsupportedSpanishScript\(item\.content\)/);
-  assert.match(lessonTutorSource, /languageCodes: \["es-ES"\]/);
-  assert.match(lessonTutorSource, /mode: "SMART"/);
-  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: \["es"\],\s*mode: "SMART"/);
+  // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
+  // and customVocabulary, but does not expose a "mode" property.
+  assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \["es-ES"\]/);
+  assert.match(lessonTutorSource, /customVocabulary: \[/);
+  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: \["es"\]/);
+  assert.doesNotMatch(lessonTutorSource, /mode: "SMART"/);
   assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: "es"/);
   assert.match(lessonTutorSource, /"Oye Orby"/);
   assert.match(lessonTutorSource, /unsupportedInputScript/);

@@ -132,3 +132,33 @@ No ejecutar un rebase si hay cambios locales sin guardar; primero revisar `git s
 - La siguiente prioridad acordada es construir los niveles en la misma rama.
 - La integración a `main` queda para después de construir y probar.
 - Esta nota documenta decisiones y contexto; no es una certificación de que el código actual haya superado pruebas de extremo a extremo.
+
+
+## Actualización de continuidad — Orby Voice y recuperación de embeddings (2026-11-02)
+
+La prioridad actual pasó temporalmente de los niveles a estabilizar Orby Voice y la indexación de conocimiento. Mantener todos estos cambios en `feat/founder-intro`.
+
+### Voz
+- Gemini Live continúa como motor de conversación realtime.
+- El chat debe mostrar la transcripción progresiva y el audio debe comenzar durante la respuesta, no después de recibir el turno completo.
+- La cola no puede aceptar/procesar el siguiente turno como respuesta lista hasta que termine el audio actual.
+- Si Live devuelve texto pero ningún fragmento de audio, usar la voz del navegador.
+- Si Live se desconecta en una respuesta filtrada, reproducir la respuesta segura con voz alternativa; no dejarla solo escrita.
+- La voz del navegador tiene cancelación y watchdog para no bloquear el envío de mensajes.
+- Aún falta probar físicamente con micrófono, Chrome/Edge, interrupciones, latencia y fallos reales de proveedor.
+
+### Biblioteca y embeddings
+- El error visible fue `429 RESOURCE_EXHAUSTED` de Gemini `embed_content_free_tier`, con la indexación detenida en 80/110 vectores.
+- Se añadió respaldo Cloudflare EmbeddingGemma con 768 dimensiones. Las columnas `embedding_model` evitan comparar vectores de modelos diferentes.
+- La nueva migración `20261102230000_orby_model_aware_embedding_search.sql` añade un listado de modelos indexados y una búsqueda híbrida multi-modelo.
+- Al agotar las cuotas gratuitas de todos los motores de embeddings, el worker deja el trabajo programado para el reinicio diario en vez de gastar reintentos en bucle.
+- Antes de probar búsqueda semántica, aplicar esta migración a Supabase desde la rama de desarrollo. No modificar ni reconstruir el material eliminado intencionalmente de Orby ICFES Lab.
+
+### Validación pendiente
+1. `git switch feat/founder-intro` y `git pull origin feat/founder-intro`.
+2. Aplicar la migración `supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql`.
+3. Ejecutar `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build`.
+4. Probar una conversación de voz hablada y otra escrita dentro del modo de voz; confirmar audio progresivo, una sola respuesta, historial y recuperación ante desconexión.
+5. Comprobar que el documento que tenía 80/110 vectores continúa desde los que faltan y conserva los vectores ya guardados.
+
+No subir a `main` ni habilitar para estudiantes antes de estas comprobaciones.

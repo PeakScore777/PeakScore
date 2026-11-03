@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\n");
       const safeAssistantTurn = !containsProgrammingInstruction(item.content)
         && !containsCookingInstruction(item.content)
-        && !containsExplicitNonIcfesTopic(item.content)
+        && !containsExplicitNonIcfesTopic(item.content, priorContext)
         && !containsExternalPreIcfesPromotion(item.content)
         && !containsUnsupportedSpanishLanguage(item.content)
         && !isLikelyEnglishOnlyOrbyReply(item.content)

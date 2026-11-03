@@ -1369,7 +1369,7 @@ async function generateWithGroq(
           {
             method: "POST",
 
-            signal: AbortSignal.timeout(task === "tutor" ? 12000 : 60000),
+            signal: AbortSignal.timeout(task === "tutor" ? 8000 : 60000),
 
             headers: {
               "Content-Type":
@@ -1380,8 +1380,14 @@ async function generateWithGroq(
             },
 
             body: JSON.stringify({
-              model:
-                "qwen/qwen3.8-27b",
+              // Keep the tutor on a production-stable model. Qwen 3.8 27B
+              // remains available for non-tutor experimentation but Groq lists
+              // it as Preview and does not recommend it for production.
+              model: task === "tutor"
+                ? (["openai/gpt-oss-120b", "openai/gpt-oss-20b"].includes(process.env.GROQ_TUTOR_MODEL?.trim() ?? "")
+                    ? process.env.GROQ_TUTOR_MODEL!.trim()
+                    : "openai/gpt-oss-120b")
+                : "qwen/qwen3.8-27b",
 
               messages: [
                 {
@@ -1392,7 +1398,16 @@ async function generateWithGroq(
 
               temperature: 0.2,
 
-              include_reasoning: false,
+              ...(task === "tutor"
+                ? {
+                    // Fast responses for ordinary turns; reserve extra reasoning
+                    // for multi-step academic requests where it improves teaching.
+                    reasoning_effort: /\\b(?:paso a paso|demuestra|justifica|analiza|compara|resuelve|explicacion detallada|detalladamente|por que ocurre|como se resuelve)\\b/i.test(prompt)
+                      ? "medium"
+                      : "low",
+                    reasoning_format: "hidden",
+                  }
+                : { include_reasoning: false }),
 
               // La generación de preguntas puede incluir
               // explanation + visual_data, por lo que 4096

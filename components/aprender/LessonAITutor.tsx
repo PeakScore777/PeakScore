@@ -1380,8 +1380,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : !preflight.allowed
             ? "outside"
             : null;
-      voicePreflightReplyRef.current = unsupportedInputScript
-        ? ORBY_SPANISH_ONLY_REPLY
+      voicePreflightReplyRef.current = asksIdentity
+        ? null
+        : unsupportedInputScript
+          ? ORBY_SPANISH_ONLY_REPLY
         : isGenericIcfesEnglishRequest(voiceUserTextRef.current)
           ? ORBY_ICFES_ENGLISH_INTRO_REPLY
           : isOrbyGreetingRequest(voiceUserTextRef.current)

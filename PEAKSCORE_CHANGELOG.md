@@ -228,3 +228,14 @@
 - No se creó clave ni integración de OpenRouter; no se añadieron pagos ni dependencias npm.
 - Commits: `53283bc`, `3adc805`, `ec7b201`, `7bd6cda`.
 - Pendiente: ejecutar validaciones en el entorno local de la rama y pruebas de extremo a extremo con audio real. No habilitar para estudiantes ni desplegar a producción todavía.
+
+
+## 2026-11-02 — Sincronización de voz y búsqueda multi-modelo
+- Gemini Live entrega la transcripción al chat de forma progresiva y los fragmentos de audio se reproducen conforme llegan después de validar el contenido parcial.
+- El turno de voz permanece ocupado hasta terminar la reproducción; la siguiente pregunta no se drena antes de tiempo.
+- Cuando falta audio en un turno Live, se usa voz del navegador; las respuestas filtradas también tienen lectura alternativa al interrumpirse la conexión.
+- Se reforzó cancelación y watchdog de SpeechSynthesis para evitar que una reproducción colgada bloquee el compositor.
+- Cloudflare EmbeddingGemma se añade como respaldo de embeddings de Gemini; cada vector conserva su modelo y la búsqueda consulta/fusiona solo espacios compatibles junto con recuperación léxica.
+- Si los motores gratuitos agotan cuota, el worker estaciona el trabajo hasta las 00:05 UTC siguiente sin agotar el contador de reintentos.
+- Nueva migración requerida: `supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql`.
+- No tocar `main`, no desplegar a estudiantes. Aún faltan las pruebas locales de typecheck/lint/build y pruebas end-to-end de voz y búsqueda semántica.

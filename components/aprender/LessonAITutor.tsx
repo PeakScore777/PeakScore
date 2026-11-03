@@ -1014,7 +1014,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     try {
       voiceChannelRef.current?.sendClientContent({
         turns: [
-          { role: "user", parts: [{ text: cleanUserText }] },
+          ...(appendUserMessage ? [{ role: "user" as const, parts: [{ text: cleanUserText }] }] : []),
           { role: "model", parts: [{ text: cleanReply }] },
         ],
         turnComplete: false,

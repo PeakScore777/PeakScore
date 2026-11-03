@@ -393,6 +393,8 @@ test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la d
   assert.match(lessonTutorRouteSource, /generationMs/);
   assert.match(lessonTutorRouteSource, /persistenceMs/);
   assert.match(lessonTutorRouteSource, /X-Orby-Response-Time-Ms/);
+  assert.doesNotMatch(lessonTutorSource, /(?:window|document)\.location\.reload\(/);
+  assert.doesNotMatch(lessonTutorSource, /router\.refresh\(/);
   assert.match(lessonTutorRouteSource, /review;dur=/);
   assert.match(lessonTutorRouteSource, /retrievedAcademicKnowledge/);
   const qualityBlock = tutorQualitySource.slice(
@@ -614,7 +616,7 @@ test("Orby evita RAG en conversación casual y lo activa para temas y seguimient
   const retrieve = filter.shouldRetrieveOrbyAcademicKnowledge;
   assert.equal(retrieve({ message: "oe" }), false);
   assert.equal(retrieve({ message: "¿Qué película me recomiendas?" }), false);
-  assert.equal(retrieve({ message: "Explícame qué es una estrella de neutrones." }), false);
+  assert.equal(retrieve({ message: "Explícame qué es una estrella de neutrones." }), true);
   assert.equal(retrieve({ message: "Se me pinchó una llanta." }), false);
   assert.equal(retrieve({ message: "Explícame la fotosíntesis." }), true);
   assert.equal(retrieve({ message: "¿Qué es una ecuación cuadrática?" }), true);
@@ -787,6 +789,12 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /audioContext.state === "suspended"/);
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
+  assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 24/);
+  assert.match(lessonTutorSource, /hasCompleteSafeSentence\) flushPendingGeminiAudio\(\)/);
+  assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
+  assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = true;\\s*voiceAssistantTextRef\.current = rawReply/);
+  assert.match(lessonTutorSource, /partialUnsafe/);
+  assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current = \[\]/);
 });
 
 test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {

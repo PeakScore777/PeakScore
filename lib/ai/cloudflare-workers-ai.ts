@@ -147,7 +147,7 @@ const ORBY_AURA_TTS_SPEAKER = "celeste";
  * side so the Cloudflare token never reaches the browser.
  */
 export async function synthesizeOrbySpeechWithCloudflare(text: string): Promise<Buffer> {
-  const normalized = text.replace(/\\s+/g, " ").trim().slice(0, 1800);
+  const normalized = text.replace(/\s+/g, " ").trim().slice(0, 1800);
   if (!normalized) throw new CloudflareWorkersAIError("EMPTY_TTS_TEXT");
 
   const result = await runModel<string | { audio?: unknown }>(

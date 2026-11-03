@@ -1724,10 +1724,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voicePendingAudioChunksRef.current = [];
         stopVoicePlayback();
       } else {
-        // A partial transcript is not a complete safety decision. Keep the
-        // text visible, but do not release any audio until turnComplete has
-        // validated the entire answer.
-        voiceOutputTranscriptValidatedRef.current = true;
+        // Release audio only after the current partial transcript contains a
+        // complete sentence and passes every deterministic output filter.
+        // Later unsafe continuations still cancel the not-yet-played audio.
+        const hasCompleteSafeSentence = partialReply.length >= 24
+          && /[.!?]["'”’)}\\]]*\\s*$/.test(partialReply);
+        voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => {
@@ -1736,6 +1738,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? current.map((message) => message.id === assistantId ? { ...message, content: visibleReply } : message)
             : [...current, { id: assistantId, role: "assistant", content: visibleReply }];
         });
+        if (hasCompleteSafeSentence) flushPendingGeminiAudio();
       }
       setVoiceStatus("Orby está hablando…");
     }
@@ -1753,11 +1756,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           data: inlineData.data,
           mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
         };
-        // Buffer every audio chunk until the complete transcript passes the
-        // final safety gate. Playing on a "safe so far" partial transcript
-        // could leak a later programming or off-topic continuation.
+        // Keep a short buffer until a complete safe sentence is available.
+        // This starts playback before the full model turn finishes while
+        // retaining the ability to cancel any unsafe continuation.
         if (voicePendingAudioChunksRef.current.length < 512) {
           voicePendingAudioChunksRef.current.push(chunk);
+          if (voiceOutputTranscriptValidatedRef.current) flushPendingGeminiAudio();
         } else {
           voiceOutputAudioBlockedRef.current = true;
           voicePendingAudioChunksRef.current = [];
@@ -1839,6 +1843,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
 
       if (rawReply) {
+        // turnComplete is the final validation boundary. If the response was
+        // safe but never emitted punctuation during streaming, release its
+        // buffered audio now instead of switching to the legacy browser voice.
+        voiceOutputTranscriptValidatedRef.current = true;
         voiceAssistantTextRef.current = rawReply;
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = id;

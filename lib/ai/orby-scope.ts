@@ -29,19 +29,6 @@ export function normalizeIcfesSubject(value: unknown, text = ""): IcfesSubject |
   return null;
 }
 
-const PROGRAMMING_PATTERNS = [
-  /\b(programar|programacion|programador|programadora|codigo fuente|escribir codigo|codificar|depurar codigo|debuggear|debugging|coding|programming)\b/i,
-  /\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|nextjs|node\.js|sql|postgresql|supabase|api rest|git|github|bash|powershell|framework|libreria de software)\b/i,
-  /\b(crear|hacer|construir|desarrollar|diseñar)\s+(?:un|una|el|la)?\s*(?:sitio|pagina|página|web|app|aplicación|software|programa|videojuego|juego digital|bot|robot virtual)\b/i,
-  /\b(ens[eé]ñame|enseñame|quiero aprender|ay[uú]dame a|expl[ií]came c[oó]mo)\b.{0,70}\b(crear|hacer|construir|desarrollar|programa|videojuego|pagina web|aplicaci[oó]n|app|bot|c[oó]digo)\b/i,
-  /\b(bucle|funci[oó]n en python|if\s*\(|for\s*\(|while\s*\(|algoritmo inform[aá]tico|base de datos|consulta sql)\b/i,
-];
-
-const OUTSIDE_SCOPE_PATTERNS = [
-  /\b(receta|cocinar|cocina|napalm|explosivo|fabricar una bomba|armas caseras)\b/i,
-  /\b(diagnostico medico|recetar medicamento|tratamiento medico|invertir dinero|apuesta|consejo legal)\b/i,
-];
-
 function normalizeOrbyIdentityText(message: string): string {
   return message.normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")

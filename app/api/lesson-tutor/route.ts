@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, containsUnsupportedSpanishScript, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -161,7 +161,7 @@ export async function POST(request: Request) {
     // Text chat follows the same Spanish-only input policy as voice.
     // Never pass foreign-script ASR or typed text to a model that might answer
     // in that language; ask for a Spanish retry deterministically.
-    if (userMessage && containsUnsupportedSpanishScript(userMessage)) {
+    if (userMessage && containsUnsupportedSpanishLanguage(userMessage)) {
       return NextResponse.json({
         reply: ORBY_SPANISH_ONLY_REPLY,
         checkQuestion: "",
@@ -683,7 +683,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     }
 
     let modelReply = normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000));
-    if (containsUnsupportedSpanishScript(modelReply)) {
+    if (containsUnsupportedSpanishLanguage(modelReply)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "unsupported_output_script" });
       modelReply = ORBY_SPANISH_OUTPUT_FALLBACK;
       parsed.checkQuestion = "";

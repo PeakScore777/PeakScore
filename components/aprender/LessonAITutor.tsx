@@ -711,6 +711,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     cancelSpeech?.();
     if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     stopVoicePlayback();
+    // The previous output has been stopped; do not let its old scheduled
+    // playback horizon suppress the student's next voice activity/end event.
+    voiceLastAssistantPlaybackUntilRef.current = Date.now() - 1;
     voicePendingAudioChunksRef.current = [];
     voiceRealtimeAudioChunkCountRef.current = 0;
     voiceOutputTranscriptValidatedRef.current = false;
@@ -1407,8 +1410,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } else if (voiceActivity?.type === "ACTIVITY_END") {
       // While local TTS is active, this is usually the mic hearing Orby's
       // speaker output. A real barge-in is handled by a non-echo interim.
-      if (!voiceBrowserSpeechActiveRef.current
-        && Date.now() > voiceLastAssistantPlaybackUntilRef.current + 1_800) {
+      if (!voiceBrowserSpeechActiveRef.current && voiceAudioSourcesRef.current.size === 0) {
         waitingForVoiceReplyRef.current = true;
         setIsListening(false);
         setVoiceStatus("Procesando lo que dijiste…");

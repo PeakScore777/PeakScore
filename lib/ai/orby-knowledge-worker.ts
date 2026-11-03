@@ -660,6 +660,70 @@ export async function processNextOrbyKnowledgeJob(options: {
     throw new Error("Etapa de aprendizaje desconocida.");
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Error desconocido.";
+
+    if (reason.includes("ORBY_EMBEDDING_QUOTA_EXHAUSTED") && job.stage === "embeddings") {
+      // Free-tier daily quotas reset at 00:00 UTC. Park the job until shortly
+      // after reset instead of consuming automatic cycles / retry attempts.
+      const now = new Date();
+      const resumeAt = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 1,
+        0,
+        5,
+        0,
+      ));
+      const counts = await getChunkCounts(job.document_id).catch(() => ({
+        total: Number(documentTitle ? 0 : 0),
+        embedded: Number(job.embedded_chunk_count ?? 0),
+        missing: 0,
+      }));
+      const { error: deferError } = await supabaseAdmin
+        .from("orby_knowledge_jobs")
+        .update({
+          status: "queued",
+          stage: "embeddings",
+          embedded_chunk_count: counts.embedded,
+          available_at: resumeAt.toISOString(),
+          locked_by: null,
+          locked_at: null,
+          lease_expires_at: null,
+          last_error: "Free embedding quota exhausted; deferred until next daily reset.",
+          updated_at: now.toISOString(),
+        })
+        .eq("id", job.id)
+        .eq("locked_by", workerId)
+        .eq("status", "running");
+      if (deferError) throw new Error("No se pudo pausar la tarea hasta el reinicio de la cuota: " + deferError.code);
+
+      await supabaseAdmin
+        .from("orby_knowledge_documents")
+        .update({
+          embedded_chunk_count: counts.embedded,
+          chunk_count: counts.total,
+          next_review_at: resumeAt.toISOString(),
+          ingestion_status: "processing",
+          updated_at: now.toISOString(),
+        })
+        .eq("id", job.document_id);
+
+      console.warn("[Orby Autopilot] Free embedding quota exhausted; job deferred until daily reset.", {
+        jobId: job.id,
+        resumeAt: resumeAt.toISOString(),
+        embedded: counts.embedded,
+        total: counts.total,
+      });
+      return {
+        state: "progress",
+        jobId: job.id,
+        documentId: job.document_id,
+        documentTitle,
+        stage: "embeddings",
+        progress: counts.embedded,
+        message: documentTitle + ": cuota diaria gratuita agotada. El aprendizaje quedó pausado y se reanudará después de las 00:05 UTC.",
+      };
+    }
+
     // A profile batch can persist some page/OCR changes before a later write fails.
     // Synchronize the fingerprint before releasing the job so the next attempt
     // resumes the saved work instead of rejecting it as a changed source.

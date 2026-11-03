@@ -82,6 +82,8 @@ function isSafeTutorOutput(text: string): boolean {
 }
 
 export async function POST(request: Request) {
+  const requestStartedAt = performance.now();
+  const stageTimings = { retrievalMs: 0, generationMs: 0, reviewMs: 0, persistenceMs: 0 };
   try {
     const contentLength = Number(request.headers.get("content-length") || 0);
     if (Number.isFinite(contentLength) && contentLength > 4_500_000) {
@@ -373,6 +375,7 @@ export async function POST(request: Request) {
     )).join("\n");
 
 
+    const retrievalStartedAt = performance.now();
     // Academic retrieval is the expensive part of a tutor turn. Do not wake
     // vector search, concept graph and student-profile queries for greetings or
     // safe everyday conversation; fetch them only when the current request needs
@@ -488,6 +491,7 @@ export async function POST(request: Request) {
     }
 
     const studentSignals = await studentSignalsPromise;
+    stageTimings.retrievalMs = performance.now() - retrievalStartedAt;
 
     // Private source metadata stays server-side. Students receive only the educational substance.
     const knowledgeContext = knowledgeSources.map((source, index) =>
@@ -671,6 +675,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       "Devuelve exclusivamente JSON válido con reply, checkQuestion y learningSignal. Para una conversación casual usa checkQuestion vacío y learningSignal null.",
     ].join("\n");
 
+    const generationStartedAt = performance.now();
     let raw = "";
     let sourceProvider: AIProvider = tutorImage
       ? "gemini"
@@ -705,6 +710,7 @@ No uses bloques Markdown ni texto fuera del JSON.
         sourceProvider = "gemini";
       }
     }
+    stageTimings.generationMs = performance.now() - generationStartedAt;
     if (!raw) {
       return NextResponse.json({ error: "No pude preparar una respuesta esta vez. Inténtalo de nuevo en unos segundos." }, { status: 503 });
     }
@@ -730,6 +736,7 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     // Deterministic validation above applies to every response. Higher-risk
     // academic answers additionally pass an independent model review.
+    const reviewStartedAt = performance.now();
     let qualityStatus: "not_required" | "passed" | "corrected" | "unverified" = "not_required";
     if (needsIndependentTutorReview({
       message: userMessage,
@@ -753,6 +760,8 @@ No uses bloques Markdown ni texto fuera del JSON.
         parsed.checkQuestion = quality.checkQuestion;
       }
     }
+
+    stageTimings.reviewMs = performance.now() - reviewStartedAt;
 
     if (hasFalseOrbyCreatorAttribution(cleanText(parsed.reply, 7000))) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "false_creator_attribution" });
@@ -830,6 +839,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       }
     }
 
+    const persistenceStartedAt = performance.now();
     if (conversationId && ownedConversation) {
       const { data: savedTurn, error: saveTurnError } = await supabaseAdmin.rpc("orby_save_turn", {
         p_user_id: user.id,
@@ -846,9 +856,32 @@ No uses bloques Markdown ni texto fuera del JSON.
       }
     }
 
+    stageTimings.persistenceMs = performance.now() - persistenceStartedAt;
+    const totalMs = performance.now() - requestStartedAt;
+    const serverTiming = [
+      `retrieval;dur=${stageTimings.retrievalMs.toFixed(1)}`,
+      `model;dur=${stageTimings.generationMs.toFixed(1)}`,
+      `review;dur=${stageTimings.reviewMs.toFixed(1)}`,
+      `persist;dur=${stageTimings.persistenceMs.toFixed(1)}`,
+      `total;dur=${totalMs.toFixed(1)}`,
+    ].join(", ");
+    console.info("[Orby Tutor] Turn performance.", {
+      retrievalMs: Math.round(stageTimings.retrievalMs),
+      generationMs: Math.round(stageTimings.generationMs),
+      reviewMs: Math.round(stageTimings.reviewMs),
+      persistenceMs: Math.round(stageTimings.persistenceMs),
+      totalMs: Math.round(totalMs),
+      retrievedAcademicKnowledge: shouldRetrieveAcademicKnowledge,
+      independentReview: qualityStatus !== "not_required",
+    });
+
     // Do not expose document names, providers, authors, topics or page metadata in student-facing API payloads.
     return NextResponse.json({ reply: finalReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: [] }, {
-      headers: { "Cache-Control": "private, no-store" },
+      headers: {
+        "Cache-Control": "private, no-store",
+        "Server-Timing": serverTiming,
+        "X-Orby-Response-Time-Ms": String(Math.round(totalMs)),
+      },
     });
   } catch (error) {
     console.error("[Orby Tutor] No se pudo responder.", { errorName: error instanceof Error ? error.name : "UnknownError" });

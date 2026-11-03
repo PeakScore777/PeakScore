@@ -7,6 +7,7 @@ import {
   containsExternalPreIcfesPromotion,
   containsOrbyPromptInjection,
   containsProgrammingInstruction,
+  containsUnsupportedSpanishLanguage,
   containsUnsupportedSpanishScript,
   hasFalseOrbyCreatorAttribution,
   isLikelyEnglishOnlyOrbyReply,
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
     // Old out-of-scope user prompts and injection attempts are omitted from the
     // new session context. They never reject the session or become fresh requests.
     const safeHistory = history.filter((item) => {
-      if (containsOrbyPromptInjection(item.content) || containsUnsupportedSpanishScript(item.content)) return false;
+      if (containsOrbyPromptInjection(item.content) || containsUnsupportedSpanishLanguage(item.content)) return false;
       if (item.role === "user") return preflightOrbyRequest(item.content).allowed;
 
       // Prior assistant turns are untrusted context too. Do not let an
@@ -84,6 +85,7 @@ export async function POST(request: Request) {
       return !containsProgrammingInstruction(item.content)
         && !containsCookingInstruction(item.content)
         && !containsExternalPreIcfesPromotion(item.content)
+        && !containsUnsupportedSpanishLanguage(item.content)
         && !isLikelyEnglishOnlyOrbyReply(item.content)
         && !hasFalseOrbyCreatorAttribution(item.content);
     }).slice(-4);

@@ -385,12 +385,16 @@ export async function POST(request: Request) {
       context,
       ...history.filter((item) => item.role === "user").slice(-4).map((item) => item.content),
     ].filter(Boolean).join(" ").slice(0, 2400);
-    const currentStudySignals = [userMessage, question].filter(Boolean).join(" ");
-    const hasExplicitAcademicTopic = /\b(?:saber\s*11|icfes|matematicas?|algebra|geometria|estadistica|lectura critica|comprension lectora|sociales y ciudadanas|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|reaccion quimica|tabla periodica|ingles|english|ecosistema|termodinamica|leyes de newton|constitucion|democracia|historia de colombia|geografia|revolucion industrial|revolucion francesa|globalizacion|probabilidad|funcion cuadratica|ecuaciones?|fracciones?|porcentajes?|densidad|energia|fuerza|velocidad terminal)\b/i.test(currentStudySignals);
-    const hasAcademicTaskIntent = /\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|diferencia entre|por que ocurre)\b/i.test(userMessage)
-      && Boolean(question.trim() || context.trim() || /\b(?:saber\s*11|icfes|matematicas?|lectura critica|sociales|ciencias naturales|ingles|fisica|quimica|biologia)\b/i.test([subject, topic].join(" ")));
+    // Only the student's current words count as an explicit topic. Lesson
+    // prompt/history is used to resolve short academic follow-ups, not to turn
+    // an unrelated casual question into an unnecessary vector search.
+    const currentStudySignals = userMessage;
+    const curriculumContextSignals = /\b(?:saber\s*11|icfes|matematicas?|algebra|geometria|estadistica|lectura critica|comprension lectora|sociales|ciencias naturales|fisica|quimica|biologia|ingles|english|constitucion|democracia|historia|geografia|probabilidad|densidad|fotosintesis|energia|gravedad|ecosistema|genetica|reaccion quimica|tabla periodica|leyes de newton)\b/i.test([subject, topic, question, context].join(" "));
+    const hasExplicitAcademicTopic = /\b(?:saber\s*11|icfes|matematicas?|algebra|geometria|estadistica|lectura critica|comprension lectora|sociales y ciudadanas|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|reaccion quimica|tabla periodica|ingles|english|termodinamica|leyes de newton|constitucion|democracia|historia de colombia|geografia|revolucion industrial|revolucion francesa|globalizacion|probabilidad|funcion cuadratica|ecuaciones?|fracciones?|porcentajes?|densidad|energia|fuerza|velocidad terminal|gravedad|masa|presion atmosferica)\b/i.test(currentStudySignals);
+    const hasAcademicTaskIntent = /\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|diferencia entre|por que ocurre|por que|como asi|otro ejemplo|dame otro ejemplo|continua)\b/i.test(userMessage)
+      && curriculumContextSignals;
     const shouldRetrieveAcademicKnowledge = !isOrbyGreetingRequest(userMessage)
-      && (hasExplicitAcademicTopic || hasAcademicTaskIntent || Boolean(question.trim() && userMessage.trim().length > 4));
+      && (hasExplicitAcademicTopic || hasAcademicTaskIntent);
     type StudentKnowledgeSource = {
       document_id: string;
       title: string;

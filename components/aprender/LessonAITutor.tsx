@@ -1404,7 +1404,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-      const partialNormalized = partialReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
+      const partialNormalized = normalizeVoiceComparison(partialReply);
       const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)
         && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|hecho|hecha|soy|fui)\b/.test(partialNormalized);
       const forcedExpected = voiceForcedReplyRef.current?.trim() ?? "";

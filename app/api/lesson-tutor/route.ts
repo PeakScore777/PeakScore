@@ -4,8 +4,8 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router";
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
-import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -211,7 +211,16 @@ export async function POST(request: Request) {
     }
 
     const scopeRequestText = [userMessage, question].filter(Boolean).join(" ").trim();
-    const recentScopeContext = recentContextMessages.slice(-2).map((item) => item.content).join("\n");
+    // The current lesson is trusted educational context: it lets Orby understand
+    // short follow-ups such as "explícame eso" without requiring students to
+    // repeat the ICFES subject in every message.
+    const recentScopeContext = [
+      ...recentContextMessages.slice(-3).map((item) => item.content),
+      subject ? "Área de estudio: " + subject : "",
+      topic ? "Tema de estudio: " + topic : "",
+      question,
+      context,
+    ].filter(Boolean).join("\n").slice(0, 2600);
     const scopePreflight = preflightOrbyRequest(scopeRequestText, recentScopeContext);
     const preflight = tutorImage && !scopeRequestText
       ? { allowed: false as const, category: "outside" as const, reply: ORBY_ICFES_SCOPE_REPLY }
@@ -237,6 +246,27 @@ export async function POST(request: Request) {
       });
     }
 
+    // A short "no sé" after Orby asks what to study is a tutoring moment,
+    // not an off-topic request. Resolve it locally without spending model quota.
+    if (!tutorImage && isOrbyStudyGuidanceRequest(userMessage, recentScopeContext)) {
+      const guidanceReply = ORBY_STUDY_GUIDANCE_REPLY;
+      if (conversationId && ownedConversation) {
+        const { error: guidanceSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
+          p_user_id: user.id,
+          p_conversation_id: conversationId,
+          p_user_content: userMessage,
+          p_assistant_content: guidanceReply,
+          p_check_question: null,
+          p_attachment_kind: null,
+          p_attachment_label: null,
+        });
+        if (guidanceSaveError) console.error("[Orby Study Guidance] Reply persistence failed.", { code: guidanceSaveError.code });
+      }
+      return NextResponse.json({ reply: guidanceReply, checkQuestion: "", verification: "not_required", sources: [] }, {
+        headers: { "Cache-Control": "private, no-store" },
+      });
+    }
+
     // "Inglés" is an ICFES subject, not an invitation to start a general English conversation.
     if (isGenericIcfesEnglishRequest(userMessage)) {
       const englishReply = ORBY_ICFES_ENGLISH_INTRO_REPLY;
@@ -254,16 +284,11 @@ export async function POST(request: Request) {
       }
       return NextResponse.json({ reply: englishReply, checkQuestion: "", verification: "not_required", sources: [] });
     }
-    const legacyOutOfScope = preflight.allowed
-      ? classifyOutOfScopeRequest([subject, topic, userMessage, question].filter(Boolean).join(" "))
-      : null;
-    if (!preflight.allowed || legacyOutOfScope) {
+    if (!preflight.allowed) {
       if (preflight.category === "prompt_injection") {
         await recordSecurityEvent(user.id, "prompt_injection", { source: "preflight_filter" });
       }
-      const refusal = preflight.allowed
-        ? getOutOfScopeReply(legacyOutOfScope as "programming" | "outside", userMessage)
-        : preflight.reply;
+      const refusal = preflight.reply;
       if (conversationId && ownedConversation) {
         const { error: refusalSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,

@@ -1344,7 +1344,7 @@ async function generateWithGroq(
   // Tutor requests must get one real Groq attempt, then immediately
   // fall back to Gemini if needed. MAX_RETRIES=0 with an attempt counter
   // starting at 1 skipped Groq entirely (the previous production bug).
-  const MAX_ATTEMPTS = task === "tutor" ? 1 : 3;
+  const MAX_ATTEMPTS = task === "tutor" ? 1 : 2;
 
   for (
     let attempt = 1;

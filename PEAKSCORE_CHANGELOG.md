@@ -251,3 +251,13 @@
 - Se conserva el texto provisional del alumno para reintentar el mismo turno ante desconexiones antes de la transcripción final, con un indicador explícito de si el mensaje ya fue añadido al historial.
 - Se separa cancelación de síntesis de voz frente a finalización correcta para no reactivar la escucha al cerrar o interrumpir.
 - Se evita guardar como pregunta del alumno el eco de la voz local de Orby.
+
+
+### Orby Voice — 2026-11-02: Spanish-first and conversational refusals
+- Added BCP-47 Spanish ASR hint (`es-ES`), SMART transcription mode and custom vocabulary for Orby wake phrases and ICFES terms.
+- Configured native Live speech synthesis with language code `es` and strengthened Colombian Spanish/Latin-script instructions.
+- Added Unicode script guard to prevent Devanagari/Hindi and other unsupported writing systems from appearing in the student chat, persisted history or played audio.
+- Buffered Live audio until the transcript is validated; for deterministic greetings/refusals, keep the approved text canonical and accept native audio only when its transcript matches that text. Otherwise discard it and use the browser voice fallback.
+- Fixed fallback selection after cancelled/blocked audio by checking whether the output was validated, rather than trusting a historical chunk count.
+- Improved short programming refusals and voice prompting for spelling, accents, grammar and non-repetitive conversation.
+- Added regression coverage for wake phrases, Spanish ASR hints, unsupported scripts, exact policy speech, and audio fallback. Current suite has 44 tests; local execution/typecheck/build remain pending.

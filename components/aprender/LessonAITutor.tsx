@@ -1422,6 +1422,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceUnsupportedInputDetectedRef.current = unsupportedInterimScript;
       setLiveTranscript(unsupportedInterimScript ? "" : interimText);
       if (!unsupportedInterimScript && voiceBrowserSpeechActiveRef.current) {
+        const normalizedInterim = normalizeVoiceComparison(interimText);
         const isBrowserSpeechEcho = isLikelyVoicePlaybackEcho(interimText, voiceLastAssistantOutputRef.current);
         if (normalizedInterim.length >= 3 && isBrowserSpeechEcho) {
           // The browser is hearing Orby's own local voice. Keep speaking and

@@ -460,7 +460,9 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledge\(/);
   assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledgeConcepts\(/);
   assert.doesNotMatch(realtimeSessionSource, /learningSignalsPromise/);
-  assert.match(realtimeSessionSource, /biblioteca de conocimiento ICFES.*bajo demanda/);
+  assert.match(realtimeSessionSource, /BIBLIOTECA ACADÉMICA: consulta la herramienta de conocimiento publicada de PeakScore/);
+  assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
+  assert.match(realtimeSessionSource, /tools: ORBY_LIVE_KNOWLEDGE_TOOLS/);
   assert.match(realtimeSessionSource, /authTokens\.create/);
   assert.match(realtimeSessionSource, /const safeHistory = history\.filter/);
   assert.match(realtimeSessionSource, /preflightOrbyRequest\(item\.content\)\.allowed/);
@@ -478,7 +480,7 @@ test("Gemini Live comprime el contexto y conserva el handle de reanudación por 
 });
 
 test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext suspendido", () => {
-  assert.match(lessonTutorSource, /voiceSpeechPlaybackGenerationRef.current += 1/);
+  assert.match(lessonTutorSource, /voiceSpeechPlaybackGenerationRef\\.current \\+= 1/);
   assert.match(lessonTutorSource, /playbackGeneration !== voiceSpeechPlaybackGenerationRef.current/);
   assert.match(lessonTutorSource, /audioContext.state === "suspended"/);
   assert.match(lessonTutorSource, /audioContext.resume()/);

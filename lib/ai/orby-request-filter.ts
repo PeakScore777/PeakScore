@@ -123,7 +123,9 @@ export function isOrbyGreetingRequest(message: string): boolean {
   const normalized = normalizeOrbyRequestText(message).replace(/[¿?¡!.,;:]+/g, "").trim();
   if (!normalized || normalized.length > 48) return false;
   return /^(?:(?:oye|oe|ey|hey) )?orby(?: ai)?$/.test(normalized)
-    || /^(?:hola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized);
+    // Speech recognition frequently drops the silent initial "h" in "hola".
+    // Accept "ola" only as a standalone short greeting, never inside a sentence.
+    || /^(?:hola|ola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized);
 }
 
 const ENGLISH_ONLY_OPENINGS = [

@@ -780,6 +780,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function stopVoicePlayback() {
+    // Invalidate onended callbacks from chunks belonging to an interrupted turn.
+    voiceSpeechPlaybackGenerationRef.current += 1;
     for (const source of voiceAudioSourcesRef.current) {
       try { source.stop(); } catch { /* Audio chunk may already have ended. */ }
       source.disconnect();
@@ -1066,12 +1068,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function playGeminiAudio(base64Audio: string, mimeType?: string) {
     const audioContext = voiceAudioContextRef.current;
     if (!audioContext || audioContext.state === "closed") return;
+    const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
 
     try {
       const binary = window.atob(base64Audio);
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-      const pcm = new Int16Array(bytes.buffer);
+      if (bytes.byteLength % Int16Array.BYTES_PER_ELEMENT !== 0) {
+        throw new Error("Invalid PCM16 audio chunk alignment.");
+      }
+      // Browsers may suspend Web Audio after tab backgrounding or device changes.
+      if (audioContext.state === "suspended") void audioContext.resume().catch(() => undefined);
+      const pcm = new Int16Array(bytes.buffer, bytes.byteOffset, bytes.byteLength / Int16Array.BYTES_PER_ELEMENT);
       if (pcm.length === 0) return;
 
       const sampleRate = Number(mimeType?.match(/rate=([0-9]+)/i)?.[1]) || 24000;
@@ -1091,6 +1099,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       source.onended = () => {
         voiceAudioSourcesRef.current.delete(source);
         source.disconnect();
+        // A stopped chunk from an older response must not finish or persist a
+        // newer turn after a barge-in, fallback, or playback reset.
+        if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
         finishRealtimeVoicePlayback();
       };
     } catch {

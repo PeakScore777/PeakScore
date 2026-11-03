@@ -222,6 +222,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
   const voiceBrowserSpeechActiveRef = useRef(false);
+  const voiceSpeechCancelRef = useRef<(() => void) | null>(null);
   const voiceSpeechPlaybackGenerationRef = useRef(0);
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
@@ -669,6 +670,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function stopSpeaking() {
+    const cancelActiveSpeech = voiceSpeechCancelRef.current;
+    voiceSpeechCancelRef.current = null;
+    cancelActiveSpeech?.();
     if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
     voiceBrowserSpeechActiveRef.current = false;
     setSpeakingIndex(null);
@@ -707,9 +711,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (preferredVoice) utterance.voice = preferredVoice;
 
       let finished = false;
+      let safetyTimer: number | null = null;
       const finish = () => {
         if (finished) return;
         finished = true;
+        if (safetyTimer !== null) window.clearTimeout(safetyTimer);
+        if (voiceSpeechCancelRef.current === finish) voiceSpeechCancelRef.current = null;
         setSpeakingIndex(null);
         if (isLocalVoiceTurn) {
           voiceBrowserSpeechActiveRef.current = false;
@@ -718,6 +725,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
         settle();
       };
+      voiceSpeechCancelRef.current = finish;
+      safetyTimer = window.setTimeout(
+        finish,
+        Math.min(120_000, Math.max(10_000, clean.length * 120)),
+      );
       utterance.onend = finish;
       utterance.onerror = () => {
         if (isLocalVoiceTurn) {
@@ -827,6 +839,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceModeRef.current = false;
     voiceSpeechPlaybackGenerationRef.current += 1;
     voiceBrowserSpeechActiveRef.current = false;
+    const cancelSpeech = voiceSpeechCancelRef.current;
+    voiceSpeechCancelRef.current = null;
+    cancelSpeech?.();
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     const liveSession = voiceChannelRef.current;
     voiceChannelRef.current = null;
@@ -1157,6 +1172,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         stopVoicePlayback();
         voiceSpeechPlaybackGenerationRef.current += 1;
         voiceBrowserSpeechActiveRef.current = false;
+        const cancelSpeech = voiceSpeechCancelRef.current;
+        voiceSpeechCancelRef.current = null;
+        cancelSpeech?.();
         if ("speechSynthesis" in window) window.speechSynthesis.cancel();
         voicePendingAudioChunksRef.current = [];
         voiceRealtimeAudioChunkCountRef.current = 0;
@@ -1189,6 +1207,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (normalizedInterim.length >= 3 && !isBrowserSpeechEcho) {
           voiceSpeechPlaybackGenerationRef.current += 1;
           voiceBrowserSpeechActiveRef.current = false;
+          const cancelSpeech = voiceSpeechCancelRef.current;
+          voiceSpeechCancelRef.current = null;
+          cancelSpeech?.();
           if ("speechSynthesis" in window) window.speechSynthesis.cancel();
           if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
           voiceLastCommittedInputRef.current = "";
@@ -1407,13 +1428,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (!activeSession) {
           voiceForcedReplyRef.current = null;
           voiceInternalPolicyTextRef.current = null;
-          waitingForVoiceReplyRef.current = false;
           voiceAssistantTextRef.current = policyReply;
           voiceResponseDoneRef.current = true;
           void persistRealtimeTurnIfReady();
-          setVoiceError("La respuesta quedó disponible por escrito porque la conexión de voz se interrumpió.");
-          setVoiceStatus("Te escucho…");
-          setIsListening(true);
+          setVoiceError("La voz en tiempo real no estuvo disponible; reproduciendo con la voz alternativa.");
+          setVoiceStatus("Orby está hablando…");
+          setIsListening(false);
+          void speakText(policyReply, messages.length);
           return;
         }
         try {
@@ -1428,13 +1449,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         } catch {
           voiceForcedReplyRef.current = null;
           voiceInternalPolicyTextRef.current = null;
-          waitingForVoiceReplyRef.current = false;
           voiceAssistantTextRef.current = policyReply;
           voiceResponseDoneRef.current = true;
           void persistRealtimeTurnIfReady();
-          setVoiceError("La respuesta quedó disponible por escrito; no se pudo iniciar su audio.");
-          setVoiceStatus("Te escucho…");
-          setIsListening(true);
+          setVoiceError("Gemini no pudo leer la respuesta; usando la voz alternativa.");
+          setVoiceStatus("Orby está hablando…");
+          setIsListening(false);
+          void speakText(policyReply, messages.length);
         }
         return;
       }

@@ -221,7 +221,7 @@
 
 
 ## 2026-11-02 — Orby Voice: primer respaldo Cloudflare
-- Añadido adaptador server-only para Workers AI con Whisper Large V3 Turbo (transcripción) y Llama 3.3 70B (respaldo de tutor).
+- Añadido adaptador server-only para Workers AI con Whisper Large V3 Turbo (transcripción) y Gemma 4 26B (respaldo de tutor).
 - La ruta de transcripción conserva Gemini → Groq y añade Cloudflare como tercer intento cuando las credenciales están configuradas.
 - La ruta del tutor conserva el router actual y recurre a Cloudflare únicamente cuando fallan los proveedores anteriores. El texto de Cloudflare no evita los controles de seguridad y calidad existentes.
 - Si Gemini Live se interrumpe tras recibir una transcripción, la respuesta de respaldo se puede leer con la síntesis del navegador.
@@ -239,3 +239,7 @@
 - Si los motores gratuitos agotan cuota, el worker estaciona el trabajo hasta las 00:05 UTC siguiente sin agotar el contador de reintentos.
 - Nueva migración requerida: `supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql`.
 - No tocar `main`, no desplegar a estudiantes. Aún faltan las pruebas locales de typecheck/lint/build y pruebas end-to-end de voz y búsqueda semántica.
+
+
+### Ajuste de cuota gratuita
+- Se selecciona `@cf/google/gemma-4-26b-a4b-it` como respaldo de tutor en Cloudflare, en lugar de Llama 3.3 70B, para consumir menos Neurons por respuesta.

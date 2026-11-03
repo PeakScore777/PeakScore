@@ -25,18 +25,6 @@ const PROGRAMMING_REQUEST_PATTERNS = [
   /\b(bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
 ];
 
-const OUTSIDE_SCOPE_PATTERNS = [
-  // Cooking requests in Spanish, English and common Latin-script variants.
-  /\b(receta|recetas|cocinar|cocina|hornear|gastronomia|cook|cooking|recipe|recipes|bake|baking|cuisine|food preparation|recette|recettes|cuisiner|cozinhar|receita|receitas|cucinare|ricetta|ricette|kochen|kocht|kochst|gekocht|rezept|rezepte)\b/i,
-  /\b(khana banana|khana pakana|mujhe khana|recipe do|recipe batao|khana banane)\b/i,
-  /\b(diagnostico medico|recetar medicamento|tratamiento medico|medicamentos|sintomas de enfermedad|medical diagnosis|prescribe medication|medical treatment)\b/i,
-  /\b(invertir dinero|comprar acciones|criptomonedas|apuesta|apuestas|consejo legal|demanda judicial)\b/i,
-  /\b(?:carros?|automoviles?|vehiculos?|llantas?|mantenimiento de vehiculos|mecanica automotriz|motos?|peliculas?|series de television|videojuegos?|chistes?|clima de manana|pronostico del tiempo)\b/i,
-  /\b(?:cars?|automobiles?|vehicles?|tires?|tyres?|flat tire|car maintenance|car repair|motorcycles?)\b/i,
-  /\b(?:movies?|films?|tv shows?|television series|video games?|gaming|jokes?|weather|forecast)\b/i,
-  /\b(?:what should i eat|meal plan|restaurant|breakfast|lunch|dinner|snack)\b/i,
-];
-
 /**
  * Positive scope allowlist. A request must mention an ICFES area, an exam
  * competency, or a recognizable curricular concept. Unknown subjects fail

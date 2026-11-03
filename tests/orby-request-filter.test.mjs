@@ -141,6 +141,11 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorRouteSource, /sin repetir toda tu presentación/);
 });
 
+test("el chat de texto también rechaza escrituras ajenas al español antes de llamar al modelo", () => {
+  assert.match(lessonTutorRouteSource, /containsUnsupportedSpanishScript\(userMessage\)/);
+  assert.match(lessonTutorRouteSource, /reply: ORBY_SPANISH_ONLY_REPLY/);
+});
+
 test("la voz nunca reproduce audio antes de validar su transcripción y bloquea escrituras no españolas", () => {
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef/);
   assert.match(lessonTutorSource, /!voiceOutputTranscriptValidatedRef\.current/);

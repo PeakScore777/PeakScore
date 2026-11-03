@@ -26,14 +26,6 @@ const PROGRAMMING_REQUEST_PATTERNS = [
   /\b(?:console\.log|print\s*\(|def\s+\w+|import\s+\w+|select\s+.{1,60}\s+from\s+)\b/i,
 ];
 
-/**
- * Positive scope allowlist. A request must mention an ICFES area, an exam
- * competency, or a recognizable curricular concept. Unknown subjects fail
- * closed instead of being sent to a general-purpose model.
- */
-const ICFES_EXAM_REFERENCE_PATTERN = /\b(?:saber\s*11|icfes|prueba de estado|examen de estado)\b/i;
-const ICFES_EXAM_LEARNING_INTENT_PATTERN = /\b(?:pregunta|preguntas|ejercicio|ejercicios|contenido|contenidos|tema|temas|competencia|competencias|componente|componentes|simulacro|cuadernillo|estructura|formato|areas|preparar|preparacion|estudiar|estudio|aprender|repasar|practicar|practica|resolver|resuelve|explicar|explica|explicame|evaluar|evalua|evaluan|que es|que son|what is|what are|what does|assess|evaluate|prepare|preparation|study|learn|practice|question|questions|exercise|exercises|topics|competencies|structure|format)\b/i;
-
 const ICFES_SCOPE_PATTERNS = [
   /\b(?:pregunta tipo icfes|simulacro(?: de saber\s*11| del icfes)?|cuadernillo de preguntas)\b/i,
   /\b(?:matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuacion(?:es)?|inecuacion(?:es)?|fracciones?|porcentajes?|razones y proporciones|proporcionalidad|funcion lineal|funcion cuadratica|plano cartesiano|pendiente de una recta|polinomios?|logaritmos?|potencias?|raiz cuadrada|teorema de pitagoras|perimetro|area de un triangulo|volumen de un|media aritmetica|mediana|moda estadistica|secuencia numerica|sucesion numerica|variable independiente|variable dependiente)\b/i,
@@ -52,12 +44,6 @@ const ORBY_STUDY_INVITATION_PATTERN =
 
 const STUDY_GUIDANCE_FOLLOW_UP_PATTERNS = [
   /^(?:no se|no lo se|ni idea|no tengo claro|no se que (?:estudiar|tema|area)|ayudame a elegir|ayudame a decidir|por donde empiezo|no se por donde empezar|que me recomiendas para empezar|elige por mi)[.!? ]*$/i,
-];
-
-const SHORT_ACADEMIC_FOLLOW_UP_PATTERNS = [
-  /^(?:y )?(?:por que|como asi|que significa|que quiere decir|explicame mas|explica mas|amplia la explicacion|no entiendo|no comprendi|puedes repetir|repite por favor|dame otro ejemplo|otro ejemplo|un ejemplo mas|continua|continua por favor|siguiente|sigamos|y eso|y ese|y esa|cual es la respuesta|la opcion [a-d]|opcion [a-d]|la [a-d]|respuesta [a-d]|el siguiente paso)[.!? ]*$/i,
-  ...STUDY_GUIDANCE_FOLLOW_UP_PATTERNS,
-  /^(?:si|no|ok|vale|listo|entiendo|de acuerdo)[.!? ]*$/i,
 ];
 
 export const ORBY_ICFES_SCOPE_REPLY =
@@ -216,12 +202,6 @@ export function containsOrbyPromptInjection(message: string): boolean {
   return Boolean(normalized) && INJECTION_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
-function isScopeRefusalContext(value: string): boolean {
-  return /\b(?:fuera del alcance|no corresponde a los contenidos|no puedo ayudarte con esa solicitud|no puedo trabajar ese tema|esa solicitud esta fuera)\b/i.test(
-    normalizeOrbyRequestText(value),
-  );
-}
-
 /**
  * The only non-explicit allowance is a short follow-up to a recent, clearly
  * curricular exchange. Greeting and identity turns remain deterministic UX
@@ -291,9 +271,17 @@ export function containsCookingRequest(value: string): boolean {
  * Backward-compatible name used by older client/output guards. It now detects
  * only potentially harmful instructions, never ordinary non-ICFES subjects.
  */
-export function containsExplicitNonIcfesTopic(value: string, _previousContext = ""): boolean {
+export function containsExplicitNonIcfesTopic(value: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(value);
-  return Boolean(normalized) && POTENTIALLY_HARMFUL_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));
+  if (!normalized) return false;
+  if (POTENTIALLY_HARMFUL_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))) return true;
+
+  // A brief referential follow-up inherits a dangerous intent only when the
+  // immediately preceding exchange contains an explicit harmful instruction.
+  const isReferentialFollowUp = /^(?:y|entonces|hazlo|haz eso|como hago eso|dime como|continua|sigue|do it|then|how do i do that|continue)[.!? ]*$/i.test(normalized);
+  if (!isReferentialFollowUp) return false;
+  const prior = normalizeOrbyRequestText(previousContext);
+  return POTENTIALLY_HARMFUL_REQUEST_PATTERNS.some((pattern) => pattern.test(prior));
 }
 
 /** Previous assistant text is trusted as context only when the exchange itself

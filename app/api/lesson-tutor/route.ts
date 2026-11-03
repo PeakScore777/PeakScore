@@ -5,7 +5,7 @@ import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router
 import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishScript, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -668,7 +668,11 @@ No uses bloques Markdown ni texto fuera del JSON.
     }
 
     let modelReply = normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000));
-    if (containsExternalPreIcfesPromotion(modelReply)) {
+    if (containsUnsupportedSpanishScript(modelReply)) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "unsupported_output_script" });
+      modelReply = ORBY_SPANISH_OUTPUT_FALLBACK;
+      parsed.checkQuestion = "";
+    } else if (containsExternalPreIcfesPromotion(modelReply)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "external_preicfes_promotion" });
       modelReply = ORBY_EXTERNAL_PREICFES_REPLY;
       parsed.checkQuestion = "";

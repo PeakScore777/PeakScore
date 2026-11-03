@@ -803,12 +803,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       stopRealtimeVoice();
       setWorkspaceMode("chat");
       setVoiceStatus("Respuesta disponible por escrito");
-      setVoiceError("La voz se interrumpió; la respuesta filtrada quedó disponible por escrito.");
+      setVoiceError("La voz en tiempo real se interrumpió; reproduciendo la respuesta filtrada con la voz alternativa.");
       voiceAssistantTextRef.current = forcedPolicyReply;
       voiceResponseDoneRef.current = true;
       voiceTurnPersistedRef.current = false;
       void persistRealtimeTurnIfReady();
-      drainPendingMessageQueue();
+      setVoiceStatus("Orby está hablando…");
+      void speakText(forcedPolicyReply, messages.length).finally(() => {
+        drainPendingMessageQueue();
+      });
       return;
     }
     stopRealtimeVoice();

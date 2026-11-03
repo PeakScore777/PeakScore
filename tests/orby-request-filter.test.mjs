@@ -361,6 +361,10 @@ test("bloquea programación y cocina aunque la petición llegue en inglés o tra
   assert.equal(filter.containsCookingInstruction("No puedo enseñar cocina; mi función es preparar Saber 11."), false);
   assert.equal(filter.containsCookingInstruction("Je peux partager une recette de gâteau."), true);
   assert.equal(filter.containsCookingInstruction("Ich zeige dir, wie man kocht."), true);
+  assert.equal(filter.containsExplicitNonIcfesTopic("Orby, se me pinchó una llanta."), true);
+  assert.equal(filter.containsExplicitNonIcfesTopic("No puedo ayudarte con esa solicitud; mi función es preparar Saber 11."), false);
+  assert.equal(filter.isIcfesScopedAssistantTurn("La respuesta correcta es B porque la fotosíntesis transforma energía.", "Explícame la fotosíntesis."), true);
+  assert.equal(filter.isIcfesScopedAssistantTurn("Los carros usan distintos tipos de motor.", "Explícame la fotosíntesis."), false);
   assert.match(lessonTutorSource, /containsCookingInstruction\(partialReply\)/);
   assert.match(lessonTutorSource, /containsCookingInstruction\(rawReply\)/);
   assert.match(lessonTutorRouteSource, /containsCookingInstruction\(modelReply\)/);

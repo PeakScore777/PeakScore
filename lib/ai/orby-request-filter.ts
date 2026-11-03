@@ -274,7 +274,7 @@ const POTENTIALLY_HARMFUL_REQUEST_PATTERNS = [
   /\b(?:como|how (?:do i|to))\b.{0,55}\b(?:golpear|pegar|agredir|atacar|beat up|assault|attack|hurt|injure)\b.{0,60}\b(?:a alguien|una persona|mi companero|someone|a person|my classmate)\b/i,
   /\b(?:como|how to)\b.{0,50}\b(?:estafar|enganar para robar|falsificar documentos|robar una cuenta|cometer fraude|scam someone|commit fraud|forge documents|steal an account)\b/i,
   /\b(?:doxxear|doxing|publicar la direccion privada|encontrar la direccion de casa de|find someone's home address|expose private information)\b/i,
-];;
+];
 
 export function containsCookingRequest(value: string): boolean {
   const normalized = normalizeOrbyRequestText(value);

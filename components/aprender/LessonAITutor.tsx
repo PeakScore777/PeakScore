@@ -1224,8 +1224,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     if (typeof interimInput?.text === "string") {
       const interimText = interimInput.text.slice(0, 1200);
-      setLiveTranscript(interimText);
-      if (voiceBrowserSpeechActiveRef.current) {
+      const unsupportedInterimScript = containsUnsupportedSpanishScript(interimText);
+      setLiveTranscript(unsupportedInterimScript ? "" : interimText);
+      if (!unsupportedInterimScript && voiceBrowserSpeechActiveRef.current) {
         const normalizedInterim = normalizeVoiceComparison(interimText);
         const normalizedAssistant = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
         const isBrowserSpeechEcho = normalizedInterim.length >= 4
@@ -1253,12 +1254,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           setIsListening(true);
           setVoiceStatus("Te escucho…");
         }
-      } else {
+      } else if (!unsupportedInterimScript) {
         const previousInterim = voiceUserTextRef.current.trim();
         if (!previousInterim || interimText.startsWith(previousInterim) || previousInterim.startsWith(interimText)) {
           voiceUserTextRef.current = interimText;
         }
         setVoiceStatus("Te escucho…");
+      } else {
+        setVoiceStatus("Verificando el audio en español…");
       }
     }
 
@@ -1334,7 +1337,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
       voiceOutputAudioBlockedRef.current = Boolean(voicePreflightReplyRef.current);
-      voiceOutputTranscriptValidatedRef.current = false;
       if (voicePreflightReplyRef.current) stopVoicePlayback();
       setLiveTranscript("");
       setMessages((current) => {
@@ -1362,7 +1364,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const partialNormalized = partialReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
       const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)
         && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|hecho|hecha|soy|fui)\b/.test(partialNormalized);
-      const partialUnsafe = containsUnsupportedSpanishScript(partialReply)
+      const partialUnsafe = voiceOutputAudioBlockedRef.current
+        || containsUnsupportedSpanishScript(partialReply)
         || containsProgrammingInstruction(partialReply)
         || containsExternalPreIcfesPromotion(partialReply)
         || isLikelyEnglishOnlyOrbyReply(partialReply)
@@ -1464,7 +1467,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceRealtimeAudioChunkCountRef.current = 0;
         voiceOutputTranscriptValidatedRef.current = false;
         voiceOutputAudioBlockedRef.current = false;
-        voiceOutputTranscriptValidatedRef.current = false;
         voiceAssistantTextRef.current = "";
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = id;
@@ -1516,6 +1518,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
 
+      const needsBrowserSpeechFallback = voiceOutputAudioBlockedRef.current
+        || !voiceOutputTranscriptValidatedRef.current
+        || voiceRealtimeAudioChunkCountRef.current === 0;
+
       if (rawReply) {
         voiceAssistantTextRef.current = rawReply;
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
@@ -1561,7 +1567,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       // Keep the turn locked until all scheduled audio has actually played.
       // If Live returns text without audio, read it with the browser's Spanish voice.
-      if (voiceRealtimeAudioChunkCountRef.current === 0 && rawReply.trim() && "speechSynthesis" in window) {
+      if (needsBrowserSpeechFallback && rawReply.trim() && "speechSynthesis" in window) {
         const id = voiceAssistantMessageIdRef.current;
         const messageIndex = messages.findIndex((message) => message.id === id);
         speakText(rawReply, messageIndex >= 0 ? messageIndex : messages.length);

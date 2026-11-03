@@ -697,7 +697,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   // Cancel only the current response, keeping the Live session and mic alive.
   // A new user turn always takes priority over audio that is still playing.
   function interruptCurrentVoiceOutput() {
+    const interruptedAssistantId = voiceAssistantMessageIdRef.current;
+    const hadIncompleteAssistantReply = !voiceResponseDoneRef.current && Boolean(interruptedAssistantId);
     if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
+    if (hadIncompleteAssistantReply && interruptedAssistantId) {
+      setMessages((current) => current.filter((item) => item.id !== interruptedAssistantId));
+    }
     clearVoiceResponseWatchdog();
     voiceLocalReplyInFlightRef.current = false;
     voiceBrowserSpeechActiveRef.current = false;
@@ -772,7 +777,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (isLocalVoiceTurn) {
           voiceBrowserSpeechActiveRef.current = false;
           if (!cancelled) {
-            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 500;
+            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 1_800;
             finishLocalVoiceReply(localVoiceMessageId);
           }
         }
@@ -1395,7 +1400,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } else if (voiceActivity?.type === "ACTIVITY_END") {
       // While local TTS is active, this is usually the mic hearing Orby's
       // speaker output. A real barge-in is handled by a non-echo interim.
-      if (!voiceBrowserSpeechActiveRef.current) {
+      if (!voiceBrowserSpeechActiveRef.current
+        && Date.now() > voiceLastAssistantPlaybackUntilRef.current + 1_800) {
         waitingForVoiceReplyRef.current = true;
         setIsListening(false);
         setVoiceStatus("Procesando lo que dijiste…");
@@ -1455,6 +1461,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       && isLikelyVoicePlaybackEcho(normalizedFinal, recentAssistantText);
     if (isRecentAcousticEcho) {
       console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
+    } else if (transcript && voiceBrowserSpeechActiveRef.current) {
+      // If final ASR arrives without a usable interim, treat it as a real
+      // interruption and stop the current local utterance before handling it.
+      interruptCurrentVoiceOutput();
     }
 
     // Never return from the whole event handler for a duplicate transcript:

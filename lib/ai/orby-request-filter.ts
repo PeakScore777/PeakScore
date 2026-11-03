@@ -13,16 +13,21 @@ export function normalizeOrbyRequestText(value: string): string {
 }
 
 const PROGRAMMING_REQUEST_PATTERNS = [
-  /\b(programar|programacion|programador|programadora|codificar|coding|programming|desarrollo de software|desarrollo web)\b/i,
+  // Spanish, English and common transliterated requests. Foreign scripts are
+  // rejected separately; these patterns cover users who transliterate them.
+  /\b(programar|programacion|programador|programadora|codificar|coding|programming|desarrollo de software|desarrollo web|software development|web development|software engineering|programming language|learn to code|teach me to code|how to code|write code|coding tutorial|app development)\b/i,
   /\b(python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|codigo fuente|escribir codigo|depurar codigo|debuggear)\b/i,
-  /\b(aprender|estudiar|ensename|ayudame|explicame|quiero aprender|me ensenas|me ayudas)\b.{0,80}\b(programar|programacion|python|javascript|typescript|java|codificar|crear una app|hacer una pagina web)\b/i,
-  /\b(crear|hacer|construir|desarrollar|disenar)\s+(?:un|una|el|la)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|videojuego|juego digital|bot|robot virtual)\b/i,
+  /\b(aprender|estudiar|ensename|ayudame|explicame|quiero aprender|me ensenas|me ayudas|teach me|learn|show me|help me)\b.{0,80}\b(programar|programacion|python|javascript|typescript|java|codificar|coding|programming|code|crear una app|hacer una pagina web)\b/i,
+  /\b(crear|hacer|construir|desarrollar|disenar|build|create|make|develop)\s+(?:un|una|el|la|a|an|the)?\s*(?:sitio|pagina|web|app|aplicacion|software|programa|videojuego|juego digital|bot|robot virtual|website|application|mobile app|software|game|bot)\b/i,
+  /\b(mujhe|main|mai)\b.{0,50}\b(coding|programming|code|python|javascript)\b|\b(coding|programming|code|python)\b.{0,50}\b(sikhao|sikh[aou]|sikhna|karna|kaise)\b/i,
   /\b(bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
 ];
 
 const OUTSIDE_SCOPE_PATTERNS = [
-  /\b(receta|recetas|cocinar|cocina|hornear|gastronomia)\b/i,
-  /\b(diagnostico medico|recetar medicamento|tratamiento medico|medicamentos|sintomas de enfermedad)\b/i,
+  // Cooking requests in Spanish, English and common Latin-script variants.
+  /\b(receta|recetas|cocinar|cocina|hornear|gastronomia|cook|cooking|recipe|recipes|bake|baking|cuisine|food preparation|recette|recettes|cuisiner|cozinhar|receita|receitas|cucinare|ricetta|ricette|kochen|rezept|rezepte)\b/i,
+  /\b(khana banana|khana pakana|mujhe khana|recipe do|recipe batao|khana banane)\b/i,
+  /\b(diagnostico medico|recetar medicamento|tratamiento medico|medicamentos|sintomas de enfermedad|medical diagnosis|prescribe medication|medical treatment)\b/i,
   /\b(invertir dinero|comprar acciones|criptomonedas|apuesta|apuestas|consejo legal|demanda judicial)\b/i,
 ];
 

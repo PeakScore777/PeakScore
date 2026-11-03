@@ -472,7 +472,7 @@ test("el filtro ICFES funciona en modo allowlist y rechaza conversaciones cotidi
     const result = filter.preflightOrbyRequest(prompt);
     assert.equal(result.allowed, false, prompt);
     assert.equal(result.category, "outside", prompt);
-    assert.match(result.reply, /solo puedo ayudarte con/i);
+    assert.match(result.reply, /no corresponde a saber 11|ese tema no lo trabajo aqui/i);
   }
 
   const icfesRequests = [

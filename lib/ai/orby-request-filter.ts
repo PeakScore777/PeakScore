@@ -233,7 +233,7 @@ function isScopeRefusalContext(value: string): boolean {
 export function isIcfesScopedRequest(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message)
     .replace(/^[¿¡\s]+/, "")
-    .replace(/[?!.;:,\s]+$/, "")
+    .replace(/[?!.;:, \s]+$/, "")
     .trim();
   if (!normalized) return false;
   if (isOrbyGreetingRequest(message) || isGenericIcfesEnglishRequest(message)) return true;
@@ -243,12 +243,11 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
 
   const isShortFollowUp = normalized.length <= 90
     && SHORT_ACADEMIC_FOLLOW_UP_PATTERNS.some((pattern) => pattern.test(normalized));
-  if (!isShortFollowUp || !previousContext.trim() || isScopeRefusalContext(previousContext)) return false;
+  const isEducationalAsk = /^(?:que es|que son|define|explicame|como funciona|como se resuelve|por que|cual es|cuales son|diferencia entre|que significa|analiza|compara|resuelve|ayudame con|quiero entender|no entiendo|puedes explicar|me explicas)\b/i.test(normalized);
+  if ((!isShortFollowUp && !isEducationalAsk) || !previousContext.trim() || isScopeRefusalContext(previousContext)) return false;
   const prior = normalizeOrbyRequestText(previousContext);
   const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
     || ORBY_STUDY_INVITATION_PATTERN.test(prior);
-  const isClearlyEducationalFollowUp = /^(?:que es|que son|define|explicame|como funciona|como se resuelve|por que|cual es|cuales son|diferencia entre|que significa|analiza|compara|resuelve|ayudame con|quiero entender|no entiendo|puedes explicar|me explicas)\b/i.test(normalized);
-  if (hasCurriculumContext && isClearlyEducationalFollowUp) return true;
   return hasCurriculumContext;
 }
 
@@ -402,7 +401,7 @@ export function containsCookingInstruction(text: string): boolean {
   if (!value) return false;
   const explicitRefusal = /\b(?:no (?:puedo|voy a|debo) (?:ensenar|explicar|compartir|dar)|no enseno|no doy clases de|fuera del alcance|mi funcion es preparar|no puedo ayudarte con)\b.{0,100}\b(?:cocina|cocinar|receta|recetas|cooking|cook|recipe|recipes|baking)\b/i.test(value);
   if (explicitRefusal) return false;
-  return /\b(?:aqui tienes|te comparto|te doy|puedes preparar|para preparar|prepara|cocina|cocinar|hornea|a recipe for|here is a recipe|how to cook|teach you to cook|share a recipe|je peux partager|ich zeige dir|voglio una ricetta|dammi una ricetta|give me a recipe|dame una receta)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|recipe|recipes|cake|food|meal|cook|cooking|bake|baking|kochen|gateau|ricetta|receita|recette|rezept)\b|\b(?:recipe for|a recipe|recette de|una receta de|ricetta per|ricetta di|ricetta|receita de|rezept fur)\b/i.test(value);
+  return /\b(?:aqui tienes|te comparto|te doy|puedes preparar|para preparar|prepara|cocina|cocinar|hornea|a recipe for|here is a recipe|how to cook|teach you to cook|share a recipe|je peux partager|ich zeige dir|voglio una ricetta|dammi una ricetta|give me a recipe|dame una receta)\b.{0,90}\b(?:receta|recetas|arepa|arepas|pan|torta|pastel|pasta|recipe|recipes|cake|food|meal|cook|cooking|bake|baking|kochen|gateau|ricetta|receita|recette|rezept)\b|\b(?:recipe for|a recipe|recette de|una receta de|ricetta per|ricetta di|ricetta|receita de|rezept fur)\b|\b(?:ich zeige dir|ich kann dir zeigen)\b.{0,70}\b(?:kochen|backen)\b/i.test(value);
 }
 
 export function extractPlainOrbyReply(value: string): string {

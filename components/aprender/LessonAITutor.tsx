@@ -1994,6 +1994,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setLiveTranscript("");
     setVoiceError("");
     voiceUserTextRef.current = "";
+    voiceUnsupportedInputDetectedRef.current = false;
     voiceUserMessageVisibleRef.current = false;
     voiceAssistantTextRef.current = "";
     voiceResponseDoneRef.current = false;
@@ -2079,6 +2080,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
         voiceUserTextRef.current = message;
+        voiceUnsupportedInputDetectedRef.current = false;
         voiceRealtimeAudioChunkCountRef.current = 0;
         voiceOutputTranscriptValidatedRef.current = false;
         voiceOutputAudioBlockedRef.current = false;
@@ -2125,6 +2127,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
       voiceUserTextRef.current = message;
+      voiceUnsupportedInputDetectedRef.current = false;
       voiceInputPolicyRef.current = typedPreflight.allowed
         ? null
         : typedPreflight.category === "programming" ? "programming" : "outside";

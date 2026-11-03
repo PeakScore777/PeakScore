@@ -742,13 +742,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function speakText(text: string, index: number): Promise<void> {
     const clean = text.trim().replace(/\\s+/g, " ").slice(0, 1800);
-    if (!clean) return;
-
+    const audioContext = voiceAudioContextRef.current;
     const isLocalLiveTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
-    const messageId = isLocalLiveTurn ? voiceAssistantMessageIdRef.current : null;
+    if (!clean || !voiceModeRef.current || !audioContext || audioContext.state === "closed") {
+      await speakWithBrowserFallback(text, index);
+      return;
+    }
+
+    const messageId = voiceAssistantMessageIdRef.current;
+    const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
     const abortController = new AbortController();
-    let audioElement: HTMLAudioElement | null = null;
-    let objectUrl: string | null = null;
+    let source: AudioBufferSourceNode | null = null;
     let finished = false;
     let resolvePlayback: (() => void) | null = null;
     let safetyTimer: number | null = null;
@@ -759,34 +763,31 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       finished = true;
       if (safetyTimer !== null) window.clearTimeout(safetyTimer);
       if (voiceSpeechCancelRef.current === cancelPlayback) voiceSpeechCancelRef.current = null;
-      if (audioElement) {
-        audioElement.onended = null;
-        audioElement.onerror = null;
-        audioElement.onloadedmetadata = null;
-        audioElement.pause();
-        audioElement.removeAttribute("src");
-        audioElement.load();
-        audioElement = null;
+      if (source) {
+        voiceAudioSourcesRef.current.delete(source);
+        source.onended = null;
+        try { source.disconnect(); } catch { /* Already disconnected. */ }
+        source = null;
       }
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-        objectUrl = null;
-      }
-      voiceBrowserSpeechActiveRef.current = false;
-      setSpeakingIndex(null);
-      if (!cancelled && isLocalLiveTurn) {
+      if (!cancelled) {
+        voiceBrowserSpeechActiveRef.current = false;
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + 1_800;
-        finishLocalVoiceReply(messageId);
+        if (isLocalLiveTurn) finishLocalVoiceReply(messageId);
+        else finishRealtimeVoicePlayback();
       }
       resolvePlayback?.();
     };
     const cancelPlayback = () => {
       abortController.abort();
+      if (source) {
+        try { source.stop(); } catch { /* Playback may already have ended. */ }
+      }
       finish(true);
     };
     voiceSpeechCancelRef.current = cancelPlayback;
 
     try {
+      await ensureVoiceAudioContextRunning(audioContext);
       const response = await fetch("/api/orby/voice-speech", {
         method: "POST",
         credentials: "same-origin",
@@ -795,37 +796,40 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         body: JSON.stringify({ text: clean }),
       });
       if (!response.ok) throw new Error("Neural speech endpoint unavailable.");
-      const audioBlob = await response.blob();
-      if (audioBlob.size < 256 || audioBlob.size > 4 * 1024 * 1024) {
+      const audioBytes = await response.arrayBuffer();
+      if (audioBytes.byteLength < 256 || audioBytes.byteLength > 4 * 1024 * 1024) {
         throw new Error("Neural speech audio has an invalid size.");
       }
-      if (abortController.signal.aborted) {
+      const audioBuffer = await audioContext.decodeAudioData(audioBytes.slice(0));
+      if (abortController.signal.aborted || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
         finish(true);
         return;
       }
 
-      objectUrl = URL.createObjectURL(audioBlob);
-      audioElement = new Audio(objectUrl);
-      audioElement.preload = "auto";
-      audioElement.volume = 1;
-      audioElement.onloadedmetadata = () => {
-        const duration = Number.isFinite(audioElement?.duration) ? audioElement.duration : clean.length * 0.055;
-        voiceLastAssistantPlaybackUntilRef.current = Date.now() + duration * 1000 + 1_800;
-        safetyTimer = window.setTimeout(finish, Math.min(60_000, Math.max(8_000, duration * 1000 + 5_000)));
-      };
-      audioElement.onended = () => finish(false);
-      audioElement.onerror = () => finish(true);
-
+      source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
+      voiceAudioSourcesRef.current.add(source);
       voiceBrowserSpeechActiveRef.current = true;
       voiceLastAssistantOutputRef.current = clean;
-      voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 55;
+      voiceLastAssistantPlaybackUntilRef.current = Date.now() + audioBuffer.duration * 1000 + 1_800;
       setSpeakingIndex(index);
       if (isLocalLiveTurn) setVoiceStatus("Orby está hablando…");
-      await audioElement.play();
+      source.onended = () => {
+        if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+        finish(false);
+        setSpeakingIndex(null);
+      };
+      safetyTimer = window.setTimeout(
+        () => finish(false),
+        Math.min(60_000, Math.max(8_000, audioBuffer.duration * 1000 + 5_000)),
+      );
+      source.start(audioContext.currentTime + 0.015);
       await playbackPromise;
     } catch (error) {
       const cancelled = abortController.signal.aborted
-        || (error instanceof DOMException && error.name === "AbortError");
+        || (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError"));
       if (cancelled) {
         finish(true);
         return;

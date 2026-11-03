@@ -34,8 +34,11 @@ const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-ca
 const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
-const cloudflareVoice = await loadTypeScriptModule("../lib/ai/cloudflare-workers-ai.ts", { stripServerOnly: true });
+const neuralSpeech = await loadTypeScriptModule("../lib/ai/orby-neural-speech.ts", { stripServerOnly: true });
 const neuralVoiceRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
+const neuralSpeechSource = await readFile(new URL("../lib/ai/orby-neural-speech.ts", import.meta.url), "utf8");
+const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-config.ts", import.meta.url), "utf8");
+const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
@@ -59,50 +62,60 @@ test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de O
   assert.match(lessonTutorSource, /if \(isVoiceInteraction\)\s*\{\s*if \("speechSynthesis" in window\)\s*\{\s*await new Promise<void>\(\(resolve\) => window\.setTimeout\(resolve, 120\)\);\s*await speakText\(data\.reply, assistantIndex\);/);
 });
 
-test("Orby neural Spanish TTS uses the server-side Aura-2 model and returns MP3 bytes", async () => {
-  const previousAccount = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const previousToken = process.env.CLOUDFLARE_API_TOKEN;
+test("Orby neural Spanish TTS shares the Live voice and returns WAV audio", async () => {
+  const previousApiKey = process.env.GEMINI_API_KEY;
   const originalFetch = globalThis.fetch;
   const expectedAudio = Buffer.alloc(512, 1);
-  expectedAudio.set(Buffer.from("ID3"), 0);
+  expectedAudio.write("RIFF", 0, "ascii");
+  expectedAudio.write("WAVE", 8, "ascii");
   let capturedUrl = "";
+  let capturedHeaders = new Headers();
   let capturedBody = {};
   try {
-    process.env.CLOUDFLARE_ACCOUNT_ID = "a".repeat(32);
-    process.env.CLOUDFLARE_API_TOKEN = "test-only-token";
+    process.env.GEMINI_API_KEY = "test-only-gemini-key";
     globalThis.fetch = async (input, init) => {
       capturedUrl = String(input);
+      capturedHeaders = new Headers(init?.headers);
       capturedBody = JSON.parse(String(init?.body ?? "{}"));
       return new Response(JSON.stringify({
-        success: true,
-        result: expectedAudio.toString("base64"),
+        steps: [{
+          type: "model_output",
+          content: [{ type: "audio", data: expectedAudio.toString("base64") }],
+        }],
       }), { status: 200, headers: { "Content-Type": "application/json" } });
     };
-    const audio = await cloudflareVoice.synthesizeOrbySpeechWithCloudflare("¡Hola! Vamos a estudiar juntos.");
+
+    const config = { voiceName: "Despina", style: "Español colombiano cálido y conversacional." };
+    const audio = await neuralSpeech.synthesizeOrbySpeech("¡Hola! Vamos a estudiar juntos.", config);
     assert.deepEqual(audio, expectedAudio);
-    assert.ok(capturedUrl.includes("@cf/deepgram/aura-2-es"));
-    assert.equal(capturedBody.speaker, "celeste");
-    assert.equal(capturedBody.encoding, "mp3");
-    assert.equal(capturedBody.container, "none");
-    assert.equal(capturedBody.text, "¡Hola! Vamos a estudiar juntos.");
+    assert.equal(capturedUrl, "https://generativelanguage.googleapis.com/v1beta/interactions");
+    assert.equal(capturedHeaders.get("x-goog-api-key"), "test-only-gemini-key");
+    assert.equal(capturedBody.model, "gemini-3.8-flash-lite-tts");
+    assert.equal(capturedBody.response_format.type, "audio");
+    assert.deepEqual(capturedBody.generation_config.speech_config, [{ voice: "Despina" }]);
+    assert.equal(capturedBody.input[0].content[0].text, "¡Hola! Vamos a estudiar juntos.");
+    assert.equal(capturedBody.input[0].content[0].annotations[0].type, "speech_metadata");
+    assert.equal(capturedBody.input[0].content[0].annotations[0].style, config.style);
+
     assert.ok(neuralVoiceRouteSource.includes("createClient()"));
     assert.ok(neuralVoiceRouteSource.includes("orby_take_rate_limit"));
-    assert.ok(neuralVoiceRouteSource.includes("synthesizeOrbySpeechWithCloudflare(text)"));
-    assert.ok(neuralVoiceRouteSource.includes('"Content-Type": "audio/mpeg"'));
+    assert.ok(neuralVoiceRouteSource.includes("synthesizeOrbySpeech(text"));
+    assert.ok(neuralVoiceRouteSource.includes('"Content-Type": "audio/wav"'));
     assert.ok(lessonTutorSource.includes('fetch("/api/orby/voice-speech"'));
     assert.ok(lessonTutorSource.includes("decodeAudioData(audioBytes.slice(0))"));
     assert.ok(lessonTutorSource.includes("voiceAudioSourcesRef.current.add(source)"));
     assert.ok(lessonTutorSource.includes("voiceSpeechCancelRef.current = cancelPlayback"));
-    assert.ok(realtimeSessionSource.includes('ORBY_LIVE_VOICE_NAME = ORBY_ALLOWED_LIVE_VOICES.has(requestedVoice) ? requestedVoice : "Despina"'));
-    assert.ok(lessonTutorSource.includes("prebuiltVoiceConfig: { voiceName: configuredVoiceName }"));
+    assert.ok(liveSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));
+    assert.ok(neuralSpeechSource.includes('const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts"'));
+    assert.ok(orbyVoiceConfigSource.includes('export const ORBY_VOICE_NAME'));
+    assert.ok(orbyVoiceConfigSource.includes('export const ORBY_VOICE_STYLE'));
   } finally {
     globalThis.fetch = originalFetch;
-    if (previousAccount === undefined) delete process.env.CLOUDFLARE_ACCOUNT_ID;
-    else process.env.CLOUDFLARE_ACCOUNT_ID = previousAccount;
-    if (previousToken === undefined) delete process.env.CLOUDFLARE_API_TOKEN;
-    else process.env.CLOUDFLARE_API_TOKEN = previousToken;
+    if (previousApiKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = previousApiKey;
   }
 });
+
 
 test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {
   assert.match(cloudflareVoiceSource, /@cf\/google\/embeddinggemma-300m/);

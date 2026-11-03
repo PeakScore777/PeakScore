@@ -285,7 +285,9 @@ export function containsExplicitNonIcfesTopic(value: string, previousContext = "
   const context = normalizeOrbyRequestText(previousContext);
   const hasCurriculumContext = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(context))
     || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized));
-  const academicContentFrame = /\b(?:en el texto|en este texto|en la lectura|en este fragmento|en el fragmento|en el pasaje|en el dialogo|en este dialogo|en el aviso|en el enunciado|la frase|esta frase|la oracion|esta oracion|el ejercicio|esta pregunta|la pregunta|el texto dice|el personaje pregunta|analiza|interpreta|traduce|que significa|que quiere decir|comprension de lectura|the passage|the text|the dialogue|this sentence|this phrase|this question|in the passage|in this text|what does .{1,70} mean|what is the meaning of)\b/i.test(normalized);
+  const academicContentFramePattern = /\b(?:en el texto|en este texto|en la lectura|en este fragmento|en el fragmento|en el pasaje|en el dialogo|en este dialogo|en el aviso|en el enunciado|la frase|esta frase|la oracion|esta oracion|el ejercicio|esta pregunta|la pregunta|el texto dice|el personaje pregunta|analiza|interpreta|traduce|que significa|que quiere decir|comprension de lectura|the passage|the text|the dialogue|this sentence|this phrase|this question|in the passage|in this text|what does .{1,70} mean|what is the meaning of)\b/i;
+  const academicContentFrame = academicContentFramePattern.test(normalized)
+    || academicContentFramePattern.test(context);
   if (hasCurriculumContext && academicContentFrame) return false;
 
   return NON_ICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized));

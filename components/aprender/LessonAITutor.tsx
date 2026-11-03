@@ -57,9 +57,14 @@ function isLikelyVoicePlaybackEcho(transcript: string, assistantSpeech: string):
   const spoken = normalizeVoiceComparison(assistantSpeech).trim();
   if (!incoming || !spoken || incoming.length < 3 || spoken.length < 6) return false;
   if (spoken.includes(incoming) || incoming.includes(spoken)) return true;
-  const incomingWords = incoming.split(/\s+/).filter((word) => word.length >= 2);
+  const lowInformationWords = new Set([
+    "no", "si", "y", "o", "de", "la", "el", "en", "es", "que", "con", "por", "para",
+    "del", "un", "una", "me", "te", "lo", "se", "ya", "pero", "como", "muy", "mas",
+    "eso", "esta", "este", "mi", "tu", "hola", "oe", "oee", "oye", "ey",
+  ]);
+  const incomingWords = incoming.split(/\s+/).filter((word) => word.length >= 2 && !lowInformationWords.has(word));
   if (incomingWords.length < 2) return false;
-  const spokenWords = new Set(spoken.split(/\s+/).filter((word) => word.length >= 2));
+  const spokenWords = new Set(spoken.split(/\s+/).filter((word) => word.length >= 2 && !lowInformationWords.has(word)));
   const overlap = incomingWords.filter((word) => spokenWords.has(word)).length;
   return overlap >= 2 && overlap / incomingWords.length >= 0.72;
 }

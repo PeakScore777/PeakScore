@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -702,7 +702,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .slice(0, 5000);
       const utterance = new SpeechSynthesisUtterance(clean);
       utterance.lang = "es-CO";
-      utterance.rate = 1.1;
+      utterance.rate = 1.18;
       utterance.pitch = 1.02;
       utterance.volume = 1;
       const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
@@ -1372,7 +1372,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const asksIdentity = /\b(quien|qn)\b.{0,64}\b(te\s+)?(creo|crearon|hizo|hicieron|desarrollo|programo|creador|creadora|entreno|entren[oó])\b|\b(quien|qn)\s+eres\b|\btu\s+creador\b/.test(normalizedTranscript)
         || falseCreatorClaim;
       voiceUserMessageVisibleRef.current = true;
-      const preflight = preflightOrbyRequest(voiceUserTextRef.current, voiceLastAssistantOutputRef.current);
+      const voiceScopeContext = [
+        voiceLastAssistantOutputRef.current,
+        "Área de estudio: " + subject,
+        "Tema de estudio: " + topic,
+        question,
+        context,
+      ].filter(Boolean).join("\\n").slice(0, 1800);
+      const preflight = preflightOrbyRequest(voiceUserTextRef.current, voiceScopeContext);
       voiceInputPolicyRef.current = asksIdentity
         ? "identity"
         : !preflight.allowed && preflight.category === "programming"
@@ -2103,10 +2110,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setError("");
         return;
       }
-      const typedPreflight = preflightOrbyRequest(message);
+      const typedVoiceContext = [
+        voiceLastAssistantOutputRef.current,
+        "Área de estudio: " + subject,
+        "Tema de estudio: " + topic,
+        question,
+        context,
+      ].filter(Boolean).join("\\n").slice(0, 1800);
+      const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);
       const englishReply = isGenericIcfesEnglishRequest(message) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : null;
       const greetingReply = isOrbyGreetingRequest(message) ? ORBY_GREETING_REPLY : null;
-      const localReply = englishReply ?? greetingReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
+      const studyGuidanceReply = isOrbyStudyGuidanceRequest(message, typedVoiceContext) ? ORBY_STUDY_GUIDANCE_REPLY : null;
+      const localReply = englishReply ?? greetingReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
         voiceUserTextRef.current = message;
         voiceUnsupportedInputDetectedRef.current = false;

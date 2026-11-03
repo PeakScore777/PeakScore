@@ -206,6 +206,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceAudioSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const voiceNextPlaybackTimeRef = useRef(0);
   const voiceUserTextRef = useRef("");
+  const voiceUnsupportedInputDetectedRef = useRef(false);
   const voiceAssistantTextRef = useRef("");
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
   const voiceUserMessageVisibleRef = useRef(false);
@@ -798,8 +799,37 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function fallbackVoiceTurnToText(reason: string) {
     clearVoiceResponseWatchdog();
     const pendingUserText = voiceUserTextRef.current.trim();
-    const forcedPolicyReply = voiceForcedReplyRef.current;
+    const forcedPolicyReply = voiceForcedReplyRef.current ?? voicePreflightReplyRef.current;
     const shouldFallback = voiceModeRef.current && Boolean(pendingUserText) && !voiceResponseDoneRef.current;
+
+    if (!pendingUserText && voiceUnsupportedInputDetectedRef.current && voiceModeRef.current) {
+      const retryUserText = "Audio no reconocido.";
+      const retryReply = ORBY_SPANISH_ONLY_REPLY;
+      const userId = "voice-asr-retry-user-" + Date.now();
+      const assistantId = "voice-asr-retry-assistant-" + Date.now();
+      voiceUserTextRef.current = retryUserText;
+      voiceAssistantTextRef.current = retryReply;
+      voiceAssistantMessageIdRef.current = assistantId;
+      voiceUserMessageVisibleRef.current = true;
+      voiceResponseDoneRef.current = true;
+      voiceTurnPersistedRef.current = false;
+      voiceUnsupportedInputDetectedRef.current = false;
+      voicePreflightReplyRef.current = null;
+      voiceForcedReplyRef.current = null;
+      stopRealtimeVoice();
+      setWorkspaceMode("chat");
+      setMessages((current) => [
+        ...current,
+        { id: userId, role: "user", content: retryUserText },
+        { id: assistantId, role: "assistant", content: retryReply },
+      ]);
+      void persistRealtimeTurnIfReady();
+      setVoiceStatus("Audio no reconocido");
+      setVoiceError("No pude reconocer la frase. Puedes repetirla en español.");
+      void speakText(retryReply, messages.length + 1).finally(() => drainPendingMessageQueue());
+      return;
+    }
+
     if (forcedPolicyReply && shouldFallback) {
       if (!voiceUserMessageVisibleRef.current && pendingUserText) {
         setMessages((current) => [
@@ -812,12 +842,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // model again just because Live audio failed; keep the visible answer,
       // save it once, and release the pending text queue.
       voiceForcedReplyRef.current = null;
+      voicePreflightReplyRef.current = null;
       voiceInternalPolicyTextRef.current = null;
+      voiceUnsupportedInputDetectedRef.current = false;
       stopRealtimeVoice();
       setWorkspaceMode("chat");
       setVoiceStatus("Respuesta disponible por escrito");
       setVoiceError("La voz en tiempo real se interrumpió; reproduciendo la respuesta filtrada con la voz alternativa.");
       voiceAssistantTextRef.current = forcedPolicyReply;
+      const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-policy-fallback-" + Date.now());
+      voiceAssistantMessageIdRef.current = assistantId;
+      setMessages((current) => {
+        const exists = current.some((message) => message.id === assistantId);
+        return exists
+          ? current.map((message) => message.id === assistantId ? { ...message, content: forcedPolicyReply } : message)
+          : [...current, { id: assistantId, role: "assistant", content: forcedPolicyReply }];
+      });
       voiceResponseDoneRef.current = true;
       voiceTurnPersistedRef.current = false;
       void persistRealtimeTurnIfReady();
@@ -1186,6 +1226,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
         voiceLastCommittedInputRef.current = "";
         voiceUserTextRef.current = "";
+        voiceUnsupportedInputDetectedRef.current = false;
         voiceUserMessageVisibleRef.current = false;
         voiceAssistantTextRef.current = "";
         voiceAssistantMessageIdRef.current = null;
@@ -1225,6 +1266,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (typeof interimInput?.text === "string") {
       const interimText = interimInput.text.slice(0, 1200);
       const unsupportedInterimScript = containsUnsupportedSpanishScript(interimText);
+      voiceUnsupportedInputDetectedRef.current = unsupportedInterimScript;
       setLiveTranscript(unsupportedInterimScript ? "" : interimText);
       if (!unsupportedInterimScript && voiceBrowserSpeechActiveRef.current) {
         const normalizedInterim = normalizeVoiceComparison(interimText);
@@ -1270,6 +1312,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     const rawTranscript = typeof inputTranscript?.text === "string" ? inputTranscript.text.trim().slice(0, 1200) : "";
     const unsupportedInputScript = Boolean(rawTranscript && containsUnsupportedSpanishScript(rawTranscript));
+    if (rawTranscript) voiceUnsupportedInputDetectedRef.current = unsupportedInputScript;
     // Never display, persist or send a foreign-script ASR hallucination as the
     // student's actual words. Replace it with a clear Spanish retry turn.
     const transcript = unsupportedInputScript

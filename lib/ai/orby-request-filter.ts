@@ -22,7 +22,7 @@ const PROGRAMMING_REQUEST_PATTERNS = [
   /\b(mujhe|main|mai)\b.{0,50}\b(coding|programming|code|python|javascript)\b|\b(coding|programming|code|python)\b.{0,50}\b(sikhao|sikh[aou]|sikhna|karna|kaise)\b/i,
   // French, Portuguese, German and Italian variants. Accents are removed
   // before matching by normalizeOrbyRequestText.
-  /\b(apprendre a coder|apprendre a programmer|coder|programmieren|programmierung|softwareentwicklung|webentwicklung|code schreiben|imparare a programmare|scrivere codice|sviluppo software|sviluppo web|ensina me a programar|ensina me programacao|quero aprender a programar|escrever codigo|desenvolvimento de software|desenvolvimento web)\b/i,
+  /\b(apprendre a coder|apprendre a programmer|apprends?[- ]moi.{0,20}\b(?:a )?programmer|je veux apprendre a coder|je veux apprendre a programmer|coder|programmieren|programmierung|softwareentwicklung|webentwicklung|code schreiben|imparare a programmare|scrivere codice|sviluppo software|sviluppo web|ensina me a programar|ensina me programacao|quero aprender a programar|escrever codigo|desenvolvimento de software|desenvolvimento web)\b/i,
   /\b(bucle|funcion en python|algoritmo informatico|consulta sql|console\.log|print\s*\(|def\s+\w+|import\s+\w+)\b/i,
 ];
 

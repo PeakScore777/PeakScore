@@ -261,3 +261,10 @@
 - Fixed fallback selection after cancelled/blocked audio by checking whether the output was validated, rather than trusting a historical chunk count.
 - Improved short programming refusals and voice prompting for spelling, accents, grammar and non-repetitive conversation.
 - Added regression coverage for wake phrases, Spanish ASR hints, unsupported scripts, exact policy speech, and audio fallback. Current suite has 44 tests; local execution/typecheck/build remain pending.
+
+
+### Refinamiento de voz — recuperación de ASR y salida SMART
+- La transcripción del audio generado se limita a español (`es`) y modo SMART; la voz nativa declara el idioma español.
+- Se añadió un único turno de recuperación cuando hay transcripción provisional en escritura no española y falta la final: `Audio no reconocido.` + petición de repetir en español.
+- Las respuestas locales (saludo, identidad, programación) mantienen un texto canónico; el audio Live solo pasa si la transcripción coincide con la frase aprobada. En otro caso, TTS lee la frase segura.
+- El prompt de voz ahora prioriza ortografía colombiana, tildes, concordancia, naturalidad y negativas breves sin repetir la presentación.

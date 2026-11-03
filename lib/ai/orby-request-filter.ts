@@ -87,13 +87,29 @@ export function isGenericIcfesEnglishRequest(message: string): boolean {
 
 export function isLikelyEnglishOnlyOrbyReply(reply: string): boolean {
   const value = reply.trim().replace(/^["'“”]+|["'“”]+$/g, "");
-  if (!value || value.length < 18) return false;
+  if (!value || value.length < 12) return false;
+
   const normalized = normalizeOrbyRequestText(value);
-  const spanishSignals = /\b(?:el|la|los|las|de|del|que|para|con|por|una|un|puedo|puedes|vamos|tema|estudiar|explicar|respuesta|pregunta|saber|prueba|ingl[eé]s)\b/.test(normalized)
+  const spanishSignals = /\b(?:el|la|los|las|de|del|que|para|con|por|una|un|puedo|puedes|vamos|tema|estudiar|explicar|respuesta|pregunta|saber|prueba|ingl[eé]s|porque|tambien|esta|este|son|como|cuando|donde|cual|primero|segundo)\b/.test(normalized)
     || /[áéíóúñ¿¡]/i.test(value);
+
+  // English ICFES excerpts are allowed inside a Spanish explanation. The
+  // filter only rejects a response whose overall wording is English and has
+  // no meaningful Spanish signal.
   if (spanishSignals) return false;
-  return ENGLISH_ONLY_OPENINGS.some((pattern) => pattern.test(value))
-    || /^(?:certainly|sure|of course|how can i help you|i can help you)\b/i.test(value);
+
+  if (ENGLISH_ONLY_OPENINGS.some((pattern) => pattern.test(value))
+    || /^(?:certainly|sure|of course|how can i help you|i can help you)\b/i.test(value)) {
+    return true;
+  }
+
+  const words = normalized.match(/[a-z]+(?:'[a-z]+)?/g) ?? [];
+  if (words.length < 4) return false;
+  const englishSignals = normalized.match(/\b(?:the|this|that|these|those|you|your|we|they|their|is|are|was|were|because|which|what|when|where|why|how|with|from|into|about|would|could|should|can|will|have|has|does|did|first|second|therefore|however|answer|question|please|here|there|and|but|for|to|of|in|on|as|at|by|be|been|it|its|my|our)\b/g) ?? [];
+
+  // Three common English function/content words in a short answer are a
+  // strong signal that the model switched languages (e.g. "The answer is B").
+  return englishSignals.length >= 3 && englishSignals.length / words.length >= 0.3;
 }
 
 export function containsExternalPreIcfesPromotion(text: string): boolean {

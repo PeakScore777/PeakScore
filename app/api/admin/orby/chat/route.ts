@@ -92,6 +92,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const admin = await getAdmin();
   if (!admin) return jsonError("Acceso reservado al administrador.", 403);
+  if (process.env.NODE_ENV === "production" && process.env.ORBY_GEMINI_LIVE_ENABLED !== "true") {
+    return jsonError("El chat administrativo de Gemini está desactivado mientras se aprueba la configuración de privacidad.", 503);
+  }
   const body = await request.json().catch(() => null);
   const message = body && typeof body.message === "string" ? body.message.trim().slice(0,4000) : "";
   if (!message) return jsonError("Escribe un mensaje para Orby.", 400);

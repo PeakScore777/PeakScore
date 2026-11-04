@@ -838,7 +838,17 @@ No uses bloques Markdown ni texto fuera del JSON.
       },
     });
   } catch (error) {
-    console.error("[Orby Tutor] No se pudo responder.", { errorName: error instanceof Error ? error.name : "UnknownError" });
-    return NextResponse.json({ error: "Orby no está disponible en este momento. Espera unos segundos y vuelve a intentarlo." }, { status: 503 });
+    if (error instanceof CloudflareWorkersAIError
+      && (error.code === "QUOTA_EXCEEDED" || error.code === "RATE_LIMITED")) {
+      return NextResponse.json({
+        error: "Se agotó temporalmente la cuota gratuita de Orby. No se activará ningún proveedor de pago. Vuelve a intentarlo cuando se restablezca la cuota diaria.",
+        code: "FREE_QUOTA_EXCEEDED",
+      }, { status: 429, headers: { "Retry-After": "3600" } });
+    }
+    console.error("[Orby Tutor] No se pudo responder.", {
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      providerCode: error instanceof CloudflareWorkersAIError ? error.code : undefined,
+    });
+    return NextResponse.json({ error: "Orby no está disponible en este momento. Tu solicitud no se enviará a otro proveedor de pago." }, { status: 503 });
   }
 }

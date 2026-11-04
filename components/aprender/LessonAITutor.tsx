@@ -2557,7 +2557,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // The first history request and the first student message can otherwise
     // race: a stale empty history response clears the newly-created chat.
     // Hold text turns until hydration settles, then release them in order.
-    if (workspace && (historyHydratingRef.current || historyLoading) && !isVoiceInteraction) {
+    if (workspace && historyHydratingRef.current && !isVoiceInteraction) {
       if (selectedFile) {
         setError("Espera a que termine de cargar el historial antes de adjuntar una imagen.");
         return;

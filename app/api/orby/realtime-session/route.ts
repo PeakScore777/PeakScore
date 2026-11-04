@@ -158,7 +158,7 @@ export async function POST(request: Request) {
     const now = Date.now();
     // Pin to the documented free-tier Live model; never accept an arbitrary paid model override.
     const model = "gemini-3.8-live";
-    const expireTime = new Date(now + 30 * 60 * 1000).toISOString();
+    const expireTime = new Date(now + 2 * 60 * 60 * 1000).toISOString();
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 
     const googleAI = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta" } });

@@ -406,6 +406,11 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(lessonTutorSource.includes("prebuiltVoiceConfig: { voiceName: configuredVoiceName }"));
   assert.match(realtimeSessionSource, /speechConfig:\s*\{\s*voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{ voiceName: ORBY_LIVE_VOICE_NAME/);
   assert.match(realtimeSessionSource, /VOZ DE ORBY: mantén una voz femenina cálida y natural/);
+  assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL Y DIDÁCTICA/);
+  assert.match(realtimeSessionSource, /no aceleres al final de las respuestas/);
+  assert.match(orbyVoiceConfigSource, /requestedVoice.*Despina/);
+  assert.match(cloudflareVoiceSource, /speaker: "celeste"/);
+
   assert.match(lessonTutorSource, /void persistRealtimeTurnIfReady\(\);\s*drainPendingMessageQueue\(\)/);
   assert.match(lessonTutorSource, /function interruptCurrentVoiceOutput\(\)/);
   assert.match(lessonTutorSource, /interruptCurrentVoiceOutput\(\);\s*pendingMessagesRef\.current = \[\]/);

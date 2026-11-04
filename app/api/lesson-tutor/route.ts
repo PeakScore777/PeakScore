@@ -674,7 +674,14 @@ No uses bloques Markdown ni texto fuera del JSON.
     const generationStartedAt = performance.now();
     let raw = "";
     if (tutorImage) {
-      // Image understanding remains on Gemini's free AI Studio tier.
+      // Gemini's free AI Studio tier may use submitted content to improve
+      // Google products. Production image analysis requires explicit privacy opt-in.
+      if (process.env.NODE_ENV === "production" && process.env.ORBY_GEMINI_LIVE_ENABLED !== "true") {
+        return NextResponse.json({
+          error: "El análisis de imágenes está desactivado mientras se aprueba la configuración de privacidad de Gemini.",
+          code: "GEMINI_IMAGE_PRIVACY_NOT_ENABLED",
+        }, { status: 503 });
+      }
       raw = await generateTutorVision(prompt, tutorImage.mimeType, tutorImage.base64);
     } else {
       const isVoiceRequest = body.voiceMode === true;

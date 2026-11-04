@@ -3196,7 +3196,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Gemini quota recovery: transcribe with Cloudflare Whisper, send the
       // text through the Cloudflare tutor, and read the answer locally.
       // The user speaks one turn at a time; no Gemini call is made here.
-      if (fallbackVoiceModeRef.current && voiceModeRef.current && audioOrigin === "recording") {
+      if (voiceFallbackModeRef.current && voiceModeRef.current && audioOrigin === "recording") {
         voiceUserTextRef.current = transcript;
         voiceAssistantTextRef.current = "";
         voiceAssistantMessageIdRef.current = null;

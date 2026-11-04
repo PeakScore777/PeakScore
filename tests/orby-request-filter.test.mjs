@@ -91,8 +91,9 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("Whisper y Cloudflare"));
   assert.ok(lessonTutorSource.includes("Voz alternativa lista"));
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
-  assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current) {\n      await speakWithBrowserFallback(clean, index)"));
-  assert.ok(lessonTutorSource.includes("needsNeuralSpeechFallback"));
+  assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));
+  assert.ok(lessonTutorSource.includes("if (voiceFallbackModeRef.current && voiceBrowserSpeechActiveRef.current)"));
+  assert.ok(lessonTutorSource.includes("needsSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
 
   assert.ok(lessonTutorSource.includes("No se pudo iniciar el audio de Orby"));
@@ -281,10 +282,10 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback\(/);
   assert.match(lessonTutorSource, /No pude reconocer la frase anterior\. Puedes repetirla en español/);
   assert.match(lessonTutorSource, /Gemini Live no pudo reconocer el español/);
-  assert.match(lessonTutorSource, /needsNeuralSpeechFallback/);
+  assert.match(lessonTutorSource, /needsSpeechFallback/);
   assert.match(lessonTutorSource, /normalizedForcedExpected\.startsWith\(partialNormalized\)/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current/);
-  assert.match(lessonTutorSource, /needsNeuralSpeechFallback/);
+  assert.match(lessonTutorSource, /needsSpeechFallback/);
   assert.match(lessonTutorSource, /forcedSpeechMismatch/);
   assert.match(lessonTutorSource, /const visibleReply = forcedExpected \|\| partialReply/);
   assert.match(lessonTutorRouteSource, /containsUnsupportedSpanishLanguage\(modelReply\)/);
@@ -359,12 +360,12 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /waitingForVoiceReplyRef\.current = true/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
   assert.match(lessonTutorSource, /const turn = \{ conversationId: id, userContent, assistantContent \}/);
-  const fallbackDecision = lessonTutorSource.indexOf("const needsNeuralSpeechFallback =");
+  const fallbackDecision = lessonTutorSource.indexOf("const needsSpeechFallback =");
   const flushBeforeFallback = lessonTutorSource.lastIndexOf("flushPendingGeminiAudio();", fallbackDecision);
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "el cierre de reproducción se evalúa después de vaciar los fragmentos de audio Live");
-  assert.match(lessonTutorSource, /needsNeuralSpeechFallback[\s\S]*?void speakText\(rawReply/);
-  assert.match(lessonTutorSource, /same AudioContext as Gemini Live/);
+  assert.match(lessonTutorSource, /needsSpeechFallback[\s\S]*?void speakText\(rawReply/);
+  assert.match(lessonTutorSource, /Gemini Live is the primary audio source/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina"'));
   assert.ok(realtimeSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));

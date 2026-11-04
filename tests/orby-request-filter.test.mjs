@@ -440,6 +440,8 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
 
 test("el chat procesa solicitudes pendientes en orden y limita peticiones bloqueadas", () => {
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.push/);
+  assert.match(lessonTutorSource, /workspace && historyHydratingRef\.current && !isVoiceInteraction/);
+  assert.doesNotMatch(lessonTutorSource, /historyHydratingRef\.current \|\| historyLoading/);
   assert.match(lessonTutorSource, /lastSubmittedMessageRef/);
   assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
   assert.match(lessonTutorSource, /utterance\.rate = 1\.04/);

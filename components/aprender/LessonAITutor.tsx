@@ -3180,7 +3180,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceSessionResumeHandleRef.current = null;
     voiceSessionResumeConversationRef.current = null;
     voiceSessionResumeUpdatedAtRef.current = 0;
-    voiceSessionResumeUpdatedAtRef.current = 0;
     stopAudioRecording(true);
     activeConversationRef.current = null;
     setConversationId(null);
@@ -3213,6 +3212,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (voiceModeRef.current) stopRealtimeVoice();
     voiceSessionResumeHandleRef.current = null;
     voiceSessionResumeConversationRef.current = null;
+    voiceSessionResumeUpdatedAtRef.current = 0;
     setWorkspaceMode("chat");
     setLearningView("chat");
     setHistoryLoading(true);

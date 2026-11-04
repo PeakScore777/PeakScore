@@ -747,9 +747,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const clean = text.trim().replace(/\s+/g, " ").slice(0, 5_000);
     if (!clean) return;
 
-    // Gemini Live is the only cloud audio source. If a turn has no usable Live
-    // audio, read its already-validated transcript locally without a second
-    // Gemini request, extra quota, or a second voice competing with Live.
+    // Gemini Live is the primary audio source. If a turn has no usable Live
+    // audio, use Cloudflare Aura-2 in sentence-sized chunks. Browser Spanish
+    // speech is only the last fallback when Cloudflare is unavailable/quota-limited.
     await speakWithBrowserFallback(clean, index);
   }
 
@@ -1951,7 +1951,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + remainingPlaybackMs + 1800;
       }
 
-      const needsNeuralSpeechFallback = voiceOutputAudioBlockedRef.current
+      const needsSpeechFallback = voiceOutputAudioBlockedRef.current
         || !voiceOutputTranscriptValidatedRef.current
         || voiceRealtimeAudioChunkCountRef.current === 0;
 
@@ -1972,10 +1972,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
 
-      // Live is the only normal audio source. If a validated turn has no
-      // Live audio, use the same configured Gemini female voice as a serialized
-      // neural fallback; it shares this AudioContext and never overlaps Live.
-      if (needsNeuralSpeechFallback && rawReply.trim()) {
+      // Live is the primary audio source. If a validated turn has no Live
+      // audio, use serialized Cloudflare Aura-2 speech and then local Spanish
+      // speech if Workers AI is temporarily unavailable or out of free quota.
+      if (needsSpeechFallback && rawReply.trim()) {
         const id = voiceAssistantMessageIdRef.current;
         const messageIndex = messages.findIndex((message) => message.id === id);
         void speakText(rawReply, messageIndex >= 0 ? messageIndex : messages.length);

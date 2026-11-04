@@ -1168,7 +1168,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if (shouldFallback) {
       activateTurnBasedVoiceFallback(
-        "Gemini Live se interrumpió o agotó su cuota. Continúo esta misma pregunta con Whisper y Cloudflare; la lectura usa la voz española de tu equipo, sin otro servicio de pago.",
+        "Gemini Live se interrumpió o agotó su cuota. Continúo esta misma pregunta con Whisper y Cloudflare; la lectura usa una voz femenina española instalada si está disponible, sin otro servicio de pago.",
         pendingUserText,
         appendUserMessage,
       );

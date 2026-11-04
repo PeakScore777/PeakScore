@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { CloudflareWorkersAIError, generateWithCloudflareImage, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { classifyOutOfScopeRequest, getOutOfScopeReply, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
@@ -43,8 +43,9 @@ export async function POST(request: Request) {
       return jsonError("Puedo crear apoyos visuales para Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés. Indica el tema que quieres estudiar.", 400);
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return jsonError("La generación visual no está configurada en el servidor.", 503);
+    if (!isCloudflareWorkersAIConfigured()) {
+      return jsonError("La generación visual gratuita no está configurada. Revisa la conexión de Cloudflare Workers AI.", 503);
+    }
 
     const limitResult = await supabaseAdmin.rpc("orby_take_rate_limit", {
       p_user_id: user.id,
@@ -72,24 +73,9 @@ export async function POST(request: Request) {
       "La imagen debe apoyar el estudio de una competencia de Saber 11. Conserva rigor científico y académico. Devuelve sólo la imagen.",
     ].join("\n\n");
 
-    const ai = new GoogleGenAI({ apiKey });
-    const interaction = await ai.interactions.create({
-      model: process.env.ORBY_IMAGE_MODEL || "gemini-nano-banana-2.1",
-      input: prompt,
-      response_format: {
-        type: "image",
-        mime_type: "image/png",
-        aspect_ratio: "16:9",
-        image_size: "1K",
-      },
-    });
-
-    const output = interaction as unknown as {
-      output_image?: { data?: string; mime_type?: string };
-      output_text?: string;
-    };
-    const imageData = typeof output.output_image?.data === "string" ? output.output_image.data : "";
-    const mimeType = output.output_image?.mime_type === "image/jpeg" ? "image/jpeg" : "image/png";
+    const generated = await generateWithCloudflareImage(prompt, 4);
+    const imageData = generated.image;
+    const mimeType = "image/jpeg";
     if (!imageData || imageData.length > 12_000_000) {
       console.error("[Orby Image Generation] Model returned no usable image.");
       return jsonError("Orby no pudo preparar la imagen esta vez. Inténtalo con una petición visual más concreta.", 502);
@@ -99,14 +85,31 @@ export async function POST(request: Request) {
       imageDataUrl: "data:" + mimeType + ";base64," + imageData,
       mimeType,
       caption: "Apoyo visual generado para " + subject + ": " + topic + ". Úsalo junto con la explicación escrita y verifica las etiquetas o datos importantes.",
-      model: process.env.ORBY_IMAGE_MODEL || "gemini-nano-banana-2.1",
+      model: "@cf/black-forest-labs/flux-1-schnell",
       dailyLimit: 3,
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
+    const typed = error as { code?: unknown };
+    const exhaustedFreeQuota = error instanceof CloudflareWorkersAIError
+      && error.code === "QUOTA_EXCEEDED";
+    const temporarilyBusy = error instanceof CloudflareWorkersAIError
+      && error.code === "RATE_LIMITED";
     console.error("[Orby Image Generation] Request failed.", {
       errorName: error instanceof Error ? error.name : "UnknownError",
-      message: error instanceof Error ? error.message.slice(0, 180) : "UnknownError",
+      providerCode: typeof typed.code === "string" ? typed.code : undefined,
     });
-    return jsonError("No se pudo generar la imagen. Inténtalo de nuevo en unos segundos.", 502);
+    if (exhaustedFreeQuota) {
+      return NextResponse.json({
+        error: "Se agotó la cuota gratuita diaria de imágenes de Orby. No se activará ningún servicio de pago. Vuelve a intentarlo después del reinicio diario.",
+        code: "FREE_QUOTA_EXCEEDED",
+      }, { status: 429, headers: { "Retry-After": "3600" } });
+    }
+    if (temporarilyBusy) {
+      return NextResponse.json({
+        error: "Cloudflare está temporalmente ocupado. La imagen no se enviará a otro proveedor; inténtalo de nuevo más tarde.",
+        code: "PROVIDER_TEMPORARILY_BUSY",
+      }, { status: 429, headers: { "Retry-After": "30" } });
+    }
+    return jsonError("No se pudo generar la imagen. No se activará otro proveedor de pago.", 502);
   }
 }

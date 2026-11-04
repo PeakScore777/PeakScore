@@ -30,7 +30,7 @@ const ICFES_SCOPE_PATTERNS = [
   /\b(?:pregunta tipo icfes|simulacro(?: de saber\s*11| del icfes)?|cuadernillo de preguntas)\b/i,
   /\b(?:matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuacion(?:es)?|inecuacion(?:es)?|fracciones?|porcentajes?|razones y proporciones|proporcionalidad|funcion lineal|funcion cuadratica|plano cartesiano|pendiente de una recta|polinomios?|logaritmos?|potencias?|raiz cuadrada|teorema de pitagoras|perimetro|area de un triangulo|volumen de un|media aritmetica|mediana|moda estadistica|secuencia numerica|sucesion numerica|variable independiente|variable dependiente)\b/i,
   /\b(?:lectura critica|comprension lectora|comprension de textos|texto argumentativo|intencion del autor|idea principal|tesis del texto|argumento central|inferir|inferencia|conclusion del texto|conectores logicos|parrafo|narrador|figura retorica|figura literaria|genero textual|proposito comunicativo|punto de vista del autor|postura del autor|analisis de texto)\b/i,
-  /\b(?:sociales y ciudadanas|ciencias sociales|historia de colombia|historia universal|geografia|democracia|constitucion politica|derechos humanos|ciudadania|estado colombiano|ramas del poder|participacion politica|conflicto armado|guerra fria|independencia de colombia|colonizacion|revolucion francesa|revolucion industrial|globalizacion|oferta y demanda|desigualdad social|migracion|territorio colombiano|desarrollo sostenible|organizacion del estado|centralismo|federalismo|poder ejecutivo|poder legislativo|poder judicial|sistema politico)\b/i,
+  /\b(?:sociales y ciudadanas|ciencias sociales|historia de colombia|historia universal|geografia|democracia|constitucion politica|derechos humanos|ciudadania|estado colombiano|ramas del poder|participacion politica|conflicto armado|guerra fria|independencia de colombia|colonizacion|revolucion francesa|revolucion industrial|globalizacion|economia circular|oferta y demanda|desigualdad social|migracion|territorio colombiano|desarrollo sostenible|organizacion del estado|centralismo|federalismo|poder ejecutivo|poder legislativo|poder judicial|sistema politico)\b/i,
   /\b(?:ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|respiracion celular|evolucion biologica|seleccion natural|reaccion quimica|atomo|molecula|tabla periodica|enlace quimico|energia|fuerza|densidad|termodinamica|materia|presion atmosferica|velocidad terminal|leyes de newton|circuito electrico|electricidad|magnetismo|ondas sonoras|acido|base|escala de ph|variable independiente|variable dependiente|variable de control|experimento|hipotesis|metodo cientifico|contaminacion|cambio climatico|biodiversidad|cadena alimentaria)\b/i,
   /\b(?:ingles|english|reading comprehension|vocabulary in context|grammar|present simple|past simple|past continuous|present perfect|modal verbs|phrasal verbs|verb tenses|part [1-7] of the icfes|parte [1-7] del examen de ingles|avisos? publicitarios?|dialogos en ingles|comprension de lectura en ingles)\b/i,
 ];
@@ -71,6 +71,13 @@ const EXTERNAL_PREICFES_REQUEST_PATTERNS = [
   /\bmilton\s+ochoa\b|\binstruimos\b|\bpreicfes\s*\.\s*net\b/i,
   /\b(?:otro|otra|otros|otras|mejor|mejores|recomiend[ae]|recomendar|compara|comparar|comparame|compare|opiniones|reseñas|precios|inscribirme|matricularme)\b.{0,70}\b(?:pre[\s-]?icfes|pre[\s-]?saber|academias?|institutos?|plataformas?|cursos?)\b/i,
   /\b(?:pre[\s-]?icfes|pre[\s-]?saber|academia|instituto|plataforma|curso)\b.{0,70}\b(?:recomiend[ae]|recomendar|mejor|mejores|compara|comparar|compare|opiniones|reseñas|precios|inscribirme|matricularme|promociona)\b/i,
+];
+ 
+const GENERAL_OFF_SCOPE_REQUEST_PATTERNS = [
+  /\b(?:recomiendame|recomienda|recommend me|what movie should i watch|which movie should i watch|what film should i watch|which car should i buy|what car should i buy|que pelicula me recomiendas|que pelicula debo ver|que carro me recomiendas|que coche me recomiendas|que serie me recomiendas|cuentame un chiste|tell me a joke)\b/i,
+  /\b(?:que debo comer|que puedo comer|what should i eat|what can i eat|que restaurante me recomiendas|what restaurant do you recommend)\b/i,
+  /\b(?:que clima hara|como estara el clima|pronostico del tiempo|what is the weather|weather tomorrow|clima de manana)\b/i,
+  /\b(?:tengo fiebre|me duele|diagnostico medico|que medicamento tomo|medical diagnosis|what medicine should i take)\b/i,
 ];
 
 export const ORBY_EXTERNAL_PREICFES_REPLY =
@@ -381,6 +388,14 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
       allowed: false,
       category: "outside",
       reply: ORBY_SAFETY_REPLY,
+    };
+  }
+
+  if (GENERAL_OFF_SCOPE_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    return {
+      allowed: false,
+      category: "outside",
+      reply: ORBY_ICFES_SCOPE_REPLY,
     };
   }
 

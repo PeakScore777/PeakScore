@@ -66,6 +66,8 @@ test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin so
   assert.ok(!lessonTutorRouteSource.includes("También puedes conversar con naturalidad sobre preguntas cotidianas"));
   assert.ok(!lessonTutorRouteSource.includes("No rechaces conversaciones casuales"));
   assert.ok(lessonTutorRouteSource.includes("Mantén siempre el alcance exclusivo de Saber 11"));
+  assert.ok(lessonTutorRouteSource.includes("GEMINI_IMAGE_PRIVACY_NOT_ENABLED"));
+  assert.ok(lessonTutorRouteSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED !== "true"'));
   assert.ok(lessonTutorSource.includes("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito."));
   assert.ok(lessonTutorSource.includes("/api/orby/voice-speech"));
   assert.ok(lessonTutorSource.includes("needsNeuralSpeechFallback"));

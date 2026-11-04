@@ -149,9 +149,9 @@ export async function synthesizeWithCloudflareSpeech(text: string): Promise<Buff
   const normalized = text.replace(/\s+/g, " ").trim().slice(0, 420);
   if (!normalized) throw new CloudflareWorkersAIError("EMPTY_TTS_TEXT");
 
-  // Aura-2 Spanish is hosted by Cloudflare Workers AI. "celeste" is the
-  // Colombian Spanish female voice. This shares the Workers Free neuron
-  // allocation; it never calls Gemini, Deepgram's external API, or a paid API.
+  // Aura-2 Spanish is hosted by Cloudflare Workers AI. Use the selected
+  // feminine Spanish speaker and a high-quality MP3 bitrate. Requests stay on
+  // this Cloudflare-hosted model; never cascade to another speech provider.
   const result = await runModel<{ audio?: unknown }>(
     "@cf/deepgram/aura-2-es",
     {

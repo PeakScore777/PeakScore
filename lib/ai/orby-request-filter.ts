@@ -45,6 +45,11 @@ const ORBY_STUDY_INVITATION_PATTERN =
 const ICFES_FOLLOW_UP_PATTERN =
   /^(?:(?:y|entonces|pero|vale|listo)\s+)?(?:explicame|explica|amplia|profundiza|continua|sigue|otro ejemplo|dame otro ejemplo|un ejemplo mas|cual es la respuesta|por que|porque|como asi|que significa eso|que quiere decir|no entiendo|no me queda claro|resuelve esto|ayudame con esto|puedes repetir|repitelo|hazlo paso a paso|paso a paso|y eso|y entonces|cual|cuanto|como funciona|como se hace)[.!? ¿¡,;:]*$/i;
 
+const ICFES_EXAM_INTENT_PATTERN =
+  /\b(?:saber\s*11|icfes)\b.{0,90}\b(?:estudiar|repasar|practicar|preparar|prepararme|resolver|pregunta|ejercicio|simulacro|competencia|componente|area|contenido|examen|explicar|explicame|que evalua|guia)\b/i;
+const ICFES_EXAM_DEFINITION_PATTERN =
+  /\b(?:que es|como es|que evalua|que mide|como funciona|estructura de|formato de)\b.{0,55}\b(?:saber\s*11|icfes)\b|\b(?:saber\s*11|icfes)\b.{0,55}\b(?:que es|como es|que evalua|que mide|estructura|formato)\b/i;
+
 const STUDY_GUIDANCE_FOLLOW_UP_PATTERNS = [
   /^(?:no se|no lo se|ni idea|no tengo claro|no se que (?:estudiar|tema|area)|ayudame a elegir|ayudame a decidir|por donde empiezo|no se por donde empezar|que me recomiendas para empezar|elige por mi)[.!? ]*$/i,
 ];
@@ -386,10 +391,14 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
 
   const prior = normalizeOrbyRequestText(previousContext);
   const currentHasCurriculumAnchor = ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))
-    || /\b(?:saber\s*11|icfes)\b/i.test(normalized)
+    || ICFES_EXAM_INTENT_PATTERN.test(normalized)
+    || ICFES_EXAM_DEFINITION_PATTERN.test(normalized)
     || ORBY_STUDY_INVITATION_PATTERN.test(normalized);
-  const priorHasCurriculumAnchor = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
-    || ORBY_STUDY_INVITATION_PATTERN.test(prior);
+  const priorIsDeterministicRefusal = /\b(?:no corresponde a saber\s*11|fuera del alcance|no puedo ayudarte con ese tema|no puedo ensenar programacion)\b/i.test(prior);
+  const priorHasCurriculumAnchor = !priorIsDeterministicRefusal && (
+    ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
+    || ORBY_STUDY_INVITATION_PATTERN.test(prior)
+  );
   const isContextualAcademicFollowUp = priorHasCurriculumAnchor
     && (ICFES_FOLLOW_UP_PATTERN.test(normalized) || isOrbyStudyGuidanceRequest(message, previousContext));
 

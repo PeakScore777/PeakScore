@@ -152,7 +152,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /voiceRealtimeAudioChunkCountRef\.current === 0/);
   assert.match(lessonTutorSource, /speakText\(rawReply/);
   assert.match(lessonTutorSource, /voiceSpeechCancelRef/);
-  assert.match(lessonTutorSource, /cancelSpeech = \(\) => finish\(true\)/);
+  assert.match(lessonTutorSource, /cancelSpeech = \(\) => \{/);
   assert.match(lessonTutorSource, /if \(!cancelled\) \{/);
   assert.match(lessonTutorSource, /voiceUserMessageVisibleRef/);
   assert.match(lessonTutorSource, /isBrowserSpeechEcho/);
@@ -237,7 +237,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
   assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.18/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.2/);
   assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.
@@ -338,7 +338,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
-  assert.match(lessonTutorSource, /Math\.min\(180_000, Math\.max\(12_000, clean\.length \* 100\)\)/);
+  assert.match(lessonTutorSource, /Math\.min\(180_000, Math\.max\(15_000, clean\.length \* 95\)\)/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(cleanUserText\)/);
   assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /hasExistingAssistant/);
@@ -873,7 +873,7 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /finishLocalVoiceReply/);
   assert.match(lessonTutorSource, /voiceBrowserSpeechActiveRef\.current = true/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = clean/);
-  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ clean\.length \* 55/);
+  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ clean\.length \* 58/);
   assert.match(lessonTutorSource, /void refreshConversations\(\)\.catch/);
 });
 

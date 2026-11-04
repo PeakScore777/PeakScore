@@ -808,45 +808,69 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return new Promise((resolve) => {
       const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
       const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
-      if (typeof window === "undefined" || !( "speechSynthesis" in window)) {
-        setVoiceError("Este navegador no tiene lectura de voz disponible. La respuesta sigue visible por escrito.");
+      if (typeof window === "undefined") {
         if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
         resolve();
         return;
       }
 
-      const synthesis = window.speechSynthesis;
+      const synthesis = "speechSynthesis" in window ? window.speechSynthesis : null;
       const clean = text
-        .replace(/\*\*/g, "")
-        .replace(/`/g, "")
+        .replace(/\\*\\*/g, "")
+        .replace(/\`/g, "")
         .replace(/^[-•]\s*/gm, "")
         .replace(/^\d+[.)]\s*/gm, "")
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 5_000);
-      const chunks = splitSpeechIntoChunks(clean);
+      const chunks = splitSpeechIntoChunks(clean, 320);
       if (!chunks.length) {
         if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
         resolve();
         return;
       }
 
-      // Cancel only the previous utterance. Do not call stopSpeaking() here:
-      // it owns this same cancellation ref and could cancel the new utterance.
       const previousCancel = voiceSpeechCancelRef.current;
       voiceSpeechCancelRef.current = null;
       previousCancel?.();
-      synthesis.cancel();
+      synthesis?.cancel();
 
       let finished = false;
       let chunkIndex = 0;
       let safetyTimer: number | null = null;
-      let cancelSpeech: (() => void) | null = null;
+      let requestController: AbortController | null = null;
+      let audioElement: HTMLAudioElement | null = null;
+      let audioObjectUrl: string | null = null;
+      let browserUtterance: SpeechSynthesisUtterance | null = null;
+      const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
+
+      const clearAudioElement = () => {
+        if (audioElement) {
+          audioElement.onended = null;
+          audioElement.onerror = null;
+          audioElement.onloadedmetadata = null;
+          audioElement.onplay = null;
+          audioElement.pause();
+          audioElement.removeAttribute("src");
+          audioElement.load();
+          audioElement = null;
+        }
+        if (audioObjectUrl) {
+          URL.revokeObjectURL(audioObjectUrl);
+          audioObjectUrl = null;
+        }
+      };
+
       const finish = (cancelled = false) => {
         if (finished) return;
         finished = true;
         if (safetyTimer !== null) window.clearTimeout(safetyTimer);
+        requestController?.abort();
+        requestController = null;
+        clearAudioElement();
+        synthesis?.cancel();
         if (voiceSpeechCancelRef.current === cancelSpeech) voiceSpeechCancelRef.current = null;
+        browserUtterance = null;
         setSpeakingIndex(null);
         if (isLocalVoiceTurn) {
           voiceBrowserSpeechActiveRef.current = false;
@@ -857,62 +881,27 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
         resolve();
       };
-      cancelSpeech = () => {
-        synthesis.cancel();
-        finish(true);
-      };
+
+      const cancelSpeech = () => finish(true);
       voiceSpeechCancelRef.current = cancelSpeech;
-
-      const speakNext = (voice: SpeechSynthesisVoice | undefined) => {
-        if (finished) return;
-        if (chunkIndex >= chunks.length) {
-          finish(false);
-          return;
-        }
-
-        const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
-        utterance.lang = "es-CO";
-        utterance.rate = 1.2;
-        utterance.pitch = 1.03;
-        utterance.volume = 1;
-        if (voice) utterance.voice = voice;
-
-        utterance.onend = () => {
-          if (finished) return;
-          chunkIndex += 1;
-          speakNext(voice);
-        };
-        utterance.onerror = (event) => {
-          if (finished) return;
-          const speechError = (event as SpeechSynthesisErrorEvent).error;
-          if (speechError === "interrupted" || speechError === "canceled") {
-            finish(true);
-            return;
-          }
-          setVoiceError("El navegador detuvo la lectura de voz. Puedes volver a pulsar reproducir; el texto no se pierde.");
-          finish(false);
-        };
-
-        setSpeakingIndex(index);
-        synthesis.resume();
-        synthesis.speak(utterance);
-      };
 
       if (isLocalVoiceTurn) {
         voiceBrowserSpeechActiveRef.current = true;
         voiceLastAssistantOutputRef.current = clean;
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 58;
-        setVoiceStatus("Orby está leyendo la respuesta…");
+        setVoiceStatus("Orby está hablando…");
         setIsListening(false);
       }
-      safetyTimer = window.setTimeout(() => {
-        if (finished) return;
-        synthesis.cancel();
-        setVoiceError("La lectura tardó demasiado y se detuvo para no dejar el micrófono bloqueado.");
-        finish(false);
-      }, Math.min(180_000, Math.max(15_000, clean.length * 95)));
 
-      void waitForSpanishBrowserVoice().then((voices) => {
+      const speakRemainingLocally = async () => {
+        if (finished) return;
+        if (!synthesis || typeof SpeechSynthesisUtterance === "undefined") {
+          setVoiceError("Cloudflare no pudo generar el audio y este navegador no tiene voz instalada. La respuesta permanece visible.");
+          finish(false);
+          return;
+        }
+
+        const voices = await waitForSpanishBrowserVoice();
         if (finished) return;
         const spanishVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("es"));
         const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /sabina|laura|sofia|lucia|monica|catalina|female|mujer/i.test(voice.name))
@@ -921,13 +910,139 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ?? spanishVoices.find((voice) => /sabina|helena|paulina|sofia|laura|lucia|monica|catalina|female|mujer/i.test(voice.name))
           ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]us/i.test(voice.lang))
           ?? spanishVoices[0];
+
+        const speakNext = () => {
+          if (finished) return;
+          if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
+            finish(true);
+            return;
+          }
+          if (chunkIndex >= chunks.length) {
+            finish(false);
+            return;
+          }
+
+          const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
+          browserUtterance = utterance;
+          utterance.lang = "es-CO";
+          utterance.rate = 1.2;
+          utterance.pitch = 1.03;
+          utterance.volume = 1;
+          if (preferredVoice) utterance.voice = preferredVoice;
+          utterance.onend = () => {
+            if (finished) return;
+            browserUtterance = null;
+            chunkIndex += 1;
+            speakNext();
+          };
+          utterance.onerror = (event) => {
+            if (finished) return;
+            const speechError = (event as SpeechSynthesisErrorEvent).error;
+            if (speechError === "interrupted" || speechError === "canceled") {
+              finish(true);
+              return;
+            }
+            setVoiceError("La voz local se interrumpió. La respuesta completa sigue disponible por escrito.");
+            finish(false);
+          };
+          setSpeakingIndex(index);
+          synthesis.resume();
+          synthesis.speak(utterance);
+        };
+
         if (!preferredVoice) {
-          setVoiceError("No hay una voz española instalada en el navegador. Instala una voz en español para escuchar a Orby.");
+          setVoiceError("No hay una voz española instalada. Continúo con la voz predeterminada del navegador.");
         }
-        speakNext(preferredVoice);
-      }).catch(() => {
-        if (!finished) speakNext(undefined);
-      });
+        speakNext();
+      };
+
+      const playCloudflareChunk = async () => {
+        if (finished) return;
+        if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
+          finish(true);
+          return;
+        }
+        if (chunkIndex >= chunks.length) {
+          finish(false);
+          return;
+        }
+
+        const controller = new AbortController();
+        requestController = controller;
+        try {
+          const response = await fetch("/api/orby/voice-speech", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(18_000)]),
+            body: JSON.stringify({ text: chunks[chunkIndex] }),
+          });
+          if (!response.ok) {
+            const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
+            if (payload.code === "FREE_QUOTA_EXCEEDED") {
+              setVoiceError("La cuota gratuita diaria de voz Cloudflare se agotó. Continúo con la voz española instalada; no se usará Gemini.");
+            }
+            throw new Error(typeof payload.error === "string" ? payload.error : "CLOUDFLARE_TTS_UNAVAILABLE");
+          }
+
+          const audioBlob = await response.blob();
+          if (audioBlob.size < 256 || audioBlob.size > 4 * 1024 * 1024) {
+            throw new Error("CLOUDFLARE_TTS_INVALID_AUDIO");
+          }
+          if (finished || controller.signal.aborted
+            || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+
+          audioObjectUrl = URL.createObjectURL(audioBlob);
+          audioElement = new Audio(audioObjectUrl);
+          audioElement.preload = "auto";
+          audioElement.onloadedmetadata = () => {
+            const duration = Number.isFinite(audioElement?.duration) ? audioElement?.duration ?? 0 : 0;
+            if (duration > 0 && isLocalVoiceTurn) {
+              voiceLastAssistantPlaybackUntilRef.current = Date.now() + duration * 1000 + 1_800;
+            }
+          };
+          audioElement.onplay = () => {
+            setSpeakingIndex(index);
+            setVoiceStatus("Orby está leyendo la respuesta…");
+          };
+          audioElement.onended = () => {
+            if (finished || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+            clearAudioElement();
+            requestController = null;
+            chunkIndex += 1;
+            void playCloudflareChunk();
+          };
+          audioElement.onerror = () => {
+            if (finished) return;
+            clearAudioElement();
+            requestController = null;
+            void speakRemainingLocally();
+          };
+
+          await audioElement.play();
+          requestController = null;
+        } catch (error) {
+          if (finished) return;
+          if (controller.signal.aborted || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
+            finish(true);
+            return;
+          }
+          console.warn("[Orby Voice] Cloudflare Aura-2 speech unavailable; using local Spanish speech.", {
+            name: error instanceof Error ? error.name : "UnknownError",
+          });
+          requestController = null;
+          clearAudioElement();
+          void speakRemainingLocally();
+        }
+      };
+
+      safetyTimer = window.setTimeout(() => {
+        if (finished) return;
+        setVoiceError("La lectura superó el tiempo de seguridad. La respuesta sigue visible por escrito.");
+        finish(false);
+      }, Math.min(180_000, Math.max(20_000, clean.length * 110)));
+
+      void playCloudflareChunk();
     });
   }
 

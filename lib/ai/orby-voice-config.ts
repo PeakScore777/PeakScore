@@ -1,20 +1,6 @@
-const ALLOWED_ORBY_VOICES = new Set([
-  "Despina",
-  "Aoede",
-  "Sulafat",
-  "Achird",
-  "Leda",
-  "Kore",
-  "Zephyr",
-]);
+/** Stable female voice selected for Orby's educational voice experience. */
+export const ORBY_VOICE_NAME = "Sulafat";
 
-const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina";
-
-/** Female voice identity selected for Gemini Live voice conversations. */
-export const ORBY_VOICE_NAME = ALLOWED_ORBY_VOICES.has(requestedVoice)
-  ? requestedVoice
-  : "Despina";
-
-/** Turn-level speech direction; kept separate from the transcript itself. */
+/** Short delivery direction shared by every Live session. */
 export const ORBY_VOICE_STYLE =
-  "Español colombiano natural. Voz cálida, cercana y serena de tutora; dicción nítida, cadencia conversacional y ritmo medio-ágil. Expresa curiosidad y empatía de forma sutil. No uses tono de locutora, noticiero, anuncio ni doblaje dramático. No añadas palabras que no estén en el texto.";
+  "Tutora colombiana cercana y profesional. Voz femenina cálida, clara y natural; ritmo medio, articulación precisa y pausas breves donde ayuden a comprender. Explica con paciencia y seguridad, enfatiza suavemente los conceptos importantes y evita sonar como locutora, anuncio, personaje o lectura mecánica. Mantén una entonación conversacional, sin exagerar emociones ni alargar las frases.";

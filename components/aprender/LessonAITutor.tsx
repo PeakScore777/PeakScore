@@ -1003,86 +1003,40 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const pendingUserText = voiceUserTextRef.current.trim();
     const forcedPolicyReply = voiceForcedReplyRef.current ?? voicePreflightReplyRef.current;
     const shouldFallback = voiceModeRef.current && Boolean(pendingUserText) && !voiceResponseDoneRef.current;
+    const appendUserMessage = !voiceUserMessageVisibleRef.current;
 
     if (!pendingUserText && voiceUnsupportedInputDetectedRef.current && voiceModeRef.current) {
-      const retryUserText = "Audio no reconocido.";
-      const retryReply = ORBY_SPANISH_ONLY_REPLY;
-      const userId = "voice-asr-retry-user-" + Date.now();
-      const assistantId = "voice-asr-retry-assistant-" + Date.now();
-      voiceUserTextRef.current = retryUserText;
-      voiceAssistantTextRef.current = retryReply;
-      voiceAssistantMessageIdRef.current = assistantId;
-      voiceUserMessageVisibleRef.current = true;
-      voiceResponseDoneRef.current = true;
-      voiceTurnPersistedRef.current = false;
+      activateTurnBasedVoiceFallback(
+        "Gemini Live no pudo reconocer el español. Cambié al modo de voz por turnos: vuelve a tocar el micrófono, habla y detén la grabación.",
+      );
+      setVoiceError("No pude reconocer la frase anterior. Puedes repetirla en español.");
       voiceUnsupportedInputDetectedRef.current = false;
-      voicePreflightReplyRef.current = null;
-      voiceForcedReplyRef.current = null;
-      stopRealtimeVoice();
-      setWorkspaceMode("chat");
-      setMessages((current) => [
-        ...current,
-        { id: userId, role: "user", content: retryUserText },
-        { id: assistantId, role: "assistant", content: retryReply },
-      ]);
-      void persistRealtimeTurnIfReady();
-      setVoiceStatus("Audio no reconocido");
-      setVoiceError("No pude reconocer la frase. Puedes repetirla en español.");
-      drainPendingMessageQueue();
       return;
     }
 
     if (forcedPolicyReply && shouldFallback) {
-      if (!voiceUserMessageVisibleRef.current && pendingUserText) {
-        setMessages((current) => [
-          ...current,
-          { id: "voice-user-recovery-" + Date.now(), role: "user", content: pendingUserText },
-        ]);
-        voiceUserMessageVisibleRef.current = true;
-      }
-      // Deterministic filters already have their trusted answer. Do not call a
-      // model again just because Live audio failed; keep the visible answer,
-      // save it once, and release the pending text queue.
       voiceForcedReplyRef.current = null;
       voicePreflightReplyRef.current = null;
       voiceUnsupportedInputDetectedRef.current = false;
-      stopRealtimeVoice();
-      setWorkspaceMode("chat");
-      setVoiceStatus("Respuesta disponible por escrito");
-      setVoiceError("La voz en tiempo real se interrumpió; reproduciendo la respuesta filtrada con la voz alternativa.");
-      voiceAssistantTextRef.current = forcedPolicyReply;
-      const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-policy-fallback-" + Date.now());
-      voiceAssistantMessageIdRef.current = assistantId;
-      setMessages((current) => {
-        const exists = current.some((message) => message.id === assistantId);
-        return exists
-          ? current.map((message) => message.id === assistantId ? { ...message, content: forcedPolicyReply } : message)
-          : [...current, { id: assistantId, role: "assistant", content: forcedPolicyReply }];
-      });
-      voiceResponseDoneRef.current = true;
-      voiceTurnPersistedRef.current = false;
-      void persistRealtimeTurnIfReady();
-      setVoiceStatus("Respuesta disponible por escrito");
-      drainPendingMessageQueue();
+      activateTurnBasedVoiceFallback(
+        "La sesión Live se interrumpió. Continúo con voz por turnos, sin consumir cuota Gemini.",
+      );
+      respondToVoiceLocally(pendingUserText, forcedPolicyReply, appendUserMessage);
       return;
     }
-    stopRealtimeVoice();
-    setWorkspaceMode("chat");
-    setVoiceStatus("Continuando por texto…");
-    setVoiceError(reason);
+
     if (shouldFallback) {
-      if (!voiceUserMessageVisibleRef.current) {
-        setMessages((current) => [
-          ...current,
-          { id: "voice-user-recovery-" + Date.now(), role: "user", content: pendingUserText },
-        ]);
-        voiceUserMessageVisibleRef.current = true;
-      }
-      // sendMessage owns the queue-drain step in its finally block.
-      void sendMessageRef.current(pendingUserText, false, true, undefined, false);
-    } else {
-      drainPendingMessageQueue();
+      activateTurnBasedVoiceFallback(
+        "Gemini Live se interrumpió o agotó su cuota. Continúo esta misma pregunta con Whisper y Cloudflare; la lectura usa la voz española de tu equipo, sin otro servicio de pago.",
+        pendingUserText,
+        appendUserMessage,
+      );
+      return;
     }
+
+    activateTurnBasedVoiceFallback(
+      reason || "Gemini Live no está disponible. Puedes continuar con voz por turnos usando Whisper, Cloudflare y la lectura local del navegador.",
+    );
   }
 
   function armVoiceResponseWatchdog() {

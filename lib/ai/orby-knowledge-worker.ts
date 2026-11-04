@@ -661,6 +661,64 @@ export async function processNextOrbyKnowledgeJob(options: {
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Error desconocido.";
 
+    // Temporary Gemini free-tier capacity failures must not consume all retry
+    // attempts or the seven-hour automatic budget. Park the shared profile
+    // queue and resume after a cooldown; exhausted free quota waits for reset.
+    const transientProfileCapacity = job.stage === "profile"
+      && /(?:\\b503\\b|UNAVAILABLE|high demand|overloaded|\\b429\\b|RESOURCE_EXHAUSTED|quota.?exceeded)/i.test(reason);
+    if (transientProfileCapacity) {
+      const now = new Date();
+      const quotaExhausted = /(?:\\b429\\b|RESOURCE_EXHAUSTED|quota.?exceeded)/i.test(reason);
+      const resumeAt = quotaExhausted
+        ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 5, 0))
+        : new Date(now.getTime() + 15 * 60 * 1000);
+      const retryMessage = quotaExhausted
+        ? "La cuota gratuita de análisis académico se agotó; se reanudará tras el reinicio diario."
+        : "Gemini está temporalmente saturado; el análisis se reanudará tras una pausa de 15 minutos.";
+      const { error: deferError } = await supabaseAdmin
+        .from("orby_knowledge_jobs")
+        .update({
+          status: "queued",
+          stage: "profile",
+          available_at: resumeAt.toISOString(),
+          locked_by: null,
+          locked_at: null,
+          lease_expires_at: null,
+          last_error: retryMessage,
+          updated_at: now.toISOString(),
+        })
+        .eq("id", job.id)
+        .eq("locked_by", workerId)
+        .eq("status", "running");
+      if (deferError) throw new Error("No se pudo pausar el análisis temporalmente: " + deferError.code);
+
+      await supabaseAdmin
+        .from("orby_knowledge_jobs")
+        .update({
+          available_at: resumeAt.toISOString(),
+          last_error: retryMessage,
+          updated_at: now.toISOString(),
+        })
+        .eq("stage", "profile")
+        .in("status", ["queued", "retrying"])
+        .neq("id", job.id);
+
+      await supabaseAdmin
+        .from("orby_knowledge_documents")
+        .update({ next_review_at: resumeAt.toISOString(), updated_at: now.toISOString() })
+        .eq("id", job.document_id);
+
+      return {
+        state: "progress",
+        jobId: job.id,
+        documentId: job.document_id,
+        documentTitle,
+        stage: "profile",
+        progress: Number(job.next_batch_index ?? 0),
+        message: documentTitle + ": " + retryMessage + " Próximo intento: " + resumeAt.toISOString() + ".",
+      };
+    }
+
     if (reason.includes("ORBY_EMBEDDING_QUOTA_EXHAUSTED") && job.stage === "embeddings") {
       // Free-tier daily quotas reset at 00:00 UTC. Park the job until shortly
       // after reset instead of consuming automatic cycles / retry attempts.

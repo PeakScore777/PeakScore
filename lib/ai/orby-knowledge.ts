@@ -323,7 +323,7 @@ export async function createOrbyEmbeddings(
     let usedModel = EMBEDDING_MODEL;
     let geminiFailure: unknown = null;
 
-    if (process.env.ORBY_GEMINI_LIVE_ENABLED === "true" && process.env.GEMINI_API_KEY) {
+    if (process.env.GEMINI_API_KEY) {
       try {
         const response = await getEmbeddingClient().models.embedContent({
           model: EMBEDDING_MODEL,
@@ -1259,7 +1259,7 @@ export async function createOrbyQueryEmbedding(query: string): Promise<OrbyQuery
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let geminiFailure: unknown = null;
 
-  if (process.env.ORBY_GEMINI_LIVE_ENABLED === "true" && process.env.GEMINI_API_KEY) {
+  if (process.env.GEMINI_API_KEY) {
     try {
       const response = await Promise.race([
         getEmbeddingClient().models.embedContent({
@@ -1320,7 +1320,7 @@ async function createOrbyQueryEmbeddingForModel(
       return values ?? null;
     }
 
-    if (model === EMBEDDING_MODEL && process.env.ORBY_GEMINI_LIVE_ENABLED === "true" && process.env.GEMINI_API_KEY) {
+    if (model === EMBEDDING_MODEL && process.env.GEMINI_API_KEY) {
       const response = await getEmbeddingClient().models.embedContent({
         model: EMBEDDING_MODEL,
         contents: text,

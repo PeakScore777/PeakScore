@@ -92,7 +92,8 @@ test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin so
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("sendMessageRef.current(transcript, false, true"));
-  assert.ok(lessonTutorSource.includes("transcribeWithCloudflare"));
+  assert.ok(lessonTutorSource.includes('fetch("/api/orby/audio/transcribe"'));
+  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes)"));
   assert.ok(lessonTutorSource.includes("Gemini Live agotó su cuota gratuita"));
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 5_000"));
@@ -269,7 +270,8 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /voiceUnsupportedInputDetectedRef/);
   assert.match(lessonTutorSource, /if \(!pendingUserText && voiceUnsupportedInputDetectedRef\.current && voiceModeRef\.current\)/);
   assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback\(/);
-  assert.match(lessonTutorSource, /No pude reconocer la frase\. Puedes repetirla en español/);
+  assert.match(lessonTutorSource, /No pude reconocer la frase anterior\. Puedes repetirla en español/);
+  assert.match(lessonTutorSource, /Gemini Live no pudo reconocer el español/);
   assert.match(lessonTutorSource, /needsNeuralSpeechFallback/);
   assert.match(lessonTutorSource, /normalizedForcedExpected\.startsWith\(partialNormalized\)/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current/);

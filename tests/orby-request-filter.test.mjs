@@ -330,7 +330,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
   assert.match(realtimeSessionSource, /Evalúa la intención real/);
   assert.match(realtimeSessionSource, /Si la intención es ambigua, pregunta brevemente en vez de rechazar/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.22/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.14/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /habla y responde en español colombiano natural/);
   assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false\)/);
@@ -388,7 +388,7 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
 test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones tienen timeout", () => {
   assert.match(
     lessonTutorSource,
-    /if \(voiceModeRef\.current && !voiceChannelRef\.current\) \{\s*stopRealtimeVoice\(\);\s*setWorkspaceMode\("chat"\)/,
+    /if \(voiceModeRef\.current && !voiceChannelRef\.current && !voiceFallbackModeRef\.current\) \{\s*stopRealtimeVoice\(\);\s*setWorkspaceMode\("chat"\)/,
   );
   assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
   assert.match(lessonTutorSource, /La conexión de voz está tardando demasiado/);
@@ -841,7 +841,7 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
   assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback/);
   assert.match(lessonTutorSource, /cleanPendingText, false, true, undefined, appendUserMessage/);
-  assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
+  assert.match(lessonTutorSource, /sendMessageRef\.current\(cleanPendingText, false, true, undefined, appendUserMessage\)/);
   assert.match(lessonTutorSource, /appendUserMessage = true/);
   assert.match(lessonTutorSource, /sessionGeneration !== voiceSessionGenerationRef\.current/);
   assert.match(lessonTutorSource, /finishLocalVoiceReply/);

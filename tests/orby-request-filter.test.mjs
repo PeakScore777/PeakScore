@@ -170,7 +170,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   const firstSafeFlush = lessonTutorSource.indexOf("if (hasCompleteSafeSentence) flushPendingGeminiAudio()", partialTranscriptStart);
   assert.ok(partialTranscriptStart >= 0 && modelAudioStart > partialTranscriptStart);
   assert.ok(firstSafeFlush > partialTranscriptStart && firstSafeFlush < modelAudioStart);
-  assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 24/);
+  assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 18/);
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = hasCompleteSafeSentence/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.push\(chunk\)/);
@@ -238,7 +238,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
   assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.14/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.18/);
   assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.
@@ -339,7 +339,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
-  assert.match(lessonTutorSource, /Math\.min\(45_000, Math\.max\(8_000, clean\.length \* 70\)\)/);
+  assert.match(lessonTutorSource, /Math\.min\(180_000, Math\.max\(12_000, clean\.length \* 100\)\)/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(cleanUserText\)/);
   assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /hasExistingAssistant/);
@@ -580,6 +580,10 @@ test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académic
     "historia",
     "química",
     "física",
+    "En un texto de Lectura Crítica se cita: 'el personaje quiere programar en Python'. Analiza la intención del personaje.",
+    "En un enunciado de Ciencias Naturales se menciona una receta tradicional como ejemplo de fermentación.",
+    "En el texto de Lectura Crítica el narrador describe una amenaza. Analiza su tono.",
+
     "En la lectura de Lectura Crítica, el personaje dice que quiere aprender Python. Analiza la intención comunicativa del personaje.",
     "En un texto de Sociales se menciona un programa de gobierno. ¿Qué postura presenta el autor?",
     "En el diálogo de Inglés aparece la frase 'Can you cook?'. Analiza su función comunicativa.",
@@ -640,6 +644,12 @@ test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académic
   assert.equal(filter.preflightOrbyRequest("programar").category, "programming");
   assert.equal(filter.preflightOrbyRequest("lectura").allowed, true);
   assert.equal(filter.preflightOrbyRequest("lengua").allowed, true);
+  const readingContext = "Área de estudio: Lectura Crítica. Analiza la intención comunicativa del texto.";
+  const quotedProgrammingMention = "En la lectura de Lectura Crítica, el personaje dice que quiere aprender Python. Analiza la intención comunicativa del personaje.";
+  assert.equal(filter.preflightOrbyRequest(quotedProgrammingMention).allowed, true);
+  assert.equal(filter.containsProgrammingInstruction(quotedProgrammingMention, readingContext), false);
+  assert.equal(filter.containsProgrammingInstruction("Enséñame a programar en Python."), true);
+  assert.equal(filter.preflightOrbyRequest("En el texto de Lectura Crítica el narrador describe una amenaza. Analiza su tono.").allowed, true);
   assert.equal(
     filter.preflightOrbyRequest("¿Y por qué?", "La fotosíntesis transforma la energía lumínica en energía química.").allowed,
     true,
@@ -827,7 +837,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /audioContext.state === "suspended"/);
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
-  assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 24/);
+  assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 18/);
   assert.match(lessonTutorSource, /hasCompleteSafeSentence\) flushPendingGeminiAudio\(\)/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
@@ -839,7 +849,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
 
 test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
-  assert.match(lessonTutorSource, /12_000/);
+  assert.match(lessonTutorSource, /9_000/);
   assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
   assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback/);
   assert.match(lessonTutorSource, /cleanPendingText, false, true, undefined, appendUserMessage/);

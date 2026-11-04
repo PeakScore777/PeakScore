@@ -167,7 +167,8 @@ export function isOrbyGreetingRequest(message: string): boolean {
   if (!normalized || normalized.length > 48) return false;
   // Colombian conversational greetings and wake words, including common ASR variants.
   return /^(?:(?:oye|oe|oee|ey|eii|hey) )?orby(?: ai)?$/.test(normalized)
-    || /^(?:oye|oe|oee|ey|eii|epa|hola|ola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized);
+    || /^(?:oye|oe|oee|ey|eii|epa|hola|ola|holi|buenas|buenos dias|buenas tardes|buenas noches|que mas|como estas|como vas|todo bien|saludos|hey|hello|hi)(?: bro| hermano| hermanito| orby)?$/.test(normalized)
+    || /^(?:oye|oe|oee|ey|eii|epa|hey)(?: bro| hermano| hermanito)?(?: que mas| como estas| como vas| todo bien)$/.test(normalized);
 }
 
 const ENGLISH_ONLY_OPENINGS = [

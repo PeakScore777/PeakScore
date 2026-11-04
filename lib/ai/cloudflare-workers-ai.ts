@@ -142,6 +142,33 @@ export async function transcribeWithCloudflare(audio: Buffer): Promise<string> {
   return transcript;
 }
 
+export async function generateWithCloudflareAnalysis(prompt: string): Promise<{ text: string }> {
+  const result = await runModel<{ response?: unknown; text?: unknown }>(
+    TUTOR_MODEL,
+    {
+      messages: [
+        {
+          role: "system",
+          content: "Eres el analista académico de Orby, el tutor de PeakScore especializado exclusivamente en el currículo Saber 11. Analiza únicamente evidencia de Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés. Respeta exactamente el esquema y las instrucciones del mensaje; devuelve JSON válido cuando se solicite, sin Markdown ni texto exterior. No inventes contenidos, competencias, oficialidad, vigencia, pesos ni evidencias ausentes. Distingue conceptos, alias equivalentes y conceptos relacionados pero diferentes. Usa español colombiano claro y ortografía impecable.",
+        },
+        { role: "user", content: prompt.slice(0, 24_000) },
+      ],
+      temperature: 0.1,
+      max_tokens: 4000,
+      stream: false,
+    },
+    25_000,
+  );
+
+  const text = typeof result.response === "string"
+    ? result.response.trim()
+    : typeof result.text === "string"
+      ? result.text.trim()
+      : "";
+  if (!text) throw new CloudflareWorkersAIError("EMPTY_RESPONSE");
+  return { text };
+}
+
 export async function generateWithCloudflareTutor(prompt: string): Promise<{ text: string }> {
   const result = await runModel<{ response?: unknown; text?: unknown }>(
     TUTOR_MODEL,

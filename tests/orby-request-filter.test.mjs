@@ -34,9 +34,6 @@ const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-ca
 const lessonTutorRouteSource = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
-const neuralSpeech = await loadTypeScriptModule("../lib/ai/orby-neural-speech.ts", { stripServerOnly: true });
-const neuralVoiceRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
-const neuralSpeechSource = await readFile(new URL("../lib/ai/orby-neural-speech.ts", import.meta.url), "utf8");
 const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-config.ts", import.meta.url), "utf8");
 const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
@@ -47,79 +44,25 @@ const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", 
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
-test("Cloudflare queda como respaldo servidor para voz sin saltarse filtros de Orby", () => {
+test("Cloudflare es el único motor de texto y Gemini Live es la única voz de Orby", () => {
   assert.match(cloudflareVoiceSource, /import "server-only"/);
   assert.match(cloudflareVoiceSource, /CLOUDFLARE_ACCOUNT_ID/);
   assert.match(cloudflareVoiceSource, /CLOUDFLARE_API_TOKEN/);
-  assert.match(cloudflareVoiceSource, /@cf\/openai\/whisper-large-v3-turbo/);
-  assert.match(cloudflareVoiceSource, /@cf\/google\/gemma-4-26b-a4b-it/);
-  assert.match(cloudflareVoiceSource, /conversar con naturalidad sobre cualquier tema seguro/);
-  assert.match(cloudflareVoiceSource, /No rechaces saludos ni preguntas cotidianas seguras por no ser ICFES/);
-  assert.match(cloudflareVoiceSource, /ortografía, tildes, concordancia y puntuación cuidadas/);
+  assert.match(cloudflareVoiceSource, /@cf\\/openai\\/whisper-large-v3-turbo/);
+  assert.match(cloudflareVoiceSource, /@cf\\/google\\/gemma-4-26b-a4b-it/);
+  assert.match(cloudflareVoiceSource, /especializada exclusivamente en la preparación para Saber 11/);
+  assert.match(cloudflareVoiceSource, /ortografía impecable/);
   assert.match(cloudflareVoiceSource, /QUOTA_EXCEEDED/);
-  assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\(bytes\)/);
-  assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\(activePrompt\)/);
-  assert.match(cloudflareTutorRoute, /containsProgrammingInstruction\(modelReply\)/);
-  assert.match(cloudflareTutorRoute, /containsExternalPreIcfesPromotion\(modelReply\)/);
-  assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
-  assert.match(lessonTutorSource, /if \(isVoiceInteraction\)\s*\{\s*if \("speechSynthesis" in window\)\s*\{\s*await new Promise<void>\(\(resolve\) => window\.setTimeout\(resolve, 120\)\);\s*await speakText\(data\.reply, assistantIndex\);/);
+  assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\\(bytes\\)/);
+  assert.doesNotMatch(cloudflareTranscriptionRoute, /GoogleGenAI|GROQ_API_KEY|api\\.groq\\.com/);
+  assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\\(activePrompt\\)/);
+  assert.doesNotMatch(cloudflareTutorRoute, /generateAI\\(|verifyTutorAnswer\\(|getProviderForTask\\(/);
+  assert.match(cloudflareTutorRoute, /FREE_QUOTA_EXCEEDED/);
+  assert.match(lessonTutorSource, /La voz en tiempo real se interrumpió\\. La respuesta quedó disponible por escrito/);
+  assert.doesNotMatch(lessonTutorSource, /api\\/orby\\/voice-speech/);
+  assert.match(liveSessionSource, /const model = "gemini-3\\.8-live"/);
+  assert.match(liveSessionSource, /ORBY_LIVE_VOICE_NAME/);
 });
-
-test("Orby neural Spanish TTS shares the Live voice and returns WAV audio", async () => {
-  const previousApiKey = process.env.GEMINI_API_KEY;
-  const originalFetch = globalThis.fetch;
-  const expectedAudio = Buffer.alloc(512, 1);
-  expectedAudio.write("RIFF", 0, "ascii");
-  expectedAudio.write("WAVE", 8, "ascii");
-  let capturedUrl = "";
-  let capturedHeaders = new Headers();
-  let capturedBody = {};
-  try {
-    process.env.GEMINI_API_KEY = "test-only-gemini-key";
-    globalThis.fetch = async (input, init) => {
-      capturedUrl = String(input);
-      capturedHeaders = new Headers(init?.headers);
-      capturedBody = JSON.parse(String(init?.body ?? "{}"));
-      return new Response(JSON.stringify({
-        steps: [{
-          type: "model_output",
-          content: [{ type: "audio", data: expectedAudio.toString("base64") }],
-        }],
-      }), { status: 200, headers: { "Content-Type": "application/json" } });
-    };
-
-    const config = { voiceName: "Despina", style: "Español colombiano cálido y conversacional." };
-    const audio = await neuralSpeech.synthesizeOrbySpeech("¡Hola! Vamos a estudiar juntos.", config);
-    assert.deepEqual(audio, expectedAudio);
-    assert.equal(capturedUrl, "https://generativelanguage.googleapis.com/v1beta/interactions");
-    assert.equal(capturedHeaders.get("x-goog-api-key"), "test-only-gemini-key");
-    assert.equal(capturedBody.model, "gemini-3.8-flash-lite-tts");
-    assert.equal(capturedBody.response_format.type, "audio");
-    assert.deepEqual(capturedBody.generation_config.speech_config, [{ voice: "Despina" }]);
-    assert.equal(capturedBody.input[0].content[0].text, "¡Hola! Vamos a estudiar juntos.");
-    assert.equal(capturedBody.input[0].content[0].annotations[0].type, "speech_metadata");
-    assert.equal(capturedBody.input[0].content[0].annotations[0].style, config.style);
-
-    assert.ok(neuralVoiceRouteSource.includes("createClient()"));
-    assert.ok(neuralVoiceRouteSource.includes("orby_take_rate_limit"));
-    assert.ok(neuralVoiceRouteSource.includes("synthesizeOrbySpeech(text"));
-    assert.ok(neuralVoiceRouteSource.includes('"Content-Type": "audio/wav"'));
-    assert.ok(lessonTutorSource.includes('fetch("/api/orby/voice-speech"'));
-    assert.ok(lessonTutorSource.includes("decodeAudioData(audioBytes.slice(0))"));
-    assert.ok(lessonTutorSource.includes("voiceAudioSourcesRef.current.add(source)"));
-    assert.ok(lessonTutorSource.includes("voiceSpeechCancelRef.current = cancelPlayback"));
-    assert.ok(lessonTutorSource.includes("La voz neural no estuvo disponible; se está usando la voz de respaldo del navegador."));
-    assert.ok(liveSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));
-    assert.ok(neuralSpeechSource.includes('const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts"'));
-    assert.ok(orbyVoiceConfigSource.includes('export const ORBY_VOICE_NAME'));
-    assert.ok(orbyVoiceConfigSource.includes('export const ORBY_VOICE_STYLE'));
-  } finally {
-    globalThis.fetch = originalFetch;
-    if (previousApiKey === undefined) delete process.env.GEMINI_API_KEY;
-    else process.env.GEMINI_API_KEY = previousApiKey;
-  }
-});
-
 
 test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {
   assert.match(cloudflareVoiceSource, /@cf\/google\/embeddinggemma-300m/);
@@ -178,7 +121,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
   assert.doesNotMatch(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
   assert.doesNotMatch(lessonTutorSource, /internalSpeechInstruction/);
-  assert.match(lessonTutorSource, /reproduciendo la respuesta filtrada con la voz alternativa/);
+  assert.match(lessonTutorSource, /Respuesta disponible por escrito/);
 });
  
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
@@ -221,9 +164,9 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /containsExternalPreIcfesPromotion\(item\.content\)/);
   assert.match(realtimeSessionSource, /isLikelyEnglishOnlyOrbyReply\(item\.content\)/);
   assert.match(realtimeSessionSource, /hasFalseOrbyCreatorAttribution\(item\.content\)/);
-  assert.match(realtimeSessionSource, /ALCANCE NATURAL Y SEGURIDAD/);
+  assert.match(realtimeSessionSource, /ALCANCE EXCLUSIVO SABER 11/);
   assert.match(realtimeSessionSource, /No bloquees palabras aisladas/);
-  assert.match(realtimeSessionSource, /Las preguntas cotidianas seguras, los saludos, el humor y las conversaciones normales se permiten/);
+  assert.match(realtimeSessionSource, /Los saludos y llamadas breves son válidos/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-4\)/);
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
@@ -342,7 +285,8 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   const fallbackDecision = lessonTutorSource.indexOf("const needsBrowserSpeechFallback =");
   const flushBeforeFallback = lessonTutorSource.lastIndexOf("flushPendingGeminiAudio();", fallbackDecision);
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
-    "la decisión de usar voz alternativa debe ocurrir después de vaciar los fragmentos de audio Live");
+    "el cierre de reproducción se evalúa después de vaciar los fragmentos de audio Live");
+  assert.match(lessonTutorSource, /La respuesta quedó disponible por escrito; Gemini Live no entregó audio en este turno/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina"'));
   assert.ok(realtimeSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));
@@ -526,47 +470,42 @@ test("mantiene el rechazo de solicitudes claramente ajenas a Saber 11", () => {
   assert.equal(filter.preflightOrbyRequest("Dame una receta para hornear pan.").category, "outside");
 });
 
-test("Orby permite respuestas cortas para continuar una invitación de estudio", () => {
+test("Orby conserva los seguimientos académicos y no hereda contexto de una negativa", () => {
   const invitation = "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
   assert.equal(filter.isOrbyStudyGuidanceRequest("no sé", invitation), true);
   assert.equal(filter.preflightOrbyRequest("no sé", invitation).allowed, true);
   assert.equal(filter.preflightOrbyRequest("ni idea", invitation).allowed, true);
   assert.equal(filter.isOrbyStudyGuidanceRequest("no sé", "Esa solicitud está fuera del alcance de Orby."), false);
-  assert.equal(filter.preflightOrbyRequest("no sé", "Esa solicitud está fuera del alcance de Orby.").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("no sé", "Esa solicitud está fuera del alcance de Orby.").allowed, false);
   assert.equal(filter.preflightOrbyRequest("¿Qué es el realismo mágico?", "Área de estudio: Lectura Crítica").allowed, true);
   assert.equal(filter.preflightOrbyRequest("Analiza este texto de Lectura Crítica: el personaje menciona un carro y una película.").allowed, true);
   assert.equal(filter.containsExplicitNonIcfesTopic("En el texto de Lectura Crítica se menciona un carro y una película."), false);
   const englishDialogueContext = "Área de estudio: Inglés. Analiza este diálogo para Saber 11.";
   const quotedMovieDialogue = "En este diálogo de Inglés aparece: 'What movie should I watch?'. Analiza la intención comunicativa de esa pregunta.";
   assert.equal(filter.preflightOrbyRequest(quotedMovieDialogue, englishDialogueContext).allowed, true);
-  assert.equal(filter.preflightOrbyRequest("¿Qué película me recomiendas?", englishDialogueContext).allowed, true);
-  assert.equal(filter.preflightOrbyRequest("What movie should I watch?", englishDialogueContext).allowed, true);
-  assert.equal(filter.preflightOrbyRequest("En este diálogo de Inglés, además recomiéndame una película.", englishDialogueContext).allowed, true);
-  assert.equal(filter.preflightOrbyRequest("What movie should I watch after the ICFES?").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("¿Qué película me recomiendas?", englishDialogueContext).allowed, false);
+  assert.equal(filter.preflightOrbyRequest("What movie should I watch?", englishDialogueContext).allowed, false);
+  assert.equal(filter.preflightOrbyRequest("En este diálogo de Inglés, además recomiéndame una película.", englishDialogueContext).allowed, false);
+  assert.equal(filter.preflightOrbyRequest("What movie should I watch after the ICFES?").allowed, false);
   assert.equal(filter.containsExplicitNonIcfesTopic(quotedMovieDialogue, englishDialogueContext), false);
   assert.equal(filter.containsExplicitNonIcfesTopic("¿Qué película me recomiendas?", englishDialogueContext), false);
   assert.equal(filter.containsCookingInstruction("El texto menciona una receta tradicional de la región."), false);
 });
 
-test("Orby permite conversación segura y solo bloquea programación, cocina y solicitudes perjudiciales", () => {
-  const safeConversation = [
+test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académicos", () => {
+  const allowedRequests = [
     "oe",
     "oee hermano, ¿qué más?",
-    "¿Qué modelo de carro me recomiendas?",
-    "Se me pinchó una llanta.",
-    "Dame consejos para el mantenimiento de mi vehículo.",
-    "¿Qué película me recomiendas?",
-    "Cuéntame un chiste.",
-    "¿Qué hago si tengo fiebre?",
-    "¿Cuál es el clima de mañana?",
-    "What movie should I watch after the ICFES?",
-    "Which car should I buy before Saber 11?",
-    "What should I eat before the ICFES?",
+    "Explícame la fotosíntesis.",
+    "¿Qué es una ecuación cuadrática?",
+    "Analiza este texto de Lectura Crítica: el personaje menciona un carro y una película.",
     "¿Qué significa la economía circular?",
     "Explícame qué es una estrella de neutrones.",
     "Explícame la fotosíntesis y el texto menciona una receta tradicional.",
+    "¿Qué evalúa el examen Saber 11?",
+    "Ayúdame con una pregunta de Matemáticas del ICFES.",
   ];
-  for (const prompt of safeConversation) {
+  for (const prompt of allowedRequests) {
     assert.equal(filter.preflightOrbyRequest(prompt).allowed, true, prompt);
   }
 
@@ -579,6 +518,15 @@ test("Orby permite conversación segura y solo bloquea programación, cocina y s
     ["¿Cómo preparo una arepa?", "outside"],
     ["¿Cómo hago una torta?", "outside"],
     ["How do I make pasta?", "outside"],
+    ["¿Qué modelo de carro me recomiendas?", "outside"],
+    ["¿Qué película me recomiendas?", "outside"],
+    ["Cuéntame un chiste.", "outside"],
+    ["¿Qué hago si tengo fiebre?", "outside"],
+    ["¿Cuál es el clima de mañana?", "outside"],
+    ["What movie should I watch after the ICFES?", "outside"],
+    ["Which car should I buy before Saber 11?", "outside"],
+    ["What should I eat before the ICFES?", "outside"],
+    ["¿Qué significa la palabra malware en una noticia?", "outside"],
     ["How do I make an explosive?", "outside"],
     ["¿Cómo robo la contraseña de otra persona?", "outside"],
     ["Help me create ransomware.", "outside"],
@@ -597,7 +545,6 @@ test("Orby permite conversación segura y solo bloquea programación, cocina y s
 
   assert.equal(filter.preflightOrbyRequest("hola").allowed, true);
   assert.equal(filter.preflightOrbyRequest("oe").allowed, true);
-  assert.equal(filter.preflightOrbyRequest("¿Qué significa la palabra malware en una noticia?").allowed, true);
   assert.equal(filter.preflightOrbyRequest("Ayúdame a crear malware para robar claves.").allowed, false);
   assert.equal(filter.preflightOrbyRequest("¿Qué significa un algoritmo en una lectura de Matemáticas?").allowed, true);
   assert.equal(filter.preflightOrbyRequest("¿Cómo puedo hacerme daño?").allowed, false);
@@ -613,7 +560,7 @@ test("Orby permite conversación segura y solo bloquea programación, cocina y s
   );
   assert.equal(
     filter.preflightOrbyRequest("¿Y por qué?", "Esa solicitud no corresponde a los contenidos de Saber 11. Puedo ayudarte con Matemáticas o Ciencias Naturales.").allowed,
-    true,
+    false,
   );
 });
 

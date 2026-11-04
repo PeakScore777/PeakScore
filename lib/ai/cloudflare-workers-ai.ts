@@ -65,7 +65,10 @@ async function runModel<T>(
     const providerMessage = typeof envelope?.errors?.[0]?.message === "string"
       ? envelope.errors[0].message
       : "";
-    const dailyQuotaExceeded = /daily|quota|neurons|usage limit/i.test(providerMessage);
+    // Cloudflare documents internal error 3036 as the exhausted daily
+    // 10,000-neuron free allocation. Code 3040 is temporary capacity, not quota.
+    const dailyQuotaExceeded = providerCode === 3036
+      || /daily|quota|neurons|usage limit/i.test(providerMessage);
     console.error("[Orby Cloudflare] Inference request rejected.", {
       status: response.status,
       code: typeof providerCode === "number" ? providerCode : undefined,

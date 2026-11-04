@@ -2187,6 +2187,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let resolveSetupComplete: (() => void) | null = null;
       let liveSessionEstablished = false;
       let lastLiveSocketError = "";
+      let connectionSequence = 0;
+      let reconnectInFlight = false;
+      let reconnectLiveSession: (() => Promise<void>) | null = null;
+      let resolveResumeSetup: (() => void) | null = null;
+      let rejectResumeSetup: ((error: Error) => void) | null = null;
+      let resumeSetupComplete = false;
       const setupFailure = new Promise<never>((_, reject) => {
         rejectSetup = reject;
       });
@@ -2194,100 +2200,124 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         resolveSetupComplete = resolve;
       });
 
-      const sessionPromise = googleAI.live.connect({
-        model,
-        config: {
-          abortSignal: startupSignal,
-          responseModalities: [Modality.AUDIO],
-          contextWindowCompression: { slidingWindow: {} },
-          sessionResumption: {
-            ...(voiceSessionResumeConversationRef.current === activeConversationRef.current
-              && voiceSessionResumeHandleRef.current
-              ? { handle: voiceSessionResumeHandleRef.current }
-              : {}),
-          },
-          tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
-          // Bias speech recognition toward Spanish. languageCodes is a hint,
-          // not a hard lock; the local foreign-script guard remains required.
-          inputAudioTranscription: {
-            // Spanish hint reduces accidental cross-language recognition. It
-            // remains a hint, so the local script guard is still required.
-            languageCodes: ["es-ES"],
-            customVocabulary: [
-              "Orby", "Oye Orby", "Hey Orby", "Orby AI", "PeakScore",
-              "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica",
-              "Sociales y Ciudadanas", "Ciencias Naturales",
-            ],
-          },
-          outputAudioTranscription: {
-            languageCodes: ["es"],
-          },
-          speechConfig: {
-            languageCode: "es",
-            voiceConfig: {
-              prebuiltVoiceConfig: { voiceName: configuredVoiceName },
-            },
-          },
-          systemInstruction: {
-            parts: [{ text: systemInstruction }],
+      const buildLiveConfig = (resumeHandle?: string) => ({
+        abortSignal: startupSignal,
+        responseModalities: [Modality.AUDIO],
+        contextWindowCompression: { slidingWindow: {} },
+        sessionResumption: resumeHandle ? { handle: resumeHandle } : {},
+        tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
+        inputAudioTranscription: {
+          languageCodes: ["es-ES"],
+          customVocabulary: [
+            "Orby", "Oye Orby", "Hey Orby", "Orby AI", "PeakScore",
+            "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica",
+            "Sociales y Ciudadanas", "Ciencias Naturales",
+          ],
+        },
+        outputAudioTranscription: { languageCodes: ["es"] },
+        speechConfig: {
+          languageCode: "es",
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: configuredVoiceName },
           },
         },
+        systemInstruction: {
+          parts: [{ text: systemInstruction }],
+        },
+      });
+
+      const handleLiveSocketMessage = (message: unknown) => {
+        const payload = message as Record<string, unknown>;
+        if (payload.sessionResumptionUpdate && typeof payload.sessionResumptionUpdate === "object") {
+          const update = payload.sessionResumptionUpdate as { resumable?: unknown; newHandle?: unknown };
+          if (update.resumable === true && typeof update.newHandle === "string"
+            && update.newHandle.length > 20 && update.newHandle.length <= 8192) {
+            voiceSessionResumeHandleRef.current = update.newHandle;
+            voiceSessionResumeConversationRef.current = activeConversationRef.current;
+          }
+        }
+
+        if (payload.goAway && typeof payload.goAway === "object") {
+          const notice = payload.goAway as { timeLeft?: unknown };
+          console.info("[Orby Voice] Live connection is approaching its provider limit.", {
+            timeLeft: typeof notice.timeLeft === "string" || typeof notice.timeLeft === "number"
+              ? notice.timeLeft
+              : undefined,
+            resumable: Boolean(voiceSessionResumeHandleRef.current),
+          });
+          setVoiceStatus("Renovando la conexión de voz sin cerrar tu conversación…");
+        }
+
+        if (payload.error && typeof payload.error === "object") {
+          const detail = payload.error as { message?: unknown; status?: unknown; code?: unknown };
+          const providerDetail = [
+            typeof detail.code === "string" ? detail.code : "",
+            typeof detail.status === "string" || typeof detail.status === "number" ? String(detail.status) : "",
+            typeof detail.message === "string" ? detail.message : "",
+          ].filter(Boolean).join(" ");
+          const quotaReached = detail.status === 429
+            || /RESOURCE_EXHAUSTED|QUOTA_EXCEEDED|quota exceeded|free tier.*quota|rate limit/i.test(providerDetail);
+          console.warn("[Orby Voice] Realtime service rejected the connection.", {
+            status: detail.status,
+            code: detail.code,
+            quotaReached,
+            reconnecting: reconnectInFlight,
+          });
+
+          const quotaMessage = "GEMINI_FREE_QUOTA_EXCEEDED: Gemini Live agotó su cuota gratuita. Continúo con Whisper, Cloudflare y lectura local; no se usará un servicio de pago.";
+          if (reconnectInFlight && !resumeSetupComplete) {
+            rejectResumeSetup?.(new Error(quotaReached ? quotaMessage : "No se pudo reanudar la conexión de voz."));
+          } else if (liveSessionEstablished && voiceModeRef.current) {
+            if (quotaReached) {
+              fallbackVoiceTurnToText("Gemini Live agotó su cuota gratuita. Continúo esta conversación con Whisper y Cloudflare, sin usar servicios de pago.");
+            } else if (reconnectLiveSession) {
+              void reconnectLiveSession();
+            } else {
+              fallbackVoiceTurnToText("La conexión de voz se interrumpió. Continúo esta misma pregunta con Whisper y Cloudflare.");
+            }
+          } else {
+            rejectSetup?.(new Error(quotaReached
+              ? quotaMessage
+              : "No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
+          }
+          return;
+        }
+
+        if (payload.setupComplete) {
+          resolveSetupComplete?.();
+          if (reconnectInFlight) {
+            resumeSetupComplete = true;
+            resolveResumeSetup?.();
+          }
+        }
+        if (payload.toolCall && typeof payload.toolCall === "object") {
+          void handleOrbyLiveKnowledgeTool(payload.toolCall);
+          return;
+        }
+        handleGeminiLiveEvent(payload);
+      };
+
+      const initialResumeHandle = voiceSessionResumeConversationRef.current === activeConversationRef.current
+        ? voiceSessionResumeHandleRef.current ?? undefined
+        : undefined;
+      const initialConnectionId = ++connectionSequence;
+      const sessionPromise = googleAI.live.connect({
+        model,
+        config: buildLiveConfig(initialResumeHandle),
         callbacks: {
           onopen: () => {
-            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
+            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted
+              || initialConnectionId !== connectionSequence) return;
             setVoiceStatus("Conectado; esperando confirmación de Orby…");
           },
           onmessage: (message) => {
-            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
-            const payload = message as unknown as Record<string, unknown>;
-            if (payload.sessionResumptionUpdate && typeof payload.sessionResumptionUpdate === "object") {
-              const update = payload.sessionResumptionUpdate as { resumable?: unknown; newHandle?: unknown };
-              if (update.resumable === true && typeof update.newHandle === "string"
-                && update.newHandle.length > 20 && update.newHandle.length <= 8192) {
-                voiceSessionResumeHandleRef.current = update.newHandle;
-                voiceSessionResumeConversationRef.current = activeConversationRef.current;
-              }
-            }
-            if (payload.error && typeof payload.error === "object") {
-              const detail = payload.error as { message?: unknown; status?: unknown; code?: unknown };
-              const providerDetail = [
-                typeof detail.code === "string" ? detail.code : "",
-                typeof detail.status === "string" || typeof detail.status === "number" ? String(detail.status) : "",
-                typeof detail.message === "string" ? detail.message : "",
-              ].filter(Boolean).join(" ");
-              const quotaReached = detail.status === 429
-                || /RESOURCE_EXHAUSTED|QUOTA_EXCEEDED|quota exceeded|free tier.*quota|rate limit/i.test(providerDetail);
-              console.warn("[Orby Voice] Realtime service rejected the connection.", {
-                status: detail.status,
-                code: detail.code,
-                quotaReached,
-              });
-
-              const quotaMessage = "GEMINI_FREE_QUOTA_EXCEEDED: Gemini Live agotó su cuota gratuita. Continúo con Whisper, Cloudflare y lectura local; no se usará un servicio de pago.";
-              if (liveSessionEstablished && voiceModeRef.current) {
-                // A quota error can arrive after setupComplete. In that case
-                // rejectSetup is already settled and does nothing: switch the
-                // current call to turn-based voice immediately instead.
-                fallbackVoiceTurnToText(quotaReached
-                  ? "Gemini Live agotó su cuota gratuita. Continúo esta conversación con Whisper y Cloudflare, y leeré las respuestas en español sin consumir más cuota de Gemini."
-                  : "La conexión de voz se interrumpió. Continúo esta misma pregunta con Whisper y Cloudflare.");
-              } else {
-                rejectSetup?.(new Error(quotaReached
-                  ? quotaMessage
-                  : "No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
-              }
-              return;
-            }
-            if (payload.setupComplete) resolveSetupComplete?.();
-            if (payload.toolCall && typeof payload.toolCall === "object") {
-              void handleOrbyLiveKnowledgeTool(payload.toolCall);
-              return;
-            }
-            handleGeminiLiveEvent(payload);
+            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted
+              || initialConnectionId !== connectionSequence) return;
+            handleLiveSocketMessage(message);
           },
           onerror: (event) => {
-            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
-            // Keep transport details in the developer console, never in student-facing messages.
+            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted
+              || initialConnectionId !== connectionSequence) return;
             const rawError = event.error instanceof Error
               ? event.error.message
               : typeof event.message === "string" && event.message.trim()
@@ -2298,10 +2328,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               message: lastLiveSocketError,
               eventType: event.type,
             });
-            setVoiceStatus("Recuperando detalle de conexión…");
+            setVoiceStatus("Recuperando conexión de voz…");
           },
           onclose: (event) => {
-            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted) return;
+            if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted
+              || initialConnectionId !== connectionSequence) return;
             const reason = event.reason?.trim();
             const detail = [
               "código " + event.code,
@@ -2309,16 +2340,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               lastLiveSocketError ? "evento previo: " + lastLiveSocketError : "",
               event.wasClean ? "cierre limpio" : "cierre no limpio",
             ].filter(Boolean).join(" · ");
-
             if (!liveSessionEstablished) {
               console.warn("[Orby Voice] Connection closed before setup completed.", { detail });
               rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de Orby."));
               return;
             }
-
             if (voiceModeRef.current) {
-              console.warn("[Orby Voice] Active session closed.", { detail });
-              fallbackVoiceTurnToText("La conexión de voz se interrumpió. Continué esta misma pregunta por el chat.");
+              console.info("[Orby Voice] Resuming the existing conversation after connection close.", { detail });
+              if (reconnectLiveSession) void reconnectLiveSession();
+              else fallbackVoiceTurnToText("La conexión de voz se interrumpió. Continúo esta misma pregunta con Whisper y Cloudflare.");
             }
           },
         },

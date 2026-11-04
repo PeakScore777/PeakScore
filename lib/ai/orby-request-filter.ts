@@ -45,6 +45,9 @@ const ORBY_STUDY_INVITATION_PATTERN =
 const ICFES_FOLLOW_UP_PATTERN =
   /^(?:(?:y|entonces|pero|vale|listo)\s+)?(?:explicame|explica|amplia|profundiza|continua|sigue|otro ejemplo|dame otro ejemplo|un ejemplo mas|cual es la respuesta|por que|porque|como asi|que significa eso|que quiere decir|no entiendo|no me queda claro|resuelve esto|ayudame con esto|puedes repetir|repitelo|hazlo paso a paso|paso a paso|y eso|y entonces|cual|cuanto|como funciona|como se hace)[.!? ¿¡,;:]*$/i;
 
+const CONTEXTUAL_STUDY_REQUEST_PATTERN =
+  /\b(?:explicame|explica|ensename|que es|que son|que significa|define|analiza|interpreta|resuelve|demuestra|justifica|compara|calcula|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|no entiendo|diferencia entre|por que ocurre)\b/i;
+
 const ICFES_EXAM_INTENT_PATTERN =
   /\b(?:saber\s*11|icfes)\b.{0,90}\b(?:estudiar|repasar|practicar|preparar|prepararme|resolver|pregunta|ejercicio|simulacro|competencia|componente|area|contenido|examen|explicar|explicame|que evalua|guia)\b/i;
 const ICFES_EXAM_DEFINITION_PATTERN =
@@ -400,7 +403,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     || ORBY_STUDY_INVITATION_PATTERN.test(prior)
   );
   const isContextualAcademicFollowUp = priorHasCurriculumAnchor
-    && (ICFES_FOLLOW_UP_PATTERN.test(normalized) || isOrbyStudyGuidanceRequest(message, previousContext));
+    && (ICFES_FOLLOW_UP_PATTERN.test(normalized) || CONTEXTUAL_STUDY_REQUEST_PATTERN.test(normalized) || isOrbyStudyGuidanceRequest(message, previousContext));
 
   if (!currentHasCurriculumAnchor && !isContextualAcademicFollowUp) {
     return {

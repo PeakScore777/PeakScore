@@ -1842,10 +1842,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Orby está hablando…");
     }
 
-    // Gemini Live is used for low-latency listening, turn handling and text.
-    // Its synthetic audio is deliberately not played: Aura-2 is the single
-    // speaker for every assistant voice turn, preventing two voices per answer.
-    voicePendingAudioChunksRef.current = [];
+    const modelTurn = serverContent.modelTurn && typeof serverContent.modelTurn === "object"
+      ? serverContent.modelTurn as { parts?: Array<Record<string, unknown>> }
+      : null;
+    for (const part of modelTurn?.parts ?? []) {
+      const inlineData = part.inlineData && typeof part.inlineData === "object"
+        ? part.inlineData as { data?: unknown; mimeType?: unknown }
+        : null;
+      if (typeof inlineData?.data !== "string" || voiceLocalReplyInFlightRef.current || voiceOutputAudioBlockedRef.current) continue;
+
+      // Live audio is the preferred natural voice. If its first chunk arrives
+      // after the text/TTS fallback already began, stop that fallback before
+      // playing Live audio; never let the two speakers overlap.
+      if (voiceBrowserSpeechActiveRef.current || voiceSpeechCancelRef.current) {
+        stopSpeaking();
+      }
+      armVoiceResponseWatchdog();
+      const chunk = {
+        data: inlineData.data,
+        mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
+      };
+      if (voicePendingAudioChunksRef.current.length < 512) {
+        voicePendingAudioChunksRef.current.push(chunk);
+        if (voiceOutputTranscriptValidatedRef.current) flushPendingGeminiAudio();
+      } else {
+        voiceOutputAudioBlockedRef.current = true;
+        voicePendingAudioChunksRef.current = [];
+        console.warn("[Orby Voice] Audio buffer limit reached; switching this turn to validated text speech.");
+      }
+    }
 
     if (serverContent.interrupted === true && !voiceLocalReplyInFlightRef.current) {
       // Barge-in cancels this response. Clear its watchdog so the next spoken

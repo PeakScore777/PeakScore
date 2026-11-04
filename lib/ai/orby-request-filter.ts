@@ -180,11 +180,11 @@ export function shouldRetrieveOrbyAcademicKnowledge(input: {
 export function getOrbySubjectSelectionReply(message: string): string | null {
   const normalized = normalizeOrbyRequestText(message)
     .replace(/[¿?¡!.,;:]+/g, " ")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
   const compact = normalized
-    .replace(/^(?:quiero estudiar|quiero ver|vamos con|empecemos con|empezar con|estudiemos|repasemos|hablemos de|tema de|area de|materia de|la materia de|el area de)\\s+/, "")
-    .replace(/^(?:el|la)\\s+/, "")
+    .replace(/^(?:quiero estudiar|quiero ver|vamos con|empecemos con|empezar con|estudiemos|repasemos|hablemos de|tema de|area de|materia de|la materia de|el area de)\s+/, "")
+    .replace(/^(?:el|la)\s+/, "")
     .trim();
 
   if (/^(?:lectura|lectura critica|lengua|lenguaje|comprension lectora|comprension de lectura|comprension de textos|literatura|gramatica|espanol|castellano)$/.test(compact)) {

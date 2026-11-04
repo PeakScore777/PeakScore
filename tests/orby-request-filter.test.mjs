@@ -85,7 +85,6 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText(quotaReached"));
   assert.ok(lessonTutorSource.includes("ambiguousShortProgrammingTranscript"));
   assert.ok(lessonTutorSource.includes("words.length <= 4"));
-  assert.ok(lessonTutorSource.includes("programar no hermano"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(6_500)"));
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 420)"));

@@ -283,6 +283,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const lastInitialPromptRef = useRef<string | null>(null);
   const activeConversationRef = useRef<string | null>(null);
   const sendingRef = useRef(false);
+  const lastSubmittedMessageRef = useRef<{ key: string; at: number } | null>(null);
   const pendingMessagesRef = useRef<Array<{ text: string; attachmentMeta?: { kind: "image" | "audio"; label: string } }>>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const stopAudioRecordingRef = useRef<(discard?: boolean) => void>(() => {});
@@ -914,7 +915,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const voices = await waitForSpanishBrowserVoice();
         if (finished) return;
         const spanishVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-        const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /sabina|laura|sofia|lucia|monica|catalina|female|mujer/i.test(voice.name))
+        const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|neural|enhanced/i.test(voice.name) && /sabina|laura|sofia|lucia|monica|catalina|female|mujer/i.test(voice.name))
+          ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /sabina|laura|sofia|lucia|monica|catalina|female|mujer/i.test(voice.name))
           ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
           ?? spanishVoices.find((voice) => /es[-_]mx/i.test(voice.lang) && /female|mujer|natural|online/i.test(voice.name))
           ?? spanishVoices.find((voice) => /sabina|helena|paulina|sofia|laura|lucia|monica|catalina|female|mujer/i.test(voice.name))
@@ -935,8 +937,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
           browserUtterance = utterance;
           utterance.lang = "es-CO";
-          utterance.rate = 1.2;
-          utterance.pitch = 1.03;
+          utterance.rate = 1.04;
+          utterance.pitch = 1.02;
           utterance.volume = 1;
           if (preferredVoice) utterance.voice = preferredVoice;
           utterance.onend = () => {
@@ -2489,6 +2491,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     let isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || message.length > 1200) return;
+
+    // Ignore accidental double-submit events (Enter + click, touch double tap,
+    // or a repeated browser submit) before they enter the serial message queue.
+    const submissionKey = message.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "")
+      .toLocaleLowerCase("es-CO").replace(/\\s+/g, " ").trim();
+    const submittedAt = Date.now();
+    const previousSubmission = lastSubmittedMessageRef.current;
+    if (submissionKey && previousSubmission?.key === submissionKey
+      && submittedAt - previousSubmission.at < 1_800) return;
+    lastSubmittedMessageRef.current = submissionKey
+      ? { key: submissionKey, at: submittedAt }
+      : null;
     // Voice startup must never lock the text composer. Cancel an unfinished
     // microphone/WebSocket attempt and continue with the fast text pipeline.
     if (voiceModeRef.current && !voiceChannelRef.current && !voiceFallbackModeRef.current) {

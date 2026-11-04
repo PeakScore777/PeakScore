@@ -997,7 +997,7 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.doesNotMatch(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
   assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*respondToVoiceLocally\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
   assert.match(lessonTutorSource, /!voiceLocalReplyInFlightRef\.current && typeof outputTranscript/);
-  assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current \|\| voiceOutputAudioBlockedRef\.current \|\| voiceResponseDoneRef\.current\) continue/);
+  assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current\s*\|\|\s*voiceOutputAudioBlockedRef\.current\s*\|\|\s*voiceResponseDoneRef\.current\)\s*continue/);
   assert.match(lessonTutorSource, /stopSpeaking\(\);/);
   assert.match(lessonTutorSource, /serverContent\.interrupted === true && !voiceLocalReplyInFlightRef\.current/);
   assert.match(lessonTutorSource, /function isLikelyVoicePlaybackEcho\(transcript: string, assistantSpeech: string\)/);

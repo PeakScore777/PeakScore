@@ -336,7 +336,7 @@ export async function POST(request: Request) {
     const history: TutorMessage[] = [];
     for (const item of rawHistory) {
       if (containsUnsupportedSpanishLanguage(item.content) || isClearlyOutOfScopeOrInjection(item.content)) continue;
-      const priorContext = history.slice(-2).map((message) => message.content).join("\n");
+      const priorContext = [recentScopeContext, ...history.slice(-2).map((message) => message.content)].join("\n");
       if (item.role === "user") {
         if (preflightOrbyRequest(item.content, priorContext).allowed) history.push(item);
         continue;

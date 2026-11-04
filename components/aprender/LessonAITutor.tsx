@@ -1688,26 +1688,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           || partialNormalized === normalizedForcedExpected
         ),
       );
+      const voiceScopeContext = [
+        voiceUserTextRef.current,
+        voiceLastAssistantOutputRef.current,
+        "Área de estudio: " + subject,
+        "Tema de estudio: " + topic,
+        question,
+        context,
+      ].filter(Boolean).join("\n").slice(0, 1800);
       const partialUnsafe = voiceOutputAudioBlockedRef.current
         || forcedSpeechMismatch
         || containsUnsupportedSpanishLanguage(partialReply)
-        || containsProgrammingInstruction(partialReply)
-        || containsCookingInstruction(partialReply, [
-          voiceUserTextRef.current,
-          voiceLastAssistantOutputRef.current,
-          "Área de estudio: " + subject,
-          "Tema de estudio: " + topic,
-          question,
-          context,
-        ].filter(Boolean).join("\n").slice(0, 1800))
-        || containsExplicitNonIcfesTopic(partialReply, [
-          voiceUserTextRef.current,
-          voiceLastAssistantOutputRef.current,
-          "Área de estudio: " + subject,
-          "Tema de estudio: " + topic,
-          question,
-          context,
-        ].filter(Boolean).join("\n").slice(0, 1800))
+        || containsProgrammingInstruction(partialReply, voiceScopeContext)
+        || containsCookingInstruction(partialReply, voiceScopeContext)
+        || containsExplicitNonIcfesTopic(partialReply, voiceScopeContext)
         || containsExternalPreIcfesPromotion(partialReply)
         || isLikelyEnglishOnlyOrbyReply(partialReply)
         || hasFalseOrbyCreatorAttribution(partialReply)
@@ -1790,7 +1784,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai|ticescool|ticeschool)\b/.test(normalizedReply)
         && /\b(?:creado|creada|desarrollado|desarrollada|entrenado|entrenada|trained|hecho|hecha|soy|fui)\b/.test(normalizedReply)
       ) || /(?:cread[oa]|entrenad[oa]|desarrollad[oa]|hech[oa])\s*(?:por|by)\s*(?!peak[-_]?score\b)[a-z0-9]/i.test(normalizedReply);
-      const unsafeGeneratedContent = containsProgrammingInstruction(rawReply)
+      const voiceScopeContext = [
+        voiceUserTextRef.current,
+        voiceLastAssistantOutputRef.current,
+        "Área de estudio: " + subject,
+        "Tema de estudio: " + topic,
+        question,
+        context,
+      ].filter(Boolean).join("\n").slice(0, 1800);
+      const unsafeGeneratedContent = containsProgrammingInstruction(rawReply, voiceScopeContext)
         || hasFalseOrbyCreatorAttribution(rawReply);
       const policyReply = forcedLiveReply
         ? null
@@ -1799,23 +1801,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? ORBY_SPANISH_OUTPUT_FALLBACK
             : voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
             ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
-            : containsCookingInstruction(rawReply, [
-          voiceUserTextRef.current,
-          voiceLastAssistantOutputRef.current,
-          "Área de estudio: " + subject,
-          "Tema de estudio: " + topic,
-          question,
-          context,
-        ].filter(Boolean).join("\n").slice(0, 1800))
+            : containsCookingInstruction(rawReply, voiceScopeContext)
               ? ORBY_COOKING_REPLY
-              : containsExplicitNonIcfesTopic(rawReply, [
-          voiceUserTextRef.current,
-          voiceLastAssistantOutputRef.current,
-          "Área de estudio: " + subject,
-          "Tema de estudio: " + topic,
-          question,
-          context,
-        ].filter(Boolean).join("\n").slice(0, 1800))
+              : containsExplicitNonIcfesTopic(rawReply, voiceScopeContext)
                 ? ORBY_SAFETY_REPLY
                 : containsExternalPreIcfesPromotion(rawReply)
                 ? ORBY_EXTERNAL_PREICFES_REPLY

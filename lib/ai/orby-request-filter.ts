@@ -74,8 +74,8 @@ const EXTERNAL_PREICFES_REQUEST_PATTERNS = [
 ];
  
 const GENERAL_OFF_SCOPE_REQUEST_PATTERNS = [
-  /\b(?:recomiendame|recomienda|recommend me)\b.{0,70}\b(?:pelicula|peliculas|carro|carros|coche|coches|serie|series|restaurante|comida|movie|movies|film|films|car|cars|show|restaurant|food)\b/i,
-  /\b(?:what movie should i watch|which movie should i watch|what film should i watch|which car should i buy|what car should i buy|que pelicula me recomiendas|que pelicula debo ver|que carro me recomiendas|que coche me recomiendas|que serie me recomiendas|cuentame un chiste|tell me a joke)\b/i,
+  /\b(?:recomiendame|recomienda|me recomiendas|recommend me)\b.{0,70}\b(?:pelicula|peliculas|carro|carros|coche|coches|serie|series|restaurante|comida|movie|movies|film|films|car|cars|show|restaurant|food)\b/i,
+  /\b(?:what movie should i watch|which movie should i watch|what film should i watch|which car should i buy|what car should i buy|que pelicula me recomiendas|que pelicula debo ver|que carro me recomiendas|que modelo de carro me recomiendas|que coche me recomiendas|que modelo de coche me recomiendas|que serie me recomiendas|cuentame un chiste|tell me a joke)\b/i,
   /\b(?:que debo comer|que puedo comer|what should i eat|what can i eat|que restaurante me recomiendas|what restaurant do you recommend)\b/i,
   /\b(?:que clima hara|como estara el clima|pronostico del tiempo|what is the weather|weather tomorrow|clima de manana)\b/i,
   /\b(?:tengo fiebre|me duele|diagnostico medico|que medicamento tomo|medical diagnosis|what medicine should i take)\b/i,

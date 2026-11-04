@@ -741,109 +741,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
 
   async function speakText(text: string, index: number): Promise<void> {
-    const clean = text.trim().replace(/\s+/g, " ").slice(0, 1800);
-    const audioContext = voiceAudioContextRef.current;
-    const isLocalLiveTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
-    if (!clean || !voiceModeRef.current || !audioContext || audioContext.state === "closed") {
-      await speakWithBrowserFallback(text, index);
+    const clean = text.trim().replace(/\\s+/g, " ").slice(0, 1800);
+    if (!clean) return;
+
+    // Live VC owns its own native female voice. Never launch a parallel TTS
+    // provider or browser voice while that session is active; if Live has no
+    // audio for a validated turn, keep the text visible and release the turn.
+    if (voiceModeRef.current) {
+      const messageId = voiceAssistantMessageIdRef.current;
+      setVoiceError("La respuesta quedó disponible por escrito; Gemini Live no entregó audio en este turno.");
+      if (waitingForVoiceReplyRef.current && voiceLocalReplyInFlightRef.current) {
+        finishLocalVoiceReply(messageId);
+      } else {
+        finishRealtimeVoicePlayback();
+      }
       return;
     }
 
-    const messageId = voiceAssistantMessageIdRef.current;
-    const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
-    const abortController = new AbortController();
-    let source: AudioBufferSourceNode | null = null;
-    let finished = false;
-    let resolvePlayback: (() => void) | null = null;
-    let safetyTimer: number | null = null;
-    const playbackPromise = new Promise<void>((resolve) => { resolvePlayback = resolve; });
-
-    const finish = (cancelled: boolean) => {
-      if (finished) return;
-      finished = true;
-      if (safetyTimer !== null) window.clearTimeout(safetyTimer);
-      if (voiceSpeechCancelRef.current === cancelPlayback) voiceSpeechCancelRef.current = null;
-      if (source) {
-        voiceAudioSourcesRef.current.delete(source);
-        source.onended = null;
-        try { source.disconnect(); } catch { /* Already disconnected. */ }
-        source = null;
-      }
-      if (!cancelled) {
-        voiceBrowserSpeechActiveRef.current = false;
-        setSpeakingIndex(null);
-        voiceLastAssistantPlaybackUntilRef.current = Date.now() + 1_800;
-        if (isLocalLiveTurn) finishLocalVoiceReply(messageId);
-        else finishRealtimeVoicePlayback();
-      }
-      resolvePlayback?.();
-    };
-    const cancelPlayback = () => {
-      abortController.abort();
-      if (source) {
-        try { source.stop(); } catch { /* Playback may already have ended. */ }
-      }
-      finish(true);
-    };
-    voiceSpeechCancelRef.current = cancelPlayback;
-
-    try {
-      await ensureVoiceAudioContextRunning(audioContext);
-      const response = await fetch("/api/orby/voice-speech", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.any([abortController.signal, AbortSignal.timeout(20_000)]),
-        body: JSON.stringify({ text: clean }),
-      });
-      if (!response.ok) throw new Error("Neural speech endpoint unavailable.");
-      const audioBytes = await response.arrayBuffer();
-      if (audioBytes.byteLength < 256 || audioBytes.byteLength > 4 * 1024 * 1024) {
-        throw new Error("Neural speech audio has an invalid size.");
-      }
-      const audioBuffer = await audioContext.decodeAudioData(audioBytes.slice(0));
-      if (abortController.signal.aborted || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
-        finish(true);
-        return;
-      }
-
-      source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
-      if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
-      voiceAudioSourcesRef.current.add(source);
-      voiceBrowserSpeechActiveRef.current = true;
-      voiceLastAssistantOutputRef.current = clean;
-      voiceLastAssistantPlaybackUntilRef.current = Date.now() + audioBuffer.duration * 1000 + 1_800;
-      setSpeakingIndex(index);
-      if (isLocalLiveTurn) setVoiceStatus("Orby está hablando…");
-      source.onended = () => {
-        if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
-        finish(false);
-        setSpeakingIndex(null);
-      };
-      safetyTimer = window.setTimeout(
-        () => finish(false),
-        Math.min(60_000, Math.max(8_000, audioBuffer.duration * 1000 + 5_000)),
-      );
-      source.start(audioContext.currentTime + 0.015);
-      await playbackPromise;
-    } catch (error) {
-      const cancelled = abortController.signal.aborted
-        || (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError"));
-      if (cancelled) {
-        finish(true);
-        return;
-      }
-      finish(true);
-      console.warn("[Orby Voice] Neural Spanish TTS unavailable; using browser fallback.", {
-        name: error instanceof Error ? error.name : "UnknownError",
-      });
-      if (voiceModeRef.current) {
-        setVoiceError("La voz neural no estuvo disponible; se está usando la voz de respaldo del navegador.");
-      }
-      await speakWithBrowserFallback(text, index);
-    }
+    // Manual read-aloud outside Voice VC uses the browser's installed Spanish
+    // voice. It does not call a paid cloud TTS endpoint.
+    await speakWithBrowserFallback(clean, index);
   }
 
   function speakWithBrowserFallback(text: string, index: number): Promise<void> {
@@ -1001,7 +918,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       void persistRealtimeTurnIfReady();
       setVoiceStatus("Audio no reconocido");
       setVoiceError("No pude reconocer la frase. Puedes repetirla en español.");
-      void speakText(retryReply, messages.length + 1).finally(() => drainPendingMessageQueue());
+      drainPendingMessageQueue();
       return;
     }
 
@@ -1035,10 +952,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceResponseDoneRef.current = true;
       voiceTurnPersistedRef.current = false;
       void persistRealtimeTurnIfReady();
-      setVoiceStatus("Orby está hablando…");
-      void speakText(forcedPolicyReply, messages.length).finally(() => {
-        drainPendingMessageQueue();
-      });
+      setVoiceStatus("Respuesta disponible por escrito");
+      drainPendingMessageQueue();
       return;
     }
     stopRealtimeVoice();
@@ -2484,7 +2399,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Orby no está disponible por ahora.");
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
-      const assistantIndex = nextMessages.length;
       setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
       if (workspace && selectedFile && selectedFile.type.startsWith("image/")) {
         // Persist the optional gallery copy after the answer is visible. Storage
@@ -2509,12 +2423,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         })();
       }
       if (isVoiceInteraction) {
-        if ("speechSynthesis" in window) {
-          await new Promise<void>((resolve) => window.setTimeout(resolve, 120));
-          await speakText(data.reply, assistantIndex);
-        } else {
-          setVoiceError("El navegador no tiene lectura de voz disponible. La respuesta quedó visible por escrito.");
-        }
+        // Live disconnected: do not switch to a different synthetic voice.
+        // Keep the Cloudflare text fallback visible and let the student retry voice.
+        setVoiceError("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito.");
       }
       if (workspace) {
         void refreshConversations().catch((caught: unknown) => {

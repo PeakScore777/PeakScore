@@ -146,9 +146,10 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(adminOrbyChatSource.includes('provider: "gemini", task: "tutor", prompt, useFallback: false'));
   assert.ok(adminOrbyChatSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED !== "true"'));
   assert.ok(adminOrbyChatSource.includes("citedEvidenceIds.has(source.id)"));
+  assert.ok(adminOrbyChatSource.includes(".flatMap((match) => match[1].split"));
   assert.ok(adminStudioSource.includes("pendingMessageId"));
   assert.ok(adminStudioSource.includes("current.filter(item => item.id !== pendingMessageId)"));
-  assert.ok(adminOrbyChatSource.includes("reply.matchAll(/\\[(E\\d{3})\\]/g)"));
+  assert.ok(adminOrbyChatSource.includes("reply.matchAll(/\\[([^\\]]+)\\]/g)"));
   assert.ok(!adminOrbyChatSource.includes("useFallback: true"));
   assert.ok(orbyKnowledgeSource.includes("if (process.env.GEMINI_API_KEY)"));
 

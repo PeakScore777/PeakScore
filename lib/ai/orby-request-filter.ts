@@ -397,7 +397,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  if (containsExplicitNonIcfesTopic(normalized, previousContext)) {
+  if (!academicMaterialQuestion && containsExplicitNonIcfesTopic(normalized, previousContext)) {
     return {
       allowed: false,
       category: "outside",

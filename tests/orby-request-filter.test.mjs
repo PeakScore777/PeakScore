@@ -89,6 +89,13 @@ test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin so
   assert.ok(!orbyNeuralSpeechSource.includes("voiceName: config.voiceName"));
   assert.ok(lessonTutorSource.includes("No se pudo iniciar el audio de Orby"));
   assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));
+  assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
+  assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
+  assert.ok(lessonTutorSource.includes("sendMessageRef.current(transcript, false, true"));
+  assert.ok(lessonTutorSource.includes("transcribeWithCloudflare"));
+  assert.ok(lessonTutorSource.includes("Gemini Live agotó su cuota gratuita"));
+  assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
+  assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 5_000"));
   assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
 });
@@ -149,6 +156,9 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /if \(!cancelled\) \{/);
   assert.match(lessonTutorSource, /voiceUserMessageVisibleRef/);
   assert.match(lessonTutorSource, /isBrowserSpeechEcho/);
+  assert.match(lessonTutorSource, /isDuplicateFinalTranscript/);
+  assert.match(lessonTutorSource, /voiceLastCommittedInputAtRef/);
+  assert.match(lessonTutorSource, /Date\.now\(\) > voiceLastAssistantPlaybackUntilRef\.current/);
   assert.match(voiceWorkletSource, /const packetSize = 640/);
   assert.doesNotMatch(voiceWorkletSource, /const packetSize = 1600/);
   assert.match(lessonTutorSource, /safetyTimer = window\.setTimeout/);

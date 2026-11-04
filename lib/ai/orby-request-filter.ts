@@ -334,9 +334,10 @@ export function containsExplicitNonIcfesTopic(value: string, previousContext = "
 export function isIcfesScopedAssistantTurn(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message);
   if (!normalized || containsOrbyPromptInjection(normalized)) return false;
-  return isIcfesScopedRequest(message, previousContext)
-    && !containsProgrammingInstruction(message)
+  return !containsProgrammingInstruction(message)
     && !containsCookingInstruction(message, previousContext)
+    && !containsExplicitNonIcfesTopic(message, previousContext)
+    && !containsExternalPreIcfesPromotion(message)
     && !containsUnsupportedSpanishLanguage(message)
     && !isLikelyEnglishOnlyOrbyReply(message)
     && !hasFalseOrbyCreatorAttribution(message);

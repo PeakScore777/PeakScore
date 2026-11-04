@@ -254,6 +254,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLastCommittedInputRef = useRef("");
   const voiceLastCommittedInputAtRef = useRef(0);
   const voiceLastAssistantOutputRef = useRef("");
+  const voiceLastAssistantOutputAtRef = useRef(0);
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
   const voiceBrowserSpeechActiveRef = useRef(false);
   const voiceSpeechCancelRef = useRef<(() => void) | null>(null);
@@ -934,6 +935,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (isLocalVoiceTurn) {
         voiceBrowserSpeechActiveRef.current = true;
         voiceLastAssistantOutputRef.current = clean;
+        voiceLastAssistantOutputAtRef.current = Date.now();
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 58;
         setVoiceStatus("Orby está hablando…");
         setIsListening(false);
@@ -1273,6 +1275,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     waitingForVoiceReplyRef.current = true;
     voiceUserTextRef.current = cleanUserText;
     voiceAssistantTextRef.current = cleanReply;
+    voiceLastAssistantOutputRef.current = cleanReply;
+    voiceLastAssistantOutputAtRef.current = Date.now();
     const previousAssistantId = replaceAssistantMessage ? voiceAssistantMessageIdRef.current : null;
     const assistantId = previousAssistantId ?? ("voice-local-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
@@ -1669,7 +1673,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
         || voiceAudioSourcesRef.current.size > 0
         || Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
-      if (!unsupportedInterimScript && assistantAudioInFlight) {
+      const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 15_000;
+      if (!unsupportedInterimScript && (assistantAudioInFlight || recentAssistantOutput)) {
         const normalizedInterim = normalizeVoiceComparison(interimText);
         const assistantSpeech = voiceAssistantTextRef.current || voiceLastAssistantOutputRef.current;
         const isBrowserSpeechEcho = isLikelyVoicePlaybackEcho(interimText, assistantSpeech);
@@ -1714,7 +1719,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
       || voiceAudioSourcesRef.current.size > 0
       || Date.now() <= voiceLastAssistantPlaybackUntilRef.current + 1_800;
-    const isRecentAcousticEcho = assistantAudioInFlight
+    // ASR can deliver the microphone echo after the audio element has ended.
+    // Keep a short transcript-based guard so Orby never answers its own greeting.
+    const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 15_000;
+    const isRecentAcousticEcho = (assistantAudioInFlight || recentAssistantOutput)
       && isLikelyVoicePlaybackEcho(normalizedFinal, recentAssistantText);
     if (isRecentAcousticEcho) {
       console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
@@ -1819,6 +1827,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Maintain a reference transcript for acoustic echo suppression in both
       // Gemini Live and browser TTS playback paths.
       voiceLastAssistantOutputRef.current = partialReply;
+      voiceLastAssistantOutputAtRef.current = Date.now();
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
       const partialNormalized = normalizeVoiceComparison(partialReply);
       const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)
@@ -1988,6 +1997,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             : [...current, { id, role: "assistant", content: rawReply }];
         });
         voiceLastAssistantOutputRef.current = rawReply;
+        voiceLastAssistantOutputAtRef.current = Date.now();
         if (!voiceOutputAudioBlockedRef.current && voiceOutputTranscriptValidatedRef.current) {
           flushPendingGeminiAudio();
         } else {
@@ -2778,6 +2788,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceAssistantTextRef.current = data.reply;
         voiceAssistantMessageIdRef.current = fallbackAssistantId ?? ("voice-fallback-assistant-" + Date.now());
         voiceLastAssistantOutputRef.current = data.reply;
+        voiceLastAssistantOutputAtRef.current = Date.now();
         voiceResponseDoneRef.current = true;
         voiceTurnPersistedRef.current = false;
         waitingForVoiceReplyRef.current = true;

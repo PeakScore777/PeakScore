@@ -186,7 +186,8 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
   assert.doesNotMatch(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
   assert.doesNotMatch(lessonTutorSource, /internalSpeechInstruction/);
-  assert.match(lessonTutorSource, /Respuesta disponible por escrito/);
+  assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback/);
+  assert.match(lessonTutorSource, /voiceFallbackModeRef\.current/);
 });
  
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
@@ -236,7 +237,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
   assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.22/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.14/);
   assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.
@@ -267,7 +268,7 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /unsupportedInterimScript/);
   assert.match(lessonTutorSource, /voiceUnsupportedInputDetectedRef/);
   assert.match(lessonTutorSource, /if \(!pendingUserText && voiceUnsupportedInputDetectedRef\.current && voiceModeRef\.current\)/);
-  assert.match(lessonTutorSource, /Audio no reconocido\./);
+  assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback\(/);
   assert.match(lessonTutorSource, /No pude reconocer la frase\. Puedes repetirla en español/);
   assert.match(lessonTutorSource, /needsNeuralSpeechFallback/);
   assert.match(lessonTutorSource, /normalizedForcedExpected\.startsWith\(partialNormalized\)/);
@@ -838,6 +839,8 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
   assert.match(lessonTutorSource, /12_000/);
   assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
+  assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback/);
+  assert.match(lessonTutorSource, /cleanPendingText, false, true, undefined, appendUserMessage/);
   assert.match(lessonTutorSource, /sendMessageRef\.current\(pendingUserText, false, true, undefined, false\)/);
   assert.match(lessonTutorSource, /appendUserMessage = true/);
   assert.match(lessonTutorSource, /sessionGeneration !== voiceSessionGenerationRef\.current/);

@@ -96,17 +96,20 @@ export async function POST(request: Request) {
     transcript = await transcribeWithCloudflare(bytes);
   } catch (error) {
     const typed = error as { status?: unknown; code?: unknown; name?: unknown };
-    const isQuota = typed.status === 429 || typed.code === "QUOTA_EXCEEDED" || typed.code === "RATE_LIMITED";
+    const isQuota = typed.code === "QUOTA_EXCEEDED";
     console.warn("[Orby Audio] Cloudflare transcription unavailable.", {
       status: typeof typed.status === "number" ? typed.status : undefined,
       code: typeof typed.code === "string" ? typed.code : "PROVIDER_ERROR",
     });
+    const isBusy = typed.code === "RATE_LIMITED";
     return NextResponse.json({
       error: isQuota
         ? "Se agotó la cuota gratuita diaria de transcripción. No se activará otro proveedor de pago; inténtalo después del reinicio de cuota."
-        : "No pudimos procesar el audio en este momento. Puedes escribir tu pregunta o intentarlo más tarde.",
-      code: isQuota ? "FREE_QUOTA_EXCEEDED" : "TRANSCRIPTION_UNAVAILABLE",
-    }, { status: isQuota ? 429 : 503 });
+        : isBusy
+          ? "Cloudflare está temporalmente ocupado. No se activará otro proveedor; escribe tu pregunta o inténtalo de nuevo."
+          : "No pudimos procesar el audio en este momento. Puedes escribir tu pregunta o intentarlo más tarde.",
+      code: isQuota ? "FREE_QUOTA_EXCEEDED" : isBusy ? "PROVIDER_TEMPORARILY_BUSY" : "TRANSCRIPTION_UNAVAILABLE",
+    }, { status: isQuota || isBusy ? 429 : 503, headers: { "Retry-After": isQuota ? "3600" : isBusy ? "30" : "60" } });
   }
 
   if (!transcript) {

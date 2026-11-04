@@ -2287,7 +2287,47 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setVoiceStatus(nextMuted ? "Micrófono silenciado" : "Te escucho…");
   }
 
+  function activateTurnBasedVoiceFallback(reason: string, pendingUserText = "", appendUserMessage = true) {
+    const cleanPendingText = pendingUserText.trim().slice(0, 1200);
+    stopRealtimeVoice();
+    voiceModeRef.current = true;
+    voiceFallbackModeRef.current = true;
+    setVoiceMode(true);
+    setVoiceFallbackMode(true);
+    setVoiceMuted(false);
+    setWorkspaceMode("voice");
+    setIsListening(false);
+    setLiveTranscript("");
+    setVoiceError(reason);
+    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta con voz alternativa…" : "Voz alternativa lista · toca el micrófono para hablar");
+
+    if (!cleanPendingText) {
+      voiceUserTextRef.current = "";
+      voiceAssistantTextRef.current = "";
+      voiceAssistantMessageIdRef.current = null;
+      waitingForVoiceReplyRef.current = false;
+      voiceResponseDoneRef.current = false;
+      voiceTurnPersistedRef.current = false;
+      return;
+    }
+
+    voiceUserTextRef.current = cleanPendingText;
+    voiceAssistantTextRef.current = "";
+    voiceAssistantMessageIdRef.current = null;
+    voiceUserMessageVisibleRef.current = !appendUserMessage;
+    voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanPendingText);
+    voiceLastCommittedInputAtRef.current = Date.now();
+    voiceResponseDoneRef.current = false;
+    voiceTurnPersistedRef.current = false;
+    waitingForVoiceReplyRef.current = true;
+    voiceLocalReplyInFlightRef.current = false;
+    voiceOutputAudioBlockedRef.current = false;
+    voicePendingAudioChunksRef.current = [];
+    void sendMessageRef.current(cleanPendingText, false, true, undefined, appendUserMessage);
+  }
+
   function finishVoiceCall() {
+    stopAudioRecording(true);
     stopRealtimeVoice();
     setWorkspaceMode("chat");
     drainPendingMessageQueue();
@@ -2316,14 +2356,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } catch (error) {
       const wasCancelled = startupController.signal.aborted;
       const ownsStartup = voiceStartupAbortRef.current === startupController;
+      const typed = error as { code?: unknown; message?: unknown };
+      const errorMessage = typeof typed.message === "string" ? typed.message : "";
+      const geminiQuotaReached = typed.code === "GEMINI_FREE_QUOTA_EXCEEDED"
+        || /GEMINI_FREE_QUOTA_EXCEEDED|l[ií]mite gratuito de Gemini Live|resource_exhausted|quota exceeded/i.test(errorMessage);
       // A late failure from an old, cancelled startup must never tear down a
       // newer voice session created after the student retried.
       if (ownsStartup) {
-        stopRealtimeVoice();
-        setWorkspaceMode("chat");
-        if (!wasCancelled) {
-          setVoiceStatus("Voz no disponible");
-          setVoiceError(error instanceof Error ? error.message : "No se pudo iniciar el chat de voz. Puedes continuar por texto.");
+        if (!wasCancelled && geminiQuotaReached) {
+          activateTurnBasedVoiceFallback(
+            "Gemini Live agotó su cuota gratuita. Orby seguirá escuchándote por turnos con Whisper y Cloudflare, y leerá las respuestas con la voz española disponible en tu equipo. No se usará ningún servicio de pago.",
+          );
+        } else {
+          stopRealtimeVoice();
+          setWorkspaceMode("chat");
+          if (!wasCancelled) {
+            setVoiceStatus("Voz no disponible");
+            setVoiceError(errorMessage || "No se pudo iniciar el chat de voz. Puedes continuar por texto.");
+          }
         }
       }
     } finally {

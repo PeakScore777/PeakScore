@@ -894,7 +894,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .slice(0, 5000);
       const utterance = new SpeechSynthesisUtterance(clean);
       utterance.lang = "es-CO";
-      utterance.rate = 1.14;
+      utterance.rate = 1.18;
       utterance.pitch = 1.04;
       utterance.volume = 1;
       const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
@@ -927,10 +927,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       };
       cancelSpeech = () => finish(true);
       voiceSpeechCancelRef.current = cancelSpeech;
-      safetyTimer = window.setTimeout(
-        finish,
-        Math.min(45_000, Math.max(8_000, clean.length * 70)),
-      );
+      safetyTimer = window.setTimeout(() => {
+        // Never release the microphone while an old utterance is still
+        // playing. If the browser gets stuck, stop it before opening the turn.
+        window.speechSynthesis.cancel();
+        finish(false);
+      }, Math.min(180_000, Math.max(12_000, clean.length * 100)));
       utterance.onend = () => finish(false);
       utterance.onerror = (event) => {
         const speechError = (event as SpeechSynthesisErrorEvent).error;
@@ -1044,8 +1046,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     clearVoiceResponseWatchdog();
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
       voiceResponseWatchdogRef.current = null;
-      fallbackVoiceTurnToText("La voz tardó demasiado en responder. Continué esta misma pregunta por el chat para que no tengas que repetirla.");
-    }, 12_000);
+      fallbackVoiceTurnToText("La voz tardó demasiado en responder. Continué esta misma pregunta con el modo alternativo para que no tengas que repetirla.");
+    }, 9_000);
   }
 
   function stopRealtimeVoice(updateState = true) {
@@ -1716,8 +1718,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // Release audio only after the current partial transcript contains a
         // complete sentence and passes every deterministic output filter.
         // Later unsafe continuations still cancel the not-yet-played audio.
-        const hasCompleteSafeSentence = partialReply.length >= 24
-          && /[.!?]["'”’)}\]]*\s*$/.test(partialReply);
+        const hasCompleteSafeSentence = partialReply.length >= 18
+          && /[.!?;]["'”’)}\]]*\s*$/.test(partialReply);
         voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;

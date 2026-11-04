@@ -42,6 +42,9 @@ const ICFES_CURRICULUM_CONTEXT_PATTERNS = ICFES_SCOPE_PATTERNS.slice(1);
 const ORBY_STUDY_INVITATION_PATTERN =
   /\b(?:que tema|que area|que quieres estudiar|que te gustaria estudiar|por donde empezamos|con que empezamos|elige un tema|elige un area)\b.{0,100}\b(?:saber\s*11|icfes|estudiar|trabajar|repasar|practicar|empezar)\b/i;
 
+const ICFES_FOLLOW_UP_PATTERN =
+  /^(?:(?:y|entonces|pero|vale|listo)\s+)?(?:explicame|explica|amplia|profundiza|continua|sigue|otro ejemplo|dame otro ejemplo|un ejemplo mas|cual es la respuesta|por que|porque|como asi|que significa eso|que quiere decir|no entiendo|no me queda claro|resuelve esto|ayudame con esto|puedes repetir|repitelo|hazlo paso a paso|paso a paso|y eso|y entonces|cual|cuanto|como funciona|como se hace)[.!? ¿¡,;:]*$/i;
+
 const STUDY_GUIDANCE_FOLLOW_UP_PATTERNS = [
   /^(?:no se|no lo se|ni idea|no tengo claro|no se que (?:estudiar|tema|area)|ayudame a elegir|ayudame a decidir|por donde empiezo|no se por donde empezar|que me recomiendas para empezar|elige por mi)[.!? ]*$/i,
 ];
@@ -373,9 +376,31 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  // Conversation is allowed by default. The ICFES curriculum remains Orby's
-  // specialty, but a harmless question does not become an error just because
-  // it is not an exam exercise.
+  // Orby is an ICFES tutor, not a general-purpose chatbot. Greetings remain
+  // available, but substantive requests must belong to one of the five
+  // Saber 11 areas. A short follow-up inherits scope only from recent
+  // curriculum evidence, never from the generic "Preparación Saber 11" label.
+  if (isOrbyGreetingRequest(message)) {
+    return { allowed: true, category: null, reply: "" };
+  }
+
+  const prior = normalizeOrbyRequestText(previousContext);
+  const currentHasCurriculumAnchor = ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))
+    || /\b(?:saber\s*11|icfes)\b/i.test(normalized)
+    || ORBY_STUDY_INVITATION_PATTERN.test(normalized);
+  const priorHasCurriculumAnchor = ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
+    || ORBY_STUDY_INVITATION_PATTERN.test(prior);
+  const isContextualAcademicFollowUp = priorHasCurriculumAnchor
+    && (ICFES_FOLLOW_UP_PATTERN.test(normalized) || isOrbyStudyGuidanceRequest(message, previousContext));
+
+  if (!currentHasCurriculumAnchor && !isContextualAcademicFollowUp) {
+    return {
+      allowed: false,
+      category: "outside",
+      reply: ORBY_ICFES_SCOPE_REPLY,
+    };
+  }
+
   return { allowed: true, category: null, reply: "" };
 }
 

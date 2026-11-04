@@ -894,11 +894,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .slice(0, 5000);
       const utterance = new SpeechSynthesisUtterance(clean);
       utterance.lang = "es-CO";
-      utterance.rate = 1.22;
-      utterance.pitch = 1.02;
+      utterance.rate = 1.14;
+      utterance.pitch = 1.04;
       utterance.volume = 1;
       const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-      const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|google/i.test(voice.name))
+      const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|google|sabina|laura/i.test(voice.name))
+        ?? spanishVoices.find((voice) => /es[-_]mx/i.test(voice.lang) && /natural|online|google|female|mujer/i.test(voice.name))
         ?? spanishVoices.find((voice) => /sabina|helena|paulina|sofia|laura|lucia|monica|catalina|female|mujer/i.test(voice.name))
         ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
         ?? spanishVoices.find((voice) => /natural|online|google/i.test(voice.name))
@@ -2904,7 +2905,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function requestMicrophonePermission() {
-    // getUserMedia in startAudioRecording triggers the browser's native permission prompt.
+    // In turn-based fallback mode, a new recording is the next user turn.
+    // Stop the local voice first so the microphone never captures Orby's reply.
+    if (voiceFallbackModeRef.current && voiceBrowserSpeechActiveRef.current) {
+      interruptCurrentVoiceOutput();
+    }
     await startAudioRecording();
   }
 
@@ -3307,11 +3312,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
+          {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">
+            <strong>Modo de voz alternativo activo.</strong> Toca el micrófono para grabar tu pregunta y vuelve a tocarlo para detenerla. Orby la transcribirá con Whisper, responderá con Cloudflare y leerá la respuesta con la voz española disponible en tu equipo, sin usar Gemini Live ni Gemini TTS.
+          </div>}
           {liveTranscript && showVoiceTranscript && <div className="mt-4 max-h-28 w-full max-w-lg overflow-y-auto rounded-xl border border-current/10 bg-black/10 px-4 py-3 text-left text-sm leading-6">{liveTranscript}</div>}
           {voiceError && <p role="alert" className="mt-4 max-w-lg rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{voiceError}</p>}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-9">
             <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setWorkspaceMode("chat")} className="flex h-14 w-14 items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Volver al chat"><MessageSquare className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Chat</span></div>
-            <div className="flex flex-col items-center gap-2"><button type="button" onClick={toggleVoiceMute} disabled={!voiceMode} className={`flex h-14 w-14 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${voiceMuted ? "border-orange-400 bg-orange-500 text-white" : "border-current/15 bg-black/5 text-current hover:bg-black/10"} disabled:opacity-40`} aria-label={voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button><span className="text-[11px] opacity-70">{voiceMuted ? "Activar" : "Silenciar"}</span></div>
+            <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => void (voiceFallbackMode ? requestMicrophonePermission() : toggleVoiceMute())} disabled={!voiceMode || (voiceFallbackMode && (isRecording || audioTranscribing))} className={`flex h-14 w-14 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${voiceMuted ? "border-orange-400 bg-orange-500 text-white" : "border-current/15 bg-black/5 text-current hover:bg-black/10"} disabled:opacity-40`} aria-label={voiceFallbackMode ? "Grabar pregunta para Orby" : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceFallbackMode ? <Mic className="h-5 w-5" /> : voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button><span className="text-[11px] opacity-70">{voiceFallbackMode ? (isRecording ? "Grabando" : audioTranscribing ? "Transcribiendo" : "Hablar") : voiceMuted ? "Activar" : "Silenciar"}</span></div>
             <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setShowVoiceTranscript((value) => !value)} className={`flex h-14 w-14 items-center justify-center rounded-full border border-current/15 transition hover:bg-black/10 ${showVoiceTranscript ? "bg-black/10 text-orange-400" : "bg-black/5 text-current"}`} aria-label="Mostrar u ocultar transcripción"><Captions className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Transcripción</span></div>
             <div className="flex flex-col items-center gap-2"><button type="button" onClick={finishVoiceCall} className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f28a18] text-[#17120c] shadow-[0_8px_28px_rgba(242,138,24,.2)] transition hover:bg-[#ffa12f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300" aria-label="Finalizar llamada"><X className="h-6 w-6" /></button><span className="text-[11px] opacity-70">Finalizar</span></div>
           </div>
@@ -3396,7 +3404,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Adjuntar imagen o audio" title={workspace && imageAssets.length >= 20 ? "Almacenamiento lleno: elimina una imagen para continuar" : "Adjuntar imagen o nota de voz"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Tomar foto" title="Tomar foto de una pregunta" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Camera className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={() => void generateVisualAid()} disabled={loading || imageGenerationLoading || isRecording || audioTranscribing || input.trim().length < 5} aria-label="Generar una imagen educativa" title={imageGenerationLoading ? "Orby está creando tu imagen…" : "Crear un apoyo visual con el tema escrito"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-orange-500/25 bg-orange-500/[0.07] text-orange-300 transition hover:border-orange-400 hover:bg-orange-500/15 disabled:opacity-35"><ImagePlus className={imageGenerationLoading ? "h-[18px] w-[18px] animate-pulse" : "h-[18px] w-[18px]"} /></button>
-        <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label="Grabar nota de voz" title="Grabar una nota de voz para transcribir" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Mic className="h-[18px] w-[18px]" /></button>
+        <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label={voiceFallbackMode ? "Grabar pregunta para Orby" : "Grabar nota de voz"} title={voiceFallbackMode ? "Habla y vuelve a pulsar para detener; Orby responderá por voz sin Gemini Live" : "Grabar una nota de voz para transcribir"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Mic className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} title={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition disabled:opacity-40 ${voiceMode ? "border-orange-500 bg-orange-500 text-[#17120c]" : "border-orange-500/30 bg-orange-500/10 text-orange-300 hover:border-orange-400 hover:bg-orange-500/20"}`}><AudioLines className="h-[18px] w-[18px]" /></button>
         <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onKeyDown={(event) => {

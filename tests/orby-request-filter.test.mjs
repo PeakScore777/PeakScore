@@ -96,7 +96,7 @@ test("Cloudflare genera texto y voz espaÃ±ola, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("needsSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
 
-  assert.ok(lessonTutorSource.includes("No se pudo iniciar el audio de Orby"));
+  assert.ok(lessonTutorSource.includes("Cloudflare no pudo generar el audio"));
   assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));
   assert.ok(lessonTutorSource.includes("await speakWithBrowserFallback(clean, index);"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
@@ -924,7 +924,7 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos atÃ
 
 test("los filtros escritos dentro de voz se contestan localmente y sincronizan Live sin generar otra respuesta", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
-  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? greetingReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
+  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? greetingReply ?? subjectSelectionReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
   const localReplyIndex = lessonTutorSource.indexOf("respondToVoiceLocally(message, localReply, true)", typedVoiceStart);
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
   const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");

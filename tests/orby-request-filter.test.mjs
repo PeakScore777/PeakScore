@@ -80,7 +80,7 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(!voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
   assert.ok(lessonTutorSource.includes("waitForSpanishBrowserVoice"));
-  assert.ok(lessonTutorSource.includes("utterance.rate = 1.2"));
+  assert.ok(lessonTutorSource.includes("utterance.rate = 1.04"));
   assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));
   assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText(quotaReached"));
   assert.ok(lessonTutorSource.includes("ambiguousShortProgrammingTranscript"));
@@ -413,6 +413,11 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
 
 test("el chat procesa solicitudes pendientes en orden y limita peticiones bloqueadas", () => {
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.push/);
+  assert.match(lessonTutorSource, /lastSubmittedMessageRef/);
+  assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.04/);
+  assert.match(lessonTutorSource, /utterance\.pitch = 1\.02/);
+
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.shift\(\)/);
   assert.match(lessonTutorSource, /AbortSignal\.timeout\(60_000\)/);
   assert.match(lessonTutorRouteSource, /containsExternalPreIcfesPromotion/);

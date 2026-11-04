@@ -2351,12 +2351,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if ((!message && !selectedFile) || message.length > 1200) return;
     // Voice startup must never lock the text composer. Cancel an unfinished
     // microphone/WebSocket attempt and continue with the fast text pipeline.
-    if (voiceModeRef.current && !voiceChannelRef.current) {
+    if (voiceModeRef.current && !voiceChannelRef.current && !voiceFallbackModeRef.current) {
       stopRealtimeVoice();
       setWorkspaceMode("chat");
       setVoiceError("");
       setVoiceStatus("Seguimos por chat de texto");
       isVoiceInteraction = false;
+    }
+    if (voiceFallbackModeRef.current && message && voiceBrowserSpeechActiveRef.current) {
+      // Typed text interrupts the local voice without waiting for the utterance to end.
+      interruptCurrentVoiceOutput();
     }
     if ((loading || sendingRef.current) && !isVoiceInteraction) {
       if (!message || selectedFile) {
@@ -2481,6 +2485,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ...(attachmentMeta ? { attachmentName: attachmentMeta.label, attachmentKind: attachmentMeta.kind } : {}),
     }] : messages;
     if (appendUserMessage) setMessages(nextMessages);
+    if (isVoiceInteraction && voiceFallbackModeRef.current) {
+      voiceUserTextRef.current = message;
+      voiceUserMessageVisibleRef.current = appendUserMessage || voiceUserMessageVisibleRef.current;
+      voiceResponseDoneRef.current = false;
+      voiceTurnPersistedRef.current = false;
+    }
     setInput("");
     if (inputRef.current) inputRef.current.style.height = "48px";
     if (selectedFile) clearAttachment();
@@ -2519,7 +2529,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Orby no está disponible por ahora.");
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
-      setMessages((current) => [...current, { role: "assistant", content: data.reply, checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "" }]);
+      const fallbackAssistantId = isVoiceInteraction && voiceFallbackModeRef.current
+        ? "voice-fallback-assistant-" + Date.now()
+        : undefined;
+      setMessages((current) => [...current, {
+        ...(fallbackAssistantId ? { id: fallbackAssistantId } : {}),
+        role: "assistant",
+        content: data.reply,
+        checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "",
+      }]);
       if (workspace && selectedFile && selectedFile.type.startsWith("image/")) {
         // Persist the optional gallery copy after the answer is visible. Storage
         // maintenance must not hold the send lock or delay the next study turn.
@@ -2542,9 +2560,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
         })();
       }
-      if (isVoiceInteraction) {
-        // Live disconnected: do not switch to a different synthetic voice.
-        // Keep the Cloudflare text fallback visible and let the student retry voice.
+      if (isVoiceInteraction && voiceFallbackModeRef.current) {
+        voiceAssistantTextRef.current = data.reply;
+        voiceAssistantMessageIdRef.current = fallbackAssistantId ?? ("voice-fallback-assistant-" + Date.now());
+        voiceLastAssistantOutputRef.current = data.reply;
+        voiceResponseDoneRef.current = true;
+        voiceTurnPersistedRef.current = false;
+        waitingForVoiceReplyRef.current = true;
+        voiceInputPolicyRef.current = null;
+        voicePreflightReplyRef.current = null;
+        setVoiceError("");
+        setVoiceStatus("Orby está leyendo la respuesta…");
+        void speakText(data.reply, nextMessages.length);
+      } else if (isVoiceInteraction) {
         setVoiceError("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito.");
       }
       if (workspace) {

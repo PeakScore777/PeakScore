@@ -261,6 +261,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceBrowserSpeechActiveRef = useRef(false);
   const voiceSpeechCancelRef = useRef<(() => void) | null>(null);
   const voiceSpeechPlaybackGenerationRef = useRef(0);
+  const voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none");
   const waitingForVoiceReplyRef = useRef(false);
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
@@ -747,6 +748,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceSpeechCancelRef.current = null;
     cancelActiveSpeech?.();
     if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+    if (voicePlaybackOwnerRef.current === "tts") voicePlaybackOwnerRef.current = "none";
     voiceBrowserSpeechActiveRef.current = false;
     setSpeakingIndex(null);
   }
@@ -883,6 +885,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceSpeechCancelRef.current = null;
       previousCancel?.();
       synthesis?.cancel();
+      if (isLocalVoiceTurn && voicePlaybackOwnerRef.current === "live") {
+        resolve();
+        return;
+      }
+      voicePlaybackOwnerRef.current = "tts";
 
       let finished = false;
       let chunkIndex = 0;
@@ -918,6 +925,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         requestController = null;
         clearAudioElement();
         synthesis?.cancel();
+        if (voicePlaybackOwnerRef.current === "tts") voicePlaybackOwnerRef.current = "none";
         if (voiceSpeechCancelRef.current === cancelSpeech) voiceSpeechCancelRef.current = null;
         browserUtterance = null;
         setSpeakingIndex(null);
@@ -1130,6 +1138,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       source.disconnect();
     }
     voiceAudioSourcesRef.current.clear();
+    if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
     const audioContext = voiceAudioContextRef.current;
     voiceNextPlaybackTimeRef.current = audioContext?.currentTime ?? 0;
   }
@@ -1270,6 +1279,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!cleanUserText || !cleanReply || !voiceModeRef.current) return;
 
     clearVoiceResponseWatchdog();
+    stopSpeaking();
     stopVoicePlayback();
     voicePendingAudioChunksRef.current = [];
     voiceRealtimeAudioChunkCountRef.current = 0;
@@ -1445,6 +1455,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function playGeminiAudio(base64Audio: string, mimeType?: string) {
+    if (voicePlaybackOwnerRef.current === "tts") return;
     const audioContext = voiceAudioContextRef.current;
     if (!audioContext || audioContext.state === "closed") return;
     const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
@@ -1472,6 +1483,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
       const scheduledAt = Math.max(audioContext.currentTime + 0.015, voiceNextPlaybackTimeRef.current);
       source.start(scheduledAt);
+      voicePlaybackOwnerRef.current = "live";
       voiceNextPlaybackTimeRef.current = scheduledAt + audioBuffer.duration;
       voiceLastAssistantPlaybackUntilRef.current = Date.now()
         + Math.max(0, voiceNextPlaybackTimeRef.current - audioContext.currentTime) * 1000
@@ -2488,6 +2500,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       finishVoiceCall();
       return;
     }
+    // A text-chat TTS utterance must never overlap the newly opened Live channel.
+    stopSpeaking();
+    stopVoicePlayback();
     const startupController = new AbortController();
     voiceStartupAbortRef.current = startupController;
     voiceModeRef.current = true;

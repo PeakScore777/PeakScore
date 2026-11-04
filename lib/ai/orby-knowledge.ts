@@ -1,5 +1,6 @@
 import "server-only";
 
+import { GoogleGenAI } from "@google/genai";
 import { createCloudflareEmbeddings, CLOUDFLARE_EMBEDDING_MODEL, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { CloudflareWorkersAIError, generateWithCloudflareAnalysis } from "@/lib/ai/cloudflare-workers-ai";
@@ -15,6 +16,9 @@ import {
   normalizeOrbyConceptIdentity,
 } from "@/lib/ai/orby-knowledge-normalization";
 
+// Legacy vector-space compatibility for existing Gemini embeddings.
+// This is a direct Google AI Studio free-tier embedding call, never a paid
+// router fallback. New documents prefer the Cloudflare Workers AI vector space.
 const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
 const EMBEDDING_BATCH_SIZE = 16;

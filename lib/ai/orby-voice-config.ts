@@ -1,5 +1,8 @@
 /** Stable female voice selected for Orby's educational voice experience. */
-const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina";
+const configuredVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim();
+const requestedVoice = configuredVoice && configuredVoice.toLowerCase() !== "sulafat"
+  ? configuredVoice
+  : "Despina";
 export const ORBY_VOICE_NAME = requestedVoice;
 
 /** Short delivery direction shared by every Live session. */

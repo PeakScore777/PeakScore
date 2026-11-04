@@ -379,10 +379,16 @@ export async function POST(request: Request) {
         console.warn("[Orby Admin Chat] Knowledge answer remains unverified.", { note: checked.note.slice(0, 220) });
       }
     }
-    const sourceList = [...new Map(references
-      .filter((source) => reply.includes("[" + source.title + " · p. " + source.page_number + "]"))
-      .map((source) => [source.document_id + ":" + source.page_number, {
-        documentId:source.document_id,title:source.title,subject:source.subject,topic:source.topic,page:source.page_number,
+    // The prompt asks the model to cite stable evidence IDs such as [E003].
+    // Resolve those IDs back to real documents/pages for the UI; the previous
+    // title-string matcher never matched the IDs and silently hid all sources.
+    const citedEvidenceIds = new Set(
+      [...reply.matchAll(/\\[(E\\d{3})\\]/g)].map((match) => match[1]),
+    );
+    const sourceList = [...new Map(evidence
+      .filter((source) => citedEvidenceIds.has(source.id))
+      .map((source) => [source.documentId + ":" + source.page, {
+        documentId:source.documentId,title:source.title,subject:source.subject,topic:source.topic,page:source.page,
       }])).values()];
     const now = Date.now();
     const { data: savedMessages, error: saveError } = await supabaseAdmin.from("orby_admin_chat_messages").insert([

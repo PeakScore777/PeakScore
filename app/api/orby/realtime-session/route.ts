@@ -89,10 +89,15 @@ export async function POST(request: Request) {
     // Old out-of-scope user prompts and injection attempts are omitted from the
     // new session context. They never reject the session or become fresh requests.
     const safeHistory: Array<{ role: "user" | "assistant"; content: string }> = [];
+    const liveScopeContext = [
+      "Área de estudio: " + subject,
+      "Tema de estudio: " + topic,
+      context,
+    ].filter(Boolean).join("\n");
     for (const item of history) {
       if (containsOrbyPromptInjection(item.content) || containsUnsupportedSpanishLanguage(item.content)) continue;
       if (item.role === "user") {
-        const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\n");
+        const priorContext = [liveScopeContext, ...safeHistory.slice(-2).map((message) => message.content)].join("\n");
         if (preflightOrbyRequest(item.content, priorContext).allowed) safeHistory.push(item);
         continue;
       }
@@ -100,7 +105,7 @@ export async function POST(request: Request) {
       // Prior assistant turns are untrusted context too. Do not let an
       // accidental language switch, unsafe lesson, external promotion, or
       // false creator claim become an instruction in the next Live session.
-      const priorContext = safeHistory.slice(-2).map((message) => message.content).join("\n");
+      const priorContext = [liveScopeContext, ...safeHistory.slice(-2).map((message) => message.content)].join("\n");
       const safeAssistantTurn = !containsProgrammingInstruction(item.content)
         && !containsCookingInstruction(item.content, priorContext)
         && !containsExplicitNonIcfesTopic(item.content, priorContext)

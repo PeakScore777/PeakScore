@@ -36,8 +36,6 @@ const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-s
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
 const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-config.ts", import.meta.url), "utf8");
 const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-const voiceSpeechRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
-const orbyNeuralSpeechSource = await readFile(new URL("../lib/ai/orby-neural-speech.ts", import.meta.url), "utf8");
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const cloudflareImageRouteSource = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
@@ -69,7 +67,13 @@ test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin so
   assert.ok(lessonTutorRouteSource.includes("GEMINI_IMAGE_PRIVACY_NOT_ENABLED"));
   assert.ok(lessonTutorRouteSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED !== "true"'));
   assert.ok(lessonTutorSource.includes("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito."));
-  assert.ok(lessonTutorSource.includes("/api/orby/voice-speech"));
+  assert.ok(!lessonTutorSource.includes("/api/orby/voice-speech"));
+  assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
+  assert.ok(lessonTutorSource.includes("waitForSpanishBrowserVoice"));
+  assert.ok(lessonTutorSource.includes("utterance.rate = 1.2"));
+  assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));
+  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText(quotaReached"));
+  assert.ok(lessonTutorSource.includes("ambiguousOneWordProgrammingTranscript"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("transcribeRecordedAudio"));
@@ -81,16 +85,8 @@ test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin so
   assert.ok(lessonTutorSource.includes("needsNeuralSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
   assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
-  assert.ok(voiceSpeechRouteSource.includes("GEMINI_TTS_FREE_QUOTA_EXCEEDED"));
-  assert.ok(voiceSpeechRouteSource.includes("ORBY_VOICE_NAME"));
-  assert.ok(orbyNeuralSpeechSource.includes('const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts"'));
-  assert.ok(orbyNeuralSpeechSource.includes("GEMINI_TTS_LIMITED"));
-  assert.ok(orbyNeuralSpeechSource.includes("speech_config: [{ voice: config.voiceName }]"));
-  assert.ok(!orbyNeuralSpeechSource.includes("voiceName: config.voiceName"));
   assert.ok(lessonTutorSource.includes("No se pudo iniciar el audio de Orby"));
   assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));
-  assert.ok(lessonTutorSource.includes("GEMINI_TTS_FREE_QUOTA_EXCEEDED"));
-  assert.ok(lessonTutorSource.includes("const quotaReached = /GEMINI_TTS_FREE_QUOTA_EXCEEDED"));
   assert.ok(lessonTutorSource.includes("await speakWithBrowserFallback(clean, index);"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
@@ -99,7 +95,7 @@ test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin so
   assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes)"));
   assert.ok(lessonTutorSource.includes("Gemini Live agotó su cuota gratuita"));
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
-  assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 5_000"));
+  assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 10_000"));
   assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
 });
@@ -572,6 +568,10 @@ test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académic
     "¿Qué evalúa el examen Saber 11?",
     "Ayúdame con una pregunta de Matemáticas del ICFES.",
     "lectura",
+    "lectura crítica",
+    "¿Qué tiene que ver la lectura con este texto?",
+    "Ayúdame a leer y comprender este texto.",
+    "Explícame la intención del autor en este fragmento.",
     "lengua",
     "lenguaje",
     "español",
@@ -652,6 +652,17 @@ test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académic
   assert.equal(filter.preflightOrbyRequest(quotedProgrammingMention).allowed, true);
   assert.equal(filter.containsProgrammingInstruction(quotedProgrammingMention, readingContext), false);
   assert.equal(filter.containsProgrammingInstruction("Enséñame a programar en Python."), true);
+  assert.equal(filter.preflightOrbyRequest(
+    "En un fragmento de Lectura Crítica, el personaje dice que quiere programar en Python. Analiza su intención.",
+    readingContext,
+  ).allowed, true);
+  assert.equal(filter.containsProgrammingInstruction(
+    "En un fragmento de Lectura Crítica, el personaje dice que quiere programar en Python. Analiza su intención.",
+    readingContext,
+  ), false);
+  assert.equal(filter.preflightOrbyRequest(
+    "En el fragmento de lectura se menciona Grupo 500 como parte de un anuncio; analiza el propósito persuasivo.",
+  ).allowed, true);
   assert.equal(filter.preflightOrbyRequest("En el texto de Lectura Crítica el narrador describe una amenaza. Analiza su tono.").allowed, true);
   assert.equal(
     filter.preflightOrbyRequest("¿Y por qué?", "La fotosíntesis transforma la energía lumínica en energía química.").allowed,

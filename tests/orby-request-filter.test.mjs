@@ -99,6 +99,8 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
   assert.ok(lessonTutorSource.includes("voiceLastAssistantOutputAtRef"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastAssistantOutputAtRef.current < 25_000"));
+  assert.ok(lessonTutorSource.includes("Turn-based Whisper can capture the laptop speaker after Orby finishes."));
+  assert.ok(lessonTutorSource.includes("isLikelyVoicePlaybackEcho(transcript, voiceLastAssistantOutputRef.current)"));
   assert.ok(lessonTutorSource.includes("ASR can deliver the microphone echo after the audio element has ended."));
   assert.ok(lessonTutorSource.includes("recentAssistantOutput"));
   assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));

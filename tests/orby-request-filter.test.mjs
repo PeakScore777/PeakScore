@@ -38,6 +38,9 @@ const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-confi
 const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+const cloudflareImageRouteSource = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
+const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
+const adminOrbyChatSource = await readFile(new URL("../app/api/admin/orby/chat/route.ts", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
@@ -61,6 +64,26 @@ test("Cloudflare es el único motor de texto y Gemini Live es la única voz de O
   assert.ok(!lessonTutorSource.includes("/api/orby/voice-speech"));
   assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
+});
+
+test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallbacks facturables", () => {
+  assert.ok(cloudflareVoiceSource.includes('"@cf/black-forest-labs/flux-1-schnell"') || cloudflareVoiceSource.includes('@cf/black-forest-labs/flux-1-schnell'));
+  assert.ok(cloudflareVoiceSource.includes("generateWithCloudflareImage"));
+  assert.ok(cloudflareVoiceSource.includes("generateWithCloudflareAnalysis"));
+  assert.ok(cloudflareImageRouteSource.includes("generateWithCloudflareImage(prompt, 4)"));
+  assert.ok(cloudflareImageRouteSource.includes('@cf/black-forest-labs/flux-1-schnell'));
+  assert.ok(!cloudflareImageRouteSource.includes("GoogleGenAI"));
+  assert.ok(!cloudflareImageRouteSource.includes("GEMINI_API_KEY"));
+  assert.ok(!cloudflareImageRouteSource.includes("gemini-nano-banana"));
+  assert.ok(cloudflareImageRouteSource.includes("FREE_QUOTA_EXCEEDED"));
+  assert.ok(orbyKnowledgeSource.includes("generateWithCloudflareAnalysis(prompt)"));
+  assert.ok(!orbyKnowledgeSource.includes("generateAI("));
+  assert.ok(!orbyKnowledgeSource.includes('"groq"'));
+  assert.ok(!orbyKnowledgeSource.includes('"llm7"'));
+  assert.ok(tutorQualitySource.includes("generateWithCloudflareAnalysis(prompt)"));
+  assert.ok(tutorQualitySource.includes("generateWithCloudflareAnalysis(secondPrompt)"));
+  assert.ok(adminOrbyChatSource.includes('provider: "gemini", task: "tutor", prompt, useFallback: false'));
+  assert.ok(!adminOrbyChatSource.includes("useFallback: true"));
 });
 
 test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {

@@ -13,6 +13,7 @@ export function normalizeOrbyRequestText(value: string): string {
 }
 
 const PROGRAMMING_REQUEST_PATTERNS = [
+  /^\\s*(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|html|css|react|sql)\\s*[.!?]*$/i,
   // Match an explicit request to learn/use software tools, not a passing
   // mention of a programming term in a reading passage or scientific example.
   /\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|como se usa|como usar|quiero usar|i want to learn|i would like to learn|i'd like to learn|teach me|help me|show me|how do i|how to|learn to)\b.{0,90}\b(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|crear una app|hacer una pagina web|write code|code)\b/i,
@@ -29,9 +30,9 @@ const PROGRAMMING_REQUEST_PATTERNS = [
 const ICFES_SCOPE_PATTERNS = [
   /\b(?:pregunta tipo icfes|simulacro(?: de saber\s*11| del icfes)?|cuadernillo de preguntas)\b/i,
   /\b(?:matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuacion(?:es)?|inecuacion(?:es)?|fracciones?|porcentajes?|razones y proporciones|proporcionalidad|funcion lineal|funcion cuadratica|plano cartesiano|pendiente de una recta|polinomios?|logaritmos?|potencias?|raiz cuadrada|teorema de pitagoras|perimetro|area de un triangulo|volumen de un|media aritmetica|mediana|moda estadistica|secuencia numerica|sucesion numerica|variable independiente|variable dependiente)\b/i,
-  /\b(?:lectura critica|comprension lectora|comprension de textos|texto argumentativo|intencion del autor|idea principal|tesis del texto|argumento central|inferir|inferencia|conclusion del texto|conectores logicos|parrafo|narrador|figura retorica|figura literaria|genero textual|proposito comunicativo|punto de vista del autor|postura del autor|analisis de texto)\b/i,
-  /\b(?:sociales y ciudadanas|ciencias sociales|historia de colombia|historia universal|geografia|democracia|constitucion politica|derechos humanos|ciudadania|estado colombiano|ramas del poder|participacion politica|conflicto armado|guerra fria|independencia de colombia|colonizacion|revolucion francesa|revolucion industrial|globalizacion|economia circular|oferta y demanda|desigualdad social|migracion|territorio colombiano|desarrollo sostenible|organizacion del estado|centralismo|federalismo|poder ejecutivo|poder legislativo|poder judicial|sistema politico)\b/i,
-  /\b(?:ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|respiracion celular|evolucion biologica|seleccion natural|reaccion quimica|atomo|molecula|tabla periodica|enlace quimico|energia|fuerza|densidad|termodinamica|materia|presion atmosferica|velocidad terminal|leyes de newton|circuito electrico|electricidad|magnetismo|ondas sonoras|acido|base|escala de ph|variable independiente|variable dependiente|variable de control|experimento|hipotesis|metodo cientifico|contaminacion|cambio climatico|biodiversidad|cadena alimentaria|astronomia|estrella(?:s)? de neutrones|agujero negro|sistema solar|orbita|gravedad)\b/i,
+  /\b(?:lectura critica|lectura|lengua|lenguaje|espanol|castellano|comprension|comprension lectora|comprension de textos|literatura|gramatica|comunicacion|argumentacion|texto argumentativo|intencion del autor|idea principal|tesis del texto|argumento central|inferir|inferencia|conclusion del texto|conectores logicos|parrafo|narrador|figura retorica|figura literaria|genero textual|proposito comunicativo|punto de vista del autor|postura del autor|analisis de texto)\b/i,
+  /\b(?:sociales|sociales y ciudadanas|ciencias sociales|historia|historia de colombia|historia universal|geografia|democracia|constitucion politica|derechos humanos|ciudadania|estado colombiano|ramas del poder|participacion politica|conflicto armado|guerra fria|independencia de colombia|colonizacion|revolucion francesa|revolucion industrial|globalizacion|economia circular|oferta y demanda|desigualdad social|migracion|territorio colombiano|desarrollo sostenible|organizacion del estado|centralismo|federalismo|poder ejecutivo|poder legislativo|poder judicial|sistema politico)\b/i,
+  /\b(?:ciencias|naturales|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|respiracion celular|evolucion biologica|seleccion natural|reaccion quimica|atomo|molecula|tabla periodica|enlace quimico|energia|fuerza|densidad|termodinamica|materia|presion atmosferica|velocidad terminal|leyes de newton|circuito electrico|electricidad|magnetismo|ondas sonoras|acido|base|escala de ph|variable independiente|variable dependiente|variable de control|experimento|hipotesis|metodo cientifico|contaminacion|cambio climatico|biodiversidad|cadena alimentaria|astronomia|estrella(?:s)? de neutrones|agujero negro|sistema solar|orbita|gravedad)\b/i,
   /\b(?:ingles|english|reading comprehension|vocabulary in context|grammar|present simple|past simple|past continuous|present perfect|modal verbs|phrasal verbs|verb tenses|part [1-7] of the icfes|parte [1-7] del examen de ingles|avisos? publicitarios?|dialogos en ingles|comprension de lectura en ingles)\b/i,
 ];
 
@@ -368,7 +369,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     return {
       allowed: false,
       category: "programming",
-      reply: "No puedo enseñar programación ni desarrollo de software. Sí puedo ayudarte con tus dudas de Saber 11 y conversar contigo sobre otros temas seguros.",
+      reply: "No puedo enseñar programación ni desarrollo de software. Mi función es prepararte para Saber 11 en Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés.",
     };
   }
 

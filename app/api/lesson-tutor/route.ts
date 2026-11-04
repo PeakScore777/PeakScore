@@ -342,7 +342,7 @@ export async function POST(request: Request) {
         continue;
       }
       if (
-        !containsProgrammingInstruction(item.content)
+        !containsProgrammingInstruction(item.content, priorContext)
         && !containsCookingInstruction(item.content, priorContext)
         && !containsExternalPreIcfesPromotion(item.content)
         && !containsExplicitNonIcfesTopic(item.content, priorContext)
@@ -746,7 +746,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       parsed.checkQuestion = "";
     }
 
-    if (containsProgrammingInstruction(modelReply)) {
+    if (containsProgrammingInstruction(modelReply, recentScopeContext)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "out_of_scope_programming_output" });
       modelReply = preflightOrbyRequest("programar").reply;
       parsed.checkQuestion = "";

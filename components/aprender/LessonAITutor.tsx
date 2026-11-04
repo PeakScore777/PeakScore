@@ -862,9 +862,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
       finish(true);
-      setVoiceError(error instanceof Error
-        ? error.message
-        : "La voz neural no estuvo disponible. La respuesta quedó visible por escrito.");
+      const providerMessage = error instanceof Error ? error.message : "";
+      if (isLocalLiveTurn && voiceModeRef.current) {
+        const quotaReached = /GEMINI_TTS_FREE_QUOTA_EXCEEDED|l[ií]mite gratuito de voz de Gemini|quota exceeded|resource_exhausted/i.test(providerMessage);
+        setVoiceError(quotaReached
+          ? "Gemini agotó la cuota gratuita de voz. Esta respuesta se leerá con la voz española disponible en tu equipo; Live sigue activo."
+          : "La voz neural no respondió. Esta respuesta se leerá con la voz española disponible en tu equipo.");
+        // The Live turn already has validated text. Do not call another model:
+        // read exactly that response locally, then reopen listening.
+        await speakWithBrowserFallback(clean, index);
+        return;
+      }
+      setVoiceError(providerMessage || "La voz neural no estuvo disponible. La respuesta quedó visible por escrito.");
       if (isLocalLiveTurn) finishLocalVoiceReply(messageId);
       else finishRealtimeVoicePlayback();
       console.warn("[Orby Voice] Neural Spanish TTS unavailable; keeping the validated text visible.", {

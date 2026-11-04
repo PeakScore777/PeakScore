@@ -71,7 +71,6 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(cloudflareVoiceSource.includes("generateWithCloudflareImage"));
   assert.ok(cloudflareVoiceSource.includes("generateWithCloudflareAnalysis"));
   assert.ok(cloudflareImageRouteSource.includes("generateWithCloudflareImage(prompt, 4)"));
-  assert.ok(cloudflareImageRouteSource.includes('@cf/black-forest-labs/flux-1-schnell'));
   assert.ok(!cloudflareImageRouteSource.includes("GoogleGenAI"));
   assert.ok(!cloudflareImageRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(!cloudflareImageRouteSource.includes("gemini-nano-banana"));

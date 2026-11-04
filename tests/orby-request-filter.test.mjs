@@ -95,7 +95,7 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(!lessonTutorSource.includes("?? spanishVoices[0]"));
   assert.ok(lessonTutorSource.includes("utterance.rate = 1.04"));
   assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));
-  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText(quotaReached"));
+  assert.ok(lessonTutorSource.includes("if (quotaReached)"));
   assert.ok(lessonTutorSource.includes("ambiguousShortProgrammingTranscript"));
   assert.ok(lessonTutorSource.includes("words.length <= 4"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(6_500)"));
@@ -227,9 +227,11 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
 
   const partialTranscriptStart = lessonTutorSource.indexOf("const outputTranscript");
   const modelAudioStart = lessonTutorSource.indexOf("const modelTurn", partialTranscriptStart);
-  const firstSafeFlush = lessonTutorSource.indexOf("if (hasCompleteSafeSentence) flushPendingGeminiAudio()", partialTranscriptStart);
+  const finalTurnValidation = lessonTutorSource.indexOf("if ((serverContent.turnComplete === true", partialTranscriptStart);
+  const finalAudioFlush = lessonTutorSource.indexOf("flushPendingGeminiAudio();", finalTurnValidation);
   assert.ok(partialTranscriptStart >= 0 && modelAudioStart > partialTranscriptStart);
-  assert.ok(firstSafeFlush > partialTranscriptStart && firstSafeFlush < modelAudioStart);
+  assert.ok(finalTurnValidation > modelAudioStart && finalAudioFlush > finalTurnValidation);
+  assert.ok(lessonTutorSource.includes("Playback is deliberately deferred until turnComplete validates the entire transcript"));
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 18/);
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = hasCompleteSafeSentence/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
@@ -938,7 +940,7 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
 
 test("Gemini Live comprime el contexto y conserva el handle de reanudación por conversación", () => {
   assert.match(lessonTutorSource, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
-  assert.match(lessonTutorSource, /sessionResumption:\s*\{/);
+  assert.match(lessonTutorSource, /sessionResumption:\s*resumeHandle\s*\?\s*\{\s*handle:\s*resumeHandle\s*\}\s*:\s*\{\}/);
   assert.match(lessonTutorSource, /voiceSessionResumeHandleRef\.current = update\.newHandle/);
   assert.match(lessonTutorSource, /voiceSessionResumeConversationRef\.current = activeConversationRef\.current/);
   assert.match(lessonTutorSource, /voiceSessionResumeConversationRef\.current === activeConversationRef\.current/);
@@ -952,7 +954,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 18/);
-  assert.match(lessonTutorSource, /hasCompleteSafeSentence\) flushPendingGeminiAudio\(\)/);
+  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the entire transcript/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
   const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);
@@ -963,7 +965,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
 
 test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario", () => {
   assert.match(lessonTutorSource, /voiceResponseWatchdogRef/);
-  assert.match(lessonTutorSource, /9_000/);
+  assert.match(lessonTutorSource, /MAX_VOICE_RECORDING_MS = 5 \* 60_000/);
   assert.match(lessonTutorSource, /fallbackVoiceTurnToText/);
   assert.match(lessonTutorSource, /activateTurnBasedVoiceFallback/);
   assert.match(lessonTutorSource, /cleanPendingText, false, true, undefined, appendUserMessage/);

@@ -1,9 +1,8 @@
 import "server-only";
 
-import { GoogleGenAI } from "@google/genai";
 import { createCloudflareEmbeddings, CLOUDFLARE_EMBEDDING_MODEL, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { generateAI } from "@/lib/ai/router";
+import { CloudflareWorkersAIError, generateWithCloudflareAnalysis } from "@/lib/ai/cloudflare-workers-ai";
 import {
   extractOrbyChecklistRows,
   extractOrbyCompetencyRows,
@@ -468,35 +467,19 @@ export async function generateOrbyKnowledgeProfileBatch(
 
     let parsed: Record<string, unknown> | null = null;
     let lastBatchError = "No se recibió un perfil académico válido.";
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        // If Gemini returns malformed/truncated JSON despite a successful HTTP
-        // response, try Groq directly once instead of repeating the same output.
-        const useGroqDirectly = attempt === 2;
-        const result = await generateAI({
-          ...(useGroqDirectly ? { provider: "groq" as const } : {}),
-          task: "analysis",
-          prompt,
-          useFallback: !useGroqDirectly,
-        });
+        // Use the same Cloudflare free-tier model as the student tutor.
+        // Never cascade into Groq, LLM7, or a paid model when JSON needs repair.
+        const result = await generateWithCloudflareAnalysis(prompt);
         const rawText = typeof result.text === "string" ? result.text : "";
         const candidate = parseJsonObject(rawText);
         if (typeof candidate.summary !== "string" || candidate.summary.trim().length < 10) {
-          const metadata = result as unknown as {
-            candidates?: Array<{ finishReason?: string; tokenCount?: number }>;
-          };
-          const finishReason = metadata.candidates?.[0]?.finishReason || "unknown";
-          const outputTokens = metadata.candidates?.[0]?.tokenCount;
-          lastBatchError = "JSON incompleto (finishReason=" + finishReason
-            + ", caracteres=" + rawText.length
-            + (typeof outputTokens === "number" ? ", tokens=" + outputTokens : "")
-            + ").";
-          console.warn("[Orby Knowledge] Profile response was not valid JSON.", {
+          lastBatchError = "JSON incompleto (" + rawText.length + " caracteres).";
+          console.warn("[Orby Knowledge] Cloudflare profile response was not valid JSON.", {
             batch: batchIndex + 1,
-            totalBatches: totalBatches,
+            totalBatches,
             attempt,
-            provider: useGroqDirectly ? "groq" : "auto",
-            finishReason,
             outputLength: rawText.length,
           });
         } else {
@@ -504,16 +487,19 @@ export async function generateOrbyKnowledgeProfileBatch(
           break;
         }
       } catch (error) {
+        if (error instanceof CloudflareWorkersAIError && error.code === "QUOTA_EXCEEDED") {
+          throwEmbeddingQuotaExceeded();
+        }
         lastBatchError = error instanceof Error ? error.message.slice(0, 350) : "Error desconocido del proveedor.";
-        console.warn("[Orby Knowledge] Profile batch failed; preserving vectors and retrying.", {
+        console.warn("[Orby Knowledge] Cloudflare profile batch failed; preserving vectors and retrying.", {
           batch: batchIndex + 1,
-          totalBatches: totalBatches,
+          totalBatches,
           attempt,
           reason: lastBatchError,
         });
       }
-      if (!parsed && attempt < 3) {
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1800));
+      if (!parsed && attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 1200));
       }
     }
     if (!parsed) {

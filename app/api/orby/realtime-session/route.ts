@@ -217,15 +217,27 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error
-      ? error.message.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").slice(0, 280)
+    const typed = error as { status?: unknown; code?: unknown; message?: unknown };
+    const message = typeof typed.message === "string"
+      ? typed.message.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").slice(0, 280)
       : "UnknownError";
+    const exhaustedFreeQuota = typed.status === 429
+      || typed.code === "RESOURCE_EXHAUSTED"
+      || /resource_exhausted|free tier.*quota|quota exceeded|rate limit/i.test(message);
     console.error("[Orby Gemini Live] Session setup failed.", {
       errorName: error instanceof Error ? error.name : "UnknownError",
+      status: typeof typed.status === "number" ? typed.status : undefined,
+      code: typeof typed.code === "string" ? typed.code : undefined,
       message,
     });
     return NextResponse.json({
-      error: "No se pudo preparar la conversación de voz.",
-    }, { status: 502 });
+      error: exhaustedFreeQuota
+        ? "Se alcanzó el límite gratuito de Gemini Live por ahora. No se activará otro servicio de pago. Puedes continuar por el chat y volver a probar la voz cuando se restablezca la cuota."
+        : "No se pudo preparar la conversación de voz. No se cambiará a un proveedor de pago.",
+      code: exhaustedFreeQuota ? "GEMINI_FREE_QUOTA_EXCEEDED" : "GEMINI_LIVE_UNAVAILABLE",
+    }, {
+      status: exhaustedFreeQuota ? 429 : 502,
+      headers: exhaustedFreeQuota ? { "Retry-After": "3600" } : undefined,
+    });
   }
 }

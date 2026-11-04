@@ -45,23 +45,24 @@ const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts"
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
 test("Cloudflare es el único motor de texto y Gemini Live es la única voz de Orby", () => {
-  assert.match(cloudflareVoiceSource, /import "server-only"/);
-  assert.match(cloudflareVoiceSource, /CLOUDFLARE_ACCOUNT_ID/);
-  assert.match(cloudflareVoiceSource, /CLOUDFLARE_API_TOKEN/);
-  assert.match(cloudflareVoiceSource, /@cf\\/openai\\/whisper-large-v3-turbo/);
-  assert.match(cloudflareVoiceSource, /@cf\\/google\\/gemma-4-26b-a4b-it/);
-  assert.match(cloudflareVoiceSource, /especializada exclusivamente en la preparación para Saber 11/);
-  assert.match(cloudflareVoiceSource, /ortografía impecable/);
-  assert.match(cloudflareVoiceSource, /QUOTA_EXCEEDED/);
-  assert.match(cloudflareTranscriptionRoute, /transcribeWithCloudflare\\(bytes\\)/);
-  assert.doesNotMatch(cloudflareTranscriptionRoute, /GoogleGenAI|GROQ_API_KEY|api\\.groq\\.com/);
-  assert.match(cloudflareTutorRoute, /generateWithCloudflareTutor\\(activePrompt\\)/);
-  assert.doesNotMatch(cloudflareTutorRoute, /generateAI\\(|verifyTutorAnswer\\(|getProviderForTask\\(/);
-  assert.match(cloudflareTutorRoute, /FREE_QUOTA_EXCEEDED/);
-  assert.match(lessonTutorSource, /La voz en tiempo real se interrumpió\\. La respuesta quedó disponible por escrito/);
-  assert.doesNotMatch(lessonTutorSource, /api\\/orby\\/voice-speech/);
-  assert.match(liveSessionSource, /const model = "gemini-3\\.8-live"/);
-  assert.match(liveSessionSource, /ORBY_LIVE_VOICE_NAME/);
+  assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
+  assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));
+  assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
+  assert.ok(cloudflareVoiceSource.includes("@cf/openai/whisper-large-v3-turbo"));
+  assert.ok(cloudflareVoiceSource.includes("@cf/google/gemma-4-26b-a4b-it"));
+  assert.ok(cloudflareVoiceSource.includes("especializada exclusivamente en la preparación para Saber 11"));
+  assert.ok(cloudflareVoiceSource.includes("ortografía impecable"));
+  assert.ok(cloudflareVoiceSource.includes("QUOTA_EXCEEDED"));
+  assert.ok(cloudflareTranscriptionRoute.includes("transcribeWithCloudflare(bytes)"));
+  assert.doesNotMatch(cloudflareTranscriptionRoute, /GoogleGenAI|GROQ_API_KEY/);
+  assert.ok(!cloudflareTranscriptionRoute.includes("api.groq.com"));
+  assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));
+  assert.doesNotMatch(cloudflareTutorRoute, /generateAI\(|verifyTutorAnswer\(|getProviderForTask\(/);
+  assert.ok(cloudflareTutorRoute.includes("FREE_QUOTA_EXCEEDED"));
+  assert.ok(lessonTutorSource.includes("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito."));
+  assert.ok(!lessonTutorSource.includes("/api/orby/voice-speech"));
+  assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));
+  assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
 });
 
 test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {

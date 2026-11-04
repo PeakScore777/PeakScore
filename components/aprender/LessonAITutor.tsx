@@ -2442,20 +2442,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const errorMessage = typeof typed.message === "string" ? typed.message : "";
       const geminiQuotaReached = typed.code === "GEMINI_FREE_QUOTA_EXCEEDED"
         || /GEMINI_FREE_QUOTA_EXCEEDED|l[ií]mite gratuito de Gemini Live|resource_exhausted|quota exceeded/i.test(errorMessage);
+      const authenticationFailure = /inicia sesión|sesion expirada|no autorizado|unauthorized|\\b401\\b|\\b403\\b/i.test(errorMessage);
       // A late failure from an old, cancelled startup must never tear down a
-      // newer voice session created after the student retried.
+      // newer voice session. Every recoverable Live failure (quota, privacy
+      // gate, network or timeout) keeps the student in voice-turn mode.
       if (ownsStartup) {
-        if (!wasCancelled && geminiQuotaReached) {
+        if (!wasCancelled && !authenticationFailure) {
           activateTurnBasedVoiceFallback(
-            "Gemini Live agotó su cuota gratuita. Orby seguirá escuchándote por turnos con Whisper y Cloudflare, y leerá las respuestas con la voz española disponible en tu equipo. No se usará ningún servicio de pago.",
+            geminiQuotaReached
+              ? "Gemini Live agotó su cuota gratuita. Continúo contigo por turnos con Whisper y Cloudflare Aura-2, sin consumir más cuota Gemini ni usar servicios de pago."
+              : "Gemini Live no está disponible ahora. Continúo en modo de voz por turnos con Whisper y Cloudflare Aura-2; no tendrás que cambiar al chat escrito.",
           );
-        } else {
+        } else if (!wasCancelled) {
           stopRealtimeVoice();
           setWorkspaceMode("chat");
-          if (!wasCancelled) {
-            setVoiceStatus("Voz no disponible");
-            setVoiceError(errorMessage || "No se pudo iniciar el chat de voz. Puedes continuar por texto.");
-          }
+          setVoiceStatus("Voz no disponible");
+          setVoiceError(errorMessage || "No se pudo autenticar la sesión de voz. Inicia sesión e inténtalo de nuevo.");
         }
       }
     } finally {

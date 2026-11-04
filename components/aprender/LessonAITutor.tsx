@@ -1673,7 +1673,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
         || voiceAudioSourcesRef.current.size > 0
         || Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
-      const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 15_000;
+      const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
       if (!unsupportedInterimScript && (assistantAudioInFlight || recentAssistantOutput)) {
         const normalizedInterim = normalizeVoiceComparison(interimText);
         const assistantSpeech = voiceAssistantTextRef.current || voiceLastAssistantOutputRef.current;
@@ -1721,7 +1721,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       || Date.now() <= voiceLastAssistantPlaybackUntilRef.current + 1_800;
     // ASR can deliver the microphone echo after the audio element has ended.
     // Keep a short transcript-based guard so Orby never answers its own greeting.
-    const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 15_000;
+    const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
     const isRecentAcousticEcho = (assistantAudioInFlight || recentAssistantOutput)
       && isLikelyVoicePlaybackEcho(normalizedFinal, recentAssistantText);
     if (isRecentAcousticEcho) {

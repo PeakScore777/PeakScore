@@ -200,11 +200,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [pendingAttachmentMeta, setPendingAttachmentMeta] = useState<{ kind: "image" | "audio"; label: string } | null>(null);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceFallbackMode, setVoiceFallbackMode] = useState(false);
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
   const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
+  const voiceFallbackModeRef = useRef(false);
   const voiceStartupAbortRef = useRef<AbortController | null>(null);
   const voiceSessionGenerationRef = useRef(0);
   const voiceSessionResumeHandleRef = useRef<string | null>(null);
@@ -240,6 +242,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLocalReplyInFlightRef = useRef(false);
   const voicePreflightReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
+  const voiceLastCommittedInputAtRef = useRef(0);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
   const voiceBrowserSpeechActiveRef = useRef(false);
@@ -744,6 +747,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const clean = text.trim().replace(/\\s+/g, " ").slice(0, 1800);
     if (!clean) return;
 
+    // Gemini Live quota recovery is deliberately independent of Gemini TTS:
+    // Cloudflare supplies speech-to-text/text, and the browser reads it locally.
+    if (voiceFallbackModeRef.current) {
+      await speakWithBrowserFallback(clean, index);
+      return;
+    }
+
     // Manual read-aloud outside Voice VC uses the browser's installed Spanish
     // voice. In Voice VC, all fallback audio uses Gemini TTS with Orby's
     // configured female voice and the same AudioContext as Gemini Live.
@@ -1089,6 +1099,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStartupAbortRef.current?.abort();
     voiceStartupAbortRef.current = null;
     voiceModeRef.current = false;
+    voiceFallbackModeRef.current = false;
+    setVoiceFallbackMode(false);
     voiceSpeechPlaybackGenerationRef.current += 1;
     voiceBrowserSpeechActiveRef.current = false;
     const cancelSpeech = voiceSpeechCancelRef.current;
@@ -1147,8 +1159,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceLocalReplyInFlightRef.current = false;
     voiceOutputAudioBlockedRef.current = false;
     waitingForVoiceReplyRef.current = false;
-    setVoiceStatus("Te escucho…");
-    setIsListening(true);
+    setVoiceStatus(voiceFallbackModeRef.current
+      ? "Voz alternativa lista · toca el micrófono para hablar"
+      : "Te escucho…");
+    setIsListening(!voiceFallbackModeRef.current);
     void persistRealtimeTurnIfReady();
     drainPendingMessageQueue();
   }

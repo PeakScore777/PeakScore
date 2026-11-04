@@ -76,9 +76,13 @@ async function runModel<T>(
       dailyQuotaExceeded,
     });
     throw new CloudflareWorkersAIError(
-      response.status === 429
-        ? dailyQuotaExceeded ? "QUOTA_EXCEEDED" : "RATE_LIMITED"
-        : response.status === 401 || response.status === 403 ? "AUTH_FAILED" : "INFERENCE_FAILED",
+      dailyQuotaExceeded
+        ? "QUOTA_EXCEEDED"
+        : response.status === 429
+          ? "RATE_LIMITED"
+          : response.status === 401 || response.status === 403
+            ? "AUTH_FAILED"
+            : "INFERENCE_FAILED",
       response.status,
     );
   }

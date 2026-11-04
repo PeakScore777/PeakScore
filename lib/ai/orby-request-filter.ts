@@ -43,7 +43,7 @@ const ORBY_STUDY_INVITATION_PATTERN =
   /\b(?:que tema|que area|que quieres estudiar|que te gustaria estudiar|por donde empezamos|con que empezamos|elige un tema|elige un area)\b.{0,100}\b(?:saber\s*11|icfes|estudiar|trabajar|repasar|practicar|empezar)\b/i;
 
 const ICFES_FOLLOW_UP_PATTERN =
-  /^(?:(?:y|entonces|pero|vale|listo)\s+)?(?:explicame|explica|amplia|profundiza|continua|sigue|otro ejemplo|dame otro ejemplo|un ejemplo mas|cual es la respuesta|por que|porque|como asi|que significa eso|que quiere decir|no entiendo|no me queda claro|resuelve esto|ayudame con esto|puedes repetir|repitelo|hazlo paso a paso|paso a paso|y eso|y entonces|cual|cuanto|como funciona|como se hace)[.!? ¿¡,;:]*$/i;
+  /^[¿¡]?\s*(?:(?:y|entonces|pero|vale|listo)\s+)?(?:explicame|explica|amplia|profundiza|continua|sigue|otro ejemplo|dame otro ejemplo|un ejemplo mas|cual es la respuesta|por que|porque|como asi|que significa eso|que quiere decir|no entiendo|no me queda claro|resuelve esto|ayudame con esto|puedes repetir|repitelo|hazlo paso a paso|paso a paso|y eso|y entonces|cual|cuanto|como funciona|como se hace)[.!? ¿¡,;:]*$/i;
 
 const CONTEXTUAL_STUDY_REQUEST_PATTERN =
   /\b(?:explicame|explica|ensename|que es|que son|que significa|define|analiza|interpreta|resuelve|demuestra|justifica|compara|calcula|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|no entiendo|diferencia entre|por que ocurre)\b/i;

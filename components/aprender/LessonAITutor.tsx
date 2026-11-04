@@ -3039,8 +3039,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (transcript.length > plausibleCharacterLimit) {
         throw new Error("La transcripción no coincide con la duración de tu voz. La descarté para evitar texto inventado; graba de nuevo.");
       }
-      setInput(transcript);
-      setPendingAttachmentMeta({ kind: "audio", label: audioOrigin === "upload" ? "Audio adjunto transcrito" : "Nota de voz transcrita" });
+
       if (audioOverride) {
         setRecordedAudio(null);
         setRecordedAudioPreviewUrl("");
@@ -3048,6 +3047,32 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       } else {
         clearRecordedAudio();
       }
+
+      // Gemini quota recovery: transcribe with Cloudflare Whisper, send the
+      // text through the Cloudflare tutor, and read the answer locally.
+      // The user speaks one turn at a time; no Gemini call is made here.
+      if (fallbackVoiceModeRef.current && voiceModeRef.current && audioOrigin === "recording") {
+        voiceUserTextRef.current = transcript;
+        voiceAssistantTextRef.current = "";
+        voiceAssistantMessageIdRef.current = null;
+        voiceUserMessageVisibleRef.current = false;
+        voiceLastCommittedInputRef.current = normalizeVoiceComparison(transcript);
+        voiceLastCommittedInputAtRef.current = Date.now();
+        voiceResponseDoneRef.current = false;
+        voiceTurnPersistedRef.current = false;
+        waitingForVoiceReplyRef.current = true;
+        setLiveTranscript(transcript);
+        setVoiceStatus("Orby está procesando tu pregunta…");
+        setVoiceError("");
+        void sendMessageRef.current(transcript, false, true, {
+          kind: "audio",
+          label: "Pregunta de voz transcrita",
+        });
+        return;
+      }
+
+      setInput(transcript);
+      setPendingAttachmentMeta({ kind: "audio", label: audioOrigin === "upload" ? "Audio adjunto transcrito" : "Nota de voz transcrita" });
       setError("");
       inputRef.current?.focus();
     } catch (caught) {

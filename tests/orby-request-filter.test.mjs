@@ -39,8 +39,6 @@ const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-sessi
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
-const routerSource = await readFile(new URL("../lib/ai/router.ts", import.meta.url), "utf8");
-const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 

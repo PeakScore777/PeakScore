@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => null);
     const text = body && typeof body === "object" && !Array.isArray(body) && typeof body.text === "string"
-      ? body.text.replace(/\\s+/g, " ").trim().slice(0, MAX_TEXT_LENGTH)
+      ? body.text.replace(/\s+/g, " ").trim().slice(0, MAX_TEXT_LENGTH)
       : "";
     if (!text) return NextResponse.json({ error: "No se recibió texto para reproducir." }, { status: 400 });
     if (containsUnsupportedSpanishLanguage(text)) {

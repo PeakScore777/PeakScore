@@ -157,7 +157,7 @@ export async function generateWithCloudflareTutor(prompt: string): Promise<{ tex
       max_tokens: 2200,
       stream: false,
     },
-    35_000,
+    18_000,
   );
 
   const text = typeof result.response === "string"

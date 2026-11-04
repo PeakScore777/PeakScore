@@ -30,7 +30,7 @@ const PROGRAMMING_REQUEST_PATTERNS = [
 const ICFES_SCOPE_PATTERNS = [
   /\b(?:pregunta tipo icfes|simulacro(?: de saber\s*11| del icfes)?|cuadernillo de preguntas)\b/i,
   /\b(?:matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuacion(?:es)?|inecuacion(?:es)?|fracciones?|porcentajes?|razones y proporciones|proporcionalidad|funcion lineal|funcion cuadratica|plano cartesiano|pendiente de una recta|polinomios?|logaritmos?|potencias?|raiz cuadrada|teorema de pitagoras|perimetro|area de un triangulo|volumen de un|media aritmetica|mediana|moda estadistica|secuencia numerica|sucesion numerica|variable independiente|variable dependiente)\b/i,
-  /\b(?:lectura critica|lectura|lengua|lenguaje|espanol|castellano|comprension|comprension lectora|comprension de textos|literatura|gramatica|comunicacion|argumentacion|texto argumentativo|intencion del autor|idea principal|tesis del texto|argumento central|inferir|inferencia|conclusion del texto|conectores logicos|parrafo|narrador|figura retorica|figura literaria|genero textual|proposito comunicativo|punto de vista del autor|postura del autor|analisis de texto)\b/i,
+  /\b(?:lectura critica|lectura|leer|lecturas|lengua|lenguaje|espanol|castellano|comprension|comprension lectora|comprension de lectura|comprension de textos|interpretacion de textos|analisis textual|texto|textos|literatura|gramatica|comunicacion|argumentacion|texto argumentativo|intencion del autor|idea principal|idea central|tesis del texto|argumento central|inferir|inferencia|conclusion del texto|conectores logicos|coherencia textual|cohesion textual|parrafo|narrador|figura retorica|figura literaria|genero textual|proposito comunicativo|punto de vista del autor|postura del autor|analisis de texto)\b/i,
   /\b(?:sociales|sociales y ciudadanas|ciencias sociales|historia|historia de colombia|historia universal|geografia|democracia|constitucion politica|derechos humanos|ciudadania|estado colombiano|ramas del poder|participacion politica|conflicto armado|guerra fria|independencia de colombia|colonizacion|revolucion francesa|revolucion industrial|globalizacion|economia circular|oferta y demanda|desigualdad social|migracion|territorio colombiano|desarrollo sostenible|organizacion del estado|centralismo|federalismo|poder ejecutivo|poder legislativo|poder judicial|sistema politico)\b/i,
   /\b(?:ciencias|naturales|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|respiracion celular|evolucion biologica|seleccion natural|reaccion quimica|atomo|molecula|tabla periodica|enlace quimico|energia|fuerza|densidad|termodinamica|materia|presion atmosferica|velocidad terminal|leyes de newton|circuito electrico|electricidad|magnetismo|ondas sonoras|acido|base|escala de ph|variable independiente|variable dependiente|variable de control|experimento|hipotesis|metodo cientifico|contaminacion|cambio climatico|biodiversidad|cadena alimentaria|astronomia|estrella(?:s)? de neutrones|agujero negro|sistema solar|orbita|gravedad)\b/i,
   /\b(?:ingles|english|reading comprehension|vocabulary in context|grammar|present simple|past simple|past continuous|present perfect|modal verbs|phrasal verbs|verb tenses|part [1-7] of the icfes|parte [1-7] del examen de ingles|avisos? publicitarios?|dialogos en ingles|comprension de lectura en ingles)\b/i,
@@ -39,7 +39,7 @@ const ICFES_SCOPE_PATTERNS = [
 const ICFES_CURRICULUM_CONTEXT_PATTERNS = ICFES_SCOPE_PATTERNS.slice(1);
 
 const ICFES_ACADEMIC_MATERIAL_FRAME_PATTERN =
-  /\b(?:en el texto|en un texto|en la lectura|en una lectura|en el fragmento|en el pasaje|en el dialogo|en un dialogo|en el enunciado|en la pregunta|en este ejercicio|para esta pregunta|segun el texto|segun la lectura|de acuerdo con el texto|de acuerdo con la lectura|se menciona|menciona|aparece|se presenta|analiza|analizar|interpreta|interpretar|comprende|comprension|intencion comunicativa|personaje|autor|narrador|parrafo|fragmento|opcion de respuesta|pregunta tipo icfes)\b/i;
+  /\b(?:en el texto|en un texto|en la lectura|en una lectura|en el fragmento|en el pasaje|en el dialogo|en un dialogo|en el enunciado|en la pregunta|en este ejercicio|para esta pregunta|segun el texto|segun la lectura|de acuerdo con el texto|de acuerdo con la lectura|lee|leer|lectura de|comprension lectora|se menciona|menciona|aparece|se presenta|analiza|analizar|interpreta|interpretar|comprende|comprension|intencion comunicativa|personaje|autor|narrador|parrafo|fragmento|opcion de respuesta|pregunta tipo icfes)\b/i;
 
 function isIcfesAcademicMaterialQuestion(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message);
@@ -371,17 +371,20 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  if (EXTERNAL_PREICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))) {
+  const academicMaterialQuestion = isIcfesAcademicMaterialQuestion(message, previousContext);
+
+  // A competitor name or a brand mentioned inside an ICFES reading passage
+  // is source material, not a request to recommend another pre-ICFES provider.
+  if (!academicMaterialQuestion
+    && EXTERNAL_PREICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))) {
     return {
       allowed: false,
       category: "outside",
       reply: ORBY_EXTERNAL_PREICFES_REPLY,
     };
   }
-
-  const academicMaterialQuestion = isIcfesAcademicMaterialQuestion(message, previousContext);
   if (!academicMaterialQuestion
-    && (PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized)) || containsProgrammingInstruction(message))) {
+    && (PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized)) || containsProgrammingInstruction(message, previousContext))) {
     return {
       allowed: false,
       category: "programming",

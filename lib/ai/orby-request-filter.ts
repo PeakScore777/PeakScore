@@ -74,10 +74,12 @@ const EXTERNAL_PREICFES_REQUEST_PATTERNS = [
 ];
  
 const GENERAL_OFF_SCOPE_REQUEST_PATTERNS = [
-  /\b(?:recomiendame|recomienda|recommend me|what movie should i watch|which movie should i watch|what film should i watch|which car should i buy|what car should i buy|que pelicula me recomiendas|que pelicula debo ver|que carro me recomiendas|que coche me recomiendas|que serie me recomiendas|cuentame un chiste|tell me a joke)\b/i,
+  /\b(?:recomiendame|recomienda|recommend me)\b.{0,70}\b(?:pelicula|peliculas|carro|carros|coche|coches|serie|series|restaurante|comida|movie|movies|film|films|car|cars|show|restaurant|food)\b/i,
+  /\b(?:what movie should i watch|which movie should i watch|what film should i watch|which car should i buy|what car should i buy|que pelicula me recomiendas|que pelicula debo ver|que carro me recomiendas|que coche me recomiendas|que serie me recomiendas|cuentame un chiste|tell me a joke)\b/i,
   /\b(?:que debo comer|que puedo comer|what should i eat|what can i eat|que restaurante me recomiendas|what restaurant do you recommend)\b/i,
   /\b(?:que clima hara|como estara el clima|pronostico del tiempo|what is the weather|weather tomorrow|clima de manana)\b/i,
   /\b(?:tengo fiebre|me duele|diagnostico medico|que medicamento tomo|medical diagnosis|what medicine should i take)\b/i,
+  /\b(?:que significa|que es|what does .{0,25} mean|meaning of)\b.{0,50}\b(?:malware|ransomware|phishing|virus informatico|keylogger)\b/i,
 ];
 
 export const ORBY_EXTERNAL_PREICFES_REPLY =
@@ -384,8 +386,9 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  const isAcademicAnalysisOfQuotedMaterial =
-    (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))
+  const hasQuotedAcademicMaterial = /['"“‘].{5,140}['"”’]/.test(message);
+  const isAcademicAnalysisOfQuotedMaterial = hasQuotedAcademicMaterial
+    && (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))
       || /\b(?:area de estudio|tema de estudio|competencia icfes|ejercicio de saber 11)\b/i.test(normalized))
     && /\b(?:en este dialogo|en el dialogo|en este texto|en la lectura|analiza|analizar|interpreta|interpretar|intencion comunicativa|comprension lectora|fragmento|enunciado|pregunta del ejercicio)\b/i.test(normalized);
   if (!isAcademicAnalysisOfQuotedMaterial

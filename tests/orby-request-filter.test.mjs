@@ -329,24 +329,29 @@ test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones 
 });
 
 test("el tutor usa Cloudflare directamente y no hace fallback a modelos de pago", () => {
-  assert.match(lessonTutorRouteSource, /generateWithCloudflareTutor\\(activePrompt\\)/);
-  assert.doesNotMatch(lessonTutorRouteSource, /generateAI\\(|verifyTutorAnswer\\(|getProviderForTask\\(/);
-  assert.match(lessonTutorRouteSource, /CloudflareWorkersAIError/);
-  assert.match(lessonTutorRouteSource, /FREE_QUOTA_EXCEEDED/);
-  assert.match(lessonTutorRouteSource, /Server-Timing/);
-  assert.match(lessonTutorRouteSource, /retrievalMs/);
-  assert.match(lessonTutorRouteSource, /generationMs/);
-  assert.match(lessonTutorRouteSource, /persistenceMs/);
-  assert.match(lessonTutorRouteSource, /X-Orby-Response-Time-Ms/);
-  assert.doesNotMatch(lessonTutorRouteSource, /api\\.groq\\.com|GROQ_API_KEY|LLM7_API_KEY/);
-  assert.doesNotMatch(lessonTutorSource, /(?:window|document)\\.location\\.reload\\(/);
-  assert.doesNotMatch(lessonTutorSource, /router\\.refresh\\(/);
-  assert.match(lessonTutorRouteSource, /review;dur=/);
-  assert.match(lessonTutorRouteSource, /retrievedAcademicKnowledge/);
-  assert.match(orbyKnowledgeSource, /query embedding timed out/i);
-  assert.match(orbyKnowledgeSource, /4_500/);
-  assert.match(orbyKnowledgeSource, /lexical retrieval continues/);
-  assert.match(orbyKnowledgeSource, /\\.slice\\(0, 2\\)/);
+  assert.ok(lessonTutorRouteSource.includes("generateWithCloudflareTutor(activePrompt)"));
+  assert.ok(!lessonTutorRouteSource.includes("generateAI("));
+  assert.ok(!lessonTutorRouteSource.includes("verifyTutorAnswer("));
+  assert.ok(!lessonTutorRouteSource.includes("getProviderForTask("));
+  assert.ok(lessonTutorRouteSource.includes("CloudflareWorkersAIError"));
+  assert.ok(lessonTutorRouteSource.includes("FREE_QUOTA_EXCEEDED"));
+  assert.ok(lessonTutorRouteSource.includes("Server-Timing"));
+  assert.ok(lessonTutorRouteSource.includes("retrievalMs"));
+  assert.ok(lessonTutorRouteSource.includes("generationMs"));
+  assert.ok(lessonTutorRouteSource.includes("persistenceMs"));
+  assert.ok(lessonTutorRouteSource.includes("X-Orby-Response-Time-Ms"));
+  assert.ok(!lessonTutorRouteSource.includes("api.groq.com"));
+  assert.ok(!lessonTutorRouteSource.includes("GROQ_API_KEY"));
+  assert.ok(!lessonTutorRouteSource.includes("LLM7_API_KEY"));
+  assert.ok(!lessonTutorSource.includes("window.location.reload("));
+  assert.ok(!lessonTutorSource.includes("document.location.reload("));
+  assert.ok(!lessonTutorSource.includes("router.refresh("));
+  assert.ok(lessonTutorRouteSource.includes("review;dur="));
+  assert.ok(lessonTutorRouteSource.includes("retrievedAcademicKnowledge"));
+  assert.ok(orbyKnowledgeSource.toLowerCase().includes("query embedding timed out"));
+  assert.ok(orbyKnowledgeSource.includes("4_500"));
+  assert.ok(orbyKnowledgeSource.includes("lexical retrieval continues"));
+  assert.ok(orbyKnowledgeSource.includes(".slice(0, 2)"));
 });
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {

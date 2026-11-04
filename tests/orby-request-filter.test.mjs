@@ -103,7 +103,10 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(tutorQualitySource.includes("generateWithCloudflareAnalysis(prompt)"));
   assert.ok(tutorQualitySource.includes("generateWithCloudflareAnalysis(secondPrompt)"));
   assert.ok(adminOrbyChatSource.includes('provider: "gemini", task: "tutor", prompt, useFallback: false'));
+  assert.ok(adminOrbyChatSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED !== "true"'));
   assert.ok(!adminOrbyChatSource.includes("useFallback: true"));
+  assert.ok(orbyKnowledgeSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED === "true" && process.env.GEMINI_API_KEY'));
+
 });
 
 test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan los índices disponibles", () => {

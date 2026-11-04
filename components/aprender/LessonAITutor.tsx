@@ -52,11 +52,14 @@ function normalizeVoiceComparison(value: string): string {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/[^a-z0-9\s]+/gi, "");
 }
 
-function ambiguousOneWordProgrammingTranscript(value: string): boolean {
+function ambiguousShortProgrammingTranscript(value: string): boolean {
   const normalized = normalizeVoiceComparison(value).replace(/\\s+/g, " ").trim();
   // Whisper can turn a short Spanish word into a programming keyword. A lone
   // token has too little context to justify rejecting a student's ICFES turn.
-  return /^(?:programar|programacion|programando|programa|codigo|codigos|python|javascript|typescript|java|html|css|sql)$/.test(normalized);
+  const words = normalized.split(" ").filter(Boolean);
+  return words.length <= 4
+    && /\\b(?:programar|programacion|programando|programa|codigo|codigos|python|javascript|typescript|java|html|css|sql)\\b/.test(normalized)
+    && !/\\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|tutorial|desde cero|clase de)\\b/.test(normalized);
 }
 
 function isLikelyVoicePlaybackEcho(transcript: string, assistantSpeech: string): boolean {
@@ -3187,7 +3190,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
       const transcript = payload.transcript.trim().slice(0, 1200);
-      if (ambiguousOneWordProgrammingTranscript(transcript)) {
+      if (ambiguousShortProgrammingTranscript(transcript)) {
         const clarification = "Creo que la transcripción pudo confundir una palabra. ¿Dijiste «lectura» o te referías a otra área de Saber 11? Repítela brevemente para no bloquear una pregunta válida.";
         if (voiceFallbackModeRef.current && voiceModeRef.current) {
           voiceUserTextRef.current = transcript;

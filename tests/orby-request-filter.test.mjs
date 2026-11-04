@@ -36,6 +36,8 @@ const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-s
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
 const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-config.ts", import.meta.url), "utf8");
 const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+const voiceSpeechRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
+const orbyNeuralSpeechSource = await readFile(new URL("../lib/ai/orby-neural-speech.ts", import.meta.url), "utf8");
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const cloudflareImageRouteSource = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
@@ -45,7 +47,7 @@ const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
-test("Cloudflare es el único motor de texto y Gemini Live es la única voz de Orby", () => {
+test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin solaparse", () => {
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
@@ -65,7 +67,16 @@ test("Cloudflare es el único motor de texto y Gemini Live es la única voz de O
   assert.ok(!lessonTutorRouteSource.includes("No rechaces conversaciones casuales"));
   assert.ok(lessonTutorRouteSource.includes("Mantén siempre el alcance exclusivo de Saber 11"));
   assert.ok(lessonTutorSource.includes("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito."));
-  assert.ok(!lessonTutorSource.includes("/api/orby/voice-speech"));
+  assert.ok(lessonTutorSource.includes("/api/orby/voice-speech"));
+  assert.ok(lessonTutorSource.includes("needsNeuralSpeechFallback"));
+  assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
+  assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
+  assert.ok(voiceSpeechRouteSource.includes("GEMINI_TTS_FREE_QUOTA_EXCEEDED"));
+  assert.ok(voiceSpeechRouteSource.includes("ORBY_VOICE_NAME"));
+  assert.ok(orbyNeuralSpeechSource.includes('const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts"'));
+  assert.ok(orbyNeuralSpeechSource.includes("GEMINI_TTS_LIMITED"));
+  assert.ok(lessonTutorSource.includes("No se pudo iniciar el audio de Orby"));
+  assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));
   assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
 });
@@ -79,6 +90,9 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(!cloudflareImageRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(!cloudflareImageRouteSource.includes("gemini-nano-banana"));
   assert.ok(cloudflareImageRouteSource.includes("FREE_QUOTA_EXCEEDED"));
+  assert.ok(voiceSpeechRouteSource.includes("GEMINI_TTS_FREE_QUOTA_EXCEEDED"));
+  assert.ok(!voiceSpeechRouteSource.includes("GROQ_API_KEY"));
+  assert.ok(!voiceSpeechRouteSource.includes("CLOUDFLARE_API_TOKEN"));
   assert.ok(orbyKnowledgeSource.includes("generateWithCloudflareAnalysis(prompt)"));
   assert.ok(!orbyKnowledgeSource.includes("generateAI("));
   assert.ok(!orbyKnowledgeSource.includes('provider: "groq"'));

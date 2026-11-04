@@ -349,9 +349,11 @@ export async function POST(request: Request) {
   ].join("\n\n");
 
   try {
-    const generated = await generateAI({ task: "tutor", prompt, useFallback: true });
+    // This private admin assistant stays on Gemini's free AI Studio tier.
+    // Never use the shared router here: it can silently fall back to LLM7/Groq.
+    const generated = await generateAI({ provider: "gemini", task: "tutor", prompt, useFallback: false });
     let reply = typeof generated.text === "string" ? normalizeAdminReplyText(extractPlainOrbyReply(generated.text)).slice(0,12000) : "";
-    const sourceProvider = (generated as unknown as { __peakscoreProvider?: "gemini" | "groq" | "llm7" }).__peakscoreProvider;
+    const sourceProvider: "gemini" = "gemini";
     if (!reply) return jsonError("Orby devolvió un formato que no se pudo validar. Reformula el mensaje e inténtalo de nuevo.", 502);
     if (containsProgrammingInstruction(reply)) {
       reply = preflightOrbyRequest("programar").reply;

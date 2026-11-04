@@ -719,7 +719,7 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     // No second model call: Cloudflare performs an internal self-check and
     // deterministic server-side validation remains the final output gate.
-    const qualityStatus: "not_required" = "not_required";
+    const qualityStatus = "not_required" as const;
     stageTimings.reviewMs = 0;
 
     if (hasFalseOrbyCreatorAttribution(cleanText(parsed.reply, 7000))) {

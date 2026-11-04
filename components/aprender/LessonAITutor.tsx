@@ -888,8 +888,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       previousCancel?.();
       synthesis?.cancel();
       if (isLocalVoiceTurn && voicePlaybackOwnerRef.current === "live") {
-        resolve();
-        return;
+        if (voiceAudioSourcesRef.current.size > 0) {
+          // Live still owns an audible response. Let its onended path finish
+          // the turn; never start a second speaker over it.
+          resolve();
+          return;
+        }
+        // A completed Live turn must release ownership so a validated
+        // text-only fallback can be spoken instead of being silently skipped.
+        voicePlaybackOwnerRef.current = "none";
       }
       voicePlaybackOwnerRef.current = "tts";
 
@@ -1449,6 +1456,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setIsListening(false);
       return;
     }
+    if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
     waitingForVoiceReplyRef.current = false;
     setVoiceStatus("Te escucho…");
     setIsListening(true);
@@ -1509,6 +1517,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // A stopped chunk from an older response must not finish or persist a
         // newer turn after a barge-in, fallback, or playback reset.
         if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+        if (voiceAudioSourcesRef.current.size === 0 && voicePlaybackOwnerRef.current === "live") {
+          voicePlaybackOwnerRef.current = "none";
+        }
         finishRealtimeVoicePlayback();
       };
     } catch {

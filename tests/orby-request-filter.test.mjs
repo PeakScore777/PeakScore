@@ -107,6 +107,9 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("voiceSessionResumeUpdatedAtRef"));
   assert.ok(lessonTutorSource.includes("90 * 60 * 1000"));
   assert.ok(lessonTutorSource.includes("reconnectLiveSession = async () =>"));
+  assert.ok(lessonTutorSource.includes("Ephemeral Live tokens are single-use."));
+  assert.ok(lessonTutorSource.includes('fetch("/api/orby/realtime-session"'));
+  assert.ok(lessonTutorSource.includes("apiKey: resumeTokenPayload.ephemeralToken"));
   assert.ok(lessonTutorSource.includes("for (let attempt = 0; attempt < 3; attempt += 1)"));
   assert.ok(lessonTutorSource.includes("voiceSessionResumeHandleRef.current"));
   assert.ok(lessonTutorSource.includes("MAX_VOICE_RECORDING_MS = 5 * 60_000"));

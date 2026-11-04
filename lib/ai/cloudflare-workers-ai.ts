@@ -119,6 +119,28 @@ export async function createCloudflareEmbeddings(texts: string[]): Promise<numbe
   });
 }
 
+export async function generateWithCloudflareImage(
+  prompt: string,
+  steps = 4,
+): Promise<{ image: string }> {
+  const normalized = prompt.trim().slice(0, 1800);
+  if (!normalized) throw new CloudflareWorkersAIError("EMPTY_IMAGE_PROMPT");
+  if (!Number.isInteger(steps) || steps < 4 || steps > 8) {
+    throw new CloudflareWorkersAIError("INVALID_IMAGE_STEPS");
+  }
+
+  const result = await runModel<{ image?: unknown }>(
+    "@cf/black-forest-labs/flux-1-schnell",
+    { prompt: normalized, steps },
+    45_000,
+  );
+  const image = typeof result.image === "string" ? result.image : "";
+  if (!image || !/^[A-Za-z0-9+/]+={0,2}$/.test(image) || image.length > 12_000_000) {
+    throw new CloudflareWorkersAIError("INVALID_IMAGE_RESPONSE");
+  }
+  return { image };
+}
+
 export async function transcribeWithCloudflare(audio: Buffer): Promise<string> {
   if (audio.length < 1024 || audio.length > 8 * 1024 * 1024) {
     throw new CloudflareWorkersAIError("INVALID_AUDIO");

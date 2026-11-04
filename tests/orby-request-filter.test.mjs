@@ -70,6 +70,14 @@ test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin so
   assert.ok(lessonTutorRouteSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED !== "true"'));
   assert.ok(lessonTutorSource.includes("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito."));
   assert.ok(lessonTutorSource.includes("/api/orby/voice-speech"));
+  assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
+  assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
+  assert.ok(lessonTutorSource.includes("transcribeRecordedAudio"));
+  assert.ok(lessonTutorSource.includes("voiceLastCommittedInputAtRef.current < 5_000") || lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 5_000"));
+  assert.ok(lessonTutorSource.includes("Whisper y Cloudflare"));
+  assert.ok(lessonTutorSource.includes("Voz alternativa lista"));
+  assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
+  assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current) {\n      await speakWithBrowserFallback(clean, index)"));
   assert.ok(lessonTutorSource.includes("needsNeuralSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
   assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
@@ -559,6 +567,11 @@ test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académic
     "historia",
     "química",
     "física",
+    "En la lectura de Lectura Crítica, el personaje dice que quiere aprender Python. Analiza la intención comunicativa del personaje.",
+    "En un texto de Sociales se menciona un programa de gobierno. ¿Qué postura presenta el autor?",
+    "En el diálogo de Inglés aparece la frase 'Can you cook?'. Analiza su función comunicativa.",
+    "En el enunciado de Ciencias Naturales se menciona preparar una receta tradicional como ejemplo de fermentación.",
+
   ];
   for (const prompt of allowedRequests) {
     assert.equal(filter.preflightOrbyRequest(prompt).allowed, true, prompt);
@@ -568,6 +581,8 @@ test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académic
     ["Enséñame Python desde cero.", "programming"],
     ["¿Cómo creo una página web con React?", "programming"],
     ["Quiero aprender programación.", "programming"],
+    ["Enséñame a programar en Python.", "programming"],
+
     ["Dame una receta para hornear pan.", "outside"],
     ["Teach me how to cook pasta.", "outside"],
     ["¿Cómo preparo una arepa?", "outside"],

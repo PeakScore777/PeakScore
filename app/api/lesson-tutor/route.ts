@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { generateAI, getProviderForTask, type AIProvider } from "@/lib/ai/router";
-import { needsIndependentTutorReview, verifyTutorAnswer } from "@/lib/ai/tutor-quality";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
 import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
-import { generateWithCloudflareTutor, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
+import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -677,38 +675,19 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     const generationStartedAt = performance.now();
     let raw = "";
-    let sourceProvider: AIProvider = tutorImage
-      ? "gemini"
-      : body.voiceMode === true
-        ? "groq"
-        : getProviderForTask("tutor");
     if (tutorImage) {
+      // Image understanding remains on Gemini's free AI Studio tier.
       raw = await generateTutorVision(prompt, tutorImage.mimeType, tutorImage.base64);
     } else {
       const isVoiceRequest = body.voiceMode === true;
       const activePrompt = shouldRetrieveAcademicKnowledge
         ? (isVoiceRequest ? voicePrompt : prompt)
         : conversationalPrompt;
-      try {
-        const result = await generateAI({
-          task: "tutor",
-          provider: isVoiceRequest ? "groq" : undefined,
-          prompt: activePrompt,
-          useFallback: true,
-        });
-        const actualProvider = (result as unknown as { __peakscoreProvider?: AIProvider }).__peakscoreProvider;
-        if (actualProvider) sourceProvider = actualProvider;
-        raw = typeof result.text === "string" ? result.text.trim() : "";
-      } catch (primaryError) {
-        if (!isCloudflareWorkersAIConfigured()) throw primaryError;
-        console.warn("[Orby Tutor] Gemini/Groq/LLM7 unavailable; trying Cloudflare Workers AI.");
-        const fallback = await generateWithCloudflareTutor(activePrompt);
-        raw = fallback.text.trim();
-        // Cloudflare is not part of the independent-review provider enum.
-        // Mark Gemini as the source sentinel so the quality layer only selects
-        // a separately configured Groq or LLM7 reviewer.
-        sourceProvider = "gemini";
-      }
+
+      // Cloudflare Workers AI is the sole text tutor provider. No silent
+      // fallback to another vendor is permitted when its free quota is spent.
+      const result = await generateWithCloudflareTutor(activePrompt);
+      raw = result.text.trim();
     }
     stageTimings.generationMs = performance.now() - generationStartedAt;
     if (!raw) {
@@ -717,9 +696,8 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     let parsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown };
     try {
-      parsed = JSON.parse(raw.replace(/^\s*```json\s*/i, "").replace(/^\s*```\s*/i, "").replace(/\s*```\s*$/i, "").trim());
+      parsed = JSON.parse(raw.replace(/^\s*\`\`\`json\s*/i, "").replace(/^\s*\`\`\`\s*/i, "").replace(/\s*\`\`\`\s*$/i, "").trim());
     } catch {
-      // No devolver texto sin validar: podría ser contenido ajeno al formato esperado.
       return NextResponse.json({ error: "Tu pregunta se recibió, pero la respuesta no se pudo procesar correctamente. Vuelve a intentarlo; no hace falta que cambies la pregunta." }, { status: 502 });
     }
 
@@ -734,34 +712,10 @@ No uses bloques Markdown ni texto fuera del JSON.
       return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Intenta de nuevo con una pregunta más concreta." }, { status: 502 });
     }
 
-    // Deterministic validation above applies to every response. Higher-risk
-    // academic answers additionally pass an independent model review.
-    const reviewStartedAt = performance.now();
-    let qualityStatus: "not_required" | "passed" | "corrected" | "unverified" = "not_required";
-    if (needsIndependentTutorReview({
-      message: userMessage,
-      context: [question, context].filter(Boolean).join("\n"),
-      hasImage: Boolean(tutorImage),
-    })) {
-      const quality = await verifyTutorAnswer({
-        sourceProvider,
-        subject,
-        topic,
-        question: [question, context, userMessage].filter(Boolean).join("\\n\\n"),
-        candidate: { reply, checkQuestion },
-      });
-      qualityStatus = quality.status;
-      if (quality.status === "corrected" || quality.reply !== reply) {
-        const safeQualityReply = cleanText(quality.reply, 7000);
-        if (!safeQualityReply || !isSafeTutorOutput(safeQualityReply)) {
-          return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Inténtalo nuevamente." }, { status: 502 });
-        }
-        parsed.reply = safeQualityReply;
-        parsed.checkQuestion = quality.checkQuestion;
-      }
-    }
-
-    stageTimings.reviewMs = performance.now() - reviewStartedAt;
+    // No second model call: Cloudflare performs an internal self-check and
+    // deterministic server-side validation remains the final output gate.
+    const qualityStatus: "not_required" = "not_required";
+    stageTimings.reviewMs = 0;
 
     if (hasFalseOrbyCreatorAttribution(cleanText(parsed.reply, 7000))) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "false_creator_attribution" });

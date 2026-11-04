@@ -89,6 +89,7 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 420)"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
+  assert.ok(lessonTutorSource.includes("Aura-2 is the single"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("transcribeRecordedAudio"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 10_000"));
@@ -137,7 +138,7 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(adminOrbyChatSource.includes('provider: "gemini", task: "tutor", prompt, useFallback: false'));
   assert.ok(adminOrbyChatSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED !== "true"'));
   assert.ok(!adminOrbyChatSource.includes("useFallback: true"));
-  assert.ok(orbyKnowledgeSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED === "true" && process.env.GEMINI_API_KEY'));
+  assert.ok(orbyKnowledgeSource.includes("if (process.env.GEMINI_API_KEY)"));
 
 });
 

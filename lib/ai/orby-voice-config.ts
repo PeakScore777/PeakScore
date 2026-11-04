@@ -1,6 +1,6 @@
 /** Stable female voice selected for Orby's educational voice experience. */
-export const ORBY_VOICE_NAME =
-  process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina";
+const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina";
+export const ORBY_VOICE_NAME = requestedVoice;
 
 /** Short delivery direction shared by every Live session. */
 export const ORBY_VOICE_STYLE =

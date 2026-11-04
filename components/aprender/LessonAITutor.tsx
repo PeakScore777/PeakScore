@@ -872,7 +872,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
         const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
         utterance.lang = "es-CO";
-        utterance.rate = 1.12;
+        utterance.rate = 1.2;
         utterance.pitch = 1.03;
         utterance.volume = 1;
         if (voice) utterance.voice = voice;
@@ -1546,7 +1546,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const isDuplicateFinalTranscript = Boolean(
       normalizedFinal
       && normalizedFinal === voiceLastCommittedInputRef.current
-      && Date.now() - voiceLastCommittedInputAtRef.current < 5_000
+      && Date.now() - voiceLastCommittedInputAtRef.current < 10_000
     );
     const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
     const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
@@ -1605,6 +1605,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(voiceUserTextRef.current, voiceScopeContext)
         ? ORBY_STUDY_GUIDANCE_REPLY
         : null;
+      const ambiguousOneWordProgrammingTranscript =
+        /^(?:programar|programacion|programa|python|javascript|codigo|programming|coding)$/i.test(normalizedTranscript);
+      const transcriptionClarificationReply = ambiguousOneWordProgrammingTranscript
+        ? "Quiero asegurarme de haberte entendido: ¿dijiste «programar» o «lectura»? También puedo ayudarte con Lectura Crítica, comprensión de textos e intención del autor."
+        : null;
       voicePreflightReplyRef.current = asksIdentity
         ? null
         : unsupportedInputScript
@@ -1613,7 +1618,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? ORBY_ICFES_ENGLISH_INTRO_REPLY
           : isOrbyGreetingRequest(voiceUserTextRef.current)
             ? ORBY_GREETING_REPLY
-            : studyGuidanceReply ?? (preflight.allowed ? null : preflight.reply);
+            : studyGuidanceReply
+              ?? transcriptionClarificationReply
+              ?? (preflight.allowed ? null : preflight.reply);
       voicePendingAudioChunksRef.current = [];
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
@@ -2046,8 +2053,32 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             }
             if (payload.error && typeof payload.error === "object") {
               const detail = payload.error as { message?: unknown; status?: unknown; code?: unknown };
-              console.warn("[Orby Voice] Realtime service rejected the connection.", { status: detail.status, code: detail.code });
-              rejectSetup?.(new Error("No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
+              const providerDetail = [
+                typeof detail.code === "string" ? detail.code : "",
+                typeof detail.status === "string" || typeof detail.status === "number" ? String(detail.status) : "",
+                typeof detail.message === "string" ? detail.message : "",
+              ].filter(Boolean).join(" ");
+              const quotaReached = detail.status === 429
+                || /RESOURCE_EXHAUSTED|QUOTA_EXCEEDED|quota exceeded|free tier.*quota|rate limit/i.test(providerDetail);
+              console.warn("[Orby Voice] Realtime service rejected the connection.", {
+                status: detail.status,
+                code: detail.code,
+                quotaReached,
+              });
+
+              const quotaMessage = "GEMINI_FREE_QUOTA_EXCEEDED: Gemini Live agotó su cuota gratuita. Continúo con Whisper, Cloudflare y lectura local; no se usará un servicio de pago.";
+              if (liveSessionEstablished && voiceModeRef.current) {
+                // A quota error can arrive after setupComplete. In that case
+                // rejectSetup is already settled and does nothing: switch the
+                // current call to turn-based voice immediately instead.
+                fallbackVoiceTurnToText(quotaReached
+                  ? "Gemini Live agotó su cuota gratuita. Continúo esta conversación con Whisper y Cloudflare, y leeré las respuestas en español sin consumir más cuota de Gemini."
+                  : "La conexión de voz se interrumpió. Continúo esta misma pregunta con Whisper y Cloudflare.");
+              } else {
+                rejectSetup?.(new Error(quotaReached
+                  ? quotaMessage
+                  : "No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
+              }
               return;
             }
             if (payload.setupComplete) resolveSetupComplete?.();

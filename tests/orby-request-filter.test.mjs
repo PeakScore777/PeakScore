@@ -115,7 +115,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);
   assert.ok(finalAudioValidationIndex >= 0 && finalTranscriptIndex > finalAudioValidationIndex);
 
-  // Filtered Live output is replaced and spoken locally; no second model call.
+  // Filtered Live output is replaced with a deterministic response; no second model call or alternate voice.
   assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
@@ -329,35 +329,25 @@ test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones 
   assert.match(lessonTutorSource, /startupSignal\.addEventListener\("abort"/);
 });
 
-test("el tutor prioriza Groq, activa Gemini sin reintentos largos y reserva la doble revisión", () => {
-  assert.match(routerSource, /tutor:\s*"groq"/);
-  assert.ok(routerSource.includes('const MAX_ATTEMPTS = task === "tutor" ? 1 : 2;'));
-  assert.match(routerSource, /attempt <= MAX_ATTEMPTS/);
-  assert.match(routerSource, /attempt < MAX_ATTEMPTS/);
-  assert.match(routerSource, /AbortSignal\.timeout\(task === "tutor" \? 12000 : 60000\)/);
-  assert.match(routerSource, /timeout: task === "tutor" \? 15000 : 60000/);
-  assert.match(routerSource, /MAX_GEMINI_RETRIES = task === "tutor" \? 0 : 2/);
+test("el tutor usa Cloudflare directamente y no hace fallback a modelos de pago", () => {
+  assert.match(lessonTutorRouteSource, /generateWithCloudflareTutor\\(activePrompt\\)/);
+  assert.doesNotMatch(lessonTutorRouteSource, /generateAI\\(|verifyTutorAnswer\\(|getProviderForTask\\(/);
+  assert.match(lessonTutorRouteSource, /CloudflareWorkersAIError/);
+  assert.match(lessonTutorRouteSource, /FREE_QUOTA_EXCEEDED/);
   assert.match(lessonTutorRouteSource, /Server-Timing/);
   assert.match(lessonTutorRouteSource, /retrievalMs/);
   assert.match(lessonTutorRouteSource, /generationMs/);
   assert.match(lessonTutorRouteSource, /persistenceMs/);
   assert.match(lessonTutorRouteSource, /X-Orby-Response-Time-Ms/);
-  assert.doesNotMatch(lessonTutorSource, /(?:window|document)\.location\.reload\(/);
-  assert.doesNotMatch(lessonTutorSource, /router\.refresh\(/);
+  assert.doesNotMatch(lessonTutorRouteSource, /api\\.groq\\.com|GROQ_API_KEY|LLM7_API_KEY/);
+  assert.doesNotMatch(lessonTutorSource, /(?:window|document)\\.location\\.reload\\(/);
+  assert.doesNotMatch(lessonTutorSource, /router\\.refresh\\(/);
   assert.match(lessonTutorRouteSource, /review;dur=/);
   assert.match(lessonTutorRouteSource, /retrievedAcademicKnowledge/);
-  const qualityBlock = tutorQualitySource.slice(
-    tutorQualitySource.indexOf("const highRiskPatterns = ["),
-    tutorQualitySource.indexOf("// Review the student's actual message"),
-  );
-  assert.match(qualityBlock, /calcula/);
-  assert.match(qualityBlock, /evidencia/);
-  assert.doesNotMatch(qualityBlock, /explica|densidad|que es|pregunta/);
-  assert.match(tutorQualitySource, /message.length > 650/);
   assert.match(orbyKnowledgeSource, /query embedding timed out/i);
   assert.match(orbyKnowledgeSource, /4_500/);
   assert.match(orbyKnowledgeSource, /lexical retrieval continues/);
-  assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
+  assert.match(orbyKnowledgeSource, /\\.slice\\(0, 2\\)/);
 });
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {

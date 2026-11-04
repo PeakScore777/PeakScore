@@ -10,7 +10,7 @@ const ALLOWED_ORBY_VOICES = new Set([
 
 const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina";
 
-/** One voice identity shared by Gemini Live and Gemini TTS local replies. */
+/** Female voice identity selected for Gemini Live voice conversations. */
 export const ORBY_VOICE_NAME = ALLOWED_ORBY_VOICES.has(requestedVoice)
   ? requestedVoice
   : "Despina";

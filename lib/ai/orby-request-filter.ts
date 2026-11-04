@@ -13,7 +13,7 @@ export function normalizeOrbyRequestText(value: string): string {
 }
 
 const PROGRAMMING_REQUEST_PATTERNS = [
-  /^\\s*(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|html|css|react|sql)\\s*[.!?]*$/i,
+  /^\s*(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|html|css|react|sql)\s*[.!?]*$/i,
   // Match an explicit request to learn/use software tools, not a passing
   // mention of a programming term in a reading passage or scientific example.
   /\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|como se usa|como usar|quiero usar|i want to learn|i would like to learn|i'd like to learn|teach me|help me|show me|how do i|how to|learn to)\b.{0,90}\b(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|crear una app|hacer una pagina web|write code|code)\b/i,
@@ -39,7 +39,7 @@ const ICFES_SCOPE_PATTERNS = [
 const ICFES_CURRICULUM_CONTEXT_PATTERNS = ICFES_SCOPE_PATTERNS.slice(1);
 
 const ICFES_ACADEMIC_MATERIAL_FRAME_PATTERN =
-  /\b(?:en el texto|en la lectura|en el fragmento|en el pasaje|en el dialogo|en el enunciado|en la pregunta|en este ejercicio|para esta pregunta|segun el texto|segun la lectura|de acuerdo con el texto|de acuerdo con la lectura|analiza|analizar|interpreta|interpretar|comprende|comprension|intencion comunicativa|personaje|autor|narrador|parrafo|fragmento|opcion de respuesta|pregunta tipo icfes)\b/i;
+  /\b(?:en el texto|en un texto|en la lectura|en una lectura|en el fragmento|en el pasaje|en el dialogo|en un dialogo|en el enunciado|en la pregunta|en este ejercicio|para esta pregunta|segun el texto|segun la lectura|de acuerdo con el texto|de acuerdo con la lectura|se menciona|menciona|aparece|se presenta|analiza|analizar|interpreta|interpretar|comprende|comprension|intencion comunicativa|personaje|autor|narrador|parrafo|fragmento|opcion de respuesta|pregunta tipo icfes)\b/i;
 
 function isIcfesAcademicMaterialQuestion(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message);

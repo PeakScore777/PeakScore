@@ -547,6 +547,18 @@ test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académic
     "Explícame la fotosíntesis y el texto menciona una receta tradicional.",
     "¿Qué evalúa el examen Saber 11?",
     "Ayúdame con una pregunta de Matemáticas del ICFES.",
+    "lectura",
+    "lengua",
+    "lenguaje",
+    "español",
+    "literatura",
+    "gramática",
+    "sociales",
+    "naturales",
+    "ciencias",
+    "historia",
+    "química",
+    "física",
   ];
   for (const prompt of allowedRequests) {
     assert.equal(filter.preflightOrbyRequest(prompt).allowed, true, prompt);
@@ -597,6 +609,9 @@ test("Orby solo permite contenidos ICFES y conserva saludos y ejemplos académic
   assert.match(filter.ORBY_COOKING_REPLY, /No puedo compartir recetas/);
   assert.match(filter.ORBY_SAFETY_REPLY, /causar daño/);
   assert.equal(filter.preflightOrbyRequest("oee").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("programar").category, "programming");
+  assert.equal(filter.preflightOrbyRequest("lectura").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("lengua").allowed, true);
   assert.equal(
     filter.preflightOrbyRequest("¿Y por qué?", "La fotosíntesis transforma la energía lumínica en energía química.").allowed,
     true,

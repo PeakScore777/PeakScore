@@ -1004,9 +1004,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           synthesis.speak(utterance);
         };
 
-        if (!preferredVoice) {
-          setVoiceError("No hay una voz española instalada. Continúo con la voz predeterminada del navegador.");
-        }
         speakNext();
       };
 
@@ -1034,7 +1031,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (!response.ok) {
             const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
             if (payload.code === "FREE_QUOTA_EXCEEDED") {
-              setVoiceError("La cuota gratuita diaria de voz Cloudflare se agotó. Continúo con la voz española instalada; no se usará Gemini.");
+              setVoiceError("La cuota gratuita diaria de voz Cloudflare se agotó. Continúo solo si hay una voz femenina española instalada; no se usará Gemini.");
             }
             throw new Error(typeof payload.error === "string" ? payload.error : "CLOUDFLARE_TTS_UNAVAILABLE");
           }
@@ -3571,7 +3568,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
           {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">
-            <strong>Modo de voz alternativo activo.</strong> Pulsa el micrófono para grabar y púlsalo otra vez para detener. Orby transcribirá con Whisper, responderá con Cloudflare y leerá con la voz española disponible en tu equipo. No consume cuota Gemini.
+            <strong>Modo de voz alternativo activo.</strong> Pulsa el micrófono para grabar y púlsalo otra vez para detener. Orby transcribirá con Whisper y responderá con Cloudflare. La lectura usará una voz femenina española instalada; si no está disponible, la respuesta seguirá visible por escrito. No consume cuota Gemini.
           </div>}
           {liveTranscript && showVoiceTranscript && <div className="mt-4 max-h-28 w-full max-w-lg overflow-y-auto rounded-xl border border-current/10 bg-black/10 px-4 py-3 text-left text-sm leading-6">{liveTranscript}</div>}
           {voiceError && <p role="alert" className="mt-4 max-w-lg rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{voiceError}</p>}

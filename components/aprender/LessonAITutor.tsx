@@ -2392,6 +2392,132 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Te escucho…");
       setIsListening(true);
 
+      // Gemini closes an individual Live WebSocket after roughly ten minutes.
+      // Resume the same server-side session with its latest handle instead of
+      // dropping the student into push-to-talk mode at every connection reset.
+      reconnectLiveSession = async () => {
+        if (reconnectInFlight || !voiceModeRef.current || startupSignal.aborted) return;
+        const resumeHandle = voiceSessionResumeConversationRef.current === activeConversationRef.current
+          ? voiceSessionResumeHandleRef.current
+          : null;
+        if (!resumeHandle) {
+          fallbackVoiceTurnToText("La conexión de voz necesita renovarse. No llegó un identificador seguro de reanudación; continúo con el modo alternativo sin perder tu conversación.");
+          return;
+        }
+
+        reconnectInFlight = true;
+        voiceChannelRef.current = null;
+        setIsListening(false);
+        setVoiceStatus("Renovando la conexión de voz sin cerrar tu conversación…");
+        let lastReconnectError = "No se pudo reanudar la conexión.";
+
+        try {
+          for (let attempt = 0; attempt < 3; attempt += 1) {
+            if (!voiceModeRef.current || startupSignal.aborted
+              || sessionGeneration !== voiceSessionGenerationRef.current) return;
+            const resumedConnectionId = ++connectionSequence;
+            resumeSetupComplete = false;
+            let connectionClosed = false;
+            let setupTimeoutId: number | null = null;
+            const resumedSetup = new Promise<void>((resolve, reject) => {
+              resolveResumeSetup = () => {
+                resumeSetupComplete = true;
+                resolve();
+              };
+              rejectResumeSetup = reject;
+            });
+
+            try {
+              const resumedSession = await googleAI.live.connect({
+                model,
+                config: buildLiveConfig(resumeHandle),
+                callbacks: {
+                  onopen: () => {
+                    if (resumedConnectionId !== connectionSequence || startupSignal.aborted) return;
+                    setVoiceStatus("Restaurando el contexto de Orby…");
+                  },
+                  onmessage: (message) => {
+                    if (resumedConnectionId !== connectionSequence || startupSignal.aborted
+                      || sessionGeneration !== voiceSessionGenerationRef.current) return;
+                    handleLiveSocketMessage(message);
+                  },
+                  onerror: (event) => {
+                    if (resumedConnectionId !== connectionSequence || startupSignal.aborted) return;
+                    const rawError = event.error instanceof Error
+                      ? event.error.message
+                      : typeof event.message === "string" ? event.message : "Error de transporte.";
+                    lastLiveSocketError = rawError.slice(0, 180);
+                    console.warn("[Orby Voice] Resumed WebSocket error.", { message: lastLiveSocketError });
+                  },
+                  onclose: (event) => {
+                    if (resumedConnectionId !== connectionSequence || startupSignal.aborted) return;
+                    connectionClosed = true;
+                    if (!resumeSetupComplete) {
+                      rejectResumeSetup?.(new Error("La conexión se cerró antes de restaurar el contexto."));
+                    } else if (voiceModeRef.current) {
+                      window.setTimeout(() => {
+                        if (voiceModeRef.current && !startupSignal.aborted) void reconnectLiveSession?.();
+                      }, 300);
+                    }
+                  },
+                },
+              });
+
+              await Promise.race([
+                resumedSetup,
+                new Promise<never>((_, reject) => {
+                  setupTimeoutId = window.setTimeout(
+                    () => reject(new Error("Orby tardó demasiado en restaurar el contexto de voz.")),
+                    10_000,
+                  );
+                }),
+              ]);
+              if (setupTimeoutId !== null) window.clearTimeout(setupTimeoutId);
+              if (connectionClosed) throw new Error("La conexión se cerró durante la reanudación.");
+              if (!voiceModeRef.current || startupSignal.aborted
+                || sessionGeneration !== voiceSessionGenerationRef.current) {
+                resumedSession.close();
+                return;
+              }
+
+              liveSession = resumedSession;
+              voiceChannelRef.current = resumedSession;
+              setVoiceError("");
+              setVoiceStatus("Te escucho…");
+              setIsListening(true);
+              console.info("[Orby Voice] Existing Live conversation resumed.", {
+                attempt: attempt + 1,
+                conversationRestored: true,
+              });
+              return;
+            } catch (error) {
+              if (setupTimeoutId !== null) window.clearTimeout(setupTimeoutId);
+              lastReconnectError = error instanceof Error ? error.message : "Error de reanudación.";
+              if (/GEMINI_FREE_QUOTA_EXCEEDED|quota exceeded|RESOURCE_EXHAUSTED/i.test(lastReconnectError)) break;
+              console.warn("[Orby Voice] Session resumption attempt failed.", {
+                attempt: attempt + 1,
+                name: error instanceof Error ? error.name : "UnknownError",
+              });
+              if (attempt < 2) {
+                await new Promise<void>((resolve) => window.setTimeout(resolve, 450 * (attempt + 1)));
+              }
+            } finally {
+              resolveResumeSetup = null;
+              rejectResumeSetup = null;
+            }
+          }
+
+          if (voiceModeRef.current && !startupSignal.aborted) {
+            fallbackVoiceTurnToText("No se pudo renovar la conexión Live después de varios intentos. Continúo esta misma conversación con el modo alternativo gratuito.");
+          }
+          console.warn("[Orby Voice] Live session resumption exhausted.", {
+            reason: lastReconnectError.slice(0, 160),
+          });
+        } finally {
+          reconnectInFlight = false;
+        }
+      };
+
       if (startupSignal.aborted) throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
       let workletTimeoutId: number | null = null;
       let abortWorkletSetup: (() => void) | null = null;

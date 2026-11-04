@@ -331,7 +331,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /PROTECCIÓN DE PEAKSCORE/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
   assert.match(realtimeSessionSource, /evalúa la intención académica completa/);
-  assert.match(realtimeSessionSource, /Si la intención es ambigua, pregunta brevemente en vez de rechazar/);
+  assert.match(realtimeSessionSource, /Si la intención es ambigua, pregunta brevemente antes de rechazar/);
   assert.match(lessonTutorSource, /utterance\.rate = 1\.14/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /habla y responde en español colombiano natural/);

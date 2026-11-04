@@ -9,6 +9,8 @@ import { createWorker } from "tesseract.js";
 import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 
+const MAX_VOICE_RECORDING_MS = 5 * 60_000;
+
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
@@ -1025,7 +1027,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
-            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(6_500)]),
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(14_000)]),
             body: JSON.stringify({ text: chunks[chunkIndex] }),
           });
           if (!response.ok) {
@@ -1185,7 +1187,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
       voiceResponseWatchdogRef.current = null;
       fallbackVoiceTurnToText("La voz tardó demasiado en responder. Continué esta misma pregunta con el modo alternativo para que no tengas que repetirla.");
-    }, 9_000);
+    }, 25_000);
   }
 
   function stopRealtimeVoice(updateState = true) {
@@ -1883,7 +1885,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? current.map((message) => message.id === assistantId ? { ...message, content: visibleReply } : message)
             : [...current, { id: assistantId, role: "assistant", content: visibleReply }];
         });
-        if (hasCompleteSafeSentence) flushPendingGeminiAudio();
+        // Keep every Live audio chunk buffered until the complete transcript passes
+        // final validation. Early playback followed by a filtered/TTS replacement
+        // was the main source of repeated phrases and apparent double voices.
       }
       setVoiceStatus("Orby está hablando…");
     }
@@ -1895,7 +1899,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const inlineData = part.inlineData && typeof part.inlineData === "object"
         ? part.inlineData as { data?: unknown; mimeType?: unknown }
         : null;
-      if (typeof inlineData?.data !== "string" || voiceLocalReplyInFlightRef.current || voiceOutputAudioBlockedRef.current) continue;
+      if (typeof inlineData?.data !== "string" || voiceLocalReplyInFlightRef.current
+        || voiceOutputAudioBlockedRef.current || voiceResponseDoneRef.current) continue;
 
       // Live audio is the preferred natural voice. If its first chunk arrives
       // after the text/TTS fallback already began, stop that fallback before
@@ -1910,7 +1915,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       };
       if (voicePendingAudioChunksRef.current.length < 512) {
         voicePendingAudioChunksRef.current.push(chunk);
-        if (voiceOutputTranscriptValidatedRef.current) flushPendingGeminiAudio();
+        // Playback is deliberately deferred until turnComplete validates the
+        // entire transcript; never start a second speaker mid-generation.
       } else {
         voiceOutputAudioBlockedRef.current = true;
         voicePendingAudioChunksRef.current = [];
@@ -3210,9 +3216,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       recorder.start(250);
       setIsRecording(true);
         recordingTimeoutRef.current = window.setTimeout(() => {
-        setVoiceError("Llegaste al límite de 60 segundos. Revisa la nota de voz antes de enviarla.");
+        setVoiceError("Llegaste al límite de 5 minutos. Revisa la nota de voz antes de enviarla.");
         stopAudioRecording();
-      }, 60_000);
+      }, MAX_VOICE_RECORDING_MS);
     } catch (caught) {
       audioStreamRef.current?.getTracks().forEach((track) => track.stop());
       audioStreamRef.current = null;
@@ -3636,7 +3642,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {voiceError && !(workspace && workspaceMode === "voice") && <p role="alert" className="shrink-0 bg-white px-3 pt-2 text-xs text-rose-600">{voiceError}</p>}
       {isListening && !(workspace && voiceMode) && <p role="status" className="shrink-0 bg-orange-50 px-3 py-2 text-xs font-semibold text-orange-800">Te escucho… Al terminar, enviaré tu pregunta a Orby.</p>}
       {isRecording && <div role="status" className="flex shrink-0 items-center justify-between border-t border-rose-100 bg-rose-50 px-3 py-2">
-        <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 60 segundos</span>
+        <span className="flex items-center gap-2 text-xs font-bold text-rose-700"><span className="h-2 w-2 animate-pulse rounded-full bg-rose-600" /> Grabando tu voz · máximo 5 minutos</span>
         <button type="button" onClick={() => stopAudioRecording()} className="inline-flex items-center gap-1.5 rounded-lg bg-rose-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-rose-700"><Square className="h-3 w-3 fill-current" /> Detener</button>
       </div>}
       {false && workspace && workspaceMode === "voice" && <div className="mx-4 mb-2 flex shrink-0 items-center gap-3 rounded-xl border border-orange-200 bg-orange-50/80 px-3 py-2 sm:mx-6" role="status" aria-live="polite">

@@ -2494,8 +2494,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     // Ignore accidental double-submit events (Enter + click, touch double tap,
     // or a repeated browser submit) before they enter the serial message queue.
-    const submissionKey = message.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "")
-      .toLocaleLowerCase("es-CO").replace(/\\s+/g, " ").trim();
+    const submissionKey = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
     const submittedAt = Date.now();
     const previousSubmission = lastSubmittedMessageRef.current;
     if (submissionKey && previousSubmission?.key === submissionKey

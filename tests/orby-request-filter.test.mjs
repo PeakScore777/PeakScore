@@ -82,6 +82,10 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
   assert.ok(lessonTutorSource.includes("waitForSpanishBrowserVoice"));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));
+  assert.ok(lessonTutorSource.includes("voiceResponseSlowNoticeRef"));
+  assert.ok(lessonTutorSource.includes("Orby sigue preparando tu respuesta. Mantengo la conexión…"));
+  assert.ok(lessonTutorSource.includes("}, 18_000);"));
+  assert.ok(lessonTutorSource.includes("}, 50_000);"));
   assert.ok(lessonTutorSource.includes('if (voicePlaybackOwnerRef.current === "tts") return;'));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "live"'));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "tts"'));

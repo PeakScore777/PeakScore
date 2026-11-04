@@ -350,7 +350,7 @@ export function containsExplicitNonIcfesTopic(value: string, previousContext = "
 export function isIcfesScopedAssistantTurn(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message);
   if (!normalized || containsOrbyPromptInjection(normalized)) return false;
-  return !containsProgrammingInstruction(message)
+  return !containsProgrammingInstruction(message, previousContext)
     && !containsCookingInstruction(message, previousContext)
     && !containsExplicitNonIcfesTopic(message, previousContext)
     && !containsExternalPreIcfesPromotion(message)
@@ -477,9 +477,12 @@ export function sanitizeOrbyKnowledgeExcerpt(content: string, title: string): st
     .join("\n");
   return safe.replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
-export function containsProgrammingInstruction(text: string): boolean {
+export function containsProgrammingInstruction(text: string, previousContext = ""): boolean {
   const value = normalizeOrbyRequestText(text);
   if (!value) return false;
+  // A source, term or quotation inside an ICFES passage is material to analyse,
+  // not a request to learn software development.
+  if (isIcfesAcademicMaterialQuestion(text, previousContext)) return false;
 
   const containsCode = text.includes(String.fromCharCode(96).repeat(3))
     || /(?:^|[\s:])(?:print|console\.log|function|const|let|var|def|class|import|export)\s*(?:\(|[a-z_$][\w$]*\s*=|\{)/im.test(text)

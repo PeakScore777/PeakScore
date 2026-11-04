@@ -3273,6 +3273,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
       const transcript = payload.transcript.trim().slice(0, 1200);
+      const recentAssistantSpeech = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
+      if (voiceFallbackModeRef.current && recentAssistantSpeech
+        && isLikelyVoicePlaybackEcho(transcript, voiceLastAssistantOutputRef.current)) {
+        // Turn-based Whisper can capture the laptop speaker after Orby finishes.
+        // Discard a near-verbatim match instead of treating Orby's greeting as a student question.
+        setLiveTranscript("");
+        setVoiceError("Ignoré el audio de Orby captado por el micrófono. Espera a que termine de hablar y graba tu pregunta.");
+        return;
+      }
       if (ambiguousShortProgrammingTranscript(transcript)) {
         const clarification = "Creo que la transcripción pudo confundir una palabra. ¿Dijiste «lectura» o te referías a otra área de Saber 11? Repítela brevemente para no bloquear una pregunta válida.";
         if (voiceFallbackModeRef.current && voiceModeRef.current) {

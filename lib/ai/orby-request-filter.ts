@@ -261,13 +261,7 @@ export function containsOrbyPromptInjection(message: string): boolean {
  * conversation is allowed; only protected categories are denied.
  */
 export function isIcfesScopedRequest(message: string, previousContext = ""): boolean {
-  const normalized = normalizeOrbyRequestText(message);
-  if (!normalized) return true;
-  return !containsOrbyPromptInjection(normalized)
-    && !EXTERNAL_PREICFES_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))
-    && !PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))
-    && !containsCookingRequest(normalized)
-    && !containsExplicitNonIcfesTopic(normalized, previousContext);
+  return preflightOrbyRequest(message, previousContext).allowed;
 }
 
 export function isOrbyStudyGuidanceRequest(message: string, previousContext = ""): boolean {
@@ -338,10 +332,9 @@ export function containsExplicitNonIcfesTopic(value: string, previousContext = "
 export function isIcfesScopedAssistantTurn(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message);
   if (!normalized || containsOrbyPromptInjection(normalized)) return false;
-  return !containsProgrammingInstruction(message)
+  return isIcfesScopedRequest(message, previousContext)
+    && !containsProgrammingInstruction(message)
     && !containsCookingInstruction(message, previousContext)
-    && !containsExplicitNonIcfesTopic(message, previousContext)
-    && !containsExternalPreIcfesPromotion(message)
     && !containsUnsupportedSpanishLanguage(message)
     && !isLikelyEnglishOnlyOrbyReply(message)
     && !hasFalseOrbyCreatorAttribution(message);
@@ -391,7 +384,12 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  if (GENERAL_OFF_SCOPE_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))) {
+  const isAcademicAnalysisOfQuotedMaterial =
+    (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))
+      || /\b(?:area de estudio|tema de estudio|competencia icfes|ejercicio de saber 11)\b/i.test(normalized))
+    && /\b(?:en este dialogo|en el dialogo|en este texto|en la lectura|analiza|analizar|interpreta|interpretar|intencion comunicativa|comprension lectora|fragmento|enunciado|pregunta del ejercicio)\b/i.test(normalized);
+  if (!isAcademicAnalysisOfQuotedMaterial
+    && GENERAL_OFF_SCOPE_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))) {
     return {
       allowed: false,
       category: "outside",

@@ -98,6 +98,15 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 420)"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
+  assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
+  assert.ok(lessonTutorSource.includes("payload.goAway"));
+  assert.ok(lessonTutorSource.includes("reconnectLiveSession = async () =>"));
+  assert.ok(lessonTutorSource.includes("for (let attempt = 0; attempt < 3; attempt += 1)"));
+  assert.ok(lessonTutorSource.includes("voiceSessionResumeHandleRef.current"));
+  assert.ok(lessonTutorSource.includes("MAX_VOICE_RECORDING_MS = 5 * 60_000"));
+  assert.ok(realtimeSessionSource.includes("2 * 60 * 60 * 1000"));
+  assert.ok(cloudflareVoiceSource.includes("10_000,"));
+
   assert.ok(lessonTutorSource.includes("never let the two speakers overlap"));
   assert.ok(lessonTutorSource.includes("stopSpeaking();"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));

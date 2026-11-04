@@ -89,7 +89,8 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 420)"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
-  assert.ok(lessonTutorSource.includes("Aura-2 is the single"));
+  assert.ok(lessonTutorSource.includes("never let the two speakers overlap"));
+  assert.ok(lessonTutorSource.includes("stopSpeaking();"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("transcribeRecordedAudio"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 10_000"));

@@ -155,6 +155,9 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
   assert.match(orbyKnowledgeSource, /detail\?\.code === "QUOTA_EXCEEDED"/);
   assert.match(cloudflareVoiceSource, /dailyQuotaExceeded/);
   assert.match(knowledgeWorkerSource, /ORBY_EMBEDDING_QUOTA_EXHAUSTED/);
+  assert.match(knowledgeWorkerSource, /transientProfileCapacity/);
+  assert.match(knowledgeWorkerSource, /15 \* 60 \* 1000/);
+  assert.match(knowledgeWorkerSource, /RESOURCE_EXHAUSTED/);
   assert.match(knowledgeWorkerSource, /available_at: resumeAt\.toISOString\(\)/);
   assert.match(knowledgeWorkerSource, /Park the remaining/);
   assert.match(knowledgeWorkerSource, /00:05 UTC/);

@@ -98,7 +98,7 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("if (quotaReached)"));
   assert.ok(lessonTutorSource.includes("ambiguousShortProgrammingTranscript"));
   assert.ok(lessonTutorSource.includes("words.length <= 4"));
-  assert.ok(lessonTutorSource.includes("AbortSignal.timeout(6_500)"));
+  assert.ok(lessonTutorSource.includes("AbortSignal.timeout(12_000)"));
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 420)"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
@@ -231,7 +231,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   const finalAudioFlush = lessonTutorSource.indexOf("flushPendingGeminiAudio();", finalTurnValidation);
   assert.ok(partialTranscriptStart >= 0 && modelAudioStart > partialTranscriptStart);
   assert.ok(finalTurnValidation > modelAudioStart && finalAudioFlush > finalTurnValidation);
-  assert.ok(lessonTutorSource.includes("Playback is deliberately deferred until turnComplete validates the entire transcript"));
+  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*entire transcript/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 18/);
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = hasCompleteSafeSentence/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
@@ -954,7 +954,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 18/);
-  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the entire transcript/);
+  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*entire transcript/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
   const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);

@@ -1875,8 +1875,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (!voiceOutputAudioBlockedRef.current && voiceOutputTranscriptValidatedRef.current) {
           flushPendingGeminiAudio();
         } else {
-          // Do not trust untranscribed or unsupported-language audio. The
-          // validated Spanish text is read by the browser fallback below.
+          // Do not trust untranscribed or unsupported-language audio.
+          // Invalid audio chunks are discarded; the validated text is handled
+          // by the single-speaker neural TTS fallback after the Live turn ends.
           voicePendingAudioChunksRef.current = [];
         }
         const playbackContext = voiceAudioContextRef.current;

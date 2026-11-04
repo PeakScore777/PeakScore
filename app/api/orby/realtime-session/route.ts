@@ -20,7 +20,7 @@ import { ORBY_VOICE_NAME } from "@/lib/ai/orby-voice-config";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Shared voice identity also powers the local TTS path.
+// Keep the selected female voice consistent across all Gemini Live sessions.
 const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME;
 
 function clean(value: unknown, max: number, fallback: string) {

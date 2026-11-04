@@ -146,7 +146,7 @@ export async function generateWithCloudflareImage(
 }
 
 export async function synthesizeWithCloudflareSpeech(text: string): Promise<Buffer> {
-  const normalized = text.replace(/\\s+/g, " ").trim().slice(0, 420);
+  const normalized = text.replace(/\s+/g, " ").trim().slice(0, 420);
   if (!normalized) throw new CloudflareWorkersAIError("EMPTY_TTS_TEXT");
 
   // Aura-2 Spanish is hosted by Cloudflare Workers AI. "celeste" is the

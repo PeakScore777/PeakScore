@@ -110,26 +110,10 @@ export async function POST(request: Request) {
   }
 
   if (!transcript) {
-    console.error("[Orby Audio] All transcription providers failed.", { failures: providerFailures });
-    const wasRateLimited = providerFailures.some((failure) => (
-      failure.status === 429 || failure.code === "RESOURCE_EXHAUSTED"
-    ));
-    const authFailed = providerFailures.some((failure) => (
-      failure.status === 401 || failure.status === 403
-      || failure.code === "UNAUTHENTICATED" || failure.code === "PERMISSION_DENIED"
-    ));
     return NextResponse.json({
-      error: wasRateLimited
-        ? "El servicio de transcripción está temporalmente ocupado. Espera un momento y vuelve a intentarlo."
-        : authFailed
-          ? "El servicio de transcripción no está disponible temporalmente. Inténtalo de nuevo más tarde."
-          : "No pudimos procesar el audio. Inténtalo de nuevo o adjunta una grabación más clara.",
-      code: wasRateLimited
-        ? "TRANSCRIPTION_RATE_LIMITED"
-        : authFailed
-          ? "TRANSCRIPTION_PROVIDER_AUTH_FAILED"
-          : "TRANSCRIPTION_PROVIDERS_FAILED",
-    }, { status: wasRateLimited ? 429 : 503 });
+      error: "No pudimos obtener una transcripción fiable. Puedes escribir la pregunta o grabarla de nuevo.",
+      code: "EMPTY_TRANSCRIPT",
+    }, { status: 502 });
   }
 
   return NextResponse.json({ transcript }, {

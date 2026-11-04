@@ -83,7 +83,7 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("waitForSpanishBrowserVoice"));
   assert.ok(lessonTutorSource.includes("feminineVoicePattern"));
   assert.ok(lessonTutorSource.includes("No hay una voz femenina en español instalada."));
-  assert.doesNotMatch(lessonTutorSource, /\\?\\? spanishVoices\\[0\\]/);
+  assert.ok(!lessonTutorSource.includes("?? spanishVoices[0]"));
   assert.ok(lessonTutorSource.includes("utterance.rate = 1.04"));
   assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));
   assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText(quotaReached"));

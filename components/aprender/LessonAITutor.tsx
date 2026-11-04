@@ -952,13 +952,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const voices = await waitForSpanishBrowserVoice();
         if (finished) return;
         const spanishVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-        const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|neural|enhanced/i.test(voice.name) && /sabina|laura|sofia|lucia|monica|catalina|female|mujer/i.test(voice.name))
-          ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /sabina|laura|sofia|lucia|monica|catalina|female|mujer/i.test(voice.name))
-          ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
-          ?? spanishVoices.find((voice) => /es[-_]mx/i.test(voice.lang) && /female|mujer|natural|online/i.test(voice.name))
-          ?? spanishVoices.find((voice) => /sabina|helena|paulina|sofia|laura|lucia|monica|catalina|female|mujer/i.test(voice.name))
-          ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]us/i.test(voice.lang))
-          ?? spanishVoices[0];
+        const feminineVoicePattern = /\\b(?:sabina|helena|paulina|sofia|laura|lucia|lucía|monica|mónica|catalina|camila|valentina|isabella|maria|maría|elena|daniela|female|woman|mujer|celeste)\\b/i;
+        const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang)
+          && feminineVoicePattern.test(voice.name)
+          && /natural|online|neural|enhanced/i.test(voice.name))
+          ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && feminineVoicePattern.test(voice.name))
+          ?? spanishVoices.find((voice) => feminineVoicePattern.test(voice.name));
+
+        if (!preferredVoice) {
+          setVoiceError("No hay una voz femenina en español instalada. La respuesta sigue disponible por escrito; instala una voz femenina española para usar este respaldo.");
+          finish(false);
+          return;
+        }
 
         const speakNext = () => {
           if (finished) return;

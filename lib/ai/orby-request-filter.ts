@@ -38,6 +38,20 @@ const ICFES_SCOPE_PATTERNS = [
 
 const ICFES_CURRICULUM_CONTEXT_PATTERNS = ICFES_SCOPE_PATTERNS.slice(1);
 
+const ICFES_ACADEMIC_MATERIAL_FRAME_PATTERN =
+  /\b(?:en el texto|en la lectura|en el fragmento|en el pasaje|en el dialogo|en el enunciado|en la pregunta|en este ejercicio|para esta pregunta|segun el texto|segun la lectura|de acuerdo con el texto|de acuerdo con la lectura|analiza|analizar|interpreta|interpretar|comprende|comprension|intencion comunicativa|personaje|autor|narrador|parrafo|fragmento|opcion de respuesta|pregunta tipo icfes)\b/i;
+
+function isIcfesAcademicMaterialQuestion(message: string, previousContext = ""): boolean {
+  const normalized = normalizeOrbyRequestText(message);
+  const prior = normalizeOrbyRequestText(previousContext);
+  const hasCurriculumAnchor = ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))
+    || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(prior))
+    || /\b(?:saber\s*11|icfes|area de estudio|materia de estudio)\b/i.test(prior);
+  const hasAcademicFrame = ICFES_ACADEMIC_MATERIAL_FRAME_PATTERN.test(normalized)
+    || /['"“‘].{5,180}['"”’]/.test(message);
+  return hasCurriculumAnchor && hasAcademicFrame;
+}
+
 // A study invitation is valid context even before a specific subject or concept
 // has been named (for example, Orby asking "¿Qué tema de Saber 11 quieres trabajar?").
 const ORBY_STUDY_INVITATION_PATTERN =
@@ -365,7 +379,9 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  if (PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized)) || containsProgrammingInstruction(message)) {
+  const academicMaterialQuestion = isIcfesAcademicMaterialQuestion(message, previousContext);
+  if (!academicMaterialQuestion
+    && (PROGRAMMING_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized)) || containsProgrammingInstruction(message))) {
     return {
       allowed: false,
       category: "programming",
@@ -373,7 +389,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  if (containsCookingRequest(normalized)) {
+  if (!academicMaterialQuestion && containsCookingRequest(normalized)) {
     return {
       allowed: false,
       category: "outside",
@@ -389,12 +405,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     };
   }
 
-  const hasQuotedAcademicMaterial = /['"“‘].{5,140}['"”’]/.test(message);
-  const isAcademicAnalysisOfQuotedMaterial = hasQuotedAcademicMaterial
-    && (ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized))
-      || /\b(?:area de estudio|tema de estudio|competencia icfes|ejercicio de saber 11)\b/i.test(normalized))
-    && /\b(?:en este dialogo|en el dialogo|en este texto|en la lectura|analiza|analizar|interpreta|interpretar|intencion comunicativa|comprension lectora|fragmento|enunciado|pregunta del ejercicio)\b/i.test(normalized);
-  if (!isAcademicAnalysisOfQuotedMaterial
+  if (!academicMaterialQuestion
     && GENERAL_OFF_SCOPE_REQUEST_PATTERNS.some((pattern) => pattern.test(normalized))) {
     return {
       allowed: false,

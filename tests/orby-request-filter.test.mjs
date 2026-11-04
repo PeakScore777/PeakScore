@@ -81,6 +81,11 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(!voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
   assert.ok(lessonTutorSource.includes("waitForSpanishBrowserVoice"));
+  assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));
+  assert.ok(lessonTutorSource.includes('if (voicePlaybackOwnerRef.current === "tts") return;'));
+  assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "live"'));
+  assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "tts"'));
+  assert.ok(lessonTutorSource.includes("A text-chat TTS utterance must never overlap the newly opened Live channel."));
   assert.ok(lessonTutorSource.includes("feminineVoicePattern"));
   assert.ok(lessonTutorSource.includes("No hay una voz femenina en español instalada."));
   assert.ok(!lessonTutorSource.includes("?? spanishVoices[0]"));

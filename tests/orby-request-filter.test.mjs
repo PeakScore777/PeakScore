@@ -42,6 +42,7 @@ const cloudflareImageRouteSource = await readFile(new URL("../app/api/orby/gener
 const voiceSpeechRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
 const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 const adminOrbyChatSource = await readFile(new URL("../app/api/admin/orby/chat/route.ts", import.meta.url), "utf8");
+const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
@@ -145,6 +146,8 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(adminOrbyChatSource.includes('provider: "gemini", task: "tutor", prompt, useFallback: false'));
   assert.ok(adminOrbyChatSource.includes('process.env.ORBY_GEMINI_LIVE_ENABLED !== "true"'));
   assert.ok(adminOrbyChatSource.includes("citedEvidenceIds.has(source.id)"));
+  assert.ok(adminStudioSource.includes("pendingMessageId"));
+  assert.ok(adminStudioSource.includes("current.filter(item => item.id !== pendingMessageId)"));
   assert.ok(adminOrbyChatSource.includes("reply.matchAll(/\\[(E\\d{3})\\]/g)"));
   assert.ok(!adminOrbyChatSource.includes("useFallback: true"));
   assert.ok(orbyKnowledgeSource.includes("if (process.env.GEMINI_API_KEY)"));

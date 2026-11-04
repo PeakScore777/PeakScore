@@ -415,7 +415,8 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     || ICFES_EXAM_INTENT_PATTERN.test(normalized)
     || ICFES_EXAM_DEFINITION_PATTERN.test(normalized)
     || ORBY_STUDY_INVITATION_PATTERN.test(normalized);
-  const priorIsDeterministicRefusal = /\b(?:no corresponde a saber\s*11|fuera del alcance|no puedo ayudarte con ese tema|no puedo ensenar programacion)\b/i.test(prior);
+  const priorIsDeterministicRefusal =
+    /\bno corresponde\b.{0,80}\bsaber\s*11\b|\bfuera del alcance\b|\bno puedo ayudarte con ese tema\b|\bno puedo ensenar programacion\b/i.test(prior);
   const priorHasCurriculumAnchor = !priorIsDeterministicRefusal && (
     ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
     || ORBY_STUDY_INVITATION_PATTERN.test(prior)

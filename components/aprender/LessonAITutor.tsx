@@ -223,6 +223,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceSessionGenerationRef = useRef(0);
   const voiceSessionResumeHandleRef = useRef<string | null>(null);
   const voiceSessionResumeConversationRef = useRef<string | null>(null);
+  const voiceSessionResumeUpdatedAtRef = useRef(0);
   const voiceResponseWatchdogRef = useRef<number | null>(null);
   const voiceResponseSlowNoticeRef = useRef<number | null>(null);
   const voiceAnalyserRef = useRef<AnalyserNode | null>(null);
@@ -2246,6 +2247,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             && update.newHandle.length > 20 && update.newHandle.length <= 8192) {
             voiceSessionResumeHandleRef.current = update.newHandle;
             voiceSessionResumeConversationRef.current = activeConversationRef.current;
+            voiceSessionResumeUpdatedAtRef.current = Date.now();
           }
         }
 
@@ -2309,7 +2311,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         handleGeminiLiveEvent(payload);
       };
 
-      const initialResumeHandle = voiceSessionResumeConversationRef.current === activeConversationRef.current
+      const resumeHandleIsFresh = Date.now() - voiceSessionResumeUpdatedAtRef.current < 90 * 60 * 1000;
+      if (!resumeHandleIsFresh) {
+        voiceSessionResumeHandleRef.current = null;
+        voiceSessionResumeConversationRef.current = null;
+        voiceSessionResumeUpdatedAtRef.current = 0;
+      }
+      const initialResumeHandle = resumeHandleIsFresh
+        && voiceSessionResumeConversationRef.current === activeConversationRef.current
         ? voiceSessionResumeHandleRef.current ?? undefined
         : undefined;
       const initialConnectionId = ++connectionSequence;
@@ -3170,6 +3179,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setQueuedMessageCount(0);
     voiceSessionResumeHandleRef.current = null;
     voiceSessionResumeConversationRef.current = null;
+    voiceSessionResumeUpdatedAtRef.current = 0;
+    voiceSessionResumeUpdatedAtRef.current = 0;
     stopAudioRecording(true);
     activeConversationRef.current = null;
     setConversationId(null);

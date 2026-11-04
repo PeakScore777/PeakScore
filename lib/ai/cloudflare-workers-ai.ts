@@ -161,7 +161,7 @@ export async function synthesizeWithCloudflareSpeech(text: string): Promise<Buff
       container: "none",
       bit_rate: 128000,
     },
-    6_000,
+    10_000,
   );
 
   const encoded = typeof result.audio === "string" ? result.audio : "";

@@ -151,7 +151,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
 });
  
 test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
-  for (const greeting of ["hola", "ola", "oe", "oee", "oye", "ey", "epa", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito"]) {
+  for (const greeting of ["hola", "ola", "oe", "oee", "oye", "ey", "epa", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito", "oee hermano, ¿qué más?"]) {
     assert.equal(filter.isOrbyGreetingRequest(greeting), true, greeting);
   }
   assert.equal(filter.isOrbyGreetingRequest("Hola, explícame la fotosíntesis"), false);

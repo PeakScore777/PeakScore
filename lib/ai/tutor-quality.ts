@@ -1,6 +1,7 @@
 import "server-only";
 
 import { generateAI, type AIProvider } from "@/lib/ai/router";
+import { generateWithCloudflareAnalysis } from "@/lib/ai/cloudflare-workers-ai";
 
 type TutorPayload = {
   reply: string;
@@ -334,16 +335,10 @@ export async function verifyOrbyKnowledgeAnswer(args: {
     };
   }
 
-  const sourceProvider = args.sourceProvider ?? "gemini";
-  const reviewer = selectIndependentReviewer(sourceProvider);
-  if (!reviewer) {
-    const resolved = resolveKnowledgeEvidenceMarkers(args.candidate, args.evidence);
-    return {
-      reply: resolved.reply + "\n\nNota de verificación: esta respuesta conserva sus propuestas pedagógicas, pero no recibió una revisión independiente de sus afirmaciones documentales.",
-      status: "unverified",
-      note: "La respuesta quedó como borrador porque no hay un proveedor independiente disponible para contrastar las fuentes.",
-    };
-  }
+  // Orby knowledge reviews use the same Cloudflare free-tier model as
+  // document profiling. Do not route this administrative feature through the
+  // shared Groq/LLM7 fallback chain.
+  const reviewer = "cloudflare";
 
   const evidenceContext = args.evidence.slice(0, 64).map((item) => [
     "[" + item.id + "] " + item.title + " | " + item.subject + " | " + item.topic + " | página " + item.page,
@@ -370,8 +365,8 @@ export async function verifyOrbyKnowledgeAnswer(args: {
 
   let first: ReviewPayload | null = null;
   try {
-    const result = await generateAI({ provider: reviewer, task: "analysis", prompt, useFallback: false });
-    first = parseKnowledgeReview(extractText(result));
+    const result = await generateWithCloudflareAnalysis(prompt);
+    first = parseKnowledgeReview(result.text);
   } catch (error) {
     console.error("[Orby Knowledge Quality] Review unavailable.", {
       reviewer,
@@ -393,8 +388,8 @@ export async function verifyOrbyKnowledgeAnswer(args: {
       "Fuentes:\\n" + evidenceContext,
     ].join("\n\n");
     try {
-      const result = await generateAI({ provider: reviewer, task: "analysis", prompt: secondPrompt, useFallback: false });
-      const second = parseKnowledgeReview(extractText(result));
+      const result = await generateWithCloudflareAnalysis(secondPrompt);
+      const second = parseKnowledgeReview(result.text);
       if (second?.verdict === "pass") {
         const resolved = resolveKnowledgeEvidenceMarkers(first.corrected_reply, args.evidence);
         if (!resolved.invalid.length && (!missingRequiredCitations || resolved.used.length > 0)) {

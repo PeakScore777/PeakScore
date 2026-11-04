@@ -396,7 +396,8 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /needsSpeechFallback[\s\S]*?void speakText\(rawReply/);
   assert.match(lessonTutorSource, /Gemini Live is the primary audio source/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
-  assert.ok(orbyVoiceConfigSource.includes('const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina"'));
+  assert.ok(orbyVoiceConfigSource.includes('const configuredVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim()'));
+  assert.match(orbyVoiceConfigSource, /configuredVoice.*toLowerCase\(\) !== "sulafat"/);
   assert.ok(realtimeSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));
   assert.match(realtimeSessionSource, /voiceName: ORBY_LIVE_VOICE_NAME/);
   assert.match(realtimeSessionSource, /Server-Timing/);

@@ -60,6 +60,10 @@ test("Cloudflare es el único motor de texto y Gemini Live es la única voz de O
   assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));
   assert.doesNotMatch(cloudflareTutorRoute, /generateAI\(|verifyTutorAnswer\(|getProviderForTask\(/);
   assert.ok(cloudflareTutorRoute.includes("FREE_QUOTA_EXCEEDED"));
+  assert.ok(lessonTutorRouteSource.includes("No eres un asistente general"));
+  assert.ok(!lessonTutorRouteSource.includes("También puedes conversar con naturalidad sobre preguntas cotidianas"));
+  assert.ok(!lessonTutorRouteSource.includes("No rechaces conversaciones casuales"));
+  assert.ok(lessonTutorRouteSource.includes("Mantén siempre el alcance exclusivo de Saber 11"));
   assert.ok(lessonTutorSource.includes("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito."));
   assert.ok(!lessonTutorSource.includes("/api/orby/voice-speech"));
   assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));

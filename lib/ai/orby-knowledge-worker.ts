@@ -665,10 +665,10 @@ export async function processNextOrbyKnowledgeJob(options: {
     // attempts or the seven-hour automatic budget. Park the shared profile
     // queue and resume after a cooldown; exhausted free quota waits for reset.
     const transientProfileCapacity = job.stage === "profile"
-      && /(?:\\b503\\b|UNAVAILABLE|high demand|overloaded|\\b429\\b|RESOURCE_EXHAUSTED|quota.?exceeded)/i.test(reason);
+      && /(?:\b503\b|UNAVAILABLE|high demand|overloaded|\b429\b|RESOURCE_EXHAUSTED|quota.?exceeded)/i.test(reason);
     if (transientProfileCapacity) {
       const now = new Date();
-      const quotaExhausted = /(?:\\b429\\b|RESOURCE_EXHAUSTED|quota.?exceeded)/i.test(reason);
+      const quotaExhausted = /(?:\b429\b|RESOURCE_EXHAUSTED|quota.?exceeded)/i.test(reason);
       const resumeAt = quotaExhausted
         ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 5, 0))
         : new Date(now.getTime() + 15 * 60 * 1000);

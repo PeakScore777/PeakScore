@@ -77,6 +77,8 @@ test("Cloudflare genera texto y Gemini Live/TTS comparten la voz femenina sin so
   assert.ok(voiceSpeechRouteSource.includes("ORBY_VOICE_NAME"));
   assert.ok(orbyNeuralSpeechSource.includes('const GEMINI_TTS_MODEL = "gemini-3.8-flash-lite-tts"'));
   assert.ok(orbyNeuralSpeechSource.includes("GEMINI_TTS_LIMITED"));
+  assert.ok(orbyNeuralSpeechSource.includes("speech_config: [{ voice: config.voiceName }]"));
+  assert.ok(!orbyNeuralSpeechSource.includes("voiceName: config.voiceName"));
   assert.ok(lessonTutorSource.includes("No se pudo iniciar el audio de Orby"));
   assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));
   assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));

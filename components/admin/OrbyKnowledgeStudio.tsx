@@ -508,7 +508,8 @@ export default function OrbyKnowledgeStudio() {
     event.preventDefault();
     const message=draft.trim();if(!message||loading)return;
     setDraft("");setError("");
-    setMessages(current=>[...current,{role:"user",content:message}]);
+    const pendingMessageId = "pending-" + Date.now();
+    setMessages(current=>[...current,{id:pendingMessageId,role:"user",content:message}]);
     setLoading(true);
     try{
       const response=await fetch("/api/admin/orby/chat",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({message})});
@@ -516,13 +517,17 @@ export default function OrbyKnowledgeStudio() {
       if(!response.ok)throw new Error(payload.error||"No se pudo consultar a Orby.");
       const persisted = Array.isArray(payload.messages) ? payload.messages as ChatMessage[] : null;
       setMessages(current => [
-        ...current.slice(0, -1),
+        ...current.filter(item => item.id !== pendingMessageId),
         ...(persisted ?? [
           {role:"user" as const,content:message},
           {role:"assistant" as const,content:payload.reply,sources:Array.isArray(payload.sources)?payload.sources:[],verification:payload.verification},
         ]),
       ]);
-    }catch(e){setError(e instanceof Error?e.message:"No se pudo enviar el mensaje.");setDraft(message);}
+    }catch(e){
+      setMessages(current => current.filter(item => item.id !== pendingMessageId));
+      setError(e instanceof Error?e.message:"No se pudo enviar el mensaje.");
+      setDraft(message);
+    }
     finally{setLoading(false);}
   }
 

@@ -744,179 +744,102 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
 
   async function speakText(text: string, index: number): Promise<void> {
-    const clean = text.trim().replace(/\\s+/g, " ").slice(0, 1800);
+    const clean = text.trim().replace(/\\s+/g, " ").slice(0, 5_000);
     if (!clean) return;
 
-    // Gemini Live quota recovery is deliberately independent of Gemini TTS:
-    // Cloudflare supplies speech-to-text/text, and the browser reads it locally.
-    if (voiceFallbackModeRef.current) {
-      await speakWithBrowserFallback(clean, index);
-      return;
-    }
+    // Gemini Live is the only cloud audio source. If a turn has no usable Live
+    // audio, read its already-validated transcript locally without a second
+    // Gemini request, extra quota, or a second voice competing with Live.
+    await speakWithBrowserFallback(clean, index);
+  }
 
-    // Manual read-aloud outside Voice VC uses the browser's installed Spanish
-    // voice. In Voice VC, all fallback audio uses Gemini TTS with Orby's
-    // configured female voice and the same AudioContext as Gemini Live.
-    if (!voiceModeRef.current) {
-      await speakWithBrowserFallback(clean, index);
-      return;
-    }
+  function splitSpeechIntoChunks(value: string, maxLength = 220): string[] {
+    const sentences = value.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [value];
+    const chunks: string[] = [];
+    let pending = "";
 
-    const audioContext = voiceAudioContextRef.current;
-    const isLocalLiveTurn = waitingForVoiceReplyRef.current;
-    const messageId = voiceAssistantMessageIdRef.current;
-    if (!audioContext || audioContext.state === "closed") {
-      setVoiceError("No se pudo iniciar el audio de Orby. La respuesta quedó disponible por escrito.");
-      if (isLocalLiveTurn) finishLocalVoiceReply(messageId);
-      else finishRealtimeVoicePlayback();
-      return;
-    }
-
-    const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
-    const abortController = new AbortController();
-    let source: AudioBufferSourceNode | null = null;
-    let finished = false;
-    let resolvePlayback: (() => void) | null = null;
-    let safetyTimer: number | null = null;
-    const playbackPromise = new Promise<void>((resolve) => { resolvePlayback = resolve; });
-
-    const finish = (cancelled: boolean) => {
-      if (finished) return;
-      finished = true;
-      if (safetyTimer !== null) window.clearTimeout(safetyTimer);
-      if (voiceSpeechCancelRef.current === cancelPlayback) voiceSpeechCancelRef.current = null;
-      if (source) {
-        voiceAudioSourcesRef.current.delete(source);
-        source.onended = null;
-        try { source.disconnect(); } catch { /* Already disconnected. */ }
-        source = null;
+    const flushLongSentence = (sentence: string) => {
+      let remaining = sentence.trim();
+      while (remaining.length > maxLength) {
+        let boundary = remaining.lastIndexOf(" ", maxLength);
+        if (boundary < Math.floor(maxLength * 0.55)) boundary = maxLength;
+        chunks.push(remaining.slice(0, boundary).trim());
+        remaining = remaining.slice(boundary).trim();
       }
-      if (!cancelled) {
-        voiceBrowserSpeechActiveRef.current = false;
-        setSpeakingIndex(null);
-        voiceLastAssistantPlaybackUntilRef.current = Date.now() + 1_800;
-        if (isLocalLiveTurn) finishLocalVoiceReply(messageId);
-        else finishRealtimeVoicePlayback();
-      }
-      resolvePlayback?.();
+      if (remaining) chunks.push(remaining);
     };
-    const cancelPlayback = () => {
-      abortController.abort();
-      if (source) {
-        try { source.stop(); } catch { /* Playback may already have ended. */ }
-      }
-      finish(true);
-    };
-    voiceSpeechCancelRef.current = cancelPlayback;
 
-    try {
-      await ensureVoiceAudioContextRunning(audioContext);
-      const response = await fetch("/api/orby/voice-speech", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        signal: AbortSignal.any([abortController.signal, AbortSignal.timeout(15_000)]),
-        body: JSON.stringify({ text: clean }),
-      });
-      if (!response.ok) {
-        const payload = await response.json().catch(() => ({})) as { error?: unknown };
-        const message = typeof payload.error === "string" ? payload.error : "La voz neural no está disponible.";
-        throw new Error(message);
+    for (const sentence of sentences) {
+      const next = [pending, sentence.trim()].filter(Boolean).join(" ");
+      if (next.length <= maxLength) {
+        pending = next;
+      } else {
+        if (pending) chunks.push(pending);
+        pending = "";
+        flushLongSentence(sentence);
       }
-      const audioBytes = await response.arrayBuffer();
-      if (audioBytes.byteLength < 256 || audioBytes.byteLength > 4 * 1024 * 1024) {
-        throw new Error("El audio neural tiene un tamaño inválido.");
-      }
-      const audioBuffer = await audioContext.decodeAudioData(audioBytes.slice(0));
-      if (abortController.signal.aborted || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
-        finish(true);
-        return;
-      }
+    }
+    if (pending) chunks.push(pending);
+    return chunks.filter(Boolean);
+  }
 
-      source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
-      if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
-      voiceAudioSourcesRef.current.add(source);
-      voiceBrowserSpeechActiveRef.current = true;
-      voiceLastAssistantOutputRef.current = clean;
-      voiceLastAssistantPlaybackUntilRef.current = Date.now() + audioBuffer.duration * 1000 + 1_800;
-      setSpeakingIndex(index);
-      setVoiceStatus("Orby está hablando…");
-      source.onended = () => {
-        if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
-        finish(false);
-        setSpeakingIndex(null);
+  async function waitForSpanishBrowserVoice(): Promise<SpeechSynthesisVoice[]> {
+    const synthesis = window.speechSynthesis;
+    let voices = synthesis.getVoices();
+    if (voices.some((voice) => voice.lang.toLowerCase().startsWith("es"))) return voices;
+
+    await new Promise<void>((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(timeout);
+        synthesis.removeEventListener("voiceschanged", finish);
+        resolve();
       };
-      safetyTimer = window.setTimeout(
-        () => finish(false),
-        Math.min(60_000, Math.max(8_000, audioBuffer.duration * 1000 + 5_000)),
-      );
-      source.start(audioContext.currentTime + 0.015);
-      await playbackPromise;
-    } catch (error) {
-      const cancelled = abortController.signal.aborted
-        || (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError"));
-      if (cancelled) {
-        finish(true);
-        return;
-      }
-      finish(true);
-      const providerMessage = error instanceof Error ? error.message : "";
-      if (isLocalLiveTurn && voiceModeRef.current) {
-        const quotaReached = /GEMINI_TTS_FREE_QUOTA_EXCEEDED|l[ií]mite gratuito de voz de Gemini|quota exceeded|resource_exhausted/i.test(providerMessage);
-        setVoiceError(quotaReached
-          ? "Gemini agotó la cuota gratuita de voz. Esta respuesta se leerá con la voz española disponible en tu equipo; Live sigue activo."
-          : "La voz neural no respondió. Esta respuesta se leerá con la voz española disponible en tu equipo.");
-        // The Live turn already has validated text. Do not call another model:
-        // read exactly that response locally, then reopen listening.
-        await speakWithBrowserFallback(clean, index);
-        return;
-      }
-      setVoiceError(providerMessage || "La voz neural no estuvo disponible. La respuesta quedó visible por escrito.");
-      if (isLocalLiveTurn) finishLocalVoiceReply(messageId);
-      else finishRealtimeVoicePlayback();
-      console.warn("[Orby Voice] Neural Spanish TTS unavailable; keeping the validated text visible.", {
-        name: error instanceof Error ? error.name : "UnknownError",
-      });
-    }
+      const timeout = window.setTimeout(finish, 900);
+      synthesis.addEventListener("voiceschanged", finish, { once: true });
+    });
+    voices = synthesis.getVoices();
+    return voices;
   }
 
   function speakWithBrowserFallback(text: string, index: number): Promise<void> {
     return new Promise((resolve) => {
       const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
       const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
-      const settle = () => resolve();
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-        setVoiceError("Tu navegador no tiene lectura de voz disponible. La respuesta también está visible por escrito.");
+      if (typeof window === "undefined" || !( "speechSynthesis" in window)) {
+        setVoiceError("Este navegador no tiene lectura de voz disponible. La respuesta sigue visible por escrito.");
         if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
-        settle();
+        resolve();
         return;
       }
 
-      stopSpeaking();
+      const synthesis = window.speechSynthesis;
       const clean = text
-        .replace(/\*\*/g, "")
-        .replace(/\`/g, "")
-        .replace(/^[-•]\s*/gm, "")
-        .replace(/^\d+[.)]\s*/gm, "")
-        .slice(0, 5000);
-      const utterance = new SpeechSynthesisUtterance(clean);
-      utterance.lang = "es-CO";
-      utterance.rate = 1.18;
-      utterance.pitch = 1.04;
-      utterance.volume = 1;
-      const spanishVoices = window.speechSynthesis.getVoices().filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-      const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /natural|online|google|sabina|laura/i.test(voice.name))
-        ?? spanishVoices.find((voice) => /es[-_]mx/i.test(voice.lang) && /natural|online|google|female|mujer/i.test(voice.name))
-        ?? spanishVoices.find((voice) => /sabina|helena|paulina|sofia|laura|lucia|monica|catalina|female|mujer/i.test(voice.name))
-        ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
-        ?? spanishVoices.find((voice) => /natural|online|google/i.test(voice.name))
-        ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]us/i.test(voice.lang))
-        ?? spanishVoices[0];
-      if (preferredVoice) utterance.voice = preferredVoice;
+        .replace(/\\*\\*/g, "")
+        .replace(/`/g, "")
+        .replace(/^[-•]\\s*/gm, "")
+        .replace(/^\\d+[.)]\\s*/gm, "")
+        .replace(/\\s+/g, " ")
+        .trim()
+        .slice(0, 5_000);
+      const chunks = splitSpeechIntoChunks(clean);
+      if (!chunks.length) {
+        if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
+        resolve();
+        return;
+      }
+
+      // Cancel only the previous utterance. Do not call stopSpeaking() here:
+      // it owns this same cancellation ref and could cancel the new utterance.
+      const previousCancel = voiceSpeechCancelRef.current;
+      voiceSpeechCancelRef.current = null;
+      previousCancel?.();
+      synthesis.cancel();
 
       let finished = false;
+      let chunkIndex = 0;
       let safetyTimer: number | null = null;
       let cancelSpeech: (() => void) | null = null;
       const finish = (cancelled = false) => {
@@ -932,39 +855,79 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             finishLocalVoiceReply(localVoiceMessageId);
           }
         }
-        settle();
+        resolve();
       };
-      cancelSpeech = () => finish(true);
+      cancelSpeech = () => {
+        synthesis.cancel();
+        finish(true);
+      };
       voiceSpeechCancelRef.current = cancelSpeech;
-      safetyTimer = window.setTimeout(() => {
-        // Never release the microphone while an old utterance is still
-        // playing. If the browser gets stuck, stop it before opening the turn.
-        window.speechSynthesis.cancel();
-        finish(false);
-      }, Math.min(180_000, Math.max(12_000, clean.length * 100)));
-      utterance.onend = () => finish(false);
-      utterance.onerror = (event) => {
-        const speechError = (event as SpeechSynthesisErrorEvent).error;
-        // Chromium emits "interrupted" or "canceled" when a newer turn replaces
-        // this utterance. That is a normal barge-in, not a playback failure.
-        if (finished || speechError === "interrupted" || speechError === "canceled") {
-          finish(true);
+
+      const speakNext = (voice: SpeechSynthesisVoice | undefined) => {
+        if (finished) return;
+        if (chunkIndex >= chunks.length) {
+          finish(false);
           return;
         }
-        if (isLocalVoiceTurn) {
-          voiceBrowserSpeechActiveRef.current = false;
-          setVoiceError("No se pudo reproducir el audio de esta respuesta. El texto quedó disponible.");
-        }
-        finish(false);
+
+        const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
+        utterance.lang = "es-CO";
+        utterance.rate = 1.12;
+        utterance.pitch = 1.03;
+        utterance.volume = 1;
+        if (voice) utterance.voice = voice;
+
+        utterance.onend = () => {
+          if (finished) return;
+          chunkIndex += 1;
+          speakNext(voice);
+        };
+        utterance.onerror = (event) => {
+          if (finished) return;
+          const speechError = (event as SpeechSynthesisErrorEvent).error;
+          if (speechError === "interrupted" || speechError === "canceled") {
+            finish(true);
+            return;
+          }
+          setVoiceError("El navegador detuvo la lectura de voz. Puedes volver a pulsar reproducir; el texto no se pierde.");
+          finish(false);
+        };
+
+        setSpeakingIndex(index);
+        synthesis.resume();
+        synthesis.speak(utterance);
       };
 
       if (isLocalVoiceTurn) {
         voiceBrowserSpeechActiveRef.current = true;
         voiceLastAssistantOutputRef.current = clean;
-        voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 55;
+        voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 58;
+        setVoiceStatus("Orby está leyendo la respuesta…");
+        setIsListening(false);
       }
-      setSpeakingIndex(index);
-      window.speechSynthesis.speak(utterance);
+      safetyTimer = window.setTimeout(() => {
+        if (finished) return;
+        synthesis.cancel();
+        setVoiceError("La lectura tardó demasiado y se detuvo para no dejar el micrófono bloqueado.");
+        finish(false);
+      }, Math.min(180_000, Math.max(15_000, clean.length * 95)));
+
+      void waitForSpanishBrowserVoice().then((voices) => {
+        if (finished) return;
+        const spanishVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("es"));
+        const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && /sabina|laura|sofia|lucia|monica|catalina|female|mujer/i.test(voice.name))
+          ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang))
+          ?? spanishVoices.find((voice) => /es[-_]mx/i.test(voice.lang) && /female|mujer|natural|online/i.test(voice.name))
+          ?? spanishVoices.find((voice) => /sabina|helena|paulina|sofia|laura|lucia|monica|catalina|female|mujer/i.test(voice.name))
+          ?? spanishVoices.find((voice) => /es[-_]mx|es[-_]us/i.test(voice.lang))
+          ?? spanishVoices[0];
+        if (!preferredVoice) {
+          setVoiceError("No hay una voz española instalada en el navegador. Instala una voz en español para escuchar a Orby.");
+        }
+        speakNext(preferredVoice);
+      }).catch(() => {
+        if (!finished) speakNext(undefined);
+      });
     });
   }
 

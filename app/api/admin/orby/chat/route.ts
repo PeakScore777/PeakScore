@@ -383,7 +383,7 @@ export async function POST(request: Request) {
     // Resolve those IDs back to real documents/pages for the UI; the previous
     // title-string matcher never matched the IDs and silently hid all sources.
     const citedEvidenceIds = new Set(
-      [...reply.matchAll(/\\[(E\\d{3})\\]/g)].map((match) => match[1]),
+      [...reply.matchAll(/\[(E\d{3})\]/g)].map((match) => match[1]),
     );
     const sourceList = [...new Map(evidence
       .filter((source) => citedEvidenceIds.has(source.id))

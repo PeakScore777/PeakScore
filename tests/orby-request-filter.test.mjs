@@ -408,7 +408,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /VOZ DE ORBY: mantén una voz femenina cálida y natural/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL Y DIDÁCTICA/);
   assert.match(realtimeSessionSource, /no aceleres al final de las respuestas/);
-  assert.match(orbyVoiceConfigSource, /requestedVoice.*Despina/);
+  assert.match(orbyVoiceConfigSource, /requestedVoice[\\s\\S]*Despina/);
   assert.match(cloudflareVoiceSource, /speaker: "celeste"/);
 
   assert.match(lessonTutorSource, /void persistRealtimeTurnIfReady\(\);\s*drainPendingMessageQueue\(\)/);

@@ -282,6 +282,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const stopRealtimeVoiceRef = useRef<(updateState?: boolean) => void>(() => {});
   const lastInitialPromptRef = useRef<string | null>(null);
   const activeConversationRef = useRef<string | null>(null);
+  const historyHydratingRef = useRef(workspace);
+  const historyHydrationGenerationRef = useRef(0);
   const sendingRef = useRef(false);
   const lastSubmittedMessageRef = useRef<{ key: string; at: number } | null>(null);
   const pendingMessagesRef = useRef<Array<{ text: string; attachmentMeta?: { kind: "image" | "audio"; label: string } }>>([]);
@@ -322,25 +324,46 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }, [open]);
 
   useEffect(() => {
-    if (!open || !workspace) return;
+    if (!open || !workspace) {
+      historyHydratingRef.current = false;
+      setHistoryLoading(false);
+      return;
+    }
     let cancelled = false;
+    const generation = ++historyHydrationGenerationRef.current;
+    historyHydratingRef.current = true;
+    setHistoryLoading(true);
+    setConversationError("");
+    const isCurrent = () => !cancelled && generation === historyHydrationGenerationRef.current;
     const loadHistory = async () => {
       try {
-        const response = await fetch("/api/orby/conversations", { credentials: "same-origin", cache: "no-store", signal: AbortSignal.timeout(12_000) });
-        if (!cancelled) setConversationError("");
+        const response = await fetch("/api/orby/conversations", {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: AbortSignal.timeout(12_000),
+        });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.error || "No se pudo cargar el historial.");
         const items = Array.isArray(payload.conversations) ? payload.conversations as Conversation[] : [];
-        if (cancelled) return;
+        if (!isCurrent()) return;
+
         setConversations(items);
         const first = items[0];
         if (first) {
-          activeConversationRef.current = first.id;
-          setConversationId(first.id);
-          const messagesResponse = await fetch(`/api/orby/conversations/${first.id}/messages`, { credentials: "same-origin", cache: "no-store" });
+          const messagesResponse = await fetch(`/api/orby/conversations/${first.id}/messages`, {
+            credentials: "same-origin",
+            cache: "no-store",
+            signal: AbortSignal.timeout(12_000),
+          });
           const messagesPayload = await messagesResponse.json().catch(() => ({}));
           if (!messagesResponse.ok) throw new Error(messagesPayload.error || "No se pudieron cargar los mensajes.");
-          if (cancelled) return;
+          if (!isCurrent()) return;
+
+          // Do not overwrite a conversation created or selected while this
+          // initial hydration request was in flight.
+          if (activeConversationRef.current && activeConversationRef.current !== first.id) return;
+          activeConversationRef.current = first.id;
+          setConversationId(first.id);
           setMessages(Array.isArray(messagesPayload.messages) ? messagesPayload.messages.map((item: Record<string, unknown>) => ({
             id: String(item.id),
             role: item.role === "assistant" ? "assistant" : "user",
@@ -351,18 +374,30 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
           })) : []);
         } else {
-          activeConversationRef.current = null;
+          // A stale empty result must never clear a chat that the student has
+          // already started during hydration.
+          if (activeConversationRef.current) return;
           setConversationId(null);
           setMessages([]);
         }
+        setConversationError("");
       } catch (caught) {
-        if (!cancelled) setConversationError(caught instanceof Error ? caught.message : "No se pudo cargar el historial.");
+        if (isCurrent()) setConversationError(caught instanceof Error ? caught.message : "No se pudo cargar el historial.");
       } finally {
-        if (!cancelled) setHistoryLoading(false);
+        if (isCurrent()) {
+          historyHydratingRef.current = false;
+          setHistoryLoading(false);
+          drainPendingMessageQueue();
+        }
       }
     };
     void loadHistory();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (generation === historyHydrationGenerationRef.current) {
+        historyHydratingRef.current = false;
+      }
+    };
   }, [open, workspace]);
 
   useEffect(() => {
@@ -2506,6 +2541,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     lastSubmittedMessageRef.current = submissionKey
       ? { key: submissionKey, at: submittedAt }
       : null;
+
+    // The first history request and the first student message can otherwise
+    // race: a stale empty history response clears the newly-created chat.
+    // Hold text turns until hydration settles, then release them in order.
+    if (workspace && (historyHydratingRef.current || historyLoading) && !isVoiceInteraction) {
+      if (selectedFile) {
+        setError("Espera a que termine de cargar el historial antes de adjuntar una imagen.");
+        return;
+      }
+      if (pendingMessagesRef.current.length >= 4) {
+        setError("La cola de Orby está llena. Espera a que termine de cargar el historial.");
+        return;
+      }
+      pendingMessagesRef.current.push({ text: message, attachmentMeta });
+      setQueuedMessageCount(pendingMessagesRef.current.length);
+      setInput("");
+      setError("");
+      return;
+    }
+
     // Voice startup must never lock the text composer. Cancel an unfinished
     // microphone/WebSocket attempt and continue with the fast text pipeline.
     if (voiceModeRef.current && !voiceChannelRef.current && !voiceFallbackModeRef.current) {

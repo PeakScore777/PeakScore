@@ -53,13 +53,13 @@ function normalizeVoiceComparison(value: string): string {
 }
 
 function ambiguousShortProgrammingTranscript(value: string): boolean {
-  const normalized = normalizeVoiceComparison(value).replace(/\\s+/g, " ").trim();
+  const normalized = normalizeVoiceComparison(value).replace(/\s+/g, " ").trim();
   // Whisper can turn a short Spanish word into a programming keyword. A lone
   // token has too little context to justify rejecting a student's ICFES turn.
   const words = normalized.split(" ").filter(Boolean);
   return words.length <= 4
-    && /\\b(?:programar|programacion|programando|programa|codigo|codigos|python|javascript|typescript|java|html|css|sql)\\b/.test(normalized)
-    && !/\\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|tutorial|desde cero|clase de)\\b/.test(normalized);
+    && /\b(?:programar|programacion|programando|programa|codigo|codigos|python|javascript|typescript|java|html|css|sql)\b/.test(normalized)
+    && !/\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|tutorial|desde cero|clase de)\b/.test(normalized);
 }
 
 function isLikelyVoicePlaybackEcho(transcript: string, assistantSpeech: string): boolean {

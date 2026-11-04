@@ -744,7 +744,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
 
   async function speakText(text: string, index: number): Promise<void> {
-    const clean = text.trim().replace(/\\s+/g, " ").slice(0, 5_000);
+    const clean = text.trim().replace(/\s+/g, " ").slice(0, 5_000);
     if (!clean) return;
 
     // Gemini Live is the only cloud audio source. If a turn has no usable Live
@@ -817,10 +817,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const synthesis = window.speechSynthesis;
       const clean = text
-        .replace(/\\*\\*/g, "")
+        .replace(/\*\*/g, "")
         .replace(/`/g, "")
-        .replace(/^[-•]\\s*/gm, "")
-        .replace(/^\\d+[.)]\\s*/gm, "")
+        .replace(/^[-•]\s*/gm, "")
+        .replace(/^\d+[.)]\s*/gm, "")
         .replace(/\\s+/g, " ")
         .trim()
         .slice(0, 5_000);

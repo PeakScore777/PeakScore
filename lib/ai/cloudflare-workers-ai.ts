@@ -156,9 +156,10 @@ export async function synthesizeWithCloudflareSpeech(text: string): Promise<Buff
     "@cf/deepgram/aura-2-es",
     {
       text: normalized,
-      speaker: "estrella",
+      speaker: "celeste",
       encoding: "mp3",
       container: "none",
+      bit_rate: 128000,
     },
     18_000,
   );

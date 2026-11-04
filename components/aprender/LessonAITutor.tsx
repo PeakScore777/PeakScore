@@ -1842,32 +1842,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Orby está hablando…");
     }
 
-    const modelTurn = serverContent.modelTurn && typeof serverContent.modelTurn === "object"
-      ? serverContent.modelTurn as { parts?: Array<Record<string, unknown>> }
-      : null;
-    for (const part of modelTurn?.parts ?? []) {
-      const inlineData = part.inlineData && typeof part.inlineData === "object"
-        ? part.inlineData as { data?: unknown; mimeType?: unknown }
-        : null;
-      if (typeof inlineData?.data === "string" && !voiceLocalReplyInFlightRef.current && !voiceOutputAudioBlockedRef.current) {
-        armVoiceResponseWatchdog();
-        const chunk = {
-          data: inlineData.data,
-          mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
-        };
-        // Keep a short buffer until a complete safe sentence is available.
-        // This starts playback before the full model turn finishes while
-        // retaining the ability to cancel any unsafe continuation.
-        if (voicePendingAudioChunksRef.current.length < 512) {
-          voicePendingAudioChunksRef.current.push(chunk);
-          if (voiceOutputTranscriptValidatedRef.current) flushPendingGeminiAudio();
-        } else {
-          voiceOutputAudioBlockedRef.current = true;
-          voicePendingAudioChunksRef.current = [];
-          console.warn("[Orby Voice] Audio buffer limit reached; switching this turn to validated text speech.");
-        }
-      }
-    }
+    // Gemini Live is used for low-latency listening, turn handling and text.
+    // Its synthetic audio is deliberately not played: Aura-2 is the single
+    // speaker for every assistant voice turn, preventing two voices per answer.
+    voicePendingAudioChunksRef.current = [];
 
     if (serverContent.interrupted === true && !voiceLocalReplyInFlightRef.current) {
       // Barge-in cancels this response. Clear its watchdog so the next spoken

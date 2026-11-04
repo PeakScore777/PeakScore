@@ -244,7 +244,7 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
   assert.match(lessonTutorSource, /if \(!pendingUserText && voiceUnsupportedInputDetectedRef\.current && voiceModeRef\.current\)/);
   assert.match(lessonTutorSource, /Audio no reconocido\./);
   assert.match(lessonTutorSource, /No pude reconocer la frase\. Puedes repetirla en español/);
-  assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
+  assert.match(lessonTutorSource, /needsNeuralSpeechFallback/);
   assert.match(lessonTutorSource, /normalizedForcedExpected\.startsWith\(partialNormalized\)/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current/);
   assert.match(lessonTutorSource, /needsBrowserSpeechFallback/);
@@ -322,11 +322,12 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /waitingForVoiceReplyRef\.current = true/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
   assert.match(lessonTutorSource, /const turn = \{ conversationId: id, userContent, assistantContent \}/);
-  const fallbackDecision = lessonTutorSource.indexOf("const needsBrowserSpeechFallback =");
+  const fallbackDecision = lessonTutorSource.indexOf("const needsNeuralSpeechFallback =");
   const flushBeforeFallback = lessonTutorSource.lastIndexOf("flushPendingGeminiAudio();", fallbackDecision);
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "el cierre de reproducción se evalúa después de vaciar los fragmentos de audio Live");
   assert.match(lessonTutorSource, /La respuesta quedó disponible por escrito; Gemini Live no entregó audio en este turno/);
+  assert.match(lessonTutorSource, /same AudioContext as Gemini Live/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const requestedVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim() || "Despina"'));
   assert.ok(realtimeSessionSource.includes("const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME"));

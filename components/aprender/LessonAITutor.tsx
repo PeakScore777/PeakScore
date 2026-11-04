@@ -1147,6 +1147,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceForcedReplyRef.current = null;
     voiceUnsupportedInputDetectedRef.current = false;
     voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanUserText);
+    voiceLastCommittedInputAtRef.current = Date.now();
 
     const previousAssistantIndex = previousAssistantId
       ? messages.findIndex((message) => message.id === previousAssistantId)
@@ -1467,7 +1468,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       clearVoiceResponseWatchdog();
       const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
         || voiceAudioSourcesRef.current.size > 0
-        || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current;
+        || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current
+        || Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
       if (assistantAudioInFlight) {
         // Do not mistake the microphone hearing Gemini's own Live audio for
         // a new student turn. Wait for the interim transcript to detect a
@@ -1476,7 +1478,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       } else {
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
         voiceLocalReplyInFlightRef.current = false;
-        voiceLastCommittedInputRef.current = "";
+        // Keep the last committed transcript across activity boundaries:
+        // Gemini may emit the same final ASR text again after an echo tail.
         voiceUserTextRef.current = "";
         voiceUnsupportedInputDetectedRef.current = false;
         voiceUserMessageVisibleRef.current = false;
@@ -1504,7 +1507,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } else if (voiceActivity?.type === "ACTIVITY_END") {
       // While local TTS is active, this is usually the mic hearing Orby's
       // speaker output. A real barge-in is handled by a non-echo interim.
-      if (!voiceBrowserSpeechActiveRef.current && voiceAudioSourcesRef.current.size === 0) {
+      if (!voiceBrowserSpeechActiveRef.current
+        && voiceAudioSourcesRef.current.size === 0
+        && Date.now() > voiceLastAssistantPlaybackUntilRef.current) {
         waitingForVoiceReplyRef.current = true;
         setIsListening(false);
         setVoiceStatus("Procesando lo que dijiste…");
@@ -1563,6 +1568,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? "No se reconoció la frase en español."
       : rawTranscript;
     const normalizedFinal = transcript ? normalizeVoiceComparison(transcript) : "";
+    const isDuplicateFinalTranscript = Boolean(
+      normalizedFinal
+      && normalizedFinal === voiceLastCommittedInputRef.current
+      && Date.now() - voiceLastCommittedInputAtRef.current < 5_000
+    );
     const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
     const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
       || voiceAudioSourcesRef.current.size > 0
@@ -1579,9 +1589,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     // Never return from the whole event handler for a duplicate transcript:
     // the same server event can also carry output audio or turnComplete.
-    if (transcript && normalizedFinal !== voiceLastCommittedInputRef.current && !isRecentAcousticEcho) {
+    if (transcript && !isDuplicateFinalTranscript && !isRecentAcousticEcho) {
       waitingForVoiceReplyRef.current = true;
       voiceLastCommittedInputRef.current = normalizedFinal;
+      voiceLastCommittedInputAtRef.current = Date.now();
       if (voiceTurnPersistedRef.current) {
         voiceUserTextRef.current = "";
         voiceAssistantTextRef.current = "";
@@ -2422,6 +2433,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Typed text sent through the Live session can also produce an input
       // transcription event. Mark it as committed so it is not added twice.
       voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
+      voiceLastCommittedInputAtRef.current = Date.now();
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
       voiceUserMessageVisibleRef.current = true;

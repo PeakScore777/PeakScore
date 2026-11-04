@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -244,6 +244,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ reply: ORBY_GREETING_REPLY, checkQuestion: "", verification: "not_required", sources: [] }, {
         headers: { "Cache-Control": "private, no-store" },
       });
+    }
+
+    // A single ICFES subject name is a study selection, not an off-topic
+    // request. Answer locally so words like "lectura" can never be refused by
+    // a model or consume a generation just to start the subject.
+    if (!tutorImage) {
+      const subjectSelectionReply = getOrbySubjectSelectionReply(userMessage);
+      if (subjectSelectionReply) {
+        if (conversationId && ownedConversation) {
+          const { error: subjectSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
+            p_user_id: user.id,
+            p_conversation_id: conversationId,
+            p_user_content: userMessage,
+            p_assistant_content: subjectSelectionReply,
+            p_check_question: null,
+            p_attachment_kind: null,
+            p_attachment_label: null,
+          });
+          if (subjectSaveError) console.error("[Orby Subject Selection] Reply persistence failed.", { code: subjectSaveError.code });
+        }
+        return NextResponse.json({ reply: subjectSelectionReply, checkQuestion: "", verification: "not_required", sources: [] }, {
+          headers: { "Cache-Control": "private, no-store" },
+        });
+      }
     }
 
     // A short "no sé" after Orby asks what to study is a tutoring moment,

@@ -816,7 +816,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const synthesis = "speechSynthesis" in window ? window.speechSynthesis : null;
       const clean = text
-        .replace(/\\*\\*/g, "")
+        .replace(/\*\*/g, "")
         .replace(/\`/g, "")
         .replace(/^[-•]\s*/gm, "")
         .replace(/^\d+[.)]\s*/gm, "")

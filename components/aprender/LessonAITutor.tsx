@@ -821,7 +821,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .replace(/`/g, "")
         .replace(/^[-•]\s*/gm, "")
         .replace(/^\d+[.)]\s*/gm, "")
-        .replace(/\\s+/g, " ")
+        .replace(/\s+/g, " ")
         .trim()
         .slice(0, 5_000);
       const chunks = splitSpeechIntoChunks(clean);

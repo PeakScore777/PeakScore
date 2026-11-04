@@ -177,6 +177,34 @@ export function shouldRetrieveOrbyAcademicKnowledge(input: {
   return hasAcademicLessonContext && isFollowUpOrStudyIntent;
 }
 
+export function getOrbySubjectSelectionReply(message: string): string | null {
+  const normalized = normalizeOrbyRequestText(message)
+    .replace(/[¿?¡!.,;:]+/g, " ")
+    .replace(/\\s+/g, " ")
+    .trim();
+  const compact = normalized
+    .replace(/^(?:quiero estudiar|quiero ver|vamos con|empecemos con|empezar con|estudiemos|repasemos|hablemos de|tema de|area de|materia de|la materia de|el area de)\\s+/, "")
+    .replace(/^(?:el|la)\\s+/, "")
+    .trim();
+
+  if (/^(?:lectura|lectura critica|lengua|lenguaje|comprension lectora|comprension de lectura|comprension de textos|literatura|gramatica|espanol|castellano)$/.test(compact)) {
+    return "¡Perfecto! Vamos con Lectura Crítica, una de las áreas de Saber 11. Trabajaremos comprensión e interpretación de textos, idea principal, intención comunicativa, inferencias, argumentos, tono y relación entre enunciados. ¿Empezamos con un texto tipo ICFES o con una de esas habilidades?";
+  }
+  if (/^(?:matematicas|matematica|algebra|geometria|estadistica|probabilidad)$/.test(compact)) {
+    return "¡Listo! Vamos con Matemáticas de Saber 11. Podemos practicar interpretación de datos, álgebra, geometría, estadística, probabilidad y resolución de problemas. ¿Quieres empezar con un ejercicio tipo ICFES o con un concepto?";
+  }
+  if (/^(?:sociales|sociales y ciudadanas|historia|geografia|constitucion|democracia|ciudadania)$/.test(compact)) {
+    return "¡Vamos con Sociales y Ciudadanas! Trabajaremos historia, geografía, ciudadanía, Constitución, pensamiento social e interpretación de perspectivas. ¿Empezamos con una pregunta tipo ICFES o con un tema?";
+  }
+  if (/^(?:ciencias|ciencias naturales|naturales|biologia|quimica|fisica|ambiente|ecosistemas)$/.test(compact)) {
+    return "¡Perfecto! Vamos con Ciencias Naturales de Saber 11. Podemos estudiar biología, química, física, ambiente, explicación de fenómenos e indagación científica. ¿Quieres un ejercicio tipo ICFES o repasar un concepto?";
+  }
+  if (/^(?:ingles|english)$/.test(compact)) {
+    return ORBY_ICFES_ENGLISH_INTRO_REPLY;
+  }
+  return null;
+}
+
 export function isOrbyGreetingRequest(message: string): boolean {
   const normalized = normalizeOrbyRequestText(message).replace(/[¿?¡!.,;:]+/g, "").trim();
   if (!normalized || normalized.length > 48) return false;

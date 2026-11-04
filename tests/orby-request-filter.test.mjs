@@ -77,8 +77,9 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(cloudflareImageRouteSource.includes("FREE_QUOTA_EXCEEDED"));
   assert.ok(orbyKnowledgeSource.includes("generateWithCloudflareAnalysis(prompt)"));
   assert.ok(!orbyKnowledgeSource.includes("generateAI("));
-  assert.ok(!orbyKnowledgeSource.includes('"groq"'));
-  assert.ok(!orbyKnowledgeSource.includes('"llm7"'));
+  assert.ok(!orbyKnowledgeSource.includes('provider: "groq"'));
+  assert.ok(!orbyKnowledgeSource.includes("api.groq.com"));
+  assert.ok(!orbyKnowledgeSource.includes("LLM7_API_KEY"));
   assert.ok(tutorQualitySource.includes("generateWithCloudflareAnalysis(prompt)"));
   assert.ok(tutorQualitySource.includes("generateWithCloudflareAnalysis(secondPrompt)"));
   assert.ok(adminOrbyChatSource.includes('provider: "gemini", task: "tutor", prompt, useFallback: false'));

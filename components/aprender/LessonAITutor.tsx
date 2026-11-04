@@ -952,7 +952,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const voices = await waitForSpanishBrowserVoice();
         if (finished) return;
         const spanishVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-        const feminineVoicePattern = /\\b(?:sabina|helena|paulina|sofia|laura|lucia|lucía|monica|mónica|catalina|camila|valentina|isabella|maria|maría|elena|daniela|female|woman|mujer|celeste)\\b/i;
+        const feminineVoicePattern = /\b(?:sabina|helena|paulina|sofia|laura|lucia|lucía|monica|mónica|catalina|camila|valentina|isabella|maria|maría|elena|daniela|female|woman|mujer|celeste)\b/i;
         const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang)
           && feminineVoicePattern.test(voice.name)
           && /natural|online|neural|enhanced/i.test(voice.name))

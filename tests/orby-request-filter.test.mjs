@@ -92,7 +92,7 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("Voz alternativa lista"));
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
   assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));
-  assert.ok(lessonTutorSource.includes("if (voiceFallbackModeRef.current && voiceBrowserSpeechActiveRef.current)"));
+  assert.ok(lessonTutorSource.includes("if (voiceFallbackModeRef.current && message && voiceBrowserSpeechActiveRef.current)"));
   assert.ok(lessonTutorSource.includes("needsSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
 
@@ -209,6 +209,22 @@ test("los saludos cortos se responden localmente sin invocar proveedores de IA",
   assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
   assert.match(lessonTutorRouteSource, /isOrbyGreetingRequest\(userMessage\)/);
   assert.match(lessonTutorSource, /const greetingReply = isOrbyGreetingRequest\(message\)/);
+});
+
+test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre", () => {
+  const reading = filter.getOrbySubjectSelectionReply("lectura");
+  assert.match(reading, /Lectura Crítica/);
+  assert.match(reading, /idea principal/);
+  assert.match(reading, /intención comunicativa/);
+  assert.match(filter.getOrbySubjectSelectionReply("lectura crítica"), /Lectura Crítica/);
+  assert.match(filter.getOrbySubjectSelectionReply("quiero estudiar lectura"), /Lectura Crítica/);
+  assert.match(filter.getOrbySubjectSelectionReply("lengua"), /Lectura Crítica/);
+  assert.match(filter.getOrbySubjectSelectionReply("matemáticas"), /Matemáticas/);
+  assert.match(filter.getOrbySubjectSelectionReply("sociales"), /Sociales y Ciudadanas/);
+  assert.match(filter.getOrbySubjectSelectionReply("naturales"), /Ciencias Naturales/);
+  assert.match(filter.getOrbySubjectSelectionReply("inglés"), /Inglés/);
+  assert.equal(filter.getOrbySubjectSelectionReply("enséñame a programar"), null);
+  assert.equal(filter.getOrbySubjectSelectionReply("¿qué película me recomiendas?"), null);
 });
 
 test("Orby reconoce sus llamadas y no acepta transcripciones en escrituras ajenas al español", () => {
@@ -334,6 +350,15 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
   assert.equal(filter.containsExternalPreIcfesPromotion("Te recomiendo inscribirte en un curso preICFES."), true);
   assert.equal(filter.containsExternalPreIcfesPromotion("No recomiendo ni promociono academias externas."), false);
   assert.match(filter.ORBY_EXTERNAL_PREICFES_REPLY, /no recomiendo, comparo ni promociono/i);
+});
+
+test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o red", () => {
+  assert.match(lessonTutorSource, /const authenticationFailure = .*401.*403/);
+  assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
+  assert.match(lessonTutorSource, /Gemini Live no está disponible ahora\. Continúo en modo de voz por turnos/);
+  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current\)/);
+  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message\)/);
+  assert.match(lessonTutorRouteSource, /getOrbySubjectSelectionReply\(userMessage\)/);
 });
 
 test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra generación Live", () => {

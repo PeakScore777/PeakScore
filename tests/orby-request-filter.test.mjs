@@ -268,7 +268,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
   assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.2/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.04/);
   assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.
@@ -371,7 +371,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
   assert.match(realtimeSessionSource, /evalúa la intención académica completa/);
   assert.match(realtimeSessionSource, /Si la intención es ambigua, pregunta brevemente antes de rechazar/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.2/);
+  assert.match(lessonTutorSource, /utterance\.rate = 1\.04/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /habla y responde en español colombiano natural/);
   assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false\)/);

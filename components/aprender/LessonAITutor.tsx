@@ -2191,7 +2191,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : "Despina";
 
       setVoiceStatus("Conectando con Orby…");
-      const googleAI = new GoogleGenAI({
+      let googleAI = new GoogleGenAI({
         apiKey: tokenPayload.ephemeralToken,
         httpOptions: { apiVersion: "v1beta" },
       });
@@ -2449,6 +2449,32 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             });
 
             try {
+              // Ephemeral Live tokens are single-use. Obtain a fresh token for
+              // every resumption attempt; reusing the original token silently
+              // turns a healthy resumption handle into an authentication failure.
+              const resumeTokenResponse = await fetch("/api/orby/realtime-session", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
+                body: JSON.stringify({
+                  subject,
+                  topic,
+                  context,
+                  history: messages.slice(-6).map(({ role, content }) => ({ role, content })),
+                }),
+              });
+              const resumeTokenPayload = await resumeTokenResponse.json().catch(() => ({}));
+              if (!resumeTokenResponse.ok || typeof resumeTokenPayload.ephemeralToken !== "string") {
+                const resumeError = typeof resumeTokenPayload.error === "string"
+                  ? resumeTokenPayload.error
+                  : "No se pudo renovar el acceso seguro a la voz.";
+                throw new Error(resumeError);
+              }
+              googleAI = new GoogleGenAI({
+                apiKey: resumeTokenPayload.ephemeralToken,
+                httpOptions: { apiVersion: "v1beta" },
+              });
               const resumedSession = await googleAI.live.connect({
                 model,
                 config: buildLiveConfig(resumeHandle),

@@ -2442,7 +2442,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const errorMessage = typeof typed.message === "string" ? typed.message : "";
       const geminiQuotaReached = typed.code === "GEMINI_FREE_QUOTA_EXCEEDED"
         || /GEMINI_FREE_QUOTA_EXCEEDED|l[ií]mite gratuito de Gemini Live|resource_exhausted|quota exceeded/i.test(errorMessage);
-      const authenticationFailure = /inicia sesión|sesion expirada|no autorizado|unauthorized|\\b401\\b|\\b403\\b/i.test(errorMessage);
+      const authenticationFailure = /inicia sesión|sesion expirada|no autorizado|unauthorized|\b401\b|\b403\b/i.test(errorMessage);
       // A late failure from an old, cancelled startup must never tear down a
       // newer voice session. Every recoverable Live failure (quota, privacy
       // gate, network or timeout) keeps the student in voice-turn mode.

@@ -224,6 +224,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceSessionResumeHandleRef = useRef<string | null>(null);
   const voiceSessionResumeConversationRef = useRef<string | null>(null);
   const voiceResponseWatchdogRef = useRef<number | null>(null);
+  const voiceResponseSlowNoticeRef = useRef<number | null>(null);
   const voiceAnalyserRef = useRef<AnalyserNode | null>(null);
   const voiceAnimationFrameRef = useRef<number | null>(null);
   const voiceVisualLevelRef = useRef(0);
@@ -1148,6 +1149,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       window.clearTimeout(voiceResponseWatchdogRef.current);
       voiceResponseWatchdogRef.current = null;
     }
+    if (voiceResponseSlowNoticeRef.current !== null) {
+      window.clearTimeout(voiceResponseSlowNoticeRef.current);
+      voiceResponseSlowNoticeRef.current = null;
+    }
   }
 
   function fallbackVoiceTurnToText(reason: string) {
@@ -1193,10 +1198,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function armVoiceResponseWatchdog() {
     clearVoiceResponseWatchdog();
+    voiceResponseSlowNoticeRef.current = window.setTimeout(() => {
+      voiceResponseSlowNoticeRef.current = null;
+      if (voiceModeRef.current && waitingForVoiceReplyRef.current && !voiceResponseDoneRef.current) {
+        setVoiceStatus("Orby sigue preparando tu respuesta. Mantengo la conexión…");
+      }
+    }, 18_000);
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
       voiceResponseWatchdogRef.current = null;
-      fallbackVoiceTurnToText("La voz tardó demasiado en responder. Continué esta misma pregunta con el modo alternativo para que no tengas que repetirla.");
-    }, 25_000);
+      voiceResponseSlowNoticeRef.current = null;
+      fallbackVoiceTurnToText("Orby tardó demasiado en responder. Conservé tu pregunta y continuaré con el motor gratuito de respaldo para que no tengas que repetirla.");
+    }, 50_000);
   }
 
   function stopRealtimeVoice(updateState = true) {

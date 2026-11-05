@@ -49,7 +49,7 @@ const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
-test("Cloudflare mantiene transcripción y tutor por turnos; Gemini Live es la única salida de voz gratuita", () => {
+test("Cloudflare mantiene transcripción y tutor por turnos; Aura-2 español ofrece TTS dentro de la cuota Workers Free", () => {
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
@@ -75,8 +75,12 @@ test("Cloudflare mantiene transcripción y tutor por turnos; Gemini Live es la �
   assert.ok(lessonTutorSource.includes('/api/orby/voice-speech'));
   assert.ok(lessonTutorSource.includes("new Audio(audioObjectUrl)"));
   assert.ok(lessonTutorSource.includes("finishWithoutGenericVoice"));
-  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_NOT_AVAILABLE"));
-  assert.doesNotMatch(voiceSpeechRouteSource, /synthesizeWithCloudflareSpeech|CLOUDFLARE_API_TOKEN|GEMINI_API_KEY/);
+  assert.ok(voiceSpeechRouteSource.includes("@cf/deepgram/aura-2-es"));
+  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_QUOTA_EXCEEDED"));
+  assert.ok(voiceSpeechRouteSource.includes("orby_voice_speech"));
+  assert.ok(voiceSpeechRouteSource.includes("speaker: \"celeste\""));
+  assert.ok(voiceSpeechRouteSource.includes("CLOUDFLARE_API_TOKEN"));
+  assert.doesNotMatch(voiceSpeechRouteSource, /GEMINI_API_KEY|GROQ_API_KEY|synthesizeWithCloudflareSpeech/);
   assert.ok(!voiceSpeechRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(!voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
@@ -180,9 +184,10 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(!cloudflareImageRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(!cloudflareImageRouteSource.includes("gemini-nano-banana"));
   assert.ok(cloudflareImageRouteSource.includes("FREE_QUOTA_EXCEEDED"));
-  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_NOT_AVAILABLE"));
+  assert.ok(voiceSpeechRouteSource.includes("@cf/deepgram/aura-2-es"));
+  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_QUOTA_EXCEEDED"));
   assert.ok(!voiceSpeechRouteSource.includes("GROQ_API_KEY"));
-  assert.doesNotMatch(voiceSpeechRouteSource, /cloudflare-workers-ai|synthesizeWithCloudflareSpeech/);
+  assert.doesNotMatch(voiceSpeechRouteSource, /GEMINI_API_KEY|synthesizeWithCloudflareSpeech/);
   assert.ok(orbyKnowledgeSource.includes("generateWithCloudflareAnalysis(prompt)"));
   assert.ok(!orbyKnowledgeSource.includes("generateAI("));
   assert.ok(!orbyKnowledgeSource.includes('provider: "groq"'));

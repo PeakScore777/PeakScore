@@ -37,7 +37,9 @@ export function isLikelyVoicePlaybackEcho(
     // Greetings and acknowledgements can be echoes only when the recent
     // assistant audio contains that same standalone low-information word.
     if (LOW_INFORMATION_WORDS.has(incoming)) {
-      if (spoken.includes(incoming)) return true;
+      // Match a complete spoken token, not a substring ("sí" must not match
+      // the beginning of "sin").
+      if (spoken.split(" ").includes(incoming)) return true;
       continue;
     }
 

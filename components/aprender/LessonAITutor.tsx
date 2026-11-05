@@ -168,6 +168,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeReviewRef = useRef<ReviewQuestion | null>(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  // Gemini Live callbacks outlive the render that opened the socket. Keep a
+  // current conversation snapshot so every turn and reconnection sees new turns.
+  const messagesRef = useRef<Message[]>([]);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [queuedMessageCount, setQueuedMessageCount] = useState(0);
@@ -1808,12 +1814,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || falseCreatorClaim;
       voiceUserMessageVisibleRef.current = true;
       const voiceScopeContext = [
+        ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceLastAssistantOutputRef.current,
         "Área de estudio: " + subject,
         "Tema de estudio: " + topic,
         question,
         context,
-      ].filter(Boolean).join("\n").slice(0, 1800);
+      ].filter(Boolean).join("\n").slice(-5_000);
       const preflight = preflightOrbyRequest(voiceUserTextRef.current, voiceScopeContext);
       voiceInputPolicyRef.current = asksIdentity
         ? "identity"
@@ -1829,7 +1836,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const ambiguousOneWordProgrammingTranscript =
         /^(?:programar|programacion|programa|python|javascript|codigo|programming|coding)$/i.test(normalizedTranscript);
       const transcriptionClarificationReply = ambiguousOneWordProgrammingTranscript
-        ? "Quiero asegurarme de haberte entendido: ¿dijiste «programar» o «lectura»? También puedo ayudarte con Lectura Crítica, comprensión de textos e intención del autor."
+        ? "Escuché una palabra que puede tener varios sentidos. ¿La viste en un texto o ejercicio de Saber 11, o te refieres a aprender programación? Cuéntame la frase completa para no asumir."
         : null;
       voicePreflightReplyRef.current = asksIdentity
         ? null
@@ -1896,13 +1903,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ),
       );
       const voiceScopeContext = [
+        ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceUserTextRef.current,
         voiceLastAssistantOutputRef.current,
         "Área de estudio: " + subject,
         "Tema de estudio: " + topic,
         question,
         context,
-      ].filter(Boolean).join("\n").slice(0, 1800);
+      ].filter(Boolean).join("\n").slice(-5_000);
       const partialUnsafe = voiceOutputAudioBlockedRef.current
         || forcedSpeechMismatch
         || containsUnsupportedSpanishLanguage(partialReply)
@@ -2011,7 +2019,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const policyReply = forcedLiveReply
         ? null
         : voicePreflightReplyRef.current
-          ?? (isLowQualityOrbyReply(rawReply)
+          ?? (isLowQualityOrbyReply(rawReply, voiceUserTextRef.current)
             ? ORBY_INCOMPLETE_REPLY_FALLBACK
             : containsUnsupportedSpanishLanguage(rawReply)
             ? ORBY_SPANISH_OUTPUT_FALLBACK
@@ -2207,7 +2215,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
-          body: JSON.stringify({ subject, topic, context, history: messages.slice(-6).map(({ role, content }) => ({ role, content })) }),
+          body: JSON.stringify({ subject, topic, context, history: messagesRef.current.slice(-8).map(({ role, content }) => ({ role, content })) }),
         }),
       ]);
       const tokenPayload = await tokenResponse.json().catch(() => ({}));

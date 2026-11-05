@@ -13,7 +13,7 @@ export function normalizeOrbyRequestText(value: string): string {
 }
 
 const PROGRAMMING_REQUEST_PATTERNS = [
-  /^\\s*(?:programar|programacion|codificar|coding|programming)\\s*[.!?]*$/i,
+  /^\s*(?:programar|programacion|codificar|coding|programming)\s*[.!?]*$/i,
   // Language/tool names alone are ambiguous (they can occur in reading passages or examples).
   // Match an explicit request to learn/use software tools, not a passing
   // mention of a programming term in a reading passage or scientific example.

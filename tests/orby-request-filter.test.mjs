@@ -244,7 +244,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   const finalAudioFlush = lessonTutorSource.indexOf("flushPendingGeminiAudio();", finalTurnValidation);
   assert.ok(partialTranscriptStart >= 0 && modelAudioStart > partialTranscriptStart);
   assert.ok(finalTurnValidation > modelAudioStart && finalAudioFlush > finalTurnValidation);
-  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*entire transcript/);
+  assert.match(lessonTutorSource, /Playback is deliberately deferred until the complete transcript passes\s*\/\/ final validation/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 18/);
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = hasCompleteSafeSentence/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);

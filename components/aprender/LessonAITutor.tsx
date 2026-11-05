@@ -1923,9 +1923,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // Release audio only after the current partial transcript contains a
         // complete sentence and passes every deterministic output filter.
         // Later unsafe continuations still cancel the not-yet-played audio.
-        const hasCompleteSafeSentence = partialReply.length >= 12
-          && (/[.!?;]["'”’)}\]]*\s*$/.test(partialReply)
-            || partialReply.split(/\s+/).length >= 8);
+        const hasCompleteSafeSentence = partialReply.length >= 18
+          && /[.!?;]["'”’)}\]]*\s*$/.test(partialReply);
         voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;

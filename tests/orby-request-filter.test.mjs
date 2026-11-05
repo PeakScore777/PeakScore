@@ -483,7 +483,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
-  assert.match(lessonTutorSource, /Math\.min\(180_000, Math\.max\(20_000, clean\.length \* 110\)\)/);
+  assert.match(lessonTutorSource, /Math\.min\(360_000, Math\.max\(30_000, clean\.length \* 110\)\)/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(cleanUserText\)/);
   assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /hasExistingAssistant/);
@@ -1574,4 +1574,4 @@ test("las respuestas TTS largas conservan texto y cada fragmento fallido se rein
   assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply)"));
   assert.ok(lessonTutorSource.includes("isLowQualityOrbyReply(rawReply)"));
   assert.ok(cloudflareVoiceSource.includes('Nunca respondas únicamente "sí", "no", "ok" ni signos de puntuación'));
-});;
+});

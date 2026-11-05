@@ -1040,7 +1040,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             finish(true);
             return;
           }
-          console.warn("[Orby Voice] Cloudflare Aura-2 speech unavailable; keeping the reply as text.", {
+          console.warn("[Orby Voice] Optional speech output unavailable; keeping the reply as text.", {
             name: error instanceof Error ? error.name : "UnknownError",
           });
           requestController = null;
@@ -1885,7 +1885,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || voiceOutputAudioBlockedRef.current || voiceResponseDoneRef.current) continue;
 
       // Live audio is the preferred natural voice. If its first chunk arrives
-      // after the text/TTS fallback already began, stop that fallback before
+      // after optional speech playback already began, stop that playback before
       // playing Live audio; never let the two speakers overlap.
       if (voiceBrowserSpeechActiveRef.current || voiceSpeechCancelRef.current) {
         stopSpeaking();
@@ -1963,8 +1963,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     : null);
       voicePreflightReplyRef.current = null;
 
-      // Deterministic safety replies use the selected Spanish browser voice
-      // immediately; Live is synchronized silently for the next student turn.
+      // Deterministic safety replies are inserted directly as validated text.
+      // Never synthesize them with an unverified or metered voice provider.
       if (policyReply) {
         // Never ask Live to read a deterministic filter response. Replace the
         // partial unsafe bubble and speak the trusted local answer immediately.
@@ -1975,7 +1975,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (rawReply) {
         // turnComplete is the final validation boundary. If the response was
         // safe but never emitted punctuation during streaming, release its
-        // buffered audio now instead of switching to the legacy browser voice.
+        // buffered Live audio now; unsupported audio is never sent to a browser voice.
         voiceOutputTranscriptValidatedRef.current = true;
         voiceAssistantTextRef.current = rawReply;
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
@@ -1994,7 +1994,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         } else {
           // Do not trust untranscribed or unsupported-language audio.
           // Invalid audio chunks are discarded; the validated text is handled
-          // by the single-speaker neural TTS fallback after the Live turn ends.
+          // by an unverified TTS provider. Keep the validated answer in text.
           voicePendingAudioChunksRef.current = [];
         }
         const playbackContext = voiceAudioContextRef.current;
@@ -2025,9 +2025,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
 
-      // Live is the primary audio source. If a validated turn has no Live
-      // audio, use serialized Cloudflare Aura-2 speech and then local Spanish
-      // speech if Workers AI is temporarily unavailable or out of free quota.
+      // Live is the only enabled audio-output source. If a validated turn has
+      // no usable Live audio, keep the answer visible and do not call metered TTS.
       if (needsSpeechFallback && rawReply.trim()) {
         const id = voiceAssistantMessageIdRef.current;
         const messageIndex = messages.findIndex((message) => message.id === id);
@@ -2980,7 +2979,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceInputPolicyRef.current = null;
         voicePreflightReplyRef.current = null;
         setVoiceError("");
-        setVoiceStatus("Orby está leyendo la respuesta…");
+        setVoiceStatus("Orby preparó la respuesta por escrito…");
         void speakText(data.reply, nextMessages.length);
       } else if (isVoiceInteraction) {
         setVoiceError("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito.");

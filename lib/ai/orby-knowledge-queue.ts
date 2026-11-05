@@ -225,18 +225,34 @@ export async function resumeOrbyJobsWaitingForEmbeddingProvider(): Promise<numbe
   );
   if (!hasGemini && !hasCloudflare) return 0;
 
-  const { data, error } = await supabaseAdmin
+  const { data: candidates, error: lookupError } = await supabaseAdmin
+    .from("orby_knowledge_jobs")
+    .select("id,last_error")
+    .eq("stage", "embeddings")
+    .in("status", ["queued", "retrying", "failed"]);
+  if (lookupError) throw new Error("No se pudieron consultar las tareas de embeddings pausadas: " + lookupError.code);
+
+  const waiting = (candidates ?? []).filter((job) => {
+    const reason = typeof job.last_error === "string" ? job.last_error : "";
+    return reason.includes(ORBY_EMBEDDING_PROVIDER_WAIT_MARKER)
+      || reason.includes("No hay un proveedor de embeddings configurado para Orby.");
+  });
+  if (!waiting.length) return 0;
+
+  const now = new Date().toISOString();
+  const { error } = await supabaseAdmin
     .from("orby_knowledge_jobs")
     .update({
       status: "queued",
-      available_at: new Date().toISOString(),
+      attempt_count: 0,
+      available_at: now,
+      locked_by: null,
+      locked_at: null,
+      lease_expires_at: null,
       last_error: null,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     })
-    .eq("stage", "embeddings")
-    .eq("status", "queued")
-    .like("last_error", ORBY_EMBEDDING_PROVIDER_WAIT_MARKER + "%")
-    .select("id");
+    .in("id", waiting.map((job) => job.id));
   if (error) throw new Error("No se pudieron reanudar las tareas de embeddings pausadas: " + error.code);
-  return data?.length ?? 0;
+  return waiting.length;
 }

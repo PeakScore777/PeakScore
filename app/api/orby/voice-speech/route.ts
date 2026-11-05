@@ -27,6 +27,17 @@ export async function POST(request: Request) {
       return jsonError("Inicia sesión para escuchar a Orby.", "UNAUTHORIZED", 401);
     }
 
+    // Fail closed: do not call the paid/metered synthesis endpoint unless the
+    // account's current plan and remaining free allocation have been verified.
+    // This flag is intentionally absent from Vercel until that verification exists.
+    if (process.env.ORBY_CLOUDFLARE_TTS_FREE_VERIFIED !== "true") {
+      return jsonError(
+        "La síntesis de voz alternativa no tiene una cuota gratuita verificada. La respuesta permanece escrita; no se realizará ninguna solicitud de audio.",
+        "FREE_TIER_TTS_NOT_AVAILABLE",
+        503,
+      );
+    }
+
     const body = await request.json().catch(() => null) as { text?: unknown } | null;
     const text = typeof body?.text === "string"
       ? body.text.replace(/\s+/g, " ").trim()

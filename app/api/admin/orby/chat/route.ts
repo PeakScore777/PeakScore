@@ -6,6 +6,7 @@ import { hasFalseOrbyCreatorAttribution, normalizeIcfesSubject, ICFES_SUBJECTS, 
 import { containsProgrammingInstruction, extractPlainOrbyReply, normalizeOrbySpanishOutput, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, searchOrbyKnowledgeConcepts, selectOrbyRelevantPedagogy } from "@/lib/ai/orby-knowledge";
 import { verifyOrbyKnowledgeAnswer, type OrbyKnowledgeEvidence } from "@/lib/ai/tutor-quality";
+import { normalizeOrbySaber11Level } from "@/lib/ai/orby-saber11-level";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,17 +29,8 @@ function normalizeAdminReplyText(value: string): string {
     .trim();
 }
 
-function normalizeSaber11LabDepth(value: string): string {
-  // The lab may inspect advanced source material, but must not turn that
-  // material into a university-level learning target for Saber 11 students.
-  return value
-    .replace(/\bnivel\s+de\s+profundidad\s+t[eé]cnica\s+superior\s*\(?universitari[oa]\)?/gi, "nivel escolar de preparación para Saber 11")
-    .replace(/\b(?:nivel|profundidad|exigencia|enfoque|preparaci[oó]n|formaci[oó]n)\s+universitari[oa]\b/gi, "profundización opcional, no exigida para Saber 11")
-    .replace(/\b(?:contenido|temario|conocimiento)\s+universitari[oa]\b/gi, "contenido de profundización opcional");
-}
-
 function normalizeAdminHistoryReply(value: string): string {
-  const plain = normalizeAdminReplyText(extractPlainOrbyReply(value));
+  const plain = normalizeOrbySaber11Level(normalizeAdminReplyText(extractPlainOrbyReply(value)));
   if (!plain) return "Esta respuesta anterior quedó guardada en un formato que no se pudo mostrar. Vuelve a formular la pregunta para obtener una respuesta limpia.";
 
   const unsupportedExternalSearchClaim =
@@ -365,7 +357,7 @@ export async function POST(request: Request) {
     // This private admin assistant stays on Gemini's free AI Studio tier.
     // Never use the shared router here: it can silently fall back to LLM7/Groq.
     const generated = await generateAI({ provider: "gemini", task: "tutor", prompt, useFallback: false });
-    let reply = typeof generated.text === "string" ? normalizeSaber11LabDepth(normalizeAdminReplyText(extractPlainOrbyReply(generated.text))).slice(0,12000) : "";
+    let reply = typeof generated.text === "string" ? normalizeOrbySaber11Level(normalizeAdminReplyText(extractPlainOrbyReply(generated.text))).slice(0,12000) : "";
     const sourceProvider = "gemini" as const;
     if (!reply) return jsonError("Orby devolvió un formato que no se pudo validar. Reformula el mensaje e inténtalo de nuevo.", 502);
     if (containsProgrammingInstruction(reply)) {
@@ -389,6 +381,8 @@ export async function POST(request: Request) {
         console.warn("[Orby Admin Chat] Knowledge answer remains unverified.", { note: checked.note.slice(0, 220) });
       }
     }
+    // Source verification may rewrite wording; enforce the student-facing exam level once more before persistence.
+    reply = normalizeOrbySaber11Level(reply);
     // The prompt asks the model to cite stable evidence IDs such as [E003].
     // Resolve those IDs back to real documents/pages for the UI; the previous
     // title-string matcher never matched the IDs and silently hid all sources.

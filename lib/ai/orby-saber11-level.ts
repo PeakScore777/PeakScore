@@ -8,5 +8,6 @@ export function normalizeOrbySaber11Level(value: string): string {
     .replace(/\bnivel\s+de\s+profundidad\s+t[eé]cnica\s+superior\s*\(?universitari[oa]\)?/gi, "nivel escolar de preparación para Saber 11")
     .replace(/\b(?:nivel|profundidad|exigencia|enfoque|preparaci[oó]n|formaci[oó]n|est[aá]ndar)\s+(?:t[eé]cnica\s+)?universitari[oa]\b/gi, "profundización opcional, no exigida para Saber 11")
     .replace(/\b(?:contenido|temario|conocimiento)\s+universitari[oa]\b/gi, "contenido de profundización opcional")
-    .replace(/\b(?:de|a nivel de)\s+(?:pregrado|posgrado)\b/gi, "de profundización opcional");
+    .replace(/\ba nivel de (?:pregrado|posgrado)\b/gi, "como profundización opcional")
+    .replace(/\bde (?:pregrado|posgrado)\b/gi, "de profundización opcional");
 }

@@ -817,7 +817,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // Gemini Live is the primary audio source. If a turn has no usable Live
     // audio, use Cloudflare Aura-2 in sentence-sized chunks. Browser Spanish
     // speech is only the last fallback when Cloudflare is unavailable/quota-limited.
-    await speakWithBrowserFallback(clean, index);
+    await speakWithCloudflareOnly(clean, index);
   }
 
   function splitSpeechIntoChunks(value: string, maxLength = 220): string[] {
@@ -850,28 +850,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return chunks.filter(Boolean);
   }
 
-  async function waitForSpanishBrowserVoice(): Promise<SpeechSynthesisVoice[]> {
-    const synthesis = window.speechSynthesis;
-    let voices = synthesis.getVoices();
-    if (voices.some((voice) => voice.lang.toLowerCase().startsWith("es"))) return voices;
-
-    await new Promise<void>((resolve) => {
-      let settled = false;
-      const finish = () => {
-        if (settled) return;
-        settled = true;
-        window.clearTimeout(timeout);
-        synthesis.removeEventListener("voiceschanged", finish);
-        resolve();
-      };
-      const timeout = window.setTimeout(finish, 900);
-      synthesis.addEventListener("voiceschanged", finish, { once: true });
-    });
-    voices = synthesis.getVoices();
-    return voices;
-  }
-
-  function speakWithBrowserFallback(text: string, index: number): Promise<void> {
+  function speakWithCloudflareOnly(text: string, index: number): Promise<void> {
     return new Promise((resolve) => {
       const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
       const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
@@ -881,7 +860,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
 
-      const synthesis = "speechSynthesis" in window ? window.speechSynthesis : null;
       const clean = text
         .replace(/\*\*/g, "")
         .replace(/\`/g, "")
@@ -920,7 +898,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let requestController: AbortController | null = null;
       let audioElement: HTMLAudioElement | null = null;
       let audioObjectUrl: string | null = null;
-      let browserUtterance: SpeechSynthesisUtterance | null = null;
       const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
 
       const clearAudioElement = () => {
@@ -947,10 +924,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         requestController?.abort();
         requestController = null;
         clearAudioElement();
-        synthesis?.cancel();
         if (voicePlaybackOwnerRef.current === "tts") voicePlaybackOwnerRef.current = "none";
         if (voiceSpeechCancelRef.current === cancelSpeech) voiceSpeechCancelRef.current = null;
-        browserUtterance = null;
         setSpeakingIndex(null);
         if (isLocalVoiceTurn) {
           voiceBrowserSpeechActiveRef.current = false;
@@ -975,70 +950,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setIsListening(false);
       }
 
-      const speakRemainingLocally = async () => {
+      const finishWithoutGenericVoice = () => {
         if (finished) return;
-        if (!synthesis || typeof SpeechSynthesisUtterance === "undefined") {
-          setVoiceError("Cloudflare no pudo generar el audio y este navegador no tiene voz instalada. La respuesta permanece visible.");
-          finish(false);
-          return;
-        }
-
-        const voices = await waitForSpanishBrowserVoice();
-        if (finished) return;
-        const spanishVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith("es"));
-        const feminineVoicePattern = /\b(?:sabina|helena|paulina|sofia|laura|lucia|lucía|monica|mónica|catalina|camila|valentina|isabella|maria|maría|elena|daniela|female|woman|mujer|celeste)\b/i;
-        const preferredVoice = spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang)
-          && feminineVoicePattern.test(voice.name)
-          && /natural|online|neural|enhanced/i.test(voice.name))
-          ?? spanishVoices.find((voice) => /es[-_]co/i.test(voice.lang) && feminineVoicePattern.test(voice.name))
-          ?? spanishVoices.find((voice) => feminineVoicePattern.test(voice.name));
-
-        if (!preferredVoice) {
-          setVoiceError("No hay una voz femenina en español instalada. La respuesta sigue disponible por escrito; instala una voz femenina española para usar este respaldo.");
-          finish(false);
-          return;
-        }
-
-        const speakNext = () => {
-          if (finished) return;
-          if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
-            finish(true);
-            return;
-          }
-          if (chunkIndex >= chunks.length) {
-            finish(false);
-            return;
-          }
-
-          const utterance = new SpeechSynthesisUtterance(chunks[chunkIndex]);
-          browserUtterance = utterance;
-          utterance.lang = "es-CO";
-          utterance.rate = 1.04;
-          utterance.pitch = 1.02;
-          utterance.volume = 1;
-          if (preferredVoice) utterance.voice = preferredVoice;
-          utterance.onend = () => {
-            if (finished) return;
-            browserUtterance = null;
-            chunkIndex += 1;
-            speakNext();
-          };
-          utterance.onerror = (event) => {
-            if (finished) return;
-            const speechError = (event as SpeechSynthesisErrorEvent).error;
-            if (speechError === "interrupted" || speechError === "canceled") {
-              finish(true);
-              return;
-            }
-            setVoiceError("La voz local se interrumpió. La respuesta completa sigue disponible por escrito.");
-            finish(false);
-          };
-          setSpeakingIndex(index);
-          synthesis.resume();
-          synthesis.speak(utterance);
-        };
-
-        speakNext();
+        setVoiceError("Cloudflare no pudo generar la voz de respaldo. La respuesta permanece visible; no se activará una voz genérica del navegador ni otro proveedor.");
+        finish(false);
       };
 
       const playCloudflareChunk = async () => {
@@ -1065,7 +980,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (!response.ok) {
             const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
             if (payload.code === "FREE_QUOTA_EXCEEDED") {
-              setVoiceError("La cuota gratuita diaria de voz Cloudflare se agotó. Continúo solo si hay una voz femenina española instalada; no se usará Gemini.");
+              setVoiceError("La cuota gratuita diaria de voz Cloudflare se agotó. La respuesta permanece visible y no se activará una voz genérica.");
             }
             throw new Error(typeof payload.error === "string" ? payload.error : "CLOUDFLARE_TTS_UNAVAILABLE");
           }
@@ -1101,7 +1016,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             if (finished) return;
             clearAudioElement();
             requestController = null;
-            void speakRemainingLocally();
+            finishWithoutGenericVoice();
           };
 
           await audioElement.play();
@@ -1117,7 +1032,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           });
           requestController = null;
           clearAudioElement();
-          void speakRemainingLocally();
+          finishWithoutGenericVoice();
         }
       };
 

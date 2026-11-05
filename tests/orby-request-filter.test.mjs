@@ -125,7 +125,7 @@ test("Cloudflare mantiene transcripción y tutor por turnos; Gemini Live es la �
   assert.ok(lessonTutorSource.includes("transcribeRecordedAudio"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 10_000"));
   assert.ok(lessonTutorSource.includes("Whisper y Cloudflare"));
-  assert.ok(lessonTutorSource.includes("Voz alternativa lista"));
+  assert.ok(lessonTutorSource.includes("Modo por turnos listo"));
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
   assert.ok(lessonTutorSource.includes("voiceLastAssistantOutputAtRef"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastAssistantOutputAtRef.current < 25_000"));
@@ -429,7 +429,7 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
 test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o red", () => {
   assert.match(lessonTutorSource, /const authenticationFailure = .*401.*403/);
   assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
-  assert.match(lessonTutorSource, /Gemini Live no está disponible ahora\. Continúo en modo de voz por turnos/);
+  assert.match(lessonTutorSource, /Gemini Live no está disponible ahora\. Continúo por turnos/);
   assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current\)/);
   assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message\)/);
   assert.match(lessonTutorRouteSource, /getOrbySubjectSelectionReply\(userMessage\)/);

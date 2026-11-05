@@ -145,7 +145,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("needsSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
 
-  assert.ok(lessonTutorSource.includes("ORBY_FREE_TTS_UNAVAILABLE_MESSAGE"));
+  assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.match(lessonTutorSource, /void speakText\(rawReply, messageIndex >= 0 \? messageIndex : messages\.length\)/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
   assert.match(lessonTutorSource, /void speakText\(data\.reply, nextMessages\.length\)/);
@@ -154,7 +154,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("speakWithVerifiedFreeTts(clean, index)"));
   assert.ok(lessonTutorSource.includes("await speakWithVerifiedFreeTts(clean, index);"));
   assert.doesNotMatch(lessonTutorSource, /speechSynthesis\.speak\(/);
-  assert.match(lessonTutorSource, /If optional TTS is unavailable, keep the validated answer visible without speaking it/);
+  assert.match(lessonTutorSource, /Internal provider configuration must not appear as a red student-facing error/);
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("sendMessageRef.current(transcript, false, true"));
@@ -283,7 +283,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   // Filtered Live output is replaced with a deterministic response; no second model call or alternate voice.
   assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
-  assert.match(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
+  assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
   assert.doesNotMatch(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
   assert.doesNotMatch(lessonTutorSource, /internalSpeechInstruction/);
@@ -1048,7 +1048,7 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
-  assert.match(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
+  assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.doesNotMatch(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
   assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*respondToVoiceLocally\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
   assert.match(lessonTutorSource, /!voiceLocalReplyInFlightRef\.current && typeof outputTranscript/);

@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho } from "@/lib/ai/orby-voice-echo";
 
@@ -826,7 +826,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
 
   async function speakText(text: string, index: number): Promise<void> {
-    const clean = text.trim().replace(/\s+/g, " ").slice(0, 5_000);
+    const clean = text.trim().replace(/\s+/g, " ").slice(0, 12_000);
     if (!clean) return;
 
     // Gemini Live is primary. For text-only turns, use Gemini 3.8 Flash TTS
@@ -881,7 +881,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .replace(/^\d+[.)]\s*/gm, "")
         .replace(/\s+/g, " ")
         .trim()
-        .slice(0, 5_000);
+        .slice(0, 12_000);
       const chunks = splitSpeechIntoChunks(clean, 420);
       if (!chunks.length) {
         if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
@@ -908,6 +908,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let finished = false;
       let didPlaybackStart = false;
       let chunkIndex = 0;
+      let chunkRetryCount = 0;
+      let skippedAudioChunks = false;
       let safetyTimer: number | null = null;
       let requestController: AbortController | null = null;
       let audioElement: HTMLAudioElement | null = null;
@@ -982,6 +984,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         finish(false);
       };
 
+      const recoverCurrentTtsChunk = () => {
+        if (finished) return;
+        skippedAudioChunks = true;
+        clearAudioElement();
+        requestController?.abort();
+        requestController = null;
+        if (chunkRetryCount < 1) {
+          chunkRetryCount += 1;
+          window.setTimeout(() => void playFreeTtsChunk(), 350);
+          return;
+        }
+        // A failed speech segment must not cancel the remaining spoken answer.
+        chunkRetryCount = 0;
+        chunkIndex += 1;
+        window.setTimeout(() => void playFreeTtsChunk(), 120);
+      };
+
       const playFreeTtsChunk = async () => {
         if (finished) return;
         if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
@@ -1052,14 +1071,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             if (finished || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
             clearAudioElement();
             requestController = null;
+            chunkRetryCount = 0;
             chunkIndex += 1;
             void playFreeTtsChunk();
           };
           audioElement.onerror = () => {
             if (finished) return;
-            clearAudioElement();
-            requestController = null;
-            finishWithoutGenericVoice();
+            recoverCurrentTtsChunk();
           };
 
           await audioElement.play();
@@ -1070,12 +1088,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             finish(true);
             return;
           }
-          console.warn("[Orby Voice] Optional speech fallback unavailable; keeping the reply as text.", {
+          console.warn("[Orby Voice] TTS chunk failed; retrying without dropping the remaining answer.", {
+            chunk: chunkIndex + 1,
+            totalChunks: chunks.length,
+            retry: chunkRetryCount + 1,
             name: error instanceof Error ? error.name : "UnknownError",
           });
-          requestController = null;
-          clearAudioElement();
-          finishWithoutGenericVoice();
+          recoverCurrentTtsChunk();
         }
       };
 
@@ -1083,7 +1102,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (finished) return;
         setVoiceError("La lectura superó el tiempo de seguridad. La respuesta sigue visible por escrito.");
         finish(false);
-      }, Math.min(180_000, Math.max(20_000, clean.length * 110)));
+      }, Math.min(360_000, Math.max(30_000, clean.length * 110)));
 
       void playFreeTtsChunk();
     });
@@ -1723,12 +1742,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       : null;
     const rawTranscript = typeof inputTranscript?.text === "string" ? inputTranscript.text.trim().slice(0, 1200) : "";
     const unsupportedInputScript = Boolean(rawTranscript && containsUnsupportedSpanishLanguage(rawTranscript));
-    if (rawTranscript) voiceUnsupportedInputDetectedRef.current = unsupportedInputScript;
-    // Never display, persist or send a foreign-script ASR hallucination as the
-    // student's actual words. Replace it with a clear Spanish retry turn.
-    const transcript = unsupportedInputScript
-      ? "No se reconoció la frase en español."
-      : rawTranscript;
+    const unclearInput = Boolean(rawTranscript && isOrbyUnclearInput(rawTranscript));
+    if (rawTranscript) voiceUnsupportedInputDetectedRef.current = unsupportedInputScript && !unclearInput;
+    if (unclearInput) {
+      setLiveTranscript("");
+      setVoiceError("");
+      setVoiceStatus("No alcancé a entenderte. Repítelo en español y te escucho…");
+      setIsListening(true);
+    }
+    // Punctuation-only ASR is noise, not a new student request.
+    const transcript = unclearInput
+      ? ""
+      : unsupportedInputScript
+        ? "No se reconoció la frase en español."
+        : rawTranscript;
     const normalizedFinal = transcript ? normalizeVoiceComparison(transcript) : "";
     const isDuplicateFinalTranscript = Boolean(
       normalizedFinal
@@ -1894,8 +1921,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // Release audio only after the current partial transcript contains a
         // complete sentence and passes every deterministic output filter.
         // Later unsafe continuations still cancel the not-yet-played audio.
-        const hasCompleteSafeSentence = partialReply.length >= 18
-          && /[.!?;]["'”’)}\]]*\s*$/.test(partialReply);
+        const hasCompleteSafeSentence = partialReply.length >= 12
+          && (/[.!?;]["'”’)}\]]*\s*$/.test(partialReply)
+            || partialReply.split(/\s+/).length >= 8);
         voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;
@@ -1962,7 +1990,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
       clearVoiceResponseWatchdog();
       const forcedLiveReply = voiceForcedReplyRef.current;
-      const rawReply = forcedLiveReply ?? normalizeVoicePunctuation(voiceAssistantTextRef.current);
+      const rawReply = normalizeOrbySpanishOutput(forcedLiveReply ?? normalizeVoicePunctuation(voiceAssistantTextRef.current));
       voiceForcedReplyRef.current = null;
       const normalizedReply = rawReply.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
       const exposesProvider = (
@@ -1982,7 +2010,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const policyReply = forcedLiveReply
         ? null
         : voicePreflightReplyRef.current
-          ?? (containsUnsupportedSpanishLanguage(rawReply)
+          ?? (isLowQualityOrbyReply(rawReply)
+            ? ORBY_INCOMPLETE_REPLY_FALLBACK
+            : containsUnsupportedSpanishLanguage(rawReply)
             ? ORBY_SPANISH_OUTPUT_FALLBACK
             : voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
             ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
@@ -1998,7 +2028,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   ? preflightOrbyRequest("programar").reply
                   : voiceInputPolicyRef.current === "outside"
                     ? preflightOrbyRequest("cocinar").reply
-                    : null);
+                    : null));
       voicePreflightReplyRef.current = null;
 
       // Deterministic safety replies are inserted directly as validated text.

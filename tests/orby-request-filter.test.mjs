@@ -142,7 +142,9 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("stopSpeaking();"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("transcribeRecordedAudio"));
-  assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 10_000"));
+  assert.ok(lessonTutorSource.includes("isDuplicateVoiceTranscriptInActivity("));
+  assert.ok(lessonTutorSource.includes("voicePendingStudentTurnRef.current"));
+  assert.ok(lessonTutorSource.includes("Ignored unsolicited Live output without a pending student turn"));
   assert.ok(lessonTutorSource.includes("Whisper y Cloudflare"));
   assert.ok(lessonTutorSource.includes("Modo por turnos listo"));
   assert.ok(lessonTutorSource.includes("Date.now() <= voiceLastAssistantPlaybackUntilRef.current"));
@@ -177,6 +179,23 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 10_000"));
   assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
+});
+
+test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en turnos distintos", () => {
+  const detectEcho = voiceEcho.isLikelyVoicePlaybackEcho;
+  const detectBarge = voiceEcho.isStrongVoiceBargeIn;
+  const detectDuplicate = voiceEcho.isDuplicateVoiceTranscriptInActivity;
+
+  assert.equal(detectBarge("hola", ["¡Hola! Soy Orby, ¿qué vamos a estudiar hoy?"]), false);
+  assert.equal(detectBarge("???", []), false);
+  assert.equal(detectBarge("espera", []), true);
+  assert.equal(detectBarge("explícame ahora la fotosíntesis", []), true);
+  assert.equal(detectBarge("sí", ["¡Sí, claro!"]), false);
+  assert.equal(detectEcho("¡Hola de nuevo!", ["¡Hola de nuevo! Soy Orby."]), true);
+
+  assert.equal(detectDuplicate("sí", "sí", 4, 4, 1_000, 2_000), true);
+  assert.equal(detectDuplicate("sí", "sí", 5, 4, 1_000, 1_100), false);
+  assert.equal(detectDuplicate("no", "sí", 4, 4, 1_000, 1_100), false);
 });
 
 test("el detector de eco reconoce respuestas anteriores aunque Orby ya haya hablado otra cosa", () => {
@@ -270,6 +289,11 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /voiceUserMessageVisibleRef/);
   assert.match(lessonTutorSource, /isBrowserSpeechEcho/);
   assert.match(lessonTutorSource, /isDuplicateFinalTranscript/);
+  assert.match(lessonTutorSource, /isDuplicateVoiceTranscriptInActivity\\(/);
+  assert.match(lessonTutorSource, /voicePendingStudentTurnRef\\.current && Boolean\\(voiceUserTextRef\\.current\\.trim\\(\\)\\)/);
+  assert.match(lessonTutorSource, /Ignored unsolicited Live output without a pending student turn/);
+  assert.match(lessonTutorSource, /isStrongVoiceBargeIn\\(interimText, assistantSpeech\\)/);
+
   assert.match(lessonTutorSource, /voiceLastCommittedInputAtRef/);
   assert.match(lessonTutorSource, /Date\.now\(\) > voiceLastAssistantPlaybackUntilRef\.current/);
   assert.match(voiceWorkletSource, /const packetSize = 640/);

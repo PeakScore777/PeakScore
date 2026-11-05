@@ -293,7 +293,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /cancelSpeech = \(\) => finish\(true\)/);
   assert.match(lessonTutorSource, /if \(!cancelled\) \{/);
   assert.match(lessonTutorSource, /voiceUserMessageVisibleRef/);
-  assert.match(lessonTutorSource, /isBrowserSpeechEcho/);
+  assert.match(lessonTutorSource, /interimIsEcho/);
   assert.match(lessonTutorSource, /isDuplicateFinalTranscript/);
   assert.match(lessonTutorSource, /isDuplicateVoiceTranscriptInActivity\(/);
   assert.match(lessonTutorSource, /voicePendingStudentTurnRef\.current && Boolean\(voiceUserTextRef\.current\.trim\(\)\)/);
@@ -1108,11 +1108,11 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.doesNotMatch(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
   assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*respondToVoiceLocally\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
-  assert.match(lessonTutorSource, /!voiceLocalReplyInFlightRef\.current && typeof outputTranscript/);
-  assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current\s*\|\|\s*voiceOutputAudioBlockedRef\.current\s*\|\|\s*voiceResponseDoneRef\.current\)\s*continue/);
+  assert.match(lessonTutorSource, /hasPendingStudentTurn && !voiceLocalReplyInFlightRef\.current/);
+  assert.match(lessonTutorSource, /!voicePendingStudentTurnRef\.current\s*\|\|\s*!voiceUserTextRef\.current\.trim\(\)\s*\|\|\s*voiceLocalReplyInFlightRef\.current/);
   assert.match(lessonTutorSource, /stopSpeaking\(\);/);
   assert.match(lessonTutorSource, /serverContent\.interrupted === true && !voiceLocalReplyInFlightRef\.current/);
-  assert.match(lessonTutorSource, /function isLikelyVoicePlaybackEcho\(transcript: string, assistantSpeech: string \| readonly string\[\]\)/);
+  assert.match(lessonTutorSource, /isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho/);
   assert.match(lessonTutorSource, /voiceRecentAssistantOutputsRef/);
   assert.match(lessonTutorSource, /getRecentVoiceAssistantOutputs/);
   assert.match(lessonTutorSource, /rememberVoiceAssistantOutput/);
@@ -1583,6 +1583,14 @@ test("Gemini 3.8 TTS conserva el WAV completo y solo envuelve PCM sin cabecera",
 test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones dentro de Saber 11", () => {
   const context = "Área de estudio: Lectura Crítica. Orby preguntó: ¿Empezamos con un texto tipo ICFES?";
   assert.equal(filter.isOrbyContextualConfirmation("Sí", context), true);
+  assert.equal(filter.isOrbyContextualConfirmation("Ya", context), true);
+  assert.equal(filter.preflightOrbyRequest("Ya", context).allowed, true);
+  assert.match(filter.getOrbySubjectSelectionReply("en inglés"), /Inglés de Saber 11/);
+  assert.match(filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"), /Sigamos con tu preparación/);
+  assert.notEqual(
+    filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"),
+    filter.ORBY_GREETING_REPLY,
+  );
   assert.equal(filter.preflightOrbyRequest("sí", context).allowed, true);
   assert.equal(filter.preflightOrbyRequest("sí").allowed, true);
   assert.equal(filter.preflightOrbyRequest("no").allowed, true);

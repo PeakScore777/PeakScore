@@ -4,6 +4,7 @@ import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { enqueueNextPendingOrbyKnowledgeDocument } from "@/lib/ai/orby-knowledge-queue";
 import { processNextOrbyKnowledgeJob } from "@/lib/ai/orby-knowledge-worker";
+import { resumeOrbyJobsWaitingForEmbeddingProvider } from "@/lib/ai/orby-knowledge-queue";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +31,13 @@ export async function POST() {
   if (!acquired) return jsonError("Ya hay otra ejecución manual en curso. El Autopilot puede trabajar en paralelo.", 409);
 
   try {
-    const queued = await enqueueNextPendingOrbyKnowledgeDocument();
+    const resumed = await resumeOrbyJobsWaitingForEmbeddingProvider();
+    const hasEmbeddingProvider = Boolean(process.env.GEMINI_API_KEY?.trim()) || Boolean(
+      process.env.CLOUDFLARE_ACCOUNT_ID?.trim() && process.env.CLOUDFLARE_API_TOKEN?.trim()
+    );
+    const queued = hasEmbeddingProvider
+      ? await enqueueNextPendingOrbyKnowledgeDocument()
+      : false;
 
     // The database promotes the oldest eligible queued job using its own clock.
     // This avoids a Vercel/Postgres clock-skew race at the instant we claim it.
@@ -44,6 +51,7 @@ export async function POST() {
     return NextResponse.json({
       ...result,
       queuedPendingDocument: queued,
+      resumedProviderWaitJobs: resumed,
       message: result.state === "idle"
         ? promotedJobId
           ? "La tarea se preparó para ejecución manual, pero el trabajador no pudo reclamarla en este intento. El presupuesto automático no afecta esta ejecución; vuelve a intentarlo."

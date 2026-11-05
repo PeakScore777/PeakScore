@@ -476,6 +476,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /cuando el estudiante diga únicamente/);
   assert.match(realtimeSessionSource, /PROTECCIÓN DE PEAKSCORE/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
+  assert.match(realtimeSessionSource, /ORTOGRAFÍA Y PRECISIÓN/);
   assert.match(realtimeSessionSource, /evalúa la intención académica completa/);
   assert.match(realtimeSessionSource, /Si la intención es ambigua, pregunta brevemente antes de rechazar/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);

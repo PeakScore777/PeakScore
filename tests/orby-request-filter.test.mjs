@@ -345,6 +345,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
+  assert.doesNotMatch(lessonTutorSource, /synthesis\?\.cancel\(\)/);
   assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.

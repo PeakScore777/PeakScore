@@ -23,19 +23,28 @@ export function isLikelyVoicePlaybackEcho(
   assistantSpeech: string | readonly string[],
 ): boolean {
   const incoming = normalizeVoiceText(transcript);
-  if (incoming.length < 3) return false;
+  if (incoming.length < 2) return false;
 
   const candidates = typeof assistantSpeech === "string" ? [assistantSpeech] : assistantSpeech;
-  const incomingWords = incoming.split(" ")
-    .filter((word) => word.length >= 2 && !LOW_INFORMATION_WORDS.has(word));
-  // Short curriculum phrases such as “Saber 11” are valid student input.
-  if (incomingWords.length < 3) return false;
-
   for (const candidate of candidates) {
     const spoken = normalizeVoiceText(candidate);
+    if (spoken.length < 2) continue;
+    if (spoken === incoming) return true;
+
+    // A brief word such as "sí" is an echo only when it actually appears as
+    // a standalone word in the audio Orby just played.
+    if (incoming.length < 3) {
+      if (LOW_INFORMATION_WORDS.has(incoming)
+        && (spoken.startsWith(incoming + " ") || spoken.endsWith(" " + incoming))) return true;
+      continue;
+    }
     if (spoken.length < 6) continue;
     if (spoken.includes(incoming) || incoming.includes(spoken)) return true;
 
+    const incomingWords = incoming.split(" ")
+      .filter((word) => word.length >= 2 && !LOW_INFORMATION_WORDS.has(word));
+    // Short curriculum phrases such as “Saber 11” remain valid student input.
+    if (incomingWords.length < 2) continue;
     const spokenWords = new Set(spoken.split(" ")
       .filter((word) => word.length >= 2 && !LOW_INFORMATION_WORDS.has(word)));
     const overlap = incomingWords.filter((word) => spokenWords.has(word)).length;

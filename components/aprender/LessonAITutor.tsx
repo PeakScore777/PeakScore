@@ -992,10 +992,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           });
           if (!response.ok) {
             const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
-            if (payload.code === "FREE_TIER_TTS_NOT_AVAILABLE") {
+            if (payload.code === "FREE_TIER_TTS_NOT_AVAILABLE" || payload.code === "FREE_TIER_TTS_QUOTA_EXCEEDED") {
               const notice = typeof payload.error === "string"
                 ? payload.error
-                : "La salida de voz alternativa no tiene una cuota gratuita confirmada. La respuesta permanece por escrito.";
+                : "La cuota gratuita de voz no está disponible ahora. La respuesta permanece por escrito y no se activará ningún servicio de pago.";
               if (isLocalVoiceTurn) setVoiceError(notice);
               else setError(notice);
               // No phantom playback/transcript: the text was never spoken.

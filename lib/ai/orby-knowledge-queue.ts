@@ -208,3 +208,35 @@ export async function enqueueOrbyKnowledgeDocument(
 
   return { job: inserted as OrbyKnowledgeJob, created: true, alreadyCurrent: false };
 }
+
+
+/**
+ * Requeue embedding jobs parked because no free provider was configured.
+ * The worker parks them without consuming retries; once credentials exist,
+ * cron/manual entry points can safely resume from the first missing chunk.
+ */
+export const ORBY_EMBEDDING_PROVIDER_WAIT_MARKER = "ORBY_EMBEDDING_PROVIDER_NOT_CONFIGURED";
+
+export async function resumeOrbyJobsWaitingForEmbeddingProvider(): Promise<number> {
+  const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
+  const hasCloudflare = Boolean(
+    process.env.CLOUDFLARE_ACCOUNT_ID?.trim()
+    && process.env.CLOUDFLARE_API_TOKEN?.trim()
+  );
+  if (!hasGemini && !hasCloudflare) return 0;
+
+  const { data, error } = await supabaseAdmin
+    .from("orby_knowledge_jobs")
+    .update({
+      status: "queued",
+      available_at: new Date().toISOString(),
+      last_error: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("stage", "embeddings")
+    .eq("status", "queued")
+    .like("last_error", ORBY_EMBEDDING_PROVIDER_WAIT_MARKER + "%")
+    .select("id");
+  if (error) throw new Error("No se pudieron reanudar las tareas de embeddings pausadas: " + error.code);
+  return data?.length ?? 0;
+}

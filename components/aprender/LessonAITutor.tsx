@@ -2015,11 +2015,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // provider, preserve the validated answer in text only.
           voicePendingAudioChunksRef.current = [];
         }
-        const playbackContext = voiceAudioContextRef.current;
-        const remainingPlaybackMs = playbackContext
-          ? Math.max(0, voiceNextPlaybackTimeRef.current - playbackContext.currentTime) * 1000
-          : 0;
-        voiceLastAssistantPlaybackUntilRef.current = Date.now() + remainingPlaybackMs + 1800;
+        const hasAudibleLiveOutput = voiceRealtimeAudioChunkCountRef.current > 0
+          || voiceAudioSourcesRef.current.size > 0;
+        if (hasAudibleLiveOutput) {
+          // Store the final transcript only after Live audio was actually
+          // scheduled. This also protects the short acoustic tail after the
+          // final audio chunk has ended.
+          voiceLastAssistantOutputRef.current = rawReply;
+          voiceLastAssistantOutputAtRef.current = Date.now();
+          rememberVoiceAssistantOutput(rawReply);
+          const playbackContext = voiceAudioContextRef.current;
+          const remainingPlaybackMs = playbackContext
+            ? Math.max(0, voiceNextPlaybackTimeRef.current - playbackContext.currentTime) * 1000
+            : 0;
+          voiceLastAssistantPlaybackUntilRef.current = Date.now() + remainingPlaybackMs + 1_800;
+        } else {
+          // A text-only Live completion was not heard by the microphone.
+          voiceLastAssistantOutputRef.current = "";
+          voiceLastAssistantOutputAtRef.current = 0;
+          voiceLastAssistantPlaybackUntilRef.current = 0;
+        }
       }
 
       const needsSpeechFallback = voiceOutputAudioBlockedRef.current

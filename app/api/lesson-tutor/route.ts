@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -229,19 +229,23 @@ export async function POST(request: Request) {
     // Greetings are deterministic UX turns. Never wake the model or consume
     // its quota for "hola" after a refusal or a new conversation.
     if (!tutorImage && isOrbyGreetingRequest(userMessage)) {
+      const greetingReply = getOrbyGreetingFollowUpReply(recentContextMessages
+        .slice(-4)
+        .map((item) => item.role + ": " + item.content)
+        .join("\n"));
       if (conversationId && ownedConversation) {
         const { error: greetingSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,
           p_conversation_id: conversationId,
           p_user_content: userMessage,
-          p_assistant_content: ORBY_GREETING_REPLY,
+          p_assistant_content: greetingReply,
           p_check_question: null,
           p_attachment_kind: null,
           p_attachment_label: null,
         });
         if (greetingSaveError) console.error("[Orby Greeting] Reply persistence failed.", { code: greetingSaveError.code });
       }
-      return NextResponse.json({ reply: ORBY_GREETING_REPLY, checkQuestion: "", verification: "not_required", sources: [] }, {
+      return NextResponse.json({ reply: greetingReply, checkQuestion: "", verification: "not_required", sources: [] }, {
         headers: { "Cache-Control": "private, no-store" },
       });
     }

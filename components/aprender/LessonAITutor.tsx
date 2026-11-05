@@ -826,6 +826,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
     waitingForVoiceReplyRef.current = false;
+    voicePendingStudentTurnRef.current = false;
+    voiceActivityGenerationRef.current += 1;
+    voiceLastCommittedActivityGenerationRef.current = -1;
+    voiceUserMessageIdRef.current = null;
     voiceLastCommittedInputRef.current = "";
     setLiveTranscript("");
     setVoiceError("");
@@ -1273,6 +1277,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     waitingForVoiceReplyRef.current = false;
+    voicePendingStudentTurnRef.current = false;
+    voiceUserMessageIdRef.current = null;
     voiceLocalReplyInFlightRef.current = false;
     if (updateState) {
       setVoiceMode(false);
@@ -1289,6 +1295,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceLocalReplyInFlightRef.current = false;
     voiceOutputAudioBlockedRef.current = false;
     waitingForVoiceReplyRef.current = false;
+    voicePendingStudentTurnRef.current = false;
+    voiceUserMessageIdRef.current = null;
     setVoiceStatus(voiceFallbackModeRef.current
       ? "Modo por turnos listo · toca el micrófono para hablar"
       : "Te escucho…");
@@ -1311,6 +1319,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceOutputAudioBlockedRef.current = true;
     voiceLocalReplyInFlightRef.current = true;
     waitingForVoiceReplyRef.current = true;
+    voicePendingStudentTurnRef.current = true;
     voiceUserTextRef.current = cleanUserText;
     voiceAssistantTextRef.current = cleanReply;
     const previousAssistantId = replaceAssistantMessage ? voiceAssistantMessageIdRef.current : null;
@@ -1331,6 +1340,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceUnsupportedInputDetectedRef.current = false;
     voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanUserText);
     voiceLastCommittedInputAtRef.current = Date.now();
+    voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
 
     setMessages((current) => {
       const hasExistingAssistant = Boolean(previousAssistantId)
@@ -1461,6 +1471,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
     if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
     waitingForVoiceReplyRef.current = false;
+    voicePendingStudentTurnRef.current = false;
     setVoiceStatus("Te escucho…");
     setIsListening(true);
     void persistRealtimeTurnIfReady();
@@ -2768,18 +2779,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       waitingForVoiceReplyRef.current = false;
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
+      voicePendingStudentTurnRef.current = false;
+      voiceUserMessageIdRef.current = null;
       return;
     }
 
+    voicePendingStudentTurnRef.current = true;
     voiceUserTextRef.current = cleanPendingText;
     voiceAssistantTextRef.current = "";
     voiceAssistantMessageIdRef.current = null;
     voiceUserMessageVisibleRef.current = !appendUserMessage;
     voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanPendingText);
     voiceLastCommittedInputAtRef.current = Date.now();
+    voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
     waitingForVoiceReplyRef.current = true;
+    voicePendingStudentTurnRef.current = true;
     voiceLocalReplyInFlightRef.current = false;
     voiceOutputAudioBlockedRef.current = false;
     voicePendingAudioChunksRef.current = [];
@@ -2804,6 +2820,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const startupController = new AbortController();
     voiceStartupAbortRef.current = startupController;
     voiceModeRef.current = true;
+    voicePendingStudentTurnRef.current = false;
+    voiceUserMessageIdRef.current = null;
     setVoiceMode(true);
     setWorkspaceMode("voice");
     setLiveTranscript("");
@@ -2964,14 +2982,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voicePreflightReplyRef.current = isGenericIcfesEnglishRequest(message)
         ? ORBY_ICFES_ENGLISH_INTRO_REPLY
         : typedPreflight.allowed ? null : typedPreflight.reply;
-      // Typed text sent through the Live session can also produce an input
-      // transcription event. Mark it as committed so it is not added twice.
+      // Typed text is a new voice turn and is already visible below.
+      // Mark its transcript as committed so Live ASR cannot append a duplicate.
+      voiceActivityGenerationRef.current += 1;
       voiceLastCommittedInputRef.current = normalizeVoiceComparison(message);
       voiceLastCommittedInputAtRef.current = Date.now();
+      voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
+      voicePendingStudentTurnRef.current = true;
+      voiceUserMessageIdRef.current = "voice-user-" + Date.now();
       voiceResponseDoneRef.current = false;
       voiceTurnPersistedRef.current = false;
       voiceUserMessageVisibleRef.current = true;
-      setMessages((current) => [...current, { id: "voice-user-" + Date.now(), role: "user", content: message }]);
+      setMessages((current) => [...current, { id: voiceUserMessageIdRef.current ?? ("voice-user-" + Date.now()), role: "user", content: message }]);
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";
       try {

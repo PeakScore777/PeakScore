@@ -164,6 +164,7 @@ test("el detector de eco reconoce respuestas anteriores aunque Orby ya haya habl
   );
   assert.equal(detect("Oye Orby, explícame la fotosíntesis", [latestReply, previousReply]), false);
   assert.equal(detect("hola", [latestReply, previousReply]), false);
+  assert.equal(detect("Saber 11", [latestReply, previousReply]), false);
 });
 
 test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallbacks facturables", () => {

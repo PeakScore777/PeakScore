@@ -49,7 +49,7 @@ const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
-test("Cloudflare mantiene transcripción y tutor por turnos; Aura-2 español ofrece TTS dentro de la cuota Workers Free", () => {
+test("Orby mantiene la voz Live y bloquea TTS alternativo sin cuota gratuita verificada", () => {
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
@@ -76,9 +76,9 @@ test("Cloudflare mantiene transcripción y tutor por turnos; Aura-2 español ofr
   assert.ok(lessonTutorSource.includes("new Audio(audioObjectUrl)"));
   assert.ok(lessonTutorSource.includes("finishWithoutGenericVoice"));
   assert.ok(voiceSpeechRouteSource.includes("@cf/deepgram/aura-2-es"));
-  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_QUOTA_EXCEEDED"));
-  assert.ok(voiceSpeechRouteSource.includes("orby_voice_speech"));
-  assert.ok(voiceSpeechRouteSource.includes("speaker: \"celeste\""));
+  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_NOT_AVAILABLE"));
+  assert.ok(voiceSpeechRouteSource.includes("ORBY_CLOUDFLARE_TTS_FREE_VERIFIED"));
+  assert.match(voiceSpeechRouteSource, /ORBY_CLOUDFLARE_TTS_FREE_VERIFIED !== "true"[\s\S]*?return jsonError/);
   assert.ok(voiceSpeechRouteSource.includes("CLOUDFLARE_API_TOKEN"));
   assert.doesNotMatch(voiceSpeechRouteSource, /GEMINI_API_KEY|GROQ_API_KEY|synthesizeWithCloudflareSpeech/);
   assert.ok(!voiceSpeechRouteSource.includes("GEMINI_API_KEY"));
@@ -143,7 +143,10 @@ test("Cloudflare mantiene transcripción y tutor por turnos; Aura-2 español ofr
   assert.ok(lessonTutorSource.includes("needsSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
 
-  assert.ok(lessonTutorSource.includes("No se pudo generar el audio con la cuota gratuita disponible"));
+  assert.ok(lessonTutorSource.includes("ORBY_FREE_TTS_UNAVAILABLE_MESSAGE"));
+  assert.doesNotMatch(lessonTutorSource, /void speakText\(rawReply/);
+  assert.doesNotMatch(lessonTutorSource, /void speakText\(cleanReply/);
+  assert.doesNotMatch(lessonTutorSource, /void speakText\(data\.reply/);
   assert.match(lessonTutorSource, /Only register an assistant echo after real audio playback starts/);
   assert.match(lessonTutorSource, /Do not expose this text as spoken audio until playback really starts/);
   assert.ok(lessonTutorSource.includes("speakWithCloudflareOnly(clean, index)"));
@@ -476,7 +479,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   const flushBeforeFallback = lessonTutorSource.lastIndexOf("flushPendingGeminiAudio();", fallbackDecision);
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "el cierre de reproducción se evalúa después de vaciar los fragmentos de audio Live");
-  assert.match(lessonTutorSource, /needsSpeechFallback[\s\S]*?void speakText\(rawReply/);
+  assert.match(lessonTutorSource, /needsSpeechFallback[\s\S]*?ORBY_FREE_TTS_UNAVAILABLE_MESSAGE[\s\S]*?finishRealtimeVoicePlayback\(\)/);
   assert.match(lessonTutorSource, /Live audio has priority\. If this is a text-only\/fallback response, use/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const configuredVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim()'));

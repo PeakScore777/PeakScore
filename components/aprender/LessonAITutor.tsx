@@ -352,9 +352,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     let cancelled = false;
     const generation = ++historyHydrationGenerationRef.current;
     historyHydratingRef.current = true;
-    setHistoryLoading(true);
-    setConversationError("");
     const isCurrent = () => !cancelled && generation === historyHydrationGenerationRef.current;
+    // Defer the initial visual state update outside the synchronous effect body.
+    queueMicrotask(() => {
+      if (!isCurrent()) return;
+      setHistoryLoading(true);
+      setConversationError("");
+    });
     const loadHistory = async () => {
       try {
         const response = await fetch("/api/orby/conversations", {

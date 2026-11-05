@@ -744,6 +744,7 @@ export async function processNextOrbyKnowledgeJob(options: {
         .update({
           status: "queued",
           stage: "embeddings",
+          manual_priority: false,
           embedded_chunk_count: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
           available_at: resumeAt.toISOString(),
           locked_by: null,
@@ -765,6 +766,7 @@ export async function processNextOrbyKnowledgeJob(options: {
         .from("orby_knowledge_jobs")
         .update({
           available_at: resumeAt.toISOString(),
+          manual_priority: false,
           last_error: waitMessage,
           updated_at: now.toISOString(),
         })

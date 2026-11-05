@@ -1738,14 +1738,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
         || voiceAudioSourcesRef.current.size > 0
         || Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
-      const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
-      if (!unsupportedInterimScript && (assistantAudioInFlight || recentAssistantOutput)) {
-        const assistantSpeech = getRecentVoiceAssistantOutputs();
-        if (isLikelyVoicePlaybackEcho(interimText, assistantSpeech)) {
-          // Discard Orby's own speaker output, including short echo fragments.
-          setLiveTranscript("");
-        } else if (isStrongVoiceBargeIn(interimText, assistantSpeech)) {
-          // Only a meaningful spoken phrase can interrupt Live playback.
+      const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 3_000;
+      const assistantSpeech = getRecentVoiceAssistantOutputs();
+      const interimIsEcho = (assistantAudioInFlight || (recentAssistantOutput && normalizeVoiceComparison(interimText).length >= 18))
+        && isLikelyVoicePlaybackEcho(interimText, assistantSpeech);
+      if (!unsupportedInterimScript && interimIsEcho) {
+        // Ignore playback feedback and only a very short acoustic tail.
+        setLiveTranscript("");
+      } else if (!unsupportedInterimScript && assistantAudioInFlight) {
+        if (isStrongVoiceBargeIn(interimText, assistantSpeech)) {
           interruptCurrentVoiceOutput();
           voicePendingStudentTurnRef.current = true;
           voiceUserTextRef.current = interimText;
@@ -1753,12 +1754,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           setLiveTranscript(interimText);
           setVoiceStatus("Te escucho…");
         } else {
-          // Short, ambiguous ASR fragments during/just after playback are not
-          // enough evidence to interrupt the current response.
+          // Weak fragments while the speaker is active are usually echo/VAD noise.
           setLiveTranscript("");
-          if (assistantAudioInFlight) setVoiceStatus("Orby está hablando…");
+          setVoiceStatus("Orby está hablando…");
         }
       } else if (!unsupportedInterimScript) {
+        // Once playback ends, accept short confirmations and follow-ups normally.
         const previousInterim = voiceUserTextRef.current.trim();
         voiceUserTextRef.current = mergeLiveTranscript(previousInterim, interimText);
         if (voiceUserTextRef.current.trim()) voicePendingStudentTurnRef.current = true;
@@ -1802,14 +1803,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       || Date.now() <= voiceLastAssistantPlaybackUntilRef.current + 1_800;
     // ASR can deliver the microphone echo after the audio element has ended.
     // Keep a short transcript-based guard so Orby never answers its own greeting.
-    const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
-    const isRecentAcousticEcho = (assistantAudioInFlight || recentAssistantOutput)
-      && isLikelyVoicePlaybackEcho(normalizedFinal, [...recentAssistantTexts, recentAssistantText]);
-    const isMeaningfulBargeIn = (assistantAudioInFlight || recentAssistantOutput)
-      && isStrongVoiceBargeIn(normalizedFinal, [...recentAssistantTexts, recentAssistantText]);
+    const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 3_000;
+    const assistantSpeechCandidates = [...recentAssistantTexts, recentAssistantText];
+    const isRecentAcousticEcho = (assistantAudioInFlight || (recentAssistantOutput && normalizedFinal.length >= 18))
+      && isLikelyVoicePlaybackEcho(normalizedFinal, assistantSpeechCandidates);
+    const isMeaningfulBargeIn = assistantAudioInFlight
+      && isStrongVoiceBargeIn(normalizedFinal, assistantSpeechCandidates);
     if (isRecentAcousticEcho) {
       console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
-    } else if ((assistantAudioInFlight || recentAssistantOutput) && !isMeaningfulBargeIn) {
+    } else if (assistantAudioInFlight && !isMeaningfulBargeIn) {
       console.info("[Orby Voice] Ignored a low-confidence transcript during assistant playback.");
     } else if (transcript && (voiceBrowserSpeechActiveRef.current || assistantAudioInFlight)) {
       // If final ASR arrives without a usable interim, treat it as a real

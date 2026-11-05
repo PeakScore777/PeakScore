@@ -245,6 +245,7 @@ export async function resumeOrbyJobsWaitingForEmbeddingProvider(): Promise<numbe
     .update({
       status: "queued",
       attempt_count: 0,
+      manual_priority: false,
       available_at: now,
       locked_by: null,
       locked_at: null,

@@ -1565,13 +1565,13 @@ test("un eco de una respuesta breve no genera otro turno, pero una confirmación
 });
 
 test("las respuestas TTS largas conservan texto y cada fragmento fallido se reintenta sin cancelar el resto", () => {
-  assert.match(lessonTutorSource, /slice\(0, 12_000\)/);
-  assert.match(lessonTutorSource, /recoverCurrentTtsChunk/);
-  assert.match(lessonTutorSource, /chunkRetryCount < 1/);
-  assert.match(lessonTutorSource, /skippedAudioChunks/);
-  assert.match(lessonTutorSource, /AbortSignal\.timeout\(30_000\)/);
-  assert.match(lessonTutorSource, /Math\.min\(360_000/);
-  assert.match(cloudflareTutorRoute, /isLowQualityOrbyReply\(modelReply\)/);
-  assert.match(lessonTutorSource, /isLowQualityOrbyReply\(rawReply\)/);
-  assert.match(cloudflareVoiceSource, /Nunca respondas únicamente "sí", "no", "ok" ni signos de puntuación/);
-});
+  assert.ok(lessonTutorSource.includes(".slice(0, 12_000)"));
+  assert.ok(lessonTutorSource.includes("recoverCurrentTtsChunk"));
+  assert.ok(lessonTutorSource.includes("chunkRetryCount < 1"));
+  assert.ok(lessonTutorSource.includes("skippedAudioChunks"));
+  assert.ok(lessonTutorSource.includes("Math.min(360_000,"));
+  assert.ok(lessonTutorSource.includes("AbortSignal.timeout(30_000)"));
+  assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply)"));
+  assert.ok(lessonTutorSource.includes("isLowQualityOrbyReply(rawReply)"));
+  assert.ok(cloudflareVoiceSource.includes('Nunca respondas únicamente "sí", "no", "ok" ni signos de puntuación'));
+});;

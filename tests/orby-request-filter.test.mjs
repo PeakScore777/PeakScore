@@ -23,6 +23,7 @@ const chunking = await loadTypeScriptModule("../lib/pdf/split-orby-text.ts");
 const checklist = await loadTypeScriptModule("../lib/pdf/extract-orby-checklist-rows.ts");
 const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowledge-normalization.ts");
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
+const voiceEcho = await loadTypeScriptModule("../lib/ai/orby-voice-echo.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
 const chunkCapacityMigration = await readFile(new URL("../supabase/migrations/20261102220000_orby_knowledge_chunk_capacity.sql", import.meta.url), "utf8");
@@ -130,7 +131,7 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("voiceLastAssistantOutputAtRef"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastAssistantOutputAtRef.current < 25_000"));
   assert.ok(lessonTutorSource.includes("Turn-based Whisper can capture the laptop speaker after Orby finishes."));
-  assert.ok(lessonTutorSource.includes("isLikelyVoicePlaybackEcho(transcript, voiceLastAssistantOutputRef.current)"));
+  assert.ok(lessonTutorSource.includes("isLikelyVoicePlaybackEcho(transcript, getRecentVoiceAssistantOutputs())"));
   assert.ok(lessonTutorSource.includes("ASR can deliver the microphone echo after the audio element has ended."));
   assert.ok(lessonTutorSource.includes("recentAssistantOutput"));
   assert.ok(lessonTutorSource.includes("speakWithBrowserFallback(clean, index)"));
@@ -151,6 +152,18 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastCommittedInputAtRef.current < 10_000"));
   assert.ok(liveSessionSource.includes('const model = "gemini-3.8-live"'));
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
+});
+
+test("el detector de eco reconoce respuestas anteriores aunque Orby ya haya hablado otra cosa", () => {
+  const detect = voiceEcho.isLikelyVoicePlaybackEcho;
+  const previousReply = "Ese tema no corresponde a Saber 11. Puedo ayudarte con Matemáticas, Lectura Crítica, Sociales, Ciencias Naturales e Inglés.";
+  const latestReply = "¡Hola! Soy Orby, ¿qué vamos a estudiar hoy?";
+  assert.equal(
+    detect("Ese tema no corresponde a Saber once puedo ayudarte con matematicas lectura critica", [latestReply, previousReply]),
+    true,
+  );
+  assert.equal(detect("Oye Orby, explícame la fotosíntesis", [latestReply, previousReply]), false);
+  assert.equal(detect("hola", [latestReply, previousReply]), false);
 });
 
 test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallbacks facturables", () => {
@@ -1008,7 +1021,10 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current\s*\|\|\s*voiceOutputAudioBlockedRef\.current\s*\|\|\s*voiceResponseDoneRef\.current\)\s*continue/);
   assert.match(lessonTutorSource, /stopSpeaking\(\);/);
   assert.match(lessonTutorSource, /serverContent\.interrupted === true && !voiceLocalReplyInFlightRef\.current/);
-  assert.match(lessonTutorSource, /function isLikelyVoicePlaybackEcho\(transcript: string, assistantSpeech: string\)/);
+  assert.match(lessonTutorSource, /function isLikelyVoicePlaybackEcho\(transcript: string, assistantSpeech: string \| readonly string\[\]\)/);
+  assert.match(lessonTutorSource, /voiceRecentAssistantOutputsRef/);
+  assert.match(lessonTutorSource, /getRecentVoiceAssistantOutputs/);
+  assert.match(lessonTutorSource, /rememberVoiceAssistantOutput/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = partialReply/);
   assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
   assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*Math\.max\(0, voiceNextPlaybackTimeRef\.current - audioContext\.currentTime\)\s*\*\s*1000\s*\+\s*1_800/);

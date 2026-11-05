@@ -32,9 +32,9 @@ function normalizeSaber11LabDepth(value: string): string {
   // The lab may inspect advanced source material, but must not turn that
   // material into a university-level learning target for Saber 11 students.
   return value
-    .replace(/\\b(?:nivel|profundidad|exigencia)\\s+(?:t[eé]cnica\\s+)?(?:superior\\s*)?\\(?universitari[oa]\\)?/gi, "nivel escolar de preparación para Saber 11")
-    .replace(/\\b(?:profundidad\\s+t[eé]cnica\\s+superior\\s*\\(?universitari[oa]\\)?|enfoque|preparaci[oó]n|formaci[oó]n)\\s+universitari[oa]\\b/gi, "profundización opcional, no exigida para Saber 11")
-    .replace(/\\b(?:contenido|temario|conocimiento)\\s+universitari[oa]\\b/gi, "contenido de profundización opcional");
+    .replace(/\bnivel\s+de\s+profundidad\s+t[eé]cnica\s+superior\s*\(?universitari[oa]\)?/gi, "nivel escolar de preparación para Saber 11")
+    .replace(/\b(?:nivel|profundidad|exigencia|enfoque|preparaci[oó]n|formaci[oó]n)\s+universitari[oa]\b/gi, "profundización opcional, no exigida para Saber 11")
+    .replace(/\b(?:contenido|temario|conocimiento)\s+universitari[oa]\b/gi, "contenido de profundización opcional");
 }
 
 function normalizeAdminHistoryReply(value: string): string {

@@ -221,6 +221,10 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
   assert.match(knowledgeWorkerSource, /Park the remaining/);
   assert.match(knowledgeWorkerSource, /00:05 UTC/);
   assert.match(knowledgeWorkerSource, /ORBY_EMBEDDING_PROVIDER_NOT_CONFIGURED/);
+  assert.match(knowledgeWorkerSource, /manual_priority: false/);
+  assert.match(knowledgeWorkerSource, /worker_lock_owner: null/);
+  assert.match(knowledgeWorkerSource, /worker_lock_expires_at: null/);
+  assert.match(knowledgeQueueSource, /manual_priority: false/);
   assert.match(knowledgeQueueSource, /resumeOrbyJobsWaitingForEmbeddingProvider/);
   assert.match(knowledgeQueueSource, /attempt_count: 0/);
   assert.match(automaticWorkerRoute, /resumeOrbyJobsWaitingForEmbeddingProvider/);

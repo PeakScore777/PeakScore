@@ -3,12 +3,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
+import { normalizeGeminiTtsAudio } from "@/lib/ai/orby-tts-audio";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MODEL = "gemini-3.8-flash-tts";
-const SAMPLE_RATE = 24_000;
 const MAX_TEXT_LENGTH = 500;
 const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 
@@ -20,25 +20,6 @@ function jsonError(error: string, code: string, status: number) {
       "X-Content-Type-Options": "nosniff",
     },
   });
-}
-
-function pcm16ToWav(pcm: Buffer): Buffer {
-  const header = Buffer.alloc(44);
-  const dataLength = pcm.byteLength;
-  header.write("RIFF", 0);
-  header.writeUInt32LE(36 + dataLength, 4);
-  header.write("WAVE", 8);
-  header.write("fmt ", 12);
-  header.writeUInt32LE(16, 16);
-  header.writeUInt16LE(1, 20);
-  header.writeUInt16LE(1, 22);
-  header.writeUInt32LE(SAMPLE_RATE, 24);
-  header.writeUInt32LE(SAMPLE_RATE * 2, 28);
-  header.writeUInt16LE(2, 32);
-  header.writeUInt16LE(16, 34);
-  header.write("data", 36);
-  header.writeUInt32LE(dataLength, 40);
-  return Buffer.concat([header, pcm]);
 }
 
 function isFreeTierQuotaError(error: unknown): boolean {
@@ -136,16 +117,22 @@ export async function POST(request: Request) {
       },
     });
 
-    const audioBase64 = response.candidates?.[0]?.content?.parts?.find((part) => typeof part.inlineData?.data === "string")?.inlineData?.data;
+    const audioPart = response.candidates?.[0]?.content?.parts?.find((part) => typeof part.inlineData?.data === "string");
+    const audioBase64 = audioPart?.inlineData?.data;
     if (typeof audioBase64 !== "string" || !audioBase64) {
       return jsonError("Gemini no devolvió audio. La respuesta permanece disponible por escrito.", "TTS_EMPTY_AUDIO", 502);
     }
 
-    const pcm = Buffer.from(audioBase64, "base64");
-    if (pcm.byteLength < 256 || pcm.byteLength > MAX_AUDIO_BYTES || pcm.byteLength % 2 !== 0) {
-      return jsonError("Gemini devolvió audio con un tamaño o formato no válido.", "TTS_INVALID_AUDIO", 502);
+    // Unary Gemini 3.8 TTS returns a complete audio/wav RIFF file by default.
+    // Preserve that header; only wrap raw audio/l16 PCM when explicitly indicated.
+    const wav = normalizeGeminiTtsAudio(audioBase64, audioPart?.inlineData?.mimeType, MAX_AUDIO_BYTES);
+    if (!wav) {
+      console.error("[Orby Gemini TTS] Provider returned an unsupported or malformed audio payload.", {
+        mimeType: audioPart?.inlineData?.mimeType,
+        encodedLength: audioBase64.length,
+      });
+      return jsonError("Gemini devolvió un audio con formato no válido.", "TTS_INVALID_AUDIO", 502);
     }
-    const wav = pcm16ToWav(pcm);
     return new Response(new Uint8Array(wav), {
       status: 200,
       headers: {

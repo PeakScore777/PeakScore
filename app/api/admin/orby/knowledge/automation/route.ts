@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isOrbyEmbeddingProviderConfigured } from "@/lib/ai/orby-knowledge";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -395,6 +396,7 @@ export async function GET() {
         && new Date(settingsResult.data.manual_worker_lock_expires_at).getTime() > Date.now()),
     },
     configured: Boolean(process.env.CRON_SECRET) && workerConfiguration.data === true,
+    embeddingProviderConfigured: isOrbyEmbeddingProviderConfigured(),
     counts: {
       queued: queued.count ?? 0,
       running: running.count ?? 0,

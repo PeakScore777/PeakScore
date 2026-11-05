@@ -11,7 +11,6 @@ import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho } from "@/lib/ai/orby-voice-echo";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
-const ORBY_FREE_TTS_UNAVAILABLE_MESSAGE = "El audio alternativo no está disponible con una cuota gratuita verificada. La respuesta permanece escrita; no se activará una voz genérica ni un servicio de pago.";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
@@ -977,7 +976,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // If optional TTS is unavailable, keep the validated answer visible without speaking it.
       const finishWithoutGenericVoice = () => {
         if (finished) return;
-        setVoiceError(ORBY_FREE_TTS_UNAVAILABLE_MESSAGE);
+        // Keep the validated answer and voice workspace usable. Internal
+        // provider configuration must not appear as a red student-facing error.
+        setVoiceError("");
+        setVoiceStatus("Respuesta lista · puedes continuar hablando o escribir");
         finish(false);
       };
 
@@ -1005,11 +1007,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (!response.ok) {
             const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
             if (payload.code === "FREE_TIER_TTS_NOT_AVAILABLE" || payload.code === "FREE_TIER_TTS_QUOTA_EXCEEDED") {
-              const notice = typeof payload.error === "string"
-                ? payload.error
-                : "La cuota gratuita de voz no está disponible ahora. La respuesta permanece por escrito y no se activará ningún servicio de pago.";
-              if (isLocalVoiceTurn) setVoiceError(notice);
-              else setError(notice);
+              // Provider quota/configuration flags are internal. Keep the
+              // answer and session usable without exposing billing jargon.
+              setVoiceError("");
+              if (!isLocalVoiceTurn) setError("");
+              setVoiceStatus("Respuesta lista · puedes continuar hablando o escribir");
               // No phantom playback/transcript: the text was never spoken.
               voiceBrowserSpeechActiveRef.current = false;
               voiceLastAssistantOutputRef.current = "";
@@ -1069,7 +1071,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             finish(true);
             return;
           }
-          console.warn("[Orby Voice] Free Gemini TTS unavailable; keeping the reply as text.", {
+          console.warn("[Orby Voice] Optional speech fallback unavailable; keeping the reply as text.", {
             name: error instanceof Error ? error.name : "UnknownError",
           });
           requestController = null;
@@ -1164,7 +1166,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if (shouldFallback) {
       activateTurnBasedVoiceFallback(
-        "Gemini Live se interrumpió o agotó su cuota. Continúo esta misma pregunta con Whisper y el tutor gratuito de Cloudflare; la respuesta quedará por escrito para evitar servicios de voz facturados.",
+        "La conexión en tiempo real se interrumpió. Continúo esta misma pregunta por turnos sin perder tu conversación.",
         pendingUserText,
         appendUserMessage,
       );
@@ -1172,7 +1174,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     activateTurnBasedVoiceFallback(
-      reason || "Gemini Live no está disponible. Puedes continuar por turnos con Whisper y Cloudflare; la respuesta alternativa quedará por escrito.",
+      reason || "La voz en tiempo real no está disponible ahora. Puedes continuar por turnos sin perder tu conversación.",
     );
   }
 
@@ -2668,8 +2670,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setWorkspaceMode("voice");
     setIsListening(false);
     setLiveTranscript("");
-    setVoiceError(reason);
-    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta con voz alternativa…" : "Modo por turnos listo · toca el micrófono para hablar");
+    setVoiceError("");
+    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta por turnos…" : "Modo por turnos listo · toca el micrófono para hablar");
+    console.info("[Orby Voice] Switched to turn-based mode.", { reason });
 
     if (!cleanPendingText) {
       voiceUserTextRef.current = "";
@@ -2742,8 +2745,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (!wasCancelled && !authenticationFailure) {
           activateTurnBasedVoiceFallback(
             geminiQuotaReached
-              ? "Gemini Live agotó su cuota gratuita. Continúo por turnos con Whisper y el tutor gratuito de Cloudflare; la respuesta quedará escrita, sin servicios facturados."
-              : "Gemini Live no está disponible ahora. Continúo por turnos con Whisper y el tutor gratuito de Cloudflare; la respuesta alternativa quedará escrita.",
+              ? "La conexión en tiempo real se interrumpió. Continúo por turnos sin perder tu conversación."
+              : "La voz en tiempo real no está disponible ahora. Continúo por turnos sin perder tu conversación.",
           );
         } else if (!wasCancelled) {
           stopRealtimeVoice();

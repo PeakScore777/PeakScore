@@ -193,6 +193,7 @@ test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en
   assert.equal(detectBarge("espera", []), true);
   assert.equal(detectBarge("explícame ahora la fotosíntesis", []), true);
   assert.equal(detectBarge("sí", ["¡Sí, claro!"]), false);
+  assert.equal(detectEcho("sí", ["Sin embargo, podemos continuar con el ejercicio." ]), false);
   assert.equal(detectEcho("¡Hola de nuevo!", ["¡Hola de nuevo! Soy Orby."]), true);
 
   assert.equal(detectDuplicate("sí", "sí", 4, 4, 1_000, 2_000), true);

@@ -144,7 +144,7 @@ test("Cloudflare mantiene transcripci√≥n y tutor por turnos; Gemini Live es la √
   assert.ok(lessonTutorSource.includes("speakWithCloudflareOnly(clean, index)"));
   assert.ok(lessonTutorSource.includes("await speakWithCloudflareOnly(clean, index);"));
   assert.doesNotMatch(lessonTutorSource, /speechSynthesis\.speak\(/);
-  assert.match(lessonTutorSource, /If Cloudflare is unavailable, keep the validated answer visible without speaking it/);
+  assert.match(lessonTutorSource, /If optional TTS is unavailable, keep the validated answer visible without speaking it/);
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("sendMessageRef.current(transcript, false, true"));

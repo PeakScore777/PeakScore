@@ -248,7 +248,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*\/\/\s*entire transcript/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 18/);
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = hasCompleteSafeSentence/);
-  assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
+  assert.match(lessonTutorSource, /if \(!voiceOutputAudioBlockedRef\.current && voiceOutputTranscriptValidatedRef\.current\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.push\(chunk\)/);
   assert.match(lessonTutorSource, /voiceOutputAudioBlockedRef\.current = true/);
   assert.match(lessonTutorSource, /Gemini Live finalizó sin entregar una transcripción utilizable/);
@@ -969,7 +969,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 18/);
   assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*\/\/\s*entire transcript/);
-  assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
+  assert.match(lessonTutorSource, /if \(!voiceOutputAudioBlockedRef\.current && voiceOutputTranscriptValidatedRef\.current\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
   const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);
   assert.ok(finalAudioValidationIndex >= 0 && finalTranscriptIndex > finalAudioValidationIndex);

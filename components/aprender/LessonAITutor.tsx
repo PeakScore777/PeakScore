@@ -3232,6 +3232,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function startNewConversation() {
+    voiceRecentAssistantOutputsRef.current = [];
     pendingMessagesRef.current = [];
     setQueuedMessageCount(0);
     voiceSessionResumeHandleRef.current = null;
@@ -3267,6 +3268,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (voiceModeRef.current) stopRealtimeVoice();
+    voiceRecentAssistantOutputsRef.current = [];
     voiceSessionResumeHandleRef.current = null;
     voiceSessionResumeConversationRef.current = null;
     voiceSessionResumeUpdatedAtRef.current = 0;

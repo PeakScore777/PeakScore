@@ -1538,14 +1538,24 @@ test("Gemini 3.8 TTS conserva el WAV completo y solo envuelve PCM sin cabecera",
 });
 
 
-test("el filtro conserva confirmaciones breves en una actividad de Saber 11 y aclara ASR ilegible", () => {
+test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones dentro de Saber 11", () => {
   const context = "Área de estudio: Lectura Crítica. Orby preguntó: ¿Empezamos con un texto tipo ICFES?";
   assert.equal(filter.isOrbyContextualConfirmation("Sí", context), true);
   assert.equal(filter.preflightOrbyRequest("sí", context).allowed, true);
   assert.equal(filter.isOrbyUnclearInput("???"), true);
-  assert.equal(filter.preflightOrbyRequest("???", context).reply, filter.ORBY_REPEAT_REQUEST_REPLY);
+  const clarification = filter.preflightOrbyRequest("???", context);
+  assert.equal(clarification.allowed, false);
+  assert.match(clarification.reply, /qué parte te generó la duda/i);
+  assert.doesNotMatch(clarification.reply, /no corresponde a Saber 11/i);
+
+  assert.equal(filter.preflightOrbyRequest("moda estadística").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("moda").allowed, true);
+  assert.equal(filter.containsProgrammingInstruction("Python"), false);
+  assert.equal(filter.preflightOrbyRequest("Enséñame a programar en Python.").category, "programming");
+
   assert.equal(filter.isLowQualityOrbyReply("???"), true);
   assert.equal(filter.isLowQualityOrbyReply("Sí."), true);
+  assert.equal(filter.isLowQualityOrbyReply("Sí.", "¿La fotosíntesis ocurre en los cloroplastos? Responde solo sí o no."), false);
   assert.equal(filter.isLowQualityOrbyReply("Sí, empecemos con Lectura Crítica."), false);
   assert.equal(filter.isLowQualityOrbyReply("La respuesta correcta es A."), false);
 });
@@ -1571,7 +1581,7 @@ test("las respuestas TTS largas conservan texto y cada fragmento fallido se rein
   assert.ok(lessonTutorSource.includes("skippedAudioChunks"));
   assert.ok(lessonTutorSource.includes("Math.min(360_000,"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(30_000)"));
-  assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply)"));
-  assert.ok(lessonTutorSource.includes("isLowQualityOrbyReply(rawReply)"));
+  assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply, userMessage)"));
+  assert.ok(lessonTutorSource.includes("isLowQualityOrbyReply(rawReply, voiceUserTextRef.current)"));
   assert.ok(cloudflareVoiceSource.includes("Nunca respondas únicamente 'sí', 'no', 'ok' ni signos de puntuación"));
 });

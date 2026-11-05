@@ -293,14 +293,15 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /voiceFallbackModeRef\.current/);
 });
  
-test("los saludos cortos se responden localmente sin invocar proveedores de IA", () => {
+test("los saludos cortos se reconocen y el modo voz los remite a Gemini Live", () => {
   for (const greeting of ["hola", "ola", "oe", "oee", "oye", "ey", "epa", "Hola bro", "buenas", "buenos días", "¿cómo estás?", "qué más hermanito", "oee hermano, ¿qué más?"]) {
     assert.equal(filter.isOrbyGreetingRequest(greeting), true, greeting);
   }
   assert.equal(filter.isOrbyGreetingRequest("Hola, explícame la fotosíntesis"), false);
   assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
   assert.match(lessonTutorRouteSource, /isOrbyGreetingRequest\(userMessage\)/);
-  assert.match(lessonTutorSource, /const greetingReply = isOrbyGreetingRequest\(message\)/);
+  assert.match(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)\s*\?\s*null/);
+  assert.doesNotMatch(lessonTutorSource, /const greetingReply = isOrbyGreetingRequest\(message\)/);
 });
 
 test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre", () => {

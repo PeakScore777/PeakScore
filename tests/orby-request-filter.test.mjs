@@ -244,7 +244,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   const finalAudioFlush = lessonTutorSource.indexOf("flushPendingGeminiAudio();", finalTurnValidation);
   assert.ok(partialTranscriptStart >= 0 && modelAudioStart > partialTranscriptStart);
   assert.ok(finalTurnValidation > modelAudioStart && finalAudioFlush > finalTurnValidation);
-  assert.match(lessonTutorSource, /Playback is deliberately deferred until the complete transcript passes\s*\/\/ final validation/);
+  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*\/\/\s*entire transcript/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 18/);
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = hasCompleteSafeSentence/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
@@ -967,7 +967,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 18/);
-  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*entire transcript/);
+  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*\/\/\s*entire transcript/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) flushPendingGeminiAudio\(\)/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
   const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);

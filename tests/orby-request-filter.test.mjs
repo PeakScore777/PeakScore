@@ -1040,8 +1040,9 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /rememberVoiceAssistantOutput/);
   assert.match(lessonTutorSource, /function startNewConversation\(\) \{\s*voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
   assert.match(lessonTutorSource, /async function selectConversation\(id: string\) \{[\s\S]*?voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
-  assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = partialReply/);
+  assert.match(lessonTutorSource, /if \(voiceRealtimeAudioChunkCountRef\.current > 0 \|\| voiceAudioSourcesRef\.current\.size > 0\) \{\s*voiceLastAssistantOutputRef\.current = partialReply/);
   assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
+  assert.match(lessonTutorSource, /A transcript is eligible for acoustic echo suppression only after/);
   assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*Math\.max\(0, voiceNextPlaybackTimeRef\.current - audioContext\.currentTime\)\s*\*\s*1000\s*\+\s*1_800/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(lessonTutorSource, /interruptCurrentVoiceOutput\(\);\s*pendingMessagesRef\.current = \[\]/);

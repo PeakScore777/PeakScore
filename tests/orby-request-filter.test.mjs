@@ -367,11 +367,11 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.
-  assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \["es-ES"\]/);
+  assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \["es-US"\]/);
   assert.match(lessonTutorSource, /customVocabulary: \[/);
-  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: \["es"\]/);
+  assert.match(lessonTutorSource, /outputAudioTranscription: \{\s*languageCodes: \["es-US"\]/);
   assert.doesNotMatch(lessonTutorSource, /mode: "SMART"/);
-  assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: "es"/);
+  assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: "es-US"/);
   assert.match(lessonTutorSource, /"Oye Orby"/);
   assert.match(lessonTutorSource, /unsupportedInputScript/);
   assert.match(lessonTutorSource, /ORBY_SPANISH_ONLY_REPLY/);

@@ -13,7 +13,7 @@ export function normalizeOrbyRequestText(value: string): string {
 }
 
 const PROGRAMMING_REQUEST_PATTERNS = [
-  /^\s*(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|html|css|react|sql)\s*[.!?]*$/i,
+  // A lone keyword is ambiguous; block only an explicit request to learn or execute programming.
   // Match an explicit request to learn/use software tools, not a passing
   // mention of a programming term in a reading passage or scientific example.
   /\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|como se usa|como usar|quiero usar|i want to learn|i would like to learn|i'd like to learn|teach me|help me|show me|how do i|how to|learn to)\b.{0,90}\b(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|crear una app|hacer una pagina web|write code|code)\b/i,
@@ -117,7 +117,15 @@ export const ORBY_SPANISH_OUTPUT_FALLBACK =
 
 
 export const ORBY_REPEAT_REQUEST_REPLY =
-  "No alcancé a entender tu mensaje. ¿Puedes repetirlo o escribir la pregunta completa?";
+  "No alcancé a entender qué necesitas revisar. ¿Puedes decirme qué tema o qué parte quieres que te explique?";
+
+export function getOrbyClarificationReply(previousContext = ""): string {
+  const recent = normalizeOrbyRequestText(previousContext).slice(-900);
+  const hasRecentAcademicContext = /\b(?:saber\s*11|icfes|matematicas?|lectura critica|sociales y ciudadanas|ciencias naturales|fotosintesis|biologia|quimica|fisica|ingles)\b/i.test(recent);
+  return hasRecentAcademicContext
+    ? "¿Qué parte te generó la duda? Puedo explicarla con otras palabras, paso a paso o con un ejemplo diferente."
+    : ORBY_REPEAT_REQUEST_REPLY;
+}
 
 export const ORBY_INCOMPLETE_REPLY_FALLBACK =
   "No quiero dejarte con una respuesta incompleta. Dime qué parte quieres revisar y te la explico paso a paso para Saber 11.";
@@ -147,13 +155,20 @@ export function isOrbyContextualConfirmation(message: string, previousContext = 
 }
 
 /** Reject punctuation and bare acknowledgements, not concise academic answers such as A or B. */
-export function isLowQualityOrbyReply(value: string): boolean {
+export function isLowQualityOrbyReply(value: string, studentRequest = ""): boolean {
   const normalized = normalizeOrbyRequestText(value)
     .replace(/[¿?¡!.,;:…]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
   if (!normalized) return true;
-  return /^(?:si|no|ok|okay|vale|claro|listo|perfecto|dale|de una|bueno)$/.test(normalized);
+
+  // Short acknowledgements are incomplete tutor answers unless the student
+  // explicitly requested a one-word yes/no or true/false response.
+  const isBareAcknowledgement = /^(?:si|no|ok|okay|vale|claro|listo|perfecto|dale|de una|bueno)$/.test(normalized);
+  if (!isBareAcknowledgement) return false;
+  const request = normalizeOrbyRequestText(studentRequest);
+  const explicitlyRequestsOneWord = /\b(?:responde|contesta|respondeme|contestame|dime)\b.{0,45}\b(?:solo|solamente|unicamente)\b.{0,30}\b(?:si o no|una palabra|verdadero o falso)\b|\b(?:solo|solamente|unicamente)\s+(?:si o no|una palabra|verdadero o falso)\b/i.test(request);
+  return !explicitlyRequestsOneWord;
 }
 
 const UNSUPPORTED_SPANISH_SCRIPT_PATTERN = /[\p{Script=Devanagari}\p{Script=Arabic}\p{Script=Cyrillic}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Myanmar}\p{Script=Ethiopic}]/u;
@@ -449,7 +464,8 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
 
   // Empty and punctuation-only ASR results deserve clarification, not a scope refusal.
   if (isOrbyUnclearInput(message)) {
-    return { allowed: false, category: "outside", reply: ORBY_REPEAT_REQUEST_REPLY };
+    // Punctuation is an unclear turn, not a request outside Saber 11.
+    return { allowed: false, category: "outside", reply: getOrbyClarificationReply(previousContext) };
   }
 
   // A competitor name or a brand mentioned inside an ICFES reading passage

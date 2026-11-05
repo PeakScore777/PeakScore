@@ -1037,7 +1037,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               voiceLastAssistantOutputRef.current = "";
               voiceLastAssistantOutputAtRef.current = 0;
               voiceLastAssistantPlaybackUntilRef.current = 0;
-              finish(false);
+              finishWithoutGenericVoice();
               return;
             }
             throw new Error(typeof payload.error === "string" ? payload.error : "FREE_TIER_TTS_UNAVAILABLE");

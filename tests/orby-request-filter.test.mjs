@@ -295,14 +295,14 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /voiceUserMessageVisibleRef/);
   assert.match(lessonTutorSource, /isBrowserSpeechEcho/);
   assert.match(lessonTutorSource, /isDuplicateFinalTranscript/);
-  assert.match(lessonTutorSource, /isDuplicateVoiceTranscriptInActivity\\(/);
-  assert.match(lessonTutorSource, /voicePendingStudentTurnRef\\.current && Boolean\\(voiceUserTextRef\\.current\\.trim\\(\\)\\)/);
-  assert.match(lessonTutorSource, /function upsertVoiceUserMessage\\(value: string\\)/);
-  assert.match(lessonTutorSource, /upsertVoiceUserMessage\\(voiceUserTextRef\\.current\\)/);
-  assert.match(lessonTutorSource, /upsertVoiceUserMessage\\(interimText\\)/);
+  assert.match(lessonTutorSource, /isDuplicateVoiceTranscriptInActivity\(/);
+  assert.match(lessonTutorSource, /voicePendingStudentTurnRef\.current && Boolean\(voiceUserTextRef\.current\.trim\(\)\)/);
+  assert.match(lessonTutorSource, /function upsertVoiceUserMessage\(value: string\)/);
+  assert.match(lessonTutorSource, /upsertVoiceUserMessage\(voiceUserTextRef\.current\)/);
+  assert.match(lessonTutorSource, /upsertVoiceUserMessage\(interimText\)/);
 
   assert.match(lessonTutorSource, /Ignored unsolicited Live output without a pending student turn/);
-  assert.match(lessonTutorSource, /isStrongVoiceBargeIn\\(interimText, assistantSpeech\\)/);
+  assert.match(lessonTutorSource, /isStrongVoiceBargeIn\(interimText, assistantSpeech\)/);
 
   assert.match(lessonTutorSource, /voiceLastCommittedInputAtRef/);
   assert.match(lessonTutorSource, /const assistantPlaybackTail = Date\.now\(\) <= voiceLastAssistantPlaybackUntilRef\.current/);

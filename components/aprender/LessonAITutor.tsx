@@ -3649,7 +3649,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
       const transcript = payload.transcript.trim().slice(0, 1200);
-      const recentAssistantSpeech = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
+      // In turn-based Whisper mode, ignore a speaker echo only while TTS is
+      // actually playing or during the short acoustic tail after its final chunk.
+      // A 25-second window swallowed valid "sí/no/¿por qué?" student turns.
+      const recentAssistantSpeech = voiceBrowserSpeechActiveRef.current
+        || Date.now() <= voiceLastAssistantPlaybackUntilRef.current + 1_000;
       if (voiceFallbackModeRef.current && recentAssistantSpeech
         && isLikelyVoicePlaybackEcho(transcript, getRecentVoiceAssistantOutputs())) {
         // Turn-based Whisper can capture the laptop speaker after Orby finishes.

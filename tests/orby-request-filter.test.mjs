@@ -280,7 +280,8 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
 
   // Filtered Live output is replaced with a deterministic response; no second model call or alternate voice.
   assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
-  assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
+  assert.match(lessonTutorSource, /finishLocalVoiceReply\(assistantId\)/);
+  assert.match(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
   assert.doesNotMatch(lessonTutorSource, /Gemini no pudo leer la respuesta; usando la voz alternativa/);
   assert.doesNotMatch(lessonTutorSource, /internalSpeechInstruction/);
@@ -1041,7 +1042,8 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /voiceAssistantTextRef\.current = cleanReply/);
   assert.match(lessonTutorSource, /sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
-  assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
+  assert.match(lessonTutorSource, /finishLocalVoiceReply\(assistantId\)/);
+  assert.match(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.doesNotMatch(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
   assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*respondToVoiceLocally\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
   assert.match(lessonTutorSource, /!voiceLocalReplyInFlightRef\.current && typeof outputTranscript/);

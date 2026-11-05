@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   combineOrbyKnowledgePageBatches,
   createOrbyEmbeddings,
+  isOrbyEmbeddingProviderConfigured,
   generateOrbyKnowledgePageBatch,
   saveOrbyKnowledgeProfile,
   type OrbyKnowledgeChunk,
@@ -716,6 +717,92 @@ export async function processNextOrbyKnowledgeJob(options: {
         stage: "profile",
         progress: Number(job.next_batch_index ?? 0),
         message: documentTitle + ": " + retryMessage + " Próximo intento: " + resumeAt.toISOString() + ".",
+      };
+    }
+
+    if (
+      reason.includes("ORBY_EMBEDDING_PROVIDER_NOT_CONFIGURED")
+      && job.stage === "embeddings"
+    ) {
+      // Missing credentials are configuration state, not a document failure.
+      // Park the shared embedding queue without consuming attempts or touching
+      // already-persisted vectors / visual-page batches.
+      const now = new Date();
+      const resumeAt = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+      let counts: { total: number; embedded: number; missing: number } | null = null;
+      try {
+        counts = await getChunkCounts(job.document_id);
+      } catch (countError) {
+        console.warn("[Orby Autopilot] Could not refresh vector counts while parking the job.", {
+          jobId: job.id,
+          name: countError instanceof Error ? countError.name : "UnknownError",
+        });
+      }
+
+      const waitMessage = "ORBY_EMBEDDING_PROVIDER_NOT_CONFIGURED: Sin proveedor gratuito configurado; la tarea espera credenciales. No se consumieron reintentos.";
+      const { data: parked, error: parkError } = await supabaseAdmin
+        .from("orby_knowledge_jobs")
+        .update({
+          status: "queued",
+          stage: "embeddings",
+          embedded_chunk_count: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
+          available_at: resumeAt.toISOString(),
+          locked_by: null,
+          locked_at: null,
+          lease_expires_at: null,
+          last_error: waitMessage,
+          updated_at: now.toISOString(),
+        })
+        .eq("id", job.id)
+        .eq("locked_by", workerId)
+        .eq("status", "running")
+        .select("id")
+        .maybeSingle();
+      if (parkError || !parked) {
+        throw new Error("No se pudo pausar la tarea sin consumir reintentos: " + (parkError?.code ?? "lease_lost"));
+      }
+
+      const { error: queueError } = await supabaseAdmin
+        .from("orby_knowledge_jobs")
+        .update({
+          available_at: resumeAt.toISOString(),
+          last_error: waitMessage,
+          updated_at: now.toISOString(),
+        })
+        .eq("stage", "embeddings")
+        .in("status", ["queued", "retrying"])
+        .neq("id", job.id);
+      if (queueError) {
+        console.warn("[Orby Autopilot] Could not park every queued embedding task.", { code: queueError.code });
+      }
+
+      const documentPatch: Record<string, unknown> = {
+        ingestion_status: "processing",
+        next_review_at: resumeAt.toISOString(),
+        updated_at: now.toISOString(),
+      };
+      if (counts) {
+        documentPatch.embedded_chunk_count = counts.embedded;
+        documentPatch.chunk_count = counts.total;
+      }
+      await supabaseAdmin.from("orby_knowledge_documents")
+        .update(documentPatch)
+        .eq("id", job.document_id)
+        .eq("worker_lock_owner", workerId);
+
+      console.warn("[Orby Autopilot] Embedding jobs parked until a free provider is configured.", {
+        jobId: job.id,
+        embedded: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
+        total: counts?.total ?? null,
+      });
+      return {
+        state: "progress",
+        jobId: job.id,
+        documentId: job.document_id,
+        documentTitle,
+        stage: "embeddings",
+        progress: counts?.embedded ?? Number(job.embedded_chunk_count ?? 0),
+        message: documentTitle + ": no hay proveedor gratuito de embeddings configurado. La tarea y la cola quedaron pausadas, sin consumir reintentos ni perder vectores o lotes anteriores.",
       };
     }
 

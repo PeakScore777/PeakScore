@@ -190,6 +190,9 @@ test("el detector de eco reconoce respuestas anteriores aunque Orby ya haya habl
   assert.equal(detect("Oye Orby, explícame la fotosíntesis", [latestReply, previousReply]), false);
   assert.equal(detect("hola", [latestReply, previousReply]), false);
   assert.equal(detect("Saber 11", [latestReply, previousReply]), false);
+  assert.equal(detect("sí", ["Sí, claro."]), true);
+  assert.equal(detect("sí", ["Hola, ¿qué quieres estudiar?"]), false);
+  assert.equal(detect("sí", ["¿Empezamos con un texto tipo ICFES?"]), false);
 });
 
 test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallbacks facturables", () => {
@@ -1562,12 +1565,13 @@ test("un eco de una respuesta breve no genera otro turno, pero una confirmación
 });
 
 test("las respuestas TTS largas conservan texto y cada fragmento fallido se reintenta sin cancelar el resto", () => {
-  assert.match(lessonTutorSource, /slice\\(0, 12_000\\)/);
+  assert.match(lessonTutorSource, /slice\(0, 12_000\)/);
   assert.match(lessonTutorSource, /recoverCurrentTtsChunk/);
   assert.match(lessonTutorSource, /chunkRetryCount < 1/);
   assert.match(lessonTutorSource, /skippedAudioChunks/);
-  assert.match(lessonTutorSource, /Math\\.min\\(360_000/);
-  assert.match(cloudflareTutorRoute, /isLowQualityOrbyReply\\(modelReply\\)/);
-  assert.match(lessonTutorSource, /isLowQualityOrbyReply\\(rawReply\\)/);
+  assert.match(lessonTutorSource, /AbortSignal\.timeout\(30_000\)/);
+  assert.match(lessonTutorSource, /Math\.min\(360_000/);
+  assert.match(cloudflareTutorRoute, /isLowQualityOrbyReply\(modelReply\)/);
+  assert.match(lessonTutorSource, /isLowQualityOrbyReply\(rawReply\)/);
   assert.match(cloudflareVoiceSource, /Nunca respondas únicamente "sí", "no", "ok" ni signos de puntuación/);
 });

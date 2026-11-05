@@ -4,13 +4,14 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /**
- * Cloudflare's hosted Deepgram Aura-2 TTS is priced per character, outside
- * the confirmed free Workers AI neuron allowance. Keep this endpoint
- * fail-closed until PeakScore approves a genuinely free output-voice provider.
+ * Deepgram Aura-2 TTS has unit pricing. Workers AI Free includes a shared
+ * daily neuron allowance, but this account's plan and remaining allocation
+ * are not verified here. Keep this endpoint fail-closed to avoid unexpected
+ * billing until a safe free-only quota can be guaranteed.
  */
 export async function POST() {
   return NextResponse.json({
-    error: "La voz alternativa de salida está pausada: el proveedor disponible cobra por caracteres y no está incluido en una cuota gratuita confirmada. Orby conservará la respuesta por escrito y no generará cargos.",
+    error: "La voz alternativa de salida está pausada: el proveedor tiene precio por uso y no se ha podido verificar una cuota gratuita disponible para PeakScore. Orby conservará la respuesta por escrito.",
     code: "FREE_TIER_TTS_NOT_AVAILABLE",
   }, {
     status: 503,

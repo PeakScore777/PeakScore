@@ -959,6 +959,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               );
             }
             finishLocalVoiceReply(localVoiceMessageId);
+            if (skippedAudioChunks) {
+              setVoiceError("Una parte del audio no pudo reproducirse; el texto completo de la respuesta sigue disponible.");
+            }
           }
         }
         resolve();
@@ -984,11 +987,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         finish(false);
       };
 
-      const recoverCurrentTtsChunk = () => {
+      function recoverCurrentTtsChunk() {
         if (finished) return;
         skippedAudioChunks = true;
         clearAudioElement();
-        requestController?.abort();
         requestController = null;
         if (chunkRetryCount < 1) {
           chunkRetryCount += 1;
@@ -999,7 +1001,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         chunkRetryCount = 0;
         chunkIndex += 1;
         window.setTimeout(() => void playFreeTtsChunk(), 120);
-      };
+      }
 
       const playFreeTtsChunk = async () => {
         if (finished) return;
@@ -1019,7 +1021,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             method: "POST",
             credentials: "same-origin",
             headers: { "Content-Type": "application/json" },
-            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(14_000)]),
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]),
             body: JSON.stringify({ text: chunks[chunkIndex] }),
           });
           if (!response.ok) {

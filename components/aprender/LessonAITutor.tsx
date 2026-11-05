@@ -178,6 +178,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [historyLoading, setHistoryLoading] = useState(workspace);
+  const isHistoryLoading = Boolean(open && workspace && historyLoading);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyQuery, setHistoryQuery] = useState("");
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
@@ -346,7 +347,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   useEffect(() => {
     if (!open || !workspace) {
       historyHydratingRef.current = false;
-      setHistoryLoading(false);
       return;
     }
     let cancelled = false;
@@ -414,9 +414,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     void loadHistory();
     return () => {
       cancelled = true;
-      if (generation === historyHydrationGenerationRef.current) {
-        historyHydratingRef.current = false;
-      }
+      // React runs this cleanup before the next setup for the same effect.
+      // A new workspace hydration can safely set the flag back to true.
+      historyHydratingRef.current = false;
     };
   }, [open, workspace]);
 
@@ -2485,7 +2485,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     lastLiveSocketError = rawError.slice(0, 180);
                     console.warn("[Orby Voice] Resumed WebSocket error.", { message: lastLiveSocketError });
                   },
-                  onclose: (event) => {
+                  onclose: () => {
                     if (resumedConnectionId !== connectionSequence || startupSignal.aborted) return;
                     connectionClosed = true;
                     if (!resumeSetupComplete) {
@@ -3602,8 +3602,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <label className="mt-2 flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-2.5"><Search className="h-3.5 w-3.5 shrink-0 text-[#777e88]"/><input value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} placeholder="Buscar conversación…" aria-label="Buscar conversación" className="min-w-0 flex-1 bg-transparent text-[11px] text-white outline-none placeholder:text-[#737a84]"/></label>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2 [scrollbar-width:thin] [scrollbar-color:#34383e_transparent]">
-            {historyLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-[#858b95]"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando chats…</div>}
-            {!historyLoading && conversations.length === 0 && <p className="px-3 py-4 text-xs leading-5 text-[#858b95]">Tus conversaciones aparecerán aquí.</p>}
+            {isHistoryLoading && <div className="flex items-center gap-2 px-2 py-3 text-xs text-[#858b95]"><LoaderCircle className="h-4 w-4 animate-spin" /> Cargando chats…</div>}
+            {!isHistoryLoading && conversations.length === 0 && <p className="px-3 py-4 text-xs leading-5 text-[#858b95]">Tus conversaciones aparecerán aquí.</p>}
             {conversations.filter((item) => `${item.title} ${item.subject} ${item.topic}`.toLocaleLowerCase("es-CO").includes(historyQuery.trim().toLocaleLowerCase("es-CO"))).map((item) => <div key={item.id} className={conversationId === item.id ? "group rounded-lg border border-orange-400/20 bg-orange-500/[0.08] px-2 py-2" : "group rounded-lg border border-transparent px-2 py-2 transition hover:bg-white/[0.04]"}>
               <div className="flex items-center gap-1">
                 <button type="button" onClick={() => void selectConversation(item.id)} className="min-w-0 flex-1 rounded-md py-1 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-orange-400">

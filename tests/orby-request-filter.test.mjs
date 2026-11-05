@@ -1533,3 +1533,41 @@ test("Gemini 3.8 TTS conserva el WAV completo y solo envuelve PCM sin cabecera",
   assert.equal(ttsAudio.normalizeGeminiTtsAudio("not-audio", "audio/wav"), null);
   assert.equal(ttsAudio.normalizeGeminiTtsAudio(Buffer.alloc(257).toString("base64"), "audio/l16"), null);
 });
+
+
+test("el filtro conserva confirmaciones breves en una actividad de Saber 11 y aclara ASR ilegible", () => {
+  const context = "Área de estudio: Lectura Crítica. Orby preguntó: ¿Empezamos con un texto tipo ICFES?";
+  assert.equal(filter.isOrbyContextualConfirmation("Sí", context), true);
+  assert.equal(filter.preflightOrbyRequest("sí", context).allowed, true);
+  assert.equal(filter.isOrbyUnclearInput("???"), true);
+  assert.equal(filter.preflightOrbyRequest("???", context).reply, filter.ORBY_REPEAT_REQUEST_REPLY);
+  assert.equal(filter.isLowQualityOrbyReply("???"), true);
+  assert.equal(filter.isLowQualityOrbyReply("Sí."), true);
+  assert.equal(filter.isLowQualityOrbyReply("Sí, empecemos con Lectura Crítica."), false);
+  assert.equal(filter.isLowQualityOrbyReply("La respuesta correcta es A."), false);
+});
+
+test("la salida de Orby corrige tildes frecuentes sin alterar la puntuación", () => {
+  assert.equal(
+    filter.normalizeOrbySpanishOutput("matematicas, quimica, biologia e ingles."),
+    "matemáticas, química, biología e inglés.",
+  );
+});
+
+test("un eco de una respuesta breve no genera otro turno, pero una confirmación nueva sí se conserva", () => {
+  const detect = voiceEcho.isLikelyVoicePlaybackEcho;
+  assert.equal(detect("sí", ["Sí, claro."]), true);
+  assert.equal(detect("sí", ["Hola, ¿qué quieres estudiar?"]), false);
+  assert.equal(detect("sí", ["¿Empezamos con un texto tipo ICFES?"]), false);
+});
+
+test("las respuestas TTS largas conservan texto y cada fragmento fallido se reintenta sin cancelar el resto", () => {
+  assert.match(lessonTutorSource, /slice\\(0, 12_000\\)/);
+  assert.match(lessonTutorSource, /recoverCurrentTtsChunk/);
+  assert.match(lessonTutorSource, /chunkRetryCount < 1/);
+  assert.match(lessonTutorSource, /skippedAudioChunks/);
+  assert.match(lessonTutorSource, /Math\\.min\\(360_000/);
+  assert.match(cloudflareTutorRoute, /isLowQualityOrbyReply\\(modelReply\\)/);
+  assert.match(lessonTutorSource, /isLowQualityOrbyReply\\(rawReply\\)/);
+  assert.match(cloudflareVoiceSource, /Nunca respondas únicamente "sí", "no", "ok" ni signos de puntuación/);
+});

@@ -95,7 +95,7 @@ test("Cloudflare mantiene transcripción y tutor por turnos; Aura-2 español ofr
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "tts"'));
   assert.ok(lessonTutorSource.includes("A text-chat TTS utterance must never overlap the newly opened Live channel."));
   assert.ok(!lessonTutorSource.includes("feminineVoicePattern"));
-  assert.ok(lessonTutorSource.includes("no se activará una voz genérica ni un servicio facturado."));
+  assert.ok(lessonTutorSource.includes("no se activará una voz genérica ni un servicio de pago."));
   assert.ok(!lessonTutorSource.includes("?? spanishVoices[0]"));
   assert.ok(!lessonTutorSource.includes("new SpeechSynthesisUtterance"));
   assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));
@@ -477,7 +477,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "el cierre de reproducción se evalúa después de vaciar los fragmentos de audio Live");
   assert.match(lessonTutorSource, /needsSpeechFallback[\s\S]*?void speakText\(rawReply/);
-  assert.match(lessonTutorSource, /Gemini Live is the only currently verified free audio-output provider/);
+  assert.match(lessonTutorSource, /Live audio has priority\. If this is a text-only\/fallback response, use/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const configuredVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim()'));
   assert.match(orbyVoiceConfigSource, /configuredVoice.*toLowerCase\(\) !== "sulafat"/);
@@ -509,7 +509,7 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
-  assert.match(lessonTutorSource, /Gemini Live is the only currently verified free audio-output provider/);
+  assert.match(lessonTutorSource, /Live audio has priority\. If this is a text-only\/fallback response, use/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
 
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.shift\(\)/);

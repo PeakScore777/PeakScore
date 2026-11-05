@@ -819,10 +819,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const clean = text.trim().replace(/\s+/g, " ").slice(0, 5_000);
     if (!clean) return;
 
-    // Live audio has priority. If this is a text-only/fallback response, use
-    // Cloudflare Aura-2 only after the server confirms the account is on Workers Free.
-    // The endpoint denies TTS by default; no browser voice or paid provider is used.
-    await speakWithCloudflareOnly(clean, index);
+    // Gemini Live is primary. For text-only turns, use Gemini 3.8 Flash TTS
+    // only when the server explicitly verifies the project's free tier.
+    // The endpoint fails closed; it never falls through to a paid provider.
+    await speakWithVerifiedFreeTts(clean, index);
   }
 
   function splitSpeechIntoChunks(value: string, maxLength = 220): string[] {
@@ -855,7 +855,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return chunks.filter(Boolean);
   }
 
-  function speakWithCloudflareOnly(text: string, index: number): Promise<void> {
+  function speakWithVerifiedFreeTts(text: string, index: number): Promise<void> {
     return new Promise((resolve) => {
       const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
       const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
@@ -970,7 +970,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         finish(false);
       };
 
-      const playCloudflareChunk = async () => {
+      const playFreeTtsChunk = async () => {
         if (finished) return;
         if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
           finish(true);
@@ -1041,7 +1041,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             clearAudioElement();
             requestController = null;
             chunkIndex += 1;
-            void playCloudflareChunk();
+            void playFreeTtsChunk();
           };
           audioElement.onerror = () => {
             if (finished) return;
@@ -1058,7 +1058,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             finish(true);
             return;
           }
-          console.warn("[Orby Voice] Optional speech output unavailable; keeping the reply as text.", {
+          console.warn("[Orby Voice] Free Gemini TTS unavailable; keeping the reply as text.", {
             name: error instanceof Error ? error.name : "UnknownError",
           });
           requestController = null;
@@ -1073,7 +1073,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         finish(false);
       }, Math.min(180_000, Math.max(20_000, clean.length * 110)));
 
-      void playCloudflareChunk();
+      void playFreeTtsChunk();
     });
   }
 
@@ -1273,6 +1273,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const previousAssistantId = replaceAssistantMessage ? voiceAssistantMessageIdRef.current : null;
     const assistantId = previousAssistantId ?? ("voice-local-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
+    const previousAssistantIndex = previousAssistantId
+      ? messages.findIndex((message) => message.id === previousAssistantId)
+      : -1;
+    const assistantIndex = previousAssistantIndex >= 0
+      ? previousAssistantIndex
+      : messages.length + (appendUserMessage ? 1 : 0);
     voiceUserMessageVisibleRef.current = true;
     voiceResponseDoneRef.current = true;
     voiceTurnPersistedRef.current = false;
@@ -1322,8 +1328,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
     }
 
-    if (voiceFallbackModeRef.current) setVoiceError(ORBY_FREE_TTS_UNAVAILABLE_MESSAGE);
-    finishLocalVoiceReply(assistantId);
+    setVoiceError("");
+    void speakText(cleanReply, assistantIndex);
   }
 
   function persistRealtimeTurnIfReady(): Promise<void> {
@@ -2057,11 +2063,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
 
-      // Live is the only automatic audio-output source. If its audio is missing
-      // or blocked, preserve the validated text and never launch a metered TTS request.
+      // Live is primary. If its audio is missing or blocked, keep the validated
+      // transcript and use Gemini TTS only when the server verifies free-tier access.
       if (needsSpeechFallback && rawReply.trim()) {
-        setVoiceError(ORBY_FREE_TTS_UNAVAILABLE_MESSAGE);
-        finishRealtimeVoicePlayback();
+        const id = voiceAssistantMessageIdRef.current;
+        const messageIndex = messages.findIndex((message) => message.id === id);
+        void speakText(rawReply, messageIndex >= 0 ? messageIndex : messages.length);
         return;
       }
       finishRealtimeVoicePlayback();
@@ -3007,9 +3014,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         waitingForVoiceReplyRef.current = true;
         voiceInputPolicyRef.current = null;
         voicePreflightReplyRef.current = null;
-        setVoiceError(ORBY_FREE_TTS_UNAVAILABLE_MESSAGE);
-        setVoiceStatus("Respuesta lista · modo por turnos");
-        finishLocalVoiceReply(voiceAssistantMessageIdRef.current);
+        setVoiceError("");
+        setVoiceStatus("Orby está preparando la respuesta hablada…");
+        void speakText(data.reply, nextMessages.length);
       } else if (isVoiceInteraction) {
         setVoiceError("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito.");
       }

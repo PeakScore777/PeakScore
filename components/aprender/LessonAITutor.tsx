@@ -1657,6 +1657,31 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  function upsertVoiceUserMessage(value: string) {
+    const content = value.trim().slice(0, 1200);
+    if (!content) return;
+    const id = voiceUserMessageIdRef.current ?? ("voice-user-" + Date.now());
+    voiceUserMessageIdRef.current = id;
+    voiceUserMessageVisibleRef.current = true;
+    setMessages((current) => {
+      const existingIndex = current.findIndex((item) => item.id === id);
+      if (existingIndex >= 0) {
+        return current.map((item) => item.id === id
+          ? { ...item, role: "user" as const, content }
+          : item);
+      }
+      const assistantId = voiceAssistantMessageIdRef.current;
+      const assistantIndex = assistantId
+        ? current.findIndex((item) => item.id === assistantId)
+        : -1;
+      const userMessage: Message = { id, role: "user", content };
+      if (assistantIndex < 0) return [...current, userMessage];
+      const next = [...current];
+      next.splice(assistantIndex, 0, userMessage);
+      return next;
+    });
+  }
+
   function handleGeminiLiveEvent(event: Record<string, unknown>) {
     if (event.setupComplete) {
       setVoiceStatus("Te escucho…");
@@ -1750,7 +1775,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           interruptCurrentVoiceOutput();
           voicePendingStudentTurnRef.current = true;
           voiceUserTextRef.current = interimText;
-          voiceUserMessageVisibleRef.current = false;
+          upsertVoiceUserMessage(interimText);
           setLiveTranscript(interimText);
           setVoiceStatus("Te escucho…");
         } else {
@@ -1762,7 +1787,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // Once playback ends, accept short confirmations and follow-ups normally.
         const previousInterim = voiceUserTextRef.current.trim();
         voiceUserTextRef.current = mergeLiveTranscript(previousInterim, interimText);
-        if (voiceUserTextRef.current.trim()) voicePendingStudentTurnRef.current = true;
+        if (voiceUserTextRef.current.trim()) {
+          voicePendingStudentTurnRef.current = true;
+          upsertVoiceUserMessage(voiceUserTextRef.current);
+        }
         setVoiceStatus("Te escucho…");
       } else {
         setVoiceStatus("Verificando el audio en español…");
@@ -1886,23 +1914,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceOutputAudioBlockedRef.current = Boolean(voicePreflightReplyRef.current);
       if (voicePreflightReplyRef.current) stopVoicePlayback();
       setLiveTranscript("");
-      setMessages((current) => {
-        const userMessageId = voiceUserMessageIdRef.current ?? ("voice-user-" + Date.now());
-        voiceUserMessageIdRef.current = userMessageId;
-        const existingIndex = current.findIndex((item) => item.id === userMessageId);
-        if (existingIndex >= 0) {
-          return current.map((item) => item.id === userMessageId
-            ? { ...item, role: "user" as const, content: voiceUserTextRef.current }
-            : item);
-        }
-        const assistantId = voiceAssistantMessageIdRef.current;
-        const assistantIndex = assistantId ? current.findIndex((message) => message.id === assistantId) : -1;
-        const userMessage: Message = { id: userMessageId, role: "user", content: voiceUserTextRef.current };
-        if (assistantIndex < 0) return [...current, userMessage];
-        const next = [...current];
-        next.splice(assistantIndex, 0, userMessage);
-        return next;
-      });
+      upsertVoiceUserMessage(voiceUserTextRef.current);
       if (voicePreflightReplyRef.current) {
         respondToVoiceLocally(voiceUserTextRef.current, voicePreflightReplyRef.current, false);
         return;

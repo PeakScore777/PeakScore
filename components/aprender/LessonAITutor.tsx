@@ -381,6 +381,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             signal: AbortSignal.timeout(12_000),
           });
           const messagesPayload = await messagesResponse.json().catch(() => ({}));
+          if (!messagesResponse.ok && messagesResponse.status === 404) {
+            if (!isCurrent()) return;
+            // The current deployment may lag behind the branch route manifest.
+            // Keep the saved conversation in the sidebar, but do not pin the
+            // composer to an unreadable conversation ID or block a new chat.
+            activeConversationRef.current = null;
+            setConversationId(null);
+            setMessages([]);
+            setConversationError("Esta versión del sitio todavía no puede abrir los mensajes guardados. Tus conversaciones siguen conservadas; puedes iniciar un chat nuevo mientras se actualiza el historial.");
+            return;
+          }
           if (!messagesResponse.ok) throw new Error(messagesPayload.error || "No se pudieron cargar los mensajes.");
           if (!isCurrent()) return;
 
@@ -3248,6 +3259,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     try {
       const response = await fetch(`/api/orby/conversations/${id}/messages`, { credentials: "same-origin", cache: "no-store" });
       const payload = await response.json().catch(() => ({}));
+      if (!response.ok && response.status === 404) {
+        activeConversationRef.current = null;
+        setConversationId(null);
+        setMessages([]);
+        setConversationError("Esta versión del sitio todavía no puede abrir los mensajes guardados. Tu historial sigue conservado; puedes continuar en un chat nuevo.");
+        return;
+      }
       if (!response.ok) throw new Error(payload.error || "No se pudo abrir la conversación.");
       pendingMessagesRef.current = [];
       setQueuedMessageCount(0);

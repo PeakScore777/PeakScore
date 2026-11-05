@@ -448,7 +448,7 @@ test("Orby no promociona ni recomienda academias u otros preICFES", () => {
 test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o red", () => {
   assert.match(lessonTutorSource, /const authenticationFailure = .*401.*403/);
   assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
-  assert.match(lessonTutorSource, /Gemini Live no está disponible ahora\. Continúo por turnos/);
+  assert.match(lessonTutorSource, /La voz en tiempo real no está disponible ahora\. Continúo por turnos sin perder tu conversación/);
   assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current\)/);
   assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message\)/);
   assert.match(lessonTutorRouteSource, /getOrbySubjectSelectionReply\(userMessage\)/);

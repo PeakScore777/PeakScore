@@ -1555,6 +1555,10 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
 
   assert.equal(filter.preflightOrbyRequest("moda estadística").allowed, true);
   assert.equal(filter.preflightOrbyRequest("moda").allowed, true);
+  assert.match(
+    filter.getOrbyClarificationReply("Área de estudio: Matemáticas. Estamos repasando la moda estadística."),
+    /Puedo explicarla con otras palabras/i,
+  );
   assert.equal(filter.containsProgrammingInstruction("Python"), false);
   assert.equal(filter.preflightOrbyRequest("Enséñame a programar en Python.").category, "programming");
 

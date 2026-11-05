@@ -117,7 +117,8 @@ test("Cloudflare mantiene transcripción y tutor por turnos; Gemini Live es la �
   assert.ok(lessonTutorSource.includes("voiceSessionResumeHandleRef.current"));
   assert.ok(lessonTutorSource.includes("MAX_VOICE_RECORDING_MS = 5 * 60_000"));
   assert.ok(realtimeSessionSource.includes("2 * 60 * 60 * 1000"));
-  assert.ok(cloudflareVoiceSource.includes("10_000,"));
+  assert.ok(cloudflareVoiceSource.includes("25_000,"));
+  assert.ok(cloudflareVoiceSource.includes("45_000,"));
 
   assert.ok(lessonTutorSource.includes("never let the two speakers overlap"));
   assert.ok(lessonTutorSource.includes("stopSpeaking();"));
@@ -446,7 +447,8 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL/);
   assert.match(realtimeSessionSource, /evalúa la intención académica completa/);
   assert.match(realtimeSessionSource, /Si la intención es ambigua, pregunta brevemente antes de rechazar/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.04/);
+  assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
+  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-4\)/);
   assert.match(realtimeSessionSource, /habla y responde en español colombiano natural/);
   assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false\)/);
@@ -499,7 +501,8 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.doesNotMatch(lessonTutorSource, /historyHydratingRef\.current \|\| historyLoading/);
   assert.match(lessonTutorSource, /lastSubmittedMessageRef/);
   assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.04/);
+  assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
+  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(lessonTutorSource, /Gemini Live is the only currently verified free audio-output provider/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
 

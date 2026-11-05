@@ -1027,7 +1027,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             finish(true);
             return;
           }
-          console.warn("[Orby Voice] Cloudflare Aura-2 speech unavailable; using local Spanish speech.", {
+          console.warn("[Orby Voice] Cloudflare Aura-2 speech unavailable; keeping the reply as text.", {
             name: error instanceof Error ? error.name : "UnknownError",
           });
           requestController = null;

@@ -301,7 +301,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /isStrongVoiceBargeIn\\(interimText, assistantSpeech\\)/);
 
   assert.match(lessonTutorSource, /voiceLastCommittedInputAtRef/);
-  assert.match(lessonTutorSource, /Date\.now\(\) > voiceLastAssistantPlaybackUntilRef\.current/);
+  assert.match(lessonTutorSource, /const assistantPlaybackTail = Date\.now\(\) <= voiceLastAssistantPlaybackUntilRef\.current/);
   assert.match(voiceWorkletSource, /const packetSize = 640/);
   assert.doesNotMatch(voiceWorkletSource, /const packetSize = 1600/);
   assert.match(lessonTutorSource, /safetyTimer = window\.setTimeout/);

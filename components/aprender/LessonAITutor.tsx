@@ -893,6 +893,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voicePlaybackOwnerRef.current = "tts";
 
       let finished = false;
+      let didPlaybackStart = false;
       let chunkIndex = 0;
       let safetyTimer: number | null = null;
       let requestController: AbortController | null = null;
@@ -930,7 +931,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (isLocalVoiceTurn) {
           voiceBrowserSpeechActiveRef.current = false;
           if (!cancelled) {
-            voiceLastAssistantPlaybackUntilRef.current = Date.now() + 1_800;
+            if (!didPlaybackStart) {
+              // Text-only responses must not be remembered as microphone echo.
+              voiceLastAssistantPlaybackUntilRef.current = 0;
+              voiceLastAssistantOutputRef.current = "";
+              voiceLastAssistantOutputAtRef.current = 0;
+              voiceBrowserSpeechActiveRef.current = false;
+            } else {
+              voiceLastAssistantPlaybackUntilRef.current = Math.max(
+                voiceLastAssistantPlaybackUntilRef.current,
+                Date.now() + 1_800,
+              );
+            }
             finishLocalVoiceReply(localVoiceMessageId);
           }
         }
@@ -1005,6 +1017,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           audioElement = new Audio(audioObjectUrl);
           audioElement.preload = "auto";
           audioElement.onplay = () => {
+            didPlaybackStart = true;
             setSpeakingIndex(index);
             setVoiceStatus("Orby está leyendo la respuesta…");
             if (isLocalVoiceTurn) {
@@ -1253,9 +1266,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     waitingForVoiceReplyRef.current = true;
     voiceUserTextRef.current = cleanUserText;
     voiceAssistantTextRef.current = cleanReply;
-    voiceLastAssistantOutputRef.current = cleanReply;
-    voiceLastAssistantOutputAtRef.current = Date.now();
-    rememberVoiceAssistantOutput(cleanReply);
     const previousAssistantId = replaceAssistantMessage ? voiceAssistantMessageIdRef.current : null;
     const assistantId = previousAssistantId ?? ("voice-local-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
@@ -1449,6 +1459,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
       const scheduledAt = Math.max(audioContext.currentTime + 0.015, voiceNextPlaybackTimeRef.current);
       source.start(scheduledAt);
+      if (voiceRealtimeAudioChunkCountRef.current === 0) {
+        const spokenTranscript = voiceAssistantTextRef.current.trim();
+        if (spokenTranscript) {
+          voiceLastAssistantOutputRef.current = spokenTranscript;
+          voiceLastAssistantOutputAtRef.current = Date.now();
+          rememberVoiceAssistantOutput(spokenTranscript);
+        }
+      }
       voicePlaybackOwnerRef.current = "live";
       voiceNextPlaybackTimeRef.current = scheduledAt + audioBuffer.duration;
       voiceLastAssistantPlaybackUntilRef.current = Date.now()
@@ -1987,9 +2005,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ? current.map((message) => message.id === id ? { ...message, content: rawReply } : message)
             : [...current, { id, role: "assistant", content: rawReply }];
         });
-        voiceLastAssistantOutputRef.current = rawReply;
-        voiceLastAssistantOutputAtRef.current = Date.now();
-        rememberVoiceAssistantOutput(rawReply);
         if (!voiceOutputAudioBlockedRef.current && voiceOutputTranscriptValidatedRef.current) {
           flushPendingGeminiAudio();
         } else {
@@ -2971,9 +2986,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (isVoiceInteraction && voiceFallbackModeRef.current) {
         voiceAssistantTextRef.current = data.reply;
         voiceAssistantMessageIdRef.current = fallbackAssistantId ?? ("voice-fallback-assistant-" + Date.now());
-        voiceLastAssistantOutputRef.current = data.reply;
-        voiceLastAssistantOutputAtRef.current = Date.now();
-        rememberVoiceAssistantOutput(data.reply);
         voiceResponseDoneRef.current = true;
         voiceTurnPersistedRef.current = false;
         waitingForVoiceReplyRef.current = true;

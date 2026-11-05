@@ -188,10 +188,11 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(!cloudflareImageRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(!cloudflareImageRouteSource.includes("gemini-nano-banana"));
   assert.ok(cloudflareImageRouteSource.includes("FREE_QUOTA_EXCEEDED"));
-  assert.ok(voiceSpeechRouteSource.includes("@cf/deepgram/aura-2-es"));
+  assert.ok(voiceSpeechRouteSource.includes("gemini-3.8-flash-tts"));
+  assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_TTS_FREE_VERIFIED"));
   assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_QUOTA_EXCEEDED"));
-  assert.ok(!voiceSpeechRouteSource.includes("GROQ_API_KEY"));
-  assert.doesNotMatch(voiceSpeechRouteSource, /GEMINI_API_KEY|synthesizeWithCloudflareSpeech/);
+  assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
+  assert.doesNotMatch(voiceSpeechRouteSource, /CLOUDFLARE_API_TOKEN|GROQ_API_KEY|synthesizeWithCloudflareSpeech/);
   assert.ok(orbyKnowledgeSource.includes("generateWithCloudflareAnalysis(prompt)"));
   assert.ok(!orbyKnowledgeSource.includes("generateAI("));
   assert.ok(!orbyKnowledgeSource.includes('provider: "groq"'));

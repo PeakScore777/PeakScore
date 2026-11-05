@@ -3107,7 +3107,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           attachmentLabel: attachmentMeta?.label ?? (selectedFile ? "Imagen adjunta" : null),
           voiceMode: isVoiceInteraction,
           workspace,
-          history: messages.slice(-8).map(({ role, content }) => ({ role, content })),
+          history: messagesRef.current.slice(-8).map(({ role, content }) => ({ role, content })),
           ...(imagePayload ? { image: imagePayload } : {}),
         }),
       });

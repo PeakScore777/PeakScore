@@ -23,6 +23,11 @@ const EMBEDDING_MODEL = "gemini-embedding-001";
 const EMBEDDING_DIMENSIONS = 768;
 const EMBEDDING_BATCH_SIZE = 16;
 
+/** True when at least one explicitly configured free-tier embedding provider is available. */
+export function isOrbyEmbeddingProviderConfigured(): boolean {
+  return Boolean(process.env.GEMINI_API_KEY?.trim()) || isCloudflareWorkersAIConfigured();
+}
+
 export type OrbyKnowledgeChunk = {
   chunk_index: number;
   page_number: number;
@@ -378,7 +383,7 @@ export async function createOrbyEmbeddings(
         });
         throw new Error("No se pudo generar el vector académico. Gemini no está disponible y Cloudflare no está configurado.");
       }
-      throw new Error("No hay un proveedor de embeddings configurado para Orby.");
+      throw new Error("ORBY_EMBEDDING_PROVIDER_NOT_CONFIGURED: No hay un proveedor gratuito de embeddings configurado para Orby. Configura GEMINI_API_KEY o CLOUDFLARE_ACCOUNT_ID y CLOUDFLARE_API_TOKEN.");
     }
     if (vectors.length !== batch.length) throw new Error("The embedding provider returned an incomplete batch.");
 

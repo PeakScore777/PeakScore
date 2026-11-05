@@ -814,9 +814,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const clean = text.trim().replace(/\s+/g, " ").slice(0, 5_000);
     if (!clean) return;
 
-    // Gemini Live is the primary audio source. If a turn has no usable Live
-    // audio, use Cloudflare Aura-2 in sentence-sized chunks. Browser Spanish
-    // speech is only the last fallback when Cloudflare is unavailable/quota-limited.
+    // Gemini Live is the only currently verified free audio-output provider.
+    // The turn-based fallback accepts speech with Whisper and answers with
+    // Cloudflare text; do not silently invoke a metered TTS model.
     await speakWithCloudflareOnly(clean, index);
   }
 
@@ -952,7 +952,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const finishWithoutGenericVoice = () => {
         if (finished) return;
-        setVoiceError("Cloudflare no pudo generar la voz de respaldo. La respuesta permanece visible; no se activará una voz genérica del navegador ni otro proveedor.");
+        setVoiceError("El audio alternativo no está disponible con una cuota gratuita verificada. La respuesta permanece escrita; no se activará una voz genérica ni un servicio facturado.");
         finish(false);
       };
 
@@ -979,10 +979,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           });
           if (!response.ok) {
             const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
-            if (payload.code === "FREE_QUOTA_EXCEEDED") {
-              setVoiceError("La cuota gratuita diaria de voz Cloudflare se agotó. La respuesta permanece visible y no se activará una voz genérica.");
+            if (payload.code === "FREE_TIER_TTS_NOT_AVAILABLE") {
+              const notice = typeof payload.error === "string"
+                ? payload.error
+                : "La salida de voz alternativa no tiene una cuota gratuita confirmada. La respuesta permanece por escrito.";
+              if (isLocalVoiceTurn) setVoiceError(notice);
+              else setError(notice);
+              // No phantom playback/transcript: the text was never spoken.
+              voiceBrowserSpeechActiveRef.current = false;
+              voiceLastAssistantOutputRef.current = "";
+              voiceLastAssistantOutputAtRef.current = 0;
+              voiceLastAssistantPlaybackUntilRef.current = 0;
+              finish(false);
+              return;
             }
-            throw new Error(typeof payload.error === "string" ? payload.error : "CLOUDFLARE_TTS_UNAVAILABLE");
+            throw new Error(typeof payload.error === "string" ? payload.error : "FREE_TIER_TTS_UNAVAILABLE");
           }
 
           const audioBlob = await response.blob();
@@ -995,15 +1006,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           audioObjectUrl = URL.createObjectURL(audioBlob);
           audioElement = new Audio(audioObjectUrl);
           audioElement.preload = "auto";
-          audioElement.onloadedmetadata = () => {
-            const duration = Number.isFinite(audioElement?.duration) ? audioElement?.duration ?? 0 : 0;
-            if (duration > 0 && isLocalVoiceTurn) {
-              voiceLastAssistantPlaybackUntilRef.current = Date.now() + duration * 1000 + 1_800;
-            }
-          };
           audioElement.onplay = () => {
             setSpeakingIndex(index);
             setVoiceStatus("Orby está leyendo la respuesta…");
+            if (isLocalVoiceTurn) {
+              // Only register an assistant echo after real audio playback starts.
+              voiceBrowserSpeechActiveRef.current = true;
+              voiceLastAssistantOutputRef.current = clean;
+              voiceLastAssistantOutputAtRef.current = Date.now();
+              rememberVoiceAssistantOutput(clean);
+              const duration = Number.isFinite(audioElement?.duration) ? audioElement?.duration ?? 0 : 0;
+              voiceLastAssistantPlaybackUntilRef.current = Date.now()
+                + (duration > 0 ? duration * 1000 : clean.length * 58)
+                + 1_800;
+            }
           };
           audioElement.onended = () => {
             if (finished || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
@@ -1122,7 +1138,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if (shouldFallback) {
       activateTurnBasedVoiceFallback(
-        "Gemini Live se interrumpió o agotó su cuota. Continúo esta misma pregunta con Whisper y Cloudflare; la lectura usa una voz femenina española instalada si está disponible, sin otro servicio de pago.",
+        "Gemini Live se interrumpió o agotó su cuota. Continúo esta misma pregunta con Whisper y el tutor gratuito de Cloudflare; la respuesta quedará por escrito para evitar servicios de voz facturados.",
         pendingUserText,
         appendUserMessage,
       );
@@ -1130,7 +1146,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     activateTurnBasedVoiceFallback(
-      reason || "Gemini Live no está disponible. Puedes continuar con voz por turnos usando Whisper, Cloudflare y la lectura local del navegador.",
+      reason || "Gemini Live no está disponible. Puedes continuar por turnos con Whisper y Cloudflare; la respuesta alternativa quedará por escrito.",
     );
   }
 

@@ -68,16 +68,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Fail closed unless the team has verified this API key belongs to a
-    // Google AI Studio Free-tier project with no billing attached.
-    // Google upgrades projects linked to active billing to a paid usage tier.
-    if (process.env.ORBY_GEMINI_TTS_FREE_VERIFIED !== "true") {
-      return jsonError(
-        "La voz alternativa aún no tiene verificado el nivel gratuito de Google. La respuesta permanece escrita; no se realizará ninguna solicitud de audio.",
-        "FREE_TIER_TTS_NOT_AVAILABLE",
-        503,
-      );
-    }
+    // TTS shares Gemini Live's explicit Preview opt-in. Production remains
+    // closed unless its existing privacy flag is enabled. Google enforces
+    // the model's free-tier quota and returns 429 when that quota is exhausted.
 
     const apiKey = process.env.GEMINI_API_KEY?.trim();
     if (!apiKey) {

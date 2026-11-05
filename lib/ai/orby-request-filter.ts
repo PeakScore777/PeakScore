@@ -115,6 +115,47 @@ export const ORBY_SPANISH_ONLY_REPLY =
 export const ORBY_SPANISH_OUTPUT_FALLBACK =
   "Quiero explicártelo correctamente en español. Repite tu pregunta en una frase breve y continuamos con tu preparación para Saber 11.";
 
+
+export const ORBY_REPEAT_REQUEST_REPLY =
+  "No alcancé a entender tu mensaje. ¿Puedes repetirlo o escribir la pregunta completa?";
+
+export const ORBY_INCOMPLETE_REPLY_FALLBACK =
+  "No quiero dejarte con una respuesta incompleta. Dime qué parte quieres revisar y te la explico paso a paso para Saber 11.";
+
+/** Punctuation-only and empty ASR results need clarification, never an ICFES refusal. */
+export function isOrbyUnclearInput(value: string): boolean {
+  const raw = value.trim();
+  if (!raw) return true;
+  if (raw.length <= 16 && /^[\s¿?¡!.,;:…—-]+$/u.test(raw)) return true;
+  return !normalizeOrbyRequestText(raw) && raw.length <= 24;
+}
+
+/** A short confirmation inherits scope only after a genuine ICFES invitation. */
+export function isOrbyContextualConfirmation(message: string, previousContext = ""): boolean {
+  const normalized = normalizeOrbyRequestText(message)
+    .replace(/[¿?¡!.,;:…]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!/^(?:si|sii|siii|claro|vale|listo|dale|de una|ok|okay|perfecto|bueno|no|me parece|hagale|hagamosle)$/.test(normalized)) {
+    return false;
+  }
+  const recent = normalizeOrbyRequestText(previousContext).slice(-700);
+  const hasIcfesContext = /\b(?:saber\s*11|icfes|matematicas?|lectura critica|sociales y ciudadanas|ciencias naturales|ingles|english)\b/.test(recent);
+  const hasInvitation = /\b(?:empezamos|comenzamos|seguimos|continuamos|practicamos|resolvemos|revisamos|hacemos|pasamos|quieres|te parece|te gustaria|iniciamos|probamos|te explico|te muestro)\b/.test(recent)
+    && /[?¿]/.test(recent);
+  return hasIcfesContext && hasInvitation;
+}
+
+/** Reject punctuation and bare acknowledgements, not concise academic answers such as A or B. */
+export function isLowQualityOrbyReply(value: string): boolean {
+  const normalized = normalizeOrbyRequestText(value)
+    .replace(/[¿?¡!.,;:…]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!normalized) return true;
+  return /^(?:si|no|ok|okay|vale|claro|listo|perfecto|dale|de una|bueno)$/.test(normalized);
+}
+
 const UNSUPPORTED_SPANISH_SCRIPT_PATTERN = /[\p{Script=Devanagari}\p{Script=Arabic}\p{Script=Cyrillic}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Thai}\p{Script=Bengali}\p{Script=Gurmukhi}\p{Script=Gujarati}\p{Script=Tamil}\p{Script=Telugu}\p{Script=Kannada}\p{Script=Malayalam}\p{Script=Sinhala}\p{Script=Myanmar}\p{Script=Ethiopic}]/u;
 
 /**
@@ -401,6 +442,16 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
 
   const academicMaterialQuestion = isIcfesAcademicMaterialQuestion(message, previousContext);
 
+  // A short answer to Orby's last academic invitation remains inside that lesson.
+  if (isOrbyContextualConfirmation(message, previousContext)) {
+    return { allowed: true, category: null, reply: "" };
+  }
+
+  // Empty and punctuation-only ASR results deserve clarification, not a scope refusal.
+  if (isOrbyUnclearInput(message)) {
+    return { allowed: false, category: "outside", reply: ORBY_REPEAT_REQUEST_REPLY };
+  }
+
   // A competitor name or a brand mentioned inside an ICFES reading passage
   // is source material, not a request to recommend another pre-ICFES provider.
   if (!academicMaterialQuestion
@@ -610,9 +661,55 @@ export function hasFalseOrbyCreatorAttribution(value: string): boolean {
 }
 
 export function normalizeOrbySpanishOutput(value: string): string {
-  return value
+  const corrections: Array<[RegExp, string]> = [
+    [/\bmatematicas\b/gi, "matemáticas"],
+    [/\bbiologia\b/gi, "biología"],
+    [/\bquimica\b/gi, "química"],
+    [/\bfisica\b/gi, "física"],
+    [/\balgebra\b/gi, "álgebra"],
+    [/\baritmetica\b/gi, "aritmética"],
+    [/\bgeometria\b/gi, "geometría"],
+    [/\bestadistica\b/gi, "estadística"],
+    [/\benergia\b/gi, "energía"],
+    [/\bcelula\b/gi, "célula"],
+    [/\bhipotesis\b/gi, "hipótesis"],
+    [/\banalisis\b/gi, "análisis"],
+    [/\bsintesis\b/gi, "síntesis"],
+    [/\bconclusion\b/gi, "conclusión"],
+    [/\bexplicacion\b/gi, "explicación"],
+    [/\binterpretacion\b/gi, "interpretación"],
+    [/\bcomprension\b/gi, "comprensión"],
+    [/\binformacion\b/gi, "información"],
+    [/\bparticipacion\b/gi, "participación"],
+    [/\bcomunicacion\b/gi, "comunicación"],
+    [/\bpoblacion\b/gi, "población"],
+    [/\brelacion\b/gi, "relación"],
+    [/\bproporcion\b/gi, "proporción"],
+    [/\becuacion\b/gi, "ecuación"],
+    [/\bfraccion\b/gi, "fracción"],
+    [/\bfuncion\b/gi, "función"],
+    [/\bsolucion\b/gi, "solución"],
+    [/\bdecision\b/gi, "decisión"],
+    [/\bevolucion\b/gi, "evolución"],
+    [/\brevolucion\b/gi, "revolución"],
+    [/\bconstitucion\b/gi, "constitución"],
+    [/\bgeografia\b/gi, "geografía"],
+    [/\bmetodo\b/gi, "método"],
+    [/\bteoria\b/gi, "teoría"],
+    [/\blogica\b/gi, "lógica"],
+    [/\bingles\b/gi, "inglés"],
+  ];
+  let normalized = value
     .replace(/\u00a0/g, " ")
-    .replace(/\r\n?/g, "\n")
+    .replace(/\r\n?/g, "\n");
+  for (const [pattern, corrected] of corrections) {
+    normalized = normalized.replace(pattern, (match) => (
+      match[0] === match[0].toLocaleUpperCase("es-CO")
+        ? corrected[0].toLocaleUpperCase("es-CO") + corrected.slice(1)
+        : corrected
+    ));
+  }
+  return normalized
     .replace(/[ \t]+([,.;:!?])/g, "$1")
     .replace(/([,;:!?])(?=[A-Za-zÁÉÍÓÚÜÑáéíóúüñ])/g, "$1 ")
     .replace(/([.!?])(?=[A-ZÁÉÍÓÚÜÑ])/g, "$1 ")

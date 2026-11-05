@@ -1928,12 +1928,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voicePendingAudioChunksRef.current = [];
         stopVoicePlayback();
       } else {
-        // Release audio only after the current partial transcript contains a
-        // complete sentence and passes every deterministic output filter.
-        // Later unsafe continuations still cancel the not-yet-played audio.
+        // Start natural Live audio as soon as one complete sentence has
+        // passed validation. Waiting for the whole response made speech feel
+        // delayed; later unsafe continuations still stop playback immediately.
         const hasCompleteSafeSentence = partialReply.length >= 18
           && /[.!?;]["'”’)}\]]*\s*$/.test(partialReply);
         voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
+        if (hasCompleteSafeSentence) flushPendingGeminiAudio();
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => {
@@ -1970,10 +1971,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         data: inlineData.data,
         mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,
       };
-      if (voicePendingAudioChunksRef.current.length < 512) {
+      if (voiceOutputTranscriptValidatedRef.current) {
+        // The first complete sentence already passed validation, so keep the
+        // Live stream flowing instead of buffering every later audio chunk.
+        playGeminiAudio(chunk.data, chunk.mimeType);
+      } else if (voicePendingAudioChunksRef.current.length < 512) {
         voicePendingAudioChunksRef.current.push(chunk);
-        // Playback is deliberately deferred until turnComplete validates the
-        // entire transcript; never start a second speaker mid-generation.
       } else {
         voiceOutputAudioBlockedRef.current = true;
         voicePendingAudioChunksRef.current = [];

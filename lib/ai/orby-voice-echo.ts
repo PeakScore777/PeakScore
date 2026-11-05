@@ -28,7 +28,8 @@ export function isLikelyVoicePlaybackEcho(
   const candidates = typeof assistantSpeech === "string" ? [assistantSpeech] : assistantSpeech;
   const incomingWords = incoming.split(" ")
     .filter((word) => word.length >= 2 && !LOW_INFORMATION_WORDS.has(word));
-  if (incomingWords.length < 2) return false;
+  // Short curriculum phrases such as “Saber 11” are valid student input.
+  if (incomingWords.length < 3) return false;
 
   for (const candidate of candidates) {
     const spoken = normalizeVoiceText(candidate);

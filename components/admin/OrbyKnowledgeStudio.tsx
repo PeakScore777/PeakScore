@@ -168,6 +168,7 @@ export default function OrbyKnowledgeStudio() {
   const [error,setError] = useState("");
   const [notice,setNotice] = useState("");
   const [automation,setAutomation] = useState<AutomationStatus|null>(null);
+  const [automationError,setAutomationError] = useState("");
   const [changingAutomation,setChangingAutomation] = useState(false);
   const [manualProcessing,setManualProcessing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement|null>(null);
@@ -209,9 +210,10 @@ export default function OrbyKnowledgeStudio() {
 
     if (!isActive()) return;
 
-    const failures = [docsResult.error, chatResult.error, automationResult.error].filter(
+    const failures = [docsResult.error, chatResult.error].filter(
       (value): value is string => Boolean(value)
     );
+    setAutomationError(automationResult.error ?? "");
 
     if (docsResult.payload && Array.isArray(docsResult.payload.documents)) {
       setDocuments(docsResult.payload.documents as KnowledgeDocument[]);
@@ -225,7 +227,7 @@ export default function OrbyKnowledgeStudio() {
     }
 
     setError(failures.length
-      ? "No se pudo completar la carga del laboratorio:\\n" + failures.join("\\n")
+      ? "No se pudo completar la carga del laboratorio:\n" + failures.join("\n")
       : "");
   }
 
@@ -240,13 +242,17 @@ export default function OrbyKnowledgeStudio() {
     const timer = window.setInterval(() => {
       fetch("/api/admin/orby/knowledge/automation", { credentials: "same-origin", cache: "no-store" })
         .then(async (response) => {
-          if (!response.ok) return null;
-          return response.json();
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo actualizar el estado del Autopilot.");
+          return payload as AutomationStatus;
         })
         .then((payload) => {
-          if (payload) setAutomation(payload as AutomationStatus);
+          setAutomation(payload);
+          setAutomationError("");
         })
-        .catch(() => undefined);
+        .catch((cause: unknown) => {
+          setAutomationError(cause instanceof Error ? cause.message : "No se pudo actualizar el estado del Autopilot.");
+        });
       fetch("/api/admin/orby/knowledge", { credentials: "same-origin", cache: "no-store" })
         .then(async (response) => response.ok ? response.json() : null)
         .then((payload) => {
@@ -559,11 +565,13 @@ export default function OrbyKnowledgeStudio() {
                 <h3 className="mt-1 text-sm font-semibold">Orby Autopilot</h3>
                 <p className="mt-1 max-w-lg text-[10px] leading-5 text-slate-400">El Autopilot ejecuta un ciclo cada tres minutos (máximo 100 por ventana móvil de 7 horas) y procesa un lote de cuatro páginas visuales por ciclo. El trabajador manual y el automático funcionan en carriles independientes y pueden avanzar a la vez en documentos distintos; comparten la misma cola, embeddings, conceptos y biblioteca, y nunca reclaman simultáneamente el mismo documento. Al pulsar el botón manual, el lote elegido queda reservado para ti; al terminar, vuelve a la cola compartida y el Autopilot puede continuar con la actualización. Si completas manualmente un borrador apto, el Autopilot hace además la validación final y lo publica solo si supera todos los controles. Tus ejecuciones manuales son ilimitadas y no consumen el presupuesto automático. Puedes pausar el carril automático sin detener el manual.</p>
               </div>
-              <span className={automation?.settings.enabled ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300" : "rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] font-bold text-slate-400"}>{automation?.settings.enabled ? "MOTOR ACTIVO" : "MOTOR PAUSADO"}</span>
+              <span className={automationError || !automation ? "rounded-full border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 text-[9px] font-bold text-amber-200" : automation.settings.enabled ? "rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-bold text-emerald-300" : "rounded-full border border-white/10 bg-white/[.04] px-2.5 py-1 text-[9px] font-bold text-slate-400"}>{automationError ? "ESTADO DESACTUALIZADO" : automation ? automation.settings.enabled ? "MOTOR ACTIVO" : "MOTOR PAUSADO" : "CARGANDO ESTADO"}</span>
             </div>
+            {automationError && <p role="status" className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/[.06] px-3 py-2 text-[10px] leading-5 text-amber-100">No se pudo consultar el estado del Autopilot: {automationError}. La biblioteca y el chat privado siguen disponibles; no se asume que el motor esté pausado.</p>}
+            {automation && !automation.embeddingProviderConfigured && <p role="alert" className="mt-3 rounded-lg border border-rose-500/20 bg-rose-500/[.06] px-3 py-2 text-[10px] leading-5 text-rose-200">No hay un proveedor gratuito de embeddings configurado en este entorno. Los documentos nuevos quedarán en cola hasta disponer de Gemini AI Studio Free o Cloudflare Workers AI Free.</p>}
             <div className="mt-2 flex flex-wrap gap-2 text-[9px] font-semibold">
-              <span className={automation?.workers.automaticBusy ? "rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-300" : "rounded-md bg-white/[.04] px-2 py-1 text-slate-500"}>{automation?.workers.automaticBusy ? "AUTOPILOT TRABAJANDO" : "AUTOPILOT DISPONIBLE"}</span>
-              <span className={automation?.workers.manualBusy ? "rounded-md bg-orange-500/10 px-2 py-1 text-orange-200" : "rounded-md bg-white/[.04] px-2 py-1 text-slate-500"}>{automation?.workers.manualBusy ? "MANUAL TRABAJANDO" : "MANUAL DISPONIBLE"}</span>
+              <span className={automation?.workers.automaticBusy ? "rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-300" : "rounded-md bg-white/[.04] px-2 py-1 text-slate-500"}>{automation ? automation.workers.automaticBusy ? "AUTOPILOT TRABAJANDO" : "AUTOPILOT DISPONIBLE" : "AUTOPILOT SIN ESTADO"}</span>
+              <span className={automation?.workers.manualBusy ? "rounded-md bg-orange-500/10 px-2 py-1 text-orange-200" : "rounded-md bg-white/[.04] px-2 py-1 text-slate-500"}>{automation ? automation.workers.manualBusy ? "MANUAL TRABAJANDO" : "MANUAL DISPONIBLE" : "MANUAL SIN ESTADO"}</span>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-6">
               <div className="rounded-lg bg-white/[.035] p-2"><p className="text-[9px] text-slate-500">En cola</p><p className="mt-1 text-lg font-semibold tabular-nums">{automation?.counts.queued ?? "—"}</p></div>

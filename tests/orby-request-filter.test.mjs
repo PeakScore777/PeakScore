@@ -1041,6 +1041,9 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /function startNewConversation\(\) \{\s*voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
   assert.match(lessonTutorSource, /async function selectConversation\(id: string\) \{[\s\S]*?voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
   assert.match(lessonTutorSource, /if \(voiceRealtimeAudioChunkCountRef\.current > 0 \|\| voiceAudioSourcesRef\.current\.size > 0\) \{\s*voiceLastAssistantOutputRef\.current = partialReply/);
+  assert.match(lessonTutorSource, /const hasAudibleLiveOutput = voiceRealtimeAudioChunkCountRef\.current > 0/);
+  assert.match(lessonTutorSource, /if \(hasAudibleLiveOutput\) \{[\s\S]*?voiceLastAssistantOutputRef\.current = rawReply;[\s\S]*?voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ remainingPlaybackMs \+ 1_800/);
+  assert.match(lessonTutorSource, /A text-only Live completion was not heard by the microphone/);
   assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
   assert.match(lessonTutorSource, /A transcript is eligible for acoustic echo suppression only after/);
   assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*Math\.max\(0, voiceNextPlaybackTimeRef\.current - audioContext\.currentTime\)\s*\*\s*1000\s*\+\s*1_800/);

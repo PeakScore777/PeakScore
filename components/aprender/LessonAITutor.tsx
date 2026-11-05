@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho } from "@/lib/ai/orby-voice-echo";
 
@@ -1791,8 +1791,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : isGenericIcfesEnglishRequest(voiceUserTextRef.current)
           ? ORBY_ICFES_ENGLISH_INTRO_REPLY
           : isOrbyGreetingRequest(voiceUserTextRef.current)
-            ? ORBY_GREETING_REPLY
-            : subjectSelectionReply
+          ? null
+          : subjectSelectionReply
               ?? studyGuidanceReply
               ?? transcriptionClarificationReply
               ?? (preflight.allowed ? null : preflight.reply);
@@ -2833,10 +2833,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ].filter(Boolean).join("\n").slice(0, 1800);
       const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);
       const englishReply = isGenericIcfesEnglishRequest(message) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : null;
-      const greetingReply = isOrbyGreetingRequest(message) ? ORBY_GREETING_REPLY : null;
       const subjectSelectionReply = getOrbySubjectSelectionReply(message);
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(message, typedVoiceContext) ? ORBY_STUDY_GUIDANCE_REPLY : null;
-      const localReply = englishReply ?? greetingReply ?? subjectSelectionReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
+      // Greetings stay on Gemini Live so the native Live voice speaks them.
+      // Deterministic text-only shortcuts must not swallow a voice-mode greeting.
+      const localReply = englishReply ?? subjectSelectionReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
         respondToVoiceLocally(message, localReply, true);
         return;

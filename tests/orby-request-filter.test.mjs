@@ -151,6 +151,9 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("voiceLastAssistantOutputAtRef"));
   assert.ok(lessonTutorSource.includes("Date.now() - voiceLastAssistantOutputAtRef.current < 3_000"));
   assert.ok(lessonTutorSource.includes("Turn-based Whisper can capture the laptop speaker after Orby finishes."));
+  assert.ok(lessonTutorSource.includes("A 25-second window swallowed valid"));
+  assert.ok(lessonTutorSource.includes("voiceBrowserSpeechActiveRef.current")
+    && lessonTutorSource.includes("voiceLastAssistantPlaybackUntilRef.current + 1_000"));
   assert.ok(lessonTutorSource.includes("isLikelyVoicePlaybackEcho(transcript, getRecentVoiceAssistantOutputs())"));
   assert.ok(lessonTutorSource.includes("ASR can deliver the microphone echo after the audio element has ended."));
   assert.ok(lessonTutorSource.includes("recentAssistantOutput"));

@@ -107,6 +107,21 @@ export const ORBY_ICFES_ENGLISH_INTRO_REPLY =
 export const ORBY_GREETING_REPLY =
   "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
 
+export function getOrbyGreetingFollowUpReply(previousContext = ""): string {
+  const recent = normalizeOrbyRequestText(previousContext).slice(-1_200);
+  if (!recent) return ORBY_GREETING_REPLY;
+
+  // A greeting inside an existing conversation must not restart the tutor's
+  // presentation or discard the active lesson.
+  if (/\b(?:ingles|english)\b/.test(recent)) {
+    return "¡Aquí estoy! Seguimos con Inglés de Saber 11. ¿Quieres practicar una pregunta o revisar alguna parte?";
+  }
+  if (/\b(?:fotosintesis|ciencias naturales|biologia|quimica|fisica|matematicas|lectura critica|sociales y ciudadanas|saber\s*11|icfes)\b/.test(recent)) {
+    return "¡Aquí estoy! Sigamos con tu preparación para Saber 11. ¿Qué parte quieres revisar ahora?";
+  }
+  return "¡Aquí estoy! ¿Qué tema de Saber 11 quieres trabajar ahora?";
+}
+
 export const ORBY_STUDY_GUIDANCE_REPLY =
   "No pasa nada. Te ayudo a elegir: podemos hacer un diagnóstico breve de Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés para descubrir qué conviene reforzar. ¿Con cuál empezamos?";
 
@@ -145,7 +160,7 @@ export function isOrbyContextualConfirmation(message: string, previousContext = 
     .replace(/[¿?¡!.,;:…]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  if (!/^(?:si|sii|siii|claro|vale|listo|dale|de una|ok|okay|perfecto|bueno|no|me parece|hagale|hagamosle)$/.test(normalized)) {
+  if (!/^(?:si|sii|siii|claro|vale|listo|dale|de una|ok|okay|perfecto|bueno|no|ya|me parece|hagale|hagamosle)$/.test(normalized)) {
     return false;
   }
   const recent = normalizeOrbyRequestText(previousContext).slice(-1_200);
@@ -247,6 +262,7 @@ export function getOrbySubjectSelectionReply(message: string): string | null {
   const compact = normalized
     .replace(/^(?:quiero estudiar|quiero ver|vamos con|empecemos con|empezar con|estudiemos|repasemos|hablemos de|tema de|area de|materia de|la materia de|el area de)\s+/, "")
     .replace(/^(?:el|la)\s+/, "")
+    .replace(/^(?:en|para|con)\s+/, "")
     .trim();
 
   if (/^(?:lectura|lectura critica|lengua|lenguaje|comprension lectora|comprension de lectura|comprension de textos|literatura|gramatica|espanol|castellano)$/.test(compact)) {

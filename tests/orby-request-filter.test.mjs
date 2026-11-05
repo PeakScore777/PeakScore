@@ -51,7 +51,7 @@ const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
-test("Orby usa voz Live y TTS Gemini solo con nivel gratuito verificado", () => {
+test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
@@ -78,9 +78,8 @@ test("Orby usa voz Live y TTS Gemini solo con nivel gratuito verificado", () => 
   assert.ok(lessonTutorSource.includes("new Audio(audioObjectUrl)"));
   assert.ok(lessonTutorSource.includes("finishWithoutGenericVoice"));
   assert.ok(voiceSpeechRouteSource.includes("gemini-3.8-flash-tts"));
-  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_NOT_AVAILABLE"));
-  assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_TTS_FREE_VERIFIED"));
-  assert.match(voiceSpeechRouteSource, /ORBY_GEMINI_TTS_FREE_VERIFIED !== "true"[\s\S]*?return jsonError/);
+  assert.doesNotMatch(voiceSpeechRouteSource, /ORBY_GEMINI_TTS_FREE_VERIFIED|FREE_TIER_TTS_NOT_AVAILABLE/);
+  assert.match(voiceSpeechRouteSource, /NODE_ENV === "production" && process\.env\.ORBY_GEMINI_LIVE_ENABLED !== "true"/);
   assert.ok(voiceSpeechRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(voiceSpeechRouteSource.includes("ORBY_VOICE_NAME"));
   assert.ok(voiceSpeechRouteSource.includes("pcm16ToWav"));
@@ -191,7 +190,6 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(!cloudflareImageRouteSource.includes("gemini-nano-banana"));
   assert.ok(cloudflareImageRouteSource.includes("FREE_QUOTA_EXCEEDED"));
   assert.ok(voiceSpeechRouteSource.includes("gemini-3.8-flash-tts"));
-  assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_TTS_FREE_VERIFIED"));
   assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_QUOTA_EXCEEDED"));
   assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
   assert.doesNotMatch(voiceSpeechRouteSource, /CLOUDFLARE_API_TOKEN|GROQ_API_KEY|synthesizeWithCloudflareSpeech/);

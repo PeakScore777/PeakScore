@@ -517,7 +517,7 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
-  assert.match(lessonTutorSource, /Live audio has priority\. If this is a text-only\/fallback response, use/);
+  assert.match(lessonTutorSource, /Gemini Live is primary\. For text-only turns, use/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
 
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.shift\(\)/);

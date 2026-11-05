@@ -24,6 +24,7 @@ const checklist = await loadTypeScriptModule("../lib/pdf/extract-orby-checklist-
 const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowledge-normalization.ts");
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
 const voiceEcho = await loadTypeScriptModule("../lib/ai/orby-voice-echo.ts");
+const ttsAudio = await loadTypeScriptModule("../lib/ai/orby-tts-audio.ts");
 const saber11Level = await loadTypeScriptModule("../lib/ai/orby-saber11-level.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
@@ -82,7 +83,9 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.match(voiceSpeechRouteSource, /NODE_ENV === "production" && process\.env\.ORBY_GEMINI_LIVE_ENABLED !== "true"/);
   assert.ok(voiceSpeechRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(voiceSpeechRouteSource.includes("ORBY_VOICE_NAME"));
-  assert.ok(voiceSpeechRouteSource.includes("pcm16ToWav"));
+  assert.ok(voiceSpeechRouteSource.includes("normalizeGeminiTtsAudio"));
+  assert.ok(voiceSpeechRouteSource.includes("audioPart?.inlineData?.mimeType"));
+  assert.doesNotMatch(voiceSpeechRouteSource, /pcm16ToWav/);
   assert.doesNotMatch(voiceSpeechRouteSource, /CLOUDFLARE_API_TOKEN|GROQ_API_KEY|api\.groq\.com/);
   assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
@@ -109,6 +112,9 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 420)"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
+  assert.match(lessonTutorSource, /inputAudioTranscription: \{\s*languageCodes: \["es-US"\]/);
+  assert.match(lessonTutorSource, /outputAudioTranscription: \{ languageCodes: \["es-US"\] \}/);
+  assert.match(lessonTutorSource, /speechConfig: \{\s*languageCode: "es-US"/);
   assert.ok(lessonTutorSource.includes("payload.goAway"));
   assert.ok(lessonTutorSource.includes("voiceSessionResumeUpdatedAtRef"));
   assert.ok(lessonTutorSource.includes("90 * 60 * 1000"));
@@ -1483,4 +1489,41 @@ test("un 404 temporal del historial no deja bloqueado el chat nuevo ni borra las
   assert.match(lessonTutorSource, /setConversationId\(null\)/);
   assert.match(lessonTutorSource, /Tus conversaciones siguen conservadas/);
   assert.match(lessonTutorSource, /Esta versión del sitio todavía no puede abrir los mensajes guardados/);
+});
+
+
+test("Gemini 3.8 TTS conserva el WAV completo y solo envuelve PCM sin cabecera", () => {
+  const pcm = Buffer.alloc(512);
+  for (let i = 0; i < pcm.length / 2; i += 1) pcm.writeInt16LE(i % 80, i * 2);
+  const wavHeader = Buffer.alloc(44);
+  wavHeader.write("RIFF", 0);
+  wavHeader.writeUInt32LE(36 + pcm.length, 4);
+  wavHeader.write("WAVE", 8);
+  wavHeader.write("fmt ", 12);
+  wavHeader.writeUInt32LE(16, 16);
+  wavHeader.writeUInt16LE(1, 20);
+  wavHeader.writeUInt16LE(1, 22);
+  wavHeader.writeUInt32LE(24_000, 24);
+  wavHeader.writeUInt32LE(48_000, 28);
+  wavHeader.writeUInt16LE(2, 32);
+  wavHeader.writeUInt16LE(16, 34);
+  wavHeader.write("data", 36);
+  wavHeader.writeUInt32LE(pcm.length, 40);
+  const originalWav = Buffer.concat([wavHeader, pcm]);
+
+  const preservedWav = ttsAudio.normalizeGeminiTtsAudio(originalWav.toString("base64"), "audio/wav");
+  assert.ok(preservedWav);
+  assert.deepEqual(Buffer.from(preservedWav), originalWav);
+  assert.equal(Buffer.from(preservedWav).toString("ascii", 0, 4), "RIFF");
+
+  const wrappedPcm = ttsAudio.normalizeGeminiTtsAudio(pcm.toString("base64"), "audio/l16;rate=24000");
+  assert.ok(wrappedPcm);
+  const wrapped = Buffer.from(wrappedPcm);
+  assert.equal(wrapped.toString("ascii", 0, 4), "RIFF");
+  assert.equal(wrapped.readUInt32LE(24), 24_000);
+  assert.deepEqual(wrapped.subarray(44), pcm);
+
+  assert.equal(ttsAudio.normalizeGeminiTtsAudio(pcm.toString("base64"), "audio/wav"), null);
+  assert.equal(ttsAudio.normalizeGeminiTtsAudio("not-audio", "audio/wav"), null);
+  assert.equal(ttsAudio.normalizeGeminiTtsAudio(Buffer.alloc(257).toString("base64"), "audio/l16"), null);
 });

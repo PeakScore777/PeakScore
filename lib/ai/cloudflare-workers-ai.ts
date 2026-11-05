@@ -145,41 +145,8 @@ export async function generateWithCloudflareImage(
   return { image };
 }
 
-export async function synthesizeWithCloudflareSpeech(text: string): Promise<Buffer> {
-  const normalized = text.replace(/\s+/g, " ").trim().slice(0, 420);
-  if (!normalized) throw new CloudflareWorkersAIError("EMPTY_TTS_TEXT");
-
-  // Aura-2 Spanish is hosted by Cloudflare Workers AI. Use the selected
-  // feminine Spanish speaker and a high-quality MP3 bitrate. Requests stay on
-  // this Cloudflare-hosted model; never cascade to another speech provider.
-  const result = await runModel<{ audio?: unknown }>(
-    "@cf/deepgram/aura-2-es",
-    {
-      text: normalized,
-      speaker: "celeste",
-      encoding: "mp3",
-      container: "none",
-      bit_rate: 128000,
-    },
-    10_000,
-  );
-
-  const encoded = typeof result.audio === "string" ? result.audio : "";
-  if (!encoded || !/^[A-Za-z0-9+/]+={0,2}$/.test(encoded)) {
-    throw new CloudflareWorkersAIError("INVALID_TTS_RESPONSE");
-  }
-
-  const audio = Buffer.from(encoded, "base64");
-  if (audio.byteLength < 256 || audio.byteLength > 4 * 1024 * 1024) {
-    throw new CloudflareWorkersAIError("INVALID_TTS_AUDIO_SIZE");
-  }
-  const hasId3Header = audio.toString("ascii", 0, 3) === "ID3";
-  const hasMpegFrameHeader = audio.length > 1 && audio[0] === 0xff && (audio[1] & 0xe0) === 0xe0;
-  if (!hasId3Header && !hasMpegFrameHeader) {
-    throw new CloudflareWorkersAIError("INVALID_TTS_MP3");
-  }
-  return audio;
-}
+// No TTS function is exported from this module: current Cloudflare speech
+// synthesis endpoints are metered, and Orby must never invoke them silently.
 
 export async function transcribeWithCloudflare(audio: Buffer): Promise<string> {
   if (audio.length < 1024 || audio.length > 8 * 1024 * 1024) {

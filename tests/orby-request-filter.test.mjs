@@ -471,7 +471,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "el cierre de reproducción se evalúa después de vaciar los fragmentos de audio Live");
   assert.match(lessonTutorSource, /needsSpeechFallback[\s\S]*?void speakText\(rawReply/);
-  assert.match(lessonTutorSource, /Gemini Live is the primary audio source/);
+  assert.match(lessonTutorSource, /Gemini Live is the only currently verified free audio-output provider/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const configuredVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim()'));
   assert.match(orbyVoiceConfigSource, /configuredVoice.*toLowerCase\(\) !== "sulafat"/);

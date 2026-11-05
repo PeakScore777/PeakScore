@@ -43,13 +43,23 @@ export function isLikelyVoicePlaybackEcho(
       continue;
     }
 
-    // Exact full-phrase matches are strong echo evidence even when most
-    // words are short (for example, "Hola de nuevo").
-    if (spoken.includes(incoming) || incoming.includes(spoken)) return true;
+    // A single meaningful token such as "Saber" is not enough to suppress
+    // a student's academic request. For low-information words, require a
+    // complete token match; never use substring matching ("sí" vs "sin").
+    if (LOW_INFORMATION_WORDS.has(incoming)) {
+      if (spoken.split(" ").includes(incoming)) return true;
+      continue;
+    }
+
+    // Exact multiword matches are strong echo evidence. Keep common complete
+    // greetings eligible even when stop-word removal leaves only one word.
+    const isGreetingPhrase = /^(?:hola(?: de nuevo)?|oye orby|oee(?: hermano)?|oe(?: hermano)?|buenas(?: tardes| noches)?|buenos dias)$/.test(incoming);
+    if (isGreetingPhrase && spoken.split(" ").join(" ").includes(incoming)) return true;
 
     // Curriculum terms such as "Saber 11" have too little lexical signal
     // for a fuzzy echo match; never suppress them as a short phrase.
     if (incomingWords.length < 2 || spoken.length < 6) continue;
+    if (spoken.includes(incoming) || incoming.includes(spoken)) return true;
 
     const spokenWords = new Set(spoken.split(" ")
       .filter((word) => /^[a-z]{2,}$/i.test(word) && !LOW_INFORMATION_WORDS.has(word)));

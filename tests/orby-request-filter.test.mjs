@@ -279,11 +279,13 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
 
   const partialTranscriptStart = lessonTutorSource.indexOf("const outputTranscript");
   const modelAudioStart = lessonTutorSource.indexOf("const modelTurn", partialTranscriptStart);
+  const firstSafeSentenceFlush = lessonTutorSource.indexOf("if (hasCompleteSafeSentence) flushPendingGeminiAudio();", partialTranscriptStart);
   const finalTurnValidation = lessonTutorSource.indexOf("if ((serverContent.turnComplete === true", partialTranscriptStart);
   const finalAudioFlush = lessonTutorSource.indexOf("flushPendingGeminiAudio();", finalTurnValidation);
-  assert.ok(partialTranscriptStart >= 0 && modelAudioStart > partialTranscriptStart);
+  assert.ok(partialTranscriptStart >= 0 && firstSafeSentenceFlush > partialTranscriptStart);
+  assert.ok(modelAudioStart > firstSafeSentenceFlush);
   assert.ok(finalTurnValidation > modelAudioStart && finalAudioFlush > finalTurnValidation);
-  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*\/\/\s*entire transcript/);
+  assert.doesNotMatch(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*\/\/\s*entire transcript/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply\.length >= 18/);
   assert.match(lessonTutorSource, /voiceOutputTranscriptValidatedRef\.current = hasCompleteSafeSentence/);
   assert.match(lessonTutorSource, /if \(!voiceOutputAudioBlockedRef\.current && voiceOutputTranscriptValidatedRef\.current\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
@@ -1013,7 +1015,8 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 18/);
-  assert.match(lessonTutorSource, /Playback is deliberately deferred until turnComplete validates the\s*\/\/\s*entire transcript/);
+  assert.match(lessonTutorSource, /if \(hasCompleteSafeSentence\) flushPendingGeminiAudio\(\)/);
+  assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) \{[\s\S]*?playGeminiAudio\(chunk\.data, chunk\.mimeType\)/);
   assert.match(lessonTutorSource, /if \(!voiceOutputAudioBlockedRef\.current && voiceOutputTranscriptValidatedRef\.current\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
   const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);

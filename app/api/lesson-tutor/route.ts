@@ -785,7 +785,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       modelReply = ORBY_SAFETY_REPLY;
       parsed.checkQuestion = "";
     }
-    if (isLowQualityOrbyReply(modelReply)) {
+    if (isLowQualityOrbyReply(modelReply, userMessage)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "low_quality_reply" });
       modelReply = ORBY_INCOMPLETE_REPLY_FALLBACK;
       parsed.checkQuestion = "";

@@ -97,7 +97,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "tts"'));
   assert.ok(lessonTutorSource.includes("A text-chat TTS utterance must never overlap the newly opened Live channel."));
   assert.ok(!lessonTutorSource.includes("feminineVoicePattern"));
-  assert.ok(lessonTutorSource.includes("no se activará una voz genérica ni un servicio de pago."));
+  assert.doesNotMatch(lessonTutorSource, /no se activará una voz genérica ni un servicio de pago/);
   assert.ok(!lessonTutorSource.includes("?? spanishVoices[0]"));
   assert.ok(!lessonTutorSource.includes("new SpeechSynthesisUtterance"));
   assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));

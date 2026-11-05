@@ -1229,7 +1229,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceOutputAudioBlockedRef.current = false;
     waitingForVoiceReplyRef.current = false;
     setVoiceStatus(voiceFallbackModeRef.current
-      ? "Voz alternativa lista · toca el micrófono para hablar"
+      ? "Modo por turnos listo · toca el micrófono para hablar"
       : "Te escucho…");
     setIsListening(!voiceFallbackModeRef.current);
     void persistRealtimeTurnIfReady();
@@ -2621,7 +2621,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setIsListening(false);
     setLiveTranscript("");
     setVoiceError(reason);
-    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta con voz alternativa…" : "Voz alternativa lista · toca el micrófono para hablar");
+    setVoiceStatus(cleanPendingText ? "Continuando tu pregunta con voz alternativa…" : "Modo por turnos listo · toca el micrófono para hablar");
 
     if (!cleanPendingText) {
       voiceUserTextRef.current = "";
@@ -3761,7 +3761,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
           {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">
-            <strong>Modo de voz alternativo activo.</strong> Pulsa el micrófono para grabar y púlsalo otra vez para detener. Orby transcribirá con Whisper y responderá con Cloudflare. La lectura usará una voz femenina española instalada; si no está disponible, la respuesta seguirá visible por escrito. No consume cuota Gemini.
+            <strong>Modo por turnos activo.</strong> Pulsa el micrófono para hablar y vuelve a pulsarlo para detener la grabación. Orby transcribirá con Whisper y responderá con el tutor de Cloudflare. La respuesta se mostrará por escrito; no se activará una voz sintética facturada ni una voz genérica del navegador. No consume cuota Gemini.
           </div>}
           {liveTranscript && showVoiceTranscript && <div className="mt-4 max-h-28 w-full max-w-lg overflow-y-auto rounded-xl border border-current/10 bg-black/10 px-4 py-3 text-left text-sm leading-6">{liveTranscript}</div>}
           {voiceError && <p role="alert" className="mt-4 max-w-lg rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{voiceError}</p>}

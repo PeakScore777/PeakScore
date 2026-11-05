@@ -220,7 +220,7 @@ export const ORBY_EMBEDDING_PROVIDER_WAIT_MARKER = "ORBY_EMBEDDING_PROVIDER_NOT_
 export async function resumeOrbyJobsWaitingForEmbeddingProvider(): Promise<number> {
   const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
   const hasCloudflare = Boolean(
-    process.env.CLOUDFLARE_ACCOUNT_ID?.trim()
+    /^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "")
     && process.env.CLOUDFLARE_API_TOKEN?.trim()
   );
   if (!hasGemini && !hasCloudflare) return 0;

@@ -149,14 +149,15 @@ export function isOrbyContextualConfirmation(message: string, previousContext = 
     return false;
   }
   const recent = normalizeOrbyRequestText(previousContext).slice(-1_200);
-  if (!recent) return false;
+  // A bare acknowledgement is never, by itself, an off-topic request. With
+  // no history, let Orby ask what the student wants to study; with history,
+  // continue the academic exchange instead of showing a scope refusal.
+  if (!recent) return true;
   const hasCurriculumContext = /\b(?:saber\s*11|icfes|matematicas?|lectura critica|sociales y ciudadanas|ciencias naturales|ingles|english|fotosintesis|biologia|quimica|fisica|historia|geometria|estadistica|mediana|moda)\b/.test(recent);
   const hasRecentQuestion = /[?¿]/.test(recent.slice(-700));
-  // The previous turn can be a direct academic question or an invitation. Do
-  // not demand a fixed verb such as "empezamos": natural tutor language varies.
   const hasAcademicIntent = hasCurriculumContext
     || /\b(?:explicar|explicame|repasar|practicar|estudiar|resolver|mostrar|ver|revisar|continuar)\b/.test(recent);
-  return hasRecentQuestion && hasAcademicIntent;
+  return hasAcademicIntent && (hasRecentQuestion || hasCurriculumContext);
 }
 
 /** Reject punctuation and bare acknowledgements, not concise academic answers such as A or B. */

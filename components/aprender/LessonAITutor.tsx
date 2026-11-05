@@ -1764,8 +1764,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const assistantPlaybackTail = Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
       const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 3_000;
       const assistantSpeech = getRecentVoiceAssistantOutputs();
-      const interimIsEcho = (assistantAudioInFlight || assistantPlaybackTail
-        || (recentAssistantOutput && normalizeVoiceComparison(interimText).length >= 18))
+      const interimLength = normalizeVoiceComparison(interimText).length;
+      const interimIsEcho = (assistantAudioInFlight || (assistantPlaybackTail && interimLength >= 8)
+        || (recentAssistantOutput && interimLength >= 18))
         && isLikelyVoicePlaybackEcho(interimText, assistantSpeech);
       if (!unsupportedInterimScript && interimIsEcho) {
         // Ignore playback feedback and only a very short acoustic tail.
@@ -1834,7 +1835,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // Keep a short transcript-based guard so Orby never answers its own greeting.
     const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 3_000;
     const assistantSpeechCandidates = [...recentAssistantTexts, recentAssistantText];
-    const isRecentAcousticEcho = (assistantAudioInFlight || assistantPlaybackTail
+    const isRecentAcousticEcho = (assistantAudioInFlight || (assistantPlaybackTail && normalizedFinal.length >= 8)
       || (recentAssistantOutput && normalizedFinal.length >= 18))
       && isLikelyVoicePlaybackEcho(normalizedFinal, assistantSpeechCandidates);
     const isMeaningfulBargeIn = assistantAudioInFlight

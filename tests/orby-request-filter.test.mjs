@@ -91,7 +91,7 @@ test("Cloudflare mantiene transcripción y tutor por turnos; Gemini Live es la �
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "tts"'));
   assert.ok(lessonTutorSource.includes("A text-chat TTS utterance must never overlap the newly opened Live channel."));
   assert.ok(!lessonTutorSource.includes("feminineVoicePattern"));
-  assert.ok(lessonTutorSource.includes("no se activará una voz genérica del navegador"));
+  assert.ok(lessonTutorSource.includes("no se activará una voz genérica ni un servicio facturado."));
   assert.ok(!lessonTutorSource.includes("?? spanishVoices[0]"));
   assert.ok(!lessonTutorSource.includes("new SpeechSynthesisUtterance"));
   assert.ok(lessonTutorSource.includes("GEMINI_FREE_QUOTA_EXCEEDED"));
@@ -342,7 +342,8 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
   assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);
-  assert.match(lessonTutorSource, /utterance\.rate = 1\.04/);
+  assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
+  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(orbyKnowledgeSource, /\.slice\(0, 2\)/);
   // @google/genai 2.17.1 AudioTranscriptionConfig supports languageCodes
   // and customVocabulary, but does not expose a "mode" property.
@@ -499,7 +500,8 @@ test("el chat procesa solicitudes pendientes en orden y limita peticiones bloque
   assert.match(lessonTutorSource, /lastSubmittedMessageRef/);
   assert.match(lessonTutorSource, /submittedAt - previousSubmission\.at < 1_800/);
   assert.match(lessonTutorSource, /utterance\.rate = 1\.04/);
-  assert.match(lessonTutorSource, /utterance\.pitch = 1\.02/);
+  assert.match(lessonTutorSource, /Gemini Live is the only currently verified free audio-output provider/);
+  assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
 
   assert.match(lessonTutorSource, /pendingMessagesRef\.current\.shift\(\)/);
   assert.match(lessonTutorSource, /AbortSignal\.timeout\(60_000\)/);
@@ -1001,7 +1003,7 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
   assert.match(lessonTutorSource, /finishLocalVoiceReply/);
   assert.match(lessonTutorSource, /voiceBrowserSpeechActiveRef\.current = true/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = clean/);
-  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\) \+ clean\.length \* 58/);
+  assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*\(duration > 0 \? duration \* 1000 : clean\.length \* 58\)\s*\+\s*1_800/);
   assert.match(lessonTutorSource, /void refreshConversations\(\)\.catch/);
 });
 

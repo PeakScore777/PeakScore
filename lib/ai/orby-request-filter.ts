@@ -29,7 +29,7 @@ const PROGRAMMING_REQUEST_PATTERNS = [
 
 const ICFES_SCOPE_PATTERNS = [
   /\b(?:pregunta tipo icfes|simulacro(?: de saber\s*11| del icfes)?|cuadernillo de preguntas)\b/i,
-  /\b(?:matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuacion(?:es)?|inecuacion(?:es)?|fracciones?|porcentajes?|razones y proporciones|proporcionalidad|funcion lineal|funcion cuadratica|plano cartesiano|pendiente de una recta|polinomios?|logaritmos?|potencias?|raiz cuadrada|teorema de pitagoras|perimetro|area de un triangulo|volumen de un|media aritmetica|mediana|moda estadistica|secuencia numerica|sucesion numerica|variable independiente|variable dependiente)\b/i,
+  /\b(?:matematicas?|algebra|aritmetica|geometria|trigonometria|probabilidad|estadistica|ecuacion(?:es)?|inecuacion(?:es)?|fracciones?|porcentajes?|razones y proporciones|proporcionalidad|funcion lineal|funcion cuadratica|plano cartesiano|pendiente de una recta|polinomios?|logaritmos?|potencias?|raiz cuadrada|teorema de pitagoras|perimetro|area de un triangulo|volumen de un|media aritmetica|mediana|moda(?: estadistica)?|secuencia numerica|sucesion numerica|variable independiente|variable dependiente)\b/i,
   /\b(?:lectura critica|lectura|leer|lecturas|lengua|lenguaje|espanol|castellano|comprension|comprension lectora|comprension de lectura|comprension de textos|interpretacion de textos|analisis textual|texto|textos|literatura|gramatica|comunicacion|argumentacion|texto argumentativo|intencion del autor|idea principal|idea central|tesis del texto|argumento central|inferir|inferencia|conclusion del texto|conectores logicos|coherencia textual|cohesion textual|parrafo|narrador|figura retorica|figura literaria|genero textual|proposito comunicativo|punto de vista del autor|postura del autor|analisis de texto)\b/i,
   /\b(?:sociales|sociales y ciudadanas|ciencias sociales|historia|historia de colombia|historia universal|geografia|democracia|constitucion politica|derechos humanos|ciudadania|estado colombiano|ramas del poder|participacion politica|conflicto armado|guerra fria|independencia de colombia|colonizacion|revolucion francesa|revolucion industrial|globalizacion|economia circular|oferta y demanda|desigualdad social|migracion|territorio colombiano|desarrollo sostenible|organizacion del estado|centralismo|federalismo|poder ejecutivo|poder legislativo|poder judicial|sistema politico)\b/i,
   /\b(?:ciencias|naturales|ciencias naturales|fisica|quimica|biologia|celula|ecosistema|genetica|fotosintesis|respiracion celular|evolucion biologica|seleccion natural|reaccion quimica|atomo|molecula|tabla periodica|enlace quimico|energia|fuerza|densidad|termodinamica|materia|presion atmosferica|velocidad terminal|leyes de newton|circuito electrico|electricidad|magnetismo|ondas sonoras|acido|base|escala de ph|variable independiente|variable dependiente|variable de control|experimento|hipotesis|metodo cientifico|contaminacion|cambio climatico|biodiversidad|cadena alimentaria|astronomia|estrella(?:s)? de neutrones|agujero negro|sistema solar|orbita|gravedad)\b/i,
@@ -147,11 +147,15 @@ export function isOrbyContextualConfirmation(message: string, previousContext = 
   if (!/^(?:si|sii|siii|claro|vale|listo|dale|de una|ok|okay|perfecto|bueno|no|me parece|hagale|hagamosle)$/.test(normalized)) {
     return false;
   }
-  const recent = normalizeOrbyRequestText(previousContext).slice(-700);
-  const hasIcfesContext = /\b(?:saber\s*11|icfes|matematicas?|lectura critica|sociales y ciudadanas|ciencias naturales|ingles|english)\b/.test(recent);
-  const hasInvitation = /\b(?:empezamos|comenzamos|seguimos|continuamos|practicamos|resolvemos|revisamos|hacemos|pasamos|quieres|te parece|te gustaria|iniciamos|probamos|te explico|te muestro)\b/.test(recent)
-    && /[?¿]/.test(recent);
-  return hasIcfesContext && hasInvitation;
+  const recent = normalizeOrbyRequestText(previousContext).slice(-1_200);
+  if (!recent) return false;
+  const hasCurriculumContext = /\b(?:saber\s*11|icfes|matematicas?|lectura critica|sociales y ciudadanas|ciencias naturales|ingles|english|fotosintesis|biologia|quimica|fisica|historia|geometria|estadistica|mediana|moda)\b/.test(recent);
+  const hasRecentQuestion = /[?¿]/.test(recent.slice(-700));
+  // The previous turn can be a direct academic question or an invitation. Do
+  // not demand a fixed verb such as "empezamos": natural tutor language varies.
+  const hasAcademicIntent = hasCurriculumContext
+    || /\b(?:explicar|explicame|repasar|practicar|estudiar|resolver|mostrar|ver|revisar|continuar)\b/.test(recent);
+  return hasRecentQuestion && hasAcademicIntent;
 }
 
 /** Reject punctuation and bare acknowledgements, not concise academic answers such as A or B. */

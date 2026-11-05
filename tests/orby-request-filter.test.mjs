@@ -154,7 +154,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("speakWithVerifiedFreeTts(clean, index)"));
   assert.ok(lessonTutorSource.includes("await speakWithVerifiedFreeTts(clean, index);"));
   assert.doesNotMatch(lessonTutorSource, /speechSynthesis\.speak\(/);
-  assert.match(lessonTutorSource, /Internal provider configuration must not appear as a red student-facing error/);
+  assert.match(lessonTutorSource, /provider configuration must not appear as a red student-facing error/);
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("voiceFallbackModeRef.current"));
   assert.ok(lessonTutorSource.includes("sendMessageRef.current(transcript, false, true"));

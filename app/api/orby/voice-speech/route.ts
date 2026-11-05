@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => null) as { text?: unknown } | null;
     const text = typeof body?.text === "string"
-      ? body.text.replace(/\\s+/g, " ").trim()
+      ? body.text.replace(/\s+/g, " ").trim()
       : "";
     if (!text || text.length > MAX_TEXT_LENGTH) {
       return jsonError(

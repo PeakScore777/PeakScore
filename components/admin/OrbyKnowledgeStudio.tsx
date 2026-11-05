@@ -18,6 +18,7 @@ type AutomationStatus = {
   settings: { enabled: boolean; last_tick_at: string | null; last_job_started_at: string | null; ai_cycles_used: number; ai_cycle_date: string | null; ai_cycle_window_started_at: string | null };
   workers: { automaticBusy: boolean; manualBusy: boolean };
   configured: boolean;
+  embeddingProviderConfigured: boolean;
   counts: { queued: number; running: number; retrying: number; failed: number; completed: number };
   recent: Array<{
     id: string;

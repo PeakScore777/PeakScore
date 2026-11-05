@@ -947,6 +947,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setIsListening(false);
       }
 
+      // If optional TTS is unavailable, keep the validated answer visible without speaking it.
       const finishWithoutGenericVoice = () => {
         if (finished) return;
         setVoiceError("El audio alternativo no está disponible con una cuota gratuita verificada. La respuesta permanece escrita; no se activará una voz genérica ni un servicio facturado.");

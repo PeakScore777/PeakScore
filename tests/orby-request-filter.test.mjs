@@ -83,7 +83,7 @@ test("Orby usa voz Live y TTS Gemini solo con nivel gratuito verificado", () => 
   assert.ok(voiceSpeechRouteSource.includes("ORBY_VOICE_NAME"));
   assert.ok(voiceSpeechRouteSource.includes("pcm16ToWav"));
   assert.doesNotMatch(voiceSpeechRouteSource, /CLOUDFLARE_API_TOKEN|GROQ_API_KEY|api\.groq\.com/);
-  assert.ok(!voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
+  assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
   assert.ok(!lessonTutorSource.includes("waitForSpanishBrowserVoice"));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));

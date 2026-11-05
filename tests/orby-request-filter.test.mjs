@@ -143,7 +143,7 @@ test("Cloudflare mantiene transcripción y tutor por turnos; Aura-2 español ofr
   assert.ok(lessonTutorSource.includes("needsSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
 
-  assert.ok(lessonTutorSource.includes("El audio alternativo no está disponible con una cuota gratuita verificada"));
+  assert.ok(lessonTutorSource.includes("No se pudo generar el audio con la cuota gratuita disponible"));
   assert.match(lessonTutorSource, /Only register an assistant echo after real audio playback starts/);
   assert.match(lessonTutorSource, /Do not expose this text as spoken audio until playback really starts/);
   assert.ok(lessonTutorSource.includes("speakWithCloudflareOnly(clean, index)"));

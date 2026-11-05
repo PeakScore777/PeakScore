@@ -1573,5 +1573,5 @@ test("las respuestas TTS largas conservan texto y cada fragmento fallido se rein
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(30_000)"));
   assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply)"));
   assert.ok(lessonTutorSource.includes("isLowQualityOrbyReply(rawReply)"));
-  assert.ok(cloudflareVoiceSource.includes('Nunca respondas únicamente "sí", "no", "ok" ni signos de puntuación'));
+  assert.ok(cloudflareVoiceSource.includes("Nunca respondas únicamente 'sí', 'no', 'ok' ni signos de puntuación"));
 });

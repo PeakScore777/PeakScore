@@ -1569,7 +1569,7 @@ test("la salida de Orby corrige tildes académicas frecuentes sin alterar la pun
   );
   assert.equal(
     filter.normalizeOrbySpanishOutput("La fotosintesis usa oxigeno, agua y dioxido de carbono; el nucleo contiene atomos."),
-    "La fotosíntesis usa oxígeno, agua y dioxido de carbono; el núcleo contiene átomos.",
+    "La fotosíntesis usa oxígeno, agua y dióxido de carbono; el núcleo contiene átomos.",
   );
 });
 

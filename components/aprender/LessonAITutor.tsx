@@ -878,7 +878,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const previousCancel = voiceSpeechCancelRef.current;
       voiceSpeechCancelRef.current = null;
       previousCancel?.();
-      synthesis?.cancel();
       if (isLocalVoiceTurn && voicePlaybackOwnerRef.current === "live") {
         if (voiceAudioSourcesRef.current.size > 0) {
           // Live still owns an audible response. Let its onended path finish
@@ -887,7 +886,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           return;
         }
         // A completed Live turn must release ownership so a validated
-        // text-only fallback can be spoken instead of being silently skipped.
+        // text-only fallback can be displayed instead of being silently skipped.
         voicePlaybackOwnerRef.current = "none";
       }
       voicePlaybackOwnerRef.current = "tts";

@@ -1695,8 +1695,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (voiceActivity?.type === "ACTIVITY_START") {
       const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
         || voiceAudioSourcesRef.current.size > 0
-        || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current
-        || Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
+        || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current;
       if (assistantAudioInFlight) {
         // Speaker echo must not start a fresh student turn or cancel the
         // response watchdog while Orby is still speaking.
@@ -1739,8 +1738,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // While local TTS is active, this is usually the mic hearing Orby's
       // speaker output. A real barge-in is handled by a non-echo interim.
       if (!voiceBrowserSpeechActiveRef.current
-        && voiceAudioSourcesRef.current.size === 0
-        && Date.now() > voiceLastAssistantPlaybackUntilRef.current) {
+        && voiceAudioSourcesRef.current.size === 0) {
         waitingForVoiceReplyRef.current = true;
         setIsListening(false);
         setVoiceStatus("Procesando lo que dijiste…");
@@ -1762,10 +1760,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setLiveTranscript(unsupportedInterimScript ? "" : interimText);
       const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
         || voiceAudioSourcesRef.current.size > 0
-        || Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
+        || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current;
+      const assistantPlaybackTail = Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
       const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 3_000;
       const assistantSpeech = getRecentVoiceAssistantOutputs();
-      const interimIsEcho = (assistantAudioInFlight || (recentAssistantOutput && normalizeVoiceComparison(interimText).length >= 18))
+      const interimIsEcho = (assistantAudioInFlight || assistantPlaybackTail
+        || (recentAssistantOutput && normalizeVoiceComparison(interimText).length >= 18))
         && isLikelyVoicePlaybackEcho(interimText, assistantSpeech);
       if (!unsupportedInterimScript && interimIsEcho) {
         // Ignore playback feedback and only a very short acoustic tail.
@@ -1828,12 +1828,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
     const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
       || voiceAudioSourcesRef.current.size > 0
-      || Date.now() <= voiceLastAssistantPlaybackUntilRef.current + 1_800;
+      || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current;
+    const assistantPlaybackTail = Date.now() <= voiceLastAssistantPlaybackUntilRef.current;
     // ASR can deliver the microphone echo after the audio element has ended.
     // Keep a short transcript-based guard so Orby never answers its own greeting.
     const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 3_000;
     const assistantSpeechCandidates = [...recentAssistantTexts, recentAssistantText];
-    const isRecentAcousticEcho = (assistantAudioInFlight || (recentAssistantOutput && normalizedFinal.length >= 18))
+    const isRecentAcousticEcho = (assistantAudioInFlight || assistantPlaybackTail
+      || (recentAssistantOutput && normalizedFinal.length >= 18))
       && isLikelyVoicePlaybackEcho(normalizedFinal, assistantSpeechCandidates);
     const isMeaningfulBargeIn = assistantAudioInFlight
       && isStrongVoiceBargeIn(normalizedFinal, assistantSpeechCandidates);

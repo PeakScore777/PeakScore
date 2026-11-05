@@ -11,6 +11,7 @@ import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho } from "@/lib/ai/orby-voice-echo";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
+const ORBY_FREE_TTS_UNAVAILABLE_MESSAGE = "El audio alternativo no está disponible con una cuota gratuita verificada. La respuesta permanece escrita; no se activará una voz genérica ni un servicio de pago.";
 
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
@@ -819,8 +820,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!clean) return;
 
     // Live audio has priority. If this is a text-only/fallback response, use
-    // Cloudflare Aura-2 only while the account's shared Workers Free quota lasts.
-    // Quota exhaustion must leave the answer readable and never trigger paid TTS.
+    // Cloudflare Aura-2 only after the server confirms the account is on Workers Free.
+    // The endpoint denies TTS by default; no browser voice or paid provider is used.
     await speakWithCloudflareOnly(clean, index);
   }
 
@@ -965,7 +966,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // If optional TTS is unavailable, keep the validated answer visible without speaking it.
       const finishWithoutGenericVoice = () => {
         if (finished) return;
-        setVoiceError("No se pudo generar el audio con la cuota gratuita disponible. La respuesta permanece escrita; no se activará una voz genérica ni un servicio de pago.");
+        setVoiceError(ORBY_FREE_TTS_UNAVAILABLE_MESSAGE);
         finish(false);
       };
 
@@ -1282,12 +1283,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanUserText);
     voiceLastCommittedInputAtRef.current = Date.now();
 
-    const previousAssistantIndex = previousAssistantId
-      ? messages.findIndex((message) => message.id === previousAssistantId)
-      : -1;
-    const assistantIndex = previousAssistantIndex >= 0
-      ? previousAssistantIndex
-      : messages.length + (appendUserMessage ? 1 : 0);
     setMessages((current) => {
       const hasExistingAssistant = Boolean(previousAssistantId)
         && current.some((message) => message.id === previousAssistantId);
@@ -1327,7 +1322,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
     }
 
-    void speakText(cleanReply, assistantIndex);
+    if (voiceFallbackModeRef.current) setVoiceError(ORBY_FREE_TTS_UNAVAILABLE_MESSAGE);
+    finishLocalVoiceReply(assistantId);
   }
 
   function persistRealtimeTurnIfReady(): Promise<void> {
@@ -2061,12 +2057,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
 
-      // Live is the only enabled audio-output source. If a validated turn has
-      // no usable Live audio, keep the answer visible and do not call metered TTS.
+      // Live is the only automatic audio-output source. If its audio is missing
+      // or blocked, preserve the validated text and never launch a metered TTS request.
       if (needsSpeechFallback && rawReply.trim()) {
-        const id = voiceAssistantMessageIdRef.current;
-        const messageIndex = messages.findIndex((message) => message.id === id);
-        void speakText(rawReply, messageIndex >= 0 ? messageIndex : messages.length);
+        setVoiceError(ORBY_FREE_TTS_UNAVAILABLE_MESSAGE);
+        finishRealtimeVoicePlayback();
         return;
       }
       finishRealtimeVoicePlayback();
@@ -3011,9 +3006,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         waitingForVoiceReplyRef.current = true;
         voiceInputPolicyRef.current = null;
         voicePreflightReplyRef.current = null;
-        setVoiceError("");
-        setVoiceStatus("Orby preparó la respuesta por escrito…");
-        void speakText(data.reply, nextMessages.length);
+        setVoiceError(ORBY_FREE_TTS_UNAVAILABLE_MESSAGE);
+        setVoiceStatus("Respuesta lista · modo por turnos");
+        finishLocalVoiceReply(voiceAssistantMessageIdRef.current);
       } else if (isVoiceInteraction) {
         setVoiceError("La voz en tiempo real se interrumpió. La respuesta quedó disponible por escrito.");
       }

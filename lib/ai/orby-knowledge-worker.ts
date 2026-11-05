@@ -6,7 +6,6 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
   combineOrbyKnowledgePageBatches,
   createOrbyEmbeddings,
-  isOrbyEmbeddingProviderConfigured,
   generateOrbyKnowledgePageBatch,
   saveOrbyKnowledgeProfile,
   type OrbyKnowledgeChunk,

@@ -2029,7 +2029,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   ? preflightOrbyRequest("programar").reply
                   : voiceInputPolicyRef.current === "outside"
                     ? preflightOrbyRequest("cocinar").reply
-                    : null));
+                    : null);
       voicePreflightReplyRef.current = null;
 
       // Deterministic safety replies are inserted directly as validated text.

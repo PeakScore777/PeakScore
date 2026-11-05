@@ -24,6 +24,7 @@ const checklist = await loadTypeScriptModule("../lib/pdf/extract-orby-checklist-
 const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowledge-normalization.ts");
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
 const voiceEcho = await loadTypeScriptModule("../lib/ai/orby-voice-echo.ts");
+const saber11Level = await loadTypeScriptModule("../lib/ai/orby-saber11-level.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
 const chunkCapacityMigration = await readFile(new URL("../supabase/migrations/20261102220000_orby_knowledge_chunk_capacity.sql", import.meta.url), "utf8");
@@ -44,6 +45,7 @@ const cloudflareImageRouteSource = await readFile(new URL("../app/api/orby/gener
 const voiceSpeechRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
 const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 const adminOrbyChatSource = await readFile(new URL("../app/api/admin/orby/chat/route.ts", import.meta.url), "utf8");
+const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby/knowledge/automation/route.ts", import.meta.url), "utf8");
 const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
@@ -1450,4 +1452,35 @@ test("no revela al estudiante claves candidatas ni números de preguntas de mate
 test("descarta soluciones sin resumen académico o área verificable", () => {
   assert.equal(questionSolutions.toStudentSafeQuestionSolution({ area: "Física" }), null);
   assert.equal(questionSolutions.toStudentSafeQuestionSolution({ problem_summary: "Un resumen" }), null);
+});
+
+
+test("el laboratorio no presenta un estado desconocido del Autopilot como motor pausado", () => {
+  assert.ok(adminStudioSource.includes("const failures = [docsResult.error, chatResult.error]"));
+  assert.ok(adminStudioSource.includes("setAutomationError(automationResult.error ?? \"\")"));
+  assert.ok(adminStudioSource.includes("ESTADO DESACTUALIZADO"));
+  assert.ok(adminStudioSource.includes("CARGANDO ESTADO"));
+  assert.ok(adminStudioSource.includes("embeddingProviderConfigured: boolean"));
+  assert.ok(adminAutomationRouteSource.includes("isOrbyEmbeddingProviderConfigured()"));
+  assert.ok(adminAutomationRouteSource.includes("embeddingProviderConfigured:"));
+});
+
+test("Orby ICFES Lab calibra sus respuestas a bachillerato y separa la profundización universitaria", () => {
+  const normalize = saber11Level.normalizeOrbySaber11Level;
+  const original = "Identificaré el contenido de nivel de profundidad técnica superior (universitario) y lo priorizaré para el examen.";
+  const normalized = normalize(original);
+  assert.ok(normalized.includes("nivel escolar de preparación para Saber 11"));
+  assert.doesNotMatch(normalized, /universitari[oa]/i);
+  assert.ok(normalize("El contenido universitario es avanzado.").includes("profundización opcional"));
+  assert.ok(adminOrbyChatSource.includes("CALIBRACIÓN ACADÉMICA OBLIGATORIA"));
+  assert.ok(adminOrbyChatSource.includes("normalizeOrbySaber11Level"));
+  assert.ok(adminOrbyChatSource.includes("identificadores internos de evidencia"));
+});
+
+test("un 404 temporal del historial no deja bloqueado el chat nuevo ni borra las conversaciones guardadas", () => {
+  assert.match(lessonTutorSource, /messagesResponse\.status === 404/);
+  assert.match(lessonTutorSource, /activeConversationRef\.current = null/);
+  assert.match(lessonTutorSource, /setConversationId\(null\)/);
+  assert.match(lessonTutorSource, /Tus conversaciones siguen conservadas/);
+  assert.match(lessonTutorSource, /Esta versión del sitio todavía no puede abrir los mensajes guardados/);
 });

@@ -1562,10 +1562,14 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.equal(filter.isLowQualityOrbyReply("La respuesta correcta es A."), false);
 });
 
-test("la salida de Orby corrige tildes frecuentes sin alterar la puntuación", () => {
+test("la salida de Orby corrige tildes académicas frecuentes sin alterar la puntuación", () => {
   assert.equal(
     filter.normalizeOrbySpanishOutput("matematicas, quimica, biologia e ingles."),
     "matemáticas, química, biología e inglés.",
+  );
+  assert.equal(
+    filter.normalizeOrbySpanishOutput("La fotosintesis usa oxigeno, agua y dioxido de carbono; el nucleo contiene atomos."),
+    "La fotosíntesis usa oxígeno, agua y dioxido de carbono; el núcleo contiene átomos.",
   );
 });
 

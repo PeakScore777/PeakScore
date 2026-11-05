@@ -33,7 +33,7 @@ export async function POST() {
   try {
     const resumed = await resumeOrbyJobsWaitingForEmbeddingProvider();
     const hasEmbeddingProvider = Boolean(process.env.GEMINI_API_KEY?.trim()) || Boolean(
-      process.env.CLOUDFLARE_ACCOUNT_ID?.trim() && process.env.CLOUDFLARE_API_TOKEN?.trim()
+      /^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "") && process.env.CLOUDFLARE_API_TOKEN?.trim()
     );
     const queued = hasEmbeddingProvider
       ? await enqueueNextPendingOrbyKnowledgeDocument()

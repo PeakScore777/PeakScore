@@ -68,12 +68,12 @@ export function isStrongVoiceBargeIn(
 ): boolean {
   const incoming = normalizeVoiceText(transcript);
   if (!incoming || isLikelyVoicePlaybackEcho(incoming, assistantSpeech)) return false;
-  if (/^(?:no entiendo|no entendi|espera|un momento|repiteme|detente|para un momento|oye orby)$/.test(incoming)) {
+  if (/^(?:no entiendo|no entendi|espera|esperate|un momento|repiteme|detente|para|alto|oye orby|por que|porque|como asi|no te escucho|tengo otra pregunta)$/.test(incoming)) {
     return true;
   }
   const meaningfulWords = incoming.split(" ")
     .filter((word) => /^[a-z]{2,}$/i.test(word) && !LOW_INFORMATION_WORDS.has(word));
-  return incoming.length >= 18 && meaningfulWords.length >= 1;
+  return incoming.length >= 12 && meaningfulWords.length >= 2;
 }
 
 /**

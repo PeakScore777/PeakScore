@@ -41,10 +41,13 @@ export function isLikelyVoicePlaybackEcho(
       continue;
     }
 
-    // Curriculum terms such as "Saber 11" have too little lexical signal
-    // for a reliable echo match; never suppress them as a short phrase.
-    if (incomingWords.length < 2 || spoken.length < 6) continue;
+    // Exact full-phrase matches are strong echo evidence even when most
+    // words are short (for example, "Hola de nuevo").
     if (spoken.includes(incoming) || incoming.includes(spoken)) return true;
+
+    // Curriculum terms such as "Saber 11" have too little lexical signal
+    // for a fuzzy echo match; never suppress them as a short phrase.
+    if (incomingWords.length < 2 || spoken.length < 6) continue;
 
     const spokenWords = new Set(spoken.split(" ")
       .filter((word) => /^[a-z]{2,}$/i.test(word) && !LOW_INFORMATION_WORDS.has(word)));

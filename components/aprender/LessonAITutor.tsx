@@ -8,6 +8,7 @@ import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, 
 import { createWorker } from "tesseract.js";
 import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_GREETING_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
+import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho } from "@/lib/ai/orby-voice-echo";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 
@@ -64,21 +65,8 @@ function ambiguousShortProgrammingTranscript(value: string): boolean {
     && !/\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|tutorial|desde cero|clase de)\b/.test(normalized);
 }
 
-function isLikelyVoicePlaybackEcho(transcript: string, assistantSpeech: string): boolean {
-  const incoming = normalizeVoiceComparison(transcript).trim();
-  const spoken = normalizeVoiceComparison(assistantSpeech).trim();
-  if (!incoming || !spoken || incoming.length < 3 || spoken.length < 6) return false;
-  if (spoken.includes(incoming) || incoming.includes(spoken)) return true;
-  const lowInformationWords = new Set([
-    "no", "si", "y", "o", "de", "la", "el", "en", "es", "que", "con", "por", "para",
-    "del", "un", "una", "me", "te", "lo", "se", "ya", "pero", "como", "muy", "mas",
-    "eso", "esta", "este", "mi", "tu", "hola", "oe", "oee", "oye", "ey",
-  ]);
-  const incomingWords = incoming.split(/\s+/).filter((word) => word.length >= 2 && !lowInformationWords.has(word));
-  if (incomingWords.length < 2) return false;
-  const spokenWords = new Set(spoken.split(/\s+/).filter((word) => word.length >= 2 && !lowInformationWords.has(word)));
-  const overlap = incomingWords.filter((word) => spokenWords.has(word)).length;
-  return overlap >= 2 && overlap / incomingWords.length >= 0.72;
+function isLikelyVoicePlaybackEcho(transcript: string, assistantSpeech: string | readonly string[]): boolean {
+  return detectVoicePlaybackEcho(transcript, assistantSpeech);
 }
 
 
@@ -259,12 +247,38 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLastCommittedInputAtRef = useRef(0);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantOutputAtRef = useRef(0);
+  const voiceRecentAssistantOutputsRef = useRef<Array<{ text: string; at: number }>>([]);
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
   const voiceBrowserSpeechActiveRef = useRef(false);
   const voiceSpeechCancelRef = useRef<(() => void) | null>(null);
   const voiceSpeechPlaybackGenerationRef = useRef(0);
   const voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none");
   const waitingForVoiceReplyRef = useRef(false);
+  function rememberVoiceAssistantOutput(value: string) {
+    const text = value.trim().slice(0, 5_000);
+    if (!text) return;
+    const now = Date.now();
+    const retained = voiceRecentAssistantOutputsRef.current
+      .filter((item) => now - item.at <= 30_000 && item.text !== text)
+      .slice(-5);
+    retained.push({ text, at: now });
+    voiceRecentAssistantOutputsRef.current = retained.slice(-6);
+  }
+
+  function getRecentVoiceAssistantOutputs(includeCurrent = true): string[] {
+    const now = Date.now();
+    const retained = voiceRecentAssistantOutputsRef.current
+      .filter((item) => now - item.at <= 30_000)
+      .map((item) => item.text);
+    voiceRecentAssistantOutputsRef.current = voiceRecentAssistantOutputsRef.current
+      .filter((item) => now - item.at <= 30_000);
+    if (includeCurrent) {
+      const current = voiceAssistantTextRef.current || voiceLastAssistantOutputRef.current;
+      if (current.trim()) retained.push(current);
+    }
+    return retained.slice(-7);
+  }
+
   const [attachment, setAttachment] = useState<File | null>(null);
   const [attachmentPreview, setAttachmentPreview] = useState("");
   const [attachmentError, setAttachmentError] = useState("");
@@ -955,6 +969,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceBrowserSpeechActiveRef.current = true;
         voiceLastAssistantOutputRef.current = clean;
         voiceLastAssistantOutputAtRef.current = Date.now();
+        rememberVoiceAssistantOutput(clean);
         voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 58;
         setVoiceStatus("Orby está hablando…");
         setIsListening(false);
@@ -1311,6 +1326,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceAssistantTextRef.current = cleanReply;
     voiceLastAssistantOutputRef.current = cleanReply;
     voiceLastAssistantOutputAtRef.current = Date.now();
+    rememberVoiceAssistantOutput(cleanReply);
     const previousAssistantId = replaceAssistantMessage ? voiceAssistantMessageIdRef.current : null;
     const assistantId = previousAssistantId ?? ("voice-local-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
@@ -1716,7 +1732,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
       if (!unsupportedInterimScript && (assistantAudioInFlight || recentAssistantOutput)) {
         const normalizedInterim = normalizeVoiceComparison(interimText);
-        const assistantSpeech = voiceAssistantTextRef.current || voiceLastAssistantOutputRef.current;
+        const assistantSpeech = getRecentVoiceAssistantOutputs();
         const isBrowserSpeechEcho = isLikelyVoicePlaybackEcho(interimText, assistantSpeech);
         if (normalizedInterim.length >= 3 && isBrowserSpeechEcho) {
           // Ignore both browser TTS and Gemini Live echo. Do not pass an
@@ -1755,6 +1771,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       && normalizedFinal === voiceLastCommittedInputRef.current
       && Date.now() - voiceLastCommittedInputAtRef.current < 10_000
     );
+    const recentAssistantTexts = getRecentVoiceAssistantOutputs(false);
     const recentAssistantText = normalizeVoiceComparison(voiceLastAssistantOutputRef.current);
     const assistantAudioInFlight = voiceBrowserSpeechActiveRef.current
       || voiceAudioSourcesRef.current.size > 0
@@ -1763,7 +1780,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // Keep a short transcript-based guard so Orby never answers its own greeting.
     const recentAssistantOutput = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
     const isRecentAcousticEcho = (assistantAudioInFlight || recentAssistantOutput)
-      && isLikelyVoicePlaybackEcho(normalizedFinal, recentAssistantText);
+      && isLikelyVoicePlaybackEcho(normalizedFinal, [...recentAssistantTexts, recentAssistantText]);
     if (isRecentAcousticEcho) {
       console.warn("[Orby Voice] Ignored a microphone transcript matching the recent assistant playback.");
     } else if (transcript && voiceBrowserSpeechActiveRef.current) {
@@ -1868,6 +1885,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Gemini Live and browser TTS playback paths.
       voiceLastAssistantOutputRef.current = partialReply;
       voiceLastAssistantOutputAtRef.current = Date.now();
+      // Keep the rolling echo history at completed utterances only, not every streamed token.
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
       const partialNormalized = normalizeVoiceComparison(partialReply);
       const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)
@@ -2042,6 +2060,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         });
         voiceLastAssistantOutputRef.current = rawReply;
         voiceLastAssistantOutputAtRef.current = Date.now();
+        rememberVoiceAssistantOutput(rawReply);
         if (!voiceOutputAudioBlockedRef.current && voiceOutputTranscriptValidatedRef.current) {
           flushPendingGeminiAudio();
         } else {
@@ -3026,6 +3045,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceAssistantMessageIdRef.current = fallbackAssistantId ?? ("voice-fallback-assistant-" + Date.now());
         voiceLastAssistantOutputRef.current = data.reply;
         voiceLastAssistantOutputAtRef.current = Date.now();
+        rememberVoiceAssistantOutput(data.reply);
         voiceResponseDoneRef.current = true;
         voiceTurnPersistedRef.current = false;
         waitingForVoiceReplyRef.current = true;
@@ -3514,7 +3534,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const transcript = payload.transcript.trim().slice(0, 1200);
       const recentAssistantSpeech = Date.now() - voiceLastAssistantOutputAtRef.current < 25_000;
       if (voiceFallbackModeRef.current && recentAssistantSpeech
-        && isLikelyVoicePlaybackEcho(transcript, voiceLastAssistantOutputRef.current)) {
+        && isLikelyVoicePlaybackEcho(transcript, getRecentVoiceAssistantOutputs())) {
         // Turn-based Whisper can capture the laptop speaker after Orby finishes.
         // Discard a near-verbatim match instead of treating Orby's greeting as a student question.
         setLiveTranscript("");

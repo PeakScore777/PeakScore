@@ -1026,6 +1026,8 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /voiceRecentAssistantOutputsRef/);
   assert.match(lessonTutorSource, /getRecentVoiceAssistantOutputs/);
   assert.match(lessonTutorSource, /rememberVoiceAssistantOutput/);
+  assert.match(lessonTutorSource, /function startNewConversation\(\) \{\s*voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
+  assert.match(lessonTutorSource, /async function selectConversation\(id: string\) \{[\s\S]*?voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
   assert.match(lessonTutorSource, /voiceLastAssistantOutputRef\.current = partialReply/);
   assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
   assert.match(lessonTutorSource, /voiceLastAssistantPlaybackUntilRef\.current = Date\.now\(\)\s*\+\s*Math\.max\(0, voiceNextPlaybackTimeRef\.current - audioContext\.currentTime\)\s*\*\s*1000\s*\+\s*1_800/);

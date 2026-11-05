@@ -830,8 +830,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!clean) return;
 
     // Gemini Live is primary. For text-only turns, use Gemini 3.8 Flash TTS
-    // only when the server explicitly verifies the project's free tier.
-    // The endpoint fails closed; it never falls through to a paid provider.
+    // The endpoint returns Gemini's valid WAV bytes and never falls through to paid speech.
     await speakWithVerifiedFreeTts(clean, index);
   }
 
@@ -2228,16 +2227,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         sessionResumption: resumeHandle ? { handle: resumeHandle } : {},
         tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
         inputAudioTranscription: {
-          languageCodes: ["es-ES"],
+          languageCodes: ["es-US"],
           customVocabulary: [
             "Orby", "Oye Orby", "Hey Orby", "Orby AI", "PeakScore",
             "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica",
             "Sociales y Ciudadanas", "Ciencias Naturales",
           ],
         },
-        outputAudioTranscription: { languageCodes: ["es"] },
+        outputAudioTranscription: { languageCodes: ["es-US"] },
         speechConfig: {
-          languageCode: "es",
+          languageCode: "es-US",
           voiceConfig: {
             prebuiltVoiceConfig: { voiceName: configuredVoiceName },
           },

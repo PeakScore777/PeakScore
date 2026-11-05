@@ -94,42 +94,56 @@ export async function POST(request: Request) {
     }
 
     const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta" } });
-    const response = await ai.models.generateContent({
+    // Gemini 3.8 Flash TTS is served through the Interactions API, not the
+    // legacy models.generateContent endpoint. Its unary audio response is
+    // exposed as interaction.output_audio with data + mime_type.
+    const interaction = await ai.interactions.create({
       model: MODEL,
-      contents: [{
-        parts: [{
-          text: [
-            "Lee únicamente el contenido indicado al final. No leas estas instrucciones ni agregues saludos, explicaciones o comentarios.",
-            "Voz femenina, suave y natural, en español latinoamericano con acento colombiano ligero. Ritmo conversacional medio, pausas naturales y dicción clara.",
-            "Estilo de Orby: " + ORBY_VOICE_STYLE,
-            "Texto exacto que debes decir: " + text,
-          ].join("\n\n"),
+      input: [{
+        type: "user_input",
+        content: [{
+          type: "text",
+          text,
+          // speech_metadata controls delivery without being spoken aloud.
+          // The SDK's generated Annotation type omits this new annotation,
+          // so cast only this wire-level metadata object.
+          annotations: [{
+            type: "speech_metadata",
+            style: ORBY_VOICE_STYLE,
+          }] as never,
         }],
       }],
-      config: {
-        responseModalities: ["AUDIO"],
-        speechConfig: {
-          languageCode: "es-US",
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: ORBY_VOICE_NAME },
-          },
-        },
+      response_format: {
+        type: "audio",
+        mime_type: "audio/wav",
+        delivery: "inline",
+      },
+      generation_config: {
+        speech_config: [{
+          language: "es-US",
+          voice: ORBY_VOICE_NAME,
+        }],
       },
     });
 
-    const audioPart = response.candidates?.[0]?.content?.parts?.find((part) => typeof part.inlineData?.data === "string");
-    const audioBase64 = audioPart?.inlineData?.data;
+    const audioBase64 = interaction.output_audio?.data;
+    const audioMimeType = interaction.output_audio?.mime_type;
     if (typeof audioBase64 !== "string" || !audioBase64) {
+      console.error("[Orby Gemini TTS] Interaction completed without inline audio.", {
+        status: interaction.status,
+        errors: interaction.errors?.map((item) => ({ code: item.code, message: item.message })),
+      });
       return jsonError("Gemini no devolvió audio. La respuesta permanece disponible por escrito.", "TTS_EMPTY_AUDIO", 502);
     }
 
     // Unary Gemini 3.8 TTS returns a complete audio/wav RIFF file by default.
     // Preserve that header; only wrap raw audio/l16 PCM when explicitly indicated.
-    const wav = normalizeGeminiTtsAudio(audioBase64, audioPart?.inlineData?.mimeType, MAX_AUDIO_BYTES);
+    const wav = normalizeGeminiTtsAudio(audioBase64, audioMimeType, MAX_AUDIO_BYTES);
     if (!wav) {
       console.error("[Orby Gemini TTS] Provider returned an unsupported or malformed audio payload.", {
-        mimeType: audioPart?.inlineData?.mimeType,
+        mimeType: audioMimeType,
         encodedLength: audioBase64.length,
+        status: interaction.status,
       });
       return jsonError("Gemini devolvió un audio con formato no válido.", "TTS_INVALID_AUDIO", 502);
     }

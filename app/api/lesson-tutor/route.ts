@@ -418,7 +418,9 @@ export async function POST(request: Request) {
       subject: subject === "Preparación Saber 11" ? "" : subject,
       topic,
       question,
-      context,
+      // A short follow-up such as "¿por qué?" must inherit the actual
+      // last academic exchange, not just the generic lesson subject.
+      context: recentScopeContext,
     });
     type StudentKnowledgeSource = {
       document_id: string;

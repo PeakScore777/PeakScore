@@ -1,13 +1,16 @@
+import { GoogleGenAI } from "@google/genai";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MODEL = "@cf/deepgram/aura-2-es";
+const MODEL = "gemini-3.8-flash-tts";
+const SAMPLE_RATE = 24_000;
 const MAX_TEXT_LENGTH = 500;
-const DAILY_QUOTA_ERROR_CODE = 3036;
+const MAX_AUDIO_BYTES = 4 * 1024 * 1024;
 
 function jsonError(error: string, code: string, status: number) {
   return NextResponse.json({ error, code }, {
@@ -19,6 +22,34 @@ function jsonError(error: string, code: string, status: number) {
   });
 }
 
+function pcm16ToWav(pcm: Buffer): Buffer {
+  const header = Buffer.alloc(44);
+  const dataLength = pcm.byteLength;
+  header.write("RIFF", 0);
+  header.writeUInt32LE(36 + dataLength, 4);
+  header.write("WAVE", 8);
+  header.write("fmt ", 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20);
+  header.writeUInt16LE(1, 22);
+  header.writeUInt32LE(SAMPLE_RATE, 24);
+  header.writeUInt32LE(SAMPLE_RATE * 2, 28);
+  header.writeUInt16LE(2, 32);
+  header.writeUInt16LE(16, 34);
+  header.write("data", 36);
+  header.writeUInt32LE(dataLength, 40);
+  return Buffer.concat([header, pcm]);
+}
+
+function isFreeTierQuotaError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const detail = error as { status?: unknown; code?: unknown; message?: unknown };
+  const message = typeof detail.message === "string" ? detail.message : "";
+  return detail.status === 429
+    || detail.code === "RESOURCE_EXHAUSTED"
+    || /RESOURCE_EXHAUSTED|quota exceeded|free tier.*quota|rate limit/i.test(message);
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -27,15 +58,20 @@ export async function POST(request: Request) {
       return jsonError("Inicia sesión para escuchar a Orby.", "UNAUTHORIZED", 401);
     }
 
-    // Fail closed: do not call the paid/metered synthesis endpoint unless the
-    // account's current plan and remaining free allocation have been verified.
-    // This flag is intentionally absent from Vercel until that verification exists.
-    if (process.env.ORBY_CLOUDFLARE_TTS_FREE_VERIFIED !== "true") {
+    // Fail closed unless the team has verified this API key belongs to a
+    // Google AI Studio Free-tier project with no billing attached.
+    // Google upgrades projects linked to active billing to a paid usage tier.
+    if (process.env.ORBY_GEMINI_TTS_FREE_VERIFIED !== "true") {
       return jsonError(
-        "La síntesis de voz alternativa no tiene una cuota gratuita verificada. La respuesta permanece escrita; no se realizará ninguna solicitud de audio.",
+        "La voz alternativa aún no tiene verificado el nivel gratuito de Google. La respuesta permanece escrita; no se realizará ninguna solicitud de audio.",
         "FREE_TIER_TTS_NOT_AVAILABLE",
         503,
       );
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY?.trim();
+    if (!apiKey) {
+      return jsonError("La voz gratuita de Orby no está configurada.", "TTS_NOT_CONFIGURED", 503);
     }
 
     const body = await request.json().catch(() => null) as { text?: unknown } | null;
@@ -50,7 +86,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Protect the shared free allocation from loops and accidental request bursts.
     const { data: limitData, error: limitError } = await supabaseAdmin.rpc("orby_take_rate_limit", {
       p_user_id: user.id,
       p_bucket: "orby_voice_speech",
@@ -74,90 +109,66 @@ export async function POST(request: Request) {
       });
     }
 
-    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "";
-    const apiToken = process.env.CLOUDFLARE_API_TOKEN?.trim() ?? "";
-    if (!/^[a-f0-9]{32}$/i.test(accountId) || !apiToken) {
-      return jsonError(
-        "La voz española de Orby no está configurada. La respuesta seguirá disponible por escrito.",
-        "TTS_NOT_CONFIGURED",
-        503,
-      );
-    }
-
-    const response = await fetch(
-      `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${MODEL}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiToken}`,
-          "Content-Type": "application/json",
+    const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta" } });
+    const response = await ai.models.generateContent({
+      model: MODEL,
+      contents: [{
+        parts: [{
+          text: [
+            "Lee únicamente el contenido indicado al final. No leas estas instrucciones ni agregues saludos, explicaciones o comentarios.",
+            "Voz femenina, suave y natural, en español latinoamericano con acento colombiano ligero. Ritmo conversacional medio, pausas naturales y dicción clara.",
+            "Estilo de Orby: " + ORBY_VOICE_STYLE,
+            "Texto exacto que debes decir: " + text,
+          ].join("\n\n"),
+        }],
+      }],
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          languageCode: "es-US",
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: ORBY_VOICE_NAME },
+          },
         },
-        body: JSON.stringify({
-          text,
-          speaker: "celeste",
-          encoding: "mp3",
-        }),
-        cache: "no-store",
-        signal: AbortSignal.timeout(18_000),
       },
-    );
+    });
 
-    if (!response.ok) {
-      const providerPayload = await response.json().catch(() => null) as {
-        errors?: Array<{ code?: number; message?: string }>;
-      } | null;
-      const providerCode = providerPayload?.errors?.[0]?.code;
-      const providerMessage = providerPayload?.errors?.[0]?.message ?? "";
-
-      if (providerCode === DAILY_QUOTA_ERROR_CODE) {
-        return jsonError(
-          "Orby ha alcanzado la cuota gratuita diaria de voz. La lectura se reanudará cuando Cloudflare restablezca la cuota; no se activará ningún servicio de pago.",
-          "FREE_TIER_TTS_QUOTA_EXCEEDED",
-          429,
-        );
-      }
-      if (response.status === 429) {
-        return jsonError(
-          "Cloudflare no tiene capacidad de voz disponible en este momento. Tu respuesta sigue visible por escrito.",
-          "TTS_TEMPORARILY_UNAVAILABLE",
-          503,
-        );
-      }
-      console.error("[Orby TTS] Cloudflare rejected the speech request.", {
-        status: response.status,
-        code: providerCode,
-        message: providerMessage.slice(0, 180),
-      });
-      return jsonError(
-        "No se pudo generar el audio gratuito. La respuesta sigue disponible por escrito.",
-        "TTS_PROVIDER_ERROR",
-        502,
-      );
+    const audioBase64 = response.candidates?.[0]?.content?.parts?.find((part) => typeof part.inlineData?.data === "string")?.inlineData?.data;
+    if (typeof audioBase64 !== "string" || !audioBase64) {
+      return jsonError("Gemini no devolvió audio. La respuesta permanece disponible por escrito.", "TTS_EMPTY_AUDIO", 502);
     }
 
-    const audio = await response.arrayBuffer();
-    if (audio.byteLength < 256 || audio.byteLength > 4 * 1024 * 1024) {
-      return jsonError("Cloudflare devolvió un audio no válido.", "TTS_INVALID_AUDIO", 502);
+    const pcm = Buffer.from(audioBase64, "base64");
+    if (pcm.byteLength < 256 || pcm.byteLength > MAX_AUDIO_BYTES || pcm.byteLength % 2 !== 0) {
+      return jsonError("Gemini devolvió audio con un tamaño o formato no válido.", "TTS_INVALID_AUDIO", 502);
     }
-
-    return new Response(audio, {
+    const wav = pcm16ToWav(pcm);
+    return new Response(new Uint8Array(wav), {
       status: 200,
       headers: {
-        "Content-Type": response.headers.get("content-type")?.includes("audio")
-          ? response.headers.get("content-type")!
-          : "audio/mpeg",
-        "Content-Length": String(audio.byteLength),
+        "Content-Type": "audio/wav",
+        "Content-Length": String(wav.byteLength),
         "Cache-Control": "no-store",
         "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (error) {
-    console.error("[Orby TTS] Speech generation failed.", {
+    if (isFreeTierQuotaError(error)) {
+      return jsonError(
+        "Se agotó la cuota gratuita de Gemini TTS. La respuesta sigue visible y no se activará un servicio de pago.",
+        "FREE_TIER_TTS_QUOTA_EXCEEDED",
+        429,
+      );
+    }
+    console.error("[Orby Gemini TTS] Speech generation failed.", {
       name: error instanceof Error ? error.name : "UnknownError",
+      status: error && typeof error === "object" && "status" in error
+        ? (error as { status?: unknown }).status
+        : undefined,
     });
     return jsonError(
-      "La voz de Orby no respondió a tiempo. La respuesta permanece por escrito y no se usará otro proveedor.",
-      "TTS_REQUEST_FAILED",
+      "No se pudo generar el audio gratuito. La respuesta sigue disponible por escrito y no se usará otro proveedor.",
+      "TTS_PROVIDER_ERROR",
       503,
     );
   }

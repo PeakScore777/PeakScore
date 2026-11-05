@@ -13,7 +13,8 @@ export function normalizeOrbyRequestText(value: string): string {
 }
 
 const PROGRAMMING_REQUEST_PATTERNS = [
-  // A lone keyword is ambiguous; block only an explicit request to learn or execute programming.
+  /^\\s*(?:programar|programacion|codificar|coding|programming)\\s*[.!?]*$/i,
+  // Language/tool names alone are ambiguous (they can occur in reading passages or examples).
   // Match an explicit request to learn/use software tools, not a passing
   // mention of a programming term in a reading passage or scientific example.
   /\b(?:quiero aprender|ensename|ayudame a|explicame como|como puedo|como se usa|como usar|quiero usar|i want to learn|i would like to learn|i'd like to learn|teach me|help me|show me|how do i|how to|learn to)\b.{0,90}\b(?:programar|programacion|codificar|coding|programming|python|javascript|typescript|java|c\+\+|c#|html|css|react|next\.js|node\.js|sql|postgresql|supabase|git|github|powershell|bash|framework|api rest|crear una app|hacer una pagina web|write code|code)\b/i,

@@ -941,12 +941,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceSpeechCancelRef.current = cancelSpeech;
 
       if (isLocalVoiceTurn) {
-        voiceBrowserSpeechActiveRef.current = true;
-        voiceLastAssistantOutputRef.current = clean;
-        voiceLastAssistantOutputAtRef.current = Date.now();
-        rememberVoiceAssistantOutput(clean);
-        voiceLastAssistantPlaybackUntilRef.current = Date.now() + clean.length * 58;
-        setVoiceStatus("Orby está hablando…");
+        // Do not expose this text as spoken audio until playback really starts.
+        // A metered/disabled TTS response must never create a phantom echo.
+        setVoiceStatus("Orby está preparando la respuesta escrita…");
         setIsListening(false);
       }
 
@@ -1130,7 +1127,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voicePreflightReplyRef.current = null;
       voiceUnsupportedInputDetectedRef.current = false;
       activateTurnBasedVoiceFallback(
-        "La sesión Live se interrumpió. Continúo con voz por turnos, sin consumir cuota Gemini.",
+        "La sesión Live se interrumpió. Continúo con el tutor gratuito por turnos; la respuesta alternativa quedará escrita.",
       );
       respondToVoiceLocally(pendingUserText, forcedPolicyReply, appendUserMessage, true);
       return;
@@ -2248,7 +2245,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             } else if (reconnectLiveSession) {
               void reconnectLiveSession();
             } else {
-              fallbackVoiceTurnToText("La conexión de voz se interrumpió. Continúo esta misma pregunta con Whisper y Cloudflare.");
+              fallbackVoiceTurnToText("La conexión de voz se interrumpió. Continúo esta misma pregunta con Whisper y el tutor gratuito de Cloudflare; la respuesta quedará escrita.");
             }
           } else {
             rejectSetup?.(new Error(quotaReached
@@ -2697,8 +2694,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (!wasCancelled && !authenticationFailure) {
           activateTurnBasedVoiceFallback(
             geminiQuotaReached
-              ? "Gemini Live agotó su cuota gratuita. Continúo contigo por turnos con Whisper y Cloudflare Aura-2, sin consumir más cuota Gemini ni usar servicios de pago."
-              : "Gemini Live no está disponible ahora. Continúo en modo de voz por turnos con Whisper y Cloudflare Aura-2; no tendrás que cambiar al chat escrito.",
+              ? "Gemini Live agotó su cuota gratuita. Continúo por turnos con Whisper y el tutor gratuito de Cloudflare; la respuesta quedará escrita, sin servicios facturados."
+              : "Gemini Live no está disponible ahora. Continúo por turnos con Whisper y el tutor gratuito de Cloudflare; la respuesta alternativa quedará escrita.",
           );
         } else if (!wasCancelled) {
           stopRealtimeVoice();

@@ -1542,6 +1542,8 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   const context = "Área de estudio: Lectura Crítica. Orby preguntó: ¿Empezamos con un texto tipo ICFES?";
   assert.equal(filter.isOrbyContextualConfirmation("Sí", context), true);
   assert.equal(filter.preflightOrbyRequest("sí", context).allowed, true);
+  assert.equal(filter.preflightOrbyRequest("sí").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("no").allowed, true);
   assert.equal(filter.isOrbyUnclearInput("???"), true);
   const clarification = filter.preflightOrbyRequest("???", context);
   assert.equal(clarification.allowed, false);

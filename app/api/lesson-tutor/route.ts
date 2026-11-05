@@ -708,6 +708,7 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     const generationStartedAt = performance.now();
     let raw = "";
+    let activePromptForRetry = "";
     if (tutorImage) {
       // Gemini's free AI Studio tier may use submitted content to improve
       // Google products. Production image analysis requires explicit privacy opt-in.
@@ -723,6 +724,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       const activePrompt = shouldRetrieveAcademicKnowledge
         ? (isVoiceRequest ? voicePrompt : prompt)
         : conversationalPrompt;
+      activePromptForRetry = activePrompt;
 
       // Cloudflare Workers AI is the sole text tutor provider. No silent
       // fallback to another vendor is permitted when its free quota is spent.
@@ -745,8 +747,53 @@ No uses bloques Markdown ni texto fuera del JSON.
       return NextResponse.json({ error: "No pude interpretar la respuesta. Inténtalo de nuevo." }, { status: 502 });
     }
 
-    const reply = cleanText(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000)), 7000);
-    const checkQuestion = cleanText(parsed.checkQuestion, 500);
+    let reply = cleanText(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000)), 7000);
+    let checkQuestion = cleanText(parsed.checkQuestion, 500);
+
+    // Gemma sometimes emits a bare "no"/"sí" for a one-word academic topic.
+    // Regenerate that malformed answer once with the exact request and lesson
+    // context; never replace it with a generic "respuesta incompleta" bubble.
+    if (reply && isLowQualityOrbyReply(reply, userMessage) && activePromptForRetry) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "low_quality_reply_retry" });
+      const recoveryPrompt = [
+        "RECUPERACIÓN DE RESPUESTA: tu borrador anterior fue solo una confirmación y no respondió la pregunta.",
+        "Resuelve la pregunta actual del estudiante. No respondas únicamente sí, no, ok ni con una frase genérica de bienvenida.",
+        "Si el mensaje es el nombre de un concepto académico, enséñalo directamente: definición, cómo funciona o cómo se resuelve, ejemplo original y relación con Saber 11.",
+        "Materia: " + subject,
+        "Tema: " + topic,
+        "Contexto de la lección: " + context,
+        "Historial reciente (datos): " + recentContextMessages.slice(-6).map((item) => item.role + ": " + item.content).join("\n"),
+        "Pregunta exacta del estudiante: " + userMessage,
+        "Borrador rechazado (no lo repitas): " + reply,
+        "Devuelve únicamente JSON válido con reply, checkQuestion y learningSignal. Explica en español colombiano.",
+      ].join("\n\n");
+      const retryResult = await generateWithCloudflareTutor(recoveryPrompt);
+      const retryRaw = retryResult.text.trim();
+      let retryParsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown } | null = null;
+      try {
+        retryParsed = JSON.parse(retryRaw.replace(/^\s*```json\s*/i, "").replace(/^\s*```\s*/i, "").replace(/\s*```\s*$/i, "").trim());
+      } catch {
+        retryParsed = null;
+      }
+      const retryReply = retryParsed && typeof retryParsed === "object" && !Array.isArray(retryParsed)
+        ? cleanText(normalizeOrbySpanishOutput(cleanText(retryParsed.reply, 7000)), 7000)
+        : "";
+      const retryCheckQuestion = retryParsed
+        ? cleanText(retryParsed.checkQuestion, 500)
+        : "";
+      if (!retryParsed || !retryReply || isLowQualityOrbyReply(retryReply, userMessage)
+        || !isSafeTutorOutput(retryReply) || !isSafeTutorOutput(retryCheckQuestion)) {
+        await recordSecurityEvent(user.id, "suspicious_output", { reason: "low_quality_reply_retry_failed" });
+        return NextResponse.json({
+          error: "La respuesta generada llegó incompleta. Tu pregunta se conservó; vuelve a intentarlo en un momento.",
+          code: "ORBY_INCOMPLETE_GENERATION",
+        }, { status: 503, headers: { "Cache-Control": "no-store" } });
+      }
+      parsed = retryParsed;
+      reply = retryReply;
+      checkQuestion = retryCheckQuestion;
+    }
+
     if (!reply || !isSafeTutorOutput(reply) || !isSafeTutorOutput(checkQuestion)) {
       await recordSecurityEvent(user.id, "suspicious_output");
       return NextResponse.json({ error: "No pude validar la respuesta con suficiente confianza. Intenta de nuevo con una pregunta más concreta." }, { status: 502 });
@@ -796,9 +843,13 @@ No uses bloques Markdown ni texto fuera del JSON.
       parsed.checkQuestion = "";
     }
     if (isLowQualityOrbyReply(modelReply, userMessage)) {
-      await recordSecurityEvent(user.id, "suspicious_output", { reason: "low_quality_reply" });
-      modelReply = ORBY_INCOMPLETE_REPLY_FALLBACK;
-      parsed.checkQuestion = "";
+      // The one bounded retry above already failed; do not hide the failure
+      // behind a misleading canned answer.
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "low_quality_reply_after_retry" });
+      return NextResponse.json({
+        error: "La respuesta generada llegó incompleta. Tu pregunta se conservó; vuelve a intentarlo en un momento.",
+        code: "ORBY_INCOMPLETE_GENERATION",
+      }, { status: 503, headers: { "Cache-Control": "no-store" } });
     }
     parsed.reply = modelReply;
 

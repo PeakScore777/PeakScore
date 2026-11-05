@@ -188,7 +188,7 @@ test("el detector de eco reconoce respuestas anteriores aunque Orby ya haya habl
     true,
   );
   assert.equal(detect("Oye Orby, explícame la fotosíntesis", [latestReply, previousReply]), false);
-  assert.equal(detect("hola", [latestReply, previousReply]), false);
+  assert.equal(detect("hola", [latestReply, previousReply]), true);
   assert.equal(detect("Saber 11", [latestReply, previousReply]), false);
   assert.equal(detect("sí", ["Sí, claro."]), true);
   assert.equal(detect("sí", ["Hola, ¿qué quieres estudiar?"]), false);

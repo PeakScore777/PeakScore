@@ -1462,7 +1462,8 @@ test("el laboratorio no presenta un estado desconocido del Autopilot como motor 
   assert.ok(adminStudioSource.includes("ESTADO DESACTUALIZADO"));
   assert.ok(adminStudioSource.includes("CARGANDO ESTADO"));
   assert.ok(adminStudioSource.includes("embeddingProviderConfigured: boolean"));
-  assert.ok(adminAutomationRouteSource.includes("isOrbyEmbeddingProviderConfigured()"));
+  assert.ok(adminAutomationRouteSource.includes("isCloudflareWorkersAIConfigured()"));
+  assert.ok(adminAutomationRouteSource.includes("Boolean(process.env.GEMINI_API_KEY?.trim())"));
   assert.ok(adminAutomationRouteSource.includes("embeddingProviderConfigured:"));
 });
 

@@ -58,6 +58,16 @@ export async function POST(request: Request) {
       return jsonError("Inicia sesión para escuchar a Orby.", "UNAUTHORIZED", 401);
     }
 
+    // Free-tier Gemini requests may be used to improve Google's products.
+    // Reuse the project's explicit production privacy approval for Live audio.
+    if (process.env.NODE_ENV === "production" && process.env.ORBY_GEMINI_LIVE_ENABLED !== "true") {
+      return jsonError(
+        "La voz alternativa está desactivada mientras terminamos la configuración de privacidad de Gemini.",
+        "TTS_PRIVACY_NOT_APPROVED",
+        503,
+      );
+    }
+
     // Fail closed unless the team has verified this API key belongs to a
     // Google AI Studio Free-tier project with no billing attached.
     // Google upgrades projects linked to active billing to a paid usage tier.

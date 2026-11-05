@@ -818,9 +818,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const clean = text.trim().replace(/\s+/g, " ").slice(0, 5_000);
     if (!clean) return;
 
-    // Gemini Live is the only currently verified free audio-output provider.
-    // The turn-based fallback accepts speech with Whisper and answers with
-    // Cloudflare text; do not silently invoke a metered TTS model.
+    // Live audio has priority. If this is a text-only/fallback response, use
+    // Cloudflare Aura-2 only while the account's shared Workers Free quota lasts.
+    // Quota exhaustion must leave the answer readable and never trigger paid TTS.
     await speakWithCloudflareOnly(clean, index);
   }
 
@@ -965,7 +965,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // If optional TTS is unavailable, keep the validated answer visible without speaking it.
       const finishWithoutGenericVoice = () => {
         if (finished) return;
-        setVoiceError("El audio alternativo no está disponible con una cuota gratuita verificada. La respuesta permanece escrita; no se activará una voz genérica ni un servicio facturado.");
+        setVoiceError("No se pudo generar el audio con la cuota gratuita disponible. La respuesta permanece escrita; no se activará una voz genérica ni un servicio de pago.");
         finish(false);
       };
 

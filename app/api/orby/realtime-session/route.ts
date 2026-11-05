@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     const topic = clean(body?.topic, 160, "Estudio y aprendizaje");
     const context = clean(body?.context, 1200, "Ayuda al estudiante con sus dudas académicas.");
     const history: Array<{ role: "user" | "assistant"; content: string }> = Array.isArray(body?.history)
-      ? body.history.slice(-6).filter((item: unknown) => !!item && typeof item === "object"
+      ? body.history.slice(-8).filter((item: unknown) => !!item && typeof item === "object"
         && ((item as { role?: unknown }).role === "user" || (item as { role?: unknown }).role === "assistant")
         && typeof (item as { content?: unknown }).content === "string")
         .map((item: { role: "user" | "assistant"; content: string }) => ({
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
         && isIcfesScopedAssistantTurn(item.content, priorContext);
       if (safeAssistantTurn) safeHistory.push(item);
     }
-    const boundedSafeHistory = safeHistory.slice(-4);
+    const boundedSafeHistory = safeHistory.slice(-8);
 
     // Only session metadata is checked as a new instruction source. Previous
     // turns are historical context, not a fresh request: a past filtered message

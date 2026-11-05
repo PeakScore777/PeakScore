@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { enqueueNextPendingOrbyKnowledgeDocument } from "@/lib/ai/orby-knowledge-queue";
 import { processNextOrbyKnowledgeJob } from "@/lib/ai/orby-knowledge-worker";
+import { resumeOrbyJobsWaitingForEmbeddingProvider } from "@/lib/ai/orby-knowledge-queue";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,14 +62,22 @@ export async function POST(request: Request) {
   }
 
   try {
-    await enqueueNextPendingOrbyKnowledgeDocument();
+    // Reopen provider-waiting jobs only when credentials exist; never enqueue
+    // new embedding work while all free embedding providers are unconfigured.
+    const resumed = await resumeOrbyJobsWaitingForEmbeddingProvider();
+    const hasEmbeddingProvider = Boolean(process.env.GEMINI_API_KEY?.trim()) || Boolean(
+      process.env.CLOUDFLARE_ACCOUNT_ID?.trim() && process.env.CLOUDFLARE_API_TOKEN?.trim()
+    );
+    const queued = hasEmbeddingProvider
+      ? await enqueueNextPendingOrbyKnowledgeDocument()
+      : false;
     const result = await processNextOrbyKnowledgeJob({ origin: "automatic" });
     if (result.state !== "idle") {
       await supabaseAdmin.from("orby_knowledge_automation_settings")
         .update({ last_job_started_at: tickAt, updated_at: tickAt })
         .eq("id", 1);
     }
-    return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ ...result, resumedProviderWaitJobs: resumed, queuedPendingDocument: queued }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("[Orby Autopilot] Tick failed.", {
       name: error instanceof Error ? error.name : "UnknownError",

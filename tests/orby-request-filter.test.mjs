@@ -1583,5 +1583,8 @@ test("las respuestas TTS largas conservan texto y cada fragmento fallido se rein
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(30_000)"));
   assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply, userMessage)"));
   assert.ok(lessonTutorSource.includes("isLowQualityOrbyReply(rawReply, voiceUserTextRef.current)"));
-  assert.ok(cloudflareVoiceSource.includes("Nunca respondas únicamente 'sí', 'no', 'ok' ni signos de puntuación"));
+  assert.ok(lessonTutorSource.includes("messagesRef.current.slice(-8)"));
+  assert.ok(lessonTutorRouteSource.includes("context: recentScopeContext"));
+  assert.ok(realtimeSessionSource.includes("nunca conviertas 'sí', 'no', 'moda', 'cocina', 'Python'"));
+  assert.ok(cloudflareVoiceSource.includes("No rechaces ni clasifiques como fuera de alcance una palabra aislada"));
 });

@@ -122,7 +122,7 @@ export const ORBY_REPEAT_REQUEST_REPLY =
 
 export function getOrbyClarificationReply(previousContext = ""): string {
   const recent = normalizeOrbyRequestText(previousContext).slice(-900);
-  const hasRecentAcademicContext = /\b(?:saber\s*11|icfes|matematicas?|lectura critica|sociales y ciudadanas|ciencias naturales|fotosintesis|biologia|quimica|fisica|ingles)\b/i.test(recent);
+  const hasRecentAcademicContext = /\b(?:saber\s*11|icfes|matematicas?|lectura critica|sociales y ciudadanas|ciencias naturales|fotosintesis|biologia|quimica|fisica|estadistica|mediana|moda|ingles)\b/i.test(recent);
   return hasRecentAcademicContext
     ? "¿Qué parte te generó la duda? Puedo explicarla con otras palabras, paso a paso o con un ejemplo diferente."
     : ORBY_REPEAT_REQUEST_REPLY;
@@ -139,7 +139,7 @@ export function isOrbyUnclearInput(value: string): boolean {
   return !normalizeOrbyRequestText(raw) && raw.length <= 24;
 }
 
-/** A short confirmation inherits scope only after a genuine ICFES invitation. */
+/** Short acknowledgements are valid turns; available academic context determines what they continue. */
 export function isOrbyContextualConfirmation(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message)
     .replace(/[¿?¡!.,;:…]+/g, " ")
@@ -463,7 +463,7 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
 
   const academicMaterialQuestion = isIcfesAcademicMaterialQuestion(message, previousContext);
 
-  // A short answer to Orby's last academic invitation remains inside that lesson.
+  // A short acknowledgement is never rejected merely for lacking a curriculum keyword.
   if (isOrbyContextualConfirmation(message, previousContext)) {
     return { allowed: true, category: null, reply: "" };
   }

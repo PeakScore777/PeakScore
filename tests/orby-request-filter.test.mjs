@@ -28,6 +28,7 @@ const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
 const chunkCapacityMigration = await readFile(new URL("../supabase/migrations/20261102220000_orby_knowledge_chunk_capacity.sql", import.meta.url), "utf8");
 const knowledgeWorkerSource = await readFile(new URL("../lib/ai/orby-knowledge-worker.ts", import.meta.url), "utf8");
+const knowledgeQueueSource = await readFile(new URL("../lib/ai/orby-knowledge-queue.ts", import.meta.url), "utf8");
 const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
 const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
@@ -48,15 +49,13 @@ const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
-test("Cloudflare genera texto y voz española, Gemini Live queda como audio en tiempo real", () => {
+test("Cloudflare mantiene transcripción y tutor por turnos; Gemini Live es la única salida de voz gratuita", () => {
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_API_TOKEN"));
   assert.ok(cloudflareVoiceSource.includes("@cf/openai/whisper-large-v3-turbo"));
   assert.ok(cloudflareVoiceSource.includes("@cf/google/gemma-4-26b-a4b-it"));
-  assert.ok(cloudflareVoiceSource.includes("@cf/deepgram/aura-2-es"));
-  assert.ok(cloudflareVoiceSource.includes('speaker: "celeste"'));
-  assert.ok(cloudflareVoiceSource.includes("synthesizeWithCloudflareSpeech"));
+  assert.doesNotMatch(cloudflareVoiceSource, /@cf\/deepgram\/aura-(?:1|2)-es|synthesizeWithCloudflareSpeech/);
   assert.ok(cloudflareVoiceSource.includes("especializada exclusivamente en la preparación para Saber 11"));
   assert.ok(cloudflareVoiceSource.includes("ortografía impecable"));
   assert.ok(cloudflareVoiceSource.includes("QUOTA_EXCEEDED"));
@@ -76,8 +75,8 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes('/api/orby/voice-speech'));
   assert.ok(lessonTutorSource.includes("new Audio(audioObjectUrl)"));
   assert.ok(lessonTutorSource.includes("finishWithoutGenericVoice"));
-  assert.ok(voiceSpeechRouteSource.includes("synthesizeWithCloudflareSpeech(text)"));
-  assert.ok(voiceSpeechRouteSource.includes("FREE_QUOTA_EXCEEDED"));
+  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_NOT_AVAILABLE"));
+  assert.doesNotMatch(voiceSpeechRouteSource, /synthesizeWithCloudflareSpeech|CLOUDFLARE_API_TOKEN|GEMINI_API_KEY/);
   assert.ok(!voiceSpeechRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(!voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
@@ -139,7 +138,9 @@ test("Cloudflare genera texto y voz española, Gemini Live queda como audio en t
   assert.ok(lessonTutorSource.includes("needsSpeechFallback"));
   assert.ok(!lessonTutorSource.includes("needsBrowserSpeechFallback"));
 
-  assert.ok(lessonTutorSource.includes("Cloudflare no pudo generar la voz de respaldo"));
+  assert.ok(lessonTutorSource.includes("El audio alternativo no está disponible con una cuota gratuita verificada"));
+  assert.match(lessonTutorSource, /Only register an assistant echo after real audio playback starts/);
+  assert.match(lessonTutorSource, /Do not expose this text as spoken audio until playback really starts/);
   assert.ok(lessonTutorSource.includes("speakWithCloudflareOnly(clean, index)"));
   assert.ok(lessonTutorSource.includes("await speakWithCloudflareOnly(clean, index);"));
   assert.doesNotMatch(lessonTutorSource, /speechSynthesis\.speak\(/);
@@ -178,9 +179,9 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(!cloudflareImageRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(!cloudflareImageRouteSource.includes("gemini-nano-banana"));
   assert.ok(cloudflareImageRouteSource.includes("FREE_QUOTA_EXCEEDED"));
-  assert.ok(voiceSpeechRouteSource.includes("synthesizeWithCloudflareSpeech(text)"));
+  assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_NOT_AVAILABLE"));
   assert.ok(!voiceSpeechRouteSource.includes("GROQ_API_KEY"));
-  assert.ok(voiceSpeechRouteSource.includes("cloudflare-workers-ai"));
+  assert.doesNotMatch(voiceSpeechRouteSource, /cloudflare-workers-ai|synthesizeWithCloudflareSpeech/);
   assert.ok(orbyKnowledgeSource.includes("generateWithCloudflareAnalysis(prompt)"));
   assert.ok(!orbyKnowledgeSource.includes("generateAI("));
   assert.ok(!orbyKnowledgeSource.includes('provider: "groq"'));
@@ -219,6 +220,11 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
   assert.match(knowledgeWorkerSource, /available_at: resumeAt\.toISOString\(\)/);
   assert.match(knowledgeWorkerSource, /Park the remaining/);
   assert.match(knowledgeWorkerSource, /00:05 UTC/);
+  assert.match(knowledgeWorkerSource, /ORBY_EMBEDDING_PROVIDER_NOT_CONFIGURED/);
+  assert.match(knowledgeQueueSource, /resumeOrbyJobsWaitingForEmbeddingProvider/);
+  assert.match(knowledgeQueueSource, /attempt_count: 0/);
+  assert.match(automaticWorkerRoute, /resumeOrbyJobsWaitingForEmbeddingProvider/);
+  assert.match(manualWorkerRoute, /resumeOrbyJobsWaitingForEmbeddingProvider/);
 });
 
 test("el audio Live comienza tras la primera oración segura y la cola espera al fin de la reproducción", () => {
@@ -475,7 +481,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL Y DIDÁCTICA/);
   assert.match(realtimeSessionSource, /no aceleres al final de las respuestas/);
   assert.match(orbyVoiceConfigSource, /requestedVoice[\s\S]*Despina/);
-  assert.match(cloudflareVoiceSource, /speaker: "celeste"/);
+  assert.doesNotMatch(cloudflareVoiceSource, /@cf\/deepgram\/aura-/);
 
   assert.match(lessonTutorSource, /void persistRealtimeTurnIfReady\(\);\s*drainPendingMessageQueue\(\)/);
   assert.match(lessonTutorSource, /function interruptCurrentVoiceOutput\(\)/);

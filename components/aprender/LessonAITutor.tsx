@@ -1828,11 +1828,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
-      // Maintain a reference transcript for acoustic echo suppression in both
-      // Gemini Live and browser TTS playback paths.
-      voiceLastAssistantOutputRef.current = partialReply;
-      voiceLastAssistantOutputAtRef.current = Date.now();
-      // Keep the rolling echo history at completed utterances only, not every streamed token.
+      // A transcript is eligible for acoustic echo suppression only after
+      // Live audio has actually been scheduled; text arriving before playback
+      // must never be mistaken for something the microphone could have heard.
+      if (voiceRealtimeAudioChunkCountRef.current > 0 || voiceAudioSourcesRef.current.size > 0) {
+        voiceLastAssistantOutputRef.current = partialReply;
+        voiceLastAssistantOutputAtRef.current = Date.now();
+      }
       voiceAssistantMessageIdRef.current = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
       const partialNormalized = normalizeVoiceComparison(partialReply);
       const partialExposesProvider = /\b(?:google|gemini|openai|anthropic|groq|llm7|microsoft copilot|meta ai)\b/.test(partialNormalized)
@@ -2009,8 +2011,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           flushPendingGeminiAudio();
         } else {
           // Do not trust untranscribed or unsupported-language audio.
-          // Invalid audio chunks are discarded; the validated text is handled
-          // by an unverified TTS provider. Keep the validated answer in text.
+          // Invalid audio chunks are discarded; with no verified free TTS
+          // provider, preserve the validated answer in text only.
           voicePendingAudioChunksRef.current = [];
         }
         const playbackContext = voiceAudioContextRef.current;

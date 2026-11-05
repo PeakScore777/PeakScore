@@ -198,6 +198,9 @@ test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en
   assert.equal(detectBarge("sí", ["¡Sí, claro!"]), false);
   assert.equal(detectEcho("sí", ["Sin embargo, podemos continuar con el ejercicio." ]), false);
   assert.equal(detectEcho("¡Hola de nuevo!", ["¡Hola de nuevo! Soy Orby."]), true);
+  assert.equal(detectEcho("Saber 11", ["Saber 11 forma parte del examen ICFES."]), false);
+  assert.equal(detectEcho("sí", ["La fotosíntesis utiliza energía solar."]), false);
+
 
   assert.equal(detectDuplicate("sí", "sí", 4, 4, 1_000, 2_000), true);
   assert.equal(detectDuplicate("sí", "sí", 5, 4, 1_000, 1_100), false);
@@ -1113,6 +1116,11 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /stopSpeaking\(\);/);
   assert.match(lessonTutorSource, /serverContent\.interrupted === true && !voiceLocalReplyInFlightRef\.current/);
   assert.match(lessonTutorSource, /isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho/);
+  assert.match(lessonTutorRouteSource, /greetingReply = getOrbyGreetingFollowUpReply/);
+  assert.match(lessonTutorRouteSource, /RECUPERACIÓN DE RESPUESTA/);
+  assert.match(lessonTutorRouteSource, /generateWithCloudflareTutor\(recoveryPrompt\)/);
+  assert.match(lessonTutorRouteSource, /ORBY_INCOMPLETE_GENERATION/);
+
   assert.match(lessonTutorSource, /voiceRecentAssistantOutputsRef/);
   assert.match(lessonTutorSource, /getRecentVoiceAssistantOutputs/);
   assert.match(lessonTutorSource, /rememberVoiceAssistantOutput/);
@@ -1587,6 +1595,7 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.equal(filter.preflightOrbyRequest("Ya", context).allowed, true);
   assert.match(filter.getOrbySubjectSelectionReply("en inglés"), /Inglés de Saber 11/);
   assert.match(filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"), /Sigamos con tu preparación/);
+  assert.ok(lessonTutorRouteSource.includes("getOrbyGreetingFollowUpReply(recentContextMessages"));
   assert.notEqual(
     filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"),
     filter.ORBY_GREETING_REPLY,

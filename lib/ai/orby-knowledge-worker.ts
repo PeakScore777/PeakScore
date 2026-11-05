@@ -778,6 +778,8 @@ export async function processNextOrbyKnowledgeJob(options: {
       const documentPatch: Record<string, unknown> = {
         ingestion_status: "processing",
         next_review_at: resumeAt.toISOString(),
+        worker_lock_owner: null,
+        worker_lock_expires_at: null,
         updated_at: now.toISOString(),
       };
       if (counts) {

@@ -55,3 +55,44 @@ export function isLikelyVoicePlaybackEcho(
 
   return false;
 }
+
+/**
+ * A short fragment heard while Orby is speaking is more likely to be speaker
+ * echo or VAD noise than a deliberate interruption. Require a meaningful
+ * phrase before barging into Live playback; the full transcript is still
+ * accepted normally once playback has ended.
+ */
+export function isStrongVoiceBargeIn(
+  transcript: string,
+  assistantSpeech: string | readonly string[] = [],
+): boolean {
+  const incoming = normalizeVoiceText(transcript);
+  if (!incoming || isLikelyVoicePlaybackEcho(incoming, assistantSpeech)) return false;
+  if (/^(?:no entiendo|no entendi|espera|un momento|repiteme|detente|para un momento|oye orby)$/.test(incoming)) {
+    return true;
+  }
+  const meaningfulWords = incoming.split(" ")
+    .filter((word) => /^[a-z]{2,}$/i.test(word) && !LOW_INFORMATION_WORDS.has(word));
+  return incoming.length >= 18 && meaningfulWords.length >= 1;
+}
+
+/**
+ * Same words can be a legitimate answer in a later speech activity ("sí", "no",
+ * "vale"). Suppress duplicates only inside the same detected activity window.
+ */
+export function isDuplicateVoiceTranscriptInActivity(
+  transcript: string,
+  previousTranscript: string,
+  activityGeneration: number,
+  previousActivityGeneration: number,
+  previousAt: number,
+  now = Date.now(),
+  duplicateWindowMs = 10_000,
+): boolean {
+  const incoming = normalizeVoiceText(transcript);
+  const previous = normalizeVoiceText(previousTranscript);
+  if (!incoming || !previous || incoming !== previous) return false;
+  if (activityGeneration !== previousActivityGeneration) return false;
+  const age = now - previousAt;
+  return age >= 0 && age < duplicateWindowMs;
+}

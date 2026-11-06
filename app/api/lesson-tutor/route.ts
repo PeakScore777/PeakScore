@@ -522,7 +522,6 @@ export async function POST(request: Request) {
     // Only the current academic request and lesson metadata are eligible
     // for public search. Never forward the conversation history to public APIs.
     const researchQuery = [
-      detectedSubject,
       topic,
       question,
       userMessage,

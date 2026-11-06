@@ -1496,6 +1496,9 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
   const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");
   assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
+  assert.match(lessonTutorSource, /voicePreflightReplyRef\.current = typedPreflight\.allowed \? null : typedPreflight\.reply/);
+  assert.doesNotMatch(lessonTutorSource, /subjectAlreadyActive/);
+  assert.doesNotMatch(lessonTutorSource, /voicePreflightReplyRef\.current = isGenericIcfesEnglishRequest\(message\)/);
   assert.match(lessonTutorSource, /if \(selectedSubject && typedPreflight\.allowed\) activeSubjectRef\.current = selectedSubject/);
   assert.doesNotMatch(lessonTutorSource.slice(typedVoiceStart, localFilterIndex), /greetingReply/);
   assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart

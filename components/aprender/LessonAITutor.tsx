@@ -3329,9 +3329,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceInputPolicyRef.current = typedPreflight.allowed
         ? null
         : typedPreflight.category === "programming" ? "programming" : "outside";
-      voicePreflightReplyRef.current = isGenericIcfesEnglishRequest(message) && !subjectAlreadyActive
-        ? ORBY_ICFES_ENGLISH_INTRO_REPLY
-        : typedPreflight.allowed ? null : typedPreflight.reply;
+      voicePreflightReplyRef.current = typedPreflight.allowed ? null : typedPreflight.reply;
       // Typed text is a new voice turn and is already visible below.
       // Mark its transcript as committed so Live ASR cannot append a duplicate.
       voiceActivityGenerationRef.current += 1;

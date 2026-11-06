@@ -1470,6 +1470,91 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     drainPendingMessageQueue();
   }
 
+  function requestLivePolicyReply(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false) {
+    const cleanUserText = userText.trim().slice(0, 1200);
+    const cleanReply = reply.trim();
+    const channel = voiceChannelRef.current;
+    if (!cleanUserText || !cleanReply || !voiceModeRef.current || !channel) {
+      respondToVoiceLocally(userText, reply, appendUserMessage, replaceAssistantMessage);
+      return;
+    }
+
+    clearVoiceResponseWatchdog();
+    stopSpeaking();
+    stopVoicePlayback();
+    voicePendingAudioChunksRef.current = [];
+    voiceRealtimeAudioChunkCountRef.current = 0;
+    voiceOutputTranscriptValidatedRef.current = false;
+    voiceOutputAudioBlockedRef.current = false;
+    voiceLocalReplyInFlightRef.current = false;
+    waitingForVoiceReplyRef.current = true;
+    voicePendingStudentTurnRef.current = true;
+    voiceUserTextRef.current = cleanUserText;
+    voiceAssistantTextRef.current = "";
+    const previousAssistantId = replaceAssistantMessage ? voiceAssistantMessageIdRef.current : null;
+    const assistantId = previousAssistantId ?? ("voice-policy-" + Date.now());
+    voiceAssistantMessageIdRef.current = assistantId;
+    voiceAssistantMessageVisibleRef.current = true;
+    voiceForcedReplyRef.current = cleanReply;
+    voicePreflightReplyRef.current = null;
+    voiceInputPolicyRef.current = null;
+    voiceResponseDoneRef.current = false;
+    voiceTurnPersistedRef.current = false;
+    voiceUserMessageVisibleRef.current = true;
+    voiceLastCommittedInputRef.current = normalizeVoiceComparison(cleanUserText);
+    voiceLastCommittedInputAtRef.current = Date.now();
+    voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
+
+    setMessages((current) => {
+      const next = [
+        ...current,
+        ...(appendUserMessage ? [{
+          id: "voice-user-" + Date.now(),
+          role: "user" as const,
+          content: cleanUserText,
+        }] : []),
+      ];
+      const exists = next.some((message) => message.id === assistantId);
+      return exists
+        ? next.map((message) => message.id === assistantId
+          ? { ...message, role: "assistant" as const, content: cleanReply }
+          : message)
+        : [...next, { id: assistantId, role: "assistant" as const, content: cleanReply }];
+    });
+    setInput("");
+    setLiveTranscript("");
+    setIsListening(false);
+    setVoiceError("");
+    setVoiceStatus("Orby está preparando la respuesta hablada…");
+    armVoiceResponseWatchdog();
+
+    // Ask the already-open Live session to speak only this trusted, deterministic
+    // refusal. Its transcript must match this exact answer prefix before audio
+    // is released; divergent or unsafe speech remains blocked by the normal gate.
+    try {
+      channel.sendClientContent({
+        turns: [{
+          role: "user",
+          parts: [{
+            text: [
+              "El estudiante hizo una solicitud que está fuera del alcance educativo de PeakScore.",
+              "No desarrolles, expliques ni ejecutes esa solicitud.",
+              "Pronuncia en voz alta únicamente la siguiente respuesta autorizada, sin añadir introducciones ni comentarios:",
+              cleanReply,
+            ].join("\n"),
+          }],
+        }],
+        turnComplete: true,
+      });
+    } catch (error) {
+      voiceForcedReplyRef.current = null;
+      console.warn("[Orby Voice] Could not request the validated Live policy reply.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+      respondToVoiceLocally(cleanUserText, cleanReply, false, true);
+    }
+  }
+
   function respondToVoiceLocally(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false) {
     const cleanUserText = userText.trim().slice(0, 1200);
     const cleanReply = reply.trim();
@@ -2193,7 +2278,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setLiveTranscript("");
       upsertVoiceUserMessage(voiceUserTextRef.current);
       if (voicePreflightReplyRef.current) {
-        respondToVoiceLocally(voiceUserTextRef.current, voicePreflightReplyRef.current, false);
+        requestLivePolicyReply(voiceUserTextRef.current, voicePreflightReplyRef.current, false);
         return;
       }
       void persistRealtimeTurnIfReady();
@@ -2396,7 +2481,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (policyReply) {
         // Never ask Live to read a deterministic filter response. Replace the
         // partial unsafe bubble and speak the trusted local answer immediately.
-        respondToVoiceLocally(voiceUserTextRef.current, policyReply, false, true);
+        requestLivePolicyReply(voiceUserTextRef.current, policyReply, false, true);
         return;
       }
 
@@ -2481,6 +2566,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Live is primary. If its audio is missing or blocked, keep the validated
       // transcript and use Gemini TTS only when the server verifies free-tier access.
       if (needsSpeechFallback && rawReply.trim()) {
+        if (forcedLiveReply) {
+          // A deterministic safety reply was requested from native Live. If
+          // Live did not produce validated audio, keep the safe text and return
+          // to listening; do not spend TTS quota on a policy response.
+          setVoiceError("La respuesta de seguridad quedó visible, pero Live no pudo reproducirla. Puedes continuar hablando.");
+          finishRealtimeVoicePlayback();
+          return;
+        }
         const id = voiceAssistantMessageIdRef.current;
         const messageIndex = messages.findIndex((message) => message.id === id);
         void speakText(rawReply, messageIndex >= 0 ? messageIndex : messages.length);
@@ -3340,7 +3433,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // forced every such turn through quota-limited Gemini TTS.
       const localReply = !typedPreflight.allowed ? typedPreflight.reply : null;
       if (localReply) {
-        respondToVoiceLocally(message, localReply, true);
+        requestLivePolicyReply(message, localReply, true);
         return;
       }
       if (selectedSubject && typedPreflight.allowed) activeSubjectRef.current = selectedSubject;

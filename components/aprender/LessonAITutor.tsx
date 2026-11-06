@@ -955,7 +955,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let chunkIndex = 0;
       let chunkRetryCount = 0;
       let rateLimitWaitCount = 0;
-      let skippedAudioChunks = false;
       let safetyTimer: number | null = null;
       let requestController: AbortController | null = null;
       let audioElement: HTMLAudioElement | null = null;
@@ -1014,9 +1013,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               );
             }
             finishLocalVoiceReply(localVoiceMessageId);
-            if (skippedAudioChunks) {
-              setVoiceError("Una parte del audio no pudo reproducirse; el texto completo de la respuesta sigue disponible.");
-            }
           }
         }
         resolve();
@@ -1035,29 +1031,28 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // If optional TTS is unavailable, keep the validated answer visible without speaking it.
       const finishWithoutGenericVoice = (notice = "No se pudo completar la lectura en voz alta. La respuesta completa sigue disponible por escrito.") => {
         if (finished) return;
-        // Preserve the full answer, but never imply that it was read aloud
-        // when privacy, quota, configuration or a provider outage stopped TTS.
-        setVoiceError(notice);
-        setVoiceStatus("Respuesta disponible por escrito · lectura de voz interrumpida");
+        // Finish first because finishLocalVoiceReply updates the ready/listening
+        // status. The final status below must describe the actual interruption.
         finish(false);
+        setVoiceError(notice);
+        setVoiceStatus("Lectura pausada · la respuesta completa sigue visible");
+        if (!isLocalVoiceTurn) setError(notice);
       };
 
       function recoverCurrentTtsChunk() {
         if (finished) return;
         clearAudioElement();
         requestController = null;
-        if (chunkRetryCount < 2) {
+        if (chunkRetryCount < 4) {
           chunkRetryCount += 1;
-          // Do not mark the chunk as lost before the retry has actually failed.
-          // The old code showed a red warning even when this retry played fine.
-          window.setTimeout(() => void playFreeTtsChunk(), 500);
+          // Retry the same segment several times. Never skip a sentence and
+          // continue as if the whole explanation had been read.
+          window.setTimeout(() => void playFreeTtsChunk(), 700);
           return;
         }
-        skippedAudioChunks = true;
-        // A genuinely failed segment must not cancel the remaining answer.
-        chunkRetryCount = 0;
-        chunkIndex += 1;
-        window.setTimeout(() => void playFreeTtsChunk(), 120);
+        finishWithoutGenericVoice(
+          "La lectura se pausó en una frase que no pudo reproducirse después de varios intentos. No voy a saltarme esa parte. La respuesta completa sigue visible; toca «Escuchar respuesta» para reiniciar desde el principio.",
+        );
       }
 
       const playFreeTtsChunk = async () => {

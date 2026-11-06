@@ -1354,10 +1354,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceStatus("Orby sigue preparando tu respuesta. Mantengo la conexión…");
       }
     }, 18_000);
+    // Keep a connected Gemini Live session while long answers and Lab retrieval complete.
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
       voiceResponseWatchdogRef.current = null;
       voiceResponseSlowNoticeRef.current = null;
-      fallbackVoiceTurnToText("Orby tardó demasiado en responder. Conservé tu pregunta y continuaré con el motor gratuito de respaldo para que no tengas que repetirla.");
+      if (!voiceModeRef.current || !waitingForVoiceReplyRef.current || voiceResponseDoneRef.current) return;
+      if (voiceChannelRef.current) {
+        setVoiceStatus("Orby sigue preparando tu respuesta. Mantengo la conexión; puedes interrumpirme si lo necesitas.");
+        voiceResponseWatchdogRef.current = window.setTimeout(() => {
+          voiceResponseWatchdogRef.current = null;
+          if (voiceModeRef.current && waitingForVoiceReplyRef.current && !voiceResponseDoneRef.current) {
+            fallbackVoiceTurnToText("La respuesta de voz sigue tardando. Conservé tu pregunta y activaré el respaldo gratuito.");
+          }
+        }, 70_000);
+        return;
+      }
+      fallbackVoiceTurnToText("La conexión de voz se interrumpió. Conservé tu pregunta y continuaré por el respaldo gratuito.");
     }, 50_000);
   }
 

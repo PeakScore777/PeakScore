@@ -10,6 +10,32 @@ export const ICFES_SUBJECTS = [
 
 export type IcfesSubject = (typeof ICFES_SUBJECTS)[number];
 
+/** Adds English equivalents for common Spanish ICFES grammar terms before Lab retrieval. */
+export function expandIcfesEnglishSearchTerms(query: string): string {
+  const normalized = query.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("es-CO");
+  const aliases: Array<[RegExp, string]> = [
+    [/\\bpasado simple\\b/g, "past simple simple past"],
+    [/\\bpresent[e]? simple\\b/g, "present simple"],
+    [/\\bpast continuous\\b|\\bpasado continuo\\b/g, "past continuous"],
+    [/\\bpresent continuous\\b|\\bpresente continuo\\b/g, "present continuous"],
+    [/\\bpresent perfect\\b|\\bpresent[e]? perfecto\\b/g, "present perfect"],
+    [/\\bpast perfect\\b|\\bpasado perfecto\\b/g, "past perfect"],
+    [/\\bfuturo simple\\b/g, "future simple simple future"],
+    [/\\bverbos? irregulares?\\b/g, "irregular verbs"],
+    [/\\bverbos? regulares?\\b/g, "regular verbs"],
+    [/\\bverbos? modales?\\b/g, "modal verbs"],
+    [/\\bvoz pasiva\\b/g, "passive voice"],
+    [/\\bestilo indirecto\\b/g, "reported speech"],
+    [/\\bcondicional cero\\b/g, "zero conditional"],
+    [/\\bprimer condicional\\b/g, "first conditional"],
+    [/\\bsegundo condicional\\b/g, "second conditional"],
+    [/\\btercer condicional\\b/g, "third conditional"],
+    [/\\bverbos frasales\\b/g, "phrasal verbs"],
+  ];
+  const expansions = aliases.filter(([pattern]) => pattern.test(normalized)).map(([, value]) => value);
+  return expansions.length ? query + " " + [...new Set(expansions)].join(" ") : query;
+}
+
 export function normalizeIcfesSubject(value: unknown, text = ""): IcfesSubject | null {
   const subject = typeof value === "string"
     ? value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()

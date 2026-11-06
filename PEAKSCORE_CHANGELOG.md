@@ -1,5 +1,14 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-06 — Orby Voice reliability: TTS configuration and subject persistence
+- Gemini 3.8 Flash TTS now receives the documented voice-only `speech_config` shape. Removed the explicit `language` field because Gemini 3.8 TTS automatically detects the transcript language; Live ASR locale hints are not reused in TTS requests.
+- Added a regression assertion for the supported TTS configuration. The selected female voice and existing speech style metadata remain unchanged.
+- Voice subject selection now updates the owned conversation before persisting the message pair. If the subject update fails, the turn is not saved and the API returns `VOICE_SUBJECT_UPDATE_FAILED` instead of reporting a partially completed save.
+- Added a regression assertion that protects this operation order.
+- Changes are isolated to `feat/founder-intro`. No `main` changes, migrations, deployments, or provider changes.
+- Validation still required in the user's local checkout: `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build`, followed by real Chrome/Edge playback tests and a real subject-switch test against Supabase.
+
+
 ## 2026-09-28
 
 ### Auditoría 3/3

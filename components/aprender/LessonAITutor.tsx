@@ -1494,7 +1494,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const previousAssistantId = replaceAssistantMessage ? voiceAssistantMessageIdRef.current : null;
     const assistantId = previousAssistantId ?? ("voice-policy-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
-    voiceAssistantMessageVisibleRef.current = true;
     voiceForcedReplyRef.current = cleanReply;
     voicePreflightReplyRef.current = null;
     voiceInputPolicyRef.current = null;

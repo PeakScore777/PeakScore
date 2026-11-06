@@ -255,6 +255,65 @@ export function isOrbyContextualConfirmation(message: string, previousContext = 
 }
 
 /** Reject punctuation and bare acknowledgements, not concise academic answers such as A or B. */
+export function prepareOrbySpeechText(value: string): string {
+  return value
+    .replace(/\\r\\n?/g, "\\n")
+    .replace(/\\u00a0/g, " ")
+    .replace(/\\`\\`\\`[a-z-]*\\s*([\\s\\S]*?)\\`\\`\\`/gi, "$1")
+    .replace(/\\$\\$([\\s\\S]+?)\\$\\$/g, "$1")
+    .replace(/\\\\\\\\?\\\\\\\\?\\\\\\\\?/, "")
+    .replace(/\\\\frac\\{([^{}]+)\\}\\{([^{}]+)\\}/g, "$1 sobre $2")
+    .replace(/\\\\sqrt\\{([^{}]+)\\}/g, "raíz cuadrada de $1")
+    .replace(/\\\\times|\\\\cdot/g, " por ")
+    .replace(/\\\\div/g, " dividido entre ")
+    .replace(/\\\\leq|≤/g, " menor o igual que ")
+    .replace(/\\\\geq|≥/g, " mayor o igual que ")
+    .replace(/\\\\neq|≠/g, " distinto de ")
+    .replace(/\\\\approx|≈/g, " aproximadamente igual a ")
+    .replace(/\\\\pi|π/g, " pi ")
+    .replace(/\\\\rho|ρ/g, " rho ")
+    .replace(/\\\\alpha|α/g, " alfa ")
+    .replace(/\\\\beta|β/g, " beta ")
+    .replace(/\\\\theta|θ/g, " theta ")
+    .replace(/\\\\left|\\\\right/g, "")
+    .replace(/\\\\text\\{([^{}]+)\\}/g, "$1")
+    .replace(/\\\\mathrm\\{([^{}]+)\\}/g, "$1")
+    .replace(/\\\\?\\\\?\\\\?/g, "")
+    .replace(/\\[([a-z]+)\\]/gi, "$1")
+    .replace(/^\\s{0,3}#{1,6}\\s*/gm, "")
+    .replace(/\\*\\*([^*]+)\\*\\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/\\*([^*]+)\\*/g, "$1")
+    .replace(/\x60([^\x60]+)\x60/g, "$1")
+    .replace(/\\[([^\\]]+)\\]\\([^)]+\\)/g, "$1")
+    .replace(/^\\s*[-*•]\\s+/gm, "")
+    .replace(/^\\s*(\\d+)[.)]\\s+/gm, "Punto $1: ")
+    .replace(/^\\s*>\\s?/gm, "")
+    .replace(/\\|/g, "; ")
+    .replace(/\\\\,/g, ", ")
+    .replace(/\\\\;/g, "; ")
+    .replace(/\\\\:/g, ": ")
+    .replace(/\\\\!/g, "")
+    .replace(/\\\\\\s+/g, " ")
+    .replace(/[ \\t]+/g, " ")
+    .replace(/\\s*\\n\\s*/g, ". ")
+    .replace(/\\s+([,.;:!?])/g, "$1")
+    .replace(/([,;:!?])(?=\\S)/g, "$1 ")
+    .replace(/\\.\\s*\\./g, ".")
+    .replace(/\\s{2,}/g, " ")
+    .trim();
+}
+
+export function composeOrbySpeechText(reply: string, checkQuestion = ""): string {
+  const cleanReply = prepareOrbySpeechText(reply);
+  const cleanCheck = prepareOrbySpeechText(checkQuestion);
+  if (!cleanReply) return cleanCheck ? "Comprueba lo aprendido: " + cleanCheck : "";
+  if (!cleanCheck || cleanReply.toLocaleLowerCase("es-CO").includes(cleanCheck.toLocaleLowerCase("es-CO"))) {
+    return cleanReply;
+  }
+  return cleanReply + ". Comprueba lo aprendido: " + cleanCheck;
+}
+
 export function isLowQualityOrbyReply(value: string, studentRequest = ""): boolean {
   const normalized = normalizeOrbyRequestText(value)
     .replace(/[¿?¡!.,;:…]+/g, " ")

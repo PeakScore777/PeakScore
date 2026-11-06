@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
 
@@ -174,14 +174,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No puedo cambiar mis reglas ni revelar información interna. Sí puedo ayudarte a prepararte para Saber 11." }, { status: 400 });
     }
 
-    const recentContextMessages: TutorMessage[] = Array.isArray(body.history)
+    const clientRecentContextMessages: TutorMessage[] = Array.isArray(body.history)
       ? body.history
           .filter((item: unknown): item is TutorMessage => !!item && typeof item === "object"
             && ((item as TutorMessage).role === "user" || (item as TutorMessage).role === "assistant")
             && typeof (item as TutorMessage).content === "string")
-          .slice(-6)
+          .slice(-12)
           .map((item: TutorMessage) => ({ role: item.role, content: item.content.slice(0, 1200) }))
       : [];
+
+    // Supabase is the source of truth for an existing conversation. The
+    // browser history is only a fallback for a new chat or transient read failure.
+    let recentContextMessages: TutorMessage[] = clientRecentContextMessages;
+    if (conversationId && ownedConversation) {
+      const { data: storedMessages, error: historyReadError } = await supabaseAdmin
+        .from("orby_messages")
+        .select("role,content")
+        .eq("conversation_id", conversationId)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(12);
+      if (historyReadError) {
+        console.error("[Orby Tutor] Authoritative conversation history unavailable.", { code: historyReadError.code });
+      } else if (Array.isArray(storedMessages) && storedMessages.length) {
+        recentContextMessages = storedMessages
+          .reverse()
+          .filter((item): item is TutorMessage => (item.role === "user" || item.role === "assistant")
+            && typeof item.content === "string")
+          .map((item) => ({ role: item.role, content: item.content.slice(0, 1200) }));
+      }
+    }
     const normalizedIdentityPrompt = userMessage.normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLocaleLowerCase("es-CO");
@@ -229,10 +251,10 @@ export async function POST(request: Request) {
     // Greetings are deterministic UX turns. Never wake the model or consume
     // its quota for "hola" after a refusal or a new conversation.
     if (!tutorImage && isOrbyGreetingRequest(userMessage)) {
-      const greetingReply = getOrbyGreetingFollowUpReply(recentContextMessages
-        .slice(-4)
-        .map((item) => item.role + ": " + item.content)
-        .join("\n"));
+      const greetingReply = getOrbyGreetingFollowUpReply(
+        recentContextMessages.map((item) => item.role + ": " + item.content).join("\n"),
+        subject,
+      );
       if (conversationId && ownedConversation) {
         const { error: greetingSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,
@@ -254,7 +276,11 @@ export async function POST(request: Request) {
     // request. Answer locally so words like "lectura" can never be refused by
     // a model or consume a generation just to start the subject.
     if (!tutorImage) {
-      const subjectSelectionReply = getOrbySubjectSelectionReply(userMessage);
+      const subjectSelectionReply = getOrbySubjectSelectionReply(
+        userMessage,
+        recentContextMessages.map((item) => item.role + ": " + item.content).join("\n"),
+        subject,
+      );
       if (subjectSelectionReply) {
         if (conversationId && ownedConversation) {
           const { error: subjectSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
@@ -296,7 +322,12 @@ export async function POST(request: Request) {
     }
 
     // "Inglés" is an ICFES subject, not an invitation to start a general English conversation.
-    if (isGenericIcfesEnglishRequest(userMessage)) {
+    if (isGenericIcfesEnglishRequest(userMessage)
+      && !isOrbySubjectAlreadyActive(
+        userMessage,
+        recentContextMessages.map((item) => item.role + ": " + item.content).join("\n"),
+        subject,
+      )) {
       const englishReply = ORBY_ICFES_ENGLISH_INTRO_REPLY;
       if (conversationId && ownedConversation) {
         const { error: saveError } = await supabaseAdmin.rpc("orby_save_turn", {
@@ -353,14 +384,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const rawHistory: TutorMessage[] = Array.isArray(body.history)
-      ? body.history
-          .filter((item: unknown): item is TutorMessage => !!item && typeof item === "object"
-            && ((item as TutorMessage).role === "user" || (item as TutorMessage).role === "assistant")
-            && typeof (item as TutorMessage).content === "string")
-          .slice(-12)
-          .map((item: TutorMessage): TutorMessage => ({ role: item.role, content: item.content.slice(0, 1200) }))
-      : [];
+    const rawHistory: TutorMessage[] = recentContextMessages.slice(-12);
     const history: TutorMessage[] = [];
     for (const item of rawHistory) {
       if (containsUnsupportedSpanishLanguage(item.content) || isClearlyOutOfScopeOrInjection(item.content)) continue;

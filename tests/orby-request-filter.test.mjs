@@ -532,6 +532,13 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
   assert.match(manualWorkerRoute, /resumeOrbyJobsWaitingForEmbeddingProvider/);
 });
 
+test("la sesión Live reconstruye historial persistido sin truncar explicaciones extensas", () => {
+  assert.match(realtimeSessionSource, /const ORBY_LIVE_HISTORY_MESSAGE_CHARS = 8_000/);
+  assert.match(realtimeSessionSource, /content: item\.content\.slice\(0, ORBY_LIVE_HISTORY_MESSAGE_CHARS\)/);
+  assert.match(realtimeSessionSource, /\.limit\(20\)/);
+  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-12\)/);
+});
+
 test("la voz conserva transcripciones largas del estudiante hasta el límite persistible", () => {
   assert.match(lessonTutorSource, /const MAX_VOICE_TRANSCRIPT_CHARS = 8_000/);
   assert.match(lessonTutorSource, /mergeLiveTranscript\(previousTranscript, transcript\)\.slice\(-MAX_VOICE_TRANSCRIPT_CHARS\)/);

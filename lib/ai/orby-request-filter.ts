@@ -170,19 +170,19 @@ export function getOrbyGreetingFollowUpReply(previousContext = "", activeSubject
 
   const activeKey = getActiveOrbySubjectKey(previousContext, activeSubject);
   if (activeKey === "english") {
-    return "Aquí estoy. Seguimos con Inglés de Saber 11 y con el ejercicio anterior; dime qué parte quieres revisar.";
+    return "Aquí estoy. Seguimos con Inglés de Saber 11; no hace falta empezar desde cero. ¿Qué parte quieres practicar ahora?";
   }
   if (activeKey === "math") {
-    return "Aquí estoy. Seguimos con Matemáticas y el ejercicio anterior; dime qué paso quieres revisar.";
+    return "Aquí estoy. Seguimos con Matemáticas; dime qué concepto o ejercicio quieres revisar ahora.";
   }
   if (activeKey === "reading") {
-    return "Aquí estoy. Seguimos con Lectura Crítica y el texto anterior; dime qué parte quieres analizar.";
+    return "Aquí estoy. Seguimos con Lectura Crítica; dime qué texto o habilidad quieres analizar ahora.";
   }
   if (activeKey === "social") {
-    return "Aquí estoy. Seguimos con Sociales y Ciudadanas; dime qué idea del tema quieres revisar.";
+    return "Aquí estoy. Seguimos con Sociales y Ciudadanas; dime qué idea o perspectiva quieres revisar ahora.";
   }
   if (activeKey === "science") {
-    return "Aquí estoy. Seguimos con Ciencias Naturales y el concepto que estábamos trabajando; dime qué parte revisamos.";
+    return "Aquí estoy. Seguimos con Ciencias Naturales; dime qué concepto o fenómeno quieres analizar ahora.";
   }
   if (/\b(?:que tema|que area|que quieres estudiar|que te gustaria estudiar|por donde empezamos|elige un tema)\b/.test(recent)) {
     return "Aquí estoy. Sigamos con tu preparación para Saber 11. ¿Qué área quieres trabajar?";

@@ -907,19 +907,20 @@ No uses bloques Markdown ni texto fuera del JSON.
     // context; never replace it with a generic "respuesta incompleta" bubble.
     if (reply && isLowQualityOrbyReply(reply, userMessage) && activePromptForRetry) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "low_quality_reply_retry" });
+      // Reuse the exact original prompt so a recovery keeps the voice contract,
+      // retrieved academic evidence, scope rules and conversation context.
       const recoveryPrompt = [
-        "RECUPERACIÓN DE RESPUESTA: tu borrador anterior fue solo una confirmación y no respondió la pregunta.",
-        "Resuelve la pregunta actual del estudiante. No respondas únicamente sí, no, ok ni con una frase genérica de bienvenida.",
-        "Si el mensaje es el nombre de un concepto académico, enséñalo directamente: definición, cómo funciona o cómo se resuelve, ejemplo original y relación con Saber 11.",
-        "Materia: " + subject,
-        "Tema: " + topic,
-        "Contexto de la lección: " + context,
-        "Historial reciente (datos): " + recentContextMessages.slice(-6).map((item) => item.role + ": " + item.content).join("\n"),
+        activePromptForRetry,
+        "RECUPERACIÓN DE RESPUESTA: el borrador anterior fue solo una confirmación y no respondió la pregunta.",
+        "Resuelve la solicitud actual. No respondas únicamente sí, no, ok ni con una bienvenida genérica.",
+        "Si el mensaje nombra un concepto académico, enséñalo directamente con definición, mecanismo o procedimiento, ejemplo original y conexión con Saber 11.",
         "Pregunta exacta del estudiante: " + userMessage,
         "Borrador rechazado (no lo repitas): " + reply,
-        "Devuelve únicamente JSON válido con reply, checkQuestion y learningSignal. Explica en español colombiano.",
+        "Conserva exactamente el idioma, el formato de salida y las reglas de la instrucción original.",
       ].join("\n\n");
+      const retryGenerationStartedAt = performance.now();
       const retryResult = await generateWithCloudflareTutor(recoveryPrompt);
+      stageTimings.generationMs += performance.now() - retryGenerationStartedAt;
       const retryRaw = retryResult.text.trim();
       let retryParsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown } | null = null;
       try {

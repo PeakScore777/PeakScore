@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => ({}));
     let subject = clean(body?.subject, 80, "Preparación Saber 11");
-    const topic = clean(body?.topic, 160, "Estudio y aprendizaje");
+    let topic = clean(body?.topic, 160, "Estudio y aprendizaje");
     const context = clean(body?.context, 1200, "Ayuda al estudiante con sus dudas académicas.");
     const clientHistory: Array<{ role: "user" | "assistant"; content: string }> = Array.isArray(body?.history)
       ? body.history.slice(-12).filter((item: unknown) => !!item && typeof item === "object"
@@ -105,6 +105,13 @@ export async function POST(request: Request) {
         if (genericSubject && storedSubject && !/^(?:preparacion saber 11|saber 11|preparacion icfes|icfes|estudio y aprendizaje)$/i
           .test(storedSubject.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim())) {
           subject = storedSubject;
+        }
+        const genericTopic = /^(?:estudio y aprendizaje|preparacion saber 11|saber 11|preparacion icfes|icfes)$/i
+          .test(topic.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+        const storedTopic = typeof storedConversation.topic === "string" ? storedConversation.topic.trim() : "";
+        if (genericTopic && storedTopic && !/^(?:estudio y aprendizaje|preparacion saber 11|saber 11|preparacion icfes|icfes)$/i
+          .test(storedTopic.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim())) {
+          topic = storedTopic;
         }
       }
 

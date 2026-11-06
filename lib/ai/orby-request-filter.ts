@@ -319,8 +319,9 @@ export function shouldRetrieveOrbyAcademicKnowledge(input: {
   const hasAcademicLessonContext = hasSpecificLessonSubject
     || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedLessonContext))
     || /\b(?:area de estudio|tema de estudio|competencia icfes|ejercicio de saber 11)\b/i.test(normalizedLessonContext);
-  const isFollowUpOrStudyIntent = /\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|diferencia entre|por que ocurre|por que|como asi|otro ejemplo|dame otro ejemplo|continua|siguiente)\b/i.test(message);
-  return hasAcademicLessonContext && isFollowUpOrStudyIntent;
+  const isFollowUpOrStudyIntent = /\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|no se|no lo se|ni idea|no tengo claro|ayudame a elegir|diferencia entre|por que ocurre|por que|como asi|otro ejemplo|dame otro ejemplo|continua|siguiente|comencemos|empecemos|vamos|otra pregunta|siguiente pregunta|empezamos)\b/i.test(message);
+  const confirmsGuidedContinuation = isOrbyContextualConfirmation(input.message, input.context ?? "");
+  return hasAcademicLessonContext && (isFollowUpOrStudyIntent || confirmsGuidedContinuation);
 }
 
 export function getOrbySubjectSelectionReply(

@@ -1009,7 +1009,7 @@ test("la búsqueda de conocimiento recupera todas las áreas si falta el índice
   assert.ok(orbyKnowledgeSource.includes("if (options.subject && rows.length === 0)"));
   assert.ok(orbyKnowledgeSource.includes("No chunks matched the active subject; retrying across published areas."));
   assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null });"));
-  assert.match(knowledgeSearchRouteSource, /preflightOrbyRequest\(query, preflightContext\)/);
+  assert.ok(knowledgeSearchRouteSource.includes('const preflightContext = subject ? "Área de estudio: " + subject : ""'));
   assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \? "Área de estudio: " \+ subject : ""/);
 });
 

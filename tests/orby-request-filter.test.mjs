@@ -54,6 +54,15 @@ const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowl
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
+test("la materia de voz se actualiza antes de persistir el turno para evitar éxito parcial", () => {
+  const subjectUpdate = realtimeTurnSource.indexOf('.from("orby_conversations")');
+  const turnPersistence = realtimeTurnSource.indexOf('rpc("orby_save_turn"');
+  assert.ok(subjectUpdate >= 0 && turnPersistence > subjectUpdate,
+    "La materia debe actualizarse antes de guardar el turno de voz.");
+  assert.ok(realtimeTurnSource.includes("VOICE_SUBJECT_UPDATE_FAILED"));
+  assert.ok(realtimeTurnSource.includes("no guardé este turno"));
+});
+
 test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
   assert.ok(cloudflareVoiceSource.includes("CLOUDFLARE_ACCOUNT_ID"));

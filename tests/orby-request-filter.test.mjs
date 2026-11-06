@@ -2180,4 +2180,5 @@ test("Orby preserves conversation context and does not cap requested teaching de
   assert.match(tutor, /\.limit\(20\)/);
   assert.match(voice, /\.limit\(20\)/);
   assert.match(voice, /safeHistory\.slice\(-12\)/);
+  assert.match(tutor, /baseSignalQuery\.eq\("subject", signalSubject\)/);
 });

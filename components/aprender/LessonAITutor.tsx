@@ -302,6 +302,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceUserTextRef = useRef("");
   const voiceUserMessageIdRef = useRef<string | null>(null);
   const voiceActivityGenerationRef = useRef(0);
+  const voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>(new Map());
   const voiceLastCommittedActivityGenerationRef = useRef(-1);
   const voicePendingStudentTurnRef = useRef(false);
   const voiceUnsupportedInputDetectedRef = useRef(false);
@@ -863,9 +864,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setSpeakingIndex(null);
   }
 
+  function cancelPendingOrbyKnowledgeRequests(ids?: string[]) {
+    const pending = voiceKnowledgeRequestsRef.current;
+    const targets = ids?.length ? ids : [...pending.keys()];
+    for (const id of targets) {
+      const controller = pending.get(id);
+      if (!controller) continue;
+      pending.delete(id);
+      controller.abort();
+    }
+  }
+
   // Cancel only the current response, keeping the Live session and mic alive.
   // A new user turn always takes priority over audio that is still playing.
   function interruptCurrentVoiceOutput() {
+    cancelPendingOrbyKnowledgeRequests();
     const interruptedAssistantId = voiceAssistantMessageIdRef.current;
     const hadIncompleteAssistantReply = !voiceResponseDoneRef.current && Boolean(interruptedAssistantId);
     if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
@@ -1349,6 +1362,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function stopRealtimeVoice(updateState = true) {
+    cancelPendingOrbyKnowledgeRequests();
     clearVoiceResponseWatchdog();
     voiceSessionGenerationRef.current += 1;
     voiceStartupAbortRef.current?.abort();
@@ -1770,16 +1784,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // with an unrelated topic or a subject the student has already left.
       const query = toolQuery.slice(0, 2000);
       const requestedSubject = typeof args.subject === "string" ? args.subject.slice(0, 80) : activeSubjectRef.current;
+      const requestController = new AbortController();
+      cancelPendingOrbyKnowledgeRequests([id]);
+      voiceKnowledgeRequestsRef.current.set(id, requestController);
 
       try {
         const response = await fetch("/api/orby/knowledge-search", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
+          signal: requestController.signal,
           body: JSON.stringify({ query, subject: requestedSubject }),
         });
         const result = await response.json().catch(() => ({}));
-        if (!isCurrentToolTurn()) return;
+        if (requestController.signal.aborted || !isCurrentToolTurn()) return;
         if (!response.ok) {
           responses.push({
             id,
@@ -1845,11 +1863,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           },
         });
       } catch {
-        responses.push({
-          id,
-          name,
-          response: { found: false, guidance: "La búsqueda no estuvo disponible en este turno. Continúa con una explicación académica segura y no inventes que consultaste fuentes." },
-        });
+        if (!requestController.signal.aborted && isCurrentToolTurn()) {
+          responses.push({
+            id,
+            name,
+            response: { found: false, guidance: "La búsqueda no estuvo disponible en este turno. Continúa con una explicación académica segura y no inventes que consultaste fuentes." },
+          });
+        }
+      } finally {
+        if (voiceKnowledgeRequestsRef.current.get(id) === requestController) {
+          voiceKnowledgeRequestsRef.current.delete(id);
+        }
       }
     }
 
@@ -1917,6 +1941,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // response watchdog while Orby is still speaking.
         setVoiceStatus("Orby está hablando…");
       } else {
+        cancelPendingOrbyKnowledgeRequests();
         clearVoiceResponseWatchdog();
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
         voiceActivityGenerationRef.current += 1;
@@ -2685,6 +2710,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             resumeSetupComplete = true;
             resolveResumeSetup?.();
           }
+        }
+        if (payload.toolCallCancellation && typeof payload.toolCallCancellation === "object") {
+          const cancellation = payload.toolCallCancellation as { ids?: unknown };
+          const cancelledIds = Array.isArray(cancellation.ids)
+            ? cancellation.ids.filter((id): id is string => typeof id === "string" && id.length > 0)
+            : [];
+          if (cancelledIds.length) cancelPendingOrbyKnowledgeRequests(cancelledIds);
+          // A cancellation is a control message, not student-facing content.
+          // Do not send function responses for calls Gemini explicitly cancelled.
+          if (!payload.toolCall) return;
         }
         if (payload.toolCall && typeof payload.toolCall === "object") {
           void handleOrbyLiveKnowledgeTool(payload.toolCall);

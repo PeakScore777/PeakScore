@@ -13,7 +13,7 @@ import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 
-type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research" };
+type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
@@ -3303,6 +3303,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             && /^https:\/\/(?:es\.wikipedia\.org\/wiki\/|openalex\.org\/W\d+|doi\.org\/)/i.test(item.url)
             && typeof item.publisher === "string"
             && (item.publishedAt === null || typeof item.publishedAt === "string")
+            && Number.isInteger(item.citationNumber) && Number(item.citationNumber) >= 1
             && (item.kind === "encyclopedia" || item.kind === "research");
         }).slice(0, 4) : [],
       };
@@ -4101,7 +4102,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Fuentes públicas de apoyo</p>
                   <ul className="space-y-2">
                     {message.sources.map((source, sourceIndex) => <li key={source.url} className="flex items-start gap-2 text-xs leading-5">
-                      <span className="shrink-0 font-semibold text-orange-700">[{sourceIndex + 1}]</span>
+                      <span className="shrink-0 font-semibold text-orange-700">[{source.citationNumber ?? sourceIndex + 1}]</span>
                       <span className="min-w-0">
                         <a href={source.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900">{source.title}</a>
                         <span className="ml-1 text-slate-500">· {source.publisher}{source.publishedAt ? ` · ${source.publishedAt}` : ""}</span>

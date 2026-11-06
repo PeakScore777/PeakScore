@@ -1361,7 +1361,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }, 50_000);
   }
 
-  function stopRealtimeVoice(updateState = true) {
+  function stopRealtimeVoice(updateState = true, preserveAudioContext = false) {
     cancelPendingOrbyKnowledgeRequests();
     clearVoiceResponseWatchdog();
     voiceSessionGenerationRef.current += 1;
@@ -1406,9 +1406,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStreamRef.current = null;
 
     const audioContext = voiceAudioContextRef.current;
-    voiceAudioContextRef.current = null;
-    if (audioContext && audioContext.state !== "closed") {
-      void audioContext.close().catch(() => undefined);
+    if (!preserveAudioContext) {
+      voiceAudioContextRef.current = null;
+      if (audioContext && audioContext.state !== "closed") {
+        void audioContext.close().catch(() => undefined);
+      }
     }
 
     waitingForVoiceReplyRef.current = false;
@@ -2485,6 +2487,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     setVoiceError("");
     setVoiceStatus("Solicitando permiso del micrófono…");
+    // Unlock the output AudioContext synchronously in the original click
+    // gesture. Waiting for the browser's microphone permission prompt first
+    // can consume transient user activation; Chrome then leaves the context
+    // suspended and every later TTS play() is rejected as autoplay.
+    const audioContext = voiceAudioContextRef.current && voiceAudioContextRef.current.state !== "closed"
+      ? voiceAudioContextRef.current
+      : new AudioContext();
+    voiceAudioContextRef.current = audioContext;
+    const audioContextReady = audioContext.state === "suspended"
+      ? audioContext.resume().then(() => null, (error: unknown) => error)
+      : Promise.resolve(null);
+
     const permissionRequest = navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true },
     });
@@ -2513,6 +2527,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }, 12_000);
         }),
       ]);
+      const audioResumeError = await audioContextReady;
+      if (audioResumeError) throw audioResumeError;
+      await ensureVoiceAudioContextRunning(audioContext);
     } finally {
       if (permissionTimeoutId !== null) window.clearTimeout(permissionTimeoutId);
       if (abortPermission) startupSignal.removeEventListener("abort", abortPermission);
@@ -2541,11 +2558,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     });
 
     try {
-      // Activate capture immediately after permission is granted, before the
-      // asynchronous conversation/token/WebSocket setup.
-      const audioContext = new AudioContext();
-      voiceAudioContextRef.current = audioContext;
-      await ensureVoiceAudioContextRunning(audioContext);
+      // The AudioContext was created and resumed from the original user
+      // gesture above, before the permission dialog could consume activation.
+      // Keep it available if Live must fall back to turn-based Gemini TTS.
 
       // Conversation creation and ephemeral-token issuance are independent.
       // Run them together so voice startup does not pay both network round trips.
@@ -3078,7 +3093,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceAssistantMessageIdRef.current = null;
         voicePublicSourcesRef.current = [];
     }
-    stopRealtimeVoice();
+    // Release the Live socket and microphone graph, but preserve the
+    // already-unlocked AudioContext so the free Gemini TTS fallback can play
+    // through Web Audio instead of a browser autoplay-blocked <audio> element.
+    stopRealtimeVoice(false, true);
     voiceModeRef.current = true;
     voiceFallbackModeRef.current = true;
     setVoiceMode(true);

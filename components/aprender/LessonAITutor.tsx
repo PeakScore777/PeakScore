@@ -3049,6 +3049,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // dropping the student into push-to-talk mode at every connection reset.
       reconnectLiveSession = async () => {
         if (reconnectInFlight || !voiceModeRef.current || startupSignal.aborted) return;
+        if (voiceKnowledgeToolTurnRef.current.pending) {
+          // A pending function response belongs to the old socket. Do not send
+          // it into a resumed channel with a stale tool-call id; recover the
+          // same student question through the free turn-based tutor instead.
+          cancelPendingOrbyKnowledgeRequests();
+          voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
+          fallbackVoiceTurnToText("La conexión se renovó mientras Orby consultaba el Lab. Conservo tu pregunta y termino la explicación con el tutor gratuito.");
+          return;
+        }
         const resumeHandle = voiceSessionResumeConversationRef.current === activeConversationRef.current
           ? voiceSessionResumeHandleRef.current
           : null;

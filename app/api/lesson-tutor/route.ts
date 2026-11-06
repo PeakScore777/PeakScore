@@ -586,7 +586,7 @@ export async function POST(request: Request) {
           try {
             const signalResult = await supabaseAdmin.from("orby_student_learning_signals")
               .select("topic,concept,learning_state,misconception,teaching_hint,confidence,created_at")
-              .eq("user_id", user.id).order("created_at", { ascending: false }).limit(3);
+              .eq("user_id", user.id).order("created_at", { ascending: false }).limit(8);
             if (signalResult.error) {
               console.error("[Orby Tutor] Learning profile unavailable.", { code: signalResult.error.code });
               return emptyStudentSignals;
@@ -607,13 +607,13 @@ export async function POST(request: Request) {
             query: learningQuery,
             subject: detectedSubject,
             visibility: "published",
-            limit: 3,
+            limit: 5,
           }),
           searchOrbyKnowledgeConcepts({
             query: learningQuery,
             subject: detectedSubject,
             visibility: "published",
-            limit: 8,
+            limit: 12,
           }),
           publicResearchPromise,
         ]);
@@ -626,7 +626,7 @@ export async function POST(request: Request) {
         ])];
         if (documentIds.length) {
           const [relatedResult, pedagogyResult] = await Promise.all([
-            getOrbyRelatedKnowledge(documentIds, "published", 1),
+            getOrbyRelatedKnowledge(documentIds, "published", 2),
             supabaseAdmin.from("orby_knowledge_profiles")
               .select("document_id,pedagogical_knowledge")
               .in("document_id", documentIds),

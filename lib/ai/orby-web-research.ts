@@ -85,7 +85,8 @@ export function shouldSearchOrbyPublicSources(input: string | {
   const asksForCurrentFacts = /\b(?:actual(?:mente|izado|izada|izados|izadas)?|vigente|hoy|ahora|a dia de hoy|reciente(?:s)?|ultimo(?:s)?|ultima(?:s)?|este ano|del ano|en 202[5-9]|en 203[0-5]|novedades?|cambios? recientes?|reforma actual|version actual|dato actualizado|estadisticas actuales|cifras actuales|datos recientes|hallazgo reciente|descubrimiento reciente|estudio mas reciente)\b/.test(normalized);
   const needsExternalVerification = /\b(?:verifica|comprueba|contrasta|confirma|es cierto que|que dice la investigacion|que dice la ciencia|consenso cientifico|segun la evidencia|dato oficial|cifra oficial|informe oficial|normativa actual|regulacion vigente)\b/.test(normalized);
 
-  return asksForSources || asksForCurrentFacts || needsExternalVerification;
+  const asksAboutCurricularEnergySources = /\b(?:fuentes?|fuente)\s+(?:de\s+)?(?:energia|electricidad|luz|calor|radiacion)\b/.test(normalized);
+  return (asksForSources && !asksAboutCurricularEnergySources) || asksForCurrentFacts || needsExternalVerification;
 }
 
 const CROSS_LANGUAGE_TOPIC_TERMS: Record<string, string[]> = {

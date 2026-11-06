@@ -41,16 +41,25 @@ const SEARCH_STOP_WORDS = new Set([
   "reciente", "recientes", "actual", "actuales", "actualizado", "actualizada", "vigente", "verifica",
   "verificar", "comprueba", "contrasta", "confirmar", "busca", "buscar", "investiga", "investigar",
   "indaga", "indagar", "sobre", "acerca", "segun", "dato", "datos", "informe", "informes",
+  "esto", "esta", "este", "estos", "estas", "eso", "esa", "ese", "esas", "esos", "aqui", "ahi", "aquello",
   "the", "what", "when", "where", "which", "how", "why", "is", "are", "of", "to", "in", "on",
   "and", "or", "for", "with", "about", "explain", "tell", "me", "please",
 ]);
 
 function meaningfulTerms(value: string): string[] {
+  // Public search receives topical keywords only, not full chat text, emails,
+  // URLs, phone numbers or long numeric identifiers from student messages.
+  const scrubbed = value
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, " ")
+    .replace(/https?:\/\/\S+/gi, " ")
+    .replace(/\b(?:\+?\d[\d().\s-]{7,}\d)\b/g, " ");
   return [...new Set(
-    normalizeForMatching(value)
+    normalizeForMatching(scrubbed)
       .replace(/[^\p{L}\p{N}]+/gu, " ")
       .split(/\s+/)
-      .filter((term) => term.length >= 3 && !SEARCH_STOP_WORDS.has(term)),
+      .filter((term) => term.length >= 3
+        && !SEARCH_STOP_WORDS.has(term)
+        && !/^\d+$/.test(term)),
   )];
 }
 
@@ -159,8 +168,9 @@ export async function searchOrbyPublicSources(
   rawQuery: string,
   options: { fetcher?: FetchLike; maxSources?: number } = {},
 ): Promise<OrbyWebResearchResult> {
-  const query = normalizeQuery(rawQuery);
-  if (query.length < 4) return { sources: [], searched: [], warnings: [] };
+  const normalizedInput = normalizeQuery(rawQuery);
+  const query = meaningfulTerms(normalizedInput).slice(0, 12).join(" ");
+  if (query.length < 4 || !query.trim()) return { sources: [], searched: [], warnings: [] };
 
   const fetcher = options.fetcher ?? fetch;
   const maxSources = Math.max(1, Math.min(5, Math.floor(options.maxSources ?? 4)));

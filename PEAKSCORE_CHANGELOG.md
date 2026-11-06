@@ -3,6 +3,7 @@
 ## 2026-11-06 — Orby hybrid public research
 - Added `lib/ai/orby-web-research.ts`, a keyless/free public-source adapter using the Wikimedia Spanish search API and OpenAlex works API. It enforces source-host allowlists, short timeouts, bounded results, deduplication, safe URL reconstruction, and treats excerpts as untrusted data.
 - Text tutor now retrieves public sources for substantive academic turns in addition to Orby Lab's published chunks, concept graph, related material and pedagogical profiles. Public-source outages are non-fatal and never trigger another model provider.
+- Text and VC research run the public-source lookup independently alongside Lab retrieval. If either evidence service is unavailable, successful results from the other remain available; public-source outages never block tutoring or trigger another model provider.
 - The VC knowledge-search tool now returns the same public-source context alongside Orby Lab results; Gemini Live instructions explain how to use and qualify those results.
 - Text chat displays the source links separately from the answer, with publisher and publication year when available.
 - Added regression tests for source allowlisting, deduplication, limits, excerpt sanitization, offline degradation, and integration in both channels.

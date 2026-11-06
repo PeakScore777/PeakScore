@@ -330,6 +330,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceBrowserSpeechActiveRef = useRef(false);
   const voiceSpeechCancelRef = useRef<(() => void) | null>(null);
   const voiceSpeechPlaybackGenerationRef = useRef(0);
+  const voiceTtsQuotaExhaustedRef = useRef(false);
   const voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none");
   const waitingForVoiceReplyRef = useRef(false);
   function rememberVoiceAssistantOutput(value: string) {
@@ -936,6 +937,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     return new Promise((resolve) => {
       const isLocalVoiceTurn = voiceModeRef.current && waitingForVoiceReplyRef.current;
       const localVoiceMessageId = isLocalVoiceTurn ? voiceAssistantMessageIdRef.current : null;
+      if (voiceTtsQuotaExhaustedRef.current) {
+        if (isLocalVoiceTurn) {
+          setVoiceStatus("Respuesta lista · cuota gratuita de lectura agotada");
+          finishLocalVoiceReply(localVoiceMessageId);
+        } else {
+          setVoiceError("La cuota gratuita de lectura está agotada. La respuesta sigue disponible por escrito.");
+        }
+        resolve();
+        return;
+      }
       if (typeof window === "undefined") {
         if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
         resolve();
@@ -1109,6 +1120,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               "RATE_LIMIT_UNAVAILABLE",
             ]);
             if (typeof payload.code === "string" && unavailableCodes.has(payload.code)) {
+              if (payload.code === "FREE_TIER_TTS_QUOTA_EXCEEDED") {
+                // The provider quota is exhausted for this browser session.
+                // Do not send another doomed request for every later tutor turn.
+                voiceTtsQuotaExhaustedRef.current = true;
+              }
               // A privacy gate, exhausted free quota or missing key is not an
               // audio decoding failure. Keep the answer and the listening UI
               // usable; never retry a request the server has already refused.

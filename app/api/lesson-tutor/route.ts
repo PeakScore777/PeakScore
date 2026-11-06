@@ -519,6 +519,17 @@ export async function POST(request: Request) {
       profile_topics?: unknown;
       profile_pedagogical_knowledge?: unknown;
     };
+    const publicResearchPromise = shouldRetrieveAcademicKnowledge
+      ? searchOrbyPublicSources(learningQuery, { maxSources: 4 }).catch((error) => {
+          // External research is supplementary. A public API outage must never
+          // block the student's answer or trigger a paid provider fallback.
+          console.warn("[Orby Tutor] Public research unavailable.", {
+            name: error instanceof Error ? error.name : "UnknownError",
+          });
+          return { sources: [], searched: [], warnings: ["PUBLIC_RESEARCH_UNAVAILABLE"] };
+        })
+      : Promise.resolve({ sources: [], searched: [], warnings: [] });
+    let publicSources: OrbyWebSource[] = [];
     let knowledgeSources: StudentKnowledgeSource[] = [];
     let pedagogicalProfilesByDocument = new Map<string, unknown>();
     let conceptGraphHits: Awaited<ReturnType<typeof searchOrbyKnowledgeConcepts>> = [];
@@ -554,7 +565,7 @@ export async function POST(request: Request) {
 
     if (shouldRetrieveAcademicKnowledge) {
       try {
-        const [knowledgeResult, conceptResult] = await Promise.all([
+        const [knowledgeResult, conceptResult, publicResearch] = await Promise.all([
           searchOrbyKnowledge({
             query: learningQuery,
             subject: detectedSubject,
@@ -567,9 +578,11 @@ export async function POST(request: Request) {
             visibility: "published",
             limit: 8,
           }),
+          publicResearchPromise,
         ]);
         knowledgeSources = knowledgeResult as StudentKnowledgeSource[];
         conceptGraphHits = conceptResult;
+        publicSources = publicResearch.sources;
         const documentIds = [...new Set([
           ...knowledgeSources.map((source) => source.document_id),
           ...conceptGraphHits.map((concept) => concept.document_id),
@@ -592,20 +605,6 @@ export async function POST(request: Request) {
         }
       } catch (error) {
         console.error("[Orby Tutor] Hybrid knowledge retrieval unavailable.", {
-          name: error instanceof Error ? error.name : "UnknownError",
-        });
-      }
-    }
-
-    let publicSources: OrbyWebSource[] = [];
-    if (shouldRetrieveAcademicKnowledge) {
-      try {
-        const publicResearch = await searchOrbyPublicSources(learningQuery, { maxSources: 4 });
-        publicSources = publicResearch.sources;
-      } catch (error) {
-        // External research is supplementary. A public API outage must never
-        // block the student's answer or trigger a paid provider fallback.
-        console.warn("[Orby Tutor] Public research unavailable.", {
           name: error instanceof Error ? error.name : "UnknownError",
         });
       }

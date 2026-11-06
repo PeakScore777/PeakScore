@@ -20,7 +20,7 @@ returns table (
 language sql
 stable
 set search_path = ''
-as $
+as $orby$
   with seed_ids as (
     select distinct unnest(coalesce(p_document_ids, '{}'::uuid[])) as id
   ),
@@ -130,7 +130,7 @@ as $
   from related
   order by relevance desc,created_at desc
   limit greatest(1, least(coalesce(p_limit,6),10));
-$;
+$orby$;
 
 revoke all on function public.orby_get_related_knowledge(uuid[],text,integer) from public, anon, authenticated;
 grant execute on function public.orby_get_related_knowledge(uuid[],text,integer) to service_role;

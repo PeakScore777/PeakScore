@@ -56,7 +56,6 @@ const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowl
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
-const relatedKnowledgeMigration = await readFile(new URL("../supabase/migrations/20261031190000_orby_knowledge_profile_v2.sql", import.meta.url), "utf8");
 
 test("la política de seguridad permite reproducir audio del mismo sitio y no bloquea la voz de Orby", () => {
   assert.match(nextConfigSource, /autoplay=\(self\)/);

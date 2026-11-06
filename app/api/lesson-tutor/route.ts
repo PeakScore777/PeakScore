@@ -795,9 +795,14 @@ No uses bloques Markdown ni texto fuera del JSON.
       raw = await generateTutorVision(prompt, tutorImage.mimeType, tutorImage.base64);
     } else {
       const isVoiceRequest = body.voiceMode === true;
-      const activePrompt = shouldRetrieveAcademicKnowledge
-        ? (isVoiceRequest ? voicePrompt : prompt)
-        : conversationalPrompt;
+      // Every voice turn, including short contextual follow-ups, must use the
+      // dedicated voice prompt. The lighter conversational prompt omits the
+      // stricter spoken-language and delivery checks students need.
+      const activePrompt = isVoiceRequest
+        ? voicePrompt
+        : shouldRetrieveAcademicKnowledge
+          ? prompt
+          : conversationalPrompt;
       activePromptForRetry = activePrompt;
 
       // Cloudflare Workers AI is the sole text tutor provider. No silent

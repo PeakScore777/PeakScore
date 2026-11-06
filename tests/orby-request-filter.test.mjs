@@ -89,6 +89,7 @@ test("Orby reserva la búsqueda web para fuentes, actualidad e investigación ex
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Qué estudios recientes explican el cambio climático?"), true);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Verifica si este dato sigue vigente en 2026."), true);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Investiga el impacto de la deforestación."), true);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("Quiero una investigación sobre la biodiversidad."), true);
 });
 
 test("Orby convierte las citas en voz sin leer URLs ni sintaxis Markdown", () => {
@@ -194,7 +195,8 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(lessonTutorSource, /function renderInline\(text: string\): ReactNode/);
   assert.match(lessonTutorSource, /parsed\.protocol === "https:"/);
   assert.match(lessonTutorSource, /es\.wikipedia\.org", "doi\.org", "openalex\.org/);
-  assert.match(lessonTutorSource, /public_sources: safePublicSources/);
+  assert.match(lessonTutorSource, /public_sources: voicePublicSourcesRef\.current/);
+  assert.match(lessonTutorSource, /Resolve references such as/);
   assert.match(lessonTutorSource, /reconcileOrbyPublicCitations\(rawReply, voicePublicSourcesRef\.current\)/);
   assert.match(realtimeSessionSource, /incluye su marcador exacto/);
   assert.match(lessonTutorSource, /voicePublicSourcesRef/);

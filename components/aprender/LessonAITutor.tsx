@@ -12,6 +12,7 @@ import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBarg
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
+import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
@@ -305,6 +306,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceUserMessageIdRef = useRef<string | null>(null);
   const voiceActivityGenerationRef = useRef(0);
   const voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>(new Map());
+  const voiceKnowledgeToolTurnRef = useRef(createOrbyVoiceToolTurnState());
   const voiceLastCommittedActivityGenerationRef = useRef(-1);
   const voicePendingStudentTurnRef = useRef(false);
   const voiceUnsupportedInputDetectedRef = useRef(false);
@@ -913,6 +915,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceTurnPersistedRef.current = false;
     waitingForVoiceReplyRef.current = false;
     voicePendingStudentTurnRef.current = false;
+    voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
     voiceActivityGenerationRef.current += 1;
     voiceLastCommittedActivityGenerationRef.current = -1;
     voiceUserMessageIdRef.current = null;
@@ -1393,6 +1396,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function stopRealtimeVoice(updateState = true, preserveAudioContext = false) {
     cancelPendingOrbyKnowledgeRequests();
+    voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
     clearVoiceResponseWatchdog();
     voiceSessionGenerationRef.current += 1;
     voiceStartupAbortRef.current?.abort();
@@ -1866,6 +1870,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
     if (!Array.isArray(calls) || calls.length === 0) return;
+    const validCallCount = calls.slice(0, 3).filter((rawCall) => {
+      if (!rawCall || typeof rawCall !== "object") return false;
+      const call = rawCall as { id?: unknown; name?: unknown };
+      return typeof call.id === "string" && Boolean(call.id) && typeof call.name === "string" && Boolean(call.name);
+    }).length;
+    if (!validCallCount) return;
+    voiceKnowledgeToolTurnRef.current = beginOrbyVoiceToolTurn(voiceKnowledgeToolTurnRef.current);
 
     setVoiceStatus("Orby está consultando conocimiento académico…");
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
@@ -2011,14 +2022,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           functionResponses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }>;
         }) => void;
       };
-      if (responses.length) toolSession.sendToolResponse({ functionResponses: responses });
-      setVoiceStatus("Te escucho…");
+      if (responses.length) {
+        // The non-blocking result is queued for the moment Live becomes idle.
+        // Keep the current student turn open until the follow-up output arrives.
+        voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolResponseSent(voiceKnowledgeToolTurnRef.current);
+        toolSession.sendToolResponse({ functionResponses: responses });
+      }
+      setVoiceStatus("Orby está incorporando el material a tu explicación…");
     } catch (error) {
       console.error("[Orby Voice] Tool response could not be sent.", {
         name: error instanceof Error ? error.name : "UnknownError",
       });
-      setVoiceError("Orby no pudo incorporar el material en este turno. Puedes repetir la pregunta.");
-      setVoiceStatus("Consulta académica interrumpida");
+      voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
+      if (isCurrentToolTurn()) {
+        fallbackVoiceTurnToText("No pude incorporar el material del Lab en esta respuesta. Conservo tu pregunta y continúo con el tutor gratuito.");
+      } else {
+        setVoiceError("Orby no pudo incorporar el material en este turno. Puedes repetir la pregunta.");
+        setVoiceStatus("Consulta académica interrumpida");
+      }
     }
   }
 
@@ -2075,6 +2096,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceLastCommittedInputAtRef.current = 0;
         voiceUserMessageIdRef.current = null;
         voicePendingStudentTurnRef.current = false;
+        voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
         voiceLocalReplyInFlightRef.current = false;
         voiceUserTextRef.current = "";
         voiceUnsupportedInputDetectedRef.current = false;
@@ -2305,6 +2327,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } else if (hasPendingStudentTurn && !voiceLocalReplyInFlightRef.current
       && typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
       voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
+      voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
       // A transcript is eligible for acoustic echo suppression only after
@@ -2436,6 +2459,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
+      const toolCompletion = completeOrbyVoiceToolGeneration(voiceKnowledgeToolTurnRef.current);
+      voiceKnowledgeToolTurnRef.current = toolCompletion.state;
+      if (!toolCompletion.shouldFinalize) {
+        setVoiceStatus(toolCompletion.state.responseSent
+          ? "Orby está completando la explicación con el material del Lab…"
+          : "Orby terminó su primera explicación y está esperando el resultado del Lab…");
+        return;
+      }
       clearVoiceResponseWatchdog();
       if (!voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim()) {
         // A model greeting or unsolicited continuation is not a student turn.

@@ -159,10 +159,12 @@ function rankRelevantSources(query: string, sources: OrbyWebSource[]): OrbyWebSo
 }
 
 /** Keep only references that the generated answer explicitly cites. */
+type OrbyCitationSource = Pick<OrbyWebSource, "title" | "url" | "publisher" | "publishedAt" | "kind" | "citationNumber">;
+
 export function reconcileOrbyPublicCitations(
   reply: string,
-  sources: OrbyWebSource[],
-): { reply: string; sources: Array<OrbyWebSource & { citationNumber: number }> } {
+  sources: OrbyCitationSource[],
+): { reply: string; sources: Array<OrbyCitationSource & { citationNumber: number }> } {
   const mentioned = new Set<number>();
   for (const match of reply.matchAll(/\[(\d{1,2})\]/g)) {
     const index = Number(match[1]);

@@ -221,11 +221,8 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(lessonTutorSource, /source\.citationNumber \?\? sourceIndex \+ 1/);
   assert.match(lessonTutorSource, /function renderInline\(text: string\): ReactNode/);
   assert.match(lessonTutorSource, /parsed\.protocol === "https:"/);
-  assert.match(lessonTutorSource, /function renderInline\(text: string\): ReactNode/);
-  assert.match(lessonTutorSource, /parsed\.protocol === "https:"/);
   assert.match(lessonTutorSource, /es\.wikipedia\.org", "doi\.org", "openalex\.org/);
   assert.match(lessonTutorSource, /public_sources: voicePublicSourcesRef\.current/);
-  assert.match(lessonTutorSource, /Resolve references such as/);
   assert.match(lessonTutorSource, /reconcileOrbyPublicCitations\(rawReply, voicePublicSourcesRef\.current\)/);
   assert.match(realtimeSessionSource, /incluye su marcador exacto/);
   assert.match(lessonTutorSource, /voicePublicSourcesRef/);

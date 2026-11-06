@@ -486,6 +486,25 @@ export async function POST(request: Request) {
       userMessage,
       ...history.slice(-8).map((item) => item.content),
     ].filter(Boolean).join(" "));
+    // Persist an explicit subject switch so the next short follow-up or greeting
+    // cannot silently fall back to the previous lesson's subject.
+    if (currentTurnSubject && conversationId && ownedConversation
+      && ownedConversation.subject !== currentTurnSubject) {
+      const { error: subjectPersistError } = await supabaseAdmin
+        .from("orby_conversations")
+        .update({ subject: currentTurnSubject, updated_at: new Date().toISOString() })
+        .eq("id", conversationId)
+        .eq("user_id", user.id);
+      if (subjectPersistError) {
+        console.error("[Orby Tutor] Active subject persistence failed.", { code: subjectPersistError.code });
+        return NextResponse.json({
+          error: "No pude actualizar el área de estudio de esta conversación. Inténtalo de nuevo.",
+          code: "ORBY_SUBJECT_UPDATE_FAILED",
+        }, { status: 503 });
+      }
+      ownedConversation.subject = currentTurnSubject;
+      subject = currentTurnSubject;
+    }
     const learningQuery = [
       userMessage,
       question,

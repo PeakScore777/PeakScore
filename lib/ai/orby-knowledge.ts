@@ -1473,14 +1473,9 @@ export async function searchOrbyKnowledgeConcepts(options: {
     return [];
   }
   if (!Array.isArray(data)) return [];
-  if (options.subject && data.length === 0) {
-    // As in chunk retrieval, do not let a taxonomy naming mismatch hide
-    // published evidence from the active ICFES area.
-    console.warn("[Orby Knowledge] No exact subject concept hits; retrying the query across published areas.", {
-      requestedSubject: options.subject,
-    });
-    return searchOrbyKnowledgeConcepts({ ...options, subject: null });
-  }
+  // This RPC already searches the published concept graph across areas; the
+  // subject is a ranking boost, not a hard taxonomy filter. Do not repeat the
+  // same empty lexical query without that boost.
   return data.flatMap((raw) => {
     const value = asRecord(raw);
     if (!value || typeof value.concept_name !== "string" || !value.concept_name.trim()) return [];

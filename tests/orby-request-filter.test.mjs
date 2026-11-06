@@ -549,7 +549,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
-  assert.match(lessonTutorSource, /Math\.min\(360_000, Math\.max\(30_000, clean\.length \* 110\)\)/);
+  assert.match(lessonTutorSource, /Math\.min\(900_000, Math\.max\(30_000, clean\.length \* 110\)\)/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(cleanUserText\)/);
   assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /hasExistingAssistant/);
@@ -1715,7 +1715,7 @@ test("las respuestas TTS largas conservan texto y cada fragmento fallido se rein
   assert.ok(lessonTutorSource.includes("recoverCurrentTtsChunk"));
   assert.ok(lessonTutorSource.includes("chunkRetryCount < 1"));
   assert.ok(lessonTutorSource.includes("skippedAudioChunks"));
-  assert.ok(lessonTutorSource.includes("Math.min(360_000,"));
+  assert.ok(lessonTutorSource.includes("Math.min(900_000,"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(30_000)"));
   assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply, userMessage)"));
   assert.ok(lessonTutorSource.includes("isLowQualityOrbyReply(rawReply, voiceUserTextRef.current)"));

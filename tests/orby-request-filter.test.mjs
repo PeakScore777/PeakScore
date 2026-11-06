@@ -533,8 +533,8 @@ test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o 
   assert.match(lessonTutorSource, /const authenticationFailure = .*401.*403/);
   assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
   assert.match(lessonTutorSource, /La voz en tiempo real no está disponible ahora\. Continúo por turnos sin perder tu conversación/);
-  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current, voiceScopeContext, subject\)/);
-  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message, typedVoiceContext, subject\)/);
+  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current, voiceScopeContext, activeSubjectRef\.current\)/);
+  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message, typedVoiceContext, activeSubjectRef\.current\)/);
   assert.match(lessonTutorRouteSource, /getOrbySubjectSelectionReply\(\s*userMessage,\s*recentContextMessages/);
 });
 
@@ -1171,7 +1171,7 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.match(lessonTutorSource, /voiceRecentAssistantOutputsRef/);
   assert.match(lessonTutorSource, /getRecentVoiceAssistantOutputs/);
   assert.match(lessonTutorSource, /rememberVoiceAssistantOutput/);
-  assert.match(lessonTutorSource, /function startNewConversation\(\) \{\s*voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
+  assert.match(lessonTutorSource, /function startNewConversation\(\) \{\s*activeSubjectRef\.current = subject;\s*voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
   assert.match(lessonTutorSource, /async function selectConversation\(id: string\) \{[\s\S]*?voiceRecentAssistantOutputsRef\.current = \[\];\s*voiceLastAssistantOutputRef\.current = ""/);
   assert.match(lessonTutorSource, /if \(voiceRealtimeAudioChunkCountRef\.current > 0 \|\| voiceAudioSourcesRef\.current\.size > 0\) \{\s*voiceLastAssistantOutputRef\.current = partialReply/);
   assert.match(lessonTutorSource, /const hasAudibleLiveOutput = voiceRealtimeAudioChunkCountRef\.current > 0/);

@@ -307,26 +307,29 @@ export function formatOrbyMarkdownTablesForSpeech(value: string): string {
       continue;
     }
 
-    const headers = cells(line);
-    if (index + 1 < lines.length && isSeparator(lines[index + 1])) {
-      output.push("Tabla.");
-      index += 2;
-      let rowNumber = 1;
-      while (index < lines.length && isPipeRow(lines[index]) && !isSeparator(lines[index])) {
-        const values = cells(lines[index]);
-        const entries = values.map((value, cellIndex) => {
-          const header = headers[cellIndex] || "Columna " + (cellIndex + 1);
-          return header + ": " + (value || "sin dato");
-        });
-        output.push("Fila " + rowNumber + ": " + entries.join("; ") + ".");
-        rowNumber += 1;
-        index += 1;
-      }
-      index -= 1;
+    // A pipe inside prose or a formula (for example P(A|B)) is not a
+    // Markdown table. Only convert rows when a valid separator row follows.
+    if (index + 1 >= lines.length || !isSeparator(lines[index + 1])) {
+      output.push(line);
       continue;
     }
 
-    output.push("Fila: " + headers.filter(Boolean).join("; ") + ".");
+    const headers = cells(line);
+    output.push("Tabla.");
+    index += 2;
+    let rowNumber = 1;
+    while (index < lines.length && isPipeRow(lines[index]) && !isSeparator(lines[index])) {
+      const values = cells(lines[index]);
+      const entries = values.map((value, cellIndex) => {
+        const header = headers[cellIndex] || "Columna " + (cellIndex + 1);
+        return header + ": " + (value || "sin dato");
+      });
+      output.push("Fila " + rowNumber + ": " + entries.join("; ") + ".");
+      rowNumber += 1;
+      index += 1;
+    }
+    index -= 1;
+    continue;
   }
 
   return output.join("\n");

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, Modality, EndSensitivity } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -268,6 +268,13 @@ export async function POST(request: Request) {
           model: "models/" + model,
           config: {
             responseModalities: [Modality.AUDIO],
+            realtimeInputConfig: {
+              automaticActivityDetection: {
+                endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
+                prefixPaddingMs: 40,
+                silenceDurationMs: 500,
+              },
+            },
             speechConfig: {
               voiceConfig: {
                 prebuiltVoiceConfig: { voiceName: ORBY_LIVE_VOICE_NAME },

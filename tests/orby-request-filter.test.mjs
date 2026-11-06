@@ -50,6 +50,7 @@ const adminOrbyChatSource = await readFile(new URL("../app/api/admin/orby/chat/r
 const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby/knowledge/automation/route.ts", import.meta.url), "utf8");
 const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
+const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowledge-search/route.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
@@ -802,6 +803,22 @@ test("Orby conserva los seguimientos académicos y no hereda contexto de una neg
   assert.equal(filter.preflightOrbyRequest("What movie should I watch?", englishDialogueContext).allowed, false);
   assert.equal(filter.preflightOrbyRequest("En este diálogo de Inglés, además recomiéndame una película.", englishDialogueContext).allowed, false);
   assert.equal(filter.preflightOrbyRequest("What movie should I watch after the ICFES?").allowed, false);
+  assert.equal(filter.preflightOrbyRequest(
+    "What does 'however' mean in this passage?",
+    "Área de estudio: Inglés",
+  ).allowed, true);
+  assert.equal(filter.preflightOrbyRequest(
+    "According to the text, what is the main idea?",
+    "Área de estudio: Inglés",
+  ).allowed, true);
+  assert.equal(filter.preflightOrbyRequest(
+    "What was the Cold War?",
+    "Área de estudio: Sociales y Ciudadanas",
+  ).allowed, true);
+  assert.equal(filter.preflightOrbyRequest(
+    "What is the weather today?",
+    "Área de estudio: Inglés",
+  ).allowed, false);
   assert.equal(filter.containsExplicitNonIcfesTopic(quotedMovieDialogue, englishDialogueContext), false);
   assert.equal(filter.containsExplicitNonIcfesTopic("¿Qué película me recomiendas?", englishDialogueContext), false);
   assert.equal(filter.containsCookingInstruction("El texto menciona una receta tradicional de la región."), false);
@@ -984,6 +1001,14 @@ test("Orby evita RAG en conversación casual y lo activa para temas y seguimient
     message: "What is the weather today?",
     subject: "Inglés",
   }), false);
+});
+
+test("la búsqueda de conocimiento recupera todas las áreas si falta el índice del nombre oficial", () => {
+  assert.ok(orbyKnowledgeSource.includes("if (options.subject && indexedModels.length === 0)"));
+  assert.ok(orbyKnowledgeSource.includes("No exact subject embedding index"));
+  assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null });"));
+  assert.match(knowledgeSearchRouteSource, /preflightOrbyRequest\\(query, preflightContext\\)/);
+  assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \\? "Área de estudio: " \\+ subject : ""/);
 });
 
 test("solo permite publicar cuando el perfil v2 y todos los embeddings están listos", () => {

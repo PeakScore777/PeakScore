@@ -25,7 +25,9 @@ export function normalizeIcfesSubject(value: unknown, text = ""): IcfesSubject |
   if (/\b(texto|lectura|argumento|narrador|tesis|inferir|inferencia|conector|parrafo|intencion del autor|figura literaria)\b/.test(normalized)) return "Lectura Crítica";
   if (/\b(historia|constitucion|democracia|ciudadania|geografia|economia|conflicto armado|derechos humanos|participacion politica|estado social)\b/.test(normalized)) return "Sociales y Ciudadanas";
   if (/\b(fisica|quimica|biologia|celula|ecosistema|genetica|energia|fuerza|densidad|termodinamica|materia|reaccion quimica|evolucion|experimento|hipotesis)\b/.test(normalized)) return "Ciencias Naturales";
-  if (/\b(ingles|english|vocabulary|grammar|reading comprehension|verb|tense|preposition|phrasal verb)\b/.test(normalized)) return "Inglés";
+  // Specific English grammar terms must override a previously active subject.
+  // Avoid generic "verb" in Spanish so ordinary Spanish grammar stays in Reading.
+  if (/\\b(ingles|english|vocabulary|grammar|reading comprehension|verb|tense|preposition|phrasal verb|past simple|simple past|past continuous|present simple|present continuous|present perfect|past perfect|future simple|future tense|modal verbs?|irregular verbs?|regular verbs?|comparatives?|superlatives?|conditionals?|passive voice|reported speech|question tags?|gerunds?|infinitives?|first conditional|second conditional|third conditional|zero conditional|linking words|collocations?|adverbs? of frequency|prepositions? of time|prepositions? of place)\\b/.test(normalized)) return "Inglés";
   return null;
 }
 

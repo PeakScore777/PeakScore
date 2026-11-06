@@ -88,14 +88,60 @@ export function shouldSearchOrbyPublicSources(input: string | {
   return asksForSources || asksForCurrentFacts || needsExternalVerification;
 }
 
+const CROSS_LANGUAGE_TOPIC_TERMS: Record<string, string[]> = {
+  fotosintesis: ["photosynthesis"],
+  cambio: ["change"],
+  climatico: ["climate"],
+  energia: ["energy"],
+  fuerza: ["force"],
+  densidad: ["density"],
+  celula: ["cell"],
+  celular: ["cellular"],
+  genetica: ["genetics", "genetic"],
+  evolucion: ["evolution"],
+  ecosistema: ["ecosystem"],
+  biodiversidad: ["biodiversity"],
+  respiracion: ["respiration"],
+  mitocondria: ["mitochondria"],
+  atomo: ["atom", "atomic"],
+  molecula: ["molecule", "molecular"],
+  gravedad: ["gravity"],
+  orbita: ["orbit"],
+  ondas: ["waves"],
+  sonido: ["sound"],
+  luz: ["light"],
+  calor: ["heat"],
+  materia: ["matter"],
+  reaccion: ["reaction"],
+  quimica: ["chemistry", "chemical"],
+  fisica: ["physics", "physical"],
+  biologia: ["biology", "biological"],
+  democracia: ["democracy"],
+  constitucion: ["constitution"],
+  derechos: ["rights"],
+  ciudadania: ["citizenship"],
+  independencia: ["independence"],
+  revolucion: ["revolution"],
+  colonialismo: ["colonialism"],
+  migracion: ["migration"],
+  deforestacion: ["deforestation"],
+};
+
+function expandCrossLanguageTerms(terms: string[]): string[] {
+  const expanded = new Set(terms);
+  for (const term of terms) {
+    for (const alias of CROSS_LANGUAGE_TOPIC_TERMS[term] ?? []) expanded.add(alias);
+  }
+  return [...expanded];
+};
 function rankRelevantSources(query: string, sources: OrbyWebSource[]): OrbyWebSource[] {
-  const terms = meaningfulTerms(query);
+  const terms = expandCrossLanguageTerms(meaningfulTerms(query));
   if (!terms.length) return [];
   const minimumMatches = terms.length <= 2 ? 1 : 2;
   return sources
     .map((source) => {
-      const title = new Set(meaningfulTerms(source.title));
-      const excerpt = new Set(meaningfulTerms(source.excerpt));
+      const title = new Set(expandCrossLanguageTerms(meaningfulTerms(source.title)));
+      const excerpt = new Set(expandCrossLanguageTerms(meaningfulTerms(source.excerpt)));
       const titleMatches = terms.filter((term) => title.has(term)).length;
       const excerptMatches = terms.filter((term) => excerpt.has(term)).length;
       const matches = new Set([

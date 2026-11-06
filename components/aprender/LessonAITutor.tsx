@@ -2528,7 +2528,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }),
       ]);
       const audioResumeError = await audioContextReady;
-      if (audioResumeError) throw audioResumeError;
+      if (audioResumeError) {
+        permissionTimedOut = true;
+        throw audioResumeError;
+      }
       await ensureVoiceAudioContextRunning(audioContext);
     } finally {
       if (permissionTimeoutId !== null) window.clearTimeout(permissionTimeoutId);

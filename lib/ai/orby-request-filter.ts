@@ -73,7 +73,7 @@ function isIcfesAcademicMaterialQuestion(message: string, previousContext = ""):
     || /\b(?:saber\s*11|icfes|area de estudio|materia de estudio)\b/i.test(prior);
   const messageHasSpecificCurriculumTopic = ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized));
   const hasQuestionFrameForNamedTopic = messageHasSpecificCurriculumTopic
-    && /^(?:what|which|who|where|when|why|how)\\b/i.test(normalized);
+    && /^(?:what|which|who|where|when|why|how)\b/i.test(normalized);
   const hasAcademicFrame = ICFES_ACADEMIC_MATERIAL_FRAME_PATTERN.test(normalized)
     || hasQuestionFrameForNamedTopic
     || /['"“‘].{5,180}['"”’]/.test(message);

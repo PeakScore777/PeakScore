@@ -382,6 +382,9 @@ test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre"
   assert.match(filter.getOrbySubjectSelectionReply("naturales"), /Ciencias Naturales/);
   assert.match(filter.getOrbySubjectSelectionReply("inglés"), /Inglés/);
   assert.equal(filter.getOrbySubjectSelectionLabel("en inglés"), "Inglés");
+  assert.equal(filter.getOrbySubjectSelectionLabel("en inglés plis"), "Inglés");
+  assert.equal(filter.getOrbySubjectSelectionLabel("o sea, ayúdame en inglés"), "Inglés");
+  assert.equal(filter.getOrbySubjectSelectionLabel("ayúdame con inglés, porfa"), "Inglés");
   assert.equal(filter.getOrbySubjectSelectionLabel("vamos con lectura"), "Lectura Crítica");
   assert.equal(filter.getOrbySubjectSelectionLabel("enséñame a programar"), null);
   const selectedEnglishHistory = [
@@ -492,6 +495,9 @@ test("la voz nunca reproduce audio antes de validar su transcripción y bloquea 
 test("el inglés se interpreta como materia Saber 11 y las respuestas genéricas en inglés se bloquean", () => {
   assert.equal(filter.isGenericIcfesEnglishRequest("inglés"), true);
   assert.equal(filter.isGenericIcfesEnglishRequest("quiero estudiar English"), true);
+  assert.equal(filter.isGenericIcfesEnglishRequest("en inglés plis"), true);
+  assert.equal(filter.isGenericIcfesEnglishRequest("o sea, ayúdame en inglés"), true);
+  assert.equal(filter.isGenericIcfesEnglishRequest("ayúdame con inglés, porfa"), true);
   assert.equal(filter.isGenericIcfesEnglishRequest("Explícame la parte 4 del cuadernillo de Inglés"), false);
   assert.equal(
     filter.isLikelyEnglishOnlyOrbyReply("Certainly! How can I help you with English today?"),

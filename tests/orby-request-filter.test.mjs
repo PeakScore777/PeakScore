@@ -24,6 +24,7 @@ const checklist = await loadTypeScriptModule("../lib/pdf/extract-orby-checklist-
 const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowledge-normalization.ts");
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
 const voiceEcho = await loadTypeScriptModule("../lib/ai/orby-voice-echo.ts");
+const speechChunks = await loadTypeScriptModule("../lib/ai/orby-speech-chunks.ts");
 const ttsAudio = await loadTypeScriptModule("../lib/ai/orby-tts-audio.ts");
 const saber11Level = await loadTypeScriptModule("../lib/ai/orby-saber11-level.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
@@ -53,6 +54,22 @@ const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn
 const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowledge-search/route.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
+
+test("Orby divide respuestas largas sin reordenar frases ni exceder el límite TTS", () => {
+  const answer = "Primera explicación completa. Segunda explicación también completa y extensa. Tercera explicación final.";
+  const chunks = speechChunks.splitOrbySpeechIntoChunks(answer, 24);
+  assert.ok(chunks.length > 3, "La respuesta larga debe dividirse en varios fragmentos.");
+  assert.ok(chunks.every((chunk) => chunk.length > 0 && chunk.length <= 24),
+    "Ningún fragmento puede superar el límite del endpoint.");
+  assert.equal(chunks.join(" "), answer,
+    "La concatenación debe conservar todas las palabras, puntuación y el orden original.");
+  assert.ok(chunks.join(" ").indexOf("Primera") < chunks.join(" ").indexOf("Segunda"));
+  assert.ok(chunks.join(" ").indexOf("Segunda") < chunks.join(" ").indexOf("Tercera"));
+
+  const single = speechChunks.splitOrbySpeechIntoChunks("Una sola frase.", 480);
+  assert.deepEqual(single, ["Una sola frase."]);
+  assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("   ", 480), []);
+});
 
 test("la materia de voz se actualiza antes de persistir el turno para evitar éxito parcial", () => {
   const subjectUpdate = realtimeTurnSource.indexOf('.from("orby_conversations")');

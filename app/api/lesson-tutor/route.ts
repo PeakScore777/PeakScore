@@ -6,7 +6,7 @@ import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesS
 import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
-import { searchOrbyPublicSources, type OrbyWebSource } from "@/lib/ai/orby-web-research";
+import { searchOrbyPublicSources, shouldSearchOrbyPublicSources, reconcileOrbyPublicCitations, type OrbyWebSource } from "@/lib/ai/orby-web-research";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -519,8 +519,20 @@ export async function POST(request: Request) {
       profile_topics?: unknown;
       profile_pedagogical_knowledge?: unknown;
     };
-    const publicResearchPromise = shouldRetrieveAcademicKnowledge
-      ? searchOrbyPublicSources(learningQuery, { maxSources: 4 }).catch((error) => {
+    const researchQuery = [
+      userMessage,
+      question,
+      topic,
+      ...history.slice(-2).map((item) => item.content),
+    ].filter(Boolean).join(" ").slice(0, 1800);
+    const shouldRunPublicResearch = shouldRetrieveAcademicKnowledge
+      && shouldSearchOrbyPublicSources({
+        message: userMessage,
+        question,
+        topic,
+      });
+    const publicResearchPromise = shouldRunPublicResearch
+      ? searchOrbyPublicSources(researchQuery, { maxSources: 4 }).catch((error) => {
           // External research is supplementary. A public API outage must never
           // block the student's answer or trigger a paid provider fallback.
           console.warn("[Orby Tutor] Public research unavailable.", {
@@ -960,6 +972,11 @@ No uses bloques Markdown ni texto fuera del JSON.
     const normalizedFinalReply = cleanText(normalizeOrbySpanishOutput(modelReply), 7000);
     // Defense in depth: never echo the private PDF title to a student if the model repeats it.
     const finalReply = cleanText(redactPrivateKnowledgeTitles(normalizedFinalReply, knowledgeSources), 7000);
+    // Only return external links whose numbered references the model actually
+    // used in its answer. Unused search results never appear as decorative sources.
+    const reconciledCitations = reconcileOrbyPublicCitations(finalReply, publicSources);
+    const deliveredReply = reconciledCitations.reply || finalReply;
+    const deliveredSources = reconciledCitations.sources;
     const finalCheckQuestion = cleanText(parsed.checkQuestion, 500);
     if (!finalReply || !isSafeTutorOutput(finalReply) || !isSafeTutorOutput(finalCheckQuestion)) {
       await recordSecurityEvent(user.id, "suspicious_output");
@@ -999,7 +1016,7 @@ No uses bloques Markdown ni texto fuera del JSON.
         p_user_id: user.id,
         p_conversation_id: conversationId,
         p_user_content: userMessage || "Analiza la imagen adjunta.",
-        p_assistant_content: finalReply,
+        p_assistant_content: deliveredReply,
         p_check_question: finalCheckQuestion || null,
         p_attachment_kind: tutorImage ? "image" : body.attachmentKind === "audio" ? "audio" : null,
         p_attachment_label: cleanText(body.attachmentLabel, 120) || (tutorImage ? "Imagen adjunta" : null),
@@ -1030,7 +1047,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     });
 
     // Do not expose document names, providers, authors, topics or page metadata in student-facing API payloads.
-    return NextResponse.json({ reply: finalReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: publicSources }, {
+    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources }, {
       headers: {
         "Cache-Control": "private, no-store",
         "Server-Timing": serverTiming,

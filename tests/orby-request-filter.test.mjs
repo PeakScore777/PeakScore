@@ -146,6 +146,23 @@ test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confi
   assert.ok(naturalLanguageResult.sources.some((item) => item.title.includes("Fotosíntesis")), "La intención de pedir fuentes no debe ocultar el tema académico en el ranking.");
 });
 
+test("Orby envía solo palabras clave académicas a fuentes públicas", async () => {
+  const outboundQueries = [];
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    outboundQueries.push(url.searchParams.get("q") ?? url.searchParams.get("search") ?? "");
+    const payload = url.hostname === "es.wikipedia.org" ? { pages: [] } : { results: [] };
+    return new Response(JSON.stringify(payload), { status: 200 });
+  };
+  await publicResearch.searchOrbyPublicSources(
+    "Dame fuentes científicas sobre fotosíntesis. Contacto estudiante@example.com, teléfono +57 300 123 4567.",
+    { fetcher },
+  );
+  assert.equal(outboundQueries.length, 2);
+  assert.ok(outboundQueries.every((query) => query.includes("fotosintesis")));
+  assert.ok(outboundQueries.every((query) => !/dame|fuentes|cientificas|example\.com|3001234567/i.test(query)));
+});
+
 test("Orby continúa sin fuentes si los servicios públicos gratuitos no responden", async () => {
   const result = await publicResearch.searchOrbyPublicSources("fotosíntesis", {
     fetcher: async () => { throw new Error("offline"); },

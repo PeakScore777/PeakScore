@@ -135,6 +135,8 @@ test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confi
   assert.ok(result.sources.every((item) => /^https:\/\/(?:es\.wikipedia\.org\/wiki\/|doi\.org\/|openalex\.org\/W)/.test(item.url)));
   assert.ok(result.sources.every((item) => !item.excerpt.includes("<b>")));
   assert.match(result.sources.find((item) => item.kind === "research").excerpt, /La fotosíntesis transforma luz en energía química/);
+  const naturalLanguageResult = await publicResearch.searchOrbyPublicSources("Dame fuentes científicas sobre la fotosíntesis.", { fetcher, maxSources: 3 });
+  assert.ok(naturalLanguageResult.sources.some((item) => item.title.includes("Fotosíntesis")), "La intención de pedir fuentes no debe ocultar el tema académico en el ranking.");
 });
 
 test("Orby continúa sin fuentes si los servicios públicos gratuitos no responden", async () => {

@@ -2529,3 +2529,11 @@ test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero",
     assert.match(source, /silenceDurationMs:\s*500/);
   }
 });
+
+
+test("la recuperación de una respuesta incompleta conserva el prompt original de voz y su medición", () => {
+  const retryBlock = cloudflareTutorRoute.split("if (reply && isLowQualityOrbyReply(reply, userMessage) && activePromptForRetry)")[1]?.split("\n    }")[0] ?? "";
+  assert.ok(retryBlock.includes("activePromptForRetry"), "la recuperación debe reutilizar el contrato original de voz/texto, el contexto y la evidencia recuperada");
+  assert.ok(retryBlock.includes("stageTimings.generationMs += performance.now() - retryGenerationStartedAt"), "la segunda generación también debe contabilizarse en la latencia del modelo");
+  assert.ok(retryBlock.includes("Conserva exactamente el idioma, el formato de salida y las reglas de la instrucción original."));
+});

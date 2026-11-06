@@ -397,6 +397,14 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(liveSessionSource.includes("ORBY_LIVE_VOICE_NAME"));
 });
 
+test("la creación y conexión de tokens efímeros Live usan v1alpha y rechazan ASR débil durante la voz", () => {
+  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1alpha" \} \}\)/);
+  assert.match(lessonTutorSource, /apiKey: tokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1alpha"/);
+  assert.match(lessonTutorSource, /apiKey: resumeTokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1alpha"/);
+  assert.match(lessonTutorSource, /const acceptFinalTranscript = Boolean\([\s\S]*?!isRecentAcousticEcho[\s\S]*?!assistantAudioInFlight \|\| isMeaningfulBargeIn/);
+  assert.match(lessonTutorSource, /if \(acceptFinalTranscript\) \{/);
+});
+
 test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en turnos distintos", () => {
   const detectEcho = voiceEcho.isLikelyVoicePlaybackEcho;
   const detectBarge = voiceEcho.isStrongVoiceBargeIn;

@@ -2113,3 +2113,42 @@ test("Orby persiste el cambio explícito de materia antes de recuperar conocimie
     "La materia detectada debe persistirse antes de consultar el Lab.");
   assert.match(source, /ownedConversation\.subject = currentTurnSubject/);
 });
+
+
+test("Orby clasifica conceptos de las cinco áreas Saber 11 sin depender del nombre formal", () => {
+  const cases = [
+    ["sistema de ecuaciones", "Matemáticas"],
+    ["desviación estándar", "Matemáticas"],
+    ["interpretación de textos", "Lectura Crítica"],
+    ["falacias argumentativas", "Lectura Crítica"],
+    ["guerra fría", "Sociales y Ciudadanas"],
+    ["mecanismos de participación", "Sociales y Ciudadanas"],
+    ["ley de Ohm", "Ciencias Naturales"],
+    ["estequiometría", "Ciencias Naturales"],
+    ["past simple", "Inglés"],
+    ["verbos irregulares", "Inglés"],
+  ];
+  for (const [topic, expected] of cases) {
+    assert.equal(scope.normalizeIcfesSubject("", topic), expected, topic);
+  }
+  assert.equal(scope.normalizeIcfesSubject("Matemáticas", "analiza este texto y calcula la pendiente"), "Matemáticas");
+  assert.equal(scope.normalizeIcfesSubject("Ciencias Naturales", "interpreta la gráfica de energía"), "Ciencias Naturales");
+});
+
+test("Orby mantiene saludos, llamadas y confirmaciones como conversación natural", () => {
+  for (const greeting of ["hola", "oe", "oee", "oye Orby", "qué más", "buenas tardes", "hey"]) {
+    assert.equal(filter.preflightOrbyRequest(greeting).allowed, true, greeting);
+  }
+  for (const confirmation of ["sí", "no", "claro", "dale", "listo", "no sé"]) {
+    assert.equal(filter.preflightOrbyRequest(confirmation, "Orby: ¿Quieres que hagamos otro ejercicio de Matemáticas?").allowed, true, confirmation);
+  }
+  assert.equal(filter.preflightOrbyRequest("explícame la fotosíntesis").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("ayúdame a aprender Python desde cero").allowed, false);
+});
+
+test("Los detectores de materias usan límites de palabra válidos y no patrones escapados literalmente", () => {
+  assert.equal(scope.normalizeIcfesSubject("", "past simple"), "Inglés");
+  assert.equal(scope.normalizeIcfesSubject("", "present perfect"), "Inglés");
+  assert.equal(scope.normalizeIcfesSubject("", "sistema de ecuaciones"), "Matemáticas");
+  assert.equal(scope.normalizeIcfesSubject("", "leyes de Newton"), "Ciencias Naturales");
+});

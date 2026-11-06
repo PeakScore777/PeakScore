@@ -104,6 +104,8 @@ export async function searchOrbyPublicSources(
         ? work.doi
         : "";
       const abstract = reconstructAbstract(work.abstract_inverted_index);
+      // Metadata-only records are not evidence. Keep only papers with a usable abstract.
+      if (abstract.length < 50) continue;
       const location = work.primary_location && typeof work.primary_location === "object"
         ? work.primary_location as Record<string, unknown>
         : {};

@@ -23,18 +23,41 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No se pudo validar el turno de voz." }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin.rpc("orby_save_turn", {
-      p_user_id: user.id,
-      p_conversation_id: conversationId,
-      p_user_content: userContent,
-      p_assistant_content: assistantContent,
-      p_check_question: null,
-      p_attachment_kind: null,
-      p_attachment_label: null,
-    });
-    if (error || !data?.ok) {
-      console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });
-      return NextResponse.json({ error: "La conversación ocurrió, pero no se pudo guardar en el historial." }, { status: 503 });
+    // A fetch can time out after the database commit succeeded. Before
+    // retrying, detect the exact same most-recent user/assistant pair so a
+    // retry never creates duplicate bubbles in the conversation history.
+    const { data: latestMessages, error: recentReadError } = await supabaseAdmin
+      .from("orby_messages")
+      .select("role,content")
+      .eq("conversation_id", conversationId)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(2);
+    const alreadySaved = !recentReadError
+      && Array.isArray(latestMessages)
+      && latestMessages.length === 2
+      && latestMessages[0]?.role === "assistant"
+      && latestMessages[0]?.content === assistantContent
+      && latestMessages[1]?.role === "user"
+      && latestMessages[1]?.content === userContent;
+
+    if (!alreadySaved) {
+      const { data, error } = await supabaseAdmin.rpc("orby_save_turn", {
+        p_user_id: user.id,
+        p_conversation_id: conversationId,
+        p_user_content: userContent,
+        p_assistant_content: assistantContent,
+        p_check_question: null,
+        p_attachment_kind: null,
+        p_attachment_label: null,
+      });
+      if (error || !data?.ok) {
+        console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });
+        return NextResponse.json({
+          error: "La conversación ocurrió, pero no se pudo guardar en el historial. Puedes reintentar sin duplicar la respuesta.",
+          code: error ? "SAVE_TURN_DATABASE_ERROR" : (typeof data?.code === "string" ? data.code : "SAVE_TURN_REJECTED"),
+        }, { status: 503 });
+      }
     }
 
     // Voice subject selections use the same deterministic classifier as text.

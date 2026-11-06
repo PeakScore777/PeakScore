@@ -1352,6 +1352,14 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /const legacyOutOfScope/);
 });
 
+test("Orby Lab nunca amplía silenciosamente una búsqueda vacía a otras materias", () => {
+  assert.match(orbyKnowledgeSource, /continuing with scoped lexical retrieval/);
+  assert.doesNotMatch(orbyKnowledgeSource, /return searchOrbyKnowledge\(\{ \.\.\.options, subject: null \}, precomputedEmbeddings\)/);
+  assert.doesNotMatch(orbyKnowledgeSource, /return searchOrbyKnowledge\(\{ \.\.\.options, subject: null \}, embeddings\)/);
+  assert.match(orbyKnowledgeSource, /empty scoped result is safer than teaching from an unrelated ICFES area/);
+  assert.match(knowledgeSearchRouteSource, /normalizeIcfesSubject\("", query\) \?\? normalizeIcfesSubject\(subjectInput, query\)/);
+});
+
 test("Gemini Live cancela búsquedas de conocimiento obsoletas y restaura el tema persistido", () => {
   assert.match(lessonTutorSource, /voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>/);
   assert.match(lessonTutorSource, /signal: requestController\.signal/);

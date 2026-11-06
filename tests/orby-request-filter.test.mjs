@@ -2169,3 +2169,15 @@ test("Los detectores de materias usan límites de palabra válidos y no patrones
   assert.equal(scope.normalizeIcfesSubject("", "sistema de ecuaciones"), "Matemáticas");
   assert.equal(scope.normalizeIcfesSubject("", "leyes de Newton"), "Ciencias Naturales");
 });
+
+test("Orby preserves conversation context and does not cap requested teaching depth", async () => {
+  const tutor = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+
+  assert.match(tutor, /AJUSTA LA PROFUNDIDAD A LA INTENCIÓN, NO A UN LÍMITE FIJO DE PALABRAS/);
+  assert.doesNotMatch(tutor, /pregunta simple, 35–70 palabras/);
+  assert.match(voice, /no impongas un límite de duración/i);
+  assert.match(tutor, /\.limit\(20\)/);
+  assert.match(voice, /\.limit\(20\)/);
+  assert.match(voice, /safeHistory\.slice\(-12\)/);
+});

@@ -90,6 +90,7 @@ test("Orby reserva la búsqueda web para fuentes, actualidad e investigación ex
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Qué es una mitocondria?"), false);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Resuelve esta ecuación paso a paso."), false);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Cuáles son las fuentes de energía renovable?"), false);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("Dame fuentes de energía renovable para mi clase de Ciencias."), false);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Dame fuentes científicas sobre la fotosíntesis."), true);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Qué estudios recientes explican el cambio climático?"), true);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Verifica si este dato sigue vigente en 2026."), true);

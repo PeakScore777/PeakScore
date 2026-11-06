@@ -92,6 +92,8 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(voiceSpeechRouteSource.includes('type: "speech_metadata"'));
   assert.ok(voiceSpeechRouteSource.includes('mime_type: "audio/wav"'));
   assert.ok(voiceSpeechRouteSource.includes("speech_config"));
+  assert.match(voiceSpeechRouteSource, /speech_config:\s*\[\s*\{\s*voice:\s*ORBY_VOICE_NAME/);
+  assert.doesNotMatch(voiceSpeechRouteSource, /speech_config:\s*\[\s*\{[^}]*language:/s);
   assert.doesNotMatch(voiceSpeechRouteSource, /ai\.models\.generateContent|candidates\?\.\[0\]/);
   assert.doesNotMatch(voiceSpeechRouteSource, /pcm16ToWav/);
   assert.doesNotMatch(voiceSpeechRouteSource, /CLOUDFLARE_API_TOKEN|GROQ_API_KEY|api\.groq\.com/);

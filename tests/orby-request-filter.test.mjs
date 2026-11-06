@@ -381,6 +381,9 @@ test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre"
   assert.match(filter.getOrbySubjectSelectionReply("sociales"), /Sociales y Ciudadanas/);
   assert.match(filter.getOrbySubjectSelectionReply("naturales"), /Ciencias Naturales/);
   assert.match(filter.getOrbySubjectSelectionReply("inglés"), /Inglés/);
+  assert.equal(filter.getOrbySubjectSelectionLabel("en inglés"), "Inglés");
+  assert.equal(filter.getOrbySubjectSelectionLabel("vamos con lectura"), "Lectura Crítica");
+  assert.equal(filter.getOrbySubjectSelectionLabel("enséñame a programar"), null);
   const selectedEnglishHistory = [
     "user: en inglés",
     "assistant: ¡Claro! Vamos a estudiar el componente de Inglés de Saber 11.",

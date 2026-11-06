@@ -2502,3 +2502,17 @@ test("AudioWorklet conserva la tasa PCM y los paquetes de 40 ms entre bloques de
     assert.ok(bufferedSamples < 640, "el remanente debe ser menor que un paquete de 40 ms");
   }
 });
+
+
+test("interrumpir una respuesta Live limpia la transcripción anterior antes del nuevo turno", async () => {
+  const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const interruptStart = lessonTutorSource.indexOf("function interruptCurrentVoiceOutput()");
+  const interruptEnd = lessonTutorSource.indexOf("\n  function ", interruptStart + 1);
+  assert.notEqual(interruptStart, -1, "debe existir el manejador de interrupciones Live");
+  assert.notEqual(interruptEnd, -1, "debe poder aislarse el manejador de interrupciones");
+  const interruptSource = lessonTutorSource.slice(interruptStart, interruptEnd);
+  assert.match(interruptSource, /voiceAssistantTextRef\\.current = ""/);
+  assert.match(interruptSource, /voiceUserTextRef\\.current = ""/);
+  assert.match(interruptSource, /voiceUserMessageIdRef\\.current = null/);
+  assert.match(lessonTutorSource.slice(interruptEnd, interruptEnd + 24_000), /voiceUserTextRef\\.current = mergeLiveTranscript\\(previousTranscript, transcript\\)/);
+});

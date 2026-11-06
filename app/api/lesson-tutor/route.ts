@@ -519,12 +519,14 @@ export async function POST(request: Request) {
       profile_topics?: unknown;
       profile_pedagogical_knowledge?: unknown;
     };
+    // Only the current academic request and lesson metadata are eligible
+    // for public search. Never forward the conversation history to public APIs.
     const researchQuery = [
-      userMessage,
-      question,
+      detectedSubject,
       topic,
-      ...history.slice(-2).map((item) => item.content),
-    ].filter(Boolean).join(" ").slice(0, 1800);
+      question,
+      userMessage,
+    ].filter(Boolean).join(" ").slice(0, 1200);
     const shouldRunPublicResearch = shouldSearchOrbyPublicSources({
         message: userMessage,
         question,

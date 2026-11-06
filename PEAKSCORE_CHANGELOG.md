@@ -2,12 +2,13 @@
 
 ## 2026-11-06 — Orby hybrid public research
 - Added `lib/ai/orby-web-research.ts`, a keyless/free public-source adapter using the Wikimedia Spanish search API and OpenAlex works API. It enforces source-host allowlists, short timeouts, bounded results, deduplication, safe URL reconstruction, and treats excerpts as untrusted data.
-- Text tutor now retrieves public sources for substantive academic turns in addition to Orby Lab's published chunks, concept graph, related material and pedagogical profiles. Public-source outages are non-fatal and never trigger another model provider.
-- Text and VC research run the public-source lookup independently alongside Lab retrieval. If either evidence service is unavailable, successful results from the other remain available; public-source outages never block tutoring or trigger another model provider.
+- General model knowledge remains the default teaching capability: ordinary definitions, explanations and routine exercises do not trigger Internet searches. Text and VC still consult Orby Lab for relevant published material; public search activates only when the student asks for sources/research, requests current or recent facts, or asks to verify/contrast external evidence.
+- When external research is requested, text and VC run the public-source lookup independently from Lab retrieval. A request for sources about an already-discussed topic can still search the web even if a new Lab lookup is not needed. If either evidence service is unavailable, successful results from the other remain available; public-source outages never block tutoring or trigger another model provider.
 - The VC knowledge-search tool now returns the same public-source context alongside Orby Lab results; Gemini Live instructions explain how to use and qualify those results.
 - The browser now forwards `public_sources` from the VC knowledge-search response into Gemini Live's function result; previously the endpoint could return sources while the client silently dropped that field.
-- Text chat displays the source links separately from the answer, with publisher and publication year when available.
-- Added regression tests for source allowlisting, deduplication, limits, excerpt sanitization, offline degradation, and integration in both channels.
+- Text chat displays only sources explicitly cited by the final model answer, preserves their original citation numbers, and embeds safe Markdown citation links in the saved assistant text so references remain clickable after conversation history reloads.
+- Added regression tests for source allowlisting, relevance filtering, deduplication, limits, excerpt sanitization, offline degradation, selective web-search triggers, Lab follow-ups requesting sources, citation reconciliation, persistent citation links, and integration in both channels.
+- Model routing remains as implemented: the text tutor uses Cloudflare Workers AI with Gemma 4, while the live voice channel uses Gemini Live. Both can answer from model knowledge; the public-source adapter supplements rather than replaces either model.
 - Scope note: this first iteration searches Wikimedia and OpenAlex only. It is not yet a general web search engine or a guarantee of official ICFES/government-source coverage. Results must be checked for relevance and quality; source presence alone is not proof that a claim is correct.
 
 ## 2026-11-06 — Orby text/voice subject routing

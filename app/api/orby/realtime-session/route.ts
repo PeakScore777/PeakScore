@@ -23,6 +23,7 @@ export const dynamic = "force-dynamic";
 
 // Keep the selected female voice consistent across all Gemini Live sessions.
 const ORBY_LIVE_VOICE_NAME = ORBY_VOICE_NAME;
+const ORBY_LIVE_HISTORY_MESSAGE_CHARS = 8_000;
 
 function clean(value: unknown, max: number, fallback: string) {
   return typeof value === "string" ? value.trim().slice(0, max) || fallback : fallback;
@@ -83,7 +84,7 @@ export async function POST(request: Request) {
         && typeof (item as { content?: unknown }).content === "string")
         .map((item: { role: "user" | "assistant"; content: string }) => ({
           role: item.role,
-          content: item.content.slice(0, 1200),
+          content: item.content.slice(0, ORBY_LIVE_HISTORY_MESSAGE_CHARS),
         }))
       : [];
 
@@ -131,7 +132,7 @@ export async function POST(request: Request) {
         history = storedMessages.reverse()
           .filter((item): item is { role: "user" | "assistant"; content: string } =>
             (item.role === "user" || item.role === "assistant") && typeof item.content === "string")
-          .map((item) => ({ role: item.role, content: item.content.slice(0, 1200) }));
+          .map((item) => ({ role: item.role, content: item.content.slice(0, ORBY_LIVE_HISTORY_MESSAGE_CHARS) }));
       }
     }
 

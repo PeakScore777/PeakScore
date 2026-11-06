@@ -136,19 +136,26 @@ function getActiveOrbySubjectKey(previousContext = "", activeSubject = ""): Orby
   if (/^(?:sociales y ciudadanas)$/.test(direct)) return "social";
   if (/^(?:ciencias naturales)$/.test(direct)) return "science";
 
-  // Inspect only the latest assistant turn, not every old mention in the chat.
-  // Otherwise switching from English to Reading would be mistaken for staying
-  // in English because an older answer still contains that word.
-  const turns = previousContext.split(/\n(?=(?:user|assistant):\s*)/i);
-  const latestAssistant = [...turns].reverse()
-    .find((turn) => /^assistant:\s*/i.test(turn.trim()))
-    ?.replace(/^assistant:\s*/i, "") ?? previousContext;
-  const recent = normalizeOrbyRequestText(latestAssistant).slice(-900);
-  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:ingles|english)\b|\b(?:ingles|english)\b.{0,35}\b(?:saber\s*11|icfes)\b/.test(recent)) return "english";
-  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:matematicas|matematica)\b|\bmatematicas de saber\s*11\b/.test(recent)) return "math";
-  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:lectura critica)\b/.test(recent)) return "reading";
-  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:sociales y ciudadanas|sociales)\b/.test(recent)) return "social";
-  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:ciencias naturales)\b/.test(recent)) return "science";
+  // Find the most recent explicit subject selection in the visible exchange.
+  // Later exercise answers often omit the subject name, so examining only the
+  // final assistant bubble loses the selected lesson after the first question.
+  const turns = previousContext.split(/\n(?=(?:user|assistant):\s*)/i).reverse();
+  for (const turn of turns) {
+    const trimmed = turn.trim();
+    const userTurn = trimmed.match(/^user:\s*(.+)$/i);
+    if (userTurn) {
+      const selected = getOrbySubjectSelectionKey(userTurn[1]);
+      if (selected) return selected;
+      continue;
+    }
+    const assistantTurn = trimmed.replace(/^assistant:\s*/i, "");
+    const recent = normalizeOrbyRequestText(assistantTurn).slice(0, 1_100);
+    if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos|practicaremos)\b.{0,65}\b(?:ingles|english)\b|\b(?:ingles|english)\b.{0,45}\b(?:saber\s*11|icfes)\b/.test(recent)) return "english";
+    if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos|practicaremos)\b.{0,65}\b(?:matematicas|matematica)\b|\bmatematicas de saber\s*11\b/.test(recent)) return "math";
+    if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos|practicaremos)\b.{0,65}\b(?:lectura critica)\b/.test(recent)) return "reading";
+    if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos|practicaremos)\b.{0,65}\b(?:sociales y ciudadanas|sociales)\b/.test(recent)) return "social";
+    if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos|practicaremos)\b.{0,65}\b(?:ciencias naturales)\b/.test(recent)) return "science";
+  }
   return null;
 }
 

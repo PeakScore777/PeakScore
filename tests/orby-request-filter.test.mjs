@@ -1765,7 +1765,7 @@ test("la lectura de Orby conserva tablas y verbaliza fórmulas matemáticas", ()
   assert.match(table, /Fila 2: Variable: Volumen; Valor: 2 cm³/);
   assert.doesNotMatch(table, /---/);
 
-  const formula = filter.formatOrbySpeechText(String.raw\`\\(\\rho = m/V\\)\`);
+  const formula = filter.formatOrbySpeechText("\\(\\rho = m/V\\)");
   assert.match(formula, /rho igual a m dividido entre V/);
 });
 

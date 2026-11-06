@@ -2012,6 +2012,17 @@ test("un 404 temporal del historial no deja bloqueado el chat nuevo ni borra las
 });
 
 
+test("los rechazos de política usan Gemini Live y solo liberan el texto autorizado", () => {
+  assert.ok(lessonTutorSource.includes("function requestLivePolicyReply("));
+  assert.ok(lessonTutorSource.includes("channel.sendClientContent({"));
+  assert.ok(lessonTutorSource.includes("voiceForcedReplyRef.current = cleanReply"));
+  assert.ok(lessonTutorSource.includes("matchesTrustedPolicyReply"));
+  assert.ok(lessonTutorSource.includes("if (forcedLiveReply)"));
+  assert.match(lessonTutorSource, /requestLivePolicyReply\(message, localReply, true\)/);
+  assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, policyReply, false, true\)/);
+  assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
+});
+
 test("Orby distingue cuota TTS agotada de un 429 temporal", () => {
   assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, message: "Too many requests" }), "rate_limited");
   assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, code: "RESOURCE_EXHAUSTED" }), "quota_exhausted");

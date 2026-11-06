@@ -2442,6 +2442,16 @@ test("Orby preserves conversation context and does not cap requested teaching de
 });
 
 
+test("la desconexión física del micrófono conserva la pregunta y activa recuperación por turnos", () => {
+  const trackHandler = lessonTutorSource.indexOf("track.onended = () =>");
+  const fallback = lessonTutorSource.indexOf("fallbackVoiceTurnToText(", trackHandler);
+  assert.ok(trackHandler >= 0);
+  assert.ok(fallback > trackHandler);
+  assert.match(lessonTutorSource.slice(trackHandler, fallback), /sessionGeneration !== voiceSessionGenerationRef\.current/);
+  assert.match(lessonTutorSource.slice(trackHandler, fallback), /voiceStreamRef\.current !== stream/);
+  assert.match(lessonTutorSource.slice(fallback, fallback + 320), /Conservé la pregunta pendiente/);
+});
+
 test("AudioWorklet conserva la tasa PCM y los paquetes de 40 ms entre bloques de captura", async () => {
   const workletSource = await readFile(new URL("../public/audio/orby-audio-capture.worklet.js", import.meta.url), "utf8");
 

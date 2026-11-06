@@ -913,6 +913,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voicePreflightReplyRef.current = null;
     voiceInputPolicyRef.current = null;
     voiceAssistantTextRef.current = "";
+    // A final ASR transcript can be the first signal of a barge-in. Clear the
+    // previous student's text here so the new transcript cannot be merged into
+    // the old question and overwrite the visible turn.
+    voiceUserTextRef.current = "";
     voiceAssistantMessageIdRef.current = null;
         voicePublicSourcesRef.current = [];
     voiceResponseDoneRef.current = false;

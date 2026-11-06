@@ -2927,9 +2927,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (!payload.toolCall) return;
         }
         if (payload.toolCall && typeof payload.toolCall === "object") {
-          // Gemini 3.8 Live may emit a non-blocking tool call alongside
-          // server content. Start retrieval, but never discard audio/transcript
-          // content carried by the same event.
+          // Gemini 3.8 Live may emit a chained tool call in the same event as
+          // the Lab-informed transcript. Mark that transcript first so the
+          // next lookup opens a fresh gate instead of sharing the old one.
+          const sameEventServerContent = payload.serverContent && typeof payload.serverContent === "object"
+            ? payload.serverContent as { outputTranscription?: unknown }
+            : null;
+          const sameEventTranscript = sameEventServerContent?.outputTranscription
+            && typeof sameEventServerContent.outputTranscription === "object"
+            ? (sameEventServerContent.outputTranscription as { text?: unknown }).text
+            : null;
+          if (typeof sameEventTranscript === "string" && sameEventTranscript.trim()) {
+            voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
+          }
           void handleOrbyLiveKnowledgeTool(payload.toolCall);
           if (payload.serverContent && typeof payload.serverContent === "object") {
             handleGeminiLiveEvent(payload);

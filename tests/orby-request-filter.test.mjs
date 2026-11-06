@@ -99,7 +99,15 @@ test("el turno Live espera el aporte asíncrono del Lab y solo finaliza tras rec
   assert.equal(chainedState.initialGenerationCompleted, false);
   assert.equal(chainedState.followupOutputSeen, false);
 
-  transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);
+  // A chained lookup may arrive in the same WebSocket event as the first
+  // Lab-informed transcript. That event must open a fresh phase before its
+  // generationComplete signal is processed.
+  const chainedTransition = voiceToolTurn.completeOrbyVoiceToolGeneration(chainedState);
+  assert.equal(chainedTransition.shouldFinalize, false);
+  assert.equal(chainedTransition.state.initialGenerationCompleted, true);
+  let chainedFollowup = voiceToolTurn.markOrbyVoiceToolResponseSent(chainedTransition.state);
+  chainedFollowup = voiceToolTurn.markOrbyVoiceToolFollowupOutput(chainedFollowup);
+  transition = voiceToolTurn.completeOrbyVoiceToolGeneration(chainedFollowup);
   assert.equal(transition.shouldFinalize, true);
   assert.equal(transition.state.pending, false);
 });
@@ -120,6 +128,15 @@ test("un resultado rápido del Lab no confunde la primera finalización con el s
   assert.equal(state.followupOutputSeen, true);
   transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);
   assert.equal(transition.shouldFinalize, true);
+});
+
+test("una llamada encadenada en el mismo evento marca primero la transcripción del Lab", () => {
+  const chainedEvent = lessonTutorSource.indexOf("const sameEventTranscript");
+  const markFollowup = lessonTutorSource.indexOf("markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current)", chainedEvent);
+  const handleTool = lessonTutorSource.indexOf("void handleOrbyLiveKnowledgeTool(payload.toolCall)", chainedEvent);
+  const handleContent = lessonTutorSource.indexOf("handleGeminiLiveEvent(payload)", handleTool);
+  assert.ok(chainedEvent >= 0 && markFollowup > chainedEvent && handleTool > markFollowup && handleContent > handleTool,
+    "La transcripción del aporte previo debe abrir paso a una nueva fase antes de procesar la llamada encadenada y su finalización.");
 });
 
 test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_IDLE del Lab", () => {

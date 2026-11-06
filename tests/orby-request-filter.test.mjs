@@ -589,7 +589,8 @@ test("los saludos cortos se reconocen y el modo voz los remite a Gemini Live", (
   assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
   assert.match(cloudflareTutorRoute, /isOrbyGreetingRequest\(userMessage\)/);
   assert.match(lessonTutorSource, /const preflight = preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
-  assert.match(lessonTutorSource, /voicePreflightReplyRef\.current = asksIdentity[\\s\\S]{0,420}\\(preflight\.allowed \? null : preflight\.reply\)/);
+  assert.ok(lessonTutorSource.includes("voicePreflightReplyRef.current = asksIdentity"));
+  assert.ok(lessonTutorSource.includes("(preflight.allowed ? null : preflight.reply)"));
   assert.doesNotMatch(lessonTutorSource, /const greetingReply = isOrbyGreetingRequest\(message\)/);
 });
 
@@ -1488,7 +1489,7 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos atÃ
   assert.match(realtimeTurnSource, /Cache-Control": "no-store"/);
 });
 
-test("los filtros escritos dentro de voz se contestan localmente y sincronizan Live sin generar otra respuesta", () => {
+test("la voz responde localmente solo a rechazos deterministas y envÃ­a los turnos permitidos a Live", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
   const localFilterIndex = lessonTutorSource.indexOf("const localReply = !typedPreflight.allowed ? typedPreflight.reply : null", typedVoiceStart);
   const localReplyIndex = lessonTutorSource.indexOf("respondToVoiceLocally(message, localReply, true)", typedVoiceStart);

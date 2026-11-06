@@ -863,6 +863,10 @@ test("el tutor usa Cloudflare directamente y no hace fallback a modelos de pago"
   assert.ok(orbyKnowledgeSource.includes("4_500"));
   assert.ok(orbyKnowledgeSource.includes("lexical retrieval continues"));
   assert.ok(orbyKnowledgeSource.includes(".slice(0, 2)"));
+  assert.match(lessonTutorRouteSource, /error\.code === "NOT_CONFIGURED"/);
+  assert.match(lessonTutorRouteSource, /error\.code === "AUTH_FAILED"/);
+  assert.match(lessonTutorRouteSource, /error\.code === "CONNECTION_FAILED"/);
+  assert.match(lessonTutorRouteSource, /CLOUDFLARE_ACCOUNT_ID/);
 });
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {

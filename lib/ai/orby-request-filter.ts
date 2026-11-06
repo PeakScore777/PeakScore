@@ -255,18 +255,73 @@ export function isOrbyContextualConfirmation(message: string, previousContext = 
 }
 
 /** Reject punctuation and bare acknowledgements, not concise academic answers such as A or B. */
-export function prepareOrbySpeechText(value: string): string {
+export function formatOrbyMarkdownTablesForSpeech(value: string): string {
+  const lines = value.replace(/\r\n?/g, "\n").split("\n");
+  const output: string[] = [];
+  const cells = (line: string) => line.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((cell) => cell.trim());
+  const isPipeRow = (line: string) => line.includes("|") && cells(line).length >= 2;
+  const isSeparator = (line: string) => isPipeRow(line)
+    && cells(line).every((cell) => /^:?-{3,}:?$/.test(cell.replace(/\s/g, "")));
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!isPipeRow(line)) {
+      if (/^\s*(?:-{3,}|_{3,}|\*{3,})\s*$/.test(line)) continue;
+      output.push(line);
+      continue;
+    }
+
+    const headers = cells(line);
+    if (index + 1 < lines.length && isSeparator(lines[index + 1])) {
+      output.push("Tabla.");
+      index += 2;
+      let rowNumber = 1;
+      while (index < lines.length && isPipeRow(lines[index]) && !isSeparator(lines[index])) {
+        const values = cells(lines[index]);
+        const entries = values.map((value, cellIndex) => {
+          const header = headers[cellIndex] || "Columna " + (cellIndex + 1);
+          return header + ": " + (value || "sin dato");
+        });
+        output.push("Fila " + rowNumber + ": " + entries.join("; ") + ".");
+        rowNumber += 1;
+        index += 1;
+      }
+      index -= 1;
+      continue;
+    }
+
+    output.push("Fila: " + headers.filter(Boolean).join("; ") + ".");
+  }
+
+  return output.join("\n");
+}
+
+function prepareOrbySpeechText(value: string): string {
   const fence = String.fromCharCode(96).repeat(3);
-  return normalizeOrbySpanishOutput(value)
+  return normalizeOrbySpanishOutput(formatOrbyMarkdownTablesForSpeech(value))
     .replace(new RegExp("^\\s*" + fence + "[a-z-]*\\s*", "gim"), "")
     .replace(new RegExp("\\s*" + fence, "g"), "")
     .replace(/\r\n?/g, "\n")
     .replace(/\u00a0/g, " ")
+    .replace(/\\\(([\s\S]+?)\\\)/g, "$1")
+    .replace(/\\\[([\s\S]+?)\\\]/g, "$1")
     .replace(/\$\$([\s\S]+?)\$\$/g, "$1")
-    .replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1 dividido entre $2")
+    .replace(/\\d?frac\{([^{}]+)\}\{([^{}]+)\}/g, "$1 dividido entre $2")
     .replace(/\\sqrt\{([^{}]+)\}/g, "raíz cuadrada de $1")
-    .replace(/\\times|\\cdot/g, " por ")
-    .replace(/\\div/g, " dividido entre ")
+    .replace(/\\sum(?:_\{([^{}]+)\})?/g, (_match, limits: string | undefined) => limits ? " sumatoria con índice " + limits : " sumatoria ")
+    .replace(/\\int/g, " integral ")
+    .replace(/\\infty/g, " infinito ")
+    .replace(/\\pm/g, " más o menos ")
+    .replace(/\\to|\\rightarrow/g, " tiende a ")
+    .replace(/\\sin/g, " seno ")
+    .replace(/\\cos/g, " coseno ")
+    .replace(/\\tan/g, " tangente ")
+    .replace(/\^\{([^{}]+)\}/g, " elevado a $1")
+    .replace(/_\{([^{}]+)\}/g, " subíndice $1")
+    .replace(/\\times|\\cdot|×|·/g, " por ")
+    .replace(/\\div|÷/g, " dividido entre ")
+    .replace(/\\lt|</g, " menor que ")
+    .replace(/\\gt|>/g, " mayor que ")
     .replace(/\\leq|≤/g, " menor o igual que ")
     .replace(/\\geq|≥/g, " mayor o igual que ")
     .replace(/\\neq|≠/g, " distinto de ")
@@ -290,7 +345,7 @@ export function prepareOrbySpeechText(value: string): string {
     .replace(/^\s*[-*•]\s+/gm, "Punto: ")
     .replace(/^\s*(\d+)[.)]\s+/gm, "Paso $1: ")
     .replace(/^\s*>\s?/gm, "")
-    .replace(/\|/g, "; ")
+    .replace(/https?:\/\/\S+/g, "enlace web")
     .replace(/(\d)\s*%/g, "$1 por ciento")
     .replace(/([.!?])(?=\S)/g, "$1 ")
     .replace(/([,;:])(?=\S)/g, "$1 ")
@@ -300,6 +355,10 @@ export function prepareOrbySpeechText(value: string): string {
     .replace(/([.!?])(?:\s*\1)+/g, "$1")
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+
+export function formatOrbySpeechText(value: string): string {
+  return prepareOrbySpeechText(value);
 }
 
 export function composeOrbySpeechText(reply: string, checkQuestion = ""): string {
@@ -929,6 +988,43 @@ export function normalizeOrbySpanishOutput(value: string): string {
     [/\beconomica\b/gi, "económica"],
     [/\bpolitica\b/gi, "política"],
     [/\bgeopolitica\b/gi, "geopolítica"],
+    [/\btambien\b/gi, "también"],
+    [/\bademas\b/gi, "además"],
+    [/\bdespues\b/gi, "después"],
+    [/\bperiodo\b/gi, "período"],
+    [/\bnumeros\b/gi, "números"],
+    [/\bnumero\b/gi, "número"],
+    [/\bpropositos\b/gi, "propósitos"],
+    [/\bproposito\b/gi, "propósito"],
+    [/\bfaciles\b/gi, "fáciles"],
+    [/\bfacil\b/gi, "fácil"],
+    [/\bdificiles\b/gi, "difíciles"],
+    [/\bdificil\b/gi, "difícil"],
+    [/\bcaracteristicas\b/gi, "características"],
+    [/\bcaracteristica\b/gi, "característica"],
+    [/\btecnicas\b/gi, "técnicas"],
+    [/\btecnica\b/gi, "técnica"],
+    [/\btecnologias\b/gi, "tecnologías"],
+    [/\btecnologia\b/gi, "tecnología"],
+    [/\bbiologicos\b/gi, "biológicos"],
+    [/\bbiologico\b/gi, "biológico"],
+    [/\bbiologicas\b/gi, "biológicas"],
+    [/\bbiologica\b/gi, "biológica"],
+    [/\bpoliticos\b/gi, "políticos"],
+    [/\bpolitico\b/gi, "político"],
+    [/\bpoliticas\b/gi, "políticas"],
+    [/\bhistoricos\b/gi, "históricos"],
+    [/\bhistorico\b/gi, "histórico"],
+    [/\bhistoricas\b/gi, "históricas"],
+    [/\bhistorica\b/gi, "histórica"],
+    [/\bmaximos\b/gi, "máximos"],
+    [/\bmaximo\b/gi, "máximo"],
+    [/\bmaximas\b/gi, "máximas"],
+    [/\bmaxima\b/gi, "máxima"],
+    [/\bminimos\b/gi, "mínimos"],
+    [/\bminimo\b/gi, "mínimo"],
+    [/\bminimas\b/gi, "mínimas"],
+    [/\bminima\b/gi, "mínima"],
   ];
   let normalized = value
     .replace(/\u00a0/g, " ")

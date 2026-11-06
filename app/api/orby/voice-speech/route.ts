@@ -135,7 +135,7 @@ export async function POST(request: Request) {
       console.error("[Orby Gemini TTS] Provider returned an unsupported or malformed audio payload.", {
         mimeType: audioMimeType,
         encodedLength: audioBase64.length,
-        status: interaction.status,
+        finishReason: generation.candidates?.[0]?.finishReason,
       });
       return jsonError("Gemini devolvió un audio con formato no válido.", "TTS_INVALID_AUDIO", 502);
     }

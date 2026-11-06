@@ -2516,3 +2516,16 @@ test("interrumpir una respuesta Live limpia la transcripción anterior antes del
   assert.match(interruptSource, /voiceUserMessageIdRef\.current = null/);
   assert.match(lessonTutorSource.slice(interruptEnd, interruptEnd + 24_000), /voiceUserTextRef\.current = mergeLiveTranscript\(previousTranscript, transcript\)/);
 });
+
+
+test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero", async () => {
+  const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const sessionRouteSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  for (const source of [lessonTutorSource, sessionRouteSource]) {
+    assert.match(source, /realtimeInputConfig:\s*\{/);
+    assert.match(source, /automaticActivityDetection:\s*\{/);
+    assert.match(source, /endOfSpeechSensitivity:\s*EndSensitivity\.END_SENSITIVITY_HIGH/);
+    assert.match(source, /prefixPaddingMs:\s*40/);
+    assert.match(source, /silenceDurationMs:\s*500/);
+  }
+});

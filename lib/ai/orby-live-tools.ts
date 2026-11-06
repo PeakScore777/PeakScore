@@ -11,7 +11,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
           properties: {
             query: {
               type: Type.STRING,
-              description: "The complete current student question or exercise, with the specific concept and relevant details. Do not send only a vague one-word topic when the student asked a concrete question.",
+              description: "The complete current student question or exercise, with the specific concept and relevant details. Resolve references such as “eso”, “ese tema”, “lo anterior” or “lo que explicaste” from the immediately preceding academic exchange and include the actual concept/topic in the query; for example, turn “dame fuentes de eso” into “fuentes científicas sobre la fotosíntesis” when the prior exchange was about photosynthesis. Do not send only a vague one-word topic or a pronoun without its academic referent.",
             },
             subject: {
               type: Type.STRING,

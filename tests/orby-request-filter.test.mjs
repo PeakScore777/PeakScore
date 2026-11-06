@@ -97,7 +97,7 @@ test("Orby solo muestra las fuentes citadas y conserva su numeración original",
     { title: "Artículo dos", url: "https://doi.org/10.1000/dos", publisher: "Revista", publishedAt: "2024", excerpt: "Evidencia dos", kind: "research" },
   ];
   const result = publicResearch.reconcileOrbyPublicCitations("La evidencia coincide [2]. Referencia inválida [9].", sources);
-  assert.equal(result.reply, "La evidencia coincide [2]. Referencia inválida.");
+  assert.equal(result.reply, "La evidencia coincide [2](https://doi.org/10.1000/dos). Referencia inválida.");
   assert.equal(result.sources.length, 1);
   assert.equal(result.sources[0].citationNumber, 2);
   assert.equal(result.sources[0].title, "Artículo dos");

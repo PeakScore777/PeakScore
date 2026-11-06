@@ -135,7 +135,8 @@ function expandCrossLanguageTerms(terms: string[]): string[] {
     for (const alias of CROSS_LANGUAGE_TOPIC_TERMS[term] ?? []) expanded.add(alias);
   }
   return [...expanded];
-};
+}
+
 function rankRelevantSources(query: string, sources: OrbyWebSource[]): OrbyWebSource[] {
   const terms = expandCrossLanguageTerms(meaningfulTerms(query));
   if (!terms.length) return [];

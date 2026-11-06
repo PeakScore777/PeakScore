@@ -73,6 +73,28 @@ test("Orby divide respuestas largas sin reordenar frases ni exceder el límite T
   assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("   ", 480), []);
 });
 
+test("Orby reserva la búsqueda web para fuentes, actualidad e investigación externa", () => {
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("Explícame la fotosíntesis con un ejemplo."), false);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Qué es una mitocondria?"), false);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("Resuelve esta ecuación paso a paso."), false);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("Dame fuentes científicas sobre la fotosíntesis."), true);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Qué estudios recientes explican el cambio climático?"), true);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("Verifica si este dato sigue vigente en 2026."), true);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("Investiga el impacto de la deforestación."), true);
+});
+
+test("Orby solo muestra las fuentes citadas y conserva su numeración original", () => {
+  const sources = [
+    { title: "Fuente uno", url: "https://es.wikipedia.org/wiki/Fuente_uno", publisher: "Wikipedia", publishedAt: null, excerpt: "Evidencia uno", kind: "encyclopedia" },
+    { title: "Artículo dos", url: "https://doi.org/10.1000/dos", publisher: "Revista", publishedAt: "2024", excerpt: "Evidencia dos", kind: "research" },
+  ];
+  const result = publicResearch.reconcileOrbyPublicCitations("La evidencia coincide [2]. Referencia inválida [9].", sources);
+  assert.equal(result.reply, "La evidencia coincide [2]. Referencia inválida.");
+  assert.equal(result.sources.length, 1);
+  assert.equal(result.sources[0].citationNumber, 2);
+  assert.equal(result.sources[0].title, "Artículo dos");
+});
+
 test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confiables", async () => {
   const calls = [];
   const fetcher = async (input) => {

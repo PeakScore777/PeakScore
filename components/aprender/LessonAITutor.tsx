@@ -1965,8 +1965,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       const previousTranscript = voiceUserTextRef.current.trim();
       voiceUserTextRef.current = mergeLiveTranscript(previousTranscript, transcript).slice(-1200);
+      const previousVoiceSubject = activeSubjectRef.current;
       const selectedVoiceSubject = getOrbySubjectSelectionLabel(voiceUserTextRef.current);
-      if (selectedVoiceSubject) activeSubjectRef.current = selectedVoiceSubject;
       if (!voiceUserMessageIdRef.current) voiceUserMessageIdRef.current = "voice-user-" + Date.now();
       const normalizedTranscript = voiceUserTextRef.current.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
       const falseCreatorClaim = /(?:asistente|tutor|modelo|herramienta|chatbot|ia|inteligencia\s*artificial).{0,140}cread[oa]\s*por\s*(?!peak\s*score\b)[a-z0-9]/i.test(normalizedTranscript)
@@ -1977,7 +1977,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const voiceScopeContext = [
         ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceLastAssistantOutputRef.current,
-        "Área de estudio: " + activeSubjectRef.current,
+        "Área de estudio: " + previousVoiceSubject,
         "Tema de estudio: " + topic,
         question,
         context,
@@ -1990,10 +1990,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : !preflight.allowed
             ? "outside"
             : null;
-      const subjectAlreadyActive = isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, activeSubjectRef.current);
-      const subjectSelectionReply = getOrbySubjectSelectionReply(voiceUserTextRef.current, voiceScopeContext, activeSubjectRef.current);
+      const subjectAlreadyActive = isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject);
+      const subjectSelectionReply = getOrbySubjectSelectionReply(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject);
       const activeSubjectReply = subjectAlreadyActive && !isOrbyGreetingRequest(voiceUserTextRef.current)
-        ? getOrbyGreetingFollowUpReply(voiceScopeContext, activeSubjectRef.current)
+        ? getOrbyGreetingFollowUpReply(voiceScopeContext, previousVoiceSubject)
         : null;
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(voiceUserTextRef.current, voiceScopeContext)
         ? ORBY_STUDY_GUIDANCE_REPLY
@@ -2016,6 +2016,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ?? studyGuidanceReply
               ?? transcriptionClarificationReply
               ?? (preflight.allowed ? null : preflight.reply);
+      if (selectedVoiceSubject) activeSubjectRef.current = selectedVoiceSubject;
       voicePendingAudioChunksRef.current = [];
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
@@ -3008,8 +3009,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }, appendUserMessage = true) {
     const message = text.trim();
+    const previousActiveSubject = activeSubjectRef.current;
     const selectedSubject = getOrbySubjectSelectionLabel(message);
-    if (selectedSubject) activeSubjectRef.current = selectedSubject;
     let isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || message.length > 1200) return;
@@ -3093,19 +3094,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         context,
       ].filter(Boolean).join("\n").slice(-5_000);
       const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);
-      const subjectAlreadyActive = isOrbySubjectAlreadyActive(message, typedVoiceContext, activeSubjectRef.current);
+      const subjectAlreadyActive = isOrbySubjectAlreadyActive(message, typedVoiceContext, previousActiveSubject);
       const englishReply = isGenericIcfesEnglishRequest(message) && !subjectAlreadyActive
         ? ORBY_ICFES_ENGLISH_INTRO_REPLY
         : null;
-      const subjectSelectionReply = getOrbySubjectSelectionReply(message, typedVoiceContext, activeSubjectRef.current);
+      const subjectSelectionReply = getOrbySubjectSelectionReply(message, typedVoiceContext, previousActiveSubject);
       const activeSubjectReply = subjectAlreadyActive
-        ? getOrbyGreetingFollowUpReply(typedVoiceContext, activeSubjectRef.current)
+        ? getOrbyGreetingFollowUpReply(typedVoiceContext, previousActiveSubject)
         : null;
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(message, typedVoiceContext) ? ORBY_STUDY_GUIDANCE_REPLY : null;
       // Greetings stay on Gemini Live so the native Live voice speaks them.
       // Deterministic text-only shortcuts must not swallow a voice-mode greeting.
       const localReply = englishReply ?? subjectSelectionReply ?? activeSubjectReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
+        if (selectedSubject) activeSubjectRef.current = selectedSubject;
         respondToVoiceLocally(message, localReply, true);
         return;
       }
@@ -3239,6 +3241,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Orby no está disponible por ahora.");
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
+      if (selectedSubject) activeSubjectRef.current = selectedSubject;
       const fallbackAssistantId = isVoiceInteraction && voiceFallbackModeRef.current
         ? "voice-fallback-assistant-" + Date.now()
         : undefined;

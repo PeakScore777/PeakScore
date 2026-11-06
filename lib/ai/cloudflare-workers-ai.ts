@@ -25,8 +25,11 @@ export class CloudflareWorkersAIError extends Error {
 function getConfig() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "";
   const apiToken = process.env.CLOUDFLARE_API_TOKEN?.trim() ?? "";
-  if (!/^[a-f0-9]{32}$/i.test(accountId) || !apiToken) {
-    throw new CloudflareWorkersAIError("NOT_CONFIGURED");
+  if (!/^[a-f0-9]{32}$/i.test(accountId)) {
+    throw new CloudflareWorkersAIError("ACCOUNT_ID_INVALID");
+  }
+  if (!apiToken) {
+    throw new CloudflareWorkersAIError("API_TOKEN_MISSING");
   }
   return { accountId, apiToken };
 }

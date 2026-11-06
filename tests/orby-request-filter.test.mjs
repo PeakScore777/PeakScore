@@ -138,15 +138,19 @@ test("Orby continúa sin fuentes si los servicios públicos gratuitos no respond
 });
 
 test("ambos canales integran investigación pública sin sustituir Orby Lab", () => {
-  assert.match(lessonTutorRouteSource, /searchOrbyPublicSources\(learningQuery/);
+  assert.match(lessonTutorRouteSource, /searchOrbyPublicSources\(researchQuery/);
   assert.match(lessonTutorRouteSource, /INVESTIGACIÓN EXTERNA PÚBLICA/);
+  assert.match(lessonTutorRouteSource, /shouldSearchOrbyPublicSources\(\{/);
+  assert.match(lessonTutorRouteSource, /const shouldRunPublicResearch = shouldRetrieveAcademicKnowledge/);
   assert.match(lessonTutorRouteSource, /sources: publicSources/);
   assert.match(knowledgeSearchRouteSource, /searchOrbyPublicSources\(query/);
+  assert.match(knowledgeSearchRouteSource, /shouldSearchOrbyPublicSources\(query\)/);
   assert.match(knowledgeSearchRouteSource, /public_sources: publicResearch\.sources/);
   assert.match(knowledgeSearchRouteSource, /Promise\.allSettled\(\[/);
   assert.match(lessonTutorRouteSource, /publicResearchPromise/);
-  assert.match(realtimeSessionSource, /también devuelve public_sources/);
+  assert.match(realtimeSessionSource, /solo devolverá public_sources cuando/);
   assert.match(lessonTutorSource, /Fuentes públicas de apoyo/);
+  assert.match(lessonTutorSource, /source\.citationNumber \?\? sourceIndex \+ 1/);
   assert.match(lessonTutorSource, /public_sources: Array\.isArray\(result\.public_sources\)/);
 });
 

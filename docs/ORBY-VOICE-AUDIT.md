@@ -5,7 +5,7 @@
 - Última actualización: 2026-11-06
 - Alcance: auditoría de código y regresiones del chat de voz (VC).
 - Producción/`main`: no modificados ni desplegados en esta ronda.
-- Estado: corrección de clasificación de errores aplicada; CI del último cambio pendiente de confirmación y validación manual del VC pendiente.
+- Estado: correcciones de clasificación de errores y ciclo asíncrono Lab–VC aplicadas; CI completo aprobado para el último commit; validación manual del VC con Gemini Live real pendiente.
 
 ## Objetivo
 
@@ -92,18 +92,14 @@ Corrección aplicada en esta ronda:
 
 ## Pruebas y CI
 
-Última ejecución conocida antes de esta corrección:
-- Workflow: [PeakScore checks #1824](https://github.com/PeakScore777/PeakScore/actions/runs/42306000153)
-- Commit: `315091ae57612bce2a9cbf83f16c3ccf2f93d657`
-- Resultado: éxito en pruebas Orby, TypeScript, ESLint y build de producción.
+Última ejecución completa:
+- Workflow: [PeakScore checks #1841](https://github.com/PeakScore777/PeakScore/actions/runs/42308989917)
+- Commit: `1502c7766b03af9153568daa854352de68fbc0f6`
+- Resultado: `success`.
+- Job: `Orby tests, TypeScript, ESLint and production build` — completado correctamente.
+- Pasos aprobados: auditoría de dependencias, pruebas de regresión Orby, TypeScript, ESLint, build de producción Next.js, validación/actualización de dependencias y artefactos de lockfile.
 
-La corrección de clasificación Live/TTS y el seguimiento asíncrono Lab–VC son posteriores a ese commit. No se deben considerar validados por el CI anterior. La ejecución más reciente que incluya todos esos cambios debe pasar:
-- `npm run test:orby`
-- TypeScript (`tsc --noEmit`)
-- ESLint
-- Build de producción Next.js
-
-Las pruebas de `tests/orby-request-filter.test.mjs` inspeccionan funciones puras e invariantes del código fuente. No simulan el proveedor Gemini Live ni sustituyen una prueba real de micrófono/WebSocket.
+Las pruebas de `tests/orby-request-filter.test.mjs` inspeccionan funciones puras e invariantes del código fuente. No simulan el proveedor Gemini Live ni sustituyen una prueba real de micrófono/WebSocket. Por eso, CI verde permite actualizar la rama local, pero no declarar aprobado el comportamiento acústico real.
 
 ## Validación manual pendiente
 

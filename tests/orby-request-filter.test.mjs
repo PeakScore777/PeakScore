@@ -195,6 +195,9 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(lessonTutorSource, /parsed\.protocol === "https:"/);
   assert.match(lessonTutorSource, /es\.wikipedia\.org", "doi\.org", "openalex\.org/);
   assert.match(lessonTutorSource, /public_sources: Array\.isArray\(result\.public_sources\)/);
+  assert.match(lessonTutorSource, /voicePublicSourcesRef/);
+  assert.match(lessonTutorSource, /replyWithSourceLinks/);
+  assert.match(lessonTutorSource, /Fuentes consultadas:/);
 });
 
 test("la búsqueda académica prioriza la materia del turno actual sobre la materia anterior", () => {

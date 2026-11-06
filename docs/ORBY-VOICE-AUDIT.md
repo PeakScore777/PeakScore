@@ -154,3 +154,18 @@ La latencia no se debe declarar resuelta por este cambio. El flujo actual espera
 Se configuró el endpointing automático de Gemini Live de forma explícita tanto en el cliente como en las restricciones del token efímero: sensibilidad alta para detectar el final de voz, 40 ms de prefijo y 500 ms de silencio. El valor busca reducir la espera predeterminada sin usar un umbral extremo que corte pausas normales. El SDK documenta que `silenceDurationMs` controla cuánto silencio se espera para cerrar el turno y que valores mayores aumentan la latencia; la guía recomienda 500–800 ms como equilibrio. Referencias: https://googleapis.github.io/js-genai/release_docs/interfaces/types.AutomaticActivityDetection.html y https://ai.google.dev/gemini-api/docs/live-api/capabilities.
 
 **Límite de validación:** el cambio reduce el umbral de cierre del habla; no demuestra por sí solo que la respuesta completa llegue “al toque”. Hay que medir en Chrome real la latencia desde el último audio del estudiante hasta la primera transcripción, primer audio y finalización. Si corta pausas naturales, volver a 600–700 ms.
+
+
+## Recuperación de respuestas incompletas: conservar el contrato del turno
+
+En la revisión del 6 de noviembre se encontró una inconsistencia entre la generación inicial y su reintento automático. Cuando el modelo devolvía una respuesta de baja calidad (por ejemplo, un «sí» aislado ante el nombre de un concepto), el reintento construía un prompt reducido y genérico. Eso descartaba precisamente instrucciones que podían ser decisivas: el contrato especial de voz, el historial ya filtrado, los fragmentos académicos recuperados, las reglas de idioma y el formato de salida de cada modalidad. En un turno VC podía provocar una recuperación que ya no se comportara como VC.
+
+Corrección aplicada en `app/api/lesson-tutor/route.ts`:
+
+- El reintento ahora reutiliza `activePromptForRetry`, es decir, el prompt exacto seleccionado para la generación original (voz, conversación breve o tutor académico con RAG).
+- Añade la instrucción de recuperación y la pregunta exacta, sin sustituir las reglas originales ni eliminar la evidencia académica.
+- Conserva explícitamente idioma y formato de salida de la modalidad original.
+- Suma el tiempo de la segunda inferencia a `generationMs`; antes, el encabezado `Server-Timing` podía subestimar la latencia total de modelo cuando ocurría un reintento.
+- Se agregó una regresión que verifica que el reintento reutilice el prompt original y contabilice su tiempo.
+
+Este ajuste no reduce filtros ni expone borradores: el resultado recuperado sigue pasando por los mismos controles de JSON, calidad, seguridad, idioma, alcance y persistencia. Tampoco cambia proveedor, cuotas ni facturación. Pendiente: ejecutar CI completo para el nuevo commit y validar el comportamiento real en Chrome; las pruebas de código no reemplazan una sesión de voz acústica.

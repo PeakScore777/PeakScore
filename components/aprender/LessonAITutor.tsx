@@ -927,6 +927,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let safetyTimer: number | null = null;
       let requestController: AbortController | null = null;
       let audioElement: HTMLAudioElement | null = null;
+      let audioBufferSource: AudioBufferSourceNode | null = null;
       let audioObjectUrl: string | null = null;
       const playbackGeneration = voiceSpeechPlaybackGenerationRef.current;
 
@@ -940,6 +941,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           audioElement.removeAttribute("src");
           audioElement.load();
           audioElement = null;
+        }
+        if (audioBufferSource) {
+          const source = audioBufferSource;
+          audioBufferSource = null;
+          source.onended = null;
+          try { source.stop(); } catch { /* The decoded chunk may already have ended. */ }
+          source.disconnect();
+          voiceAudioSourcesRef.current.delete(source);
         }
         if (audioObjectUrl) {
           URL.revokeObjectURL(audioObjectUrl);
@@ -1003,15 +1012,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       function recoverCurrentTtsChunk() {
         if (finished) return;
-        skippedAudioChunks = true;
         clearAudioElement();
         requestController = null;
         if (chunkRetryCount < 1) {
           chunkRetryCount += 1;
-          window.setTimeout(() => void playFreeTtsChunk(), 350);
+          // Do not mark the chunk as lost before the retry has actually failed.
+          // The old code showed a red warning even when this retry played fine.
+          window.setTimeout(() => void playFreeTtsChunk(), 500);
           return;
         }
-        // A failed speech segment must not cancel the remaining spoken answer.
+        skippedAudioChunks = true;
+        // A genuinely failed segment must not cancel the remaining answer.
         chunkRetryCount = 0;
         chunkIndex += 1;
         window.setTimeout(() => void playFreeTtsChunk(), 120);
@@ -1040,19 +1051,33 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           });
           if (!response.ok) {
             const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
-            if (payload.code === "FREE_TIER_TTS_NOT_AVAILABLE" || payload.code === "FREE_TIER_TTS_QUOTA_EXCEEDED") {
-              // Provider quota/configuration flags are internal. Keep the
-              // answer and session usable without exposing billing jargon.
+            const unavailableCodes = new Set([
+              "FREE_TIER_TTS_NOT_AVAILABLE",
+              "FREE_TIER_TTS_QUOTA_EXCEEDED",
+              "TTS_PRIVACY_NOT_APPROVED",
+              "TTS_NOT_CONFIGURED",
+              "RATE_LIMIT_UNAVAILABLE",
+            ]);
+            if (typeof payload.code === "string" && unavailableCodes.has(payload.code)) {
+              // A privacy gate, exhausted free quota or missing key is not an
+              // audio decoding failure. Keep the answer and the listening UI
+              // usable; never retry a request the server has already refused.
               setVoiceError("");
               if (!isLocalVoiceTurn) setError("");
               setVoiceStatus("Respuesta lista · puedes continuar hablando o escribir");
-              // No phantom playback/transcript: the text was never spoken.
               voiceBrowserSpeechActiveRef.current = false;
               voiceLastAssistantOutputRef.current = "";
               voiceLastAssistantOutputAtRef.current = 0;
               voiceLastAssistantPlaybackUntilRef.current = 0;
               finishWithoutGenericVoice();
               return;
+            }
+            if (payload.code === "RATE_LIMITED") {
+              const retryAfter = Number(response.headers.get("Retry-After") ?? 0);
+              if (Number.isFinite(retryAfter) && retryAfter > 5) {
+                finishWithoutGenericVoice();
+                return;
+              }
             }
             throw new Error(typeof payload.error === "string" ? payload.error : "FREE_TIER_TTS_UNAVAILABLE");
           }
@@ -1064,40 +1089,80 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (finished || controller.signal.aborted
             || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
 
-          audioObjectUrl = URL.createObjectURL(audioBlob);
-          audioElement = new Audio(audioObjectUrl);
-          audioElement.preload = "auto";
-          audioElement.onplay = () => {
+          const voiceAudioContext = isLocalVoiceTurn ? voiceAudioContextRef.current : null;
+          if (voiceAudioContext && voiceAudioContext.state !== "closed") {
+            // In voice mode, decode the verified WAV into the already-unlocked
+            // microphone AudioContext. This avoids HTMLMediaElement autoplay
+            // and decoder failures after asynchronous TTS network requests.
+            await ensureVoiceAudioContextRunning(voiceAudioContext);
+            const decodedAudio = await voiceAudioContext.decodeAudioData(await audioBlob.arrayBuffer());
+            if (finished || controller.signal.aborted
+              || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+            const source = voiceAudioContext.createBufferSource();
+            source.buffer = decodedAudio;
+            source.connect(voiceAudioContext.destination);
+            if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
+            audioBufferSource = source;
+            const scheduledAt = Math.max(voiceAudioContext.currentTime + 0.02, voiceNextPlaybackTimeRef.current);
+            source.onended = () => {
+              if (finished || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+              voiceAudioSourcesRef.current.delete(source);
+              source.disconnect();
+              if (audioBufferSource === source) audioBufferSource = null;
+              requestController = null;
+              chunkRetryCount = 0;
+              chunkIndex += 1;
+              void playFreeTtsChunk();
+            };
+            source.start(scheduledAt);
             didPlaybackStart = true;
+            voiceAudioSourcesRef.current.add(source);
+            voicePlaybackOwnerRef.current = "tts";
+            voiceNextPlaybackTimeRef.current = scheduledAt + decodedAudio.duration;
             setSpeakingIndex(index);
             setVoiceStatus("Orby está leyendo la respuesta…");
-            if (isLocalVoiceTurn) {
-              // Only register an assistant echo after real audio playback starts.
-              voiceBrowserSpeechActiveRef.current = true;
-              voiceLastAssistantOutputRef.current = clean;
-              voiceLastAssistantOutputAtRef.current = Date.now();
-              rememberVoiceAssistantOutput(clean);
-              const duration = Number.isFinite(audioElement?.duration) ? audioElement?.duration ?? 0 : 0;
-              voiceLastAssistantPlaybackUntilRef.current = Date.now()
-                + (duration > 0 ? duration * 1000 : clean.length * 58)
-                + 1_800;
-            }
-          };
-          audioElement.onended = () => {
-            if (finished || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
-            clearAudioElement();
-            requestController = null;
-            chunkRetryCount = 0;
-            chunkIndex += 1;
-            void playFreeTtsChunk();
-          };
-          audioElement.onerror = () => {
-            if (finished) return;
-            recoverCurrentTtsChunk();
-          };
+            voiceBrowserSpeechActiveRef.current = true;
+            voiceLastAssistantOutputRef.current = clean;
+            voiceLastAssistantOutputAtRef.current = Date.now();
+            rememberVoiceAssistantOutput(clean);
+            voiceLastAssistantPlaybackUntilRef.current = Date.now()
+              + Math.max(0, voiceNextPlaybackTimeRef.current - voiceAudioContext.currentTime) * 1000
+              + 1_800;
+          } else {
+            audioObjectUrl = URL.createObjectURL(audioBlob);
+            audioElement = new Audio(audioObjectUrl);
+            audioElement.preload = "auto";
+            audioElement.onplay = () => {
+              didPlaybackStart = true;
+              setSpeakingIndex(index);
+              setVoiceStatus("Orby está leyendo la respuesta…");
+              if (isLocalVoiceTurn) {
+                voiceBrowserSpeechActiveRef.current = true;
+                voiceLastAssistantOutputRef.current = clean;
+                voiceLastAssistantOutputAtRef.current = Date.now();
+                rememberVoiceAssistantOutput(clean);
+                const duration = Number.isFinite(audioElement?.duration) ? audioElement?.duration ?? 0 : 0;
+                voiceLastAssistantPlaybackUntilRef.current = Date.now()
+                  + (duration > 0 ? duration * 1000 : clean.length * 58)
+                  + 1_800;
+              }
+            };
+            audioElement.onended = () => {
+              if (finished || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+              clearAudioElement();
+              requestController = null;
+              chunkRetryCount = 0;
+              chunkIndex += 1;
+              void playFreeTtsChunk();
+            };
+            audioElement.onerror = () => {
+              if (finished) return;
+              recoverCurrentTtsChunk();
+            };
 
-          await audioElement.play();
-          requestController = null;
+            await audioElement.play();
+            requestController = null;
+          }
         } catch (error) {
           if (finished) return;
           if (controller.signal.aborted || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {

@@ -1793,7 +1793,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          signal: requestController.signal,
+          signal: AbortSignal.any([requestController.signal, AbortSignal.timeout(12_000)]),
           body: JSON.stringify({ query, subject: requestedSubject }),
         });
         const result = await response.json().catch(() => ({}));
@@ -2722,7 +2722,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (!payload.toolCall) return;
         }
         if (payload.toolCall && typeof payload.toolCall === "object") {
+          // Gemini 3.8 Live may emit a non-blocking tool call alongside
+          // server content. Start retrieval, but never discard audio/transcript
+          // content carried by the same event.
           void handleOrbyLiveKnowledgeTool(payload.toolCall);
+          if (payload.serverContent && typeof payload.serverContent === "object") {
+            handleGeminiLiveEvent(payload);
+          }
           return;
         }
         handleGeminiLiveEvent(payload);

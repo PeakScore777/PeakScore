@@ -65,6 +65,13 @@ test("la política de seguridad permite reproducir audio del mismo sitio y no bl
   assert.match(lessonTutorSource, /source\.start\(scheduledAt\)/);
 });
 
+test("los turnos permitidos de voz permanecen en Gemini Live y no gastan TTS local", () => {
+  assert.match(lessonTutorSource, /voicePreflightReplyRef\.current = asksIdentity[\s\S]{0,420}preflight\.allowed \? null : preflight\.reply/);
+  assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
+  assert.doesNotMatch(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, (?:ORBY_STUDY_GUIDANCE_REPLY|ORBY_ICFES_ENGLISH_INTRO_REPLY)/);
+  assert.doesNotMatch(lessonTutorSource, /const localReply = englishReply \?\?/);
+});
+
 test("Orby divide respuestas largas sin reordenar frases ni exceder el límite TTS", () => {
   const answer = "Primera explicación completa. Segunda explicación también completa y extensa. Tercera explicación final.";
   const chunks = speechChunks.splitOrbySpeechIntoChunks(answer, 24);

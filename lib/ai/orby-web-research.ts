@@ -23,7 +23,7 @@ function cleanText(value: unknown, max = 1200): string {
 }
 
 function normalizeQuery(value: string): string {
-  return value.normalize("NFKC").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 180);
+  return value.normalize("NFKC").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 2000);
 }
 
 function normalizeForMatching(value: string): string {

@@ -159,6 +159,16 @@ function getActiveOrbySubjectKey(previousContext = "", activeSubject = ""): Orby
   return null;
 }
 
+export function getOrbySubjectSelectionLabel(message: string): string | null {
+  const key = getOrbySubjectSelectionKey(message);
+  if (key === "english") return "Inglés";
+  if (key === "math") return "Matemáticas";
+  if (key === "reading") return "Lectura Crítica";
+  if (key === "social") return "Sociales y Ciudadanas";
+  if (key === "science") return "Ciencias Naturales";
+  return null;
+}
+
 export function isOrbySubjectAlreadyActive(message: string, previousContext = "", activeSubject = ""): boolean {
   const requested = getOrbySubjectSelectionKey(message);
   return Boolean(requested && getActiveOrbySubjectKey(previousContext, activeSubject) === requested);

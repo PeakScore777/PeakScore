@@ -121,6 +121,8 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(lessonTutorRouteSource, /sources: publicSources/);
   assert.match(knowledgeSearchRouteSource, /searchOrbyPublicSources\(query/);
   assert.match(knowledgeSearchRouteSource, /public_sources: publicResearch\.sources/);
+  assert.match(knowledgeSearchRouteSource, /Promise\.allSettled\(\[/);
+  assert.match(lessonTutorRouteSource, /publicResearchPromise/);
   assert.match(realtimeSessionSource, /también devuelve public_sources/);
   assert.match(lessonTutorSource, /Fuentes públicas de apoyo/);
 });

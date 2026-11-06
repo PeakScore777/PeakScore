@@ -1185,6 +1185,38 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.doesNotMatch(lessonTutorSource.slice(typedVoiceStart, localFilterIndex), /pendingMessagesRef\.current\.push/);
 });
 
+test("una selección nueva se evalúa antes de actualizar la materia activa", () => {
+  const liveSelectionStart = lessonTutorSource.indexOf("const previousVoiceSubject = activeSubjectRef.current;");
+  const liveDecision = lessonTutorSource.indexOf(
+    "isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject)",
+    liveSelectionStart,
+  );
+  const liveCommit = lessonTutorSource.indexOf(
+    "if (selectedVoiceSubject) activeSubjectRef.current = selectedVoiceSubject;",
+    liveDecision,
+  );
+  assert.ok(liveSelectionStart >= 0 && liveDecision > liveSelectionStart && liveCommit > liveDecision);
+
+  const typedVoiceStart = lessonTutorSource.indexOf("if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)");
+  const typedDecision = lessonTutorSource.indexOf(
+    "isOrbySubjectAlreadyActive(message, typedVoiceContext, previousActiveSubject)",
+    typedVoiceStart,
+  );
+  const typedCommit = lessonTutorSource.indexOf(
+    "if (selectedSubject) activeSubjectRef.current = selectedSubject;",
+    typedDecision,
+  );
+  assert.ok(typedVoiceStart >= 0 && typedDecision > typedVoiceStart && typedCommit > typedDecision);
+  assert.ok(lessonTutorSource.includes('"Área de estudio: " + previousActiveSubject'));
+  const sendStart = lessonTutorSource.indexOf("async function sendMessage(");
+  const successfulResponse = lessonTutorSource.indexOf(
+    "if (selectedSubject) activeSubjectRef.current = selectedSubject;",
+    sendStart,
+  );
+  const validReply = lessonTutorSource.indexOf("if (typeof data.reply !== \"string\" || !data.reply.trim())", sendStart);
+  assert.ok(successfulResponse > validReply && validReply > sendStart);
+});
+
 test("el motor conserva los lotes visuales al volver a indexar fragmentos OCR", () => {
   assert.match(chunkCapacityMigration, /chunk_count\s*<=\s*2000/i);
   assert.match(knowledgeWorkerSource, /const MAX_DOCUMENT_CHUNKS = 2000/);

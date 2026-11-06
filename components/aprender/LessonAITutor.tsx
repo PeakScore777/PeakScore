@@ -1344,7 +1344,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       activateTurnBasedVoiceFallback(
         "La sesión Live se interrumpió. Continúo con el tutor gratuito por turnos; la respuesta alternativa quedará escrita.",
       );
-      respondToVoiceLocally(pendingUserText, forcedPolicyReply, appendUserMessage, true);
+      respondToVoiceLocally(pendingUserText, forcedPolicyReply, appendUserMessage, true, false);
       return;
     }
 
@@ -1554,7 +1554,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  function respondToVoiceLocally(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false) {
+  function respondToVoiceLocally(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false, speak = true) {
     const cleanUserText = userText.trim().slice(0, 1200);
     const cleanReply = reply.trim();
     if (!cleanUserText || !cleanReply || !voiceModeRef.current) return;
@@ -1631,7 +1631,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     setVoiceError("");
-    void speakText(cleanReply, assistantIndex);
+    if (speak) {
+      void speakText(cleanReply, assistantIndex);
+    } else {
+      // Live already failed to speak this trusted refusal. Keep it visible and
+      // return to listening without spending another provider request.
+      finishLocalVoiceReply(assistantId);
+    }
   }
 
   function persistRealtimeTurnIfReady(): Promise<void> {

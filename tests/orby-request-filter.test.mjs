@@ -166,17 +166,18 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.match(lessonTutorSource, /void speakText\(rawReply, messageIndex >= 0 \? messageIndex : messages\.length\)/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
   assert.match(lessonTutorSource, /void speakText\(data\.reply, nextMessages\.length(?:, typeof data\.checkQuestion === "string" \? data\.checkQuestion : "")?\)/);
-  assert.ok(lessonTutorSource.includes("A genuinely failed segment must not cancel the remaining answer."));
-  assert.ok(lessonTutorSource.includes("Do not mark the chunk as lost before the retry has actually failed."));
+  assert.ok(lessonTutorSource.includes("Retry the same segment several times. Never skip a sentence"));
+  assert.ok(lessonTutorSource.includes("No voy a saltarme esa parte"));
   assert.ok(lessonTutorSource.includes("await ensureVoiceAudioContextRunning(voiceAudioContext)"));
   assert.ok(lessonTutorSource.includes("voiceAudioContext.decodeAudioData(await audioBlob.arrayBuffer())"));
   assert.ok(lessonTutorSource.includes("audioBufferSource = source"));
   assert.ok(lessonTutorSource.includes("voiceAudioSourcesRef.current.add(source)"));
   const ttsRecoveryStart = lessonTutorSource.indexOf("function recoverCurrentTtsChunk()");
-  const ttsRetryGate = lessonTutorSource.indexOf("if (chunkRetryCount < 1)", ttsRecoveryStart);
-  const ttsMarkSkipped = lessonTutorSource.indexOf("skippedAudioChunks = true", ttsRecoveryStart);
-  assert.ok(ttsRecoveryStart >= 0 && ttsRetryGate > ttsRecoveryStart && ttsMarkSkipped > ttsRetryGate,
-    "solo marca el fragmento como perdido después del reintento definitivo");
+  const ttsRetryGate = lessonTutorSource.indexOf("if (chunkRetryCount < 4)", ttsRecoveryStart);
+  const ttsPause = lessonTutorSource.indexOf("No voy a saltarme esa parte", ttsRetryGate);
+  assert.ok(ttsRecoveryStart >= 0 && ttsRetryGate > ttsRecoveryStart && ttsPause > ttsRetryGate,
+    "el reproductor reintenta el mismo fragmento y pausa antes de omitir contenido");
+  assert.doesNotMatch(lessonTutorSource, /skippedAudioChunks/);
   assert.match(lessonTutorSource, /Do not expose this text as spoken audio until playback really starts/);
   assert.ok(lessonTutorSource.includes("speakWithVerifiedFreeTts(clean, index)"));
   assert.ok(lessonTutorSource.includes("await speakWithVerifiedFreeTts(clean, index);"));
@@ -1800,8 +1801,9 @@ test("un eco de una respuesta breve no genera otro turno, pero una confirmación
   assert.equal(detect("sí", ["¿Empezamos con un texto tipo ICFES?"]), false);
 });
 
-test("las respuestas TTS largas conservan texto y cada fragmento fallido se reintenta sin cancelar el resto", () => {
-  assert.ok(lessonTutorSource.includes(".slice(0, 12_000)"));
+test("las respuestas TTS largas conservan el texto completo y no omiten fragmentos", () => {
+  assert.ok(lessonTutorSource.includes("const clean = composeOrbySpeechText(text, checkQuestion);"));
+  assert.doesNotMatch(lessonTutorSource, /composeOrbySpeechText\(text, checkQuestion\)\.slice/);
   assert.ok(lessonTutorSource.includes("recoverCurrentTtsChunk"));
   assert.ok(lessonTutorSource.includes("chunkRetryCount < 4"));
   assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 480)"));

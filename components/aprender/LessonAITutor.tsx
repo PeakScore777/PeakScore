@@ -11,6 +11,7 @@ import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
+import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
@@ -2826,8 +2827,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             typeof detail.status === "string" || typeof detail.status === "number" ? String(detail.status) : "",
             typeof detail.message === "string" ? detail.message : "",
           ].filter(Boolean).join(" ");
-          const quotaReached = detail.status === 429
-            || /RESOURCE_EXHAUSTED|QUOTA_EXCEEDED|quota exceeded|free tier.*quota|rate limit/i.test(providerDetail);
+          const liveFailure = classifyGeminiProviderFailure({
+            status: detail.status,
+            code: detail.code,
+            message: providerDetail,
+          });
+          const quotaReached = liveFailure === "quota_exhausted";
+          const rateLimited = liveFailure === "rate_limited";
           console.warn("[Orby Voice] Realtime service rejected the connection.", {
             status: detail.status,
             code: detail.code,
@@ -2836,11 +2842,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           });
 
           const quotaMessage = "GEMINI_FREE_QUOTA_EXCEEDED: Gemini Live agotó su cuota gratuita. Continúo con Whisper, Cloudflare y lectura local; no se usará un servicio de pago.";
+          const rateLimitMessage = "Gemini Live está limitando temporalmente las solicitudes. Conservé tu conversación y continuaré por el respaldo gratuito; no significa que se haya agotado tu cuota.";
           if (reconnectInFlight && !resumeSetupComplete) {
-            rejectResumeSetup?.(new Error(quotaReached ? quotaMessage : "No se pudo reanudar la conexión de voz."));
+            rejectResumeSetup?.(new Error(
+              quotaReached ? quotaMessage : rateLimited ? rateLimitMessage : "No se pudo reanudar la conexión de voz.",
+            ));
           } else if (liveSessionEstablished && voiceModeRef.current) {
             if (quotaReached) {
               fallbackVoiceTurnToText("Gemini Live agotó su cuota gratuita. Continúo esta conversación con Whisper y Cloudflare, sin usar servicios de pago.");
+            } else if (rateLimited) {
+              fallbackVoiceTurnToText(rateLimitMessage);
             } else if (reconnectLiveSession) {
               void reconnectLiveSession();
             } else {
@@ -2849,7 +2860,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           } else {
             rejectSetup?.(new Error(quotaReached
               ? quotaMessage
-              : "No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
+              : rateLimited
+                ? rateLimitMessage
+                : "No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
           }
           return;
         }

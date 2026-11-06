@@ -325,7 +325,7 @@ export async function POST(request: Request) {
     // the same Saber 11 component again.
     const recentConversationText = recentContextMessages
       .map((item) => item.role + ": " + item.content)
-      .join("\\n");
+      .join("\n");
     if (!tutorImage && isOrbySubjectAlreadyActive(userMessage, recentConversationText, subject)) {
       const continuationReply = getOrbyGreetingFollowUpReply(recentConversationText, subject);
       if (conversationId && ownedConversation) {

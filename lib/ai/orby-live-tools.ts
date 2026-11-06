@@ -1,10 +1,11 @@
-import { Type, type Tool } from "@google/genai";
+import { Behavior, Type, type Tool } from "@google/genai";
 
 export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
   {
     functionDeclarations: [
       {
         name: "search_orby_learning_knowledge",
+        behavior: Behavior.BLOCKING,
         description: "Searches PeakScore’s published Saber 11 learning library and may add free public research only when the student asks for sources or external verification. MUST call this tool before answering each new substantive academic question that could benefit from published material: a new concept, exercise, reading or graph analysis, exam competency, misconception, or request to deepen an explanation. Resolve short follow-ups from the conversation and search only when they introduce a new concept or need evidence beyond the existing exchange. Do not call for greetings, confirmations, or a follow-up already fully answered in the current context. Send the complete contextualized question and current Saber 11 subject. If no relevant published material is found, continue teaching from reliable model knowledge without pretending the library contained evidence.",
         parameters: {
           type: Type.OBJECT,

@@ -1007,8 +1007,8 @@ test("la búsqueda de conocimiento recupera todas las áreas si falta el índice
   assert.ok(orbyKnowledgeSource.includes("if (options.subject && indexedModels.length === 0)"));
   assert.ok(orbyKnowledgeSource.includes("No exact subject embedding index"));
   assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null });"));
-  assert.match(knowledgeSearchRouteSource, /preflightOrbyRequest\\(query, preflightContext\\)/);
-  assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \\? "Área de estudio: " \\+ subject : ""/);
+  assert.match(knowledgeSearchRouteSource, /preflightOrbyRequest\(query, preflightContext\)/);
+  assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \? "Área de estudio: " \+ subject : ""/);
 });
 
 test("solo permite publicar cuando el perfil v2 y todos los embeddings están listos", () => {
@@ -1136,7 +1136,7 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /learningSignalsPromise/);
   assert.match(realtimeSessionSource, /BIBLIOTECA ACADÉMICA \(USO OBLIGATORIO CUANDO APLIQUE\)/);
   assert.match(realtimeSessionSource, /pregunta académica nueva y sustantiva/);
-  assert.match(realtimeSessionSource, /si no se recupera material publicado/);
+  assert.match(realtimeSessionSource, /Si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
   assert.match(liveToolsSource, /MUST call this before answering a new substantive academic question/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);

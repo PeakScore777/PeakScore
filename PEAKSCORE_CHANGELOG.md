@@ -1,5 +1,13 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-06 — Orby hybrid public research
+- Added `lib/ai/orby-web-research.ts`, a keyless/free public-source adapter using the Wikimedia Spanish search API and OpenAlex works API. It enforces source-host allowlists, short timeouts, bounded results, deduplication, safe URL reconstruction, and treats excerpts as untrusted data.
+- Text tutor now retrieves public sources for substantive academic turns in addition to Orby Lab's published chunks, concept graph, related material and pedagogical profiles. Public-source outages are non-fatal and never trigger another model provider.
+- The VC knowledge-search tool now returns the same public-source context alongside Orby Lab results; Gemini Live instructions explain how to use and qualify those results.
+- Text chat displays the source links separately from the answer, with publisher and publication year when available.
+- Added regression tests for source allowlisting, deduplication, limits, excerpt sanitization, offline degradation, and integration in both channels.
+- Scope note: this first iteration searches Wikimedia and OpenAlex only. It is not yet a general web search engine or a guarantee of official ICFES/government-source coverage. Results must be checked for relevance and quality; source presence alone is not proof that a claim is correct.
+
 ## 2026-11-06 — Orby text/voice subject routing
 - Text tutor retrieval now gives the current student turn's detected Saber 11 subject priority over the conversation's previously active subject. This avoids sending an explicitly new-area question to the old subject's vector index.
 - The shared voice knowledge-search endpoint applies the same current-query-first rule, so VC retrieval is not forced to remain on the prior conversation subject.

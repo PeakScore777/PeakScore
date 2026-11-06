@@ -91,6 +91,13 @@ test("Orby reserva la búsqueda web para fuentes, actualidad e investigación ex
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Investiga el impacto de la deforestación."), true);
 });
 
+test("Orby convierte las citas en voz sin leer URLs ni sintaxis Markdown", () => {
+  const spoken = filter.composeOrbySpeechText("La evidencia está respaldada por [1](https://doi.org/10.1000/prueba).");
+  assert.ok(!spoken.includes("https://"));
+  assert.ok(!spoken.includes("]("));
+  assert.ok(spoken.includes("1"));
+});
+
 test("Orby solo muestra las fuentes citadas y conserva su numeración original", () => {
   const sources = [
     { title: "Fuente uno", url: "https://es.wikipedia.org/wiki/Fuente_uno", publisher: "Wikipedia", publishedAt: null, excerpt: "Evidencia uno", kind: "encyclopedia" },
@@ -165,6 +172,8 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(realtimeSessionSource, /solo devolverá public_sources cuando/);
   assert.match(lessonTutorSource, /Fuentes públicas de apoyo/);
   assert.match(lessonTutorSource, /source\.citationNumber \?\? sourceIndex \+ 1/);
+  assert.match(lessonTutorSource, /function renderInline\(text: string\): ReactNode/);
+  assert.match(lessonTutorSource, /parsed\.protocol === "https:"/);
   assert.match(lessonTutorSource, /function renderInline\(text: string\): ReactNode/);
   assert.match(lessonTutorSource, /parsed\.protocol === "https:"/);
   assert.match(lessonTutorSource, /es\.wikipedia\.org", "doi\.org", "openalex\.org/);

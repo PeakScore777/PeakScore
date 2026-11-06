@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 
@@ -1955,7 +1955,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : !preflight.allowed
             ? "outside"
             : null;
-      const subjectSelectionReply = getOrbySubjectSelectionReply(voiceUserTextRef.current);
+      const subjectAlreadyActive = isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, subject);
+      const subjectSelectionReply = getOrbySubjectSelectionReply(voiceUserTextRef.current, voiceScopeContext, subject);
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(voiceUserTextRef.current, voiceScopeContext)
         ? ORBY_STUDY_GUIDANCE_REPLY
         : null;
@@ -1968,7 +1969,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? null
         : unsupportedInputScript
           ? ORBY_SPANISH_ONLY_REPLY
-        : isGenericIcfesEnglishRequest(voiceUserTextRef.current)
+        : isGenericIcfesEnglishRequest(voiceUserTextRef.current) && !subjectAlreadyActive
           ? ORBY_ICFES_ENGLISH_INTRO_REPLY
           : isOrbyGreetingRequest(voiceUserTextRef.current)
           ? null
@@ -2356,7 +2357,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
-          body: JSON.stringify({ subject, topic, context, history: messagesRef.current.slice(-8).map(({ role, content }) => ({ role, content })) }),
+          body: JSON.stringify({
+            subject,
+            topic,
+            context,
+            conversationId: activeConversationRef.current ?? conversationId,
+            history: messagesRef.current.slice(-12).map(({ role, content }) => ({ role, content })),
+          }),
         }),
       ]);
       const tokenPayload = await tokenResponse.json().catch(() => ({}));
@@ -3032,15 +3039,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       pendingMessagesRef.current = [];
       setQueuedMessageCount(0);
       const typedVoiceContext = [
+        ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceLastAssistantOutputRef.current,
         "Área de estudio: " + subject,
         "Tema de estudio: " + topic,
         question,
         context,
-      ].filter(Boolean).join("\n").slice(0, 1800);
+      ].filter(Boolean).join("\n").slice(-5_000);
       const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);
-      const englishReply = isGenericIcfesEnglishRequest(message) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : null;
-      const subjectSelectionReply = getOrbySubjectSelectionReply(message);
+      const subjectAlreadyActive = isOrbySubjectAlreadyActive(message, typedVoiceContext, subject);
+      const englishReply = isGenericIcfesEnglishRequest(message) && !subjectAlreadyActive
+        ? ORBY_ICFES_ENGLISH_INTRO_REPLY
+        : null;
+      const subjectSelectionReply = getOrbySubjectSelectionReply(message, typedVoiceContext, subject);
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(message, typedVoiceContext) ? ORBY_STUDY_GUIDANCE_REPLY : null;
       // Greetings stay on Gemini Live so the native Live voice speaks them.
       // Deterministic text-only shortcuts must not swallow a voice-mode greeting.
@@ -3061,7 +3072,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceInputPolicyRef.current = typedPreflight.allowed
         ? null
         : typedPreflight.category === "programming" ? "programming" : "outside";
-      voicePreflightReplyRef.current = isGenericIcfesEnglishRequest(message)
+      voicePreflightReplyRef.current = isGenericIcfesEnglishRequest(message) && !subjectAlreadyActive
         ? ORBY_ICFES_ENGLISH_INTRO_REPLY
         : typedPreflight.allowed ? null : typedPreflight.reply;
       // Typed text is a new voice turn and is already visible below.

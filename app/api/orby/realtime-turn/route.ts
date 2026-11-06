@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { normalizeIcfesSubject } from "@/lib/ai/orby-scope";
+import { getOrbySubjectSelectionReply } from "@/lib/ai/orby-request-filter";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +36,31 @@ export async function POST(request: Request) {
       console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });
       return NextResponse.json({ error: "La conversación ocurrió, pero no se pudo guardar en el historial." }, { status: 503 });
     }
+
+    // Voice subject selections use the same deterministic classifier as text.
+    // Only a standalone recognized area can change the stored subject; an
+    // incidental mention inside an exercise or passage cannot switch it.
+    if (getOrbySubjectSelectionReply(userContent)) {
+      const selectedSubject = normalizeIcfesSubject(userContent, userContent);
+      if (selectedSubject) {
+        const { data: updatedConversation, error: subjectError } = await supabaseAdmin
+          .from("orby_conversations")
+          .update({ subject: selectedSubject })
+          .eq("id", conversationId)
+          .eq("user_id", user.id)
+          .select("id")
+          .maybeSingle();
+        if (subjectError || !updatedConversation) {
+          console.error("[Orby Realtime] Voice turn saved but active subject could not be updated.", {
+            code: subjectError?.code,
+          });
+          return NextResponse.json({
+            error: "El turno se guardó, pero no se pudo actualizar la materia activa. Vuelve a seleccionarla antes de continuar.",
+          }, { status: 503 });
+        }
+      }
+    }
+
     return NextResponse.json({ saved: true }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "No se pudo guardar el turno de voz." }, { status: 500 });

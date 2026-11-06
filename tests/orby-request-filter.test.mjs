@@ -123,6 +123,8 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
   assert.match(lessonTutorSource, /completeOrbyVoiceToolGeneration/);
   assert.match(lessonTutorSource, /voiceKnowledgeToolTurnRef\.current = resetOrbyVoiceToolTurn\(\)/);
   assert.match(lessonTutorSource, /Orby está completando la explicación con el material del Lab/);
+  assert.match(realtimeSessionSource, /SEGUIMIENTO DEL LAB ASÍNCRONO/);
+  assert.match(realtimeSessionSource, /no repitas toda la respuesta/);
 });
 
 test("una respuesta Live lenta no fuerza TTS si el canal sigue conectado", () => {

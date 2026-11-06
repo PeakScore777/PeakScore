@@ -522,9 +522,9 @@ export async function POST(request: Request) {
     // Only the current academic request and lesson metadata are eligible
     // for public search. Never forward the conversation history to public APIs.
     const researchQuery = [
+      userMessage,
       topic,
       question,
-      userMessage,
     ].filter(Boolean).join(" ").slice(0, 1200);
     const shouldRunPublicResearch = shouldSearchOrbyPublicSources({
         message: userMessage,

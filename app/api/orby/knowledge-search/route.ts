@@ -64,12 +64,7 @@ export async function POST(request: Request) {
       });
     }
 
-    const fragments = await searchOrbyKnowledge({
-      query,
-      subject,
-      visibility: "published",
-      limit: 6,
-    }) as Array<{
+    type VoiceKnowledgeFragment = {
       document_id: string;
       title: string;
       subject: string;
@@ -80,17 +75,49 @@ export async function POST(request: Request) {
       profile_concepts?: unknown;
       profile_competencies?: unknown;
       profile_topics?: unknown;
-    }>;
-
-    const [conceptHits, related] = await Promise.all([
+    };
+    const [fragmentResult, conceptResult, publicResult] = await Promise.allSettled([
+      searchOrbyKnowledge({
+        query,
+        subject,
+        visibility: "published",
+        limit: 6,
+      }),
       searchOrbyKnowledgeConcepts({
         query,
         subject,
         visibility: "published",
         limit: 32,
       }),
-      getOrbyRelatedKnowledge([...new Set(fragments.map((item) => item.document_id))], "published", 3),
+      searchOrbyPublicSources(query, { maxSources: 4 }),
     ]);
+    const fragments: VoiceKnowledgeFragment[] = fragmentResult.status === "fulfilled"
+      ? fragmentResult.value as VoiceKnowledgeFragment[]
+      : [];
+    const conceptHits = conceptResult.status === "fulfilled" ? conceptResult.value : [];
+    const publicResearch = publicResult.status === "fulfilled"
+      ? publicResult.value
+      : { sources: [], searched: ["Wikimedia", "OpenAlex"], warnings: ["PUBLIC_RESEARCH_UNAVAILABLE"] };
+
+    if (fragmentResult.status === "rejected") {
+      console.warn("[Orby Voice Knowledge] Private Lab retrieval unavailable.");
+    }
+    if (conceptResult.status === "rejected") {
+      console.warn("[Orby Voice Knowledge] Concept retrieval unavailable.");
+    }
+    if (publicResult.status === "rejected") {
+      console.warn("[Orby Voice Knowledge] Public research unavailable.");
+    }
+
+    let related: Awaited<ReturnType<typeof getOrbyRelatedKnowledge>> = [];
+    const documentIds = [...new Set(fragments.map((item) => item.document_id))];
+    if (documentIds.length) {
+      try {
+        related = await getOrbyRelatedKnowledge(documentIds, "published", 3);
+      } catch {
+        console.warn("[Orby Voice Knowledge] Related-document retrieval unavailable.");
+      }
+    }
 
     const concepts = conceptHits.slice(0, 24).map((item) => ({
       name: item.concept_name,
@@ -101,15 +128,6 @@ export async function POST(request: Request) {
       confidence: item.confidence,
       importance: item.importance,
     }));
-
-    let publicResearch = { sources: [], searched: ["Wikimedia", "OpenAlex"], warnings: [] } as Awaited<ReturnType<typeof searchOrbyPublicSources>>;
-    try {
-      publicResearch = await searchOrbyPublicSources(query, { maxSources: 4 });
-    } catch (error) {
-      console.warn("[Orby Voice Knowledge] Public research unavailable.", {
-        name: error instanceof Error ? error.name : "UnknownError",
-      });
-    }
 
     const excerpts = fragments.map((item) => ({
       area: item.subject || "Transversal",

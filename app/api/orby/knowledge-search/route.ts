@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { classifyOutOfScopeRequest, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
 import { preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
-import { searchOrbyPublicSources } from "@/lib/ai/orby-web-research";
+import { searchOrbyPublicSources, shouldSearchOrbyPublicSources } from "@/lib/ai/orby-web-research";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -89,7 +89,9 @@ export async function POST(request: Request) {
         visibility: "published",
         limit: 32,
       }),
-      searchOrbyPublicSources(query, { maxSources: 4 }),
+      shouldSearchOrbyPublicSources(query)
+        ? searchOrbyPublicSources(query, { maxSources: 4 })
+        : Promise.resolve({ sources: [], searched: [], warnings: [] }),
     ]);
     const fragments: VoiceKnowledgeFragment[] = fragmentResult.status === "fulfilled"
       ? fragmentResult.value as VoiceKnowledgeFragment[]

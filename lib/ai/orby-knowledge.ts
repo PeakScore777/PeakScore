@@ -1374,6 +1374,18 @@ export async function searchOrbyKnowledge(options: {
       .slice(0, 2)
     : [];
 
+  // Published profiles may use a curricular synonym for the official area
+  // (for example "Ciencias Sociales" instead of "Sociales y Ciudadanas").
+  // The exact-area filter then exposes no embedding model at all. Retry this
+  // query across the published library rather than silently returning zero.
+  if (options.subject && indexedModels.length === 0) {
+    console.warn("[Orby RAG] No exact subject embedding index; retrying query across published areas.", {
+      requestedSubject: options.subject,
+      modelLookupFailed: Boolean(modelError),
+    });
+    return searchOrbyKnowledge({ ...options, subject: null });
+  }
+
   const embeddingEntries = await Promise.all(indexedModels.map(async (model) => {
     const values = await createOrbyQueryEmbeddingForModel(options.query, model);
     return values ? { model, values } : null;
@@ -1461,6 +1473,14 @@ export async function searchOrbyKnowledgeConcepts(options: {
     return [];
   }
   if (!Array.isArray(data)) return [];
+  if (options.subject && data.length === 0) {
+    // As in chunk retrieval, do not let a taxonomy naming mismatch hide
+    // published evidence from the active ICFES area.
+    console.warn("[Orby Knowledge] No exact subject concept hits; retrying the query across published areas.", {
+      requestedSubject: options.subject,
+    });
+    return searchOrbyKnowledgeConcepts({ ...options, subject: null });
+  }
   return data.flatMap((raw) => {
     const value = asRecord(raw);
     if (!value || typeof value.concept_name !== "string" || !value.concept_name.trim()) return [];

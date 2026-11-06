@@ -63,7 +63,7 @@ const ICFES_SCOPE_PATTERNS = [
 const ICFES_CURRICULUM_CONTEXT_PATTERNS = ICFES_SCOPE_PATTERNS.slice(1);
 
 const ICFES_ACADEMIC_MATERIAL_FRAME_PATTERN =
-  /\b(?:en el texto|en un texto|en la lectura|en una lectura|en el fragmento|en el pasaje|en el dialogo|en un dialogo|en el enunciado|en la pregunta|en este ejercicio|para esta pregunta|segun el texto|segun la lectura|de acuerdo con el texto|de acuerdo con la lectura|lee|leer|lectura de|comprension lectora|se menciona|menciona|aparece|se presenta|analiza|analizar|interpreta|interpretar|comprende|comprension|intencion comunicativa|personaje|autor|narrador|parrafo|fragmento|opcion de respuesta|pregunta tipo icfes)\b/i;
+  /\b(?:en el texto|en un texto|en la lectura|en una lectura|en el fragmento|en el pasaje|en el dialogo|en un dialogo|en el enunciado|en la pregunta|en este ejercicio|para esta pregunta|segun el texto|segun la lectura|de acuerdo con el texto|de acuerdo con la lectura|lee|leer|lectura de|comprension lectora|se menciona|menciona|aparece|se presenta|analiza|analizar|interpreta|interpretar|comprende|comprension|intencion comunicativa|personaje|autor|narrador|parrafo|fragmento|opcion de respuesta|pregunta tipo icfes|according to (?:the )?(?:text|passage|dialogue)|in this (?:text|passage|dialogue|exercise)|what does .{1,90} mean|what is implied|what can be inferred|main idea|choose the correct|select the correct|fill in the blank|complete the sentence|which statement|which option|reading comprehension)\b/i;
 
 function isIcfesAcademicMaterialQuestion(message: string, previousContext = ""): boolean {
   const normalized = normalizeOrbyRequestText(message);
@@ -487,8 +487,9 @@ export function shouldRetrieveOrbyAcademicKnowledge(input: {
     || ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedLessonContext))
     || /\b(?:area de estudio|tema de estudio|competencia icfes|ejercicio de saber 11)\b/i.test(normalizedLessonContext);
   const isFollowUpOrStudyIntent = /\b(?:explicame|explica|ensename|ayudame a resolver|resuelve|analiza|interpreta|compara|define|que significa|que es|que son|como funciona|como se resuelve|dame ejercicios|practiquemos|repasemos|estudiemos|quiero aprender|no entiendo|no se|no lo se|ni idea|no tengo claro|ayudame a elegir|diferencia entre|por que ocurre|por que|como asi|otro ejemplo|dame otro ejemplo|continua|siguiente|comencemos|empecemos|vamos|otra pregunta|siguiente pregunta|empezamos)\b/i.test(message);
+  const isEnglishAcademicQuestion = /\b(?:what does .{1,90} mean|what is the meaning of|what is implied|what can be inferred|what is the main idea|main idea|according to (?:the )?(?:text|passage|dialogue)|which (?:statement|option|answer)|choose the correct|select the correct|fill in the blank|complete the sentence|why does the author|what was the|who was the|explain|define|compare|solve|calculate|infer|interpret)\b/i.test(currentText);
   const confirmsGuidedContinuation = isOrbyContextualConfirmation(input.message, input.context ?? "");
-  return hasAcademicLessonContext && (isFollowUpOrStudyIntent || confirmsGuidedContinuation);
+  return hasAcademicLessonContext && (isFollowUpOrStudyIntent || isEnglishAcademicQuestion || confirmsGuidedContinuation);
 }
 
 export function getOrbySubjectSelectionReply(

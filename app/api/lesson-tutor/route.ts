@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
-import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
+import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, expandIcfesEnglishSearchTerms, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
 import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
@@ -505,13 +505,16 @@ export async function POST(request: Request) {
       ownedConversation.subject = currentTurnSubject;
       subject = currentTurnSubject;
     }
-    const learningQuery = [
+    const learningQueryBase = [
       userMessage,
       question,
       topic,
       context,
       ...history.slice(-8).map((item) => item.content),
-    ].filter(Boolean).join(" ").slice(0, 3200);
+    ].filter(Boolean).join(" ").slice(0, 3000);
+    const learningQuery = (detectedSubject === "Inglés"
+      ? expandIcfesEnglishSearchTerms(learningQueryBase)
+      : learningQueryBase).slice(0, 3200);
     // Only the student's current words count as an explicit topic. Lesson
     // prompt/history is used to resolve short academic follow-ups, not to turn
     // an unrelated casual question into an unnecessary vector search.

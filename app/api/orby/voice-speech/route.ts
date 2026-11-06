@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
 import { normalizeGeminiTtsAudio } from "@/lib/ai/orby-tts-audio";
+import { classifyGeminiTtsFailure } from "@/lib/ai/orby-tts-errors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,15 +21,6 @@ function jsonError(error: string, code: string, status: number) {
       "X-Content-Type-Options": "nosniff",
     },
   });
-}
-
-function isFreeTierQuotaError(error: unknown): boolean {
-  if (!error || typeof error !== "object") return false;
-  const detail = error as { status?: unknown; code?: unknown; message?: unknown };
-  const message = typeof detail.message === "string" ? detail.message : "";
-  return detail.status === 429
-    || detail.code === "RESOURCE_EXHAUSTED"
-    || /RESOURCE_EXHAUSTED|quota exceeded|free tier.*quota|rate limit/i.test(message);
 }
 
 export async function POST(request: Request) {
@@ -149,12 +141,22 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    if (isFreeTierQuotaError(error)) {
+    const failureKind = classifyGeminiTtsFailure(error);
+    if (failureKind === "quota_exhausted") {
       return jsonError(
         "Se agotó la cuota gratuita de Gemini TTS. La respuesta sigue visible y no se activará un servicio de pago.",
         "FREE_TIER_TTS_QUOTA_EXCEEDED",
         429,
       );
+    }
+    if (failureKind === "rate_limited") {
+      return NextResponse.json({
+        error: "Gemini TTS está recibiendo demasiadas solicitudes temporalmente. Espera un momento.",
+        code: "RATE_LIMITED",
+      }, {
+        status: 429,
+        headers: { "Retry-After": "15", "Cache-Control": "no-store" },
+      });
     }
     console.error("[Orby Gemini TTS] Speech generation failed.", {
       name: error instanceof Error ? error.name : "UnknownError",

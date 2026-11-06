@@ -2910,7 +2910,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           const cancelledIds = Array.isArray(cancellation.ids)
             ? cancellation.ids.filter((id): id is string => typeof id === "string" && id.length > 0)
             : [];
-          if (cancelledIds.length) cancelPendingOrbyKnowledgeRequests(cancelledIds);
+          if (cancelledIds.length) {
+            cancelPendingOrbyKnowledgeRequests(cancelledIds);
+            if (voiceKnowledgeRequestsRef.current.size === 0) {
+              const cancelledToolTurn = voiceKnowledgeToolTurnRef.current;
+              voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
+              if (cancelledToolTurn.pending && cancelledToolTurn.initialGenerationCompleted
+                && voiceModeRef.current && voicePendingStudentTurnRef.current
+                && !voiceResponseDoneRef.current) {
+                fallbackVoiceTurnToText("La consulta del Lab se canceló antes de incorporarse. Conservo tu pregunta y termino la explicación con el tutor gratuito.");
+              }
+            }
+          }
           // A cancellation is a control message, not student-facing content.
           // Do not send function responses for calls Gemini explicitly cancelled.
           if (!payload.toolCall) return;

@@ -1352,6 +1352,17 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /const legacyOutOfScope/);
 });
 
+test("Gemini Live cancela búsquedas de conocimiento obsoletas y restaura el tema persistido", () => {
+  assert.match(lessonTutorSource, /voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>/);
+  assert.match(lessonTutorSource, /signal: requestController\.signal/);
+  assert.match(lessonTutorSource, /payload\.toolCallCancellation/);
+  assert.match(lessonTutorSource, /cancelPendingOrbyKnowledgeRequests\(cancelledIds\)/);
+  assert.match(lessonTutorSource, /cancelPendingOrbyKnowledgeRequests\(\)/);
+  assert.match(realtimeSessionSource, /select\("subject,topic"\)/);
+  assert.match(realtimeSessionSource, /const genericTopic =/);
+  assert.match(realtimeSessionSource, /topic = storedTopic/);
+});
+
 test("Gemini Live comprime el contexto y conserva el handle de reanudación por conversación", () => {
   assert.match(lessonTutorSource, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
   assert.match(lessonTutorSource, /sessionResumption:\s*resumeHandle\s*\?\s*\{\s*handle:\s*resumeHandle\s*\}\s*:\s*\{\}/);

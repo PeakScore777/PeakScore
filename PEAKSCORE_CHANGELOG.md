@@ -1,5 +1,12 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-06 — Orby Live knowledge retrieval isolation
+- Confirmed the VC path is connected to the published Orby Lab knowledge engine through Gemini Live function calling and `/api/orby/knowledge-search`.
+- The retrieval endpoint searches published document chunks, the published concept graph, and related-document context; subject-scoped retrieval can fall back across published areas when the active subject has no matching chunks.
+- Removed automatic concatenation of the component's live transcript buffer into the tool query. The model already sends the complete current question; appending a possibly stale interim/final transcript could contaminate retrieval with the previous topic.
+- Added regression assertions for retrieval wiring, published visibility, concept/related retrieval, rate limiting, and stale-transcript isolation.
+- This confirms the architecture is connected in code, not that every Live turn will always invoke the tool or that the current deployed database contains published material for every subject.
+
 ## 2026-11-06 — Orby long-response playback order
 - Extracted speech chunking into the pure helper `lib/ai/orby-speech-chunks.ts` so the logic can be tested independently.
 - Fixed a sentence-order regression: when a long sentence followed a short pending sentence, the old chunker could enqueue the later sentence before the earlier one. The new chunker flushes pending text first, preserves punctuation and word order, and enforces the endpoint character limit.

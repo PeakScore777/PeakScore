@@ -884,31 +884,39 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function splitSpeechIntoChunks(value: string, maxLength = 220): string[] {
+    // Preserve the original sentence order. The previous implementation
+    // flushed the *next* long sentence before the pending earlier sentence,
+    // which made Orby speak explanations out of order.
     const sentences = value.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [value];
     const chunks: string[] = [];
     let pending = "";
 
-    const flushLongSentence = (sentence: string) => {
-      let remaining = sentence.trim();
-      while (remaining.length > maxLength) {
-        let boundary = remaining.lastIndexOf(" ", maxLength);
-        if (boundary < Math.floor(maxLength * 0.55)) boundary = maxLength;
+    const append = (segment: string) => {
+      let remaining = segment.trim();
+      while (remaining) {
+        const available = maxLength - pending.length - (pending ? 1 : 0);
+        if (available <= 0) {
+          chunks.push(pending);
+          pending = "";
+          continue;
+        }
+        if (remaining.length <= available) {
+          pending = pending ? `${pending} ${remaining}` : remaining;
+          break;
+        }
+        if (pending) {
+          chunks.push(pending);
+          pending = "";
+          continue;
+        }
+        let boundary = remaining.lastIndexOf(" ", available);
+        if (boundary < Math.floor(available * 0.55)) boundary = available;
         chunks.push(remaining.slice(0, boundary).trim());
         remaining = remaining.slice(boundary).trim();
       }
-      if (remaining) chunks.push(remaining);
     };
 
-    for (const sentence of sentences) {
-      const next = [pending, sentence.trim()].filter(Boolean).join(" ");
-      if (next.length <= maxLength) {
-        pending = next;
-      } else {
-        if (pending) chunks.push(pending);
-        pending = "";
-        flushLongSentence(sentence);
-      }
-    }
+    for (const sentence of sentences) append(sentence);
     if (pending) chunks.push(pending);
     return chunks.filter(Boolean);
   }

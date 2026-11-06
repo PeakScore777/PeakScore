@@ -1406,7 +1406,7 @@ test("la voz desbloquea AudioContext antes del permiso y lo conserva para el TTS
 
 test("Gemini Live cancela búsquedas de conocimiento obsoletas y restaura el tema persistido", () => {
   assert.match(lessonTutorSource, /voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>/);
-  assert.match(lessonTutorSource, /signal: requestController\.signal/);
+  assert.match(lessonTutorSource, /signal: AbortSignal\.any\(\[requestController\.signal, AbortSignal\.timeout\(12_000\)\]\)/);
   assert.match(lessonTutorSource, /payload\.toolCallCancellation/);
   assert.match(lessonTutorSource, /cancelPendingOrbyKnowledgeRequests\(cancelledIds\)/);
   assert.match(lessonTutorSource, /cancelPendingOrbyKnowledgeRequests\(\)/);

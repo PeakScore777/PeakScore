@@ -1008,7 +1008,9 @@ test("la búsqueda de conocimiento recupera todas las áreas si falta el índice
   assert.ok(orbyKnowledgeSource.includes("No exact subject embedding index"));
   assert.ok(orbyKnowledgeSource.includes("if (options.subject && rows.length === 0)"));
   assert.ok(orbyKnowledgeSource.includes("No chunks matched the active subject; retrying across published areas."));
-  assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null });"));
+  assert.ok(orbyKnowledgeSource.includes("const cached = precomputedEmbeddings.find((entry) => entry.model === model)"));
+  assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null }, precomputedEmbeddings);"));
+  assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null }, embeddings);"));
   assert.ok(knowledgeSearchRouteSource.includes('const preflightContext = subject ? "Área de estudio: " + subject : ""'));
   assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \? "Área de estudio: " \+ subject : ""/);
 });

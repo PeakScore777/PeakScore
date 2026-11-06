@@ -623,6 +623,10 @@ export async function POST(request: Request) {
       }
     }
 
+    // Collect external evidence independently: an explicit source request can
+    // require web research even when no new Lab retrieval is needed.
+    publicSources = (await publicResearchPromise).sources;
+
     const studentSignals = await studentSignalsPromise;
     stageTimings.retrievalMs = performance.now() - retrievalStartedAt;
 

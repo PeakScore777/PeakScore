@@ -2018,6 +2018,7 @@ test("los rechazos de política usan Gemini Live y solo liberan el texto autoriz
   assert.ok(lessonTutorSource.includes("voiceForcedReplyRef.current = cleanReply"));
   assert.ok(lessonTutorSource.includes("matchesTrustedPolicyReply"));
   assert.ok(lessonTutorSource.includes("if (forcedLiveReply)"));
+  assert.match(lessonTutorSource, /respondToVoiceLocally\(pendingUserText, forcedPolicyReply, appendUserMessage, true, false\)/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(message, localReply, true\)/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);

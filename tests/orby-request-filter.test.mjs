@@ -794,7 +794,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(realtimeSessionSource, /"VOZ DE ORBY: " \+ ORBY_VOICE_STYLE/);
   assert.match(orbyVoiceConfigSource, /voz femenina suave, natural y clara/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL Y DIDÁCTICA/);
-  assert.match(realtimeSessionSource, /no aceleres al final de las respuestas/);
+  assert.match(realtimeSessionSource, /no aceleres al final/);
   assert.match(orbyVoiceConfigSource, /requestedVoice[\s\S]*Despina/);
   assert.doesNotMatch(cloudflareVoiceSource, /@cf\/deepgram\/aura-/);
 

@@ -149,8 +149,10 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(lessonTutorRouteSource, /searchOrbyPublicSources\(researchQuery/);
   assert.match(lessonTutorRouteSource, /INVESTIGACIÓN EXTERNA PÚBLICA/);
   assert.match(lessonTutorRouteSource, /shouldSearchOrbyPublicSources\(\{/);
-  assert.match(lessonTutorRouteSource, /const shouldRunPublicResearch = shouldRetrieveAcademicKnowledge/);
-  assert.match(lessonTutorRouteSource, /sources: publicSources/);
+  assert.match(lessonTutorRouteSource, /const shouldRunPublicResearch = shouldSearchOrbyPublicSources/);
+  assert.match(lessonTutorRouteSource, /const deliveredSources = reconciledCitations\.sources/);
+  assert.match(lessonTutorRouteSource, /sources: deliveredSources/);
+  assert.match(lessonTutorRouteSource, /reconcileOrbyPublicCitations\(finalReply, publicSources\)/);
   assert.match(knowledgeSearchRouteSource, /searchOrbyPublicSources\(query/);
   assert.match(knowledgeSearchRouteSource, /shouldSearchOrbyPublicSources\(query\)/);
   assert.match(knowledgeSearchRouteSource, /public_research_found: publicResearch\.sources\.length > 0/);

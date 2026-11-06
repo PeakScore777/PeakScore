@@ -1983,6 +1983,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             public_research_found: result.public_research_found === true,
             guidance: typeof result.guidance === "string" ? result.guidance.slice(0, 700) : "",
           },
+          scheduling: FunctionResponseScheduling.WHEN_IDLE,
         });
       } catch {
         if (!requestController.signal.aborted && isCurrentToolTurn()) {

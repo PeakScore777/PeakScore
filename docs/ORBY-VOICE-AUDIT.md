@@ -5,7 +5,7 @@
 - Última actualización: 2026-11-06
 - Alcance: auditoría de código y regresiones del chat de voz (VC).
 - Producción/`main`: no modificados ni desplegados en esta ronda.
-- Estado: correcciones de clasificación de errores y ciclo asíncrono Lab–VC aplicadas; CI completo aprobado para el último commit; validación manual del VC con Gemini Live real pendiente.
+- Estado: correcciones de clasificación de errores y ciclo asíncrono Lab–VC aplicadas; CI completo aprobado para `be9e7d5`; validación manual del VC con Gemini Live real pendiente.
 
 ## Objetivo
 
@@ -94,13 +94,13 @@ Corrección aplicada en esta ronda:
 ## Pruebas y CI
 
 Última ejecución completa:
-- Workflow: [PeakScore checks #1841](https://github.com/PeakScore777/PeakScore/actions/runs/42308989917)
-- Commit: `1502c7766b03af9153568daa854352de68fbc0f6`
+- Workflow: [PeakScore checks #1845](https://github.com/PeakScore777/PeakScore/actions/runs/42309990796)
+- Commit: `be9e7d569a8a8154dc4c1724096363a4ed9800a0`
 - Resultado: `success`.
 - Job: `Orby tests, TypeScript, ESLint and production build` — completado correctamente.
 - Pasos aprobados: auditoría de dependencias, pruebas de regresión Orby, TypeScript, ESLint, build de producción Next.js, validación/actualización de dependencias y artefactos de lockfile.
 
-Las pruebas de `tests/orby-request-filter.test.mjs` inspeccionan funciones puras e invariantes del código fuente. No simulan el proveedor Gemini Live ni sustituyen una prueba real de micrófono/WebSocket. Por eso, CI verde permite actualizar la rama local, pero no declarar aprobado el comportamiento acústico real.
+El job completo terminó en `success`: auditoría de dependencias, pruebas de regresión Orby, TypeScript, ESLint y build de producción Next.js. Las pruebas de `tests/orby-request-filter.test.mjs` inspeccionan funciones puras e invariantes del código fuente. No simulan el proveedor Gemini Live ni sustituyen una prueba real de micrófono/WebSocket. Por eso, CI verde permite actualizar la rama local, pero no declarar aprobado el comportamiento acústico real.
 
 ## Validación manual pendiente
 

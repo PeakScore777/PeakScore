@@ -20,7 +20,9 @@ export function createOrbyVoiceToolTurnState(): OrbyVoiceToolTurnState {
  * share the existing gate.
  */
 export function beginOrbyVoiceToolTurn(state: OrbyVoiceToolTurnState): OrbyVoiceToolTurnState {
-  if (state.pending) return state;
+  // Keep simultaneous lookups in one gate, but start a fresh phase if Live
+  // requests another lookup after the previous Lab supplement has begun.
+  if (state.pending && !state.followupOutputSeen) return state;
   return {
     pending: true,
     responseSent: false,

@@ -1351,12 +1351,15 @@ async function createOrbyQueryEmbeddingForModel(
   return null;
 }
 
-export async function searchOrbyKnowledge(options: {
-  query: string;
-  subject?: string | null;
-  visibility: "admin" | "published";
-  limit?: number;
-}) {
+export async function searchOrbyKnowledge(
+  options: {
+    query: string;
+    subject?: string | null;
+    visibility: "admin" | "published";
+    limit?: number;
+  },
+  precomputedEmbeddings: Array<{ model: string; values: number[] }> = [],
+) {
   const { data: modelRows, error: modelError } = await supabaseAdmin.rpc(
     "orby_list_knowledge_embedding_models",
     {
@@ -1383,10 +1386,12 @@ export async function searchOrbyKnowledge(options: {
       requestedSubject: options.subject,
       modelLookupFailed: Boolean(modelError),
     });
-    return searchOrbyKnowledge({ ...options, subject: null });
+    return searchOrbyKnowledge({ ...options, subject: null }, precomputedEmbeddings);
   }
 
   const embeddingEntries = await Promise.all(indexedModels.map(async (model) => {
+    const cached = precomputedEmbeddings.find((entry) => entry.model === model);
+    if (cached) return cached;
     const values = await createOrbyQueryEmbeddingForModel(options.query, model);
     return values ? { model, values } : null;
   }));

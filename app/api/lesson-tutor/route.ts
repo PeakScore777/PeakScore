@@ -522,7 +522,7 @@ export async function POST(request: Request) {
     // Public research receives only a short topical query, never the raw chat history.
     // For follow-ups such as "dame fuentes de eso", reuse the recent academic context;
     // the research helper then reduces it to a small set of scrubbed topic keywords.
-    const refersToPriorAcademicContext = /\b(?:eso|esa explicacion|ese tema|el tema anterior|lo anterior|lo que explicaste|lo que vimos|lo que hablamos|de ese concepto|de ahi)\b/i.test(userMessage);
+    const refersToPriorAcademicContext = /\b(?:eso|esto|esa explicacion|ese tema|esta afirmacion|esa afirmacion|ese dato|el dato anterior|esa cifra|esa respuesta|esa informacion|el tema anterior|lo anterior|lo que explicaste|lo que dijiste|lo que me dijiste|lo que vimos|lo que hablamos|de ese concepto|de ahi)\b/i.test(userMessage);
     const researchQuery = [
       userMessage,
       topic,

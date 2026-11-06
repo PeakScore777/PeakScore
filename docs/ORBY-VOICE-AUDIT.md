@@ -1,133 +1,116 @@
 # Orby VC — auditoría y bitácora
 
 - Proyecto: PeakScore
-- Rama: feat/founder-intro
-- Fecha: 2026-11-06
-- Estado: correcciones de código con CI aprobado; pendiente validación manual de voz en navegador. No desplegado ni fusionado a main.
+- Rama de trabajo: `feat/founder-intro`
+- Última actualización: 2026-11-06
+- Alcance: auditoría de código y regresiones del chat de voz (VC).
+- Producción/`main`: no modificados ni desplegados en esta ronda.
+- Estado: corrección de clasificación de errores aplicada; CI del último cambio pendiente de confirmación y validación manual del VC pendiente.
 
 ## Objetivo
 
-Recuperar una conversación de voz continua y natural para el tutor Saber 11. Orby debe atender saludos, preguntas, seguimientos, cambios de materia e interrupciones. Debe consultar el material publicado del Orby Lab cuando la pregunta académica lo requiera, sin hacer búsquedas innecesarias en cada turno.
+Mantener una conversación oral continua, natural y recuperable para el tutor Saber 11. Orby debe atender saludos, preguntas, seguimientos, cambios de materia e interrupciones; conservar el texto y el historial; y consultar el contenido publicado del Orby Lab cuando aporte valor académico.
 
-## Restricciones
+## Restricciones obligatorias
 
-- Usar únicamente modelos y servicios dentro de cuotas gratuitas reales.
-- No introducir APIs facturables ni cambios silenciosos a proveedores pagos.
-- Si una cuota gratuita se agota, informar con claridad y conservar el contexto.
-- Mantener el alcance educativo Saber 11 y las cinco áreas.
-- No reconstruir material del Orby ICFES Lab que fue eliminado intencionalmente.
+- Usar únicamente modelos y servicios que puedan operar dentro de cuotas gratuitas reales.
+- No introducir APIs facturables, proveedores de pago ni fallbacks de pago silenciosos.
+- Ante cuota agotada, informar con claridad y preservar el texto/contexto.
+- Mantener el alcance exclusivo de las cinco áreas Saber 11.
+- El material del Orby ICFES Lab fue eliminado intencionalmente: no tratarlo como una pérdida accidental ni reconstruirlo.
+- Trabajar con cambios pequeños, revisables y documentados en esta rama.
 
-## Hallazgos del código revisado
+## Auditoría del flujo VC
 
-### Herramienta de conocimiento
+### Captura y procesamiento de voz
 
-La declaración de la búsqueda académica en tiempo real no explicitaba el comportamiento de bloqueo. En una sesión Live, una búsqueda no bloqueante puede permitir que el modelo continúe hablando antes de recibir los fragmentos recuperados. Hay que asegurar que las respuestas académicas que necesitan el Lab integren el resultado de la búsqueda antes de continuar.
+- El navegador captura audio del micrófono y lo envía a la sesión Gemini Live mediante AudioWorklet y audio PCM de 16 kHz.
+- Se conserva transcripción de entrada y salida para mostrar el intercambio, validar la respuesta y persistir el turno.
+- Se revisaron las rutas de transcripción, sesión Live, TTS de respaldo y guardado de conversaciones.
+- Se verificaron controles para ecos del audio del propio tutor, interrupciones, duplicados de transcripción y conservación de mensajes largos.
 
-### Degradación a voz por turnos
+### Recuperación del Orby Lab
 
-El cliente tenía un watchdog de 50 segundos que podía cambiar una sesión a voz por turnos. Ese camino utiliza un servicio TTS separado, cuya cuota gratuita no es la misma que la cuota de la sesión Live. Por eso un error de cuota TTS no demuestra por sí solo que Live haya agotado su cuota.
+- La herramienta `search_orby_learning_knowledge` está declarada como `Behavior.NON_BLOCKING`: la consulta se ejecuta en paralelo y no congela toda la conversación Live.
+- El cliente procesa también `serverContent` cuando llega en el mismo evento que `toolCall`, para no descartar audio o transcripción.
+- La búsqueda envía la pregunta contextualizada y materia solicitada a `/api/orby/knowledge-search`.
+- Cada ruta de respuesta de herramienta utiliza `FunctionResponseScheduling.WHEN_IDLE`; el test actual exige cinco puntos de programación.
+- La consulta pendiente se cancela si cambia la actividad del estudiante, se interrumpe la respuesta o se reemplaza la sesión. Antes de enviar resultados, se valida que sigan perteneciendo a la misma sesión y actividad.
+- Los saludos, confirmaciones y seguimientos que ya se resuelven con el contexto no deben provocar búsquedas innecesarias.
+- Cuando no hay material publicado útil, Orby debe continuar con conocimiento académico fiable sin inventar que consultó el Lab.
 
-### Reanudación
+**Nota de auditoría:** una descripción anterior de este documento afirmaba que la herramienta era bloqueante. Esa afirmación quedó obsoleta tras los cambios recientes. El estado actual del código y las pruebas es no bloqueante, con entrega diferida de resultados cuando Live puede incorporarlos.
 
-El cliente conserva un identificador de reanudación de sesión y restaura el historial. Este recorrido necesita pruebas reales tras cierres de WebSocket, avisos de cierre del proveedor y respuestas largas.
+### Continuidad, interrupciones y reconexión
 
-### Filtros
+- El watchdog avisa a los 18 segundos y a los 50 segundos conserva una sesión Live que sigue conectada, concediendo una ventana adicional de 70 segundos antes de activar el respaldo.
+- Se guarda el identificador de reanudación de la sesión y se solicita un token efímero nuevo para cada intento, porque los tokens son de un solo uso.
+- La interrupción cancela búsquedas pendientes y audio antiguo para que un resultado anterior no contamine el turno nuevo.
+- El fallback conserva la pregunta y el contexto cuando la conexión no puede continuar.
+- La lógica está cubierta parcialmente por pruebas estáticas; las reconexiones reales y las interrupciones acústicas aún requieren pruebas en Chrome.
 
-Los filtros deben detener solicitudes claramente ajenas al tutor, pero dejar pasar saludos, confirmaciones, lenguaje cotidiano, preguntas cortas y seguimientos académicos. Una búsqueda del Lab no debe ser obligatoria para cada frase.
+### Cuotas gratuitas y errores 429
 
-## Plan de trabajo
+Se detectó que el handler de errores de Gemini Live marcaba cualquier HTTP 429 como cuota gratuita agotada. Ese criterio era incorrecto: 429 también puede significar limitación temporal de frecuencia.
 
-- [x] Revisar la ruta principal de voz, la sesión en tiempo real, el respaldo TTS y la búsqueda de conocimiento.
-- [x] Identificar que la búsqueda del Lab no declaraba explícitamente una espera bloqueante.
-- [x] Identificar el watchdog de 50 segundos y su relación con el respaldo TTS.
-- [x] Aplicar cambios pequeños y verificables en la rama de trabajo.
-- [x] Añadir pruebas para la espera de resultados académicos.
-- [x] Añadir pruebas para evitar la degradación prematura de una sesión Live conectada.
-- [ ] Ejecutar las pruebas, TypeScript, ESLint y build en el mismo commit.
-- [ ] Probar en navegador conversaciones largas, interrupciones, cambios de materia y recuperación.
-- [ ] Confirmar que los saludos no consultan el Lab.
-- [ ] Confirmar que una pregunta académica sí usa material publicado y pertinente del Lab.
+Corrección aplicada en esta ronda:
 
-## Cambios ya aplicados en la rama
+- Se creó `classifyGeminiProviderFailure` en `lib/ai/orby-tts-errors.ts`, compartido por Live y TTS.
+- La clasificación distingue `quota_exhausted`, `rate_limited` y `provider_error`.
+- Un 429 aislado o un mensaje como `Too many requests` se trata como limitación temporal, no como cuota consumida.
+- Códigos explícitos como `RESOURCE_EXHAUSTED`/`QUOTA_EXCEEDED` o mensajes verificables de cuota agotada se clasifican como agotamiento.
+- El flujo Live presenta mensajes distintos y utiliza el respaldo gratuito ante un rate limit temporal, sin afirmar que se agotó la cuota.
+- La ruta TTS conserva su compatibilidad mediante `classifyGeminiTtsFailure`, que delega en el clasificador común.
+- No se agregó ningún proveedor ni servicio de pago.
 
-- La herramienta `search_orby_learning_knowledge` declara `Behavior.BLOCKING`: Gemini Live espera la respuesta de la búsqueda antes de continuar el turno.
-- El watchdog conserva la sesión si `voiceChannelRef.current` sigue conectado al alcanzar 50 segundos y concede una ventana adicional de 70 segundos.
-- Solo se considera el respaldo por turnos si la sesión no está conectada o si el segundo plazo también expira.
-- Se añadieron pruebas estáticas para la espera de la herramienta y el comportamiento del watchdog.
-- Estos cambios están en `feat/founder-intro`; todavía no se han validado con CI ni con una prueba manual de navegador.
+## Cambios relevantes ya presentes en la rama antes de esta ronda
 
-## Resultado de CI — 2026-11-06
+- Respuestas deterministas de política pueden solicitar voz nativa a la sesión Live; no llaman a TTS para cada rechazo.
+- La respuesta hablada de política se valida contra el texto autorizado antes de liberar audio.
+- La cuota TTS agotada se recuerda durante la sesión del navegador para no repetir llamadas que ya fallarán.
+- El audio WAV válido se conserva completo; solo se envuelve PCM cuando el formato declara que no tiene cabecera WAV.
+- Las respuestas largas se dividen en fragmentos conservando orden y contenido.
+- Los mensajes de voz se guardan con una ruta de persistencia que evita duplicar el mismo turno en reintentos.
 
-Commit validado: `cef451f36889ca449448f3046c01e20db86a0ff2`.
+## Pruebas y CI
 
-Ejecución de GitHub Actions: https://github.com/PeakScore777/PeakScore/actions/runs/42300838516
+Última ejecución conocida antes de esta corrección:
+- Workflow: [PeakScore checks #1824](https://github.com/PeakScore777/PeakScore/actions/runs/42306000153)
+- Commit: `315091ae57612bce2a9cbf83f16c3ccf2f93d657`
+- Resultado: éxito en pruebas Orby, TypeScript, ESLint y build de producción.
 
-- Pruebas de regresión de Orby: aprobadas.
-- TypeScript: aprobado.
-- ESLint: aprobado.
-- Build de producción Next.js: aprobado.
-- Auditoría de dependencias: completada correctamente.
-- La compuerta de auditoría de dependencias se omitió porque el flujo no necesitó aplicar una actualización adicional.
+La corrección de clasificación Live/TTS y sus nuevos asserts son posteriores a ese commit. No se deben considerar validados por el CI anterior. La ejecución correspondiente al commit que incluya estos cambios debe pasar:
+- `npm run test:orby`
+- TypeScript (`tsc --noEmit`)
+- ESLint
+- Build de producción Next.js
 
-**Alcance de esta validación:** el job ejecutó `npm run test:orby` (`node --test tests/orby-request-filter.test.mjs`), TypeScript, ESLint y el build. Las pruebas de regresión nuevas inspeccionan el código fuente y sus invariantes; no simulan una sesión Gemini Live real ni demuestran por sí solas conversación prolongada, audio, reconexión o recuperación de cuotas. Esos escenarios requieren validación manual/integración en navegador.
+Las pruebas de `tests/orby-request-filter.test.mjs` inspeccionan funciones puras e invariantes del código fuente. No simulan el proveedor Gemini Live ni sustituyen una prueba real de micrófono/WebSocket.
 
-## Estado de validación
+## Validación manual pendiente
 
-- [x] CI completo aprobado en el commit de código `cef451f36889ca449448f3046c01e20db86a0ff2`.
-- [x] La actualización posterior de este documento no modifica código ejecutable.
-- [ ] Prueba manual de voz continua en Chrome.
-- [ ] Prueba de interrupción mientras Orby habla.
-- [ ] Prueba de reconexión por `goAway` y cierre de WebSocket.
-- [ ] Prueba de consulta del Lab con una pregunta real y revisión de fragmentos utilizados.
-- [ ] Prueba de cuotas gratuitas agotadas sin fallback facturable.
-
-## Nueva regresión detectada en la prueba real del usuario — 2026-11-06
-
-Las capturas del navegador muestran que el tutor responde por escrito a saludos, preguntas generales e Inglés. La respuesta al término «programar» se bloquea correctamente por política, pero la consola muestra un HTTP 429 en `/api/orby/voice-speech` y la interfaz informa que se agotó la cuota gratuita de voz.
-
-Esto separa dos comportamientos:
-- El filtro de alcance sí produjo una respuesta escrita coherente para rechazar programación.
-- La ruta de síntesis de voz TTS agotó su cuota; eso no prueba que Gemini Live ni el filtro hayan fallado en ese turno.
-
-### Causa técnica adicional identificada
-
-La función `respondToVoiceLocally` terminaba llamando a `speakText`, que siempre invocaba `/api/orby/voice-speech`. Por tanto, respuestas locales de política también podían consumir solicitudes TTS. Además, el servidor clasificaba cualquier HTTP 429 como cuota agotada, aunque Gemini también usa 429 para limitación temporal de frecuencia.
-
-### Correcciones aplicadas después de la prueba del usuario
-
-- Se añadió `lib/ai/orby-tts-errors.ts` para distinguir cuota realmente agotada (`RESOURCE_EXHAUSTED`/mensajes de cuota) de limitación temporal (429/rate limit).
-- `app/api/orby/voice-speech/route.ts` ahora devuelve `FREE_TIER_TTS_QUOTA_EXCEEDED` solo para cuota agotada y `RATE_LIMITED` para throttling temporal.
-- `components/aprender/LessonAITutor.tsx` recuerda durante la sesión del navegador que la cuota TTS se agotó y evita repetir solicitudes que volverían a fallar en cada respuesta. El texto y la conversación se conservan.
-- Se añadió una prueba de regresión que diferencia ambos tipos de error y comprueba el bloqueo de nuevas llamadas TTS tras agotar la cuota.
-
-Estos cambios son posteriores al CI previamente aprobado y necesitan una nueva ejecución completa antes de pedir otro Pull.
-
-## Voz nativa para respuestas de política — 2026-11-06
-
-Se detectó que los rechazos deterministas de alcance (programación, temas ajenos e idioma no admitido) terminaban en `respondToVoiceLocally` y solicitaban Gemini TTS por separado. Esto agotaba la cuota TTS aunque la sesión Gemini Live siguiera abierta.
-
-### Cambio aplicado
-
-- Se añadió `requestLivePolicyReply`: envía a la sesión Gemini Live ya abierta una instrucción acotada para pronunciar únicamente la respuesta de rechazo previamente aprobada.
-- La transcripción se compara con el prefijo exacto de la respuesta autorizada. Solo ese texto coincidente puede liberar el audio; una desviación continúa bloqueada por los filtros existentes.
-- Si Live no entrega audio válido, se conserva el rechazo por escrito y se vuelve a escuchar. No se llama a TTS para ese rechazo.
-- Se conectó este flujo a los rechazos de preflight por voz, filtros de transcripción final y mensajes escritos dentro de la sesión de voz.
-- Se añadieron pruebas de regresión para verificar que los tres puntos usan la ruta Live y mantienen el control de salida.
-
-La ruta local de texto sigue como contingencia si no existe un canal Live disponible. No se introduce ningún proveedor de pago ni se cambia la política de cuota gratuita.
+- [ ] Conversación larga en Chrome: varios intercambios sin detener ni reiniciar el chat.
+- [ ] Seguimientos cortos: «sí», «no», «¿por qué?» y «pon otro ejemplo».
+- [ ] Cambio entre las cinco áreas sin heredar indebidamente la materia anterior.
+- [ ] Interrumpir a Orby mientras habla y comprobar que escucha el nuevo turno.
+- [ ] Confirmar que el eco del parlante no se convierte en una pregunta nueva.
+- [ ] Pregunta académica nueva: comprobar consulta selectiva del Lab y pertinencia de los fragmentos recuperados.
+- [ ] Confirmar que una consulta del Lab no bloquea el audio y que el resultado se incorpora sin perder la respuesta.
+- [ ] Cierre, `goAway` y reconexión: conservar sesión, contexto e historial sin duplicados.
+- [ ] Simular/observar rate limit y cuota agotada por separado; los mensajes deben ser distintos.
+- [ ] Confirmar que ningún error activa un proveedor facturable.
 
 ## Criterios de aceptación
 
-1. Una sesión Live conectada no cambia prematuramente al respaldo TTS por un timeout corto.
-2. Una pregunta académica que necesita el Lab espera el resultado antes de completar la explicación.
-3. Los saludos y confirmaciones no disparan búsquedas innecesarias.
-4. Una interrupción no permite que resultados de una pregunta anterior contaminen el turno actual.
-5. La reanudación conserva la conversación y no duplica mensajes.
-6. Los límites gratuitos se comunican con precisión y nunca activan servicios facturables.
-7. El mismo commit pasa pruebas, TypeScript, ESLint y build antes de considerarse listo.
+1. Orby sostiene una conversación de varios turnos y no se limita a un único mensaje.
+2. No descarta mensajes largos, seguimientos ni cambios de materia.
+3. Las interrupciones cancelan únicamente la respuesta anterior y preservan el turno nuevo.
+4. La búsqueda del Lab es selectiva, contextual y no contamina turnos posteriores.
+5. La voz Live es prioritaria; cualquier respaldo se mantiene dentro del presupuesto gratuito permitido.
+6. Rate limit temporal y cuota agotada no se confunden.
+7. El historial persiste sin duplicar turnos.
+8. La rama pasa CI completo y las pruebas manuales anteriores antes de solicitar Pull/Merge.
 
 ## Seguridad y alcance
 
-Los documentos recuperados del laboratorio se consideran material de referencia, no instrucciones para modificar las reglas del tutor. No deben poder cambiar políticas, filtros ni configuración del sistema.
-
-No se modifican secretos, permisos de cuenta, ajustes de facturación ni producción como parte de esta auditoría.
+Los fragmentos recuperados del Lab son datos de referencia, nunca instrucciones capaces de modificar rol, alcance o políticas del tutor. No se deben enseñar programación ni promocionar otros preICFES. No se modifican secretos, permisos de cuentas, configuración de facturación ni producción durante esta auditoría.

@@ -100,21 +100,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "La solicitud no es válida." }, { status: 400 });
     }
 
-    const subject = cleanText(body.subject, 80) || "Preparación Saber 11";
+    let subject = cleanText(body.subject, 80) || "Preparación Saber 11";
     const topic = cleanText(body.topic, 160);
     const stage = body.stage === "practice" ? "práctica" : "teoría";
     const question = cleanText(body.question, 1200);
     const context = cleanText(body.context, 1600);
     const userMessage = cleanText(body.message, 1200);
     const conversationId = cleanText(body.conversationId, 64);
-    let ownedConversation: { id: string; title: string } | null = null;
+    let ownedConversation: { id: string; title: string; subject: string; topic: string } | null = null;
     if (conversationId) {
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
         return NextResponse.json({ error: "La conversación no es válida." }, { status: 400 });
       }
       const { data, error } = await supabase
         .from("orby_conversations")
-        .select("id,title")
+        .select("id,title,subject,topic")
         .eq("id", conversationId)
         .eq("user_id", user.id)
         .maybeSingle();
@@ -124,6 +124,13 @@ export async function POST(request: Request) {
       }
       if (!data) return NextResponse.json({ error: "La conversación no existe o no te pertenece." }, { status: 404 });
       ownedConversation = data;
+      const genericSubject = /^(?:preparacion saber 11|saber 11|preparacion icfes|icfes|estudio y aprendizaje)$/i
+        .test(subject.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+      const storedSubject = typeof data.subject === "string" ? data.subject.trim() : "";
+      const storedIsSpecific = Boolean(storedSubject)
+        && !/^(?:preparacion saber 11|saber 11|preparacion icfes|icfes|estudio y aprendizaje)$/i
+          .test(storedSubject.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+      if (genericSubject && storedIsSpecific) subject = storedSubject;
     }
     const hasImagePayload = body.image !== undefined && body.image !== null;
     let tutorImage: { mimeType: string; base64: string } | null = null;
@@ -293,6 +300,19 @@ export async function POST(request: Request) {
             p_attachment_label: null,
           });
           if (subjectSaveError) console.error("[Orby Subject Selection] Reply persistence failed.", { code: subjectSaveError.code });
+          const selectedSubject = normalizeIcfesSubject(userMessage, userMessage);
+          if (selectedSubject) {
+            const { error: subjectStateError } = await supabaseAdmin.from("orby_conversations")
+              .update({ subject: selectedSubject, updated_at: new Date().toISOString() })
+              .eq("id", conversationId)
+              .eq("user_id", user.id);
+            if (subjectStateError) {
+              console.error("[Orby Subject Selection] Active subject could not be persisted.", { code: subjectStateError.code });
+            } else if (ownedConversation) {
+              ownedConversation.subject = selectedSubject;
+              subject = selectedSubject;
+            }
+          }
         }
         return NextResponse.json({ reply: subjectSelectionReply, checkQuestion: "", verification: "not_required", sources: [] }, {
           headers: { "Cache-Control": "private, no-store" },

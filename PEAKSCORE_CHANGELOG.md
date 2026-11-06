@@ -7,10 +7,12 @@
 - The VC knowledge-search tool now returns the same public-source context alongside Orby Lab results; Gemini Live instructions explain how to use and qualify those results.
 - The browser now forwards `public_sources` from the VC knowledge-search response into Gemini Live's function result; previously the endpoint could return sources while the client silently dropped that field.
 - Text chat displays only sources explicitly cited by the final model answer, preserves their original citation numbers, and embeds safe Markdown citation links in the saved assistant text so references remain clickable after conversation history reloads.
+- VC transcripts now attach validated public-source links when the Live knowledge tool returns them. The source list is rendered below the voice reply and its Markdown links are appended to the persisted transcript, while raw audio playback continues to use the answer without URLs.
 - Research relevance ranking ignores request-intent words (such as “fuentes”, “investiga” and “recientes”) and scores the actual academic topic against source titles and abstracts, preventing the wording of a source request from hiding relevant results.
 - Citation links are rendered only for the approved HTTPS hosts (Spanish Wikipedia, DOI and OpenAlex); text-to-speech removes the Markdown destination and does not read out a raw URL.
 - Added regression tests for source allowlisting, relevance filtering, deduplication, limits, excerpt sanitization, offline degradation, selective web-search triggers, Lab follow-ups requesting sources, citation reconciliation, persistent citation links, and integration in both channels.
 - Model routing remains as implemented: the text tutor uses Cloudflare Workers AI with Gemma 4, while the live voice channel uses Gemini Live. Both can answer from model knowledge; the public-source adapter supplements rather than replaces either model.
+- Public API requests receive only normalized academic keywords from the current request and lesson metadata; the full conversation history is not forwarded. Emails, URLs, phone-like numbers, and generic personal-context words are removed before search.
 - Scope note: this first iteration searches Wikimedia and OpenAlex only. It is not yet a general web search engine or a guarantee of official ICFES/government-source coverage. Results must be checked for relevance and quality; source presence alone is not proof that a claim is correct.
 
 ## 2026-11-06 — Orby text/voice subject routing

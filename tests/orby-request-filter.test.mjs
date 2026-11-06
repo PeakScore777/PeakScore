@@ -390,6 +390,7 @@ test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre"
   assert.equal(filter.isOrbySubjectAlreadyActive("en inglés", selectedEnglishHistory), true);
   assert.equal(filter.getOrbySubjectSelectionReply("en inglés", selectedEnglishHistory), null);
   assert.match(filter.getOrbyGreetingFollowUpReply(selectedEnglishHistory), /Seguimos con Inglés/);
+  assert.match(filter.getOrbyGreetingFollowUpReply(selectedEnglishHistory), /ejercicio anterior/);
   assert.match(filter.getOrbySubjectSelectionReply("lectura", selectedEnglishHistory) ?? "", /Lectura Crítica/);
   assert.equal(filter.getOrbySubjectSelectionReply("en inglés", "", "Preparación Saber 11")?.includes("Saber 11"), true);
   assert.equal(filter.getOrbySubjectSelectionReply("enséñame a programar"), null);

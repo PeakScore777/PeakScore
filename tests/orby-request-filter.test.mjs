@@ -27,6 +27,7 @@ const voiceEcho = await loadTypeScriptModule("../lib/ai/orby-voice-echo.ts");
 const speechChunks = await loadTypeScriptModule("../lib/ai/orby-speech-chunks.ts");
 const publicResearch = await loadTypeScriptModule("../lib/ai/orby-web-research.ts");
 const ttsAudio = await loadTypeScriptModule("../lib/ai/orby-tts-audio.ts");
+const ttsErrors = await loadTypeScriptModule("../lib/ai/orby-tts-errors.ts");
 const saber11Level = await loadTypeScriptModule("../lib/ai/orby-saber11-level.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
@@ -2010,6 +2011,14 @@ test("un 404 temporal del historial no deja bloqueado el chat nuevo ni borra las
   assert.match(lessonTutorSource, /Esta versión del sitio todavía no puede abrir los mensajes guardados/);
 });
 
+
+test("Orby distingue cuota TTS agotada de un 429 temporal", () => {
+  assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, message: "Too many requests" }), "rate_limited");
+  assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, code: "RESOURCE_EXHAUSTED" }), "quota_exhausted");
+  assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 503, message: "temporary provider failure" }), "provider_error");
+  assert.ok(lessonTutorSource.includes("voiceTtsQuotaExhaustedRef.current = true"));
+  assert.ok(lessonTutorSource.includes("if (voiceTtsQuotaExhaustedRef.current)"));
+});
 
 test("Gemini 3.8 TTS conserva el WAV completo y solo envuelve PCM sin cabecera", () => {
   const pcm = Buffer.alloc(512);

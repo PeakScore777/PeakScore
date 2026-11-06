@@ -6,7 +6,7 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbyGreetingFollowUpReply, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbyGreetingFollowUpReply, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 
@@ -438,7 +438,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           activeConversationRef.current = first.id;
           restoreActiveSubjectFromStoredConversation(first.subject, messagesPayload.messages);
           setConversationId(first.id);
-          setMessages(Array.isArray(messagesPayload.messages) ? messagesPayload.messages.map((item: Record<string, unknown>) => ({
+          setMessages(dedupeAdjacentAssistantMessages(Array.isArray(messagesPayload.messages) ? messagesPayload.messages.map((item: Record<string, unknown>) => ({
             id: String(item.id),
             role: item.role === "assistant" ? "assistant" : "user",
             content: typeof item.content === "string" ? item.content : "",
@@ -446,7 +446,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
             attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
             createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
-          })) : []);
+          })) : []));
         } else {
           // A stale empty result must never clear a chat that the student has
           // already started during hydration.
@@ -3257,12 +3257,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const fallbackAssistantId = isVoiceInteraction && voiceFallbackModeRef.current
         ? "voice-fallback-assistant-" + Date.now()
         : undefined;
-      setMessages((current) => [...current, {
+      const assistantMessage: Message = {
         ...(fallbackAssistantId ? { id: fallbackAssistantId } : {}),
         role: "assistant",
         content: data.reply,
         checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "",
-      }]);
+      };
+      setMessages((current) => dedupeAdjacentAssistantMessages([...current, assistantMessage]));
       if (workspace && selectedFile && selectedFile.type.startsWith("image/")) {
         // Persist the optional gallery copy after the answer is visible. Storage
         // maintenance must not hold the send lock or delay the next study turn.
@@ -3543,7 +3544,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       activeConversationRef.current = id;
       restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages);
       setConversationId(id);
-      setMessages(Array.isArray(payload.messages) ? payload.messages.map((item: Record<string, unknown>) => ({
+      setMessages(dedupeAdjacentAssistantMessages(Array.isArray(payload.messages) ? payload.messages.map((item: Record<string, unknown>) => ({
         id: String(item.id),
         role: item.role === "assistant" ? "assistant" : "user",
         content: typeof item.content === "string" ? item.content : "",
@@ -3551,7 +3552,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
         attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
         createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
-      })) : []);
+      })) : []));
       setError("");
       setInput("");
       setPendingDeleteConversation(null);

@@ -46,6 +46,7 @@ const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", i
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
 const cloudflareImageRouteSource = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
 const voiceSpeechRouteSource = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
+const nextConfigSource = await readFile(new URL("../next.config.ts", import.meta.url), "utf8");
 const tutorQualitySource = await readFile(new URL("../lib/ai/tutor-quality.ts", import.meta.url), "utf8");
 const adminOrbyChatSource = await readFile(new URL("../app/api/admin/orby/chat/route.ts", import.meta.url), "utf8");
 const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby/knowledge/automation/route.ts", import.meta.url), "utf8");
@@ -56,6 +57,13 @@ const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts"
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
 const relatedKnowledgeMigration = await readFile(new URL("../supabase/migrations/20261031190000_orby_knowledge_profile_v2.sql", import.meta.url), "utf8");
+
+test("la política de seguridad permite reproducir audio del mismo sitio y no bloquea la voz de Orby", () => {
+  assert.match(nextConfigSource, /autoplay=\\(self\\)/);
+  assert.doesNotMatch(nextConfigSource, /autoplay=\\(\\)/);
+  assert.match(lessonTutorSource, /await ensureVoiceAudioContextRunning\\(voiceAudioContext\\)/);
+  assert.match(lessonTutorSource, /source\\.start\\(scheduledAt\\)/);
+});
 
 test("Orby divide respuestas largas sin reordenar frases ni exceder el límite TTS", () => {
   const answer = "Primera explicación completa. Segunda explicación también completa y extensa. Tercera explicación final.";

@@ -1199,18 +1199,17 @@ test("Orby evita RAG en conversación casual y lo activa para temas y seguimient
   }), false);
 });
 
-test("la búsqueda de conocimiento recupera todas las áreas si falta el índice del nombre oficial", () => {
+test("la búsqueda de conocimiento conserva el aislamiento cuando falta el índice de una materia", () => {
   assert.ok(orbyKnowledgeSource.includes("if (options.subject && indexedModels.length === 0)"));
   assert.ok(orbyKnowledgeSource.includes("No exact subject embedding index"));
-  assert.ok(orbyKnowledgeSource.includes("if (options.subject && rows.length === 0)"));
-  assert.ok(orbyKnowledgeSource.includes("No chunks matched the active subject; retrying across published areas."));
+  assert.ok(orbyKnowledgeSource.includes("continuing with scoped lexical retrieval"));
   assert.ok(orbyKnowledgeSource.includes("const cached = precomputedEmbeddings.find((entry) => entry.model === model)"));
-  assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null }, precomputedEmbeddings);"));
-  assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null }, embeddings);"));
+  assert.doesNotMatch(orbyKnowledgeSource, /if \\(options\\.subject && rows\\.length === 0\\)/);
+  assert.doesNotMatch(orbyKnowledgeSource, /retrying across published areas/);
+  assert.doesNotMatch(orbyKnowledgeSource, /subject: null/);
   assert.ok(knowledgeSearchRouteSource.includes('const preflightContext = subject ? "Área de estudio: " + subject : ""'));
-  assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \? "Área de estudio: " \+ subject : ""/);
+  assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \\? "Área de estudio: " \\+ subject : ""/);
 });
-
 test("solo permite publicar cuando el perfil v2 y todos los embeddings están listos", () => {
   assert.equal(publication.isOrbyKnowledgePublicationReady({
     chunk_count: 8,

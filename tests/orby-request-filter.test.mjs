@@ -1376,7 +1376,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) \{[\s\S]*?playGeminiAudio\(chunk\.data, chunk\.mimeType\)/);
   assert.match(lessonTutorSource, /if \(!voiceOutputAudioBlockedRef\.current && voiceOutputTranscriptValidatedRef\.current\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
-  const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);
+  const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = replyWithSourceLinks", finalAudioValidationIndex);
   assert.ok(finalAudioValidationIndex >= 0 && finalTranscriptIndex > finalAudioValidationIndex);
   assert.match(lessonTutorSource, /partialUnsafe/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current = \[\]/);
@@ -2069,7 +2069,7 @@ test("las respuestas TTS largas conservan el texto completo y no omiten fragment
   assert.doesNotMatch(lessonTutorSource, /composeOrbySpeechText\(text, checkQuestion\)\.slice/);
   assert.ok(lessonTutorSource.includes("recoverCurrentTtsChunk"));
   assert.ok(lessonTutorSource.includes("chunkRetryCount < 4"));
-  assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 480)"));
+  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 480)"));
   assert.ok(lessonTutorSource.includes("rateLimitWaitCount < 12"));
   assert.ok(lessonTutorSource.includes("retry the SAME chunk"));
   assert.ok(lessonTutorSource.includes("La lectura se pausó en una frase"));

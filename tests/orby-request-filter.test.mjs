@@ -71,6 +71,14 @@ test("Orby divide respuestas largas sin reordenar frases ni exceder el límite T
   assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("   ", 480), []);
 });
 
+test("la búsqueda académica prioriza la materia del turno actual sobre la materia anterior", () => {
+  const currentTurnSubject = lessonTutorRouteSource.indexOf('const currentTurnSubject = normalizeIcfesSubject("", [userMessage, question, topic]');
+  const detectedSubject = lessonTutorRouteSource.indexOf("const detectedSubject = currentTurnSubject ?? normalizeIcfesSubject(subject");
+  assert.ok(currentTurnSubject >= 0 && detectedSubject > currentTurnSubject,
+    "La búsqueda de texto debe detectar la materia nueva antes de reutilizar la anterior.");
+  assert.match(knowledgeSearchRouteSource, /normalizeIcfesSubject\("", query\) \?\? normalizeIcfesSubject\(subjectInput, query\)/);
+});
+
 test("la materia de voz se actualiza antes de persistir el turno para evitar éxito parcial", () => {
   const subjectUpdate = realtimeTurnSource.indexOf('.from("orby_conversations")');
   const turnPersistence = realtimeTurnSource.indexOf('rpc("orby_save_turn"');

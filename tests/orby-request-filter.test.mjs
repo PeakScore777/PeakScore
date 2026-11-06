@@ -115,7 +115,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("words.length <= 4"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(12_000)"));
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
-  assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 420)"));
+  assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 480)"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
   assert.match(lessonTutorSource, /inputAudioTranscription: \{\s*languageCodes: \["es-US"\]/);

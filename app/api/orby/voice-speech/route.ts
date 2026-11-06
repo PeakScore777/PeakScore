@@ -119,8 +119,10 @@ export async function POST(request: Request) {
         delivery: "inline",
       },
       generation_config: {
+        // Gemini TTS detects the spoken language from the transcript.
+        // Do not pass a Live-ASR locale here: TTS accepts a voice selection,
+        // and unsupported locale metadata can reject otherwise valid chunks.
         speech_config: [{
-          language: "es-US",
           voice: ORBY_VOICE_NAME,
         }],
       },

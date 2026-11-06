@@ -875,7 +875,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
 
   async function speakText(text: string, index: number, checkQuestion = ""): Promise<void> {
-    const clean = composeOrbySpeechText(text, checkQuestion).slice(0, 12_000);
+    const clean = composeOrbySpeechText(text, checkQuestion);
     if (!clean) return;
 
     // Gemini Live is primary. For text-only turns, use Gemini 3.8 Flash TTS
@@ -929,8 +929,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .replace(/^[-•]\s*/gm, "")
         .replace(/^\d+[.)]\s*/gm, "")
         .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 12_000);
+        .trim();
       // Use near-maximum endpoint chunks to reduce free-tier requests without truncating content.
       const chunks = splitSpeechIntoChunks(clean, 480);
       if (!chunks.length) {
@@ -1226,13 +1225,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
       };
 
-      // Long answers are played sequentially in verified 420-character
-      // chunks. Keep a generous overall deadline so valid explanations are not
-      // cut off at six minutes; each network request still has its own timeout.
+      // The full answer is read sequentially in endpoint-safe chunks.
+      // If the overall deadline is reached, pause honestly instead of
+      // implying that an incomplete reading finished.
       safetyTimer = window.setTimeout(() => {
         if (finished) return;
-        setVoiceError("La lectura superó el tiempo de seguridad. La respuesta sigue visible por escrito.");
         finish(false);
+        setVoiceError("La lectura superó el tiempo máximo de seguridad. No se ha recortado el texto: la respuesta completa sigue visible y puedes reiniciar la lectura.");
+        setVoiceStatus("Lectura pausada · puedes reiniciarla desde el principio");
       }, Math.min(900_000, Math.max(30_000, clean.length * 110)));
 
       void playFreeTtsChunk();

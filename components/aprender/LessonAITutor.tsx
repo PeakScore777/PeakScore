@@ -1808,9 +1808,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
         }
         if (safePublicSources.length) {
-          voicePublicSourcesRef.current = [...new Map(
-            [...voicePublicSourcesRef.current, ...safePublicSources].map((source) => [source.url, source]),
-          ).values()].slice(0, 4).map((source, index) => ({ ...source, citationNumber: index + 1 }));
+          const mergedSources = new Map<string, OrbyPublicSource>();
+          for (const source of [...voicePublicSourcesRef.current, ...safePublicSources]) {
+            mergedSources.set(source.url, source);
+          }
+          voicePublicSourcesRef.current = [...mergedSources.values()]
+            .slice(0, 4)
+            .map((source, index) => ({ ...source, citationNumber: index + 1 }));
         }
 
         responses.push({

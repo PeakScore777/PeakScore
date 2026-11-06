@@ -28,6 +28,7 @@ const speechChunks = await loadTypeScriptModule("../lib/ai/orby-speech-chunks.ts
 const publicResearch = await loadTypeScriptModule("../lib/ai/orby-web-research.ts");
 const ttsAudio = await loadTypeScriptModule("../lib/ai/orby-tts-audio.ts");
 const ttsErrors = await loadTypeScriptModule("../lib/ai/orby-tts-errors.ts");
+const voiceToolTurn = await loadTypeScriptModule("../lib/ai/orby-voice-tool-turn.ts");
 const saber11Level = await loadTypeScriptModule("../lib/ai/orby-saber11-level.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
@@ -75,6 +76,55 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.ok(lessonTutorSource.includes("FunctionResponseScheduling.WHEN_IDLE"));
   assert.ok(lessonTutorSource.includes("scheduling: FunctionResponseScheduling.WHEN_IDLE"));
   assert.equal((lessonTutorSource.match(/scheduling: FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 5);
+});
+
+test("el turno Live espera el aporte asíncrono del Lab y solo finaliza tras recibirlo", () => {
+  let state = voiceToolTurn.beginOrbyVoiceToolTurn(voiceToolTurn.createOrbyVoiceToolTurnState());
+
+  // The first model generation can complete while the knowledge search is pending.
+  let transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);
+  assert.equal(transition.shouldFinalize, false);
+  state = transition.state;
+  assert.equal(state.initialGenerationCompleted, true);
+
+  // A result scheduled before/after the first completion still needs a real
+  // follow-up transcript before the student's turn can be persisted.
+  state = voiceToolTurn.markOrbyVoiceToolResponseSent(state);
+  const earlyOutput = voiceToolTurn.markOrbyVoiceToolFollowupOutput(state);
+  assert.equal(earlyOutput.followupOutputSeen, false);
+  state = voiceToolTurn.markOrbyVoiceToolFollowupOutput(earlyOutput);
+  assert.equal(state.followupOutputSeen, true);
+
+  transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);
+  assert.equal(transition.shouldFinalize, true);
+  assert.equal(transition.state.pending, false);
+});
+
+test("un resultado rápido del Lab no confunde la primera finalización con el seguimiento", () => {
+  let state = voiceToolTurn.beginOrbyVoiceToolTurn(voiceToolTurn.createOrbyVoiceToolTurnState());
+  state = voiceToolTurn.markOrbyVoiceToolResponseSent(state);
+
+  // A transcript from the initial generation is not the Lab follow-up.
+  state = voiceToolTurn.markOrbyVoiceToolFollowupOutput(state);
+  assert.equal(state.followupOutputSeen, false);
+
+  let transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);
+  assert.equal(transition.shouldFinalize, false);
+  state = transition.state;
+
+  state = voiceToolTurn.markOrbyVoiceToolFollowupOutput(state);
+  assert.equal(state.followupOutputSeen, true);
+  transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);
+  assert.equal(transition.shouldFinalize, true);
+});
+
+test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_IDLE del Lab", () => {
+  assert.match(lessonTutorSource, /voiceKnowledgeToolTurnRef\.current = beginOrbyVoiceToolTurn/);
+  assert.match(lessonTutorSource, /markOrbyVoiceToolResponseSent/);
+  assert.match(lessonTutorSource, /markOrbyVoiceToolFollowupOutput/);
+  assert.match(lessonTutorSource, /completeOrbyVoiceToolGeneration/);
+  assert.match(lessonTutorSource, /voiceKnowledgeToolTurnRef\.current = resetOrbyVoiceToolTurn\(\)/);
+  assert.match(lessonTutorSource, /Orby está completando la explicación con el material del Lab/);
 });
 
 test("una respuesta Live lenta no fuerza TTS si el canal sigue conectado", () => {

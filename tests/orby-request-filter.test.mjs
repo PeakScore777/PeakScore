@@ -1204,9 +1204,9 @@ test("la búsqueda de conocimiento conserva el aislamiento cuando falta el índi
   assert.ok(orbyKnowledgeSource.includes("No exact subject embedding index"));
   assert.ok(orbyKnowledgeSource.includes("continuing with scoped lexical retrieval"));
   assert.ok(orbyKnowledgeSource.includes("const cached = precomputedEmbeddings.find((entry) => entry.model === model)"));
-  assert.doesNotMatch(orbyKnowledgeSource, /if \\(options\\.subject && rows\\.length === 0\\)/);
-  assert.doesNotMatch(orbyKnowledgeSource, /retrying across published areas/);
-  assert.doesNotMatch(orbyKnowledgeSource, /subject: null/);
+  assert.equal(orbyKnowledgeSource.includes("if (options.subject && rows.length === 0)"), false);
+  assert.equal(orbyKnowledgeSource.includes("retrying across published areas"), false);
+  assert.equal(orbyKnowledgeSource.includes("subject: null"), false);
   assert.ok(knowledgeSearchRouteSource.includes('const preflightContext = subject ? "Área de estudio: " + subject : ""'));
   assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \\? "Área de estudio: " \\+ subject : ""/);
 });
@@ -1371,7 +1371,7 @@ test("el grafo conceptual de Orby Lab aplica el mismo aislamiento por materia qu
   assert.match(conceptGraphMigration, /when 'sociales y ciudadanas' then array/);
   assert.match(conceptGraphMigration, /when 'ciencias naturales' then array/);
   assert.match(conceptGraphMigration, /when 'inglés' then array/);
-  assert.match(conceptGraphMigration, /or lower\(coalesce\(e\.subject,''\)\) like/);
+  assert.match(conceptGraphMigration, /p_subject is null/);
 });
 
 test("Orby Lab nunca amplía silenciosamente una búsqueda vacía a otras materias", () => {

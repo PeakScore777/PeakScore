@@ -556,12 +556,14 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
   const isContextualAcademicFollowUp = priorHasCurriculumAnchor
     && (ICFES_FOLLOW_UP_PATTERN.test(normalized) || CONTEXTUAL_STUDY_REQUEST_PATTERN.test(normalized) || isOrbyStudyGuidanceRequest(message, previousContext));
 
+  // Do not treat the curriculum keyword list as a hard allowlist. Students
+  // often use an unfamiliar concept, an incomplete sentence or an everyday
+  // phrase while trying to describe an ICFES doubt. Deterministic rules above
+  // still block explicit programming, cooking, harmful requests and clearly
+  // unrelated recommendations. Ambiguous requests go to the restricted tutor
+  // prompt, which must clarify or redirect without teaching an unrelated topic.
   if (!currentHasCurriculumAnchor && !isContextualAcademicFollowUp) {
-    return {
-      allowed: false,
-      category: "outside",
-      reply: ORBY_ICFES_SCOPE_REPLY,
-    };
+    return { allowed: true, category: null, reply: "" };
   }
 
   return { allowed: true, category: null, reply: "" };

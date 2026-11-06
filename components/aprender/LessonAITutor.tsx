@@ -13,7 +13,7 @@ import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 
-type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
+type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; sources?: Array<{ title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research" }>; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
@@ -3294,6 +3294,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         role: "assistant",
         content: data.reply,
         checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "",
+        sources: Array.isArray(data.sources) ? data.sources.filter((source: unknown): source is Message["sources"][number] => {
+          if (!source || typeof source !== "object") return false;
+          const item = source as Record<string, unknown>;
+          return typeof item.title === "string" && typeof item.url === "string"
+            && /^https:\/\/(?:es\.wikipedia\.org\/wiki\/|openalex\.org\/W\d+|doi\.org\/)/i.test(item.url)
+            && typeof item.publisher === "string"
+            && (item.publishedAt === null || typeof item.publishedAt === "string")
+            && (item.kind === "encyclopedia" || item.kind === "research");
+        }).slice(0, 4) : [],
       };
       setMessages((current) => dedupeAdjacentAssistantMessages([...current, assistantMessage]));
       if (workspace && selectedFile && selectedFile.type.startsWith("image/")) {
@@ -4086,6 +4095,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <article key={index} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[15px] leading-7 sm:text-base">{renderTutorContent(message.content)}</div>
+                {message.sources && message.sources.length > 0 && <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700" aria-label="Fuentes públicas consultadas">
+                  <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Fuentes públicas de apoyo</p>
+                  <ul className="space-y-2">
+                    {message.sources.map((source, sourceIndex) => <li key={source.url} className="flex items-start gap-2 text-xs leading-5">
+                      <span className="shrink-0 font-semibold text-orange-700">[{sourceIndex + 1}]</span>
+                      <span className="min-w-0">
+                        <a href={source.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900">{source.title}</a>
+                        <span className="ml-1 text-slate-500">· {source.publisher}{source.publishedAt ? ` · ${source.publishedAt}` : ""}</span>
+                      </span>
+                    </li>)}
+                  </ul>
+                </section>}
                 {message.generatedImage && <figure className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black/20">
                   <Image src={message.generatedImage} width={1600} height={900} unoptimized alt="Imagen educativa generada por Orby" className="h-auto max-h-[560px] w-full object-contain" />
                   <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 px-3 py-2 text-[10px] text-[#8f96a0]">

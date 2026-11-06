@@ -2045,12 +2045,24 @@ test("los rechazos de política usan Gemini Live y solo liberan el texto autoriz
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
 });
 
-test("Orby distingue cuota TTS agotada de un 429 temporal", () => {
+test("Orby distingue cuota agotada, rate limit temporal y error general en Gemini Live y TTS", () => {
   assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, message: "Too many requests" }), "rate_limited");
   assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, code: "RESOURCE_EXHAUSTED" }), "quota_exhausted");
   assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 503, message: "temporary provider failure" }), "provider_error");
-  assert.ok(lessonTutorSource.includes("voiceTtsQuotaExhaustedRef.current = true"));
-  assert.ok(lessonTutorSource.includes("if (voiceTtsQuotaExhaustedRef.current)"));
+
+  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, message: "Too many requests" }), "rate_limited");
+  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, code: "RATE_LIMITED" }), "rate_limited");
+  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, message: "Quota exceeded for free tier" }), "quota_exhausted");
+  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, code: "RESOURCE_EXHAUSTED" }), "quota_exhausted");
+  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 503, message: "temporary provider failure" }), "provider_error");
+
+  assert.match(lessonTutorSource, /classifyGeminiProviderFailure\(/);
+  assert.match(lessonTutorSource, /const quotaReached = liveFailure === "quota_exhausted"/);
+  assert.match(lessonTutorSource, /const rateLimited = liveFailure === "rate_limited"/);
+  assert.match(lessonTutorSource, /if \(rateLimited\)[\s\S]{0,180}fallbackVoiceTurnToText\(rateLimitMessage\)/);
+  assert.doesNotMatch(lessonTutorSource, /detail\.status === 429\s*\|\|/);
+  assert.match(lessonTutorSource, /voiceTtsQuotaExhaustedRef\.current = true/);
+  assert.match(lessonTutorSource, /if \(voiceTtsQuotaExhaustedRef\.current\)/);
 });
 
 test("Gemini 3.8 TTS conserva el WAV completo y solo envuelve PCM sin cabecera", () => {

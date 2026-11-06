@@ -2097,6 +2097,9 @@ test("Orby reconoce temas habituales de gramática inglesa como Inglés aunque l
   for (const topic of cases) {
     assert.equal(scope.normalizeIcfesSubject("", topic), "Inglés", topic);
   }
+  assert.match(scope.expandIcfesEnglishSearchTerms("Explícame el pasado simple"), /past simple/);
+  assert.match(scope.expandIcfesEnglishSearchTerms("verbos irregulares"), /irregular verbs/);
+  assert.match(scope.expandIcfesEnglishSearchTerms("voz pasiva"), /passive voice/);
   assert.equal(scope.normalizeIcfesSubject("Matemáticas", "pasado simple"), "Matemáticas",
     "Un área explícita seleccionada en el turno debe conservar prioridad sobre un tema incidental.");
 });

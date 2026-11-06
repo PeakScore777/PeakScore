@@ -160,7 +160,7 @@ test("Orby envía solo palabras clave académicas a fuentes públicas", async ()
   );
   assert.equal(outboundQueries.length, 2);
   assert.ok(outboundQueries.every((query) => query.includes("fotosintesis")));
-  assert.ok(outboundQueries.every((query) => !/dame|fuentes|cientificas|example\.com|3001234567/i.test(query)));
+  assert.ok(outboundQueries.every((query) => !/dame|fuentes|cientificas|contacto|telefono|estudiante|example\.com|3001234567/i.test(query)));
 });
 
 test("Orby continúa sin fuentes si los servicios públicos gratuitos no responden", async () => {

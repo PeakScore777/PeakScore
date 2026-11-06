@@ -1782,6 +1782,37 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           continue;
         }
 
+        const publicSourceCandidates = Array.isArray(result.public_sources) ? result.public_sources.slice(0, 4) : [];
+        const safePublicSources: OrbyPublicSource[] = [];
+        for (const candidate of publicSourceCandidates) {
+          if (!candidate || typeof candidate !== "object") continue;
+          const source = candidate as Record<string, unknown>;
+          if (typeof source.title !== "string" || typeof source.url !== "string"
+            || typeof source.publisher !== "string"
+            || (source.publishedAt !== null && typeof source.publishedAt !== "string")
+            || (source.kind !== "encyclopedia" && source.kind !== "research")) continue;
+          try {
+            const parsedUrl = new URL(source.url);
+            if (parsedUrl.protocol !== "https:"
+              || !["es.wikipedia.org", "doi.org", "openalex.org"].includes(parsedUrl.hostname.toLowerCase())) continue;
+            safePublicSources.push({
+              title: source.title.slice(0, 220),
+              url: parsedUrl.toString(),
+              publisher: source.publisher.slice(0, 140),
+              publishedAt: source.publishedAt as string | null,
+              kind: source.kind,
+              citationNumber: safePublicSources.length + 1,
+            });
+          } catch {
+            // Ignore malformed public URLs; only safe HTTPS references reach the transcript UI.
+          }
+        }
+        if (safePublicSources.length) {
+          voicePublicSourcesRef.current = [...new Map(
+            [...voicePublicSourcesRef.current, ...safePublicSources].map((source) => [source.url, source]),
+          ).values()].slice(0, 4).map((source, index) => ({ ...source, citationNumber: index + 1 }));
+        }
+
         responses.push({
           id,
           name,
@@ -1792,7 +1823,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             concepts: Array.isArray(result.concepts) ? result.concepts.slice(0, 24) : [],
             profiles: Array.isArray(result.profiles) ? result.profiles.slice(0, 4) : [],
             related: Array.isArray(result.related) ? result.related.slice(0, 3) : [],
-            public_sources: Array.isArray(result.public_sources) ? result.public_sources.slice(0, 4) : [],
+            public_sources: publicSourceCandidates,
+            public_research_found: result.public_research_found === true,
             guidance: typeof result.guidance === "string" ? result.guidance.slice(0, 700) : "",
           },
         });

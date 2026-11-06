@@ -2655,7 +2655,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   subject,
                   topic,
                   context,
-                  history: messages.slice(-6).map(({ role, content }) => ({ role, content })),
+                  conversationId: activeConversationRef.current ?? conversationId,
+                  history: messagesRef.current.slice(-12).map(({ role, content }) => ({ role, content })),
                 }),
               });
               const resumeTokenPayload = await resumeTokenResponse.json().catch(() => ({}));

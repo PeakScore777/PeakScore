@@ -3,7 +3,7 @@
 - Proyecto: PeakScore
 - Rama: feat/founder-intro
 - Fecha: 2026-11-06
-- Estado: auditoría en curso. No desplegado ni fusionado a main.
+- Estado: correcciones de código con CI aprobado; pendiente validación manual de voz en navegador. No desplegado ni fusionado a main.
 
 ## Objetivo
 
@@ -69,7 +69,17 @@ Ejecución de GitHub Actions: https://github.com/PeakScore777/PeakScore/actions/
 - Auditoría de dependencias: completada correctamente.
 - La compuerta de auditoría de dependencias se omitió porque el flujo no necesitó aplicar una actualización adicional.
 
-**Alcance de esta validación:** confirma las pruebas automatizadas y la compilación del commit. No sustituye una prueba manual de conversación prolongada, interrupción, reconexión y agotamiento de cuotas en un navegador real.
+**Alcance de esta validación:** el job ejecutó `npm run test:orby` (`node --test tests/orby-request-filter.test.mjs`), TypeScript, ESLint y el build. Las pruebas de regresión nuevas inspeccionan el código fuente y sus invariantes; no simulan una sesión Gemini Live real ni demuestran por sí solas conversación prolongada, audio, reconexión o recuperación de cuotas. Esos escenarios requieren validación manual/integración en navegador.
+
+## Estado de validación
+
+- [x] CI completo aprobado en el commit de código `cef451f36889ca449448f3046c01e20db86a0ff2`.
+- [x] La actualización posterior de este documento no modifica código ejecutable.
+- [ ] Prueba manual de voz continua en Chrome.
+- [ ] Prueba de interrupción mientras Orby habla.
+- [ ] Prueba de reconexión por `goAway` y cierre de WebSocket.
+- [ ] Prueba de consulta del Lab con una pregunta real y revisión de fragmentos utilizados.
+- [ ] Prueba de cuotas gratuitas agotadas sin fallback facturable.
 
 ## Criterios de aceptación
 

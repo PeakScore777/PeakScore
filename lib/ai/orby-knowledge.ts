@@ -1377,16 +1377,15 @@ export async function searchOrbyKnowledge(
       .slice(0, 2)
     : [];
 
-  // Published profiles may use a curricular synonym for the official area
-  // (for example "Ciencias Sociales" instead of "Sociales y Ciudadanas").
-  // The exact-area filter then exposes no embedding model at all. Retry this
-  // query across the published library rather than silently returning zero.
+  // Keep the requested ICFES area isolated even when it has no indexed
+  // embedding model. The SQL retrieval function also performs scoped lexical
+  // search against document/profile area aliases, so an empty vector index
+  // must never trigger an unrestricted cross-area search.
   if (options.subject && indexedModels.length === 0) {
-    console.warn("[Orby RAG] No exact subject embedding index; retrying query across published areas.", {
+    console.warn("[Orby RAG] No exact subject embedding index; continuing with scoped lexical retrieval.", {
       requestedSubject: options.subject,
       modelLookupFailed: Boolean(modelError),
     });
-    return searchOrbyKnowledge({ ...options, subject: null }, precomputedEmbeddings);
   }
 
   const embeddingEntries = await Promise.all(indexedModels.map(async (model) => {
@@ -1418,23 +1417,11 @@ export async function searchOrbyKnowledge(
       p_limit: options.limit ?? 8,
     });
     if (fallback.error) throw new Error("Knowledge search failed: " + fallback.error.code);
-    const fallbackRows = Array.isArray(fallback.data) ? fallback.data : [];
-    if (options.subject && fallbackRows.length === 0) {
-      return searchOrbyKnowledge({ ...options, subject: null }, embeddings);
-    }
-    return fallbackRows;
+    return Array.isArray(fallback.data) ? fallback.data : [];
   }
   const rows = Array.isArray(data) ? data : [];
-  // A query can have a valid canonical subject index while the best matching
-  // material is categorized under a synonym or neighboring published label.
-  // If the scoped search finds no chunks, retry across published areas once.
-  if (options.subject && rows.length === 0) {
-    console.warn("[Orby RAG] No chunks matched the active subject; retrying across published areas.", {
-      requestedSubject: options.subject,
-      availableEmbeddingModels: indexedModels.length,
-    });
-    return searchOrbyKnowledge({ ...options, subject: null }, embeddings);
-  }
+  // The SQL function already resolves approved profile-area aliases.
+  // An empty scoped result is safer than teaching from an unrelated ICFES area.
   return rows;
 }
 

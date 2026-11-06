@@ -2156,7 +2156,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : unsupportedInputScript
           ? ORBY_SPANISH_ONLY_REPLY
           : (preflight.allowed ? null : preflight.reply);
-      if (selectedVoiceSubject) activeSubjectRef.current = selectedVoiceSubject;
+      if (selectedVoiceSubject && preflight.allowed) activeSubjectRef.current = selectedVoiceSubject;
       voicePendingAudioChunksRef.current = [];
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
@@ -3312,10 +3312,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // forced every such turn through quota-limited Gemini TTS.
       const localReply = !typedPreflight.allowed ? typedPreflight.reply : null;
       if (localReply) {
-        if (selectedSubject) activeSubjectRef.current = selectedSubject;
         respondToVoiceLocally(message, localReply, true);
         return;
       }
+      if (selectedSubject && typedPreflight.allowed) activeSubjectRef.current = selectedSubject;
       waitingForVoiceReplyRef.current = true;
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;

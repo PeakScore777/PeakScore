@@ -588,7 +588,8 @@ test("los saludos cortos se reconocen y el modo voz los remite a Gemini Live", (
   assert.equal(filter.isOrbyGreetingRequest("Hola, explícame la fotosíntesis"), false);
   assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
   assert.match(cloudflareTutorRoute, /isOrbyGreetingRequest\(userMessage\)/);
-  assert.match(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)\s*\?\s*null/);
+  assert.match(lessonTutorSource, /const preflight = preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
+  assert.match(lessonTutorSource, /voicePreflightReplyRef\.current = asksIdentity[\\s\\S]{0,420}\\(preflight\.allowed \? null : preflight\.reply\)/);
   assert.doesNotMatch(lessonTutorSource, /const greetingReply = isOrbyGreetingRequest\(message\)/);
 });
 
@@ -667,7 +668,8 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-12\)/);
   assert.match(cloudflareTutorRoute, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
-  assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);
+  assert.match(lessonTutorSource, /const typedPreflight = preflightOrbyRequest\(message, typedVoiceContext\)/);
+  assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
   assert.match(lessonTutorSource, /finishWithoutGenericVoice/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.doesNotMatch(lessonTutorSource, /synthesis\?\.cancel\(\)/);
@@ -766,8 +768,8 @@ test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o 
   assert.match(lessonTutorSource, /const authenticationFailure = .*401.*403/);
   assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
   assert.match(lessonTutorSource, /La voz en tiempo real no está disponible ahora\. Continúo por turnos sin perder tu conversación/);
-  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current, voiceScopeContext, previousVoiceSubject\)/);
-  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message, typedVoiceContext, previousActiveSubject\)/);
+  assert.match(lessonTutorSource, /const selectedVoiceSubject = getOrbySubjectSelectionLabel\(voiceUserTextRef\.current\)/);
+  assert.match(lessonTutorSource, /const selectedSubject = getOrbySubjectSelectionLabel\(message\)/);
   assert.match(cloudflareTutorRoute, /getOrbySubjectSelectionReply\(\s*userMessage,\s*recentContextMessages/);
 });
 
@@ -1488,11 +1490,12 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos at�
 
 test("los filtros escritos dentro de voz se contestan localmente y sincronizan Live sin generar otra respuesta", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
-  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? subjectSelectionReply ?? activeSubjectReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
+  const localFilterIndex = lessonTutorSource.indexOf("const localReply = !typedPreflight.allowed ? typedPreflight.reply : null", typedVoiceStart);
   const localReplyIndex = lessonTutorSource.indexOf("respondToVoiceLocally(message, localReply, true)", typedVoiceStart);
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
   const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");
-  assert.match(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)\s*\?\s*null/);
+  assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
+  assert.match(lessonTutorSource, /if \(selectedSubject && typedPreflight\.allowed\) activeSubjectRef\.current = selectedSubject/);
   assert.doesNotMatch(lessonTutorSource.slice(typedVoiceStart, localFilterIndex), /greetingReply/);
   assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart
     && localReplyIndex > localFilterIndex && sendRealtimeIndex > localReplyIndex
@@ -1532,30 +1535,43 @@ test("los filtros escritos dentro de voz se contestan localmente y sincronizan L
   assert.doesNotMatch(lessonTutorSource.slice(typedVoiceStart, localFilterIndex), /pendingMessagesRef\.current\.push/);
 });
 
-test("una selección nueva se evalúa antes de actualizar la materia activa", () => {
+test("una selección nueva se valida antes de actualizar la materia activa en voz", () => {
   const liveSelectionStart = lessonTutorSource.indexOf("const previousVoiceSubject = activeSubjectRef.current;");
   const liveDecision = lessonTutorSource.indexOf(
-    "isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject)",
+    "const selectedVoiceSubject = getOrbySubjectSelectionLabel(voiceUserTextRef.current);",
     liveSelectionStart,
   );
-  const liveCommit = lessonTutorSource.indexOf(
-    "if (selectedVoiceSubject) activeSubjectRef.current = selectedVoiceSubject;",
+  const liveValidation = lessonTutorSource.indexOf(
+    "const preflight = preflightOrbyRequest(voiceUserTextRef.current, voiceScopeContext);",
     liveDecision,
   );
-  assert.ok(liveSelectionStart >= 0 && liveDecision > liveSelectionStart && liveCommit > liveDecision);
+  const liveCommit = lessonTutorSource.indexOf(
+    "if (selectedVoiceSubject && preflight.allowed) activeSubjectRef.current = selectedVoiceSubject;",
+    liveValidation,
+  );
+  assert.ok(liveSelectionStart >= 0 && liveDecision > liveSelectionStart
+    && liveValidation > liveDecision && liveCommit > liveValidation,
+  "La voz solo debe cambiar de materia después de validar el turno.");
 
-  const typedVoiceStart = lessonTutorSource.indexOf("if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)");
-  const typedDecision = lessonTutorSource.indexOf(
-    "isOrbySubjectAlreadyActive(message, typedVoiceContext, previousActiveSubject)",
+  const sendStart = lessonTutorSource.indexOf("async function sendMessage(");
+  const typedDecision = lessonTutorSource.indexOf("const selectedSubject = getOrbySubjectSelectionLabel(message);", sendStart);
+  const typedVoiceStart = lessonTutorSource.indexOf("if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)", typedDecision);
+  const typedValidation = lessonTutorSource.indexOf(
+    "const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);",
     typedVoiceStart,
   );
   const typedCommit = lessonTutorSource.indexOf(
-    "if (selectedSubject) activeSubjectRef.current = selectedSubject;",
-    typedDecision,
+    "if (selectedSubject && typedPreflight.allowed) activeSubjectRef.current = selectedSubject;",
+    typedValidation,
   );
-  assert.ok(typedVoiceStart >= 0 && typedDecision > typedVoiceStart && typedCommit > typedDecision);
+  const typedLiveSend = lessonTutorSource.indexOf(
+    "voiceChannelRef.current.sendRealtimeInput({ text: message })",
+    typedCommit,
+  );
+  assert.ok(sendStart >= 0 && typedDecision > sendStart && typedVoiceStart > typedDecision
+    && typedValidation > typedVoiceStart && typedCommit > typedValidation && typedLiveSend > typedCommit,
+  "El cambio de materia escrito debe validarse y persistirse antes de enviar el turno a Live.");
   assert.ok(lessonTutorSource.includes('"Área de estudio: " + previousActiveSubject'));
-  const sendStart = lessonTutorSource.indexOf("async function sendMessage(");
   const validReply = lessonTutorSource.indexOf("if (typeof data.reply !== \"string\" || !data.reply.trim())", sendStart);
   const successfulResponse = lessonTutorSource.indexOf(
     "if (selectedSubject) activeSubjectRef.current = selectedSubject;",
@@ -2031,8 +2047,10 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(first.subject, messagesPayload.messages)"));
   assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages)"));
   assert.ok(lessonTutorSource.includes("getOrbySubjectSelectionLabel(item.content)"));
-  assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject)"));
-  assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(message, typedVoiceContext, previousActiveSubject)"));
+  assert.ok(lessonTutorSource.includes("const selectedVoiceSubject = getOrbySubjectSelectionLabel(voiceUserTextRef.current)"));
+  assert.ok(lessonTutorSource.includes("if (selectedVoiceSubject && preflight.allowed) activeSubjectRef.current = selectedVoiceSubject"));
+  assert.ok(lessonTutorSource.includes("const selectedSubject = getOrbySubjectSelectionLabel(message)"));
+  assert.ok(lessonTutorSource.includes("if (selectedSubject && typedPreflight.allowed) activeSubjectRef.current = selectedSubject"));
   assert.ok(lessonTutorSource.includes("const selectedSubject = getOrbySubjectSelectionLabel(message)"));
   const liveStartup = lessonTutorSource
     .split("async function startRealtimeVoice")[1]

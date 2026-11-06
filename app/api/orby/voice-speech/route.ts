@@ -94,46 +94,36 @@ export async function POST(request: Request) {
     }
 
     const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta" } });
-    // Gemini 3.8 Flash TTS is served through the Interactions API, not the
-    // legacy models.generateContent endpoint. Its unary audio response is
-    // exposed as interaction.output_audio with data + mime_type.
-    const interaction = await ai.interactions.create({
+    // Gemini 3.8 Flash TTS supports GenerateContent, not the Interactions API.
+    // Calling interactions.create here returned provider errors for every
+    // fallback utterance, leaving the student with text and no spoken answer.
+    const generation = await ai.models.generateContent({
       model: MODEL,
-      input: [{
-        type: "user_input",
-        content: [{
-          type: "text",
+      contents: [{
+        role: "user",
+        parts: [{
           text,
-          // speech_metadata controls delivery without being spoken aloud.
-          // The SDK's generated Annotation type omits this new annotation,
-          // so cast only this wire-level metadata object.
-          annotations: [{
-            type: "speech_metadata",
-            style: ORBY_VOICE_STYLE,
-          }] as never,
-        }],
+          // speechMetadata is request metadata, not text to be read aloud.
+          speechMetadata: { style: ORBY_VOICE_STYLE },
+        } as never],
       }],
-      response_format: {
-        type: "audio",
-        mime_type: "audio/wav",
-        delivery: "inline",
-      },
-      generation_config: {
-        // Gemini TTS detects the spoken language from the transcript.
-        // Do not pass a Live-ASR locale here: TTS accepts a voice selection,
-        // and unsupported locale metadata can reject otherwise valid chunks.
-        speech_config: [{
-          voice: ORBY_VOICE_NAME,
-        }],
+      config: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: { voice: ORBY_VOICE_NAME },
+        },
       },
     });
 
-    const audioBase64 = interaction.output_audio?.data;
-    const audioMimeType = interaction.output_audio?.mime_type;
+    const audioPart = generation.candidates?.[0]?.content?.parts?.find(
+      (part) => typeof part.inlineData?.data === "string" && part.inlineData.data.length > 0,
+    );
+    const audioBase64 = audioPart?.inlineData?.data;
+    const audioMimeType = audioPart?.inlineData?.mimeType;
     if (typeof audioBase64 !== "string" || !audioBase64) {
-      console.error("[Orby Gemini TTS] Interaction completed without inline audio.", {
-        status: interaction.status,
-        errors: interaction.errors?.map((item) => ({ code: item.code, message: item.message })),
+      console.error("[Orby Gemini TTS] GenerateContent completed without inline audio.", {
+        finishReason: generation.candidates?.[0]?.finishReason,
+        promptFeedback: generation.promptFeedback?.blockReason,
       });
       return jsonError("Gemini no devolvió audio. La respuesta permanece disponible por escrito.", "TTS_EMPTY_AUDIO", 502);
     }

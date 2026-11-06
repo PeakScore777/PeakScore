@@ -1103,9 +1103,27 @@ No uses bloques Markdown ni texto fuera del JSON.
         code: "PROVIDER_TEMPORARILY_BUSY",
       }, { status: 429, headers: { "Retry-After": "30" } });
     }
+    if (error instanceof CloudflareWorkersAIError) {
+      const configurationFailure = error.code === "NOT_CONFIGURED";
+      const authenticationFailure = error.code === "AUTH_FAILED";
+      const connectionFailure = error.code === "CONNECTION_FAILED";
+      console.error("[Orby Tutor] Cloudflare tutor request failed.", {
+        code: error.code,
+        status: error.status,
+      });
+      return NextResponse.json({
+        error: configurationFailure
+          ? "El motor académico gratuito de Orby no está configurado en este entorno. Revisa CLOUDFLARE_ACCOUNT_ID y CLOUDFLARE_API_TOKEN en el servidor."
+          : authenticationFailure
+            ? "Cloudflare rechazó las credenciales del motor académico. Revisa el token y sus permisos de Workers AI."
+            : connectionFailure
+              ? "No se pudo conectar con el motor académico gratuito de Orby. Conservé tu pregunta; vuelve a intentarlo."
+              : "Cloudflare no pudo generar esta respuesta. No se activará ningún proveedor de pago; vuelve a intentarlo.",
+        code: error.code,
+      }, { status: configurationFailure || authenticationFailure ? 503 : 502 });
+    }
     console.error("[Orby Tutor] No se pudo responder.", {
       errorName: error instanceof Error ? error.name : "UnknownError",
-      providerCode: error instanceof CloudflareWorkersAIError ? error.code : undefined,
     });
     return NextResponse.json({ error: "Orby no está disponible en este momento. Tu solicitud no se enviará a otro proveedor de pago." }, { status: 503 });
   }

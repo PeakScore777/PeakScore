@@ -13,7 +13,8 @@ import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 
-type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; sources?: Array<{ title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research" }>; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
+type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research" };
+type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
@@ -3294,7 +3295,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         role: "assistant",
         content: data.reply,
         checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "",
-        sources: Array.isArray(data.sources) ? data.sources.filter((source: unknown): source is Message["sources"][number] => {
+        sources: Array.isArray(data.sources) ? data.sources.filter((source: unknown): source is OrbyPublicSource => {
           if (!source || typeof source !== "object") return false;
           const item = source as Record<string, unknown>;
           return typeof item.title === "string" && typeof item.url === "string"

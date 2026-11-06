@@ -41,6 +41,24 @@ Mantener una conversación oral continua, natural y recuperable para el tutor Sa
 
 **Nota de auditoría:** una descripción anterior de este documento afirmaba que la herramienta era bloqueante. Esa afirmación quedó obsoleta tras los cambios recientes. El estado actual del código y las pruebas es no bloqueante, con entrega diferida de resultados cuando Live puede incorporarlos.
 
+### Incorporación diferida del Lab en el mismo turno de voz
+
+Se detectó una condición de carrera en el cliente: el modelo podía terminar su primera generación mientras la búsqueda no bloqueante seguía en curso. Cuando llegaba el resultado y Gemini programaba su respuesta con `WHEN_IDLE`, el cliente ya podía haber marcado el turno como finalizado e ignorar la transcripción y el audio posteriores.
+
+Corrección aplicada:
+
+- Se agregó `lib/ai/orby-voice-tool-turn.ts`, una máquina de estados pura que distingue la primera generación, el envío de la respuesta de herramienta y la transcripción del seguimiento.
+- La primera finalización de Live queda provisional cuando existe una búsqueda pendiente. El turno del estudiante permanece abierto y el watchdog sigue activo.
+- El resultado se envía con `FunctionResponseScheduling.WHEN_IDLE`. El turno solo se finaliza cuando llega la transcripción del seguimiento posterior al resultado.
+- Se cubren ambos órdenes: el resultado del Lab puede llegar antes o después de la primera finalización de Live; una transcripción anterior al resultado no cuenta como seguimiento.
+- El prompt indica a Orby que complemente lo ya explicado con hallazgos útiles, sin repetir la respuesta completa; si la búsqueda no aporta nada, debe indicarlo brevemente y cerrar el turno.
+- Si Gemini cancela la llamada o la conexión se renueva mientras el resultado sigue pendiente, se invalida el trabajo antiguo y se conserva la pregunta para terminarla con el tutor gratuito por turnos. No se envían respuestas de herramienta con IDs de una conexión anterior.
+- Si no se puede entregar la respuesta de herramienta, se activa el respaldo gratuito para recuperar la misma pregunta, en lugar de dejar el turno esperando indefinidamente.
+
+Las pruebas nuevas cubren los dos órdenes de llegada (resultado antes/después de la primera finalización), exigen salida real del seguimiento antes de finalizar y comprueban recuperación ante cancelación/reconexión. Son pruebas de lógica e invariantes: la interacción completa debe validarse en Chrome con Gemini Live real.
+
+La semántica coincide con la documentación oficial: `NON_BLOCKING` permite que la conversación continúe mientras se ejecuta la herramienta; `WHEN_IDLE` incorpora el resultado y solicita una generación sin interrumpir la generación activa. Referencias: [Live API — herramientas asíncronas](https://ai.google.dev/gemini-api/docs/live-api/tools) y [API — programación de respuestas de función](https://ai.google.dev/api/generate-content).
+
 ### Continuidad, interrupciones y reconexión
 
 - El watchdog avisa a los 18 segundos y a los 50 segundos conserva una sesión Live que sigue conectada, concediendo una ventana adicional de 70 segundos antes de activar el respaldo.
@@ -79,7 +97,7 @@ Corrección aplicada en esta ronda:
 - Commit: `315091ae57612bce2a9cbf83f16c3ccf2f93d657`
 - Resultado: éxito en pruebas Orby, TypeScript, ESLint y build de producción.
 
-La corrección de clasificación Live/TTS y sus nuevos asserts son posteriores a ese commit. No se deben considerar validados por el CI anterior. La ejecución correspondiente al commit que incluya estos cambios debe pasar:
+La corrección de clasificación Live/TTS y el seguimiento asíncrono Lab–VC son posteriores a ese commit. No se deben considerar validados por el CI anterior. La ejecución más reciente que incluya todos esos cambios debe pasar:
 - `npm run test:orby`
 - TypeScript (`tsc --noEmit`)
 - ESLint
@@ -96,6 +114,7 @@ Las pruebas de `tests/orby-request-filter.test.mjs` inspeccionan funciones puras
 - [ ] Confirmar que el eco del parlante no se convierte en una pregunta nueva.
 - [ ] Pregunta académica nueva: comprobar consulta selectiva del Lab y pertinencia de los fragmentos recuperados.
 - [ ] Confirmar que una consulta del Lab no bloquea el audio y que el resultado se incorpora sin perder la respuesta.
+- [ ] Confirmar que el segundo aporte de `WHEN_IDLE` se escucha y se añade sin repetir la primera explicación.
 - [ ] Cierre, `goAway` y reconexión: conservar sesión, contexto e historial sin duplicados.
 - [ ] Simular/observar rate limit y cuota agotada por separado; los mensajes deben ser distintos.
 - [ ] Confirmar que ningún error activa un proveedor facturable.

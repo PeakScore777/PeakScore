@@ -25,6 +25,7 @@ const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowle
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
 const voiceEcho = await loadTypeScriptModule("../lib/ai/orby-voice-echo.ts");
 const speechChunks = await loadTypeScriptModule("../lib/ai/orby-speech-chunks.ts");
+const publicResearch = await loadTypeScriptModule("../lib/ai/orby-web-research.ts");
 const ttsAudio = await loadTypeScriptModule("../lib/ai/orby-tts-audio.ts");
 const saber11Level = await loadTypeScriptModule("../lib/ai/orby-saber11-level.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
@@ -52,6 +53,7 @@ const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby
 const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowledge-search/route.ts", import.meta.url), "utf8");
+const publicResearchRouteSource = await readFile(new URL("../lib/ai/orby-web-research.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
@@ -69,6 +71,58 @@ test("Orby divide respuestas largas sin reordenar frases ni exceder el límite T
   const single = speechChunks.splitOrbySpeechIntoChunks("Una sola frase.", 480);
   assert.deepEqual(single, ["Una sola frase."]);
   assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("   ", 480), []);
+});
+
+test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confiables", async () => {
+  const calls = [];
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    calls.push(url.hostname);
+    if (url.hostname === "es.wikipedia.org") {
+      return new Response(JSON.stringify({ pages: [
+        { key: "Fotosintesis", title: "Fotosíntesis", description: "<b>Proceso</b> por el que las plantas convierten energía luminosa." },
+        { key: "Fotosintesis", title: "Fotosíntesis duplicada", description: "Duplicado." },
+        { key: "../evil", title: "Enlace inválido", description: "No debe incluirse." },
+      ] }), { status: 200 });
+    }
+    if (url.hostname === "api.openalex.org") {
+      return new Response(JSON.stringify({ results: [{
+        id: "https://openalex.org/W123456789",
+        doi: "https://doi.org/10.1000/example",
+        title: "Photosynthesis research",
+        publication_year: 2024,
+        abstract_inverted_index: { "La": [0], "fotosíntesis": [1], "transforma": [2], "luz": [3] },
+        primary_location: { source: { display_name: "Revista científica" } },
+      }] }), { status: 200 });
+    }
+    throw new Error("Host no permitido");
+  };
+  const result = await publicResearch.searchOrbyPublicSources("fotosíntesis", { fetcher, maxSources: 3 });
+  assert.equal(calls.length, 2);
+  assert.ok(result.sources.length <= 3);
+  assert.ok(result.sources.some((item) => item.kind === "research" && item.url === "https://doi.org/10.1000/example"));
+  assert.ok(result.sources.some((item) => item.kind === "encyclopedia" && item.url.includes("es.wikipedia.org/wiki/Fotosintesis")));
+  assert.ok(result.sources.every((item) => /^https:\/\/(?:es\.wikipedia\.org\/wiki\/|doi\.org\/|openalex\.org\/W)/.test(item.url)));
+  assert.ok(result.sources.every((item) => !item.excerpt.includes("<b>")));
+  assert.equal(result.sources.find((item) => item.kind === "research").excerpt, "La fotosíntesis transforma luz");
+});
+
+test("Orby continúa sin fuentes si los servicios públicos gratuitos no responden", async () => {
+  const result = await publicResearch.searchOrbyPublicSources("fotosíntesis", {
+    fetcher: async () => { throw new Error("offline"); },
+  });
+  assert.equal(result.sources.length, 0);
+  assert.equal(result.warnings.length, 2);
+});
+
+test("ambos canales integran investigación pública sin sustituir Orby Lab", () => {
+  assert.match(lessonTutorRouteSource, /searchOrbyPublicSources\(learningQuery/);
+  assert.match(lessonTutorRouteSource, /INVESTIGACIÓN EXTERNA PÚBLICA/);
+  assert.match(lessonTutorRouteSource, /sources: publicSources/);
+  assert.match(knowledgeSearchRouteSource, /searchOrbyPublicSources\(query/);
+  assert.match(knowledgeSearchRouteSource, /public_sources: publicResearch\.sources/);
+  assert.match(realtimeSessionSource, /también devuelve public_sources/);
+  assert.match(lessonTutorSource, /Fuentes públicas de apoyo/);
 });
 
 test("la búsqueda académica prioriza la materia del turno actual sobre la materia anterior", () => {

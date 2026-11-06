@@ -116,7 +116,7 @@ export async function POST(request: Request) {
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(12);
+        .limit(20);
       if (historyError) {
         console.error("[Orby Voice] Persisted conversation history unavailable.", { code: historyError.code });
       } else if (Array.isArray(storedMessages) && storedMessages.length) {
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
         && isIcfesScopedAssistantTurn(item.content, priorContext);
       if (safeAssistantTurn) safeHistory.push(item);
     }
-    const boundedSafeHistory = safeHistory.slice(-8);
+    const boundedSafeHistory = safeHistory.slice(-12);
 
     // Only session metadata is checked as a new instruction source. Previous
     // turns are historical context, not a fresh request: a past filtered message

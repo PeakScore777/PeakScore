@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
@@ -179,7 +179,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     messagesRef.current = messages;
   }, [messages]);
 
-  function restoreActiveSubjectFromStoredConversation(savedSubject: unknown, savedMessages: unknown) {
+  const restoreActiveSubjectFromStoredConversation = useCallback((savedSubject: unknown, savedMessages: unknown) => {
     const storedLabel = typeof savedSubject === "string"
       ? getOrbySubjectSelectionLabel(savedSubject)
       : null;
@@ -199,7 +199,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
     }
     activeSubjectRef.current = subject;
-  }
+  }, [subject]);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -473,7 +473,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // A new workspace hydration can safely set the flag back to true.
       historyHydratingRef.current = false;
     };
-  }, [open, workspace]);
+  }, [open, workspace, subject, restoreActiveSubjectFromStoredConversation]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });

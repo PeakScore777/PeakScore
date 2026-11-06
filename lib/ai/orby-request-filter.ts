@@ -107,19 +107,81 @@ export const ORBY_ICFES_ENGLISH_INTRO_REPLY =
 export const ORBY_GREETING_REPLY =
   "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
 
-export function getOrbyGreetingFollowUpReply(previousContext = ""): string {
-  const recent = normalizeOrbyRequestText(previousContext).slice(-1_200);
-  if (!recent) return ORBY_GREETING_REPLY;
+type OrbySubjectKey = "math" | "reading" | "social" | "science" | "english";
 
-  // A greeting inside an existing conversation must not restart the tutor's
-  // presentation or discard the active lesson.
-  if (/\b(?:ingles|english)\b/.test(recent)) {
-    return "¡Aquí estoy! Seguimos con Inglés de Saber 11. ¿Quieres practicar una pregunta o revisar alguna parte?";
+function getOrbySubjectSelectionKey(message: string): OrbySubjectKey | null {
+  const normalized = normalizeOrbyRequestText(message)
+    .replace(/[¿?¡!.,;:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const compact = normalized
+    .replace(/^(?:quiero estudiar|quiero ver|vamos con|empecemos con|empezar con|estudiemos|repasemos|hablemos de|tema de|area de|materia de|la materia de|el area de)\s+/, "")
+    .replace(/^(?:el|la)\s+/, "")
+    .replace(/^(?:en|para|con)\s+/, "")
+    .trim();
+
+  if (/^(?:lectura|lectura critica|lengua|lenguaje|comprension lectora|comprension de lectura|comprension de textos|literatura|gramatica|espanol|castellano)$/.test(compact)) return "reading";
+  if (/^(?:matematicas|matematica|algebra|geometria|estadistica|probabilidad)$/.test(compact)) return "math";
+  if (/^(?:sociales|sociales y ciudadanas|historia|geografia|constitucion|democracia|ciudadania)$/.test(compact)) return "social";
+  if (/^(?:ciencias|ciencias naturales|naturales|biologia|quimica|fisica|ambiente|ecosistemas)$/.test(compact)) return "science";
+  if (/^(?:ingles|english)$/.test(compact)) return "english";
+  return null;
+}
+
+function getActiveOrbySubjectKey(previousContext = "", activeSubject = ""): OrbySubjectKey | null {
+  const direct = normalizeOrbyRequestText(activeSubject);
+  if (/^(?:ingles|english)$/.test(direct)) return "english";
+  if (/^(?:matematicas|matematica)$/.test(direct)) return "math";
+  if (/^(?:lectura critica)$/.test(direct)) return "reading";
+  if (/^(?:sociales y ciudadanas)$/.test(direct)) return "social";
+  if (/^(?:ciencias naturales)$/.test(direct)) return "science";
+
+  // Inspect only the latest assistant turn, not every old mention in the chat.
+  // Otherwise switching from English to Reading would be mistaken for staying
+  // in English because an older answer still contains that word.
+  const turns = previousContext.split(/\n(?=(?:user|assistant):\s*)/i);
+  const latestAssistant = [...turns].reverse()
+    .find((turn) => /^assistant:\s*/i.test(turn.trim()))
+    ?.replace(/^assistant:\s*/i, "") ?? previousContext;
+  const recent = normalizeOrbyRequestText(latestAssistant).slice(-900);
+  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:ingles|english)\b|\b(?:ingles|english)\b.{0,35}\b(?:saber\s*11|icfes)\b/.test(recent)) return "english";
+  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:matematicas|matematica)\b|\bmatematicas de saber\s*11\b/.test(recent)) return "math";
+  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:lectura critica)\b/.test(recent)) return "reading";
+  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:sociales y ciudadanas|sociales)\b/.test(recent)) return "social";
+  if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos)\b.{0,55}\b(?:ciencias naturales)\b/.test(recent)) return "science";
+  return null;
+}
+
+export function isOrbySubjectAlreadyActive(message: string, previousContext = "", activeSubject = ""): boolean {
+  const requested = getOrbySubjectSelectionKey(message);
+  return Boolean(requested && getActiveOrbySubjectKey(previousContext, activeSubject) === requested);
+}
+
+export function getOrbyGreetingFollowUpReply(previousContext = "", activeSubject = ""): string {
+  const recent = normalizeOrbyRequestText(previousContext).slice(-1_200);
+  if (!recent && !activeSubject) return ORBY_GREETING_REPLY;
+
+  const activeKey = getActiveOrbySubjectKey(previousContext, activeSubject);
+  if (activeKey === "english") {
+    return "Aquí estoy. Seguimos con Inglés de Saber 11 y con el ejercicio anterior; dime qué parte quieres revisar.";
   }
-  if (/\b(?:fotosintesis|ciencias naturales|biologia|quimica|fisica|matematicas|lectura critica|sociales y ciudadanas|saber\s*11|icfes)\b/.test(recent)) {
-    return "¡Aquí estoy! Sigamos con tu preparación para Saber 11. ¿Qué parte quieres revisar ahora?";
+  if (activeKey === "math") {
+    return "Aquí estoy. Seguimos con Matemáticas y el ejercicio anterior; dime qué paso quieres revisar.";
   }
-  return "¡Aquí estoy! ¿Qué tema de Saber 11 quieres trabajar ahora?";
+  if (activeKey === "reading") {
+    return "Aquí estoy. Seguimos con Lectura Crítica y el texto anterior; dime qué parte quieres analizar.";
+  }
+  if (activeKey === "social") {
+    return "Aquí estoy. Seguimos con Sociales y Ciudadanas; dime qué idea del tema quieres revisar.";
+  }
+  if (activeKey === "science") {
+    return "Aquí estoy. Seguimos con Ciencias Naturales y el concepto que estábamos trabajando; dime qué parte revisamos.";
+  }
+  if (/\b(?:que tema|que area|que quieres estudiar|que te gustaria estudiar|por donde empezamos|elige un tema)\b/.test(recent)) {
+    return "Aquí estoy. Sigamos con tu preparación para Saber 11. ¿Qué área quieres trabajar?";
+  }
+  if (recent) return "Aquí estoy. Seguimos con el ejercicio anterior; dime qué parte quieres revisar.";
+  return ORBY_GREETING_REPLY;
 }
 
 export const ORBY_STUDY_GUIDANCE_REPLY =
@@ -254,33 +316,27 @@ export function shouldRetrieveOrbyAcademicKnowledge(input: {
   return hasAcademicLessonContext && isFollowUpOrStudyIntent;
 }
 
-export function getOrbySubjectSelectionReply(message: string): string | null {
-  const normalized = normalizeOrbyRequestText(message)
-    .replace(/[¿?¡!.,;:]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const compact = normalized
-    .replace(/^(?:quiero estudiar|quiero ver|vamos con|empecemos con|empezar con|estudiemos|repasemos|hablemos de|tema de|area de|materia de|la materia de|el area de)\s+/, "")
-    .replace(/^(?:el|la)\s+/, "")
-    .replace(/^(?:en|para|con)\s+/, "")
-    .trim();
+export function getOrbySubjectSelectionReply(
+  message: string,
+  previousContext = "",
+  activeSubject = "",
+): string | null {
+  const key = getOrbySubjectSelectionKey(message);
+  if (!key || isOrbySubjectAlreadyActive(message, previousContext, activeSubject)) return null;
 
-  if (/^(?:lectura|lectura critica|lengua|lenguaje|comprension lectora|comprension de lectura|comprension de textos|literatura|gramatica|espanol|castellano)$/.test(compact)) {
-    return "¡Perfecto! Vamos con Lectura Crítica, una de las áreas de Saber 11. Trabajaremos comprensión e interpretación de textos, idea principal, intención comunicativa, inferencias, argumentos, tono y relación entre enunciados. ¿Empezamos con un texto tipo ICFES o con una de esas habilidades?";
+  if (key === "reading") {
+    return "¡Perfecto! Vamos con Lectura Crítica de Saber 11. Trabajaremos comprensión, idea principal, intención comunicativa, inferencias y argumentos. Para empezar, puedo proponerte un texto tipo ICFES o aclarar una habilidad concreta.";
   }
-  if (/^(?:matematicas|matematica|algebra|geometria|estadistica|probabilidad)$/.test(compact)) {
-    return "¡Listo! Vamos con Matemáticas de Saber 11. Podemos practicar interpretación de datos, álgebra, geometría, estadística, probabilidad y resolución de problemas. ¿Quieres empezar con un ejercicio tipo ICFES o con un concepto?";
+  if (key === "math") {
+    return "¡Listo! Vamos con Matemáticas de Saber 11. Trabajaremos interpretación de datos, álgebra, geometría, estadística y resolución de problemas. ¿Qué concepto o ejercicio quieres revisar primero?";
   }
-  if (/^(?:sociales|sociales y ciudadanas|historia|geografia|constitucion|democracia|ciudadania)$/.test(compact)) {
-    return "¡Vamos con Sociales y Ciudadanas! Trabajaremos historia, geografía, ciudadanía, Constitución, pensamiento social e interpretación de perspectivas. ¿Empezamos con una pregunta tipo ICFES o con un tema?";
+  if (key === "social") {
+    return "¡Vamos con Sociales y Ciudadanas! Trabajaremos pensamiento social, interpretación de perspectivas, historia, geografía y ciudadanía. ¿Qué tema quieres revisar primero?";
   }
-  if (/^(?:ciencias|ciencias naturales|naturales|biologia|quimica|fisica|ambiente|ecosistemas)$/.test(compact)) {
-    return "¡Perfecto! Vamos con Ciencias Naturales de Saber 11. Podemos estudiar biología, química, física, ambiente, explicación de fenómenos e indagación científica. ¿Quieres un ejercicio tipo ICFES o repasar un concepto?";
+  if (key === "science") {
+    return "¡Perfecto! Vamos con Ciencias Naturales de Saber 11. Podemos trabajar biología, química, física, ambiente e indagación científica. ¿Qué concepto quieres entender primero?";
   }
-  if (/^(?:ingles|english)$/.test(compact)) {
-    return ORBY_ICFES_ENGLISH_INTRO_REPLY;
-  }
-  return null;
+  return ORBY_ICFES_ENGLISH_INTRO_REPLY;
 }
 
 export function isOrbyGreetingRequest(message: string): boolean {

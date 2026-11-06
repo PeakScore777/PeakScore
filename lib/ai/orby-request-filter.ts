@@ -12,7 +12,7 @@ export function dedupeAdjacentAssistantMessages<T extends {
   const result: T[] = [];
   const normalize = (value: string | undefined) => (value ?? "")
     .normalize("NFKC")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim()
     .toLocaleLowerCase("es-CO");
 
@@ -349,8 +349,8 @@ function prepareOrbySpeechText(value: string): string {
     .replace(/\\geq|≥/g, " mayor o igual que ")
     .replace(/\\neq|≠/g, " distinto de ")
     .replace(/\\approx|≈/g, " aproximadamente igual a ")
-    .replace(/([A-Za-zÁÉÍÓÚÜÑα-ωΑ-Ω0-9])\\s*=\\s*([A-Za-zÁÉÍÓÚÜÑα-ωΑ-Ω0-9])/g, "$1 igual a $2")
-    .replace(/([A-Za-z0-9])\\s*\\/\\s*([A-Za-z0-9])/g, "$1 dividido entre $2")
+    .replace(/([A-Za-zÁÉÍÓÚÜÑα-ωΑ-Ω0-9])\s*=\s*([A-Za-zÁÉÍÓÚÜÑα-ωΑ-Ω0-9])/g, "$1 igual a $2")
+    .replace(/([A-Za-z0-9])\s*\/\s*([A-Za-z0-9])/g, "$1 dividido entre $2")
     .replace(/\\pi|π/g, " pi ")
     .replace(/\\rho|ρ/g, " rho ")
     .replace(/\\alpha|α/g, " alfa ")

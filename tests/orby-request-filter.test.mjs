@@ -2280,7 +2280,7 @@ test("la lectura de Orby conserva tablas y verbaliza fórmulas matemáticas", ()
   assert.match(table, /Fila 2: Variable: Volumen; Valor: 2 cm³/);
   assert.doesNotMatch(table, /---/);
 
-  const formula = filter.formatOrbySpeechText("\\(\\rho = m/V\\)");
+  const formula = filter.formatOrbySpeechText("\(\\rho = m/V\)");
   assert.match(formula, /rho igual a m dividido entre V/);
 });
 
@@ -2514,5 +2514,5 @@ test("interrumpir una respuesta Live limpia la transcripción anterior antes del
   assert.match(interruptSource, /voiceAssistantTextRef\.current = ""/);
   assert.match(interruptSource, /voiceUserTextRef\.current = ""/);
   assert.match(interruptSource, /voiceUserMessageIdRef\.current = null/);
-  assert.match(lessonTutorSource.slice(interruptEnd, interruptEnd + 24_000), /voiceUserTextRef\.current = mergeLiveTranscript\\(previousTranscript, transcript\\)/);
+  assert.match(lessonTutorSource.slice(interruptEnd, interruptEnd + 24_000), /voiceUserTextRef\.current = mergeLiveTranscript\(previousTranscript, transcript\)/);
 });

@@ -1643,6 +1643,13 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeSessionSource.includes('from("orby_messages")'));
   assert.ok(realtimeSessionSource.includes("body?.conversationId"));
   assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current ?? conversationId"));
+  const liveStartup = lessonTutorSource
+    .split("async function startRealtimeVoice")[1]
+    ?.split("function toggleVoiceMute")[0] ?? "";
+  const conversationReadyAt = liveStartup.indexOf("const [activeId, tokenResponse]");
+  const conversationBoundAt = liveStartup.indexOf("activeConversationRef.current = activeId;");
+  const liveHandlerAt = liveStartup.indexOf("const handleLiveSocketMessage");
+  assert.ok(conversationReadyAt >= 0 && conversationBoundAt > conversationReadyAt && conversationBoundAt < liveHandlerAt);
   const reconnectRequest = lessonTutorSource
     .split('const resumeTokenResponse = await fetch("/api/orby/realtime-session"')[1]
     ?.split("const resumeTokenPayload")[0] ?? "";

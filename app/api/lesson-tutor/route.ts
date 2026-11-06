@@ -604,6 +604,8 @@ export async function POST(request: Request) {
           }
         }
       } catch (error) {
+        // Preserve public research if the private Lab retrieval fails.
+        publicSources = (await publicResearchPromise).sources;
         console.error("[Orby Tutor] Hybrid knowledge retrieval unavailable.", {
           name: error instanceof Error ? error.name : "UnknownError",
         });

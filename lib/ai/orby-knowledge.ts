@@ -1420,7 +1420,7 @@ export async function searchOrbyKnowledge(
     if (fallback.error) throw new Error("Knowledge search failed: " + fallback.error.code);
     const fallbackRows = Array.isArray(fallback.data) ? fallback.data : [];
     if (options.subject && fallbackRows.length === 0) {
-      return searchOrbyKnowledge({ ...options, subject: null });
+      return searchOrbyKnowledge({ ...options, subject: null }, embeddings);
     }
     return fallbackRows;
   }
@@ -1433,7 +1433,7 @@ export async function searchOrbyKnowledge(
       requestedSubject: options.subject,
       availableEmbeddingModels: indexedModels.length,
     });
-    return searchOrbyKnowledge({ ...options, subject: null });
+    return searchOrbyKnowledge({ ...options, subject: null }, embeddings);
   }
   return rows;
 }

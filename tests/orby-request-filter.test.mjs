@@ -641,7 +641,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /No bloquees palabras aisladas/);
   assert.match(realtimeSessionSource, /Los saludos y llamadas breves son válidos/);
   assert.match(realtimeSessionSource, /body\.history\.slice\(-12\)/);
-  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-8\)/);
+  assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-12\)/);
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
   assert.match(lessonTutorSource, /isOrbyStudyGuidanceRequest\(message, typedVoiceContext\)/);

@@ -93,14 +93,15 @@ test("el turno Live espera el aporte asíncrono del Lab y solo finaliza tras rec
   state = voiceToolTurn.markOrbyVoiceToolFollowupOutput(state);
   assert.equal(state.followupOutputSeen, true);
 
-  transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);
-  assert.equal(transition.shouldFinalize, true);
-  assert.equal(transition.state.pending, false);
-
   const chainedState = voiceToolTurn.beginOrbyVoiceToolTurn(state);
   assert.equal(chainedState.pending, true);
   assert.equal(chainedState.responseSent, false);
+  assert.equal(chainedState.initialGenerationCompleted, false);
   assert.equal(chainedState.followupOutputSeen, false);
+
+  transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);
+  assert.equal(transition.shouldFinalize, true);
+  assert.equal(transition.state.pending, false);
 });
 
 test("un resultado rápido del Lab no confunde la primera finalización con el seguimiento", () => {

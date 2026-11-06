@@ -423,6 +423,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             // Keep the saved conversation in the sidebar, but do not pin the
             // composer to an unreadable conversation ID or block a new chat.
             activeConversationRef.current = null;
+            activeSubjectRef.current = subject;
             setConversationId(null);
             setMessages([]);
             setConversationError("Esta versión del sitio todavía no puede abrir los mensajes guardados. Tus conversaciones siguen conservadas; puedes iniciar un chat nuevo mientras se actualiza el historial.");
@@ -450,6 +451,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // A stale empty result must never clear a chat that the student has
           // already started during hydration.
           if (activeConversationRef.current) return;
+          activeSubjectRef.current = subject;
           setConversationId(null);
           setMessages([]);
         }
@@ -3514,6 +3516,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const payload = await response.json().catch(() => ({}));
       if (!response.ok && response.status === 404) {
         activeConversationRef.current = null;
+        activeSubjectRef.current = subject;
         setConversationId(null);
         setMessages([]);
         setConversationError("Esta versión del sitio todavía no puede abrir los mensajes guardados. Tu historial sigue conservado; puedes continuar en un chat nuevo.");

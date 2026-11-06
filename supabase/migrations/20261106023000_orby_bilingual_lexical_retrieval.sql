@@ -50,7 +50,16 @@ as $function$
       or exists (
         select 1
         from pg_catalog.jsonb_array_elements_text(coalesce(p.areas, '[]'::jsonb)) as area(value)
-        where lower(btrim(area.value)) = lower(btrim(p_subject))
+        where lower(btrim(area.value)) = any (
+          case lower(btrim(p_subject))
+            when 'matemáticas' then array['matemáticas','matematicas','álgebra','algebra','aritmética','aritmetica','geometría','geometria','estadística','estadistica','probabilidad','razonamiento cuantitativo','razonamiento lógico','razonamiento logico','física/matemáticas']
+            when 'lectura crítica' then array['lectura crítica','lectura critica','lenguaje','literatura','humanidades','análisis textual','analisis textual','análisis de la imagen','analisis de la imagen']
+            when 'sociales y ciudadanas' then array['sociales y ciudadanas','ciencias sociales','ciencias sociales y competencias ciudadanas','competencias ciudadanas','historia','historia de colombia','historia/política','historia/politica','geografía','geografia','economía','economia','economía y política','economia y politica','ciencias políticas','ciencias politicas','ética y ciudadanía','etica y ciudadania','ética y política','etica y politica','constitución política de colombia','constitucion politica de colombia','constitución política','constitucion politica','derecho constitucional','derechos humanos','antropología','antropologia','filosofía','filosofia','psicología','psicologia']
+            when 'ciencias naturales' then array['ciencias naturales','física','fisica','química','quimica','biología','biologia','biología celular','biologia celular','biología molecular','biologia molecular','biología vegetal','biologia vegetal','biología animal','biologia animal','genética','genetica','genética de poblaciones','genetica de poblaciones','ecología','ecologia','ciencias ambientales','fisicoquímica biológica','fisicoquimica biologica','bioquímica','bioquimica','citología','citologia','microbiología','microbiologia','fisiología','fisiologia','fisiología humana','fisiologia humana','fisiología vegetal','fisiologia vegetal','metabolismo','salud','química orgánica','quimica organica','química inorgánica','quimica inorganica','estequiometría','estequiometria','electromagnetismo','cinemática','cinematica','mecánica clásica','mecanica clasica','mecánica de fluidos','mecanica de fluidos','acústica','acustica','óptica','optica','termodinámica','termodinamica','electricidad','electricidad y magnetismo','electrostática','electrostatica','estática','estatica','estática de fluidos','estatica de fluidos','eventos ondulatorios','movimiento ondulatorio','componente celular']
+            when 'inglés' then array['inglés','ingles','english language']
+            else array[lower(btrim(p_subject))]
+          end
+        )
       )
     )
   ),

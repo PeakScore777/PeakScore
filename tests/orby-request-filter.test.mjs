@@ -2079,3 +2079,34 @@ test("las respuestas TTS largas conservan el texto completo y no omiten fragment
   assert.ok(realtimeSessionSource.includes("Nunca conviertas 'sí', 'no', 'moda', 'cocina', 'Python'"));
   assert.ok(cloudflareVoiceSource.includes("No rechaces ni clasifiques como fuera de alcance una palabra aislada"));
 });
+
+
+test("Orby reconoce temas habituales de gramática inglesa como Inglés aunque la conversación anterior fuera de otra materia", () => {
+  const cases = [
+    "pasado simple",
+    "simple past",
+    "past simple",
+    "past continuous",
+    "present perfect",
+    "verbos irregulares",
+    "modal verbs",
+    "first conditional",
+    "passive voice",
+    "phrasal verbs",
+  ];
+  for (const topic of cases) {
+    assert.equal(scope.normalizeIcfesSubject("", topic), "Inglés", topic);
+  }
+  assert.equal(scope.normalizeIcfesSubject("Matemáticas", "pasado simple"), "Matemáticas",
+    "Un área explícita seleccionada en el turno debe conservar prioridad sobre un tema incidental.");
+});
+
+test("Orby persiste el cambio explícito de materia antes de recuperar conocimiento", async () => {
+  const source = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const detection = source.indexOf("const currentTurnSubject = normalizeIcfesSubject");
+  const persistence = source.indexOf("ORBY_SUBJECT_UPDATE_FAILED", detection);
+  const retrieval = source.indexOf("if (shouldRetrieveAcademicKnowledge)", detection);
+  assert.ok(detection >= 0 && persistence > detection && retrieval > persistence,
+    "La materia detectada debe persistirse antes de consultar el Lab.");
+  assert.match(source, /ownedConversation\.subject = currentTurnSubject/);
+});

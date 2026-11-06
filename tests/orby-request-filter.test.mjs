@@ -532,6 +532,15 @@ test("Gemini y Cloudflare mantienen espacios vectoriales separados y consultan l
   assert.match(manualWorkerRoute, /resumeOrbyJobsWaitingForEmbeddingProvider/);
 });
 
+test("la voz conserva transcripciones largas del estudiante hasta el límite persistible", () => {
+  assert.match(lessonTutorSource, /const MAX_VOICE_TRANSCRIPT_CHARS = 8_000/);
+  assert.match(lessonTutorSource, /mergeLiveTranscript\(previousTranscript, transcript\)\.slice\(-MAX_VOICE_TRANSCRIPT_CHARS\)/);
+  assert.match(lessonTutorSource, /inputTranscript\.text\.trim\(\)\.slice\(0, MAX_VOICE_TRANSCRIPT_CHARS\)/);
+  assert.match(lessonTutorSource, /payload\.transcript\.trim\(\)\.slice\(0, MAX_VOICE_TRANSCRIPT_CHARS\)/);
+  assert.match(lessonTutorSource, /value\.trim\(\)\.slice\(0, MAX_VOICE_TRANSCRIPT_CHARS\)/);
+  assert.match(realtimeTurnSource, /\.slice\(0, 8000\)/);
+});
+
 test("el audio Live comienza tras la primera oración segura y la cola espera al fin de la reproducción", () => {
   assert.match(lessonTutorSource, /flushPendingGeminiAudio/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.length < 512/);

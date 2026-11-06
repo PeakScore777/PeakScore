@@ -228,7 +228,7 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(realtimeSessionSource, /incluye su marcador exacto/);
   assert.match(lessonTutorSource, /voicePublicSourcesRef/);
   assert.match(lessonTutorSource, /replyWithSourceLinks/);
-  assert.match(lessonTutorSource, /Fuentes consultadas:/);
+  assert.match(lessonTutorSource, /voicePublicSourcesRef\.current = \[\]/);
 });
 
 test("la búsqueda académica prioriza la materia del turno actual sobre la materia anterior", () => {

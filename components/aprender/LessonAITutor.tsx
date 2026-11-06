@@ -1828,7 +1828,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             concepts: Array.isArray(result.concepts) ? result.concepts.slice(0, 24) : [],
             profiles: Array.isArray(result.profiles) ? result.profiles.slice(0, 4) : [],
             related: Array.isArray(result.related) ? result.related.slice(0, 3) : [],
-            public_sources: safePublicSources,
+            public_sources: voicePublicSourcesRef.current,
             public_research_found: result.public_research_found === true,
             guidance: typeof result.guidance === "string" ? result.guidance.slice(0, 700) : "",
           },

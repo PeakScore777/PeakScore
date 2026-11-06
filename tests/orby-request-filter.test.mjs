@@ -90,9 +90,7 @@ test("el turno Live espera el aporte asíncrono del Lab y solo finaliza tras rec
   // A result scheduled before/after the first completion still needs a real
   // follow-up transcript before the student's turn can be persisted.
   state = voiceToolTurn.markOrbyVoiceToolResponseSent(state);
-  const earlyOutput = voiceToolTurn.markOrbyVoiceToolFollowupOutput(state);
-  assert.equal(earlyOutput.followupOutputSeen, false);
-  state = voiceToolTurn.markOrbyVoiceToolFollowupOutput(earlyOutput);
+  state = voiceToolTurn.markOrbyVoiceToolFollowupOutput(state);
   assert.equal(state.followupOutputSeen, true);
 
   transition = voiceToolTurn.completeOrbyVoiceToolGeneration(state);

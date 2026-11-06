@@ -686,7 +686,8 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorSource, /"Oye Orby"/);
   assert.match(lessonTutorSource, /unsupportedInputScript/);
   assert.match(lessonTutorSource, /ORBY_SPANISH_ONLY_REPLY/);
-  assert.match(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)/);
+  assert.match(lessonTutorSource, /const preflight = preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
+  assert.doesNotMatch(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)/);
   assert.match(cloudflareTutorRoute, /REGLA DE IDIOMA Y VOZ/);
   assert.match(cloudflareTutorRoute, /ORTOGRAFÍA/);
   assert.match(cloudflareTutorRoute, /sin repetir toda tu presentación/);

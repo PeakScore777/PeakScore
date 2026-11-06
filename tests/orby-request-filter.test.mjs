@@ -1172,6 +1172,12 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
   assert.match(liveToolsSource, /MUST call this before answering a new substantive academic question/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
+  assert.match(lessonTutorSource, /const query = toolQuery\.slice\(0, 2000\)/);
+  assert.doesNotMatch(lessonTutorSource, /const currentTranscript = voiceUserTextRef\.current/);
+  assert.match(knowledgeSearchRouteSource, /searchOrbyKnowledge\(\{[\s\S]*?visibility: "published"/);
+  assert.match(knowledgeSearchRouteSource, /searchOrbyKnowledgeConcepts\(/);
+  assert.match(knowledgeSearchRouteSource, /getOrbyRelatedKnowledge\(/);
+  assert.match(knowledgeSearchRouteSource, /p_bucket: "orby_voice_knowledge"/);
   assert.match(realtimeSessionSource, /tools: ORBY_LIVE_KNOWLEDGE_TOOLS/);
   assert.match(realtimeSessionSource, /authTokens\.create/);
   assert.match(realtimeSessionSource, /const safeHistory: Array/);

@@ -450,14 +450,19 @@ export async function POST(request: Request) {
     // vector search, concept graph and student-profile queries for greetings or
     // safe everyday conversation; fetch them only when the current request needs
     // an explanation, exercise, or an identifiable Saber 11 concept.
-    const detectedSubject = normalizeIcfesSubject(subject, [topic, question, userMessage].filter(Boolean).join(" "));
+    const detectedSubject = normalizeIcfesSubject(subject, [
+      topic,
+      question,
+      userMessage,
+      ...history.slice(-8).map((item) => item.content),
+    ].filter(Boolean).join(" "));
     const learningQuery = [
       userMessage,
       question,
       topic,
       context,
-      ...history.filter((item) => item.role === "user").slice(-4).map((item) => item.content),
-    ].filter(Boolean).join(" ").slice(0, 2400);
+      ...history.slice(-8).map((item) => item.content),
+    ].filter(Boolean).join(" ").slice(0, 3200);
     // Only the student's current words count as an explicit topic. Lesson
     // prompt/history is used to resolve short academic follow-ups, not to turn
     // an unrelated casual question into an unnecessary vector search.

@@ -32,14 +32,15 @@ export async function POST(request: Request) {
       .eq("conversation_id", conversationId)
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(2);
+      .limit(20);
     const alreadySaved = !recentReadError
       && Array.isArray(latestMessages)
-      && latestMessages.length === 2
-      && latestMessages[0]?.role === "assistant"
-      && latestMessages[0]?.content === assistantContent
-      && latestMessages[1]?.role === "user"
-      && latestMessages[1]?.content === userContent;
+      && latestMessages.some((message, index, history) =>
+        message?.role === "assistant"
+        && message?.content === assistantContent
+        && history[index + 1]?.role === "user"
+        && history[index + 1]?.content === userContent
+      );
 
     if (!alreadySaved) {
       const { data, error } = await supabaseAdmin.rpc("orby_save_turn", {

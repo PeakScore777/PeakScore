@@ -216,6 +216,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [historyQuery, setHistoryQuery] = useState("");
   const [pendingDeleteConversation, setPendingDeleteConversation] = useState<string | null>(null);
   const [conversationError, setConversationError] = useState("");
+  const [failedVoiceTurn, setFailedVoiceTurn] = useState<{
+    conversationId: string;
+    userContent: string;
+    assistantContent: string;
+  } | null>(null);
   const [learningView, setLearningView] = useState<"chat" | "notes" | "topics" | "progress" | "storage">("chat");
   const [learningItems, setLearningItems] = useState<LearningItem[]>([]);
   const [learningSignals, setLearningSignals] = useState<LearningSignal[]>([]);
@@ -1516,21 +1521,66 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           signal: AbortSignal.timeout(12_000),
           body: JSON.stringify(turn),
         });
-        if (!response.ok) throw new Error("No se pudo guardar el turno de voz.");
+        const payload = await response.json().catch(() => ({})) as { error?: unknown };
+        if (!response.ok) {
+          throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo guardar el turno de voz.");
+        }
       });
     voiceTurnPersistenceChainRef.current = saveTask
       .then(() => {
+        setFailedVoiceTurn((current) => current?.conversationId === turn.conversationId
+          && current.userContent === turn.userContent
+          && current.assistantContent === turn.assistantContent
+          ? null
+          : current);
+        setConversationError("");
         void refreshConversations().catch((caught: unknown) => {
           setConversationError(caught instanceof Error ? caught.message : "No se pudo actualizar el historial.");
         });
       })
-      .catch(() => {
-        setConversationError("La respuesta se escuchó, pero no se pudo guardar el turno en el historial.");
+      .catch((caught: unknown) => {
+        // Release the persisted guard so the student can retry this immutable
+        // exchange instead of permanently losing it after one transient failure.
+        voiceTurnPersistedRef.current = false;
+        setFailedVoiceTurn(turn);
+        setConversationError(caught instanceof Error
+          ? caught.message
+          : "La respuesta se escuchó, pero no se pudo guardar el turno en el historial.");
       });
     return voiceTurnPersistenceChainRef.current;
   }
 
-  function pcmBufferToBase64(buffer: ArrayBuffer): string {
+  async function retryFailedVoiceTurn() {
+    const turn = failedVoiceTurn;
+    if (!turn) return;
+    setConversationError("Reintentando guardar la conversación…");
+    try {
+      const response = await fetch("/api/orby/realtime-turn", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.timeout(12_000),
+        body: JSON.stringify(turn),
+      });
+      const payload = await response.json().catch(() => ({})) as { error?: unknown };
+      if (!response.ok) {
+        throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo guardar el turno de voz.");
+      }
+      setFailedVoiceTurn((current) => current === turn ? null : current);
+      setConversationError("");
+      if (voiceUserTextRef.current.trim() === turn.userContent
+        && voiceAssistantTextRef.current.trim() === turn.assistantContent) {
+        voiceTurnPersistedRef.current = true;
+      }
+      await refreshConversations();
+    } catch (caught) {
+      setConversationError(caught instanceof Error
+        ? caught.message
+        : "No se pudo guardar el turno. La respuesta sigue disponible en pantalla.");
+    }
+  }
+
+  function pcmBufferToBase64(buffer: ArrayBuffer) {
     const bytes = new Uint8Array(buffer);
     let binary = "";
     for (let offset = 0; offset < bytes.length; offset += 0x8000) {
@@ -4202,7 +4252,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <button type="submit" disabled={(!input.trim() && !attachment) || isRecording || audioTranscribing} aria-label="Enviar mensaje a Orby" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
       </form>
       {queuedMessageCount > 0 && <p className="shrink-0 border-t border-orange-500/15 bg-orange-500/[0.06] px-4 py-1.5 text-[11px] text-orange-200" role="status">{queuedMessageCount} pregunta{queuedMessageCount === 1 ? "" : "s"} en cola; Orby las responderá en orden.</p>}
-      {conversationError && workspace && <p role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">{conversationError}</p>}
+      {conversationError && workspace && <div role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span>{conversationError}</span>
+          {failedVoiceTurn && <button type="button" onClick={() => void retryFailedVoiceTurn()} className="shrink-0 rounded-md border border-rose-200 bg-white px-2.5 py-1 font-semibold text-rose-700 transition hover:bg-rose-100">Reintentar guardado</button>}
+        </div>
+      </div>}
       <p className="shrink-0 border-t border-[#25282d] bg-[#0b0d10] px-4 pb-3 pt-1 text-center text-[10px] leading-4 text-[#707782]">Orby puede cometer errores. Comprueba los datos importantes antes de usarlos.</p>
         </div>
       </div>

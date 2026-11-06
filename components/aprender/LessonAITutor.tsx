@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbyGreetingFollowUpReply, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbyGreetingFollowUpReply, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, getOrbySubjectSelectionLabel, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 
@@ -153,6 +153,10 @@ const starters = [
 
 export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false }: Props) {
   const orbyAccent = accent === "orby";
+  const activeSubjectRef = useRef(subject);
+  useEffect(() => {
+    activeSubjectRef.current = subject;
+  }, [subject]);
   const [globalTheme, setGlobalTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
@@ -174,6 +178,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
+
+  function restoreActiveSubjectFromStoredConversation(savedSubject: unknown, savedMessages: unknown) {
+    const storedLabel = typeof savedSubject === "string"
+      ? getOrbySubjectSelectionLabel(savedSubject)
+      : null;
+    if (storedLabel) {
+      activeSubjectRef.current = storedLabel;
+      return;
+    }
+    if (Array.isArray(savedMessages)) {
+      for (let index = savedMessages.length - 1; index >= 0; index -= 1) {
+        const item = savedMessages[index] as { role?: unknown; content?: unknown } | null;
+        if (item?.role !== "user" || typeof item.content !== "string") continue;
+        const selectedLabel = getOrbySubjectSelectionLabel(item.content);
+        if (selectedLabel) {
+          activeSubjectRef.current = selectedLabel;
+          return;
+        }
+      }
+    }
+    activeSubjectRef.current = subject;
+  }
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [queuedMessageCount, setQueuedMessageCount] = useState(0);
@@ -408,6 +435,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // initial hydration request was in flight.
           if (activeConversationRef.current && activeConversationRef.current !== first.id) return;
           activeConversationRef.current = first.id;
+          restoreActiveSubjectFromStoredConversation(first.subject, messagesPayload.messages);
           setConversationId(first.id);
           setMessages(Array.isArray(messagesPayload.messages) ? messagesPayload.messages.map((item: Record<string, unknown>) => ({
             id: String(item.id),
@@ -1202,7 +1230,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       signal: startupSignal
         ? AbortSignal.any([startupSignal, AbortSignal.timeout(12_000)])
         : AbortSignal.timeout(12_000),
-      body: JSON.stringify({ subject, topic }),
+      body: JSON.stringify({ subject: activeSubjectRef.current, topic }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.conversation?.id) {
@@ -1662,7 +1690,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .filter(Boolean)
         .join(" ")
         .slice(0, 2000);
-      const requestedSubject = typeof args.subject === "string" ? args.subject.slice(0, 80) : subject;
+      const requestedSubject = typeof args.subject === "string" ? args.subject.slice(0, 80) : activeSubjectRef.current;
 
       try {
         const response = await fetch("/api/orby/knowledge-search", {
@@ -1935,6 +1963,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       const previousTranscript = voiceUserTextRef.current.trim();
       voiceUserTextRef.current = mergeLiveTranscript(previousTranscript, transcript).slice(-1200);
+      const selectedVoiceSubject = getOrbySubjectSelectionLabel(voiceUserTextRef.current);
+      if (selectedVoiceSubject) activeSubjectRef.current = selectedVoiceSubject;
       if (!voiceUserMessageIdRef.current) voiceUserMessageIdRef.current = "voice-user-" + Date.now();
       const normalizedTranscript = voiceUserTextRef.current.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO").replace(/\s+/g, " ").trim();
       const falseCreatorClaim = /(?:asistente|tutor|modelo|herramienta|chatbot|ia|inteligencia\s*artificial).{0,140}cread[oa]\s*por\s*(?!peak\s*score\b)[a-z0-9]/i.test(normalizedTranscript)
@@ -1945,7 +1975,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const voiceScopeContext = [
         ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceLastAssistantOutputRef.current,
-        "Área de estudio: " + subject,
+        "Área de estudio: " + activeSubjectRef.current,
         "Tema de estudio: " + topic,
         question,
         context,
@@ -1958,10 +1988,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : !preflight.allowed
             ? "outside"
             : null;
-      const subjectAlreadyActive = isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, subject);
-      const subjectSelectionReply = getOrbySubjectSelectionReply(voiceUserTextRef.current, voiceScopeContext, subject);
+      const subjectAlreadyActive = isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, activeSubjectRef.current);
+      const subjectSelectionReply = getOrbySubjectSelectionReply(voiceUserTextRef.current, voiceScopeContext, activeSubjectRef.current);
       const activeSubjectReply = subjectAlreadyActive && !isOrbyGreetingRequest(voiceUserTextRef.current)
-        ? getOrbyGreetingFollowUpReply(voiceScopeContext, subject)
+        ? getOrbyGreetingFollowUpReply(voiceScopeContext, activeSubjectRef.current)
         : null;
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(voiceUserTextRef.current, voiceScopeContext)
         ? ORBY_STUDY_GUIDANCE_REPLY
@@ -2036,7 +2066,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceUserTextRef.current,
         voiceLastAssistantOutputRef.current,
-        "Área de estudio: " + subject,
+        "Área de estudio: " + activeSubjectRef.current,
         "Tema de estudio: " + topic,
         question,
         context,
@@ -2158,7 +2188,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const voiceScopeContext = [
         voiceUserTextRef.current,
         voiceLastAssistantOutputRef.current,
-        "Área de estudio: " + subject,
+        "Área de estudio: " + activeSubjectRef.current,
         "Tema de estudio: " + topic,
         question,
         context,
@@ -2365,7 +2395,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           headers: { "Content-Type": "application/json" },
           signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
           body: JSON.stringify({
-            subject,
+            subject: activeSubjectRef.current,
             topic,
             context,
             conversationId: activeConversationRef.current ?? conversationId,
@@ -2663,7 +2693,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 headers: { "Content-Type": "application/json" },
                 signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
                 body: JSON.stringify({
-                  subject,
+                  subject: activeSubjectRef.current,
                   topic,
                   context,
                   conversationId: activeConversationRef.current ?? conversationId,
@@ -2976,6 +3006,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }, appendUserMessage = true) {
     const message = text.trim();
+    const selectedSubject = getOrbySubjectSelectionLabel(message);
+    if (selectedSubject) activeSubjectRef.current = selectedSubject;
     let isVoiceInteraction = voiceInteraction || voiceModeRef.current;
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || message.length > 1200) return;
@@ -3053,19 +3085,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const typedVoiceContext = [
         ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceLastAssistantOutputRef.current,
-        "Área de estudio: " + subject,
+        "Área de estudio: " + activeSubjectRef.current,
         "Tema de estudio: " + topic,
         question,
         context,
       ].filter(Boolean).join("\n").slice(-5_000);
       const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);
-      const subjectAlreadyActive = isOrbySubjectAlreadyActive(message, typedVoiceContext, subject);
+      const subjectAlreadyActive = isOrbySubjectAlreadyActive(message, typedVoiceContext, activeSubjectRef.current);
       const englishReply = isGenericIcfesEnglishRequest(message) && !subjectAlreadyActive
         ? ORBY_ICFES_ENGLISH_INTRO_REPLY
         : null;
-      const subjectSelectionReply = getOrbySubjectSelectionReply(message, typedVoiceContext, subject);
+      const subjectSelectionReply = getOrbySubjectSelectionReply(message, typedVoiceContext, activeSubjectRef.current);
       const activeSubjectReply = subjectAlreadyActive
-        ? getOrbyGreetingFollowUpReply(typedVoiceContext, subject)
+        ? getOrbyGreetingFollowUpReply(typedVoiceContext, activeSubjectRef.current)
         : null;
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(message, typedVoiceContext) ? ORBY_STUDY_GUIDANCE_REPLY : null;
       // Greetings stay on Gemini Live so the native Live voice speaks them.
@@ -3127,7 +3159,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           signal: AbortSignal.timeout(12_000),
-          body: JSON.stringify({ subject, topic }),
+          body: JSON.stringify({ subject: activeSubjectRef.current, topic }),
         });
         const createPayload = await createResponse.json().catch(() => ({}));
         if (!createResponse.ok || !createPayload.conversation?.id) {
@@ -3187,7 +3219,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         credentials: "same-origin",
         signal: AbortSignal.timeout(60_000),
         body: JSON.stringify({
-          subject: activeReview?.subject ?? subject,
+          subject: activeReview?.subject ?? activeSubjectRef.current,
           topic: activeReview?.topic ?? topic,
           stage,
           question: activeReview?.prompt ?? question,
@@ -3348,7 +3380,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject, topic }),
+          body: JSON.stringify({ subject: activeSubjectRef.current, topic }),
         });
         const createPayload = await createResponse.json().catch(() => ({}));
         if (!createResponse.ok || !createPayload.conversation?.id) {
@@ -3372,7 +3404,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: visualPrompt,
-          subject,
+          subject: activeSubjectRef.current,
           topic,
           context: [context, previousExplanation].filter(Boolean).join("\\n\\n").slice(0, 1800),
         }),
@@ -3425,6 +3457,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function startNewConversation() {
+    activeSubjectRef.current = subject;
     voiceRecentAssistantOutputsRef.current = [];
     voiceLastAssistantOutputRef.current = "";
     voiceLastAssistantOutputAtRef.current = 0;
@@ -3463,6 +3496,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (window.matchMedia("(max-width: 767px)").matches) setHistoryOpen(false);
       return;
     }
+    const selectedConversation = conversations.find((item) => item.id === id);
     if (voiceModeRef.current) stopRealtimeVoice();
     voiceRecentAssistantOutputsRef.current = [];
     voiceLastAssistantOutputRef.current = "";
@@ -3489,6 +3523,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       pendingMessagesRef.current = [];
       setQueuedMessageCount(0);
       activeConversationRef.current = id;
+      restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages);
       setConversationId(id);
       setMessages(Array.isArray(payload.messages) ? payload.messages.map((item: Record<string, unknown>) => ({
         id: String(item.id),

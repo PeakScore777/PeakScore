@@ -74,6 +74,7 @@ as $function$
             pg_catalog.to_tsvector('simple'::pg_catalog.regconfig, coalesce(c.content, '')),
             q.literal_query
           ), 0)
+        + case when c.content ilike '%' || left(coalesce(p_query, ''), 80) || '%' then 4.0 else 0 end
         + case when e.title ilike '%' || left(coalesce(p_query, ''), 80) || '%' then 0.15 else 0 end
       )::real as lexical_score,
       c.page_number

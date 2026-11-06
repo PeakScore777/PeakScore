@@ -81,6 +81,27 @@ Ejecución de GitHub Actions: https://github.com/PeakScore777/PeakScore/actions/
 - [ ] Prueba de consulta del Lab con una pregunta real y revisión de fragmentos utilizados.
 - [ ] Prueba de cuotas gratuitas agotadas sin fallback facturable.
 
+## Nueva regresión detectada en la prueba real del usuario — 2026-11-06
+
+Las capturas del navegador muestran que el tutor responde por escrito a saludos, preguntas generales e Inglés. La respuesta al término «programar» se bloquea correctamente por política, pero la consola muestra un HTTP 429 en `/api/orby/voice-speech` y la interfaz informa que se agotó la cuota gratuita de voz.
+
+Esto separa dos comportamientos:
+- El filtro de alcance sí produjo una respuesta escrita coherente para rechazar programación.
+- La ruta de síntesis de voz TTS agotó su cuota; eso no prueba que Gemini Live ni el filtro hayan fallado en ese turno.
+
+### Causa técnica adicional identificada
+
+La función `respondToVoiceLocally` terminaba llamando a `speakText`, que siempre invocaba `/api/orby/voice-speech`. Por tanto, respuestas locales de política también podían consumir solicitudes TTS. Además, el servidor clasificaba cualquier HTTP 429 como cuota agotada, aunque Gemini también usa 429 para limitación temporal de frecuencia.
+
+### Correcciones aplicadas después de la prueba del usuario
+
+- Se añadió `lib/ai/orby-tts-errors.ts` para distinguir cuota realmente agotada (`RESOURCE_EXHAUSTED`/mensajes de cuota) de limitación temporal (429/rate limit).
+- `app/api/orby/voice-speech/route.ts` ahora devuelve `FREE_TIER_TTS_QUOTA_EXCEEDED` solo para cuota agotada y `RATE_LIMITED` para throttling temporal.
+- `components/aprender/LessonAITutor.tsx` recuerda durante la sesión del navegador que la cuota TTS se agotó y evita repetir solicitudes que volverían a fallar en cada respuesta. El texto y la conversación se conservan.
+- Se añadió una prueba de regresión que diferencia ambos tipos de error y comprueba el bloqueo de nuevas llamadas TTS tras agotar la cuota.
+
+Estos cambios son posteriores al CI previamente aprobado y necesitan una nueva ejecución completa antes de pedir otro Pull.
+
 ## Criterios de aceptación
 
 1. Una sesión Live conectada no cambia prematuramente al respaldo TTS por un timeout corto.

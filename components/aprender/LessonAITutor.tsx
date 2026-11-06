@@ -2336,21 +2336,28 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // safe but never emitted punctuation during streaming, release its
         // buffered Live audio now; unsupported audio is never sent to a browser voice.
         voiceOutputTranscriptValidatedRef.current = true;
-        voiceAssistantTextRef.current = rawReply;
-        const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-        voiceAssistantMessageIdRef.current = id;
         const sourcesForVoiceReply = voicePublicSourcesRef.current;
         voicePublicSourcesRef.current = [];
+        const replyWithSourceLinks = sourcesForVoiceReply.length
+          ? rawReply + "\n\nFuentes consultadas:\n" + sourcesForVoiceReply.map((source) =>
+              `[${source.citationNumber}](${source.url}) ${source.title} — ${source.publisher}${source.publishedAt ? " — " + source.publishedAt : ""}`
+            ).join("\n")
+          : rawReply;
+        // Keep the displayed and persisted VC transcript linked to its sources.
+        // Audio playback and echo detection still use rawReply without URLs.
+        voiceAssistantTextRef.current = replyWithSourceLinks;
+        const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+        voiceAssistantMessageIdRef.current = id;
         setMessages((current) => {
           const exists = current.some((message) => message.id === id);
           return exists
             ? current.map((message) => message.id === id
-              ? { ...message, content: rawReply, ...(sourcesForVoiceReply.length ? { sources: sourcesForVoiceReply } : {}) }
+              ? { ...message, content: replyWithSourceLinks, ...(sourcesForVoiceReply.length ? { sources: sourcesForVoiceReply } : {}) }
               : message)
             : [...current, {
                 id,
                 role: "assistant",
-                content: rawReply,
+                content: replyWithSourceLinks,
                 ...(sourcesForVoiceReply.length ? { sources: sourcesForVoiceReply } : {}),
               }];
         });

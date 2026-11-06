@@ -1721,11 +1721,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         continue;
       }
 
-      const currentTranscript = voiceUserTextRef.current.trim().slice(0, 500);
-      const query = [toolQuery, currentTranscript && !toolQuery.toLowerCase().includes(currentTranscript.toLowerCase()) ? currentTranscript : ""]
-        .filter(Boolean)
-        .join(" ")
-        .slice(0, 2000);
+      // The model is instructed to send the complete current question.
+      // Never append voiceUserTextRef here: it can still contain a previous
+      // interim/final transcript during tool hand-off and contaminate retrieval
+      // with an unrelated topic or a subject the student has already left.
+      const query = toolQuery.slice(0, 2000);
       const requestedSubject = typeof args.subject === "string" ? args.subject.slice(0, 80) : activeSubjectRef.current;
 
       try {

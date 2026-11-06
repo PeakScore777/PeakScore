@@ -9,6 +9,7 @@ import { createWorker } from "tesseract.js";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbyGreetingFollowUpReply, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
+import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 
@@ -883,43 +884,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     await speakWithVerifiedFreeTts(clean, index);
   }
 
-  function splitSpeechIntoChunks(value: string, maxLength = 220): string[] {
-    // Preserve the original sentence order. The previous implementation
-    // flushed the *next* long sentence before the pending earlier sentence,
-    // which made Orby speak explanations out of order.
-    const sentences = value.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [value];
-    const chunks: string[] = [];
-    let pending = "";
-
-    const append = (segment: string) => {
-      let remaining = segment.trim();
-      while (remaining) {
-        const available = maxLength - pending.length - (pending ? 1 : 0);
-        if (available <= 0) {
-          chunks.push(pending);
-          pending = "";
-          continue;
-        }
-        if (remaining.length <= available) {
-          pending = pending ? `${pending} ${remaining}` : remaining;
-          break;
-        }
-        if (pending) {
-          chunks.push(pending);
-          pending = "";
-          continue;
-        }
-        let boundary = remaining.lastIndexOf(" ", available);
-        if (boundary < Math.floor(available * 0.55)) boundary = available;
-        chunks.push(remaining.slice(0, boundary).trim());
-        remaining = remaining.slice(boundary).trim();
-      }
-    };
-
-    for (const sentence of sentences) append(sentence);
-    if (pending) chunks.push(pending);
-    return chunks.filter(Boolean);
-  }
 
   function speakWithVerifiedFreeTts(text: string, index: number): Promise<void> {
     return new Promise((resolve) => {
@@ -939,7 +903,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .replace(/\s+/g, " ")
         .trim();
       // Use near-maximum endpoint chunks to reduce free-tier requests without truncating content.
-      const chunks = splitSpeechIntoChunks(clean, 480);
+      const chunks = splitOrbySpeechIntoChunks(clean, 480);
       if (!chunks.length) {
         if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
         resolve();

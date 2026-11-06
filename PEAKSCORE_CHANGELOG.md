@@ -1,5 +1,11 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-06 — Orby long-response playback order
+- Extracted speech chunking into the pure helper `lib/ai/orby-speech-chunks.ts` so the logic can be tested independently.
+- Fixed a sentence-order regression: when a long sentence followed a short pending sentence, the old chunker could enqueue the later sentence before the earlier one. The new chunker flushes pending text first, preserves punctuation and word order, and enforces the endpoint character limit.
+- Added regression tests for long multi-sentence answers, exact reconstruction, chunk-size limits, single-sentence answers, and empty input.
+- This prevents a class of out-of-order speech playback bugs; it does not yet prove end-to-end audio continuity or provider reliability.
+
 ## 2026-11-06 — Orby Voice reliability: TTS configuration and subject persistence
 - Gemini 3.8 Flash TTS now receives the documented voice-only `speech_config` shape. Removed the explicit `language` field because Gemini 3.8 TTS automatically detects the transcript language; Live ASR locale hints are not reused in TTS requests.
 - Added a regression assertion for the supported TTS configuration. The selected female voice and existing speech style metadata remain unchanged.

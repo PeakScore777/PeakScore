@@ -105,7 +105,11 @@ export function reconcileOrbyPublicCitations(
   }
   const safeReply = reply.replace(/\[(\d{1,2})\]/g, (marker, rawIndex: string) => {
     const index = Number(rawIndex);
-    return mentioned.has(index) ? marker : "";
+    const source = sources[index - 1];
+    if (!mentioned.has(index) || !source) return "";
+    // Persist the citation as a Markdown link in the assistant message itself.
+    // The chat can then restore a working source link after a history reload.
+    return `[${index}](${source.url})`;
   });
   return {
     reply: safeReply.replace(/[ \t]{2,}/g, " ").replace(/ +([,.;:!?])/g, "$1").trim(),

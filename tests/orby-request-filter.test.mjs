@@ -1137,7 +1137,7 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos atÃ
 
 test("los filtros escritos dentro de voz se contestan localmente y sincronizan Live sin generar otra respuesta", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
-  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? subjectSelectionReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
+  const localFilterIndex = lessonTutorSource.indexOf("const localReply = englishReply ?? subjectSelectionReply ?? activeSubjectReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null)", typedVoiceStart);
   const localReplyIndex = lessonTutorSource.indexOf("respondToVoiceLocally(message, localReply, true)", typedVoiceStart);
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
   const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");

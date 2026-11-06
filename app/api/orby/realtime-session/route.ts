@@ -76,15 +76,38 @@ export async function POST(request: Request) {
     const subject = clean(body?.subject, 80, "Preparación Saber 11");
     const topic = clean(body?.topic, 160, "Estudio y aprendizaje");
     const context = clean(body?.context, 1200, "Ayuda al estudiante con sus dudas académicas.");
-    const history: Array<{ role: "user" | "assistant"; content: string }> = Array.isArray(body?.history)
-      ? body.history.slice(-8).filter((item: unknown) => !!item && typeof item === "object"
+    const clientHistory: Array<{ role: "user" | "assistant"; content: string }> = Array.isArray(body?.history)
+      ? body.history.slice(-12).filter((item: unknown) => !!item && typeof item === "object"
         && ((item as { role?: unknown }).role === "user" || (item as { role?: unknown }).role === "assistant")
         && typeof (item as { content?: unknown }).content === "string")
         .map((item: { role: "user" | "assistant"; content: string }) => ({
           role: item.role,
-          content: item.content.slice(0, 500),
+          content: item.content.slice(0, 1200),
         }))
       : [];
+
+    let history = clientHistory;
+    const conversationId = typeof body?.conversationId === "string" ? body.conversationId : "";
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+      // A Live session can be resumed after reload or a long lesson. Rehydrate
+      // its context from the owner's persisted conversation, not only the
+      // possibly stale React snapshot sent by the browser.
+      const { data: storedMessages, error: historyError } = await supabaseAdmin
+        .from("orby_messages")
+        .select("role,content")
+        .eq("conversation_id", conversationId)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(12);
+      if (historyError) {
+        console.error("[Orby Voice] Persisted conversation history unavailable.", { code: historyError.code });
+      } else if (Array.isArray(storedMessages) && storedMessages.length) {
+        history = storedMessages.reverse()
+          .filter((item): item is { role: "user" | "assistant"; content: string } =>
+            (item.role === "user" || item.role === "assistant") && typeof item.content === "string")
+          .map((item) => ({ role: item.role, content: item.content.slice(0, 1200) }));
+      }
+    }
 
     // Old out-of-scope user prompts and injection attempts are omitted from the
     // new session context. They never reject the session or become fresh requests.

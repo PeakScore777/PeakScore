@@ -1712,6 +1712,11 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeTurnSource.includes("getOrbySubjectSelectionReply(userContent)"));
   assert.ok(realtimeTurnSource.includes(".update({ subject: selectedSubject })"));
   assert.ok(realtimeTurnSource.includes('.eq("user_id", user.id)'));
+  assert.ok(realtimeTurnSource.includes(".limit(20)"));
+  assert.ok(realtimeTurnSource.includes("const alreadySaved ="));
+  assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));
+  assert.ok(lessonTutorSource.includes("setFailedVoiceTurn(turn)"));
+  assert.ok(lessonTutorSource.includes("Reintentar guardado"));
   assert.match(lessonTutorRouteSource, /getOrbyGreetingFollowUpReply\(\s*recentContextMessages\.map/);
   assert.notEqual(
     filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"),

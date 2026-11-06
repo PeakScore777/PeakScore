@@ -145,7 +145,7 @@ export async function POST(request: Request) {
         if (learningSignalsError) {
           console.warn("[Orby Voice] Student learning profile unavailable.", { code: learningSignalsError.code });
         } else if (Array.isArray(learningSignals) && learningSignals.length) {
-          studentLearningContext = learningSignals.map((signal) => {
+          const verifiedLearningSignals = learningSignals.map((signal) => {
             const state = typeof signal.learning_state === "string" ? signal.learning_state : "needs_review";
             const concept = typeof signal.concept === "string" ? signal.concept.slice(0, 140) : "";
             const misconception = typeof signal.misconception === "string" ? signal.misconception.slice(0, 240) : "";
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
             return { concept, state, misconception, hint, confidence };
           }).filter((signal) => signal.concept && signal.confidence >= 0.8)
             .slice(0, 8);
-          studentLearningContext = JSON.stringify(learningSignals.map((signal) => ({
+          studentLearningContext = JSON.stringify(verifiedLearningSignals.map((signal) => ({
             concept: signal.concept,
             state: signal.state,
             misconception: signal.misconception,

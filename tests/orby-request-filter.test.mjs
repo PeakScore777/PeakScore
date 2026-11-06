@@ -125,6 +125,7 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(lessonTutorRouteSource, /publicResearchPromise/);
   assert.match(realtimeSessionSource, /también devuelve public_sources/);
   assert.match(lessonTutorSource, /Fuentes públicas de apoyo/);
+  assert.match(lessonTutorSource, /public_sources: Array\.isArray\(result\.public_sources\)/);
 });
 
 test("la búsqueda académica prioriza la materia del turno actual sobre la materia anterior", () => {

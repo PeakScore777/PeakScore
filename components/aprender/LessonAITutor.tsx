@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { GoogleGenAI, Modality, FunctionResponseScheduling, type Session } from "@google/genai";
+import { GoogleGenAI, Modality, EndSensitivity, FunctionResponseScheduling, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
@@ -2806,6 +2806,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const buildLiveConfig = (resumeHandle?: string) => ({
         abortSignal: startupSignal,
         responseModalities: [Modality.AUDIO],
+        // Reduce the default silence endpointing delay while retaining enough
+        // pause tolerance for natural speech and mid-sentence breathing.
+        realtimeInputConfig: {
+          automaticActivityDetection: {
+            endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
+            prefixPaddingMs: 40,
+            silenceDurationMs: 500,
+          },
+        },
         contextWindowCompression: { slidingWindow: {} },
         sessionResumption: resumeHandle ? { handle: resumeHandle } : {},
         tools: ORBY_LIVE_KNOWLEDGE_TOOLS,

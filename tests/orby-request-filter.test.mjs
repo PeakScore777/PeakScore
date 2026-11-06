@@ -200,6 +200,8 @@ test("Orby continúa sin fuentes si los servicios públicos gratuitos no respond
 test("ambos canales integran investigación pública sin sustituir Orby Lab", () => {
   assert.match(lessonTutorRouteSource, /searchOrbyPublicSources\(researchQuery/);
   assert.match(lessonTutorRouteSource, /refersToPriorAcademicContext \? recentScopeContext/);
+  assert.match(lessonTutorRouteSource, /esa afirmacion\|ese dato\|esa cifra/);
+  assert.match(liveToolsSource, /“esto”/);
   assert.match(liveToolsSource, /Resolve references such as/);
   assert.match(lessonTutorRouteSource, /INVESTIGACIÓN EXTERNA PÚBLICA/);
   assert.match(lessonTutorRouteSource, /shouldSearchOrbyPublicSources\(\{/);

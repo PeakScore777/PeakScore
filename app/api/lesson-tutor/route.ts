@@ -320,6 +320,31 @@ export async function POST(request: Request) {
       }
     }
 
+    // Repeating an already active subject is a continuation, not a new lesson.
+    // Answer from the saved exchange instead of asking the model to introduce
+    // the same Saber 11 component again.
+    const recentConversationText = recentContextMessages
+      .map((item) => item.role + ": " + item.content)
+      .join("\\n");
+    if (!tutorImage && isOrbySubjectAlreadyActive(userMessage, recentConversationText, subject)) {
+      const continuationReply = getOrbyGreetingFollowUpReply(recentConversationText, subject);
+      if (conversationId && ownedConversation) {
+        const { error: continuationSaveError } = await supabaseAdmin.rpc("orby_save_turn", {
+          p_user_id: user.id,
+          p_conversation_id: conversationId,
+          p_user_content: userMessage,
+          p_assistant_content: continuationReply,
+          p_check_question: null,
+          p_attachment_kind: null,
+          p_attachment_label: null,
+        });
+        if (continuationSaveError) console.error("[Orby Subject Continuation] Reply persistence failed.", { code: continuationSaveError.code });
+      }
+      return NextResponse.json({ reply: continuationReply, checkQuestion: "", verification: "not_required", sources: [] }, {
+        headers: { "Cache-Control": "private, no-store" },
+      });
+    }
+
     // A short "no sé" after Orby asks what to study is a tutoring moment,
     // not an off-topic request. Resolve it locally without spending model quota.
     if (!tutorImage && isOrbyStudyGuidanceRequest(userMessage, recentScopeContext)) {

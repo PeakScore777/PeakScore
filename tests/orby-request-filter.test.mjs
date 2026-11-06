@@ -882,6 +882,11 @@ test("el tutor usa Cloudflare directamente y no hace fallback a modelos de pago"
   assert.match(cloudflareTutorRoute, /error\.code === "AUTH_FAILED"/);
   assert.match(cloudflareTutorRoute, /error\.code === "CONNECTION_FAILED"/);
   assert.match(cloudflareTutorRoute, /CLOUDFLARE_ACCOUNT_ID/);
+  assert.match(cloudflareVoiceSource, /ACCOUNT_ID_INVALID/);
+  assert.match(cloudflareVoiceSource, /API_TOKEN_MISSING/);
+  assert.match(cloudflareTutorRoute, /error\.code === "ACCOUNT_ID_INVALID"/);
+  assert.match(cloudflareTutorRoute, /error\.code === "API_TOKEN_MISSING"/);
+  assert.match(cloudflareTutorRoute, /no es el ID de zona/);
 });
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
@@ -111,12 +111,42 @@ function normalizeVoicePunctuation(value: string): string {
     .trim();
 }
 
-function renderInline(text: string) {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, index) =>
-    part.startsWith("**") && part.endsWith("**")
-      ? <strong key={index} className="font-bold text-slate-950">{part.slice(2, -2)}</strong>
-      : <span key={index}>{part}</span>
-  );
+function renderInline(text: string): ReactNode {
+  const parts: ReactNode[] = [];
+  const tokenPattern = /(\*\*[^*]+\*\*|\[(\d{1,2})\]\((https:\/\/[^)\s]+)\))/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+
+  while ((match = tokenPattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(<span key={key++}>{text.slice(lastIndex, match.index)}</span>);
+    }
+
+    const token = match[0];
+    if (token.startsWith("**")) {
+      parts.push(<strong key={key++} className="font-bold text-slate-950">{token.slice(2, -2)}</strong>);
+    } else {
+      const citationNumber = match[2];
+      const rawUrl = match[3];
+      let safeUrl = "";
+      try {
+        const parsed = new URL(rawUrl);
+        if (parsed.protocol === "https:" && ["es.wikipedia.org", "doi.org", "openalex.org"].includes(parsed.hostname.toLowerCase())) {
+          safeUrl = parsed.toString();
+        }
+      } catch {
+        safeUrl = "";
+      }
+      parts.push(safeUrl
+        ? <a key={key++} href={safeUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-sky-900">[{citationNumber}]</a>
+        : <span key={key++}>{token}</span>);
+    }
+    lastIndex = tokenPattern.lastIndex;
+  }
+
+  if (lastIndex < text.length) parts.push(<span key={key++}>{text.slice(lastIndex)}</span>);
+  return parts;
 }
 
 function renderTutorContent(content: string) {

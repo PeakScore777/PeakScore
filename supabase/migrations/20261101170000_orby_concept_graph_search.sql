@@ -1,5 +1,140 @@
 -- Search the normalized concept graph directly, instead of relying only
 -- on chunk similarity. Every result retains its document and page evidence.
+-- Keep related-document context inside the academic areas represented by
+-- the seed documents. Concept aliases and topic labels can be shared across
+-- subjects, so they must not independently pull unrelated-area material.
+create or replace function public.orby_get_related_knowledge(
+  p_document_ids uuid[],
+  p_visibility text default 'published',
+  p_limit integer default 6
+)
+returns table (
+  document_id uuid,
+  title text,
+  subject text,
+  summary text,
+  shared_concepts jsonb,
+  areas jsonb,
+  topics jsonb
+)
+language sql
+stable
+set search_path = ''
+as $
+  with seed_ids as (
+    select distinct unnest(coalesce(p_document_ids, '{}'::uuid[])) as id
+  ),
+  seed_areas as (
+    select distinct lower(btrim(area.value)) as area
+    from public.orby_knowledge_profiles p
+    join seed_ids s on s.id = p.document_id
+    cross join lateral pg_catalog.jsonb_array_elements_text(coalesce(p.areas, '[]'::jsonb)) as area(value)
+    where length(btrim(area.value)) > 1
+  ),
+  seed_terms as (
+    select distinct c.concept_key as term, 'Concepto: ' || c.concept_name as label, 'concept'::text as kind
+    from public.orby_knowledge_document_concepts c
+    join seed_ids s on s.id = c.document_id
+    union
+    select distinct regexp_replace(lower(alias), '[^a-z0-9]+', '-', 'g'), 'Alias: ' || alias, 'alias'::text
+    from public.orby_knowledge_document_concepts c
+    join seed_ids s on s.id = c.document_id
+    cross join lateral unnest(c.aliases) alias
+    where length(trim(alias)) >= 3
+    union
+    select distinct c.parent_key, 'Familia: ' || c.parent_concept, 'family'::text
+    from public.orby_knowledge_document_concepts c
+    join seed_ids s on s.id = c.document_id
+    where c.parent_key is not null and length(c.parent_key) >= 4
+  ),
+  candidate_terms as (
+    select distinct c.document_id, c.concept_key as term, 'Concepto: ' || c.concept_name as label, 'concept'::text as kind
+    from public.orby_knowledge_document_concepts c
+    union
+    select distinct c.document_id, regexp_replace(lower(alias), '[^a-z0-9]+', '-', 'g'), 'Alias: ' || alias, 'alias'::text
+    from public.orby_knowledge_document_concepts c
+    cross join lateral unnest(c.aliases) alias
+    where length(trim(alias)) >= 3
+    union
+    select distinct c.document_id, c.parent_key, 'Familia: ' || c.parent_concept, 'family'::text
+    from public.orby_knowledge_document_concepts c
+    where c.parent_key is not null and length(c.parent_key) >= 4
+  ),
+  concept_matches as (
+    select c.document_id,
+      pg_catalog.jsonb_agg(distinct pg_catalog.to_jsonb(s.label)) as labels,
+      count(distinct s.term) filter (where s.kind='concept') as direct_count,
+      count(distinct s.term) filter (where s.kind='alias') as alias_count,
+      count(distinct s.term) filter (where s.kind='family') as family_count
+    from seed_terms s
+    join candidate_terms c on c.term=s.term
+    where not (c.document_id = any(coalesce(p_document_ids, '{}'::uuid[])))
+    group by c.document_id
+  ),
+  seed_topics as (
+    select distinct regexp_replace(lower(trim(topic)), '[^a-z0-9]+', '-', 'g') as topic_key,
+      trim(topic) as topic
+    from public.orby_knowledge_profiles p
+    join seed_ids s on s.id=p.document_id
+    cross join lateral pg_catalog.jsonb_array_elements_text(coalesce(p.topics,'[]'::jsonb)) topic
+    where length(trim(topic)) >= 7
+  ),
+  candidate_topics as (
+    select p.document_id, regexp_replace(lower(trim(topic)), '[^a-z0-9]+', '-', 'g') as topic_key,
+      trim(topic) as topic
+    from public.orby_knowledge_profiles p
+    cross join lateral pg_catalog.jsonb_array_elements_text(coalesce(p.topics,'[]'::jsonb)) topic
+    where length(trim(topic)) >= 7
+  ),
+  topic_matches as (
+    select c.document_id,
+      pg_catalog.jsonb_agg(distinct pg_catalog.to_jsonb('Tema: ' || s.topic)) as labels,
+      count(distinct s.topic_key) as topic_count
+    from seed_topics s
+    join candidate_topics c on c.topic_key=s.topic_key
+    where not (c.document_id = any(coalesce(p_document_ids, '{}'::uuid[])))
+    group by c.document_id
+  ),
+  eligible as (
+    select d.id,d.title,d.subject,d.created_at,p.summary,p.areas,p.topics
+    from public.orby_knowledge_documents d
+    join public.orby_knowledge_profiles p on p.document_id=d.id
+    where (
+      (p_visibility='admin' and d.status in ('draft','published'))
+      or (p_visibility='published' and d.status='published')
+    )
+    and exists (
+      select 1
+      from seed_areas sa
+      where sa.area = any (
+        array(
+          select lower(btrim(candidate_area.value))
+          from pg_catalog.jsonb_array_elements_text(coalesce(p.areas, '[]'::jsonb)) as candidate_area(value)
+        )
+      )
+    )
+  ),
+  related as (
+    select e.id,e.title,e.subject,e.summary,
+      coalesce(cm.labels,'[]'::jsonb) || coalesce(tm.labels,'[]'::jsonb) as shared_labels,
+      e.areas,e.topics,
+      (coalesce(cm.direct_count,0)*5 + coalesce(cm.alias_count,0)*3
+        + coalesce(cm.family_count,0)*2 + coalesce(tm.topic_count,0)) as relevance,
+      e.created_at
+    from eligible e
+    left join concept_matches cm on cm.document_id=e.id
+    left join topic_matches tm on tm.document_id=e.id
+    where cm.document_id is not null or tm.document_id is not null
+  )
+  select id,title,subject,summary,shared_labels,areas,topics
+  from related
+  order by relevance desc,created_at desc
+  limit greatest(1, least(coalesce(p_limit,6),10));
+$;
+
+revoke all on function public.orby_get_related_knowledge(uuid[],text,integer) from public, anon, authenticated;
+grant execute on function public.orby_get_related_knowledge(uuid[],text,integer) to service_role;
+
 create or replace function public.orby_search_knowledge_concepts(
   p_query text,
   p_subject text default null,

@@ -132,16 +132,29 @@ export const ORBY_GREETING_REPLY =
 
 type OrbySubjectKey = "math" | "reading" | "social" | "science" | "english";
 
-function getOrbySubjectSelectionKey(message: string): OrbySubjectKey | null {
-  const normalized = normalizeOrbyRequestText(message)
+function normalizeSubjectSelectionPhrase(message: string): string {
+  let compact = normalizeOrbyRequestText(message)
     .replace(/[¿?¡!.,;:]+/g, " ")
+    .replace(/\b(?:por favor|porfa|porfis|plis|please|gracias)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  const compact = normalized
-    .replace(/^(?:quiero estudiar|quiero ver|vamos con|empecemos con|empezar con|estudiemos|repasemos|hablemos de|tema de|area de|materia de|la materia de|el area de)\s+/, "")
-    .replace(/^(?:el|la)\s+/, "")
-    .replace(/^(?:en|para|con)\s+/, "")
-    .trim();
+
+  // Students often choose an area conversationally rather than naming it
+  // alone: "en inglés plis", "o sea, ayúdame en inglés", "vamos con inglés".
+  compact = compact.replace(/^(?:(?:o sea|pues|oye|bueno|listo)\s+)+/, "");
+  for (let pass = 0; pass < 4; pass += 1) {
+    const previous = compact;
+    compact = compact
+      .replace(/^(?:quiero estudiar|quiero aprender|quiero ver|necesito estudiar|necesito|ayudame a estudiar|ayudame a aprender|ayudame|ayuda|puedes ayudarme|me ayudas|vamos a estudiar|vamos a|vamos con|empecemos con|empezar con|estudiemos|repasemos|hablemos de|tema de|area de|materia de|la materia de|el area de)\s+/, "")
+      .replace(/^(?:el|la|en|para|con|sobre|a)\s+/, "")
+      .trim();
+    if (compact === previous) break;
+  }
+  return compact;
+}
+
+function getOrbySubjectSelectionKey(message: string): OrbySubjectKey | null {
+  const compact = normalizeSubjectSelectionPhrase(message);
 
   if (/^(?:lectura|lectura critica|lengua|lenguaje|comprension lectora|comprension de lectura|comprension de textos|literatura|gramatica|espanol|castellano)$/.test(compact)) return "reading";
   if (/^(?:matematicas|matematica|algebra|geometria|estadistica|probabilidad)$/.test(compact)) return "math";
@@ -517,6 +530,7 @@ export function isGenericIcfesEnglishRequest(message: string): boolean {
   if (!normalized || normalized.length > 100) return false;
   const mentionsEnglish = /\b(?:ingles|english)\b/.test(normalized);
   if (!mentionsEnglish) return false;
+  if (getOrbySubjectSelectionKey(message) === "english") return true;
   return /^(?:(?:ayudame|ayuda|quiero estudiar|quiero aprender|vamos a estudiar|practiquemos|estudiemos|help me with|can you help me with)\s+)?(?:el )?(?:ingles|english)(?: de saber 11| del icfes)?[.!? ]*$/i.test(normalized)
     || /^(?:quiero|necesito|puedo|vamos a)\s+(?:estudiar|aprender|practicar|repasar|ver)\s+(?:ingles|english)(?: de saber 11| del icfes)?[.!? ]*$/i.test(normalized);
 }

@@ -537,7 +537,7 @@ test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o 
   assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
   assert.match(lessonTutorSource, /La voz en tiempo real no está disponible ahora\. Continúo por turnos sin perder tu conversación/);
   assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current, voiceScopeContext, previousVoiceSubject\)/);
-  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message, typedVoiceContext, activeSubjectRef\.current\)/);
+  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message, typedVoiceContext, previousActiveSubject\)/);
   assert.match(lessonTutorRouteSource, /getOrbySubjectSelectionReply\(\s*userMessage,\s*recentContextMessages/);
 });
 
@@ -1212,12 +1212,12 @@ test("una selección nueva se evalúa antes de actualizar la materia activa", ()
   assert.ok(typedVoiceStart >= 0 && typedDecision > typedVoiceStart && typedCommit > typedDecision);
   assert.ok(lessonTutorSource.includes('"Área de estudio: " + previousActiveSubject'));
   const sendStart = lessonTutorSource.indexOf("async function sendMessage(");
+  const validReply = lessonTutorSource.indexOf("if (typeof data.reply !== \"string\" || !data.reply.trim())", sendStart);
   const successfulResponse = lessonTutorSource.indexOf(
     "if (selectedSubject) activeSubjectRef.current = selectedSubject;",
-    sendStart,
+    validReply,
   );
-  const validReply = lessonTutorSource.indexOf("if (typeof data.reply !== \"string\" || !data.reply.trim())", sendStart);
-  assert.ok(successfulResponse > validReply && validReply > sendStart);
+  assert.ok(validReply > sendStart && successfulResponse > validReply);
 });
 
 test("el motor conserva los lotes visuales al volver a indexar fragmentos OCR", () => {
@@ -1688,7 +1688,7 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages)"));
   assert.ok(lessonTutorSource.includes("getOrbySubjectSelectionLabel(item.content)"));
   assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject)"));
-  assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(message, typedVoiceContext, activeSubjectRef.current)"));
+  assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(message, typedVoiceContext, previousActiveSubject)"));
   assert.ok(lessonTutorSource.includes("const selectedSubject = getOrbySubjectSelectionLabel(message)"));
   const liveStartup = lessonTutorSource
     .split("async function startRealtimeVoice")[1]

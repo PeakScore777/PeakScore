@@ -2537,3 +2537,13 @@ test("la recuperación de una respuesta incompleta conserva el prompt original d
   assert.ok(retryBlock.includes("stageTimings.generationMs += performance.now() - retryGenerationStartedAt"), "la segunda generación también debe contabilizarse en la latencia del modelo");
   assert.ok(retryBlock.includes("Conserva exactamente el idioma, el formato de salida y las reglas de la instrucción original."));
 });
+
+
+test("una caída parcial de recuperación no descarta las fuentes académicas que sí respondieron", () => {
+  const retrievalBlock = cloudflareTutorRoute.split("if (shouldRetrieveAcademicKnowledge) {")[1]?.split("// Collect external evidence independently")[0] ?? "";
+  assert.ok(retrievalBlock.includes("Promise.allSettled"), "el índice vectorial y el grafo deben recuperarse de forma independiente");
+  assert.ok(retrievalBlock.includes("knowledgeOutcome.status === \"fulfilled\""));
+  assert.ok(retrievalBlock.includes("conceptOutcome.status === \"fulfilled\""));
+  assert.ok(retrievalBlock.includes("Knowledge enrichment unavailable"), "un fallo de enriquecimiento no debe borrar la evidencia primaria");
+  assert.doesNotMatch(retrievalBlock, /Promise\.all\(\[\s*searchOrbyKnowledge/);
+});

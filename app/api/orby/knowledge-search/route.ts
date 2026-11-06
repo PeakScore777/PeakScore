@@ -32,7 +32,13 @@ export async function POST(request: Request) {
     const subjectInput = typeof body.subject === "string" ? body.subject.slice(0, 80) : "";
     if (query.length < 3) return fail("Escribe un tema académico más concreto.", 400);
 
-    const preflight = preflightOrbyRequest(query);
+    const subject = normalizeIcfesSubject(subjectInput, query);
+    // English-language exam stems are valid inside English and the other
+    // active Saber 11 areas. Pass the active area to the same academic-frame
+    // classifier used by the tutor so a safe English question is not blocked
+    // as an unrelated general-chat request.
+    const preflightContext = subject ? "Área de estudio: " + subject : "";
+    const preflight = preflightOrbyRequest(query, preflightContext);
     if (!preflight.allowed) return fail(preflight.reply, 400);
     const outOfScope = classifyOutOfScopeRequest(query);
     if (outOfScope) return fail("La consulta está fuera de las cinco áreas de Saber 11.", 400);
@@ -55,7 +61,6 @@ export async function POST(request: Request) {
       });
     }
 
-    const subject = normalizeIcfesSubject(subjectInput, query);
     const fragments = await searchOrbyKnowledge({
       query,
       subject,

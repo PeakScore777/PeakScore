@@ -55,6 +55,7 @@ const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn
 const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowledge-search/route.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
+const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
 
 test("Orby divide respuestas largas sin reordenar frases ni exceder el límite TTS", () => {
   const answer = "Primera explicación completa. Segunda explicación también completa y extensa. Tercera explicación final.";
@@ -1350,6 +1351,18 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /preflightOrbyRequest\(item\.content, priorContext\)\.allowed/);
   assert.doesNotMatch(realtimeSessionSource, /const latestUserText/);
   assert.doesNotMatch(realtimeSessionSource, /const legacyOutOfScope/);
+});
+
+test("el grafo conceptual de Orby Lab aplica el mismo aislamiento por materia que los fragmentos", () => {
+  assert.match(conceptGraphMigration, /left join public\.orby_knowledge_profiles p on p\.document_id = d\.id/);
+  assert.match(conceptGraphMigration, /p_subject is null/);
+  assert.match(conceptGraphMigration, /jsonb_array_elements_text\(coalesce\(p\.areas, '\[\]'::jsonb\)\)/);
+  assert.match(conceptGraphMigration, /when 'matemáticas' then array/);
+  assert.match(conceptGraphMigration, /when 'lectura crítica' then array/);
+  assert.match(conceptGraphMigration, /when 'sociales y ciudadanas' then array/);
+  assert.match(conceptGraphMigration, /when 'ciencias naturales' then array/);
+  assert.match(conceptGraphMigration, /when 'inglés' then array/);
+  assert.match(conceptGraphMigration, /or lower\(coalesce\(e\.subject,''\)\) like/);
 });
 
 test("Orby Lab nunca amplía silenciosamente una búsqueda vacía a otras materias", () => {

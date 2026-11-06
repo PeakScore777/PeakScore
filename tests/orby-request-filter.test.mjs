@@ -65,16 +65,17 @@ test("la política de seguridad permite reproducir audio del mismo sitio y no bl
 });
 
 test("la herramienta de conocimiento Live espera el resultado de Orby Lab", () => {
-  assert.match(liveToolsSource, /import \\{ Behavior, Type, type Tool \\} from "@google\\/genai"/);
-  assert.match(liveToolsSource, /name: "search_orby_learning_knowledge",[\\s\\S]{0,240}behavior: Behavior\\.BLOCKING/);
-  assert.match(lessonTutorSource, /await fetch\\("\/api\/orby\/knowledge-search"/);
-  assert.match(lessonTutorSource, /sendToolResponse\\(\\{ functionResponses: responses \\}\\)/);
+  assert.ok(liveToolsSource.includes('import { Behavior, Type, type Tool } from "@google/genai";'));
+  assert.ok(liveToolsSource.includes('name: "search_orby_learning_knowledge"'));
+  assert.ok(liveToolsSource.includes("behavior: Behavior.BLOCKING"));
+  assert.ok(lessonTutorSource.includes('await fetch("/api/orby/knowledge-search"'));
+  assert.ok(lessonTutorSource.includes("sendToolResponse({ functionResponses: responses })"));
 });
 
 test("una respuesta Live lenta no fuerza TTS si el canal sigue conectado", () => {
-  assert.match(lessonTutorSource, /Keep a connected Gemini Live session while long answers and Lab retrieval complete/);
-  assert.match(lessonTutorSource, /if \\(voiceChannelRef\\.current\\)/);
-  assert.match(lessonTutorSource, /\\}, 70_000\\)/);
+  assert.ok(lessonTutorSource.includes("Keep a connected Gemini Live session while long answers and Lab retrieval complete."));
+  assert.ok(lessonTutorSource.includes("if (voiceChannelRef.current)"));
+  assert.ok(lessonTutorSource.includes("}, 70_000);"));
 });
 
 test("los turnos permitidos de voz permanecen en Gemini Live y no gastan TTS local", () => {

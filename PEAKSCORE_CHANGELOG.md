@@ -1,5 +1,11 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-06 — Orby text/voice subject routing
+- Text tutor retrieval now gives the current student turn's detected Saber 11 subject priority over the conversation's previously active subject. This avoids sending an explicitly new-area question to the old subject's vector index.
+- The shared voice knowledge-search endpoint applies the same current-query-first rule, so VC retrieval is not forced to remain on the prior conversation subject.
+- Added regression assertions for both routes.
+- This change affects retrieval routing only; it does not silently rewrite persisted conversation metadata based on incidental mentions. A deliberate subject switch remains the correct way to change the active conversation label.
+
 ## 2026-11-06 — Orby Live knowledge retrieval isolation
 - Confirmed the VC path is connected to the published Orby Lab knowledge engine through Gemini Live function calling and `/api/orby/knowledge-search`.
 - The retrieval endpoint searches published document chunks, the published concept graph, and related-document context; subject-scoped retrieval can fall back across published areas when the active subject has no matching chunks.

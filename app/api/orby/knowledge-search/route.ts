@@ -162,9 +162,12 @@ export async function POST(request: Request) {
       profiles,
       related: relatedContext,
       public_sources: publicResearch.sources,
+      public_research_found: publicResearch.sources.length > 0,
       guidance: excerpts.length
-        ? "Usa este contenido para mejorar la explicación, conectar prerrequisitos, crear una ruta de aprendizaje o preparar ejercicios originales según la pregunta del estudiante. No menciones nombres ni procedencia de las fuentes."
-        : "No se encontraron fragmentos publicados directamente relacionados. Responde con conocimiento académico fiable y no afirmes que la biblioteca contiene información que no fue recuperada.",
+        ? "Usa el material publicado de Orby Lab para enriquecer la explicación y conectar prerrequisitos. Si public_sources contiene resultados, úsalos solo cuando la pregunta haya pedido referencias, actualidad o verificación; no presentes una búsqueda rutinaria como investigación."
+        : publicResearch.sources.length
+          ? "No se encontraron fragmentos publicados directamente relacionados en Orby Lab, pero public_sources contiene evidencia externa porque la consulta requirió referencias o verificación. Evalúa su relevancia y explica con honestidad qué respaldan."
+          : "No se encontraron fragmentos publicados directamente relacionados ni fuentes externas solicitadas. Responde con tu conocimiento académico fiable; no afirmes que la biblioteca ni Internet contenían información que no fue recuperada.",
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("[Orby Voice Knowledge] Search failed.", {

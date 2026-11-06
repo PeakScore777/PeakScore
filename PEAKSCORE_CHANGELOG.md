@@ -5,6 +5,7 @@
 - Text tutor now retrieves public sources for substantive academic turns in addition to Orby Lab's published chunks, concept graph, related material and pedagogical profiles. Public-source outages are non-fatal and never trigger another model provider.
 - Text and VC research run the public-source lookup independently alongside Lab retrieval. If either evidence service is unavailable, successful results from the other remain available; public-source outages never block tutoring or trigger another model provider.
 - The VC knowledge-search tool now returns the same public-source context alongside Orby Lab results; Gemini Live instructions explain how to use and qualify those results.
+- The browser now forwards `public_sources` from the VC knowledge-search response into Gemini Live's function result; previously the endpoint could return sources while the client silently dropped that field.
 - Text chat displays the source links separately from the answer, with publisher and publication year when available.
 - Added regression tests for source allowlisting, deduplication, limits, excerpt sanitization, offline degradation, and integration in both channels.
 - Scope note: this first iteration searches Wikimedia and OpenAlex only. It is not yet a general web search engine or a guarantee of official ICFES/government-source coverage. Results must be checked for relevance and quality; source presence alone is not proof that a claim is correct.

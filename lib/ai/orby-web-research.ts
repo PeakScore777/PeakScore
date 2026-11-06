@@ -42,6 +42,7 @@ const SEARCH_STOP_WORDS = new Set([
   "verificar", "comprueba", "contrasta", "confirmar", "busca", "buscar", "investiga", "investigar",
   "indaga", "indagar", "sobre", "acerca", "segun", "dato", "datos", "informe", "informes",
   "esto", "esta", "este", "estos", "estas", "eso", "esa", "ese", "esas", "esos", "aqui", "ahi", "aquello",
+  "contacto", "telefono", "estudiante", "profesor", "profesora", "companero", "companera", "nombre", "apellido", "llamo",
   "the", "what", "when", "where", "which", "how", "why", "is", "are", "of", "to", "in", "on",
   "and", "or", "for", "with", "about", "explain", "tell", "me", "please",
 ]);

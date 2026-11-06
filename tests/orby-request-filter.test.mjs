@@ -165,7 +165,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.match(lessonTutorSource, /void speakText\(rawReply, messageIndex >= 0 \? messageIndex : messages\.length\)/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
-  assert.match(lessonTutorSource, /void speakText\(data\.reply, nextMessages\.length\)/);
+  assert.match(lessonTutorSource, /void speakText\(data\.reply, nextMessages\.length(?:, typeof data\.checkQuestion === "string" \? data\.checkQuestion : "")?\)/);
   assert.ok(lessonTutorSource.includes("A genuinely failed segment must not cancel the remaining answer."));
   assert.ok(lessonTutorSource.includes("Do not mark the chunk as lost before the retry has actually failed."));
   assert.ok(lessonTutorSource.includes("await ensureVoiceAudioContextRunning(voiceAudioContext)"));

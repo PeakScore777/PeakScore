@@ -2339,11 +2339,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceAssistantTextRef.current = rawReply;
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = id;
+        const sourcesForVoiceReply = voicePublicSourcesRef.current;
+        voicePublicSourcesRef.current = [];
         setMessages((current) => {
           const exists = current.some((message) => message.id === id);
           return exists
-            ? current.map((message) => message.id === id ? { ...message, content: rawReply } : message)
-            : [...current, { id, role: "assistant", content: rawReply }];
+            ? current.map((message) => message.id === id
+              ? { ...message, content: rawReply, ...(sourcesForVoiceReply.length ? { sources: sourcesForVoiceReply } : {}) }
+              : message)
+            : [...current, {
+                id,
+                role: "assistant",
+                content: rawReply,
+                ...(sourcesForVoiceReply.length ? { sources: sourcesForVoiceReply } : {}),
+              }];
         });
         if (!voiceOutputAudioBlockedRef.current && voiceOutputTranscriptValidatedRef.current) {
           flushPendingGeminiAudio();

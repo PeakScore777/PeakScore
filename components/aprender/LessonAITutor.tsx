@@ -388,6 +388,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const historyHydratingRef = useRef(workspace);
   const historyHydrationGenerationRef = useRef(0);
   const sendingRef = useRef(false);
+  // Invalidate in-flight replies when the student opens or selects another chat.
+  const chatViewGenerationRef = useRef(0);
+  const textRequestGenerationRef = useRef(0);
+  const activeTextRequestRef = useRef<AbortController | null>(null);
   const lastSubmittedMessageRef = useRef<{ key: string; at: number } | null>(null);
   const pendingMessagesRef = useRef<Array<{ text: string; attachmentMeta?: { kind: "image" | "audio"; label: string } }>>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -3574,6 +3578,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     sendingRef.current = true;
+    const requestGeneration = ++textRequestGenerationRef.current;
+    const chatGeneration = chatViewGenerationRef.current;
+    const requestController = new AbortController();
+    activeTextRequestRef.current = requestController;
+    const isCurrentRequest = () => requestGeneration === textRequestGenerationRef.current
+      && chatGeneration === chatViewGenerationRef.current
+      && !requestController.signal.aborted;
 
     let targetConversationId = conversationId;
     if (workspace && !targetConversationId) {
@@ -3582,10 +3593,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          signal: AbortSignal.timeout(12_000),
+          signal: AbortSignal.any([requestController.signal, AbortSignal.timeout(12_000)]),
           body: JSON.stringify({ subject: activeSubjectRef.current, topic }),
         });
         const createPayload = await createResponse.json().catch(() => ({}));
+        if (!isCurrentRequest()) return;
         if (!createResponse.ok || !createPayload.conversation?.id) {
           throw new Error(createPayload.error || "No se pudo crear el chat.");
         }
@@ -3594,7 +3606,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setConversationId(targetConversationId);
         setConversations((current) => [createPayload.conversation as Conversation, ...current]);
       } catch (caught) {
+        if (!isCurrentRequest()) return;
         setConversationError(caught instanceof Error ? caught.message : "No se pudo crear el chat.");
+        activeTextRequestRef.current = null;
         sendingRef.current = false;
         drainPendingMessageQueue();
         return;
@@ -3610,13 +3624,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       drainPendingMessageQueue();
       return;
     }
-    const nextMessages: Message[] = appendUserMessage ? [...messages, {
+    if (!isCurrentRequest()) return;
+    const previousMessages = messagesRef.current;
+    const nextMessages: Message[] = appendUserMessage ? [...previousMessages, {
+      id: "user-" + crypto.randomUUID(),
       role: "user",
       content: message || "Analiza la imagen adjunta.",
       ...(selectedFile && imagePayload ? { attachmentName: selectedFile.name, attachmentPreview: selectedFile.type.startsWith("image/") ? `data:${selectedFile.type};base64,${imagePayload.base64}` : "", attachmentKind: "image" as const } : {}),
       ...(attachmentMeta ? { attachmentName: attachmentMeta.label, attachmentKind: attachmentMeta.kind } : {}),
-    }] : messages;
-    if (appendUserMessage) setMessages(nextMessages);
+    }] : previousMessages;
+    if (appendUserMessage) {
+      messagesRef.current = nextMessages;
+      setMessages(nextMessages);
+    }
     if (isVoiceInteraction && voiceFallbackModeRef.current) {
       voiceUserTextRef.current = message;
       voiceUserMessageVisibleRef.current = appendUserMessage || voiceUserMessageVisibleRef.current;
@@ -3641,7 +3661,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
-        signal: AbortSignal.timeout(60_000),
+        signal: AbortSignal.any([requestController.signal, AbortSignal.timeout(60_000)]),
         body: JSON.stringify({
           subject: activeReview?.subject ?? activeSubjectRef.current,
           topic: activeReview?.topic ?? topic,
@@ -3659,6 +3679,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }),
       });
       const data = await response.json().catch(() => ({}));
+      if (!isCurrentRequest()) return;
       if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "Orby no está disponible por ahora.");
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
       if (selectedSubject) activeSubjectRef.current = selectedSubject;
@@ -3666,7 +3687,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? "voice-fallback-assistant-" + Date.now()
         : undefined;
       const assistantMessage: Message = {
-        ...(fallbackAssistantId ? { id: fallbackAssistantId } : {}),
+        id: fallbackAssistantId ?? ("assistant-" + crypto.randomUUID()),
         role: "assistant",
         content: data.reply,
         checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "",
@@ -3725,6 +3746,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       setPendingAttachmentMeta(null);
     } catch (caught) {
+      if (!isCurrentRequest()) return;
       setError(caught instanceof Error ? caught.message : "Ocurrió un error. Inténtalo otra vez.");
       if (isVoiceInteraction && voiceFallbackModeRef.current) {
         waitingForVoiceReplyRef.current = false;
@@ -3741,9 +3763,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceMode(false);
       }
     } finally {
-      sendingRef.current = false;
-      setLoading(false);
-      drainPendingMessageQueue();
+      // An older aborted request must not unlock or drain the queue of a newer chat.
+      if (requestGeneration === textRequestGenerationRef.current
+        && chatGeneration === chatViewGenerationRef.current) {
+        if (activeTextRequestRef.current === requestController) activeTextRequestRef.current = null;
+        sendingRef.current = false;
+        setLoading(false);
+        drainPendingMessageQueue();
+      }
     }
   }
 
@@ -3807,7 +3834,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setInput("");
     if (inputRef.current) inputRef.current.style.height = "48px";
     const userContent = "Crear una imagen educativa: " + visualPrompt;
-    setMessages((current) => [...current, { role: "user", content: userContent }]);
+    setMessages((current) => [...current, { id: "user-" + crypto.randomUUID(), role: "user", content: userContent }]);
 
     let targetId = conversationId;
     try {
@@ -3859,6 +3886,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? payload.caption
         : "Aquí tienes un apoyo visual para estudiar este concepto.";
       setMessages((current) => [...current, {
+        id: "assistant-" + crypto.randomUUID(),
         role: "assistant",
         content: caption,
         generatedImage: payload.imageDataUrl,
@@ -3893,6 +3921,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function startNewConversation() {
+    chatViewGenerationRef.current += 1;
+    textRequestGenerationRef.current += 1;
+    activeTextRequestRef.current?.abort();
+    activeTextRequestRef.current = null;
+    sendingRef.current = false;
+    setLoading(false);
     activeSubjectRef.current = subject;
     voiceRecentAssistantOutputsRef.current = [];
     voiceLastAssistantOutputRef.current = "";
@@ -3924,7 +3958,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function selectConversation(id: string) {
-    if (loading) return;
     if (id === activeConversationRef.current) {
       setLearningView("chat");
       setWorkspaceMode("chat");
@@ -3932,6 +3965,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (window.matchMedia("(max-width: 767px)").matches) setHistoryOpen(false);
       return;
     }
+    chatViewGenerationRef.current += 1;
+    textRequestGenerationRef.current += 1;
+    activeTextRequestRef.current?.abort();
+    activeTextRequestRef.current = null;
+    sendingRef.current = false;
+    setLoading(false);
+    pendingMessagesRef.current = [];
+    setQueuedMessageCount(0);
     const selectedConversation = conversations.find((item) => item.id === id);
     if (voiceModeRef.current) stopRealtimeVoice();
     voiceRecentAssistantOutputsRef.current = [];
@@ -4471,7 +4512,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ) : (
           <div className="space-y-4">
             {messages.map((message, index) => (
-              <article key={index} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
+              <article key={message.id ?? `${message.role}-${index}`} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[15px] leading-7 sm:text-base">{renderTutorContent(message.content)}</div>
                 {message.sources && message.sources.length > 0 && <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700" aria-label="Fuentes públicas consultadas">

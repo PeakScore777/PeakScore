@@ -584,9 +584,16 @@ export async function POST(request: Request) {
     const studentSignalsPromise: Promise<typeof emptyStudentSignals> = shouldRetrieveAcademicKnowledge
       ? (async () => {
           try {
-            const signalResult = await supabaseAdmin.from("orby_student_learning_signals")
+            const signalSubject = detectedSubject ?? normalizeIcfesSubject(subject, recentScopeContext);
+            const baseSignalQuery = supabaseAdmin.from("orby_student_learning_signals")
               .select("topic,concept,learning_state,misconception,teaching_hint,confidence,created_at")
-              .eq("user_id", user.id).order("created_at", { ascending: false }).limit(8);
+              .eq("user_id", user.id);
+            const scopedSignalQuery = signalSubject
+              ? baseSignalQuery.eq("subject", signalSubject)
+              : baseSignalQuery;
+            const signalResult = await scopedSignalQuery
+              .order("created_at", { ascending: false })
+              .limit(8);
             if (signalResult.error) {
               console.error("[Orby Tutor] Learning profile unavailable.", { code: signalResult.error.code });
               return emptyStudentSignals;

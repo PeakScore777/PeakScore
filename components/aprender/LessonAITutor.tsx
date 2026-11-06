@@ -2804,7 +2804,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ].filter(Boolean).join(" · ");
             if (!liveSessionEstablished) {
               console.warn("[Orby Voice] Connection closed before setup completed.", { detail });
-              rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de Orby."));
+              rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de Orby. " + detail));
               return;
             }
             if (voiceModeRef.current) {
@@ -2839,7 +2839,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           setupFailure,
           new Promise<never>((_, reject) => {
             acknowledgementTimeoutId = window.setTimeout(
-              () => reject(new Error("Orby no confirmó la conexión de voz. Continúa por el chat de texto.")),
+              () => reject(new Error(
+                "Orby no confirmó la conexión de voz. Continúa por el chat de texto."
+                + (lastLiveSocketError ? " Último evento de red: " + lastLiveSocketError : ""),
+              )),
               8_000,
             );
           }),
@@ -3185,6 +3188,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const geminiQuotaReached = typed.code === "GEMINI_FREE_QUOTA_EXCEEDED"
         || /GEMINI_FREE_QUOTA_EXCEEDED|l[ií]mite gratuito de Gemini Live|resource_exhausted|quota exceeded/i.test(errorMessage);
       const authenticationFailure = /inicia sesión|sesion expirada|no autorizado|unauthorized|\b401\b|\b403\b/i.test(errorMessage);
+      if (ownsStartup && !wasCancelled) {
+        console.warn("[Orby Voice] Live startup failed; activating the free turn-based path.", {
+          name: error instanceof Error ? error.name : "UnknownError",
+          code: typeof typed.code === "string" ? typed.code : undefined,
+          message: errorMessage.slice(0, 220),
+          audioContextState: voiceAudioContextRef.current?.state,
+        });
+      }
       // A late failure from an old, cancelled startup must never tear down a
       // newer voice session. Every recoverable Live failure (quota, privacy
       // gate, network or timeout) keeps the student in voice-turn mode.

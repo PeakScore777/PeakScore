@@ -6,7 +6,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { GoogleGenAI, Modality, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
-import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbyGreetingFollowUpReply, isOrbyStudyGuidanceRequest, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, ORBY_STUDY_GUIDANCE_REPLY, getOrbySubjectSelectionReply, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 
@@ -1957,6 +1957,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             : null;
       const subjectAlreadyActive = isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, subject);
       const subjectSelectionReply = getOrbySubjectSelectionReply(voiceUserTextRef.current, voiceScopeContext, subject);
+      const activeSubjectReply = subjectAlreadyActive && !isOrbyGreetingRequest(voiceUserTextRef.current)
+        ? getOrbyGreetingFollowUpReply(voiceScopeContext, subject)
+        : null;
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(voiceUserTextRef.current, voiceScopeContext)
         ? ORBY_STUDY_GUIDANCE_REPLY
         : null;
@@ -1974,6 +1977,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : isOrbyGreetingRequest(voiceUserTextRef.current)
           ? null
           : subjectSelectionReply
+              ?? activeSubjectReply
               ?? studyGuidanceReply
               ?? transcriptionClarificationReply
               ?? (preflight.allowed ? null : preflight.reply);
@@ -3057,10 +3061,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? ORBY_ICFES_ENGLISH_INTRO_REPLY
         : null;
       const subjectSelectionReply = getOrbySubjectSelectionReply(message, typedVoiceContext, subject);
+      const activeSubjectReply = subjectAlreadyActive
+        ? getOrbyGreetingFollowUpReply(typedVoiceContext, subject)
+        : null;
       const studyGuidanceReply = isOrbyStudyGuidanceRequest(message, typedVoiceContext) ? ORBY_STUDY_GUIDANCE_REPLY : null;
       // Greetings stay on Gemini Live so the native Live voice speaks them.
       // Deterministic text-only shortcuts must not swallow a voice-mode greeting.
-      const localReply = englishReply ?? subjectSelectionReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
+      const localReply = englishReply ?? subjectSelectionReply ?? activeSubjectReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
       if (localReply) {
         respondToVoiceLocally(message, localReply, true);
         return;

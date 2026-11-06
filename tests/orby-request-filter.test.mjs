@@ -1006,6 +1006,8 @@ test("Orby evita RAG en conversación casual y lo activa para temas y seguimient
 test("la búsqueda de conocimiento recupera todas las áreas si falta el índice del nombre oficial", () => {
   assert.ok(orbyKnowledgeSource.includes("if (options.subject && indexedModels.length === 0)"));
   assert.ok(orbyKnowledgeSource.includes("No exact subject embedding index"));
+  assert.ok(orbyKnowledgeSource.includes("if (options.subject && rows.length === 0)"));
+  assert.ok(orbyKnowledgeSource.includes("No chunks matched the active subject; retrying across published areas."));
   assert.ok(orbyKnowledgeSource.includes("return searchOrbyKnowledge({ ...options, subject: null });"));
   assert.match(knowledgeSearchRouteSource, /preflightOrbyRequest\(query, preflightContext\)/);
   assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \? "Área de estudio: " \+ subject : ""/);

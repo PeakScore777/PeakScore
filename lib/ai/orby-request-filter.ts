@@ -4,6 +4,29 @@ export type OrbyPreflightResult =
   | { allowed: true; category: null; reply: "" }
   | { allowed: false; category: OrbyRequestCategory; reply: string };
 
+export function dedupeAdjacentAssistantMessages<T extends {
+  role: "user" | "assistant";
+  content: string;
+  checkQuestion?: string;
+}>(messages: T[]): T[] {
+  const result: T[] = [];
+  const normalize = (value: string | undefined) => (value ?? "")
+    .normalize("NFKC")
+    .replace(/\\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("es-CO");
+
+  for (const message of messages) {
+    const previous = result[result.length - 1];
+    const repeatedAssistant = message.role === "assistant"
+      && previous?.role === "assistant"
+      && normalize(previous.content) === normalize(message.content)
+      && normalize(previous.checkQuestion) === normalize(message.checkQuestion);
+    if (!repeatedAssistant) result.push(message);
+  }
+  return result;
+}
+
 export function normalizeOrbyRequestText(value: string): string {
   return value.normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")

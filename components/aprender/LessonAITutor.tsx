@@ -1031,12 +1031,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
 
       // If optional TTS is unavailable, keep the validated answer visible without speaking it.
-      const finishWithoutGenericVoice = () => {
+      const finishWithoutGenericVoice = (notice = "No se pudo completar la lectura en voz alta. La respuesta completa sigue disponible por escrito.") => {
         if (finished) return;
-        // Keep the validated answer and voice workspace usable. Internal
-        // provider configuration must not appear as a red student-facing error.
-        setVoiceError("");
-        setVoiceStatus("Respuesta lista · puedes continuar hablando o escribir");
+        // Preserve the full answer, but never imply that it was read aloud
+        // when privacy, quota, configuration or a provider outage stopped TTS.
+        setVoiceError(notice);
+        setVoiceStatus("Respuesta disponible por escrito · lectura de voz interrumpida");
         finish(false);
       };
 
@@ -1044,7 +1044,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (finished) return;
         clearAudioElement();
         requestController = null;
-        if (chunkRetryCount < 1) {
+        if (chunkRetryCount < 2) {
           chunkRetryCount += 1;
           // Do not mark the chunk as lost before the retry has actually failed.
           // The old code showed a red warning even when this retry played fine.
@@ -1099,15 +1099,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               voiceLastAssistantOutputRef.current = "";
               voiceLastAssistantOutputAtRef.current = 0;
               voiceLastAssistantPlaybackUntilRef.current = 0;
-              finishWithoutGenericVoice();
+              finishWithoutGenericVoice(
+                payload.code === "FREE_TIER_TTS_QUOTA_EXCEEDED"
+                  ? "Se agotó la cuota gratuita de voz. La lectura se pausó, pero la respuesta completa sigue visible; no se activará ningún servicio de pago."
+                  : "La voz gratuita no está disponible en este momento. La respuesta completa sigue visible y puedes intentarlo de nuevo más tarde.",
+              );
               return;
             }
             if (payload.code === "RATE_LIMITED") {
               const retryAfter = Number(response.headers.get("Retry-After") ?? 0);
-              if (Number.isFinite(retryAfter) && retryAfter > 5) {
-                finishWithoutGenericVoice();
+              if (chunkRetryCount < 2 && Number.isFinite(retryAfter) && retryAfter <= 90) {
+                chunkRetryCount += 1;
+                requestController = null;
+                window.setTimeout(() => void playFreeTtsChunk(), Math.max(1, retryAfter) * 1000 + 250);
                 return;
               }
+              finishWithoutGenericVoice(
+                "La lectura alcanzó el límite temporal del servicio gratuito. No se saltará el resto en silencio: el texto completo sigue disponible para leerlo o volver a intentarlo.",
+              );
+              return;
             }
             throw new Error(typeof payload.error === "string" ? payload.error : "FREE_TIER_TTS_UNAVAILABLE");
           }

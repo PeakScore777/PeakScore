@@ -1747,6 +1747,44 @@ test("la salida de Orby corrige tildes académicas frecuentes sin alterar la pun
     filter.normalizeOrbySpanishOutput("La fotosintesis usa oxigeno, agua y dioxido de carbono; el nucleo contiene atomos."),
     "La fotosíntesis usa oxígeno, agua y dióxido de carbono; el núcleo contiene átomos.",
   );
+  assert.equal(
+    filter.normalizeOrbySpanishOutput("Tambien se analiza el numero, el proposito y las caracteristicas del fenomeno."),
+    "También se analiza el número, el propósito y las características del fenómeno.",
+  );
+});
+
+test("la lectura de Orby conserva tablas y verbaliza fórmulas matemáticas", () => {
+  const table = filter.formatOrbySpeechText([
+    "| Variable | Valor |",
+    "| --- | --- |",
+    "| Masa | 10 g |",
+    "| Volumen | 2 cm³ |",
+  ].join("\n"));
+  assert.match(table, /Tabla\./);
+  assert.match(table, /Fila 1: Variable: Masa; Valor: 10 g/);
+  assert.match(table, /Fila 2: Variable: Volumen; Valor: 2 cm³/);
+  assert.doesNotMatch(table, /---/);
+
+  const formula = filter.formatOrbySpeechText(String.raw\`\\(\\rho = m/V\\)\`);
+  assert.match(formula, /rho igual a m dividido entre V/);
+});
+
+test("Orby no muestra dos respuestas idénticas consecutivas, pero conserva turnos separados", () => {
+  const history = [
+    { role: "user", content: "Hola" },
+    { role: "assistant", content: "Soy Orby, tu tutor." },
+    { role: "assistant", content: " Soy Orby, tu tutor. " },
+    { role: "user", content: "¿Qué estudiamos?" },
+    { role: "assistant", content: "Podemos estudiar Inglés." },
+    { role: "assistant", content: "Podemos estudiar Inglés." },
+  ];
+  const deduplicated = filter.dedupeAdjacentAssistantMessages(history);
+  assert.deepEqual(deduplicated.map((item) => item.content), [
+    "Hola",
+    "Soy Orby, tu tutor.",
+    "¿Qué estudiamos?",
+    "Podemos estudiar Inglés.",
+  ]);
 });
 
 test("un eco de una respuesta breve no genera otro turno, pero una confirmación nueva sí se conserva", () => {
@@ -1759,8 +1797,12 @@ test("un eco de una respuesta breve no genera otro turno, pero una confirmación
 test("las respuestas TTS largas conservan texto y cada fragmento fallido se reintenta sin cancelar el resto", () => {
   assert.ok(lessonTutorSource.includes(".slice(0, 12_000)"));
   assert.ok(lessonTutorSource.includes("recoverCurrentTtsChunk"));
-  assert.ok(lessonTutorSource.includes("chunkRetryCount < 1"));
-  assert.ok(lessonTutorSource.includes("skippedAudioChunks"));
+  assert.ok(lessonTutorSource.includes("chunkRetryCount < 4"));
+  assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 480)"));
+  assert.ok(lessonTutorSource.includes("rateLimitWaitCount < 12"));
+  assert.ok(lessonTutorSource.includes("retry the SAME chunk"));
+  assert.ok(lessonTutorSource.includes("La lectura se pausó en una frase"));
+  assert.ok(!lessonTutorSource.includes("skippedAudioChunks"));
   assert.ok(lessonTutorSource.includes("Math.min(900_000,"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(30_000)"));
   assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply, userMessage)"));

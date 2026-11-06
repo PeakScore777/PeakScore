@@ -1179,11 +1179,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
       };
 
+      // Long answers are played sequentially in verified 420-character
+      // chunks. Keep a generous overall deadline so valid explanations are not
+      // cut off at six minutes; each network request still has its own timeout.
       safetyTimer = window.setTimeout(() => {
         if (finished) return;
         setVoiceError("La lectura superó el tiempo de seguridad. La respuesta sigue visible por escrito.");
         finish(false);
-      }, Math.min(360_000, Math.max(30_000, clean.length * 110)));
+      }, Math.min(900_000, Math.max(30_000, clean.length * 110)));
 
       void playFreeTtsChunk();
     });

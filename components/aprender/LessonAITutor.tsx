@@ -10,6 +10,7 @@ import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsEx
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
+import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 
@@ -2340,15 +2341,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // safe but never emitted punctuation during streaming, release its
         // buffered Live audio now; unsupported audio is never sent to a browser voice.
         voiceOutputTranscriptValidatedRef.current = true;
-        const sourcesForVoiceReply = voicePublicSourcesRef.current;
+        const citationResult = reconcileOrbyPublicCitations(rawReply, voicePublicSourcesRef.current);
+        const sourcesForVoiceReply = citationResult.sources;
         voicePublicSourcesRef.current = [];
-        const replyWithSourceLinks = sourcesForVoiceReply.length
-          ? rawReply + "\n\nFuentes consultadas:\n" + sourcesForVoiceReply.map((source) =>
-              `[${source.citationNumber}](${source.url}) ${source.title} — ${source.publisher}${source.publishedAt ? " — " + source.publishedAt : ""}`
-            ).join("\n")
-          : rawReply;
-        // Keep the displayed and persisted VC transcript linked to its sources.
-        // Audio playback and echo detection still use rawReply without URLs.
+        // Persist only sources that the Live transcript explicitly cited.
+        // Audio playback and echo detection continue using rawReply without URLs.
+        const replyWithSourceLinks = citationResult.reply || rawReply;
         voiceAssistantTextRef.current = replyWithSourceLinks;
         const id = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
         voiceAssistantMessageIdRef.current = id;

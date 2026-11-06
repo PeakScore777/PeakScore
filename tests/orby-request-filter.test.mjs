@@ -53,7 +53,6 @@ const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby
 const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowledge-search/route.ts", import.meta.url), "utf8");
-const publicResearchRouteSource = await readFile(new URL("../lib/ai/orby-web-research.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 

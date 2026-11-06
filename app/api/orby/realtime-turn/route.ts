@@ -23,6 +23,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No se pudo validar el turno de voz." }, { status: 400 });
     }
 
+    // Resolve and persist an explicit subject selection BEFORE saving the
+    // voice turn. Previously the message pair was committed first and the
+    // subject update could fail afterwards, leaving a saved turn attached to
+    // stale conversation metadata (the exact partial-success state shown in
+    // the admin screenshot).
+    const selectedSubject = getOrbySubjectSelectionReply(userContent)
+      ? normalizeIcfesSubject(userContent, userContent)
+      : null;
+
+    if (selectedSubject) {
+      const { data: updatedConversation, error: subjectError } = await supabaseAdmin
+        .from("orby_conversations")
+        .update({ subject: selectedSubject })
+        .eq("id", conversationId)
+        .eq("user_id", user.id)
+        .select("id")
+        .maybeSingle();
+
+      if (subjectError || !updatedConversation) {
+        console.error("[Orby Realtime] Voice subject update failed before turn persistence.", {
+          code: subjectError?.code,
+          conversationFound: Boolean(updatedConversation),
+        });
+        return NextResponse.json({
+          error: "No pude cambiar la materia activa, así que no guardé este turno. Selecciona la materia nuevamente e inténtalo otra vez.",
+          code: "VOICE_SUBJECT_UPDATE_FAILED",
+        }, { status: 503, headers: { "Cache-Control": "no-store" } });
+      }
+    }
+
     // A fetch can time out after the database commit succeeded. Before
     // retrying, detect the exact same most-recent user/assistant pair so a
     // retry never creates duplicate bubbles in the conversation history.
@@ -55,33 +85,9 @@ export async function POST(request: Request) {
       if (error || !data?.ok) {
         console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });
         return NextResponse.json({
-          error: "La conversación ocurrió, pero no se pudo guardar en el historial. Puedes reintentar sin duplicar la respuesta.",
+          error: "La respuesta se completó, pero no se pudo guardar en el historial. Puedes reintentar sin duplicar el turno.",
           code: error ? "SAVE_TURN_DATABASE_ERROR" : (typeof data?.code === "string" ? data.code : "SAVE_TURN_REJECTED"),
-        }, { status: 503 });
-      }
-    }
-
-    // Voice subject selections use the same deterministic classifier as text.
-    // Only a standalone recognized area can change the stored subject; an
-    // incidental mention inside an exercise or passage cannot switch it.
-    if (getOrbySubjectSelectionReply(userContent)) {
-      const selectedSubject = normalizeIcfesSubject(userContent, userContent);
-      if (selectedSubject) {
-        const { data: updatedConversation, error: subjectError } = await supabaseAdmin
-          .from("orby_conversations")
-          .update({ subject: selectedSubject })
-          .eq("id", conversationId)
-          .eq("user_id", user.id)
-          .select("id")
-          .maybeSingle();
-        if (subjectError || !updatedConversation) {
-          console.error("[Orby Realtime] Voice turn saved but active subject could not be updated.", {
-            code: subjectError?.code,
-          });
-          return NextResponse.json({
-            error: "El turno se guardó, pero no se pudo actualizar la materia activa. Vuelve a seleccionarla antes de continuar.",
-          }, { status: 503 });
-        }
+        }, { status: 503, headers: { "Cache-Control": "no-store" } });
       }
     }
 

@@ -1643,8 +1643,11 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeSessionSource.includes('from("orby_messages")'));
   assert.ok(realtimeSessionSource.includes("body?.conversationId"));
   assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current ?? conversationId"));
-  assert.match(lessonTutorSource, /resumeTokenResponse[\\s\\S]{0,1600}conversationId: activeConversationRef\\.current \\?\\? conversationId/);
-  assert.match(lessonTutorSource, /resumeTokenResponse[\\s\\S]{0,1800}history: messagesRef\\.current\\.slice\\(-12\\)/);
+  const reconnectRequest = lessonTutorSource
+    .split('const resumeTokenResponse = await fetch("/api/orby/realtime-session"')[1]
+    ?.split("const resumeTokenPayload")[0] ?? "";
+  assert.ok(reconnectRequest.includes("conversationId: activeConversationRef.current ?? conversationId"));
+  assert.ok(reconnectRequest.includes("history: messagesRef.current.slice(-12)"));
   assert.match(realtimeTurnSource, /getOrbySubjectSelectionReply\\(userContent\\)/);
   assert.match(realtimeTurnSource, /update\\(\\{ subject: selectedSubject \\}\\)/);
   assert.match(realtimeTurnSource, /\\.eq\\("user_id", user\\.id\\)/);

@@ -926,7 +926,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, 12_000);
-      const chunks = splitSpeechIntoChunks(clean, 420);
+      // Use near-maximum endpoint chunks to reduce free-tier requests without truncating content.
+      const chunks = splitSpeechIntoChunks(clean, 480);
       if (!chunks.length) {
         if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
         resolve();
@@ -953,6 +954,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let didPlaybackStart = false;
       let chunkIndex = 0;
       let chunkRetryCount = 0;
+      let rateLimitWaitCount = 0;
       let skippedAudioChunks = false;
       let safetyTimer: number | null = null;
       let requestController: AbortController | null = null;
@@ -1107,15 +1109,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               return;
             }
             if (payload.code === "RATE_LIMITED") {
+              // This is our per-user rolling-window limit, not exhausted provider quota.
+              // Wait and retry the SAME chunk; never abandon the rest of a long explanation.
               const retryAfter = Number(response.headers.get("Retry-After") ?? 0);
-              if (chunkRetryCount < 2 && Number.isFinite(retryAfter) && retryAfter <= 90) {
-                chunkRetryCount += 1;
+              if (Number.isFinite(retryAfter) && retryAfter >= 0 && rateLimitWaitCount < 12) {
+                rateLimitWaitCount += 1;
                 requestController = null;
-                window.setTimeout(() => void playFreeTtsChunk(), Math.max(1, retryAfter) * 1000 + 250);
+                setVoiceStatus("Pausa breve de la lectura gratuita; continuaré desde la misma frase…");
+                window.setTimeout(() => void playFreeTtsChunk(), Math.max(2, retryAfter + 1) * 1000);
                 return;
               }
               finishWithoutGenericVoice(
-                "La lectura alcanzó el límite temporal del servicio gratuito. No se saltará el resto en silencio: el texto completo sigue disponible para leerlo o volver a intentarlo.",
+                "La lectura se detuvo por el límite temporal del servicio gratuito. El texto completo sigue visible; no se ha omitido deliberadamente ninguna parte ni se activará un servicio de pago.",
               );
               return;
             }
@@ -1151,6 +1156,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               if (audioBufferSource === source) audioBufferSource = null;
               requestController = null;
               chunkRetryCount = 0;
+              rateLimitWaitCount = 0;
               chunkIndex += 1;
               void playFreeTtsChunk();
             };
@@ -1192,6 +1198,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               clearAudioElement();
               requestController = null;
               chunkRetryCount = 0;
+              rateLimitWaitCount = 0;
               chunkIndex += 1;
               void playFreeTtsChunk();
             };

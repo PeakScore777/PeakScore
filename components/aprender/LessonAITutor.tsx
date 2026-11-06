@@ -13,6 +13,7 @@ import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
+const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -1471,7 +1472,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function requestLivePolicyReply(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false) {
-    const cleanUserText = userText.trim().slice(0, 1200);
+    const cleanUserText = userText.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
     const cleanReply = reply.trim();
     const channel = voiceChannelRef.current;
     if (!cleanUserText || !cleanReply || !voiceModeRef.current || !channel) {
@@ -2018,7 +2019,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function upsertVoiceUserMessage(value: string) {
-    const content = value.trim().slice(0, 1200);
+    const content = value.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
     if (!content) return;
     const id = voiceUserMessageIdRef.current ?? ("voice-user-" + Date.now());
     voiceUserMessageIdRef.current = id;
@@ -2116,7 +2117,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       ? serverContent.interimInputTranscription as { text?: unknown }
       : null;
     if (typeof interimInput?.text === "string") {
-      const interimText = interimInput.text.slice(0, 1200);
+      const interimText = interimInput.text.slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
       const unsupportedInterimScript = containsUnsupportedSpanishLanguage(interimText);
       voiceUnsupportedInputDetectedRef.current = unsupportedInterimScript;
       setLiveTranscript(unsupportedInterimScript ? "" : interimText);
@@ -2163,7 +2164,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const inputTranscript = serverContent.inputTranscription && typeof serverContent.inputTranscription === "object"
       ? serverContent.inputTranscription as { text?: unknown }
       : null;
-    const rawTranscript = typeof inputTranscript?.text === "string" ? inputTranscript.text.trim().slice(0, 1200) : "";
+    const rawTranscript = typeof inputTranscript?.text === "string" ? inputTranscript.text.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS) : "";
     const unsupportedInputScript = Boolean(rawTranscript && containsUnsupportedSpanishLanguage(rawTranscript));
     const unclearInput = Boolean(rawTranscript && isOrbyUnclearInput(rawTranscript));
     if (rawTranscript) voiceUnsupportedInputDetectedRef.current = unsupportedInputScript && !unclearInput;
@@ -2240,7 +2241,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceTurnPersistedRef.current = false;
       }
       const previousTranscript = voiceUserTextRef.current.trim();
-      voiceUserTextRef.current = mergeLiveTranscript(previousTranscript, transcript).slice(-1200);
+      voiceUserTextRef.current = mergeLiveTranscript(previousTranscript, transcript).slice(-MAX_VOICE_TRANSCRIPT_CHARS);
       const previousVoiceSubject = activeSubjectRef.current;
       const selectedVoiceSubject = getOrbySubjectSelectionLabel(voiceUserTextRef.current);
       if (!voiceUserMessageIdRef.current) voiceUserMessageIdRef.current = "voice-user-" + Date.now();
@@ -3220,7 +3221,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function activateTurnBasedVoiceFallback(reason: string, pendingUserText = "", appendUserMessage = true) {
-    const cleanPendingText = pendingUserText.trim().slice(0, 1200);
+    const cleanPendingText = pendingUserText.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
     const staleAssistantId = voiceAssistantMessageIdRef.current;
     if (staleAssistantId && !voiceResponseDoneRef.current) {
       setMessages((current) => current.filter((message) => message.id !== staleAssistantId));
@@ -4130,7 +4131,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!response.ok || typeof payload.transcript !== "string" || !payload.transcript.trim()) {
         throw new Error(payload.error || "No se pudo transcribir la nota de voz.");
       }
-      const transcript = payload.transcript.trim().slice(0, 1200);
+      const transcript = payload.transcript.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
       // In turn-based Whisper mode, ignore a speaker echo only while TTS is
       // actually playing or during the short acoustic tail after its final chunk.
       // A 25-second window swallowed valid "sí/no/¿por qué?" student turns.

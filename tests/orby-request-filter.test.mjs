@@ -56,6 +56,7 @@ const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowl
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
+const relatedKnowledgeMigration = await readFile(new URL("../supabase/migrations/20261031190000_orby_knowledge_profile_v2.sql", import.meta.url), "utf8");
 
 test("Orby divide respuestas largas sin reordenar frases ni exceder el límite TTS", () => {
   const answer = "Primera explicación completa. Segunda explicación también completa y extensa. Tercera explicación final.";
@@ -1351,6 +1352,13 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /preflightOrbyRequest\(item\.content, priorContext\)\.allowed/);
   assert.doesNotMatch(realtimeSessionSource, /const latestUserText/);
   assert.doesNotMatch(realtimeSessionSource, /const legacyOutOfScope/);
+});
+
+test("la recuperación de documentos relacionados no cruza las áreas de los documentos semilla", () => {
+  assert.match(relatedKnowledgeMigration, /seed_areas as/);
+  assert.match(relatedKnowledgeMigration, /where sa\.area = any/);
+  assert.match(relatedKnowledgeMigration, /jsonb_array_elements_text\(coalesce\(p\.areas, '\[\]'::jsonb\)\)/);
+  assert.match(relatedKnowledgeMigration, /create or replace function public\.orby_get_related_knowledge\(/);
 });
 
 test("el grafo conceptual de Orby Lab aplica el mismo aislamiento por materia que los fragmentos", () => {

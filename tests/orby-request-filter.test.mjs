@@ -1208,7 +1208,7 @@ test("la búsqueda de conocimiento conserva el aislamiento cuando falta el índi
   assert.equal(orbyKnowledgeSource.includes("retrying across published areas"), false);
   assert.equal(orbyKnowledgeSource.includes("subject: null"), false);
   assert.ok(knowledgeSearchRouteSource.includes('const preflightContext = subject ? "Área de estudio: " + subject : ""'));
-  assert.match(knowledgeSearchRouteSource, /const preflightContext = subject \\? "Área de estudio: " \\+ subject : ""/);
+  assert.ok(knowledgeSearchRouteSource.includes('const preflightContext = subject ? "Área de estudio: " + subject : "";'));
 });
 test("solo permite publicar cuando el perfil v2 y todos los embeddings están listos", () => {
   assert.equal(publication.isOrbyKnowledgePublicationReady({

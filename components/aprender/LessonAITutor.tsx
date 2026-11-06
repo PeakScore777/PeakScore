@@ -2366,6 +2366,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }),
         }),
       ]);
+      // Publish the conversation identity before Live can emit a resumption
+      // handle. Otherwise the first handle may be recorded against null while
+      // the microphone/worklet is still being prepared.
+      activeConversationRef.current = activeId;
       const tokenPayload = await tokenResponse.json().catch(() => ({}));
       if (!tokenResponse.ok || typeof tokenPayload.ephemeralToken !== "string") {
         throw new Error(tokenPayload.error || "No se pudo iniciar la sesión de voz.");

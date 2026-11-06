@@ -200,7 +200,7 @@ test("Orby continúa sin fuentes si los servicios públicos gratuitos no respond
 test("ambos canales integran investigación pública sin sustituir Orby Lab", () => {
   assert.match(lessonTutorRouteSource, /searchOrbyPublicSources\(researchQuery/);
   assert.match(lessonTutorRouteSource, /refersToPriorAcademicContext \? recentScopeContext/);
-  assert.match(lessonTutorRouteSource, /esa afirmacion\|ese dato\|esa cifra/);
+  assert.ok(lessonTutorRouteSource.includes("esa afirmacion") && lessonTutorRouteSource.includes("ese dato") && lessonTutorRouteSource.includes("esa cifra"));
   assert.match(liveToolsSource, /“esto”/);
   assert.match(liveToolsSource, /Resolve references such as/);
   assert.match(lessonTutorRouteSource, /INVESTIGACIÓN EXTERNA PÚBLICA/);
@@ -294,7 +294,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.doesNotMatch(voiceSpeechRouteSource, /pcm16ToWav/);
   assert.doesNotMatch(voiceSpeechRouteSource, /CLOUDFLARE_API_TOKEN|GROQ_API_KEY|api\.groq\.com/);
   assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
-  assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks"));
+  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks"));
   assert.ok(!lessonTutorSource.includes("waitForSpanishBrowserVoice"));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));
   assert.ok(lessonTutorSource.includes("voiceResponseSlowNoticeRef"));
@@ -315,7 +315,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("words.length <= 4"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(12_000)"));
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
-  assert.ok(lessonTutorSource.includes("splitSpeechIntoChunks(clean, 480)"));
+  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 480)"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
@@ -548,7 +548,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /Gemini Live finalizó sin entregar una transcripción utilizable/);
 
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
-  const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = rawReply", finalAudioValidationIndex);
+  const finalTranscriptIndex = lessonTutorSource.indexOf("voiceAssistantTextRef.current = replyWithSourceLinks", finalAudioValidationIndex);
   assert.ok(finalAudioValidationIndex >= 0 && finalTranscriptIndex > finalAudioValidationIndex);
 
   // Filtered Live output is replaced with a deterministic response; no second model call or alternate voice.
@@ -1340,7 +1340,7 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /pregunta académica nueva y sustantiva/);
   assert.match(realtimeSessionSource, /Si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
-  assert.match(liveToolsSource, /MUST call this before answering a new substantive academic question/);
+  assert.match(liveToolsSource, /MUST call this tool before answering a new substantive academic question/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
   assert.match(lessonTutorSource, /const query = toolQuery\.slice\(0, 2000\)/);
   assert.doesNotMatch(lessonTutorSource, /const currentTranscript = voiceUserTextRef\.current/);

@@ -73,6 +73,14 @@ test("Orby divide respuestas largas sin reordenar frases ni exceder el límite T
   assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("   ", 480), []);
 });
 
+test("Orby Lab también se consulta cuando el alumno pide fuentes de una duda anterior", () => {
+  assert.equal(filter.shouldRetrieveOrbyAcademicKnowledge({
+    message: "Dame fuentes de eso",
+    subject: "Ciencias Naturales",
+    context: "Área de estudio: Ciencias Naturales. Estamos explicando la fotosíntesis y la conversión de energía luminosa.",
+  }), true);
+});
+
 test("Orby reserva la búsqueda web para fuentes, actualidad e investigación externa", () => {
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Explícame la fotosíntesis con un ejemplo."), false);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Qué es una mitocondria?"), false);
@@ -145,6 +153,8 @@ test("ambos canales integran investigación pública sin sustituir Orby Lab", ()
   assert.match(lessonTutorRouteSource, /sources: publicSources/);
   assert.match(knowledgeSearchRouteSource, /searchOrbyPublicSources\(query/);
   assert.match(knowledgeSearchRouteSource, /shouldSearchOrbyPublicSources\(query\)/);
+  assert.match(knowledgeSearchRouteSource, /public_research_found: publicResearch\.sources\.length > 0/);
+  assert.match(knowledgeSearchRouteSource, /publicResearch\.sources\.length\s*\?/);
   assert.match(knowledgeSearchRouteSource, /public_sources: publicResearch\.sources/);
   assert.match(knowledgeSearchRouteSource, /Promise\.allSettled\(\[/);
   assert.match(lessonTutorRouteSource, /publicResearchPromise/);

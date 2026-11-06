@@ -1413,9 +1413,24 @@ export async function searchOrbyKnowledge(options: {
       p_limit: options.limit ?? 8,
     });
     if (fallback.error) throw new Error("Knowledge search failed: " + fallback.error.code);
-    return Array.isArray(fallback.data) ? fallback.data : [];
+    const fallbackRows = Array.isArray(fallback.data) ? fallback.data : [];
+    if (options.subject && fallbackRows.length === 0) {
+      return searchOrbyKnowledge({ ...options, subject: null });
+    }
+    return fallbackRows;
   }
-  return Array.isArray(data) ? data : [];
+  const rows = Array.isArray(data) ? data : [];
+  // A query can have a valid canonical subject index while the best matching
+  // material is categorized under a synonym or neighboring published label.
+  // If the scoped search finds no chunks, retry across published areas once.
+  if (options.subject && rows.length === 0) {
+    console.warn("[Orby RAG] No chunks matched the active subject; retrying across published areas.", {
+      requestedSubject: options.subject,
+      availableEmbeddingModels: indexedModels.length,
+    });
+    return searchOrbyKnowledge({ ...options, subject: null });
+  }
+  return rows;
 }
 
 export async function getOrbyRelatedKnowledge(

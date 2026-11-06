@@ -79,6 +79,10 @@ test("Orby Lab también se consulta cuando el alumno pide fuentes de una duda an
     subject: "Ciencias Naturales",
     context: "Área de estudio: Ciencias Naturales. Estamos explicando la fotosíntesis y la conversión de energía luminosa.",
   }), true);
+  assert.equal(filter.shouldRetrieveOrbyAcademicKnowledge({
+    message: "Quiero una investigación sobre la biodiversidad",
+    subject: "Ciencias Naturales",
+  }), true);
 });
 
 test("Orby reserva la búsqueda web para fuentes, actualidad e investigación externa", () => {

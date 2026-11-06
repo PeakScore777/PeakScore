@@ -65,10 +65,11 @@ test("la política de seguridad permite reproducir audio del mismo sitio y no bl
   assert.match(lessonTutorSource, /source\.start\(scheduledAt\)/);
 });
 
-test("la herramienta de conocimiento Live espera el resultado de Orby Lab", () => {
+test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recupera material", () => {
   assert.ok(liveToolsSource.includes('import { Behavior, Type, type Tool } from "@google/genai";'));
   assert.ok(liveToolsSource.includes('name: "search_orby_learning_knowledge"'));
-  assert.ok(liveToolsSource.includes("behavior: Behavior.BLOCKING"));
+  assert.ok(liveToolsSource.includes("behavior: Behavior.NON_BLOCKING"));
+  assert.doesNotMatch(liveToolsSource, /behavior: Behavior\.BLOCKING/);
   assert.ok(lessonTutorSource.includes('await fetch("/api/orby/knowledge-search"'));
   assert.ok(lessonTutorSource.includes("sendToolResponse({ functionResponses: responses })"));
 });

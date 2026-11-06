@@ -1355,10 +1355,12 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
 });
 
 test("la recuperación de documentos relacionados no cruza las áreas de los documentos semilla", () => {
-  assert.match(relatedKnowledgeMigration, /seed_areas as/);
-  assert.match(relatedKnowledgeMigration, /where sa\.area = any/);
-  assert.match(relatedKnowledgeMigration, /jsonb_array_elements_text\(coalesce\(p\.areas, '\[\]'::jsonb\)\)/);
-  assert.match(relatedKnowledgeMigration, /create or replace function public\.orby_get_related_knowledge\(/);
+  assert.match(conceptGraphMigration, /create or replace function public\.orby_get_related_knowledge\(/);
+  assert.match(conceptGraphMigration, /seed_areas as/);
+  assert.match(conceptGraphMigration, /where sa\.area = any/);
+  assert.match(conceptGraphMigration, /jsonb_array_elements_text\(coalesce\(p\.areas, '\[\]'::jsonb\)\)/);
+  assert.match(conceptGraphMigration, /as \$\$/);
+  assert.match(conceptGraphMigration, /\$\$;/);
 });
 
 test("el grafo conceptual de Orby Lab aplica el mismo aislamiento por materia que los fragmentos", () => {

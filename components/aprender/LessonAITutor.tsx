@@ -2708,9 +2708,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStreamRef.current = stream;
     stream.getAudioTracks().forEach((track) => {
       track.onended = () => {
-        if (!voiceModeRef.current) return;
-        setVoiceError("El micrófono dejó de enviar audio. Comprueba que siga conectado y que el navegador tenga permiso.");
-        setVoiceStatus("Micrófono desconectado");
+        // Ignore late ended events from a stream that has already been replaced.
+        if (!voiceModeRef.current || sessionGeneration !== voiceSessionGenerationRef.current
+          || voiceStreamRef.current !== stream) return;
+        fallbackVoiceTurnToText(
+          "El micrófono se desconectó. Conservé la pregunta pendiente y cambié al modo de voz por turnos; revisa el dispositivo y vuelve a tocar el micrófono para reconectarlo.",
+        );
       };
       track.onmute = () => {
         if (!voiceModeRef.current) return;

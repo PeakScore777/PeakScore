@@ -1332,11 +1332,11 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledge\(/);
   assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledgeConcepts\(/);
   assert.doesNotMatch(realtimeSessionSource, /learningSignalsPromise/);
-  assert.match(realtimeSessionSource, /BIBLIOTECA ACADÉMICA \(USO OBLIGATORIO CUANDO APLIQUE\)/);
+  assert.match(realtimeSessionSource, /ORBY LAB Y CONOCIMIENTO/);
   assert.match(realtimeSessionSource, /pregunta académica nueva y sustantiva/);
   assert.match(realtimeSessionSource, /Si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
-  assert.match(liveToolsSource, /MUST call this tool before answering a new substantive academic question/);
+  assert.match(liveToolsSource, /MUST call this tool before answering each new substantive academic question/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
   assert.match(lessonTutorSource, /const query = toolQuery\.slice\(0, 2000\)/);
   assert.doesNotMatch(lessonTutorSource, /const currentTranscript = voiceUserTextRef\.current/);

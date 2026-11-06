@@ -553,6 +553,13 @@ export function preflightOrbyRequest(message: string, previousContext = ""): Orb
     ICFES_CURRICULUM_CONTEXT_PATTERNS.some((pattern) => pattern.test(prior))
     || ORBY_STUDY_INVITATION_PATTERN.test(prior)
   );
+  const isFollowUpAfterRefusal = priorIsDeterministicRefusal && (
+    ICFES_FOLLOW_UP_PATTERN.test(normalized)
+    || STUDY_GUIDANCE_FOLLOW_UP_PATTERNS.some((pattern) => pattern.test(normalized))
+  );
+  if (isFollowUpAfterRefusal) {
+    return { allowed: false, category: "outside", reply: ORBY_ICFES_SCOPE_REPLY };
+  }
   const isContextualAcademicFollowUp = priorHasCurriculumAnchor
     && (ICFES_FOLLOW_UP_PATTERN.test(normalized) || CONTEXTUAL_STUDY_REQUEST_PATTERN.test(normalized) || isOrbyStudyGuidanceRequest(message, previousContext));
 

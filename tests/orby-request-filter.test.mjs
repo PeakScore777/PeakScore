@@ -166,7 +166,13 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.match(lessonTutorSource, /void speakText\(rawReply, messageIndex >= 0 \? messageIndex : messages\.length\)/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
   assert.match(lessonTutorSource, /void speakText\(data\.reply, nextMessages\.length\)/);
-  assert.match(lessonTutorSource, /Only register an assistant echo after real audio playback starts/);
+  assert.match(lessonTutorSource, /A failed speech segment must not cancel the remaining spoken answer/);
+  assert.match(lessonTutorSource, /Do not mark the chunk as lost before the retry has actually failed/);
+  assert.match(lessonTutorSource, /await ensureVoiceAudioContextRunning\\(voiceAudioContext\\)/);
+  assert.match(lessonTutorSource, /voiceAudioContext\\.decodeAudioData\\(await audioBlob\\.arrayBuffer\\(\\)\\)/);
+  assert.match(lessonTutorSource, /audioBufferSource = source/);
+  assert.match(lessonTutorSource, /voiceAudioSourcesRef\\.current\\.add\\(source\\)/);
+  assert.match(lessonTutorSource, /function recoverCurrentTtsChunk\\(\\)[\\s\\S]*?if \\(chunkRetryCount < 1\\)[\\s\\S]*?skippedAudioChunks = true/);
   assert.match(lessonTutorSource, /Do not expose this text as spoken audio until playback really starts/);
   assert.ok(lessonTutorSource.includes("speakWithVerifiedFreeTts(clean, index)"));
   assert.ok(lessonTutorSource.includes("await speakWithVerifiedFreeTts(clean, index);"));

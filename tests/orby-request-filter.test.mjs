@@ -585,7 +585,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.ok(finalAudioValidationIndex >= 0 && finalTranscriptIndex > finalAudioValidationIndex);
 
   // Filtered Live output is replaced with a deterministic response; no second model call or alternate voice.
-  assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
+  assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
   assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
@@ -800,13 +800,13 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory.slice\(-12\)/);
   assert.match(realtimeSessionSource, /habla y responde en español colombiano natural/);
-  assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false\)/);
+  assert.match(lessonTutorSource, /function respondToVoiceLocally\(userText: string, reply: string, appendUserMessage: boolean, replaceAssistantMessage = false, speak = true\)/);
   assert.match(lessonTutorSource, /voiceChannelRef\.current\?\.sendClientContent\(/);
   assert.match(lessonTutorSource, /turnComplete: false/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
   assert.match(lessonTutorSource, /Math\.min\(900_000, Math\.max\(30_000, clean\.length \* 110\)\)/);
   assert.match(lessonTutorSource, /voiceLastCommittedInputRef\.current = normalizeVoiceComparison\(cleanUserText\)/);
-  assert.match(lessonTutorSource, /respondToVoiceLocally\(voiceUserTextRef\.current, policyReply, false, true\)/);
+  assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, policyReply, false, true\)/);
   assert.match(lessonTutorSource, /hasExistingAssistant/);
   assert.doesNotMatch(lessonTutorSource, /voiceInternalPolicyTextRef|isInternalPolicySpeechEcho/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
@@ -820,6 +820,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
     "el cierre de reproducción se evalúa después de vaciar los fragmentos de audio Live");
   assert.match(lessonTutorSource, /needsSpeechFallback[\s\S]*?void speakText\(rawReply/);
+  assert.match(lessonTutorSource, /if \(forcedLiveReply\)[\s\S]*?respondToVoiceLocally\(pendingUserText, forcedPolicyReply, appendUserMessage, true, false\)/);
   assert.match(lessonTutorSource, /Gemini Live is primary\. For text-only turns, use/);
   assert.match(lessonTutorSource, /message\.role === "assistant" && !voiceMode/);
   assert.ok(orbyVoiceConfigSource.includes('const configuredVoice = process.env.ORBY_LIVE_VOICE_NAME?.trim()'));
@@ -1507,7 +1508,7 @@ test("el endpoint de persistencia de voz autentica al alumno y guarda turnos at�
 test("la voz responde localmente solo a rechazos deterministas y envía los turnos permitidos a Live", () => {
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
   const localFilterIndex = lessonTutorSource.indexOf("const localReply = !typedPreflight.allowed ? typedPreflight.reply : null", typedVoiceStart);
-  const localReplyIndex = lessonTutorSource.indexOf("respondToVoiceLocally(message, localReply, true)", typedVoiceStart);
+  const localReplyIndex = lessonTutorSource.indexOf("requestLivePolicyReply(message, localReply, true)", typedVoiceStart);
   const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
   const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");
   assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
@@ -1526,7 +1527,7 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
   assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.doesNotMatch(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
-  assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*respondToVoiceLocally\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
+  assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
   assert.match(lessonTutorSource, /hasPendingStudentTurn && !voiceLocalReplyInFlightRef\.current/);
   assert.match(lessonTutorSource, /!voicePendingStudentTurnRef\.current\s*\|\|\s*!voiceUserTextRef\.current\.trim\(\)\s*\|\|\s*voiceLocalReplyInFlightRef\.current/);
   assert.match(lessonTutorSource, /stopSpeaking\(\);/);

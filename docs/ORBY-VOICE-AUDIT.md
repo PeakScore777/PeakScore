@@ -102,6 +102,20 @@ La función `respondToVoiceLocally` terminaba llamando a `speakText`, que siempr
 
 Estos cambios son posteriores al CI previamente aprobado y necesitan una nueva ejecución completa antes de pedir otro Pull.
 
+## Voz nativa para respuestas de política — 2026-11-06
+
+Se detectó que los rechazos deterministas de alcance (programación, temas ajenos e idioma no admitido) terminaban en `respondToVoiceLocally` y solicitaban Gemini TTS por separado. Esto agotaba la cuota TTS aunque la sesión Gemini Live siguiera abierta.
+
+### Cambio aplicado
+
+- Se añadió `requestLivePolicyReply`: envía a la sesión Gemini Live ya abierta una instrucción acotada para pronunciar únicamente la respuesta de rechazo previamente aprobada.
+- La transcripción se compara con el prefijo exacto de la respuesta autorizada. Solo ese texto coincidente puede liberar el audio; una desviación continúa bloqueada por los filtros existentes.
+- Si Live no entrega audio válido, se conserva el rechazo por escrito y se vuelve a escuchar. No se llama a TTS para ese rechazo.
+- Se conectó este flujo a los rechazos de preflight por voz, filtros de transcripción final y mensajes escritos dentro de la sesión de voz.
+- Se añadieron pruebas de regresión para verificar que los tres puntos usan la ruta Live y mantienen el control de salida.
+
+La ruta local de texto sigue como contingencia si no existe un canal Live disponible. No se introduce ningún proveedor de pago ni se cambia la política de cuota gratuita.
+
 ## Criterios de aceptación
 
 1. Una sesión Live conectada no cambia prematuramente al respaldo TTS por un timeout corto.

@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { GoogleGenAI, Modality, type Session } from "@google/genai";
+import { GoogleGenAI, Modality, FunctionResponseScheduling, type Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { createWorker } from "tesseract.js";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
@@ -1867,7 +1867,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!Array.isArray(calls) || calls.length === 0) return;
 
     setVoiceStatus("Orby está consultando conocimiento académico…");
-    const responses: Array<{ id: string; name: string; response: Record<string, unknown> }> = [];
+    const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
 
     for (const rawCall of calls.slice(0, 3)) {
       if (!rawCall || typeof rawCall !== "object") continue;
@@ -1877,7 +1877,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!id || !name) continue;
 
       if (name !== "search_orby_learning_knowledge") {
-        responses.push({ id, name, response: { error: "Herramienta no disponible." } });
+        responses.push({ id, name, response: { error: "Herramienta no disponible." }, scheduling: FunctionResponseScheduling.WHEN_IDLE });
         continue;
       }
 
@@ -1895,7 +1895,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const toolQuery = typeof args.query === "string" ? args.query.trim().slice(0, 1600) : "";
       if (toolQuery.length < 3) {
-        responses.push({ id, name, response: { found: false, error: "No se recibió un tema académico claro." } });
+        responses.push({ id, name, response: { found: false, error: "No se recibió un tema académico claro." }, scheduling: FunctionResponseScheduling.WHEN_IDLE });
         continue;
       }
 
@@ -1929,6 +1929,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 ? result.error.slice(0, 240)
                 : "No se pudo consultar el material en este turno.",
             },
+            scheduling: FunctionResponseScheduling.WHEN_IDLE,
           });
           continue;
         }
@@ -1989,6 +1990,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             id,
             name,
             response: { found: false, guidance: "La búsqueda no estuvo disponible en este turno. Continúa con una explicación académica segura y no inventes que consultaste fuentes." },
+            scheduling: FunctionResponseScheduling.WHEN_IDLE,
           });
         }
       } finally {
@@ -2004,7 +2006,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!isCurrentToolTurn()) return;
       const toolSession = session as unknown as {
         sendToolResponse: (payload: {
-          functionResponses: Array<{ id: string; name: string; response: Record<string, unknown> }>;
+          functionResponses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }>;
         }) => void;
       };
       if (responses.length) toolSession.sendToolResponse({ functionResponses: responses });

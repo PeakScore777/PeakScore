@@ -519,13 +519,16 @@ export async function POST(request: Request) {
       profile_topics?: unknown;
       profile_pedagogical_knowledge?: unknown;
     };
-    // Only the current academic request and lesson metadata are eligible
-    // for public search. Never forward the conversation history to public APIs.
+    // Public research receives only a short topical query, never the raw chat history.
+    // For follow-ups such as "dame fuentes de eso", reuse the recent academic context;
+    // the research helper then reduces it to a small set of scrubbed topic keywords.
+    const refersToPriorAcademicContext = /\b(?:eso|esa explicacion|ese tema|el tema anterior|lo anterior|lo que explicaste|lo que vimos|lo que hablamos|de ese concepto|de ahi)\b/i.test(userMessage);
     const researchQuery = [
       userMessage,
       topic,
       question,
-    ].filter(Boolean).join(" ").slice(0, 1200);
+      refersToPriorAcademicContext ? recentScopeContext : "",
+    ].filter(Boolean).join(" ").slice(0, 1800);
     const shouldRunPublicResearch = shouldSearchOrbyPublicSources({
         message: userMessage,
         question,

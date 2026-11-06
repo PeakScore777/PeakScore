@@ -1648,9 +1648,9 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
     ?.split("const resumeTokenPayload")[0] ?? "";
   assert.ok(reconnectRequest.includes("conversationId: activeConversationRef.current ?? conversationId"));
   assert.ok(reconnectRequest.includes("history: messagesRef.current.slice(-12)"));
-  assert.match(realtimeTurnSource, /getOrbySubjectSelectionReply\\(userContent\\)/);
-  assert.match(realtimeTurnSource, /update\\(\\{ subject: selectedSubject \\}\\)/);
-  assert.match(realtimeTurnSource, /\\.eq\\("user_id", user\\.id\\)/);
+  assert.ok(realtimeTurnSource.includes("getOrbySubjectSelectionReply(userContent)"));
+  assert.ok(realtimeTurnSource.includes(".update({ subject: selectedSubject })"));
+  assert.ok(realtimeTurnSource.includes('.eq("user_id", user.id)'));
   assert.match(lessonTutorRouteSource, /getOrbyGreetingFollowUpReply\(\s*recentContextMessages\.map/);
   assert.notEqual(
     filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"),

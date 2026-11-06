@@ -744,8 +744,14 @@ test("el filtro de salida no marca una explicación de velocidad terminal como p
   );
 });
 
-test("mantiene el rechazo de solicitudes claramente ajenas a Saber 11", () => {
-  assert.equal(filter.preflightOrbyRequest("Dame una receta para hornear pan.").category, "outside");
+test("las preguntas ambiguas llegan al tutor para aclaración y las solicitudes externas explícitas siguen bloqueadas", () => {
+  const ambiguous = filter.preflightOrbyRequest("Háblame de fotografía.");
+  assert.equal(ambiguous.allowed, true);
+  assert.equal(ambiguous.reply, "");
+  assert.equal(filter.preflightOrbyRequest("¿Qué película me recomiendas?").allowed, false);
+  assert.equal(filter.preflightOrbyRequest("Dame una receta para hornear pan.").allowed, false);
+  assert.equal(filter.preflightOrbyRequest("Enséñame Python desde cero.").allowed, false);
+  assert.equal(filter.preflightOrbyRequest("¿Cómo hackeo una cuenta ajena?").allowed, false);
 });
 
 test("Orby conserva los seguimientos académicos y no hereda contexto de una negativa", () => {

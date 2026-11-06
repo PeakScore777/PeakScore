@@ -2094,9 +2094,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       interruptCurrentVoiceOutput();
     }
 
+    // A final transcript received while Orby is speaking is not
+    // automatically a valid interruption. Interim ASR already applies this
+    // confidence gate; the final ASR path must enforce the same rule or weak
+    // echo/VAD fragments are accidentally submitted despite the warning above.
+    const acceptFinalTranscript = Boolean(
+      transcript
+      && !isDuplicateFinalTranscript
+      && !isRecentAcousticEcho
+      && (!assistantAudioInFlight || isMeaningfulBargeIn),
+    );
+
     // Never return from the whole event handler for a duplicate transcript:
     // the same server event can also carry output audio or turnComplete.
-    if (transcript && !isDuplicateFinalTranscript && !isRecentAcousticEcho) {
+    if (acceptFinalTranscript) {
       waitingForVoiceReplyRef.current = true;
       voiceLastCommittedInputRef.current = normalizedFinal;
       voiceLastCommittedInputAtRef.current = Date.now();

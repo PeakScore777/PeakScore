@@ -1382,6 +1382,18 @@ test("Orby Lab nunca amplía silenciosamente una búsqueda vacía a otras materi
   assert.match(knowledgeSearchRouteSource, /normalizeIcfesSubject\("", query\) \?\? normalizeIcfesSubject\(subjectInput, query\)/);
 });
 
+test("la voz desbloquea AudioContext antes del permiso y lo conserva para el TTS de respaldo", () => {
+  const permissionIndex = lessonTutorSource.indexOf("navigator.mediaDevices.getUserMedia({");
+  const contextIndex = lessonTutorSource.indexOf("const audioContext = voiceAudioContextRef.current");
+  const resumeIndex = lessonTutorSource.indexOf("const audioContextReady = audioContext.state === \"suspended\"");
+  assert.ok(contextIndex >= 0 && resumeIndex > contextIndex && permissionIndex > resumeIndex,
+    "AudioContext.resume debe invocarse desde el gesto original antes de abrir el diálogo del micrófono.");
+  assert.match(lessonTutorSource, /stopRealtimeVoice\(false, true\)/,
+    "El fallback debe liberar Live sin cerrar el AudioContext desbloqueado.");
+  assert.match(lessonTutorSource, /function stopRealtimeVoice\(updateState = true, preserveAudioContext = false\)/);
+  assert.match(lessonTutorSource, /if \(!preserveAudioContext\) \{[\\s\\S]*?audioContext\.close\(\)/);
+});
+
 test("Gemini Live cancela búsquedas de conocimiento obsoletas y restaura el tema persistido", () => {
   assert.match(lessonTutorSource, /voiceKnowledgeRequestsRef = useRef<Map<string, AbortController>>/);
   assert.match(lessonTutorSource, /signal: requestController\.signal/);

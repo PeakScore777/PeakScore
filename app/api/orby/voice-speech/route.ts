@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       config: {
         responseModalities: ["AUDIO"],
         speechConfig: {
-          voiceConfig: { voice: ORBY_VOICE_NAME },
+          voiceConfig: { prebuiltVoiceConfig: { voiceName: ORBY_VOICE_NAME } },
         },
       },
     });

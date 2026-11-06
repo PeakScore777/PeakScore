@@ -91,6 +91,7 @@ test("Orby reserva la búsqueda web para fuentes, actualidad e investigación ex
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Resuelve esta ecuación paso a paso."), false);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Cuáles son las fuentes de energía renovable?"), false);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Dame fuentes de energía renovable para mi clase de Ciencias."), false);
+  assert.equal(publicResearch.shouldSearchOrbyPublicSources("Dame fuentes científicas sobre fuentes de energía renovable."), true);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Dame fuentes científicas sobre la fotosíntesis."), true);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("¿Qué estudios recientes explican el cambio climático?"), true);
   assert.equal(publicResearch.shouldSearchOrbyPublicSources("Verifica si este dato sigue vigente en 2026."), true);
@@ -115,6 +116,8 @@ test("Orby solo muestra las fuentes citadas y conserva su numeración original",
   assert.equal(result.sources.length, 1);
   assert.equal(result.sources[0].citationNumber, 2);
   assert.equal(result.sources[0].title, "Artículo dos");
+  const untrustedUrl = publicResearch.reconcileOrbyPublicCitations("La fuente dice [1](https://evil.example/track).", sources);
+  assert.equal(untrustedUrl.reply, "La fuente dice [1](https://es.wikipedia.org/wiki/Fuente_uno).");
 });
 
 test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confiables", async () => {

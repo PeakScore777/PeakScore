@@ -35,6 +35,12 @@ const SEARCH_STOP_WORDS = new Set([
   "una", "uno", "unos", "unas", "del", "las", "los", "el", "la", "y", "o", "en", "de", "al",
   "es", "son", "fue", "ser", "sea", "se", "un", "su", "sus", "mi", "mis", "me", "te", "lo",
   "explica", "explicame", "ensena", "ensename", "ayudame", "quiero", "saber", "entender",
+  "dame", "fuente", "fuentes", "referencia", "referencias", "bibliografia", "cita", "citas",
+  "articulo", "articulos", "paper", "papers", "publicacion", "publicaciones", "estudio", "estudios",
+  "investigacion", "investigaciones", "evidencia", "cientifico", "cientifica", "cientificos", "cientificas",
+  "reciente", "recientes", "actual", "actuales", "actualizado", "actualizada", "vigente", "verifica",
+  "verificar", "comprueba", "contrasta", "confirmar", "busca", "buscar", "investiga", "investigar",
+  "indaga", "indagar", "sobre", "acerca", "segun", "dato", "datos", "informe", "informes",
   "the", "what", "when", "where", "which", "how", "why", "is", "are", "of", "to", "in", "on",
   "and", "or", "for", "with", "about", "explain", "tell", "me", "please",
 ]);

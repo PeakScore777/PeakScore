@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { runInNewContext } from "node:vm";
 import ts from "typescript";
 
 async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = {}) {
@@ -2438,4 +2439,56 @@ test("Orby preserves conversation context and does not cap requested teaching de
   assert.match(voice, /\.limit\(20\)/);
   assert.match(voice, /safeHistory\.slice\(-12\)/);
   assert.match(tutor, /baseSignalQuery\.eq\("subject", signalSubject\)/);
+});
+
+
+test("AudioWorklet conserva la tasa PCM y los paquetes de 40 ms entre bloques de captura", async () => {
+  const workletSource = await readFile(new URL("../public/audio/orby-audio-capture.worklet.js", import.meta.url), "utf8");
+
+  for (const sampleRate of [44_100, 48_000]) {
+    const postedPackets = [];
+    let Processor;
+    class AudioWorkletProcessorMock {
+      constructor() {
+        this.port = {
+          postMessage(buffer) {
+            postedPackets.push(new Int16Array(buffer));
+          },
+        };
+      }
+    }
+
+    runInNewContext(workletSource, {
+      AudioWorkletProcessor: AudioWorkletProcessorMock,
+      registerProcessor(name, processor) {
+        assert.equal(name, "orby-audio-capture");
+        Processor = processor;
+      },
+      sampleRate,
+    });
+
+    assert.equal(typeof Processor, "function");
+    const processor = new Processor();
+    const frameCount = sampleRate;
+    let processedFrames = 0;
+    while (processedFrames < frameCount) {
+      const blockSize = Math.min(128, frameCount - processedFrames);
+      const input = new Float32Array(blockSize);
+      for (let index = 0; index < blockSize; index += 1) {
+        input[index] = Math.sin((processedFrames + index) * 0.017) * 0.7;
+      }
+      processor.process([[input]]);
+      processedFrames += blockSize;
+    }
+
+    const emittedSamples = postedPackets.reduce((total, packet) => total + packet.length, 0);
+    const bufferedSamples = processor.pendingPcm.length;
+    const totalSamples = emittedSamples + bufferedSamples;
+    const expectedSamples = Math.ceil((frameCount - 1) / (sampleRate / 16_000));
+
+    assert.ok(postedPackets.length > 0, "el worklet debe emitir audio durante la captura");
+    assert.ok(postedPackets.every((packet) => packet.length === 640), "cada paquete debe contener 640 muestras PCM");
+    assert.equal(totalSamples, expectedSamples, `no debe perder muestras a ${sampleRate} Hz`);
+    assert.ok(bufferedSamples < 640, "el remanente debe ser menor que un paquete de 40 ms");
+  }
 });

@@ -40,6 +40,7 @@ const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-s
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
 const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-config.ts", import.meta.url), "utf8");
 const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
 const cloudflareTranscriptionRoute = await readFile(new URL("../app/api/orby/audio/transcribe/route.ts", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const cloudflareImageRouteSource = await readFile(new URL("../app/api/orby/generate-image/route.ts", import.meta.url), "utf8");
@@ -967,6 +968,22 @@ test("Orby evita RAG en conversación casual y lo activa para temas y seguimient
     subject: "Lectura Crítica",
     topic: "Comprensión lectora",
   }), false);
+  assert.equal(retrieve({
+    message: "What does 'however' mean in this passage?",
+    subject: "Inglés",
+  }), true);
+  assert.equal(retrieve({
+    message: "According to the text, what is the main idea?",
+    subject: "Inglés",
+  }), true);
+  assert.equal(retrieve({
+    message: "What was the Cold War?",
+    subject: "Sociales y Ciudadanas",
+  }), true);
+  assert.equal(retrieve({
+    message: "What is the weather today?",
+    subject: "Inglés",
+  }), false);
 });
 
 test("solo permite publicar cuando el perfil v2 y todos los embeddings están listos", () => {
@@ -1092,8 +1109,12 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledge\(/);
   assert.doesNotMatch(realtimeSessionSource, /searchOrbyKnowledgeConcepts\(/);
   assert.doesNotMatch(realtimeSessionSource, /learningSignalsPromise/);
-  assert.match(realtimeSessionSource, /BIBLIOTECA ACADÉMICA: consulta la herramienta de conocimiento publicada de PeakScore/);
+  assert.match(realtimeSessionSource, /BIBLIOTECA ACADÉMICA \(USO OBLIGATORIO CUANDO APLIQUE\)/);
+  assert.match(realtimeSessionSource, /pregunta académica nueva y sustantiva/);
+  assert.match(realtimeSessionSource, /si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
+  assert.match(liveToolsSource, /MUST call this before answering a new substantive academic question/);
+  assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
   assert.match(realtimeSessionSource, /tools: ORBY_LIVE_KNOWLEDGE_TOOLS/);
   assert.match(realtimeSessionSource, /authTokens\.create/);
   assert.match(realtimeSessionSource, /const safeHistory: Array/);

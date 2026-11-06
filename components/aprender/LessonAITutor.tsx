@@ -1718,6 +1718,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   async function handleOrbyLiveKnowledgeTool(toolCall: unknown) {
     const session = voiceChannelRef.current;
     if (!session || !toolCall || typeof toolCall !== "object") return;
+    // A knowledge lookup belongs only to the Live session and student turn
+    // that requested it. Barge-in, a new student activity, or reconnection
+    // invalidates the result so old material cannot leak into a newer answer.
+    const sessionGeneration = voiceSessionGenerationRef.current;
+    const activityGeneration = voiceActivityGenerationRef.current;
+    const isCurrentToolTurn = () =>
+      voiceChannelRef.current === session
+      && voiceSessionGenerationRef.current === sessionGeneration
+      && voiceActivityGenerationRef.current === activityGeneration;
 
     const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
     if (!Array.isArray(calls) || calls.length === 0) return;
@@ -1770,6 +1779,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           body: JSON.stringify({ query, subject: requestedSubject }),
         });
         const result = await response.json().catch(() => ({}));
+        if (!isCurrentToolTurn()) return;
         if (!response.ok) {
           responses.push({
             id,
@@ -1844,6 +1854,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     try {
+      // Recheck immediately before delivery: an older async lookup must never
+      // answer a newer turn or send tool output into a replaced socket.
+      if (!isCurrentToolTurn()) return;
       const toolSession = session as unknown as {
         sendToolResponse: (payload: {
           functionResponses: Array<{ id: string; name: string; response: Record<string, unknown> }>;

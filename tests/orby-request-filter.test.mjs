@@ -1648,6 +1648,13 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeSessionSource.includes('from("orby_messages")'));
   assert.ok(realtimeSessionSource.includes("body?.conversationId"));
   assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current ?? conversationId"));
+  assert.ok(lessonTutorSource.includes("const activeSubjectRef = useRef(subject)"));
+  assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(first.subject, messagesPayload.messages)"));
+  assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages)"));
+  assert.ok(lessonTutorSource.includes("getOrbySubjectSelectionLabel(item.content)"));
+  assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, activeSubjectRef.current)"));
+  assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(message, typedVoiceContext, activeSubjectRef.current)"));
+  assert.ok(lessonTutorSource.includes("const selectedSubject = getOrbySubjectSelectionLabel(message)"));
   const liveStartup = lessonTutorSource
     .split("async function startRealtimeVoice")[1]
     ?.split("function toggleVoiceMute")[0] ?? "";

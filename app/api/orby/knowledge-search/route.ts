@@ -32,7 +32,9 @@ export async function POST(request: Request) {
     const subjectInput = typeof body.subject === "string" ? body.subject.slice(0, 80) : "";
     if (query.length < 3) return fail("Escribe un tema académico más concreto.", 400);
 
-    const subject = normalizeIcfesSubject(subjectInput, query);
+    // Prefer the subject explicitly present in this question over the
+    // stale subject supplied by a conversation that may just have switched.
+    const subject = normalizeIcfesSubject("", query) ?? normalizeIcfesSubject(subjectInput, query);
     // English-language exam stems are valid inside English and the other
     // active Saber 11 areas. Pass the active area to the same academic-frame
     // classifier used by the tutor so a safe English question is not blocked

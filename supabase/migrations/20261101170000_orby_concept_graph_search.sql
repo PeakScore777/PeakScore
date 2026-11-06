@@ -34,9 +34,29 @@ as $$
   eligible as (
     select d.id, d.title, d.subject, d.topic
     from public.orby_knowledge_documents d
-    where
+    left join public.orby_knowledge_profiles p on p.document_id = d.id
+    where (
       (p_visibility = 'admin' and d.status in ('draft','published'))
       or (p_visibility = 'published' and d.status = 'published')
+    )
+    and (
+      p_subject is null
+      or d.subject = p_subject
+      or exists (
+        select 1
+        from pg_catalog.jsonb_array_elements_text(coalesce(p.areas, '[]'::jsonb)) as area(value)
+        where lower(btrim(area.value)) = any (
+          case lower(btrim(p_subject))
+            when 'matemáticas' then array['matemáticas','matematicas','álgebra','algebra','aritmética','aritmetica','geometría','geometria','estadística','estadistica','probabilidad','razonamiento cuantitativo','razonamiento lógico','razonamiento logico','física/matemáticas']
+            when 'lectura crítica' then array['lectura crítica','lectura critica','lenguaje','literatura','humanidades','análisis textual','analisis textual','análisis de la imagen','analisis de la imagen']
+            when 'sociales y ciudadanas' then array['sociales y ciudadanas','ciencias sociales','ciencias sociales y competencias ciudadanas','competencias ciudadanas','historia','historia de colombia','historia/política','historia/politica','geografía','geografia','economía','economia','economía y política','economia y politica','ciencias políticas','ciencias politicas','ética y ciudadanía','etica y ciudadania','ética y política','etica y politica','constitución política de colombia','constitucion politica de colombia','constitución política','constitucion politica','derecho constitucional','derechos humanos','antropología','antropologia','filosofía','filosofia','psicología','psicologia']
+            when 'ciencias naturales' then array['ciencias naturales','física','fisica','química','quimica','biología','biologia','biología celular','biologia celular','biología molecular','biologia molecular','genética','genetica','ecología','ecologia','ciencias ambientales','bioquímica','bioquimica','microbiología','microbiologia','fisiología','fisiologia','química orgánica','quimica organica','estequiometría','estequiometria','electromagnetismo','cinemática','cinematica','mecánica clásica','mecanica clasica','termodinámica','termodinamica','electricidad','óptica','optica']
+            when 'inglés' then array['inglés','ingles','english language']
+            else array[lower(btrim(p_subject))]
+          end
+        )
+      )
+    )
   ),
   indexed as (
     select

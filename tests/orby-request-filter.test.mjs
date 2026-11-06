@@ -1359,8 +1359,8 @@ test("la recuperación de documentos relacionados no cruza las áreas de los doc
   assert.match(conceptGraphMigration, /seed_areas as/);
   assert.match(conceptGraphMigration, /where sa\.area = any/);
   assert.match(conceptGraphMigration, /jsonb_array_elements_text\(coalesce\(p\.areas, '\[\]'::jsonb\)\)/);
-  assert.match(conceptGraphMigration, /as \$\$/);
-  assert.match(conceptGraphMigration, /\$\$;/);
+  assert.match(conceptGraphMigration, /as \$orby\$/);
+  assert.match(conceptGraphMigration, /\$orby\$;/);
 });
 
 test("el grafo conceptual de Orby Lab aplica el mismo aislamiento por materia que los fragmentos", () => {

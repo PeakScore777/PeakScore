@@ -145,6 +145,22 @@ test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confi
   assert.match(result.sources.find((item) => item.kind === "research").excerpt, /La fotosíntesis transforma luz en energía química/);
   const naturalLanguageResult = await publicResearch.searchOrbyPublicSources("Dame fuentes científicas sobre la fotosíntesis.", { fetcher, maxSources: 3 });
   assert.ok(naturalLanguageResult.sources.some((item) => item.title.includes("Fotosíntesis")), "La intención de pedir fuentes no debe ocultar el tema académico en el ranking.");
+  const englishAbstractFetcher = async (input) => {
+    const url = new URL(String(input));
+    if (url.hostname === "es.wikipedia.org") return new Response(JSON.stringify({ pages: [] }), { status: 200 });
+    if (url.hostname === "api.openalex.org") return new Response(JSON.stringify({ results: [{
+      id: "https://openalex.org/W987654321",
+      doi: "https://doi.org/10.1000/photosynthesis",
+      title: "Photosynthesis in terrestrial plants",
+      publication_year: 2023,
+      abstract_inverted_index: { "Photosynthesis": [0], "converts": [1], "light": [2], "energy": [3], "into": [4], "chemical": [5], "in": [6], "plants": [7], "and": [8], "algae": [9], "during": [10], "the": [11], "day": [12] },
+      primary_location: { source: { display_name: "Plant Science Journal" } },
+    }] }), { status: 200 });
+    throw new Error("Host no permitido");
+  };
+  const englishAbstractResult = await publicResearch.searchOrbyPublicSources("fotosíntesis", { fetcher: englishAbstractFetcher });
+  assert.equal(englishAbstractResult.sources.length, 1);
+  assert.equal(englishAbstractResult.sources[0].title, "Photosynthesis in terrestrial plants");
 });
 
 test("Orby encuentra publicaciones en inglés para consultas académicas en español", async () => {
@@ -192,6 +208,8 @@ test("Orby continúa sin fuentes si los servicios públicos gratuitos no respond
 
 test("ambos canales integran investigación pública sin sustituir Orby Lab", () => {
   assert.match(lessonTutorRouteSource, /searchOrbyPublicSources\(researchQuery/);
+  assert.match(lessonTutorRouteSource, /refersToPriorAcademicContext \? recentScopeContext/);
+  assert.match(liveToolsSource, /Resolve references such as/);
   assert.match(lessonTutorRouteSource, /INVESTIGACIÓN EXTERNA PÚBLICA/);
   assert.match(lessonTutorRouteSource, /shouldSearchOrbyPublicSources\(\{/);
   assert.match(lessonTutorRouteSource, /const shouldRunPublicResearch = shouldSearchOrbyPublicSources/);

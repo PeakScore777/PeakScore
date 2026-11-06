@@ -3088,7 +3088,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const typedVoiceContext = [
         ...messagesRef.current.slice(-8).map(({ role, content }) => role + ": " + content),
         voiceLastAssistantOutputRef.current,
-        "Área de estudio: " + activeSubjectRef.current,
+        "Área de estudio: " + previousActiveSubject,
         "Tema de estudio: " + topic,
         question,
         context,

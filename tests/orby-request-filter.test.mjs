@@ -28,7 +28,7 @@ const ttsAudio = await loadTypeScriptModule("../lib/ai/orby-tts-audio.ts");
 const saber11Level = await loadTypeScriptModule("../lib/ai/orby-saber11-level.ts");
 const parallelWorkersMigration = await readFile(new URL("../supabase/migrations/20261102210000_orby_parallel_manual_autopilot_workers.sql", import.meta.url), "utf8");
 const manualPriorityMigration = await readFile(new URL("../supabase/migrations/20261102213000_orby_manual_priority_shared_queue_handoff.sql", import.meta.url), "utf8");
-const chunkCapacityMigration = await readFile(new URL("../supabase/migrations/20261102220000_orby_knowledge_chunk_capacity.sql", import.meta.url), "utf8");
+const chunkCapacityMigration = await readFile(new URL("../supabase/migrations/20261106021730_orby_knowledge_chunk_capacity.sql", import.meta.url), "utf8");
 const knowledgeWorkerSource = await readFile(new URL("../lib/ai/orby-knowledge-worker.ts", import.meta.url), "utf8");
 const knowledgeQueueSource = await readFile(new URL("../lib/ai/orby-knowledge-queue.ts", import.meta.url), "utf8");
 const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
@@ -50,7 +50,7 @@ const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby
 const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
-const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261102230000_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
+const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 
 test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareVoiceSource.includes('import "server-only"'));
@@ -381,6 +381,17 @@ test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre"
   assert.match(filter.getOrbySubjectSelectionReply("sociales"), /Sociales y Ciudadanas/);
   assert.match(filter.getOrbySubjectSelectionReply("naturales"), /Ciencias Naturales/);
   assert.match(filter.getOrbySubjectSelectionReply("inglés"), /Inglés/);
+  const selectedEnglishHistory = [
+    "user: en inglés",
+    "assistant: ¡Claro! Vamos a estudiar el componente de Inglés de Saber 11.",
+    "user: sí",
+    "assistant: Empecemos con una pregunta tipo ICFES.",
+  ].join("\n");
+  assert.equal(filter.isOrbySubjectAlreadyActive("en inglés", selectedEnglishHistory), true);
+  assert.equal(filter.getOrbySubjectSelectionReply("en inglés", selectedEnglishHistory), null);
+  assert.match(filter.getOrbyGreetingFollowUpReply(selectedEnglishHistory), /Seguimos con Inglés/);
+  assert.equal(filter.getOrbySubjectSelectionReply("lectura", selectedEnglishHistory), null);
+  assert.equal(filter.getOrbySubjectSelectionReply("en inglés", "", "Preparación Saber 11")?.includes("Saber 11"), true);
   assert.equal(filter.getOrbySubjectSelectionReply("enséñame a programar"), null);
   assert.equal(filter.getOrbySubjectSelectionReply("¿qué película me recomiendas?"), null);
 });
@@ -1611,6 +1622,12 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.equal(filter.preflightOrbyRequest("Ya", context).allowed, true);
   assert.match(filter.getOrbySubjectSelectionReply("en inglés"), /Inglés de Saber 11/);
   assert.match(filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"), /Sigamos con tu preparación/);
+  assert.ok(lessonTutorRouteSource.includes("getOrbyGreetingFollowUpReply("));
+  assert.ok(lessonTutorRouteSource.includes('from("orby_messages")'));
+  assert.ok(lessonTutorRouteSource.includes("isOrbySubjectAlreadyActive("));
+  assert.ok(realtimeSessionSource.includes('from("orby_messages")'));
+  assert.ok(realtimeSessionSource.includes("body?.conversationId"));
+  assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current ?? conversationId"));
   assert.ok(lessonTutorRouteSource.includes("getOrbyGreetingFollowUpReply(recentContextMessages"));
   assert.notEqual(
     filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"),

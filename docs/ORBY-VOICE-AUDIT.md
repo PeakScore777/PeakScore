@@ -138,3 +138,12 @@ También se detectó que `track.onended` solo mostraba un aviso aunque el micró
 ## Seguridad y alcance
 
 Los fragmentos recuperados del Lab son datos de referencia, nunca instrucciones capaces de modificar rol, alcance o políticas del tutor. No se deben enseñar programación ni promocionar otros preICFES. No se modifican secretos, permisos de cuentas, configuración de facturación ni producción durante esta auditoría.
+
+
+## Incidencia nueva: interrupción durante la respuesta y latencia percibida
+
+En la revisión del video del 6 de noviembre se identificó un caso concreto de cruce de turnos: si el estudiante interrumpe el audio de Live y el primer evento reconocible es la transcripción final (sin una transcripción intermedia fuerte), el manejador cancelaba la respuesta anterior pero conservaba `voiceUserTextRef`. El siguiente texto final podía fusionarse con la pregunta anterior. Ahora la interrupción limpia también el texto del estudiante; el flujo que recibe la transcripción nueva la asigna después como un turno independiente. La respuesta parcial anterior se elimina cuando corresponde y los identificadores del nuevo turno no reutilizan los del anterior.
+
+La latencia no se debe declarar resuelta por este cambio. El flujo actual espera la generación de Live y valida una frase completa antes de liberar audio, mientras que el chat por turnos espera retrieval académico y generación antes de mostrar la respuesta. Se conserva esa validación de seguridad; no se reduce a ciegas ni se habilitan proveedores facturables. La siguiente medición debe separar tiempo de cierre de voz, primer texto, primer audio y final de respuesta en Chrome real.
+
+**Prueba añadida:** regresión estática que exige limpiar el texto anterior al interrumpir y verifica que el transcript final nuevo se fusiona después de esa limpieza. No sustituye una prueba acústica en navegador.

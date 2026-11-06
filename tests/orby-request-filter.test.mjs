@@ -59,8 +59,8 @@ const conceptGraphMigration = await readFile(new URL("../supabase/migrations/202
 const relatedKnowledgeMigration = await readFile(new URL("../supabase/migrations/20261031190000_orby_knowledge_profile_v2.sql", import.meta.url), "utf8");
 
 test("la política de seguridad permite reproducir audio del mismo sitio y no bloquea la voz de Orby", () => {
-  assert.match(nextConfigSource, /autoplay=\\(self\\)/);
-  assert.doesNotMatch(nextConfigSource, /autoplay=\\(\\)/);
+  assert.match(nextConfigSource, /autoplay=\(self\)/);
+  assert.doesNotMatch(nextConfigSource, /autoplay=\(\)/);
   assert.match(lessonTutorSource, /await ensureVoiceAudioContextRunning\\(voiceAudioContext\\)/);
   assert.match(lessonTutorSource, /source\\.start\\(scheduledAt\\)/);
 });
@@ -886,7 +886,7 @@ test("el tutor usa Cloudflare directamente y no hace fallback a modelos de pago"
   assert.match(cloudflareVoiceSource, /API_TOKEN_MISSING/);
   assert.match(cloudflareTutorRoute, /error\.code === "ACCOUNT_ID_INVALID"/);
   assert.match(cloudflareTutorRoute, /error\.code === "API_TOKEN_MISSING"/);
-  assert.match(cloudflareTutorRoute, /no es el ID de zona/);
+  assert.match(cloudflareTutorRoute, /no el ID de zona/);
 });
 
 test("permite contenido científico legítimo que contiene vocabulario ambiguo", () => {

@@ -2601,7 +2601,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Conectando con Orby…");
       let googleAI = new GoogleGenAI({
         apiKey: tokenPayload.ephemeralToken,
-        httpOptions: { apiVersion: "v1alpha" },
+        httpOptions: { apiVersion: "v1beta" },
       });
 
       let rejectSetup: ((error: Error) => void) | null = null;
@@ -2911,7 +2911,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               }
               googleAI = new GoogleGenAI({
                 apiKey: resumeTokenPayload.ephemeralToken,
-                httpOptions: { apiVersion: "v1alpha" },
+                httpOptions: { apiVersion: "v1beta" },
               });
               const resumedSession = await googleAI.live.connect({
                 model,

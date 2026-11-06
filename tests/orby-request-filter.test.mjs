@@ -125,6 +125,8 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
   assert.match(lessonTutorSource, /Orby está completando la explicación con el material del Lab/);
   assert.match(realtimeSessionSource, /SEGUIMIENTO DEL LAB ASÍNCRONO/);
   assert.match(realtimeSessionSource, /no repitas toda la respuesta/);
+  assert.match(lessonTutorSource, /reconnectLiveSession = async \(\) => \{[\s\S]{0,650}voiceKnowledgeToolTurnRef\.current\.pending[\s\S]{0,500}fallbackVoiceTurnToText\("La conexión se renovó mientras Orby consultaba el Lab/);
+  assert.match(lessonTutorSource, /toolCallCancellation[\s\S]{0,1100}fallbackVoiceTurnToText\("La consulta del Lab se canceló/);
 });
 
 test("una respuesta Live lenta no fuerza TTS si el canal sigue conectado", () => {

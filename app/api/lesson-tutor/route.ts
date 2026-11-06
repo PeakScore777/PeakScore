@@ -475,7 +475,11 @@ export async function POST(request: Request) {
     // vector search, concept graph and student-profile queries for greetings or
     // safe everyday conversation; fetch them only when the current request needs
     // an explanation, exercise, or an identifiable Saber 11 concept.
-    const detectedSubject = normalizeIcfesSubject(subject, [
+    // The current student's explicit subject mention outranks the previous
+    // conversation subject. Otherwise a Maths conversation could keep sending
+    // a Chemistry question to the Maths knowledge index.
+    const currentTurnSubject = normalizeIcfesSubject("", [userMessage, question, topic].filter(Boolean).join(" "));
+    const detectedSubject = currentTurnSubject ?? normalizeIcfesSubject(subject, [
       topic,
       question,
       userMessage,

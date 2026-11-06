@@ -390,7 +390,7 @@ test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre"
   assert.equal(filter.isOrbySubjectAlreadyActive("en inglés", selectedEnglishHistory), true);
   assert.equal(filter.getOrbySubjectSelectionReply("en inglés", selectedEnglishHistory), null);
   assert.match(filter.getOrbyGreetingFollowUpReply(selectedEnglishHistory), /Seguimos con Inglés/);
-  assert.equal(filter.getOrbySubjectSelectionReply("lectura", selectedEnglishHistory), null);
+  assert.match(filter.getOrbySubjectSelectionReply("lectura", selectedEnglishHistory) ?? "", /Lectura Crítica/);
   assert.equal(filter.getOrbySubjectSelectionReply("en inglés", "", "Preparación Saber 11")?.includes("Saber 11"), true);
   assert.equal(filter.getOrbySubjectSelectionReply("enséñame a programar"), null);
   assert.equal(filter.getOrbySubjectSelectionReply("¿qué película me recomiendas?"), null);
@@ -927,6 +927,21 @@ test("Orby evita RAG en conversación casual y lo activa para temas y seguimient
     message: "",
     question: "Analiza la intención comunicativa de este diálogo de Inglés.",
     subject: "Inglés",
+  }), true);
+  assert.equal(retrieve({
+    message: "sí",
+    subject: "Preparación Saber 11",
+    context: "Área de estudio: Inglés. Orby preguntó: ¿Empezamos con un aviso publicitario?",
+  }), true);
+  assert.equal(retrieve({
+    message: "no sé",
+    subject: "Preparación Saber 11",
+    context: "Área de estudio: Inglés. Orby preguntó: ¿Qué significa 20% off?",
+  }), true);
+  assert.equal(retrieve({
+    message: "comencemos",
+    subject: "Preparación Saber 11",
+    context: "Área de estudio: Lectura Crítica. Orby preguntó: ¿Leemos el texto?",
   }), true);
   assert.equal(retrieve({
     message: "¿Qué película me recomiendas?",

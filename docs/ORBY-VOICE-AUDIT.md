@@ -56,6 +56,21 @@ Los filtros deben detener solicitudes claramente ajenas al tutor, pero dejar pas
 - Se añadieron pruebas estáticas para la espera de la herramienta y el comportamiento del watchdog.
 - Estos cambios están en `feat/founder-intro`; todavía no se han validado con CI ni con una prueba manual de navegador.
 
+## Resultado de CI — 2026-11-06
+
+Commit validado: `cef451f36889ca449448f3046c01e20db86a0ff2`.
+
+Ejecución de GitHub Actions: https://github.com/PeakScore777/PeakScore/actions/runs/42300838516
+
+- Pruebas de regresión de Orby: aprobadas.
+- TypeScript: aprobado.
+- ESLint: aprobado.
+- Build de producción Next.js: aprobado.
+- Auditoría de dependencias: completada correctamente.
+- La compuerta de auditoría de dependencias se omitió porque el flujo no necesitó aplicar una actualización adicional.
+
+**Alcance de esta validación:** confirma las pruebas automatizadas y la compilación del commit. No sustituye una prueba manual de conversación prolongada, interrupción, reconexión y agotamiento de cuotas en un navegador real.
+
 ## Criterios de aceptación
 
 1. Una sesión Live conectada no cambia prematuramente al respaldo TTS por un timeout corto.

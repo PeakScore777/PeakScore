@@ -2520,11 +2520,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         sessionResumption: resumeHandle ? { handle: resumeHandle } : {},
         tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
         inputAudioTranscription: {
-          languageCodes: ["es-US"],
+          // The student may read an English ICFES item aloud inside a Spanish
+          // conversation. Automatic multilingual recognition preserves both
+          // languages; output transcription and spoken answers stay Spanish.
+          languageCodes: [],
           customVocabulary: [
             "Orby", "Oye Orby", "Hey Orby", "Orby AI", "PeakScore",
             "Saber 11", "ICFES", "Matemáticas", "Lectura Crítica",
             "Sociales y Ciudadanas", "Ciencias Naturales",
+            "however", "although", "unless", "despite", "therefore", "because",
+            "instead", "purpose", "main idea", "according to", "advertisement",
+            "announcement", "notice", "discount", "schedule", "vacancy",
+            "application", "instructions", "conversation", "dialogue", "paragraph",
+            "passage", "statement", "true or false", "fill in the blank",
+            "present simple", "past simple", "present perfect", "phrasal verb",
+            "preposition", "pronoun", "conjunction", "adjective", "adverb",
           ],
         },
         outputAudioTranscription: { languageCodes: ["es-US"] },

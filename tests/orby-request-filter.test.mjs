@@ -533,7 +533,7 @@ test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o 
   assert.match(lessonTutorSource, /const authenticationFailure = .*401.*403/);
   assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
   assert.match(lessonTutorSource, /La voz en tiempo real no está disponible ahora\. Continúo por turnos sin perder tu conversación/);
-  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current, voiceScopeContext, activeSubjectRef\.current\)/);
+  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current, voiceScopeContext, previousVoiceSubject\)/);
   assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message, typedVoiceContext, activeSubjectRef\.current\)/);
   assert.match(lessonTutorRouteSource, /getOrbySubjectSelectionReply\(\s*userMessage,\s*recentContextMessages/);
 });
@@ -1684,7 +1684,7 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(first.subject, messagesPayload.messages)"));
   assert.ok(lessonTutorSource.includes("restoreActiveSubjectFromStoredConversation(selectedConversation?.subject, payload.messages)"));
   assert.ok(lessonTutorSource.includes("getOrbySubjectSelectionLabel(item.content)"));
-  assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, activeSubjectRef.current)"));
+  assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject)"));
   assert.ok(lessonTutorSource.includes("isOrbySubjectAlreadyActive(message, typedVoiceContext, activeSubjectRef.current)"));
   assert.ok(lessonTutorSource.includes("const selectedSubject = getOrbySubjectSelectionLabel(message)"));
   const liveStartup = lessonTutorSource

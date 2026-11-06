@@ -187,8 +187,8 @@ export async function POST(request: Request) {
           .filter((item: unknown): item is TutorMessage => !!item && typeof item === "object"
             && ((item as TutorMessage).role === "user" || (item as TutorMessage).role === "assistant")
             && typeof (item as TutorMessage).content === "string")
-          .slice(-12)
-          .map((item: TutorMessage) => ({ role: item.role, content: item.content.slice(0, 1200) }))
+          .slice(-20)
+          .map((item: TutorMessage) => ({ role: item.role, content: item.content.slice(0, 1600) }))
       : [];
 
     // Supabase is the source of truth for an existing conversation. The
@@ -201,7 +201,7 @@ export async function POST(request: Request) {
         .eq("conversation_id", conversationId)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(12);
+        .limit(20);
       if (historyReadError) {
         console.error("[Orby Tutor] Authoritative conversation history unavailable.", { code: historyReadError.code });
       } else if (Array.isArray(storedMessages) && storedMessages.length) {
@@ -209,7 +209,7 @@ export async function POST(request: Request) {
           .reverse()
           .filter((item): item is TutorMessage => (item.role === "user" || item.role === "assistant")
             && typeof item.content === "string")
-          .map((item) => ({ role: item.role, content: item.content.slice(0, 1200) }));
+          .map((item) => ({ role: item.role, content: item.content.slice(0, 1600) }));
       }
     }
     const normalizedIdentityPrompt = userMessage.normalize("NFD")
@@ -484,7 +484,7 @@ export async function POST(request: Request) {
       topic,
       question,
       userMessage,
-      ...history.slice(-8).map((item) => item.content),
+      ...history.slice(-12).map((item) => item.content),
     ].filter(Boolean).join(" "));
     // Persist an explicit subject switch so the next short follow-up or greeting
     // cannot silently fall back to the previous lesson's subject.

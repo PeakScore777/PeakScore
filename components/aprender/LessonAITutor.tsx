@@ -2148,32 +2148,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : !preflight.allowed
             ? "outside"
             : null;
-      const subjectAlreadyActive = isOrbySubjectAlreadyActive(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject);
-      const subjectSelectionReply = getOrbySubjectSelectionReply(voiceUserTextRef.current, voiceScopeContext, previousVoiceSubject);
-      const activeSubjectReply = subjectAlreadyActive && !isOrbyGreetingRequest(voiceUserTextRef.current)
-        ? getOrbyGreetingFollowUpReply(voiceScopeContext, previousVoiceSubject)
-        : null;
-      const studyGuidanceReply = isOrbyStudyGuidanceRequest(voiceUserTextRef.current, voiceScopeContext)
-        ? ORBY_STUDY_GUIDANCE_REPLY
-        : null;
-      const ambiguousOneWordProgrammingTranscript =
-        /^(?:programar|programacion|programa|python|javascript|codigo|programming|coding)$/i.test(normalizedTranscript);
-      const transcriptionClarificationReply = ambiguousOneWordProgrammingTranscript
-        ? "Escuché una palabra que puede tener varios sentidos. ¿La viste en un texto o ejercicio de Saber 11, o te refieres a aprender programación? Cuéntame la frase completa para no asumir."
-        : null;
+      // Benign conversation, greetings, subject selection and study guidance
+      // must stay on Gemini Live so the native audio channel speaks them.
+      // Only deterministic safety/language refusals may use the metered TTS fallback.
       voicePreflightReplyRef.current = asksIdentity
         ? null
         : unsupportedInputScript
           ? ORBY_SPANISH_ONLY_REPLY
-        : isGenericIcfesEnglishRequest(voiceUserTextRef.current) && !subjectAlreadyActive
-          ? ORBY_ICFES_ENGLISH_INTRO_REPLY
-          : isOrbyGreetingRequest(voiceUserTextRef.current)
-          ? null
-          : subjectSelectionReply
-              ?? activeSubjectReply
-              ?? studyGuidanceReply
-              ?? transcriptionClarificationReply
-              ?? (preflight.allowed ? null : preflight.reply);
+          : (preflight.allowed ? null : preflight.reply);
       if (selectedVoiceSubject) activeSubjectRef.current = selectedVoiceSubject;
       voicePendingAudioChunksRef.current = [];
       voiceRealtimeAudioChunkCountRef.current = 0;
@@ -3325,18 +3307,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         context,
       ].filter(Boolean).join("\n").slice(-5_000);
       const typedPreflight = preflightOrbyRequest(message, typedVoiceContext);
-      const subjectAlreadyActive = isOrbySubjectAlreadyActive(message, typedVoiceContext, previousActiveSubject);
-      const englishReply = isGenericIcfesEnglishRequest(message) && !subjectAlreadyActive
-        ? ORBY_ICFES_ENGLISH_INTRO_REPLY
-        : null;
-      const subjectSelectionReply = getOrbySubjectSelectionReply(message, typedVoiceContext, previousActiveSubject);
-      const activeSubjectReply = subjectAlreadyActive
-        ? getOrbyGreetingFollowUpReply(typedVoiceContext, previousActiveSubject)
-        : null;
-      const studyGuidanceReply = isOrbyStudyGuidanceRequest(message, typedVoiceContext) ? ORBY_STUDY_GUIDANCE_REPLY : null;
-      // Greetings stay on Gemini Live so the native Live voice speaks them.
-      // Deterministic text-only shortcuts must not swallow a voice-mode greeting.
-      const localReply = englishReply ?? subjectSelectionReply ?? activeSubjectReply ?? studyGuidanceReply ?? (!typedPreflight.allowed ? typedPreflight.reply : null);
+      // Keep ordinary allowed messages (including English selection, subject changes,
+      // follow-ups and study guidance) on Gemini Live. Local text-only shortcuts
+      // forced every such turn through quota-limited Gemini TTS.
+      const localReply = !typedPreflight.allowed ? typedPreflight.reply : null;
       if (localReply) {
         if (selectedSubject) activeSubjectRef.current = selectedSubject;
         respondToVoiceLocally(message, localReply, true);

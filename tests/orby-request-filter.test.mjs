@@ -91,7 +91,7 @@ test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confi
         doi: "https://doi.org/10.1000/example",
         title: "Photosynthesis research",
         publication_year: 2024,
-        abstract_inverted_index: { "La": [0], "fotosíntesis": [1], "transforma": [2], "luz": [3] },
+        abstract_inverted_index: { "La": [0], "fotosíntesis": [1], "transforma": [2], "luz": [3], "en": [4], "energía": [5], "química": [6], "durante": [7], "el": [8], "proceso": [9], "biológico": [10], "de": [11], "las": [12], "plantas": [13], "verdes": [14], "y": [15], "otros": [16], "organismos": [17], "fotosintéticos": [18] },
         primary_location: { source: { display_name: "Revista científica" } },
       }] }), { status: 200 });
     }
@@ -104,7 +104,7 @@ test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confi
   assert.ok(result.sources.some((item) => item.kind === "encyclopedia" && item.url.includes("es.wikipedia.org/wiki/Fotosintesis")));
   assert.ok(result.sources.every((item) => /^https:\/\/(?:es\.wikipedia\.org\/wiki\/|doi\.org\/|openalex\.org\/W)/.test(item.url)));
   assert.ok(result.sources.every((item) => !item.excerpt.includes("<b>")));
-  assert.equal(result.sources.find((item) => item.kind === "research").excerpt, "La fotosíntesis transforma luz");
+  assert.match(result.sources.find((item) => item.kind === "research").excerpt, /La fotosíntesis transforma luz en energía química/);
 });
 
 test("Orby continúa sin fuentes si los servicios públicos gratuitos no responden", async () => {

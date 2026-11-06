@@ -147,6 +147,24 @@ test("Orby obtiene fuentes públicas gratuitas, deduplica y limita enlaces confi
   assert.ok(naturalLanguageResult.sources.some((item) => item.title.includes("Fotosíntesis")), "La intención de pedir fuentes no debe ocultar el tema académico en el ranking.");
 });
 
+test("Orby encuentra publicaciones en inglés para consultas académicas en español", async () => {
+  const fetcher = async (input) => {
+    const url = new URL(String(input));
+    if (url.hostname === "es.wikipedia.org") return new Response(JSON.stringify({ pages: [] }), { status: 200 });
+    if (url.hostname === "api.openalex.org") return new Response(JSON.stringify({ results: [{
+      id: "https://openalex.org/W987654321",
+      doi: "https://doi.org/10.1000/photosynthesis",
+      title: "Photosynthesis in terrestrial plants",
+      publication_year: 2023,
+      abstract_inverted_index: { "Photosynthesis": [0], "converts": [1], "light": [2], "energy": [3], "into": [4], "chemical": [5], "energy": [6], "in": [7], "plants": [8], "and": [9], "algae": [10], "during": [11], "the": [12], "day": [13] },
+      primary_location: { source: { display_name: "Plant Science Journal" } },
+    }] }), { status: 200 });
+    throw new Error("Host no permitido");
+  };
+  const result = await publicResearch.searchOrbyPublicSources("Dame fuentes sobre fotosíntesis", { fetcher });
+  assert.equal(result.sources.length, 1);
+  assert.equal(result.sources[0].title, "Photosynthesis in terrestrial plants");
+});
 test("Orby envía solo palabras clave académicas a fuentes públicas", async () => {
   const outboundQueries = [];
   const fetcher = async (input) => {

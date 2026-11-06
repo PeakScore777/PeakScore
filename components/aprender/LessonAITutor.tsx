@@ -2326,7 +2326,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         question,
         context,
       ].filter(Boolean).join("\n").slice(-5_000);
-      const partialUnsafe = voiceOutputAudioBlockedRef.current
+      const matchesTrustedPolicyReply = Boolean(
+        forcedExpected && normalizedForcedExpected.startsWith(partialNormalized),
+      );
+      // The trusted refusal is itself expected to mention the blocked subject
+      // (for example, programming). Validate it against the exact approved
+      // response prefix rather than treating its subject word as unsafe advice.
+      // Any deviation or extra continuation still goes through every safety gate.
+      const partialUnsafe = !matchesTrustedPolicyReply && (
+        voiceOutputAudioBlockedRef.current
         || forcedSpeechMismatch
         || containsUnsupportedSpanishLanguage(partialReply)
         || containsProgrammingInstruction(partialReply, voiceScopeContext)
@@ -2335,7 +2343,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || containsExternalPreIcfesPromotion(partialReply)
         || isLikelyEnglishOnlyOrbyReply(partialReply)
         || hasFalseOrbyCreatorAttribution(partialReply)
-        || partialExposesProvider;
+        || partialExposesProvider
+      );
 
       if (partialUnsafe) {
         voiceOutputTranscriptValidatedRef.current = false;

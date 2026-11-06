@@ -65,6 +65,8 @@ La semántica coincide con la documentación oficial: `NON_BLOCKING` permite que
 - El watchdog avisa a los 18 segundos y a los 50 segundos conserva una sesión Live que sigue conectada, concediendo una ventana adicional de 70 segundos antes de activar el respaldo.
 - Se guarda el identificador de reanudación de la sesión y se solicita un token efímero nuevo para cada intento, porque los tokens son de un solo uso.
 - La interrupción cancela búsquedas pendientes y audio antiguo para que un resultado anterior no contamine el turno nuevo.
+- La desconexión física de la pista del micrófono activa el modo gratuito por turnos y conserva la pregunta pendiente; se ignoran eventos `ended` tardíos de streams reemplazados.
+- Se añadió una prueba aislada del AudioWorklet para verificar remuestreo de 44.1/48 kHz a 16 kHz, paquetes PCM de 640 muestras (40 ms) y conservación del remanente entre bloques.
 - El fallback conserva la pregunta y el contexto cuando la conexión no puede continuar.
 - La lógica está cubierta parcialmente por pruebas estáticas; las reconexiones reales y las interrupciones acústicas aún requieren pruebas en Chrome.
 
@@ -101,6 +103,12 @@ Corrección aplicada en esta ronda:
 - Pasos aprobados: auditoría de dependencias, pruebas de regresión Orby, TypeScript, ESLint, build de producción Next.js, validación/actualización de dependencias y artefactos de lockfile.
 
 El job completo terminó en `success`: auditoría de dependencias, pruebas de regresión Orby, TypeScript, ESLint y build de producción Next.js. Las pruebas de `tests/orby-request-filter.test.mjs` inspeccionan funciones puras e invariantes del código fuente. No simulan el proveedor Gemini Live ni sustituyen una prueba real de micrófono/WebSocket. Por eso, CI verde permite actualizar la rama local, pero no declarar aprobado el comportamiento acústico real.
+
+## Nueva revisión de captura de audio
+
+Se revisó el procesador `public/audio/orby-audio-capture.worklet.js`: el remuestreo lineal mantiene el cursor entre bloques, y el envío agrupa PCM mono de 16 kHz en paquetes de 40 ms. La prueba nueva ejecuta el worklet con un mock del entorno AudioWorklet y comprueba el conteo de muestras en 44.1 y 48 kHz; no reemplaza una medición de audio real ni prueba todos los dispositivos.
+
+También se detectó que `track.onended` solo mostraba un aviso aunque el micrófono físico se hubiera desconectado, dejando el modo Live aparentemente activo sin entrada. Ahora se conmuta al respaldo por turnos, conservando el texto pendiente y evitando que un evento tardío de un stream anterior cierre una sesión nueva.
 
 ## Validación manual pendiente
 

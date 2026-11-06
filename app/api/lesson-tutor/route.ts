@@ -608,30 +608,44 @@ export async function POST(request: Request) {
       : Promise.resolve(emptyStudentSignals);
 
     if (shouldRetrieveAcademicKnowledge) {
-      try {
-        const [knowledgeResult, conceptResult, publicResearch] = await Promise.all([
-          searchOrbyKnowledge({
-            query: learningQuery,
-            subject: detectedSubject,
-            visibility: "published",
-            limit: 5,
-          }),
-          searchOrbyKnowledgeConcepts({
-            query: learningQuery,
-            subject: detectedSubject,
-            visibility: "published",
-            limit: 12,
-          }),
-          publicResearchPromise,
-        ]);
-        knowledgeSources = knowledgeResult as StudentKnowledgeSource[];
-        conceptGraphHits = conceptResult;
-        publicSources = publicResearch.sources;
-        const documentIds = [...new Set([
-          ...knowledgeSources.map((source) => source.document_id),
-          ...conceptGraphHits.map((concept) => concept.document_id),
-        ])];
-        if (documentIds.length) {
+      // The vector index and concept graph are independent evidence sources.
+      // Promise.all used to discard BOTH when either one failed, making a
+      // healthy Lab index look empty during a partial retrieval outage.
+      const [knowledgeOutcome, conceptOutcome] = await Promise.allSettled([
+        searchOrbyKnowledge({
+          query: learningQuery,
+          subject: detectedSubject,
+          visibility: "published",
+          limit: 5,
+        }),
+        searchOrbyKnowledgeConcepts({
+          query: learningQuery,
+          subject: detectedSubject,
+          visibility: "published",
+          limit: 12,
+        }),
+      ]);
+      if (knowledgeOutcome.status === "fulfilled") {
+        knowledgeSources = knowledgeOutcome.value as StudentKnowledgeSource[];
+      } else {
+        console.error("[Orby Tutor] Knowledge index unavailable.", {
+          name: knowledgeOutcome.reason instanceof Error ? knowledgeOutcome.reason.name : "UnknownError",
+        });
+      }
+      if (conceptOutcome.status === "fulfilled") {
+        conceptGraphHits = conceptOutcome.value;
+      } else {
+        console.error("[Orby Tutor] Concept graph unavailable.", {
+          name: conceptOutcome.reason instanceof Error ? conceptOutcome.reason.name : "UnknownError",
+        });
+      }
+      publicSources = (await publicResearchPromise).sources;
+      const documentIds = [...new Set([
+        ...knowledgeSources.map((source) => source.document_id),
+        ...conceptGraphHits.map((concept) => concept.document_id),
+      ])];
+      if (documentIds.length) {
+        try {
           const [relatedResult, pedagogyResult] = await Promise.all([
             getOrbyRelatedKnowledge(documentIds, "published", 2),
             supabaseAdmin.from("orby_knowledge_profiles")
@@ -646,13 +660,12 @@ export async function POST(request: Request) {
               (pedagogyResult.data ?? []).map((profile) => [profile.document_id, profile.pedagogical_knowledge])
             );
           }
+        } catch (error) {
+          // The primary vector/concept evidence remains usable if enrichment fails.
+          console.error("[Orby Tutor] Knowledge enrichment unavailable.", {
+            name: error instanceof Error ? error.name : "UnknownError",
+          });
         }
-      } catch (error) {
-        // Preserve public research if the private Lab retrieval fails.
-        publicSources = (await publicResearchPromise).sources;
-        console.error("[Orby Tutor] Hybrid knowledge retrieval unavailable.", {
-          name: error instanceof Error ? error.name : "UnknownError",
-        });
       }
     }
 

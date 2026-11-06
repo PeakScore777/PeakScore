@@ -2511,8 +2511,8 @@ test("interrumpir una respuesta Live limpia la transcripción anterior antes del
   assert.notEqual(interruptStart, -1, "debe existir el manejador de interrupciones Live");
   assert.notEqual(interruptEnd, -1, "debe poder aislarse el manejador de interrupciones");
   const interruptSource = lessonTutorSource.slice(interruptStart, interruptEnd);
-  assert.match(interruptSource, /voiceAssistantTextRef\\.current = ""/);
-  assert.match(interruptSource, /voiceUserTextRef\\.current = ""/);
-  assert.match(interruptSource, /voiceUserMessageIdRef\\.current = null/);
-  assert.match(lessonTutorSource.slice(interruptEnd, interruptEnd + 24_000), /voiceUserTextRef\\.current = mergeLiveTranscript\\(previousTranscript, transcript\\)/);
+  assert.match(interruptSource, /voiceAssistantTextRef\.current = ""/);
+  assert.match(interruptSource, /voiceUserTextRef\.current = ""/);
+  assert.match(interruptSource, /voiceUserMessageIdRef\.current = null/);
+  assert.match(lessonTutorSource.slice(interruptEnd, interruptEnd + 24_000), /voiceUserTextRef\.current = mergeLiveTranscript\\(previousTranscript, transcript\\)/);
 });

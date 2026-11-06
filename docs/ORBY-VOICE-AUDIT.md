@@ -169,3 +169,17 @@ Corrección aplicada en `app/api/lesson-tutor/route.ts`:
 - Se agregó una regresión que verifica que el reintento reutilice el prompt original y contabilice su tiempo.
 
 Este ajuste no reduce filtros ni expone borradores: el resultado recuperado sigue pasando por los mismos controles de JSON, calidad, seguridad, idioma, alcance y persistencia. Tampoco cambia proveedor, cuotas ni facturación. Pendiente: ejecutar CI completo para el nuevo commit y validar el comportamiento real en Chrome; las pruebas de código no reemplazan una sesión de voz acústica.
+
+
+## Recuperación híbrida del conocimiento ante fallos parciales
+
+En la revisión adicional del 6 de noviembre se detectó otro problema en la ruta académica compartida por chat y VC: la búsqueda vectorial del Lab y la búsqueda del grafo conceptual estaban agrupadas en un único `Promise.all`. Si cualquiera de las dos fallaba, el bloque completo saltaba al `catch` y se perdían también los resultados válidos de la otra fuente. En consecuencia, una caída parcial podía hacer que Orby respondiera como si no hubiera material recuperado, aunque una de las dos fuentes sí estuviera disponible.
+
+Corrección aplicada en `app/api/lesson-tutor/route.ts`:
+
+- Se sustituyó el acoplamiento de ambas búsquedas por `Promise.allSettled` y se conservan por separado los resultados exitosos.
+- Los fallos del índice vectorial y del grafo conceptual se registran independientemente, sin revelar datos del estudiante.
+- El enriquecimiento posterior (material relacionado y perfiles pedagógicos) queda aislado: si falla, no elimina los fragmentos vectoriales o conceptos ya recuperados.
+- Se añadió una prueba de regresión que verifica el comportamiento ante fallos parciales.
+
+No se crean ni reconstruyen materiales del Lab; se usa exclusivamente el material publicado que exista. Tampoco se cambia el proveedor de IA ni se introduce gasto. Pendiente de CI y de validación funcional con una sesión real.

@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { classifyOutOfScopeRequest, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
 import { preflightOrbyRequest, sanitizeOrbyKnowledgeExcerpt } from "@/lib/ai/orby-request-filter";
+import { searchOrbyPublicSources } from "@/lib/ai/orby-web-research";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -101,6 +102,15 @@ export async function POST(request: Request) {
       importance: item.importance,
     }));
 
+    let publicResearch = { sources: [], searched: ["Wikimedia", "OpenAlex"], warnings: [] } as Awaited<ReturnType<typeof searchOrbyPublicSources>>;
+    try {
+      publicResearch = await searchOrbyPublicSources(query, { maxSources: 4 });
+    } catch (error) {
+      console.warn("[Orby Voice Knowledge] Public research unavailable.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+    }
+
     const excerpts = fragments.map((item) => ({
       area: item.subject || "Transversal",
       topic: item.topic || "",
@@ -131,6 +141,7 @@ export async function POST(request: Request) {
       concepts,
       profiles,
       related: relatedContext,
+      public_sources: publicResearch.sources,
       guidance: excerpts.length
         ? "Usa este contenido para mejorar la explicación, conectar prerrequisitos, crear una ruta de aprendizaje o preparar ejercicios originales según la pregunta del estudiante. No menciones nombres ni procedencia de las fuentes."
         : "No se encontraron fragmentos publicados directamente relacionados. Responde con conocimiento académico fiable y no afirmes que la biblioteca contiene información que no fue recuperada.",

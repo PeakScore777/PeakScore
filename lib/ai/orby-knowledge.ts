@@ -1480,9 +1480,9 @@ export async function searchOrbyKnowledgeConcepts(options: {
     return [];
   }
   if (!Array.isArray(data)) return [];
-  // This RPC already searches the published concept graph across areas; the
-  // subject is a ranking boost, not a hard taxonomy filter. Do not repeat the
-  // same empty lexical query without that boost.
+  // The RPC applies a strict subject/area scope before ranking concepts.
+  // Keep the graph aligned with chunk retrieval: a missing match in this area
+  // must stay empty rather than teaching from an unrelated Saber 11 subject.
   return data.flatMap((raw) => {
     const value = asRecord(raw);
     if (!value || typeof value.concept_name !== "string" || !value.concept_name.trim()) return [];

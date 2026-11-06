@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const subject = clean(body?.subject, 80, "Preparación Saber 11");
+    let subject = clean(body?.subject, 80, "Preparación Saber 11");
     const topic = clean(body?.topic, 160, "Estudio y aprendizaje");
     const context = clean(body?.context, 1200, "Ayuda al estudiante con sus dudas académicas.");
     const clientHistory: Array<{ role: "user" | "assistant"; content: string }> = Array.isArray(body?.history)
@@ -89,6 +89,24 @@ export async function POST(request: Request) {
     let history = clientHistory;
     const conversationId = typeof body?.conversationId === "string" ? body.conversationId : "";
     if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+      const { data: storedConversation, error: conversationError } = await supabaseAdmin
+        .from("orby_conversations")
+        .select("subject,topic")
+        .eq("id", conversationId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (conversationError) {
+        console.error("[Orby Voice] Conversation metadata unavailable.", { code: conversationError.code });
+      } else if (storedConversation) {
+        const genericSubject = /^(?:preparacion saber 11|saber 11|preparacion icfes|icfes|estudio y aprendizaje)$/i
+          .test(subject.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim());
+        const storedSubject = typeof storedConversation.subject === "string" ? storedConversation.subject.trim() : "";
+        if (genericSubject && storedSubject && !/^(?:preparacion saber 11|saber 11|preparacion icfes|icfes|estudio y aprendizaje)$/i
+          .test(storedSubject.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim())) {
+          subject = storedSubject;
+        }
+      }
+
       // A Live session can be resumed after reload or a long lesson. Rehydrate
       // its context from the owner's persisted conversation, not only the
       // possibly stale React snapshot sent by the browser.

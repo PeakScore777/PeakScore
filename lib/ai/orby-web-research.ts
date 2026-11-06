@@ -2,6 +2,7 @@ export type OrbyWebSource = {
   title: string;
   url: string;
   publisher: string;
+  citationNumber?: number;
   publishedAt: string | null;
   excerpt: string;
   kind: "encyclopedia" | "research";
@@ -23,6 +24,96 @@ function cleanText(value: unknown, max = 1200): string {
 
 function normalizeQuery(value: string): string {
   return value.normalize("NFKC").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 180);
+}
+
+function normalizeForMatching(value: string): string {
+  return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");
+}
+
+const SEARCH_STOP_WORDS = new Set([
+  "que", "como", "cual", "cuales", "cuando", "donde", "porque", "para", "por", "con", "sin",
+  "una", "uno", "unos", "unas", "del", "las", "los", "el", "la", "y", "o", "en", "de", "al",
+  "es", "son", "fue", "ser", "sea", "se", "un", "su", "sus", "mi", "mis", "me", "te", "lo",
+  "explica", "explicame", "ensena", "ensename", "ayudame", "quiero", "saber", "entender",
+  "the", "what", "when", "where", "which", "how", "why", "is", "are", "of", "to", "in", "on",
+  "and", "or", "for", "with", "about", "explain", "tell", "me", "please",
+]);
+
+function meaningfulTerms(value: string): string[] {
+  return [...new Set(
+    normalizeForMatching(value)
+      .replace(/[^\p{L}\p{N}]+/gu, " ")
+      .split(/\s+/)
+      .filter((term) => term.length >= 3 && !SEARCH_STOP_WORDS.has(term)),
+  )];
+}
+
+/**
+ * The tutor model already has general academic knowledge. Public research is
+ * reserved for requests that genuinely need external evidence, current facts,
+ * or explicit references; normal concept teaching should not pay the latency
+ * and reliability cost of a web lookup.
+ */
+export function shouldSearchOrbyPublicSources(input: string | {
+  message?: string;
+  question?: string;
+  topic?: string;
+}): boolean {
+  const text = typeof input === "string"
+    ? input
+    : [input.message, input.question, input.topic].filter(Boolean).join(" ");
+  const normalized = normalizeForMatching(text).replace(/\s+/g, " ").trim();
+  if (!normalized) return false;
+
+  const asksForSources = /\b(?:fuentes?|referencias?|bibliografia|citas?|citar|articulos? cientificos?|papers?|publicaciones cientificas?|estudios publicados|investigaciones? (?:cientificas?|recientes?)|evidencia (?:cientifica|publicada|externa)|busca (?:en )?(?:internet|la web)|investiga (?:en )?(?:internet|la web)|consulta (?:en )?(?:internet|la web)|segun estudios|revision sistematica|meta.?analisis)\b/.test(normalized);
+  const asksForCurrentFacts = /\b(?:actual(?:mente|izado|izada|izados|izadas)?|vigente|hoy|ahora|a dia de hoy|reciente(?:s)?|ultimo(?:s)?|ultima(?:s)?|este ano|del ano|en 202[5-9]|en 203[0-5]|novedades?|cambios? recientes?|reforma actual|version actual|dato actualizado|estadisticas actuales|cifras actuales|datos recientes|hallazgo reciente|descubrimiento reciente|estudio mas reciente)\b/.test(normalized);
+  const needsExternalVerification = /\b(?:verifica|comprueba|contrasta|confirma|es cierto que|que dice la investigacion|que dice la ciencia|consenso cientifico|segun la evidencia|dato oficial|cifra oficial|informe oficial|normativa actual|regulacion vigente)\b/.test(normalized);
+
+  return asksForSources || asksForCurrentFacts || needsExternalVerification;
+}
+
+function rankRelevantSources(query: string, sources: OrbyWebSource[]): OrbyWebSource[] {
+  const terms = meaningfulTerms(query);
+  if (!terms.length) return [];
+  const minimumMatches = terms.length <= 2 ? 1 : 2;
+  return sources
+    .map((source) => {
+      const title = new Set(meaningfulTerms(source.title));
+      const excerpt = new Set(meaningfulTerms(source.excerpt));
+      const titleMatches = terms.filter((term) => title.has(term)).length;
+      const excerptMatches = terms.filter((term) => excerpt.has(term)).length;
+      const matches = new Set([
+        ...terms.filter((term) => title.has(term)),
+        ...terms.filter((term) => excerpt.has(term)),
+      ]).size;
+      return { source, matches, score: titleMatches * 3 + excerptMatches };
+    })
+    .filter((item) => item.matches >= minimumMatches)
+    .sort((a, b) => b.score - a.score || b.matches - a.matches)
+    .map((item) => item.source);
+}
+
+/** Keep only references that the generated answer explicitly cites. */
+export function reconcileOrbyPublicCitations(
+  reply: string,
+  sources: OrbyWebSource[],
+): { reply: string; sources: Array<OrbyWebSource & { citationNumber: number }> } {
+  const mentioned = new Set<number>();
+  for (const match of reply.matchAll(/\[(\d{1,2})\]/g)) {
+    const index = Number(match[1]);
+    if (Number.isInteger(index) && index >= 1 && index <= sources.length) mentioned.add(index);
+  }
+  const safeReply = reply.replace(/\[(\d{1,2})\]/g, (marker, rawIndex: string) => {
+    const index = Number(rawIndex);
+    return mentioned.has(index) ? marker : "";
+  });
+  return {
+    reply: safeReply.replace(/[ \t]{2,}/g, " ").replace(/ +([,.;:!?])/g, "$1").trim(),
+    sources: [...mentioned].sort((a, b) => a - b).map((index) => ({
+      ...sources[index - 1],
+      citationNumber: index,
+    })),
+  };
 }
 
 function reconstructAbstract(index: unknown): string {
@@ -127,5 +218,5 @@ export async function searchOrbyPublicSources(
   }
 
   const deduped = [...new Map(sources.map((source) => [source.url, source])).values()];
-  return { sources: deduped.slice(0, maxSources), searched, warnings };
+  return { sources: rankRelevantSources(query, deduped).slice(0, maxSources), searched, warnings };
 }

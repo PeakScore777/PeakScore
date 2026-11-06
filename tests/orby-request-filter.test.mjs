@@ -429,7 +429,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /ALCANCE EXCLUSIVO SABER 11/);
   assert.match(realtimeSessionSource, /No bloquees palabras aisladas/);
   assert.match(realtimeSessionSource, /Los saludos y llamadas breves son válidos/);
-  assert.match(realtimeSessionSource, /body\.history\.slice\(-8\)/);
+  assert.match(realtimeSessionSource, /body\.history\.slice\(-12\)/);
   assert.match(realtimeSessionSource, /const boundedSafeHistory = safeHistory\.slice\(-8\)/);
   assert.match(lessonTutorRouteSource, /preflightOrbyRequest\(scopeRequestText, recentScopeContext\)/);
   assert.match(lessonTutorSource, /preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
@@ -528,9 +528,9 @@ test("Orby mantiene voz por turnos si Gemini Live falla por cuota, privacidad o 
   assert.match(lessonTutorSource, /const authenticationFailure = .*401.*403/);
   assert.match(lessonTutorSource, /if \(ownsStartup\) \{[\s\S]*?if \(!wasCancelled && !authenticationFailure\) \{[\s\S]*?activateTurnBasedVoiceFallback/);
   assert.match(lessonTutorSource, /La voz en tiempo real no está disponible ahora\. Continúo por turnos sin perder tu conversación/);
-  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current\)/);
-  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message\)/);
-  assert.match(lessonTutorRouteSource, /getOrbySubjectSelectionReply\(userMessage\)/);
+  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(voiceUserTextRef\.current, voiceScopeContext, subject\)/);
+  assert.match(lessonTutorSource, /getOrbySubjectSelectionReply\(message, typedVoiceContext, subject\)/);
+  assert.match(lessonTutorRouteSource, /getOrbySubjectSelectionReply\(\s*userMessage,\s*recentContextMessages/);
 });
 
 test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra generación Live", () => {
@@ -1643,7 +1643,12 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeSessionSource.includes('from("orby_messages")'));
   assert.ok(realtimeSessionSource.includes("body?.conversationId"));
   assert.ok(lessonTutorSource.includes("conversationId: activeConversationRef.current ?? conversationId"));
-  assert.ok(lessonTutorRouteSource.includes("getOrbyGreetingFollowUpReply(recentContextMessages"));
+  assert.match(lessonTutorSource, /resumeTokenResponse[\\s\\S]{0,1600}conversationId: activeConversationRef\\.current \\?\\? conversationId/);
+  assert.match(lessonTutorSource, /resumeTokenResponse[\\s\\S]{0,1800}history: messagesRef\\.current\\.slice\\(-12\\)/);
+  assert.match(realtimeTurnSource, /getOrbySubjectSelectionReply\\(userContent\\)/);
+  assert.match(realtimeTurnSource, /update\\(\\{ subject: selectedSubject \\}\\)/);
+  assert.match(realtimeTurnSource, /\\.eq\\("user_id", user\\.id\\)/);
+  assert.match(lessonTutorRouteSource, /getOrbyGreetingFollowUpReply\(\s*recentContextMessages\.map/);
   assert.notEqual(
     filter.getOrbyGreetingFollowUpReply("assistant: ¿Qué tema de Saber 11 quieres trabajar?"),
     filter.ORBY_GREETING_REPLY,

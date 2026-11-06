@@ -40,13 +40,21 @@ Los filtros deben detener solicitudes claramente ajenas al tutor, pero dejar pas
 - [x] Revisar la ruta principal de voz, la sesión en tiempo real, el respaldo TTS y la búsqueda de conocimiento.
 - [x] Identificar que la búsqueda del Lab no declaraba explícitamente una espera bloqueante.
 - [x] Identificar el watchdog de 50 segundos y su relación con el respaldo TTS.
-- [ ] Aplicar cambios pequeños y verificables en la rama de trabajo.
-- [ ] Añadir pruebas para la espera de resultados académicos.
-- [ ] Añadir pruebas para evitar la degradación prematura de una sesión Live conectada.
+- [x] Aplicar cambios pequeños y verificables en la rama de trabajo.
+- [x] Añadir pruebas para la espera de resultados académicos.
+- [x] Añadir pruebas para evitar la degradación prematura de una sesión Live conectada.
 - [ ] Ejecutar las pruebas, TypeScript, ESLint y build en el mismo commit.
 - [ ] Probar en navegador conversaciones largas, interrupciones, cambios de materia y recuperación.
 - [ ] Confirmar que los saludos no consultan el Lab.
 - [ ] Confirmar que una pregunta académica sí usa material publicado y pertinente del Lab.
+
+## Cambios ya aplicados en la rama
+
+- La herramienta `search_orby_learning_knowledge` declara `Behavior.BLOCKING`: Gemini Live espera la respuesta de la búsqueda antes de continuar el turno.
+- El watchdog conserva la sesión si `voiceChannelRef.current` sigue conectado al alcanzar 50 segundos y concede una ventana adicional de 70 segundos.
+- Solo se considera el respaldo por turnos si la sesión no está conectada o si el segundo plazo también expira.
+- Se añadieron pruebas estáticas para la espera de la herramienta y el comportamiento del watchdog.
+- Estos cambios están en `feat/founder-intro`; todavía no se han validado con CI ni con una prueba manual de navegador.
 
 ## Criterios de aceptación
 

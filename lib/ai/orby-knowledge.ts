@@ -1321,7 +1321,7 @@ async function createOrbyQueryEmbeddingForModel(
 
   try {
     if (model === CLOUDFLARE_EMBEDDING_MODEL) {
-      const [values] = await createCloudflareEmbeddings([text]);
+      const [values] = await createCloudflareEmbeddings([text], 8_000);
       return values ?? null;
     }
 

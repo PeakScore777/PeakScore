@@ -17,9 +17,11 @@ export async function POST(request: Request) {
     if (!body || typeof body !== "object" || Array.isArray(body)) return NextResponse.json({ error: "Solicitud no válida." }, { status: 400 });
 
     const conversationId = typeof body.conversationId === "string" ? body.conversationId : "";
+    const turnId = typeof body.turnId === "string" ? body.turnId : "";
     const userContent = typeof body.userContent === "string" ? body.userContent.trim().slice(0, 8000) : "";
     const assistantContent = typeof body.assistantContent === "string" ? body.assistantContent.trim().slice(0, 8000) : "";
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId) || !userContent || !assistantContent) {
+    const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+    if (!isUuid(conversationId) || !isUuid(turnId) || !userContent || !assistantContent) {
       return NextResponse.json({ error: "No se pudo validar el turno de voz." }, { status: 400 });
     }
 
@@ -53,53 +55,21 @@ export async function POST(request: Request) {
       }
     }
 
-    // A fetch can time out after the database commit succeeded. Before
-    // retrying, detect the exact same most-recent user/assistant pair so a
-    // retry never creates duplicate bubbles in the conversation history.
-    const { data: latestMessages, error: recentReadError } = await supabaseAdmin
-      .from("orby_messages")
-      .select("role,content")
-      .eq("conversation_id", conversationId)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    if (recentReadError || !Array.isArray(latestMessages)) {
-      console.error("[Orby Realtime] Could not verify whether the voice turn was already saved.", {
-        code: recentReadError?.code,
-      });
+    // The database claims the stable turn ID while holding the conversation
+    // row lock. Concurrent retries therefore serialize and only one can insert.
+    const { data, error } = await supabaseAdmin.rpc("orby_save_voice_turn", {
+      p_user_id: user.id,
+      p_conversation_id: conversationId,
+      p_turn_id: turnId,
+      p_user_content: userContent,
+      p_assistant_content: assistantContent,
+    });
+    if (error || !data?.ok) {
+      console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });
       return NextResponse.json({
-        error: "No pude comprobar si el turno ya está guardado. No añadí otro registro para evitar duplicarlo; vuelve a intentarlo.",
-        code: "SAVE_TURN_IDEMPOTENCY_CHECK_FAILED",
+        error: "La respuesta se completó, pero no se pudo guardar el turno en el historial. Puedes reintentar sin duplicarlo.",
+        code: error ? "SAVE_TURN_DATABASE_ERROR" : (typeof data?.code === "string" ? data.code : "SAVE_TURN_REJECTED"),
       }, { status: 503, headers: { "Cache-Control": "no-store" } });
-    }
-
-    // Messages are returned newest first. Only the latest assistant/user
-    // pair can prove that THIS request already committed; searching older
-    // history would suppress a legitimate repeated question later in the chat.
-    const latestAssistant = latestMessages[0];
-    const previousUser = latestMessages[1];
-    const alreadySaved = latestAssistant?.role === "assistant"
-      && latestAssistant?.content === assistantContent
-      && previousUser?.role === "user"
-      && previousUser?.content === userContent;
-
-    if (!alreadySaved) {
-      const { data, error } = await supabaseAdmin.rpc("orby_save_turn", {
-        p_user_id: user.id,
-        p_conversation_id: conversationId,
-        p_user_content: userContent,
-        p_assistant_content: assistantContent,
-        p_check_question: null,
-        p_attachment_kind: null,
-        p_attachment_label: null,
-      });
-      if (error || !data?.ok) {
-        console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });
-        return NextResponse.json({
-          error: "La respuesta se completó, pero no se pudo guardar en el historial. Puedes reintentar sin duplicar el turno.",
-          code: error ? "SAVE_TURN_DATABASE_ERROR" : (typeof data?.code === "string" ? data.code : "SAVE_TURN_REJECTED"),
-        }, { status: 503, headers: { "Cache-Control": "no-store" } });
-      }
     }
 
     return NextResponse.json({ saved: true }, { headers: { "Cache-Control": "no-store" } });

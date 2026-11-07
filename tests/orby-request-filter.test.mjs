@@ -3530,3 +3530,17 @@ test("Los procesos fisiológicos están conectados al renderizador, Live y tutor
   assert.match(lesson, /filtración\/reabsorción\/secreción renal/);
   assert.match(voice, /acoplamiento excitación-contracción/);
 });
+
+
+test("el fallback de voz puede devolver la misma pizarra visual tipada que el tutor escrito", () => {
+  const voicePromptStart = cloudflareTutorRoute.indexOf("const voicePrompt = [");
+  const voicePromptEnd = cloudflareTutorRoute.indexOf("const conversationalPrompt = [", voicePromptStart);
+  assert.ok(voicePromptStart >= 0 && voicePromptEnd > voicePromptStart);
+  const voicePrompt = cloudflareTutorRoute.slice(voicePromptStart, voicePromptEnd);
+  assert.match(voicePrompt, /board version 2/);
+  assert.match(voicePrompt, /hasta 4 visuales tipados/);
+  for (const visualType of ["diagram", "graph", "vectors", "table", "timeline", "molecule", "circuit", "cell", "dna", "punnett", "cell-division", "organ-system", "neuron", "physiology-process"]) {
+    assert.ok(voicePrompt.includes(visualType), "falta el tipo visual " + visualType + " en el contrato del fallback de voz");
+  }
+  assert.doesNotMatch(voicePrompt, /board con version 1 y hasta 8 bloques/);
+});

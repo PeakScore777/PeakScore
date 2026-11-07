@@ -496,7 +496,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("voiceSessionResumeHandleRef.current"));
   assert.ok(lessonTutorSource.includes("MAX_VOICE_RECORDING_MS = 5 * 60_000"));
   assert.ok(realtimeSessionSource.includes("2 * 60 * 60 * 1000"));
-  assert.ok(cloudflareVoiceSource.includes("25_000,"));
+  assert.match(cloudflareVoiceSource, /CLOUDFLARE_EMBEDDING_MODEL,[\s\S]*?\{ text: normalized \},\s*8_000,/);
   assert.ok(cloudflareVoiceSource.includes("45_000,"));
 
   assert.ok(lessonTutorSource.includes("never let the two speakers overlap"));

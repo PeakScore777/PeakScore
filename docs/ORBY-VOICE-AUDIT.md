@@ -348,3 +348,26 @@ Commits:
 
 Validación pendiente para esta tanda: CI completo sobre `38200d1` (suite Orby, TypeScript, ESLint, auditoría de dependencias y build Next.js). Después, comparar el bundle inicial/análisis de chunks para cuantificar el ahorro real. Esta optimización no cambia los proveedores de IA, las cuotas ni la facturación.
 
+
+
+## 2026-11-06 — carga diferida del SDK de Gemini Live
+
+La revisión del bundle detectó que `@google/genai` se importaba estáticamente desde el componente cliente, aunque la mayor parte de las sesiones solo necesita el chat escrito. Se cambió el punto de carga:
+
+- El componente conserva únicamente los tipos `Session` y `FunctionResponseScheduling` como importación de TypeScript.
+- `startRealtimeVoice()` inicia `import("@google/genai")` al comenzar explícitamente una sesión de voz, en paralelo con el flujo de permiso del micrófono.
+- La inicialización, reconexión, modalidades de audio, endpointing y respuestas de herramientas usan el módulo cargado dinámicamente.
+- El chat escrito no debe descargar el SDK de Gemini Live solo por montar el componente.
+
+Se añadieron/ajustaron regresiones para verificar la carga diferida, la configuración de endpointing y la programación de respuestas de herramientas. La prueba estática comprueba el contrato del código; no reemplaza un análisis de chunks del build ni una sesión real en Chrome.
+
+Commits:
+- `ba28b4c` — `perf(orby): lazy-load Gemini Live SDK on voice start`.
+- `590ea66` — `test(orby): cover lazy-loaded Gemini Live SDK`.
+
+Estado de CI:
+- La tanda OCR en `d232513` terminó correctamente en GitHub Actions.
+- El workflow de `ba28b4c` estaba ejecutándose al registrar esta nota.
+- El commit de pruebas `590ea66` necesita su propio CI completo antes de dar esta optimización por validada.
+
+No se cambian modelos, proveedores, cuotas ni credenciales. La carga dinámica se activa solo por una acción explícita de iniciar voz.

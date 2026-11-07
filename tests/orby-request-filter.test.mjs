@@ -17,6 +17,7 @@ async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = 
   return import("data:text/javascript;base64," + encoded);
 }
 
+const boardModule = await loadTypeScriptModule("../lib/ai/orby-board.ts");
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
 const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServerOnly: true });
 const publication = await loadTypeScriptModule("../lib/ai/orby-publication.ts");
@@ -3097,4 +3098,100 @@ test("Orby mide las actualizaciones de pizarra por turno sin registrar contenido
   assert.match(boardTiming, /boardUpdateMs:/);
   assert.match(boardTiming, /audioChunksScheduled:/);
   assert.doesNotMatch(boardTiming, /voiceUserTextRef|voiceAssistantTextRef|board\.title|board\.blocks/);
+});
+
+
+test("La pizarra Orby valida y conserva escenas moleculares y circuitos tipados", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const molecule = sanitizeOrbyBoard({
+    version: 2,
+    title: "Agua",
+    blocks: [{ type: "text", text: "Dos átomos de hidrógeno y uno de oxígeno." }],
+    visuals: [{
+      type: "molecule",
+      title: "Modelo esquemático de H₂O",
+      atoms: [
+        { id: "o", element: "O", x: 50, y: 42 },
+        { id: "h1", element: "H", x: 35, y: 58 },
+        { id: "h2", element: "H", x: 65, y: 58 },
+      ],
+      bonds: [
+        { from: "o", to: "h1", order: 1 },
+        { from: "o", to: "h2", order: 1 },
+      ],
+    }],
+  });
+  assert.equal(molecule?.visuals?.[0]?.type, "molecule");
+  assert.equal(molecule?.visuals?.[0]?.atoms.length, 3);
+
+  const circuit = sanitizeOrbyBoard({
+    version: 2,
+    title: "Circuito básico",
+    blocks: [{ type: "text", text: "Esquema conceptual, no simulación eléctrica." }],
+    visuals: [{
+      type: "circuit",
+      title: "Elementos del circuito",
+      components: [
+        { id: "cell", kind: "battery", x: 20, y: 50, label: "Pila" },
+        { id: "lamp", kind: "lamp", x: 75, y: 50, label: "Bombillo" },
+      ],
+      connections: [{ from: "cell", to: "lamp" }],
+    }],
+  });
+  assert.equal(circuit?.visuals?.[0]?.type, "circuit");
+  assert.equal(circuit?.visuals?.[0]?.connections.length, 1);
+});
+
+test("La pizarra Orby rechaza enlaces moleculares y conexiones eléctricas inválidas", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const base = {
+    version: 2,
+    title: "Escena inválida",
+    blocks: [{ type: "text", text: "Prueba de validación." }],
+  };
+  const invalidMolecule = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "molecule",
+      title: "Enlace inválido",
+      atoms: [
+        { id: "a", element: "C", x: 30, y: 50 },
+        { id: "b", element: "O", x: 70, y: 50 },
+      ],
+      bonds: [{ from: "a", to: "missing", order: 1 }],
+    }],
+  });
+  assert.equal(invalidMolecule, null, "no se permiten enlaces a átomos inexistentes");
+
+  const invalidCircuit = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "circuit",
+      title: "Conexión inválida",
+      components: [
+        { id: "battery", kind: "battery", x: 20, y: 50, label: "Pila" },
+        { id: "lamp", kind: "lamp", x: 80, y: 50, label: "Lámpara" },
+      ],
+      connections: [{ from: "battery", to: "unknown" }],
+    }],
+  });
+  assert.equal(invalidCircuit, null, "no se permiten conexiones a componentes inexistentes");
+});
+
+test("El renderizador y la herramienta Live ofrecen primitivas de química y circuitos sin ejecutar markup", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const lesson = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(renderer, /function Molecule/);
+  assert.match(renderer, /function Circuit/);
+  assert.match(renderer, /visual\.type === "molecule"/);
+  assert.match(renderer, /visual\.type === "circuit"/);
+  assert.match(tools, /atoms:/);
+  assert.match(tools, /bonds:/);
+  assert.match(tools, /components:/);
+  assert.match(tools, /connections:/);
+  assert.match(lesson, /Es un esquema educativo 2D/);
+  assert.match(voice, /no es una simulación/);
+  assert.doesNotMatch(renderer, /dangerouslySetInnerHTML/);
 });

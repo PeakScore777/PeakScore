@@ -23,6 +23,12 @@ export class CloudflareWorkersAIError extends Error {
 }
 
 function getConfig() {
+  // Fail closed unless an operator explicitly confirms that this account is
+  // Workers Free with no billing path that can charge for excess Neurons.
+  // Workers Paid continues past the daily free allocation and bills usage.
+  if (process.env.ORBY_CLOUDFLARE_FREE_PLAN_CONFIRMED !== "true") {
+    throw new CloudflareWorkersAIError("FREE_PLAN_NOT_CONFIRMED");
+  }
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "";
   const apiToken = process.env.CLOUDFLARE_API_TOKEN?.trim() ?? "";
   if (!/^[a-f0-9]{32}$/i.test(accountId)) {
@@ -267,8 +273,9 @@ export async function generateWithCloudflareBoard(prompt: string): Promise<{ tex
 }
 
 export function isCloudflareWorkersAIConfigured(): boolean {
-  return Boolean(
-    /^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "")
-    && process.env.CLOUDFLARE_API_TOKEN?.trim(),
-  );
+  return process.env.ORBY_CLOUDFLARE_FREE_PLAN_CONFIRMED === "true"
+    && Boolean(
+      /^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "")
+      && process.env.CLOUDFLARE_API_TOKEN?.trim(),
+    );
 }

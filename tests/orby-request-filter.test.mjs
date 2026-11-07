@@ -3870,3 +3870,12 @@ test("el modo por turnos explica con precisión la cuota y el proveedor de voz",
   assert.doesNotMatch(lessonTutorSource, /No consume cuota Gemini/);
   assert.doesNotMatch(lessonTutorSource, /no se activará una voz sintética facturada/);
 });
+
+test("Orby Admin no muestra una alerta de secretos faltantes mientras el estado aún carga", async () => {
+  const studio = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
+  const automationRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/route.ts", import.meta.url), "utf8");
+  assert.match(studio, /automation && !automation\.configured/);
+  assert.match(studio, /AbortSignal\.timeout\(12_000\)/);
+  assert.match(automationRoute, /if \(workerConfiguration\.error\)/);
+  assert.match(automationRoute, /No se pudo verificar la conexión protegida con Supabase Vault/);
+});

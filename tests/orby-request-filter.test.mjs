@@ -1100,6 +1100,10 @@ test("bloquea consultas generales sobre personas sin bloquear figuras del currí
   assert.equal(scope.isOrbyIdentityQuestion("qn es PeakScore?"), true);
   assert.equal(scope.isOrbyIdentityQuestion("kien es Orby?"), true);
   assert.equal(scope.isOrbyIdentityQuestion("qien fue PeakScore?"), true);
+  assert.equal(scope.isOrbyIdentityQuestion("q y es PeakScore?"), true);
+  assert.equal(filter.preflightOrbyRequest("q y es Westcol?").category, "outside");
+  assert.equal(filter.preflightOrbyRequest("¿Qué es la fotosíntesis?").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("q y es fotosintesis?").allowed, true);
   assert.equal(scope.isOrbyIdentityQuestion("qn es Westcol?"), false);
   assert.equal(filter.preflightOrbyRequest("¿Quién es el narrador del texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
   assert.equal(filter.preflightOrbyRequest("qn es el narrador del texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
@@ -1111,7 +1115,9 @@ test("Orby no promociona su propia plataforma cuando le preguntan si es recomend
   assert.match(tutor, /hasRecentPeakScoreIdentityExchange/);
   assert.match(tutor, /asksPeakScoreRecommendationFollowUp/);
   assert.match(tutor, /No puedo darte una valoración independiente de mi propia plataforma ni prometer resultados/);
-  assert.match(tutor, /if \(asksOrbyIdentity \|\| asksPeakScoreRecommendationFollowUp\)/);
+  assert.match(tutor, /const asksUserIdentity/);
+  assert.match(tutor, /No puedo identificarte por fuera de lo que compartes en este chat/);
+  assert.match(tutor, /if \(asksOrbyIdentity \|\| asksPeakScoreRecommendationFollowUp \|\| asksUserIdentity\)/);
 });
 
 test("rechaza solicitudes explícitas de programación con una redirección breve", () => {

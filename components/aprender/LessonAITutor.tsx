@@ -1521,7 +1521,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceMuteGainRef.current?.disconnect();
     voiceMuteGainRef.current = null;
 
-    voiceStreamRef.current?.getTracks().forEach((track) => track.stop());
+    const microphoneStream = voiceStreamRef.current;
+    microphoneStream?.getTracks().forEach((track) => {
+      // Detach callbacks before stopping tracks so a late device event cannot
+      // mutate UI state after voice mode has already been torn down.
+      track.onended = null;
+      track.onmute = null;
+      track.onunmute = null;
+      track.stop();
+    });
     voiceStreamRef.current = null;
 
     const audioContext = voiceAudioContextRef.current;
@@ -2938,14 +2946,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         );
       };
       track.onmute = () => {
-        if (!voiceModeRef.current) return;
+        // A replaced microphone track must never overwrite the status of the
+        // current session with a delayed mute event from an older stream.
+        if (!voiceModeRef.current || sessionGeneration !== voiceSessionGenerationRef.current
+          || voiceStreamRef.current !== stream) return;
         setVoiceStatus("El navegador pausó el micrófono; comprueba el permiso del sitio.");
       };
       track.onunmute = () => {
-        if (voiceModeRef.current) {
-          setVoiceError("");
-          setVoiceStatus("Te escucho…");
-        }
+        if (!voiceModeRef.current || sessionGeneration !== voiceSessionGenerationRef.current
+          || voiceStreamRef.current !== stream) return;
+        setVoiceError("");
+        setVoiceStatus("Te escucho…");
       };
     });
 

@@ -2441,8 +2441,12 @@ test("las respuestas TTS largas conservan el texto completo y no omiten fragment
   assert.ok(lessonTutorSource.includes("Math.min(900_000,"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(30_000)"));
   assert.match(lessonTutorSource, /const prefetchNextTtsChunk = \(\) =>/);
+  assert.match(lessonTutorSource, /const schedulePrefetchNextTtsChunk = \(durationSeconds: number\) =>/);
+  assert.match(lessonTutorSource, /durationSeconds < 1\.5/);
+  assert.match(lessonTutorSource, /durationSeconds \* 0\.65/);
+  assert.match(lessonTutorSource, /prefetchTimer !== null\) window\.clearTimeout\(prefetchTimer\)/);
   assert.match(lessonTutorSource, /prefetchedAudio\?\.controller\.abort\(\)/);
-  assert.match(lessonTutorSource, /prefetchNextTtsChunk\(\);/);
+  assert.match(lessonTutorSource, /schedulePrefetchNextTtsChunk\(decodedAudio\.duration\)/);
   assert.match(lessonTutorSource, /const prefetched = prefetchedAudio\?\.index === chunkIndex/);
   assert.match(lessonTutorSource, /\.catch\(\(\) => \{\s*if \(prefetchedAudio\?\.controller === controller\) prefetchedAudio = null;[\s\S]*?return null;/);
   assert.match(lessonTutorSource, /if \(!response\) throw new Error\("TTS_PREFETCH_FAILED"\)/);

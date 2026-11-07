@@ -1,7 +1,8 @@
 class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.pending = new Float32Array(0);
+    this.pendingSample = 0;
+    this.hasPendingSample = false;
     this.position = 0;
     this.targetRate = 16000;
     this.mergedBuffer = new Float32Array(0);
@@ -16,7 +17,8 @@ class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
 
     const left = channels[0];
     const right = channels.length > 1 ? channels[1] : null;
-    const requiredFrames = this.pending.length + left.length;
+    const pendingFrames = this.hasPendingSample ? 1 : 0;
+    const requiredFrames = pendingFrames + left.length;
 
     // Reuse scratch storage between render quanta; grow only when a device
     // supplies a larger-than-usual block.
@@ -25,13 +27,13 @@ class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
       this.mergedBuffer = new Float32Array(capacity);
     }
     const merged = this.mergedBuffer;
-    merged.set(this.pending, 0);
+    if (pendingFrames) merged[0] = this.pendingSample;
     if (right) {
       for (let i = 0; i < left.length; i += 1) {
-        merged[this.pending.length + i] = (left[i] + right[i]) * 0.5;
+        merged[pendingFrames + i] = (left[i] + right[i]) * 0.5;
       }
     } else {
-      merged.set(left, this.pending.length);
+      merged.set(left, pendingFrames);
     }
 
     const step = sampleRate / this.targetRate;
@@ -55,7 +57,8 @@ class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
     // Retain the final source frame and fractional cursor for interpolation
     // across render quanta; do not discard the resampler's overshoot.
     const consumed = Math.min(Math.floor(this.position), Math.max(0, requiredFrames - 1));
-    this.pending = merged.slice(consumed, requiredFrames);
+    this.hasPendingSample = consumed < requiredFrames;
+    this.pendingSample = this.hasPendingSample ? merged[consumed] : 0;
     this.position -= consumed;
 
     // Fill a fixed 40 ms packet directly. Transfer complete packets and

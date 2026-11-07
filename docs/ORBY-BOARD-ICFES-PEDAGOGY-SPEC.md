@@ -526,3 +526,29 @@ El cuerpo humano representado es un esquema genérico; no está segmentado por s
 
 ### Estado
 Cambios guardados en `feat/founder-intro`; pendiente ejecución efectiva de pruebas, TypeScript, ESLint, build y validación manual de voz/pizarra. No se modificó `main`, no se desplegó ni se añadieron proveedores de pago. No autorizar Pull hasta completar las verificaciones.
+
+
+## 19. Séptimo incremento — neurona y señalización nerviosa (2026-11-07)
+
+### Nueva primitiva `neuron`
+- Partes admitidas: dendritas, soma, núcleo, cono axónico, axón, mielina, nodos de Ranvier y terminales sinápticas.
+- Requiere dendritas, soma, axón y terminales sinápticas; limita el total a ocho partes y valida IDs y nombres únicos.
+- Renderizador conceptual de la neurona y lista accesible de partes y funciones.
+- Herramienta Live y prompts de voz/texto actualizados.
+
+### Precisión científica
+Orby debe distinguir:
+- Recepción e integración de señales en dendritas/soma.
+- Propagación del potencial de acción a lo largo del axón.
+- Comunicación sináptica entre neuronas u otras células, que puede ser química o eléctrica según el tipo de sinapsis.
+- La mielina y los nodos de Ranvier participan en la conducción saltatoria en axones mielinizados; no deben presentarse como estructuras obligatorias en toda neurona.
+
+El dibujo es esquemático, no está a escala y no representa todos los tipos neuronales ni la complejidad de la sinapsis.
+
+### Pruebas añadidas
+- Aceptación de neurona con las cuatro partes fundamentales.
+- Rechazo de escena que omite el axón.
+- Comprobaciones estáticas de renderer, herramienta Live y distinción entre potencial de acción y transmisión sináptica.
+
+### Estado
+Cambios guardados en `feat/founder-intro`; pendiente ejecutar tests, TypeScript, ESLint, build y prueba real de voz/pizarra. No se modificó `main`, no se desplegó ni se introdujeron servicios pagos. Pull sigue bloqueado hasta completar validación.

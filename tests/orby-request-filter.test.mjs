@@ -3629,34 +3629,53 @@ test("La escucha continua solo se rearma tras terminar todos los fragmentos de v
 
 
 
-test("las actualizaciones Live de la pizarra se acumulan sin duplicar bloques y reemplazan visuales por identidad", () => {
-  const { sanitizeOrbyBoard, mergeOrbyBoardSnapshots } = boardModule;
-  const first = sanitizeOrbyBoard({
+
+
+test("la pizarra Live acepta la última instantánea completa como estado autoritativo", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const previous = sanitizeOrbyBoard({
     version: 1,
     title: "Densidad",
-    blocks: [{ type: "heading", text: "Primero: masa" }, { type: "text", text: "La masa mide la cantidad de materia." }],
+    blocks: [{ type: "heading", text: "Borrador anterior" }],
   });
-  const second = sanitizeOrbyBoard({
+  const latest = sanitizeOrbyBoard({
     version: 2,
-    title: "Densidad",
-    blocks: [
-      { type: "heading", text: "Primero: masa" },
-      { type: "text", text: "La masa mide la cantidad de materia." },
-      { type: "step", label: "Después", text: "Relacionamos masa y volumen." },
-    ],
+    title: "Densidad corregida",
+    blocks: [{ type: "heading", text: "Densidad" }, { type: "formula", text: "d = m / V" }],
     visuals: [{
       type: "diagram",
-      title: "Relación masa-volumen",
+      title: "Masa y volumen",
       nodes: [{ id: "masa", label: "Masa", x: 25, y: 50 }, { id: "vol", label: "Volumen", x: 75, y: 50 }],
       edges: [{ from: "masa", to: "vol" }],
     }],
   });
-  assert.ok(first);
-  assert.ok(second);
-  const merged = mergeOrbyBoardSnapshots(first, second);
-  assert.equal(merged.blocks.length, 3, "conserva pasos previos y agrega solo el nuevo");
-  assert.equal(merged.visuals?.length, 1);
-  const repeated = mergeOrbyBoardSnapshots(merged, second);
-  assert.equal(repeated.blocks.length, 3, "una instantánea repetida no duplica bloques");
-  assert.equal(repeated.visuals?.length, 1);
+  assert.ok(previous);
+  assert.ok(latest);
+  assert.equal(latest.version, 2);
+  assert.equal(latest.blocks.some((block) => block.text.includes("Borrador anterior")), false);
+  assert.equal(latest.visuals?.length, 1);
+});
+
+test("Gemini Live recibe instrucciones de dibujar por secciones y limita las actualizaciones por turno", async () => {
+  const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(lesson, /const snapshot = sanitizeOrbyBoard\(args\)/);
+  assert.match(lesson, /const board = snapshot/);
+  assert.match(lesson, /voiceTeachingBoardRef\.current = snapshot/);
+  assert.match(lesson, /MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8/);
+  assert.match(lesson, /voiceBoardUpdateCountRef\.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN/);
+  assert.doesNotMatch(lesson, /mergeOrbyBoardSnapshots/);
+  assert.match(tools, /ONE call at a time; never bundle multiple board snapshots/);
+  assert.match(tools, /FULL cumulative current board/);
+  assert.match(renderer, /JSON\.stringify\(visual\)/);
+});
+
+test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perder idempotencia", async () => {
+  const migration = await readFile(new URL("../supabase/migrations/20261107070000_orby_board_visual_persistence.sql", import.meta.url), "utf8");
+  assert.equal((migration.match(/create or replace function public\.orby_save_(?:turn|voice_turn)_with_board/gi) ?? []).length, 2);
+  assert.equal((migration.match(/coalesce\(p_teaching_board->>'version', ''\) not in \('1', '2'\)/g) ?? []).length, 2);
+  assert.equal((migration.match(/jsonb_array_length\(p_teaching_board->'visuals'\) > 4/g) ?? []).length, 2);
+  assert.equal((migration.match(/octet_length\(p_teaching_board::text\) > 24000/g) ?? []).length, 2);
+  assert.match(migration, /on conflict \(conversation_id, user_id, turn_id\) do nothing/);
 });

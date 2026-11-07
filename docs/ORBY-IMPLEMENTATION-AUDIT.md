@@ -176,3 +176,10 @@ Pruebas necesarias:
 - No se fija una promesa de respuesta total en 1 segundo: la red, el modelo, la generación de audio y la complejidad hacen imposible garantizarlo en todos los casos. Objetivo de ingeniería: primera señal útil/subtítulo/audio lo antes posible y medir p50/p95 por etapa.
 - El valor de 400 ms es un ajuste conservador sujeto a QA de interrupciones y falsos cierres; si corta frases o turnos naturales, debe revertirse o ajustarse tras medición.
 - Prueba estática añadida para asegurar que ambos lados coincidan y que la instrucción no omita seguridad. Archivos releídos en GitHub; no se ejecutaron Node tests, TypeScript, ESLint, build ni pruebas de micrófono. No hay workflow CI asociado al commit de test.
+
+
+## 16. Medición del primer audio recibido — 2026-11-07
+- Se añadió una marca monotónica por turno para registrar cuándo llega el primer chunk de audio Live, separada de cuándo se programa el primer audio audible.
+- La marca se reinicia al aceptar un turno por voz o texto dentro de la llamada. Esto permite distinguir latencia de generación/transporte de la programación de reproducción.
+- Se añadió prueba estática de presencia de ambas métricas. Los logs registran tiempos y no contenido de voz.
+- Aún no hay mediciones reales de p50/p95 ni pruebas runtime; no afirmar que se alcanzó el objetivo de 1 s. Workflow CI no reportado para el commit.

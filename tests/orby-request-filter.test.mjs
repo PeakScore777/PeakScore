@@ -2807,6 +2807,33 @@ test("una interrupción del estudiante descarta el final de audio anterior sin c
   assert.match(eventMethod, /if \(!discardInterruptedGenerationOutput[\s\S]*?serverContent\.turnComplete/);
 });
 
+test("Orby libera callbacks y buffers PCM tras reproducción, interrupción y cierre", () => {
+  const stopPlaybackStart = lessonTutorSource.indexOf("function stopVoicePlayback()");
+  const stopPlaybackEnd = lessonTutorSource.indexOf("function clearVoiceResponseWatchdog()", stopPlaybackStart);
+  const stopPlayback = lessonTutorSource.slice(stopPlaybackStart, stopPlaybackEnd);
+  assert.match(stopPlayback, /source\.onended = null/);
+  assert.match(stopPlayback, /source\.stop\(\)/);
+  assert.match(stopPlayback, /source\.disconnect\(\)/);
+  assert.match(stopPlayback, /source\.buffer = null/);
+  assert.match(stopPlayback, /voiceAudioSourcesRef\.current\.clear\(\)/);
+
+  const livePlaybackStart = lessonTutorSource.indexOf("function playGeminiAudio(");
+  const livePlaybackEnd = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool", livePlaybackStart);
+  const livePlayback = lessonTutorSource.slice(livePlaybackStart, livePlaybackEnd);
+  assert.match(livePlayback, /source\.onended = \(\) => \{/);
+  assert.match(livePlayback, /source\.onended = null/);
+  assert.match(livePlayback, /source\.buffer = null/);
+  assert.match(livePlayback, /voiceAudioSourcesRef\.current\.delete\(source\)/);
+
+  const ttsStart = lessonTutorSource.indexOf("function speakWithVerifiedFreeTts(");
+  const ttsEnd = lessonTutorSource.indexOf("function ", ttsStart + 12);
+  const tts = lessonTutorSource.slice(ttsStart, ttsEnd);
+  assert.match(tts, /source\.onended = null/);
+  assert.match(tts, /source\.buffer = null/);
+  assert.match(tts, /source\.disconnect\(\)/);
+  assert.match(tts, /playbackGeneration !== voiceSpeechPlaybackGenerationRef\.current/);
+});
+
 test("Orby mide por turno la latencia hasta la primera transcripción y el primer audio Live", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(source, /voiceTurnAcceptedAtRef = useRef\(0\)/);

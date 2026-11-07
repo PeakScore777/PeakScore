@@ -58,8 +58,10 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
     muted: "#94a3b8",
     success: "#0f766e",
   } as const;
-  const strokeTimings = visual.strokes.map((stroke, index) => ({
-    delay: visual.strokes.slice(0, index).reduce((total, previous) => total + Math.min(1_800, Math.max(520, previous.points.length * 48)) + 110, 0),
+  // Cumulative snapshots keep prior strokes mounted. Use a short stagger,
+  // not the sum of every previous stroke duration, so later updates stay live.
+  const strokeTimings = visual.strokes.map((_stroke, index) => ({
+    delay: Math.min(index * 180, 900),
   }));
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-[680px] min-h-[320px] w-full overflow-visible">

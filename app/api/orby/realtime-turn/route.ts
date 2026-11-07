@@ -79,12 +79,17 @@ export async function POST(request: Request) {
       const boardSave = await supabaseAdmin.rpc("orby_save_voice_turn_with_board", { ...voiceTurnArgs, p_teaching_board: board });
       data = boardSave.data as { ok?: boolean; code?: string } | null;
       error = boardSave.error;
-      if (boardSave.error && isMissingDatabaseFunction(boardSave.error)) {
+      const rejectedByLegacyBoardSchema = Boolean(
+        boardSave.data && typeof boardSave.data === "object"
+        && (boardSave.data as { ok?: unknown }).ok === false
+        && (boardSave.data as { code?: unknown }).code === "invalid_input",
+      );
+      if ((boardSave.error && isMissingDatabaseFunction(boardSave.error)) || rejectedByLegacyBoardSchema) {
         const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", voiceTurnArgs);
         data = legacySave.data as { ok?: boolean; code?: string } | null;
         error = legacySave.error;
         boardPersisted = false;
-        console.warn("[Orby Realtime] Board RPC is not installed yet; saved the idempotent text turn only.");
+        console.warn("[Orby Realtime] Board persistence schema is behind the current scene format; saved the idempotent text turn only.");
       }
     } else {
       const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", voiceTurnArgs);

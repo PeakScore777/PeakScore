@@ -1136,12 +1136,17 @@ No uses bloques Markdown ni texto fuera del JSON.
       const boardSave = await supabaseAdmin.rpc("orby_save_turn_with_board", { ...turnArgs, p_teaching_board: board });
       let savedTurn: unknown = boardSave.data;
       let saveTurnError = boardSave.error;
-      if (boardSave.error && isMissingDatabaseFunction(boardSave.error)) {
+      const rejectedByLegacyBoardSchema = Boolean(
+        board && boardSave.data && typeof boardSave.data === "object"
+        && (boardSave.data as { ok?: unknown }).ok === false
+        && (boardSave.data as { code?: unknown }).code === "invalid_input",
+      );
+      if ((boardSave.error && isMissingDatabaseFunction(boardSave.error)) || rejectedByLegacyBoardSchema) {
         const legacySave = await supabaseAdmin.rpc("orby_save_turn", turnArgs);
         savedTurn = legacySave.data;
         saveTurnError = legacySave.error;
         boardPersisted = false;
-        console.warn("[Orby Tutor] Board RPC is not installed yet; saved the atomic text turn only.");
+        console.warn("[Orby Tutor] Board persistence schema is behind the current scene format; saved the atomic text turn only.");
       }
       if (saveTurnError || !savedTurn || typeof savedTurn !== "object" || (savedTurn as { ok?: boolean }).ok !== true) {
         console.error("[Orby Tutor] Atomic turn persistence failed.", { code: saveTurnError?.code });

@@ -3853,3 +3853,11 @@ test("la voz Live conserva el turno idempotente si aún no existe la RPC de piza
   assert.match(realtimeTurnSource, /boardPersisted/);
   assert.match(lessonTutorSource, /boardPersistenceWarning/);
 });
+
+
+test("las RPC antiguas de pizarra no hacen perder turnos con escenas visuales version 2", () => {
+  assert.match(cloudflareTutorRoute, /rejectedByLegacyBoardSchema/);
+  assert.match(cloudflareTutorRoute, /code\?: unknown \}\)\.code === "invalid_input"/);
+  assert.match(realtimeTurnSource, /rejectedByLegacyBoardSchema/);
+  assert.match(realtimeTurnSource, /boardPersisted = false/);
+});

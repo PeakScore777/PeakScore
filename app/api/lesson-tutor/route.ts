@@ -1099,7 +1099,7 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     const persistenceStartedAt = performance.now();
     if (conversationId && ownedConversation) {
-      const { data: savedTurn, error: saveTurnError } = await supabaseAdmin.rpc("orby_save_turn", {
+      const { data: savedTurn, error: saveTurnError } = await supabaseAdmin.rpc("orby_save_turn_with_board", {
         p_user_id: user.id,
         p_conversation_id: conversationId,
         p_user_content: userMessage || "Analiza la imagen adjunta.",
@@ -1107,6 +1107,7 @@ No uses bloques Markdown ni texto fuera del JSON.
         p_check_question: finalCheckQuestion || null,
         p_attachment_kind: tutorImage ? "image" : body.attachmentKind === "audio" ? "audio" : null,
         p_attachment_label: cleanText(body.attachmentLabel, 120) || (tutorImage ? "Imagen adjunta" : null),
+        p_teaching_board: board,
       });
       if (saveTurnError || !savedTurn || typeof savedTurn !== "object" || (savedTurn as { ok?: boolean }).ok !== true) {
         console.error("[Orby Tutor] Atomic turn persistence failed.", { code: saveTurnError?.code });

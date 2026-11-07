@@ -203,3 +203,11 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Commit `e6c1738`: prueba de regresión para verificar el contador, el reinicio y que la telemetría no incluya contenido académico.
 - Esta instrumentación permite comparar cuándo aparece cada dibujo con el inicio del audio y detectar escenas que llegan tarde. No es sincronización automática ni cambia la temporización del modelo.
 - Validar privacidad y utilidad de estos logs en una sesión local antes de usarlos en producción. No se activa Gemini Live en producción.
+
+## Incidencia de CI y corrección — 2026-11-07
+
+- La compilación Vercel del commit `314c10b236d3ae78b5377801eb32a5fe2b0349ab` falló durante `npm run build` porque el test estático de la herramienta de pizarra tenía el patrón RegExp sobreescapado: buscaba los caracteres literales `\\s\\S` en vez de cualquier secuencia de caracteres.
+- En esa ejecución, el conjunto reportó 134 pruebas: 133 pasaron y falló únicamente la aserción de presencia de `Behavior.NON_BLOCKING`; no fue un error de TypeScript ni del componente de pizarra.
+- Commit `b7548bfe77a4686be16ea01c437dd262dd318ccc`: corregido el patrón a `[\\s\\S]` y `Behavior\.NON_BLOCKING`.
+- La comprobación del archivo en GitHub confirma que el patrón ya está escrito correctamente. El estado Vercel del nuevo SHA todavía figura como `pending`; esperar el resultado de la nueva compilación antes de declarar CI verde.
+- No se ha ejecutado una sesión Chrome con audio real. No solicitar Pull ni desplegar manualmente.

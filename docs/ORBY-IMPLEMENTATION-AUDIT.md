@@ -190,3 +190,34 @@ Pruebas necesarias:
 - Se instrumenta el tiempo total desde aceptación de la pregunta hasta quedar listo para el siguiente turno (`fullConversationCycleMs`), separado de primer texto/primer audio.
 - El objetivo es conversación manos libres continua sin pulsar de nuevo el micrófono entre turnos. No se modifica la detección de silencio de 400 ms en esta tanda.
 - Prueba estática añadida para el orden de espera de audio y rearme de escucha. No ejecutada en Node ni probada con micrófono real; no hay afirmación de QA runtime.
+
+
+## 18. Auditoría profunda adicional y primera entrega Studio — 2026-11-07
+
+**Rama de trabajo:** `feat/orby-studio-classroom` (derivada de `feat/founder-intro`; cuatro commits por delante y cero por detrás en el momento de la revisión). No modifica `main`.
+
+### Hallazgos confirmados en el video actual y en el código
+
+1. El escenario de llamada daba prioridad visual a la esfera central; la pizarra solo aparecía si ya existía `activeVoiceAssistantMessage.board`. Mientras tanto se mostraba un estado provisional pequeño. Esto no ofrece una superficie de clase persistente ni un layout de enseñanza.
+2. La llegada de una pizarra dependía principalmente de que Gemini Live llamara a `render_orby_teaching_board`. Si el modelo no invocaba la herramienta, el escenario permanecía sin tablero. No existía un generador visual independiente para recuperar ese caso.
+3. El fallback de voz por turnos podía entregar una respuesta escrita/hablada sin garantizar un tablero visual paralelo.
+4. El renderer tenía SVG y animaciones de trazos para algunos tipos, pero no una secuencia de acciones sincronizadas palabra a palabra con el audio. No se debe afirmar sincronía exacta si Live no proporciona alineación verificable.
+5. La generación de voz y la generación del tablero comparten límites de proveedor/cuota; la nueva ruta visual usa exclusivamente el Cloudflare Workers AI ya configurado y aplica su propio rate limit. Si la cuota gratuita falla, no activa proveedor alternativo facturable.
+6. El identificador de Cloudflare solo desbloquea el endpoint de Workers AI si también existe un API token válido y autorizado. No corrige por sí mismo la sesión Gemini Live, que usa `GEMINI_API_KEY` y un token efímero.
+
+### Cambios realizados en esta rama
+
+- `components/aprender/OrbyBoard.tsx`: rediseño del tablero como lienzo de aula, fondo claro de papel, área de escritura amplia, jerarquía didáctica, cabecera de clase y pie PeakScore.
+- `components/aprender/LessonAITutor.tsx`: rediseño del escenario de voz como aula de dos columnas: pizarra dominante y panel lateral con Orby, subtítulos y controles. La pizarra tiene una superficie estable incluso antes de recibir el primer tablero; la esfera deja de ocupar el centro de la clase.
+- `app/api/orby/voice-board/route.ts`: endpoint autenticado para generar un tablero independiente usando el modelo de Cloudflare Workers AI ya existente. Valida alcance Saber 11, entrada, límite por usuario y salida con `sanitizeOrbyBoard`; no guarda turnos ni duplica el chat.
+- `LessonAITutor.tsx`: petición visual paralela al aceptar una pregunta académica en voz. La respuesta Live sigue siendo prioritaria: si llega una pizarra Live, cancela la petición alternativa; si el respaldo llega primero, se muestra y una pizarra Live posterior puede sustituirla. La petición se cancela al cambiar de generación/interrumpir.
+- `tests/orby-request-filter.test.mjs`: regresión estática para el escenario de aula, endpoint visual, cancelación y límites.
+
+### Validación y límites
+
+- Se verificó por GitHub que la rama nueva contiene los tres archivos principales y el test actualizado.
+- Comparación con `feat/founder-intro`: 4 commits ahead, 0 behind.
+- El estado Vercel consultado para el commit anterior de la rama base muestra fallo por `build-rate-limit`/límite de builds del plan; no es evidencia de un error TypeScript de esta rama.
+- No se pudo ejecutar Node tests, TypeScript, ESLint, build ni una sesión Chrome/micrófono desde la conexión actual. Por tanto, esta entrega es una implementación estática comprometida, todavía no una validación runtime aprobada.
+- Falta QA manual de: voz real + pizarra simultánea, carrera entre Live y fallback, interrupción durante generación visual, fallback con cuota agotada, móvil, persistencia de la pizarra Live y tiempos p50/p95.
+- No crear PR hacia `main`, no desplegar y no aplicar migraciones remotas hasta que las pruebas locales/CI estén verdes.

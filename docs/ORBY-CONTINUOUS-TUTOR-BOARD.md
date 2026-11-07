@@ -286,3 +286,11 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - No se cambió `ORBY_GEMINI_LIVE_ENABLED`, privacidad, cuotas, migraciones ni configuración de Supabase.
 - La CI debe finalizar tests Orby, TypeScript, ESLint y build sobre el commit nuevo. Después se requiere Chrome con micrófono: primera escena durante voz, varias actualizaciones acumulativas, interrupción, nueva pregunta e historial manual.
 - No hacer Pull, merge a `main` ni despliegue hasta revisar los resultados.
+
+## Revisión del primer resultado local — 2026-11-07
+
+- El registro local compartido reporta 170 pruebas: 165 aprobadas y 5 fallidas.
+- Se identificaron tres expectativas estáticas desactualizadas por el nuevo flujo: tres salidas SILENT (visible/provisional/rechazada), limpieza segura antes de responder un rechazo y nueva disposición de la pizarra.
+- Una de las cinco fallas sí detectó un detalle de presentación: el deduplicador conservaba los espacios periféricos de la copia más reciente aunque el texto normalizado fuera idéntico. Ahora conserva el primer texto y fusiona los metadatos visuales posteriores.
+- Se actualizó el contrato de pruebas y se corrigió el texto accesible del estado de preparación. El siguiente resultado local debe confirmar que desaparecen estas cinco fallas.
+- Este registro no equivale a una ejecución nueva: falta volver a correr `npm run test:orby`, TypeScript, ESLint y build. No declarar CI verde hasta ver esos resultados.

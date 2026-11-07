@@ -304,3 +304,14 @@ El workflow de CI debe completar suite Orby, TypeScript, ESLint y build de produ
 ### Recuperación de Lab sin esperar embeddings lentos
 
 La búsqueda de conocimiento conserva la recuperación híbrida y el aislamiento estricto por materia. Se separó el timeout de embeddings de consulta del timeout de ingestión documental: `createOrbyQueryEmbeddingForModel` usa un límite de 8 segundos para la solicitud de consulta; si no hay vector a tiempo, `searchOrbyKnowledge` continúa con la búsqueda léxica acotada a la materia. `createCloudflareEmbeddings` conserva 25 segundos por defecto, para que los lotes de procesamiento del Orby Lab no hereden el límite corto de una consulta interactiva. Se añadieron pruebas que comprueban explícitamente ambos contratos.
+
+
+### Barge-in después de `turnComplete`, mientras Live aún reproduce audio
+
+Se amplió la marca de interrupción del estudiante. No basta con `voiceResponseDoneRef`: Live puede haber terminado la generación, pero el audio programado continuar reproduciéndose. `interruptCurrentVoiceOutput` ahora considera también `voiceBrowserSpeechActiveRef`, fuentes Web Audio activas y el horizonte de reproducción del `AudioContext`. Así, una interrupción durante ese intervalo conserva el turno nuevo y no permite que el evento `interrupted` cierre su espera.
+
+La prueba verifica que la marca de barge-in cubra tanto una generación aún abierta como el audio que sigue en reproducción tras finalizarla.
+
+### Timeouts de embeddings separados por uso
+
+Las consultas de embeddings Cloudflare para recuperación interactiva usan 8 segundos y luego permiten continuar con búsqueda léxica por materia. La función genérica `createCloudflareEmbeddings` conserva 25 segundos por defecto para los lotes del Lab; solo el caller de embeddings de consulta pasa explícitamente 8 segundos. Esto acota el posible bloqueo de una pregunta sin recortar el presupuesto de ingestión documental.

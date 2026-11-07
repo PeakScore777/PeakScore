@@ -1065,6 +1065,22 @@ test("permite contenido científico legítimo que contiene vocabulario ambiguo",
   }
 });
 
+test("bloquea consultas generales sobre personas sin bloquear figuras del currículo ICFES", () => {
+  for (const prompt of [
+    "¿Quién es Westcol?",
+    "Quien es Michael Scott",
+    "¿Quién es Lionel Messi?",
+    "Who is Taylor Swift?",
+  ]) {
+    const result = filter.preflightOrbyRequest(prompt);
+    assert.equal(result.allowed, false, prompt);
+    assert.equal(result.category, "outside", prompt);
+  }
+
+  assert.equal(filter.preflightOrbyRequest("¿Quién fue Simón Bolívar?").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("¿Quién es el narrador del texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
+});
+
 test("rechaza solicitudes explícitas de programación con una redirección breve", () => {
   const refusal = filter.preflightOrbyRequest("Enséñame Python desde cero.");
   assert.equal(refusal.category, "programming");

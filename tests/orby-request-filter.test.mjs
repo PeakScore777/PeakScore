@@ -39,7 +39,6 @@ const knowledgeQueueSource = await readFile(new URL("../lib/ai/orby-knowledge-qu
 const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
 const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-const boardSource = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
 const boardComponentSource = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
 const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-capture.worklet.js", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");

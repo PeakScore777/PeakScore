@@ -394,3 +394,10 @@
 - Se añadió `docs/ORBY-IMPLEMENTATION-AUDIT.md` con arquitectura confirmada, brechas curriculares, validación semántica pendiente y plan de pruebas.
 - No se ejecutaron localmente pruebas, TypeScript, ESLint ni build; no se declara CI aprobada ni prueba real de Chrome/micrófono.
 - No se tocó `main`, no se desplegó y no se aplicaron migraciones remotas. No hacer Pull hasta validar CI, voz/tablero y la migración de idempotencia de voz en un entorno de prueba.
+
+
+## 2026-11-07 — etapas de pizarra ligadas a la frase hablada
+- El contrato de la herramienta Live incluye `spokenCue` opcional para asociar cada snapshot acumulativo con una frase exacta de la explicación.
+- LessonAITutor retiene las etapas hasta que la transcripción de salida validada contiene esa frase; valida generación/sesión y descarta etapas antiguas.
+- No añade llamadas de IA ni servicios; conserva compatibilidad para snapshots sin cue y respeta los filtros existentes.
+- Es sincronización aproximada por frase, no alineación temporal exacta con el audio. Falta QA real y ejecución de tests/build.

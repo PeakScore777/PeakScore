@@ -1821,6 +1821,13 @@ test("una selección nueva se valida antes de actualizar la materia activa en vo
   assert.ok(validReply > sendStart && successfulResponse > validReply);
 });
 
+test("el motor OCR local se carga solo cuando el estudiante lo solicita", () => {
+  assert.doesNotMatch(lessonTutorSource, /^import\s+\{\s*createWorker\s*\}\s+from\s+["']tesseract\.js["'];?\s*$/m);
+  assert.match(lessonTutorSource, /async function readImageText\(\)[\s\S]*?await import\(["']tesseract\.js["']\)/);
+  assert.match(lessonTutorSource, /worker = await createWorker\(["']spa["']\)/);
+  assert.match(lessonTutorSource, /if \(worker\) await worker\.terminate\(\)/);
+});
+
 test("el motor conserva los lotes visuales al volver a indexar fragmentos OCR", () => {
   assert.match(chunkCapacityMigration, /chunk_count\s*<=\s*2000/i);
   assert.match(knowledgeWorkerSource, /const MAX_DOCUMENT_CHUNKS = 2000/);

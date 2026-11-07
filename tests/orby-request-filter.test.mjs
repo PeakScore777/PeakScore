@@ -3556,3 +3556,13 @@ test("La pizarra revela trazos SVG progresivamente y respeta movimiento reducido
   assert.match(styles, /stroke-dashoffset: 1/);
   assert.match(styles, /prefers-reduced-motion: reduce/);
 });
+
+
+test("Los bloques y visuales nuevos de la pizarra se revelan sin cambiar las claves de los elementos existentes", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(renderer, /const blockKey =/);
+  assert.match(renderer, /orby-board-appear/);
+  assert.match(renderer, /visual\.type}:/);
+  assert.match(renderer, /animationDelay/);
+  assert.match(renderer, /key=\{stage\.name\}/);
+});

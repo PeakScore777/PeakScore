@@ -1124,6 +1124,8 @@ test("Orby no promociona su propia plataforma cuando le preguntan si es recomend
   assert.match(tutor, /ORBY_PLATFORM_NEUTRALITY_REPLY/);
   assert.match(tutor, /hasRecentPeakScoreIdentityExchange/);
   assert.match(lessonTutorSource, /containsPlatformMarketingClaim\(rawReply\)/);
+  const partialSafetyGate = lessonTutorSource.slice(lessonTutorSource.indexOf("const partialUnsafe ="), lessonTutorSource.indexOf("if (partialUnsafe)", lessonTutorSource.indexOf("const partialUnsafe =")));
+  assert.match(partialSafetyGate, /containsPlatformMarketingClaim\(partialReply\)/);
   assert.match(tutor, /asksPeakScoreRecommendationFollowUp/);
   assert.match(tutor, /No puedo darte una valoración independiente de mi propia plataforma ni prometer resultados/);
   assert.match(tutor, /const asksUserIdentity/);

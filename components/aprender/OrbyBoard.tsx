@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
 import { useId } from "react";
 import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-board";
@@ -412,13 +412,57 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
   );
 }
 
+type StudentStroke = { points: Array<{ x: number; y: number }>; mode: "pen" | "highlight" };
+
 export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
+  const [tool, setTool] = useState<"pen" | "highlight" | "eraser">("pen");
+  const [strokes, setStrokes] = useState<StudentStroke[]>([]);
+  const [draft, setDraft] = useState<StudentStroke | null>(null);
+  const [drawing, setDrawing] = useState(false);
+  function getPoint(event: React.PointerEvent<SVGSVGElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    return { x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)), y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100)) };
+  }
+  function pointerDown(event: React.PointerEvent<SVGSVGElement>) {
+    const point = getPoint(event);
+    if (tool === "eraser") {
+      setStrokes((current) => current.filter((stroke) => !stroke.points.some((p) => Math.hypot(p.x - point.x, p.y - point.y) < 5)));
+      return;
+    }
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDrawing(true);
+    setDraft({ points: [point], mode: tool });
+  }
+  function pointerMove(event: React.PointerEvent<SVGSVGElement>) {
+    if (drawing) {
+      const point = getPoint(event);
+      setDraft((current) => current ? { ...current, points: [...current.points, point] } : current);
+    }
+  }
+  function pointerUp() {
+    if (!drawing) return;
+    setDrawing(false);
+    setDraft((current) => {
+      if (current && current.points.length > 1) setStrokes((items) => [...items, current]);
+      return null;
+    });
+  }
   return (
     <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden rounded-xl border border-slate-200/90 bg-[#fffefb] text-slate-900 shadow-[0_10px_34px_rgba(15,23,42,.10)] sm:rounded-2xl" style={{ backgroundImage: "linear-gradient(rgba(148,163,184,.075) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.075) 1px, transparent 1px)", backgroundSize: "30px 30px" }}>
       <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200/90 bg-[#fffefb]/95 px-4 py-3 backdrop-blur-sm sm:px-8">
         <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Apuntes de clase</h3></div>
         <span className="truncate text-right text-xs font-semibold text-slate-700 sm:text-sm">{board.title}</span>
       </header>
+      <div className="sticky top-[49px] z-10 flex flex-wrap items-center gap-1.5 border-b border-slate-200 bg-[#fffefb]/95 px-3 py-2 backdrop-blur-sm" aria-label="Herramientas de anotación">
+        <span className="mr-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Mis trazos</span>
+        <button type="button" onClick={() => setTool("pen")} aria-pressed={tool === "pen"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "pen" ? "bg-orange-100 text-orange-800" : "text-slate-600 hover:bg-slate-100")}>Lápiz</button>
+        <button type="button" onClick={() => setTool("highlight")} aria-pressed={tool === "highlight"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "highlight" ? "bg-amber-100 text-amber-800" : "text-slate-600 hover:bg-slate-100")}>Resaltador</button>
+        <button type="button" onClick={() => setTool("eraser")} aria-pressed={tool === "eraser"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "eraser" ? "bg-slate-200 text-slate-900" : "text-slate-600 hover:bg-slate-100")}>Borrador</button>
+        <button type="button" onClick={() => setStrokes((items) => items.slice(0, -1))} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Deshacer</button>
+        <button type="button" onClick={() => setStrokes([])} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Limpiar</button>
+        <span className="ml-auto text-[9px] text-slate-400">{strokes.length} trazos</span>
+      </div>
       <div className="mx-auto min-h-[60vh] max-w-6xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-10 sm:py-10">
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
@@ -434,6 +478,10 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
           <Visual visual={visual}/>
         </section>)}
       </div>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Capa de escritura personal" className={"absolute inset-0 z-[8] h-full w-full touch-none " + (tool === "eraser" ? "cursor-cell" : "cursor-crosshair")} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onLostPointerCapture={pointerUp}>
+        {strokes.map((stroke, index) => <polyline key={index} points={stroke.points.map((p) => p.x + "," + p.y).join(" ")} fill="none" stroke={stroke.mode === "highlight" ? "#fbbf24" : "#ea580c"} strokeWidth={stroke.mode === "highlight" ? 3.8 : 0.9} strokeLinecap="round" strokeLinejoin="round" opacity={stroke.mode === "highlight" ? 0.32 : 0.9}/>)}
+        {draft && <polyline points={draft.points.map((p) => p.x + "," + p.y).join(" ")} fill="none" stroke={draft.mode === "highlight" ? "#fbbf24" : "#ea580c"} strokeWidth={draft.mode === "highlight" ? 3.8 : 0.9} strokeLinecap="round" strokeLinejoin="round" opacity={draft.mode === "highlight" ? 0.32 : 0.9}/>}
+      </svg>
     </section>
   );
 }

@@ -219,7 +219,7 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
 
 test("una respuesta Live lenta no fuerza TTS si el canal sigue conectado", () => {
   assert.ok(lessonTutorSource.includes("Every transcript/audio/tool event rearms this inactivity timer."));
-  assert.ok(lessonTutorSource.includes("if (voiceChannelRef.current)"));
+  assert.match(lessonTutorSource, /fallbackVoiceTurnToText\(voiceChannelRef\.current\s*\?/);
   assert.ok(lessonTutorSource.includes("}, 32_000);"));
   assert.ok(lessonTutorSource.includes("}, 12_000);"));
   assert.match(lessonTutorSource, /Gemini Live dejó de enviar avances/);
@@ -582,7 +582,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
 });
 
 test("la creación y conexión de tokens efímeros Live usan v1beta y rechazan ASR débil durante la voz", () => {
-  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1beta" \} \}\)/);
+  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1beta", timeout: 12_000 \} \}\)/);
   assert.match(lessonTutorSource, /apiKey: tokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1beta"/);
   assert.match(lessonTutorSource, /apiKey: resumeTokenPayload\.ephemeralToken,[\s\S]{0,100}apiVersion: "v1beta"/);
   assert.match(lessonTutorSource, /const acceptFinalTranscript = Boolean\([\s\S]*?!isRecentAcousticEcho[\s\S]*?!assistantAudioInFlight \|\| isMeaningfulBargeIn/);

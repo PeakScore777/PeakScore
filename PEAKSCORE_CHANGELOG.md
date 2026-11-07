@@ -1,5 +1,10 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — estado de preparación del tablero en llamada
+- La llamada reserva una superficie de pizarra mientras el turno está pendiente y aún no hay visual validado; se reemplaza por el tablero real cuando llega.
+- No se muestra un dibujo ficticio ni se genera una petición adicional. Test estático añadido; runtime/Chrome/TS/ESLint/build pendientes.
+
+
 ## 2026-11-07 — continuidad del tutor de voz dentro del chat
 - La respuesta de voz activa muestra estado EN VIVO en su burbuja y el texto incremental usa aria-live polite para accesibilidad.
 - El tablero permanece debajo del mismo mensaje y conserva el id compartido con el escenario de llamada.

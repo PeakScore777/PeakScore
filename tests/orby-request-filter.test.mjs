@@ -757,6 +757,7 @@ test("los saludos cortos se reconocen y el modo voz los remite a Gemini Live", (
   assert.ok(lessonTutorSource.includes("(preflight.allowed ? null : preflight.reply)"));
   assert.match(lessonTutorSource, /if \(isOrbyGreetingRequest\(voiceUserTextRef\.current\)\)/);
   assert.match(lessonTutorSource, /getOrbyGreetingFollowUpReply\(greetingContext, activeSubjectRef\.current\)/);
+  assert.match(lessonTutorSource, /\.join\("\\n"\);/);
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, greetingReply, false\)/);
   assert.match(filter.getOrbyGreetingFollowUpReply("assistant: Estamos estudiando álgebra.", "Matemáticas"), /Seguimos con Matemáticas/);
 });

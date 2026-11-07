@@ -322,7 +322,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceAssistantTextRef = useRef("");
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
   const voiceTeachingBoardRef = useRef<OrbyBoardData | null>(null);
-  const voicePendingBoardCuesRef = useRef<Array<{ board: OrbyBoardData; cue: string }>>([]);
+  const voicePendingBoardSnapshotsRef = useRef<Array<{
+    board: OrbyBoardData;
+    sessionGeneration: number;
+    activityGeneration: number;
+    createdAt: number;
+  }>>([]);
+  const voiceAwaitingInputTranscriptionRef = useRef(false);
+  const voiceInputPreflightAcceptedRef = useRef(false);
+  const voiceInputActivityStartedAtRef = useRef(0);
   const voicePublicSourcesRef = useRef<OrbyPublicSource[]>([]);
   const voiceUserMessageVisibleRef = useRef(false);
   const voiceResponseDoneRef = useRef(false);
@@ -913,6 +921,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   // Cancel only the current response, keeping the Live session and mic alive.
   // A new user turn always takes priority over audio that is still playing.
   function interruptCurrentVoiceOutput() {
+    clearPendingOrbyTeachingBoard();
     cancelPendingOrbyKnowledgeRequests();
     // Remember that the next Live "interrupted" event belongs to this
     // student's new turn, not to a completed assistant response.
@@ -1427,6 +1436,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function fallbackVoiceTurnToText(reason: string) {
+    clearPendingOrbyTeachingBoard();
     clearVoiceResponseWatchdog();
     const pendingUserText = voiceUserTextRef.current.trim();
     const forcedPolicyReply = voiceForcedReplyRef.current ?? voicePreflightReplyRef.current;
@@ -1495,6 +1505,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStartupAbortRef.current?.abort();
     voiceStartupAbortRef.current = null;
     voiceModeRef.current = false;
+    clearPendingOrbyTeachingBoard();
     voiceTeachingBoardRef.current = null;
     voiceBargeInPendingRef.current = false;
     voiceFallbackModeRef.current = false;
@@ -2001,6 +2012,46 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  function clearPendingOrbyTeachingBoard() {
+    voicePendingBoardSnapshotsRef.current = [];
+    voiceAwaitingInputTranscriptionRef.current = false;
+    voiceInputPreflightAcceptedRef.current = false;
+    voiceInputActivityStartedAtRef.current = 0;
+  }
+
+  function publishOrbyTeachingBoardSnapshot(board: OrbyBoardData) {
+    voiceTeachingBoardRef.current = board;
+    const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+    voiceAssistantMessageIdRef.current = assistantId;
+    setMessages((current) => {
+      const exists = current.some((message) => message.id === assistantId);
+      return exists
+        ? current.map((message) => message.id === assistantId ? { ...message, board } : message)
+        : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board }];
+    });
+  }
+
+  function flushPendingOrbyTeachingBoard() {
+    const pending = voicePendingBoardSnapshotsRef.current.at(-1) ?? null;
+    voicePendingBoardSnapshotsRef.current = [];
+    voiceAwaitingInputTranscriptionRef.current = false;
+    voiceInputActivityStartedAtRef.current = 0;
+    if (!pending
+      || Date.now() - pending.createdAt > 15_000
+      || pending.sessionGeneration !== voiceSessionGenerationRef.current
+      || pending.activityGeneration !== voiceActivityGenerationRef.current
+      || !voiceInputPreflightAcceptedRef.current
+      || !voicePendingStudentTurnRef.current
+      || !voiceUserTextRef.current.trim()
+      || voiceInputPolicyRef.current !== null
+      || voicePreflightReplyRef.current
+      || isOrbyGreetingRequest(voiceUserTextRef.current)
+      || getOrbySubjectSelectionLabel(voiceUserTextRef.current)
+      || voiceDiscardStaleLiveOutputRef.current
+      || voiceBargeInPendingRef.current) return;
+    publishOrbyTeachingBoardSnapshot(pending.board);
+  }
+
   function handleOrbyLiveTeachingBoardTool(toolCall: unknown) {
     const session = voiceChannelRef.current;
     if (!session || !toolCall || typeof toolCall !== "object") return;
@@ -2013,10 +2064,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (!Array.isArray(calls)) return;
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
     let acceptedSnapshotInEvent = false;
-    // A tool call canceled in a sibling event is ignored by the normal event
-    // dispatcher; this handler never starts asynchronous work or outlives its turn.
-    // Accept at most one snapshot per Live event so React cannot batch several
-    // model updates into a single final frame and hide the progressive drawing.
+
+    // One cumulative snapshot per Live event keeps the teacher-like drawing stages visible.
     for (const raw of calls.slice(0, 3)) {
       if (!raw || typeof raw !== "object") continue;
       const call = raw as { id?: unknown; name?: unknown; args?: unknown };
@@ -2028,38 +2077,76 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const snapshot = sanitizeOrbyBoard(args);
       if (!isCurrent()) return;
       const boardLimitReached = voiceBoardUpdateCountRef.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
-      if (!snapshot || !voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim() || voiceResponseDoneRef.current || boardLimitReached || acceptedSnapshotInEvent) {
-        const reason = acceptedSnapshotInEvent
-          ? "Envía una sola actualización de pizarra por evento y espera su confirmación antes de la siguiente."
+      const activeAcademicTurn = voicePendingStudentTurnRef.current
+        && Boolean(voiceUserTextRef.current.trim())
+        && voiceInputPreflightAcceptedRef.current
+        && voiceInputPolicyRef.current === null
+        && !voicePreflightReplyRef.current
+        && !isOrbyGreetingRequest(voiceUserTextRef.current)
+        && !getOrbySubjectSelectionLabel(voiceUserTextRef.current)
+        && !voiceResponseDoneRef.current
+        && !voiceDiscardStaleLiveOutputRef.current
+        && !voiceBargeInPendingRef.current;
+      const canStageBeforeFinalTranscript = voiceAwaitingInputTranscriptionRef.current
+        && voiceInputActivityStartedAtRef.current > 0
+        && Date.now() - voiceInputActivityStartedAtRef.current <= 15_000
+        && !voiceResponseDoneRef.current
+        && !voiceDiscardStaleLiveOutputRef.current
+        && !voiceBargeInPendingRef.current;
+
+      if (!snapshot || boardLimitReached || acceptedSnapshotInEvent
+        || (!activeAcademicTurn && !canStageBeforeFinalTranscript)) {
+        const reason = !snapshot
+          ? "El esquema no pasó la validación visual."
           : boardLimitReached
-            ? "Se alcanzó el límite de actualizaciones visuales de este turno. Continúa la explicación sin más cambios de pizarra."
-            : "No hay una respuesta académica activa o el contenido de la pizarra no es válido. Continúa la explicación sin pizarra.";
-        responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: false, reason }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
+            ? "Se alcanzó el límite de ocho actualizaciones visuales de este turno."
+            : acceptedSnapshotInEvent
+              ? "Envía una sola actualización de pizarra por evento."
+              : "No hay una pregunta académica validada para esta pizarra.";
+        responses.push({
+          id: call.id,
+          name: "render_orby_teaching_board",
+          response: { accepted: false, status: "rejected", retryable: true, reason },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+        });
         continue;
       }
-      // Tool calls contain a full cumulative snapshot; latest validated state is authoritative.
-      // This permits corrections/removals without leaving stale teaching content visible.
-      const board = snapshot;
+
       acceptedSnapshotInEvent = true;
-      let revealBoardNow = !snapshot.spokenCue;
-      if (snapshot.spokenCue) {
-        const cue = normalizeVoiceComparison(snapshot.spokenCue).replace(/\s+/g, " ").trim();
-        const normalizedExistingSpeech = " " + normalizeVoiceComparison(voiceAssistantTextRef.current).replace(/\s+/g, " ").trim() + " ";
-        const cueAlreadySpoken = Boolean(cue) && normalizedExistingSpeech.includes(" " + cue + " ");
-        // If transcription arrived before the tool call, reveal immediately.
-        // Otherwise preserve queue order so a later snapshot cannot jump ahead.
-        if (voicePendingBoardCuesRef.current.length === 0 && cueAlreadySpoken) {
-          revealBoardNow = true;
-        } else {
-          voicePendingBoardCuesRef.current.push({ board, cue });
-        }
-      } else {
-        // An immediate snapshot supersedes any cue that was never heard.
-        voicePendingBoardCuesRef.current = [];
-        revealBoardNow = true;
-      }
-      if (revealBoardNow) voiceTeachingBoardRef.current = snapshot;
       voiceBoardUpdateCountRef.current += 1;
+      if (activeAcademicTurn) {
+        publishOrbyTeachingBoardSnapshot(snapshot);
+        responses.push({
+          id: call.id,
+          name: "render_orby_teaching_board",
+          response: {
+            accepted: true,
+            status: "rendered",
+            retryable: false,
+            guidance: "Pizarra visible y actualizada. Continúa hablando con naturalidad; no esperes a que termine la animación.",
+          },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+        });
+      } else {
+        voicePendingBoardSnapshotsRef.current = [{
+          board: snapshot,
+          sessionGeneration,
+          activityGeneration,
+          createdAt: Date.now(),
+        }];
+        responses.push({
+          id: call.id,
+          name: "render_orby_teaching_board",
+          response: {
+            accepted: true,
+            status: "queued_for_input_validation",
+            retryable: false,
+            guidance: "Instantánea recibida. Continúa la explicación oral; no repitas el dibujo. Se mostrará al validar la pregunta.",
+          },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
+        });
+      }
+
       console.info("[Orby Voice] Teaching board update timing.", {
         updateNumber: voiceBoardUpdateCountRef.current,
         boardUpdateMs: voiceTurnAcceptedAtRef.current > 0
@@ -2067,34 +2154,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           : null,
         audioChunksScheduled: voiceRealtimeAudioChunkCountRef.current,
       });
-      const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-      voiceAssistantMessageIdRef.current = assistantId;
-      if (revealBoardNow) {
-        setMessages((current) => {
-          const exists = current.some((message) => message.id === assistantId);
-          return exists
-            ? current.map((message) => message.id === assistantId ? { ...message, board } : message)
-            : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board }];
-        });
-      }
-      responses.push({
-        id: call.id,
-        name: "render_orby_teaching_board",
-        response: {
-          accepted: true,
-          guidance: revealBoardNow
-            ? "Pizarra visible. Continúa explicándola con voz natural."
-            : `Pizarra en cola. Pronuncia exactamente "${snapshot.spokenCue}" antes de explicar esa parte; el cliente la mostrará al reconocer la frase.`,
-        },
-        scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
-      });
     }
     if (!isCurrent() || !responses.length) return;
     try {
       (session as unknown as { sendToolResponse: (payload: { functionResponses: typeof responses }) => void })
         .sendToolResponse({ functionResponses: responses });
     } catch (error) {
-      console.error("[Orby Voice] Teaching board tool response failed.", { name: error instanceof Error ? error.name : "UnknownError" });
+      console.error("[Orby Voice] Teaching board tool response failed.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
     }
   }
 
@@ -2400,6 +2468,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
         voiceActivityGenerationRef.current += 1;
+        clearPendingOrbyTeachingBoard();
+        voiceAwaitingInputTranscriptionRef.current = true;
+        voiceInputPreflightAcceptedRef.current = false;
+        voiceInputActivityStartedAtRef.current = Date.now();
+        voiceBoardUpdateCountRef.current = 0;
         voiceLastCommittedActivityGenerationRef.current = -1;
         voiceLastCommittedInputRef.current = "";
         voiceLastCommittedInputAtRef.current = 0;
@@ -2478,6 +2551,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       } else if (!unsupportedInterimScript && assistantAudioInFlight) {
         if (isStrongVoiceBargeIn(interimText, assistantSpeech)) {
           interruptCurrentVoiceOutput();
+          voiceAwaitingInputTranscriptionRef.current = true;
+          voiceInputPreflightAcceptedRef.current = false;
+          voiceInputActivityStartedAtRef.current = Date.now();
           voicePendingStudentTurnRef.current = true;
           voiceUserTextRef.current = interimText;
           upsertVoiceUserMessage(interimText);
@@ -2493,6 +2569,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const previousInterim = voiceUserTextRef.current.trim();
         voiceUserTextRef.current = mergeLiveTranscript(previousInterim, interimText);
         if (voiceUserTextRef.current.trim()) {
+          if (!voiceAwaitingInputTranscriptionRef.current) {
+            voiceAwaitingInputTranscriptionRef.current = true;
+            voiceInputPreflightAcceptedRef.current = false;
+            voiceInputActivityStartedAtRef.current = Date.now();
+          }
           voicePendingStudentTurnRef.current = true;
           upsertVoiceUserMessage(voiceUserTextRef.current);
         }
@@ -2574,8 +2655,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceFirstAudioLoggedRef.current = false;
       voiceFirstAudioChunkReceivedRef.current = false;
       voiceListeningReadyLoggedRef.current = false;
-      voiceBoardUpdateCountRef.current = 0;
-      voicePendingBoardCuesRef.current = [];
+      if (voicePendingBoardSnapshotsRef.current.length === 0) voiceBoardUpdateCountRef.current = 0;
+      voiceAwaitingInputTranscriptionRef.current = false;
+      voiceInputActivityStartedAtRef.current = 0;
+      voiceInputPreflightAcceptedRef.current = false;
       // The prior assistant message keeps its own board in messages/history;
       // never carry that board into the next student turn or persist it twice.
       voiceTeachingBoardRef.current = null;
@@ -2638,10 +2721,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setLiveTranscript("");
       upsertVoiceUserMessage(voiceUserTextRef.current);
       if (voicePreflightReplyRef.current) {
+        clearPendingOrbyTeachingBoard();
         requestLivePolicyReply(voiceUserTextRef.current, voicePreflightReplyRef.current, false);
         return;
       }
       if (isOrbyGreetingRequest(voiceUserTextRef.current)) {
+        clearPendingOrbyTeachingBoard();
         // Greetings are deterministic conversational turns. Keep them out of
         // academic retrieval and avoid another generic introduction in Live.
         const greetingContext = messagesRef.current
@@ -2653,6 +2738,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         requestLivePolicyReply(voiceUserTextRef.current, greetingReply, false);
         return;
       }
+      voiceInputPreflightAcceptedRef.current = voiceInputPolicyRef.current === null
+        && !voicePreflightReplyRef.current
+        && !selectedVoiceSubject;
+      if (voiceInputPreflightAcceptedRef.current) flushPendingOrbyTeachingBoard();
+      else clearPendingOrbyTeachingBoard();
       void persistRealtimeTurnIfReady();
       armVoiceResponseWatchdog();
       setVoiceStatus("Orby está pensando…");
@@ -2673,13 +2763,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceOutputTranscriptValidatedRef.current = false;
       if (studentBargeInPending) {
         discardInterruptedGenerationOutput = true;
-        voicePendingBoardCuesRef.current = [];
         voiceResponseDoneRef.current = false;
         waitingForVoiceReplyRef.current = true;
         setVoiceStatus("Procesando lo que dijiste…");
         setIsListening(false);
         armVoiceResponseWatchdog();
       } else {
+        clearPendingOrbyTeachingBoard();
         voiceBargeInPendingRef.current = false;
         voiceResponseDoneRef.current = true;
         waitingForVoiceReplyRef.current = false;
@@ -2713,17 +2803,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
-      const normalizedSpokenReply = " " + normalizeVoiceComparison(partialReply).replace(/\s+/g, " ").trim() + " ";
-      let boardMatchedToSpeech: OrbyBoardData | null = null;
-      // Reveal no more than one cue per transcript event. A single ASR event
-      // may contain several already-spoken phrases; draining the whole queue
-      // here would batch them into one render and skip the teacher-like steps.
-      const pendingBoardCue = voicePendingBoardCuesRef.current[0];
-      if (pendingBoardCue && pendingBoardCue.cue && normalizedSpokenReply.includes(" " + pendingBoardCue.cue + " ")) {
-        voicePendingBoardCuesRef.current.shift();
-        boardMatchedToSpeech = pendingBoardCue.board;
-      }
-      if (boardMatchedToSpeech) voiceTeachingBoardRef.current = boardMatchedToSpeech;
       // A transcript is eligible for acoustic echo suppression only after
       // Live audio has actually been scheduled; text arriving before playback
       // must never be mistaken for something the microphone could have heard.
@@ -2793,8 +2872,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setMessages((current) => {
           const exists = current.some((message) => message.id === assistantId);
           return exists
-            ? current.map((message) => message.id === assistantId ? { ...message, content: visibleReply, ...(boardMatchedToSpeech ? { board: boardMatchedToSpeech } : {}) } : message)
-            : [...current, { id: assistantId, role: "assistant", content: visibleReply, ...(boardMatchedToSpeech ? { board: boardMatchedToSpeech } : {}) }];
+            ? current.map((message) => message.id === assistantId ? { ...message, content: visibleReply } : message)
+            : [...current, { id: assistantId, role: "assistant", content: visibleReply }];
         });
         // Keep every Live audio chunk buffered until the complete transcript passes
         // final validation. Early playback followed by a filtered/TTS replacement
@@ -2868,22 +2947,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if (!discardInterruptedGenerationOutput
       && (serverContent.turnComplete === true || serverContent.generationComplete === true)
-      && voicePendingBoardCuesRef.current.length > 0) {
-      // If transcription omitted a cue (for example ASR punctuation/word loss),
-      // never lose the final teaching board: commit the latest validated snapshot
-      // at turn completion, after all available speech has finished.
-      const finalPendingBoard = voicePendingBoardCuesRef.current.at(-1)?.board ?? null;
-      voicePendingBoardCuesRef.current = [];
-      if (finalPendingBoard) {
-        voiceTeachingBoardRef.current = finalPendingBoard;
-        const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
-        voiceAssistantMessageIdRef.current = assistantId;
-        setMessages((current) => current.some((message) => message.id === assistantId)
-          ? current.map((message) => message.id === assistantId
-            ? { ...message, board: finalPendingBoard }
-            : message)
-          : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board: finalPendingBoard }]);
-      }
+      && voiceAwaitingInputTranscriptionRef.current
+      && Date.now() - voiceInputActivityStartedAtRef.current > 15_000) {
+      clearPendingOrbyTeachingBoard();
     }
 
     if (!discardInterruptedGenerationOutput
@@ -3395,12 +3461,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (!payload.toolCall) return;
         }
         if (payload.toolCall && typeof payload.toolCall === "object") {
-          // Gemini 3.8 Live may emit a chained tool call in the same event as
-          // the Lab-informed transcript. Mark that transcript first so the
-          // next lookup opens a fresh gate instead of sharing the old one.
           const sameEventServerContent = payload.serverContent && typeof payload.serverContent === "object"
-            ? payload.serverContent as { outputTranscription?: unknown }
+            ? payload.serverContent as Record<string, unknown>
             : null;
+          const inputTranscription = sameEventServerContent?.inputTranscription;
+          const interimInputTranscription = sameEventServerContent?.interimInputTranscription;
+          const hasSameEventInput = Boolean(inputTranscription || interimInputTranscription);
           const sameEventTranscript = sameEventServerContent?.outputTranscription
             && typeof sameEventServerContent.outputTranscription === "object"
             ? (sameEventServerContent.outputTranscription as { text?: unknown }).text
@@ -3408,6 +3474,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (typeof sameEventTranscript === "string" && sameEventTranscript.trim()) {
             voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
           }
+
+          // Gemini Live does not guarantee ordering between input transcription
+          // and tool calls. Process VAD/student input first so preflight and the
+          // current activity generation are established before a board arrives.
+          if (payload.voiceActivity || hasSameEventInput) {
+            const inputOnly: Record<string, unknown> = {};
+            if (inputTranscription) inputOnly.inputTranscription = inputTranscription;
+            if (interimInputTranscription) inputOnly.interimInputTranscription = interimInputTranscription;
+            handleGeminiLiveEvent({
+              ...payload,
+              toolCall: undefined,
+              serverContent: Object.keys(inputOnly).length ? inputOnly : undefined,
+            });
+          }
+
           const liveCalls = (payload.toolCall as { functionCalls?: unknown }).functionCalls;
           if (Array.isArray(liveCalls)) {
             const cancelledIds = payload.toolCallCancellation && typeof payload.toolCallCancellation === "object"
@@ -3421,12 +3502,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             if (boardCalls.length) void handleOrbyLiveTeachingBoardTool({ functionCalls: boardCalls });
             if (knowledgeCalls.length) void handleOrbyLiveKnowledgeTool({ functionCalls: knowledgeCalls });
           }
-          if (payload.serverContent && typeof payload.serverContent === "object") {
-            handleGeminiLiveEvent(payload);
+
+          // Process generated speech/output once, without replaying input or VAD.
+          if (sameEventServerContent) {
+            const outputOnly = { ...sameEventServerContent };
+            delete outputOnly.inputTranscription;
+            delete outputOnly.interimInputTranscription;
+            if (Object.keys(outputOnly).length > 0) {
+              handleGeminiLiveEvent({
+                ...payload,
+                voiceActivity: undefined,
+                toolCall: undefined,
+                serverContent: outputOnly,
+              });
+            }
           }
           return;
         }
-        handleGeminiLiveEvent(payload);
+        handleGeminiLiveEvent(payload);        handleGeminiLiveEvent(payload);
       };
 
       const resumeHandleIsFresh = Date.now() - voiceSessionResumeUpdatedAtRef.current < 90 * 60 * 1000;
@@ -3788,6 +3881,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function activateTurnBasedVoiceFallback(reason: string, pendingUserText = "", appendUserMessage = true) {
+    clearPendingOrbyTeachingBoard();
     const cleanPendingText = pendingUserText.trim().slice(0, MAX_VOICE_TRANSCRIPT_CHARS);
     const staleAssistantId = voiceAssistantMessageIdRef.current;
     if (staleAssistantId && !voiceResponseDoneRef.current) {
@@ -4419,6 +4513,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function startNewConversation() {
+    clearPendingOrbyTeachingBoard();
     chatViewGenerationRef.current += 1;
     textRequestGenerationRef.current += 1;
     activeTextRequestRef.current?.abort();
@@ -4456,6 +4551,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function selectConversation(id: string) {
+    clearPendingOrbyTeachingBoard();
     if (id === activeConversationRef.current) {
       setLearningView("chat");
       setWorkspaceMode("chat");
@@ -4506,6 +4602,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         role: item.role === "assistant" ? "assistant" : "user",
         content: typeof item.content === "string" ? item.content : "",
         checkQuestion: typeof item.check_question === "string" ? item.check_question : "",
+        ...(item.teaching_board && typeof item.teaching_board === "object" ? { board: item.teaching_board as OrbyBoardData } : {}),
         attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
         attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
         createdAt: typeof item.created_at === "string" ? item.created_at : undefined,
@@ -4841,6 +4938,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
     : undefined;
   const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
+  const voiceBoardActive = Boolean(activeVoiceAssistantMessage?.board);
 
   return (
     <>
@@ -5062,12 +5160,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 sm:px-8" aria-label="Conversación de voz con Orby">
         <div className="pointer-events-none absolute inset-x-0 top-[34%] h-56 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,.13),transparent_65%)]" aria-hidden="true" />
-        <div className="relative z-10 flex w-full max-w-4xl flex-col items-center text-center">
-          <div className="relative flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64" aria-hidden="true">
+        <div className={`relative z-10 flex w-full flex-col items-center text-center ${voiceBoardActive ? "max-w-6xl gap-3" : "max-w-4xl"}`}>
+          {voiceBoardActive && <section className="w-full text-left" aria-label="Pizarra de la explicación de Orby">
+            <OrbyBoard board={activeVoiceAssistantMessage.board!} />
+          </section>}
+          <div className={voiceBoardActive ? "relative flex h-16 w-16 items-center justify-center" : "relative flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64"} aria-hidden="true">
             <div className="absolute inset-2 rounded-full bg-orange-500/10 blur-2xl" />
             <div ref={voiceStageOrbRef} className={voiceMuted ? "orby-voice-orb orby-voice-orb-muted" : isListening ? "orby-voice-orb orby-voice-orb-active" : "orby-voice-orb"} />
           </div>
-          <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
+          <h2 className={voiceBoardActive ? "text-lg font-black tracking-tight sm:text-xl" : "mt-2 text-2xl font-black tracking-tight sm:text-3xl"}>{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
           {showAssistantSubtitles && <section className="mt-4 w-full max-w-3xl rounded-xl border border-orange-400/25 bg-[#111820]/90 px-4 py-3 text-left shadow-lg" aria-label="Subtítulos de la voz de Orby" aria-live="polite" aria-atomic="false">
             <div className="mb-1 flex items-center justify-between gap-3">
@@ -5076,12 +5177,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>
             <p className="max-h-28 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá lo que Orby vaya diciendo…" : "Conecta con Orby para comenzar.")}</p>
           </section>}
-          {activeVoiceAssistantMessage?.board ? <section className="mt-4 w-full max-w-4xl text-left" aria-label="Pizarra de la explicación de Orby">
-            <OrbyBoard board={activeVoiceAssistantMessage.board} />
-          </section> : voiceMode && voicePendingStudentTurnRef.current && <section className="mt-4 w-full max-w-4xl rounded-xl border border-dashed border-orange-300/35 bg-[#fffdf8] px-5 py-6 text-left text-slate-800 shadow-sm" role="status" aria-label="Pizarra de Orby preparándose">
+          {!voiceBoardActive && voiceMode && voicePendingStudentTurnRef.current && <section className="mt-4 w-full max-w-3xl rounded-xl border border-dashed border-orange-300/35 bg-[#fffdf8] px-5 py-4 text-left text-slate-800 shadow-sm" role="status" aria-label="Pizarra de Orby preparándose">
             <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-orange-900"><span className="h-2 w-2 animate-pulse rounded-full bg-orange-500"/> Pizarra de Orby</div>
-            <p className="mt-2 text-sm font-semibold">Preparando el apoyo visual…</p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">Cuando la explicación necesite un dibujo, fórmula o esquema, aparecerá aquí mientras Orby habla.</p>
+            <p className="mt-2 text-sm font-semibold">Preparando el primer trazo…</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">La voz continúa mientras se valida la primera entrada. No se espera al final de la explicación.</p>
           </section>}
           {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">
             <strong>Modo por turnos activo.</strong> Pulsa el micrófono para hablar y vuelve a pulsarlo para detener la grabación. Orby transcribirá con Whisper y responderá con el tutor de Cloudflare. La respuesta se mostrará por escrito; no se activará una voz sintética facturada ni una voz genérica del navegador. No consume cuota Gemini.

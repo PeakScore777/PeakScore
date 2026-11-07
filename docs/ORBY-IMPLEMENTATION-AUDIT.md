@@ -1,0 +1,102 @@
+# Orby — auditoría inicial de implementación
+
+**Fecha:** 2026-11-07  
+**Rama inspeccionada:** `feat/founder-intro`  
+**Alcance:** lectura estática de rutas, prompts, tablero, herramientas Live, recuperación de conocimiento y persistencia. No equivale a pruebas ejecutadas en navegador ni a CI aprobada.
+
+## 1. Arquitectura existente confirmada
+
+- `components/aprender/LessonAITutor.tsx` concentra chat, audio, sesión Gemini Live, transcripción, interrupciones, fallback por turnos, pizarra y persistencia de voz.
+- `components/aprender/OrbyBoard.tsx` renderiza bloques y visuales educativos tipados.
+- `lib/ai/orby-board.ts` define y sanitiza los tipos de tablero; el contrato incluye diagramas, gráficas, vectores, tablas, líneas de tiempo, moléculas, circuitos, células, ADN, cuadros de Punnett, división celular, sistemas orgánicos, neuronas y procesos fisiológicos.
+- `lib/ai/orby-live-tools.ts` declara las herramientas no bloqueantes de búsqueda académica y actualización de la pizarra durante una lección hablada.
+- `app/api/lesson-tutor/route.ts` autentica, valida alcance, recupera conocimiento publicado, señales de aprendizaje, genera con Cloudflare Workers AI, aplica filtros y guarda respuesta/tablero.
+- La recuperación de fragmentos y conceptos usa `Promise.allSettled`; el enriquecimiento pedagógico se realiza después con resultados parciales disponibles.
+- La ruta mide recuperación, generación y persistencia mediante `Server-Timing` y `X-Orby-Response-Time-Ms`.
+- El proveedor textual del tutor es Cloudflare Workers AI. El código documenta que no debe cambiar silenciosamente a proveedores de pago cuando la cuota gratuita se agota.
+
+## 2. Hallazgos y cambios de esta tanda
+
+### A. Contrato visual de Gemini Live — corregido
+
+La herramienta Live ya permitía llamar repetidamente a `render_orby_teaching_board`, enviar snapshots acumulativos no bloqueantes y actualizar la pizarra del mismo mensaje mientras se reproduce la explicación. El manejador valida cada payload con `sanitizeOrbyBoard`, lo incorpora al turno activo y lo conserva para persistencia/reintentos.
+
+Sin embargo, el texto de la propiedad `visual.type` describía solo cinco tipos básicos, aunque el sanitizador y el renderizador ya aceptaban catorce. Esto podía inducir al modelo a evitar visuales avanzados que el producto sí sabe representar.
+
+Corrección:
+- Se documentaron los catorce valores exactos admitidos en el contrato de la herramienta.
+- Se corrigieron las instrucciones de coordenadas para que coincidan con los rangos del sanitizador.
+- Se añadió una regresión que comprueba que el contrato enumera los tipos visuales avanzados.
+
+### B. Fallback de voz — corregido
+
+La ruta de voz en tiempo real tenía un contrato visual progresivo, pero el fallback por turnos de `/api/lesson-tutor` pedía únicamente `board` versión 1 con bloques textuales. Por eso, cuando Live se interrumpía y la misma pregunta continuaba por turnos, el fallback podía responder oralmente sin producir las escenas visuales avanzadas.
+
+Corrección:
+- El prompt de fallback ahora solicita `board` versión 2, con hasta ocho bloques y cuatro visuales tipados.
+- Se documentaron los mismos catorce tipos admitidos por el sanitizador.
+- Se añadieron instrucciones para respetar límites, secuencias y consistencia conceptual.
+- Se añadió una prueba estática que evita regresar accidentalmente al contrato solo textual.
+
+Estos cambios mejoran el contrato de generación; todavía deben validarse con una sesión real de Chrome y micrófono.
+
+## 3. Brechas que siguen abiertas
+
+### A. Cobertura curricular desigual
+
+El prompt de servidor contiene una guía temática explícita y extensa para Ciencias Naturales. Las otras cuatro áreas tienen identidad, alcance y competencias generales, pero no una matriz curricular equivalente integrada de forma verificable en el prompt/recuperación.
+
+Acción siguiente:
+- Convertir el nuevo documento curricular en una fuente estructurada y versionada.
+- Mapear área → competencia → componente → tema → subtema → prerrequisitos → prioridad (núcleo/refuerzo/ampliación).
+- Inyectar solo el contexto pertinente al área/tema detectado, sin añadir todo el temario en cada solicitud ni inflar la latencia.
+- Contrastar primero con la guía Icfes 2026-2 y sus marcos oficiales; no tratar los listados de preparación universitaria como el temario obligatorio del examen.
+
+### B. Validación semántica de respuestas
+
+La ruta devuelve `qualityStatus = "not_required"` y `reviewMs = 0`; la protección final es principalmente estructural, de idioma, alcance, formato y reglas deterministas específicas. Existe una corrección acotada para la confusión entre fase S y mitosis, pero no un verificador semántico general de hechos, fórmulas, procedimientos, cronologías o consistencia entre explicación y dibujo.
+
+Acción siguiente:
+- Añadir validadores deterministas pequeños y probados para errores de alto impacto observados.
+- Validar coherencia entre board y explicación: mismas unidades, nombres, orden de etapas, valores, etiquetas y relaciones.
+- Añadir ejemplos adversariales y casos correctos que no deben ser modificados.
+- No introducir una segunda llamada costosa por defecto ni un modelo de pago como juez; cualquier revisión adicional debe respetar cuotas gratuitas y degradar con aviso claro.
+
+### C. Integración del currículo con el conocimiento publicado
+
+La ruta ya recupera fragmentos, conceptos, relaciones, perfiles pedagógicos y señales de aprendizaje. El plan curricular recién creado todavía no está conectado a esta recuperación ni se ha comprobado cómo cubre las cinco áreas con el corpus que actualmente exista.
+
+Acción siguiente:
+- Auditar el esquema y las funciones existentes antes de crear migraciones.
+- Reconciliar catálogo curricular con documentos publicados realmente disponibles, sin reconstruir material que el propietario eliminó intencionalmente.
+- Medir cobertura por competencia/tema y distinguir “tema en temario” de “evidencia de conocimiento publicada y recuperable”.
+
+### D. Pruebas reales
+
+La auditoría fue estática. No se ejecutó el conjunto de pruebas, TypeScript, ESLint, build ni una sesión real de voz/tablero. La consulta de ejecuciones de workflow no devolvió ejecuciones para los commits consultados; no se declara CI aprobada.
+
+Pruebas necesarias:
+- Chrome: explicación hablada con varias actualizaciones de tablero acumulativas.
+- Interrumpir a Orby y volver a preguntar; comprobar que no se atribuyan dibujos/audio antiguos al turno nuevo.
+- Fallback por turnos tras desconexión Live; comprobar que la pizarra versión 2 aparezca y se guarde.
+- Cuota gratuita agotada: conservar el texto/pregunta y no activar proveedores de pago.
+- Persistencia y reintentos de voz con la migración correspondiente aplicada en un entorno de prueba.
+- Pruebas por área con explicaciones y ejercicios originales, incluidas respuestas incorrectas y distractores.
+
+## 4. Orden recomendado de la siguiente fase
+
+1. Ejecutar CI y revisar el estado real de la rama frente a `main`; la comparación disponible reporta ramas divergentes. No hacer rebase ni integración automática sin revisar los commits que faltan en la rama de trabajo.
+2. Inspeccionar el resto de los prompts Live y el contrato de salida para asegurar que las cinco áreas reciben la misma exigencia pedagógica.
+3. Conectar la matriz curricular selectiva a la recuperación existente.
+4. Implementar validación de coherencia semántica y visual en casos concretos.
+5. Ejecutar pruebas de regresión, TypeScript, ESLint y build.
+6. Probar voz y tablero en Chrome real y registrar latencia hasta primera palabra, primer audio, primera actualización visual y persistencia.
+
+## 5. Estado de seguridad y despliegue
+
+- No se modificó `main`.
+- No se desplegó.
+- No se ejecutó ninguna migración remota de Supabase.
+- La migración de idempotencia de voz documentada previamente continúa pendiente de aplicación/verificación en la base activa; no se debe asumir que el código de persistencia ya está operativo en producción.
+- No hacer Pull todavía. Esperar CI completa y pruebas reales, y confirmar el estado de la migración antes de despliegue.
+

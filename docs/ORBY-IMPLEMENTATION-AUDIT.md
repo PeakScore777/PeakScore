@@ -303,3 +303,32 @@ CI está verde, pero **no autoriza por sí sola un Pull/merge ni un despliegue**
 Esta ejecución incluye la nueva regresión que exige confirmación explícita del plan gratuito antes de permitir Workers AI. La confirmación permanece desactivada por defecto en `.env.example`.
 
 La validación sigue siendo automatizada: no sustituye la prueba manual de Chrome/micrófono ni verifica por sí misma el plan real de Cloudflare o el estado de las migraciones Supabase.
+
+### Verificación de persistencia contra Supabase activo — 2026-11-07
+
+Se consultó el proyecto Supabase activo de PeakScore en modo de solo lectura. La base está `ACTIVE_HEALTHY`, pero la verificación puntual detectó que el esquema de persistencia visual aún no está aplicado:
+
+| Elemento requerido por Orby Studio | Estado real |
+|---|---|
+| `public.orby_messages.teaching_board` | **No existe** |
+| `orby_save_turn_with_board(uuid,uuid,text,text,text,text,text,jsonb)` | **No existe** |
+| `orby_save_voice_turn_with_board(uuid,uuid,uuid,text,text,jsonb)` | **No existe** |
+
+La consulta de solo lectura confirmó los tres resultados como `false`. La lista de migraciones activas llega hasta `20261107044656_orby_voice_turn_idempotency`; no incluye estas tres migraciones de la rama:
+
+1. `20261107050000_orby_teaching_board_persistence.sql`
+2. `20261107060000_orby_voice_board_idempotency.sql`
+3. `20261107070000_orby_board_visual_persistence.sql`
+
+**Impacto funcional confirmado por el código:** `/api/orby/realtime-turn` detecta que falta la RPC nueva y guarda el turno de voz por la RPC anterior, con `boardPersisted: false` y una advertencia explícita. Por tanto, la pizarra puede mostrarse durante la sesión, pero no reaparecer al reabrir el historial. No afirmar que la persistencia de la pizarra ya funciona en la base activa.
+
+**Próximo paso controlado:** aplicar las tres migraciones aditivas, en ese orden, al proyecto Supabase correcto; después comprobar que existe la columna y ambas RPC con sus firmas exactas, y probar un turno de voz con pizarra para verificar que el mensaje se guarda una sola vez. No se aplicaron migraciones ni se modificaron datos durante esta auditoría.
+
+### Hallazgos del Security Advisor de Supabase
+
+- 23 tablas con RLS activo y sin políticas explícitas aparecen como INFO. En varias tablas internas esto puede ser el diseño correcto (acceso solo mediante `service_role`); revisar privilegios y exposición antes de añadir políticas, no abrirlas por defecto.
+- 12 funciones `SECURITY DEFINER` ejecutables por `authenticated` requieren revisión individual de sus comprobaciones de propiedad/rol. No revocar permisos en bloque: algunas RPC son operaciones intencionales y protegidas por validaciones internas.
+- La protección de contraseñas filtradas está desactivada en Auth; activarla desde la configuración de Auth es una mejora recomendada.
+- `pg_net` está instalado en `public`; revisar si puede moverse sin romper jobs o extensiones dependientes.
+
+Estos hallazgos pertenecen a la base activa y no quedan resueltos por que GitHub Actions o Vercel compilen correctamente.

@@ -570,3 +570,22 @@ La CI anterior `42333562718` corresponde a `29f9cb4`; no valida estos cambios. L
 
 
 Nota de cobertura: se ajustó el rango de extracción de la regresión TTS para abarcar la función completa, incluidas sus funciones auxiliares internas, y no detenerse en el primer helper anidado. Commit: `3e0bea9`.
+
+
+## 2026-11-07 — eventos tardíos del micrófono
+
+La revisión del ciclo de vida del stream encontró que `onended` ya comprobaba la generación y la identidad del stream, pero `onmute` y `onunmute` podían actualizar el estado visual desde un track reemplazado. Se unificaron las tres protecciones:
+
+- Los tres handlers comprueban que el modo de voz siga activo.
+- Comprueban la generación de sesión vigente.
+- Comprueban que el stream siga siendo el stream activo.
+- Al cerrar el micrófono, se eliminan `onended`, `onmute` y `onunmute` antes de detener cada track.
+- Se añadieron regresiones para eventos tardíos y desmontaje del stream.
+
+La solicitud de permiso tardía ya detenía los tracks si el usuario cancelaba o vencía el tiempo de espera; ese comportamiento se conserva. No se modificó la captura PCM ni la latencia de envío.
+
+Commits:
+- `b5c1323` — proteger eventos tardíos y limpiar handlers.
+- `fc39672` — regresiones del ciclo de vida del micrófono.
+
+La CI de `11ea224` ya había completado regresiones, TypeScript y ESLint; el build de producción seguía en ejecución. Esta nueva punta requiere una ejecución completa propia.

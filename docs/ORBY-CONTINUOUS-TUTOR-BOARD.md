@@ -117,3 +117,23 @@ La persistencia puede seguir guardando intercambios atómicos. Eso es una decisi
 - La privacidad de Gemini Live en producción sigue bloqueada; no se modifica `ORBY_GEMINI_LIVE_ENABLED`.
 - CI debe finalizar para el último commit antes de considerar esta etapa validada. Después siguen pruebas reales en Chrome de voz larga, barge-in, llamada cancelada y recarga del historial.
 - Esta es una primera versión de escena completa por turno, no una pizarra incremental sincronizada fotograma a fotograma con el audio.
+
+
+## Requisito prioritario confirmado — voz y dibujo simultáneos
+
+La experiencia objetivo de Orby Voice es la del video de referencia del responsable: el tutor **habla y dibuja al mismo tiempo**. No se considera terminado si la escena aparece únicamente cuando finaliza la respuesta hablada.
+
+### Comportamiento obligatorio
+
+- Orby explica oralmente mientras la pizarra se construye progresivamente, en paralelo con el audio.
+- Cada bloque, fórmula, paso, etiqueta, flecha o elemento visual debe aparecer cuando corresponda a la parte de la explicación que Orby está pronunciando; no se debe esperar al final del turno.
+- La pizarra debe poder actualizarse varias veces durante una misma respuesta, sin crear burbujas independientes ni duplicar la respuesta hablada.
+- La conversación sigue siendo continua: el estudiante puede interrumpir, preguntar o cambiar el rumbo; los eventos y dibujos atrasados de la explicación anterior se descartan.
+- El dibujo no debe bloquear el micrófono, el audio, la transcripción ni la recepción de nuevas intervenciones.
+- La persistencia conserva la escena final asociada al mismo mensaje y al mismo identificador idempotente del turno. Las actualizaciones parciales no deben crear mensajes duplicados.
+
+### Criterio de aceptación
+
+En una sesión real de Chrome, pedir a Orby que resuelva oralmente un ejercicio de Saber 11. Mientras habla, comprobar que el contenido visual aparece y progresa acompasado con la explicación; interrumpirlo a mitad de un paso y hacer una pregunta nueva. Orby debe detener el dibujo anterior, responder a la nueva intervención y continuar sin mostrar elementos atrasados. Repetir con una fórmula y con un esquema conceptual.
+
+La herramienta actual `render_orby_teaching_board` de escena completa por turno es solo un primer puente técnico: **no satisface por sí sola este requisito**. La siguiente implementación debe usar actualizaciones incrementales de pizarra durante la misma generación Live, con validación, límites y asociación a la generación activa. No declarar la experiencia lista hasta superar la prueba real de voz y dibujo simultáneos.

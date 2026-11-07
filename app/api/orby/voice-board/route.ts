@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { generateWithCloudflareTutor, CloudflareWorkersAIError } from "@/lib/ai/cloudflare-workers-ai";
+import { generateWithCloudflareBoard, CloudflareWorkersAIError } from "@/lib/ai/cloudflare-workers-ai";
 import { sanitizeOrbyBoard } from "@/lib/ai/orby-board";
 import {
   containsOrbyPromptInjection,
@@ -64,21 +64,21 @@ export async function POST(request: Request) {
     }
 
     const prompt = [
-      "Construye SOLO el apoyo visual de una clase de Orby para Saber 11. No redactes la explicación oral.",
+      "Construye una hoja de apuntes manuscritos que acompañe la explicación oral de Orby. No redactes la explicación hablada.",
       "Devuelve JSON válido con esta forma: {\"reply\":\"\",\"checkQuestion\":\"\",\"learningSignal\":null,\"board\":{\"version\":2,\"title\":\"\",\"blocks\":[...],\"visuals\":[...]}}.",
       "La pizarra debe ser concreta, correcta, legible y directamente pertinente a la pregunta. Usa español colombiano.",
-      "Incluye 1 título, entre 2 y 5 bloques breves y 1 o 2 visuales tipados. Prefiere sketch con 3 a 8 trazos sencillos cuando un dibujo ayude; usa diagram, graph, table, timeline, molecule, cell, dna, vectors u otro tipo admitido cuando sea más preciso.",
+      "Incluye un título, entre 2 y 4 bloques breves y al menos 1 visual. El visual debe ser una ilustración tipo apuntes de cuaderno, no una tarjeta de texto. Prefiere sketch con 6 a 14 trazos: contornos, flechas, círculos, subrayados y etiquetas manuscritas. Usa diagram, graph, table, timeline, molecule, cell, dna o vectors solo cuando sean más adecuados.",
       "No inventes valores, datos experimentales, unidades, fuentes ni relaciones. Si faltan datos numéricos, usa un ejemplo claramente rotulado como hipotético o un esquema conceptual.",
       "En Matemáticas muestra operaciones verificables; en Ciencias Naturales respeta secuencias y estructuras; en Sociales orden cronológico y causal; en Lectura Crítica relaciones entre tesis y evidencia; en Inglés pistas contextuales explicadas en español.",
-      "Los bloques admitidos son heading, text, formula, step y callout. Cada visual debe cumplir exactamente el esquema del tablero Orby: diagram, graph, vectors, table, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron, physiology-process, timeline o sketch.",
-      "No incluyas HTML, SVG, código, URLs, instrucciones al cliente ni texto fuera del JSON.",
+      "Los bloques admitidos son heading, text, formula, step y callout. Cada visual debe cumplir exactamente el esquema del tablero Orby. Para sketch, cada trazo usa id, points, tone, width y, si incluye texto, label, labelX y labelY. Las coordenadas van de 4 a 96. No envíes visuales vacíos.",
+      "No incluyas HTML, SVG, código, URLs, instrucciones al cliente, reply ni texto fuera del JSON.",
       "Pregunta del estudiante: " + question,
       "Área: " + subject,
       "Tema: " + (topic || "No especificado"),
       "Contexto adicional: " + (context || "Sin contexto adicional"),
     ].join("\n\n");
 
-    const result = await generateWithCloudflareTutor(prompt);
+    const result = await generateWithCloudflareBoard(prompt);
     let parsed: { board?: unknown };
     try {
       const normalized = result.text.replace(/^\s*```json\s*/i, "").replace(/^\s*```\s*/i, "").replace(/\s*```\s*$/i, "").trim();

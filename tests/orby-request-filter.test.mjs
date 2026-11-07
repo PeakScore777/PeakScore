@@ -3879,3 +3879,10 @@ test("Orby Admin no muestra una alerta de secretos faltantes mientras el estado 
   assert.match(automationRoute, /if \(workerConfiguration\.error\)/);
   assert.match(automationRoute, /No se pudo verificar la conexión protegida con Supabase Vault/);
 });
+
+test("el tutor escrito exige devolver la pizarra y revisar ortografía en el contrato JSON", async () => {
+  const route = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  assert.match(route, /"learningSignal":null,"board":null/);
+  assert.match(route, /Control de calidad lingüística obligatorio/);
+  assert.match(route, /Para preguntas académicas sustantivas, devuelve/);
+});

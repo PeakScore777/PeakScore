@@ -3544,3 +3544,15 @@ test("el fallback de voz puede devolver la misma pizarra visual tipada que el tu
   }
   assert.doesNotMatch(voicePrompt, /board con version 1 y hasta 8 bloques/);
 });
+
+
+test("La pizarra revela trazos SVG progresivamente y respeta movimiento reducido", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(renderer, /className="orby-board /);
+  assert.match(renderer, /orby-board-stroke/);
+  assert.match(renderer, /pathLength={1}/);
+  assert.match(styles, /@keyframes orby-board-draw/);
+  assert.match(styles, /stroke-dashoffset: 1/);
+  assert.match(styles, /prefers-reduced-motion: reduce/);
+});

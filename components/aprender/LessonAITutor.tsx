@@ -2530,6 +2530,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setIsListening(false);
         armVoiceResponseWatchdog();
       } else {
+        voiceBargeInPendingRef.current = false;
         voiceResponseDoneRef.current = true;
         waitingForVoiceReplyRef.current = false;
         void persistRealtimeTurnIfReady();

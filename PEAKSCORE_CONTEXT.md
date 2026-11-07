@@ -322,3 +322,13 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Se corrigió la recuperación cuando solo llega un interim no español y nunca llega el evento final: Orby muestra un turno único `Audio no reconocido.`, solicita repetir en español y lo pronuncia, sin guardar devanagari.
 - Las respuestas deterministas (saludo, identidad, rechazo) se mantienen canónicas en la burbuja; la salida de voz solo se acepta si la transcripción coincide progresivamente con ese texto. Una reformulación, presentación repetida o cambio de idioma activa voz alternativa para el texto aprobado.
 - Se reforzó la negativa breve para programación y el prompt hablado contra repeticiones de marca, muletillas y faltas de ortografía.
+
+
+## 2026-11-07 — currículo integral Orby Saber 11
+- Documento de diseño curricular: `docs/ORBY-ICFES-CURRICULUM-PLAN.md`.
+- Baseline académica: guía Icfes Saber 11 2026-2 + marcos de referencia oficiales para las cinco pruebas; materiales cargados por el propietario como apoyo y prerrequisitos.
+- Separar siempre núcleo evaluado, refuerzo escolar y ampliación avanzada. No presentar temas universitarios como requisito Icfes.
+- Inglés conserva su banco manual en siete partes. No generar preguntas de Inglés automáticamente sin nueva autorización.
+- Restricción económica: solo modelos/servicios gratuitos reales dentro de cuota; al agotarse, pausar/degradar con aviso, sin fallback de pago.
+- Esta especificación no supone que el corpus eliminado del Orby ICFES Lab deba reconstruirse ni que existan conteos/conceptos previos.
+- Estado: documento y plan creados en `feat/founder-intro`; falta auditar implementación real antes de cambios funcionales. No Pull ni deploy hasta completar CI y pruebas de voz/tablero en navegador.

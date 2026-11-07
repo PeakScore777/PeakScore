@@ -2824,6 +2824,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function startRealtimeVoice(startupSignal: AbortSignal) {
     const startupStartedAt = performance.now();
+    const voiceSdkStartedAt = performance.now();
     const startupTimings = {
       microphonePermissionMs: 0,
       conversationAndTokenMs: 0,
@@ -2970,9 +2971,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : "Despina";
 
       setVoiceStatus("Conectando con Orby…");
-      const sdkLoadStartedAt = performance.now();
       const voiceSdk = await voiceSdkPromise;
-      startupTimings.sdkLoadMs = performance.now() - sdkLoadStartedAt;
+      startupTimings.sdkLoadMs = performance.now() - voiceSdkStartedAt;
       voiceSdkRef.current = voiceSdk;
       let googleAI = new voiceSdk.GoogleGenAI({
         apiKey: tokenPayload.ephemeralToken,

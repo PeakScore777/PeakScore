@@ -3911,7 +3911,7 @@ test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva s
 
 
 test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
-  assert.match(boardComponentSource, /key=\{stroke\.id\}/);
+  assert.match(boardComponentSource, /key=\{`\$\{stroke\.id\}:/);
   assert.match(boardComponentSource, /orby-board-sketch-stroke/);
   assert.match(boardComponentSource, /orby-board-pen-tip/);
   assert.match(liveToolsSource, /set spokenCue to an exact short phrase/);

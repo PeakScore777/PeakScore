@@ -343,6 +343,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceTurnAcceptedAtRef = useRef(0);
   const voiceFirstOutputTextLoggedRef = useRef(false);
   const voiceFirstAudioLoggedRef = useRef(false);
+  const voiceBoardUpdateCountRef = useRef(0);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantOutputAtRef = useRef(0);
   const voiceRecentAssistantOutputsRef = useRef<Array<{ text: string; at: number }>>([]);
@@ -2017,6 +2018,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         continue;
       }
       voiceTeachingBoardRef.current = board;
+      voiceBoardUpdateCountRef.current += 1;
+      console.info("[Orby Voice] Teaching board update timing.", {
+        updateNumber: voiceBoardUpdateCountRef.current,
+        boardUpdateMs: voiceTurnAcceptedAtRef.current > 0
+          ? Math.round(performance.now() - voiceTurnAcceptedAtRef.current)
+          : null,
+        audioChunksScheduled: voiceRealtimeAudioChunkCountRef.current,
+      });
       const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
       voiceAssistantMessageIdRef.current = assistantId;
       setMessages((current) => {
@@ -2510,6 +2519,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceTurnAcceptedAtRef.current = performance.now();
       voiceFirstOutputTextLoggedRef.current = false;
       voiceFirstAudioLoggedRef.current = false;
+      voiceBoardUpdateCountRef.current = 0;
       voiceLastCommittedInputRef.current = normalizedFinal;
       voiceLastCommittedInputAtRef.current = Date.now();
       voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;

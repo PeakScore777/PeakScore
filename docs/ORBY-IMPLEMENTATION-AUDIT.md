@@ -129,3 +129,12 @@ Pruebas necesarias:
 - Límite importante: esto **no** implementa aún escritura manuscrita de texto, secuenciador de acciones por paso, ni alineación exacta con palabras/segmentos de voz. No equivale todavía al objetivo completo del video.
 - Validación: cambios verificados mediante relectura de archivos en GitHub; no se pudo ejecutar Node tests, TypeScript, ESLint, build ni navegador desde esta conexión. No declarar CI aprobada.
 - Comparación actual con `main`: ramas divergentes; `feat/founder-intro` aparece 8 commits detrás y 2985 delante según compare. No hacer merge/rebase automático ni Pull sin auditar esa divergencia.
+
+
+## 10. Segunda capa visual — bloques pedagógicos incrementales
+
+- Los bloques de texto (títulos, fórmulas, pasos, llamadas y párrafos) y las secciones visuales ahora usan una revelación suave al montarse. Las etapas de procesos y eventos de líneas de tiempo incorporan retrasos escalonados acotados.
+- Se reemplazaron claves de índice simples en bloques/visuales por claves con tipo y contenido más índice. En snapshots acumulativos que agregan contenido al final, los elementos anteriores conservan identidad React y no deberían volver a animarse solo por el append.
+- La prueba estática nueva comprueba claves, clases de revelación y retrasos.
+- Esto es una aparición progresiva de bloques completos, no un efecto de escritura carácter por carácter. Tampoco establece sincronía temporal exacta con audio; esa capa requiere eventos incrementales y alineación real del proveedor.
+- Validación actual: archivos releídos en GitHub; no hay workflow asociado al commit de test. Node tests, TypeScript, ESLint, build y pruebas de navegador siguen sin ejecutarse.

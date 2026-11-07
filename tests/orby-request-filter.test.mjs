@@ -3886,3 +3886,15 @@ test("el tutor escrito exige devolver la pizarra y revisar ortografía en el con
   assert.match(route, /Control de calidad lingüística obligatorio/);
   assert.match(route, /Para preguntas académicas sustantivas, devuelve/);
 });
+
+
+test("la pizarra Live espera la frase hablada antes de revelar una etapa marcada", () => {
+  assert.match(liveToolsSource, /spokenCue:[\\s\\S]{0,320}frase[\\s\\S]{0,180}narración/);
+  assert.match(lessonTutorSource, /voiceCuePendingBoardRef/);
+  assert.match(lessonTutorSource, /isOrbyBoardCueSpoken\\(snapshot, voiceAssistantTextRef\\.current\\)/);
+  assert.match(lessonTutorSource, /status: cueReady \\? "rendered" : "queued_for_spoken_cue"/);
+  assert.match(lessonTutorSource, /flushCuePendingOrbyTeachingBoard\\(\\)/);
+  assert.match(lessonTutorSource, /flushCuePendingOrbyTeachingBoard\\(\\);/);
+  assert.match(lessonTutorSource, /snapshot\\.sessionGeneration !== sessionGeneration/);
+  assert.match(lessonTutorSource, /snapshot\\.activityGeneration !== activityGeneration/);
+});

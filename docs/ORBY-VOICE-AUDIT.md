@@ -667,3 +667,6 @@ Se conservan las reglas de coste: el respaldo sigue usando el tutor gratuito con
 - Se mantiene la protección `b6f9242` contra salida Live atrasada y la restauración del AudioWorklet `8e175bf`.
 
 La auditoría estática identifica causas plausibles y corrige rutas controlables. No equivale a una garantía de cero fallos: antes de producción deben pasar pruebas de CI, TypeScript, ESLint, build y pruebas reales de voz en Chrome con red lenta, interrupciones, turnos escritos consecutivos, cuota agotada y desconexión del micrófono.
+
+
+- **Emisión del token Live:** el cliente ya limitaba el fetch a 15 s, pero el SDK del servidor no declaraba su propio timeout. Ahora la llamada de emisión del token efímero también tiene un límite de 12 s, y existe una prueba para impedir que se quite accidentalmente.

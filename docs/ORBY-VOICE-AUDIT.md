@@ -761,3 +761,25 @@ Se añadió una regresión con cambio Matemáticas → Ciencias Naturales y un e
 ### Validación pendiente
 
 No se recibió resultado de CI para estos commits; la consulta de ejecuciones de workflow no devolvió ejecuciones. Las pruebas nuevas están escritas, pero no se declaran ejecutadas ni aprobadas desde GitHub. Tampoco se ha realizado una sesión de Chrome/Live en esta etapa. No se cambia la arquitectura de recuperación hasta contar con tiempos reales y comparar calidad de resultados.
+
+
+## 2026-11-07 — idempotencia atómica del guardado de voz
+
+La auditoría del endpoint `/api/orby/realtime-turn` encontró una carrera real: el endpoint leía los dos mensajes más recientes para detectar un reintento y, después, llamaba a `orby_save_turn`. Dos solicitudes simultáneas podían completar esa lectura antes de que cualquiera insertara el turno. La función anterior bloqueaba la conversación al insertar, pero no recibía una identidad de turno ni hacía la comprobación dentro de la misma transacción.
+
+### Corrección implementada en `feat/founder-intro`
+
+- Se añadió `orby_voice_turn_receipts`, con clave primaria compuesta por conversación, usuario e identificador UUID del turno.
+- Se añadió `orby_save_voice_turn`: bloquea la fila de conversación, reclama el UUID con `ON CONFLICT DO NOTHING` y solo inserta el par de mensajes si la reclamación es nueva. La reclamación y los mensajes se confirman en la misma transacción PostgreSQL.
+- El cliente genera un UUID al crear el paquete inmutable del turno y lo conserva dentro de `failedVoiceTurn`; el botón de reintento reutiliza exactamente ese identificador.
+- El endpoint valida el UUID y delega la idempotencia a la función SQL. Se eliminó la lectura previa de mensajes como mecanismo de deduplicación.
+- Las preguntas repetidas de forma legítima no se confunden: cada nuevo turno tiene un UUID distinto, aunque el texto sea idéntico.
+
+Commits:
+- `8e439f0` — migración y función SQL atómica.
+- `18ac6ed` — endpoint de voz usa la nueva función.
+- `9adee8a` — cliente conserva el ID del turno al reintentar.
+
+### Validación pendiente
+
+La garantía de concurrencia se apoya en el bloqueo transaccional de la conversación y la clave única de recibo. Aún falta ejecutar la CI de estos commits y probar dos solicitudes simultáneas contra una base Supabase de prueba. No se ha tocado `main`, no se ha desplegado y no se debe hacer Pull todavía.

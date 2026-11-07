@@ -260,3 +260,21 @@ Se revisaron las grabaciones de pantalla de 80,1 s y 125,7 s. Los hallazgos repr
 - El prefetch reduce la espera de red entre fragmentos TTS; no se presenta como una medición de latencia en Chrome ni cambia el tiempo de generación del proveedor.
 - Aún se necesita una prueba manual en Chrome con micrófono real: «qn es Westcol», «q y es PeakScore», «es recomendable», «qn soy yo», una pregunta académica abreviada («q y es fotosíntesis»), una respuesta larga y una interrupción durante el TTS.
 - No se modifica main, no se reconstruye el material eliminado del Lab y no se introduce un proveedor de pago.
+
+
+## 2026-11-06 — endurecimiento de salida, ortografía y cuota de voz
+
+Esta tanda amplía la revisión de las grabaciones y registra controles adicionales que no existían en la primera nota:
+
+- La detección de consultas fuera de alcance comprende transcripciones ASR/coloquiales (`qn`, `qien`, `kien`, `q y es`, `q es` y variantes inglesas `who is/was`) sin bloquear preguntas curriculares del tipo «¿qué es fotosíntesis?» ni las preguntas sobre narrador/personajes de un texto.
+- La política de salida detecta autopromoción de PeakScore/Orby y marketing genérico de herramientas de preparación. Se aplica en chat, en el cierre de Gemini Live y en el validador de frases parciales antes de permitir audio. Se conserva la recomendación académica concreta (por ejemplo, practicar preguntas Saber 11) y se reemplaza la publicidad por una aclaración neutral.
+- Los prompts del tutor de voz por turnos y de Gemini Live prohíben actuar como portavoz/vendedor de PeakScore, prometer mejoras de puntaje o dar una valoración supuestamente independiente de la plataforma propia.
+- Gemini Live recibe una instrucción explícita para no reiniciar una bienvenida ante un saludo breve dentro de una conversación activa y retomar el tema anterior; si no hay contexto útil, pregunta por el área Saber 11 que se desea retomar.
+- `normalizeOrbySpanishOutput` amplía correcciones de tildes de vocabulario académico frecuente y añade regresiones que comprueban que la puntuación y el sentido se mantienen.
+- El TTS gratuito prepara como máximo un fragmento por adelantado, pero espera a que se haya reproducido aproximadamente el 65 % del fragmento actual y omite segmentos de menos de 1,5 segundos. El temporizador se limpia al cambiar de fragmento y al terminar/cancelar la lectura. Esto reduce la espera entre clips sin anticipar llamadas desde el inicio ni permitir más de una precarga activa.
+
+### Restricción de cuota y límite de validación
+
+La cancelación de un `AbortSignal` en el SDK de Gemini es del lado cliente y no garantiza cancelar el trabajo ya aceptado por el servicio ni evitar su consumo de cuota. Por eso el prefetch se retrasa para reducir el intervalo en el que una interrupción podría dejar una generación especulativa sin aprovechar. La mejora es de preparación de red entre fragmentos; no se presenta como una medición de latencia de producción.
+
+El CI debe terminar verde sobre el último commit de `feat/founder-intro` (suite Orby, TypeScript, ESLint, build y auditoría de dependencias). Antes de considerar la voz completamente validada, falta ejecutar en Chrome real los casos `qn es Westcol`, `q y es PeakScore`, `es recomendable`, `qn soy yo`, `oe` durante un hilo activo, una consulta académica abreviada, respuesta larga e interrupción durante Live/TTS. El test automatizado no simula la acústica del micrófono ni la latencia real del proveedor.

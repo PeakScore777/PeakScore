@@ -982,6 +982,21 @@ export function hasFalseOrbyCreatorAttribution(value: string): boolean {
   return Boolean(alleged) && !/^peak[-_]?score$/i.test(alleged);
 }
 
+/**
+ * Corrects one high-impact biology misconception observed in Orby's output:
+ * DNA replication happens before mitosis (S phase of interphase); mitosis
+ * separates sister chromatids. Trigger narrowly to avoid rewriting valid
+ * explanations that merely mention both processes.
+ */
+export function correctOrbyDnaMitosisSequence(value: string): string {
+  const normalized = normalizeOrbyRequestText(value);
+  const mentionsMitosis = /\bmitosis\b/.test(normalized);
+  const linksDnaAndCopy = /\b(?:adn|material genetico)\b.{0,100}\b(?:copia|duplic|replica)\w*\b|\b(?:copia|duplic|replica)\w*.{0,100}\b(?:adn|material genetico)\b/.test(normalized);
+  const assignsReplicationToMitosis = /\b(?:durante|en|cuando ocurre|al ocurrir)\s+(?:la\s+)?mitosis\b.{0,180}\b(?:adn|material genetico)\b.{0,100}\b(?:copia|duplic|replica)\w*\b|\b(?:mitosis)\b.{0,100}\b(?:adn|material genetico)\b.{0,80}\b(?:separa|divide)\w*.{0,60}\b(?:copia|duplic|replica)\w*\b/.test(normalized);
+  if (!mentionsMitosis || !linksDnaAndCopy || !assignsReplicationToMitosis) return value;
+  return "Hay una distinción importante: el ADN se duplica antes de la mitosis, durante la fase S de la interfase. Así, la célula prepara dos copias de su material genético. Después, en la mitosis, las cromátidas hermanas se separan y se distribuyen en dos núcleos. Finalmente, la citocinesis divide el citoplasma y se forman las dos células hijas. En resumen: primero se duplica el ADN; luego la mitosis reparte las copias.";
+}
+
 export function normalizeOrbySpanishOutput(value: string): string {
   const corrections: Array<[RegExp, string]> = [
     [/\bmatematicas\b/gi, "matemáticas"],

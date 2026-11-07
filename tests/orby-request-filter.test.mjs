@@ -598,6 +598,10 @@ test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en
   assert.equal(detectBarge("explícame ahora la fotosíntesis", []), true);
   assert.equal(detectBarge("sí", ["¡Sí, claro!"]), false);
   assert.equal(detectEcho("sí", ["Sin embargo, podemos continuar con el ejercicio." ]), false);
+  assert.equal(detectEcho("sol", ["La consola está lista para el siguiente ejercicio."]), false,
+    "Una palabra dentro de otra no debe activar la supresión de eco.");
+  assert.equal(detectEcho("la respuesta", ["La respuesta correcta es la opción B."]), true,
+    "Una frase completa compartida sí debe detectarse como eco.");
   assert.equal(detectEcho("¡Hola de nuevo!", ["¡Hola de nuevo! Soy Orby."]), true);
   assert.equal(detectEcho("Saber 11", ["Saber 11 forma parte del examen ICFES."]), false);
   assert.equal(detectEcho("sí", ["La fotosíntesis utiliza energía solar."]), false);

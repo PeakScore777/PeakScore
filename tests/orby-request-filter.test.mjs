@@ -1039,7 +1039,9 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = null/);
   assert.match(lessonTutorSource, /waitingForVoiceReplyRef\.current = true/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
-  assert.match(lessonTutorSource, /const turn = \{ conversationId: id, turnId: crypto\.randomUUID\(\), userContent, assistantContent \}/);
+  assert.match(lessonTutorSource, /previousTurn\.conversationId === id/);
+  assert.match(lessonTutorSource, /previousTurn\.userContent === userContent/);
+  assert.match(lessonTutorSource, /previousTurn\.assistantContent === assistantContent/);
   const fallbackDecision = lessonTutorSource.indexOf("const needsSpeechFallback =");
   const flushBeforeFallback = lessonTutorSource.lastIndexOf("flushPendingGeminiAudio();", fallbackDecision);
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
@@ -2450,7 +2452,9 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.match(voiceTurnIdempotencyMigration, /already_saved/);
   assert.match(lessonTutorSource, /pendingVoicePersistenceRef = useRef/);
   assert.match(lessonTutorSource, /const previousTurn = pendingVoicePersistenceRef\.current/);
-  assert.match(lessonTutorSource, /previousTurn\.turnId === turn\.turnId/);
+  assert.match(lessonTutorSource, /previousTurn\.conversationId === id/);
+  assert.match(lessonTutorSource, /previousTurn\.userContent === userContent/);
+  assert.match(lessonTutorSource, /previousTurn\.assistantContent === assistantContent/);
   assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = turn/);
   assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = null/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));

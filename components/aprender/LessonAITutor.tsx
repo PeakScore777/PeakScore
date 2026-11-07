@@ -2691,11 +2691,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const partialReply = voiceAssistantTextRef.current.trim();
       const normalizedSpokenReply = normalizeVoiceComparison(partialReply);
       let boardMatchedToSpeech: OrbyBoardData | null = null;
-      while (voicePendingBoardCuesRef.current.length > 0) {
-        const pendingCue = voicePendingBoardCuesRef.current[0];
-        if (!normalizedSpokenReply.includes(pendingCue.cue)) break;
+      // Reveal no more than one cue per transcript event. A single ASR event
+      // may contain several already-spoken phrases; draining the whole queue
+      // here would batch them into one render and skip the teacher-like steps.
+      const pendingBoardCue = voicePendingBoardCuesRef.current[0];
+      if (pendingBoardCue && normalizedSpokenReply.includes(pendingBoardCue.cue)) {
         voicePendingBoardCuesRef.current.shift();
-        boardMatchedToSpeech = pendingCue.board;
+        boardMatchedToSpeech = pendingBoardCue.board;
       }
       if (boardMatchedToSpeech) voiceTeachingBoardRef.current = boardMatchedToSpeech;
       // A transcript is eligible for acoustic echo suppression only after

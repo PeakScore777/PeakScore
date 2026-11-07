@@ -279,3 +279,11 @@ Referencia oficial consultada: https://developers.cloudflare.com/workers-ai/plat
 ### Decisión de entrega
 
 CI está verde, pero **no autoriza por sí sola un Pull/merge ni un despliegue**. Mantener intactas `main` y la base de datos activa hasta completar QA manual de voz/pizarra, confirmar la política de coste de Cloudflare y verificar las migraciones pendientes.
+
+### Protección adicional de facturación — 2026-11-07
+
+- `lib/ai/cloudflare-workers-ai.ts` ahora exige `ORBY_CLOUDFLARE_FREE_PLAN_CONFIRMED=true` antes de ejecutar cualquier inferencia, transcripción, embedding o generación visual con Workers AI.
+- Si la variable falta o está en `false`, el proveedor falla cerrado con `FREE_PLAN_NOT_CONFIRMED`; las funciones de detección de configuración también lo consideran no disponible.
+- `.env.example` deja el valor en `false` por defecto. Solo debe cambiarse tras verificar manualmente que la cuenta está en Workers Free y que no hay facturación, créditos prepagados ni otra ruta que pueda cobrar.
+- Esta confirmación es una barrera de configuración, no una lectura automática del plan Cloudflare. Si el plan de cuenta cambia después, el operador debe volver a verificarlo y desactivar el flag si existe riesgo de cobro.
+- La ruta de respaldo visual de voz queda igualmente protegida porque usa el mismo proveedor compartido. La cuota gratuita agotada continúa degradando con aviso; no se añade fallback facturable.

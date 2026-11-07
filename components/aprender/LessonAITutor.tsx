@@ -5226,54 +5226,62 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         {error && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       </div>
 
-      {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 sm:px-8" aria-label="Conversación de voz con Orby">
-        <div className="pointer-events-none absolute inset-x-0 top-[34%] h-56 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,.13),transparent_65%)]" aria-hidden="true" />
-        <div className={`relative z-10 flex w-full flex-col items-center text-center ${voiceBoardActive ? "max-w-6xl gap-3" : "max-w-4xl"}`}>
-          {activeVoiceAssistantMessage?.board && <section className="w-full text-left" aria-label="Pizarra de la explicación de Orby">
-            <OrbyBoard board={activeVoiceAssistantMessage.board} />
-          </section>}
-          <div className={voiceBoardActive ? "relative flex h-16 w-16 items-center justify-center" : "relative flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64"} aria-hidden="true">
-            <div className="absolute inset-2 rounded-full bg-orange-500/10 blur-2xl" />
-            <div ref={voiceStageOrbRef} className={voiceMuted ? "orby-voice-orb orby-voice-orb-muted" : isListening ? "orby-voice-orb orby-voice-orb-active" : "orby-voice-orb"} />
-          </div>
-          <h2 className={voiceBoardActive ? "text-lg font-black tracking-tight sm:text-xl" : "mt-2 text-2xl font-black tracking-tight sm:text-3xl"}>{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
-          <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
-          {showAssistantSubtitles && <section className="mt-4 w-full max-w-3xl rounded-xl border border-orange-400/25 bg-[#111820]/90 px-4 py-3 text-left shadow-lg" aria-label="Subtítulos de la voz de Orby" aria-live="polite" aria-atomic="false">
-            <div className="mb-1 flex items-center justify-between gap-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-orange-300">Orby · Subtítulos en vivo</p>
-              {voicePlaybackOwnerRef.current !== "none" && <span className="flex items-center gap-1.5 text-[9px] font-semibold text-emerald-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"/> EN VOZ</span>}
+      {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-3 sm:px-5 sm:py-4" aria-label="Clase en vivo con Orby">
+        <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 rounded-t-2xl border border-b-0 border-slate-200/80 bg-white px-4 py-2.5 text-slate-800">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" />
+            <div className="min-w-0">
+              <p className="truncate text-xs font-extrabold tracking-tight">Orby · Tutor IA</p>
+              <p className="truncate text-[10px] text-slate-500">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te está escuchando" : voiceStatus}</p>
             </div>
-            <p className="max-h-28 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá lo que Orby vaya diciendo…" : "Conecta con Orby para comenzar.")}</p>
-          </section>}
-          {!voiceBoardActive && voiceMode && voicePendingStudentTurnRef.current && <section className="mt-4 w-full max-w-3xl rounded-xl border border-dashed border-orange-300/35 bg-[#fffdf8] px-5 py-4 text-left text-slate-800 shadow-sm" role="status" aria-label="Pizarra de Orby preparándose">
-            <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-orange-900"><span className="h-2 w-2 animate-pulse rounded-full bg-orange-500"/> Pizarra de Orby</div>
-            <p className="mt-2 text-sm font-semibold">Preparando el apoyo visual…</p>
-            <p className="mt-1 text-xs leading-5 text-slate-600">La voz continúa mientras se valida la primera entrada. No se espera al final de la explicación.</p>
-          </section>}
-          {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">
-            <strong>Modo por turnos activo.</strong> Pulsa el micrófono para hablar y vuelve a pulsarlo para enviar la grabación. Whisper transcribe tu pregunta y Cloudflare prepara la explicación. Orby intentará leerla con Gemini TTS si la cuota gratuita y la configuración de privacidad lo permiten; si no, la respuesta quedará por escrito. No se usa una voz genérica del navegador ni se cambia automáticamente a otro proveedor.
-          </div>}
-          {liveTranscript && showVoiceTranscript && <div className="mt-4 max-h-28 w-full max-w-lg overflow-y-auto rounded-xl border border-current/10 bg-black/10 px-4 py-3 text-left text-sm leading-6">{liveTranscript}</div>}
-          {voiceError && <p role="alert" className="mt-4 max-w-lg rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{voiceError}</p>}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-9">
-            <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setWorkspaceMode("chat")} className="flex h-14 w-14 items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Volver al chat"><MessageSquare className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Chat</span></div>
-            <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => void (voiceFallbackMode ? (isRecording ? stopAudioRecording() : requestMicrophonePermission()) : toggleVoiceMute())} disabled={!voiceMode || loading || (voiceFallbackMode && audioTranscribing)} className={`flex h-14 w-14 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${voiceMuted ? "border-orange-400 bg-orange-500 text-white" : "border-current/15 bg-black/5 text-current hover:bg-black/10"} disabled:opacity-40`} aria-label={voiceFallbackMode ? (isRecording ? "Detener grabación" : "Grabar pregunta para Orby") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceFallbackMode ? (isRecording ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-5 w-5" />) : voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button><span className="text-[11px] opacity-70">{voiceFallbackMode ? (isRecording ? "Detener" : audioTranscribing ? "Transcribiendo" : "Hablar") : voiceMuted ? "Activar" : "Silenciar"}</span></div>
-            <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`flex h-14 w-14 items-center justify-center rounded-full border border-current/15 transition hover:bg-black/10 ${showAssistantSubtitles ? "bg-black/10 text-orange-400" : "bg-black/5 text-current"}`} aria-label="Mostrar u ocultar subtítulos de Orby"><Captions className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Subtítulos</span></div>
-            <div className="flex flex-col items-center gap-2"><button type="button" onClick={finishVoiceCall} className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f28a18] text-[#17120c] shadow-[0_8px_28px_rgba(242,138,24,.2)] transition hover:bg-[#ffa12f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300" aria-label="Finalizar llamada"><X className="h-6 w-6" /></button><span className="text-[11px] opacity-70">Finalizar</span></div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex">CLASE EN VIVO</span>
+            <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition ${showAssistantSubtitles ? "border-orange-200 bg-orange-50 text-orange-700" : "border-slate-200 bg-white text-slate-500"}`} aria-pressed={showAssistantSubtitles}>
+              <Captions className="mr-1 inline h-3.5 w-3.5" /> Subtítulos {showAssistantSubtitles ? "activados" : "desactivados"}
+            </button>
           </div>
         </div>
+        <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-slate-200/80 bg-[#f8f9fc]">
+          <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-4">
+            {activeVoiceAssistantMessage?.board
+              ? <div className="orby-class-board mx-auto w-full max-w-[1500px]">
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} />
+                </div>
+              : <div className="orby-class-empty mx-auto flex min-h-[280px] h-full max-w-5xl flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 px-6 text-center text-slate-500">
+                  <BookOpen className="mb-3 h-8 w-8 text-orange-500/70" />
+                  <p className="text-sm font-bold text-slate-700">{voiceMode ? "Preparando la pizarra de la clase…" : "Tu clase con Orby"}</p>
+                  <p className="mt-1 max-w-md text-xs leading-5">Los apuntes, esquemas y dibujos aparecerán aquí mientras Orby explica.</p>
+                </div>}
+            {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-700">{voiceError}</p>}
+            {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Modo por turnos:</strong> pulsa el micrófono para grabar tu pregunta. La respuesta puede tardar más que en la llamada en vivo y respetará las cuotas gratuitas disponibles.</p>}
+          </div>
+          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label="Subtítulos en vivo de Orby" aria-live="polite" aria-atomic="false">
+            <div className="mx-auto max-w-5xl rounded-xl border border-slate-700/70 bg-[#171b22]/95 px-4 py-3 text-white shadow-xl backdrop-blur-sm">
+              <div className="mb-1 flex items-center gap-2">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400" />
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-orange-300">Orby · Subtítulos en vivo</p>
+              </div>
+              <p className="max-h-20 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 sm:text-base">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá lo que Orby vaya explicando…" : "Conecta con Orby para comenzar la clase.")}</p>
+            </div>
+          </section>}
+        </div>
+        <footer className="orby-class-controls flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-b-2xl border border-t-0 border-slate-700/80 bg-[#10151d] px-3 py-3 text-white sm:px-5">
+          <div className="hidden min-w-0 items-center gap-2 sm:flex">
+            <span className="flex h-2.5 w-2.5 items-center justify-center"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" /></span>
+            <div className="min-w-0"><p className="text-[11px] font-bold">Orby está en clase</p><p className="truncate text-[10px] text-slate-400">{topic || subject}</p></div>
+          </div>
+          <div className="mx-auto flex items-center justify-center gap-2 sm:gap-3">
+            <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label="Abrir chat de Orby" title="Chat"><MessageSquare className="h-5 w-5" /></button>
+            <button type="button" onClick={() => void (voiceFallbackMode ? (isRecording ? stopAudioRecording() : requestMicrophonePermission()) : toggleVoiceMute())} disabled={!voiceMode || loading || (voiceFallbackMode && audioTranscribing)} className={`orby-call-control ${voiceMuted ? "orby-call-control-active" : ""}`} aria-label={voiceFallbackMode ? (isRecording ? "Detener grabación" : "Grabar pregunta") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"} title={voiceFallbackMode ? (isRecording ? "Detener grabación" : "Grabar pregunta") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceFallbackMode ? (isRecording ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-5 w-5" />) : voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button>
+            <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`orby-call-control ${showAssistantSubtitles ? "orby-call-control-active" : ""}`} aria-label={showAssistantSubtitles ? "Ocultar subtítulos" : "Mostrar subtítulos"} title="Subtítulos"><Captions className="h-5 w-5" /></button>
+            <button type="button" onClick={finishVoiceCall} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-red-600 px-4 text-sm font-bold text-white shadow-lg transition hover:bg-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Salir de la clase"><X className="h-4 w-4" /> <span>Salir</span></button>
+          </div>
+        </footer>
       </section>}
-      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la llamada de Orby" className="orby-mini-voice fixed left-1/2 top-1/2 z-[95] flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-transparent text-white transition duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
-        <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0 overflow-hidden">
-          <defs>
-            <filter id="orby-smoke-filter" x="-35%" y="-35%" width="170%" height="170%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="8" result="smokeNoise" />
-              <feDisplacementMap in="SourceGraphic" in2="smokeNoise" scale="17" xChannelSelector="R" yChannelSelector="G" />
-            </filter>
-          </defs>
-        </svg>
-        <span ref={voiceMiniOrbRef} className={voiceMuted ? "orby-mini-voice-core orby-mini-voice-muted" : "orby-mini-voice-core"} />
-        <span className="sr-only">Volver a la llamada de Orby. {voiceMuted ? "Micrófono silenciado." : voiceStatus}</span>
+      {workspace && voiceMode && workspaceMode === "chat" && <button type="button" onClick={() => setWorkspaceMode("voice")} aria-label="Volver a la clase en vivo con Orby" className="orby-mini-voice fixed bottom-24 right-6 z-[95] flex h-12 items-center gap-2 rounded-full border border-orange-400/30 bg-[#111820] px-4 text-xs font-bold text-white shadow-xl transition hover:border-orange-300 hover:bg-[#1b2632] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300">
+        <span ref={voiceMiniOrbRef} className="orby-mini-voice-wave flex h-5 items-center gap-0.5" aria-hidden="true"><i/><i/><i/><i/><i/></span>
+        Volver a clase
       </button>}
       {attachment && <div className="shrink-0 border-t border-slate-100 bg-white px-3 pt-3">
         <div className={`flex items-center gap-3 rounded-xl border p-2 ${orbyAccent ? "border-orange-200 bg-orange-50" : "border-sky-200 bg-sky-50"}`}>
@@ -5436,6 +5444,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel[data-orby-theme="dark"] [class~="bg-slate-100"], #orby-tutor-panel[data-orby-theme="dark"] [class~="bg-slate-50"] { background-color:#151d28!important; }
         #orby-tutor-panel[data-orby-theme="dark"] .orby-voice-stage { background:radial-gradient(ellipse at 50% 35%,#2a160c 0%,#11151c 45%,#090c11 100%); color:#f8fafc; }
         #orby-tutor-panel[data-orby-theme="light"] .orby-voice-stage { background:radial-gradient(ellipse at 50% 35%,#fff2e8 0%,#fff 55%,#f7f8fb 100%); color:#111827; }
+
+        /* Live lesson: the whiteboard is the classroom, not a decorative chat attachment. */
+        #orby-tutor-panel .orby-voice-stage { background:#11151d!important; color:#f8fafc; }
+        #orby-tutor-panel .orby-class-topbar { min-height:52px; }
+        #orby-tutor-panel .orby-class-paper { background-color:#fffefa; background-image:radial-gradient(#d8dee8 .8px,transparent .8px); background-size:19px 19px; }
+        #orby-tutor-panel .orby-class-board .orby-board { margin:0 auto!important; max-width:100%; min-height:100%; border:0!important; border-radius:0!important; background-color:transparent!important; background-image:none!important; box-shadow:none!important; }
+        #orby-tutor-panel .orby-class-board .orby-board > header { position:sticky;top:0;z-index:2;background:rgba(255,255,255,.94)!important;backdrop-filter:blur(8px); }
+        #orby-tutor-panel .orby-class-board .orby-board > div { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:start;gap:clamp(14px,2vw,28px);padding:clamp(14px,2.5vw,36px)!important; }
+        #orby-tutor-panel .orby-class-board .orby-board > div > * { min-width:0; }
+        #orby-tutor-panel .orby-class-board .orby-board section { background:rgba(255,255,255,.84)!important; }
+        #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(255,254,250,0),rgba(255,254,250,.98) 24%); }
+        #orby-tutor-panel .orby-call-control { display:flex;height:44px;width:44px;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);border-radius:9999px;background:rgba(255,255,255,.07);color:#f8fafc;transition:background .18s,border-color .18s,transform .18s; }
+        #orby-tutor-panel .orby-call-control:hover:not(:disabled) { background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.32); }
+        #orby-tutor-panel .orby-call-control:disabled { opacity:.4;cursor:not-allowed; }
+        #orby-tutor-panel .orby-call-control-active { background:rgba(249,115,22,.2);border-color:rgba(251,146,60,.75);color:#fdba74; }
+        #orby-tutor-panel .orby-mini-voice-wave i { display:block;width:3px;height:8px;border-radius:4px;background:#fb923c;animation:orby-wave 650ms ease-in-out infinite alternate; }
+        #orby-tutor-panel .orby-mini-voice-wave i:nth-child(2),#orby-tutor-panel .orby-mini-voice-wave i:nth-child(4) { animation-delay:160ms;height:14px; }
+        #orby-tutor-panel .orby-mini-voice-wave i:nth-child(3) { animation-delay:300ms;height:19px; }
+        #orby-tutor-panel[data-orby-theme="light"] .orby-voice-stage { background:#11151d!important; }
+        @media(max-width:767px) {
+          #orby-tutor-panel .orby-voice-stage { padding:8px!important; }
+          #orby-tutor-panel .orby-class-topbar { padding:8px 10px; }
+          #orby-tutor-panel .orby-class-paper { min-height:0; }
+          #orby-tutor-panel .orby-class-board .orby-board > div { grid-template-columns:1fr; }
+          #orby-tutor-panel .orby-call-control { height:40px;width:40px; }
+          #orby-tutor-panel .orby-class-controls { padding:9px; }
+        }
+        @media(prefers-reduced-motion:reduce) { #orby-tutor-panel .orby-mini-voice-wave i { animation:none!important; } }
+
         #orby-tutor-panel .orby-wave-bar { animation:orby-wave 900ms ease-in-out infinite alternate; transform-origin:center; }
         #orby-tutor-panel .orby-voice-orb { position:relative;width:100%;height:100%;border-radius:9999px;border:1px solid rgba(255,183,112,.7);background:radial-gradient(circle at 34% 25%,#ffe7bd 0%,#ffc36f 13%,#ff9c2e 28%,#df7417 46%,#8c3b0d 68%,#23130a 86%);box-shadow:0 0 48px rgba(242,138,24,.28),0 0 110px rgba(242,138,24,.11),inset -18px -26px 45px rgba(31,13,3,.6),inset 10px 9px 24px rgba(255,239,210,.34);transition:filter .35s,transform .35s; }
         #orby-tutor-panel .orby-voice-orb:before { content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 31% 22%,rgba(255,255,255,.72),rgba(255,232,196,.2) 17%,transparent 43%);filter:blur(1px); }

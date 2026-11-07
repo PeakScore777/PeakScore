@@ -59,7 +59,7 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
     success: "#0f766e",
   } as const;
   return (
-    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-[560px] w-full overflow-visible">
+    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-[680px] min-h-[320px] w-full overflow-visible">
       {visual.strokes.map((stroke, index) => {
         const color = palette[stroke.tone];
         const delay = Math.min(index * 110, 1_650);
@@ -407,12 +407,12 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
 
 export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   return (
-    <section aria-label={"Pizarra: " + board.title} className="orby-board mt-2 overflow-hidden rounded-xl border border-orange-200 bg-[#fffdf8] text-slate-900 shadow-[0_16px_44px_rgba(15,23,42,.12)]" style={{ backgroundImage: "radial-gradient(rgba(148,163,184,.17) .55px, transparent .55px)", backgroundSize: "16px 16px" }}>
-      <header className="flex items-center gap-2 border-b border-orange-100 bg-orange-50 px-4 py-3">
-        <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 text-sm font-black text-white">O</span>
-        <h3 className="text-xs font-extrabold uppercase tracking-[0.12em] text-orange-950">Pizarra · {board.title}</h3>
+    <section aria-label={"Pizarra: " + board.title} className="orby-board mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-[#fffefb] text-slate-900 shadow-[0_18px_52px_rgba(15,23,42,.14)]" style={{ backgroundImage: "linear-gradient(rgba(148,163,184,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.10) 1px, transparent 1px)", backgroundSize: "28px 28px" }}>
+      <header className="flex items-center gap-3 border-b border-slate-200 bg-white/90 px-5 py-3">
+        <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-black text-white shadow-sm">O</span>
+        <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-700">Pizarra · {board.title}</h3>
       </header>
-      <div className="space-y-4 p-4 sm:p-6">
+      <div className="space-y-5 p-5 sm:p-8">
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
           const revealClass = "orby-board-appear";
@@ -422,7 +422,7 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
           if (block.type === "callout") return <div key={blockKey} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
           return <p key={blockKey} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear space-y-2 rounded-xl border border-slate-100/80 bg-white/80 p-4 shadow-[0_2px_12px_rgba(15,23,42,.035)]">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
           <Visual visual={visual}/>
         </section>)}

@@ -406,27 +406,50 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
 }
 
 export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
+  const visualCount = board.visuals?.length ?? 0;
   return (
-    <section aria-label={"Pizarra: " + board.title} className="orby-board mt-2 overflow-hidden rounded-xl border border-orange-200 bg-[#fffdf8] text-slate-900 shadow-[0_16px_44px_rgba(15,23,42,.12)]" style={{ backgroundImage: "radial-gradient(rgba(148,163,184,.17) .55px, transparent .55px)", backgroundSize: "16px 16px" }}>
-      <header className="flex items-center gap-2 border-b border-orange-100 bg-orange-50 px-4 py-3">
-        <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 text-sm font-black text-white">O</span>
-        <h3 className="text-xs font-extrabold uppercase tracking-[0.12em] text-orange-950">Pizarra · {board.title}</h3>
+    <section
+      aria-label={"Pizarra de clase: " + board.title}
+      className="orby-board relative isolate overflow-hidden rounded-[22px] border border-[#dedbd3] bg-[#f7f6f1] text-slate-900 shadow-[0_18px_55px_rgba(15,23,42,.16)]"
+    >
+      <header className="relative z-10 flex flex-wrap items-center justify-between gap-3 border-b border-[#e5e1d8] bg-white/95 px-4 py-3 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#17191e] text-sm font-black text-orange-400 shadow-sm">O</span>
+          <div className="min-w-0">
+            <p className="text-[9px] font-extrabold uppercase tracking-[.2em] text-orange-700">PeakScore · Aula en directo</p>
+            <h3 className="truncate text-sm font-extrabold tracking-tight text-slate-900 sm:text-base">{board.title || "Explicación de Orby"}</h3>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-800">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" /> Pizarra activa
+          </span>
+          <span className="hidden rounded-full bg-slate-100 px-2.5 py-1 text-[9px] font-semibold text-slate-500 sm:inline-flex">{visualCount} {visualCount === 1 ? "recurso visual" : "recursos visuales"}</span>
+        </div>
       </header>
-      <div className="space-y-4 p-4 sm:p-6">
-        {board.blocks.map((block, index) => {
-          const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
-          const revealClass = "orby-board-appear";
-          if (block.type === "heading") return <h4 key={blockKey} className={`text-sm font-bold text-slate-900 ${revealClass}`}>{block.text}</h4>;
-          if (block.type === "formula") return <div key={blockKey} className={`overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono text-sm font-semibold text-slate-900 ${revealClass}`}>{block.text}</div>;
-          if (block.type === "step") return <div key={blockKey} className={`flex gap-3 rounded-lg bg-white p-3 ${revealClass}`}><span className="shrink-0 rounded-md bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-900">{block.label}</span><p className="text-sm leading-6 text-slate-700">{block.text}</p></div>;
-          if (block.type === "callout") return <div key={blockKey} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
-          return <p key={blockKey} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
-        })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear space-y-2 rounded-lg border border-slate-200 bg-white p-3">
-          {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
-          <Visual visual={visual}/>
-        </section>)}
+      <div className="relative min-h-[300px] overflow-hidden bg-[#fbfaf6] px-4 py-5 sm:min-h-[420px] sm:px-8 sm:py-7">
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-60" style={{ backgroundImage: "radial-gradient(#d8d5cc 0.7px, transparent 0.7px)", backgroundSize: "22px 22px" }} />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent" />
+        <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-5">
+          {board.blocks.map((block, index) => {
+            const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
+            const revealClass = "orby-board-appear";
+            if (block.type === "heading") return <h4 key={blockKey} className={`border-l-[3px] border-orange-500 pl-3 text-base font-extrabold tracking-tight text-slate-900 sm:text-lg ${revealClass}`}>{block.text}</h4>;
+            if (block.type === "formula") return <div key={blockKey} className={`overflow-x-auto rounded-xl border border-slate-200 bg-white/95 px-4 py-4 text-center font-mono text-base font-bold text-slate-900 shadow-[0_3px_14px_rgba(15,23,42,.04)] sm:text-lg ${revealClass}`}>{block.text}</div>;
+            if (block.type === "step") return <div key={blockKey} className={`flex gap-3 rounded-xl border border-slate-200/80 bg-white/90 p-3.5 shadow-[0_3px_14px_rgba(15,23,42,.04)] sm:p-4 ${revealClass}`}><span className="shrink-0 rounded-lg bg-orange-100 px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wide text-orange-900">{block.label}</span><p className="text-sm leading-7 text-slate-700">{block.text}</p></div>;
+            if (block.type === "callout") return <div key={blockKey} className={`rounded-xl border border-orange-200 bg-orange-50/90 px-4 py-3 text-sm font-medium leading-7 text-orange-950 ${revealClass}`}>{block.text}</div>;
+            return <p key={blockKey} className={`max-w-4xl text-sm leading-7 text-slate-700 sm:text-base ${revealClass}`}>{block.text}</p>;
+          })}
+          {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear rounded-2xl border border-[#e5e2da] bg-white/95 p-3 shadow-[0_5px_20px_rgba(15,23,42,.05)] sm:p-5">
+            {visual.title ? <div className="mb-3 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-orange-500" /><h4 className="text-xs font-extrabold uppercase tracking-[.12em] text-slate-700">{visual.title}</h4></div> : null}
+            <Visual visual={visual}/>
+          </section>)}
+        </div>
       </div>
+      <footer className="flex items-center justify-between gap-3 border-t border-[#e7e3da] bg-white/90 px-4 py-2.5 text-[9px] font-semibold uppercase tracking-[.14em] text-slate-400 sm:px-6">
+        <span>Material visual de estudio · Saber 11</span>
+        <span>Orby AI · PeakScore</span>
+      </footer>
     </section>
   );
 }

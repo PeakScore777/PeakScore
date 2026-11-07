@@ -3783,6 +3783,7 @@ test("el contrato de trazos exige etiquetas posicionadas y una frase hablada rea
 test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento reducido", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const sanitizer = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
   assert.match(renderer, /function smoothSketchPath/);
   assert.match(renderer, /orby-board-sketch-stroke/);
   assert.match(renderer, /<animateMotion path=\{path\}/);

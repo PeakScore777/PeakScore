@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - feat/founder-intro
+      - feat/orby-studio-classroom
   pull_request:
     branches:
       - main

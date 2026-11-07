@@ -247,3 +247,12 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Nodos, conexiones, puntos, vectores, átomos, componentes de circuito, pares de ADN y orgánulos usan claves basadas en identidad y geometría. Si una pieza nueva o corregida cambia, se monta como pieza nueva y activa su trazo/entrada; las piezas que no cambian permanecen montadas.
 - Las piezas reciben un escalonado breve de hasta 630 ms para que el esquema se construya en secuencia. Se conserva `prefers-reduced-motion`.
 - Esto es animación de dibujo por primitivas SVG/DOM, no un flujo de lápiz con coordenadas en tiempo real. El siguiente paso de fidelidad requiere eventos de trazo incrementales del modelo y validación de carga/rendimiento en navegador.
+
+## Dibujo libre tipo profesor — 2026-11-07
+
+- Se añadió el visual `sketch` al contrato seguro de la pizarra: hasta 16 trazos por visual, cada uno con 2–40 puntos normalizados, color controlado (`ink`, `accent`, `muted`, `success`), grosor limitado y etiqueta opcional con coordenadas obligatorias.
+- Gemini Live recibe el esquema de trazos y la instrucción de dibujar contorno, estructuras internas, flechas y rótulos en pequeñas actualizaciones acumulativas. Los IDs estables preservan trazos no modificados entre instantáneas.
+- El renderizador suaviza los puntos con curvas Bézier cuadráticas, anima la línea con `stroke-dashoffset` y mueve una punta de lápiz SVG por la trayectoria. Las etiquetas entran después de que termina su trazo; `prefers-reduced-motion` desactiva la animación y oculta la punta.
+- La voz no debe esperar a la herramienta no bloqueante. El prompt de sesión pide emitir la primera frase útil enseguida y dibujar en paralelo. La alineación visual sigue siendo por `spokenCue` de transcripción, no por reloj fonético; se revela máximo una instantánea por evento de transcripción y se conserva el fallback de escena final.
+- Los trazos se validan en servidor antes de renderizar. Los límites por punto/visual y el límite existente de 24 KB por escena reducen superficie de abuso y memoria.
+- No se ha ejecutado build, test ni una sesión Chrome real desde esta edición. La validación de CI continúa bloqueada por el estado `build-rate-limit` de Vercel y no hay ejecuciones GitHub Actions asociadas. No se han aplicado migraciones, modificado `main` ni desplegado.

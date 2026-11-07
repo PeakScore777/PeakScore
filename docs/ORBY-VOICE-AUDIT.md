@@ -567,3 +567,6 @@ Commits:
 - `373d43f` — regresiones de limpieza de recursos.
 
 La CI anterior `42333562718` corresponde a `29f9cb4`; no valida estos cambios. La punta actual necesita CI completo.
+
+
+Nota de cobertura: se ajustó el rango de extracción de la regresión TTS para abarcar la función completa, incluidas sus funciones auxiliares internas, y no detenerse en el primer helper anidado. Commit: `3e0bea9`.

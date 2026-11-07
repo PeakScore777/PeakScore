@@ -1711,7 +1711,8 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /pregunta académica nueva y sustantiva/);
   assert.match(realtimeSessionSource, /Si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
-  assert.match(liveToolsSource, /MUST call this tool before answering each new substantive academic question/);
+  assert.match(liveToolsSource, /MUST call this tool for each new substantive academic question/);
+  assert.match(liveToolsSource, /never wait for search completion before the first spoken sentence/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
   assert.match(lessonTutorSource, /const query = toolQuery\.slice\(0, 2000\)/);
   assert.doesNotMatch(lessonTutorSource, /const currentTranscript = voiceUserTextRef\.current/);
@@ -2998,7 +2999,7 @@ test("la emisión del token efímero de Gemini Live tiene un límite de tiempo d
   assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
 });
 
-test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero", async () => {
+test("Gemini Live usa endpointing de voz de 400 ms en cliente y token efímero", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const sessionRouteSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   for (const source of [lessonTutorSource, sessionRouteSource]) {
@@ -3006,7 +3007,7 @@ test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero",
     assert.match(source, /automaticActivityDetection:\s*\{/);
     assert.match(source, source === lessonTutorSource ? /endOfSpeechSensitivity:\s*voiceSdk\.EndSensitivity\.END_SENSITIVITY_HIGH/ : /endOfSpeechSensitivity:\s*EndSensitivity\.END_SENSITIVITY_HIGH/);
     assert.match(source, /prefixPaddingMs:\s*40/);
-    assert.match(source, /silenceDurationMs:\s*500/);
+    assert.match(source, /silenceDurationMs:\s*400/);
   }
 });
 
@@ -3191,7 +3192,8 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
   assert.match(tools, /bonds:/);
   assert.match(tools, /components:/);
   assert.match(tools, /connections:/);
-  assert.match(tools, /Exact lowercase type:[\\s\\S]{0,260}physiology-process/,
+  assert.ok(tools.includes("Exact lowercase type: sketch | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process"),
+    "Gemini Live debe conocer todos los tipos visuales que acepta el sanitizador, incluido sketch");
     "Gemini Live debe conocer todos los tipos visuales que acepta el sanitizador, no solo los cinco básicos");
   assert.match(tools, /Coordinate ranges: diagram nodes 5–95; vector origin 10–90/,
     "las instrucciones de coordenadas deben coincidir con la validación del tablero");

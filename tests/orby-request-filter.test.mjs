@@ -749,12 +749,16 @@ test("los saludos cortos se reconocen y el modo voz los remite a Gemini Live", (
     assert.equal(filter.isOrbyGreetingRequest(greeting), true, greeting);
   }
   assert.equal(filter.isOrbyGreetingRequest("Hola, explícame la fotosíntesis"), false);
-  assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
+  assert.doesNotMatch(filter.ORBY_GREETING_REPLY, /PeakScore|Soy Orby/);
+  assert.match(filter.ORBY_GREETING_REPLY, /Matemáticas/);
   assert.match(cloudflareTutorRoute, /isOrbyGreetingRequest\(userMessage\)/);
   assert.match(lessonTutorSource, /const preflight = preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
   assert.ok(lessonTutorSource.includes("voicePreflightReplyRef.current = asksIdentity"));
   assert.ok(lessonTutorSource.includes("(preflight.allowed ? null : preflight.reply)"));
-  assert.doesNotMatch(lessonTutorSource, /const greetingReply = isOrbyGreetingRequest\(message\)/);
+  assert.match(lessonTutorSource, /if \(isOrbyGreetingRequest\(voiceUserTextRef\.current\)\)/);
+  assert.match(lessonTutorSource, /getOrbyGreetingFollowUpReply\(greetingContext, activeSubjectRef\.current\)/);
+  assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, greetingReply, false\)/);
+  assert.match(filter.getOrbyGreetingFollowUpReply("assistant: Estamos estudiando álgebra.", "Matemáticas"), /Seguimos con Matemáticas/);
 });
 
 test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre", () => {

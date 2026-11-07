@@ -249,8 +249,8 @@ test("Orby divide respuestas largas sin reordenar frases ni exceder el límite T
   const academicChunks = speechChunks.splitOrbySpeechIntoChunks(academicAnswer, 480);
   assert.deepEqual(academicChunks, [academicAnswer],
     "Los decimales y las abreviaturas no deben crear pausas ni perder puntuación.");
-  assert.equal(speechChunks.splitOrbySpeechIntoChunks("Primero. Después.", 480).length, 2,
-    "Las oraciones completas sí deben conservar sus límites naturales.");
+  assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("Primero. Después.", 480), ["Primero. Después."],
+    "Las oraciones completas pueden compartir un fragmento, pero deben conservar su puntuación y orden.");
 });
 
 test("Orby Lab también se consulta cuando el alumno pide fuentes de una duda anterior", () => {

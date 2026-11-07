@@ -94,6 +94,7 @@ export function isOrbyIdentityQuestion(message: string): boolean {
     || (/\bpeak\s*score\b/i.test(normalized)
       && /\b(?:quien(?:es)?|qn|qien|kien|que\s+es|que\s+son|de\s+que\s+trata|para\s+que\s+sirve)\b/i.test(normalized))
     || /\b(?:quien|qn|qien|kien)\s+(?:es|fue)\s+(?:peak\s*score|orby)\b/i.test(normalized)
+    || /\bq\s+y\s+es\s+(?:peak\s*score|orby)\b/i.test(normalized)
     || hasFalseOrbyCreatorAttribution(normalized);
 }
 export const ORBY_IDENTITY_REPLY =

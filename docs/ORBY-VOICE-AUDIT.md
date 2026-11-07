@@ -720,3 +720,29 @@ Se revisó la grabación de 99,3 s enviada como referencia del estándar pedagó
 - Revisar por separado el saludo que en el video termina en el fallback de respuesta incompleta. El video muestra el síntoma, pero aún no se ha aislado qué evento de Live o qué ruta de texto lo produce.
 - Diseñar y probar una validación de precisión conceptual para explicaciones de procesos biológicos, sin convertirla en un filtro frágil que rechace explicaciones correctas.
 - Medir en Chrome real tiempo hasta primera transcripción, primer texto, primer audio y respuesta completa. La corrección de guía reduce inferencia en un caso específico; no demuestra una mejora general de latencia.
+
+## 2026-11-07 — precisión conceptual y ruta de latencia
+
+### Precisión: replicación del ADN y mitosis
+
+El ejemplo del video evidenció una confusión de alto impacto: presentar la copia del ADN como si ocurriera durante la mitosis. Se agregó una corrección determinista, deliberadamente estrecha, que solo interviene cuando una respuesta menciona mitosis, ADN/copia y atribuye explícitamente la replicación a esa etapa. La explicación corregida separa tres hechos: duplicación en fase S de la interfase, separación de cromátidas hermanas durante la mitosis y división del citoplasma en la citocinesis.
+
+La corrección se aplica a la salida inicial y a la recuperación acotada del tutor, antes de validar y entregar el texto. Se agregaron pruebas para el error observado, una explicación correcta que debe permanecer intacta y una mención de mitosis que no debe activar el reemplazo. Esto no equivale a un verificador universal de biología; el alcance es únicamente esa confusión observada.
+
+### Latencia: hallazgos confirmados, sin cambios especulativos
+
+- La ruta de tutor ya ejecuta en paralelo la búsqueda vectorial, el grafo de conceptos y el perfil de aprendizaje; la recuperación usa `Promise.allSettled` para no perder una fuente cuando la otra falla.
+- Cuando se recuperan documentos, el enriquecimiento pedagógico y la búsqueda de documentos relacionados también corren en paralelo.
+- El generador Cloudflare no transmite tokens progresivamente: solicita una respuesta JSON completa, con timeout de 18 s y máximo de 2.200 tokens. Esto fija una cota de espera, pero no reduce por sí solo el tiempo real.
+- La búsqueda vectorial consulta primero qué modelos están indexados y luego puede generar hasta dos embeddings de consulta, en paralelo. Cada modelo puede añadir una llamada externa antes de la búsqueda SQL. No se cambia todavía el número de espacios vectoriales ni se elimina una fuente: hacerlo sin métricas de relevancia podría reducir la calidad del Lab.
+- El guardado final es atómico y el endpoint informa tiempos de recuperación, generación y persistencia mediante `Server-Timing` y `X-Orby-Response-Time-Ms`. Falta recoger mediciones reales de navegador para localizar la etapa dominante en producción.
+
+### Cambios de esta etapa
+
+- `935cc52a`: detector acotado para corregir la confusión ADN/mitosis.
+- `772b243b`: integración de la corrección en la ruta de texto, incluida la recuperación.
+- `55713190`: pruebas de regresión de precisión conceptual.
+
+### Validación pendiente
+
+No se recibió resultado de CI para estos commits; la consulta de ejecuciones de workflow no devolvió ejecuciones. Las pruebas nuevas están escritas, pero no se declaran ejecutadas ni aprobadas desde GitHub. Tampoco se ha realizado una sesión de Chrome/Live en esta etapa. No se cambia la arquitectura de recuperación hasta contar con tiempos reales y comparar calidad de resultados.

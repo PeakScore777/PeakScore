@@ -1,5 +1,12 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — tablero y subtítulos durante llamada de Orby
+- El escenario de voz muestra la pizarra del turno activo con OrbyBoard y subtítulos incrementales desde outputTranscription de Live.
+- Control para mostrar/ocultar subtítulos; sin nuevas llamadas de IA ni proveedores.
+- Limitación: texto según transcripción disponible, sin alineación exacta palabra-a-palabra; pizarra al llegar la herramienta, no sincronía temporal garantizada por trazo. Fallback sigue degradado sin inventar voz.
+- Prueba estática añadida. Archivos verificados en GitHub; no se ejecutaron browser/mic/TS/ESLint/build.
+
+
 ## 2026-11-07 — revelación de bloques y etapas de Orby
 - Bloques pedagógicos y visuales nuevos aparecen suavemente; procesos fisiológicos y líneas de tiempo se revelan con retrasos escalonados acotados.
 - Claves estables para snapshots acumulativos que anexan contenido y test estático de regresión.

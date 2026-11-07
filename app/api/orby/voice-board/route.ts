@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 
     const prompt = [
       "Construye una hoja de apuntes manuscritos que acompañe la explicación oral de Orby. No redactes la explicación hablada.",
-      "Devuelve JSON válido con esta forma: {\"reply\":\"\",\"checkQuestion\":\"\",\"learningSignal\":null,\"board\":{\"version\":2,\"title\":\"\",\"blocks\":[...],\"visuals\":[...]}}.",
+      "Devuelve exclusivamente JSON válido con esta forma: {\"board\":{\"version\":2,\"title\":\"\",\"blocks\":[...],\"visuals\":[...]}}.",
       "La pizarra debe ser concreta, correcta, legible y directamente pertinente a la pregunta. Usa español colombiano.",
       "Incluye un título, entre 2 y 4 bloques breves y al menos 1 visual. El visual debe ser una ilustración tipo apuntes de cuaderno, no una tarjeta de texto. Prefiere sketch con 6 a 14 trazos: contornos, flechas, círculos, subrayados y etiquetas manuscritas. Usa diagram, graph, table, timeline, molecule, cell, dna o vectors solo cuando sean más adecuados.",
       "No inventes valores, datos experimentales, unidades, fuentes ni relaciones. Si faltan datos numéricos, usa un ejemplo claramente rotulado como hipotético o un esquema conceptual.",

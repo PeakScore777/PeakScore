@@ -33,6 +33,8 @@ export type OrbyBoardVisual =
   | { type: "table"; title: string; headers: string[]; rows: string[][] }
   | { type: "molecule"; title: string; atoms: Array<{ id: string; element: string; x: number; y: number; charge?: string }>; bonds: Array<{ from: string; to: string; order: 1 | 2 | 3 }> }
   | { type: "circuit"; title: string; components: Array<{ id: string; kind: "battery" | "resistor" | "lamp" | "switch"; x: number; y: number; label: string }>; connections: Array<{ from: string; to: string }> }
+  | { type: "cell"; title: string; cellType: "animal" | "plant" | "prokaryotic"; organelles: Array<{ id: string; kind: "nucleus" | "mitochondrion" | "chloroplast" | "vacuole" | "membrane" | "cell-wall" | "ribosome" | "endoplasmic-reticulum" | "golgi" | "cytoplasm"; x: number; y: number; label: string }> }
+  | { type: "dna"; title: string; pairs: Array<{ left: "A" | "T" | "C" | "G"; right: "A" | "T" | "C" | "G" }> }
   | {
       type: "timeline";
       title: string;
@@ -211,6 +213,43 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       connections.push({ from, to });
     }
     return { type: "circuit", title: safeText(raw.title, 80), components, connections };
+  }
+
+  if (raw.type === "cell") {
+    if (!["animal", "plant", "prokaryotic"].includes(String(raw.cellType))
+      || !Array.isArray(raw.organelles) || raw.organelles.length < 2 || raw.organelles.length > 14) return null;
+    const allowed = ["nucleus", "mitochondrion", "chloroplast", "vacuole", "membrane", "cell-wall", "ribosome", "endoplasmic-reticulum", "golgi", "cytoplasm"];
+    const organelles: Array<{ id: string; kind: "nucleus" | "mitochondrion" | "chloroplast" | "vacuole" | "membrane" | "cell-wall" | "ribosome" | "endoplasmic-reticulum" | "golgi" | "cytoplasm"; x: number; y: number; label: string }> = [];
+    const ids = new Set<string>();
+    for (const entry of raw.organelles) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const item = entry as Record<string, unknown>;
+      const id = safeId(item.id);
+      const kind = item.kind;
+      const label = safeText(item.label, 36);
+      if (!id || ids.has(id) || !allowed.includes(String(kind)) || !label
+        || !finite(item.x, 10, 90) || !finite(item.y, 10, 90)) return null;
+      ids.add(id);
+      organelles.push({ id, kind: kind as typeof organelles[number]["kind"], x: item.x, y: item.y, label });
+    }
+    if (raw.cellType === "animal" && organelles.some((item) => item.kind === "cell-wall" || item.kind === "chloroplast")) return null;
+    if (raw.cellType === "plant" && !organelles.some((item) => item.kind === "cell-wall")) return null;
+    if (raw.cellType === "prokaryotic" && organelles.some((item) => ["nucleus", "mitochondrion", "chloroplast", "endoplasmic-reticulum", "golgi"].includes(item.kind))) return null;
+    return { type: "cell", title: safeText(raw.title, 80), cellType: raw.cellType as "animal" | "plant" | "prokaryotic", organelles };
+  }
+
+  if (raw.type === "dna") {
+    if (!Array.isArray(raw.pairs) || raw.pairs.length < 2 || raw.pairs.length > 12) return null;
+    const pairs: Array<{ left: "A" | "T" | "C" | "G"; right: "A" | "T" | "C" | "G" }> = [];
+    for (const entry of raw.pairs) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const pair = entry as Record<string, unknown>;
+      if (!["A", "T", "C", "G"].includes(String(pair.left)) || !["A", "T", "C", "G"].includes(String(pair.right))
+        || !((pair.left === "A" && pair.right === "T") || (pair.left === "T" && pair.right === "A")
+          || (pair.left === "C" && pair.right === "G") || (pair.left === "G" && pair.right === "C"))) return null;
+      pairs.push({ left: pair.left as "A" | "T" | "C" | "G", right: pair.right as "A" | "T" | "C" | "G" });
+    }
+    return { type: "dna", title: safeText(raw.title, 80), pairs };
   }
 
   if (raw.type === "timeline") {

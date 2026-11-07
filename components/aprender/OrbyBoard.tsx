@@ -443,10 +443,8 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   function pointerUp() {
     if (!drawing) return;
     setDrawing(false);
-    setDraft((current) => {
-      if (current && current.points.length > 1) setStrokes((items) => [...items, current]);
-      return null;
-    });
+    if (draft && draft.points.length > 1) setStrokes((items) => [...items, draft]);
+    setDraft(null);
   }
   return (
     <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden rounded-xl border border-slate-200/90 bg-[#fffefb] text-slate-900 shadow-[0_10px_34px_rgba(15,23,42,.10)] sm:rounded-2xl" style={{ backgroundImage: "linear-gradient(rgba(148,163,184,.075) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.075) 1px, transparent 1px)", backgroundSize: "30px 30px" }}>

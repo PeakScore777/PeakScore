@@ -384,7 +384,8 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   const title = safeText(raw.title, 100);
   if (!title) return null;
   const spokenCue = raw.spokenCue === undefined ? "" : safeText(raw.spokenCue, 100);
-  if (raw.spokenCue !== undefined && !spokenCue) return null;
+  const spokenCueWords = spokenCue ? spokenCue.split(/\s+/).filter(Boolean).length : 0;
+  if (raw.spokenCue !== undefined && (spokenCueWords < 3 || spokenCueWords > 12)) return null;
 
   const blocks: OrbyBoardBlock[] = [];
   for (const candidate of raw.blocks) {

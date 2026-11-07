@@ -232,6 +232,40 @@ export async function generateWithCloudflareTutor(prompt: string): Promise<{ tex
   return { text };
 }
 
+/**
+ * Generates a visual-only teaching board. Kept separate from the spoken tutor
+ * contract so the tutor's required reply/checkQuestion/learningSignal schema
+ * cannot silently omit the board payload.
+ */
+export async function generateWithCloudflareBoard(prompt: string): Promise<{ text: string }> {
+  const result = await runModel<{ response?: unknown; text?: unknown }>(
+    TUTOR_MODEL,
+    {
+      messages: [
+        {
+          role: "system",
+          content: "Eres el ilustrador pedagógico de Orby, tutora de PeakScore para Saber 11. Tu única tarea es crear una pizarra visual manuscrita para acompañar una clase oral. Devuelve exclusivamente un objeto JSON válido con una única propiedad board. El objeto board debe tener version:2, title, blocks (1 a 6 bloques) y visuals (1 a 2 elementos). Usa español colombiano. El visual debe parecer apuntes hechos a mano en una hoja de cuaderno: dibujos esquemáticos sencillos, flechas, círculos, subrayados y etiquetas breves. Prefiere type sketch con trazos suaves, irregulares y legibles; utiliza tinta azul oscura, acentos rojos y verde solo para destacar. Cada trazo usa id único, points con 2 a 40 puntos x/y entre 4 y 96, tone ink/accent/muted/success, width entre 0.6 y 2.4; las etiquetas requieren labelX y labelY. Para diagramas de célula, moléculas, procesos, estructuras, mapas conceptuales o mecanismos, dibuja las partes y conecta con flechas; no reemplaces el dibujo con párrafos. En Matemáticas, dibuja ejes, gráficas, figuras y pasos de operaciones cuando corresponda. Incluye bloques cortos: heading, text, formula, step o callout. No inventes datos. No incluyas reply, checkQuestion, learningSignal, Markdown, HTML, SVG ni texto fuera del JSON.",
+        },
+        { role: "user", content: prompt.slice(0, 12_000) },
+      ],
+      temperature: 0.15,
+      max_tokens: 2400,
+      response_format: { type: "json_object" },
+      chat_template_kwargs: { enable_thinking: false },
+      stream: false,
+    },
+    22_000,
+  );
+
+  const text = typeof result.response === "string"
+    ? result.response.trim()
+    : typeof result.text === "string"
+      ? result.text.trim()
+      : "";
+  if (!text) throw new CloudflareWorkersAIError("EMPTY_BOARD_RESPONSE");
+  return { text };
+}
+
 export function isCloudflareWorkersAIConfigured(): boolean {
   return Boolean(
     /^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "")

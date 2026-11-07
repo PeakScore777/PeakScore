@@ -3605,3 +3605,12 @@ test("La voz reduce la espera de cierre de turno y prioriza respuestas directas 
   assert.match(server, /RESPUESTA ÁGIL Y CONTINUA/);
   assert.match(server, /La rapidez nunca justifica inventar, omitir filtros de seguridad ni sacrificar precisión académica/);
 });
+
+
+test("La voz registra la llegada del primer chunk de audio para medir latencia real", async () => {
+  const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(source, /voiceFirstAudioChunkReceivedRef/);
+  assert.match(source, /firstAudioChunkReceivedMs/);
+  assert.match(source, /First audio chunk received timing/);
+  assert.match(source, /First audible response timing/);
+});

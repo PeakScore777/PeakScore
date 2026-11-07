@@ -324,6 +324,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceInputPolicyRef = useRef<"identity" | "programming" | "outside" | null>(null);
   const voiceForcedReplyRef = useRef<string | null>(null);
   const voiceLocalReplyInFlightRef = useRef(false);
+  const voiceBargeInPendingRef = useRef(false);
   const voicePreflightReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
   const voiceLastCommittedInputAtRef = useRef(0);
@@ -888,6 +889,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   // A new user turn always takes priority over audio that is still playing.
   function interruptCurrentVoiceOutput() {
     cancelPendingOrbyKnowledgeRequests();
+    // Remember that the next Live "interrupted" event belongs to this
+    // student's new turn, not to a completed assistant response.
+    voiceBargeInPendingRef.current = voiceModeRef.current
+      && waitingForVoiceReplyRef.current
+      && !voiceResponseDoneRef.current;
     const interruptedAssistantId = voiceAssistantMessageIdRef.current;
     const hadIncompleteAssistantReply = !voiceResponseDoneRef.current && Boolean(interruptedAssistantId);
     if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
@@ -1462,6 +1468,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStartupAbortRef.current?.abort();
     voiceStartupAbortRef.current = null;
     voiceModeRef.current = false;
+    voiceBargeInPendingRef.current = false;
     voiceFallbackModeRef.current = false;
     setVoiceFallbackMode(false);
     voiceSpeechPlaybackGenerationRef.current += 1;
@@ -2563,13 +2570,28 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     if (serverContent.interrupted === true && !voiceLocalReplyInFlightRef.current) {
-      // Barge-in cancels this response. Clear its watchdog so the next spoken
-      // turn receives a fresh deadline instead of inheriting a stuck timer.
+      const studentBargeInPending = voiceBargeInPendingRef.current
+        && voicePendingStudentTurnRef.current
+        && Boolean(voiceUserTextRef.current.trim());
+      voiceBargeInPendingRef.current = false;
+      // This event closes the assistant's previous generation. When a new
+      // student turn is already pending, never mark/persist the old partial
+      // transcript as a completed answer or clear the new turn's waiting state.
       clearVoiceResponseWatchdog();
       stopVoicePlayback();
       voicePendingAudioChunksRef.current = [];
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
+      if (studentBargeInPending) {
+        voiceResponseDoneRef.current = false;
+        waitingForVoiceReplyRef.current = true;
+        setVoiceStatus("Procesando lo que dijiste…");
+        setIsListening(false);
+        armVoiceResponseWatchdog();
+        // Do not interpret a turnComplete flag carried with this interruption
+        // as completion of the new student turn.
+        return;
+      }
       voiceResponseDoneRef.current = true;
       waitingForVoiceReplyRef.current = false;
       void persistRealtimeTurnIfReady();
@@ -2594,6 +2616,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceAssistantTextRef.current = "";
         voiceAssistantMessageIdRef.current = null;
         voicePublicSourcesRef.current = [];
+        voiceBargeInPendingRef.current = false;
         voiceResponseDoneRef.current = true;
         voiceTurnPersistedRef.current = true;
         waitingForVoiceReplyRef.current = false;
@@ -2721,6 +2744,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceInputPolicyRef.current = null;
       voicePreflightReplyRef.current = null;
       voiceForcedReplyRef.current = null;
+      voiceBargeInPendingRef.current = false;
       voiceResponseDoneRef.current = true;
       voiceOutputAudioBlockedRef.current = false;
       voiceOutputTranscriptValidatedRef.current = false;

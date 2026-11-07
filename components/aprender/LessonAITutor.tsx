@@ -328,6 +328,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceForcedReplyRef = useRef<string | null>(null);
   const voiceLocalReplyInFlightRef = useRef(false);
   const voiceBargeInPendingRef = useRef(false);
+  const voiceDiscardStaleLiveOutputRef = useRef(false);
   const voicePreflightReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
   const voiceLastCommittedInputAtRef = useRef(0);
@@ -2244,11 +2245,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // transcript may already be visible even though playback is not active.
         // Remove only that unfinished bubble before resetting its refs; otherwise
         // it survives as an orphaned, truncated assistant message in the chat.
-        const unfinishedAssistantId = !voiceResponseDoneRef.current
+        const hasUnfinishedLiveGeneration = !voiceResponseDoneRef.current
+          && Boolean(voiceAssistantMessageIdRef.current || voiceAssistantTextRef.current.trim());
+        const unfinishedAssistantId = hasUnfinishedLiveGeneration
           ? voiceAssistantMessageIdRef.current
           : null;
         if (unfinishedAssistantId) {
           setMessages((current) => current.filter((message) => message.id !== unfinishedAssistantId));
+        }
+        // Live may deliver the previous generation's final transcript after
+        // mic ACTIVITY_START but before its interruption event. Keep a one-
+        // generation discard guard so late output cannot answer the next question.
+        if (hasUnfinishedLiveGeneration && voiceChannelRef.current) {
+          voiceDiscardStaleLiveOutputRef.current = true;
+          voiceBargeInPendingRef.current = true;
         }
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
         voiceActivityGenerationRef.current += 1;
@@ -2302,9 +2312,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // A typed barge-in can be followed by late output from the previous Live
     // generation before the server delivers its `interrupted` event. Suppress
     // that output immediately; the interrupted event then clears the guard.
-    let discardInterruptedGenerationOutput = Boolean(
-      voiceBargeInPendingRef.current && voicePendingStudentTurnRef.current,
-    );
+    let discardInterruptedGenerationOutput = voiceDiscardStaleLiveOutputRef.current
+      || Boolean(voiceBargeInPendingRef.current && voicePendingStudentTurnRef.current);
 
     const interimInput = serverContent.interimInputTranscription && typeof serverContent.interimInputTranscription === "object"
       ? serverContent.interimInputTranscription as { text?: unknown }
@@ -2675,6 +2684,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           });
         }
       }
+    }
+
+    if (discardInterruptedGenerationOutput
+      && (serverContent.turnComplete === true || serverContent.generationComplete === true)) {
+      // This completion belongs to the stale generation. Release the guard
+      // only after discarding its final event; the next Live generation is valid.
+      voiceDiscardStaleLiveOutputRef.current = false;
+      voiceBargeInPendingRef.current = false;
     }
 
     if (!discardInterruptedGenerationOutput

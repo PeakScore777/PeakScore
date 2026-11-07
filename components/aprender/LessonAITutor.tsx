@@ -2046,6 +2046,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // The SDK exposes no reliable phonetic timestamps, so do not guess.
         voicePendingBoardCuesRef.current.push({ board, cue: normalizeVoiceComparison(snapshot.spokenCue) });
       } else {
+        // An immediate snapshot supersedes any cue that was never heard.
+        voicePendingBoardCuesRef.current = [];
         voiceTeachingBoardRef.current = snapshot;
       }
       voiceBoardUpdateCountRef.current += 1;
@@ -2646,6 +2648,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
       if (studentBargeInPending) {
+        voicePendingBoardCuesRef.current = [];
         discardInterruptedGenerationOutput = true;
         voiceResponseDoneRef.current = false;
         waitingForVoiceReplyRef.current = true;

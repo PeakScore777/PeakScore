@@ -322,6 +322,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceAssistantTextRef = useRef("");
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
   const voiceTeachingBoardRef = useRef<OrbyBoardData | null>(null);
+  const voiceBoardFallbackControllerRef = useRef<AbortController | null>(null);
   const voicePendingBoardSnapshotsRef = useRef<Array<{
     board: OrbyBoardData;
     sessionGeneration: number;
@@ -2021,6 +2022,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function clearPendingOrbyTeachingBoard() {
+    voiceBoardFallbackControllerRef.current?.abort();
+    voiceBoardFallbackControllerRef.current = null;
     voicePendingBoardSnapshotsRef.current = [];
     voiceAwaitingInputTranscriptionRef.current = false;
     voiceInputPreflightAcceptedRef.current = false;
@@ -2058,6 +2061,68 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       || voiceDiscardStaleLiveOutputRef.current
       || voiceBargeInPendingRef.current) return;
     publishOrbyTeachingBoardSnapshot(pending.board);
+  }
+
+  async function requestOrbyVoiceBoardFallback(questionText: string) {
+    const cleanQuestion = questionText.trim().slice(0, 1200);
+    if (cleanQuestion.length < 8 || !voiceModeRef.current || !voicePendingStudentTurnRef.current) return;
+    voiceBoardFallbackControllerRef.current?.abort();
+    const controller = new AbortController();
+    voiceBoardFallbackControllerRef.current = controller;
+    const sessionGeneration = voiceSessionGenerationRef.current;
+    const activityGeneration = voiceActivityGenerationRef.current;
+    const startedAt = performance.now();
+    try {
+      const response = await fetch("/api/orby/voice-board", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(22_000)]),
+        body: JSON.stringify({
+          question: cleanQuestion,
+          subject: activeSubjectRef.current || "Preparación Saber 11",
+          topic,
+          context,
+        }),
+      });
+      const payload = await response.json().catch(() => ({})) as { board?: unknown; error?: unknown };
+      const isCurrent = !controller.signal.aborted
+        && voiceModeRef.current
+        && voiceSessionGenerationRef.current === sessionGeneration
+        && voiceActivityGenerationRef.current === activityGeneration
+        && voicePendingStudentTurnRef.current
+        && voiceUserTextRef.current.trim().length > 0;
+      if (!isCurrent) return;
+      if (!response.ok) {
+        console.warn("[Orby Voice Board] Free visual fallback unavailable.", {
+          status: response.status,
+          elapsedMs: Math.round(performance.now() - startedAt),
+        });
+        return;
+      }
+      const board = sanitizeOrbyBoard(payload.board);
+      if (!board) {
+        console.warn("[Orby Voice Board] Fallback board failed client validation.");
+        return;
+      }
+      // Live remains authoritative if it has already delivered a visual for this turn.
+      if (voiceTeachingBoardRef.current) return;
+      publishOrbyTeachingBoardSnapshot(board);
+      console.info("[Orby Voice Board] First visual fallback ready.", {
+        elapsedMs: Math.round(performance.now() - startedAt),
+        visuals: board.visuals?.length ?? 0,
+      });
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        console.warn("[Orby Voice Board] Fallback request failed.", {
+          name: error instanceof Error ? error.name : "UnknownError",
+        });
+      }
+    } finally {
+      if (voiceBoardFallbackControllerRef.current === controller) {
+        voiceBoardFallbackControllerRef.current = null;
+      }
+    }
   }
 
   function handleOrbyLiveTeachingBoardTool(toolCall: unknown) {
@@ -2121,6 +2186,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
 
       acceptedSnapshotInEvent = true;
+      voiceBoardFallbackControllerRef.current?.abort();
+      voiceBoardFallbackControllerRef.current = null;
       voiceBoardUpdateCountRef.current += 1;
       if (activeAcademicTurn) {
         publishOrbyTeachingBoardSnapshot(snapshot);
@@ -2750,6 +2817,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && !voicePreflightReplyRef.current
         && !selectedVoiceSubject;
       if (voiceInputPreflightAcceptedRef.current) flushPendingOrbyTeachingBoard();
+      if (voiceInputPreflightAcceptedRef.current) void requestOrbyVoiceBoardFallback(voiceUserTextRef.current);
       else clearPendingOrbyTeachingBoard();
       void persistRealtimeTurnIfReady();
       armVoiceResponseWatchdog();

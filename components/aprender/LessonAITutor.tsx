@@ -1993,7 +1993,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
     if (!Array.isArray(calls)) return;
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
-    const cancelled = new Set<string>();
     // A tool call canceled in a sibling event is ignored by the normal event
     // dispatcher; this handler never starts asynchronous work or outlives its turn.
     for (const raw of calls.slice(0, 3)) {
@@ -3296,10 +3295,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
           const liveCalls = (payload.toolCall as { functionCalls?: unknown }).functionCalls;
           if (Array.isArray(liveCalls)) {
-            const boardCalls = liveCalls.filter((call) => !!call && typeof call === "object"
-              && (call as { name?: unknown }).name === "render_orby_teaching_board");
-            const knowledgeCalls = liveCalls.filter((call) => !!call && typeof call === "object"
-              && (call as { name?: unknown }).name !== "render_orby_teaching_board");
+            const cancelledIds = payload.toolCallCancellation && typeof payload.toolCallCancellation === "object"
+              && Array.isArray((payload.toolCallCancellation as { ids?: unknown }).ids)
+              ? (payload.toolCallCancellation as { ids: unknown[] }).ids.filter((id): id is string => typeof id === "string")
+              : [];
+            const activeCalls = liveCalls.filter((call) => !!call && typeof call === "object"
+              && !cancelledIds.includes((call as { id?: unknown }).id as string));
+            const boardCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "render_orby_teaching_board");
+            const knowledgeCalls = activeCalls.filter((call) => (call as { name?: unknown }).name !== "render_orby_teaching_board");
             if (boardCalls.length) void handleOrbyLiveTeachingBoardTool({ functionCalls: boardCalls });
             if (knowledgeCalls.length) void handleOrbyLiveKnowledgeTool({ functionCalls: knowledgeCalls });
           }

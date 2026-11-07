@@ -3418,6 +3418,7 @@ test("La pizarra anatómica se expone a voz y tutor escrito sin markup ejecutabl
   assert.match(tools, /system:/);
   assert.match(tools, /structures:/);
   assert.match(lesson, /sistemas permitidos/);
+  assert.match(lesson, /sketch: \{type:"sketch"/);
   assert.match(voice, /no una referencia anatómica a escala/);
   assert.doesNotMatch(renderer, /dangerouslySetInnerHTML/);
 });
@@ -3540,7 +3541,7 @@ test("el fallback de voz puede devolver la misma pizarra visual tipada que el tu
   const voicePrompt = cloudflareTutorRoute.slice(voicePromptStart, voicePromptEnd);
   assert.match(voicePrompt, /board version 2/);
   assert.match(voicePrompt, /hasta 4 visuales tipados/);
-  for (const visualType of ["diagram", "graph", "vectors", "table", "timeline", "molecule", "circuit", "cell", "dna", "punnett", "cell-division", "organ-system", "neuron", "physiology-process"]) {
+  for (const visualType of ["sketch", "diagram", "graph", "vectors", "table", "timeline", "molecule", "circuit", "cell", "dna", "punnett", "cell-division", "organ-system", "neuron", "physiology-process"]) {
     assert.ok(voicePrompt.includes(visualType), "falta el tipo visual " + visualType + " en el contrato del fallback de voz");
   }
   assert.doesNotMatch(voicePrompt, /board con version 1 y hasta 8 bloques/);

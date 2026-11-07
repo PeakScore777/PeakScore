@@ -603,6 +603,10 @@ test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en
   assert.equal(detectEcho("respuesta correcta", ["La respuesta correcta es la opción B."]), true,
     "Una frase completa compartida sí debe detectarse como eco.");
   assert.equal(detectEcho("¡Hola de nuevo!", ["¡Hola de nuevo! Soy Orby."]), true);
+  assert.equal(detectEcho("¡Hola de nuevo!", ["El estudiante dijo hola de nuevo ayer."]), true,
+    "El eco puede estar rodeado por texto adicional, pero debe coincidir como frase completa.");
+  assert.equal(detectEcho("hola", ["La palabra holanda no es un saludo."]), false,
+    "Una coincidencia parcial de saludo no debe activar el detector.");
   assert.equal(detectEcho("Saber 11", ["Saber 11 forma parte del examen ICFES."]), false);
   assert.equal(detectEcho("sí", ["La fotosíntesis utiliza energía solar."]), false);
 

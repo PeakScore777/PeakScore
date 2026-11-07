@@ -217,6 +217,39 @@ function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "ce
   );
 }
 
+function OrganSystem({ visual }: { visual: Extract<OrbyBoardVisual, { type: "organ-system" }> }) {
+  const palettes: Record<string, { fill: string; stroke: string }> = {
+    nervous: { fill: "#fef3c7", stroke: "#b45309" },
+    circulatory: { fill: "#fee2e2", stroke: "#b91c1c" },
+    respiratory: { fill: "#dbeafe", stroke: "#1d4ed8" },
+    digestive: { fill: "#ffedd5", stroke: "#c2410c" },
+    endocrine: { fill: "#f3e8ff", stroke: "#7e22ce" },
+    urinary: { fill: "#dcfce7", stroke: "#15803d" },
+    skeletal: { fill: "#f1f5f9", stroke: "#475569" },
+    muscular: { fill: "#fce7f3", stroke: "#be185d" },
+  };
+  const palette = palettes[visual.system];
+  return (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Esquema del sistema humano"} className="h-auto max-h-72 w-full">
+        <circle cx="50" cy="12" r="7" fill="#f8fafc" stroke={colors.ink} strokeWidth="1"/>
+        <path d="M50 20 L50 65 M50 28 L31 47 M50 28 L69 47 M50 65 L36 91 M50 65 L64 91" fill="none" stroke="#94a3b8" strokeWidth="5" strokeLinecap="round"/>
+        {visual.structures.map((item) => <g key={item.id}>
+          <line x1="50" y1="24" x2={item.x} y2={item.y} stroke={palette.stroke} strokeWidth="0.55" strokeDasharray="2 1"/>
+          <circle cx={item.x} cy={item.y} r="4.3" fill={palette.fill} stroke={palette.stroke} strokeWidth="0.9"/>
+          <text x={item.x} y={item.y + 1.3} fontSize="3.1" fontWeight="bold" textAnchor="middle" fill={colors.ink}>{item.name.slice(0, 2)}</text>
+        </g>)}
+      </svg>
+      <ol className="space-y-2">
+        {visual.structures.map((item, index) => <li key={item.id} className="rounded-md border border-slate-100 bg-slate-50 p-2">
+          <p className="text-[11px] font-bold text-slate-900">{index + 1}. {item.name}</p>
+          <p className="text-[10px] leading-4 text-slate-600">{item.role}</p>
+        </li>)}
+      </ol>
+    </div>
+  );
+}
+
 function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
@@ -227,6 +260,7 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "dna") return <Dna visual={visual}/>;
   if (visual.type === "punnett") return <Punnett visual={visual}/>;
   if (visual.type === "cell-division") return <CellDivision visual={visual}/>;
+  if (visual.type === "organ-system") return <OrganSystem visual={visual}/>;
   if (visual.type === "table") return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-xs">

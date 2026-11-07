@@ -5226,12 +5226,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         {error && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       </div>
 
-      {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden px-3 py-3 sm:px-5 sm:py-4" aria-label="Clase en vivo con Orby">
-        <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 rounded-t-2xl border border-b-0 border-slate-200/80 bg-white px-4 py-2.5 text-slate-800">
+      {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-4 sm:py-3" aria-label="Clase en vivo con Orby">
+        <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 rounded-t-xl border border-b-0 border-slate-200/80 bg-white/95 px-4 py-2 text-slate-800 sm:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" />
             <div className="min-w-0">
-              <p className="truncate text-xs font-extrabold tracking-tight">Orby · Tutor IA</p>
+              <p className="truncate text-xs font-extrabold tracking-tight">Hoja de clase</p>
               <p className="truncate text-[10px] text-slate-500">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te está escuchando" : voiceStatus}</p>
             </div>
           </div>
@@ -5242,10 +5242,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </button>
           </div>
         </div>
-        <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-slate-200/80 bg-[#f8f9fc]">
-          <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-4">
+        <div className="orby-class-paper-shell relative flex min-h-0 flex-1 flex-col overflow-hidden border-x border-slate-200/80 bg-[#eef1f5]">
+          <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             {activeVoiceAssistantMessage?.board
-              ? <div className="orby-class-board mx-auto w-full max-w-[1500px]">
+              ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
                   <OrbyBoard board={activeVoiceAssistantMessage.board} />
                 </div>
               : <div className="orby-class-empty mx-auto flex min-h-[280px] h-full max-w-5xl flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 px-6 text-center text-slate-500">
@@ -5257,16 +5257,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Modo por turnos:</strong> pulsa el micrófono para grabar tu pregunta. La respuesta puede tardar más que en la llamada en vivo y respetará las cuotas gratuitas disponibles.</p>}
           </div>
           {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label="Subtítulos en vivo de Orby" aria-live="polite" aria-atomic="false">
-            <div className="mx-auto max-w-5xl rounded-xl border border-slate-700/70 bg-[#171b22]/95 px-4 py-3 text-white shadow-xl backdrop-blur-sm">
+            <div className="mx-auto max-w-5xl rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-slate-700 shadow-sm backdrop-blur-sm sm:px-4">
               <div className="mb-1 flex items-center gap-2">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400" />
-                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-orange-300">Orby · Subtítulos en vivo</p>
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
+                <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-orange-700">Explicación en vivo</p>
               </div>
               <p className="max-h-20 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 sm:text-base">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá lo que Orby vaya explicando…" : "Conecta con Orby para comenzar la clase.")}</p>
             </div>
           </section>}
         </div>
-        <footer className="orby-class-controls flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-b-2xl border border-t-0 border-slate-700/80 bg-[#10151d] px-3 py-3 text-white sm:px-5">
+        <footer className="orby-class-controls flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-b-xl border border-t-0 border-slate-700/80 bg-[#10151d] px-3 py-2.5 text-white sm:px-5">
           <div className="hidden min-w-0 items-center gap-2 sm:flex">
             <span className="flex h-2.5 w-2.5 items-center justify-center"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" /></span>
             <div className="min-w-0"><p className="text-[11px] font-bold">Orby está en clase</p><p className="truncate text-[10px] text-slate-400">{topic || subject}</p></div>

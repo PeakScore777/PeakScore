@@ -287,3 +287,19 @@ CI está verde, pero **no autoriza por sí sola un Pull/merge ni un despliegue**
 - `.env.example` deja el valor en `false` por defecto. Solo debe cambiarse tras verificar manualmente que la cuenta está en Workers Free y que no hay facturación, créditos prepagados ni otra ruta que pueda cobrar.
 - Esta confirmación es una barrera de configuración, no una lectura automática del plan Cloudflare. Si el plan de cuenta cambia después, el operador debe volver a verificarlo y desactivar el flag si existe riesgo de cobro.
 - La ruta de respaldo visual de voz queda igualmente protegida porque usa el mismo proveedor compartido. La cuota gratuita agotada continúa degradando con aviso; no se añade fallback facturable.
+
+### Revalidación tras el bloqueo de facturación — 2026-11-07
+
+**Commit:** `d631372ffc99778408c32046333c194d8cce5788`  
+**GitHub Actions:** `42419412662` — **success**.
+
+- Regresiones Orby: **178 aprobadas, 0 fallidas**.
+- TypeScript: aprobado.
+- ESLint: aprobado.
+- Next.js production build: aprobado.
+- `npm audit`: **0 vulnerabilidades** en todas las severidades.
+- Next.js emitió un aviso no bloqueante porque un HDRI remoto de Poly Haven supera el límite de caché de 2 MB; la compilación finalizó correctamente.
+
+Esta ejecución incluye la nueva regresión que exige confirmación explícita del plan gratuito antes de permitir Workers AI. La confirmación permanece desactivada por defecto en `.env.example`.
+
+La validación sigue siendo automatizada: no sustituye la prueba manual de Chrome/micrófono ni verifica por sí misma el plan real de Cloudflare o el estado de las migraciones Supabase.

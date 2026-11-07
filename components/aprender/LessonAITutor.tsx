@@ -3164,7 +3164,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           automaticActivityDetection: {
             endOfSpeechSensitivity: voiceSdk.EndSensitivity.END_SENSITIVITY_HIGH,
             prefixPaddingMs: 40,
-            silenceDurationMs: 500,
+            silenceDurationMs: 400,
           },
         },
         contextWindowCompression: { slidingWindow: {} },

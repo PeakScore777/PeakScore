@@ -63,14 +63,25 @@ export async function POST(request: Request) {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20);
-    const alreadySaved = !recentReadError
-      && Array.isArray(latestMessages)
-      && latestMessages.some((message, index, history) =>
-        message?.role === "assistant"
-        && message?.content === assistantContent
-        && history[index + 1]?.role === "user"
-        && history[index + 1]?.content === userContent
-      );
+    if (recentReadError || !Array.isArray(latestMessages)) {
+      console.error("[Orby Realtime] Could not verify whether the voice turn was already saved.", {
+        code: recentReadError?.code,
+      });
+      return NextResponse.json({
+        error: "No pude comprobar si el turno ya está guardado. No añadí otro registro para evitar duplicarlo; vuelve a intentarlo.",
+        code: "SAVE_TURN_IDEMPOTENCY_CHECK_FAILED",
+      }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    }
+
+    // Messages are returned newest first. Only the latest assistant/user
+    // pair can prove that THIS request already committed; searching older
+    // history would suppress a legitimate repeated question later in the chat.
+    const latestAssistant = latestMessages[0];
+    const previousUser = latestMessages[1];
+    const alreadySaved = latestAssistant?.role === "assistant"
+      && latestAssistant?.content === assistantContent
+      && previousUser?.role === "user"
+      && previousUser?.content === userContent;
 
     if (!alreadySaved) {
       const { data, error } = await supabaseAdmin.rpc("orby_save_turn", {

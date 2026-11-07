@@ -3194,7 +3194,6 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
   assert.match(tools, /connections:/);
   assert.ok(tools.includes("Exact lowercase type: sketch | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process"),
     "Gemini Live debe conocer todos los tipos visuales que acepta el sanitizador, incluido sketch");
-    "Gemini Live debe conocer todos los tipos visuales que acepta el sanitizador, no solo los cinco básicos");
   assert.match(tools, /Coordinate ranges: diagram nodes 5–95; vector origin 10–90/,
     "las instrucciones de coordenadas deben coincidir con la validación del tablero");
   assert.match(lesson, /Es un esquema educativo 2D/);

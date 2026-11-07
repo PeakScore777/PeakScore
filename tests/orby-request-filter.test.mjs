@@ -2419,6 +2419,9 @@ test("las respuestas TTS largas conservan el texto completo y no omiten fragment
   assert.match(lessonTutorSource, /prefetchedAudio\?\.controller\.abort\(\)/);
   assert.match(lessonTutorSource, /prefetchNextTtsChunk\(\);/);
   assert.match(lessonTutorSource, /const prefetched = prefetchedAudio\?\.index === chunkIndex/);
+  assert.match(lessonTutorSource, /catch \(\) => \{\s*if \(prefetchedAudio\?\.controller === controller\) prefetchedAudio = null;[\s\S]*?return null;/);
+  assert.match(lessonTutorSource, /if \(!response\) throw new Error\("TTS_PREFETCH_FAILED"\)/);
+
 
   assert.ok(cloudflareTutorRoute.includes("isLowQualityOrbyReply(modelReply, userMessage)"));
   assert.ok(lessonTutorSource.includes("isLowQualityOrbyReply(rawReply, voiceUserTextRef.current)"));

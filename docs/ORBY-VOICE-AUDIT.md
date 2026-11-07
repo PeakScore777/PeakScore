@@ -631,3 +631,39 @@ Commits:
 - `8a4af91` — prueba del orden adverso de eventos.
 
 La corrección es una protección de orden de eventos; debe confirmarse con la suite y con una sesión real en Chrome antes de dar el problema por cerrado.
+
+
+## 2026-11-07 — auditoría profunda de latencia, silencio y turnos escritos
+
+Se amplió la revisión desde la captura hasta el guardado del turno. Se localizaron dos riesgos concretos adicionales:
+
+1. **Fin ambiguo de mensajes escritos en Live.** El compositor escrito enviaba el texto mediante `sendRealtimeInput({ text })`, una ruta de entrada en tiempo real asociada al endpointing/VAD de la sesión. El código no cerraba explícitamente ese turno escrito. Esto podía dejar la respuesta esperando a que Live detectara un final de actividad que el usuario ya había expresado al pulsar Enviar. Ahora el mensaje escrito se envía con `sendClientContent({ turns: [...], turnComplete: true })`, que marca inequívocamente el final del turno.
+2. **Recuperación demasiado tardía cuando Live deja de avanzar.** El watchdog anterior avisaba a los 18 s, esperaba 50 s y después añadía otros 70 s antes de cambiar al respaldo. En el peor caso podía dejar al estudiante esperando cerca de dos minutos. Ahora avisa a los 12 s y recupera la misma pregunta después de 32 s sin progreso. Cada evento de transcripción, audio o herramienta vuelve a armar el watchdog, por lo que una respuesta que sigue avanzando no se corta por su duración total.
+
+Se conservan las reglas de coste: el respaldo sigue usando el tutor gratuito configurado; no se añade un proveedor de pago ni un fallback silencioso. Si la cuota gratuita está agotada, se debe informar y conservar la respuesta/pregunta cuando sea posible.
+
+### Rutas y límites revisados
+
+- Inicio de micrófono: permiso acotado a 12 s; preparación del AudioWorklet a 8 s; conexión Live a 15 s y confirmación a 8 s.
+- Solicitud escrita del tutor: timeout cliente de 60 s; creación de conversación de 12 s.
+- Búsqueda de conocimiento Live: timeout cliente de 12 s; recuperación privada, conceptos y fuentes públicas se ejecutan en paralelo con resultados parciales cuando una fuente falla.
+- Whisper: timeout de proveedor de 45 s.
+- Cloudflare tutor: timeout de proveedor de 18 s; análisis: 25 s; embeddings: 25 s.
+- TTS Gemini: sin límite explícito propio del SDK en esta ruta; debe mantenerse acotado por el tiempo de la solicitud del navegador y no puede convertirse en condición para mostrar la respuesta textual.
+- Persistencia de turno Live: timeout cliente de 12 s, con reintento de guardado y sin duplicar el par usuario/asistente.
+
+### Riesgos que requieren seguimiento
+
+- La sesión Live depende de red, cuota y disponibilidad del proveedor; el watchdog convierte el silencio en una recuperación acotada, pero no puede garantizar disponibilidad externa permanente.
+- La búsqueda del Lab puede tardar o fallar; no debe bloquear el turno conversacional ni descartar resultados parciales útiles.
+- La validación de calidad puede requerir una segunda generación cuando el primer borrador es solo «sí/no»; esa segunda llamada está limitada por el timeout del proveedor y debe devolver error explícito si vuelve a fallar.
+- Los logs de rendimiento existentes cubren inicio de sesión Live y etapas de tutor escrito. Falta instrumentar de forma consistente latencia de primera transcripción, primera respuesta textual, primer audio, herramientas y persistencia, con identificador de turno no sensible. No registrar texto, audio, tokens ni datos personales en telemetría.
+
+### Cambios implementados en esta tanda
+
+- `53aded3` — cerrar explícitamente los turnos escritos y reducir el watchdog de inactividad a 32 s (aviso a 12 s).
+- `ca31235` — regresiones para el cierre explícito y la recuperación por inactividad.
+- `e57e337` — hacer robustas las aserciones del buffer PCM restaurado.
+- Se mantiene la protección `b6f9242` contra salida Live atrasada y la restauración del AudioWorklet `8e175bf`.
+
+La auditoría estática identifica causas plausibles y corrige rutas controlables. No equivale a una garantía de cero fallos: antes de producción deben pasar pruebas de CI, TypeScript, ESLint, build y pruebas reales de voz en Chrome con red lenta, interrupciones, turnos escritos consecutivos, cuota agotada y desconexión del micrófono.

@@ -1,5 +1,13 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — primera capa de trazos progresivos de Orby
+- OrbyBoard: trazado SVG progresivo para conexiones, gráficas, vectores, enlaces moleculares, circuitos y ADN; aparición suave de nodos.
+- CSS: animaciones accesibles con respeto a prefers-reduced-motion.
+- Tests: regresión estática para renderer y movimiento reducido.
+- Límite: todavía no hay escritura manuscrita de texto, secuenciador incremental ni sincronía por segmentos de voz. No afirmar que iguala el video todavía.
+- Relectura GitHub sí; ejecución de pruebas/compilación/navegador no disponible en esta tanda. Rama divergente frente a main; no Pull.
+
+
 ## 2026-11-07 — Orby Live Tutor: especificación de pizarra sincronizada
 - Inspección adicional de audio: Gemini Live agenda chunks PCM16 con Web Audio, pero el flujo revisado no vincula cada chunk a frases/palabras del transcript; no puede afirmarse sincronía exacta por palabra todavía.
 - Creado docs/ORBY-LIVE-TUTOR-SPEC.md con visión, comportamiento obligatorio, secuencia pedagógica, contrato incremental recomendado, criterios de aceptación y matriz de pruebas basada en el video de referencia del propietario.

@@ -2295,7 +2295,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const serverContent = event.serverContent && typeof event.serverContent === "object"
       ? event.serverContent as Record<string, unknown>
       : {};
-    let discardInterruptedGenerationOutput = false;
+    // A typed barge-in can be followed by late output from the previous Live
+    // generation before the server delivers its `interrupted` event. Suppress
+    // that output immediately; the interrupted event then clears the guard.
+    let discardInterruptedGenerationOutput = Boolean(
+      voiceBargeInPendingRef.current && voicePendingStudentTurnRef.current,
+    );
 
     const interimInput = serverContent.interimInputTranscription && typeof serverContent.interimInputTranscription === "object"
       ? serverContent.interimInputTranscription as { text?: unknown }

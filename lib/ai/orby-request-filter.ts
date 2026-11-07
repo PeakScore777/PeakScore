@@ -423,7 +423,11 @@ export function composeOrbySpeechText(reply: string, checkQuestion = ""): string
 }
 
 export function isLowQualityOrbyReply(value: string, studentRequest = ""): boolean {
-  const normalized = normalizeOrbyRequestText(value)
+  const raw = value.trim();
+  // Punctuation-only output (for example, "???") is not a usable tutor answer.
+  // Keep a truly empty transcript distinct: its caller owns same-turn recovery.
+  if (raw && /^[\s¿?¡!.,;:…—-]+$/u.test(raw)) return true;
+  const normalized = normalizeOrbyRequestText(raw)
     .replace(/[¿?¡!.,;:…]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();

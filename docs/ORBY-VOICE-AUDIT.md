@@ -783,3 +783,18 @@ Commits:
 ### Validación pendiente
 
 La garantía de concurrencia se apoya en el bloqueo transaccional de la conversación y la clave única de recibo. Aún falta ejecutar la CI de estos commits y probar dos solicitudes simultáneas contra una base Supabase de prueba. No se ha tocado `main`, no se ha desplegado y no se debe hacer Pull todavía.
+
+
+## 2026-11-07 — evidencia del fallo de persistencia en Supabase activo
+
+Se inspeccionó el proyecto Supabase PeakScore (`avmywztnsrnyjhvbaiio`) en modo de solo lectura. La base de datos no registra la migración `20261107010000`; `to_regclass('public.orby_voice_turn_receipts')` y `to_regprocedure('public.orby_save_voice_turn(uuid,uuid,uuid,text,text)')` devuelven `NULL`. La función anterior `orby_save_turn` sí existe.
+
+Los logs de Edge de Supabase confirman solicitudes reales a `POST /rest/v1/rpc/orby_save_voice_turn` con respuesta HTTP 404 y `PostgREST; error=PGRST202` (7 nov 2026, 04:37 UTC). Esto coincide con el mensaje de la interfaz: la generación termina, pero la persistencia falla porque PostgREST no encuentra la función RPC desplegada.
+
+### Estado de validación del código
+
+En la CI del commit `9e9b32d`: pruebas de Orby, TypeScript y ESLint aparecen aprobados; el build de producción aún estaba ejecutándose en la última consulta. No se debe afirmar que la CI completa terminó hasta revisar la conclusión del workflow.
+
+### Límite de cambios
+
+No se aplicó la migración al proyecto Supabase activo. Es un cambio de esquema remoto y requiere autorización explícita. No se usó la función antigua como fallback porque eso volvería a permitir duplicados bajo reintentos concurrentes y ocultaría la causa real. La migración permanece en GitHub, rama `feat/founder-intro`; no se tocó `main` ni se desplegó código.

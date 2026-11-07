@@ -2348,6 +2348,10 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.match(realtimeTurnSource, /if \(recentReadError \|\| !Array\.isArray\(latestMessages\)\)/);
   assert.match(realtimeTurnSource, /SAVE_TURN_IDEMPOTENCY_CHECK_FAILED/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));
+  assert.ok(lessonTutorSource.includes("voiceTurnRetryInFlightRef.current"));
+  assert.ok(lessonTutorSource.includes("setRetryingVoiceTurn(true)"));
+  assert.ok(lessonTutorSource.includes("setRetryingVoiceTurn(false)"));
+  assert.match(lessonTutorSource, /disabled=\{retryingVoiceTurn\}/);
   assert.ok(lessonTutorSource.includes("setFailedVoiceTurn(turn)"));
   const sendMessageSource = lessonTutorSource.slice(
     lessonTutorSource.indexOf("async function sendMessage("),

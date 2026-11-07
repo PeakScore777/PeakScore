@@ -67,10 +67,10 @@ export function isLikelyVoicePlaybackEcho(
 }
 
 /**
- * A short fragment heard while Orby is speaking is more likely to be speaker
- * echo or VAD noise than a deliberate interruption. Require a meaningful
- * phrase before barging into Live playback; the full transcript is still
- * accepted normally once playback has ended.
+ * A short fragment heard while Orby is speaking can be speaker echo or VAD
+ * noise, but greetings and conversational acknowledgements are also valid
+ * deliberate interruptions. Echo matching runs first; otherwise accept these
+ * complete, high-confidence ASR phrases instead of silently dropping them.
  */
 export function isStrongVoiceBargeIn(
   transcript: string,
@@ -78,7 +78,7 @@ export function isStrongVoiceBargeIn(
 ): boolean {
   const incoming = normalizeVoiceText(transcript);
   if (!incoming || isLikelyVoicePlaybackEcho(incoming, assistantSpeech)) return false;
-  if (/^(?:no entiendo|no entendi|espera|esperate|un momento|repiteme|detente|para|alto|oye orby|por que|porque|como asi|no te escucho|tengo otra pregunta)$/.test(incoming)) {
+  if (/^(?:hola(?: bro)?|oe(?: hermano)?|oee(?: hermano)?|oye(?: orby)?|ey|hey|si|no|claro|vale|listo|gracias|bueno|no entiendo|no entendi|espera|esperate|un momento|repiteme|detente|para|alto|por que|porque|como asi|no te escucho|tengo otra pregunta)$/.test(incoming)) {
     return true;
   }
   const meaningfulWords = incoming.split(" ")

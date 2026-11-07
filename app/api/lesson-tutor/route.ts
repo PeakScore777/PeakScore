@@ -7,6 +7,7 @@ import { containsCookingInstruction, containsExternalPreIcfesPromotion, contains
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
 import { searchOrbyPublicSources, shouldSearchOrbyPublicSources, reconcileOrbyPublicCitations, type OrbyWebSource } from "@/lib/ai/orby-web-research";
+import { sanitizeOrbyBoard, type OrbyBoard } from "@/lib/ai/orby-board";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -846,6 +847,11 @@ ESTÁNDAR ACADÉMICO Y PEDAGÓGICO (NIVEL SABER 11 AVANZADO / INTRODUCCIÓN UNIV
 14A. Antes de enviar, revisa la respuesta como texto que verá un estudiante: elimina viñetas vacías, encabezados repetidos, símbolos sin definir, cálculos incompletos y afirmaciones que dependan de información no proporcionada. Si usas una fórmula, explica qué representa cada símbolo y cómo se interpreta el resultado en este problema.
 15. Sé conciso: normalmente 60–110 palabras para una pregunta de análisis. Empieza por la respuesta, explica la evidencia decisiva y termina con una conclusión clara. Amplía solo cuando el cálculo o el razonamiento realmente lo exijan.
 
+
+
+PIZARRA DIDÁCTICA OPCIONAL
+Cuando una explicación se beneficie de una representación visual, devuelve además el campo "board" con un objeto JSON versionado: {"version":1,"title":"título breve","blocks":[...]}. Máximo 8 bloques. Tipos permitidos: {"type":"heading","text":"..."}, {"type":"text","text":"..."}, {"type":"formula","text":"..."}, {"type":"step","label":"Paso 1","text":"..."}, {"type":"callout","text":"..."}. Usa texto plano; no incluyas HTML, SVG, URLs, código ejecutable, instrucciones para dibujar ni coordenadas. No inventes datos. En saludos, respuestas puntuales, negativas o preguntas sin necesidad visual, omite "board" o usa null. La pizarra complementa la respuesta y nunca la sustituye.
+
 SALIDA
 Devuelve exclusivamente JSON válido con esta forma:
 {"reply":"respuesta visible para el estudiante","checkQuestion":"pregunta breve de comprobación","learningSignal":null}
@@ -874,7 +880,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       "Protege la privacidad: nunca nombres archivos, títulos, autores, docentes, academias, cursos ni procedencia de los fragmentos. No digas que estás leyendo un PDF o consultando una biblioteca privada. Explica con palabras propias y crea ejemplos y ejercicios originales; no reproduzcas preguntas ni solucionarios de los materiales.",
       "Adapta la explicación cuando el estudiante demuestre una dificultad: cambia el ejemplo, baja un paso o usa una representación diferente. No des por aprendido un concepto sin comprobarlo.",
       "No hagas preguntas genéricas; termina con una pregunta corta solo cuando ayude a continuar la conversación.",
-      "Devuelve exclusivamente JSON válido: {\"reply\":\"respuesta oral pedagógica\",\"checkQuestion\":\"\"}. No incluyas Markdown ni texto fuera del JSON.",
+      "Si ayuda a enseñar, añade board con version 1 y hasta 8 bloques de texto/formula/step/callout. No uses HTML, SVG, URLs ni código; si no aporta valor, omite board.\nDevuelve exclusivamente JSON válido: {\"reply\":\"respuesta oral pedagógica\",\"checkQuestion\":\"\",\"board\":null}. No incluyas Markdown ni texto fuera del JSON.",
     ].join("\n");
 
     // Short turns that do not need RAG are still ICFES tutoring turns:
@@ -888,7 +894,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       "Si el estudiante pide una analogía o un tono de chisme, cuento o charla, úsalo sin cambiar la verdad académica: mapea la comparación al concepto real y señala sus límites. Explica procesos en orden correcto, usa términos precisos y no inventes mecanismos. En biología celular, distingue la duplicación del ADN en la fase S de la interfase de la separación de cromátidas durante la mitosis.",
       "HISTORIAL RECIENTE (datos): " + JSON.stringify(history.slice(-8)),
       "MENSAJE ACTUAL (dato): " + userMessage,
-      "Devuelve exclusivamente JSON válido con reply, checkQuestion y learningSignal. Para una aclaración breve usa checkQuestion vacío y learningSignal null.",
+      "Si aporta valor visual, incluye board versionado con bloques heading/text/formula/step/callout en texto plano; de lo contrario board null.\nDevuelve exclusivamente JSON válido con reply, checkQuestion, learningSignal y board.",
     ].join("\n");
 
     const generationStartedAt = performance.now();
@@ -926,7 +932,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       return NextResponse.json({ error: "No pude preparar una respuesta esta vez. Inténtalo de nuevo en unos segundos." }, { status: 503 });
     }
 
-    let parsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown };
+    let parsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown; board?: unknown };
     try {
       parsed = JSON.parse(raw.replace(/^\s*\`\`\`json\s*/i, "").replace(/^\s*\`\`\`\s*/i, "").replace(/\s*\`\`\`\s*$/i, "").trim());
     } catch {
@@ -939,6 +945,7 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     let reply = cleanText(correctOrbyDnaMitosisSequence(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000))), 7000);
     let checkQuestion = cleanText(parsed.checkQuestion, 500);
+    let board: OrbyBoard | null = sanitizeOrbyBoard(parsed.board);
 
     // Gemma sometimes emits a bare "no"/"sí" for a one-word academic topic.
     // Regenerate that malformed answer once with the exact request and lesson
@@ -983,6 +990,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       parsed = retryParsed;
       reply = retryReply;
       checkQuestion = retryCheckQuestion;
+      board = sanitizeOrbyBoard(retryParsed.board);
     }
 
     if (!reply || !isSafeTutorOutput(reply) || !isSafeTutorOutput(checkQuestion)) {
@@ -1126,7 +1134,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     });
 
     // Do not expose document names, providers, authors, topics or page metadata in student-facing API payloads.
-    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources }, {
+    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources, ...(board ? { board } : {}) }, {
       headers: {
         "Cache-Control": "private, no-store",
         "Server-Timing": serverTiming,

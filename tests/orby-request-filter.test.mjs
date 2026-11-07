@@ -1288,6 +1288,11 @@ test("las preguntas ambiguas llegan al tutor para aclaración y las solicitudes 
   assert.equal(filter.preflightOrbyRequest("¿Cómo hackeo una cuenta ajena?").allowed, false);
 });
 
+test("la ruta aplica la corrección conceptual tanto a la primera generación como a la recuperación", () => {
+  assert.match(lessonTutorSource, /correctOrbyDnaMitosisSequence\(normalizeOrbySpanishOutput\(cleanText\(parsed\.reply/);
+  assert.match(lessonTutorSource, /correctOrbyDnaMitosisSequence\(normalizeOrbySpanishOutput\(cleanText\(retryParsed\.reply/);
+});
+
 test("corrige la confusión entre replicación del ADN y mitosis sin alterar respuestas correctas", () => {
   const incorrect = "Durante la mitosis el ADN se separa y hace una copia para formar dos células.";
   const corrected = filter.correctOrbyDnaMitosisSequence(incorrect);

@@ -5161,8 +5161,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-6 sm:px-8" aria-label="Conversación de voz con Orby">
         <div className="pointer-events-none absolute inset-x-0 top-[34%] h-56 -translate-y-1/2 bg-[radial-gradient(ellipse_at_center,rgba(249,115,22,.13),transparent_65%)]" aria-hidden="true" />
         <div className={`relative z-10 flex w-full flex-col items-center text-center ${voiceBoardActive ? "max-w-6xl gap-3" : "max-w-4xl"}`}>
-          {voiceBoardActive && <section className="w-full text-left" aria-label="Pizarra de la explicación de Orby">
-            <OrbyBoard board={activeVoiceAssistantMessage.board!} />
+          {activeVoiceAssistantMessage?.board && <section className="w-full text-left" aria-label="Pizarra de la explicación de Orby">
+            <OrbyBoard board={activeVoiceAssistantMessage.board} />
           </section>}
           <div className={voiceBoardActive ? "relative flex h-16 w-16 items-center justify-center" : "relative flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64"} aria-hidden="true">
             <div className="absolute inset-2 rounded-full bg-orange-500/10 blur-2xl" />
@@ -5179,7 +5179,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </section>}
           {!voiceBoardActive && voiceMode && voicePendingStudentTurnRef.current && <section className="mt-4 w-full max-w-3xl rounded-xl border border-dashed border-orange-300/35 bg-[#fffdf8] px-5 py-4 text-left text-slate-800 shadow-sm" role="status" aria-label="Pizarra de Orby preparándose">
             <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-orange-900"><span className="h-2 w-2 animate-pulse rounded-full bg-orange-500"/> Pizarra de Orby</div>
-            <p className="mt-2 text-sm font-semibold">Preparando el primer trazo…</p>
+            <p className="mt-2 text-sm font-semibold">Preparando el apoyo visual…</p>
             <p className="mt-1 text-xs leading-5 text-slate-600">La voz continúa mientras se valida la primera entrada. No se espera al final de la explicación.</p>
           </section>}
           {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">

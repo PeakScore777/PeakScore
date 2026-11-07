@@ -211,3 +211,13 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Commit `b7548bfe77a4686be16ea01c437dd262dd318ccc`: corregido el patrón a `[\\s\\S]` y `Behavior\.NON_BLOCKING`.
 - La comprobación del archivo en GitHub confirma que el patrón ya está escrito correctamente. El estado Vercel del nuevo SHA todavía figura como `pending`; esperar el resultado de la nueva compilación antes de declarar CI verde.
 - No se ha ejecutado una sesión Chrome con audio real. No solicitar Pull ni desplegar manualmente.
+
+
+## 2026-11-07 — acumulación segura de instantáneas Live
+
+- Se añadió mergeOrbyBoardSnapshots en lib/ai/orby-board.ts. Recibe únicamente escenas ya sanitizadas y conserva los bloques anteriores, agrega bloques nuevos sin duplicarlos y actualiza visuales por identidad (type + title).
+- handleOrbyLiveTeachingBoardTool ahora combina cada instantánea recibida con la escena activa del mismo turno antes de actualizar el mensaje. Se mantienen las comprobaciones de sesión/generación y las respuestas SILENT.
+- Se añadió una prueba de regresión que cubre acumulación, repetición de instantáneas y actualización de visuales.
+- Commits: 3126977d (merge de escenas), 2410c42e (integración Live), f13511e5 (prueba).
+- Esto evita que una instantánea parcial o repetida borre pasos ya dibujados. No crea marcas de tiempo de audio ni garantiza sincronización fonética: el ritmo todavía depende de cuándo Gemini emite cada llamada. La aceptación visual y de voz requiere prueba real en Chrome.
+- La consulta de ejecuciones GitHub Actions para f13511e5 no devolvió runs; no se declara CI validada. No se aplicó la migración pendiente de Supabase, no se activó Gemini Live en producción, no se hizo Pull ni despliegue.

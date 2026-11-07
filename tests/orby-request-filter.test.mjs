@@ -2445,6 +2445,7 @@ test("las respuestas TTS largas conservan el texto completo y no omiten fragment
   assert.match(lessonTutorSource, /durationSeconds < 1\.5/);
   assert.match(lessonTutorSource, /durationSeconds \* 0\.65/);
   assert.match(lessonTutorSource, /prefetchTimer !== null\) window\.clearTimeout\(prefetchTimer\)/);
+  assert.match(lessonTutorSource, /if \(prefetchTimer !== null\) window\.clearTimeout\(prefetchTimer\);\s*prefetchTimer = null;\s*chunkIndex \+= 1;/);
   assert.match(lessonTutorSource, /prefetchedAudio\?\.controller\.abort\(\)/);
   assert.match(lessonTutorSource, /schedulePrefetchNextTtsChunk\(decodedAudio\.duration\)/);
   assert.match(lessonTutorSource, /const prefetched = prefetchedAudio\?\.index === chunkIndex/);

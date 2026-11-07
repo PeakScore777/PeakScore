@@ -3294,3 +3294,65 @@ test("Los renderizadores y herramientas Live incluyen célula y ADN con límites
   assert.match(voice, /pares complementarios A–T y C–G/);
   assert.doesNotMatch(renderer, /dangerouslySetInnerHTML/);
 });
+
+
+test("La pizarra valida cuadros de Punnett y etapas canónicas de división celular", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const punnett = sanitizeOrbyBoard({
+    version: 2, title: "Cruce Aa × Aa",
+    blocks: [{ type: "text", text: "Cada progenitor aporta un alelo por gameto." }],
+    visuals: [{ type: "punnett", title: "Cuadro monohíbrido", topAlleles: ["A", "a"], sideAlleles: ["A", "a"] }],
+  });
+  assert.equal(punnett?.visuals?.[0]?.type, "punnett");
+
+  const mitosisNames = ["Profase", "Metafase", "Anafase", "Telofase y citocinesis"];
+  const mitosis = sanitizeOrbyBoard({
+    version: 2, title: "Mitosis",
+    blocks: [{ type: "text", text: "Secuencia simplificada de la división mitótica." }],
+    visuals: [{ type: "cell-division", title: "Mitosis", mode: "mitosis", phases: mitosisNames.map((name) => ({ name, detail: "Descripción de la etapa." })) }],
+  });
+  assert.equal(mitosis?.visuals?.[0]?.type, "cell-division");
+
+  const meiosisNames = ["Profase I", "Metafase I", "Anafase I", "Telofase I", "Profase II", "Metafase II", "Anafase II", "Telofase II"];
+  const meiosis = sanitizeOrbyBoard({
+    version: 2, title: "Meiosis",
+    blocks: [{ type: "text", text: "Dos divisiones sucesivas." }],
+    visuals: [{ type: "cell-division", title: "Meiosis", mode: "meiosis", phases: meiosisNames.map((name) => ({ name, detail: "Descripción de la etapa." })) }],
+  });
+  assert.equal(meiosis?.visuals?.[0]?.type, "cell-division");
+  assert.equal(meiosis?.visuals?.[0]?.phases.length, 8);
+});
+
+test("La pizarra rechaza alelos inválidos y secuencias de división celular fuera de orden", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const base = { version: 2, title: "Inválido", blocks: [{ type: "text", text: "Prueba." }] };
+  const invalidPunnett = sanitizeOrbyBoard({
+    ...base, visuals: [{ type: "punnett", title: "Cruce", topAlleles: ["AA", "a"], sideAlleles: ["A", "a"] }],
+  });
+  assert.equal(invalidPunnett, null);
+
+  const swappedMitosis = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "cell-division", title: "Mitosis incorrecta", mode: "mitosis",
+      phases: ["Profase", "Anafase", "Metafase", "Telofase y citocinesis"].map((name) => ({ name, detail: "Descripción." })),
+    }],
+  });
+  assert.equal(swappedMitosis, null);
+});
+
+test("Los renderizadores, esquema Live y prompts incluyen genética y división celular", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const lesson = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(renderer, /function Punnett/);
+  assert.match(renderer, /function CellDivision/);
+  assert.match(renderer, /visual\.type === "punnett"/);
+  assert.match(renderer, /visual\.type === "cell-division"/);
+  assert.match(tools, /topAlleles:/);
+  assert.match(tools, /sideAlleles:/);
+  assert.match(tools, /cell-division/);
+  assert.match(lesson, /cuadro 2×2/);
+  assert.match(voice, /cromátidas hermanas en meiosis II/);
+});

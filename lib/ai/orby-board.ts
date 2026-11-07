@@ -47,7 +47,6 @@ export type OrbyBoard = {
 const MAX_BLOCKS = 8;
 const MAX_VISUALS = 4;
 const MAX_TEXT = 240;
-const PALETTE = ["orange", "blue", "green", "red", "neutral"] as const;
 
 function safeText(value: unknown, max = MAX_TEXT): string {
   if (typeof value !== "string") return "";

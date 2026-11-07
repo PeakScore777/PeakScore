@@ -802,6 +802,30 @@ test("los saludos cortos se reconocen y el modo voz los remite a Gemini Live", (
   assert.match(filter.getOrbyGreetingFollowUpReply("assistant: Estamos estudiando álgebra.", "Matemáticas"), /Seguimos con Matemáticas/);
 });
 
+test("el saludo respeta el área más reciente del chat y solo usa el área activa como respaldo", () => {
+  const historyWithSubjectChange = [
+    "user: Matemáticas",
+    "assistant: Seguimos con Matemáticas.",
+    "user: ahora quiero estudiar Ciencias Naturales",
+    "assistant: Claro, vamos con Ciencias Naturales.",
+    "user: ¿por qué ocurre eso?",
+    "assistant: La explicación del fenómeno...",
+  ].join("\n");
+  assert.match(
+    filter.getOrbyGreetingFollowUpReply(historyWithSubjectChange, "Matemáticas"),
+    /Seguimos con Ciencias Naturales/,
+  );
+
+  const historyWithoutExplicitSelection = [
+    "user: ¿me ayudas con este ejercicio?",
+    "assistant: Claro, revisemos el procedimiento.",
+  ].join("\n");
+  assert.match(
+    filter.getOrbyGreetingFollowUpReply(historyWithoutExplicitSelection, "Lectura Crítica"),
+    /Seguimos con Lectura Crítica/,
+  );
+});
+
 test("Orby reconoce Lectura Crítica y las cinco áreas al decir solo el nombre", () => {
   const reading = filter.getOrbySubjectSelectionReply("lectura");
   assert.match(reading, /Lectura Crítica/);

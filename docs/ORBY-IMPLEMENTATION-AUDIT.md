@@ -190,3 +190,12 @@ Pruebas necesarias:
 - Se instrumenta el tiempo total desde aceptación de la pregunta hasta quedar listo para el siguiente turno (`fullConversationCycleMs`), separado de primer texto/primer audio.
 - El objetivo es conversación manos libres continua sin pulsar de nuevo el micrófono entre turnos. No se modifica la detección de silencio de 400 ms en esta tanda.
 - Prueba estática añadida para el orden de espera de audio y rearme de escucha. No ejecutada en Node ni probada con micrófono real; no hay afirmación de QA runtime.
+
+## 18. Corrección de rama y aislamiento de base de datos — 2026-11-07
+
+- Rama de trabajo/pruebas correcta: `feat/founder-intro`. No se debe continuar implementando Orby en `feat/orby-studio-classroom`; esa rama se usó por error en la tanda anterior.
+- Se verificó la configuración de Vercel sin exponer credenciales: `NEXT_PUBLIC_SUPABASE_URL` apunta a `https://avmywztnsrnyjhvbaiio.supabase.co` para los entornos `production`, `preview` y `development`. El proyecto Supabase activo no tiene ramas de desarrollo.
+- Consecuencia de seguridad: aplicar ahora las migraciones de pizarra en ese proyecto alteraría el esquema compartido con producción, no solo el preview `feat/founder-intro`. Aunque la migración es aditiva, no se debe presentar como una operación aislada de pruebas.
+- Las tres migraciones de pizarra están presentes en la rama equivocada, no se han aplicado a Supabase y no se deben ejecutar allí. Antes hay que portar/revisar los cambios necesarios directamente en `feat/founder-intro` y disponer de una base de pruebas aislada (proyecto Supabase de staging o branch DB, previa verificación de coste) para aplicar y validar el esquema. Si se decide usar la base compartida, solicitar confirmación explícita indicando que también modifica el esquema de producción.
+- Estado de código comprobado en `feat/founder-intro`: existe `OrbyBoard.tsx` y `lib/ai/orby-board.ts`; existe `/api/orby/realtime-turn`; todavía no existe `/api/orby/voice-board`. No asumir que el código de la otra rama está integrado.
+- No se han modificado datos, políticas RLS, migraciones ni configuración de producción durante esta verificación.

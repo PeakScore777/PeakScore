@@ -105,6 +105,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Keep Turbopack anchored to this app, avoiding ambiguous workspace-root detection.
+  turbopack: {
+    root: process.cwd(),
+  },
+
   serverExternalPackages: [
     "pdf-parse",
     "@napi-rs/canvas",

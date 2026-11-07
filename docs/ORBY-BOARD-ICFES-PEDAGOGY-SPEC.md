@@ -552,3 +552,34 @@ El dibujo es esquemático, no está a escala y no representa todos los tipos neu
 
 ### Estado
 Cambios guardados en `feat/founder-intro`; pendiente ejecutar tests, TypeScript, ESLint, build y prueba real de voz/pizarra. No se modificó `main`, no se desplegó ni se introdujeron servicios pagos. Pull sigue bloqueado hasta completar validación.
+
+
+## 20. Octavo incremento — motor de procesos fisiológicos paso a paso (2026-11-07)
+
+### Nueva primitiva `physiology-process`
+Contrato:
+- `process`: blood-flow, gas-exchange, digestion, nephron-filtration, muscle-contraction o synaptic-transmission.
+- `stages`: lista ordenada con nombre canónico, mecanismo explicado y ubicación anatómica.
+- El sanitizador exige exactamente la cantidad y el nombre de cada etapa en su orden predefinido; rechaza secuencias truncadas, reordenadas o con campos vacíos.
+- El renderizador muestra una secuencia vertical numerada, con explicación y localización por etapa.
+- La herramienta Live y los prompts escrito/oral permiten crear snapshots acumulativos de la misma secuencia mientras Orby enseña.
+
+### Seis procesos cubiertos
+1. **Flujo sanguíneo:** nueve pasos, desde venas cavas hasta aorta y cuerpo; permite explicar por separado circulación pulmonar y sistémica.
+2. **Intercambio gaseoso:** ventilación alveolar y difusión de O₂/CO₂ por gradientes de presión parcial.
+3. **Digestión:** recorrido desde boca hasta eliminación, con absorción de nutrientes en intestino delgado.
+4. **Filtración nefronal:** glomérulo, cápsula de Bowman, túbulos, asa de Henle y conducto colector; las explicaciones deben distinguir filtración, reabsorción y secreción.
+5. **Contracción muscular:** unión neuromuscular, acetilcolina, potencial muscular, calcio, interacción actina-miosina, sarcómero y relajación.
+6. **Transmisión sináptica:** llegada del potencial, entrada de calcio, exocitosis, receptores postsinápticos y retirada/reciclaje del neurotransmisor.
+
+### Pruebas incorporadas
+- Aceptación de las seis secuencias completas.
+- Rechazo de flujo sanguíneo con etapas intercambiadas.
+- Verificación estática de renderer, herramienta Live y prompts didácticos.
+- Los tests están escritos, no ejecutados aún.
+
+### Reglas de rigor
+No introducir valores fisiológicos, tiempos, porcentajes, diagnósticos ni relaciones causales que no estén sustentados. Las etapas son modelos didácticos simplificados; la explicación debe señalar cuando se omiten mecanismos reguladores o variaciones anatómicas.
+
+### Estado
+Archivos actualizados en `feat/founder-intro` y verificados por lectura posterior. Pendiente ejecutar `npm run test:orby`, TypeScript, ESLint, build y prueba manual de voz/micrófono para confirmar sincronización real. No se modificó `main`, no se desplegó ni se añadieron servicios pagos. Pull no autorizado hasta cerrar validación.

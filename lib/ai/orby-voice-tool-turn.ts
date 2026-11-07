@@ -1,4 +1,7 @@
+export const MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN = 2;
+
 export type OrbyVoiceToolTurnState = {
+  toolCallsStarted: number;
   pending: boolean;
   responseSent: boolean;
   initialGenerationCompleted: boolean;
@@ -7,6 +10,7 @@ export type OrbyVoiceToolTurnState = {
 
 export function createOrbyVoiceToolTurnState(): OrbyVoiceToolTurnState {
   return {
+    toolCallsStarted: 0,
     pending: false,
     responseSent: false,
     initialGenerationCompleted: false,
@@ -19,11 +23,22 @@ export function createOrbyVoiceToolTurnState(): OrbyVoiceToolTurnState {
  * A fresh tool call starts a new gate; extra calls for the same pending turn
  * share the existing gate.
  */
-export function beginOrbyVoiceToolTurn(state: OrbyVoiceToolTurnState): OrbyVoiceToolTurnState {
+export function beginOrbyVoiceToolTurn(
+  state: OrbyVoiceToolTurnState,
+  requestedCalls = 1,
+): OrbyVoiceToolTurnState {
+  const increment = Math.max(0, Math.floor(requestedCalls));
   // Keep simultaneous lookups in one gate, but start a fresh phase if Live
   // requests another lookup after the previous Lab supplement has begun.
-  if (state.pending && !state.followupOutputSeen) return state;
+  // The call budget belongs to the entire student turn and survives that phase.
+  if (state.pending && !state.followupOutputSeen) {
+    return {
+      ...state,
+      toolCallsStarted: Math.min(MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, state.toolCallsStarted + increment),
+    };
+  }
   return {
+    toolCallsStarted: Math.min(MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, state.toolCallsStarted + increment),
     pending: true,
     responseSent: false,
     initialGenerationCompleted: false,

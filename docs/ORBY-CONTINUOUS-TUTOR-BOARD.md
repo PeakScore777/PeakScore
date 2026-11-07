@@ -65,3 +65,19 @@ La persistencia puede seguir guardando intercambios atómicos. Eso es una decisi
 - No reconstruir material del Orby ICFES Lab que fue eliminado intencionalmente.
 - No modificar `main`, no desplegar y no pedir Pull hasta que el responsable revise el resultado.
 - No afirmar que la experiencia está terminada por pasar pruebas estáticas; la voz continua requiere prueba real con micrófono y navegador.
+
+
+## Avance implementado — primera versión de pizarra
+
+- Se añadió `lib/ai/orby-board.ts` con contrato versionado y sanitizador estricto.
+- Se añadió `components/aprender/OrbyBoard.tsx`, que renderiza bloques tipados como texto, fórmulas, pasos y llamadas de atención. No interpreta HTML, SVG ni código del modelo.
+- `/api/lesson-tutor` acepta la pizarra opcional, valida el objeto en servidor y solo devuelve el campo si pasa el esquema. También valida la escena recuperada tras el reintento de respuesta incompleta.
+- `LessonAITutor` incorpora la pizarra al mensaje del asistente y la muestra debajo de la explicación. Las respuestas antiguas y las respuestas sin escena siguen funcionando sin cambios.
+- Se añadió una prueba para escenas válidas, tipos desconocidos, versión incorrecta, exceso de bloques y renderizado sin HTML inseguro.
+
+### Límites pendientes de esta entrega
+
+- La pizarra todavía no se persiste al recargar el historial; el esquema actual de mensajes guarda texto y metadatos de adjunto, no escenas. No se añadió una migración de base de datos en esta fase.
+- La pizarra está integrada con el tutor escrito y la ruta de voz alternativa que usa `/api/lesson-tutor`; todavía no se sincroniza con eventos de Gemini Live en tiempo real.
+- No se activó Gemini Live en producción ni se cambió ninguna condición de privacidad o cuota.
+- CI se encuentra en ejecución para el commit de esta integración. No se declara validada hasta que finalice.

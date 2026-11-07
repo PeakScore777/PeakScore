@@ -448,3 +448,21 @@ Se revisó el AudioWorklet `public/audio/orby-audio-capture.worklet.js` y su reg
 - Verificación de que el total emitido más el remanente coincide con el número esperado de muestras remuestreadas.
 
 No se cambió el AudioWorklet de producción ni el umbral de detección de voz. La prueba complementa las existentes; CI de la nueva punta de rama todavía pendiente.
+
+
+## 2026-11-07 — corrección de regresión del detector de eco
+
+El CI del commit `bfc1590` ejecutó 120 regresiones: 119 pasaron y una falló en el caso de saludo completo. La auditoría de dependencias pasó; TypeScript, ESLint y build se omitieron por el fallo temprano del test.
+
+Causa: al endurecer la coincidencia por token completo, el detector pasó a buscar el saludo entero como si fuera un único token. Eso rechazaba un eco legítimo como `"¡Hola de nuevo!"` dentro de `"¡Hola de nuevo! Soy Orby."`.
+
+Corrección:
+- Se mantiene la coincidencia por límites de frase completa (inicio, fin o espacios alrededor), nunca por subcadena interna.
+- Se conserva el rechazo de coincidencias parciales como `"hola"` dentro de `"holanda"`.
+- Se amplían las regresiones para saludos rodeados de texto y falsos positivos de subcadenas.
+
+Commits:
+- `5e6dd69` — restaurar reconocimiento de frase completa.
+- `db8efc2` — pruebas de saludo y subcadenas.
+
+El workflow de la nueva punta debe confirmar la corrección. No se declara validado hasta que termine toda la cadena.

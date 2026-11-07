@@ -345,6 +345,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceFirstOutputTextLoggedRef = useRef(false);
   const voiceFirstAudioLoggedRef = useRef(false);
   const voiceFirstAudioChunkReceivedRef = useRef(false);
+  const voiceListeningReadyLoggedRef = useRef(false);
   const voiceBoardUpdateCountRef = useRef(0);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantOutputAtRef = useRef(0);
@@ -1902,6 +1903,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
     waitingForVoiceReplyRef.current = false;
     voicePendingStudentTurnRef.current = false;
+    if (!voiceListeningReadyLoggedRef.current && voiceTurnAcceptedAtRef.current > 0) {
+      voiceListeningReadyLoggedRef.current = true;
+      console.info("[Orby Voice] Ready for next student turn.", {
+        fullConversationCycleMs: Math.round(performance.now() - voiceTurnAcceptedAtRef.current),
+      });
+    }
     setVoiceStatus("Te escucho…");
     setIsListening(true);
     void persistRealtimeTurnIfReady();
@@ -2522,6 +2529,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceFirstOutputTextLoggedRef.current = false;
       voiceFirstAudioLoggedRef.current = false;
       voiceFirstAudioChunkReceivedRef.current = false;
+      voiceListeningReadyLoggedRef.current = false;
       voiceBoardUpdateCountRef.current = 0;
       voiceLastCommittedInputRef.current = normalizedFinal;
       voiceLastCommittedInputAtRef.current = Date.now();

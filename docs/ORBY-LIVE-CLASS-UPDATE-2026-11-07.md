@@ -56,3 +56,19 @@ Pendiente:
 6. Guardar una captura/exportación completa que combine la pizarra de Orby y las anotaciones del estudiante.
 
 **No declarar listo para Pull Request o producción hasta completar estas validaciones.**
+
+## Sexta mutación — herramientas de edición del cuaderno
+
+**Fecha:** 7 de noviembre de 2026  
+**Hora:** 18:48 (UTC−05:00, Colombia)
+
+- Se completó el botón **Rehacer**, que restaura el último trazo retirado con Deshacer.
+- Al dibujar un trazo nuevo se limpia la pila de rehacer, evitando reintroducir cambios que ya no corresponden al historial.
+- El borrador ahora captura el puntero y permite eliminar trazos mientras se arrastra sobre la hoja, no solo con un toque inicial.
+- Limpiar también vacía el historial de rehacer.
+- Se añadieron comprobaciones estáticas para la disponibilidad de rehacer y el borrado continuo.
+
+**Commit de implementación:** `feb8456`  
+**Commit de regresiones:** `e8910bb`
+
+**Pendiente:** el borrado todavía elimina trazos completos cuando el cursor se aproxima a cualquiera de sus puntos; no recorta geométricamente un segmento. Las anotaciones se guardan localmente en el navegador y no se sincronizan entre dispositivos. Ejecutar Node tests, TypeScript, ESLint, build y QA manual de puntero/táctil antes de considerar esta etapa validada.

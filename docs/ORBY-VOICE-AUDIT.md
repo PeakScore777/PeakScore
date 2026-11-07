@@ -486,3 +486,28 @@ Commits:
 Validación de CI:
 - El workflow del commit `5e6dd69` completó regresiones y TypeScript correctamente; ESLint y build estaban aún ejecutándose en la última lectura.
 - Los commits posteriores `db8efc2`, `7888351` y la instrumentación requieren validación de la punta actual.
+
+
+## 2026-11-07 — diagnóstico por etapas del arranque de voz
+
+La revisión confirmó que el cliente ya inicia en paralelo la creación de conversación y la emisión del token efímero; no se duplicó esa optimización. Se añadieron mediciones del navegador para conocer dónde se consume el tiempo real:
+
+- `microphonePermissionMs`: espera hasta obtener permiso y stream del micrófono.
+- `conversationAndTokenMs`: creación/recuperación de conversación y token efímero (operaciones paralelas).
+- `sdkLoadMs`: tiempo transcurrido desde que se inicia la descarga del SDK, que corre en paralelo con el permiso.
+- `liveConnectMs`: tiempo hasta resolver la conexión Live.
+- `liveSetupMs`: tiempo adicional hasta recibir la confirmación `setupComplete`.
+- `workletLoadMs`: carga del AudioWorklet de captura.
+- `totalMs`: duración desde el inicio del arranque hasta que el cliente queda escuchando.
+
+Las mediciones usan `performance.now()` y solo registran duraciones, sin transcripciones, prompts ni texto del estudiante. La separación entre conexión y confirmación Live se corrigió expresamente para evitar métricas artificiales de cero. El SDK se mide desde el inicio de la importación, aunque esta se solape con el permiso del micrófono.
+
+No se cambió el umbral de silencio, la política de escucha, el proveedor ni el orden de seguridad de la sesión. Las cifras reales deberán observarse en Chrome para decidir qué etapa optimizar.
+
+Commits:
+- `ed6b85e` — instrumentación inicial del arranque.
+- `caecffa` — separación de conexión y confirmación Live.
+- `bf4c6f3` — medición completa del SDK en paralelo.
+- `b665437` — regresión de instrumentación por etapas.
+
+CI de la punta actual pendiente.

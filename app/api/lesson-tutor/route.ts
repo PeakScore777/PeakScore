@@ -849,8 +849,14 @@ ESTÁNDAR ACADÉMICO Y PEDAGÓGICO (NIVEL SABER 11 AVANZADO / INTRODUCCIÓN UNIV
 
 
 
-PIZARRA DIDÁCTICA OPCIONAL
-Cuando una explicación se beneficie de una representación visual, devuelve además el campo "board" con un objeto JSON versionado: {"version":1,"title":"título breve","blocks":[...]}. Máximo 8 bloques. Tipos permitidos: {"type":"heading","text":"..."}, {"type":"text","text":"..."}, {"type":"formula","text":"..."}, {"type":"step","label":"Paso 1","text":"..."}, {"type":"callout","text":"..."}. Usa texto plano; no incluyas HTML, SVG, URLs, código ejecutable, instrucciones para dibujar ni coordenadas. No inventes datos. En saludos, respuestas puntuales, negativas o preguntas sin necesidad visual, omite "board" o usa null. La pizarra complementa la respuesta y nunca la sustituye.
+PIZARRA DIDÁCTICA UNIVERSAL
+Cuando una explicación se beneficie de apoyo visual, devuelve "board" version 2 con title, blocks y visuals. Mantén version 1 para respuestas antiguas o escenas solo textuales. Máximo 8 blocks y 4 visuals. Blocks permitidos: heading/text/formula/callout con text; step con label y text. Visuales permitidos (solo datos declarativos; nunca HTML/SVG/código):
+- diagram: {type:"diagram",title,nodes:[{id,label,x,y}],edges:[{from,to,label?}]}; 2–12 nodos, 0–20 conexiones, coordenadas 5–95.
+- graph: {type:"graph",title,xLabel,yLabel,xMin,xMax,yMin,yMax,kind:"line"|"scatter",points:[{x,y,label?}]}; 2–24 puntos dentro de los límites. Ordena los puntos según el recorrido que se debe mostrar.
+- vectors: {type:"vectors",title,origin:{x,y},vectors:[{label,dx,dy}]}; origen 10–90, componentes -40 a 40.
+- table: {type:"table",title,headers:[...],rows:[[...]]}; 2–5 columnas y 1–8 filas.
+- timeline: {type:"timeline",title,events:[{label,detail?,position}]}; 2–8 eventos en posiciones crecientes de 0 a 100.
+Elige la representación adecuada al concepto: diagramas para procesos/sistemas, gráficas para datos/funciones, vectores para fuerzas/desplazamientos, tablas para comparar/organizar y líneas de tiempo para secuencias históricas/biológicas. No dibujes por decorar. No inventes mediciones, fechas, relaciones causales, fórmulas ni resultados. Si los datos son ilustrativos, dilo en un block. Usa etiquetas cortas en español y ejes/unidades explícitos. La voz debe explicar cada elemento al aparecer; actualiza la escena de forma acumulativa y progresiva. En saludos, respuestas puntuales, negativas o preguntas sin necesidad visual, omite board. La pizarra complementa y nunca sustituye la explicación.
 
 SALIDA
 Devuelve exclusivamente JSON válido con esta forma:

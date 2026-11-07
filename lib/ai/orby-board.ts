@@ -38,6 +38,7 @@ export type OrbyBoardVisual =
   | { type: "punnett"; title: string; topAlleles: [string, string]; sideAlleles: [string, string] }
   | { type: "cell-division"; title: string; mode: "mitosis" | "meiosis"; phases: Array<{ name: string; detail: string }> }
   | { type: "organ-system"; title: string; system: "nervous" | "circulatory" | "respiratory" | "digestive" | "endocrine" | "urinary" | "skeletal" | "muscular"; structures: Array<{ id: string; name: string; x: number; y: number; role: string }> }
+  | { type: "neuron"; title: string; parts: Array<{ id: string; name: string; role: string }> }
   | {
       type: "timeline";
       title: string;
@@ -304,6 +305,27 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       structures.push({ id, name, x: item.x, y: item.y, role });
     }
     return { type: "organ-system", title: safeText(raw.title, 80), system: raw.system as "nervous" | "circulatory" | "respiratory" | "digestive" | "endocrine" | "urinary" | "skeletal" | "muscular", structures };
+  }
+
+  if (raw.type === "neuron") {
+    if (!Array.isArray(raw.parts) || raw.parts.length < 4 || raw.parts.length > 8) return null;
+    const allowed = ["dendritas", "soma", "núcleo", "cono axónico", "axón", "mielina", "nodos de Ranvier", "terminales sinápticas"];
+    const parts: Array<{ id: string; name: string; role: string }> = [];
+    const ids = new Set<string>();
+    const names = new Set<string>();
+    for (const entry of raw.parts) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const item = entry as Record<string, unknown>;
+      const id = safeId(item.id);
+      const name = safeText(item.name, 36);
+      const role = safeText(item.role, 110);
+      if (!id || ids.has(id) || !allowed.includes(name.toLocaleLowerCase("es")) || names.has(name.toLocaleLowerCase("es")) || !role) return null;
+      ids.add(id);
+      names.add(name.toLocaleLowerCase("es"));
+      parts.push({ id, name, role });
+    }
+    if (!["dendritas", "soma", "axón", "terminales sinápticas"].every((name) => names.has(name))) return null;
+    return { type: "neuron", title: safeText(raw.title, 80), parts };
   }
 
   if (raw.type === "timeline") {

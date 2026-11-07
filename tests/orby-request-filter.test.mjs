@@ -476,7 +476,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(!lessonTutorSource.includes("waitForSpanishBrowserVoice"));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));
   assert.ok(lessonTutorSource.includes("voiceResponseSlowNoticeRef"));
-  assert.ok(lessonTutorSource.includes("Orby sigue preparando tu respuesta. Mantengo la conexión…"));
+  assert.ok(lessonTutorSource.includes("Orby está tardando más de lo normal. Sigo esperando tu respuesta…"));
   assert.ok(lessonTutorSource.includes("}, 12_000);"));
   assert.ok(lessonTutorSource.includes("}, 32_000);"));
   assert.ok(lessonTutorSource.includes('if (voicePlaybackOwnerRef.current === "tts") return;'));
@@ -2775,7 +2775,7 @@ test("Orby descarta texto y audio tardíos antes del evento interrupted tras un 
   assert.ok(completionStart > audioStart);
   assert.match(source.slice(outputStart, audioStart), /if \(discardInterruptedGenerationOutput/);
   assert.match(source.slice(audioStart, completionStart), /if \(discardInterruptedGenerationOutput/);
-  assert.match(source, /voiceBargeInPendingRef\.current = false;[\s\S]{0,220}discardInterruptedGenerationOutput = true/);
+  assert.match(source, /if \(studentBargeInPending\) \{\s*discardInterruptedGenerationOutput = true/);
 });
 
 test("interrumpir una respuesta Live limpia la transcripción anterior antes del nuevo turno", async () => {

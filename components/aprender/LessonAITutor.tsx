@@ -2044,7 +2044,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (snapshot.spokenCue) {
         // Wait until Live's output transcription reaches this exact phrase.
         // The SDK exposes no reliable phonetic timestamps, so do not guess.
-        voicePendingBoardCuesRef.current.push({ board, cue: normalizeVoiceComparison(snapshot.spokenCue) });
+        voicePendingBoardCuesRef.current.push({ board, cue: normalizeVoiceComparison(snapshot.spokenCue).replace(/\s+/g, " ").trim() });
       } else {
         // An immediate snapshot supersedes any cue that was never heard.
         voicePendingBoardCuesRef.current = [];
@@ -2689,13 +2689,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
-      const normalizedSpokenReply = normalizeVoiceComparison(partialReply);
+      const normalizedSpokenReply = " " + normalizeVoiceComparison(partialReply).replace(/\s+/g, " ").trim() + " ";
       let boardMatchedToSpeech: OrbyBoardData | null = null;
       // Reveal no more than one cue per transcript event. A single ASR event
       // may contain several already-spoken phrases; draining the whole queue
       // here would batch them into one render and skip the teacher-like steps.
       const pendingBoardCue = voicePendingBoardCuesRef.current[0];
-      if (pendingBoardCue && normalizedSpokenReply.includes(pendingBoardCue.cue)) {
+      if (pendingBoardCue && pendingBoardCue.cue && normalizedSpokenReply.includes(" " + pendingBoardCue.cue + " ")) {
         voicePendingBoardCuesRef.current.shift();
         boardMatchedToSpeech = pendingBoardCue.board;
       }

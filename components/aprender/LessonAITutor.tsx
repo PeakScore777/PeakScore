@@ -1004,6 +1004,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let rateLimitWaitCount = 0;
       let safetyTimer: number | null = null;
       let requestController: AbortController | null = null;
+      let prefetchedAudio: { index: number; controller: AbortController; request: Promise<Response> } | null = null;
       let audioElement: HTMLAudioElement | null = null;
       let audioBufferSource: AudioBufferSourceNode | null = null;
       let audioObjectUrl: string | null = null;
@@ -1040,6 +1041,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (safetyTimer !== null) window.clearTimeout(safetyTimer);
         requestController?.abort();
         requestController = null;
+        prefetchedAudio?.controller.abort();
+        prefetchedAudio = null;
         clearAudioElement();
         if (voicePlaybackOwnerRef.current === "tts") voicePlaybackOwnerRef.current = "none";
         if (voiceSpeechCancelRef.current === cancelSpeech) voiceSpeechCancelRef.current = null;
@@ -1102,6 +1105,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         );
       }
 
+      const prefetchNextTtsChunk = () => {
+        const nextIndex = chunkIndex + 1;
+        if (finished || nextIndex >= chunks.length || prefetchedAudio?.index === nextIndex) return;
+        // Generate the next audio segment while the current segment is playing.
+        // Keep at most one request ahead and abort it on interruption/turn change.
+        prefetchedAudio?.controller.abort();
+        const controller = new AbortController();
+        const request = fetch("/api/orby/voice-speech", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]),
+          body: JSON.stringify({ text: chunks[nextIndex] }),
+        }).catch((error: unknown) => {
+          if (prefetchedAudio?.controller === controller) prefetchedAudio = null;
+          throw error;
+        });
+        prefetchedAudio = { index: nextIndex, controller, request };
+      };
+
       const playFreeTtsChunk = async () => {
         if (finished) return;
         if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) {
@@ -1113,16 +1136,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           return;
         }
 
-        const controller = new AbortController();
+        const prefetched = prefetchedAudio?.index === chunkIndex ? prefetchedAudio : null;
+        if (prefetched) prefetchedAudio = null;
+        const controller = prefetched?.controller ?? new AbortController();
         requestController = controller;
         try {
-          const response = await fetch("/api/orby/voice-speech", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: { "Content-Type": "application/json" },
-            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]),
-            body: JSON.stringify({ text: chunks[chunkIndex] }),
-          });
+          const response = prefetched
+            ? await prefetched.request
+            : await fetch("/api/orby/voice-speech", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]),
+                body: JSON.stringify({ text: chunks[chunkIndex] }),
+              });
           if (!response.ok) {
             const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
             const unavailableCodes = new Set([
@@ -1210,6 +1237,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             source.start(scheduledAt);
             didPlaybackStart = true;
             voiceAudioSourcesRef.current.add(source);
+            prefetchNextTtsChunk();
             voicePlaybackOwnerRef.current = "tts";
             voiceNextPlaybackTimeRef.current = scheduledAt + decodedAudio.duration;
             setSpeakingIndex(index);
@@ -1227,6 +1255,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             audioElement.preload = "auto";
             audioElement.onplay = () => {
               didPlaybackStart = true;
+              prefetchNextTtsChunk();
               setSpeakingIndex(index);
               setVoiceStatus("Orby está leyendo la respuesta…");
               if (isLocalVoiceTurn) {

@@ -95,8 +95,8 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveTeachingBoardTool");
   const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool", boardHandlerStart);
   const boardHandler = lessonTutorSource.slice(boardHandlerStart, boardHandlerEnd);
-  assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 2,
-    "las actualizaciones visuales solo deben añadirse al contexto, sin disparar otra generación de voz");
+  assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 3,
+    "las instantáneas visibles, provisionales y rechazadas responden en silencio sin disparar otra generación de voz");
   assert.doesNotMatch(boardHandler, /FunctionResponseScheduling\.(?:WHEN_IDLE|INTERRUPT)/);
 });
 
@@ -1854,7 +1854,7 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   assert.match(lessonTutorSource, /void speakText\(cleanReply, assistantIndex\)/);
   assert.doesNotMatch(lessonTutorSource, /ORBY_FREE_TTS_UNAVAILABLE_MESSAGE/);
   assert.doesNotMatch(lessonTutorSource, /sendRealtimeInput\(\{ text: internalSpeechInstruction \}\)/);
-  assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
+  assert.match(lessonTutorSource, /if \(voicePreflightReplyRef\.current\) \{\s*(?:clearPendingOrbyTeachingBoard\(\);\s*)?requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
   assert.match(lessonTutorSource, /hasPendingStudentTurn && !voiceLocalReplyInFlightRef\.current/);
   assert.match(lessonTutorSource, /!voicePendingStudentTurnRef\.current\s*\|\|\s*!voiceUserTextRef\.current\.trim\(\)\s*\|\|\s*voiceLocalReplyInFlightRef\.current/);
   assert.match(lessonTutorSource, /stopSpeaking\(\);/);

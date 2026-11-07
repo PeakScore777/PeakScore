@@ -53,10 +53,10 @@ function smoothSketchPath(points: Array<{ x: number; y: number }>): string {
 
 function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }> }) {
   const palette = {
-    ink: "#334155",
-    accent: colors.orange,
-    muted: "#94a3b8",
-    success: "#0f766e",
+    ink: "#243b68",
+    accent: "#c2413b",
+    muted: "#64748b",
+    success: "#16734a",
   } as const;
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-[560px] w-full overflow-visible">
@@ -92,6 +92,7 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
                 className="orby-board-sketch-label"
                 fontSize="4"
                 fontWeight="600"
+                fontFamily="Segoe Print, Bradley Hand, Comic Sans MS, cursive"
                 fill={color}
                 style={{ animationDelay: `${delay + duration}ms` }}
               >{stroke.label}</text>
@@ -406,36 +407,43 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
 }
 
 export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
+  const handwriting = "'Segoe Print', 'Bradley Hand', 'Comic Sans MS', cursive";
   return (
     <section
-      aria-label={"Pizarra de clase: " + board.title}
-      className="orby-board relative isolate min-h-[420px] overflow-hidden rounded-xl border border-[#e7e4dc] bg-[#fffefb] text-slate-900 shadow-[0_12px_38px_rgba(15,23,42,.12)] sm:min-h-[560px]"
+      aria-label={"Apuntes de clase: " + board.title}
+      className="orby-board relative isolate min-h-[460px] overflow-hidden rounded-xl border border-[#e8e2d6] bg-[#fffefb] text-slate-900 shadow-[0_14px_42px_rgba(15,23,42,.14)] sm:min-h-[600px]"
     >
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.24]" style={{ backgroundImage: "linear-gradient(to bottom, transparent 31px, #d9e2ef 32px)", backgroundSize: "100% 32px" }} />
-      <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-7 top-0 w-px bg-rose-200/70 sm:left-12" />
-      <div className="relative mx-auto flex min-h-[420px] w-full max-w-6xl flex-col px-7 pb-8 pt-7 sm:min-h-[560px] sm:px-14 sm:pb-12 sm:pt-10">
-        <div className="mb-5 flex items-start justify-between gap-3 pl-2 sm:pl-4">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.42]" style={{ backgroundImage: "linear-gradient(to bottom, transparent 34px, #d7e3f2 35px)", backgroundSize: "100% 35px" }} />
+      <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-8 top-0 w-px bg-rose-300/70 sm:left-12" />
+      <div aria-hidden="true" className="pointer-events-none absolute left-2 top-5 h-2 w-2 rounded-full border border-slate-300 bg-slate-100 shadow-[0_1px_2px_rgba(0,0,0,.15)] sm:left-4" />
+      <div className="relative mx-auto flex min-h-[460px] w-full max-w-6xl flex-col px-8 pb-10 pt-7 sm:min-h-[600px] sm:px-14 sm:pb-14 sm:pt-9">
+        <header className="mb-4 flex items-start justify-between gap-3 pl-2 sm:pl-4">
           <div className="min-w-0">
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[.18em] text-orange-700">PeakScore · Clase en directo</p>
-            <h3 className="font-serif text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">{board.title || "Apuntes de clase"}</h3>
+            <p className="mb-1 text-[9px] font-bold uppercase tracking-[.18em] text-slate-500">PeakScore · Apuntes de clase</p>
+            <h3 className="text-xl font-bold leading-tight text-[#243b68] sm:text-2xl" style={{ fontFamily: handwriting, transform: "rotate(-.35deg)" }}>{board.title || "Apuntes de Orby"}</h3>
+            <div className="mt-1 h-[2px] w-40 max-w-full rounded-full bg-[#c2413b]/75" />
           </div>
-          <span className="shrink-0 rounded-full border border-slate-200 bg-white/80 px-2.5 py-1 text-[9px] font-semibold text-slate-500">ORBY</span>
-        </div>
-        <div className="flex flex-col gap-3 pl-2 sm:pl-4">
+          <span className="mt-1 shrink-0 -rotate-3 rounded-sm border border-[#c2413b]/50 px-2 py-1 text-[9px] font-bold tracking-widest text-[#c2413b]" style={{ fontFamily: handwriting }}>ORBY</span>
+        </header>
+
+        <div className="flex flex-col gap-2 pl-2 sm:pl-4">
           {board.blocks.map((block, index) => {
             const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
-            if (block.type === "heading") return <h4 key={blockKey} className="orby-board-appear mt-2 border-b border-slate-200 pb-1 font-serif text-lg font-bold text-slate-900 sm:text-xl">{block.text}</h4>;
-            if (block.type === "formula") return <div key={blockKey} className="orby-board-appear my-2 overflow-x-auto py-2 text-center font-mono text-lg font-semibold text-slate-900 sm:text-2xl">{block.text}</div>;
-            if (block.type === "step") return <div key={blockKey} className="orby-board-appear flex items-start gap-3 py-1"><span className="mt-0.5 shrink-0 font-mono text-xs font-bold text-orange-700">{block.label}</span><p className="text-sm leading-7 text-slate-800 sm:text-base">{block.text}</p></div>;
-            if (block.type === "callout") return <p key={blockKey} className="orby-board-appear my-2 max-w-4xl border-l-2 border-orange-500 pl-3 text-sm font-semibold italic leading-7 text-orange-900 sm:text-base">{block.text}</p>;
-            return <p key={blockKey} className="orby-board-appear max-w-4xl text-sm leading-7 text-slate-800 sm:text-base">{block.text}</p>;
+            if (block.type === "heading") return <h4 key={blockKey} className="orby-board-appear mt-2 w-fit border-b-2 border-[#c2413b]/65 pb-0.5 text-base font-bold text-[#243b68] sm:text-lg" style={{ fontFamily: handwriting, transform: "rotate(-.2deg)" }}>{block.text}</h4>;
+            if (block.type === "formula") return <div key={blockKey} className="orby-board-appear my-1 w-fit max-w-full overflow-x-auto border-b border-dashed border-[#243b68]/35 py-1 text-lg font-semibold text-[#243b68] sm:text-xl" style={{ fontFamily: handwriting }}>{block.text}</div>;
+            if (block.type === "step") return <div key={blockKey} className="orby-board-appear flex max-w-4xl items-start gap-2 py-0.5">
+              <span className="mt-0.5 shrink-0 text-xs font-bold text-[#c2413b] sm:text-sm" style={{ fontFamily: handwriting }}>{block.label}:</span>
+              <p className="text-sm leading-7 text-[#243b68] sm:text-base" style={{ fontFamily: handwriting }}>{block.text}</p>
+            </div>;
+            if (block.type === "callout") return <p key={blockKey} className="orby-board-appear my-1 w-fit max-w-4xl border-l-[3px] border-[#c2413b] pl-3 text-sm font-semibold leading-7 text-[#a33232] sm:text-base" style={{ fontFamily: handwriting }}>{block.text}</p>;
+            return <p key={blockKey} className="orby-board-appear max-w-4xl text-sm leading-7 text-[#243b68] sm:text-base" style={{ fontFamily: handwriting }}>{block.text}</p>;
           })}
-          {board.visuals?.map((visual, index) => <div key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title || "Dibujo de clase"} className="orby-board-appear my-2 w-full">
-            {visual.title ? <h4 className="mb-2 font-serif text-sm font-bold text-slate-700 sm:text-base">{visual.title}</h4> : null}
-            <div className="mx-auto w-full max-w-4xl"><Visual visual={visual}/></div>
+          {board.visuals?.map((visual, index) => <div key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title || "Dibujo de clase"} className="orby-board-appear my-1 w-full max-w-4xl">
+            {visual.title ? <h4 className="mb-1 w-fit text-sm font-bold text-[#c2413b] sm:text-base" style={{ fontFamily: handwriting }}>{visual.title}</h4> : null}
+            <div className="mx-auto w-full"><Visual visual={visual}/></div>
           </div>)}
         </div>
-        <div className="mt-auto flex justify-end pt-8 pr-1 text-[9px] font-semibold uppercase tracking-[.16em] text-slate-300">Apuntes de Orby · Saber 11</div>
+        <footer className="mt-auto flex justify-end pt-8 pr-1 text-[9px] font-semibold uppercase tracking-[.14em] text-slate-400">Orby · Saber 11</footer>
       </div>
     </section>
   );

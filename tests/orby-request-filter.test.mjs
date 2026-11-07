@@ -3665,6 +3665,9 @@ test("Gemini Live recibe instrucciones de dibujar por secciones y limita las act
   assert.match(lesson, /voiceTeachingBoardRef\.current = snapshot/);
   assert.match(lesson, /MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8/);
   assert.match(lesson, /voiceBoardUpdateCountRef\.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN/);
+  assert.match(lesson, /let acceptedSnapshotInEvent = false/);
+  assert.match(lesson, /\|\| acceptedSnapshotInEvent/);
+  assert.match(lesson, /acceptedSnapshotInEvent = true/);
   assert.doesNotMatch(lesson, /mergeOrbyBoardSnapshots/);
   assert.match(tools, /ONE call at a time; never bundle multiple board snapshots/);
   assert.match(tools, /FULL cumulative current board/);

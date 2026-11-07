@@ -1288,6 +1288,21 @@ test("las preguntas ambiguas llegan al tutor para aclaración y las solicitudes 
   assert.equal(filter.preflightOrbyRequest("¿Cómo hackeo una cuenta ajena?").allowed, false);
 });
 
+test("corrige la confusión entre replicación del ADN y mitosis sin alterar respuestas correctas", () => {
+  const incorrect = "Durante la mitosis el ADN se separa y hace una copia para formar dos células.";
+  const corrected = filter.correctOrbyDnaMitosisSequence(incorrect);
+  assert.match(corrected, /fase S de la interfase/i);
+  assert.match(corrected, /cromátidas hermanas se separan/i);
+  assert.match(corrected, /citocinesis divide el citoplasma/i);
+  assert.doesNotMatch(corrected, /durante la mitosis el ADN se separa y hace una copia/i);
+
+  const correct = "El ADN se duplica durante la fase S de la interfase. Después, en la mitosis, se separan las cromátidas hermanas.";
+  assert.equal(filter.correctOrbyDnaMitosisSequence(correct), correct);
+
+  const unrelated = "La mitosis permite repartir los cromosomas en dos núcleos.";
+  assert.equal(filter.correctOrbyDnaMitosisSequence(unrelated), unrelated);
+});
+
 test("Orby conserva los seguimientos académicos y no hereda contexto de una negativa", () => {
   const invitation = "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
   assert.equal(filter.isOrbyStudyGuidanceRequest("no sé", invitation), true);

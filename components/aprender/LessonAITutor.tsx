@@ -2350,6 +2350,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceUserMessageVisibleRef.current = false;
         voiceAssistantTextRef.current = "";
         voiceAssistantMessageIdRef.current = null;
+        voiceTeachingBoardRef.current = null;
         voicePublicSourcesRef.current = [];
         voiceResponseDoneRef.current = false;
         voiceTurnPersistedRef.current = false;

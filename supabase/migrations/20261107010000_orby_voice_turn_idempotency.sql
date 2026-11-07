@@ -79,7 +79,7 @@ begin
   set
     title = case
       when title = 'Nueva conversación'
-        then left(pg_catalog.regexp_replace(p_user_content, '\\s+', ' ', 'g'), 72)
+        then left(pg_catalog.regexp_replace(p_user_content, '[[:space:]]+', ' ', 'g'), 72)
       else title
     end,
     updated_at = v_now + interval '1 millisecond'

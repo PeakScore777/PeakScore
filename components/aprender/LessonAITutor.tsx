@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
-import { mergeOrbyBoardSnapshots, sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
+import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
@@ -17,6 +17,7 @@ import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoic
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
+const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
@@ -2022,14 +2023,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       const snapshot = sanitizeOrbyBoard(args);
       if (!isCurrent()) return;
-      if (!snapshot || !voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim() || voiceResponseDoneRef.current) {
-        responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: false, reason: "No hay una respuesta académica activa o el contenido de la pizarra no es válido. Continúa la explicación sin pizarra." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
+      const boardLimitReached = voiceBoardUpdateCountRef.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
+      if (!snapshot || !voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim() || voiceResponseDoneRef.current || boardLimitReached) {
+        const reason = boardLimitReached
+          ? "Se alcanzó el límite de actualizaciones visuales de este turno. Continúa la explicación sin más cambios de pizarra."
+          : "No hay una respuesta académica activa o el contenido de la pizarra no es válido. Continúa la explicación sin pizarra.";
+        responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: false, reason }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
         continue;
       }
-      // Keep each valid Live snapshot progressive within this spoken turn.
-      // This also tolerates partial snapshots without erasing earlier teaching steps.
-      const board = mergeOrbyBoardSnapshots(voiceTeachingBoardRef.current, snapshot);
-      voiceTeachingBoardRef.current = board;
+      // Tool calls contain a full cumulative snapshot; latest validated state is authoritative.
+      // This permits corrections/removals without leaving stale teaching content visible.
+      const board = snapshot;
+      voiceTeachingBoardRef.current = snapshot;
       voiceBoardUpdateCountRef.current += 1;
       console.info("[Orby Voice] Teaching board update timing.", {
         updateNumber: voiceBoardUpdateCountRef.current,

@@ -4919,8 +4919,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="space-y-4">
             {messages.map((message, index) => (
               <article key={message.id ?? `${message.role}-${index}`} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
-                <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
-                <div className="break-words text-[15px] leading-7 sm:text-base">{renderTutorContent(message.content)}</div>
+                <div className="mb-1 flex items-center gap-2">
+                  <p className={message.role === "user" ? "text-[10px] font-bold uppercase tracking-wider text-orange-100" : `text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
+                  {message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current && !voiceResponseDoneRef.current && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"/> EN VIVO</span>}
+                </div>
+                <div className="break-words text-[15px] leading-7 sm:text-base" aria-live={message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current ? "polite" : undefined} aria-atomic="false">{renderTutorContent(message.content)}</div>
                 {message.board && <OrbyBoard board={message.board} />}
                 {message.sources && message.sources.length > 0 && <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700" aria-label="Fuentes públicas consultadas">
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Fuentes públicas de apoyo</p>

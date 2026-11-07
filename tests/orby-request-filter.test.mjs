@@ -218,7 +218,7 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
 });
 
 test("una respuesta Live lenta no fuerza TTS si el canal sigue conectado", () => {
-  assert.ok(lessonTutorSource.includes("Keep a connected Gemini Live session while long answers and Lab retrieval complete."));
+  assert.ok(lessonTutorSource.includes("Every transcript/audio/tool event rearms this inactivity timer."));
   assert.ok(lessonTutorSource.includes("if (voiceChannelRef.current)"));
   assert.ok(lessonTutorSource.includes("}, 32_000);"));
   assert.ok(lessonTutorSource.includes("}, 12_000);"));

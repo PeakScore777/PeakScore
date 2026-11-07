@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import OrbyBoard from "@/components/aprender/OrbyBoard";
+import type { OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
@@ -17,7 +19,7 @@ const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
-type Message = { id?: string; role: "user" | "assistant"; content: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
+type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
@@ -4007,6 +4009,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         id: fallbackAssistantId ?? ("assistant-" + crypto.randomUUID()),
         role: "assistant",
         content: data.reply,
+        ...(data.board && typeof data.board === "object" ? { board: data.board as OrbyBoardData } : {}),
         checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "",
         sources: Array.isArray(data.sources) ? data.sources.filter((source: unknown): source is OrbyPublicSource => {
           if (!source || typeof source !== "object") return false;
@@ -4832,6 +4835,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <article key={message.id ?? `${message.role}-${index}`} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
                 <p className={message.role === "user" ? "mb-1 text-[10px] font-bold uppercase tracking-wider text-orange-100" : `mb-1 text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
                 <div className="break-words text-[15px] leading-7 sm:text-base">{renderTutorContent(message.content)}</div>
+                {message.board && <OrbyBoard board={message.board} />}
                 {message.sources && message.sources.length > 0 && <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700" aria-label="Fuentes públicas consultadas">
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Fuentes públicas de apoyo</p>
                   <ul className="space-y-2">

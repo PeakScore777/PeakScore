@@ -2904,6 +2904,11 @@ test("Orby mide las etapas del arranque Live sin registrar contenido de conversa
   assert.doesNotMatch(source, /Startup stage timings[\s\S]{0,500}voiceUserTextRef\.current/);
 });
 
+test("la emisión del token efímero de Gemini Live tiene un límite de tiempo del lado del servidor", () => {
+  assert.match(realtimeSessionSource, /new GoogleGenAI\(\{ apiKey, httpOptions: \{ apiVersion: "v1beta", timeout: 12_000 \} \}\)/);
+  assert.match(lessonTutorSource, /AbortSignal\.any\(\[startupSignal, AbortSignal\.timeout\(15_000\)\]\)/);
+});
+
 test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const sessionRouteSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");

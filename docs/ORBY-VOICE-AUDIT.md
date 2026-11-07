@@ -320,3 +320,8 @@ Las consultas de embeddings Cloudflare para recuperación interactiva usan 8 seg
 ### Cobertura de ambas rutas de embeddings de consulta
 
 La auditoría encontró dos callers interactivos distintos: `createOrbyQueryEmbedding` (ruta de consulta heredada) y `createOrbyQueryEmbeddingForModel` (recuperación híbrida por modelo). Ambos pasan ahora explícitamente 8 segundos a `createCloudflareEmbeddings`. El valor predeterminado de esa función queda en 25 segundos, de modo que `createOrbyEmbeddings` y los lotes de documentos conservan su presupuesto de ingestión. La prueba inspecciona ambas rutas para evitar que una consulta interactiva vuelva a heredar silenciosamente el límite largo.
+
+
+### Reintento de historial sin doble envío
+
+El botón de reintento del turno de voz ahora usa un cerrojo en `useRef` para impedir dos POST concurrentes y un estado visible que deshabilita el botón mientras guarda. Se libera en `finally` tanto si el guardado funciona como si falla. La conversación afectada permanece bloqueada para nuevos mensajes hasta resolver el guardado; las demás conversaciones pueden continuar.

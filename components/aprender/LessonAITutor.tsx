@@ -5007,6 +5007,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
   const voiceBoardActive = Boolean(activeVoiceAssistantMessage?.board);
 
+  function saveCurrentBoardAsNote() {
+    const board = activeVoiceAssistantMessage?.board;
+    if (!board) return;
+    const sections = [
+      board.title,
+      ...board.blocks.map((block) => {
+        if (block.type === "heading") return "\n" + block.text.toLocaleUpperCase("es-CO");
+        if (block.type === "step") return block.label + ": " + block.text;
+        return block.text;
+      }),
+      ...(board.visuals ?? []).map((visual) => {
+        const detail = visual.type === "sketch"
+          ? visual.strokes.map((stroke) => stroke.label).filter(Boolean).join(", ")
+          : "";
+        return "Apoyo visual: " + (visual.title || visual.type) + (detail ? " · " + detail : "");
+      }),
+    ].filter(Boolean);
+    void saveLearningItem("note", board.title || "Apuntes de clase", sections.join("\n\n").slice(0, 12000));
+  }
+
   return (
     <>
     <aside id="orby-tutor-panel" data-orby-theme={globalTheme} data-orby-workspace={workspace ? "true" : "false"} aria-label="Tutor de inteligencia artificial Orby" className={workspace
@@ -5236,6 +5256,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            {activeVoiceAssistantMessage?.board && <button type="button" onClick={saveCurrentBoardAsNote} className="inline-flex items-center gap-1.5 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-1.5 text-[10px] font-bold text-orange-700 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Guardar apuntes de esta clase" title="Guardar apuntes"><Bookmark className="h-3.5 w-3.5" /> <span className="hidden sm:inline">Guardar apuntes</span></button>}
             <span className="hidden rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 sm:inline-flex">CLASE EN VIVO</span>
             <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-bold transition ${showAssistantSubtitles ? "border-orange-200 bg-orange-50 text-orange-700" : "border-slate-200 bg-white text-slate-500"}`} aria-pressed={showAssistantSubtitles}>
               <Captions className="mr-1 inline h-3.5 w-3.5" /> Subtítulos {showAssistantSubtitles ? "activados" : "desactivados"}

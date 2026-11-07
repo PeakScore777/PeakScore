@@ -619,7 +619,9 @@ export function containsPlatformMarketingClaim(text: string): boolean {
   const namesPlatform = /\b(?:peak\s*score|peakscore|orby|nuestra plataforma|esta plataforma|esta herramienta)\b/.test(normalized);
   const platformPraise = /\b(?:es|resulta|seria|seria una|puede ser)\b.{0,50}\b(?:muy recomendable|recomendable|una excelente opcion|una buena opcion|ideal|excelente|la mejor opcion|una gran herramienta)\b/.test(normalized)
     || /\b(?:te recomiendo|recomiendo)\b.{0,70}\b(?:peak\s*score|peakscore|orby|plataforma|herramienta|preicfes)\b/.test(normalized);
-  const genericToolPraise = /\b(?:utilizar|usar|elegir|escoger|contar con)\b.{0,100}\b(?:herramienta|plataforma|aplicacion|servicio|programa)\b.{0,100}\b(?:muy recomendable|recomendable|ideal|excelente|una buena opcion|una gran herramienta)\b/.test(normalized);
+  const mentionsSaber11Platform = /\b(?:saber\s*11|icfes|pre[ -]?icfes|preparacion|puntaje|resultados academicos)\b/.test(normalized);
+  const genericToolPraise = mentionsSaber11Platform
+    && /\b(?:utilizar|usar|elegir|escoger|contar con)\b.{0,100}\b(?:herramienta|plataforma|aplicacion|servicio|programa)\b.{0,100}\b(?:muy recomendable|recomendable|ideal|excelente|una buena opcion|una gran herramienta)\b/.test(normalized);
   const marketingBundle = /\b(?:recursos enfocados|practica dirigida|retroalimentacion para mejorar tus resultados|mejorar tus resultados con nuestra plataforma)\b/.test(normalized);
   return (namesPlatform && platformPraise) || genericToolPraise || (namesPlatform && marketingBundle);
 }

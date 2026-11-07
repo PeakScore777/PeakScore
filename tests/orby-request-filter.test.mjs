@@ -2681,7 +2681,8 @@ test("una interrupción del estudiante descarta el final de audio anterior sin c
     lessonTutorSource.indexOf("\n  function ", lessonTutorSource.indexOf("function interruptCurrentVoiceOutput()") + 1),
   );
   assert.match(lessonTutorSource, /const voiceBargeInPendingRef = useRef\(false\)/);
-  assert.match(interruptMethod, /voiceBargeInPendingRef\.current = Boolean\(voiceChannelRef\.current\)[\s\S]*?waitingForVoiceReplyRef\.current[\s\S]*?!voiceResponseDoneRef\.current/);
+  assert.match(interruptMethod, /const assistantAudioStillPlaying = voiceBrowserSpeechActiveRef\.current[\s\S]*?voiceAudioSourcesRef\.current\.size > 0[\s\S]*?voiceNextPlaybackTimeRef\.current/);
+  assert.match(interruptMethod, /voiceBargeInPendingRef\.current = Boolean\(voiceChannelRef\.current\)[\s\S]*?waitingForVoiceReplyRef\.current[\s\S]*?!voiceResponseDoneRef\.current \|\| assistantAudioStillPlaying/);
 
   const eventStart = lessonTutorSource.indexOf("function handleGeminiLiveEvent");
   const eventEnd = lessonTutorSource.indexOf("\n  function ", eventStart + 1);

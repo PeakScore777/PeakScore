@@ -273,6 +273,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [imageAssetsLoading, setImageAssetsLoading] = useState(false);
   const [imageStorageError, setImageStorageError] = useState("");
   const [showVoiceTranscript, setShowVoiceTranscript] = useState(true);
+  const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
@@ -4740,6 +4741,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   if (!open) return null;
+  const activeVoiceAssistantMessage = voiceAssistantMessageIdRef.current
+    ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
+    : undefined;
+  const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
 
   return (
     <>
@@ -4965,6 +4970,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           </div>
           <h2 className="mt-2 text-2xl font-black tracking-tight sm:text-3xl">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te estoy escuchando" : voiceMode ? "Orby está contigo" : "Conecta con Orby"}</h2>
           <p className="mt-2 max-w-md text-sm leading-6 opacity-65">{voiceStatus}</p>
+          {showAssistantSubtitles && <section className="mt-4 w-full max-w-3xl rounded-xl border border-orange-400/25 bg-[#111820]/90 px-4 py-3 text-left shadow-lg" aria-label="Subtítulos de la voz de Orby" aria-live="polite" aria-atomic="false">
+            <div className="mb-1 flex items-center justify-between gap-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-orange-300">Orby · Subtítulos en vivo</p>
+              {voicePlaybackOwnerRef.current !== "none" && <span className="flex items-center gap-1.5 text-[9px] font-semibold text-emerald-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"/> EN VOZ</span>}
+            </div>
+            <p className="max-h-28 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá lo que Orby vaya diciendo…" : "Conecta con Orby para comenzar.")}</p>
+          </section>}
+          {activeVoiceAssistantMessage?.board && <section className="mt-4 w-full max-w-4xl text-left" aria-label="Pizarra de la explicación de Orby">
+            <OrbyBoard board={activeVoiceAssistantMessage.board}/>
+          </section>}
           {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">
             <strong>Modo por turnos activo.</strong> Pulsa el micrófono para hablar y vuelve a pulsarlo para detener la grabación. Orby transcribirá con Whisper y responderá con el tutor de Cloudflare. La respuesta se mostrará por escrito; no se activará una voz sintética facturada ni una voz genérica del navegador. No consume cuota Gemini.
           </div>}
@@ -4973,7 +4988,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-9">
             <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setWorkspaceMode("chat")} className="flex h-14 w-14 items-center justify-center rounded-full border border-current/15 bg-black/5 text-current transition hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400" aria-label="Volver al chat"><MessageSquare className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Chat</span></div>
             <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => void (voiceFallbackMode ? (isRecording ? stopAudioRecording() : requestMicrophonePermission()) : toggleVoiceMute())} disabled={!voiceMode || loading || (voiceFallbackMode && audioTranscribing)} className={`flex h-14 w-14 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 ${voiceMuted ? "border-orange-400 bg-orange-500 text-white" : "border-current/15 bg-black/5 text-current hover:bg-black/10"} disabled:opacity-40`} aria-label={voiceFallbackMode ? (isRecording ? "Detener grabación" : "Grabar pregunta para Orby") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceFallbackMode ? (isRecording ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-5 w-5" />) : voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button><span className="text-[11px] opacity-70">{voiceFallbackMode ? (isRecording ? "Detener" : audioTranscribing ? "Transcribiendo" : "Hablar") : voiceMuted ? "Activar" : "Silenciar"}</span></div>
-            <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setShowVoiceTranscript((value) => !value)} className={`flex h-14 w-14 items-center justify-center rounded-full border border-current/15 transition hover:bg-black/10 ${showVoiceTranscript ? "bg-black/10 text-orange-400" : "bg-black/5 text-current"}`} aria-label="Mostrar u ocultar transcripción"><Captions className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Transcripción</span></div>
+            <div className="flex flex-col items-center gap-2"><button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`flex h-14 w-14 items-center justify-center rounded-full border border-current/15 transition hover:bg-black/10 ${showAssistantSubtitles ? "bg-black/10 text-orange-400" : "bg-black/5 text-current"}`} aria-label="Mostrar u ocultar subtítulos de Orby"><Captions className="h-5 w-5" /></button><span className="text-[11px] opacity-70">Subtítulos</span></div>
             <div className="flex flex-col items-center gap-2"><button type="button" onClick={finishVoiceCall} className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f28a18] text-[#17120c] shadow-[0_8px_28px_rgba(242,138,24,.2)] transition hover:bg-[#ffa12f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-300" aria-label="Finalizar llamada"><X className="h-6 w-6" /></button><span className="text-[11px] opacity-70">Finalizar</span></div>
           </div>
         </div>

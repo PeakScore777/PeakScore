@@ -258,10 +258,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     turnId: string;
     userContent: string;
     assistantContent: string;
+    board?: OrbyBoardData;
   } | null>(null);
   const [retryingVoiceTurn, setRetryingVoiceTurn] = useState(false);
   // Keep the same idempotency key if a completed turn is retried after a timeout.
-  const pendingVoicePersistenceRef = useRef<{ conversationId: string; turnId: string; userContent: string; assistantContent: string } | null>(null);
+  const pendingVoicePersistenceRef = useRef<{ conversationId: string; turnId: string; userContent: string; assistantContent: string; board?: OrbyBoardData } | null>(null);
   const [learningView, setLearningView] = useState<"chat" | "notes" | "topics" | "progress" | "storage">("chat");
   const [learningItems, setLearningItems] = useState<LearningItem[]>([]);
   const [learningSignals, setLearningSignals] = useState<LearningSignal[]>([]);
@@ -1757,7 +1758,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       && previousTurn.userContent === userContent
       && previousTurn.assistantContent === assistantContent
       ? previousTurn
-      : { conversationId: id, turnId: crypto.randomUUID(), userContent, assistantContent };
+      : {
+        conversationId: id,
+        turnId: crypto.randomUUID(),
+        userContent,
+        assistantContent,
+        ...(voiceTeachingBoardRef.current ? { board: voiceTeachingBoardRef.current } : {}),
+      };
     pendingVoicePersistenceRef.current = turn;
     voiceTurnPersistedRef.current = true;
     const saveTask = voiceTurnPersistenceChainRef.current

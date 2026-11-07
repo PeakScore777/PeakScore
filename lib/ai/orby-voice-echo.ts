@@ -36,16 +36,7 @@ export function isLikelyVoicePlaybackEcho(
 
     // Greetings and acknowledgements can be echoes only when the recent
     // assistant audio contains that same standalone low-information word.
-    if (LOW_INFORMATION_WORDS.has(incoming)) {
-      // Match a complete spoken token, not a substring ("sí" must not match
-      // the beginning of "sin").
-      if (spoken.split(" ").includes(incoming)) return true;
-      continue;
-    }
-
-    // A single meaningful token such as "Saber" is not enough to suppress
-    // a student's academic request. For low-information words, require a
-    // complete token match; never use substring matching ("sí" vs "sin").
+    // Match a complete token, never a substring ("sí" must not match "sin").
     if (LOW_INFORMATION_WORDS.has(incoming)) {
       if (spoken.split(" ").includes(incoming)) return true;
       continue;
@@ -54,7 +45,7 @@ export function isLikelyVoicePlaybackEcho(
     // Exact multiword matches are strong echo evidence. Keep common complete
     // greetings eligible even when stop-word removal leaves only one word.
     const isGreetingPhrase = /^(?:hola(?: de nuevo)?|oye orby|oee(?: hermano)?|oe(?: hermano)?|buenas(?: tardes| noches)?|buenos dias)$/.test(incoming);
-    if (isGreetingPhrase && spoken.split(" ").join(" ").includes(incoming)) return true;
+    if (isGreetingPhrase && spoken.split(" ").includes(incoming)) return true;
 
     // Curriculum terms such as "Saber 11" have too little lexical signal
     // for a fuzzy echo match; never suppress them as a short phrase.

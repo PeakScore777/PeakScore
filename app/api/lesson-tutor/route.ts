@@ -219,12 +219,22 @@ export async function POST(request: Request) {
       && recentContextMessages.some((item) => item.role === "assistant" && /\bpeak\s*score\b|\bgoogle\b|\bcread[oa]\b/i.test(item.content));
     const asksWhoAreThey = /\bquienes?\s+son\b/.test(normalizedIdentityPrompt);
     const asksPeakScoreFollowUp = /\bpeak\s*score\b/.test(normalizedIdentityPrompt)
-      && recentContextMessages.some((item) => /\bquien\b|\bcread[oa]\b|\bgoogle\b|\borby\b/i.test(item.content));
+      && recentContextMessages.some((item) => /\bquien\b|\bqn\b|\bcread[oa]\b|\bgoogle\b|\borby\b/i.test(item.content));
     const asksOrbyIdentity = isOrbyIdentityQuestion(userMessage)
       || (asksWhoAreThey && recentPeakScoreContext)
       || asksPeakScoreFollowUp;
-    if (asksOrbyIdentity) {
-      const identityReply = ORBY_IDENTITY_REPLY;
+    const hasRecentPeakScoreIdentityExchange = recentContextMessages.some((item, index, history) =>
+      item.role === "assistant"
+      && /PeakScore es la plataforma educativa/i.test(item.content)
+      && history[index - 1]?.role === "user"
+      && /\bpeak\s*score\b/i.test(history[index - 1]?.content ?? "")
+    );
+    const asksPeakScoreRecommendationFollowUp = hasRecentPeakScoreIdentityExchange
+      && /^(?:es|seria|vale la pena|consideras que es)\s+(?:recomendable|buena|confiable|util|una buena opcion|una buena herramienta)[.!? ]*$/i.test(normalizedIdentityPrompt);
+    if (asksOrbyIdentity || asksPeakScoreRecommendationFollowUp) {
+      const identityReply = asksPeakScoreRecommendationFollowUp
+        ? "PeakScore es la plataforma educativa en la que funciona Orby. No puedo darte una valoración independiente de mi propia plataforma ni prometer resultados. Sí puedo explicarte sus funciones y limitaciones para que decidas si se ajusta a lo que necesitas."
+        : ORBY_IDENTITY_REPLY;
       if (conversationId && ownedConversation) {
         const { error: identitySaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,

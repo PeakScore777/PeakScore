@@ -499,22 +499,19 @@ export async function POST(request: Request) {
       userMessage,
       ...history.slice(-12).map((item) => item.content),
     ].filter(Boolean).join(" "));
-    // Persist an explicit subject switch so the next short follow-up or greeting
-    // cannot silently fall back to the previous lesson's subject.
+    // Start subject persistence without blocking independent Lab retrieval.
+    // The response is still withheld if the database update fails.
+    let subjectPersistencePromise: Promise<{ error: { code?: string } | null }> | null = null;
     if (currentTurnSubject && conversationId && ownedConversation
       && ownedConversation.subject !== currentTurnSubject) {
-      const { error: subjectPersistError } = await supabaseAdmin
-        .from("orby_conversations")
-        .update({ subject: currentTurnSubject, updated_at: new Date().toISOString() })
-        .eq("id", conversationId)
-        .eq("user_id", user.id);
-      if (subjectPersistError) {
-        console.error("[Orby Tutor] Active subject persistence failed.", { code: subjectPersistError.code });
-        return NextResponse.json({
-          error: "No pude actualizar el área de estudio de esta conversación. Inténtalo de nuevo.",
-          code: "ORBY_SUBJECT_UPDATE_FAILED",
-        }, { status: 503 });
-      }
+      subjectPersistencePromise = (async () => {
+        const { error } = await supabaseAdmin
+          .from("orby_conversations")
+          .update({ subject: currentTurnSubject, updated_at: new Date().toISOString() })
+          .eq("id", conversationId)
+          .eq("user_id", user.id);
+        return { error: error ? { code: error.code } : null };
+      })();
       ownedConversation.subject = currentTurnSubject;
       subject = currentTurnSubject;
     }
@@ -687,6 +684,16 @@ export async function POST(request: Request) {
     publicSources = (await publicResearchPromise).sources;
 
     const studentSignals = await studentSignalsPromise;
+    if (subjectPersistencePromise) {
+      const { error: subjectPersistError } = await subjectPersistencePromise;
+      if (subjectPersistError) {
+        console.error("[Orby Tutor] Active subject persistence failed.", { code: subjectPersistError.code });
+        return NextResponse.json({
+          error: "No pude actualizar el área de estudio de esta conversación. Inténtalo de nuevo.",
+          code: "ORBY_SUBJECT_UPDATE_FAILED",
+        }, { status: 503 });
+      }
+    }
     stageTimings.retrievalMs = performance.now() - retrievalStartedAt;
 
     // Private source metadata stays server-side. Students receive only the educational substance.

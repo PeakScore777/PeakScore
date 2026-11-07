@@ -4980,8 +4980,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             </div>
             <p className="max-h-28 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá lo que Orby vaya diciendo…" : "Conecta con Orby para comenzar.")}</p>
           </section>}
-          {activeVoiceAssistantMessage?.board && <section className="mt-4 w-full max-w-4xl text-left" aria-label="Pizarra de la explicación de Orby">
+          {activeVoiceAssistantMessage?.board ? <section className="mt-4 w-full max-w-4xl text-left" aria-label="Pizarra de la explicación de Orby">
             <OrbyBoard board={activeVoiceAssistantMessage.board}/>
+          </section> : voiceMode && voicePendingStudentTurnRef.current && <section className="mt-4 w-full max-w-4xl rounded-xl border border-dashed border-orange-300/35 bg-[#fffdf8] px-5 py-6 text-left text-slate-800 shadow-sm" role="status" aria-label="Pizarra de Orby preparándose">
+            <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-orange-900"><span className="h-2 w-2 animate-pulse rounded-full bg-orange-500"/> Pizarra de Orby</div>
+            <p className="mt-2 text-sm font-semibold">Preparando el apoyo visual…</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">Cuando la explicación necesite un dibujo, fórmula o esquema, aparecerá aquí mientras Orby habla.</p>
           </section>}
           {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">
             <strong>Modo por turnos activo.</strong> Pulsa el micrófono para hablar y vuelve a pulsarlo para detener la grabación. Orby transcribirá con Whisper y responderá con el tutor de Cloudflare. La respuesta se mostrará por escrito; no se activará una voz sintética facturada ni una voz genérica del navegador. No consume cuota Gemini.

@@ -371,3 +371,28 @@ Estado de CI:
 - El commit de pruebas `590ea66` necesita su propio CI completo antes de dar esta optimización por validada.
 
 No se cambian modelos, proveedores, cuotas ni credenciales. La carga dinámica se activa solo por una acción explícita de iniciar voz.
+
+
+## 2026-11-07 — solapamiento seguro de persistencia y recuperación
+
+En `app/api/lesson-tutor/route.ts`, el cambio explícito de materia se escribía en Supabase y se esperaba su respuesta antes de iniciar la recuperación académica. Se modificó para iniciar la escritura y la recuperación en paralelo.
+
+Garantías conservadas:
+- La materia de la conversación se actualiza en memoria para construir la consulta con el área nueva.
+- La escritura se espera antes de iniciar la generación y antes de entregar la respuesta.
+- Si la actualización falla, se devuelve `ORBY_SUBJECT_UPDATE_FAILED`; no se entrega una respuesta como si el cambio hubiera quedado guardado.
+- La búsqueda sigue usando el área explícita del turno actual y conserva las rutas independientes del Lab.
+
+Se actualizó la regresión para comprobar el solapamiento y que la generación espere la persistencia.
+
+CI de Gemini Live:
+- El workflow del commit `ba28b4c` falló en regresiones, no en instalación ni auditoría de dependencias.
+- El log identificó dos aserciones desactualizadas: una seguía buscando la referencia estática de `FunctionResponseScheduling`, y otra esperaba `EndSensitivity` sin el prefijo del módulo dinámico.
+- Se actualizaron las expectativas para el SDK cargado bajo demanda. No se debe marcar el CI de `ba28b4c` como aprobado.
+- El workflow de `2807b9c` y la nueva tanda posterior requieren validación completa propia.
+
+Commits:
+- `69f83b6` — `perf(orby): overlap subject persistence with retrieval`.
+- `d827e65` — `test(orby): verify parallel subject persistence safely`.
+
+Esta optimización reduce una espera serial en cambios de materia; no hay todavía una medición de producción que permita prometer una reducción concreta de milisegundos.

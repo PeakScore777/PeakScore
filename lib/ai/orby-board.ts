@@ -69,7 +69,7 @@ export type OrbyBoard = {
 const MAX_BLOCKS = 8;
 const MAX_VISUALS = 4;
 const MAX_TEXT = 240;
-const MAX_BOARD_BYTES = 24_000;
+const MAX_BOARD_BYTES = 18_000;
 
 function withinBoardBudget(board: OrbyBoard): boolean {
   return new TextEncoder().encode(JSON.stringify(board)).byteLength <= MAX_BOARD_BYTES;

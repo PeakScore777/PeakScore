@@ -39,6 +39,10 @@ export async function GET() {
   ]);
 
   if (settingsResult.error || !settingsResult.data) return jsonError("No se pudo consultar la configuración del motor.", 503);
+  if (workerConfiguration.error) {
+    console.error("[Orby Autopilot] Vault configuration check failed.", { code: workerConfiguration.error.code });
+    return jsonError("No se pudo verificar la conexión protegida con Supabase Vault. Comprueba la función de configuración del Autopilot y sus permisos.", 503);
+  }
   if ([queued, running, retrying, failed, completed].some((result) => result.error) || recent.error) {
     return jsonError("No se pudo consultar el estado de la cola de Orby.", 503);
   }

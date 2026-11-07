@@ -330,6 +330,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voicePreflightReplyRef = useRef<string | null>(null);
   const voiceLastCommittedInputRef = useRef("");
   const voiceLastCommittedInputAtRef = useRef(0);
+  // Per-turn monotonic timestamps measure Live latency without storing student text.
+  const voiceTurnAcceptedAtRef = useRef(0);
+  const voiceFirstOutputTextLoggedRef = useRef(false);
+  const voiceFirstAudioLoggedRef = useRef(false);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantOutputAtRef = useRef(0);
   const voiceRecentAssistantOutputsRef = useRef<Array<{ text: string; at: number }>>([]);
@@ -1905,6 +1909,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const scheduledAt = Math.max(audioContext.currentTime + 0.015, voiceNextPlaybackTimeRef.current);
       source.start(scheduledAt);
       if (voiceRealtimeAudioChunkCountRef.current === 0) {
+        if (!voiceFirstAudioLoggedRef.current && voiceTurnAcceptedAtRef.current > 0) {
+          voiceFirstAudioLoggedRef.current = true;
+          console.info("[Orby Voice] First audible response timing.", {
+            firstAudioMs: Math.round(performance.now() - voiceTurnAcceptedAtRef.current),
+          });
+        }
         const spokenTranscript = voiceAssistantTextRef.current.trim();
         if (spokenTranscript) {
           voiceLastAssistantOutputRef.current = spokenTranscript;
@@ -2381,6 +2391,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // the same server event can also carry output audio or turnComplete.
     if (acceptFinalTranscript) {
       waitingForVoiceReplyRef.current = true;
+      voiceTurnAcceptedAtRef.current = performance.now();
+      voiceFirstOutputTextLoggedRef.current = false;
+      voiceFirstAudioLoggedRef.current = false;
       voiceLastCommittedInputRef.current = normalizedFinal;
       voiceLastCommittedInputAtRef.current = Date.now();
       voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
@@ -2496,6 +2509,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       console.warn("[Orby Voice] Ignored unsolicited Live output without a pending student turn.");
     } else if (hasPendingStudentTurn && !voiceLocalReplyInFlightRef.current
       && typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
+      if (!voiceFirstOutputTextLoggedRef.current && voiceTurnAcceptedAtRef.current > 0) {
+        voiceFirstOutputTextLoggedRef.current = true;
+        console.info("[Orby Voice] First response transcript timing.", {
+          firstTranscriptMs: Math.round(performance.now() - voiceTurnAcceptedAtRef.current),
+        });
+      }
       voiceAssistantTextRef.current = mergeLiveTranscript(voiceAssistantTextRef.current, outputTranscript.text);
       voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();

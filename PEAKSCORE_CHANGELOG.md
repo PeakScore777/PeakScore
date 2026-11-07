@@ -1,5 +1,10 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — especificación de voz, pizarra y subtítulos
+- Nuevo docs/ORBY-VOICE-WHITEBOARD-SPEC.md: experiencia esperada, contrato de eventos, reglas pedagógicas y checklist de aceptación.
+- Separa estado implementado/parcial/pendiente y bloquea la declaración de listo hasta QA real en Chrome/micrófono y checks técnicos.
+
+
 ## 2026-11-07 — tablero y subtítulos durante llamada de Orby
 - El escenario de voz muestra la pizarra del turno activo con OrbyBoard y subtítulos incrementales desde outputTranscription de Live.
 - Control para mostrar/ocultar subtítulos; sin nuevas llamadas de IA ni proveedores.

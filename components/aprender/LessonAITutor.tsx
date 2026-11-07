@@ -1951,7 +1951,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           body: JSON.stringify({ query, subject: requestedSubject }),
         });
         const result = await response.json().catch(() => ({}));
-        if (requestController.signal.aborted || !isCurrentToolTurn()) return;
+        if (!isCurrentToolTurn()) return;
+        // A cancelled sibling lookup must not discard other still-valid calls
+        // from the same Live tool batch. Skip only this result and continue.
+        if (requestController.signal.aborted) continue;
         if (!response.ok) {
           responses.push({
             id,

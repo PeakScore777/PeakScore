@@ -4,7 +4,15 @@
  */
 export function splitOrbySpeechIntoChunks(value: string, maxLength = 480): string[] {
   const limit = Math.max(1, Math.floor(maxLength));
-  const sentences = value.match(/[^.!?]+[.!?]+|[^.!?]+$/g) ?? [value];
+  // Protect decimal points and common Spanish abbreviations before finding
+  // sentence boundaries. Otherwise "3.14" or "p. ej." can be split as if
+  // each dot ended a spoken sentence, creating unnatural pauses in TTS.
+  const protectedText = value
+    .replace(/(\\d)\\.(?=\\d)/g, "$1\\uE000")
+    .replace(/\\bp\\.(?=\\s*ej\\.)/gi, "p\\uE000")
+    .replace(/\\b(?:Sr|Sra|Dr|Dra|etc|núm)\\./gi, (match) => match.slice(0, -1) + "\\uE000");
+  const sentences = (protectedText.match(/[^.!?]+[.!?]+(?=\\s+|$)|[^.!?]+$/g) ?? [protectedText])
+    .map((sentence) => sentence.replace(/\\uE000/g, "."));
   const chunks: string[] = [];
   let pending = "";
 

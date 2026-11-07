@@ -3046,7 +3046,7 @@ test("la pizarra de Orby valida escenas acotadas y nunca acepta marcado o códig
   assert.equal(board.sanitizeOrbyBoard({ version: 1, title: "X", blocks: [{ type: "html", text: "<script>" }] }), null);
   assert.equal(board.sanitizeOrbyBoard({ version: 1, title: "X", blocks: Array(9).fill({ type: "text", text: "a" }) }), null);
   assert.equal(board.sanitizeOrbyBoard({ version: 2, title: "X", blocks: [{ type: "text", text: "a" }] }), null);
-  assert.match(boardComponentSource, /aria-label=\{"Pizarra: " \+ board\.title\}/);
+  assert.match(boardComponentSource, /aria-label=\{"Apuntes de clase: " \+ board\.title\}/);
   assert.doesNotMatch(boardComponentSource, /dangerouslySetInnerHTML/);
   assert.match(cloudflareTutorRoute, /sanitizeOrbyBoard\(parsed\.board\)/);
   assert.match(lessonTutorSource, /message\.board && <OrbyBoard board=\{message\.board\} \/>/);
@@ -3574,8 +3574,9 @@ test("Los bloques y visuales nuevos de la pizarra se revelan sin cambiar las cla
 test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcripción de salida", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(source, /showAssistantSubtitles/);
-  assert.match(source, /Subtítulos en vivo/);
-  assert.match(source, /assistantVoiceSubtitle/);
+  assert.match(source, /Subtítulos de Orby/);
+  assert.match(source, /voiceCaptionText/);
+  assert.doesNotMatch(source, /assistantVoiceSubtitle/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}/);
   assert.match(source, /outputTranscript\.text/);
@@ -3593,9 +3594,9 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
 
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(source, /Pizarra de Orby preparándose/);
+  assert.match(source, /Cuaderno de Orby/);
   assert.match(source, /voiceMode && voicePendingStudentTurnRef\.current/);
-  assert.match(source, /Preparando el apoyo visual/);
+  assert.match(source, /Preparando tus apuntes/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });
 
@@ -3863,7 +3864,7 @@ test("las RPC antiguas de pizarra no hacen perder turnos con escenas visuales ve
 
 
 test("el modo por turnos explica con precisión la cuota y el proveedor de voz", () => {
-  assert.match(lessonTutorSource, /la cuota gratuita y la configuración de privacidad lo permiten/);
+  assert.match(lessonTutorSource, /Si la cuota gratuita de voz no está disponible, conservamos el texto sin activar proveedores de pago/);
   assert.doesNotMatch(lessonTutorSource, /No consume cuota Gemini/);
   assert.doesNotMatch(lessonTutorSource, /no se activará una voz sintética facturada/);
 });
@@ -3895,5 +3896,5 @@ test("el aula de voz usa un lienzo de clase y un respaldo visual gratuito indepe
   assert.ok(fallback.includes("if (!board || !board.visuals?.length)"));
   assert.ok(fallback.includes("containsProgrammingInstruction(question, academicContext)"));
   assert.ok(lesson.includes("setVoiceCaptionText(getOrbyLiveCaption(partialReply))"));
-  assert.match(fallback, /No activará ningún servicio de pago/);
+  assert.match(fallback, /Orby no activará ningún servicio de pago/);
 });

@@ -219,3 +219,8 @@ Se revisó la grabación de pantalla de 125,7 s posterior a la prueba anterior.
 Se encontró un error de escape en la expresión regular de consultas generales «quién es / quién fue / who is / who was»: la expresión tenía barras invertidas duplicadas en un literal RegExp, por lo que buscaba secuencias literales y no límites de palabra/espacios. Se corrigió el patrón para reconocer consultas generales de personas y se añadieron regresiones para Westcol, Michael Scott, Lionel Messi y Taylor Swift.
 
 La regla conserva excepciones explícitas para figuras del currículo de Sociales (Simón Bolívar) y preguntas literarias sobre narrador/personaje en Lectura Crítica. Pendiente: confirmar el resultado del CI y validar el comportamiento real de Live en navegador con micrófono y audio.
+
+
+### Ajuste de excepción curricular
+
+El primer CI detectó que la pregunta aislada «¿Quién fue Simón Bolívar?» no tenía suficiente ancla curricular para distinguir una consulta biográfica general. Se amplió el marco de preguntas en español sobre figuras históricas y la regresión usa ahora «¿Quién fue Simón Bolívar en la independencia de Colombia?». Así se conserva la excepción académica explícita sin abrir consultas biográficas generales. La prueba literaria también permanece en la suite. 

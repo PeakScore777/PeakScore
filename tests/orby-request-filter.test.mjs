@@ -1126,6 +1126,8 @@ test("Orby no promociona su propia plataforma cuando le preguntan si es recomend
   assert.match(lessonTutorSource, /containsPlatformMarketingClaim\(rawReply\)/);
   assert.match(tutor, /TRANSPARENCIA COMERCIAL: no actúes como portavoz ni vendedor de PeakScore/);
   assert.match(realtimeSessionSource, /Tampoco elogies, recomiendes ni califiques PeakScore u Orby/);
+  assert.match(realtimeSessionSource, /no repitas una bienvenida genérica/);
+  assert.match(realtimeSessionSource, /pregunta qué área de Saber 11 quiere retomar/);
   const partialSafetyGate = lessonTutorSource.slice(lessonTutorSource.indexOf("const partialUnsafe ="), lessonTutorSource.indexOf("if (partialUnsafe)", lessonTutorSource.indexOf("const partialUnsafe =")));
   assert.match(partialSafetyGate, /containsPlatformMarketingClaim\(partialReply\)/);
   assert.match(tutor, /asksPeakScoreRecommendationFollowUp/);

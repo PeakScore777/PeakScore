@@ -134,12 +134,63 @@ function Circuit({ visual }: { visual: Extract<OrbyBoardVisual, { type: "circuit
   );
 }
 
+function Cell({ visual }: { visual: Extract<OrbyBoardVisual, { type: "cell" }> }) {
+  const center = visual.cellType === "prokaryotic" ? { x: 50, y: 50 } : { x: 50, y: 50 };
+  const organelleColors: Record<string, string> = {
+    nucleus: "#c4b5fd", mitochondrion: "#fca5a5", chloroplast: "#86efac",
+    vacuole: "#bfdbfe", membrane: "#fdba74", "cell-wall": "#a3a3a3",
+    ribosome: "#fcd34d", "endoplasmic-reticulum": "#ddd6fe", golgi: "#f9a8d4", cytoplasm: "#e0f2fe",
+  };
+  return (
+    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Esquema celular"} className="h-auto max-h-72 w-full">
+      {visual.cellType === "plant" ? <rect x="7" y="7" width="86" height="86" rx="17" fill="#f0fdf4" stroke="#64748b" strokeWidth="2.2"/> : null}
+      <ellipse cx={center.x} cy={center.y} rx={visual.cellType === "prokaryotic" ? 40 : 37} ry={visual.cellType === "prokaryotic" ? 29 : 36}
+        fill="#f8fafc" stroke={colors.orange} strokeWidth="1.8"/>
+      {visual.organelles.map((item) => {
+        const fill = organelleColors[item.kind] || "#e2e8f0";
+        if (item.kind === "nucleus") return <g key={item.id}><circle cx={item.x} cy={item.y} r="8" fill={fill} stroke={colors.ink} strokeWidth="0.7"/><circle cx={item.x + 2} cy={item.y - 1} r="2" fill="#7c3aed"/></g>;
+        if (item.kind === "mitochondrion") return <g key={item.id}><ellipse cx={item.x} cy={item.y} rx="7" ry="4" fill={fill} stroke={colors.ink} strokeWidth="0.6"/><path d={`M ${item.x - 5} ${item.y} q 2 -4 4 0 t 4 0`} fill="none" stroke={colors.ink} strokeWidth="0.5"/></g>;
+        if (item.kind === "chloroplast") return <g key={item.id}><ellipse cx={item.x} cy={item.y} rx="7" ry="4" fill={fill} stroke={colors.ink} strokeWidth="0.6"/><path d={`M ${item.x - 4} ${item.y - 1} h8 M ${item.x - 4} ${item.y + 1} h8`} stroke="#166534" strokeWidth="0.7"/></g>;
+        if (item.kind === "vacuole") return <rect key={item.id} x={item.x - 7} y={item.y - 5} width="14" height="10" rx="3" fill={fill} stroke={colors.ink} strokeWidth="0.6"/>;
+        if (item.kind === "ribosome") return <circle key={item.id} cx={item.x} cy={item.y} r="2" fill={fill} stroke={colors.ink} strokeWidth="0.4"/>;
+        if (item.kind === "cell-wall" || item.kind === "membrane") return null;
+        return <g key={item.id}><ellipse cx={item.x} cy={item.y} rx="6" ry="3.5" fill={fill} stroke={colors.ink} strokeWidth="0.5"/></g>;
+      })}
+      {visual.organelles.map((item) => <text key={item.id + "-label"} x={item.x} y={item.y + 10} fontSize="3.1" textAnchor="middle" fill={colors.ink}>{item.label}</text>)}
+    </svg>
+  );
+}
+
+function Dna({ visual }: { visual: Extract<OrbyBoardVisual, { type: "dna" }> }) {
+  const step = 76 / Math.max(visual.pairs.length - 1, 1);
+  return (
+    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Pares de bases del ADN"} className="h-auto max-h-72 w-full">
+      {visual.pairs.map((pair, index) => {
+        const y = 12 + index * step;
+        const x1 = 50 + Math.sin(index * 0.9) * 18;
+        const x2 = 50 - Math.sin(index * 0.9) * 18;
+        return <g key={index}>
+          <line x1={x1} y1={y} x2={x2} y2={y} stroke={colors.ink} strokeWidth="1.2"/>
+          <circle cx={x1} cy={y} r="5" fill="#dbeafe" stroke={colors.ink} strokeWidth="0.5"/>
+          <circle cx={x2} cy={y} r="5" fill="#fee2e2" stroke={colors.ink} strokeWidth="0.5"/>
+          <text x={x1} y={y + 1.5} fontSize="4" textAnchor="middle" fill={colors.ink}>{pair.left}</text>
+          <text x={x2} y={y + 1.5} fontSize="4" textAnchor="middle" fill={colors.ink}>{pair.right}</text>
+        </g>;
+      })}
+      <path d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 + Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke={colors.orange} strokeWidth="1.3"/>
+      <path d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 - Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke="#0f766e" strokeWidth="1.3"/>
+    </svg>
+  );
+}
+
 function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
   if (visual.type === "vectors") return <Vectors visual={visual}/>;
   if (visual.type === "molecule") return <Molecule visual={visual}/>;
   if (visual.type === "circuit") return <Circuit visual={visual}/>;
+  if (visual.type === "cell") return <Cell visual={visual}/>;
+  if (visual.type === "dna") return <Dna visual={visual}/>;
   if (visual.type === "table") return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-xs">

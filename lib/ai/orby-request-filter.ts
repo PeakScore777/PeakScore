@@ -661,7 +661,10 @@ export function isIcfesScopedRequest(message: string, previousContext = ""): boo
 }
 
 export function isOrbyStudyGuidanceRequest(message: string, previousContext = ""): boolean {
-  const normalized = normalizeOrbyRequestText(message);
+  const normalized = normalizeOrbyRequestText(message)
+    .replace(/[,.!?;:]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return STUDY_GUIDANCE_FOLLOW_UP_PATTERNS.some((pattern) => pattern.test(normalized))
     && ORBY_STUDY_INVITATION_PATTERN.test(normalizeOrbyRequestText(previousContext));
 }

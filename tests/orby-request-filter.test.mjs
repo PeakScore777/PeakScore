@@ -3662,37 +3662,52 @@ test("la pizarra Live acepta la última instantánea completa como estado autori
   assert.equal(sanitizeOrbyBoard({ version: 1, title: "Inválida", spokenCue: "ahora sí", blocks: [{ type: "text", text: "x" }] }), null);
 });
 
-test("Gemini Live recibe instrucciones de dibujar por secciones y limita las actualizaciones por turno", async () => {
+test("Gemini Live publica la pizarra sin sincronización por frases y procesa primero la entrada", async () => {
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
-  assert.match(lesson, /const snapshot = sanitizeOrbyBoard\(args\)/);
-  assert.match(lesson, /const board = snapshot/);
-  assert.match(lesson, /voiceTeachingBoardRef\.current = snapshot/);
-  assert.match(lesson, /MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8/);
-  assert.match(lesson, /voiceBoardUpdateCountRef\.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN/);
-  assert.match(lesson, /voicePendingBoardCuesRef\.current = \[\];[\s\S]{0,220}voiceTeachingBoardRef\.current = null/);
-  assert.match(lesson, /let acceptedSnapshotInEvent = false/);
-  assert.match(lesson, /\|\| acceptedSnapshotInEvent/);
-  assert.match(lesson, /acceptedSnapshotInEvent = true/);
-  assert.doesNotMatch(lesson, /mergeOrbyBoardSnapshots/);
-  assert.match(tools, /ONE call at a time; never bundle multiple board snapshots/);
-  assert.match(tools, /FULL cumulative current board/);
-  assert.match(tools, /spokenCue: a short exact Spanish phrase/);
-  assert.match(lesson, /voicePendingBoardCuesRef\.current\.push/);
-  assert.match(lesson, /const cueAlreadySpoken = Boolean\(cue\) && normalizedExistingSpeech\.includes/);
-  assert.match(lesson, /if \(revealBoardNow\) \{\s*setMessages/);
-  assert.match(lesson, /Pizarra en cola\. Pronuncia exactamente/);
-  assert.match(lesson, /normalizedSpokenReply\.includes\(" " \+ pendingBoardCue\.cue \+ " "\)/);
-  assert.match(lesson, /finalPendingBoard/);
-  assert.match(renderer, /key=\{`\$\{visual\.type\}:\$\{visual\.title\}:\$\{index\}`\}/);
-  assert.match(renderer, /node\.id\}:\$\{node\.x\}:\$\{node\.y\}/);
-  assert.match(renderer, /Math\.min\(index \* 90, 630\)/);
-  assert.match(renderer, /bond\.from.*bond\.to.*from\.x.*to\.x/);
-  assert.match(renderer, /component\.id.*component\.kind.*component\.x.*component\.y/);
-  assert.match(renderer, /pair\.left.*pair\.right.*y/);
-  assert.match(renderer, /item\.id.*item\.x.*item\.y.*item\.label/);
-  assert.doesNotMatch(renderer, /key=\{\x60\$\{visual\.type\}:\$\{visual\.title\}:\$\{index\}:\$\{JSON\.stringify\(visual\)\}\x60\}/);
+  assert.match(lesson, /voicePendingBoardSnapshotsRef/);
+  assert.match(lesson, /voiceAwaitingInputTranscriptionRef/);
+  assert.match(lesson, /voiceInputPreflightAcceptedRef/);
+  assert.match(lesson, /flushPendingOrbyTeachingBoard/);
+  assert.match(lesson, /status: "queued_for_input_validation"/);
+  assert.match(lesson, /status: "rendered"/);
+  assert.match(lesson, /clearPendingOrbyTeachingBoard/);
+  assert.doesNotMatch(lesson, /voicePendingBoardCuesRef|boardMatchedToSpeech/);
+  assert.doesNotMatch(lesson, /normalizedSpokenReply\.includes/);
+  const callbackInput = lesson.indexOf("Process VAD/student input first");
+  const callbackTools = lesson.indexOf("const liveCalls =", callbackInput);
+  assert.ok(callbackInput >= 0 && callbackTools > callbackInput);
+  assert.match(tools, /Do not use transcript phrase matching/);
+  assert.doesNotMatch(tools, /spokenCue: \{ type: Type\.STRING/);
+  assert.match(route, /no incluyas spokenCue/);
+  assert.match(renderer, /orby-board-pen-tip/);
+  assert.match(renderer, /fill="#f59e0b"/);
+  assert.match(renderer, /max-h-\[560px\]/);
+});
+
+test("el deduplicador conserva pizarra, fuentes e imagen cuando llega un mensaje duplicado", () => {
+  const first = {
+    role: "assistant",
+    content: "La densidad relaciona masa y volumen.",
+    board: { version: 2, title: "Densidad", blocks: [], visuals: [] },
+    sources: [{ title: "Fuente", url: "https://example.org/source", publisher: "Fuente académica", publishedAt: null, kind: "research", citationNumber: 1 }],
+  };
+  const second = {
+    role: "assistant",
+    content: "La densidad relaciona masa y volumen.",
+    generatedImage: "data:image/png;base64,AAAA",
+  };
+  const merged = filter.dedupeAdjacentAssistantMessages([first, second]);
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].board.title, "Densidad");
+  assert.equal(merged[0].sources.length, 1);
+  assert.equal(merged[0].generatedImage, "data:image/png;base64,AAAA");
+});
+
+test("la selección manual del historial restaura teaching_board", () => {
+  assert.match(lessonTutorSource, /item\.teaching_board && typeof item\.teaching_board === "object"/);
 });
 
 test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perder idempotencia", async () => {
@@ -3808,6 +3823,6 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 1);
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /tone: \{ type: Type.STRING, description: "ink, accent, muted or success\."/);
-  assert.match(lesson, /Reveal no more than one cue per transcript event/);
-  assert.doesNotMatch(lesson.slice(lesson.indexOf("const normalizedSpokenReply"), lesson.indexOf("const normalizedSpokenReply") + 1000), /while \(voicePendingBoardCuesRef/);
+  assert.match(lesson, /flushPendingOrbyTeachingBoard/);
+  assert.doesNotMatch(lesson, /spokenCue|voicePendingBoardCuesRef/);
 });

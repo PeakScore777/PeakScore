@@ -258,3 +258,6 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - No se ha ejecutado build, test ni una sesión Chrome real desde esta edición. La validación de CI continúa bloqueada por el estado `build-rate-limit` de Vercel y no hay ejecuciones GitHub Actions asociadas. No se han aplicado migraciones, modificado `main` ni desplegado.
 
 - Corrección adicional de cue: una instantánea con `spokenCue` queda realmente fuera del mensaje visible hasta reconocer la frase. Si la transcripción ya llegó antes que la herramienta, se compara con el texto oral acumulado y se revela en cuanto llega el snapshot; si no, queda en cola. Se añadió prueba para proteger esta condición y el fallback final crea/actualiza la burbuja aunque no hubiera texto previo.
+
+- Se alineó también la búsqueda del Lab con la latencia: la primera frase oral empieza desde conocimiento fiable mientras la consulta no bloqueante corre en paralelo; el material recuperado solo amplía o corrige la explicación cuando llega. No se cita contenido no recibido.
+- El sanitizador aplica el mismo tope de 24 KB que la RPC de Supabase antes de aceptar una escena, incluida la pizarra de trazos; escenas excesivas se rechazan antes de mostrar o persistir.

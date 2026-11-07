@@ -3576,7 +3576,7 @@ test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcrip
   assert.match(source, /showAssistantSubtitles/);
   assert.match(source, /Subtítulos de Orby/);
   assert.match(source, /voiceCaptionText/);
-  assert.doesNotMatch(source, /assistantVoiceSubtitle/);
+  assert.doesNotMatch(source, /voiceCaptionText/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}/);
   assert.match(source, /outputTranscript\.text/);

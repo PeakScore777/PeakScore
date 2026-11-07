@@ -714,6 +714,12 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
   assert.match(lessonTutorSource, /flushPendingGeminiAudio/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.length < 512/);
   assert.match(lessonTutorSource, /pendingEncodedChars <= 8 \* 1024 \* 1024/);
+  assert.match(lessonTutorSource, /voicePendingAudioEncodedCharsRef = useRef\(0\)/);
+  assert.match(lessonTutorSource, /voicePendingAudioEncodedCharsRef\.current \+ chunk\.data\.length/);
+  assert.match(lessonTutorSource, /voicePendingAudioEncodedCharsRef\.current = pendingEncodedChars/);
+  assert.match(lessonTutorSource, /function clearPendingGeminiAudioQueue\(\)/);
+  assert.match(lessonTutorSource, /clearPendingGeminiAudioQueue\(\);/);
+  assert.doesNotMatch(lessonTutorSource, /voicePendingAudioChunksRef\.current\.reduce\(/);
   assert.match(lessonTutorSource, /pendingChunkCount = voicePendingAudioChunksRef\.current\.length/);
   assert.match(lessonTutorSource, /Audio buffer budget reached/);
   assert.match(lessonTutorSource, /finishRealtimeVoicePlayback/);

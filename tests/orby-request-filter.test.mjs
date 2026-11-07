@@ -3566,3 +3566,14 @@ test("Los bloques y visuales nuevos de la pizarra se revelan sin cambiar las cla
   assert.match(renderer, /animationDelay/);
   assert.match(renderer, /key=\{stage\.name\}/);
 });
+
+
+test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcripción de salida", async () => {
+  const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(source, /showAssistantSubtitles/);
+  assert.match(source, /Subtítulos en vivo/);
+  assert.match(source, /assistantVoiceSubtitle/);
+  assert.match(source, /activeVoiceAssistantMessage\?\.board/);
+  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\}/);
+  assert.match(source, /outputTranscript\.text/);
+});

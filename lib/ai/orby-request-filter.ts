@@ -175,16 +175,9 @@ function getOrbySubjectSelectionKey(message: string): OrbySubjectKey | null {
 }
 
 function getActiveOrbySubjectKey(previousContext = "", activeSubject = ""): OrbySubjectKey | null {
-  const direct = normalizeOrbyRequestText(activeSubject);
-  if (/^(?:ingles|english)$/.test(direct)) return "english";
-  if (/^(?:matematicas|matematica)$/.test(direct)) return "math";
-  if (/^(?:lectura critica)$/.test(direct)) return "reading";
-  if (/^(?:sociales y ciudadanas)$/.test(direct)) return "social";
-  if (/^(?:ciencias naturales)$/.test(direct)) return "science";
-
-  // Find the most recent explicit subject selection in the visible exchange.
-  // Later exercise answers often omit the subject name, so examining only the
-  // final assistant bubble loses the selected lesson after the first question.
+  // The latest explicit selection in this conversation wins over a possibly
+  // stale component/session subject. The active subject is only a fallback
+  // when the visible exchange contains no explicit selection.
   const turns = previousContext.split(/\n(?=(?:user|assistant):\s*)/i).reverse();
   for (const turn of turns) {
     const trimmed = turn.trim();
@@ -202,6 +195,13 @@ function getActiveOrbySubjectKey(previousContext = "", activeSubject = ""): Orby
     if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos|practicaremos)\b.{0,65}\b(?:sociales y ciudadanas|sociales)\b/.test(recent)) return "social";
     if (/\b(?:componente|area|materia|seguimos con|vamos con|trabajaremos|estudiamos|practicaremos)\b.{0,65}\b(?:ciencias naturales)\b/.test(recent)) return "science";
   }
+
+  const direct = normalizeOrbyRequestText(activeSubject);
+  if (/^(?:ingles|english)$/.test(direct)) return "english";
+  if (/^(?:matematicas|matematica)$/.test(direct)) return "math";
+  if (/^(?:lectura critica)$/.test(direct)) return "reading";
+  if (/^(?:sociales y ciudadanas)$/.test(direct)) return "social";
+  if (/^(?:ciencias naturales)$/.test(direct)) return "science";
   return null;
 }
 

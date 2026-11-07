@@ -240,3 +240,10 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - El cliente valida la frase, conserva la instantánea pendiente y la revela cuando la transcripción acumulada de Live contiene la frase normalizada. No se inventan timestamps ni se simula sincronización fonética.
 - Si el reconocimiento omite la frase, al terminar el turno se muestra la última instantánea válida para no perder el contenido. Las instantáneas sin `spokenCue` conservan el comportamiento inmediato.
 - El historial guarda la pizarra final del turno, no una secuencia temporal completa. La precisión depende de la transcripción que emita Live; debe medirse en Chrome con audio real antes de aceptar esta fase.
+
+## Trazos progresivos y reconciliación visual — 2026-11-07
+
+- La tarjeta de cada visual conserva una identidad estable entre instantáneas; no se desmonta todo el SVG cuando cambia un elemento.
+- Nodos, conexiones, puntos, vectores, átomos, componentes de circuito, pares de ADN y orgánulos usan claves basadas en identidad y geometría. Si una pieza nueva o corregida cambia, se monta como pieza nueva y activa su trazo/entrada; las piezas que no cambian permanecen montadas.
+- Las piezas reciben un escalonado breve de hasta 630 ms para que el esquema se construya en secuencia. Se conserva `prefers-reduced-motion`.
+- Esto es animación de dibujo por primitivas SVG/DOM, no un flujo de lápiz con coordenadas en tiempo real. El siguiente paso de fidelidad requiere eventos de trazo incrementales del modelo y validación de carga/rendimiento en navegador.

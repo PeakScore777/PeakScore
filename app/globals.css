@@ -1260,3 +1260,30 @@ body {
     color: #55ddeb;
   }
 }
+
+/* Orby board: newly mounted SVG strokes draw in as live snapshots arrive. */
+.orby-board .orby-board-stroke {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: orby-board-draw 680ms cubic-bezier(.22,.72,.25,1) forwards;
+}
+.orby-board .orby-board-appear {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: orby-board-appear 360ms ease-out both;
+}
+@keyframes orby-board-draw { to { stroke-dashoffset: 0; } }
+@keyframes orby-board-appear {
+  from { opacity: 0; transform: scale(.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .orby-board .orby-board-stroke,
+  .orby-board .orby-board-appear {
+    animation: none !important;
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

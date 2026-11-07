@@ -2765,7 +2765,7 @@ test("AudioWorklet conserva muestras con bloques variables y mezcla estéreo sin
 
 test("Orby descarta texto y audio tardíos antes del evento interrupted tras un barge-in escrito", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(source, /let discardInterruptedGenerationOutput = Boolean\(\s*voiceBargeInPendingRef\.current && voicePendingStudentTurnRef\.current/);
+  assert.match(source, /let discardInterruptedGenerationOutput = voiceDiscardStaleLiveOutputRef\.current\s*\|\| Boolean\(voiceBargeInPendingRef\.current && voicePendingStudentTurnRef\.current\)/);
   const guardStart = source.indexOf("let discardInterruptedGenerationOutput = Boolean(");
   const outputStart = source.indexOf("const outputTranscript =", guardStart);
   const audioStart = source.indexOf("const modelTurn =", outputStart);
@@ -2786,6 +2786,9 @@ test("una nueva actividad de micrófono elimina la burbuja parcial de la generac
   assert.match(activityHandler, /const unfinishedAssistantId = !voiceResponseDoneRef\.current[\s\S]{0,180}voiceAssistantMessageIdRef\.current/);
   assert.match(activityHandler, /if \(unfinishedAssistantId\) \{\s*setMessages\(\(current\) => current\.filter\(\(message\) => message\.id !== unfinishedAssistantId\)\)/);
   assert.ok(activityHandler.indexOf("setMessages((current)") < activityHandler.indexOf("voiceAssistantMessageIdRef.current = null"));
+  assert.match(activityHandler, /voiceDiscardStaleLiveOutputRef\.current = true/);
+  assert.match(activityHandler, /voiceBargeInPendingRef\.current = true/);
+  assert.match(lessonTutorSource, /voiceDiscardStaleLiveOutputRef\.current = false;[\s\S]{0,120}const outputTranscript/);
 });
 
 test("interrumpir una respuesta Live limpia la transcripción anterior antes del nuevo turno", async () => {

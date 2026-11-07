@@ -392,3 +392,18 @@ Se incorporó una primera extensión de código sobre la pizarra existente, mant
 - **Pendiente:** pruebas manuales reales con Chrome/micrófono para comprobar que el modelo emita v2 de forma consistente, que el tablero avance mientras habla y que barge-in descarte actualizaciones antiguas.
 - Esta fase todavía no implementa primitivas específicas de moléculas, células, circuitos, óptica, mapas geográficos o anotación de textos. Se construirán como adaptadores sobre las primitivas universales, no como dibujos arbitrarios.
 - No declarar el trabajo listo para Pull hasta cerrar validación automatizada y funcional. No aplicar migraciones ni cambiar proveedores/cuotas como parte de esta fase.
+
+
+---
+
+## 14. Segundo incremento — química y electricidad (2026-11-07)
+
+Se agregaron dos primitivas declarativas nuevas sobre el contrato v2:
+
+- **Molecule:** átomos identificados por símbolo químico y posición 2D; enlaces únicos con orden sencillo, doble o triple. El sanitizador valida símbolos, IDs, coordenadas, referencias y cardinalidad. El renderizador dibuja enlaces y etiquetas de átomos. Es un esquema educativo 2D: no representa geometría tridimensional, ángulos de enlace ni predice estructuras.
+- **Circuit:** componentes tipados (batería, resistencia, lámpara e interruptor) y conexiones entre IDs. El sanitizador valida tipos, IDs, posiciones y referencias. El renderizador presenta símbolos esquemáticos y cableado. No simula corriente, voltaje, resistencia equivalente ni continuidad eléctrica.
+
+También se amplió el esquema de herramienta Live y las instrucciones del tutor escrito y oral para elegir estas escenas solo cuando aporten valor y explicar sus límites.
+
+### Validación pendiente
+La escritura y lectura de los archivos en la rama están verificadas. Aún no se ha ejecutado TypeScript, lint, build ni pruebas de navegador/micrófono. No declarar listo para Pull hasta que pasen. No se modificó `main`, no se desplegó y no se añadieron proveedores o servicios de pago.

@@ -284,7 +284,7 @@ function Neuron({ visual }: { visual: Extract<OrbyBoardVisual, { type: "neuron" 
 function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type: "physiology-process" }> }) {
   return (
     <ol className="relative space-y-2">
-      {visual.stages.map((stage, index) => <li key={stage.name} className="relative flex gap-3">
+      {visual.stages.map((stage, index) => <li key={stage.name} className="orby-board-appear relative flex gap-3" style={{ animationDelay: `${Math.min(index * 110, 770)}ms` }}>
         <div className="flex w-8 shrink-0 flex-col items-center">
           <span className="z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 border-orange-500 bg-orange-50 text-[11px] font-black text-orange-900">{index + 1}</span>
           {index < visual.stages.length - 1 ? <span aria-hidden="true" className="my-1 min-h-5 w-0.5 flex-1 bg-orange-200"/> : null}
@@ -325,7 +325,7 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
       <div className="absolute left-2 right-2 top-[7px] h-px bg-slate-300"/>
       {visual.events.map((event, index) => {
         const align = event.position < 12 ? "translate-x-0 text-left" : event.position > 88 ? "-translate-x-full text-right" : "-translate-x-1/2 text-center";
-        return <div key={index} className="absolute top-0 w-24 space-y-2" style={{ left: `${event.position}%` }}>
+        return <div key={`${event.position}:${event.label}:${index}`} className="orby-board-appear absolute top-0 w-24 space-y-2" style={{ left: `${event.position}%`, animationDelay: `${Math.min(index * 100, 700)}ms` }}>
           <div className="h-3 w-3 rounded-full border-2 border-orange-500 bg-white"/>
           <div className={align}>
             <p className="text-[11px] font-bold leading-4 text-slate-800">{event.label}</p>
@@ -346,13 +346,15 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
       </header>
       <div className="space-y-3 p-4">
         {board.blocks.map((block, index) => {
-          if (block.type === "heading") return <h4 key={index} className="text-sm font-bold text-slate-900">{block.text}</h4>;
-          if (block.type === "formula") return <div key={index} className="overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono text-sm font-semibold text-slate-900">{block.text}</div>;
-          if (block.type === "step") return <div key={index} className="flex gap-3 rounded-lg bg-white p-3"><span className="shrink-0 rounded-md bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-900">{block.label}</span><p className="text-sm leading-6 text-slate-700">{block.text}</p></div>;
-          if (block.type === "callout") return <div key={index} className="rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950">{block.text}</div>;
-          return <p key={index} className="text-sm leading-6 text-slate-700">{block.text}</p>;
+          const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
+          const revealClass = "orby-board-appear";
+          if (block.type === "heading") return <h4 key={blockKey} className={`text-sm font-bold text-slate-900 ${revealClass}`}>{block.text}</h4>;
+          if (block.type === "formula") return <div key={blockKey} className={`overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono text-sm font-semibold text-slate-900 ${revealClass}`}>{block.text}</div>;
+          if (block.type === "step") return <div key={blockKey} className={`flex gap-3 rounded-lg bg-white p-3 ${revealClass}`}><span className="shrink-0 rounded-md bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-900">{block.label}</span><p className="text-sm leading-6 text-slate-700">{block.text}</p></div>;
+          if (block.type === "callout") return <div key={blockKey} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
+          return <p key={blockKey} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={index} aria-label={visual.title} className="space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear space-y-2 rounded-lg border border-slate-200 bg-white p-3">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
           <Visual visual={visual}/>
         </section>)}

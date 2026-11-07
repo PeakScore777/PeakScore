@@ -73,7 +73,7 @@ function isIcfesAcademicMaterialQuestion(message: string, previousContext = ""):
     || /\b(?:saber\s*11|icfes|area de estudio|materia de estudio)\b/i.test(prior);
   const messageHasSpecificCurriculumTopic = ICFES_SCOPE_PATTERNS.some((pattern) => pattern.test(normalized));
   const hasQuestionFrameForNamedTopic = messageHasSpecificCurriculumTopic
-    && /^(?:what|which|who|where|when|why|how|quien fue|quienes fueron)\b/i.test(normalized);
+    && /^[¿¡\\s]*(?:what|which|who|where|when|why|how|que es|q y es|q es|quien fue|quienes fueron)\b/i.test(normalized);
   const hasAcademicFrame = ICFES_ACADEMIC_MATERIAL_FRAME_PATTERN.test(normalized)
     || hasQuestionFrameForNamedTopic
     || /['"“‘].{5,180}['"”’]/.test(message);
@@ -121,7 +121,7 @@ const GENERAL_OFF_SCOPE_REQUEST_PATTERNS = [
   // Curriculum-linked historical figures remain allowed through
   // isIcfesAcademicMaterialQuestion (e.g. "¿Quién fue Simón Bolívar?").
   // Keep academic authorship questions available for Lectura Crítica.
-  /\b(?:quien(?:es)?|qn|qien|kien)\s+(?:es|fue|era|son|fueron)\b(?!\s+(?:el autor|la autora|el narrador|la narradora|el protagonista|la protagonista|el personaje|la personaje))\s+[\p{L}][\p{L} .'-]{1,60}/iu,
+  /\b(?:(?:quien(?:es)?|qn|qien|kien)\s+(?:es|fue|era|son|fueron)|q\s+y\s+es|q\s+es)\b(?!\s+(?:el autor|la autora|el narrador|la narradora|el protagonista|la protagonista|el personaje|la personaje))\s+[\p{L}][\p{L} .'-]{1,60}/iu,
   /\b(?:recomiendame|recomienda|me recomiendas|recommend me)\b.{0,70}\b(?:pelicula|peliculas|carro|carros|coche|coches|serie|series|restaurante|comida|movie|movies|film|films|car|cars|show|restaurant|food)\b/i,
   /\b(?:what movie should i watch|which movie should i watch|what film should i watch|which car should i buy|what car should i buy|que pelicula me recomiendas|que pelicula debo ver|que carro me recomiendas|que modelo de carro me recomiendas|que coche me recomiendas|que modelo de coche me recomiendas|que serie me recomiendas|cuentame un chiste|tell me a joke)\b/i,
   /\b(?:que debo comer|que puedo comer|what should i eat|what can i eat|que restaurante me recomiendas|what restaurant do you recommend)\b/i,

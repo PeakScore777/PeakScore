@@ -195,3 +195,11 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Ejecutar `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build` en el SHA final.
 - Probar Chrome con audio real: varias actualizaciones dentro de una explicación, ausencia de frases duplicadas, interrupción del estudiante, descarte de llamadas atrasadas y persistencia de la escena final.
 - No solicitar Pull, no integrar en `main` ni desplegar hasta cerrar las validaciones y recibir autorización.
+
+## Instrumentación de sincronización — latencia de cada actualización visual (2026-11-07)
+
+- Commit `b237151`: se agregó un contador de actualizaciones de pizarra por pregunta y una métrica en el cliente que registra únicamente el ordinal, milisegundos desde la aceptación de la pregunta y cantidad de fragmentos de audio ya programados.
+- El contador se reinicia al aceptar una nueva pregunta. La telemetría no registra texto del estudiante, contenido de la explicación ni bloques de la pizarra.
+- Commit `e6c1738`: prueba de regresión para verificar el contador, el reinicio y que la telemetría no incluya contenido académico.
+- Esta instrumentación permite comparar cuándo aparece cada dibujo con el inicio del audio y detectar escenas que llegan tarde. No es sincronización automática ni cambia la temporización del modelo.
+- Validar privacidad y utilidad de estos logs en una sesión local antes de usarlos en producción. No se activa Gemini Live en producción.

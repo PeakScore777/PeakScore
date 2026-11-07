@@ -891,7 +891,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     cancelPendingOrbyKnowledgeRequests();
     // Remember that the next Live "interrupted" event belongs to this
     // student's new turn, not to a completed assistant response.
-    voiceBargeInPendingRef.current = voiceModeRef.current
+    voiceBargeInPendingRef.current = Boolean(voiceChannelRef.current)
       && waitingForVoiceReplyRef.current
       && !voiceResponseDoneRef.current;
     const interruptedAssistantId = voiceAssistantMessageIdRef.current;
@@ -2251,6 +2251,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const serverContent = event.serverContent && typeof event.serverContent === "object"
       ? event.serverContent as Record<string, unknown>
       : {};
+    let discardInterruptedGenerationOutput = false;
 
     const interimInput = serverContent.interimInputTranscription && typeof serverContent.interimInputTranscription === "object"
       ? serverContent.interimInputTranscription as { text?: unknown }
@@ -2443,11 +2444,42 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setVoiceStatus("Orby está pensando…");
       setIsListening(false);
     }
+    if (serverContent.interrupted === true && !voiceLocalReplyInFlightRef.current) {
+      const studentBargeInPending = voiceBargeInPendingRef.current
+        && voicePendingStudentTurnRef.current
+        && Boolean(voiceUserTextRef.current.trim());
+      voiceBargeInPendingRef.current = false;
+      // This event closes the assistant's previous generation. When a new
+      // student turn is already pending, discard all remaining output from
+      // that generation while preserving the new input and its watchdog.
+      clearVoiceResponseWatchdog();
+      stopVoicePlayback();
+      voicePendingAudioChunksRef.current = [];
+      voiceRealtimeAudioChunkCountRef.current = 0;
+      voiceOutputTranscriptValidatedRef.current = false;
+      if (studentBargeInPending) {
+        discardInterruptedGenerationOutput = true;
+        voiceResponseDoneRef.current = false;
+        waitingForVoiceReplyRef.current = true;
+        setVoiceStatus("Procesando lo que dijiste…");
+        setIsListening(false);
+        armVoiceResponseWatchdog();
+      } else {
+        voiceResponseDoneRef.current = true;
+        waitingForVoiceReplyRef.current = false;
+        void persistRealtimeTurnIfReady();
+        setVoiceStatus("Te escucho…");
+        setIsListening(true);
+      }
+    }
+
     const outputTranscript = serverContent.outputTranscription && typeof serverContent.outputTranscription === "object"
       ? serverContent.outputTranscription as { text?: unknown }
       : null;
     const hasPendingStudentTurn = voicePendingStudentTurnRef.current && Boolean(voiceUserTextRef.current.trim());
-    if (!hasPendingStudentTurn && typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
+    if (discardInterruptedGenerationOutput && typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
+      console.info("[Orby Voice] Ignored trailing assistant transcript from the interrupted generation.");
+    } else if (!hasPendingStudentTurn && typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
       console.warn("[Orby Voice] Ignored unsolicited Live output without a pending student turn.");
     } else if (hasPendingStudentTurn && !voiceLocalReplyInFlightRef.current
       && typeof outputTranscript?.text === "string" && outputTranscript.text.trim()) {
@@ -2541,7 +2573,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const inlineData = part.inlineData && typeof part.inlineData === "object"
         ? part.inlineData as { data?: unknown; mimeType?: unknown }
         : null;
-      if (typeof inlineData?.data !== "string" || !voicePendingStudentTurnRef.current
+      if (discardInterruptedGenerationOutput
+        || typeof inlineData?.data !== "string" || !voicePendingStudentTurnRef.current
         || !voiceUserTextRef.current.trim() || voiceLocalReplyInFlightRef.current
         || voiceOutputAudioBlockedRef.current || voiceResponseDoneRef.current) continue;
 
@@ -2569,37 +2602,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
     }
 
-    if (serverContent.interrupted === true && !voiceLocalReplyInFlightRef.current) {
-      const studentBargeInPending = voiceBargeInPendingRef.current
-        && voicePendingStudentTurnRef.current
-        && Boolean(voiceUserTextRef.current.trim());
-      voiceBargeInPendingRef.current = false;
-      // This event closes the assistant's previous generation. When a new
-      // student turn is already pending, never mark/persist the old partial
-      // transcript as a completed answer or clear the new turn's waiting state.
-      clearVoiceResponseWatchdog();
-      stopVoicePlayback();
-      voicePendingAudioChunksRef.current = [];
-      voiceRealtimeAudioChunkCountRef.current = 0;
-      voiceOutputTranscriptValidatedRef.current = false;
-      if (studentBargeInPending) {
-        voiceResponseDoneRef.current = false;
-        waitingForVoiceReplyRef.current = true;
-        setVoiceStatus("Procesando lo que dijiste…");
-        setIsListening(false);
-        armVoiceResponseWatchdog();
-        // Do not interpret a turnComplete flag carried with this interruption
-        // as completion of the new student turn.
-        return;
-      }
-      voiceResponseDoneRef.current = true;
-      waitingForVoiceReplyRef.current = false;
-      void persistRealtimeTurnIfReady();
-      setVoiceStatus("Te escucho…");
-      setIsListening(true);
-    }
-
-    if ((serverContent.turnComplete === true || serverContent.generationComplete === true) && !voiceResponseDoneRef.current) {
+    if (!discardInterruptedGenerationOutput
+      && (serverContent.turnComplete === true || serverContent.generationComplete === true)
+      && !voiceResponseDoneRef.current) {
       const toolCompletion = completeOrbyVoiceToolGeneration(voiceKnowledgeToolTurnRef.current);
       voiceKnowledgeToolTurnRef.current = toolCompletion.state;
       if (!toolCompletion.shouldFinalize) {

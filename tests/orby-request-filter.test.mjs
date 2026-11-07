@@ -89,7 +89,7 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.ok(lessonTutorSource.includes("sendToolResponse({ functionResponses: responses })"));
   assert.ok(lessonTutorSource.includes("voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
   assert.ok(lessonTutorSource.includes("scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
-  assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6);
+  assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 8);
 });
 
 test("cancelar una búsqueda Live no descarta llamadas hermanas todavía válidas", () => {
@@ -200,7 +200,7 @@ test("un resultado rápido del Lab no confunde la primera finalización con el s
 test("una llamada encadenada en el mismo evento marca primero la transcripción del Lab", () => {
   const chainedEvent = lessonTutorSource.indexOf("const sameEventTranscript");
   const markFollowup = lessonTutorSource.indexOf("markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current)", chainedEvent);
-  const handleTool = lessonTutorSource.indexOf("void handleOrbyLiveKnowledgeTool(payload.toolCall)", chainedEvent);
+  const handleTool = lessonTutorSource.indexOf("handleOrbyLiveKnowledgeTool({ functionCalls: knowledgeCalls })", chainedEvent);
   const handleContent = lessonTutorSource.indexOf("handleGeminiLiveEvent(payload)", handleTool);
   assert.ok(chainedEvent >= 0 && markFollowup > chainedEvent && handleTool > markFollowup && handleContent > handleTool,
     "La transcripción del aporte previo debe abrir paso a una nueva fase antes de procesar la llamada encadenada y su finalización.");

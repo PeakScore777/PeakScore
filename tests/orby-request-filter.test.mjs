@@ -3068,7 +3068,7 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   const route = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
   const migration = await readFile(new URL("../supabase/migrations/20261107060000_orby_voice_board_idempotency.sql", import.meta.url), "utf8");
   assert.match(tools, /name: "render_orby_teaching_board"/);
-  assert.match(tools, /name: "render_orby_teaching_board"[\\s\\S]{0,180}behavior: Behavior\\.NON_BLOCKING/,
+  assert.match(tools, /name: "render_orby_teaching_board"[\s\S]{0,180}behavior: Behavior\.NON_BLOCKING/,
     "las actualizaciones de pizarra no deben bloquear ni forzar una generación de voz por cada dibujo");
   assert.match(lesson, /function handleOrbyLiveTeachingBoardTool/);
   assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls \}\)/);

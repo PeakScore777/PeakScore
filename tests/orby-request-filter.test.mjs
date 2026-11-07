@@ -80,12 +80,12 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
 });
 
 test("cancelar una búsqueda Live no descarta llamadas hermanas todavía válidas", () => {
-  assert.match(lessonTutorSource, /if \(!isCurrentToolTurn\(\)\) return;[\s\S]*?if \(requestController\.signal\.aborted\) continue;/);
+  assert.match(lessonTutorSource, /if \(!isCurrentToolTurn\(\)\) \{\s*cleanupToolRequestControllers\(\);\s*return;\s*\}[\s\S]*?if \(requestController\.signal\.aborted\) continue;/);
 });
 
 test("Gemini Live registra todas las búsquedas hermanas antes del primer await y limpia las obsoletas", () => {
   const handlerStart = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool");
-  const handlerEnd = lessonTutorSource.indexOf("\\n  function upsertVoiceUserMessage", handlerStart);
+  const handlerEnd = lessonTutorSource.indexOf("function upsertVoiceUserMessage", handlerStart);
   assert.notEqual(handlerStart, -1);
   assert.notEqual(handlerEnd, -1);
   const handler = lessonTutorSource.slice(handlerStart, handlerEnd);

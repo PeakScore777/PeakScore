@@ -2345,6 +2345,12 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.match(realtimeTurnSource, /SAVE_TURN_IDEMPOTENCY_CHECK_FAILED/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));
   assert.ok(lessonTutorSource.includes("setFailedVoiceTurn(turn)"));
+  const sendMessageSource = lessonTutorSource.slice(
+    lessonTutorSource.indexOf("async function sendMessage("),
+    lessonTutorSource.indexOf("\n  function ", lessonTutorSource.indexOf("async function sendMessage(") + 1),
+  );
+  assert.match(sendMessageSource, /failedVoiceTurn && failedVoiceTurn\.conversationId === activeConversationRef\.current/);
+  assert.match(sendMessageSource, /Reintenta el guardado antes de enviar otra pregunta en esta conversación/);
   assert.ok(lessonTutorSource.includes("Reintentar guardado"));
   assert.match(cloudflareTutorRoute, /getOrbyGreetingFollowUpReply\(\s*recentContextMessages\.map/);
   assert.notEqual(

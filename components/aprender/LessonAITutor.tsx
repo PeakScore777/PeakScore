@@ -3,7 +3,7 @@
 import Image from "next/image";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { GoogleGenAI, Modality, EndSensitivity, FunctionResponseScheduling, type Session } from "@google/genai";
+import type { FunctionResponseScheduling, Session } from "@google/genai";
 import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isLowQualityOrbyReply, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
@@ -295,6 +295,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceStageOrbRef = useRef<HTMLDivElement | null>(null);
   const voiceMiniOrbRef = useRef<HTMLSpanElement | null>(null);
   const voiceChannelRef = useRef<Session | null>(null);
+  const voiceSdkRef = useRef<typeof import("@google/genai") | null>(null);
   const voiceStreamRef = useRef<MediaStream | null>(null);
   const voiceAudioContextRef = useRef<AudioContext | null>(null);
   const voiceMicSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -1995,13 +1996,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             found: false,
             guidance: "Ya se alcanzó el límite de consultas de conocimiento para esta pregunta. Continúa con la explicación usando la evidencia disponible; no repitas la búsqueda.",
           },
-          scheduling: FunctionResponseScheduling.WHEN_IDLE,
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE,
         });
         continue;
       }
 
       if (name !== "search_orby_learning_knowledge") {
-        responses.push({ id, name, response: { error: "Herramienta no disponible." }, scheduling: FunctionResponseScheduling.WHEN_IDLE });
+        responses.push({ id, name, response: { error: "Herramienta no disponible." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE });
         continue;
       }
 
@@ -2024,7 +2025,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (voiceKnowledgeRequestsRef.current.get(id) === unusedController) voiceKnowledgeRequestsRef.current.delete(id);
           unusedController.abort();
         }
-        responses.push({ id, name, response: { found: false, error: "No se recibió un tema académico claro." }, scheduling: FunctionResponseScheduling.WHEN_IDLE });
+        responses.push({ id, name, response: { found: false, error: "No se recibió un tema académico claro." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE });
         continue;
       }
 
@@ -2063,7 +2064,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 ? result.error.slice(0, 240)
                 : "No se pudo consultar el material en este turno.",
             },
-            scheduling: FunctionResponseScheduling.WHEN_IDLE,
+            scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE,
           });
           continue;
         }
@@ -2117,7 +2118,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             public_research_found: result.public_research_found === true,
             guidance: typeof result.guidance === "string" ? result.guidance.slice(0, 700) : "",
           },
-          scheduling: FunctionResponseScheduling.WHEN_IDLE,
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE,
         });
       } catch {
         if (!requestController.signal.aborted && isCurrentToolTurn()) {
@@ -2125,7 +2126,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             id,
             name,
             response: { found: false, guidance: "La búsqueda no estuvo disponible en este turno. Continúa con una explicación académica segura y no inventes que consultaste fuentes." },
-            scheduling: FunctionResponseScheduling.WHEN_IDLE,
+            scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE,
           });
         }
       } finally {
@@ -2803,6 +2804,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function startRealtimeVoice(startupSignal: AbortSignal) {
+    // Descargar el SDK pesado en paralelo con el permiso del micrófono; el chat
+    // escrito no necesita incluirlo en su bundle inicial.
+    const voiceSdkPromise = import("@google/genai");
     const sessionGeneration = ++voiceSessionGenerationRef.current;
     if (!navigator.mediaDevices?.getUserMedia || !("WebSocket" in window) || !("AudioWorkletNode" in window)) {
       throw new Error("Este navegador no admite conversación de voz en tiempo real. Prueba Chrome o Edge actualizado.");
@@ -2935,7 +2939,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : "Despina";
 
       setVoiceStatus("Conectando con Orby…");
-      let googleAI = new GoogleGenAI({
+      const voiceSdk = await voiceSdkPromise;
+      voiceSdkRef.current = voiceSdk;
+      let googleAI = new voiceSdk.GoogleGenAI({
         apiKey: tokenPayload.ephemeralToken,
         httpOptions: { apiVersion: "v1beta" },
       });
@@ -2959,12 +2965,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const buildLiveConfig = (resumeHandle?: string) => ({
         abortSignal: startupSignal,
-        responseModalities: [Modality.AUDIO],
+        responseModalities: [voiceSdk.Modality.AUDIO],
         // Reduce the default silence endpointing delay while retaining enough
         // pause tolerance for natural speech and mid-sentence breathing.
         realtimeInputConfig: {
           automaticActivityDetection: {
-            endOfSpeechSensitivity: EndSensitivity.END_SENSITIVITY_HIGH,
+            endOfSpeechSensitivity: voiceSdk.EndSensitivity.END_SENSITIVITY_HIGH,
             prefixPaddingMs: 40,
             silenceDurationMs: 500,
           },
@@ -3296,7 +3302,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   : "No se pudo renovar el acceso seguro a la voz.";
                 throw new Error(resumeError);
               }
-              googleAI = new GoogleGenAI({
+              googleAI = new voiceSdk.GoogleGenAI({
                 apiKey: resumeTokenPayload.ephemeralToken,
                 httpOptions: { apiVersion: "v1beta" },
               });

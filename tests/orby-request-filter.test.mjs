@@ -1123,6 +1123,8 @@ test("Orby bloquea la autopromoción genérica sin bloquear consejos de estudio"
   assert.equal(filter.containsPlatformMarketingClaim(promotionalReply), true);
   assert.equal(filter.containsPlatformMarketingClaim("PeakScore es una excelente plataforma educativa y la mejor opción para subir tu puntaje."), true);
   assert.equal(filter.containsPlatformMarketingClaim("Practicar con preguntas tipo Saber 11 ayuda a reconocer el formato del examen."), false);
+  assert.equal(filter.containsPlatformMarketingClaim("Utilizar una herramienta de medición es recomendable para comparar resultados experimentales."), false);
+  assert.equal(filter.containsPlatformMarketingClaim("Usar una herramienta especializada en las pruebas Saber 11 es muy recomendable."), true);
   assert.equal(filter.containsPlatformMarketingClaim("No puedo promocionar ni evaluar de forma independiente una plataforma."), false);
 });
 

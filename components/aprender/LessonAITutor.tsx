@@ -1453,29 +1453,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function armVoiceResponseWatchdog() {
     clearVoiceResponseWatchdog();
+    // Report a slow turn early, then recover automatically if Live stops making
+    // progress. Every transcript/audio/tool event rearms this inactivity timer.
     voiceResponseSlowNoticeRef.current = window.setTimeout(() => {
       voiceResponseSlowNoticeRef.current = null;
       if (voiceModeRef.current && waitingForVoiceReplyRef.current && !voiceResponseDoneRef.current) {
-        setVoiceStatus("Orby sigue preparando tu respuesta. Mantengo la conexión…");
+        setVoiceStatus("Orby está tardando más de lo normal. Sigo esperando tu respuesta…");
       }
-    }, 18_000);
-    // Keep a connected Gemini Live session while long answers and Lab retrieval complete.
+    }, 12_000);
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
       voiceResponseWatchdogRef.current = null;
       voiceResponseSlowNoticeRef.current = null;
       if (!voiceModeRef.current || !waitingForVoiceReplyRef.current || voiceResponseDoneRef.current) return;
-      if (voiceChannelRef.current) {
-        setVoiceStatus("Orby sigue preparando tu respuesta. Mantengo la conexión; puedes interrumpirme si lo necesitas.");
-        voiceResponseWatchdogRef.current = window.setTimeout(() => {
-          voiceResponseWatchdogRef.current = null;
-          if (voiceModeRef.current && waitingForVoiceReplyRef.current && !voiceResponseDoneRef.current) {
-            fallbackVoiceTurnToText("La respuesta de voz sigue tardando. Conservé tu pregunta y activaré el respaldo gratuito.");
-          }
-        }, 70_000);
-        return;
-      }
-      fallbackVoiceTurnToText("La conexión de voz se interrumpió. Conservé tu pregunta y continuaré por el respaldo gratuito.");
-    }, 50_000);
+      fallbackVoiceTurnToText(voiceChannelRef.current
+        ? "Gemini Live dejó de enviar avances. Conservé tu pregunta y continuaré con el tutor gratuito por turnos."
+        : "La conexión de voz se interrumpió. Conservé tu pregunta y continuaré con el tutor gratuito por turnos.");
+    }, 32_000);
   }
 
   function stopRealtimeVoice(updateState = true, preserveAudioContext = false) {
@@ -3832,7 +3825,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setInput("");
       if (inputRef.current) inputRef.current.style.height = "48px";
       try {
-        voiceChannelRef.current.sendRealtimeInput({ text: message });
+        // Typed messages are complete user turns, not microphone fragments.
+        // Use explicit turnComplete so Live never waits for audio VAD to close them.
+        voiceChannelRef.current.sendClientContent({
+          turns: [{ role: "user", parts: [{ text: message }] }],
+          turnComplete: true,
+        });
       } catch {
         waitingForVoiceReplyRef.current = false;
         setVoiceError("No se pudo enviar el mensaje al canal de voz. Vuelve a intentarlo.");

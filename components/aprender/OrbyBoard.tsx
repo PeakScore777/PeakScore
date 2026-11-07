@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { useId } from "react";
 import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-board";
 
@@ -183,6 +185,37 @@ function Dna({ visual }: { visual: Extract<OrbyBoardVisual, { type: "dna" }> }) 
   );
 }
 
+function Punnett({ visual }: { visual: Extract<OrbyBoardVisual, { type: "punnett" }> }) {
+  const cells = [
+    [visual.topAlleles[0] + visual.sideAlleles[0], visual.topAlleles[1] + visual.sideAlleles[0]],
+    [visual.topAlleles[0] + visual.sideAlleles[1], visual.topAlleles[1] + visual.sideAlleles[1]],
+  ];
+  return (
+    <div className="mx-auto grid max-w-xs grid-cols-3 gap-1 text-center text-sm">
+      <div/>
+      {visual.topAlleles.map((allele, index) => <div key={index} className="rounded bg-orange-100 p-2 font-bold">{allele}</div>)}
+      {visual.sideAlleles.map((allele, row) => <React.Fragment key={row}>
+        <div className="rounded bg-orange-100 p-2 font-bold">{allele}</div>
+        {cells[row].map((genotype, col) => <div key={col} className="rounded border border-slate-200 bg-white p-3 font-mono font-bold text-slate-900">{genotype}</div>)}
+      </React.Fragment>)}
+    </div>
+  );
+}
+
+function CellDivision({ visual }: { visual: Extract<OrbyBoardVisual, { type: "cell-division" }> }) {
+  return (
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      {visual.phases.map((phase, index) => <div key={phase.name} className="min-w-0 rounded-lg border border-slate-200 bg-white p-2">
+        <div className="mb-2 flex h-10 items-center justify-center rounded bg-orange-50 text-[10px] font-black text-orange-800">
+          {visual.mode === "mitosis" ? ["◯","⊗","↗","◎"][index] : ["◯","⊗","↗","◎","◯","⊗","↗","◎"][index]}
+        </div>
+        <p className="text-[11px] font-bold text-slate-900">{phase.name}</p>
+        <p className="mt-1 text-[10px] leading-4 text-slate-600">{phase.detail}</p>
+      </div>)}
+    </div>
+  );
+}
+
 function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
@@ -191,6 +224,8 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "circuit") return <Circuit visual={visual}/>;
   if (visual.type === "cell") return <Cell visual={visual}/>;
   if (visual.type === "dna") return <Dna visual={visual}/>;
+  if (visual.type === "punnett") return <Punnett visual={visual}/>;
+  if (visual.type === "cell-division") return <CellDivision visual={visual}/>;
   if (visual.type === "table") return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-xs">

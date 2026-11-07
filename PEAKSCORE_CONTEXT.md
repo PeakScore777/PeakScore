@@ -359,3 +359,10 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - CSS incluye movimiento reducido sin animación. Prueba estática añadida para proteger el contrato visual.
 - Es una primera capa de presentación para snapshots progresivos, no escritura manuscrita ni sincronización exacta con voz. El secuenciador de acciones y alineación con narración siguen pendientes.
 - Relectura de GitHub completada; Node tests/TS/ESLint/build/navegador no ejecutados. La rama sigue divergente de main; no hacer Pull/merge/rebase.
+
+
+## 2026-11-07 — revelación progresiva de bloques del tablero
+- Títulos, fórmulas, pasos, llamadas, párrafos y visuales nuevos se revelan al montarse; etapas fisiológicas y eventos de línea de tiempo usan retrasos escalonados limitados.
+- Claves de React basadas en tipo/contenido/posición conservan elementos previos cuando un snapshot acumulativo agrega elementos al final.
+- Prueba estática añadida. Sigue siendo aparición de bloques completos, no escritura carácter a carácter ni sincronización exacta con voz. No declarar completo el comportamiento del video.
+- Relectura GitHub sí; pruebas runtime/build/browser no ejecutadas.

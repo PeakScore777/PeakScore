@@ -2834,6 +2834,26 @@ test("Orby libera callbacks y buffers PCM tras reproducción, interrupción y ci
   assert.match(tts, /playbackGeneration !== voiceSpeechPlaybackGenerationRef\.current/);
 });
 
+test("Orby ignora eventos tardíos de tracks reemplazados y desconecta handlers al cerrar el micrófono", () => {
+  const trackSetupStart = lessonTutorSource.indexOf("stream.getAudioTracks().forEach((track) =>");
+  const trackSetupEnd = lessonTutorSource.indexOf("try {", trackSetupStart);
+  const trackSetup = lessonTutorSource.slice(trackSetupStart, trackSetupEnd);
+  for (const eventName of ["onended", "onmute", "onunmute"]) {
+    assert.match(trackSetup, new RegExp("track\\." + eventName + " = \\(\\) =>"));
+    assert.match(trackSetup, /sessionGeneration !== voiceSessionGenerationRef\.current/);
+    assert.match(trackSetup, /voiceStreamRef\.current !== stream/);
+  }
+
+  const stopStart = lessonTutorSource.indexOf("function stopRealtimeVoice(");
+  const stopEnd = lessonTutorSource.indexOf("waitingForVoiceReplyRef.current = false;", stopStart);
+  const stop = lessonTutorSource.slice(stopStart, stopEnd);
+  assert.match(stop, /track\.onended = null/);
+  assert.match(stop, /track\.onmute = null/);
+  assert.match(stop, /track\.onunmute = null/);
+  assert.match(stop, /track\.stop\(\)/);
+  assert.match(stop, /voiceStreamRef\.current = null/);
+});
+
 test("Orby mide por turno la latencia hasta la primera transcripción y el primer audio Live", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(source, /voiceTurnAcceptedAtRef = useRef\(0\)/);

@@ -3552,7 +3552,6 @@ test("el fallback de voz puede devolver la misma pizarra visual tipada que el tu
 test("La pizarra revela trazos SVG progresivamente y respeta movimiento reducido", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  const sanitizer = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
   assert.match(renderer, /className="orby-board /);
   assert.match(renderer, /orby-board-stroke/);
   assert.match(renderer, /pathLength={1}/);

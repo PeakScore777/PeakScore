@@ -177,7 +177,7 @@ function Circuit({ visual }: { visual: Extract<OrbyBoardVisual, { type: "circuit
   const components = new Map(visual.components.map((component) => [component.id, component]));
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Circuito eléctrico esquemático"} className="h-auto max-h-72 w-full">
-      {visual.connections.map((connection, index) => {
+      {visual.connections.map((connection) => {
         const from = components.get(connection.from), to = components.get(connection.to);
         if (!from || !to) return null;
         return <line className="orby-board-stroke" pathLength={1} key={`${connection.from}:${connection.to}:${from.x}:${from.y}:${to.x}:${to.y}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>;

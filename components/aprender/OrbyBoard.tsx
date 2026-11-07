@@ -443,7 +443,9 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   function pointerDown(event: React.PointerEvent<SVGSVGElement>) {
     const point = getPoint(event);
     if (tool === "eraser") {
-      setStrokes((current) => current.filter((stroke) => !stroke.points.some((p) => Math.hypot(p.x - point.x, p.y - point.y) < 5)));
+      event.preventDefault();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      eraseAt(point);
       return;
     }
     event.preventDefault();
@@ -451,7 +453,16 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
     setDrawing(true);
     setDraft({ points: [point], mode: tool });
   }
+  function eraseAt(point: { x: number; y: number }) {
+    setStrokes((current) => current.filter((stroke) =>
+      !stroke.points.some((p) => Math.hypot(p.x - point.x, p.y - point.y) < 5)
+    ));
+  }
   function pointerMove(event: React.PointerEvent<SVGSVGElement>) {
+    if (tool === "eraser" && event.buttons !== 0) {
+      eraseAt(getPoint(event));
+      return;
+    }
     if (drawing) {
       const point = getPoint(event);
       setDraft((current) => current ? { ...current, points: [...current.points, point] } : current);
@@ -460,7 +471,7 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   function pointerUp() {
     if (!drawing) return;
     setDrawing(false);
-    if (draft && draft.points.length > 1) setStrokes((items) => [...items, draft]);
+    if (draft && draft.points.length > 1) { setStrokes((items) => [...items, draft]); setRedoStrokes([]); }
     setDraft(null);
   }
   return (
@@ -474,8 +485,9 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
         <button type="button" onClick={() => setTool("pen")} aria-pressed={tool === "pen"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "pen" ? "bg-orange-100 text-orange-800" : "text-slate-600 hover:bg-slate-100")}>Lápiz</button>
         <button type="button" onClick={() => setTool("highlight")} aria-pressed={tool === "highlight"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "highlight" ? "bg-amber-100 text-amber-800" : "text-slate-600 hover:bg-slate-100")}>Resaltador</button>
         <button type="button" onClick={() => setTool("eraser")} aria-pressed={tool === "eraser"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "eraser" ? "bg-slate-200 text-slate-900" : "text-slate-600 hover:bg-slate-100")}>Borrador</button>
-        <button type="button" onClick={() => setStrokes((items) => items.slice(0, -1))} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Deshacer</button>
-        <button type="button" onClick={() => setStrokes([])} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Limpiar</button>
+        <button type="button" onClick={() => { const last = strokes[strokes.length - 1]; if (!last) return; setStrokes((items) => items.slice(0, -1)); setRedoStrokes((items) => [...items, last]); }} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Deshacer</button>
+        <button type="button" onClick={() => { const last = redoStrokes[redoStrokes.length - 1]; if (!last) return; setRedoStrokes((items) => items.slice(0, -1)); setStrokes((items) => [...items, last]); }} disabled={!redoStrokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Rehacer</button>
+        <button type="button" onClick={() => { setStrokes([]); setRedoStrokes([]); }} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Limpiar</button>
         <span className="ml-auto text-[9px] text-slate-400">{strokes.length} trazos</span>
       </div>
       <div className="mx-auto min-h-[60vh] max-w-6xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-10 sm:py-10">

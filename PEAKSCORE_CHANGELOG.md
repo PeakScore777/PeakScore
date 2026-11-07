@@ -1,5 +1,10 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — instrumentación de latencia de voz
+- Se añadió medición del primer chunk de audio recibido, independiente de la primera reproducción audible, reiniciada por turno.
+- Test estático añadido; falta medir p50/p95 con sesiones reales. No se declara cumplido el objetivo de 1 segundo.
+
+
 ## 2026-11-07 — ajuste de respuesta continua de voz
 - Live endpointing reducido de 500 a 400 ms en cliente y servidor para acortar la pausa tras terminar de hablar.
 - Instrucción de voz prioriza respuesta directa, sin relleno y con continuidad contextual, manteniendo filtros y precisión.

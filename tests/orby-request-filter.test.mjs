@@ -2548,14 +2548,19 @@ test("Orby reconoce temas habituales de gramática inglesa como Inglés aunque l
     "Un área explícita seleccionada en el turno debe conservar prioridad sobre un tema incidental.");
 });
 
-test("Orby persiste el cambio explícito de materia antes de recuperar conocimiento", async () => {
+test("Orby solapa la persistencia de materia con la recuperación y espera antes de responder", async () => {
   const source = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
   const detection = source.indexOf("const currentTurnSubject = normalizeIcfesSubject");
-  const persistence = source.indexOf("ORBY_SUBJECT_UPDATE_FAILED", detection);
+  const persistenceStart = source.indexOf("subjectPersistencePromise = (async () =>", detection);
   const retrieval = source.indexOf("if (shouldRetrieveAcademicKnowledge)", detection);
-  assert.ok(detection >= 0 && persistence > detection && retrieval > persistence,
-    "La materia detectada debe persistirse antes de consultar el Lab.");
+  const persistenceAwait = source.indexOf("if (subjectPersistencePromise)", retrieval);
+  const generation = source.indexOf("const generationStartedAt = performance.now()", persistenceAwait);
+  assert.ok(detection >= 0 && persistenceStart > detection && retrieval > persistenceStart,
+    "La escritura debe comenzar antes de la recuperación para solapar ambas esperas.");
+  assert.ok(persistenceAwait > retrieval && generation > persistenceAwait,
+    "La respuesta debe esperar la persistencia antes de generar y entregar contenido.");
   assert.match(source, /ownedConversation\.subject = currentTurnSubject/);
+  assert.match(source, /ORBY_SUBJECT_UPDATE_FAILED/);
 });
 
 

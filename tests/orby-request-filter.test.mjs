@@ -3416,3 +3416,53 @@ test("La pizarra anatómica se expone a voz y tutor escrito sin markup ejecutabl
   assert.match(voice, /no una referencia anatómica a escala/);
   assert.doesNotMatch(renderer, /dangerouslySetInnerHTML/);
 });
+
+
+test("La pizarra valida neuronas con estructuras fundamentales y funciones", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const board = sanitizeOrbyBoard({
+    version: 2, title: "La neurona",
+    blocks: [{ type: "text", text: "La señal se integra y transmite a otras células." }],
+    visuals: [{
+      type: "neuron", title: "Partes de una neurona",
+      parts: [
+        { id: "den", name: "dendritas", role: "Reciben señales de otras células." },
+        { id: "soma", name: "soma", role: "Integra señales y contiene el núcleo." },
+        { id: "axon", name: "axón", role: "Conduce el potencial de acción." },
+        { id: "term", name: "terminales sinápticas", role: "Transmiten señales a la célula siguiente." },
+      ],
+    }],
+  });
+  assert.equal(board?.visuals?.[0]?.type, "neuron");
+  assert.equal(board?.visuals?.[0]?.parts.length, 4);
+});
+
+test("La pizarra rechaza neuronas sin partes fundamentales o con etiquetas repetidas", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const base = { version: 2, title: "Inválido", blocks: [{ type: "text", text: "Prueba." }] };
+  const missingAxon = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "neuron", title: "Neurona incompleta",
+      parts: [
+        { id: "d", name: "dendritas", role: "Reciben señales." },
+        { id: "s", name: "soma", role: "Integra señales." },
+        { id: "t", name: "terminales sinápticas", role: "Comunican." },
+        { id: "n", name: "núcleo", role: "Contiene ADN." },
+      ],
+    }],
+  });
+  assert.equal(missingAxon, null);
+});
+
+test("La anatomía neuronal está conectada a renderer, Live y prompts", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const lesson = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(renderer, /function Neuron/);
+  assert.match(renderer, /visual\.type === "neuron"/);
+  assert.match(tools, /parts:/);
+  assert.match(lesson, /comunicación química en la sinapsis/);
+  assert.match(voice, /potencial de acción que se propaga por el axón/);
+});

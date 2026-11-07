@@ -233,3 +233,10 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - La cadencia real sigue dependiendo de cuándo Gemini emita los eventos Live; el cliente dibuja al recibir cada evento, pero no hay timestamps fonéticos del audio. La prueba real de Chrome sigue siendo requisito de aceptación.
 
 - Se serializa también la recepción: el cliente acepta como máximo una instantánea de pizarra por evento Live y rechaza las hermanas del mismo evento con respuesta silenciosa. Evita que React agrupe varios cambios recibidos juntos y muestre solo el último, ocultando pasos intermedios.
+
+## Alineación por frase hablada — 2026-11-07
+
+- Cada instantánea puede incluir `spokenCue`: frase breve exacta (3–12 palabras) que el tutor debe pronunciar justo antes de revelar ese dibujo.
+- El cliente valida la frase, conserva la instantánea pendiente y la revela cuando la transcripción acumulada de Live contiene la frase normalizada. No se inventan timestamps ni se simula sincronización fonética.
+- Si el reconocimiento omite la frase, al terminar el turno se muestra la última instantánea válida para no perder el contenido. Las instantáneas sin `spokenCue` conservan el comportamiento inmediato.
+- El historial guarda la pizarra final del turno, no una secuencia temporal completa. La precisión depende de la transcripción que emita Live; debe medirse en Chrome con audio real antes de aceptar esta fase.

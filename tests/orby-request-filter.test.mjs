@@ -3678,7 +3678,12 @@ test("Gemini Live recibe instrucciones de dibujar por secciones y limita las act
   assert.match(lesson, /voicePendingBoardCuesRef\.current\.push/);
   assert.match(lesson, /normalizedSpokenReply\.includes\(pendingCue\.cue\)/);
   assert.match(lesson, /finalPendingBoard/);
-  assert.match(renderer, /JSON\.stringify\(visual\)/);
+  assert.match(renderer, /JSON.stringify\(visual\)/);
+  assert.match(renderer, /node\.id:\$\{node\.x\}:\$\{node\.y\}/);
+  assert.match(renderer, /Math\.min\(index \* 90, 630\)/);
+  assert.match(renderer, /bond\.from.*bond\.to.*from\.x.*to\.x/);
+  assert.match(renderer, /component\.id.*component\.kind.*component\.x.*component\.y/);
+  assert.doesNotMatch(renderer, /key=\{\x60\$\{visual\.type\}:\$\{visual\.title\}:\$\{index\}:\$\{JSON\.stringify\(visual\)\}\x60\}/);
 });
 
 test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perder idempotencia", async () => {

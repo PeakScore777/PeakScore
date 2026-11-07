@@ -231,10 +231,13 @@ export async function POST(request: Request) {
     );
     const asksPeakScoreRecommendationFollowUp = hasRecentPeakScoreIdentityExchange
       && /^(?:es|seria|vale la pena|consideras que es)\s+(?:recomendable|buena|confiable|util|una buena opcion|una buena herramienta)[.!? ]*$/i.test(normalizedIdentityPrompt);
-    if (asksOrbyIdentity || asksPeakScoreRecommendationFollowUp) {
-      const identityReply = asksPeakScoreRecommendationFollowUp
-        ? "PeakScore es la plataforma educativa en la que funciona Orby. No puedo darte una valoración independiente de mi propia plataforma ni prometer resultados. Sí puedo explicarte sus funciones y limitaciones para que decidas si se ajusta a lo que necesitas."
-        : ORBY_IDENTITY_REPLY;
+    const asksUserIdentity = /^(?:quien|qn|qien|kien)\s+soy(?:\s+(?:yo|o))?[.!? ]*$/i.test(normalizedIdentityPrompt);
+    if (asksOrbyIdentity || asksPeakScoreRecommendationFollowUp || asksUserIdentity) {
+      const identityReply = asksUserIdentity
+        ? "No puedo identificarte por fuera de lo que compartes en este chat. Solo puedo tener en cuenta la información que escribas aquí; no tengo acceso a tu identidad personal."
+        : asksPeakScoreRecommendationFollowUp
+          ? "PeakScore es la plataforma educativa en la que funciona Orby. No puedo darte una valoración independiente de mi propia plataforma ni prometer resultados. Sí puedo explicarte sus funciones y limitaciones para que decidas si se ajusta a lo que necesitas."
+          : ORBY_IDENTITY_REPLY;
       if (conversationId && ownedConversation) {
         const { error: identitySaveError } = await supabaseAdmin.rpc("orby_save_turn", {
           p_user_id: user.id,

@@ -491,3 +491,38 @@ Cambios guardados en `feat/founder-intro`. Pendiente ejecución real de tests, T
 
 ### Estado de validación
 Archivos actualizados y posteriormente leídos desde `feat/founder-intro`. La verificación CI conocida continúa mostrando un estado Vercel `failure` asociado a `build-rate-limit` en el commit anterior; este nuevo conjunto todavía no tiene ejecución confirmada de tests, TypeScript, ESLint o build. No afirmar que los tests pasan. La prueba manual de voz y tablero sigue pendiente. No se modificó `main`, no se desplegó y no se añadieron proveedores ni servicios de pago. **Pull no autorizado todavía.**
+
+
+## 18. Sexto incremento — anatomía y fisiología humana (2026-11-07)
+
+### Nueva primitiva `organ-system`
+Sistemas admitidos:
+- Nervioso
+- Circulatorio
+- Respiratorio
+- Digestivo
+- Endocrino
+- Urinario
+- Óseo
+- Muscular
+
+Cada escena incluye entre 2 y 12 estructuras con ID único, nombre, posición esquemática y función fisiológica breve. El sanitizador valida el sistema, la cardinalidad, IDs, etiquetas, roles y coordenadas. El renderizador presenta un esquema corporal de orientación y una lista numerada de estructuras con sus funciones; no pretende ser una ilustración anatómica exacta ni una imagen médica.
+
+### Integración pedagógica
+- El esquema se ofrece al tutor escrito y a la herramienta de voz Live.
+- Las instrucciones piden explicar ubicación y función con nivel Saber 11, distinguiendo órgano, tejido y sistema.
+- Se advierte que las posiciones son esquemáticas y se prohíbe convertir el recurso educativo en diagnóstico clínico.
+- La voz debe describir cada estructura al dibujarla, evitando enumerar etiquetas sin explicación.
+
+### Pruebas añadidas
+- Aceptación de una escena circulatoria con corazón, arterias y venas.
+- Rechazo de sistema desconocido.
+- Rechazo de IDs duplicados.
+- Verificación de integración con renderer, esquema Live y prompts.
+- Comprobación de que el renderer no ejecuta markup del modelo.
+
+### Límites
+El cuerpo humano representado es un esquema genérico; no está segmentado por sexo, edad, variación individual ni contexto clínico. La escena no sustituye atlas anatómicos, imágenes diagnósticas ni evaluación profesional. El modelo debe reconocer cuando una estructura, relación o detalle excede el alcance del esquema.
+
+### Estado
+Cambios guardados en `feat/founder-intro`; pendiente ejecución efectiva de pruebas, TypeScript, ESLint, build y validación manual de voz/pizarra. No se modificó `main`, no se desplegó ni se añadieron proveedores de pago. No autorizar Pull hasta completar las verificaciones.

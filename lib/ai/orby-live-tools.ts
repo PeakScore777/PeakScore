@@ -5,7 +5,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
     functionDeclarations: [
       {
         name: "render_orby_teaching_board",
-        description: "Creates or updates a compact visual teaching board for the current Saber 11 explanation. Use only when a diagram, worked steps, comparison, or formula materially helps the student understand. The board is attached to your current spoken answer; do not use it for greetings or ordinary short replies. Provide concise Spanish text, no HTML, Markdown, URLs, code, or external resources. Use 1 to 8 blocks. A formula block contains a plain-text mathematical expression, not executable markup.",
+        description: "Creates or updates the visual teaching board DURING the current spoken Saber 11 explanation. Do not wait until the answer is finished: call this tool repeatedly as the explanation progresses, sending the current cumulative board snapshot each time a new step, formula, label, or diagram explanation is introduced. Each call replaces the previous snapshot for the same assistant message, so include all blocks that should remain visible plus the new material. Keep each update small and synchronized with the words being spoken. Use only when visuals materially help; never for greetings or short replies. Provide concise Spanish text, no HTML, Markdown, URLs, code, or external resources. Use 1 to 8 blocks. A formula block contains a plain-text mathematical expression, not executable markup.",
         parameters: {
           type: Type.OBJECT,
           properties: {

@@ -3603,6 +3603,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const selectedFile = includeAttachment ? attachment : null;
     if ((!message && !selectedFile) || message.length > 1200) return;
 
+    // Do not let a newer message overtake a voice turn whose persistence
+    // failed. The pending pair must remain the latest exchange so Retry can
+    // prove whether the previous commit succeeded without confusing it with
+    // a later, identical question. Other conversations remain available.
+    if (failedVoiceTurn && failedVoiceTurn.conversationId === activeConversationRef.current) {
+      setConversationError("Hay un turno de voz pendiente de guardar. Reintenta el guardado antes de enviar otra pregunta en esta conversación.");
+      return;
+    }
+
     // Ignore accidental double-submit events (Enter + click, touch double tap,
     // or a repeated browser submit) before they enter the serial message queue.
     const submissionKey = message.normalize("NFD").replace(/[\u0300-\u036f]/g, "")

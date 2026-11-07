@@ -435,3 +435,32 @@ Estas pruebas quedaron incorporadas al archivo ya ejecutado por `npm run test:or
 
 ### Estado
 Cambios guardados en `feat/founder-intro`; archivos leídos de nuevo para verificar su persistencia. No se tocó `main`, no se desplegó y no se alteraron proveedores ni cuotas gratuitas. **Pull aún no autorizado:** faltan ejecución real de `npm run test:orby`, lint, build y prueba manual de voz/pizarra en navegador.
+
+
+## 16. Cuarto incremento — biología celular y genética (2026-11-07)
+
+### Nueva primitiva `cell`
+- Tipos: animal, vegetal y procariota.
+- Elementos etiquetados: núcleo, mitocondria, cloroplasto, vacuola, membrana, pared celular, ribosoma, retículo endoplasmático, aparato de Golgi y citoplasma.
+- Validación de IDs, tipos, coordenadas, cantidad y compatibilidad estructural básica.
+- Reglas explícitas: una célula animal no puede incluir pared celular ni cloroplastos; una vegetal debe mostrar pared celular; una procariota no puede incluir núcleo ni organelos membranosos (mitocondria, cloroplasto, retículo o Golgi).
+- Renderizador 2D esquemático con etiquetas. No pretende representar escala, distribución real ni ultraestructura.
+
+### Nueva primitiva `dna`
+- Muestra entre 2 y 12 pares de bases.
+- Valida complementariedad: A–T, T–A, C–G o G–C.
+- Renderizador esquemático de pares y hebras; no crea secuencias personales ni predice expresión génica.
+
+### Pruebas añadidas
+- Aceptación de una célula animal y vegetal válida.
+- Aceptación de pares complementarios.
+- Rechazo de pared celular en célula animal.
+- Rechazo de núcleo en procariota.
+- Rechazo de pares no complementarios.
+- Verificación estática de renderizadores, schema Live e instrucciones didácticas.
+
+### Advertencias de rigor
+Los diagramas celulares son representaciones educativas simplificadas. La presencia de estructuras debe explicarse con matices según organismo, tejido, tipo celular y contexto; el dibujo no sustituye micrografías ni evidencia experimental. La primitiva DNA solo demuestra complementariedad de bases y no representa por sí sola replicación, transcripción, mutación o regulación génica.
+
+### Estado
+Cambios guardados en `feat/founder-intro`. Pendiente ejecución real de tests, TypeScript, ESLint, build y prueba de voz en navegador. No se tocó `main`, no se desplegó y no se añadieron servicios de pago.

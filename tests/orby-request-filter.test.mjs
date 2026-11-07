@@ -76,7 +76,7 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.ok(lessonTutorSource.includes("sendToolResponse({ functionResponses: responses })"));
   assert.ok(lessonTutorSource.includes("FunctionResponseScheduling.WHEN_IDLE"));
   assert.ok(lessonTutorSource.includes("scheduling: FunctionResponseScheduling.WHEN_IDLE"));
-  assert.equal((lessonTutorSource.match(/scheduling: FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 5);
+  assert.equal((lessonTutorSource.match(/scheduling: FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6);
 });
 
 test("el turno Live espera el aporte asíncrono del Lab y solo finaliza tras recibirlo", () => {

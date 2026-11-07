@@ -2810,6 +2810,26 @@ test("Orby mide por turno la latencia hasta la primera transcripción y el prime
   assert.match(source, /voiceFirstAudioLoggedRef\.current = false/);
 });
 
+test("Orby mide las etapas del arranque Live sin registrar contenido de conversación", async () => {
+  const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  for (const stage of [
+    "microphonePermissionMs",
+    "conversationAndTokenMs",
+    "sdkLoadMs",
+    "liveConnectMs",
+    "liveSetupMs",
+    "workletLoadMs",
+  ]) {
+    assert.ok(source.includes(stage), `Falta la métrica de arranque: ${stage}`);
+  }
+  assert.match(source, /Startup stage timings/);
+  assert.match(source, /liveConnectMs = performance\.now\(\) - liveConnectStartedAt/);
+  assert.match(source, /liveSetupMs = performance\.now\(\) - liveSetupStartedAt/);
+  assert.match(source, /sdkLoadMs = performance\.now\(\) - voiceSdkStartedAt/);
+  assert.match(source, /totalMs:\s*Math\.round\(performance\.now\(\) - startupStartedAt\)/);
+  assert.doesNotMatch(source, /Startup stage timings[\s\S]{0,500}voiceUserTextRef\.current/);
+});
+
 test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const sessionRouteSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");

@@ -5290,7 +5290,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               {showAssistantSubtitles && voiceCaptionText && <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex min-h-[76px] items-end justify-center bg-gradient-to-t from-black/90 via-black/65 to-transparent px-4 pb-4 pt-9 sm:min-h-[92px] sm:px-8 sm:pb-5" aria-label="Subtítulos de Orby" aria-live="polite" aria-atomic="true">
                 <p key={voiceCaptionText} className="max-w-4xl text-center text-[15px] font-extrabold leading-snug tracking-[.01em] text-white sm:text-lg" style={{ textShadow: "0 2px 2px rgba(0,0,0,.95), 1px 0 1px rgba(0,0,0,.95), -1px 0 1px rgba(0,0,0,.95)" }}>{voiceCaptionText}</p>
               </div>}
-            </div>}
+            </div>
             </main>
 
             <aside className="flex min-h-0 flex-col gap-3">

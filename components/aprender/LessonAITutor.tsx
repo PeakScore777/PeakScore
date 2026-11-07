@@ -488,12 +488,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (!isCurrent()) return;
 
         setConversations(items);
+        // The sidebar history is ready as soon as the conversation list arrives.
+        // Keep message hydration in the background so a slow message query does not
+        // leave the whole workspace stuck on “Cargando chats…”. Typed turns remain
+        // queued by historyHydratingRef until the active conversation is restored.
+        setHistoryLoading(false);
         const first = items[0];
         if (first) {
           const messagesResponse = await fetch(`/api/orby/conversations/${first.id}/messages`, {
             credentials: "same-origin",
             cache: "no-store",
-            signal: AbortSignal.timeout(12_000),
+            signal: AbortSignal.timeout(8_000),
           });
           const messagesPayload = await messagesResponse.json().catch(() => ({}));
           if (!messagesResponse.ok && messagesResponse.status === 404) {

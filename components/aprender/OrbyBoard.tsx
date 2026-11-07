@@ -58,13 +58,17 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
     muted: "#94a3b8",
     success: "#0f766e",
   } as const;
+  let nextStrokeAtMs = 0;
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-[680px] min-h-[320px] w-full overflow-visible">
-      {visual.strokes.map((stroke, index) => {
+      {visual.strokes.map((stroke) => {
         const color = palette[stroke.tone];
-        const delay = Math.min(index * 110, 1_650);
         const path = smoothSketchPath(stroke.points);
-        const duration = Math.min(1_400, Math.max(360, stroke.points.length * 34));
+        // Draw strokes one after another, like a teacher writing on a tablet.
+        // A short pause between pen lifts keeps words and diagram parts legible.
+        const duration = Math.min(1_800, Math.max(520, stroke.points.length * 48));
+        const delay = nextStrokeAtMs;
+        nextStrokeAtMs += duration + 110;
         const lastPoint = stroke.points[stroke.points.length - 1];
         return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
           <path

@@ -61,6 +61,16 @@ const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowl
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
 const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
 
+test("el SDK Gemini Live se carga solo al iniciar la voz, no al abrir el chat", () => {
+  assert.match(lessonTutorSource, /import type \{ FunctionResponseScheduling, Session \} from ".*@google\\/genai"/);
+  assert.doesNotMatch(lessonTutorSource, /import \{[^}]*GoogleGenAI[^}]*\} from ".*@google\\/genai"/);
+  assert.match(lessonTutorSource, /const voiceSdkPromise = import\(["].*@google\\/genai["]\)/);
+  assert.match(lessonTutorSource, /const voiceSdk = await voiceSdkPromise/);
+  assert.match(lessonTutorSource, /new voiceSdk\.GoogleGenAI\(/);
+  assert.match(lessonTutorSource, /responseModalities:\s*\[voiceSdk\.Modality\.AUDIO\]/);
+  assert.match(lessonTutorSource, /voiceSdkRef\.current = voiceSdk/);
+});
+
 test("la política de seguridad permite reproducir audio del mismo sitio y no bloquea la voz de Orby", () => {
   assert.match(nextConfigSource, /autoplay=\(self\)/);
   assert.doesNotMatch(nextConfigSource, /autoplay=\(\)/);
@@ -75,9 +85,9 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.doesNotMatch(liveToolsSource, /behavior: Behavior\.BLOCKING/);
   assert.ok(lessonTutorSource.includes('await fetch("/api/orby/knowledge-search"'));
   assert.ok(lessonTutorSource.includes("sendToolResponse({ functionResponses: responses })"));
-  assert.ok(lessonTutorSource.includes("FunctionResponseScheduling.WHEN_IDLE"));
-  assert.ok(lessonTutorSource.includes("scheduling: FunctionResponseScheduling.WHEN_IDLE"));
-  assert.equal((lessonTutorSource.match(/scheduling: FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6);
+  assert.ok(lessonTutorSource.includes("voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
+  assert.ok(lessonTutorSource.includes("scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
+  assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6);
 });
 
 test("cancelar una búsqueda Live no descarta llamadas hermanas todavía válidas", () => {
@@ -2725,7 +2735,7 @@ test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero",
   for (const source of [lessonTutorSource, sessionRouteSource]) {
     assert.match(source, /realtimeInputConfig:\s*\{/);
     assert.match(source, /automaticActivityDetection:\s*\{/);
-    assert.match(source, /endOfSpeechSensitivity:\s*EndSensitivity\.END_SENSITIVITY_HIGH/);
+    assert.match(source, source === lessonTutorSource ? /endOfSpeechSensitivity:\s*voiceSdk\.EndSensitivity\.END_SENSITIVITY_HIGH/ : /endOfSpeechSensitivity:\s*EndSensitivity\.END_SENSITIVITY_HIGH/);
     assert.match(source, /prefixPaddingMs:\s*40/);
     assert.match(source, /silenceDurationMs:\s*500/);
   }

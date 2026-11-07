@@ -1110,9 +1110,20 @@ test("bloquea consultas generales sobre personas sin bloquear figuras del currí
   assert.equal(filter.preflightOrbyRequest("¿Quién es Westcol en el texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
 });
 
+test("Orby bloquea la autopromoción genérica sin bloquear consejos de estudio", () => {
+  const promotionalReply = "¡Claro! Utilizar una herramienta especializada en las pruebas Saber 11 es muy recomendable, ya que te ofrece recursos enfocados, práctica dirigida y retroalimentación para mejorar tus resultados.";
+  assert.equal(filter.containsPlatformMarketingClaim(promotionalReply), true);
+  assert.equal(filter.containsPlatformMarketingClaim("PeakScore es una excelente plataforma educativa y la mejor opción para subir tu puntaje."), true);
+  assert.equal(filter.containsPlatformMarketingClaim("Practicar con preguntas tipo Saber 11 ayuda a reconocer el formato del examen."), false);
+  assert.equal(filter.containsPlatformMarketingClaim("No puedo promocionar ni evaluar de forma independiente una plataforma."), false);
+});
+
 test("Orby no promociona su propia plataforma cuando le preguntan si es recomendable", async () => {
   const tutor = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  assert.match(tutor, /containsPlatformMarketingClaim\(modelReply\)/);
+  assert.match(tutor, /ORBY_PLATFORM_NEUTRALITY_REPLY/);
   assert.match(tutor, /hasRecentPeakScoreIdentityExchange/);
+  assert.match(lessonTutorSource, /containsPlatformMarketingClaim\(rawReply\)/);
   assert.match(tutor, /asksPeakScoreRecommendationFollowUp/);
   assert.match(tutor, /No puedo darte una valoración independiente de mi propia plataforma ni prometer resultados/);
   assert.match(tutor, /const asksUserIdentity/);

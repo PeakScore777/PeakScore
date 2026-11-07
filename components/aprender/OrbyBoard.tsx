@@ -36,6 +36,64 @@ function Diagram({ visual }: { visual: Extract<OrbyBoardVisual, { type: "diagram
   );
 }
 
+function smoothSketchPath(points: Array<{ x: number; y: number }>): string {
+  if (points.length < 2) return "";
+  if (points.length === 2) return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+  let path = `M ${points[0].x} ${points[0].y}`;
+  for (let index = 1; index < points.length - 1; index += 1) {
+    const current = points[index];
+    const next = points[index + 1];
+    const midX = (current.x + next.x) / 2;
+    const midY = (current.y + next.y) / 2;
+    path += ` Q ${current.x} ${current.y} ${midX} ${midY}`;
+  }
+  const last = points[points.length - 1];
+  return path + ` T ${last.x} ${last.y}`;
+}
+
+function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }> }) {
+  const palette = {
+    ink: "#334155",
+    accent: colors.orange,
+    muted: "#94a3b8",
+    success: "#0f766e",
+  } as const;
+  return (
+    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-80 w-full overflow-visible">
+      {visual.strokes.map((stroke, index) => {
+        const color = palette[stroke.tone];
+        const delay = Math.min(index * 150, 1_800);
+        const lastPoint = stroke.points[stroke.points.length - 1];
+        return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
+          <path
+            d={smoothSketchPath(stroke.points)}
+            pathLength={1}
+            className="orby-board-sketch-stroke"
+            fill="none"
+            stroke={color}
+            strokeWidth={stroke.width}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ animationDelay: `${delay}ms` }}
+          />
+          {stroke.label && stroke.labelX !== undefined && stroke.labelY !== undefined
+            ? <text
+                x={stroke.labelX}
+                y={stroke.labelY}
+                className="orby-board-sketch-label"
+                fontSize="4"
+                fontWeight="600"
+                fill={color}
+                style={{ animationDelay: `${delay + 560}ms` }}
+              >{stroke.label}</text>
+            : null}
+          <circle cx={lastPoint.x} cy={lastPoint.y} r="0.45" fill={color} className="orby-board-appear" style={{ animationDelay: `${delay + 540}ms` }}/>
+        </g>;
+      })}
+    </svg>
+  );
+}
+
 function Graph({ visual }: { visual: Extract<OrbyBoardVisual, { type: "graph" }> }) {
   const left = 12, right = 94, top = 10, bottom = 78;
   const px = (x: number) => left + ((x - visual.xMin) / (visual.xMax - visual.xMin)) * (right - left);
@@ -301,6 +359,7 @@ function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type
 
 function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
+  if (visual.type === "sketch") return <Sketch visual={visual}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
   if (visual.type === "vectors") return <Vectors visual={visual}/>;
   if (visual.type === "molecule") return <Molecule visual={visual}/>;

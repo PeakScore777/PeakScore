@@ -3084,3 +3084,17 @@ test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conse
   assert.match(migration, /on conflict \(conversation_id, user_id, turn_id\) do nothing/);
   assert.match(migration, /teaching_board/);
 });
+
+test("Orby mide las actualizaciones de pizarra por turno sin registrar contenido académico", () => {
+  assert.match(lessonTutorSource, /const voiceBoardUpdateCountRef = useRef\(0\)/);
+  assert.match(lessonTutorSource, /voiceBoardUpdateCountRef\.current = 0/);
+  assert.match(lessonTutorSource, /voiceBoardUpdateCountRef\.current \+= 1/);
+  const boardTimingStart = lessonTutorSource.indexOf('console.info("[Orby Voice] Teaching board update timing."');
+  const boardTimingEnd = lessonTutorSource.indexOf("\n      });", boardTimingStart);
+  assert.ok(boardTimingStart >= 0 && boardTimingEnd > boardTimingStart);
+  const boardTiming = lessonTutorSource.slice(boardTimingStart, boardTimingEnd);
+  assert.match(boardTiming, /updateNumber:/);
+  assert.match(boardTiming, /boardUpdateMs:/);
+  assert.match(boardTiming, /audioChunksScheduled:/);
+  assert.doesNotMatch(boardTiming, /voiceUserTextRef|voiceAssistantTextRef|board\.title|board\.blocks/);
+});

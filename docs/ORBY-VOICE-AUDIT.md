@@ -435,3 +435,16 @@ Commits:
 - `825e41a` — ajuste de la regresión de frase significativa.
 
 CI: las ejecuciones intermedias fueron canceladas al llegar commits posteriores a la rama; el run anterior `42332341129` aún no había finalizado al registrar esta nota. El siguiente CI completo debe validar la punta de rama. No se declara aprobado todavía.
+
+
+## 2026-11-07 — cobertura adicional de captura de micrófono
+
+Se revisó el AudioWorklet `public/audio/orby-audio-capture.worklet.js` y su regresión existente. El test anterior validaba la conservación de muestras a 44.1/48 kHz usando bloques mono de 128 frames. Se amplió la cobertura con un caso adicional:
+
+- Bloques de captura con tamaños variables (64, 127, 256, 96, 192, 128 y 80 frames).
+- Entrada estéreo con canales de amplitud diferente.
+- Verificación de que la mezcla promedia L/R y no duplica el volumen.
+- Verificación de paquetes PCM de 640 muestras (40 ms a 16 kHz).
+- Verificación de que el total emitido más el remanente coincide con el número esperado de muestras remuestreadas.
+
+No se cambió el AudioWorklet de producción ni el umbral de detección de voz. La prueba complementa las existentes; CI de la nueva punta de rama todavía pendiente.

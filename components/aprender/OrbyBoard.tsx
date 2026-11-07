@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useId } from "react";
 import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-board";
@@ -417,8 +417,25 @@ type StudentStroke = { points: Array<{ x: number; y: number }>; mode: "pen" | "h
 export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   const [tool, setTool] = useState<"pen" | "highlight" | "eraser">("pen");
   const [strokes, setStrokes] = useState<StudentStroke[]>([]);
+  const [redoStrokes, setRedoStrokes] = useState<StudentStroke[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
+  const storageKey = "peakscore:orby-board-ink:" + encodeURIComponent(board.title || "clase");
   const [draft, setDraft] = useState<StudentStroke | null>(null);
   const [drawing, setDrawing] = useState(false);
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) setStrokes(parsed.filter((stroke) => stroke && (stroke.mode === "pen" || stroke.mode === "highlight") && Array.isArray(stroke.points) && stroke.points.length >= 2 && stroke.points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y) && point.x >= 0 && point.x <= 100 && point.y >= 0 && point.y <= 100)));
+      }
+    } catch {}
+    setStorageReady(true);
+  }, [storageKey]);
+  useEffect(() => {
+    if (!storageReady) return;
+    try { window.localStorage.setItem(storageKey, JSON.stringify(strokes)); } catch {}
+  }, [storageKey, storageReady, strokes]);
   function getPoint(event: React.PointerEvent<SVGSVGElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
     return { x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)), y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100)) };

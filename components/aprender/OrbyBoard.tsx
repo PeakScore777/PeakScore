@@ -414,22 +414,22 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
 
 export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   return (
-    <section aria-label={"Pizarra: " + board.title} className="orby-board mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-[#fffefb] text-slate-900 shadow-[0_18px_52px_rgba(15,23,42,.14)]" style={{ backgroundImage: "linear-gradient(rgba(148,163,184,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.10) 1px, transparent 1px)", backgroundSize: "28px 28px" }}>
-      <header className="flex items-center gap-3 border-b border-slate-200 bg-white/90 px-5 py-3">
-        <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,.55)]" />
-        <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-700">Pizarra · {board.title}</h3>
+    <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden rounded-xl border border-slate-200/90 bg-[#fffefb] text-slate-900 shadow-[0_10px_34px_rgba(15,23,42,.10)] sm:rounded-2xl" style={{ backgroundImage: "linear-gradient(rgba(148,163,184,.075) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.075) 1px, transparent 1px)", backgroundSize: "30px 30px" }}>
+      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200/90 bg-[#fffefb]/95 px-4 py-3 backdrop-blur-sm sm:px-8">
+        <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Apuntes de clase</h3></div>
+        <span className="truncate text-right text-xs font-semibold text-slate-700 sm:text-sm">{board.title}</span>
       </header>
-      <div className="space-y-5 p-5 sm:p-8">
+      <div className="mx-auto min-h-[60vh] max-w-6xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-10 sm:py-10">
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
           const revealClass = "orby-board-appear";
-          if (block.type === "heading") return <h4 key={blockKey} className={`text-sm font-bold text-slate-900 ${revealClass}`}>{block.text}</h4>;
+          if (block.type === "heading") return <h4 key={blockKey} className={`font-serif text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-3xl ${revealClass}`}>{block.text}</h4>;
           if (block.type === "formula") return <div key={blockKey} className={`overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono text-sm font-semibold text-slate-900 ${revealClass}`}>{block.text}</div>;
           if (block.type === "step") return <div key={blockKey} className={`flex gap-3 rounded-lg bg-white p-3 ${revealClass}`}><span className="shrink-0 rounded-md bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-900">{block.label}</span><p className="text-sm leading-6 text-slate-700">{block.text}</p></div>;
           if (block.type === "callout") return <div key={blockKey} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
           return <p key={blockKey} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear space-y-2 rounded-xl border border-slate-100/80 bg-white/80 p-4 shadow-[0_2px_12px_rgba(15,23,42,.035)]">
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-xl border border-slate-200/70 bg-white/75 p-3 shadow-[0_2px_12px_rgba(15,23,42,.025)] sm:p-5">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
           <Visual visual={visual}/>
         </section>)}

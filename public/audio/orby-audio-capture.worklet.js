@@ -1,14 +1,10 @@
 class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.pendingSample = 0;
-    this.hasPendingSample = false;
+    this.pending = new Float32Array(0);
     this.position = 0;
     this.targetRate = 16000;
-    this.mergedBuffer = new Float32Array(0);
-    this.resampledBuffer = new Int16Array(0);
-    this.pendingPcm = new Int16Array(640);
-    this.pendingPcmLength = 0;
+    this.pendingPcm = new Int16Array(0);
   }
 
   process(inputs) {
@@ -17,61 +13,51 @@ class OrbyAudioCaptureProcessor extends AudioWorkletProcessor {
 
     const left = channels[0];
     const right = channels.length > 1 ? channels[1] : null;
-    const pendingFrames = this.hasPendingSample ? 1 : 0;
-    const requiredFrames = pendingFrames + left.length;
+    const incoming = new Float32Array(left.length);
+    for (let i = 0; i < left.length; i += 1) {
+      incoming[i] = right ? (left[i] + right[i]) * 0.5 : left[i];
+    }
 
-    // Reuse scratch storage between render quanta; grow only when a device
-    // supplies a larger-than-usual block.
-    if (this.mergedBuffer.length < requiredFrames) {
-      const capacity = Math.max(requiredFrames, this.mergedBuffer.length * 2, 256);
-      this.mergedBuffer = new Float32Array(capacity);
-    }
-    const merged = this.mergedBuffer;
-    if (pendingFrames) merged[0] = this.pendingSample;
-    if (right) {
-      for (let i = 0; i < left.length; i += 1) {
-        merged[pendingFrames + i] = (left[i] + right[i]) * 0.5;
-      }
-    } else {
-      merged.set(left, pendingFrames);
-    }
+    const merged = new Float32Array(this.pending.length + incoming.length);
+    merged.set(this.pending);
+    merged.set(incoming, this.pending.length);
 
     const step = sampleRate / this.targetRate;
-    const maxOutputSamples = Math.ceil(requiredFrames / step) + 2;
-    if (this.resampledBuffer.length < maxOutputSamples) {
-      const capacity = Math.max(maxOutputSamples, this.resampledBuffer.length * 2, 128);
-      this.resampledBuffer = new Int16Array(capacity);
-    }
-
-    let outputLength = 0;
-    while (this.position + 1 < requiredFrames) {
+    const samples = [];
+    while (this.position + 1 < merged.length) {
       const index = Math.floor(this.position);
       const fraction = this.position - index;
-      const sample = merged[index] * (1 - fraction) + merged[index + 1] * fraction;
-      const clamped = Math.max(-1, Math.min(1, sample));
-      this.resampledBuffer[outputLength] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
-      outputLength += 1;
+      samples.push(merged[index] * (1 - fraction) + merged[index + 1] * fraction);
       this.position += step;
     }
 
-    // Retain the final source frame and fractional cursor for interpolation
-    // across render quanta; do not discard the resampler's overshoot.
-    const consumed = Math.min(Math.floor(this.position), Math.max(0, requiredFrames - 1));
-    this.hasPendingSample = consumed < requiredFrames;
-    this.pendingSample = this.hasPendingSample ? merged[consumed] : 0;
+    // Keep the last source sample for the next render quantum. The
+    // interpolation cursor may advance past the end by up to one resampling
+    // step (for example 3 samples at 48 kHz); consuming that overshoot would
+    // drop valid microphone frames and cause discontinuities in the PCM stream.
+    const consumed = Math.min(Math.floor(this.position), Math.max(0, merged.length - 1));
+    this.pending = merged.slice(consumed);
     this.position -= consumed;
 
-    // Fill a fixed 40 ms packet directly. Transfer complete packets and
-    // allocate the next staging buffer only once per emitted packet.
-    for (let i = 0; i < outputLength; i += 1) {
-      this.pendingPcm[this.pendingPcmLength] = this.resampledBuffer[i];
-      this.pendingPcmLength += 1;
-      if (this.pendingPcmLength === 640) {
-        const packet = this.pendingPcm;
-        this.port.postMessage(packet.buffer, [packet.buffer]);
-        this.pendingPcm = new Int16Array(640);
-        this.pendingPcmLength = 0;
+    if (samples.length > 0) {
+      // Use regular 40 ms PCM packets: responsive enough for live turns while
+      // avoiding a WebSocket message for every ~2.7 ms AudioWorklet quantum.
+      const pending = this.pendingPcm || new Int16Array(0);
+      const next = new Int16Array(pending.length + samples.length);
+      next.set(pending);
+      for (let i = 0; i < samples.length; i += 1) {
+        const clamped = Math.max(-1, Math.min(1, samples[i]));
+        next[pending.length + i] = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff;
       }
+
+      const packetSize = 640; // 40 ms at 16 kHz, mono, signed 16-bit PCM.
+      let offset = 0;
+      while (offset + packetSize <= next.length) {
+        const packet = next.slice(offset, offset + packetSize);
+        this.port.postMessage(packet.buffer, [packet.buffer]);
+        offset += packetSize;
+      }
+      this.pendingPcm = next.slice(offset);
     }
 
     return true;

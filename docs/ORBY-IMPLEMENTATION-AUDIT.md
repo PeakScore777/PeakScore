@@ -160,3 +160,10 @@ Pruebas necesarias:
 - El contenedor del texto incremental expone `aria-live="polite"` y `aria-atomic="false"` solo para el mensaje de voz activo, para que lectores de pantalla puedan anunciar las actualizaciones sin tratar todos los mensajes históricos como contenido en vivo.
 - La pizarra permanece debajo del texto en el mismo mensaje; el escenario de llamada y la vista de chat apuntan al mismo id de asistente.
 - Se añadió una prueba estática de regresión. Relectura de archivos en GitHub confirmada; no hay workflow asociado al commit de prueba. No se ejecutaron tests, TS, ESLint, build ni Chrome/micrófono.
+
+
+## 14. Estado de preparación de pizarra en llamada — 2026-11-07
+- Mientras hay una pregunta activa y aún no ha llegado un tablero validado, el escenario reserva una superficie clara «Pizarra de Orby · Preparando el apoyo visual…».
+- Cuando llega el tablero validado del mismo mensaje de asistente, el estado provisional se sustituye por OrbyBoard. Si el turno no necesita un visual y no llega tablero, el estado provisional desaparece al dejar de estar pendiente el turno.
+- No se inventa un tablero vacío ni se duplica una petición de IA. Se usa el indicador de turno pendiente ya existente.
+- Prueba estática añadida. Archivos releídos en GitHub; no se ejecutaron pruebas Node, TS, ESLint, build ni Chrome/micrófono.

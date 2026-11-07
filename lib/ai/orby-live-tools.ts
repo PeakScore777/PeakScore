@@ -6,7 +6,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
       {
         name: "render_orby_teaching_board",
         behavior: Behavior.NON_BLOCKING,
-        description: "Builds the current visual teaching board DURING a spoken Saber 11 lesson. Call repeatedly as the explanation progresses, not only at the end. Send a cumulative snapshot with the current blocks and up to four visual primitives. Use version 1 for text-only boards; use version 2 when visuals are included. Visuals available: diagram (nodes and directed edges), graph (explicit bounded axes and points), vectors (origin and labeled components), table (headers and rows), timeline (ordered events), molecule (atoms and single/double/triple covalent bonds), circuit (battery/resistor/lamp/switch components and wire connections), cell (animal/plant/prokaryotic cell with labeled organelles), DNA (complementary base pairs). Coordinates for diagrams/vectors/molecules/circuits use a 0-100 canvas; diagram nodes should be between 5 and 95; molecule/circuit coordinates 8–92. Graph values must lie within declared axis bounds. Do not invent measurements, dates, formulas, labels or experimental results. Use concise Spanish text; no HTML, SVG, Markdown, URLs or code. Keep updates synchronized with the spoken explanation. Omit the board for greetings or short replies.",
+        description: "Builds the current visual teaching board DURING a spoken Saber 11 lesson. Call repeatedly as the explanation progresses, not only at the end. Send a cumulative snapshot with the current blocks and up to four visual primitives. Use version 1 for text-only boards; use version 2 when visuals are included. Visuals available: diagram (nodes and directed edges), graph (explicit bounded axes and points), vectors (origin and labeled components), table (headers and rows), timeline (ordered events), molecule (atoms and single/double/triple covalent bonds), circuit (battery/resistor/lamp/switch components and wire connections), cell (animal/plant/prokaryotic cell with labeled organelles), DNA (complementary base pairs), punnett (2×2 single-gene cross with two gametes per parent), cell-division (canonical mitosis or meiosis stages in order). Coordinates for diagrams/vectors/molecules/circuits use a 0-100 canvas; diagram nodes should be between 5 and 95; molecule/circuit coordinates 8–92. Graph values must lie within declared axis bounds. Do not invent measurements, dates, formulas, labels or experimental results. Use concise Spanish text; no HTML, SVG, Markdown, URLs or code. Keep updates synchronized with the spoken explanation. Omit the board for greetings or short replies.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -74,6 +74,12 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
                   pairs: { type: Type.ARRAY, description: "DNA base pairs using only complementary A–T and C–G pairs.", items: { type: Type.OBJECT, properties: {
                     left: { type: Type.STRING, description: "A, T, C or G." }, right: { type: Type.STRING, description: "Complementary base: A–T or C–G." },
                   }, required: ["left", "right"] } },
+                  topAlleles: { type: Type.ARRAY, description: "Exactly two alleles contributed by one parent, in gamete order.", items: { type: Type.STRING } },
+                  sideAlleles: { type: Type.ARRAY, description: "Exactly two alleles contributed by the other parent, in gamete order.", items: { type: Type.STRING } },
+                  mode: { type: Type.STRING, description: "mitosis or meiosis." },
+                  phases: { type: Type.ARRAY, description: "Ordered stages: four canonical mitosis stages or eight meiosis I/II stages.", items: { type: Type.OBJECT, properties: {
+                    name: { type: Type.STRING }, detail: { type: Type.STRING },
+                  }, required: ["name", "detail"] } },
                 },
                 required: ["type"],
               },

@@ -2576,6 +2576,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceListeningReadyLoggedRef.current = false;
       voiceBoardUpdateCountRef.current = 0;
       voicePendingBoardCuesRef.current = [];
+      // The prior assistant message keeps its own board in messages/history;
+      // never carry that board into the next student turn or persist it twice.
+      voiceTeachingBoardRef.current = null;
       voiceLastCommittedInputRef.current = normalizedFinal;
       voiceLastCommittedInputAtRef.current = Date.now();
       voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;

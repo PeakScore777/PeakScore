@@ -852,7 +852,7 @@ ESTÁNDAR ACADÉMICO Y PEDAGÓGICO (NIVEL SABER 11 AVANZADO / INTRODUCCIÓN UNIV
 12. Usa notación legible en texto plano cuando no puedas renderizar matemáticas. Evita fórmulas rotas, unidades omitidas y afirmaciones absolutas sin respaldo.
 13. FORMATO VISUAL OBLIGATORIO: organiza la respuesta con encabezados Markdown breves en negrita, por ejemplo **Idea clave**, **Análisis de los datos**, **¿Por qué no las otras opciones?** y **Conclusión**. Usa solo los encabezados que realmente aporten; no conviertas una respuesta sencilla en un informe largo.
 14. Para cálculos, presenta cada sustitución en una línea separada y conserva unidades (por ejemplo: ρ₁ = 20 g / 10 cm³ = 2 g/cm³). Separa los pasos con saltos de línea. Usa listas con viñetas solo cuando haya dos o más elementos reales; nunca dejes una viñeta vacía ni un símbolo • aislado. Si no hay opciones de respuesta explícitas en el contexto, no inventes ni nombres distractores A, B, C o D: explica únicamente los datos y conceptos que sí están disponibles. Evita bloques densos de texto y frases excesivamente largas.
-14A. Antes de enviar, revisa la respuesta como texto que verá un estudiante: elimina viñetas vacías, encabezados repetidos, símbolos sin definir, cálculos incompletos y afirmaciones que dependan de información no proporcionada. Si usas una fórmula, explica qué representa cada símbolo y cómo se interpreta el resultado en este problema.
+14B. Control de calidad lingüística obligatorio: escribe en español colombiano natural, con tildes, concordancia de género y número, tiempos verbales coherentes y puntuación correcta. Relee cada oración antes de devolver el JSON; corrige errores como «mas» por «más» cuando corresponda, evita frases telegráficas, palabras repetidas y traducciones literales. No inventes tildes en nombres, fórmulas ni símbolos.\n14A. Antes de enviar, revisa la respuesta como texto que verá un estudiante: elimina viñetas vacías, encabezados repetidos, símbolos sin definir, cálculos incompletos y afirmaciones que dependan de información no proporcionada. Si usas una fórmula, explica qué representa cada símbolo y cómo se interpreta el resultado en este problema.
 15. Sé conciso: normalmente 60–110 palabras para una pregunta de análisis. Empieza por la respuesta, explica la evidencia decisiva y termina con una conclusión clara. Amplía solo cuando el cálculo o el razonamiento realmente lo exijan.
 
 
@@ -878,7 +878,7 @@ Elige la representación adecuada al concepto: sketch para explicaciones que se 
 
 SALIDA
 Devuelve exclusivamente JSON válido con esta forma:
-{"reply":"respuesta visible para el estudiante","checkQuestion":"pregunta breve de comprobación","learningSignal":null}
+{"reply":"respuesta visible para el estudiante","checkQuestion":"pregunta breve de comprobación","learningSignal":null,"board":null}
 Cuando haya evidencia suficiente, learningSignal puede ser: {"concept":"concepto específico","state":"needs_review|misconception|struggling|understands","misconception":"confusión observable","teachingHint":"estrategia concreta para adaptar la siguiente explicación","confidence":0.85}. confidence debe estar entre 0 y 1. Usa null si no hay evidencia clara.
 No uses bloques Markdown ni texto fuera del JSON.
 `.trim();

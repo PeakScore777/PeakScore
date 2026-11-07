@@ -3889,12 +3889,12 @@ test("el tutor escrito exige devolver la pizarra y revisar ortografía en el con
 
 
 test("la pizarra Live espera la frase hablada antes de revelar una etapa marcada", () => {
-  assert.match(liveToolsSource, /spokenCue:/);\n  assert.match(liveToolsSource, /must say before this cumulative snapshot is revealed/);
-  assert.match(lessonTutorSource, /voiceCuePendingBoardRef/);
-  assert.match(lessonTutorSource, /isOrbyBoardCueSpoken\\(snapshot, voiceAssistantTextRef\\.current\\)/);
-  assert.match(lessonTutorSource, /status: cueReady \\? "rendered" : "queued_for_spoken_cue"/);
-  assert.match(lessonTutorSource, /flushCuePendingOrbyTeachingBoard\\(\\)/);
-  assert.match(lessonTutorSource, /flushCuePendingOrbyTeachingBoard\\(\\);/);
-  assert.match(lessonTutorSource, /snapshot\\.sessionGeneration !== sessionGeneration/);
-  assert.match(lessonTutorSource, /snapshot\\.activityGeneration !== activityGeneration/);
+  assert.ok(liveToolsSource.includes("spokenCue:"));
+  assert.ok(liveToolsSource.includes("must say before this cumulative snapshot is revealed"));
+  assert.ok(lessonTutorSource.includes("voiceCuePendingBoardRef"));
+  assert.ok(lessonTutorSource.includes("isOrbyBoardCueSpoken(snapshot, voiceAssistantTextRef.current)"));
+  assert.ok(lessonTutorSource.includes('status: cueReady ? "rendered" : "queued_for_spoken_cue"'));
+  assert.ok(lessonTutorSource.includes("flushCuePendingOrbyTeachingBoard()"));
+  assert.ok(lessonTutorSource.includes("snapshot.sessionGeneration !== sessionGeneration"));
+  assert.ok(lessonTutorSource.includes("snapshot.activityGeneration !== activityGeneration"));
 });

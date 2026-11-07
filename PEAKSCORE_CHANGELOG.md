@@ -1,5 +1,11 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — revelación de bloques y etapas de Orby
+- Bloques pedagógicos y visuales nuevos aparecen suavemente; procesos fisiológicos y líneas de tiempo se revelan con retrasos escalonados acotados.
+- Claves estables para snapshots acumulativos que anexan contenido y test estático de regresión.
+- No es escritura carácter por carácter ni sincronía exacta con narración. Pruebas runtime/build/browser no ejecutadas.
+
+
 ## 2026-11-07 — primera capa de trazos progresivos de Orby
 - OrbyBoard: trazado SVG progresivo para conexiones, gráficas, vectores, enlaces moleculares, circuitos y ADN; aparición suave de nodos.
 - CSS: animaciones accesibles con respeto a prefers-reduced-motion.

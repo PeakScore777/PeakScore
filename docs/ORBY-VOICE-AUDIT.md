@@ -194,3 +194,8 @@ No se crean ni reconstruyen materiales del Lab; se usa exclusivamente el materia
 - Pruebas: se añadió cobertura para la primera búsqueda, la búsqueda encadenada, el agotamiento del presupuesto, el reinicio del contador y la respuesta de límite desde el cliente.
 - Restricción preservada: no se añade proveedor, modelo ni fallback de pago. Este límite no impide responder desde el conocimiento del tutor cuando no se consulta el Lab.
 - Pendiente de validación externa: el test automatizado verifica la máquina de estados y el cableado del cliente; no sustituye una sesión real de Chrome con micrófono y audio ni demuestra por sí solo la calidad acústica de Gemini Live.
+
+
+### Verificación CI del límite de búsquedas (6 de noviembre)
+
+La primera ejecución completa del CI para el límite de dos búsquedas detectó una prueba estática demasiado rígida: esperaba cinco apariciones de la programación `WHEN_IDLE`, pero el nuevo camino de respuesta de límite añadió una sexta aparición válida. Las otras 110 pruebas pasaron. Se ajusta la expectativa estructural a seis; no se modifica el comportamiento de producción por este fallo. La siguiente ejecución debe confirmar la suite completa, TypeScript, ESLint y build.

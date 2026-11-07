@@ -83,7 +83,7 @@ function isIcfesAcademicMaterialQuestion(message: string, previousContext = ""):
 // A study invitation is valid context even before a specific subject or concept
 // has been named (for example, Orby asking "¿Qué tema de Saber 11 quieres trabajar?").
 const ORBY_STUDY_INVITATION_PATTERN =
-  /\b(?:que tema|que area|que quieres estudiar|que te gustaria estudiar|por donde empezamos|con que empezamos|elige un tema|elige un area)\b.{0,100}\b(?:saber\s*11|icfes|estudiar|trabajar|repasar|practicar|empezar)\b/i;
+  /\b(?:que tema|que area|que quieres estudiar|que te gustaria estudiar|que quieres repasar|que te gustaria repasar|dime que parte quieres revisar|dime que tema quieres revisar|dime que area quieres trabajar|por donde empezamos|con que empezamos|elige un tema|elige un area)\b.{0,120}\b(?:saber\s*11|icfes|estudiar|trabajar|repasar|practicar|empezar|explicar|revisar)\b/i;
 
 const ICFES_FOLLOW_UP_PATTERN =
   /^[¿¡]?\s*(?:(?:y|entonces|pero|vale|listo)\s+)?(?:explicame|explica|amplia|profundiza|continua|sigue|otro ejemplo|dame otro ejemplo|un ejemplo mas|cual es la respuesta|por que|porque|como asi|que significa eso|que quiere decir|no entiendo|no me queda claro|resuelve esto|ayudame con esto|puedes repetir|repitelo|hazlo paso a paso|paso a paso|y eso|y entonces|cual|cuanto|como funciona|como se hace)[.!? ¿¡,;:]*$/i;
@@ -97,7 +97,8 @@ const ICFES_EXAM_DEFINITION_PATTERN =
   /\b(?:que es|como es|que evalua|que mide|como funciona|estructura de|formato de)\b.{0,55}\b(?:saber\s*11|icfes)\b|\b(?:saber\s*11|icfes)\b.{0,55}\b(?:que es|como es|que evalua|que mide|estructura|formato)\b/i;
 
 const STUDY_GUIDANCE_FOLLOW_UP_PATTERNS = [
-  /^(?:no se|no lo se|ni idea|no tengo claro|no se que (?:estudiar|tema|area)|ayudame a elegir|ayudame a decidir|por donde empiezo|no se por donde empezar|que me recomiendas para empezar|elige por mi)[.!? ]*$/i,
+  /^(?:no se|no lo se|ni idea|no tengo claro|no se que (?:estudiar|tema|area)|ayudame a elegir|ayudame a decidir|por donde empiezo|no se por donde empezar|que me recomiendas para empezar|elige por mi)(?:\\s+(?:xd+|jaja+|jeje+|bro|hermano|la verdad|todavia|aun))*[.!? ]*$/i,
+  /^(?:dime|cuentame|te escucho|por donde empezamos)[.!? ]*$/i,
 ];
 
 export const ORBY_ICFES_SCOPE_REPLY =
@@ -247,7 +248,7 @@ export function getOrbyGreetingFollowUpReply(previousContext = "", activeSubject
 }
 
 export const ORBY_STUDY_GUIDANCE_REPLY =
-  "No pasa nada. Te ayudo a elegir: podemos hacer un diagnóstico breve de Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés para descubrir qué conviene reforzar. ¿Con cuál empezamos?";
+  "Tranqui, no tienes que saberlo todavía. Hagamos una pregunta diagnóstica corta de Saber 11 y, según tu respuesta, identificamos qué tema conviene reforzar. ¿Empezamos?";
 
 export const ORBY_SPANISH_ONLY_REPLY =
   "No alcancé a reconocer tu frase en español. ¿Puedes repetirla, por favor?";
@@ -426,7 +427,10 @@ export function isLowQualityOrbyReply(value: string, studentRequest = ""): boole
     .replace(/[¿?¡!.,;:…]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  if (!normalized) return true;
+  // An empty Live transcript is a missing generation, not a one-word answer.
+  // The caller must recover the same turn through the filtered text route;
+  // showing the generic incomplete-reply bubble here hides the real failure.
+  if (!normalized) return false;
 
   // Short acknowledgements are incomplete tutor answers unless the student
   // explicitly requested a one-word yes/no or true/false response.

@@ -220,7 +220,9 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
 test("una respuesta Live lenta no fuerza TTS si el canal sigue conectado", () => {
   assert.ok(lessonTutorSource.includes("Keep a connected Gemini Live session while long answers and Lab retrieval complete."));
   assert.ok(lessonTutorSource.includes("if (voiceChannelRef.current)"));
-  assert.ok(lessonTutorSource.includes("}, 70_000);"));
+  assert.ok(lessonTutorSource.includes("}, 32_000);"));
+  assert.ok(lessonTutorSource.includes("}, 12_000);"));
+  assert.match(lessonTutorSource, /Gemini Live dejó de enviar avances/);
 });
 
 test("los turnos permitidos de voz permanecen en Gemini Live y no gastan TTS local", () => {
@@ -475,8 +477,8 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));
   assert.ok(lessonTutorSource.includes("voiceResponseSlowNoticeRef"));
   assert.ok(lessonTutorSource.includes("Orby sigue preparando tu respuesta. Mantengo la conexión…"));
-  assert.ok(lessonTutorSource.includes("}, 18_000);"));
-  assert.ok(lessonTutorSource.includes("}, 50_000);"));
+  assert.ok(lessonTutorSource.includes("}, 12_000);"));
+  assert.ok(lessonTutorSource.includes("}, 32_000);"));
   assert.ok(lessonTutorSource.includes('if (voicePlaybackOwnerRef.current === "tts") return;'));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "live"'));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "tts"'));
@@ -1764,7 +1766,7 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   const typedVoiceStart = lessonTutorSource.indexOf('if (voiceModeRef.current && voiceChannelRef.current && message && !selectedFile)');
   const localFilterIndex = lessonTutorSource.indexOf("const localReply = !typedPreflight.allowed ? typedPreflight.reply : null", typedVoiceStart);
   const localReplyIndex = lessonTutorSource.indexOf("requestLivePolicyReply(message, localReply, true)", typedVoiceStart);
-  const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendRealtimeInput({ text: message })", typedVoiceStart);
+  const sendRealtimeIndex = lessonTutorSource.indexOf("voiceChannelRef.current.sendClientContent({", typedVoiceStart);
   const localHelperIndex = lessonTutorSource.indexOf("function respondToVoiceLocally");
   assert.match(lessonTutorSource, /const localReply = !typedPreflight\.allowed \? typedPreflight\.reply : null/);
   assert.match(lessonTutorSource, /voicePreflightReplyRef\.current = typedPreflight\.allowed \? null : typedPreflight\.reply/);
@@ -1775,6 +1777,7 @@ test("la voz responde localmente solo a rechazos deterministas y envía los turn
   assert.ok(typedVoiceStart >= 0 && localFilterIndex > typedVoiceStart
     && localReplyIndex > localFilterIndex && sendRealtimeIndex > localReplyIndex
     && localHelperIndex >= 0 && localHelperIndex < typedVoiceStart);
+  assert.match(lessonTutorSource.slice(sendRealtimeIndex, sendRealtimeIndex + 260), /turnComplete: true/);
   assert.match(lessonTutorSource, /voiceLocalReplyInFlightRef\.current = true/);
   assert.match(lessonTutorSource, /voiceAssistantTextRef\.current = cleanReply/);
   assert.match(lessonTutorSource, /sendClientContent\(/);
@@ -1840,7 +1843,7 @@ test("una selección nueva se valida antes de actualizar la materia activa en vo
     typedValidation,
   );
   const typedLiveSend = lessonTutorSource.indexOf(
-    "voiceChannelRef.current.sendRealtimeInput({ text: message })",
+    "voiceChannelRef.current.sendClientContent({",
     typedCommit,
   );
   assert.ok(sendStart >= 0 && typedDecision > sendStart && typedVoiceStart > typedDecision

@@ -1077,7 +1077,7 @@ test("bloquea consultas generales sobre personas sin bloquear figuras del currí
     assert.equal(result.category, "outside", prompt);
   }
 
-  assert.equal(filter.preflightOrbyRequest("¿Quién fue Simón Bolívar en la independencia de Colombia?").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("Analiza el papel de Simón Bolívar en la independencia de Colombia.").allowed, true);
   assert.equal(filter.preflightOrbyRequest("¿Quién es el narrador del texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
 });
 

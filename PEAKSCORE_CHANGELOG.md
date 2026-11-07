@@ -1,5 +1,12 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — Orby Live Tutor: especificación de pizarra sincronizada
+- Creado docs/ORBY-LIVE-TUTOR-SPEC.md con visión, comportamiento obligatorio, secuencia pedagógica, contrato incremental recomendado, criterios de aceptación y matriz de pruebas basada en el video de referencia del propietario.
+- La auditoría confirmó que Live puede actualizar snapshots acumulativos, pero OrbyBoard.tsx renderiza SVG estático; no hay evidencia todavía de trazos progresivos ni sincronización por segmentos reales de voz. Se registra como brecha abierta, no como funcionalidad terminada.
+- Actualizados PEAKSCORE_CONTEXT.md y docs/ORBY-IMPLEMENTATION-AUDIT.md para conservar la referencia y evitar regresiones de alcance.
+- Sin cambios a main, despliegue ni migraciones remotas. No se ejecutaron build/tests/browser en esta tanda.
+
+
 ## 2026-11-06 — Orby hybrid public research
 - Added `lib/ai/orby-web-research.ts`, a keyless/free public-source adapter using the Wikimedia Spanish search API and OpenAlex works API. It enforces source-host allowlists, short timeouts, bounded results, deduplication, safe URL reconstruction, and treats excerpts as untrusted data.
 - General model knowledge remains the default teaching capability: ordinary definitions, explanations and routine exercises do not trigger Internet searches. Text and VC still consult Orby Lab for relevant published material; public search activates only when the student asks for sources/research, requests current or recent facts, or asks to verify/contrast external evidence.

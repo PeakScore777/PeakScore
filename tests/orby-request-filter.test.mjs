@@ -3898,3 +3898,13 @@ test("la pizarra Live espera la frase hablada antes de revelar una etapa marcada
   assert.ok(lessonTutorSource.includes("snapshot.sessionGeneration !== sessionGeneration"));
   assert.ok(lessonTutorSource.includes("snapshot.activityGeneration !== activityGeneration"));
 });
+
+
+test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva subtítulos", () => {
+  assert.match(lessonTutorSource, /aria-label="Clase en vivo con Orby"/);
+  assert.match(lessonTutorSource, /orby-class-paper/);
+  assert.match(lessonTutorSource, /Orby · Subtítulos en vivo/);
+  assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
+  assert.match(lessonTutorSource, /orby-class-board/);
+  assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);
+});

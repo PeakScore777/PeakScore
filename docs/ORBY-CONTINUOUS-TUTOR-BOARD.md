@@ -221,3 +221,13 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Commits: 3126977d (merge de escenas), 2410c42e (integración Live), f13511e5 (prueba).
 - Esto evita que una instantánea parcial o repetida borre pasos ya dibujados. No crea marcas de tiempo de audio ni garantiza sincronización fonética: el ritmo todavía depende de cuándo Gemini emite cada llamada. La aceptación visual y de voz requiere prueba real en Chrome.
 - La consulta de ejecuciones GitHub Actions para f13511e5 no devolvió runs; no se declara CI validada. No se aplicó la migración pendiente de Supabase, no se activó Gemini Live en producción, no se hizo Pull ni despliegue.
+
+
+## Corrección de contrato y persistencia visual — 2026-11-07
+
+- La herramienta solicita instantáneas completas acumulativas. El cliente utiliza la instantánea validada más reciente como estado autoritativo; no concatena bloques de dos instantáneas. Así el modelo puede corregir, reordenar o retirar contenido sin dejar texto obsoleto en la pizarra.
+- Se limita a ocho actualizaciones por turno. La instrucción Live pide emitir una actualización antes de cada sección hablada importante, una llamada a la vez, con 3–6 actualizaciones para clases de varios pasos.
+- El renderizador vuelve a montar únicamente el visual cuyo contenido cambió; los bloques sin cambios conservan su estado y el nuevo dibujo vuelve a ejecutar el trazo SVG.
+- Hallazgo de persistencia: las RPC anteriores rechazaban version 2, aunque el sanitizador ya permite escenas con visuales. Se añadió la migración aditiva 20261107070000_orby_board_visual_persistence.sql para actualizar ambas RPC (orby_save_turn_with_board y orby_save_voice_turn_with_board) y aceptar version 1 o 2, con máximo de 4 visuales y 24 KB por escena. Se conserva el bloqueo de conversación, el recibo idempotente y los permisos service_role.
+- La nueva migración debe aplicarse junto con las migraciones pendientes de pizarra antes de validar persistencia real. No se ha aplicado Supabase ni se ha desplegado la aplicación.
+- La cadencia real sigue dependiendo de cuándo Gemini emita los eventos Live; el cliente dibuja al recibir cada evento, pero no hay timestamps fonéticos del audio. La prueba real de Chrome sigue siendo requisito de aceptación.

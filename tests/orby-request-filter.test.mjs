@@ -1085,6 +1085,11 @@ test("bloquea consultas generales sobre personas sin bloquear figuras del currí
     "Quien es Michael Scott",
     "¿Quién es Lionel Messi?",
     "Who is Taylor Swift?",
+    "qn es Westcol",
+    "Qn es Westcol?",
+    "qien es Westcol",
+    "kien es Westcol?",
+    "qn fue un streamer famoso",
   ]) {
     const result = filter.preflightOrbyRequest(prompt);
     assert.equal(result.allowed, false, prompt);
@@ -1093,6 +1098,8 @@ test("bloquea consultas generales sobre personas sin bloquear figuras del currí
 
   assert.equal(filter.preflightOrbyRequest("Analiza el papel de Simón Bolívar en la independencia de Colombia.").allowed, true);
   assert.equal(filter.preflightOrbyRequest("¿Quién es el narrador del texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("qn es el narrador del texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
+  assert.equal(filter.preflightOrbyRequest("¿Quién es Westcol en el texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
 });
 
 test("rechaza solicitudes explícitas de programación con una redirección breve", () => {

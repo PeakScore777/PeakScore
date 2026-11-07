@@ -37,11 +37,13 @@ export async function POST(request: Request) {
     if (question.length < 8) {
       return NextResponse.json({ error: "La pregunta es demasiado corta para construir una pizarra." }, { status: 400 });
     }
-    if (containsOrbyPromptInjection(question) || containsUnsupportedSpanishLanguage(question)
-      || containsProgrammingInstruction(question)) {
+    const academicContext = [subject, topic, context].filter(Boolean).join("\n");
+    const untrustedBoardInput = [question, academicContext].filter(Boolean).join("\n");
+    if (containsOrbyPromptInjection(untrustedBoardInput) || containsUnsupportedSpanishLanguage(question)
+      || containsProgrammingInstruction(question, academicContext)) {
       return NextResponse.json({ error: "La solicitud no pasó la validación académica de Orby." }, { status: 400 });
     }
-    const preflight = preflightOrbyRequest(question, [subject, topic, context].filter(Boolean).join("\n"));
+    const preflight = preflightOrbyRequest(question, academicContext);
     if (!preflight.allowed) {
       return NextResponse.json({ error: "La pizarra solo está disponible para contenidos de las áreas Saber 11." }, { status: 400 });
     }

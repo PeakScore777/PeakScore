@@ -1252,6 +1252,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               requestController = null;
               chunkRetryCount = 0;
               rateLimitWaitCount = 0;
+              if (prefetchTimer !== null) window.clearTimeout(prefetchTimer);
+              prefetchTimer = null;
               chunkIndex += 1;
               void playFreeTtsChunk();
             };

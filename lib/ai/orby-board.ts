@@ -109,7 +109,8 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       if (!finite(width, 0.6, 2.4)) return null;
       const label = safeText(item.label, 48);
       const hasLabelPosition = item.labelX !== undefined || item.labelY !== undefined;
-      if (hasLabelPosition && (!label || !finite(item.labelX, 4, 96) || !finite(item.labelY, 4, 96))) return null;
+      if ((label && (!finite(item.labelX, 4, 96) || !finite(item.labelY, 4, 96)))
+        || (hasLabelPosition && !label)) return null;
       strokes.push({
         id,
         points,
@@ -431,7 +432,8 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   if (!title) return null;
   const spokenCue = raw.spokenCue === undefined ? "" : safeText(raw.spokenCue, 100);
   const spokenCueWords = spokenCue ? spokenCue.split(/\s+/).filter(Boolean).length : 0;
-  if (raw.spokenCue !== undefined && (spokenCueWords < 3 || spokenCueWords > 12)) return null;
+  if (raw.spokenCue !== undefined && (spokenCueWords < 3 || spokenCueWords > 12
+    || !/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]/u.test(spokenCue))) return null;
 
   const blocks: OrbyBoardBlock[] = [];
   for (const candidate of raw.blocks) {

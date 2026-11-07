@@ -44,7 +44,18 @@ export type OrbyBoardVisual =
       type: "timeline";
       title: string;
       events: Array<{ label: string; detail?: string; position: number }>;
-    };
+    }
+  | { type: "sketch"; title: string; strokes: OrbySketchStroke[] };
+
+export type OrbySketchStroke = {
+  id: string;
+  points: Array<{ x: number; y: number }>;
+  tone: "ink" | "accent" | "muted" | "success";
+  width: number;
+  label?: string;
+  labelX?: number;
+  labelY?: number;
+};
 
 export type OrbyBoard = {
   version: 1 | 2;
@@ -75,6 +86,41 @@ function safeId(value: unknown): string {
 function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
+  if (raw.type === "sketch") {
+    if (!Array.isArray(raw.strokes) || raw.strokes.length < 1 || raw.strokes.length > 16) return null;
+    const strokes: OrbySketchStroke[] = [];
+    const ids = new Set<string>();
+    for (const entry of raw.strokes) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const item = entry as Record<string, unknown>;
+      const id = safeId(item.id);
+      if (!id || ids.has(id) || !Array.isArray(item.points) || item.points.length < 2 || item.points.length > 40) return null;
+      ids.add(id);
+      const points: Array<{ x: number; y: number }> = [];
+      for (const pointEntry of item.points) {
+        if (!pointEntry || typeof pointEntry !== "object" || Array.isArray(pointEntry)) return null;
+        const point = pointEntry as Record<string, unknown>;
+        if (!finite(point.x, 4, 96) || !finite(point.y, 4, 96)) return null;
+        points.push({ x: point.x, y: point.y });
+      }
+      const tone = item.tone === undefined ? "ink" : item.tone;
+      if (tone !== "ink" && tone !== "accent" && tone !== "muted" && tone !== "success") return null;
+      const width = item.width === undefined ? 1.25 : item.width;
+      if (!finite(width, 0.6, 2.4)) return null;
+      const label = safeText(item.label, 48);
+      const hasLabelPosition = item.labelX !== undefined || item.labelY !== undefined;
+      if (hasLabelPosition && (!label || !finite(item.labelX, 4, 96) || !finite(item.labelY, 4, 96))) return null;
+      strokes.push({
+        id,
+        points,
+        tone,
+        width,
+        ...(label ? { label } : {}),
+        ...(hasLabelPosition ? { labelX: item.labelX as number, labelY: item.labelY as number } : {}),
+      });
+    }
+    return { type: "sketch", title: safeText(raw.title, 80), strokes };
+  }
   if (raw.type === "diagram") {
     if (!Array.isArray(raw.nodes) || raw.nodes.length < 2 || raw.nodes.length > 12
       || !Array.isArray(raw.edges) || raw.edges.length > 20) return null;

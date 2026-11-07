@@ -741,7 +741,8 @@ La corrección se aplica a la salida inicial y a la recuperación acotada del tu
 
 - `935cc52a`: detector acotado para corregir la confusión ADN/mitosis.
 - `772b243b`: integración de la corrección en la ruta de texto, incluida la recuperación.
-- `55713190`: pruebas de regresión de precisión conceptual.
+- `55713190`: pruebas unitarias de precisión conceptual.
+- `c9087518` / `470a51fd`: prueba de integración que verifica que la ruta del tutor aplique la corrección tanto a la primera generación como al reintento.
 
 ### Validación pendiente
 

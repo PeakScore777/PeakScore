@@ -137,7 +137,7 @@ export const ORBY_ICFES_ENGLISH_INTRO_REPLY =
   "¡Claro! Vamos a estudiar el componente de Inglés de Saber 11, no una conversación general en inglés. Practicaremos comprensión de textos, avisos y diálogos, vocabulario en contexto e interpretación de la intención comunicativa. Te explicaré en español y usaremos ejercicios originales tipo ICFES. ¿Empezamos con una pregunta de práctica?";
 
 export const ORBY_GREETING_REPLY =
-  "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
+  "¡Aquí estoy! ¿Qué área quieres trabajar: Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales o Inglés?";
 
 type OrbySubjectKey = "math" | "reading" | "social" | "science" | "english";
 

@@ -466,3 +466,23 @@ Commits:
 - `db8efc2` — pruebas de saludo y subcadenas.
 
 El workflow de la nueva punta debe confirmar la corrección. No se declara validado hasta que termine toda la cadena.
+
+
+## 2026-11-07 — instrumentación de latencia de voz Live
+
+Se añadieron métricas monotónicas por turno en `components/aprender/LessonAITutor.tsx`:
+
+- `firstTranscriptMs`: tiempo desde que el cliente acepta la transcripción final del estudiante hasta que llega la primera transcripción de respuesta de Orby.
+- `firstAudioMs`: tiempo desde ese mismo punto hasta que se programa el primer paquete de audio Live para reproducción.
+- Los dos indicadores se reinician al aceptar cada turno, evitando arrastrar tiempos de la conversación anterior.
+- Solo se registran duraciones y no se incluyen transcripciones ni contenido personal en estos eventos.
+
+Esto permite separar el tiempo de respuesta textual del tiempo hasta el primer audio. No cambia el endpointing, el modelo, el proveedor, ni las cuotas; tampoco promete una reducción de latencia por sí mismo. Las métricas reales deberán observarse en sesiones de Chrome y correlacionarse con el rendimiento de red y del servicio.
+
+Commits:
+- `58c1218` — instrumentación de primera transcripción y primer audio.
+- `5b115d0` — regresión de instrumentación por turno.
+
+Validación de CI:
+- El workflow del commit `5e6dd69` completó regresiones y TypeScript correctamente; ESLint y build estaban aún ejecutándose en la última lectura.
+- Los commits posteriores `db8efc2`, `7888351` y la instrumentación requieren validación de la punta actual.

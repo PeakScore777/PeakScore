@@ -3053,3 +3053,25 @@ test("la pizarra se guarda de forma atómica y se recupera en el historial", asy
   assert.match(migration, /for update/);
   assert.match(migration, /insert into public[.]orby_messages/);
 });
+
+
+test("Gemini Live separa la herramienta de pizarra, valida el payload y lo conserva en reintentos de voz", async () => {
+  const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const route = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20261107060000_orby_voice_board_idempotency.sql", import.meta.url), "utf8");
+  assert.match(tools, /name: "render_orby_teaching_board"/);
+  assert.match(lesson, /function handleOrbyLiveTeachingBoardTool/);
+  assert.match(lesson, /handleOrbyLiveTeachingBoardTool\(\{ functionCalls: boardCalls \}\)/);
+  assert.match(lesson, /handleOrbyLiveKnowledgeTool\(\{ functionCalls: knowledgeCalls \}\)/);
+  assert.match(lesson, /sanitizeOrbyBoard\(args\)/);
+  assert.match(lesson, /voiceTeachingBoardRef\.current = board/);
+  assert.match(lesson, /voiceTeachingBoardRef\.current = null/);
+  assert.match(lesson, /board: voiceTeachingBoardRef\.current/);
+  assert.match(route, /sanitizeOrbyBoard\(body\.board\)/);
+  assert.match(route, /orby_save_voice_turn_with_board/);
+  assert.match(route, /p_teaching_board: board/);
+  assert.match(migration, /orby_voice_turn_receipts/);
+  assert.match(migration, /on conflict \(conversation_id, user_id, turn_id\) do nothing/);
+  assert.match(migration, /teaching_board/);
+});

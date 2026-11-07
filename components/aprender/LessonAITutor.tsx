@@ -5454,6 +5454,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         #orby-tutor-panel .orby-class-board .orby-board > div { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));align-items:start;gap:clamp(14px,2vw,28px);padding:clamp(14px,2.5vw,36px)!important; }
         #orby-tutor-panel .orby-class-board .orby-board > div > * { min-width:0; }
         #orby-tutor-panel .orby-class-board .orby-board section { background:rgba(255,255,255,.84)!important; }
+        #orby-tutor-panel .orby-class-board .orby-board,
+        #orby-tutor-panel .orby-class-board .orby-board * { color:#172033; }
+        #orby-tutor-panel .orby-class-board .orby-board [class~="text-slate-950"],
+        #orby-tutor-panel .orby-class-board .orby-board [class~="text-slate-900"],
+        #orby-tutor-panel .orby-class-board .orby-board [class~="text-slate-800"],
+        #orby-tutor-panel .orby-class-board .orby-board [class~="text-slate-700"] { color:#172033!important; }
+        #orby-tutor-panel .orby-class-board .orby-board [class~="text-slate-600"],
+        #orby-tutor-panel .orby-class-board .orby-board [class~="text-slate-500"] { color:#536174!important; }
+        #orby-tutor-panel .orby-class-board .orby-board [class~="bg-white"] { background-color:rgba(255,255,255,.94)!important; }
+
         #orby-tutor-panel .orby-live-captions { background:linear-gradient(180deg,rgba(255,254,250,0),rgba(255,254,250,.98) 24%); }
         #orby-tutor-panel .orby-call-control { display:flex;height:44px;width:44px;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.16);border-radius:9999px;background:rgba(255,255,255,.07);color:#f8fafc;transition:background .18s,border-color .18s,transform .18s; }
         #orby-tutor-panel .orby-call-control:hover:not(:disabled) { background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.32); }

@@ -2338,6 +2338,11 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeTurnSource.includes('.eq("user_id", user.id)'));
   assert.ok(realtimeTurnSource.includes(".limit(20)"));
   assert.ok(realtimeTurnSource.includes("const alreadySaved ="));
+  assert.match(realtimeTurnSource, /const latestAssistant = latestMessages\[0\]/);
+  assert.match(realtimeTurnSource, /const previousUser = latestMessages\[1\]/);
+  assert.doesNotMatch(realtimeTurnSource, /latestMessages\.some\(/);
+  assert.match(realtimeTurnSource, /if \(recentReadError \|\| !Array\.isArray\(latestMessages\)\)/);
+  assert.match(realtimeTurnSource, /SAVE_TURN_IDEMPOTENCY_CHECK_FAILED/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));
   assert.ok(lessonTutorSource.includes("setFailedVoiceTurn(turn)"));
   assert.ok(lessonTutorSource.includes("Reintentar guardado"));

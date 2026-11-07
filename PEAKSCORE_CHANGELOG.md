@@ -1,5 +1,10 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — escucha continua manos libres
+- Métrica del ciclo completo de conversación y verificación del rearme del micrófono únicamente después del último fragmento de voz de Orby.
+- Prueba estática añadida; pendiente QA real de micrófono/eco y conversación sin pulsar de nuevo.
+
+
 ## 2026-11-07 — instrumentación de latencia de voz
 - Se añadió medición del primer chunk de audio recibido, independiente de la primera reproducción audible, reiniciada por turno.
 - Test estático añadido; falta medir p50/p95 con sesiones reales. No se declara cumplido el objetivo de 1 segundo.

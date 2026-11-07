@@ -37,6 +37,7 @@ export type OrbyBoardVisual =
   | { type: "dna"; title: string; pairs: Array<{ left: "A" | "T" | "C" | "G"; right: "A" | "T" | "C" | "G" }> }
   | { type: "punnett"; title: string; topAlleles: [string, string]; sideAlleles: [string, string] }
   | { type: "cell-division"; title: string; mode: "mitosis" | "meiosis"; phases: Array<{ name: string; detail: string }> }
+  | { type: "organ-system"; title: string; system: "nervous" | "circulatory" | "respiratory" | "digestive" | "endocrine" | "urinary" | "skeletal" | "muscular"; structures: Array<{ id: string; name: string; x: number; y: number; role: string }> }
   | {
       type: "timeline";
       title: string;
@@ -284,6 +285,25 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       phases.push({ name, detail });
     }
     return { type: "cell-division", title: safeText(raw.title, 80), mode: raw.mode, phases };
+  }
+
+  if (raw.type === "organ-system") {
+    const allowed = ["nervous", "circulatory", "respiratory", "digestive", "endocrine", "urinary", "skeletal", "muscular"];
+    if (!allowed.includes(String(raw.system)) || !Array.isArray(raw.structures)
+      || raw.structures.length < 2 || raw.structures.length > 12) return null;
+    const structures: Array<{ id: string; name: string; x: number; y: number; role: string }> = [];
+    const ids = new Set<string>();
+    for (const entry of raw.structures) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const item = entry as Record<string, unknown>;
+      const id = safeId(item.id);
+      const name = safeText(item.name, 48);
+      const role = safeText(item.role, 100);
+      if (!id || ids.has(id) || !name || !role || !finite(item.x, 10, 90) || !finite(item.y, 8, 92)) return null;
+      ids.add(id);
+      structures.push({ id, name, x: item.x, y: item.y, role });
+    }
+    return { type: "organ-system", title: safeText(raw.title, 80), system: raw.system as "nervous" | "circulatory" | "respiratory" | "digestive" | "endocrine" | "urinary" | "skeletal" | "muscular", structures };
   }
 
   if (raw.type === "timeline") {

@@ -31,14 +31,15 @@ begin
      or (p_check_question is not null and char_length(p_check_question) > 500)
      or (p_attachment_kind is not null and p_attachment_kind not in ('image', 'audio'))
      or (p_attachment_label is not null and char_length(p_attachment_label) > 120)
-     or (p_teaching_board is not null and (
-       pg_catalog.jsonb_typeof(p_teaching_board) <> 'object'
-       or p_teaching_board->>'version' <> '1'
-       or pg_catalog.jsonb_typeof(p_teaching_board->'blocks') <> 'array'
-       or pg_catalog.jsonb_array_length(p_teaching_board->'blocks') < 1
-       or pg_catalog.jsonb_array_length(p_teaching_board->'blocks') > 8
-       or pg_catalog.octet_length(p_teaching_board::text) > 12000
-     )) then
+     or (p_teaching_board is not null and case
+       when pg_catalog.jsonb_typeof(p_teaching_board) <> 'object' then true
+       when p_teaching_board->>'version' <> '1' then true
+       when pg_catalog.jsonb_typeof(p_teaching_board->'blocks') <> 'array' then true
+       when pg_catalog.jsonb_array_length(p_teaching_board->'blocks') < 1 then true
+       when pg_catalog.jsonb_array_length(p_teaching_board->'blocks') > 8 then true
+       when pg_catalog.octet_length(p_teaching_board::text) > 12000 then true
+       else false
+     end) then
     return jsonb_build_object('ok', false, 'code', 'invalid_input');
   end if;
 

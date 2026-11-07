@@ -299,3 +299,8 @@ Se añadieron regresiones para: preservar el nuevo turno durante `interrupted`; 
 ### Validación pendiente de esta tanda
 
 El workflow de CI debe completar suite Orby, TypeScript, ESLint y build de producción sobre el commit que contiene estos cambios, además de la auditoría de dependencias. Las pruebas automatizadas no sustituyen una sesión Chrome real con micrófono, una interrupción hablada durante Live ni una repetición posterior de exactamente la misma pregunta.
+
+
+### Recuperación de Lab sin esperar embeddings lentos
+
+La búsqueda de conocimiento conserva la recuperación híbrida y el aislamiento estricto por materia. Se separó el timeout de embeddings de consulta del timeout de ingestión documental: `createOrbyQueryEmbeddingForModel` usa un límite de 8 segundos para la solicitud de consulta; si no hay vector a tiempo, `searchOrbyKnowledge` continúa con la búsqueda léxica acotada a la materia. `createCloudflareEmbeddings` conserva 25 segundos por defecto, para que los lotes de procesamiento del Orby Lab no hereden el límite corto de una consulta interactiva. Se añadieron pruebas que comprueban explícitamente ambos contratos.

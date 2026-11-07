@@ -3595,3 +3595,13 @@ test("La llamada reserva una superficie de pizarra durante el turno y la sustitu
   assert.match(source, /Preparando el apoyo visual/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });
+
+
+test("La voz reduce la espera de cierre de turno y prioriza respuestas directas sin omitir seguridad", async () => {
+  const client = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const server = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(client, /silenceDurationMs: 400/);
+  assert.match(server, /silenceDurationMs: 400/);
+  assert.match(server, /RESPUESTA ÁGIL Y CONTINUA/);
+  assert.match(server, /La rapidez nunca justifica inventar, omitir filtros de seguridad ni sacrificar precisión académica/);
+});

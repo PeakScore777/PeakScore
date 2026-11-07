@@ -314,3 +314,12 @@
 - Se añadió un único turno de recuperación cuando hay transcripción provisional en escritura no española y falta la final: `Audio no reconocido.` + petición de repetir en español.
 - Las respuestas locales (saludo, identidad, programación) mantienen un texto canónico; el audio Live solo pasa si la transcripción coincide con la frase aprobada. En otro caso, TTS lee la frase segura.
 - El prompt de voz ahora prioriza ortografía colombiana, tildes, concordancia, naturalidad y negativas breves sin repetir la presentación.
+
+
+## 2026-11-07 — especificación curricular integral de Orby
+- Se añadió `docs/ORBY-ICFES-CURRICULUM-PLAN.md` con un mapa inicial de las cinco pruebas Saber 11, competencias, componentes, progresión pedagógica, política de precisión y plan de implementación.
+- La especificación toma como referencia principal la guía Icfes Saber 11 2026-2 y los marcos de referencia oficiales; los materiales aportados por el propietario son insumos complementarios, no sustituyen la estructura oficial del examen.
+- Se separan contenidos núcleo Saber 11, prerrequisitos/refuerzo y ampliaciones académicas para no presentar cálculo universitario, números complejos u otros temas avanzados como foco obligatorio del examen.
+- Se preserva la creación/revisión manual del banco de Inglés en sus siete partes y la restricción de presupuesto: no introducir proveedores, modelos ni fallbacks con riesgo de cobro.
+- Esta entrega es documentación y diseño; no implica que el código del tutor ya implemente toda la cobertura. No se modificó `main`, no se desplegó ni se debe hacer Pull todavía.
+- Fuentes oficiales consultadas: guía de orientación 2026-2, página de marcos de referencia Saber 11 y caja de herramientas «¿Qué se evalúa?» del Icfes.

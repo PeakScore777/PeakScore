@@ -278,3 +278,10 @@ Esta tanda amplía la revisión de las grabaciones y registra controles adiciona
 La cancelación de un `AbortSignal` en el SDK de Gemini es del lado cliente y no garantiza cancelar el trabajo ya aceptado por el servicio ni evitar su consumo de cuota. Por eso el prefetch se retrasa para reducir el intervalo en el que una interrupción podría dejar una generación especulativa sin aprovechar. La mejora es de preparación de red entre fragmentos; no se presenta como una medición de latencia de producción.
 
 El CI debe terminar verde sobre el último commit de `feat/founder-intro` (suite Orby, TypeScript, ESLint, build y auditoría de dependencias). Antes de considerar la voz completamente validada, falta ejecutar en Chrome real los casos `qn es Westcol`, `q y es PeakScore`, `es recomendable`, `qn soy yo`, `oe` durante un hilo activo, una consulta académica abreviada, respuesta larga e interrupción durante Live/TTS. El test automatizado no simula la acústica del micrófono ni la latencia real del proveedor.
+
+
+### Saludos breves en Live: resolución determinista
+
+La voz ya no deja que «hola», «oe», «oee», «oye», etc. activen una nueva respuesta general del modelo. `LessonAITutor` reconoce esos turnos con `isOrbyGreetingRequest`, elimina el saludo recién recibido del contexto que consulta y obtiene la continuación con `getOrbyGreetingFollowUpReply` usando los últimos mensajes y la materia activa. La respuesta se envía como turno de política controlado a Gemini Live, sin búsqueda del Lab ni generación de tutoría académica adicional. Cuando no existe contexto útil, la respuesta breve pregunta cuál de las cinco áreas de Saber 11 quiere trabajar, sin repetir la presentación de Orby.
+
+La unión del contexto usa saltos de línea reales. Se añadieron regresiones para comprobar que Live usa esta ruta determinista, retoma Matemáticas cuando corresponde y no repite la identidad de Orby al saludar.

@@ -22,13 +22,13 @@ function Diagram({ visual }: { visual: Extract<OrbyBoardVisual, { type: "diagram
         if (!from || !to) return null;
         const midX = (from.x + to.x) / 2;
         const midY = (from.y + to.y) / 2;
-        return <g key={`${edge.from}:${edge.to}:${from.x}:${from.y}:${to.x}:${to.y}:${edge.label || ""}`}>
+        return <g key={`${edge.from}:${edge.to}:${from.x}:${from.y}:${to.x}:${to.y}:${edge.label || ""}`} style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
           <line className="orby-board-stroke" pathLength={1} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="0.8" markerEnd={`url(#${markerId})`} />
           {edge.label ? <text x={midX} y={midY - 2} fontSize="3.2" textAnchor="middle" fill={colors.ink}>{edge.label}</text> : null}
         </g>;
       })}
       <defs><marker id={markerId} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill={colors.ink}/></marker></defs>
-      {visual.nodes.map((node) => <g key={`${node.id}:${node.x}:${node.y}:${node.label}`}>
+      {visual.nodes.map((node, index) => <g key={`${node.id}:${node.x}:${node.y}:${node.label}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
         <rect className="orby-board-appear" x={node.x - 8} y={node.y - 5} width="16" height="10" rx="2" fill="#ffedd5" stroke={colors.orange} strokeWidth="0.7"/>
         <text x={node.x} y={node.y + 1} fontSize="3.1" textAnchor="middle" fill="#7c2d12">{node.label}</text>
       </g>)}
@@ -50,7 +50,7 @@ function Graph({ visual }: { visual: Extract<OrbyBoardVisual, { type: "graph" }>
       <line className="orby-board-stroke" pathLength={1} x1={left} y1={top} x2={left} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
       <line className="orby-board-stroke" pathLength={1} x1={left} y1={bottom} x2={right} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
       {visual.kind === "line" ? <path key={path} className="orby-board-stroke" pathLength={1} d={path} fill="none" stroke={colors.orange} strokeWidth="1.5" strokeLinejoin="round"/> : null}
-      {visual.points.map((point, index) => <g key={`${point.x}:${point.y}:${point.label || index}`} className="orby-board-appear">
+      {visual.points.map((point, index) => <g key={`${point.x}:${point.y}:${point.label || index}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
         <circle className="orby-board-appear" cx={px(point.x)} cy={py(point.y)} r="1.8" fill={colors.orange}/>
         {point.label ? <text x={px(point.x)} y={py(point.y) - 3} fontSize="3" textAnchor="middle" fill={colors.ink}>{point.label}</text> : null}
       </g>)}
@@ -73,7 +73,7 @@ function Vectors({ visual }: { visual: Extract<OrbyBoardVisual, { type: "vectors
       {visual.vectors.map((vector, index) => {
         const endX = visual.origin.x + vector.dx;
         const endY = visual.origin.y - vector.dy;
-        return <g key={`${vector.label}:${visual.origin.x}:${visual.origin.y}:${vector.dx}:${vector.dy}`} className="orby-board-appear">
+        return <g key={`${vector.label}:${visual.origin.x}:${visual.origin.y}:${vector.dx}:${vector.dy}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
           <line className="orby-board-stroke" pathLength={1} x1={visual.origin.x} y1={visual.origin.y} x2={endX} y2={endY} stroke={colors.orange} strokeWidth="1.2" markerEnd={`url(#${markerId})`}/>
           <text x={endX + 2} y={endY - 2} fontSize="3.6" fill={colors.ink}>{vector.label}</text>
         </g>;
@@ -93,12 +93,12 @@ function Molecule({ visual }: { visual: Extract<OrbyBoardVisual, { type: "molecu
         const length = Math.hypot(dx, dy) || 1;
         const offsetX = (-dy / length) * 1.5, offsetY = (dx / length) * 1.5;
         const offsets = bond.order === 1 ? [0] : bond.order === 2 ? [-1.5, 1.5] : [-3, 0, 3];
-        return <g key={`${bond.from}:${bond.to}:${bond.order}:${from.x}:${from.y}:${to.x}:${to.y}`}>{offsets.map((offset) => <line className="orby-board-stroke" pathLength={1} key={offset}
+        return <g key={`${bond.from}:${bond.to}:${bond.order}:${from.x}:${from.y}:${to.x}:${to.y}`} style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>{offsets.map((offset) => <line className="orby-board-stroke" pathLength={1} key={offset}
           x1={from.x + offsetX * offset} y1={from.y + offsetY * offset}
           x2={to.x + offsetX * offset} y2={to.y + offsetY * offset}
           stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>)}</g>;
       })}
-      {visual.atoms.map((atom) => <g key={`${atom.id}:${atom.x}:${atom.y}:${atom.element}:${atom.charge || ""}`} className="orby-board-appear">
+      {visual.atoms.map((atom, index) => <g key={`${atom.id}:${atom.x}:${atom.y}:${atom.element}:${atom.charge || ""}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
         <circle cx={atom.x} cy={atom.y} r="5.3" fill={atom.element === "O" ? "#fee2e2" : atom.element === "N" ? "#dbeafe" : atom.element === "H" ? "#f1f5f9" : "#ffedd5"} stroke={colors.ink} strokeWidth="0.6"/>
         <text x={atom.x} y={atom.y + 1.5} fontSize="4.2" fontWeight="bold" textAnchor="middle" fill={colors.ink}>{atom.element}{atom.charge || ""}</text>
       </g>)}
@@ -115,7 +115,7 @@ function Circuit({ visual }: { visual: Extract<OrbyBoardVisual, { type: "circuit
         if (!from || !to) return null;
         return <line className="orby-board-stroke" pathLength={1} key={`${connection.from}:${connection.to}:${from.x}:${from.y}:${to.x}:${to.y}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>;
       })}
-      {visual.components.map((component) => <g key={`${component.id}:${component.kind}:${component.x}:${component.y}:${component.label}`} className="orby-board-appear">
+      {visual.components.map((component, index) => <g key={`${component.id}:${component.kind}:${component.x}:${component.y}:${component.label}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
         {component.kind === "battery" ? <g>
           <line x1={component.x - 5} y1={component.y - 5} x2={component.x - 5} y2={component.y + 5} stroke={colors.orange} strokeWidth="1.5"/>
           <line x1={component.x + 1} y1={component.y - 8} x2={component.x + 1} y2={component.y + 8} stroke={colors.orange} strokeWidth="2"/>
@@ -171,7 +171,7 @@ function Dna({ visual }: { visual: Extract<OrbyBoardVisual, { type: "dna" }> }) 
         const y = 12 + index * step;
         const x1 = 50 + Math.sin(index * 0.9) * 18;
         const x2 = 50 - Math.sin(index * 0.9) * 18;
-        return <g key={index}>
+        return <g key={`${index}:${pair.left}:${pair.right}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
           <line className="orby-board-stroke" pathLength={1} x1={x1} y1={y} x2={x2} y2={y} stroke={colors.ink} strokeWidth="1.2"/>
           <circle cx={x1} cy={y} r="5" fill="#dbeafe" stroke={colors.ink} strokeWidth="0.5"/>
           <circle cx={x2} cy={y} r="5" fill="#fee2e2" stroke={colors.ink} strokeWidth="0.5"/>

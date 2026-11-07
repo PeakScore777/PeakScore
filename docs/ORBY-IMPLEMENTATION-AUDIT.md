@@ -153,3 +153,10 @@ Pruebas necesarias:
 ## 12. Especificación funcional voz + tablero + subtítulos
 - Creado docs/ORBY-VOICE-WHITEBOARD-SPEC.md como contrato de producto y QA: escenario de llamada, chat durante llamada, subtítulos incrementales, snapshots acumulativos, interrupciones, filtros, accesibilidad, fallback y cuota gratuita.
 - Distingue explícitamente lo implementado, lo parcial y lo pendiente; incluye checklist para no declarar listo antes de probar micrófono, responsive y snapshots reales.
+
+
+## 13. Continuidad visible de la voz en el chat — 2026-11-07
+- La burbuja del mensaje de Orby correspondiente al turno de voz activo ahora marca `EN VIVO` mientras el turno no ha terminado.
+- El contenedor del texto incremental expone `aria-live="polite"` y `aria-atomic="false"` solo para el mensaje de voz activo, para que lectores de pantalla puedan anunciar las actualizaciones sin tratar todos los mensajes históricos como contenido en vivo.
+- La pizarra permanece debajo del texto en el mismo mensaje; el escenario de llamada y la vista de chat apuntan al mismo id de asistente.
+- Se añadió una prueba estática de regresión. Relectura de archivos en GitHub confirmada; no hay workflow asociado al commit de prueba. No se ejecutaron tests, TS, ESLint, build ni Chrome/micrófono.

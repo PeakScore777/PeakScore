@@ -713,6 +713,9 @@ test("la voz conserva transcripciones largas del estudiante hasta el límite per
 test("el audio Live comienza tras la primera oración segura y la cola espera al fin de la reproducción", () => {
   assert.match(lessonTutorSource, /flushPendingGeminiAudio/);
   assert.match(lessonTutorSource, /voicePendingAudioChunksRef\.current\.length < 512/);
+  assert.match(lessonTutorSource, /pendingEncodedChars <= 8 \* 1024 \* 1024/);
+  assert.match(lessonTutorSource, /pendingChunkCount = voicePendingAudioChunksRef\.current\.length/);
+  assert.match(lessonTutorSource, /Audio buffer budget reached/);
   assert.match(lessonTutorSource, /finishRealtimeVoicePlayback/);
   assert.match(lessonTutorSource, /voiceAudioSourcesRef\.current\.size > 0/);
   assert.match(lessonTutorSource, /voiceRealtimeAudioChunkCountRef\.current === 0/);

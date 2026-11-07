@@ -54,13 +54,14 @@ Componentes: biológico, físico, químico y Ciencia-Tecnología-Sociedad (CTS).
 
 ### Inglés
 - Mantener el formato de siete partes de la guía 2026-2; el banco de preguntas debe etiquetar cada parte y su habilidad, no agruparlo como un test genérico de gramática.
-- Parte 1: vocabulario por definiciones/descripciones.
-- Parte 2: propósito y contexto de avisos.
-- Parte 3: respuesta funcional en diálogos.
-- Parte 4: gramática contextual para completar textos.
-- Parte 5: comprensión literal y paráfrasis.
-- Parte 6: comprensión inferencial, intención y detalles.
-- Parte 7: vocabulario y gramática contextual para completar un texto.
+- Parte 1 (11 %): conocimiento lexical; relacionar cinco descripciones con cinco palabras de una lista de siete.
+- Parte 2 (11 %): conocimiento pragmático; reconocer propósito comunicativo y lugar apropiado de un aviso.
+- Parte 3 (11 %): conocimiento comunicativo; seleccionar la intervención pertinente para completar conversaciones breves.
+- Parte 4 (18 %): conocimiento gramatical; completar espacios de un texto con la opción gramaticalmente adecuada.
+- Parte 5 (16 %): comprensión literal; seleccionar paráfrasis que responde preguntas sobre un texto.
+- Parte 6 (11 %): lectura inferencial; analizar intención del autor y aspectos generales/particulares del texto.
+- Parte 7 (22 %): conocimiento gramatical y lexical; completar un texto seleccionando palabras adecuadas.
+- Niveles de desempeño del marco oficial: Pre A1, A1, A2 y B1.
 - Progresión MCER Pre-A1, A1, A2 y B1. Explicar en español colombiano cuando el estudiante lo necesite; conservar ejemplos y estímulos en inglés.
 - Respetar la decisión del proyecto de crear y revisar manualmente el banco de Inglés; no delegar su generación a IA sin una decisión explícita nueva.
 

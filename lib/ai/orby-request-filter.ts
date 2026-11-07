@@ -22,7 +22,21 @@ export function dedupeAdjacentAssistantMessages<T extends {
       && previous?.role === "assistant"
       && normalize(previous.content) === normalize(message.content)
       && normalize(previous.checkQuestion) === normalize(message.checkQuestion);
-    if (!repeatedAssistant) result.push(message);
+    if (repeatedAssistant && previous) {
+      // Live may attach board/media metadata in a later update to identical text.
+      const merged = { ...(previous as T & Record<string, unknown>), ...(message as T & Record<string, unknown>) } as T & Record<string, unknown>;
+      const previousRecord = previous as T & Record<string, unknown>;
+      const messageRecord = message as T & Record<string, unknown>;
+      for (const key of ["board", "sources", "generatedImage", "attachmentName", "attachmentPreview", "attachmentKind"]) {
+        const latestValue = messageRecord[key];
+        const previousValue = previousRecord[key];
+        const latestIsEmpty = latestValue == null || (Array.isArray(latestValue) && latestValue.length === 0);
+        if (latestIsEmpty && previousValue != null) merged[key] = previousValue;
+      }
+      result[result.length - 1] = merged as T;
+    } else {
+      result.push(message);
+    }
   }
   return result;
 }

@@ -98,3 +98,22 @@ La persistencia puede seguir guardando intercambios atómicos. Eso es una decisi
 - Hasta aplicar la migración, la ruta nueva no estará disponible contra la base de datos actual.
 - La CI del commit más reciente debe finalizar antes de solicitar Pull.
 - Esta persistencia cubre el tutor HTTP y el historial; no convierte todavía Gemini Live en una sesión continua ni sincroniza pizarras durante el audio.
+
+
+## 2026-11-07 — primera conexión de pizarra con Gemini Live
+
+- Se declaró la herramienta `render_orby_teaching_board` dentro de las herramientas Live, con un esquema JSON limitado a título y bloques tipados.
+- El cliente despacha las llamadas de pizarra por un manejador separado del buscador académico; no consumen el presupuesto de consultas al Lab.
+- El manejador valida el payload con `sanitizeOrbyBoard`, comprueba que la sesión y actividad sigan vigentes y adjunta la escena al mismo mensaje de Orby.
+- Las llamadas que aparecen canceladas en el mismo evento se excluyen antes del despacho. La pizarra se limpia al iniciar una nueva actividad, al interrumpir y al cerrar la sesión.
+- El paquete inmutable de persistencia del turno incluye la pizarra, de modo que el reintento conserva el mismo `turnId` y la misma escena.
+- `/api/orby/realtime-turn` vuelve a validar el payload en servidor y llama a la nueva RPC `orby_save_voice_turn_with_board`; los turnos sin pizarra siguen usando la RPC existente.
+- La migración aditiva `20261107060000_orby_voice_board_idempotency.sql` conserva la clave de recibo `(conversation_id,user_id,turn_id)` y guarda el par de mensajes y la pizarra dentro de la misma transacción.
+- Se añadió una prueba de regresión estática para despacho, sanitización, payload de reintento y contrato de migración.
+
+### Límites y validación
+
+- La migración **no está aplicada** en Supabase. La persistencia Live con pizarra requiere aplicarla antes de que esa ruta pueda guardar escenas; no se habilita un fallback que oculte un RPC ausente.
+- La privacidad de Gemini Live en producción sigue bloqueada; no se modifica `ORBY_GEMINI_LIVE_ENABLED`.
+- CI debe finalizar para el último commit antes de considerar esta etapa validada. Después siguen pruebas reales en Chrome de voz larga, barge-in, llamada cancelada y recarga del historial.
+- Esta es una primera versión de escena completa por turno, no una pizarra incremental sincronizada fotograma a fotograma con el audio.

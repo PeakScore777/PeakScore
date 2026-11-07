@@ -20,7 +20,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
   const { data, error } = await supabase
     .from("orby_messages")
-    .select("id,role,content,check_question,attachment_kind,attachment_label,created_at")
+    .select("id,role,content,check_question,teaching_board,attachment_kind,attachment_label,created_at")
     .eq("conversation_id", conversationId)
     .eq("user_id", user.id)
     .order("created_at", { ascending: true })

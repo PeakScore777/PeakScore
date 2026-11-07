@@ -111,3 +111,10 @@ Pruebas necesarias:
 - Próxima prioridad técnica: diseñar acciones visuales tipadas e incrementales con id/orden/generación, acumulación y cancelación segura al interrumpir; luego enlazar acciones con eventos o segmentos de narración que el proveedor realmente exponga. No inventar timestamps si no existe alineación de voz.
 - La especificación exige accesibilidad con movimiento reducido, tablero final estático legible, consistencia académica y pruebas en Live/fallback, sin servicios ni llamadas de IA de pago.
 - No se ejecutaron pruebas de navegador ni compilación en esta revisión; estado pendiente de validación.
+
+### Detalle de sincronización de audio (inspección adicional)
+
+- `playGeminiAudio()` decodifica chunks PCM16 y los agenda con Web Audio usando `voiceNextPlaybackTimeRef`; por tanto, el cliente conoce el orden y el tiempo programado de reproducción de cada chunk.
+- El flujo inspeccionado no conserva una alineación verificable entre cada chunk PCM y una frase/palabra/segmento del transcript. La herramienta de pizarra entrega snapshots completos, no acciones con marca de narración.
+- Consecuencia: hoy podemos medir el inicio de audio y la llegada de snapshots, pero no afirmar que una flecha o etiqueta aparece exactamente cuando Orby pronuncia su nombre.
+- Próximo diseño: definir eventos incrementales con `turnGeneration`, `sequence`, `actionId`, estado acumulado y referencia de narración solo si Live ofrece metadatos fiables. Si no hay alineación fiable, usar una secuencia pedagógica sincronizada por eventos de contenido (no timestamps inventados) y etiquetar esa sincronización como aproximada.

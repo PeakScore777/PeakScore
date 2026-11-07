@@ -3614,3 +3614,15 @@ test("La voz registra la llegada del primer chunk de audio para medir latencia r
   assert.match(source, /First audio chunk received timing/);
   assert.match(source, /First audible response timing/);
 });
+
+
+test("La escucha continua solo se rearma tras terminar todos los fragmentos de voz", async () => {
+  const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const start = source.indexOf("function finishRealtimeVoicePlayback()");
+  const end = source.indexOf("function clearPendingGeminiAudioQueue()", start);
+  const finish = source.slice(start, end);
+  assert.match(finish, /if \(voiceAudioSourcesRef\.current\.size > 0\)[\s\S]*?setIsListening\(false\)/);
+  assert.match(finish, /voicePendingStudentTurnRef\.current = false;[\s\S]*?setIsListening\(true\)/);
+  assert.match(finish, /Ready for next student turn/);
+  assert.match(finish, /fullConversationCycleMs/);
+});

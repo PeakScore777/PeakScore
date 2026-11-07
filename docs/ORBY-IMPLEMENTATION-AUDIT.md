@@ -221,3 +221,27 @@ Pruebas necesarias:
 - No se pudo ejecutar Node tests, TypeScript, ESLint, build ni una sesión Chrome/micrófono desde la conexión actual. Por tanto, esta entrega es una implementación estática comprometida, todavía no una validación runtime aprobada.
 - Falta QA manual de: voz real + pizarra simultánea, carrera entre Live y fallback, interrupción durante generación visual, fallback con cuota agotada, móvil, persistencia de la pizarra Live y tiempos p50/p95.
 - No crear PR hacia `main`, no desplegar y no aplicar migraciones remotas hasta que las pruebas locales/CI estén verdes.
+
+
+## 19. Corrección de la experiencia visual según las nuevas referencias — 2026-11-07
+
+Se revisaron las dos nuevas referencias de video junto con la grabación actual. La referencia buscada no es un chat con una tarjeta de subtítulos ni una pizarra de bloques limpios: es una clase visual sobre una hoja digital, con apuntes manuscritos, diagramas, flechas, círculos, etiquetas y un puntero que dibuja; los subtítulos van superpuestos en la franja inferior, como captions de video, y no dentro de una tarjeta lateral.
+
+### Causa técnica encontrada
+
+La primera ruta de respaldo visual reutilizaba `generateWithCloudflareTutor`. Esa función tiene un contrato de sistema que exige JSON con `reply`, `checkQuestion` y `learningSignal`, mientras que la ruta visual pedía además `board`. Por tanto, el modelo podía obedecer el contrato del tutor de texto y omitir `board`; el sanitizador rechazaba el resultado y el alumno se quedaba sin una pizarra útil. Se separó el contrato de generación visual para que la respuesta de la ruta sea exclusivamente `{ board: ... }`.
+
+### Cambios adicionales
+
+- Nuevo `generateWithCloudflareBoard`, usando el mismo modelo de Cloudflare Workers AI y la misma política de cuota gratuita; no añade proveedores ni servicios facturables.
+- La ruta visual exige ahora al menos un visual validado. Si no lo obtiene, devuelve un error explícito en vez de aceptar silenciosamente una hoja solo textual.
+- El prompt de dibujo exige apuntes tipo cuaderno y favorece sketch manuscrito con contornos, flechas, círculos y etiquetas; los diagramas se construyen progresivamente.
+- La validación de programación del respaldo recibe el contexto académico completo para no confundir expresiones de Ciencias Naturales como «código genético» con una solicitud de programación.
+- `OrbyBoard` se rediseñó como hoja de cuaderno con margen rojo, líneas azules, tinta azul oscura, anotaciones rojas y tipografía manuscrita; conserva el lápiz animado sobre los trazos SVG.
+- Se reemplazó la tarjeta lateral de subtítulos por captions inferiores centrados, blancos, con sombra y degradado oscuro. Los captions se actualizan con la transcripción incremental segura de Live y con cada fragmento de voz alternativa; las salidas que no pasan los filtros no se muestran.
+- La pizarra informa cuándo está dibujando o cuando el servicio gratuito no pudo producir un dibujo; no debe quedarse visualmente vacía sin explicación.
+- Se reforzó la instrucción de la herramienta Live para pedir un visual en cada explicación académica sustantiva y snapshots acumulativos tempranos.
+
+### Estado de validación
+
+Los cambios están guardados en `feat/orby-studio-classroom`. No se ha confirmado una compilación ni una prueba de navegador: el estado de Vercel sigue reportando `build-rate-limit`. No se declara lista para producción hasta probar una sesión real, observar los snapshots Live y comprobar el fallback Cloudflare con cuota disponible y agotada.

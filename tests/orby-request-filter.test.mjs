@@ -1289,8 +1289,8 @@ test("las preguntas ambiguas llegan al tutor para aclaración y las solicitudes 
 });
 
 test("la ruta aplica la corrección conceptual tanto a la primera generación como a la recuperación", () => {
-  assert.match(lessonTutorSource, /correctOrbyDnaMitosisSequence\(normalizeOrbySpanishOutput\(cleanText\(parsed\.reply/);
-  assert.match(lessonTutorSource, /correctOrbyDnaMitosisSequence\(normalizeOrbySpanishOutput\(cleanText\(retryParsed\.reply/);
+  assert.match(cloudflareTutorRoute, /correctOrbyDnaMitosisSequence\(normalizeOrbySpanishOutput\(cleanText\(parsed\.reply/);
+  assert.match(cloudflareTutorRoute, /correctOrbyDnaMitosisSequence\(normalizeOrbySpanishOutput\(cleanText\(retryParsed\.reply/);
 });
 
 test("corrige la confusión entre replicación del ADN y mitosis sin alterar respuestas correctas", () => {

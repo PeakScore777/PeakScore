@@ -1,6 +1,7 @@
 # PeakScore — Changelog técnico
 
 ## 2026-11-07 — Orby Live Tutor: especificación de pizarra sincronizada
+- Inspección adicional de audio: Gemini Live agenda chunks PCM16 con Web Audio, pero el flujo revisado no vincula cada chunk a frases/palabras del transcript; no puede afirmarse sincronía exacta por palabra todavía.
 - Creado docs/ORBY-LIVE-TUTOR-SPEC.md con visión, comportamiento obligatorio, secuencia pedagógica, contrato incremental recomendado, criterios de aceptación y matriz de pruebas basada en el video de referencia del propietario.
 - La auditoría confirmó que Live puede actualizar snapshots acumulativos, pero OrbyBoard.tsx renderiza SVG estático; no hay evidencia todavía de trazos progresivos ni sincronización por segmentos reales de voz. Se registra como brecha abierta, no como funcionalidad terminada.
 - Actualizados PEAKSCORE_CONTEXT.md y docs/ORBY-IMPLEMENTATION-AUDIT.md para conservar la referencia y evitar regresiones de alcance.

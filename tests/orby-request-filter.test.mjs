@@ -3838,7 +3838,7 @@ test("el historial de Orby sigue disponible si teaching_board aún no existe en 
   assert.match(conversationMessagesRouteSource, /isMissingTeachingBoardColumn/);
   assert.match(conversationMessagesRouteSource, /error\.code === "42703" \|\| error\.code === "PGRST204"/);
   assert.match(conversationMessagesRouteSource, /teaching_board: null/);
-  assert.match(conversationMessagesRouteSource, /baseQuery\(\)/);
+  assert.match(conversationMessagesRouteSource, /legacyQuery\(\)/);
 });
 
 test("el tutor escrito conserva la respuesta si falta la RPC aditiva de pizarra", () => {

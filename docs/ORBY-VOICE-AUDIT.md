@@ -3,9 +3,12 @@
 - Proyecto: PeakScore
 - Rama de trabajo: `feat/founder-intro`
 - Última actualización: 2026-11-06
-- Alcance: auditoría de código y regresiones del chat de voz (VC).
+- Alcance: auditoría de código, rendimiento y regresiones del chat de voz (VC).
 - Producción/`main`: no modificados ni desplegados en esta ronda.
-- Estado: correcciones de clasificación de errores y ciclo asíncrono Lab–VC aplicadas; CI completo aprobado para `be9e7d5`; validación manual del VC con Gemini Live real pendiente.
+- CI base: completo y aprobado para `6e0475e` (regresiones Orby, TypeScript, ESLint, build Next.js y auditoría de dependencias).
+- Nueva tanda de carga diferida OCR: commits `453afac` y `38200d1`; CI del commit final pendiente.
+- Vercel: check separado con `build-rate-limit`; no confundirlo con el build de producción aprobado en GitHub Actions.
+- Validación manual de Gemini Live con micrófono real: pendiente.
 
 ## Objetivo
 
@@ -325,3 +328,23 @@ La auditoría encontró dos callers interactivos distintos: `createOrbyQueryEmbe
 ### Reintento de historial sin doble envío
 
 El botón de reintento del turno de voz ahora usa un cerrojo en `useRef` para impedir dos POST concurrentes y un estado visible que deshabilita el botón mientras guarda. Se libera en `finally` tanto si el guardado funciona como si falla. La conversación afectada permanece bloqueada para nuevos mensajes hasta resolver el guardado; las demás conversaciones pueden continuar.
+
+
+## 2026-11-06 — carga diferida del motor OCR
+
+Se detectó que `LessonAITutor.tsx` importaba `tesseract.js` de forma estática, aunque el OCR solo se ejecuta cuando el estudiante pulsa la acción para leer texto de una imagen. Esto hacía que el motor opcional formara parte del grafo de carga inicial del componente de chat/voz.
+
+Cambio aplicado:
+- Se eliminó el import estático de `createWorker`.
+- `readImageText()` importa dinámicamente `tesseract.js` justo antes de crear el worker.
+- Se conserva el idioma español (`spa`), la extracción existente, el límite de texto y la terminación del worker en `finally`.
+- El camino habitual de chat/voz no necesita cargar Tesseract; la primera solicitud explícita de OCR sí asume la descarga/carga del chunk opcional.
+
+Regresión añadida en `tests/orby-request-filter.test.mjs`: exige que no exista import estático, que la carga dinámica ocurra dentro de `readImageText()`, y que el worker español siga terminándose. No mide por sí sola el tamaño final del bundle ni el tiempo de descarga en Chrome.
+
+Commits:
+- `453afac` — `perf(orby): lazy-load local OCR engine`.
+- `38200d1` — `test(orby): cover lazy-loaded OCR engine`.
+
+Validación pendiente para esta tanda: CI completo sobre `38200d1` (suite Orby, TypeScript, ESLint, auditoría de dependencias y build Next.js). Después, comparar el bundle inicial/análisis de chunks para cuantificar el ahorro real. Esta optimización no cambia los proveedores de IA, las cuotas ni la facturación.
+

@@ -65,3 +65,11 @@ Cuando un estudiante abra una llamada o active la conversación por voz desde el
 - Parcial: el proveedor entrega fragmentos de transcripción, pero no hay alineación palabra-a-palabra garantizada entre audio y subtítulo; las actualizaciones de tablero no tienen timestamps de narración asociados.
 - Pendiente: probar dos o más snapshots reales en llamada, verificar continuidad en chat, probar interrupciones y responsive en Chrome con micrófono, y comprobar el fallback.
 - No se debe declarar listo para Pull hasta completar QA real y ejecutar Node tests, TypeScript, ESLint y build.
+
+## Sincronización incremental por frase — 2026-11-07
+
+- El contrato Live de `render_orby_teaching_board` expone `spokenCue` opcional: una frase corta exacta que Orby debe pronunciar antes de revelar esa instantánea acumulativa.
+- El cliente conserva snapshots pendientes por `sessionGeneration` y `activityGeneration`; los revela únicamente cuando la transcripción de salida validada contiene la frase, y descarta snapshots caducados o de turnos anteriores.
+- Las actualizaciones sin `spokenCue` mantienen el comportamiento inmediato para compatibilidad y primera pizarra.
+- Esto sincroniza por coincidencia de frase validada, no por timestamps ni alineación palabra-a-palabra del audio. La sincronía exacta del video aún requiere eventos de voz alineados por el proveedor y QA real.
+- Añadida regresión estática; Node tests, TypeScript, ESLint, build y Chrome/micrófono siguen pendientes de ejecución.

@@ -1309,4 +1309,5 @@ body {
     opacity: 1 !important;
     transform: none !important;
   }
+  .orby-board .orby-board-pen-tip { display: none !important; }
 }

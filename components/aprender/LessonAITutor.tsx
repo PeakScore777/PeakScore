@@ -322,6 +322,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceAssistantTextRef = useRef("");
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
   const voiceTeachingBoardRef = useRef<OrbyBoardData | null>(null);
+  const voicePendingBoardCuesRef = useRef<Array<{ board: OrbyBoardData; cue: string }>>([]);
   const voicePublicSourcesRef = useRef<OrbyPublicSource[]>([]);
   const voiceUserMessageVisibleRef = useRef(false);
   const voiceResponseDoneRef = useRef(false);
@@ -2039,8 +2040,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Tool calls contain a full cumulative snapshot; latest validated state is authoritative.
       // This permits corrections/removals without leaving stale teaching content visible.
       const board = snapshot;
-      voiceTeachingBoardRef.current = snapshot;
       acceptedSnapshotInEvent = true;
+      if (snapshot.spokenCue) {
+        // Wait until Live's output transcription reaches this exact phrase.
+        // The SDK exposes no reliable phonetic timestamps, so do not guess.
+        voicePendingBoardCuesRef.current.push({ board, cue: normalizeVoiceComparison(snapshot.spokenCue) });
+      } else {
+        voiceTeachingBoardRef.current = snapshot;
+      }
       voiceBoardUpdateCountRef.current += 1;
       console.info("[Orby Voice] Teaching board update timing.", {
         updateNumber: voiceBoardUpdateCountRef.current,
@@ -2545,6 +2552,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceFirstAudioChunkReceivedRef.current = false;
       voiceListeningReadyLoggedRef.current = false;
       voiceBoardUpdateCountRef.current = 0;
+      voicePendingBoardCuesRef.current = [];
       voiceLastCommittedInputRef.current = normalizedFinal;
       voiceLastCommittedInputAtRef.current = Date.now();
       voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
@@ -2678,6 +2686,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
+      const normalizedSpokenReply = normalizeVoiceComparison(partialReply);
+      let boardMatchedToSpeech: OrbyBoardData | null = null;
+      while (voicePendingBoardCuesRef.current.length > 0) {
+        const pendingCue = voicePendingBoardCuesRef.current[0];
+        if (!normalizedSpokenReply.includes(pendingCue.cue)) break;
+        voicePendingBoardCuesRef.current.shift();
+        boardMatchedToSpeech = pendingCue.board;
+      }
+      if (boardMatchedToSpeech) voiceTeachingBoardRef.current = boardMatchedToSpeech;
       // A transcript is eligible for acoustic echo suppression only after
       // Live audio has actually been scheduled; text arriving before playback
       // must never be mistaken for something the microphone could have heard.
@@ -2747,8 +2764,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setMessages((current) => {
           const exists = current.some((message) => message.id === assistantId);
           return exists
-            ? current.map((message) => message.id === assistantId ? { ...message, content: visibleReply } : message)
-            : [...current, { id: assistantId, role: "assistant", content: visibleReply }];
+            ? current.map((message) => message.id === assistantId ? { ...message, content: visibleReply, ...(boardMatchedToSpeech ? { board: boardMatchedToSpeech } : {}) } : message)
+            : [...current, { id: assistantId, role: "assistant", content: visibleReply, ...(boardMatchedToSpeech ? { board: boardMatchedToSpeech } : {}) }];
         });
         // Keep every Live audio chunk buffered until the complete transcript passes
         // final validation. Early playback followed by a filtered/TTS replacement

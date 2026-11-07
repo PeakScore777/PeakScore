@@ -109,7 +109,7 @@ function mergeLiveTranscript(previous: string, incoming: string): string {
 }
 
 function getOrbyLiveCaption(value: string): string {
-  const normalized = value.replace(/\\s+/g, " ").trim();
+  const normalized = value.replace(/\s+/g, " ").trim();
   if (!normalized) return "";
   const parts = normalized.match(/[^.!?]+[.!?]?/g) ?? [normalized];
   const latest = (parts.at(-1) ?? normalized).trim();

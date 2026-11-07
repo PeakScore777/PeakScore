@@ -244,6 +244,13 @@ test("Orby divide respuestas largas sin reordenar frases ni exceder el límite T
   const single = speechChunks.splitOrbySpeechIntoChunks("Una sola frase.", 480);
   assert.deepEqual(single, ["Una sola frase."]);
   assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("   ", 480), []);
+
+  const academicAnswer = "La densidad es 3.14 g/cm³. Por ejemplo, el Dr. explica el resultado.";
+  const academicChunks = speechChunks.splitOrbySpeechIntoChunks(academicAnswer, 480);
+  assert.deepEqual(academicChunks, [academicAnswer],
+    "Los decimales y las abreviaturas no deben crear pausas ni perder puntuación.");
+  assert.equal(speechChunks.splitOrbySpeechIntoChunks("Primero. Después.", 480).length, 2,
+    "Las oraciones completas sí deben conservar sus límites naturales.");
 });
 
 test("Orby Lab también se consulta cuando el alumno pide fuentes de una duda anterior", () => {

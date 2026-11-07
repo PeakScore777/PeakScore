@@ -2445,6 +2445,11 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.match(voiceTurnIdempotencyMigration, /for update/i);
   assert.match(voiceTurnIdempotencyMigration, /on conflict \(conversation_id, user_id, turn_id\) do nothing/i);
   assert.match(voiceTurnIdempotencyMigration, /already_saved/);
+  assert.match(lessonTutorSource, /pendingVoicePersistenceRef = useRef/);
+  assert.match(lessonTutorSource, /const previousTurn = pendingVoicePersistenceRef\.current/);
+  assert.match(lessonTutorSource, /previousTurn\.turnId === turn\.turnId/);
+  assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = turn/);
+  assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = null/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));
   assert.ok(lessonTutorSource.includes("voiceTurnRetryInFlightRef.current"));
   assert.ok(lessonTutorSource.includes("setRetryingVoiceTurn(true)"));

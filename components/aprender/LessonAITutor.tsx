@@ -2013,7 +2013,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const board = sanitizeOrbyBoard(args);
       if (!isCurrent()) return;
       if (!board || !voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim() || voiceResponseDoneRef.current) {
-        responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: false, reason: "No hay una respuesta académica activa o el contenido de la pizarra no es válido. Continúa la explicación sin pizarra." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE });
+        responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: false, reason: "No hay una respuesta académica activa o el contenido de la pizarra no es válido. Continúa la explicación sin pizarra." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
         continue;
       }
       voiceTeachingBoardRef.current = board;
@@ -2025,7 +2025,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? current.map((message) => message.id === assistantId ? { ...message, board } : message)
           : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board }];
       });
-      responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: true, guidance: "Pizarra incorporada al mensaje actual. Explícala con la voz sin repetir literalmente todos sus bloques." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE });
+      responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: true, guidance: "Pizarra incorporada al mensaje actual. Explícala con la voz sin repetir literalmente todos sus bloques." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
     }
     if (!isCurrent() || !responses.length) return;
     try {

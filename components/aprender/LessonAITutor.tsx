@@ -2041,15 +2041,24 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // This permits corrections/removals without leaving stale teaching content visible.
       const board = snapshot;
       acceptedSnapshotInEvent = true;
+      let revealBoardNow = !snapshot.spokenCue;
       if (snapshot.spokenCue) {
-        // Wait until Live's output transcription reaches this exact phrase.
-        // The SDK exposes no reliable phonetic timestamps, so do not guess.
-        voicePendingBoardCuesRef.current.push({ board, cue: normalizeVoiceComparison(snapshot.spokenCue).replace(/\s+/g, " ").trim() });
+        const cue = normalizeVoiceComparison(snapshot.spokenCue).replace(/\s+/g, " ").trim();
+        const normalizedExistingSpeech = " " + normalizeVoiceComparison(voiceAssistantTextRef.current).replace(/\s+/g, " ").trim() + " ";
+        const cueAlreadySpoken = Boolean(cue) && normalizedExistingSpeech.includes(" " + cue + " ");
+        // If transcription arrived before the tool call, reveal immediately.
+        // Otherwise preserve queue order so a later snapshot cannot jump ahead.
+        if (voicePendingBoardCuesRef.current.length === 0 && cueAlreadySpoken) {
+          revealBoardNow = true;
+        } else {
+          voicePendingBoardCuesRef.current.push({ board, cue });
+        }
       } else {
         // An immediate snapshot supersedes any cue that was never heard.
         voicePendingBoardCuesRef.current = [];
-        voiceTeachingBoardRef.current = snapshot;
+        revealBoardNow = true;
       }
+      if (revealBoardNow) voiceTeachingBoardRef.current = snapshot;
       voiceBoardUpdateCountRef.current += 1;
       console.info("[Orby Voice] Teaching board update timing.", {
         updateNumber: voiceBoardUpdateCountRef.current,
@@ -2060,13 +2069,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
       const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
       voiceAssistantMessageIdRef.current = assistantId;
-      setMessages((current) => {
-        const exists = current.some((message) => message.id === assistantId);
-        return exists
-          ? current.map((message) => message.id === assistantId ? { ...message, board } : message)
-          : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board }];
+      if (revealBoardNow) {
+        setMessages((current) => {
+          const exists = current.some((message) => message.id === assistantId);
+          return exists
+            ? current.map((message) => message.id === assistantId ? { ...message, board } : message)
+            : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board }];
+        });
+      }
+      responses.push({
+        id: call.id,
+        name: "render_orby_teaching_board",
+        response: {
+          accepted: true,
+          guidance: revealBoardNow
+            ? "Pizarra visible. Continúa explicándola con voz natural."
+            : "Pizarra en cola. Di exactamente spokenCue y continúa hablando; el cliente la mostrará al reconocer la frase.",
+        },
+        scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
       });
-      responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: true, guidance: "Pizarra incorporada al mensaje actual. Explícala con la voz sin repetir literalmente todos sus bloques." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
     }
     if (!isCurrent() || !responses.length) return;
     try {
@@ -2852,12 +2873,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voicePendingBoardCuesRef.current = [];
       if (finalPendingBoard) {
         voiceTeachingBoardRef.current = finalPendingBoard;
-        const assistantId = voiceAssistantMessageIdRef.current;
-        if (assistantId) {
-          setMessages((current) => current.map((message) => message.id === assistantId
+        const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+        voiceAssistantMessageIdRef.current = assistantId;
+        setMessages((current) => current.some((message) => message.id === assistantId)
+          ? current.map((message) => message.id === assistantId
             ? { ...message, board: finalPendingBoard }
-            : message));
-        }
+            : message)
+          : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board: finalPendingBoard }]);
       }
     }
 

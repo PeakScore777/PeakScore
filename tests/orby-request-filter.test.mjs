@@ -3042,3 +3042,15 @@ test("la pizarra de Orby valida escenas acotadas y nunca acepta marcado o códig
   assert.match(cloudflareTutorRoute, /sanitizeOrbyBoard\(parsed\.board\)/);
   assert.match(lessonTutorSource, /message\.board && <OrbyBoard board=\{message\.board\} \/>/);
 });
+
+test("la pizarra se guarda de forma atómica y se recupera en el historial", async () => {
+  const route = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const history = await readFile(new URL("../app/api/orby/conversations/[conversationId]/messages/route.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20261107050000_orby_teaching_board_persistence.sql", import.meta.url), "utf8");
+  assert.match(route, /orby_save_turn_with_board/);
+  assert.match(route, /p_teaching_board: board/);
+  assert.match(history, /teaching_board/);
+  assert.match(migration, /teaching_board jsonb/);
+  assert.match(migration, /for update/);
+  assert.match(migration, /insert into public[.]orby_messages/);
+});

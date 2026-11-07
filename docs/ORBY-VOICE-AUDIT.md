@@ -285,3 +285,17 @@ El CI debe terminar verde sobre el último commit de `feat/founder-intro` (suite
 La voz ya no deja que «hola», «oe», «oee», «oye», etc. activen una nueva respuesta general del modelo. `LessonAITutor` reconoce esos turnos con `isOrbyGreetingRequest`, elimina el saludo recién recibido del contexto que consulta y obtiene la continuación con `getOrbyGreetingFollowUpReply` usando los últimos mensajes y la materia activa. La respuesta se envía como turno de política controlado a Gemini Live, sin búsqueda del Lab ni generación de tutoría académica adicional. Cuando no existe contexto útil, la respuesta breve pregunta cuál de las cinco áreas de Saber 11 quiere trabajar, sin repetir la presentación de Orby.
 
 La unión del contexto usa saltos de línea reales. Se añadieron regresiones para comprobar que Live usa esta ruta determinista, retoma Matemáticas cuando corresponde y no repite la identidad de Orby al saludar.
+
+
+## 2026-11-06 — protección de interrupciones Live y guardado idempotente
+
+Se auditó el ciclo de interrupción del micrófono, generación Live y persistencia del historial. Se corrigieron dos carreras:
+
+1. `components/aprender/LessonAITutor.tsx`: `interruptCurrentVoiceOutput` marca únicamente interrupciones de una sesión Live conectada que tenía una respuesta pendiente. Cuando llega `serverContent.interrupted` para esa generación anterior y ya existe un nuevo turno del estudiante, se conserva `waitingForVoiceReply`, se mantiene el watchdog del nuevo turno y se descartan la transcripción, el audio y el `turnComplete` tardíos de la generación interrumpida. La entrada/transcripción del estudiante se procesa antes de ese cierre; la rama de interrupción ya no retorna anticipadamente y no impide procesar eventos posteriores independientes. La marca se reinicia al detener Live y al completar un turno normal.
+2. `app/api/orby/realtime-turn/route.ts`: la idempotencia solo reconoce como reintento el par usuario/asistente situado en las dos posiciones más recientes del historial, devuelto en orden descendente. Buscar cualquier par coincidente en los últimos 20 mensajes podía omitir una repetición legítima de la misma pregunta mucho después. Si falla la lectura de verificación, la ruta ahora devuelve `SAVE_TURN_IDEMPOTENCY_CHECK_FAILED` sin insertar a ciegas, para que el cliente pueda reintentar sin duplicar.
+
+Se añadieron regresiones para: preservar el nuevo turno durante `interrupted`; descartar los restos de texto/audio y no finalizar el nuevo turno con un `turnComplete` viejo; comprobar el par más reciente; y no escribir cuando la lectura idempotente falla.
+
+### Validación pendiente de esta tanda
+
+El workflow de CI debe completar suite Orby, TypeScript, ESLint y build de producción sobre el commit que contiene estos cambios, además de la auditoría de dependencias. Las pruebas automatizadas no sustituyen una sesión Chrome real con micrófono, una interrupción hablada durante Live ni una repetición posterior de exactamente la misma pregunta.

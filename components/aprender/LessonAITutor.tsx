@@ -2823,6 +2823,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   async function startRealtimeVoice(startupSignal: AbortSignal) {
+    const startupStartedAt = performance.now();
+    const startupTimings = {
+      microphonePermissionMs: 0,
+      conversationAndTokenMs: 0,
+      sdkLoadMs: 0,
+      liveConnectMs: 0,
+      liveSetupMs: 0,
+      workletLoadMs: 0,
+    };
     // Descargar el SDK pesado en paralelo con el permiso del micrófono; el chat
     // escrito no necesita incluirlo en su bundle inicial.
     const voiceSdkPromise = import("@google/genai");
@@ -2876,6 +2885,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }, 12_000);
         }),
       ]);
+      startupTimings.microphonePermissionMs = performance.now() - startupStartedAt;
       const audioResumeError = await audioContextReady;
       if (audioResumeError) {
         permissionTimedOut = true;
@@ -2919,6 +2929,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       // Conversation creation and ephemeral-token issuance are independent.
       // Run them together so voice startup does not pay both network round trips.
+      const conversationAndTokenStartedAt = performance.now();
       const [activeId, tokenResponse] = await Promise.all([
         ensureVoiceConversation(startupSignal),
         fetch("/api/orby/realtime-session", {
@@ -2938,6 +2949,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // Publish the conversation identity before Live can emit a resumption
       // handle. Otherwise the first handle may be recorded against null while
       // the microphone/worklet is still being prepared.
+      startupTimings.conversationAndTokenMs = performance.now() - conversationAndTokenStartedAt;
       activeConversationRef.current = activeId;
       const tokenPayload = await tokenResponse.json().catch(() => ({}));
       if (!tokenResponse.ok || typeof tokenPayload.ephemeralToken !== "string") {
@@ -2958,7 +2970,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : "Despina";
 
       setVoiceStatus("Conectando con Orby…");
+      const sdkLoadStartedAt = performance.now();
       const voiceSdk = await voiceSdkPromise;
+      startupTimings.sdkLoadMs = performance.now() - sdkLoadStartedAt;
       voiceSdkRef.current = voiceSdk;
       let googleAI = new voiceSdk.GoogleGenAI({
         apiKey: tokenPayload.ephemeralToken,
@@ -3213,6 +3227,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
 
       let liveSession: Session;
+      const liveConnectStartedAt = performance.now();
       let connectTimeoutId: number | null = null;
       let acknowledgementTimeoutId: number | null = null;
       try {
@@ -3247,11 +3262,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (connectTimeoutId !== null) window.clearTimeout(connectTimeoutId);
         if (acknowledgementTimeoutId !== null) window.clearTimeout(acknowledgementTimeoutId);
       }
+      startupTimings.liveConnectMs = performance.now() - liveConnectStartedAt;
+      startupTimings.liveSetupMs = performance.now() - liveConnectStartedAt - startupTimings.liveConnectMs;
       rejectSetup = null;
       liveSessionEstablished = true;
       voiceChannelRef.current = liveSession;
       setVoiceStatus("Te escucho…");
       setIsListening(true);
+      console.info("[Orby Voice] Startup stage timings.", {
+        ...Object.fromEntries(Object.entries(startupTimings).map(([stage, duration]) => [stage, Math.round(duration)])),
+        totalMs: Math.round(performance.now() - startupStartedAt),
+      });
 
       // Gemini closes an individual Live WebSocket after roughly ten minutes.
       // Resume the same server-side session with its latest handle instead of
@@ -3423,6 +3444,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (startupSignal.aborted) abortWorkletSetup();
         else startupSignal.addEventListener("abort", abortWorkletSetup, { once: true });
       });
+      const workletLoadStartedAt = performance.now();
       try {
         await Promise.race([
           audioContext.audioWorklet.addModule("/audio/orby-audio-capture.worklet.js"),
@@ -3438,6 +3460,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (workletTimeoutId !== null) window.clearTimeout(workletTimeoutId);
         if (abortWorkletSetup) startupSignal.removeEventListener("abort", abortWorkletSetup);
       }
+      startupTimings.workletLoadMs = performance.now() - workletLoadStartedAt;
       if (startupSignal.aborted) throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
       await ensureVoiceAudioContextRunning(audioContext);
 

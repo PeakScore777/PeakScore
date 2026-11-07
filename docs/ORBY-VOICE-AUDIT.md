@@ -315,3 +315,8 @@ La prueba verifica que la marca de barge-in cubra tanto una generación aún abi
 ### Timeouts de embeddings separados por uso
 
 Las consultas de embeddings Cloudflare para recuperación interactiva usan 8 segundos y luego permiten continuar con búsqueda léxica por materia. La función genérica `createCloudflareEmbeddings` conserva 25 segundos por defecto para los lotes del Lab; solo el caller de embeddings de consulta pasa explícitamente 8 segundos. Esto acota el posible bloqueo de una pregunta sin recortar el presupuesto de ingestión documental.
+
+
+### Cobertura de ambas rutas de embeddings de consulta
+
+La auditoría encontró dos callers interactivos distintos: `createOrbyQueryEmbedding` (ruta de consulta heredada) y `createOrbyQueryEmbeddingForModel` (recuperación híbrida por modelo). Ambos pasan ahora explícitamente 8 segundos a `createCloudflareEmbeddings`. El valor predeterminado de esa función queda en 25 segundos, de modo que `createOrbyEmbeddings` y los lotes de documentos conservan su presupuesto de ingestión. La prueba inspecciona ambas rutas para evitar que una consulta interactiva vuelva a heredar silenciosamente el límite largo.

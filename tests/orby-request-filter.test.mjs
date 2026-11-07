@@ -3737,6 +3737,29 @@ test("Orby admite trazos libres seguros y progresivos para dibujar como profesor
   assert.equal(sanitizeOrbyBoard(duplicateId), null);
 });
 
+test("el contrato de trazos exige etiquetas posicionadas y una frase hablada real", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const base = {
+    version: 2,
+    title: "Esquema",
+    blocks: [{ type: "heading", text: "Esquema" }],
+    visuals: [{ type: "sketch", title: "Boceto", strokes: [
+      { id: "linea", points: [{ x: 10, y: 20 }, { x: 50, y: 50 }], tone: "ink", label: "Estructura" },
+    ] }],
+  };
+  assert.equal(sanitizeOrbyBoard(base), null, "una etiqueta sin coordenadas no debe desaparecer silenciosamente");
+  const noLabel = JSON.parse(JSON.stringify(base));
+  delete noLabel.visuals[0].strokes[0].label;
+  assert.ok(sanitizeOrbyBoard(noLabel));
+  const punctuationCue = {
+    version: 1,
+    title: "Respuesta",
+    spokenCue: "! ? .",
+    blocks: [{ type: "text", text: "Explicación breve" }],
+  };
+  assert.equal(sanitizeOrbyBoard(punctuationCue), null);
+});
+
 test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento reducido", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
@@ -3756,6 +3779,8 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(route, /nunca pauses la voz para esperar una herramienta NON_BLOCKING/);
   assert.match(route, /2–6 trazos nuevos por actualización/);
   assert.match(tools, /Freehand sketch strokes/);
+  assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 1);
+  assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /tone: \{ type: Type.STRING, description: "ink, accent, muted or success\."/);
   assert.match(lesson, /Reveal no more than one cue per transcript event/);
   assert.doesNotMatch(lesson.slice(lesson.indexOf("const normalizedSpokenReply"), lesson.indexOf("const normalizedSpokenReply") + 1000), /while \(voicePendingBoardCuesRef/);

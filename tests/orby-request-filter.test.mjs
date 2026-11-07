@@ -3586,3 +3586,12 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
   assert.match(source, /aria-live=\{message\.role === "assistant" && voiceMode/);
   assert.match(source, /\{message\.board && <OrbyBoard board=\{message\.board\} \/>\}/);
 });
+
+
+test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
+  const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(source, /Pizarra de Orby preparándose/);
+  assert.match(source, /voiceMode && voicePendingStudentTurnRef\.current/);
+  assert.match(source, /Preparando el apoyo visual/);
+  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
+});

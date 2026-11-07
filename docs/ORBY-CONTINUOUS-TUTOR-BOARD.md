@@ -174,3 +174,24 @@ La herramienta actual `render_orby_teaching_board` de escena completa por turno 
 - Confirmar en Chrome que Gemini Live acepta llamadas de pizarra no bloqueantes con `sendToolResponse` y que la voz sigue avanzando sin repetición, pausas ni llamadas acumuladas.
 - Confirmar la sincronización perceptible entre audio y cada actualización; `NON_BLOCKING` evita bloquear, pero no crea por sí mismo marcas de tiempo ni alineación fonética.
 - Probar interrupción, cancelación, fin de turno y recuperación del historial antes de solicitar Pull. No desplegar ni integrar en `main`.
+
+## Fase de sincronización — respuestas SILENT para la pizarra (2026-11-07)
+
+### Hallazgo
+
+La herramienta de pizarra estaba declarada como `Behavior.NON_BLOCKING`, pero el cliente respondía cada llamada con `FunctionResponseScheduling.WHEN_IDLE`. En el SDK `@google/genai 2.17.1`, `WHEN_IDLE` agrega el resultado al contexto y solicita generar una salida cuando el modelo quede libre. Eso no es lo que queremos para una actualización visual: puede provocar una salida de voz adicional por cada dibujo.
+
+La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`, tag `v2.17.1`, describe `SILENT` como agregar el resultado al contexto sin interrumpir ni activar generación.
+
+### Cambio realizado
+
+- Commit `3427eba`: ambas respuestas de `render_orby_teaching_board` ahora usan `FunctionResponseScheduling.SILENT`.
+- Commit `b3fa6fbe`: la prueba de regresión verifica que el manejador de pizarra tenga dos respuestas SILENT y ninguna WHEN_IDLE/INTERRUPT. También ajusta el conteo de WHEN_IDLE reservado a las herramientas de búsqueda académica.
+- La herramienta sigue declarada `Behavior.NON_BLOCKING`. No se cambiaron proveedores, configuración de privacidad, cuotas, base de datos ni migraciones.
+
+### Alcance y validación pendiente
+
+- SILENT evita solicitar una nueva generación por cada dibujo; no proporciona por sí mismo marcas de tiempo ni sincronización fonética. La escena todavía depende de cuándo Gemini emita la llamada a la herramienta.
+- Ejecutar `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build` en el SHA final.
+- Probar Chrome con audio real: varias actualizaciones dentro de una explicación, ausencia de frases duplicadas, interrupción del estudiante, descarte de llamadas atrasadas y persistencia de la escena final.
+- No solicitar Pull, no integrar en `main` ni desplegar hasta cerrar las validaciones y recibir autorización.

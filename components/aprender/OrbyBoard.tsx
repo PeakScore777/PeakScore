@@ -80,10 +80,66 @@ function Vectors({ visual }: { visual: Extract<OrbyBoardVisual, { type: "vectors
   );
 }
 
+function Molecule({ visual }: { visual: Extract<OrbyBoardVisual, { type: "molecule" }> }) {
+  const atoms = new Map(visual.atoms.map((atom) => [atom.id, atom]));
+  return (
+    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Modelo molecular esquemático"} className="h-auto max-h-72 w-full">
+      {visual.bonds.map((bond, index) => {
+        const from = atoms.get(bond.from), to = atoms.get(bond.to);
+        if (!from || !to) return null;
+        const dx = to.x - from.x, dy = to.y - from.y;
+        const length = Math.hypot(dx, dy) || 1;
+        const offsetX = (-dy / length) * 1.5, offsetY = (dx / length) * 1.5;
+        const offsets = bond.order === 1 ? [0] : bond.order === 2 ? [-1.5, 1.5] : [-3, 0, 3];
+        return <g key={index}>{offsets.map((offset) => <line key={offset}
+          x1={from.x + offsetX * offset} y1={from.y + offsetY * offset}
+          x2={to.x + offsetX * offset} y2={to.y + offsetY * offset}
+          stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>)}</g>;
+      })}
+      {visual.atoms.map((atom) => <g key={atom.id}>
+        <circle cx={atom.x} cy={atom.y} r="5.3" fill={atom.element === "O" ? "#fee2e2" : atom.element === "N" ? "#dbeafe" : atom.element === "H" ? "#f1f5f9" : "#ffedd5"} stroke={colors.ink} strokeWidth="0.6"/>
+        <text x={atom.x} y={atom.y + 1.5} fontSize="4.2" fontWeight="bold" textAnchor="middle" fill={colors.ink}>{atom.element}{atom.charge || ""}</text>
+      </g>)}
+    </svg>
+  );
+}
+
+function Circuit({ visual }: { visual: Extract<OrbyBoardVisual, { type: "circuit" }> }) {
+  const components = new Map(visual.components.map((component) => [component.id, component]));
+  return (
+    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Circuito eléctrico esquemático"} className="h-auto max-h-72 w-full">
+      {visual.connections.map((connection, index) => {
+        const from = components.get(connection.from), to = components.get(connection.to);
+        if (!from || !to) return null;
+        return <line key={index} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>;
+      })}
+      {visual.components.map((component) => <g key={component.id}>
+        {component.kind === "battery" ? <g>
+          <line x1={component.x - 5} y1={component.y - 5} x2={component.x - 5} y2={component.y + 5} stroke={colors.orange} strokeWidth="1.5"/>
+          <line x1={component.x + 1} y1={component.y - 8} x2={component.x + 1} y2={component.y + 8} stroke={colors.orange} strokeWidth="2"/>
+        </g> : null}
+        {component.kind === "resistor" ? <rect x={component.x - 6} y={component.y - 3} width="12" height="6" rx="1" fill="#ffedd5" stroke={colors.orange} strokeWidth="1.1"/> : null}
+        {component.kind === "lamp" ? <g>
+          <circle cx={component.x} cy={component.y} r="5" fill="#fef3c7" stroke={colors.orange} strokeWidth="1.1"/>
+          <path d={`M ${component.x - 3} ${component.y - 3} L ${component.x + 3} ${component.y + 3} M ${component.x + 3} ${component.y - 3} L ${component.x - 3} ${component.y + 3}`} stroke={colors.orange} strokeWidth="0.9"/>
+        </g> : null}
+        {component.kind === "switch" ? <g>
+          <circle cx={component.x - 4} cy={component.y} r="1.2" fill={colors.ink}/>
+          <circle cx={component.x + 4} cy={component.y} r="1.2" fill={colors.ink}/>
+          <line x1={component.x - 4} y1={component.y} x2={component.x + 3} y2={component.y - 4} stroke={colors.orange} strokeWidth="1.3"/>
+        </g> : null}
+        <text x={component.x} y={component.y + 12} fontSize="3.4" textAnchor="middle" fill={colors.ink}>{component.label}</text>
+      </g>)}
+    </svg>
+  );
+}
+
 function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
   if (visual.type === "vectors") return <Vectors visual={visual}/>;
+  if (visual.type === "molecule") return <Molecule visual={visual}/>;
+  if (visual.type === "circuit") return <Circuit visual={visual}/>;
   if (visual.type === "table") return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-xs">

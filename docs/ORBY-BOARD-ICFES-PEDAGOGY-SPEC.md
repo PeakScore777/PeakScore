@@ -464,3 +464,30 @@ Los diagramas celulares son representaciones educativas simplificadas. La presen
 
 ### Estado
 Cambios guardados en `feat/founder-intro`. Pendiente ejecución real de tests, TypeScript, ESLint, build y prueba de voz en navegador. No se tocó `main`, no se desplegó y no se añadieron servicios de pago.
+
+
+## 17. Quinto incremento — genética mendeliana y división celular (2026-11-07)
+
+### Nueva primitiva `punnett`
+- Representa un cruce monohíbrido 2×2 a partir de dos alelos por progenitor.
+- Cada casilla combina un alelo de cada gameto.
+- El renderizador normaliza el orden de alelos (mayúscula antes de minúscula) para evitar mostrar `aA` cuando la notación convencional es `Aa`.
+- No calcula automáticamente fenotipos ni presupone dominancia, penetrancia o proporciones fuera de los supuestos declarados. Orby debe explicitar qué representa el rasgo y qué modelo mendeliano se está usando.
+
+### Nueva primitiva `cell-division`
+- Mitosis: Profase, Metafase, Anafase, Telofase y citocinesis.
+- Meiosis: Profase I, Metafase I, Anafase I, Telofase I, Profase II, Metafase II, Anafase II y Telofase II.
+- El validador exige las etapas canónicas en orden, con descripciones no vacías.
+- Las instrucciones didácticas obligan a distinguir separación de homólogos en meiosis I y cromátidas hermanas en meiosis II.
+- El renderizador muestra una secuencia visual de etapas; no es una animación microscópica ni una reconstrucción a escala de cromosomas.
+
+### Pruebas añadidas
+- Aceptación de cruce monohíbrido 2×2.
+- Aceptación de las cuatro etapas de mitosis.
+- Aceptación de las ocho etapas de meiosis.
+- Rechazo de alelos que no sean símbolos de un solo carácter.
+- Rechazo de etapas de mitosis fuera de orden.
+- Comprobaciones estáticas de renderer, schema Live y prompts de voz/texto.
+
+### Estado de validación
+Archivos actualizados y posteriormente leídos desde `feat/founder-intro`. La verificación CI conocida continúa mostrando un estado Vercel `failure` asociado a `build-rate-limit` en el commit anterior; este nuevo conjunto todavía no tiene ejecución confirmada de tests, TypeScript, ESLint o build. No afirmar que los tests pasan. La prueba manual de voz y tablero sigue pendiente. No se modificó `main`, no se desplegó y no se añadieron proveedores ni servicios de pago. **Pull no autorizado todavía.**

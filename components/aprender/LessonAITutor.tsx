@@ -2461,6 +2461,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || containsProgrammingInstruction(partialReply, voiceScopeContext)
         || containsCookingInstruction(partialReply, voiceScopeContext)
         || containsExplicitNonIcfesTopic(partialReply, voiceScopeContext)
+        || containsPlatformMarketingClaim(partialReply)
         || containsExternalPreIcfesPromotion(partialReply)
         || isLikelyEnglishOnlyOrbyReply(partialReply)
         || hasFalseOrbyCreatorAttribution(partialReply)

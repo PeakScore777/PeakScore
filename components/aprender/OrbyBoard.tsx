@@ -23,13 +23,13 @@ function Diagram({ visual }: { visual: Extract<OrbyBoardVisual, { type: "diagram
         const midX = (from.x + to.x) / 2;
         const midY = (from.y + to.y) / 2;
         return <g key={index}>
-          <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="0.8" markerEnd={`url(#${markerId})`} />
+          <line className="orby-board-stroke" pathLength={1} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="0.8" markerEnd={`url(#${markerId})`} />
           {edge.label ? <text x={midX} y={midY - 2} fontSize="3.2" textAnchor="middle" fill={colors.ink}>{edge.label}</text> : null}
         </g>;
       })}
       <defs><marker id={markerId} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill={colors.ink}/></marker></defs>
       {visual.nodes.map((node) => <g key={node.id}>
-        <rect x={node.x - 8} y={node.y - 5} width="16" height="10" rx="2" fill="#ffedd5" stroke={colors.orange} strokeWidth="0.7"/>
+        <rect className="orby-board-appear" x={node.x - 8} y={node.y - 5} width="16" height="10" rx="2" fill="#ffedd5" stroke={colors.orange} strokeWidth="0.7"/>
         <text x={node.x} y={node.y + 1} fontSize="3.1" textAnchor="middle" fill="#7c2d12">{node.label}</text>
       </g>)}
     </svg>
@@ -47,9 +47,9 @@ function Graph({ visual }: { visual: Extract<OrbyBoardVisual, { type: "graph" }>
         const y = top + (bottom - top) * step / 4;
         return <line key={step} x1={left} y1={y} x2={right} y2={y} stroke={colors.grid} strokeWidth="0.45"/>;
       })}
-      <line x1={left} y1={top} x2={left} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
-      <line x1={left} y1={bottom} x2={right} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
-      {visual.kind === "line" ? <path d={path} fill="none" stroke={colors.orange} strokeWidth="1.5" strokeLinejoin="round"/> : null}
+      <line className="orby-board-stroke" pathLength={1} x1={left} y1={top} x2={left} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
+      <line className="orby-board-stroke" pathLength={1} x1={left} y1={bottom} x2={right} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
+      {visual.kind === "line" ? <path className="orby-board-stroke" pathLength={1} d={path} fill="none" stroke={colors.orange} strokeWidth="1.5" strokeLinejoin="round"/> : null}
       {visual.points.map((point, index) => <g key={index}>
         <circle cx={px(point.x)} cy={py(point.y)} r="1.8" fill={colors.orange}/>
         {point.label ? <text x={px(point.x)} y={py(point.y) - 3} fontSize="3" textAnchor="middle" fill={colors.ink}>{point.label}</text> : null}
@@ -74,7 +74,7 @@ function Vectors({ visual }: { visual: Extract<OrbyBoardVisual, { type: "vectors
         const endX = visual.origin.x + vector.dx;
         const endY = visual.origin.y - vector.dy;
         return <g key={index}>
-          <line x1={visual.origin.x} y1={visual.origin.y} x2={endX} y2={endY} stroke={colors.orange} strokeWidth="1.2" markerEnd={`url(#${markerId})`}/>
+          <line className="orby-board-stroke" pathLength={1} x1={visual.origin.x} y1={visual.origin.y} x2={endX} y2={endY} stroke={colors.orange} strokeWidth="1.2" markerEnd={`url(#${markerId})`}/>
           <text x={endX + 2} y={endY - 2} fontSize="3.6" fill={colors.ink}>{vector.label}</text>
         </g>;
       })}
@@ -93,7 +93,7 @@ function Molecule({ visual }: { visual: Extract<OrbyBoardVisual, { type: "molecu
         const length = Math.hypot(dx, dy) || 1;
         const offsetX = (-dy / length) * 1.5, offsetY = (dx / length) * 1.5;
         const offsets = bond.order === 1 ? [0] : bond.order === 2 ? [-1.5, 1.5] : [-3, 0, 3];
-        return <g key={index}>{offsets.map((offset) => <line key={offset}
+        return <g key={index}>{offsets.map((offset) => <line className="orby-board-stroke" pathLength={1} key={offset}
           x1={from.x + offsetX * offset} y1={from.y + offsetY * offset}
           x2={to.x + offsetX * offset} y2={to.y + offsetY * offset}
           stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>)}</g>;
@@ -113,7 +113,7 @@ function Circuit({ visual }: { visual: Extract<OrbyBoardVisual, { type: "circuit
       {visual.connections.map((connection, index) => {
         const from = components.get(connection.from), to = components.get(connection.to);
         if (!from || !to) return null;
-        return <line key={index} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>;
+        return <line className="orby-board-stroke" pathLength={1} key={index} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>;
       })}
       {visual.components.map((component) => <g key={component.id}>
         {component.kind === "battery" ? <g>
@@ -172,15 +172,15 @@ function Dna({ visual }: { visual: Extract<OrbyBoardVisual, { type: "dna" }> }) 
         const x1 = 50 + Math.sin(index * 0.9) * 18;
         const x2 = 50 - Math.sin(index * 0.9) * 18;
         return <g key={index}>
-          <line x1={x1} y1={y} x2={x2} y2={y} stroke={colors.ink} strokeWidth="1.2"/>
+          <line className="orby-board-stroke" pathLength={1} x1={x1} y1={y} x2={x2} y2={y} stroke={colors.ink} strokeWidth="1.2"/>
           <circle cx={x1} cy={y} r="5" fill="#dbeafe" stroke={colors.ink} strokeWidth="0.5"/>
           <circle cx={x2} cy={y} r="5" fill="#fee2e2" stroke={colors.ink} strokeWidth="0.5"/>
           <text x={x1} y={y + 1.5} fontSize="4" textAnchor="middle" fill={colors.ink}>{pair.left}</text>
           <text x={x2} y={y + 1.5} fontSize="4" textAnchor="middle" fill={colors.ink}>{pair.right}</text>
         </g>;
       })}
-      <path d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 + Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke={colors.orange} strokeWidth="1.3"/>
-      <path d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 - Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke="#0f766e" strokeWidth="1.3"/>
+      <path className="orby-board-stroke" pathLength={1} d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 + Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke={colors.orange} strokeWidth="1.3"/>
+      <path className="orby-board-stroke" pathLength={1} d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 - Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke="#0f766e" strokeWidth="1.3"/>
     </svg>
   );
 }
@@ -339,7 +339,7 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
 
 export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   return (
-    <section aria-label={"Pizarra: " + board.title} className="mt-4 overflow-hidden rounded-xl border border-orange-200 bg-[#fffdf8] text-slate-900 shadow-sm">
+    <section aria-label={"Pizarra: " + board.title} className="orby-board mt-4 overflow-hidden rounded-xl border border-orange-200 bg-[#fffdf8] text-slate-900 shadow-sm">
       <header className="flex items-center gap-2 border-b border-orange-100 bg-orange-50 px-4 py-3">
         <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 text-sm font-black text-white">O</span>
         <h3 className="text-xs font-extrabold uppercase tracking-[0.12em] text-orange-950">Pizarra · {board.title}</h3>

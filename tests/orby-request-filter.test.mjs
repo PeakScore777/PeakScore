@@ -1291,6 +1291,15 @@ test("las preguntas ambiguas llegan al tutor para aclaración y las solicitudes 
 test("Orby conserva los seguimientos académicos y no hereda contexto de una negativa", () => {
   const invitation = "¡Aquí estoy! Soy Orby, tu tutor de PeakScore. ¿Qué tema de Saber 11 quieres trabajar?";
   assert.equal(filter.isOrbyStudyGuidanceRequest("no sé", invitation), true);
+  const videoInvitation = "Claro, dime qué te gustaría repasar de las materias de Saber 11 como Ciencias Naturales o Inglés.";
+  assert.equal(filter.isOrbyStudyGuidanceRequest("no sé, xd", videoInvitation), true);
+  assert.equal(filter.isOrbyStudyGuidanceRequest("no sé jaja", videoInvitation), true);
+  assert.equal(filter.isOrbyStudyGuidanceRequest("dime", videoInvitation), true);
+  assert.equal(filter.isOrbyStudyGuidanceRequest("no sé, xd", "Saber 11: ¿qué área quieres trabajar?"), true);
+  assert.equal(filter.isOrbyStudyGuidanceRequest("no sé, xd", "Esa solicitud está fuera del alcance de Orby."), false);
+  assert.equal(filter.isOrbyStudyGuidanceRequest("dime", "Esa solicitud está fuera del alcance de Orby."), false);
+  assert.equal(filter.preflightOrbyRequest("no sé, xd", videoInvitation).allowed, true);
+  assert.equal(filter.preflightOrbyRequest("no sé, xd", videoInvitation).reply, "");
   assert.equal(filter.preflightOrbyRequest("no sé", invitation).allowed, true);
   assert.equal(filter.preflightOrbyRequest("ni idea", invitation).allowed, true);
   assert.equal(filter.isOrbyStudyGuidanceRequest("no sé", "Esa solicitud está fuera del alcance de Orby."), false);

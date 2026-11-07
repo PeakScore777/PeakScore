@@ -396,3 +396,8 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Prompt de voz actualizado para respuestas directas, sin relleno, seguimiento contextual y explicación por pasos cuando se necesite; no revela razonamiento interno ni salta filtros.
 - 1 segundo es objetivo para primera señal útil, no garantía de respuesta completa. Medir p50/p95 y validar que 400 ms no corte frases.
 - Test estático añadido; runtime, Chrome/micrófono, TS/ESLint/build no ejecutados.
+
+
+## 2026-11-07 — medición de primer audio
+- Se registra el tiempo desde la aceptación del turno hasta recibir el primer chunk de audio Live, aparte del momento en que se programa la reproducción audible.
+- Métrica por turno, sin registrar texto ni audio. Prueba estática añadida; faltan datos reales p50/p95 y QA de navegador.

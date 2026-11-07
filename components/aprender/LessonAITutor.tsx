@@ -2536,6 +2536,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setVoiceStatus("Te escucho…");
         setIsListening(true);
       }
+      // The interrupted event is the boundary between the old and new Live
+      // generations. The current event remains discarded via the local guard;
+      // subsequent events belong to the new generation and must be accepted.
+      voiceDiscardStaleLiveOutputRef.current = false;
     }
 
     const outputTranscript = serverContent.outputTranscription && typeof serverContent.outputTranscription === "object"

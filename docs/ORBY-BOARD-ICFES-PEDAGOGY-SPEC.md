@@ -407,3 +407,31 @@ También se amplió el esquema de herramienta Live y las instrucciones del tutor
 
 ### Validación pendiente
 La escritura y lectura de los archivos en la rama están verificadas. Aún no se ha ejecutado TypeScript, lint, build ni pruebas de navegador/micrófono. No declarar listo para Pull hasta que pasen. No se modificó `main`, no se desplegó y no se añadieron proveedores o servicios de pago.
+
+
+## 15. Tercer incremento — modelos de química y electricidad (2026-11-07)
+
+### Nuevas escenas
+- `molecule`: átomos con símbolo, posición 2D y carga opcional; enlaces simples, dobles o triples.
+- `circuit`: batería, resistencia, lámpara e interruptor con conexiones identificadas.
+- Ambas escenas se validan en servidor antes de guardarse/renderizarse; se rechazan referencias a IDs inexistentes, IDs duplicados, tipos desconocidos, órdenes de enlace inválidos y coordenadas fuera de rango.
+- El renderizador usa SVG declarativo controlado por React. No inserta HTML del modelo ni ejecuta código.
+
+### Pruebas añadidas
+Se ampliaron las pruebas automáticas del proyecto para comprobar:
+1. Aceptación y normalización de un ejemplo molecular H₂O.
+2. Aceptación de una escena de circuito básica.
+3. Rechazo de enlaces a átomos inexistentes.
+4. Rechazo de conexiones a componentes inexistentes.
+5. Existencia de renderizadores y esquema Live para ambas primitivas.
+6. Ausencia de `dangerouslySetInnerHTML` en el renderizador.
+
+Estas pruebas quedaron incorporadas al archivo ya ejecutado por `npm run test:orby`, pero **todavía no se han ejecutado en un entorno de build**. La existencia del test no equivale a resultado aprobado.
+
+### Límites científicos que debe comunicar Orby
+- La escena molecular es un esquema 2D de conectividad; no determina por sí sola geometría tridimensional, ángulos, polaridad ni propiedades moleculares.
+- La escena de circuito es un dibujo topológico; no calcula corriente, voltaje, potencia, resistencia equivalente ni continuidad.
+- La explicación debe separar claramente lo que muestran los datos del dibujo de lo que se puede deducir con las leyes físicas o químicas pertinentes.
+
+### Estado
+Cambios guardados en `feat/founder-intro`; archivos leídos de nuevo para verificar su persistencia. No se tocó `main`, no se desplegó y no se alteraron proveedores ni cuotas gratuitas. **Pull aún no autorizado:** faltan ejecución real de `npm run test:orby`, lint, build y prueba manual de voz/pizarra en navegador.

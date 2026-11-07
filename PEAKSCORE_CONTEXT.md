@@ -401,3 +401,8 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 ## 2026-11-07 — medición de primer audio
 - Se registra el tiempo desde la aceptación del turno hasta recibir el primer chunk de audio Live, aparte del momento en que se programa la reproducción audible.
 - Métrica por turno, sin registrar texto ni audio. Prueba estática añadida; faltan datos reales p50/p95 y QA de navegador.
+
+
+## 2026-11-07 — escucha continua manos libres
+- La escucha se rearma después de terminar todos los fragmentos de audio de Orby; se mide el ciclo completo hasta quedar listo para la siguiente intervención (`fullConversationCycleMs`).
+- Test estático añadido; falta probar en Chrome/micrófono que el estudiante pueda hablar naturalmente sin tocar el botón y sin que el micrófono capture la voz de Orby.

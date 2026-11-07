@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, expandIcfesEnglishSearchTerms, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
 import { searchOrbyPublicSources, shouldSearchOrbyPublicSources, reconcileOrbyPublicCitations, type OrbyWebSource } from "@/lib/ai/orby-web-research";
@@ -993,6 +993,10 @@ No uses bloques Markdown ni texto fuera del JSON.
     if (containsUnsupportedSpanishLanguage(modelReply)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "unsupported_output_script" });
       modelReply = ORBY_SPANISH_OUTPUT_FALLBACK;
+      parsed.checkQuestion = "";
+    } else if (containsPlatformMarketingClaim(modelReply)) {
+      await recordSecurityEvent(user.id, "suspicious_output", { reason: "platform_self_promotion" });
+      modelReply = ORBY_PLATFORM_NEUTRALITY_REPLY;
       parsed.checkQuestion = "";
     } else if (containsExternalPreIcfesPromotion(modelReply)) {
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "external_preicfes_promotion" });

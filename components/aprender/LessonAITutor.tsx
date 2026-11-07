@@ -2638,10 +2638,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (withinChunkLimit && withinMemoryBudget) {
           voicePendingAudioChunksRef.current.push(chunk);
         } else {
+          const pendingChunkCount = voicePendingAudioChunksRef.current.length;
           voiceOutputAudioBlockedRef.current = true;
           voicePendingAudioChunksRef.current = [];
           console.warn("[Orby Voice] Audio buffer budget reached; switching this turn to validated text speech.", {
-            pendingChunks: voicePendingAudioChunksRef.current.length,
+            pendingChunks: pendingChunkCount,
             encodedChars: pendingEncodedChars,
           });
         }

@@ -81,3 +81,20 @@ La persistencia puede seguir guardando intercambios atómicos. Eso es una decisi
 - La pizarra está integrada con el tutor escrito y la ruta de voz alternativa que usa `/api/lesson-tutor`; todavía no se sincroniza con eventos de Gemini Live en tiempo real.
 - No se activó Gemini Live en producción ni se cambió ninguna condición de privacidad o cuota.
 - CI se encuentra en ejecución para el commit de esta integración. No se declara validada hasta que finalice.
+
+
+## Segunda fase — persistencia de pizarras
+
+- Se añadió la columna opcional `orby_messages.teaching_board` mediante migración.
+- Se creó `orby_save_turn_with_board`: inserta el mensaje del estudiante y la respuesta del tutor con la pizarra en una sola transacción, bloqueando la conversación antes de escribir.
+- La ruta escrita ahora utiliza esa RPC y envía únicamente la pizarra previamente validada en servidor.
+- El endpoint de historial incluye `teaching_board`; el cliente la reconstruye como bloque tipado al abrir la conversación.
+- La validación SQL usa ramas `CASE` para no ejecutar funciones de arrays sobre JSON que no sea un array.
+- Se añadieron pruebas estáticas para la ruta de guardado, migración y recuperación.
+
+### Pendiente de despliegue y validación
+
+- La migración nueva está en GitHub; no se aplicó al proyecto Supabase ni se desplegó la aplicación en esta fase.
+- Hasta aplicar la migración, la ruta nueva no estará disponible contra la base de datos actual.
+- La CI del commit más reciente debe finalizar antes de solicitar Pull.
+- Esta persistencia cubre el tutor HTTP y el historial; no convierte todavía Gemini Live en una sesión continua ni sincroniza pizarras durante el audio.

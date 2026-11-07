@@ -3936,3 +3936,14 @@ test("la clase en vivo permite guardar los apuntes de la pizarra en la bibliotec
   assert.match(lessonTutorSource, /aria-label="Guardar apuntes de esta clase"/);
   assert.match(lessonTutorSource, /sections\.join\("\\n\\n"\)/);
 });
+
+
+test("la pizarra ofrece herramientas de anotacion independientes para el estudiante", () => {
+  assert.match(boardComponentSource, /setTool\("pen"\)/);
+  assert.match(boardComponentSource, /setTool\("highlight"\)/);
+  assert.match(boardComponentSource, /setTool\("eraser"\)/);
+  assert.match(boardComponentSource, /aria-label="Capa de escritura personal"/);
+  assert.match(boardComponentSource, /Deshacer/);
+  assert.match(boardComponentSource, /Limpiar/);
+  assert.match(boardComponentSource, /setPointerCapture/);
+});

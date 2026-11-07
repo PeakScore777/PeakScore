@@ -369,3 +369,26 @@ Los documentos oficiales del Icfes incluyen condiciones de uso que restringen la
 ## 12. Criterio de éxito
 
 Orby habrá alcanzado el objetivo cuando, ante un tema nuevo de cualquiera de las cinco pruebas, pueda: **explicar con precisión, elegir una representación adecuada, construirla progresivamente mientras habla, hacer que el estudiante participe, detectar el error, corregirlo visualmente, aplicar el concepto a un contexto Saber 11 y recuperar la pizarra al volver a la conversación**, todo sin comprometer seguridad, rendimiento, privacidad ni presupuesto.
+
+
+---
+
+## 13. Implementación universal — primer incremento (2026-11-07)
+
+Se incorporó una primera extensión de código sobre la pizarra existente, manteniendo compatibilidad con escenas v1:
+
+- `lib/ai/orby-board.ts`: el contrato ahora admite escenas v1 y v2. v2 incorpora cinco primitivas declarativas: diagramas de nodos/flechas, gráficas de línea/dispersión, vectores, tablas y líneas de tiempo.
+- El sanitizador comprueba tipos, cantidades máximas, IDs únicos, referencias de conexiones, límites de ejes, puntos dentro del rango, tamaños de tablas, posiciones ordenadas y coordenadas acotadas. El contenido no acepta HTML/SVG/código.
+- `components/aprender/OrbyBoard.tsx`: renderiza las cinco primitivas mediante componentes React y SVG locales. Los datos del modelo no se ejecutan ni se insertan como markup.
+- `lib/ai/orby-live-tools.ts`: expone el esquema tipado de las primitivas a la herramienta de pizarra Live.
+- `app/api/lesson-tutor/route.ts`: las instrucciones del tutor escrito describen cuándo elegir cada visual y cuándo omitir la pizarra.
+- `app/api/orby/realtime-session/route.ts`: las instrucciones de voz solicitan construir la escena progresivamente, sincronizada con lo que se explica, sin inventar datos ni continuar tras una interrupción.
+
+### Estado honesto de validación
+
+- Cambios escritos en `feat/founder-intro`; no se tocó `main` ni se desplegó.
+- Se verificó la lectura posterior de los archivos actualizados en GitHub.
+- **Pendiente:** ejecutar TypeScript, ESLint, pruebas Orby y build completo en CI; las consultas de workflow para los commits de este incremento no devolvieron ejecuciones.
+- **Pendiente:** pruebas manuales reales con Chrome/micrófono para comprobar que el modelo emita v2 de forma consistente, que el tablero avance mientras habla y que barge-in descarte actualizaciones antiguas.
+- Esta fase todavía no implementa primitivas específicas de moléculas, células, circuitos, óptica, mapas geográficos o anotación de textos. Se construirán como adaptadores sobre las primitivas universales, no como dibujos arbitrarios.
+- No declarar el trabajo listo para Pull hasta cerrar validación automatizada y funcional. No aplicar migraciones ni cambiar proveedores/cuotas como parte de esta fase.

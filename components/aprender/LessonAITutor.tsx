@@ -2089,9 +2089,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const isCurrent = !controller.signal.aborted
         && voiceModeRef.current
         && voiceSessionGenerationRef.current === sessionGeneration
-        && voiceActivityGenerationRef.current === activityGeneration
-        && voicePendingStudentTurnRef.current
-        && voiceUserTextRef.current.trim().length > 0;
+        && voiceActivityGenerationRef.current === activityGeneration;
       if (!isCurrent) return;
       if (!response.ok) {
         console.warn("[Orby Voice Board] Free visual fallback unavailable.", {

@@ -366,3 +366,11 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Claves de React basadas en tipo/contenido/posición conservan elementos previos cuando un snapshot acumulativo agrega elementos al final.
 - Prueba estática añadida. Sigue siendo aparición de bloques completos, no escritura carácter a carácter ni sincronización exacta con voz. No declarar completo el comportamiento del video.
 - Relectura GitHub sí; pruebas runtime/build/browser no ejecutadas.
+
+
+## 2026-11-07 — tablero y subtítulos dentro de la llamada
+- En el escenario de llamada se renderiza la pizarra del mensaje de voz activo y subtítulos en vivo desde la transcripción de salida de Live.
+- El control de subtítulos permite mostrarlos/ocultarlos. Se reutiliza el mismo mensaje/tablero y no se agregan llamadas de IA ni proveedores.
+- La transcripción depende del texto que Live emite; no hay alineación palabra-a-palabra con el audio. El tablero se actualiza al llegar la herramienta, sin sincronía exacta por trazo todavía.
+- Fallback por turnos conserva su aviso y comportamiento degradado; no se fuerza voz adicional.
+- Prueba estática añadida y archivos releídos en GitHub; navegador/micrófono/build/TS/ESLint no ejecutados.

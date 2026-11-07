@@ -729,6 +729,12 @@ El ejemplo del video evidenció una confusión de alto impacto: presentar la cop
 
 La corrección se aplica a la salida inicial y a la recuperación acotada del tutor, antes de validar y entregar el texto. Se agregaron pruebas para el error observado, una explicación correcta que debe permanecer intacta y una mención de mitosis que no debe activar el reemplazo. Esto no equivale a un verificador universal de biología; el alcance es únicamente esa confusión observada.
 
+### Regresión detectada por CI: respuesta compuesta solo por signos
+
+La ejecución de GitHub Actions del commit `07811197` ejecutó 130 pruebas: 129 pasaron y falló una aserción en `tests/orby-request-filter.test.mjs:2486`. La prueba esperaba que `isLowQualityOrbyReply("???")` clasificara los signos como respuesta incompleta; la función limpiaba la puntuación antes de clasificar y convertía ese contenido en cadena vacía, que estaba reservada para la recuperación del transcript vacío de Live.
+
+Corrección: distinguir explícitamente una salida no vacía compuesta solo por puntuación (respuesta inválida) de un transcript realmente vacío (la ruta de recuperación conserva su responsabilidad). Se mantiene la regla existente de detectar respuestas de una sola palabra como "sí" cuando el estudiante no pidió una respuesta binaria. La siguiente ejecución de CI debe confirmar el arreglo; TypeScript, ESLint y build no corrieron en la ejecución fallida porque el workflow se detiene al fallar las pruebas.
+
 ### Repetición de presentación: prioridad incorrecta del área activa
 
 Se encontró una causa concreta para saludos que podían retomar el área equivocada: `getActiveOrbySubjectKey` consultaba primero `activeSubject` (estado de la sesión/componente) y solo después buscaba la selección más reciente en el historial. Si el estudiante cambiaba de área dentro de la conversación, un valor de sesión desactualizado podía ganar y el saludo devolver una continuación de la materia anterior.

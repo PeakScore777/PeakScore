@@ -372,3 +372,45 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
 
   return null;
 }
+
+/** Strictly validates model-produced board data; the client renders only known React/SVG primitives. */
+export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  if ((raw.version !== 1 && raw.version !== 2) || !Array.isArray(raw.blocks)
+    || raw.blocks.length === 0 || raw.blocks.length > MAX_BLOCKS) return null;
+  const title = safeText(raw.title, 100);
+  if (!title) return null;
+
+  const blocks: OrbyBoardBlock[] = [];
+  for (const candidate of raw.blocks) {
+    if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
+    const item = candidate as Record<string, unknown>;
+    const type = item.type;
+    if (type === "heading" || type === "text" || type === "formula" || type === "callout") {
+      const text = safeText(item.text);
+      if (!text) return null;
+      blocks.push({ type, text });
+    } else if (type === "step") {
+      const label = safeText(item.label, 48);
+      const text = safeText(item.text);
+      if (!label || !text) return null;
+      blocks.push({ type, label, text });
+    } else {
+      return null;
+    }
+  }
+
+  if (raw.version === 1) {
+    if (raw.visuals !== undefined) return null;
+    return { version: 1, title, blocks };
+  }
+  if (!Array.isArray(raw.visuals) || raw.visuals.length > MAX_VISUALS) return null;
+  const visuals: OrbyBoardVisual[] = [];
+  for (const candidate of raw.visuals) {
+    const visual = sanitizeVisual(candidate);
+    if (!visual) return null;
+    visuals.push(visual);
+  }
+  return { version: 2, title, blocks, visuals };
+}

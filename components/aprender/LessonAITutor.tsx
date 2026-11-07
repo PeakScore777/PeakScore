@@ -258,6 +258,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     assistantContent: string;
   } | null>(null);
   const [retryingVoiceTurn, setRetryingVoiceTurn] = useState(false);
+  // Keep the same idempotency key if a completed turn is retried after a timeout.
+  const pendingVoicePersistenceRef = useRef<{ conversationId: string; turnId: string; userContent: string; assistantContent: string } | null>(null);
   const [learningView, setLearningView] = useState<"chat" | "notes" | "topics" | "progress" | "storage">("chat");
   const [learningItems, setLearningItems] = useState<LearningItem[]>([]);
   const [learningSignals, setLearningSignals] = useState<LearningSignal[]>([]);
@@ -1743,7 +1745,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     // Capture immutable turn data before the next voice turn resets its refs.
-    const turn = { conversationId: id, turnId: crypto.randomUUID(), userContent, assistantContent };
+    const previousTurn = pendingVoicePersistenceRef.current;
+    const turn = previousTurn
+      && previousTurn.conversationId === id
+      && previousTurn.userContent === userContent
+      && previousTurn.assistantContent === assistantContent
+      ? previousTurn
+      : { conversationId: id, turnId: crypto.randomUUID(), userContent, assistantContent };
+    pendingVoicePersistenceRef.current = turn;
     voiceTurnPersistedRef.current = true;
     const saveTask = voiceTurnPersistenceChainRef.current
       .catch(() => undefined)
@@ -1767,6 +1776,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           && current.assistantContent === turn.assistantContent
           ? null
           : current);
+        if (pendingVoicePersistenceRef.current?.turnId === turn.turnId) {
+          pendingVoicePersistenceRef.current = null;
+        }
         setConversationError("");
         void refreshConversations().catch((caught: unknown) => {
           setConversationError(caught instanceof Error ? caught.message : "No se pudo actualizar el historial.");
@@ -1803,6 +1815,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo guardar el turno de voz.");
       }
       setFailedVoiceTurn((current) => current === turn ? null : current);
+      if (pendingVoicePersistenceRef.current?.turnId === turn.turnId) {
+        pendingVoicePersistenceRef.current = null;
+      }
       setConversationError("");
       if (voiceUserTextRef.current.trim() === turn.userContent
         && voiceAssistantTextRef.current.trim() === turn.assistantContent) {

@@ -2669,8 +2669,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
       if (studentBargeInPending) {
-        voicePendingBoardCuesRef.current = [];
         discardInterruptedGenerationOutput = true;
+        voicePendingBoardCuesRef.current = [];
         voiceResponseDoneRef.current = false;
         waitingForVoiceReplyRef.current = true;
         setVoiceStatus("Procesando lo que dijiste…");
@@ -5074,7 +5074,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <p className="max-h-28 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá lo que Orby vaya diciendo…" : "Conecta con Orby para comenzar.")}</p>
           </section>}
           {activeVoiceAssistantMessage?.board ? <section className="mt-4 w-full max-w-4xl text-left" aria-label="Pizarra de la explicación de Orby">
-            <OrbyBoard board={activeVoiceAssistantMessage.board}/>
+            <OrbyBoard board={activeVoiceAssistantMessage.board} />
           </section> : voiceMode && voicePendingStudentTurnRef.current && <section className="mt-4 w-full max-w-4xl rounded-xl border border-dashed border-orange-300/35 bg-[#fffdf8] px-5 py-6 text-left text-slate-800 shadow-sm" role="status" aria-label="Pizarra de Orby preparándose">
             <div className="flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-orange-900"><span className="h-2 w-2 animate-pulse rounded-full bg-orange-500"/> Pizarra de Orby</div>
             <p className="mt-2 text-sm font-semibold">Preparando el apoyo visual…</p>

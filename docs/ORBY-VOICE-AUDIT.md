@@ -511,3 +511,22 @@ Commits:
 - `b665437` — regresión de instrumentación por etapas.
 
 CI de la punta actual pendiente.
+
+
+## 2026-11-07 — límite de memoria para audio Live pendiente
+
+La auditoría encontró que la cola previa limitaba el número de fragmentos a 512, pero no el tamaño acumulado de sus cargas Base64. Se añadió un presupuesto dual antes de almacenar audio cuya transcripción todavía no ha sido validada:
+
+- Máximo 512 fragmentos pendientes.
+- Máximo 8 MiB de caracteres Base64 acumulados (aproximadamente 6 MiB de datos binarios).
+- Si se alcanza cualquiera de los límites, se descarta la cola no validada y se activa la ruta existente de voz por texto validado; no se reproduce audio no verificado.
+- El registro de diagnóstico conserva el número real de fragmentos antes de vaciar la cola.
+
+La cola se sigue vaciando al aprobarse la primera oración completa y las generaciones interrumpidas siguen limpiando el audio pendiente. No se alteró el orden de reproducción, el límite de escucha ni el proveedor.
+
+Commits:
+- `daa92b9` — presupuesto de memoria para audio pendiente.
+- `a006f4d` — precisión del registro del límite.
+- `8bc40f9` — regresión para ambos límites.
+
+El CI de esta punta debe validar la prueba nueva, TypeScript, ESLint y build. La ejecución anterior `42333196498` corresponde a `fa2cd3a` y no valida estos cambios posteriores.

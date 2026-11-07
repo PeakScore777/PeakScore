@@ -332,3 +332,15 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Restricción económica: solo modelos/servicios gratuitos reales dentro de cuota; al agotarse, pausar/degradar con aviso, sin fallback de pago.
 - Esta especificación no supone que el corpus eliminado del Orby ICFES Lab deba reconstruirse ni que existan conteos/conceptos previos.
 - Estado: documento y plan creados en `feat/founder-intro`; falta auditar implementación real antes de cambios funcionales. No Pull ni deploy hasta completar CI y pruebas de voz/tablero en navegador.
+
+
+## 2026-11-07 — auditoría inicial y pizarra visual de voz
+- Auditoría: `docs/ORBY-IMPLEMENTATION-AUDIT.md`.
+- Currículo: `docs/ORBY-ICFES-CURRICULUM-PLAN.md`.
+- Se corrigió el contrato de la herramienta Live para describir los catorce tipos visuales que ya acepta el sanitizador, con coordenadas alineadas a los rangos reales.
+- El fallback por turnos de voz ahora solicita board versión 2 con bloques y visuales tipados; antes solo solicitaba versión 1 textual.
+- Regresiones estáticas añadidas a `tests/orby-request-filter.test.mjs` para ambos contratos.
+- Hallazgo pendiente: la cobertura curricular explícita del prompt es desigual (Ciencias Naturales tiene guía detallada; las otras áreas necesitan matriz equivalente y contexto selectivo desde el catálogo curricular).
+- Hallazgo pendiente: la ruta de texto tiene `qualityStatus = not_required` y `reviewMs = 0`; las validaciones actuales no son un verificador semántico general. Reforzar con validadores deterministas acotados y coherencia board-respuesta, sin llamadas pagadas.
+- Estado de validación: solo lectura estática; no se ejecutaron pruebas/TypeScript/ESLint/build ni Chrome Live. No afirmar que está probado.
+- No hacer Pull ni desplegar hasta CI completa, pruebas reales de voz/tablero y verificación de migración de idempotencia de voz en entorno de prueba.

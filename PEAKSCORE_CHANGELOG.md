@@ -1,5 +1,12 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — ajuste de respuesta continua de voz
+- Live endpointing reducido de 500 a 400 ms en cliente y servidor para acortar la pausa tras terminar de hablar.
+- Instrucción de voz prioriza respuesta directa, sin relleno y con continuidad contextual, manteniendo filtros y precisión.
+- 1 s se trata como objetivo de primera señal, no como SLA de respuesta completa. Requiere medir p50/p95 y validar que no haya cortes de voz.
+- Test estático añadido; no se ejecutaron pruebas runtime/Chrome/micrófono/TS/ESLint/build.
+
+
 ## 2026-11-07 — estado de preparación del tablero en llamada
 - La llamada reserva una superficie de pizarra mientras el turno está pendiente y aún no hay visual validado; se reemplaza por el tablero real cuando llega.
 - No se muestra un dibujo ficticio ni se genera una petición adicional. Test estático añadido; runtime/Chrome/TS/ESLint/build pendientes.

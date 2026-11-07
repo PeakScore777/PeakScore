@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
-import type { OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
+import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
@@ -318,6 +318,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceUnsupportedInputDetectedRef = useRef(false);
   const voiceAssistantTextRef = useRef("");
   const voiceAssistantMessageIdRef = useRef<string | null>(null);
+  const voiceTeachingBoardRef = useRef<OrbyBoardData | null>(null);
   const voicePublicSourcesRef = useRef<OrbyPublicSource[]>([]);
   const voiceUserMessageVisibleRef = useRef(false);
   const voiceResponseDoneRef = useRef(false);
@@ -944,6 +945,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // the old question and overwrite the visible turn.
     voiceUserTextRef.current = "";
     voiceAssistantMessageIdRef.current = null;
+    voiceTeachingBoardRef.current = null;
         voicePublicSourcesRef.current = [];
     voiceResponseDoneRef.current = false;
     voiceTurnPersistedRef.current = false;
@@ -1486,6 +1488,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStartupAbortRef.current?.abort();
     voiceStartupAbortRef.current = null;
     voiceModeRef.current = false;
+    voiceTeachingBoardRef.current = null;
     voiceBargeInPendingRef.current = false;
     voiceFallbackModeRef.current = false;
     setVoiceFallbackMode(false);
@@ -1976,6 +1979,54 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       };
     } catch {
       setVoiceError("No se pudo reproducir una parte de la respuesta de voz.");
+    }
+  }
+
+  function handleOrbyLiveTeachingBoardTool(toolCall: unknown) {
+    const session = voiceChannelRef.current;
+    if (!session || !toolCall || typeof toolCall !== "object") return;
+    const sessionGeneration = voiceSessionGenerationRef.current;
+    const activityGeneration = voiceActivityGenerationRef.current;
+    const isCurrent = () => voiceChannelRef.current === session
+      && voiceSessionGenerationRef.current === sessionGeneration
+      && voiceActivityGenerationRef.current === activityGeneration;
+    const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
+    if (!Array.isArray(calls)) return;
+    const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
+    const cancelled = new Set<string>();
+    // A tool call canceled in a sibling event is ignored by the normal event
+    // dispatcher; this handler never starts asynchronous work or outlives its turn.
+    for (const raw of calls.slice(0, 3)) {
+      if (!raw || typeof raw !== "object") continue;
+      const call = raw as { id?: unknown; name?: unknown; args?: unknown };
+      if (call.name !== "render_orby_teaching_board" || typeof call.id !== "string" || !call.id) continue;
+      let args: unknown = call.args;
+      if (typeof args === "string") {
+        try { args = JSON.parse(args); } catch { args = null; }
+      }
+      const board = sanitizeOrbyBoard(args);
+      if (!isCurrent()) return;
+      if (!board || !voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim() || voiceResponseDoneRef.current) {
+        responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: false, reason: "No hay una respuesta académica activa o el contenido de la pizarra no es válido. Continúa la explicación sin pizarra." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE });
+        continue;
+      }
+      voiceTeachingBoardRef.current = board;
+      const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
+      voiceAssistantMessageIdRef.current = assistantId;
+      setMessages((current) => {
+        const exists = current.some((message) => message.id === assistantId);
+        return exists
+          ? current.map((message) => message.id === assistantId ? { ...message, board } : message)
+          : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board }];
+      });
+      responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: true, guidance: "Pizarra incorporada al mensaje actual. Explícala con la voz sin repetir literalmente todos sus bloques." }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE });
+    }
+    if (!isCurrent() || !responses.length) return;
+    try {
+      (session as unknown as { sendToolResponse: (payload: { functionResponses: typeof responses }) => void })
+        .sendToolResponse({ functionResponses: responses });
+    } catch (error) {
+      console.error("[Orby Voice] Teaching board tool response failed.", { name: error instanceof Error ? error.name : "UnknownError" });
     }
   }
 
@@ -3243,7 +3294,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           if (typeof sameEventTranscript === "string" && sameEventTranscript.trim()) {
             voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
           }
-          void handleOrbyLiveKnowledgeTool(payload.toolCall);
+          const liveCalls = (payload.toolCall as { functionCalls?: unknown }).functionCalls;
+          if (Array.isArray(liveCalls)) {
+            const boardCalls = liveCalls.filter((call) => !!call && typeof call === "object"
+              && (call as { name?: unknown }).name === "render_orby_teaching_board");
+            const knowledgeCalls = liveCalls.filter((call) => !!call && typeof call === "object"
+              && (call as { name?: unknown }).name !== "render_orby_teaching_board");
+            if (boardCalls.length) void handleOrbyLiveTeachingBoardTool({ functionCalls: boardCalls });
+            if (knowledgeCalls.length) void handleOrbyLiveKnowledgeTool({ functionCalls: knowledgeCalls });
+          }
           if (payload.serverContent && typeof payload.serverContent === "object") {
             handleGeminiLiveEvent(payload);
           }

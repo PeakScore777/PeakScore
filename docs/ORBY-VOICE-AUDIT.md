@@ -223,4 +223,16 @@ La regla conserva excepciones explícitas para figuras del currículo de Sociale
 
 ### Ajuste de excepción curricular
 
-El primer CI detectó que la pregunta aislada «¿Quién fue Simón Bolívar?» no tenía suficiente ancla curricular para distinguir una consulta biográfica general. Se amplió el marco de preguntas en español sobre figuras históricas y la regresión usa ahora «¿Quién fue Simón Bolívar en la independencia de Colombia?». Así se conserva la excepción académica explícita sin abrir consultas biográficas generales. La prueba curricular usa una formulación académica explícita («Analiza el papel de Simón Bolívar en la independencia de Colombia»), no una pregunta biográfica abierta. La prueba literaria también permanece en la suite. 
+El primer CI detectó que la pregunta aislada «¿Quién fue Simón Bolívar?» no tenía suficiente ancla curricular para distinguir una consulta biográfica general. Se amplió el marco de preguntas en español sobre figuras históricas y la regresión usa ahora «¿Quién fue Simón Bolívar en la independencia de Colombia?». Así se conserva la excepción académica explícita sin abrir consultas biográficas generales. La prueba curricular usa una formulación académica explícita («Analiza el papel de Simón Bolívar en la independencia de Colombia»), no una pregunta biográfica abierta. La prueba literaria también permanece en la suite.
+
+## Live Lab — carrera de cancelación entre llamadas hermanas
+
+Se detectó una carrera en `handleOrbyLiveKnowledgeTool`: los controladores se registraban dentro de un bucle secuencial, después de cada espera. Si Gemini cancelaba varias llamadas mientras la primera búsqueda seguía pendiente, las llamadas hermanas aún no registradas podían escapar de la cancelación y ejecutarse con un turno obsoleto.
+
+Corrección aplicada:
+- Registrar todos los controladores aceptados antes del primer `await fetch`.
+- La cancelación por ID puede alcanzar todas las llamadas hermanas desde el inicio.
+- Si la sesión/turno deja de ser vigente, limpiar y abortar los controladores restantes antes de salir.
+- Conservar el comportamiento de no descartar resultados hermanos válidos cuando solo se cancela una búsqueda.
+
+Se añadió una prueba estática que verifica el orden de registro respecto al primer `await` y la limpieza de solicitudes obsoletas. Pendiente CI y prueba acústica real en navegador.

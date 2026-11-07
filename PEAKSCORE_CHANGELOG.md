@@ -323,3 +323,12 @@
 - Se preserva la creación/revisión manual del banco de Inglés en sus siete partes y la restricción de presupuesto: no introducir proveedores, modelos ni fallbacks con riesgo de cobro.
 - Esta entrega es documentación y diseño; no implica que el código del tutor ya implemente toda la cobertura. No se modificó `main`, no se desplegó ni se debe hacer Pull todavía.
 - Fuentes oficiales consultadas: guía de orientación 2026-2, página de marcos de referencia Saber 11 y caja de herramientas «¿Qué se evalúa?» del Icfes.
+
+
+## 2026-11-07 — tablero visual en voz y auditoría inicial de implementación
+- Se amplió la descripción de `render_orby_teaching_board`: ahora declara los catorce tipos visuales que ya acepta `sanitizeOrbyBoard`, y alinea los rangos de coordenadas con el validador.
+- Se actualizó el prompt de fallback de voz de `app/api/lesson-tutor/route.ts`: ahora puede producir tableros versión 2 con bloques y visuales tipados, en lugar de limitarse a bloques textuales versión 1.
+- Se añadieron regresiones estáticas para el contrato visual de Live y el tablero del fallback de voz.
+- Se añadió `docs/ORBY-IMPLEMENTATION-AUDIT.md` con arquitectura confirmada, brechas curriculares, validación semántica pendiente y plan de pruebas.
+- No se ejecutaron localmente pruebas, TypeScript, ESLint ni build; no se declara CI aprobada ni prueba real de Chrome/micrófono.
+- No se tocó `main`, no se desplegó y no se aplicaron migraciones remotas. No hacer Pull hasta validar CI, voz/tablero y la migración de idempotencia de voz en un entorno de prueba.

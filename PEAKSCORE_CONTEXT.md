@@ -344,3 +344,11 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Hallazgo pendiente: la ruta de texto tiene `qualityStatus = not_required` y `reviewMs = 0`; las validaciones actuales no son un verificador semántico general. Reforzar con validadores deterministas acotados y coherencia board-respuesta, sin llamadas pagadas.
 - Estado de validación: solo lectura estática; no se ejecutaron pruebas/TypeScript/ESLint/build ni Chrome Live. No afirmar que está probado.
 - No hacer Pull ni desplegar hasta CI completa, pruebas reales de voz/tablero y verificación de migración de idempotencia de voz en entorno de prueba.
+
+
+## 2026-11-07 — estándar obligatorio de Orby como tutor en vivo
+- Especificación completa: docs/ORBY-LIVE-TUTOR-SPEC.md. El video compartido por el propietario es la referencia de experiencia: Orby habla mientras construye progresivamente la pizarra con trazos, flechas, fórmulas y etiquetas.
+- La voz y la pizarra deben avanzar en paralelo; el tablero debe ser acumulativo, sincronizado con la narración real disponible e interrumpible sin mezclar generaciones.
+- Auditoría estática: Live ya recibe snapshots de tablero, pero OrbyBoard.tsx los representa como SVG estático. Aún falta el motor de dibujo progresivo y el contrato de acciones visuales enlazadas a voz. No afirmar que ya se comporta como el video.
+- Prioridad: acciones tipadas incrementales con ids/secuencia/generación, cancelación segura, accesibilidad reduced-motion y pruebas de sincronización. No inventar timestamps ni añadir llamadas/proveedores pagados.
+- Solo trabajar en feat/founder-intro; no modificar main, desplegar ni ejecutar migraciones remotas sin autorización. No reconstruir material eliminado intencionalmente del Orby ICFES Lab.

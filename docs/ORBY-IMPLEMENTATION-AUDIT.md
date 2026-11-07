@@ -167,3 +167,12 @@ Pruebas necesarias:
 - Cuando llega el tablero validado del mismo mensaje de asistente, el estado provisional se sustituye por OrbyBoard. Si el turno no necesita un visual y no llega tablero, el estado provisional desaparece al dejar de estar pendiente el turno.
 - No se inventa un tablero vacío ni se duplica una petición de IA. Se usa el indicador de turno pendiente ya existente.
 - Prueba estática añadida. Archivos releídos en GitHub; no se ejecutaron pruebas Node, TS, ESLint, build ni Chrome/micrófono.
+
+
+## 15. Latencia conversacional de voz — 2026-11-07
+- Se redujo el silencio de cierre automático de turno de 500 ms a 400 ms tanto en la configuración Live del cliente como en la configuración de restricciones del token efímero del servidor. Ambos lados deben coincidir.
+- Se añadió una instrucción de respuesta ágil: empezar por una respuesta directa, evitar relleno, continuar con los pasos esenciales cuando la pregunta lo requiera, mantener contexto en seguimientos y no narrar razonamiento interno.
+- La rapidez no autoriza saltarse filtros, precisión, cuota gratuita ni alcance Saber 11.
+- No se fija una promesa de respuesta total en 1 segundo: la red, el modelo, la generación de audio y la complejidad hacen imposible garantizarlo en todos los casos. Objetivo de ingeniería: primera señal útil/subtítulo/audio lo antes posible y medir p50/p95 por etapa.
+- El valor de 400 ms es un ajuste conservador sujeto a QA de interrupciones y falsos cierres; si corta frases o turnos naturales, debe revertirse o ajustarse tras medición.
+- Prueba estática añadida para asegurar que ambos lados coincidan y que la instrucción no omita seguridad. Archivos releídos en GitHub; no se ejecutaron Node tests, TypeScript, ESLint, build ni pruebas de micrófono. No hay workflow CI asociado al commit de test.

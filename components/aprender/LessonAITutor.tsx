@@ -2011,8 +2011,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
     if (!Array.isArray(calls)) return;
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
+    let acceptedSnapshotInEvent = false;
     // A tool call canceled in a sibling event is ignored by the normal event
     // dispatcher; this handler never starts asynchronous work or outlives its turn.
+    // Accept at most one snapshot per Live event so React cannot batch several
+    // model updates into a single final frame and hide the progressive drawing.
     for (const raw of calls.slice(0, 3)) {
       if (!raw || typeof raw !== "object") continue;
       const call = raw as { id?: unknown; name?: unknown; args?: unknown };
@@ -2024,10 +2027,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const snapshot = sanitizeOrbyBoard(args);
       if (!isCurrent()) return;
       const boardLimitReached = voiceBoardUpdateCountRef.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
-      if (!snapshot || !voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim() || voiceResponseDoneRef.current || boardLimitReached) {
-        const reason = boardLimitReached
-          ? "Se alcanzó el límite de actualizaciones visuales de este turno. Continúa la explicación sin más cambios de pizarra."
-          : "No hay una respuesta académica activa o el contenido de la pizarra no es válido. Continúa la explicación sin pizarra.";
+      if (!snapshot || !voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim() || voiceResponseDoneRef.current || boardLimitReached || acceptedSnapshotInEvent) {
+        const reason = acceptedSnapshotInEvent
+          ? "Envía una sola actualización de pizarra por evento y espera su confirmación antes de la siguiente."
+          : boardLimitReached
+            ? "Se alcanzó el límite de actualizaciones visuales de este turno. Continúa la explicación sin más cambios de pizarra."
+            : "No hay una respuesta académica activa o el contenido de la pizarra no es válido. Continúa la explicación sin pizarra.";
         responses.push({ id: call.id, name: "render_orby_teaching_board", response: { accepted: false, reason }, scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
         continue;
       }
@@ -2035,6 +2040,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // This permits corrections/removals without leaving stale teaching content visible.
       const board = snapshot;
       voiceTeachingBoardRef.current = snapshot;
+      acceptedSnapshotInEvent = true;
       voiceBoardUpdateCountRef.current += 1;
       console.info("[Orby Voice] Teaching board update timing.", {
         updateNumber: voiceBoardUpdateCountRef.current,

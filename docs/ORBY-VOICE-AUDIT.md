@@ -418,3 +418,20 @@ El CI de `d36d136` ejecutó las regresiones y detectó que una nueva aserción e
 Se corrigió la prueba para verificar que ambas oraciones se conserven completas, con puntuación y orden, permitiendo que compartan un fragmento. El CI previo falló solo en esa aserción de segmentación; la auditoría de dependencias sí terminó correctamente y los pasos posteriores se omitieron por el fallo temprano de pruebas.
 
 Commit de corrección: `534fcb4`. CI de este commit pendiente. No se modificó el algoritmo de producción para satisfacer una prueba incorrecta.
+
+
+## 2026-11-07 — precisión del detector de eco acústico
+
+La auditoría del helper `lib/ai/orby-voice-echo.ts` detectó una comprobación duplicada para palabras de baja información y una comparación de saludos basada en subcadenas. Se endureció la detección:
+
+- Se eliminó el bloque duplicado de coincidencia de palabras cortas.
+- Las palabras cortas y saludos requieren coincidencia de token completo; no basta con que aparezcan como subcadena de otra palabra.
+- Se añadieron regresiones para evitar falsos positivos como `"sol"` dentro de `"consola"`, mantener `"sí"` distinto de `"sin"` y reconocer frases significativas completas.
+- Se conserva el umbral para no suprimir términos académicos cortos como `Saber 11` ni solicitudes nuevas por una coincidencia débil.
+
+Commits:
+- `ef01322` — corrección del matching de tokens.
+- `2f43545` — regresiones de coincidencia por palabra completa.
+- `825e41a` — ajuste de la regresión de frase significativa.
+
+CI: las ejecuciones intermedias fueron canceladas al llegar commits posteriores a la rama; el run anterior `42332341129` aún no había finalizado al registrar esta nota. El siguiente CI completo debe validar la punta de rama. No se declara aprobado todavía.

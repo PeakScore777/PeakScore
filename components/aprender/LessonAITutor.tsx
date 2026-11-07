@@ -3244,6 +3244,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             }, 15_000);
           }),
         ]);
+        startupTimings.liveConnectMs = performance.now() - liveConnectStartedAt;
+        const liveSetupStartedAt = performance.now();
         if (startupSignal.aborted) throw new DOMException("La conexión de voz fue cancelada.", "AbortError");
         await Promise.race([
           setupComplete,
@@ -3258,12 +3260,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             );
           }),
         ]);
+        startupTimings.liveSetupMs = performance.now() - liveSetupStartedAt;
       } finally {
         if (connectTimeoutId !== null) window.clearTimeout(connectTimeoutId);
         if (acknowledgementTimeoutId !== null) window.clearTimeout(acknowledgementTimeoutId);
       }
-      startupTimings.liveConnectMs = performance.now() - liveConnectStartedAt;
-      startupTimings.liveSetupMs = performance.now() - liveConnectStartedAt - startupTimings.liveConnectMs;
       rejectSetup = null;
       liveSessionEstablished = true;
       voiceChannelRef.current = liveSession;

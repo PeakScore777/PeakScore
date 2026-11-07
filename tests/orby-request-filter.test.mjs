@@ -3626,3 +3626,37 @@ test("La escucha continua solo se rearma tras terminar todos los fragmentos de v
   assert.match(finish, /Ready for next student turn/);
   assert.match(finish, /fullConversationCycleMs/);
 });
+
+
+
+test("las actualizaciones Live de la pizarra se acumulan sin duplicar bloques y reemplazan visuales por identidad", () => {
+  const { sanitizeOrbyBoard, mergeOrbyBoardSnapshots } = boardModule;
+  const first = sanitizeOrbyBoard({
+    version: 1,
+    title: "Densidad",
+    blocks: [{ type: "heading", text: "Primero: masa" }, { type: "text", text: "La masa mide la cantidad de materia." }],
+  });
+  const second = sanitizeOrbyBoard({
+    version: 2,
+    title: "Densidad",
+    blocks: [
+      { type: "heading", text: "Primero: masa" },
+      { type: "text", text: "La masa mide la cantidad de materia." },
+      { type: "step", label: "Después", text: "Relacionamos masa y volumen." },
+    ],
+    visuals: [{
+      type: "diagram",
+      title: "Relación masa-volumen",
+      nodes: [{ id: "masa", label: "Masa", x: 25, y: 50 }, { id: "vol", label: "Volumen", x: 75, y: 50 }],
+      edges: [{ from: "masa", to: "vol" }],
+    }],
+  });
+  assert.ok(first);
+  assert.ok(second);
+  const merged = mergeOrbyBoardSnapshots(first, second);
+  assert.equal(merged.blocks.length, 3, "conserva pasos previos y agrega solo el nuevo");
+  assert.equal(merged.visuals?.length, 1);
+  const repeated = mergeOrbyBoardSnapshots(merged, second);
+  assert.equal(repeated.blocks.length, 3, "una instantánea repetida no duplica bloques");
+  assert.equal(repeated.visuals?.length, 1);
+});

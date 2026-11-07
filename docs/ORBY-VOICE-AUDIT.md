@@ -589,3 +589,24 @@ Commits:
 - `fc39672` — regresiones del ciclo de vida del micrófono.
 
 La CI de `11ea224` ya había completado regresiones, TypeScript y ESLint; el build de producción seguía en ejecución. Esta nueva punta requiere una ejecución completa propia.
+
+
+## 2026-11-07 — reducción de asignaciones en AudioWorklet
+
+Se optimizó `public/audio/orby-audio-capture.worklet.js` sin cambiar el formato PCM ni la frecuencia objetivo:
+
+- Se reutiliza el buffer de mezcla y solo crece cuando un bloque supera su capacidad.
+- Se reutiliza el buffer de remuestreo y se evita el array dinámico de muestras.
+- La muestra de arrastre del interpolador se guarda como escalar, eliminando el `slice()` por quantum.
+- El PCM se escribe directamente en un buffer fijo de 640 muestras (40 ms a 16 kHz).
+- Al transferir un paquete completo al hilo principal, se reserva el siguiente buffer de staging; no se copia ni se concatena el remanente en cada quantum.
+- Se actualizaron las regresiones para comprobar el remanente mediante `pendingPcmLength`, conservando las comprobaciones de 44.1/48 kHz, bloques variables, mezcla estéreo y ausencia de pérdida de muestras.
+
+El trabajo de mezcla y remuestreo sigue siendo lineal en el número de muestras. No se modificaron la cancelación de eco del navegador, el envío a Gemini Live, el tamaño de paquete, ni los filtros pedagógicos. La mejora reduce asignaciones por quantum; el impacto real de CPU/GC debe confirmarse en Chrome con dispositivos reales.
+
+Commits:
+- `bcf5dab` — buffers reutilizables y PCM fijo.
+- `30cb22c` — pruebas adaptadas al buffer de staging.
+- `91f72c1` — arrastre del interpolador sin asignación por quantum.
+
+CI de esta punta pendiente.

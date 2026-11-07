@@ -2826,7 +2826,7 @@ test("Orby libera callbacks y buffers PCM tras reproducción, interrupción y ci
   assert.match(livePlayback, /voiceAudioSourcesRef\.current\.delete\(source\)/);
 
   const ttsStart = lessonTutorSource.indexOf("function speakWithVerifiedFreeTts(");
-  const ttsEnd = lessonTutorSource.indexOf("function ", ttsStart + 12);
+  const ttsEnd = lessonTutorSource.indexOf("async function ensureVoiceConversation(", ttsStart);
   const tts = lessonTutorSource.slice(ttsStart, ttsEnd);
   assert.match(tts, /source\.onended = null/);
   assert.match(tts, /source\.buffer = null/);

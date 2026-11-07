@@ -73,7 +73,7 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
         const duration = Math.min(1_800, Math.max(520, stroke.points.length * 48));
         const delay = strokeTimings[index]?.delay ?? 0;
         const lastPoint = stroke.points[stroke.points.length - 1];
-        return <g key={stroke.id}>
+        return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
           <path
             d={path}
             pathLength={1}

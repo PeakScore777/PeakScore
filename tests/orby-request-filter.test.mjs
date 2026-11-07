@@ -113,6 +113,41 @@ test("el turno Live espera el aporte asíncrono del Lab y solo finaliza tras rec
   assert.equal(transition.state.pending, false);
 });
 
+test("la voz limita las búsquedas encadenadas del Lab a dos por turno", () => {
+  const limit = voiceToolTurn.MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN;
+  assert.equal(limit, 2);
+  let state = voiceToolTurn.createOrbyVoiceToolTurnState();
+
+  state = voiceToolTurn.beginOrbyVoiceToolTurn(state, 1);
+  assert.equal(state.toolCallsStarted, 1);
+  state = voiceToolTurn.markOrbyVoiceToolResponseSent(state);
+  state = voiceToolTurn.markOrbyVoiceToolFollowupOutput({
+    ...state,
+    initialGenerationCompleted: true,
+  });
+  assert.equal(state.followupOutputSeen, true);
+
+  // A chained lookup belongs to the same student turn and consumes its final slot.
+  state = voiceToolTurn.beginOrbyVoiceToolTurn(state, 1);
+  assert.equal(state.toolCallsStarted, 2);
+  assert.equal(Math.max(0, limit - state.toolCallsStarted), 0);
+
+  const completed = voiceToolTurn.completeOrbyVoiceToolGeneration({
+    ...state,
+    initialGenerationCompleted: true,
+    responseSent: true,
+    followupOutputSeen: true,
+  });
+  assert.equal(completed.shouldFinalize, true);
+  assert.equal(completed.state.toolCallsStarted, 0);
+});
+
+test("las llamadas Live adicionales reciben respuesta de límite sin iniciar otra búsqueda", () => {
+  assert.match(lessonTutorSource, /remainingToolCalls = Math\.max\(0, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN - currentToolTurn\.toolCallsStarted\)/);
+  assert.match(lessonTutorSource, /callIndex >= acceptedToolCalls/);
+  assert.match(lessonTutorSource, /límite de consultas de conocimiento para esta pregunta/);
+});
+
 test("un resultado rápido del Lab no confunde la primera finalización con el seguimiento", () => {
   let state = voiceToolTurn.beginOrbyVoiceToolTurn(voiceToolTurn.createOrbyVoiceToolTurnState());
   state = voiceToolTurn.markOrbyVoiceToolResponseSent(state);

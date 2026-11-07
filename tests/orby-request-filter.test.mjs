@@ -3466,3 +3466,63 @@ test("La anatomía neuronal está conectada a renderer, Live y prompts", async (
   assert.match(lesson, /comunicación química en la sinapsis/);
   assert.match(voice, /potencial de acción que se propaga por el axón/);
 });
+
+
+test("La pizarra acepta las seis secuencias fisiológicas con orden canónico", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const sequences = {
+    "blood-flow": ["Venas cavas", "Aurícula derecha", "Ventrículo derecho", "Arterias pulmonares", "Pulmones", "Venas pulmonares", "Aurícula izquierda", "Ventrículo izquierdo", "Aorta y cuerpo"],
+    "gas-exchange": ["Aire llega al alvéolo", "Ventilación y difusión", "Oxígeno pasa a la sangre", "Dióxido de carbono pasa al alvéolo", "La sangre sale oxigenada"],
+    digestion: ["Boca", "Esófago", "Estómago", "Intestino delgado", "Absorción de nutrientes", "Intestino grueso", "Eliminación"],
+    "nephron-filtration": ["Glomérulo", "Cápsula de Bowman", "Túbulo proximal", "Asa de Henle", "Túbulo distal", "Conducto colector", "Orina hacia la pelvis renal"],
+    "muscle-contraction": ["Impulso llega a la unión neuromuscular", "Se libera acetilcolina", "Se propaga el potencial muscular", "Retículo libera calcio", "Actina y miosina interactúan", "Sarcómero se acorta", "Calcio se retira y el músculo se relaja"],
+    "synaptic-transmission": ["Potencial llega al terminal", "Entran iones calcio", "Vesículas liberan neurotransmisor", "Neurotransmisor cruza la hendidura", "Se une a receptores", "La célula postsináptica responde", "Neurotransmisor se elimina o recicla"],
+  };
+  for (const [process, names] of Object.entries(sequences)) {
+    const board = sanitizeOrbyBoard({
+      version: 2, title: process,
+      blocks: [{ type: "text", text: "Secuencia fisiológica didáctica." }],
+      visuals: [{
+        type: "physiology-process", title: process, process,
+        stages: names.map((name, index) => ({ name, detail: `Mecanismo de la etapa ${index + 1}.`, location: "Estructura anatómica correspondiente" })),
+      }],
+    });
+    assert.equal(board?.visuals?.[0]?.type, "physiology-process", `debe aceptar ${process}`);
+  }
+});
+
+test("La pizarra rechaza procesos fisiológicos con etapas omitidas o fuera de orden", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const base = { version: 2, title: "Inválido", blocks: [{ type: "text", text: "Prueba." }] };
+  const invalid = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "physiology-process", title: "Flujo incorrecto", process: "blood-flow",
+      stages: [
+        { name: "Venas cavas", detail: "Entra sangre.", location: "Tórax" },
+        { name: "Ventrículo derecho", detail: "Bombea sangre.", location: "Corazón" },
+        { name: "Aurícula derecha", detail: "Recibe sangre.", location: "Corazón" },
+        { name: "Arterias pulmonares", detail: "Llevan sangre.", location: "Pulmones" },
+        { name: "Pulmones", detail: "Intercambian gases.", location: "Pulmones" },
+        { name: "Venas pulmonares", detail: "Retornan sangre.", location: "Pulmones" },
+        { name: "Aurícula izquierda", detail: "Recibe sangre.", location: "Corazón" },
+        { name: "Ventrículo izquierdo", detail: "Bombea sangre.", location: "Corazón" },
+        { name: "Aorta y cuerpo", detail: "Distribuye sangre.", location: "Cuerpo" },
+      ],
+    }],
+  });
+  assert.equal(invalid, null);
+});
+
+test("Los procesos fisiológicos están conectados al renderizador, Live y tutor", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const lesson = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(renderer, /function PhysiologyProcess/);
+  assert.match(renderer, /visual\.type === "physiology-process"/);
+  assert.match(tools, /process:/);
+  assert.match(tools, /stages:/);
+  assert.match(lesson, /filtración\/reabsorción\/secreción renal/);
+  assert.match(voice, /acoplamiento excitación-contracción/);
+});

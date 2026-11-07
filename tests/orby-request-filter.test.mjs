@@ -3356,3 +3356,63 @@ test("Los renderizadores, esquema Live y prompts incluyen genética y división 
   assert.match(lesson, /cuadro 2×2/);
   assert.match(voice, /cromátidas hermanas en meiosis II/);
 });
+
+
+test("La pizarra valida y normaliza sistemas anatómicos humanos", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const board = sanitizeOrbyBoard({
+    version: 2, title: "Sistema circulatorio",
+    blocks: [{ type: "text", text: "El corazón impulsa la sangre por los vasos." }],
+    visuals: [{
+      type: "organ-system", title: "Sistema circulatorio", system: "circulatory",
+      structures: [
+        { id: "heart", name: "Corazón", x: 50, y: 35, role: "Bombea la sangre." },
+        { id: "arteries", name: "Arterias", x: 70, y: 55, role: "Llevan sangre desde el corazón." },
+        { id: "veins", name: "Venas", x: 30, y: 55, role: "Retornan sangre al corazón." },
+      ],
+    }],
+  });
+  assert.equal(board?.visuals?.[0]?.type, "organ-system");
+  assert.equal(board?.visuals?.[0]?.structures.length, 3);
+});
+
+test("La pizarra rechaza sistemas anatómicos con estructuras inválidas", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const base = { version: 2, title: "Inválido", blocks: [{ type: "text", text: "Prueba." }] };
+  const invalidSystem = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "organ-system", title: "Sistema desconocido", system: "teleportation",
+      structures: [
+        { id: "a", name: "Órgano A", x: 40, y: 40, role: "Función A." },
+        { id: "b", name: "Órgano B", x: 60, y: 60, role: "Función B." },
+      ],
+    }],
+  });
+  assert.equal(invalidSystem, null);
+  const duplicateIds = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "organ-system", title: "IDs repetidos", system: "nervous",
+      structures: [
+        { id: "brain", name: "Encéfalo", x: 50, y: 20, role: "Integra información." },
+        { id: "brain", name: "Médula", x: 50, y: 60, role: "Conduce señales." },
+      ],
+    }],
+  });
+  assert.equal(duplicateIds, null);
+});
+
+test("La pizarra anatómica se expone a voz y tutor escrito sin markup ejecutable", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const lesson = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(renderer, /function OrganSystem/);
+  assert.match(renderer, /visual\.type === "organ-system"/);
+  assert.match(tools, /system:/);
+  assert.match(tools, /structures:/);
+  assert.match(lesson, /sistemas permitidos/);
+  assert.match(voice, /no una referencia anatómica a escala/);
+  assert.doesNotMatch(renderer, /dangerouslySetInnerHTML/);
+});

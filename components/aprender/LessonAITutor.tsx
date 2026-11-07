@@ -891,9 +891,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     cancelPendingOrbyKnowledgeRequests();
     // Remember that the next Live "interrupted" event belongs to this
     // student's new turn, not to a completed assistant response.
+    const assistantAudioStillPlaying = voiceBrowserSpeechActiveRef.current
+      || voiceAudioSourcesRef.current.size > 0
+      || (voiceAudioContextRef.current?.currentTime ?? 0) < voiceNextPlaybackTimeRef.current;
     voiceBargeInPendingRef.current = Boolean(voiceChannelRef.current)
       && waitingForVoiceReplyRef.current
-      && !voiceResponseDoneRef.current;
+      && (!voiceResponseDoneRef.current || assistantAudioStillPlaying);
     const interruptedAssistantId = voiceAssistantMessageIdRef.current;
     const hadIncompleteAssistantReply = !voiceResponseDoneRef.current && Boolean(interruptedAssistantId);
     if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();

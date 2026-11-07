@@ -698,3 +698,25 @@ Se añadió un guard de una sola generación:
 - Las regresiones verifican el aislamiento y el orden de liberación del guard.
 
 Este cambio apunta al fallo visible de respuestas repetidas/fragmentos antiguos atribuidos al mensaje siguiente. No se declara validado acústicamente hasta repetir la secuencia en Chrome real y completar CI.
+
+## 2026-11-07 — revisión del video de referencia: guía conversacional y precisión conceptual
+
+Se revisó la grabación de 99,3 s enviada como referencia del estándar pedagógico esperado. Se identificaron tres observaciones concretas:
+
+1. **Seguimiento «no sé, xd»:** después de que Orby invita a elegir un área de Saber 11, la respuesta informal del estudiante termina en el fallback genérico de respuesta incompleta. La causa reproducible en el filtro era un escape duplicado (`\\s+`) dentro de una expresión regular literal: buscaba los caracteres barra+s en lugar de espacios reales. Por eso no reconocía sufijos coloquiales como «xd», «jaja» o «bro» después de «no sé».
+2. **Orden de invitación:** el detector de contexto exigía que «Saber 11» apareciera después de la pregunta de selección. Algunas invitaciones naturales presentan primero el examen y después preguntan qué área trabajar. Se amplió para aceptar ambas disposiciones y las formulaciones «¿qué área quieres trabajar?» y «¿qué área trabajamos?».
+3. **Explicación de ADN/mitosis:** el video muestra una analogía cercana, pero la secuencia «cuando la célula quiere dividirse, el ADN se separa y hace una copia» mezcla replicación con división celular. La copia del ADN ocurre en la fase S de la interfase; después, durante la mitosis, se separan las cromátidas hermanas. La citocinesis divide el citoplasma. El prompt académico ya contenía la regla correcta, pero la salida observada no la respetó: hace falta una validación de exactitud de la respuesta generada, no solo más instrucciones al modelo.
+
+### Corrección implementada
+
+- Corregido el escape duplicado de la expresión regular para aceptar espacios normales en los sufijos coloquiales.
+- Ampliado el detector de invitaciones para reconocer la secuencia del video y preguntas de área con el nombre Saber 11 antes o después.
+- Añadidas regresiones para «no sé, xd», «no sé jaja», «dime» y para impedir que una negativa previa se interprete como invitación académica.
+- Cuando el filtro reconoce la respuesta de orientación, la ruta responde de forma determinista antes del limitador, la recuperación de conocimiento y la inferencia del modelo. Esto evita una generación innecesaria y reduce latencia para ese caso concreto.
+
+### Pendiente de esta revisión
+
+- Ejecutar CI completo sobre el commit de la corrección; no se declara aprobada la suite hasta ver el resultado.
+- Revisar por separado el saludo que en el video termina en el fallback de respuesta incompleta. El video muestra el síntoma, pero aún no se ha aislado qué evento de Live o qué ruta de texto lo produce.
+- Diseñar y probar una validación de precisión conceptual para explicaciones de procesos biológicos, sin convertirla en un filtro frágil que rechace explicaciones correctas.
+- Medir en Chrome real tiempo hasta primera transcripción, primer texto, primer audio y respuesta completa. La corrección de guía reduce inferencia en un caso específico; no demuestra una mejora general de latencia.

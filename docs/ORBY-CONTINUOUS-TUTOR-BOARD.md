@@ -261,3 +261,6 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 
 - Se alineó también la búsqueda del Lab con la latencia: la primera frase oral empieza desde conocimiento fiable mientras la consulta no bloqueante corre en paralelo; el material recuperado solo amplía o corrige la explicación cuando llega. No se cita contenido no recibido.
 - El sanitizador limita la escena compacta a 18 KB para dejar margen a la serialización JSONB; la RPC conserva el tope estricto de 24 KB. Las escenas excesivas se rechazan antes de mostrar o persistir.
+
+- En cada nuevo turno de estudiante se limpia la referencia interna de pizarra y la cola de cues. La escena anterior permanece asociada a su mensaje histórico, pero no puede filtrarse ni persistirse otra vez como parte de la respuesta nueva.
+- El contrato `sketch` también se añadió al tutor escrito y al fallback de voz por turnos; las mismas restricciones de trazos se validan antes de renderizar. Live continúa usando el contrato no bloqueante para voz simultánea.

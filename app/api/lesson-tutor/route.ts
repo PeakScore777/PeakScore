@@ -967,7 +967,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       const retryResult = await generateWithCloudflareTutor(recoveryPrompt);
       stageTimings.generationMs += performance.now() - retryGenerationStartedAt;
       const retryRaw = retryResult.text.trim();
-      let retryParsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown } | null = null;
+      let retryParsed: { reply?: unknown; checkQuestion?: unknown; learningSignal?: unknown; board?: unknown } | null = null;
       try {
         retryParsed = JSON.parse(retryRaw.replace(/^\s*```json\s*/i, "").replace(/^\s*```\s*/i, "").replace(/\s*```\s*$/i, "").trim());
       } catch {

@@ -3684,7 +3684,7 @@ test("Gemini Live publica la pizarra sin sincronización por frases y procesa pr
   assert.match(route, /no incluyas spokenCue/);
   assert.match(renderer, /orby-board-pen-tip/);
   assert.match(renderer, /fill="#f59e0b"/);
-  assert.match(renderer, /max-h-\[560px\]/);
+  assert.match(renderer, /max-h-\[680px\]/);
 });
 
 test("el deduplicador conserva pizarra, fuentes e imagen cuando llega un mensaje duplicado", () => {

@@ -3195,3 +3195,102 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
   assert.match(voice, /no es una simulación/);
   assert.doesNotMatch(renderer, /dangerouslySetInnerHTML/);
 });
+
+
+test("La pizarra Orby valida modelos celulares y complementariedad del ADN", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const animalCell = sanitizeOrbyBoard({
+    version: 2,
+    title: "Célula animal",
+    blocks: [{ type: "text", text: "Esquema simplificado de una célula eucariota animal." }],
+    visuals: [{
+      type: "cell",
+      title: "Célula animal",
+      cellType: "animal",
+      organelles: [
+        { id: "mem", kind: "membrane", x: 50, y: 50, label: "Membrana" },
+        { id: "nuc", kind: "nucleus", x: 50, y: 45, label: "Núcleo" },
+        { id: "mit", kind: "mitochondrion", x: 30, y: 60, label: "Mitocondria" },
+      ],
+    }],
+  });
+  assert.equal(animalCell?.visuals?.[0]?.type, "cell");
+
+  const plantWithChloroplast = sanitizeOrbyBoard({
+    version: 2,
+    title: "Célula vegetal",
+    blocks: [{ type: "text", text: "La pared celular es una estructura característica." }],
+    visuals: [{
+      type: "cell", title: "Célula vegetal", cellType: "plant",
+      organelles: [
+        { id: "wall", kind: "cell-wall", x: 50, y: 50, label: "Pared" },
+        { id: "nuc", kind: "nucleus", x: 50, y: 45, label: "Núcleo" },
+        { id: "chl", kind: "chloroplast", x: 30, y: 30, label: "Cloroplasto" },
+      ],
+    }],
+  });
+  assert.equal(plantWithChloroplast?.visuals?.[0]?.type, "cell");
+
+  const dna = sanitizeOrbyBoard({
+    version: 2,
+    title: "Complementariedad del ADN",
+    blocks: [{ type: "text", text: "A se aparea con T y C con G." }],
+    visuals: [{
+      type: "dna", title: "Pares de bases",
+      pairs: [{ left: "A", right: "T" }, { left: "C", right: "G" }, { left: "T", right: "A" }],
+    }],
+  });
+  assert.equal(dna?.visuals?.[0]?.type, "dna");
+  assert.equal(dna?.visuals?.[0]?.pairs.length, 3);
+});
+
+test("La pizarra Orby rechaza organelos incompatibles y pares de ADN incorrectos", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const base = { version: 2, title: "Escena inválida", blocks: [{ type: "text", text: "Prueba." }] };
+  const animalWithWall = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "cell", title: "Célula animal", cellType: "animal",
+      organelles: [
+        { id: "wall", kind: "cell-wall", x: 20, y: 20, label: "Pared" },
+        { id: "nuc", kind: "nucleus", x: 50, y: 50, label: "Núcleo" },
+      ],
+    }],
+  });
+  assert.equal(animalWithWall, null);
+
+  const prokaryoteWithNucleus = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{
+      type: "cell", title: "Procariota", cellType: "prokaryotic",
+      organelles: [
+        { id: "nuc", kind: "nucleus", x: 50, y: 50, label: "Núcleo" },
+        { id: "rib", kind: "ribosome", x: 30, y: 30, label: "Ribosoma" },
+      ],
+    }],
+  });
+  assert.equal(prokaryoteWithNucleus, null);
+
+  const invalidDna = sanitizeOrbyBoard({
+    ...base,
+    visuals: [{ type: "dna", title: "Par no complementario", pairs: [{ left: "A", right: "C" }, { left: "G", right: "C" }] }],
+  });
+  assert.equal(invalidDna, null);
+});
+
+test("Los renderizadores y herramientas Live incluyen célula y ADN con límites pedagógicos", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const lesson = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const voice = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(renderer, /function Cell/);
+  assert.match(renderer, /function Dna/);
+  assert.match(renderer, /visual\.type === "cell"/);
+  assert.match(renderer, /visual\.type === "dna"/);
+  assert.match(tools, /cellType:/);
+  assert.match(tools, /organelles:/);
+  assert.match(tools, /pairs:/);
+  assert.match(lesson, /procariota sin núcleo/);
+  assert.match(voice, /pares complementarios A–T y C–G/);
+  assert.doesNotMatch(renderer, /dangerouslySetInnerHTML/);
+});

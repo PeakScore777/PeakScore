@@ -89,7 +89,14 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   assert.ok(lessonTutorSource.includes("sendToolResponse({ functionResponses: responses })"));
   assert.ok(lessonTutorSource.includes("voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
   assert.ok(lessonTutorSource.includes("scheduling: voiceSdkRef.current!.FunctionResponseScheduling.WHEN_IDLE"));
-  assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 8);
+  assert.equal((lessonTutorSource.match(/scheduling: voiceSdkRef\.current!\.FunctionResponseScheduling\.WHEN_IDLE/g) ?? []).length, 6,
+    "WHEN_IDLE queda reservado para las búsquedas académicas que sí requieren una respuesta del modelo");
+  const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveTeachingBoardTool");
+  const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool", boardHandlerStart);
+  const boardHandler = lessonTutorSource.slice(boardHandlerStart, boardHandlerEnd);
+  assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 2,
+    "las actualizaciones visuales solo deben añadirse al contexto, sin disparar otra generación de voz");
+  assert.doesNotMatch(boardHandler, /FunctionResponseScheduling\.(?:WHEN_IDLE|INTERRUPT)/);
 });
 
 test("cancelar una búsqueda Live no descarta llamadas hermanas todavía válidas", () => {

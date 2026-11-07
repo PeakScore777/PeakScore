@@ -3804,6 +3804,9 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   assert.match(renderer, /<animateMotion path=\{path\}/);
   assert.match(renderer, /dur=\{\x60\$\{duration\}ms\x60\}/);
   assert.match(renderer, /stroke\.points\.map/);
+  assert.match(renderer, /let nextStrokeAtMs = 0/);
+  assert.match(renderer, /const delay = nextStrokeAtMs/);
+  assert.match(renderer, /nextStrokeAtMs \+= duration \+ 110/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
   assert.match(sanitizer, /MAX_BOARD_BYTES = 18_000/);

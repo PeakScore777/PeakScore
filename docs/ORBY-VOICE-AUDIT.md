@@ -396,3 +396,16 @@ Commits:
 - `d827e65` — `test(orby): verify parallel subject persistence safely`.
 
 Esta optimización reduce una espera serial en cambios de materia; no hay todavía una medición de producción que permita prometer una reducción concreta de milisegundos.
+
+
+## 2026-11-07 — continuidad de voz y segmentación TTS
+
+Se revisó el flujo de lectura por fragmentos en `components/aprender/LessonAITutor.tsx` y `lib/ai/orby-speech-chunks.ts`.
+
+Ajustes:
+- El divisor protege los puntos decimales y abreviaturas frecuentes en español (`3.14`, `p. ej.`, `Dr.`, `etc.`) para que no se conviertan en pausas artificiales.
+- Se añadieron regresiones que comprueban que decimales y abreviaturas no fragmentan una frase, y que los límites reales entre oraciones sí se conservan.
+- Se mantuvo el mecanismo existente de un solo fragmento TTS adelantado, cancelación por generación y reintento del mismo fragmento sin saltarse contenido.
+- Se repararon tres escapes dobles en expresiones regulares de las pruebas del SDK Gemini Live que impedían incluso analizar el archivo de pruebas (SyntaxError: Invalid regular expression flags).
+
+No se ha cambiado el proveedor de voz ni se ha agregado un fallback de pago. Las mejoras de segmentación todavía requieren pasar CI y una prueba real de escucha en navegador.

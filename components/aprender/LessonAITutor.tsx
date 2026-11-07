@@ -1047,6 +1047,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           source.onended = null;
           try { source.stop(); } catch { /* The decoded chunk may already have ended. */ }
           source.disconnect();
+          source.buffer = null;
           voiceAudioSourcesRef.current.delete(source);
         }
         if (audioObjectUrl) {
@@ -1265,8 +1266,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             const scheduledAt = Math.max(voiceAudioContext.currentTime + 0.02, voiceNextPlaybackTimeRef.current);
             source.onended = () => {
               if (finished || playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;
+              source.onended = null;
               voiceAudioSourcesRef.current.delete(source);
               source.disconnect();
+              source.buffer = null;
               if (audioBufferSource === source) audioBufferSource = null;
               requestController = null;
               chunkRetryCount = 0;
@@ -1385,8 +1388,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // Invalidate onended callbacks from chunks belonging to an interrupted turn.
     voiceSpeechPlaybackGenerationRef.current += 1;
     for (const source of voiceAudioSourcesRef.current) {
+      source.onended = null;
       try { source.stop(); } catch { /* Audio chunk may already have ended. */ }
       source.disconnect();
+      source.buffer = null;
     }
     voiceAudioSourcesRef.current.clear();
     if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
@@ -1937,7 +1942,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceRealtimeAudioChunkCountRef.current += 1;
       source.onended = () => {
         voiceAudioSourcesRef.current.delete(source);
+        source.onended = null;
         source.disconnect();
+        source.buffer = null;
         // A stopped chunk from an older response must not finish or persist a
         // newer turn after a barge-in, fallback, or playback reset.
         if (playbackGeneration !== voiceSpeechPlaybackGenerationRef.current) return;

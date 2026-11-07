@@ -12,6 +12,10 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
           properties: {
             version: { type: Type.NUMBER, description: "1 for text-only, 2 when visuals are present." },
             title: { type: Type.STRING, description: "Short Spanish title, at most 100 characters." },
+            spokenCue: {
+              type: Type.STRING,
+              description: "Optional exact short Spanish phrase (3–12 words) that Orby must say before this cumulative snapshot is revealed. Use the same wording in the narration, not a paraphrase. Omit for the first visual or when no useful phrase alignment is possible.",
+            },
             blocks: {
               type: Type.ARRAY,
               description: "One to eight ordered teaching blocks.",

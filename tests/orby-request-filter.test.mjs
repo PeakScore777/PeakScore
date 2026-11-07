@@ -3947,3 +3947,11 @@ test("la pizarra ofrece herramientas de anotacion independientes para el estudia
   assert.match(boardComponentSource, /Limpiar/);
   assert.match(boardComponentSource, /setPointerCapture/);
 });
+
+test("la hoja permite rehacer y borrar trazos mediante arrastre", () => {
+  assert.match(boardComponentSource, /Rehacer/);
+  assert.match(boardComponentSource, /setRedoStrokes/);
+  assert.match(boardComponentSource, /function eraseAt/);
+  assert.match(boardComponentSource, /event\.buttons !== 0/);
+  assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
+});

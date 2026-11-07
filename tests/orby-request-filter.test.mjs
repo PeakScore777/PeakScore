@@ -2660,6 +2660,38 @@ test("interrumpir una respuesta Live limpia la transcripción anterior antes del
 });
 
 
+test("una interrupción del estudiante descarta el final de audio anterior sin cerrar ni guardar el nuevo turno", async () => {
+  const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const interruptMethod = lessonTutorSource.slice(
+    lessonTutorSource.indexOf("function interruptCurrentVoiceOutput()"),
+    lessonTutorSource.indexOf("\n  function ", lessonTutorSource.indexOf("function interruptCurrentVoiceOutput()") + 1),
+  );
+  assert.match(lessonTutorSource, /const voiceBargeInPendingRef = useRef\(false\)/);
+  assert.match(interruptMethod, /voiceBargeInPendingRef\.current = Boolean\(voiceChannelRef\.current\)[\s\S]*?waitingForVoiceReplyRef\.current[\s\S]*?!voiceResponseDoneRef\.current/);
+
+  const eventStart = lessonTutorSource.indexOf("function handleGeminiLiveEvent");
+  const eventEnd = lessonTutorSource.indexOf("\n  function ", eventStart + 1);
+  const eventMethod = lessonTutorSource.slice(eventStart, eventEnd);
+  const interruptStart = eventMethod.indexOf("if (serverContent.interrupted === true");
+  const outputStart = eventMethod.indexOf("const outputTranscript =", interruptStart);
+  const audioStart = eventMethod.indexOf("for (const part of modelTurn?.parts ?? [])", outputStart);
+  const completionStart = eventMethod.indexOf("if (!discardInterruptedGenerationOutput", audioStart);
+  assert.ok(interruptStart > eventMethod.indexOf("const acceptFinalTranscript"), "la transcripción nueva debe poder marcar el barge-in antes de procesar la interrupción");
+  assert.ok(outputStart > interruptStart && audioStart > outputStart && completionStart > audioStart);
+  const interruptedBranch = eventMethod.slice(interruptStart, outputStart);
+  const studentBranch = interruptedBranch.slice(
+    interruptedBranch.indexOf("if (studentBargeInPending)"),
+    interruptedBranch.indexOf("\n      } else {", interruptedBranch.indexOf("if (studentBargeInPending)")),
+  );
+  assert.match(studentBranch, /discardInterruptedGenerationOutput = true/);
+  assert.match(studentBranch, /voiceResponseDoneRef\.current = false/);
+  assert.match(studentBranch, /waitingForVoiceReplyRef\.current = true/);
+  assert.doesNotMatch(studentBranch, /persistRealtimeTurnIfReady|voiceResponseDoneRef\.current = true|return;/);
+  assert.match(eventMethod, /if \(discardInterruptedGenerationOutput && typeof outputTranscript\?\.text === "string"/);
+  assert.match(eventMethod, /if \(discardInterruptedGenerationOutput[\s\S]*?typeof inlineData\?\.data/);
+  assert.match(eventMethod, /if \(!discardInterruptedGenerationOutput[\s\S]*?serverContent\.turnComplete/);
+});
+
 test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const sessionRouteSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");

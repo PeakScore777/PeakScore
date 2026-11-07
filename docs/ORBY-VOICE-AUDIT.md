@@ -183,3 +183,14 @@ Corrección aplicada en `app/api/lesson-tutor/route.ts`:
 - Se añadió una prueba de regresión que verifica el comportamiento ante fallos parciales.
 
 No se crean ni reconstruyen materiales del Lab; se usa exclusivamente el material publicado que exista. Tampoco se cambia el proveedor de IA ni se introduce gasto. Pendiente de CI y de validación funcional con una sesión real.
+
+
+## 2026-11-06 — límite de búsquedas encadenadas en Gemini Live
+
+- Hallazgo: el flujo NON_BLOCKING/WHEN_IDLE mantenía correctamente abierto el turno mientras llegaba el suplemento del Lab, pero permitía que Live solicitara nuevas búsquedas encadenadas sin un presupuesto explícito por turno.
+- Riesgo: una cadena repetitiva podía aumentar la latencia, consumir cuota gratuita de Workers AI en la ruta de conocimiento y retrasar la finalización de la respuesta.
+- Cambio en `lib/ai/orby-voice-tool-turn.ts`: el estado ahora conserva `toolCallsStarted` durante las fases encadenadas y define un máximo de dos llamadas de conocimiento por turno del estudiante. El contador se reinicia al finalizar o reiniciar el turno.
+- Cambio en `components/aprender/LessonAITutor.tsx`: solo inicia las búsquedas que caben en el presupuesto restante. Las llamadas adicionales reciben una respuesta estructurada indicando que debe continuar con la evidencia disponible, en vez de lanzar otra consulta.
+- Pruebas: se añadió cobertura para la primera búsqueda, la búsqueda encadenada, el agotamiento del presupuesto, el reinicio del contador y la respuesta de límite desde el cliente.
+- Restricción preservada: no se añade proveedor, modelo ni fallback de pago. Este límite no impide responder desde el conocimiento del tutor cuando no se consulta el Lab.
+- Pendiente de validación externa: el test automatizado verifica la máquina de estados y el cableado del cliente; no sustituye una sesión real de Chrome con micrófono y audio ni demuestra por sí solo la calidad acústica de Gemini Live.

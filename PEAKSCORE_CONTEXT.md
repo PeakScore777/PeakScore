@@ -379,3 +379,8 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 ## Especificación de experiencia voz + tablero
 - Fuente de verdad funcional: docs/ORBY-VOICE-WHITEBOARD-SPEC.md. Define llamada con subtítulos en vivo y tablero simultáneo, continuidad al volver al chat, snapshots acumulativos, interrupciones seguras y QA.
 - No declarar listo para Pull hasta validar con Chrome/micrófono y ejecutar Node tests, TypeScript, ESLint y build.
+
+
+## 2026-11-07 — respuesta de voz visible en el chat
+- El mensaje de Orby del turno de voz activo se identifica con estado EN VIVO y anuncia sus cambios de texto mediante aria-live polite; la pizarra permanece en la misma burbuja.
+- Escenario de llamada y chat comparten el id del mismo mensaje. Prueba estática añadida; runtime/Chrome/build aún no ejecutados.

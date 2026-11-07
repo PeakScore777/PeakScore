@@ -2625,12 +2625,26 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // The first complete sentence already passed validation, so keep the
         // Live stream flowing instead of buffering every later audio chunk.
         playGeminiAudio(chunk.data, chunk.mimeType);
-      } else if (voicePendingAudioChunksRef.current.length < 512) {
-        voicePendingAudioChunksRef.current.push(chunk);
       } else {
-        voiceOutputAudioBlockedRef.current = true;
-        voicePendingAudioChunksRef.current = [];
-        console.warn("[Orby Voice] Audio buffer limit reached; switching this turn to validated text speech.");
+        // Bound both object count and encoded payload size. A chunk-count-only
+        // cap can still retain excessive memory when the provider sends large
+        // PCM payloads before the transcript is validated.
+        const pendingEncodedChars = voicePendingAudioChunksRef.current.reduce(
+          (total, pendingChunk) => total + pendingChunk.data.length,
+          chunk.data.length,
+        );
+        const withinChunkLimit = voicePendingAudioChunksRef.current.length < 512;
+        const withinMemoryBudget = pendingEncodedChars <= 8 * 1024 * 1024;
+        if (withinChunkLimit && withinMemoryBudget) {
+          voicePendingAudioChunksRef.current.push(chunk);
+        } else {
+          voiceOutputAudioBlockedRef.current = true;
+          voicePendingAudioChunksRef.current = [];
+          console.warn("[Orby Voice] Audio buffer budget reached; switching this turn to validated text speech.", {
+            pendingChunks: voicePendingAudioChunksRef.current.length,
+            encodedChars: pendingEncodedChars,
+          });
+        }
       }
     }
 

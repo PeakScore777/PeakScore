@@ -62,11 +62,14 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-80 w-full overflow-visible">
       {visual.strokes.map((stroke, index) => {
         const color = palette[stroke.tone];
-        const delay = Math.min(index * 150, 1_800);
+        const delay = Math.min(index * 110, 1_650);
+        const path = smoothSketchPath(stroke.points);
+        const duration = Math.min(1_400, Math.max(360, stroke.points.length * 34));
+        const firstPoint = stroke.points[0];
         const lastPoint = stroke.points[stroke.points.length - 1];
         return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
           <path
-            d={smoothSketchPath(stroke.points)}
+            d={path}
             pathLength={1}
             className="orby-board-sketch-stroke"
             fill="none"
@@ -74,8 +77,11 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
             strokeWidth={stroke.width}
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ animationDelay: `${delay}ms` }}
+            style={{ animationDelay: `${delay}ms`, animationDuration: `${duration}ms` }}
           />
+          <circle className="orby-board-pen-tip" cx={firstPoint.x} cy={firstPoint.y} r="1.15" fill={color}>
+            <animateMotion path={path} dur={`${duration}ms`} begin={`${delay}ms`} rotate="auto" fill="freeze"/>
+          </circle>
           {stroke.label && stroke.labelX !== undefined && stroke.labelY !== undefined
             ? <text
                 x={stroke.labelX}
@@ -84,10 +90,10 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
                 fontSize="4"
                 fontWeight="600"
                 fill={color}
-                style={{ animationDelay: `${delay + 560}ms` }}
+                style={{ animationDelay: `${delay + duration}ms` }}
               >{stroke.label}</text>
             : null}
-          <circle cx={lastPoint.x} cy={lastPoint.y} r="0.45" fill={color} className="orby-board-appear" style={{ animationDelay: `${delay + 540}ms` }}/>
+          <circle cx={lastPoint.x} cy={lastPoint.y} r="0.45" fill={color} className="orby-board-appear" style={{ animationDelay: `${delay + duration}ms` }}/>
         </g>;
       })}
     </svg>

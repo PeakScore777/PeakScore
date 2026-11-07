@@ -292,6 +292,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const showVoiceTranscript = true;
   const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(true);
   const [voiceCaptionText, setVoiceCaptionText] = useState("");
+  const [voiceBoardNotice, setVoiceBoardNotice] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
@@ -1526,7 +1527,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceModeRef.current = false;
     clearPendingOrbyTeachingBoard();
     voiceTeachingBoardRef.current = null;
-    voiceBargeInPendingRef.current = false;
+    setVoiceCaptionText("");
+    setVoiceBargeInPendingRef.current = false;
     voiceFallbackModeRef.current = false;
     setVoiceFallbackMode(false);
     voiceSpeechPlaybackGenerationRef.current += 1;
@@ -2041,6 +2043,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function clearPendingOrbyTeachingBoard() {
     voiceBoardFallbackControllerRef.current?.abort();
+    setVoiceBoardNotice("");
     voiceBoardFallbackControllerRef.current = null;
     voicePendingBoardSnapshotsRef.current = [];
     voiceAwaitingInputTranscriptionRef.current = false;
@@ -2049,6 +2052,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function publishOrbyTeachingBoardSnapshot(board: OrbyBoardData) {
+    setVoiceBoardNotice("");
     voiceTeachingBoardRef.current = board;
     const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
@@ -2090,6 +2094,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const sessionGeneration = voiceSessionGenerationRef.current;
     const activityGeneration = voiceActivityGenerationRef.current;
     const startedAt = performance.now();
+    setVoiceBoardNotice("Orby está dibujando tus apuntes…");
     try {
       const response = await fetch("/api/orby/voice-board", {
         method: "POST",
@@ -2110,6 +2115,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && voiceActivityGenerationRef.current === activityGeneration;
       if (!isCurrent) return;
       if (!response.ok) {
+        setVoiceBoardNotice(typeof payload.error === "string" ? payload.error : "No se pudo generar la pizarra. La explicación oral continúa.");
         console.warn("[Orby Voice Board] Free visual fallback unavailable.", {
           status: response.status,
           elapsedMs: Math.round(performance.now() - startedAt),
@@ -2118,6 +2124,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       const board = sanitizeOrbyBoard(payload.board);
       if (!board) {
+        setVoiceBoardNotice("El dibujo no superó la validación. Vuelve a preguntar y lo intentaré de nuevo.");
         console.warn("[Orby Voice Board] Fallback board failed client validation.");
         return;
       }
@@ -2130,6 +2137,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
     } catch (error) {
       if (!controller.signal.aborted) {
+        setVoiceBoardNotice("No se pudo conectar con la pizarra gratuita. La explicación oral continúa.");
         console.warn("[Orby Voice Board] Fallback request failed.", {
           name: error instanceof Error ? error.name : "UnknownError",
         });
@@ -2896,7 +2904,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
-      setVoiceCaptionText(getOrbyLiveCaption(partialReply));
       // A transcript is eligible for acoustic echo suppression only after
       // Live audio has actually been scheduled; text arriving before playback
       // must never be mistaken for something the microphone could have heard.
@@ -2961,6 +2968,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           && /[.!?;]["'”’)}\]]*\s*$/.test(partialReply);
         voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
         if (hasCompleteSafeSentence) flushPendingGeminiAudio();
+        setVoiceCaptionText(getOrbyLiveCaption(partialReply));
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => {
@@ -5032,8 +5040,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const activeVoiceAssistantMessage = voiceAssistantMessageIdRef.current
     ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
     : undefined;
-  const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
-  const voiceBoardActive = Boolean(activeVoiceAssistantMessage?.board);
 
   return (
     <>
@@ -5283,7 +5289,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-2xl text-orange-600">✎</span>
                   <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-orange-700">Cuaderno de Orby</p>
                   <h3 className="mt-2 font-serif text-2xl font-bold text-slate-900">{voicePendingStudentTurnRef.current ? "Preparando tus apuntes…" : "Aquí se construye la clase"}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{voicePendingStudentTurnRef.current ? "Orby está preparando el dibujo, las flechas y las anotaciones de tu pregunta." : "Haz una pregunta para que Orby dibuje y explique sobre esta hoja."}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{voiceBoardNotice || (voicePendingStudentTurnRef.current ? "Orby está preparando el dibujo, las flechas y las anotaciones de tu pregunta." : "Haz una pregunta para que Orby dibuje y explique sobre esta hoja.")}</p>
                   {voicePendingStudentTurnRef.current && <div className="mt-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-orange-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500"/> Dibujando la explicación</div>}
                 </div>
               </div>}

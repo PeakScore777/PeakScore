@@ -320,6 +320,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceTurnRetryInFlightRef = useRef(false);
   const voiceTurnPersistenceChainRef = useRef<Promise<void>>(Promise.resolve());
   const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
+  const voicePendingAudioEncodedCharsRef = useRef(0);
   const voiceRealtimeAudioChunkCountRef = useRef(0);
   const voiceOutputAudioBlockedRef = useRef(false);
   const voiceOutputTranscriptValidatedRef = useRef(false);
@@ -923,7 +924,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     // The previous output has been stopped; do not let its old scheduled
     // playback horizon suppress the student's next voice activity/end event.
     voiceLastAssistantPlaybackUntilRef.current = Date.now() - 1;
-    voicePendingAudioChunksRef.current = [];
+    clearPendingGeminiAudioQueue();
     voiceRealtimeAudioChunkCountRef.current = 0;
     voiceOutputTranscriptValidatedRef.current = false;
     voiceOutputAudioBlockedRef.current = false;
@@ -1567,7 +1568,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     clearVoiceResponseWatchdog();
     stopSpeaking();
     stopVoicePlayback();
-    voicePendingAudioChunksRef.current = [];
+    clearPendingGeminiAudioQueue();
     voiceRealtimeAudioChunkCountRef.current = 0;
     voiceOutputTranscriptValidatedRef.current = false;
     voiceOutputAudioBlockedRef.current = false;
@@ -1647,7 +1648,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     clearVoiceResponseWatchdog();
     stopSpeaking();
     stopVoicePlayback();
-    voicePendingAudioChunksRef.current = [];
+    clearPendingGeminiAudioQueue();
     voiceRealtimeAudioChunkCountRef.current = 0;
     voiceOutputTranscriptValidatedRef.current = false;
     voiceOutputAudioBlockedRef.current = true;
@@ -1868,14 +1869,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     drainPendingMessageQueue();
   }
 
+  function clearPendingGeminiAudioQueue() {
+    voicePendingAudioChunksRef.current = [];
+    voicePendingAudioEncodedCharsRef.current = 0;
+  }
+
   function flushPendingGeminiAudio() {
     if (voiceOutputAudioBlockedRef.current) {
-      voicePendingAudioChunksRef.current = [];
+      clearPendingGeminiAudioQueue();
       return;
     }
     if (!voiceOutputTranscriptValidatedRef.current) return;
     const pending = voicePendingAudioChunksRef.current;
-    voicePendingAudioChunksRef.current = [];
+    clearPendingGeminiAudioQueue();
     for (const chunk of pending) playGeminiAudio(chunk.data, chunk.mimeType);
   }
 
@@ -2252,7 +2258,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceSpeechCancelRef.current = null;
         cancelSpeech?.();
         if ("speechSynthesis" in window) window.speechSynthesis.cancel();
-        voicePendingAudioChunksRef.current = [];
+        clearPendingGeminiAudioQueue();
         voiceRealtimeAudioChunkCountRef.current = 0;
         voiceOutputTranscriptValidatedRef.current = false;
         voiceOutputAudioBlockedRef.current = false;
@@ -2442,7 +2448,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           ? ORBY_SPANISH_ONLY_REPLY
           : (preflight.allowed ? null : preflight.reply);
       if (selectedVoiceSubject && preflight.allowed) activeSubjectRef.current = selectedVoiceSubject;
-      voicePendingAudioChunksRef.current = [];
+      clearPendingGeminiAudioQueue();
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
       voiceOutputAudioBlockedRef.current = Boolean(voicePreflightReplyRef.current);
@@ -2480,7 +2486,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // that generation while preserving the new input and its watchdog.
       clearVoiceResponseWatchdog();
       stopVoicePlayback();
-      voicePendingAudioChunksRef.current = [];
+      clearPendingGeminiAudioQueue();
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
       if (studentBargeInPending) {
@@ -2573,7 +2579,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (partialUnsafe) {
         voiceOutputTranscriptValidatedRef.current = false;
         voiceOutputAudioBlockedRef.current = true;
-        voicePendingAudioChunksRef.current = [];
+        clearPendingGeminiAudioQueue();
         stopVoicePlayback();
       } else {
         // Start natural Live audio as soon as one complete sentence has
@@ -2629,18 +2635,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // Bound both object count and encoded payload size. A chunk-count-only
         // cap can still retain excessive memory when the provider sends large
         // PCM payloads before the transcript is validated.
-        const pendingEncodedChars = voicePendingAudioChunksRef.current.reduce(
-          (total, pendingChunk) => total + pendingChunk.data.length,
-          chunk.data.length,
-        );
+        const pendingEncodedChars = voicePendingAudioEncodedCharsRef.current + chunk.data.length;
         const withinChunkLimit = voicePendingAudioChunksRef.current.length < 512;
         const withinMemoryBudget = pendingEncodedChars <= 8 * 1024 * 1024;
         if (withinChunkLimit && withinMemoryBudget) {
           voicePendingAudioChunksRef.current.push(chunk);
+          voicePendingAudioEncodedCharsRef.current = pendingEncodedChars;
         } else {
           const pendingChunkCount = voicePendingAudioChunksRef.current.length;
           voiceOutputAudioBlockedRef.current = true;
-          voicePendingAudioChunksRef.current = [];
+          clearPendingGeminiAudioQueue();
           console.warn("[Orby Voice] Audio buffer budget reached; switching this turn to validated text speech.", {
             pendingChunks: pendingChunkCount,
             encodedChars: pendingEncodedChars,
@@ -2664,7 +2668,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!voicePendingStudentTurnRef.current || !voiceUserTextRef.current.trim()) {
         // A model greeting or unsolicited continuation is not a student turn.
         stopVoicePlayback();
-        voicePendingAudioChunksRef.current = [];
+        clearPendingGeminiAudioQueue();
         voiceAssistantTextRef.current = "";
         voiceAssistantMessageIdRef.current = null;
         voicePublicSourcesRef.current = [];
@@ -2764,7 +2768,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // Do not trust untranscribed or unsupported-language audio.
           // Invalid audio chunks are discarded; with no verified free TTS
           // provider, preserve the validated answer in text only.
-          voicePendingAudioChunksRef.current = [];
+          clearPendingGeminiAudioQueue();
         }
         const hasAudibleLiveOutput = voiceRealtimeAudioChunkCountRef.current > 0
           || voiceAudioSourcesRef.current.size > 0;
@@ -2792,7 +2796,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || !voiceOutputTranscriptValidatedRef.current
         || voiceRealtimeAudioChunkCountRef.current === 0;
 
-      voicePendingAudioChunksRef.current = [];
+      clearPendingGeminiAudioQueue();
       voiceInputPolicyRef.current = null;
       voicePreflightReplyRef.current = null;
       voiceForcedReplyRef.current = null;
@@ -3588,7 +3592,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voicePendingStudentTurnRef.current = true;
     voiceLocalReplyInFlightRef.current = false;
     voiceOutputAudioBlockedRef.current = false;
-    voicePendingAudioChunksRef.current = [];
+    clearPendingGeminiAudioQueue();
     void sendMessageRef.current(cleanPendingText, false, true, undefined, appendUserMessage);
   }
 
@@ -3780,7 +3784,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceRealtimeAudioChunkCountRef.current = 0;
       voiceOutputTranscriptValidatedRef.current = false;
       voiceOutputAudioBlockedRef.current = false;
-      voicePendingAudioChunksRef.current = [];
+      clearPendingGeminiAudioQueue();
       voiceAssistantTextRef.current = "";
       voiceAssistantMessageIdRef.current = null;
         voicePublicSourcesRef.current = [];

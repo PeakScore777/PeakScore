@@ -247,3 +247,35 @@ La primera ruta de respaldo visual reutilizaba `generateWithCloudflareTutor`. Es
 Los cambios están guardados en `feat/orby-studio-classroom`. No se ha confirmado una compilación ni una prueba de navegador: el estado de Vercel sigue reportando `build-rate-limit`. No se declara lista para producción hasta probar una sesión real, observar los snapshots Live y comprobar el fallback Cloudflare con cuota disponible y agotada.
 
 - La voz alternativa actualiza cada caption cuando comienza realmente su fragmento de audio (Web Audio o reproducción HTML), no al iniciar la solicitud de síntesis; evita subtítulos adelantados si el proveedor gratuito rechaza la lectura.
+
+## 20. Validación automatizada de la rama de aula — 2026-11-07
+
+**Commit validado:** `6460537df77d208b0657a5a1105e5bbf30ded928`  
+**Ejecución CI:** `42418855620` — resultado `success`.
+
+Resultados observados en GitHub Actions:
+
+- Suite Orby: **177 pruebas aprobadas, 0 fallidas**.
+- TypeScript (`npx tsc --noEmit`): aprobado.
+- ESLint (`npm run lint`): aprobado.
+- Compilación de producción (`npx next build`): aprobada.
+- `npm audit`: 0 vulnerabilidades (info, low, moderate, high y critical).
+- La ejecución terminó con éxito; el aviso de caché de un HDRI de más de 2 MB no impidió la compilación.
+
+### Lo que esta validación NO demuestra
+
+- No se ha ejecutado una sesión real de Chrome con micrófono ni se ha comprobado visualmente la sincronización voz/trazos.
+- No se han medido primera palabra audible, primer audio, primer trazo ni latencias p50/p95.
+- No se ha verificado en la base activa que las migraciones de persistencia/idempotencia estén aplicadas.
+- No se ha desplegado ni se ha probado la cuota real de Cloudflare en la cuenta de producción.
+- La auditoría de dependencias solo refleja el árbol de dependencias del commit y la fecha de ejecución.
+
+### Política de coste: comprobación pendiente de cuenta
+
+Cloudflare Workers AI documenta una asignación de 10.000 Neurons diarios. En Workers Free, al agotarla, las operaciones se detienen; en Workers Paid, el consumo superior a esa asignación se factura. Por tanto, la garantía de coste cero depende también de que la cuenta de Cloudflare permanezca en Workers Free y no tenga un mecanismo de facturación/prepago que permita continuar consumiendo. El código no puede inferir ni cambiar el plan de la cuenta. Antes de habilitar uso real, confirmar el plan y vigilar el consumo en el panel de Cloudflare.
+
+Referencia oficial consultada: https://developers.cloudflare.com/workers-ai/platform/pricing/
+
+### Decisión de entrega
+
+CI está verde, pero **no autoriza por sí sola un Pull/merge ni un despliegue**. Mantener intactas `main` y la base de datos activa hasta completar QA manual de voz/pizarra, confirmar la política de coste de Cloudflare y verificar las migraciones pendientes.

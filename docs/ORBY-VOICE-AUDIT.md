@@ -729,6 +729,14 @@ El ejemplo del video evidenció una confusión de alto impacto: presentar la cop
 
 La corrección se aplica a la salida inicial y a la recuperación acotada del tutor, antes de validar y entregar el texto. Se agregaron pruebas para el error observado, una explicación correcta que debe permanecer intacta y una mención de mitosis que no debe activar el reemplazo. Esto no equivale a un verificador universal de biología; el alcance es únicamente esa confusión observada.
 
+### Repetición de presentación: prioridad incorrecta del área activa
+
+Se encontró una causa concreta para saludos que podían retomar el área equivocada: `getActiveOrbySubjectKey` consultaba primero `activeSubject` (estado de la sesión/componente) y solo después buscaba la selección más reciente en el historial. Si el estudiante cambiaba de área dentro de la conversación, un valor de sesión desactualizado podía ganar y el saludo devolver una continuación de la materia anterior.
+
+Se cambió la prioridad: primero se recorre el intercambio de la conversación desde el turno más reciente hacia atrás para detectar la última selección explícita; el área activa queda como respaldo únicamente cuando el historial no contiene una selección. La función compartida alimenta los saludos deterministas del chat de texto y de voz.
+
+Se añadió una regresión con cambio Matemáticas → Ciencias Naturales y un estado de sesión todavía en Matemáticas, además de un caso donde el historial no tiene selección explícita y sí corresponde usar el área activa.
+
 ### Latencia: hallazgos confirmados, sin cambios especulativos
 
 - La ruta de tutor ya ejecuta en paralelo la búsqueda vectorial, el grafo de conceptos y el perfil de aprendizaje; la recuperación usa `Promise.allSettled` para no perder una fuente cuando la otra falla.

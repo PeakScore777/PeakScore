@@ -56,6 +56,7 @@ const adminOrbyChatSource = await readFile(new URL("../app/api/admin/orby/chat/r
 const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby/knowledge/automation/route.ts", import.meta.url), "utf8");
 const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
+const voiceTurnIdempotencyMigration = await readFile(new URL("../supabase/migrations/20261107010000_orby_voice_turn_idempotency.sql", import.meta.url), "utf8");
 const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowledge-search/route.ts", import.meta.url), "utf8");
 
 const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrations/20261106021746_orby_model_aware_embedding_search.sql", import.meta.url), "utf8");
@@ -422,7 +423,7 @@ test("la búsqueda académica prioriza la materia del turno actual sobre la mate
 
 test("la materia de voz se actualiza antes de persistir el turno para evitar éxito parcial", () => {
   const subjectUpdate = realtimeTurnSource.indexOf('.from("orby_conversations")');
-  const turnPersistence = realtimeTurnSource.indexOf('rpc("orby_save_turn"');
+  const turnPersistence = realtimeTurnSource.indexOf('rpc("orby_save_voice_turn"');
   assert.ok(subjectUpdate >= 0 && turnPersistence > subjectUpdate,
     "La materia debe actualizarse antes de guardar el turno de voz.");
   assert.ok(realtimeTurnSource.includes("VOICE_SUBJECT_UPDATE_FAILED"));
@@ -2437,13 +2438,13 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeTurnSource.includes("getOrbySubjectSelectionReply(userContent)"));
   assert.ok(realtimeTurnSource.includes(".update({ subject: selectedSubject })"));
   assert.ok(realtimeTurnSource.includes('.eq("user_id", user.id)'));
-  assert.ok(realtimeTurnSource.includes(".limit(20)"));
-  assert.ok(realtimeTurnSource.includes("const alreadySaved ="));
-  assert.match(realtimeTurnSource, /const latestAssistant = latestMessages\[0\]/);
-  assert.match(realtimeTurnSource, /const previousUser = latestMessages\[1\]/);
-  assert.doesNotMatch(realtimeTurnSource, /latestMessages\.some\(/);
-  assert.match(realtimeTurnSource, /if \(recentReadError \|\| !Array\.isArray\(latestMessages\)\)/);
-  assert.match(realtimeTurnSource, /SAVE_TURN_IDEMPOTENCY_CHECK_FAILED/);
+  assert.match(realtimeTurnSource, /const turnId = typeof body\\.turnId === "string" \\? body\\.turnId : ""/);
+  assert.match(realtimeTurnSource, /!isUuid\\(turnId\\)/);
+  assert.match(realtimeTurnSource, /p_turn_id: turnId/);
+  assert.match(voiceTurnIdempotencyMigration, /primary key \\(conversation_id, user_id, turn_id\\)/i);
+  assert.match(voiceTurnIdempotencyMigration, /for update/i);
+  assert.match(voiceTurnIdempotencyMigration, /on conflict \\(conversation_id, user_id, turn_id\\) do nothing/i);
+  assert.match(voiceTurnIdempotencyMigration, /already_saved/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));
   assert.ok(lessonTutorSource.includes("voiceTurnRetryInFlightRef.current"));
   assert.ok(lessonTutorSource.includes("setRetryingVoiceTurn(true)"));

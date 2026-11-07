@@ -798,3 +798,8 @@ En la CI del commit `9e9b32d`: pruebas de Orby, TypeScript y ESLint aparecen apr
 ### Límite de cambios
 
 No se aplicó la migración al proyecto Supabase activo. Es un cambio de esquema remoto y requiere autorización explícita. No se usó la función antigua como fallback porque eso volvería a permitir duplicados bajo reintentos concurrentes y ocultaría la causa real. La migración permanece en GitHub, rama `feat/founder-intro`; no se tocó `main` ni se desplegó código.
+
+
+### CI final — commit `9e9b32d`
+
+Workflow `42339106392` terminó con `success`. Pasaron las 130 pruebas de regresión de Orby, TypeScript, ESLint y el build de producción de Next.js. La auditoría de dependencias terminó correctamente. La conclusión valida el código de ese commit; no valida la migración remota, que sigue sin aplicarse en Supabase.

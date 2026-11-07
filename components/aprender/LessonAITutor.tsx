@@ -1219,8 +1219,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           finish(false);
           return;
         }
-        if (isLocalVoiceTurn) setVoiceCaptionText(getOrbyLiveCaption(chunks[chunkIndex]));
-
         const prefetched = prefetchedAudio?.index === chunkIndex ? prefetchedAudio : null;
         if (prefetched) prefetchedAudio = null;
         const controller = prefetched?.controller ?? new AbortController();
@@ -1325,6 +1323,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               void playFreeTtsChunk();
             };
             source.start(scheduledAt);
+            if (isLocalVoiceTurn) setVoiceCaptionText(getOrbyLiveCaption(chunks[chunkIndex]));
             didPlaybackStart = true;
             voiceAudioSourcesRef.current.add(source);
             schedulePrefetchNextTtsChunk(decodedAudio.duration);
@@ -1344,6 +1343,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             audioElement = new Audio(audioObjectUrl);
             audioElement.preload = "auto";
             audioElement.onplay = () => {
+              if (isLocalVoiceTurn) setVoiceCaptionText(getOrbyLiveCaption(chunks[chunkIndex]));
               didPlaybackStart = true;
               schedulePrefetchNextTtsChunk(audioElement?.duration ?? 0);
               setSpeakingIndex(index);

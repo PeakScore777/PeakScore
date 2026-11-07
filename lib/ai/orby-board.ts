@@ -69,6 +69,11 @@ export type OrbyBoard = {
 const MAX_BLOCKS = 8;
 const MAX_VISUALS = 4;
 const MAX_TEXT = 240;
+const MAX_BOARD_BYTES = 24_000;
+
+function withinBoardBudget(board: OrbyBoard): boolean {
+  return new TextEncoder().encode(JSON.stringify(board)).byteLength <= MAX_BOARD_BYTES;
+}
 
 function safeText(value: unknown, max = MAX_TEXT): string {
   if (typeof value !== "string") return "";
@@ -456,7 +461,8 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
 
   if (raw.version === 1) {
     if (raw.visuals !== undefined) return null;
-    return { version: 1, title, blocks, ...(spokenCue ? { spokenCue } : {}) };
+    const board: OrbyBoard = { version: 1, title, blocks, ...(spokenCue ? { spokenCue } : {}) };
+    return withinBoardBudget(board) ? board : null;
   }
   if (!Array.isArray(raw.visuals) || raw.visuals.length > MAX_VISUALS) return null;
   const visuals: OrbyBoardVisual[] = [];
@@ -465,5 +471,6 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
     if (!visual) return null;
     visuals.push(visual);
   }
-  return { version: 2, title, blocks, visuals, ...(spokenCue ? { spokenCue } : {}) };
+  const board: OrbyBoard = { version: 2, title, blocks, visuals, ...(spokenCue ? { spokenCue } : {}) };
+  return withinBoardBudget(board) ? board : null;
 }

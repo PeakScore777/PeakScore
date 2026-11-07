@@ -45,7 +45,11 @@ export function isLikelyVoicePlaybackEcho(
     // Exact multiword matches are strong echo evidence. Keep common complete
     // greetings eligible even when stop-word removal leaves only one word.
     const isGreetingPhrase = /^(?:hola(?: de nuevo)?|oye orby|oee(?: hermano)?|oe(?: hermano)?|buenas(?: tardes| noches)?|buenos dias)$/.test(incoming);
-    if (isGreetingPhrase && spoken.split(" ").includes(incoming)) return true;
+    const containsWholePhrase = spoken === incoming
+      || spoken.startsWith(`${incoming} `)
+      || spoken.endsWith(` ${incoming}`)
+      || spoken.includes(` ${incoming} `);
+    if (isGreetingPhrase && containsWholePhrase) return true;
 
     // Curriculum terms such as "Saber 11" have too little lexical signal
     // for a fuzzy echo match; never suppress them as a short phrase.

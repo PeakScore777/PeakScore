@@ -250,6 +250,37 @@ function OrganSystem({ visual }: { visual: Extract<OrbyBoardVisual, { type: "org
   );
 }
 
+function Neuron({ visual }: { visual: Extract<OrbyBoardVisual, { type: "neuron" }> }) {
+  const points = [
+    { x: 18, y: 50 }, { x: 35, y: 50 }, { x: 53, y: 50 }, { x: 72, y: 50 }, { x: 88, y: 50 },
+  ];
+  return (
+    <div className="space-y-3">
+      <svg viewBox="0 0 100 72" role="img" aria-label={visual.title || "Esquema simplificado de una neurona"} className="h-auto max-h-56 w-full">
+        <g fill="none" stroke="#b45309" strokeWidth="1.8" strokeLinecap="round">
+          <path d="M18 36 L10 23 M18 36 L7 39 M18 36 L12 54 M18 36 L22 18 M18 36 L29 25"/>
+          <path d="M18 36 Q28 26 35 36 Q28 46 18 36" fill="#fed7aa"/>
+          <path d="M35 36 L88 36" stroke="#c2410c" strokeWidth="2.3"/>
+          <path d="M88 36 L94 25 M88 36 L96 36 M88 36 L94 47" />
+          <path d="M46 31 Q50 36 46 41 M58 31 Q62 36 58 41 M70 31 Q74 36 70 41" stroke="#60a5fa" strokeWidth="4"/>
+        </g>
+        <circle cx="26" cy="36" r="2.8" fill="#7c3aed"/>
+        <path d="M12 62 L88 62" stroke="#64748b" strokeWidth="0.6" strokeDasharray="2 2"/>
+        <path d="M84 59 L88 62 L84 65" fill="none" stroke="#64748b" strokeWidth="0.8"/>
+        <text x="50" y="69" fontSize="3.5" textAnchor="middle" fill={colors.ink}>Dirección general del impulso nervioso</text>
+        {points.map((point, index) => <circle key={index} cx={point.x} cy={point.y} r="0.8" fill={colors.orange}/>)}
+      </svg>
+      <ol className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {visual.parts.map((part, index) => <li key={part.id} className="rounded-md border border-slate-100 bg-slate-50 p-2">
+          <p className="text-[11px] font-bold text-slate-900">{index + 1}. {part.name}</p>
+          <p className="text-[10px] leading-4 text-slate-600">{part.role}</p>
+        </li>)}
+      </ol>
+      <p className="text-[10px] text-slate-500">Esquema conceptual, no está a escala. La mielina y los nodos se representan de forma simplificada.</p>
+    </div>
+  );
+}
+
 function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
@@ -261,6 +292,7 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "punnett") return <Punnett visual={visual}/>;
   if (visual.type === "cell-division") return <CellDivision visual={visual}/>;
   if (visual.type === "organ-system") return <OrganSystem visual={visual}/>;
+  if (visual.type === "neuron") return <Neuron visual={visual}/>;
   if (visual.type === "table") return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-xs">

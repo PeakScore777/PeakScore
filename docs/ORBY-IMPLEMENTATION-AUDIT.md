@@ -183,3 +183,10 @@ Pruebas necesarias:
 - La marca se reinicia al aceptar un turno por voz o texto dentro de la llamada. Esto permite distinguir latencia de generación/transporte de la programación de reproducción.
 - Se añadió prueba estática de presencia de ambas métricas. Los logs registran tiempos y no contenido de voz.
 - Aún no hay mediciones reales de p50/p95 ni pruebas runtime; no afirmar que se alcanzó el objetivo de 1 s. Workflow CI no reportado para el commit.
+
+
+## 17. Escucha manos libres y ciclo conversacional — 2026-11-07
+- La ruta de reproducción Live conserva el bloqueo de escucha mientras queden fuentes de audio activas; solo rearma el micrófono después de que termine el último fragmento. Esto evita que el micrófono reabra durante la voz de Orby.
+- Se instrumenta el tiempo total desde aceptación de la pregunta hasta quedar listo para el siguiente turno (`fullConversationCycleMs`), separado de primer texto/primer audio.
+- El objetivo es conversación manos libres continua sin pulsar de nuevo el micrófono entre turnos. No se modifica la detección de silencio de 400 ms en esta tanda.
+- Prueba estática añadida para el orden de espera de audio y rearme de escucha. No ejecutada en Node ni probada con micrófono real; no hay afirmación de QA runtime.

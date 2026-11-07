@@ -409,3 +409,12 @@ Ajustes:
 - Se repararon tres escapes dobles en expresiones regulares de las pruebas del SDK Gemini Live que impedían incluso analizar el archivo de pruebas (SyntaxError: Invalid regular expression flags).
 
 No se ha cambiado el proveedor de voz ni se ha agregado un fallback de pago. Las mejoras de segmentación todavía requieren pasar CI y una prueba real de escucha en navegador.
+
+
+## 2026-11-07 — ajuste de regresión de segmentación
+
+El CI de `d36d136` ejecutó las regresiones y detectó que una nueva aserción exigía que dos oraciones cortas generaran dos fragmentos TTS. El algoritmo está diseñado para empaquetar oraciones completas dentro del límite de 480 caracteres, por lo que esa expectativa era incorrecta: no es necesario crear una petición/pausa por cada oración.
+
+Se corrigió la prueba para verificar que ambas oraciones se conserven completas, con puntuación y orden, permitiendo que compartan un fragmento. El CI previo falló solo en esa aserción de segmentación; la auditoría de dependencias sí terminó correctamente y los pasos posteriores se omitieron por el fallo temprano de pruebas.
+
+Commit de corrección: `534fcb4`. CI de este commit pendiente. No se modificó el algoritmo de producción para satisfacer una prueba incorrecta.

@@ -2426,7 +2426,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           .filter((message) => !(message.role === "user" && isOrbyGreetingRequest(message.content)))
           .slice(-8)
           .map((message) => message.role + ": " + message.content)
-          .join("\\n");
+          .join("\n");
         const greetingReply = getOrbyGreetingFollowUpReply(greetingContext, activeSubjectRef.current);
         requestLivePolicyReply(voiceUserTextRef.current, greetingReply, false);
         return;

@@ -161,3 +161,16 @@ La herramienta actual `render_orby_teaching_board` de escena completa por turno 
 3. Interrumpir a Orby durante una actualización y comprobar que ninguna llamada o escena de la generación anterior reaparece.
 4. Comprobar que la escena final se persiste una sola vez y se recupera al recargar el historial.
 5. Solo después de esas pruebas, actualizar el estado de aceptación. Mantener prohibidos Pull, merge a `main` y despliegue hasta autorización expresa.
+
+## Fase siguiente — despacho no bloqueante de pizarra (2026-11-07)
+
+- Commit `dd3c2b77b6785958dfa56bfed46f7d6aa9f306b6`: la herramienta `render_orby_teaching_board` ahora declara `Behavior.NON_BLOCKING`, de modo que una actualización visual no debe detener la generación de voz ni exigir que el modelo espere a que el cliente responda antes de continuar.
+- Commit `173b928b8ec25e6e1d37b78b401b8cffb91b9974`: se añadió una aserción de regresión al conjunto `tests/orby-request-filter.test.mjs` para proteger el comportamiento no bloqueante.
+- La función de cliente sigue validando la escena y actualizando el mismo mensaje. No se cambió el esquema de persistencia, los proveedores, las cuotas ni la configuración de privacidad.
+
+### Validación pendiente
+
+- Los commits se escribieron en `feat/founder-intro`; no se ejecutó aquí `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` ni `npm run build` sobre el árbol completo. No declarar CI aprobado.
+- Confirmar en Chrome que Gemini Live acepta llamadas de pizarra no bloqueantes con `sendToolResponse` y que la voz sigue avanzando sin repetición, pausas ni llamadas acumuladas.
+- Confirmar la sincronización perceptible entre audio y cada actualización; `NON_BLOCKING` evita bloquear, pero no crea por sí mismo marcas de tiempo ni alineación fonética.
+- Probar interrupción, cancelación, fin de turno y recuperación del historial antes de solicitar Pull. No desplegar ni integrar en `main`.

@@ -709,7 +709,7 @@ Se revisó la grabación de 99,3 s enviada como referencia del estándar pedagó
 
 ### Corrección implementada
 
-- Corregido el escape duplicado de la expresión regular para aceptar espacios normales en los sufijos coloquiales.
+- Corregido el escape duplicado de la expresión regular y normalizada la puntuación informal antes de evaluar sufijos como «, xd»; ahora «no sé, xd» se convierte en una respuesta de orientación válida.
 - Ampliado el detector de invitaciones para reconocer la secuencia del video y preguntas de área con el nombre Saber 11 antes o después.
 - Añadidas regresiones para «no sé, xd», «no sé jaja», «dime» y para impedir que una negativa previa se interprete como invitación académica.
 - Cuando el filtro reconoce la respuesta de orientación, la ruta responde de forma determinista antes del limitador, la recuperación de conocimiento y la inferencia del modelo. Esto evita una generación innecesaria y reduce latencia para ese caso concreto.

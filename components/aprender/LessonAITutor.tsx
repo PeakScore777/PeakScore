@@ -2839,6 +2839,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     if (!discardInterruptedGenerationOutput
       && (serverContent.turnComplete === true || serverContent.generationComplete === true)
+      && voicePendingBoardCuesRef.current.length > 0) {
+      // If transcription omitted a cue (for example ASR punctuation/word loss),
+      // never lose the final teaching board: commit the latest validated snapshot
+      // at turn completion, after all available speech has finished.
+      const finalPendingBoard = voicePendingBoardCuesRef.current.at(-1)?.board ?? null;
+      voicePendingBoardCuesRef.current = [];
+      if (finalPendingBoard) {
+        voiceTeachingBoardRef.current = finalPendingBoard;
+        const assistantId = voiceAssistantMessageIdRef.current;
+        if (assistantId) {
+          setMessages((current) => current.map((message) => message.id === assistantId
+            ? { ...message, board: finalPendingBoard }
+            : message));
+        }
+      }
+    }
+
+    if (!discardInterruptedGenerationOutput
+      && (serverContent.turnComplete === true || serverContent.generationComplete === true)
       && !voiceResponseDoneRef.current) {
       const toolCompletion = completeOrbyVoiceToolGeneration(voiceKnowledgeToolTurnRef.current);
       voiceKnowledgeToolTurnRef.current = toolCompletion.state;

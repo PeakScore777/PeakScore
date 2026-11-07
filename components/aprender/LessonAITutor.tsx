@@ -1528,7 +1528,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     clearPendingOrbyTeachingBoard();
     voiceTeachingBoardRef.current = null;
     setVoiceCaptionText("");
-    setVoiceBargeInPendingRef.current = false;
+    voiceBargeInPendingRef.current = false;
     voiceFallbackModeRef.current = false;
     setVoiceFallbackMode(false);
     voiceSpeechPlaybackGenerationRef.current += 1;

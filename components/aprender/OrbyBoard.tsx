@@ -61,7 +61,7 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
   // Cumulative snapshots keep prior strokes mounted. Use a short stagger,
   // not the sum of every previous stroke duration, so later updates stay live.
   const strokeTimings = visual.strokes.map((_stroke, index) => ({
-    delay: Math.min(index * 180, 900),
+    delay: Math.min(index * 120, 600),
   }));
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-[680px] min-h-[320px] w-full overflow-visible">
@@ -73,7 +73,7 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
         const duration = Math.min(1_800, Math.max(520, stroke.points.length * 48));
         const delay = strokeTimings[index]?.delay ?? 0;
         const lastPoint = stroke.points[stroke.points.length - 1];
-        return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
+        return <g key={stroke.id}>
           <path
             d={path}
             pathLength={1}
@@ -416,7 +416,7 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   return (
     <section aria-label={"Pizarra: " + board.title} className="orby-board mt-2 w-full overflow-hidden rounded-2xl border border-slate-200 bg-[#fffefb] text-slate-900 shadow-[0_18px_52px_rgba(15,23,42,.14)]" style={{ backgroundImage: "linear-gradient(rgba(148,163,184,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.10) 1px, transparent 1px)", backgroundSize: "28px 28px" }}>
       <header className="flex items-center gap-3 border-b border-slate-200 bg-white/90 px-5 py-3">
-        <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-sm font-black text-white shadow-sm">O</span>
+        <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,.55)]" />
         <h3 className="text-xs font-extrabold uppercase tracking-[0.14em] text-slate-700">Pizarra · {board.title}</h3>
       </header>
       <div className="space-y-5 p-5 sm:p-8">

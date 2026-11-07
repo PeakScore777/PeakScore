@@ -3928,3 +3928,11 @@ test("la clase de voz prioriza la hoja digital y mantiene controles accesibles",
   assert.match(boardComponentSource, /Apuntes de clase/);
   assert.match(boardComponentSource, /min-h-\[60vh\]/);
 });
+
+
+test("la clase en vivo permite guardar los apuntes de la pizarra en la biblioteca", () => {
+  assert.match(lessonTutorSource, /function saveCurrentBoardAsNote/);
+  assert.match(lessonTutorSource, /saveLearningItem\("note", board\.title/);
+  assert.match(lessonTutorSource, /aria-label="Guardar apuntes de esta clase"/);
+  assert.match(lessonTutorSource, /sections\.join\("\\n\\n"\)/);
+});

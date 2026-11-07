@@ -32,7 +32,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  type: { type: Type.STRING, description: "Exact lowercase type: diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process." },
+                  type: { type: Type.STRING, description: "Exact lowercase type: sketch | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process." },
                   title: { type: Type.STRING },
                   nodes: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: {
                     id: { type: Type.STRING }, label: { type: Type.STRING }, x: { type: Type.NUMBER }, y: { type: Type.NUMBER },

@@ -118,3 +118,14 @@ Pruebas necesarias:
 - El flujo inspeccionado no conserva una alineación verificable entre cada chunk PCM y una frase/palabra/segmento del transcript. La herramienta de pizarra entrega snapshots completos, no acciones con marca de narración.
 - Consecuencia: hoy podemos medir el inicio de audio y la llegada de snapshots, pero no afirmar que una flecha o etiqueta aparece exactamente cuando Orby pronuncia su nombre.
 - Próximo diseño: definir eventos incrementales con `turnGeneration`, `sequence`, `actionId`, estado acumulado y referencia de narración solo si Live ofrece metadatos fiables. Si no hay alineación fiable, usar una secuencia pedagógica sincronizada por eventos de contenido (no timestamps inventados) y etiquetar esa sincronización como aproximada.
+
+
+## 7. Primera mejora visual incremental — 2026-11-07
+
+- `OrbyBoard.tsx`: se añadieron clases de animación de trazo a conexiones de diagramas, ejes y curvas de gráficas, vectores, enlaces moleculares, conexiones de circuitos y pares/cadenas de ADN. Los nodos de diagramas aparecen suavemente.
+- `app/globals.css`: se añadieron keyframes de dibujo SVG y aparición, con alternativa inmediata para `prefers-reduced-motion: reduce`.
+- `tests/orby-request-filter.test.mjs`: se añadió una regresión estática para verificar que el renderer usa los trazos y que existe el modo de movimiento reducido.
+- Alcance real: los elementos SVG recién montados pueden trazarse al llegar una actualización de tablero; los elementos ya montados no deben reiniciarse por el mero cambio de props. Esto mejora la percepción de snapshots incrementales.
+- Límite importante: esto **no** implementa aún escritura manuscrita de texto, secuenciador de acciones por paso, ni alineación exacta con palabras/segmentos de voz. No equivale todavía al objetivo completo del video.
+- Validación: cambios verificados mediante relectura de archivos en GitHub; no se pudo ejecutar Node tests, TypeScript, ESLint, build ni navegador desde esta conexión. No declarar CI aprobada.
+- Comparación actual con `main`: ramas divergentes; `feat/founder-intro` aparece 8 commits detrás y 2985 delante según compare. No hacer merge/rebase automático ni Pull sin auditar esa divergencia.

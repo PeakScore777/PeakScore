@@ -354,7 +354,7 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
           if (block.type === "callout") return <div key={blockKey} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
           return <p key={blockKey} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} aria-label={visual.title} className="orby-board-appear space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}:${JSON.stringify(visual)}`} aria-label={visual.title} className="orby-board-appear space-y-2 rounded-lg border border-slate-200 bg-white p-3">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
           <Visual visual={visual}/>
         </section>)}

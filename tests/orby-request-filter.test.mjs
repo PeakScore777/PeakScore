@@ -3641,6 +3641,7 @@ test("la pizarra Live acepta la última instantánea completa como estado autori
   const latest = sanitizeOrbyBoard({
     version: 2,
     title: "Densidad corregida",
+    spokenCue: "Ahora relacionemos masa y volumen",
     blocks: [{ type: "heading", text: "Densidad" }, { type: "formula", text: "d = m / V" }],
     visuals: [{
       type: "diagram",
@@ -3654,6 +3655,8 @@ test("la pizarra Live acepta la última instantánea completa como estado autori
   assert.equal(latest.version, 2);
   assert.equal(latest.blocks.some((block) => block.text.includes("Borrador anterior")), false);
   assert.equal(latest.visuals?.length, 1);
+  assert.equal(latest.spokenCue, "Ahora relacionemos masa y volumen");
+  assert.equal(sanitizeOrbyBoard({ version: 1, title: "Inválida", spokenCue: "ahora sí", blocks: [{ type: "text", text: "x" }] }), null);
 });
 
 test("Gemini Live recibe instrucciones de dibujar por secciones y limita las actualizaciones por turno", async () => {
@@ -3671,6 +3674,10 @@ test("Gemini Live recibe instrucciones de dibujar por secciones y limita las act
   assert.doesNotMatch(lesson, /mergeOrbyBoardSnapshots/);
   assert.match(tools, /ONE call at a time; never bundle multiple board snapshots/);
   assert.match(tools, /FULL cumulative current board/);
+  assert.match(tools, /spokenCue: a short exact Spanish phrase/);
+  assert.match(lesson, /voicePendingBoardCuesRef\.current\.push/);
+  assert.match(lesson, /normalizedSpokenReply\.includes\(pendingCue\.cue\)/);
+  assert.match(lesson, /finalPendingBoard/);
   assert.match(renderer, /JSON\.stringify\(visual\)/);
 });
 

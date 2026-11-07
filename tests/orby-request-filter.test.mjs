@@ -2778,6 +2778,16 @@ test("Orby descarta texto y audio tardíos antes del evento interrupted tras un 
   assert.match(source, /if \(studentBargeInPending\) \{\s*discardInterruptedGenerationOutput = true/);
 });
 
+test("una nueva actividad de micrófono elimina la burbuja parcial de la generación anterior", () => {
+  const activityStart = lessonTutorSource.indexOf('if (voiceActivity?.type === "ACTIVITY_START")');
+  const activityEnd = lessonTutorSource.indexOf('} else if (voiceActivity?.type === "ACTIVITY_END")', activityStart);
+  assert.ok(activityStart >= 0 && activityEnd > activityStart);
+  const activityHandler = lessonTutorSource.slice(activityStart, activityEnd);
+  assert.match(activityHandler, /const unfinishedAssistantId = !voiceResponseDoneRef\.current[\s\S]{0,180}voiceAssistantMessageIdRef\.current/);
+  assert.match(activityHandler, /if \(unfinishedAssistantId\) \{\s*setMessages\(\(current\) => current\.filter\(\(message\) => message\.id !== unfinishedAssistantId\)\)/);
+  assert.ok(activityHandler.indexOf("setMessages((current)") < activityHandler.indexOf("voiceAssistantMessageIdRef.current = null"));
+});
+
 test("interrumpir una respuesta Live limpia la transcripción anterior antes del nuevo turno", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const interruptStart = lessonTutorSource.indexOf("function interruptCurrentVoiceOutput()");

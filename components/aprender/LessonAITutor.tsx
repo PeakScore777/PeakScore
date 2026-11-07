@@ -108,6 +108,22 @@ function mergeLiveTranscript(previous: string, incoming: string): string {
   return left + (needsSeparator ? " " : "") + suffix;
 }
 
+function getOrbyLiveCaption(value: string): string {
+  const normalized = value.replace(/\\s+/g, " ").trim();
+  if (!normalized) return "";
+  const parts = normalized.match(/[^.!?]+[.!?]?/g) ?? [normalized];
+  const latest = (parts.at(-1) ?? normalized).trim();
+  if (latest.length <= 112) return latest;
+  const words = latest.split(" ");
+  let caption = "";
+  for (const word of words.slice(-18)) {
+    const next = caption ? caption + " " + word : word;
+    if (next.length > 112) break;
+    caption = next;
+  }
+  return caption || latest.slice(-112);
+}
+
 function normalizeVoicePunctuation(value: string): string {
   return value
     .replace(/\s+([,.;:!?])/g, "$1")
@@ -275,6 +291,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [imageStorageError, setImageStorageError] = useState("");
   const showVoiceTranscript = true;
   const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(true);
+  const [voiceCaptionText, setVoiceCaptionText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
   const [recordedAudioPreviewUrl, setRecordedAudioPreviewUrl] = useState("");
@@ -1201,6 +1218,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           finish(false);
           return;
         }
+        if (isLocalVoiceTurn) setVoiceCaptionText(getOrbyLiveCaption(chunks[chunkIndex]));
 
         const prefetched = prefetchedAudio?.index === chunkIndex ? prefetchedAudio : null;
         if (prefetched) prefetchedAudio = null;
@@ -2735,6 +2753,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // The prior assistant message keeps its own board in messages/history;
       // never carry that board into the next student turn or persist it twice.
       voiceTeachingBoardRef.current = null;
+      setVoiceCaptionText("");
       voiceLastCommittedInputRef.current = normalizedFinal;
       voiceLastCommittedInputAtRef.current = Date.now();
       voiceLastCommittedActivityGenerationRef.current = voiceActivityGenerationRef.current;
@@ -2877,6 +2896,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolFollowupOutput(voiceKnowledgeToolTurnRef.current);
       armVoiceResponseWatchdog();
       const partialReply = voiceAssistantTextRef.current.trim();
+      setVoiceCaptionText(getOrbyLiveCaption(partialReply));
       // A transcript is eligible for acoustic echo suppression only after
       // Live audio has actually been scheduled; text arriving before playback
       // must never be mistaken for something the microphone could have heard.
@@ -5255,16 +5275,22 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
           <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_310px]">
             <main className="min-h-[340px] min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#171a20] p-2 shadow-[0_18px_55px_rgba(0,0,0,.22)] sm:p-3" aria-label="Pizarra de enseñanza">
-              {activeVoiceAssistantMessage?.board ? <OrbyBoard board={activeVoiceAssistantMessage.board} /> : <div className="relative flex min-h-[330px] h-full flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-white/10 bg-[#f7f6f1] px-6 py-10 text-center text-slate-800 sm:min-h-[440px]">
-                <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-70" style={{ backgroundImage: "radial-gradient(#d8d5cc 0.7px, transparent 0.7px)", backgroundSize: "22px 22px" }} />
+              <div className="relative min-h-[420px] w-full overflow-hidden rounded-xl bg-[#fffefb]">
+              {activeVoiceAssistantMessage?.board ? <OrbyBoard board={activeVoiceAssistantMessage.board} /> : <div className="relative flex min-h-[420px] h-full flex-col items-center justify-center overflow-hidden bg-[#fffefb] px-6 py-10 text-center text-slate-800 sm:min-h-[560px]">
+                <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[.28]" style={{ backgroundImage: "linear-gradient(to bottom, transparent 31px, #d9e2ef 32px)", backgroundSize: "100% 32px" }} />
+                <div aria-hidden="true" className="pointer-events-none absolute bottom-0 left-8 top-0 w-px bg-rose-200/80" />
                 <div className="relative z-10 flex max-w-md flex-col items-center">
-                  <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-orange-200 bg-orange-50 text-2xl text-orange-600">✎</span>
-                  <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-orange-700">Pizarra inteligente</p>
-                  <h3 className="mt-2 text-xl font-black tracking-tight text-slate-900">{voicePendingStudentTurnRef.current ? "Preparando el esquema de la clase" : "Tu espacio de aprendizaje"}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{voicePendingStudentTurnRef.current ? "Orby está escuchando tu pregunta y preparando el apoyo visual. La explicación oral no se detiene mientras llega el primer esquema." : "Cuando comiences una explicación, aquí aparecerán los dibujos, procedimientos, fórmulas y diagramas que Orby construya contigo."}</p>
-                  {voicePendingStudentTurnRef.current && <div className="mt-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-orange-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500"/> Preparando apoyo visual</div>}
+                  <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-orange-200 bg-orange-50 text-2xl text-orange-600">✎</span>
+                  <p className="text-[10px] font-extrabold uppercase tracking-[.2em] text-orange-700">Cuaderno de Orby</p>
+                  <h3 className="mt-2 font-serif text-2xl font-bold text-slate-900">{voicePendingStudentTurnRef.current ? "Preparando tus apuntes…" : "Aquí se construye la clase"}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{voicePendingStudentTurnRef.current ? "Orby está preparando el dibujo, las flechas y las anotaciones de tu pregunta." : "Haz una pregunta para que Orby dibuje y explique sobre esta hoja."}</p>
+                  {voicePendingStudentTurnRef.current && <div className="mt-5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-orange-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500"/> Dibujando la explicación</div>}
                 </div>
               </div>}
+              {showAssistantSubtitles && voiceCaptionText && <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex min-h-[76px] items-end justify-center bg-gradient-to-t from-black/90 via-black/65 to-transparent px-4 pb-4 pt-9 sm:min-h-[92px] sm:px-8 sm:pb-5" aria-label="Subtítulos de Orby" aria-live="polite" aria-atomic="true">
+                <p key={voiceCaptionText} className="max-w-4xl text-center text-[15px] font-extrabold leading-snug tracking-[.01em] text-white sm:text-lg" style={{ textShadow: "0 2px 2px rgba(0,0,0,.95), 1px 0 1px rgba(0,0,0,.95), -1px 0 1px rgba(0,0,0,.95)" }}>{voiceCaptionText}</p>
+              </div>}
+            </div>}
             </main>
 
             <aside className="flex min-h-0 flex-col gap-3">
@@ -5280,13 +5306,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     <p className="mt-0.5 text-[11px] text-slate-400">{voiceMuted ? "Micrófono silenciado" : isListening ? "Te está escuchando" : voiceStatus}</p>
                   </div>
                 </div>
-                {showAssistantSubtitles && <section className="mt-4 rounded-xl border border-orange-400/20 bg-[#0d1015] p-3 text-left" aria-label="Subtítulos de la voz de Orby" aria-live="polite" aria-atomic="false">
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-orange-300">Lo que Orby está explicando</p>
-                    {voicePlaybackOwnerRef.current !== "none" && <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-300"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400"/> EN VOZ</span>}
-                  </div>
-                  <p className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-6 text-slate-100">{assistantVoiceSubtitle || (voiceMode ? "Aquí aparecerá la explicación de Orby…" : "Conecta con Orby para comenzar.")}</p>
-                </section>}
+                
                 {liveTranscript && showVoiceTranscript && <div className="mt-3 rounded-xl border border-white/10 bg-white/[.04] p-3 text-left">
                   <p className="mb-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Tu pregunta</p>
                   <p className="max-h-20 overflow-y-auto whitespace-pre-wrap break-words text-xs leading-5 text-slate-200">{liveTranscript}</p>

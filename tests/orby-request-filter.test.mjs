@@ -39,6 +39,8 @@ const knowledgeQueueSource = await readFile(new URL("../lib/ai/orby-knowledge-qu
 const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
 const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+const boardSource = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
+const boardComponentSource = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
 const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-capture.worklet.js", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
@@ -3017,4 +3019,26 @@ test("una caída parcial de recuperación no descarta las fuentes académicas qu
   assert.ok(retrievalBlock.includes("conceptOutcome.status === \"fulfilled\""));
   assert.ok(retrievalBlock.includes("Knowledge enrichment unavailable"), "un fallo de enriquecimiento no debe borrar la evidencia primaria");
   assert.doesNotMatch(retrievalBlock, /Promise\.all\(\[\s*searchOrbyKnowledge/);
+});
+
+
+test("la pizarra de Orby valida escenas acotadas y nunca acepta marcado o código", async () => {
+  const board = await loadTypeScriptModule("../lib/ai/orby-board.ts");
+  const valid = board.sanitizeOrbyBoard({
+    version: 1,
+    title: "Densidad",
+    blocks: [
+      { type: "formula", text: "ρ = m / V" },
+      { type: "step", label: "Paso 1", text: "Divide la masa entre el volumen." },
+    ],
+  });
+  assert.equal(valid.title, "Densidad");
+  assert.equal(valid.blocks.length, 2);
+  assert.equal(board.sanitizeOrbyBoard({ version: 1, title: "X", blocks: [{ type: "html", text: "<script>" }] }), null);
+  assert.equal(board.sanitizeOrbyBoard({ version: 1, title: "X", blocks: Array(9).fill({ type: "text", text: "a" }) }), null);
+  assert.equal(board.sanitizeOrbyBoard({ version: 2, title: "X", blocks: [{ type: "text", text: "a" }] }), null);
+  assert.match(boardComponentSource, /aria-label=\{"Pizarra: " \+ board\.title\}/);
+  assert.doesNotMatch(boardComponentSource, /dangerouslySetInnerHTML/);
+  assert.match(cloudflareTutorRoute, /sanitizeOrbyBoard\(parsed\.board\)/);
+  assert.match(lessonTutorSource, /message\.board && <OrbyBoard board=\{message\.board\} \/>/);
 });

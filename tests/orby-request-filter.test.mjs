@@ -3738,6 +3738,19 @@ test("Orby admite trazos libres seguros y progresivos para dibujar como profesor
   const duplicateId = structuredClone(valid);
   duplicateId.visuals[0].strokes[1].id = "membrana";
   assert.equal(sanitizeOrbyBoard(duplicateId), null);
+
+  const manyPoints = Array.from({ length: 40 }, (_, index) => ({ x: 4 + (index % 90), y: 4 + ((index * 7) % 90) }));
+  const heavyVisual = { type: "sketch", title: "Dibujo", strokes: Array.from({ length: 16 }, (_, index) => ({
+    id: "trazo" + index,
+    points: manyPoints,
+    tone: "ink",
+    width: 1.2,
+    label: "Estructura-" + index + "-".repeat(34),
+    labelX: 50,
+    labelY: 50,
+  })) };
+  const overBudget = { version: 2, title: "Escena extensa", blocks: [{ type: "text", text: "Dibujo" }], visuals: [heavyVisual, heavyVisual, heavyVisual] };
+  assert.equal(sanitizeOrbyBoard(overBudget), null, "el payload nunca debe superar el límite atómico de Supabase");
 });
 
 test("el contrato de trazos exige etiquetas posicionadas y una frase hablada real", () => {
@@ -3780,8 +3793,11 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(route, /nunca pauses la voz para esperar una herramienta NON_BLOCKING/);
+  assert.match(route, /no retrases la primera frase oral/);
   assert.match(route, /2–6 trazos nuevos por actualización/);
   assert.match(tools, /Freehand sketch strokes/);
+  assert.match(tools, /Exact lowercase type: sketch \\| diagram/);
+  assert.match(tools, /never wait for search completion before the first spoken sentence/);
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 1);
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /tone: \{ type: Type.STRING, description: "ink, accent, muted or success\."/);

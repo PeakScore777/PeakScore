@@ -2239,6 +2239,17 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       } else {
         cancelPendingOrbyKnowledgeRequests();
         clearVoiceResponseWatchdog();
+        // A new microphone activity can arrive before Live has produced its
+        // first validated sentence/audio. In that window the old partial
+        // transcript may already be visible even though playback is not active.
+        // Remove only that unfinished bubble before resetting its refs; otherwise
+        // it survives as an orphaned, truncated assistant message in the chat.
+        const unfinishedAssistantId = !voiceResponseDoneRef.current
+          ? voiceAssistantMessageIdRef.current
+          : null;
+        if (unfinishedAssistantId) {
+          setMessages((current) => current.filter((message) => message.id !== unfinishedAssistantId));
+        }
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
         voiceActivityGenerationRef.current += 1;
         voiceLastCommittedActivityGenerationRef.current = -1;

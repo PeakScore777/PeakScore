@@ -281,6 +281,24 @@ function Neuron({ visual }: { visual: Extract<OrbyBoardVisual, { type: "neuron" 
   );
 }
 
+function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type: "physiology-process" }> }) {
+  return (
+    <ol className="relative space-y-2">
+      {visual.stages.map((stage, index) => <li key={stage.name} className="relative flex gap-3">
+        <div className="flex w-8 shrink-0 flex-col items-center">
+          <span className="z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 border-orange-500 bg-orange-50 text-[11px] font-black text-orange-900">{index + 1}</span>
+          {index < visual.stages.length - 1 ? <span aria-hidden="true" className="my-1 min-h-5 w-0.5 flex-1 bg-orange-200"/> : null}
+        </div>
+        <div className="mb-1 min-w-0 flex-1 rounded-lg border border-slate-100 bg-slate-50 p-2">
+          <p className="text-[11px] font-bold text-slate-900">{stage.name}</p>
+          <p className="mt-0.5 text-[10px] leading-4 text-slate-600">{stage.detail}</p>
+          <p className="mt-1 text-[9px] font-semibold uppercase tracking-wide text-orange-800">{stage.location}</p>
+        </div>
+      </li>)}
+    </ol>
+  );
+}
+
 function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
@@ -293,6 +311,7 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
   if (visual.type === "cell-division") return <CellDivision visual={visual}/>;
   if (visual.type === "organ-system") return <OrganSystem visual={visual}/>;
   if (visual.type === "neuron") return <Neuron visual={visual}/>;
+  if (visual.type === "physiology-process") return <PhysiologyProcess visual={visual}/>;
   if (visual.type === "table") return (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse text-left text-xs">

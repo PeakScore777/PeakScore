@@ -257,6 +257,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     userContent: string;
     assistantContent: string;
   } | null>(null);
+  const [retryingVoiceTurn, setRetryingVoiceTurn] = useState(false);
   const [learningView, setLearningView] = useState<"chat" | "notes" | "topics" | "progress" | "storage">("chat");
   const [learningItems, setLearningItems] = useState<LearningItem[]>([]);
   const [learningSignals, setLearningSignals] = useState<LearningSignal[]>([]);
@@ -316,6 +317,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceUserMessageVisibleRef = useRef(false);
   const voiceResponseDoneRef = useRef(false);
   const voiceTurnPersistedRef = useRef(false);
+  const voiceTurnRetryInFlightRef = useRef(false);
   const voiceTurnPersistenceChainRef = useRef<Promise<void>>(Promise.resolve());
   const voicePendingAudioChunksRef = useRef<Array<{ data: string; mimeType?: string }>>([]);
   const voiceRealtimeAudioChunkCountRef = useRef(0);
@@ -1768,7 +1770,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   async function retryFailedVoiceTurn() {
     const turn = failedVoiceTurn;
-    if (!turn) return;
+    if (!turn || voiceTurnRetryInFlightRef.current) return;
+    voiceTurnRetryInFlightRef.current = true;
+    setRetryingVoiceTurn(true);
     setConversationError("Reintentando guardar la conversación…");
     try {
       const response = await fetch("/api/orby/realtime-turn", {
@@ -1793,6 +1797,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setConversationError(caught instanceof Error
         ? caught.message
         : "No se pudo guardar el turno. La respuesta sigue disponible en pantalla.");
+    } finally {
+      voiceTurnRetryInFlightRef.current = false;
+      setRetryingVoiceTurn(false);
     }
   }
 
@@ -4845,7 +4852,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       {conversationError && workspace && <div role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>{conversationError}</span>
-          {failedVoiceTurn && <button type="button" onClick={() => void retryFailedVoiceTurn()} className="shrink-0 rounded-md border border-rose-200 bg-white px-2.5 py-1 font-semibold text-rose-700 transition hover:bg-rose-100">Reintentar guardado</button>}
+          {failedVoiceTurn && <button type="button" disabled={retryingVoiceTurn} onClick={() => void retryFailedVoiceTurn()} className="shrink-0 rounded-md border border-rose-200 bg-white px-2.5 py-1 font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-wait disabled:opacity-60">{retryingVoiceTurn ? "Guardando…" : "Reintentar guardado"}</button>}
         </div>
       </div>}
       <p className="shrink-0 border-t border-[#25282d] bg-[#0b0d10] px-4 pb-3 pt-1 text-center text-[10px] leading-4 text-[#707782]">Orby puede cometer errores. Comprueba los datos importantes antes de usarlos.</p>

@@ -1003,6 +1003,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let chunkRetryCount = 0;
       let rateLimitWaitCount = 0;
       let safetyTimer: number | null = null;
+      let prefetchTimer: number | null = null;
       let requestController: AbortController | null = null;
       let prefetchedAudio: { index: number; controller: AbortController; request: Promise<Response | null> } | null = null;
       let audioElement: HTMLAudioElement | null = null;
@@ -1039,6 +1040,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (finished) return;
         finished = true;
         if (safetyTimer !== null) window.clearTimeout(safetyTimer);
+        if (prefetchTimer !== null) window.clearTimeout(prefetchTimer);
+        prefetchTimer = null;
         requestController?.abort();
         requestController = null;
         prefetchedAudio?.controller.abort();
@@ -1126,6 +1129,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           return null;
         });
         prefetchedAudio = { index: nextIndex, controller, request };
+      };
+
+      const schedulePrefetchNextTtsChunk = (durationSeconds: number) => {
+        if (finished || chunkIndex + 1 >= chunks.length || prefetchedAudio) return;
+        // Gemini documents that aborting a client request does not cancel an
+        // accepted service operation or its quota usage. Delay speculation until
+        // the current segment is mostly heard, and skip short segments entirely.
+        if (!Number.isFinite(durationSeconds) || durationSeconds < 1.5) return;
+        if (prefetchTimer !== null) window.clearTimeout(prefetchTimer);
+        const delayMs = Math.max(350, Math.floor(durationSeconds * 0.65 * 1000));
+        prefetchTimer = window.setTimeout(() => {
+          prefetchTimer = null;
+          prefetchNextTtsChunk();
+        }, delayMs);
       };
 
       const playFreeTtsChunk = async () => {
@@ -1241,7 +1258,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             source.start(scheduledAt);
             didPlaybackStart = true;
             voiceAudioSourcesRef.current.add(source);
-            prefetchNextTtsChunk();
+            schedulePrefetchNextTtsChunk(decodedAudio.duration);
             voicePlaybackOwnerRef.current = "tts";
             voiceNextPlaybackTimeRef.current = scheduledAt + decodedAudio.duration;
             setSpeakingIndex(index);
@@ -1259,7 +1276,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             audioElement.preload = "auto";
             audioElement.onplay = () => {
               didPlaybackStart = true;
-              prefetchNextTtsChunk();
+              schedulePrefetchNextTtsChunk(audioElement?.duration ?? 0);
               setSpeakingIndex(index);
               setVoiceStatus("Orby está leyendo la respuesta…");
               if (isLocalVoiceTurn) {

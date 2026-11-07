@@ -1297,7 +1297,7 @@ export async function createOrbyQueryEmbedding(query: string): Promise<OrbyQuery
 
   if (isCloudflareWorkersAIConfigured()) {
     try {
-      const [values] = await createCloudflareEmbeddings([text]);
+      const [values] = await createCloudflareEmbeddings([text], 8_000);
       return { values, model: CLOUDFLARE_EMBEDDING_MODEL };
     } catch (error) {
       console.warn("[Orby RAG] Cloudflare query embedding unavailable; lexical retrieval continues.", {

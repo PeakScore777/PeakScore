@@ -253,6 +253,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [conversationError, setConversationError] = useState("");
   const [failedVoiceTurn, setFailedVoiceTurn] = useState<{
     conversationId: string;
+    turnId: string;
     userContent: string;
     assistantContent: string;
   } | null>(null);
@@ -1742,7 +1743,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
 
     // Capture immutable turn data before the next voice turn resets its refs.
-    const turn = { conversationId: id, userContent, assistantContent };
+    const turn = { conversationId: id, turnId: crypto.randomUUID(), userContent, assistantContent };
     voiceTurnPersistedRef.current = true;
     const saveTask = voiceTurnPersistenceChainRef.current
       .catch(() => undefined)

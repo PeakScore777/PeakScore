@@ -3887,7 +3887,7 @@ test("el aula de voz usa un lienzo de clase y un respaldo visual gratuito indepe
   assert.match(fallback, /orby_take_rate_limit/);
   assert.match(fallback, /orby_voice_board/);
   assert.match(fallback, /generateWithCloudflareBoard/);
-  assert.match(fallback, /visuales manuscritos/);
+  assert.match(fallback, /apuntes manuscritos/);
   const provider = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
   assert.match(provider, /export async function generateWithCloudflareBoard/);
   assert.match(provider, /única propiedad board/);

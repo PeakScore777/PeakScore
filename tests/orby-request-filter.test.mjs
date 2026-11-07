@@ -62,9 +62,9 @@ const modelAwareEmbeddingMigration = await readFile(new URL("../supabase/migrati
 const conceptGraphMigration = await readFile(new URL("../supabase/migrations/20261101170000_orby_concept_graph_search.sql", import.meta.url), "utf8");
 
 test("el SDK Gemini Live se carga solo al iniciar la voz, no al abrir el chat", () => {
-  assert.match(lessonTutorSource, /import type \{ FunctionResponseScheduling, Session \} from ".*@google\\/genai"/);
-  assert.doesNotMatch(lessonTutorSource, /import \{[^}]*GoogleGenAI[^}]*\} from ".*@google\\/genai"/);
-  assert.match(lessonTutorSource, /const voiceSdkPromise = import\(["].*@google\\/genai["]\)/);
+  assert.match(lessonTutorSource, /import type \{ FunctionResponseScheduling, Session \} from ".*@google\/genai"/);
+  assert.doesNotMatch(lessonTutorSource, /import \{[^}]*GoogleGenAI[^}]*\} from ".*@google\/genai"/);
+  assert.match(lessonTutorSource, /const voiceSdkPromise = import\(["].*@google\/genai["]\)/);
   assert.match(lessonTutorSource, /const voiceSdk = await voiceSdkPromise/);
   assert.match(lessonTutorSource, /new voiceSdk\.GoogleGenAI\(/);
   assert.match(lessonTutorSource, /responseModalities:\s*\[voiceSdk\.Modality\.AUDIO\]/);

@@ -9,13 +9,15 @@ on:
     branches:
       - main
 
+# CI validates repository contents only; dependency updates use a separate,
+# reviewed change instead of mutating the branch during validation.
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
-  group: peakscore-checks-${{ github.ref }}
-  # Never cancel an active validation run on branch pushes. A newer commit
-  # may queue another run, but each SHA must receive an actual build result.
+  # Keep each commit in its own group so a newer push cannot replace a
+  # validation that is already queued for another SHA.
+  group: peakscore-checks-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -33,12 +35,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - name: Resolve non-breaking security updates
-        shell: bash
-        run: |
-          npm install --package-lock-only --ignore-scripts --save-exact next@16.4.3 eslint-config-next@16.4.3
-          npm audit fix --ignore-scripts || echo "Non-breaking automatic fixes were unavailable; the full audit gate below will report unresolved advisories."
-
+      # Install exactly what this commit declares. Do not rewrite package.json
+      # or package-lock.json inside the validation job.
       - name: Install dependencies
         run: npm ci
 
@@ -96,7 +94,9 @@ jobs:
         run: npm run lint
 
       - name: Next.js production build
-        run: npm run build
+        # The dedicated Orby step above already ran the test suite. Invoke
+        # Next directly here to avoid running the same suite a second time.
+        run: npx next build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
           # Build-only placeholders: no secrets or production credentials.
@@ -108,28 +108,5 @@ jobs:
         if: steps.dependency_audit.outcome == 'failure'
         shell: bash
         run: |
-          echo "Dependency security gate failed. TypeScript and ESLint ran, but unresolved advisories must be fixed before merge."
+          echo "Dependency security gate failed. TypeScript, ESLint and the production build ran, but unresolved advisories must be fixed before merge."
           exit 1
-
-      - name: Commit validated dependency security updates
-        if: github.ref == 'refs/heads/feat/founder-intro'
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json
-          if git diff --cached --quiet; then
-            echo "No dependency changes to commit."
-            exit 0
-          fi
-          git commit -m "chore(deps): apply tested security updates"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-
-      - name: Upload tested dependency lockfiles
-        uses: actions/upload-artifact@v7
-        with:
-          name: tested-security-updates
-          path: |
-            package.json
-            package-lock.json
-          retention-days: 7

@@ -610,3 +610,24 @@ Commits:
 - `91f72c1` — arrastre del interpolador sin asignación por quantum.
 
 CI de esta punta pendiente.
+
+
+## 2026-11-07 — regresión de turnos consecutivos con entrada escrita
+
+Se investigó la captura donde Orby respondió a una pregunta anterior y esa respuesta volvió a aparecer después de que el estudiante escribió un tema nuevo. La causa plausible localizada fue una ventana de carrera: tras un barge-in escrito, la salida de la generación anterior podía llegar antes del evento Live `interrupted`. La lógica previa solo activaba el descarte al recibir ese evento; por tanto, un fragmento tardío podía asociarse temporalmente al nuevo turno.
+
+Corrección:
+- Si hay un barge-in pendiente y ya existe un nuevo turno del estudiante, el manejador marca como descartable la salida de la generación anterior desde el comienzo del evento.
+- El texto de salida, los fragmentos de audio y la finalización de esa generación quedan descartados mientras se espera el evento `interrupted`.
+- El evento `interrupted` cierra la generación anterior y libera la protección para la respuesta nueva.
+- Se añadió una regresión para comprobar el orden adverso: salida tardía primero, evento `interrupted` después.
+
+Además, se revirtió la optimización reciente del AudioWorklet a la versión previamente validada, porque no era prudente mantener un cambio de procesamiento de bajo nivel mientras se investigaba una regresión conversacional. Se adaptaron las pruebas al formato anterior del remanente PCM.
+
+Commits:
+- `8e175bf` — restaurar el AudioWorklet anterior.
+- `3a26802` — alinear sus regresiones.
+- `b6f9242` — descartar salida Live tardía tras barge-in escrito.
+- `8a4af91` — prueba del orden adverso de eventos.
+
+La corrección es una protección de orden de eventos; debe confirmarse con la suite y con una sesión real en Chrome antes de dar el problema por cerrado.

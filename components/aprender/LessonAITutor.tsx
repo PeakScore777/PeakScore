@@ -2084,7 +2084,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           accepted: true,
           guidance: revealBoardNow
             ? "Pizarra visible. Continúa explicándola con voz natural."
-            : "Pizarra en cola. Di exactamente spokenCue y continúa hablando; el cliente la mostrará al reconocer la frase.",
+            : `Pizarra en cola. Pronuncia exactamente "${snapshot.spokenCue}" antes de explicar esa parte; el cliente la mostrará al reconocer la frase.`,
         },
         scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
       });

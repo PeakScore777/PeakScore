@@ -83,6 +83,20 @@ test("cancelar una búsqueda Live no descarta llamadas hermanas todavía válida
   assert.match(lessonTutorSource, /if \(!isCurrentToolTurn\(\)\) return;[\s\S]*?if \(requestController\.signal\.aborted\) continue;/);
 });
 
+test("Gemini Live registra todas las búsquedas hermanas antes del primer await y limpia las obsoletas", () => {
+  const handlerStart = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool");
+  const handlerEnd = lessonTutorSource.indexOf("\\n  function upsertVoiceUserMessage", handlerStart);
+  assert.notEqual(handlerStart, -1);
+  assert.notEqual(handlerEnd, -1);
+  const handler = lessonTutorSource.slice(handlerStart, handlerEnd);
+  const registerAll = handler.indexOf("for (const call of validCalls.slice(0, acceptedToolCalls))");
+  const firstAwait = handler.indexOf("await fetch(\"/api/orby/knowledge-search\"");
+  assert.ok(registerAll >= 0 && firstAwait > registerAll, "todas las llamadas deben registrarse antes del primer fetch");
+  assert.match(handler, /cleanupToolRequestControllers\(\)/);
+  assert.match(handler, /if \(!isCurrentToolTurn\(\)\) \{\s*cleanupToolRequestControllers\(\);\s*return;/);
+});
+
+
 test("el turno Live espera el aporte asíncrono del Lab y solo finaliza tras recibirlo", () => {
   let state = voiceToolTurn.beginOrbyVoiceToolTurn(voiceToolTurn.createOrbyVoiceToolTurnState());
 

@@ -5,12 +5,8 @@ import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-
 
 const colors = {
   orange: "#f97316",
-  blue: "#0284c7",
-  green: "#059669",
-  red: "#dc2626",
   ink: "#334155",
   grid: "#e2e8f0",
-  paper: "#fffdf8",
 };
 
 function Diagram({ visual }: { visual: Extract<OrbyBoardVisual, { type: "diagram" }> }) {

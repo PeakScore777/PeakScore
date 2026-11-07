@@ -1118,7 +1118,8 @@ test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones 
 });
 
 
-test("Cloudflare Workers AI fails closed unless the zero-billing Free plan is explicitly confirmed", () => {
+test("Cloudflare Workers AI fails closed unless the zero-billing Free plan is explicitly confirmed", async () => {
+  const envExampleSource = await readFile(new URL("../.env.example", import.meta.url), "utf8");
   assert.match(cloudflareVoiceSource, /ORBY_CLOUDFLARE_FREE_PLAN_CONFIRMED !== "true"/);
   assert.match(cloudflareVoiceSource, /FREE_PLAN_NOT_CONFIRMED/);
   assert.match(cloudflareVoiceSource, /ORBY_CLOUDFLARE_FREE_PLAN_CONFIRMED === "true"/);

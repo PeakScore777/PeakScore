@@ -294,3 +294,12 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Una de las cinco fallas sí detectó un detalle de presentación: el deduplicador conservaba los espacios periféricos de la copia más reciente aunque el texto normalizado fuera idéntico. Ahora conserva el primer texto y fusiona los metadatos visuales posteriores.
 - Se actualizó el contrato de pruebas y se corrigió el texto accesible del estado de preparación. El siguiente resultado local debe confirmar que desaparecen estas cinco fallas.
 - Este registro no equivale a una ejecución nueva: falta volver a correr `npm run test:orby`, TypeScript, ESLint y build. No declarar CI verde hasta ver esos resultados.
+
+
+## 2026-11-07 — correcciones de regresiones y compatibilidad de migraciones
+
+- Se eliminó una doble llamada consecutiva a `handleGeminiLiveEvent(payload)`: cada evento WebSocket normal debe procesarse una sola vez para no programar dos veces el mismo fragmento PCM ni duplicar transcripciones.
+- El historial ahora reintenta la lectura con las columnas anteriores cuando Supabase todavía no conoce `teaching_board` (errores PostgreSQL `42703` o PostgREST `PGRST204`). El chat textual ya no debe quedar bloqueado por una columna aditiva pendiente.
+- Tutor escrito y voz Live conservan el turno con sus RPC atómicas anteriores si la RPC aditiva de pizarra aún no existe (`PGRST202` / `42883`). La pizarra se muestra en la sesión activa y la interfaz advierte que no se conservará al recargar hasta aplicar la migración.
+- No se aplicó ninguna migración, no se cambió la configuración de privacidad/cuotas de Gemini Live, no se desplegó y no se integró `main`.
+- Pendiente de validación: ejecutar tests Orby, TypeScript, ESLint y build sobre este commit; probar Chrome con audio y micrófono; confirmar que la voz reproduce cada fragmento una sola vez, que el tablero recibe varias instantáneas y que una interrupción descarta todo lo anterior. La persistencia completa de escenas requiere aplicar las migraciones de pizarra ya presentes en la rama.

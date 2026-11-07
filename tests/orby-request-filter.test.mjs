@@ -58,6 +58,7 @@ const adminOrbyChatSource = await readFile(new URL("../app/api/admin/orby/chat/r
 const adminAutomationRouteSource = await readFile(new URL("../app/api/admin/orby/knowledge/automation/route.ts", import.meta.url), "utf8");
 const adminStudioSource = await readFile(new URL("../components/admin/OrbyKnowledgeStudio.tsx", import.meta.url), "utf8");
 const realtimeTurnSource = await readFile(new URL("../app/api/orby/realtime-turn/route.ts", import.meta.url), "utf8");
+const conversationMessagesRouteSource = await readFile(new URL("../app/api/orby/conversations/[conversationId]/messages/route.ts", import.meta.url), "utf8");
 const voiceTurnIdempotencyMigration = await readFile(new URL("../supabase/migrations/20261107010000_orby_voice_turn_idempotency.sql", import.meta.url), "utf8");
 const knowledgeSearchRouteSource = await readFile(new URL("../app/api/orby/knowledge-search/route.ts", import.meta.url), "utf8");
 
@@ -3825,4 +3826,30 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(tools, /tone: \{ type: Type.STRING, description: "ink, accent, muted or success\."/);
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
   assert.doesNotMatch(lesson, /spokenCue|voicePendingBoardCuesRef/);
+});
+
+
+test("Gemini Live procesa una sola vez cada evento WebSocket normal", () => {
+  assert.doesNotMatch(lessonTutorSource, /handleGeminiLiveEvent\(payload\);\s*handleGeminiLiveEvent\(payload\);/);
+  assert.match(lessonTutorSource, /handleGeminiLiveEvent\(payload\);\s*\};/);
+});
+
+test("el historial de Orby sigue disponible si teaching_board aún no existe en Supabase", () => {
+  assert.match(conversationMessagesRouteSource, /isMissingTeachingBoardColumn/);
+  assert.match(conversationMessagesRouteSource, /error\.code === "42703" \|\| error\.code === "PGRST204"/);
+  assert.match(conversationMessagesRouteSource, /teaching_board: null/);
+  assert.match(conversationMessagesRouteSource, /baseQuery\(\)/);
+});
+
+test("el tutor escrito conserva la respuesta si falta la RPC aditiva de pizarra", () => {
+  assert.match(cloudflareTutorRoute, /isMissingDatabaseFunction/);
+  assert.match(cloudflareTutorRoute, /supabaseAdmin\.rpc\("orby_save_turn", turnArgs\)/);
+  assert.match(cloudflareTutorRoute, /boardPersistenceWarning/);
+});
+
+test("la voz Live conserva el turno idempotente si aún no existe la RPC de pizarra", () => {
+  assert.match(realtimeTurnSource, /isMissingDatabaseFunction/);
+  assert.match(realtimeTurnSource, /supabaseAdmin\.rpc\("orby_save_voice_turn", voiceTurnArgs\)/);
+  assert.match(realtimeTurnSource, /boardPersisted/);
+  assert.match(lessonTutorSource, /boardPersistenceWarning/);
 });

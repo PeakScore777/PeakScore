@@ -20,7 +20,7 @@ const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
 const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
 
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
-type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
+type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
@@ -1764,6 +1764,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     const userContent = voiceUserTextRef.current.trim();
     const assistantContent = voiceAssistantTextRef.current.trim();
     const id = activeConversationRef.current;
+    const assistantMessageId = voiceAssistantMessageIdRef.current;
     if (!voiceResponseDoneRef.current || !userContent || !assistantContent || !id || voiceTurnPersistedRef.current) {
       return Promise.resolve();
     }
@@ -1794,9 +1795,16 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           signal: AbortSignal.timeout(12_000),
           body: JSON.stringify(turn),
         });
-        const payload = await response.json().catch(() => ({})) as { error?: unknown };
+        const payload = await response.json().catch(() => ({})) as { error?: unknown; boardPersisted?: unknown; boardPersistenceWarning?: unknown };
         if (!response.ok) {
           throw new Error(typeof payload.error === "string" ? payload.error : "No se pudo guardar el turno de voz.");
+        }
+        if (turn.board && payload.boardPersisted === false && assistantMessageId) {
+          setMessages((current) => current.map((item) => item.id === assistantMessageId
+            ? { ...item, boardPersistenceWarning: typeof payload.boardPersistenceWarning === "string"
+              ? payload.boardPersistenceWarning
+              : "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." }
+            : item));
         }
       });
     voiceTurnPersistenceChainRef.current = saveTask
@@ -3519,7 +3527,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           }
           return;
         }
-        handleGeminiLiveEvent(payload);        handleGeminiLiveEvent(payload);
+        handleGeminiLiveEvent(payload);
       };
 
       const resumeHandleIsFresh = Date.now() - voiceSessionResumeUpdatedAtRef.current < 90 * 60 * 1000;
@@ -4282,6 +4290,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         role: "assistant",
         content: data.reply,
         ...(data.board && typeof data.board === "object" ? { board: data.board as OrbyBoardData } : {}),
+        ...(typeof data.boardPersistenceWarning === "string" ? { boardPersistenceWarning: data.boardPersistenceWarning } : {}),
         checkQuestion: typeof data.checkQuestion === "string" ? data.checkQuestion : "",
         sources: Array.isArray(data.sources) ? data.sources.filter((source: unknown): source is OrbyPublicSource => {
           if (!source || typeof source !== "object") return false;
@@ -5119,6 +5128,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 </div>
                 <div className="break-words text-[15px] leading-7 sm:text-base" aria-live={message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current ? "polite" : undefined} aria-atomic="false">{renderTutorContent(message.content)}</div>
                 {message.board && <OrbyBoard board={message.board} />}
+                {message.boardPersistenceWarning && <p role="status" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{message.boardPersistenceWarning}</p>}
                 {message.sources && message.sources.length > 0 && <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700" aria-label="Fuentes públicas consultadas">
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Fuentes públicas de apoyo</p>
                   <ul className="space-y-2">

@@ -14,6 +14,14 @@ export const dynamic = "force-dynamic";
 
 type TutorMessage = { role: "user" | "assistant"; content: string };
 
+function isMissingDatabaseFunction(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  if (error.code === "PGRST202" || error.code === "42883") return true;
+  const message = error.message?.toLowerCase() ?? "";
+  return message.includes("could not find the function")
+    || (message.includes("function") && message.includes("does not exist"));
+}
+
 function cleanText(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
@@ -1114,8 +1122,9 @@ No uses bloques Markdown ni texto fuera del JSON.
     }
 
     const persistenceStartedAt = performance.now();
+    let boardPersisted = Boolean(board);
     if (conversationId && ownedConversation) {
-      const { data: savedTurn, error: saveTurnError } = await supabaseAdmin.rpc("orby_save_turn_with_board", {
+      const turnArgs = {
         p_user_id: user.id,
         p_conversation_id: conversationId,
         p_user_content: userMessage || "Analiza la imagen adjunta.",
@@ -1123,8 +1132,17 @@ No uses bloques Markdown ni texto fuera del JSON.
         p_check_question: finalCheckQuestion || null,
         p_attachment_kind: tutorImage ? "image" : body.attachmentKind === "audio" ? "audio" : null,
         p_attachment_label: cleanText(body.attachmentLabel, 120) || (tutorImage ? "Imagen adjunta" : null),
-        p_teaching_board: board,
-      });
+      };
+      const boardSave = await supabaseAdmin.rpc("orby_save_turn_with_board", { ...turnArgs, p_teaching_board: board });
+      let savedTurn: unknown = boardSave.data;
+      let saveTurnError = boardSave.error;
+      if (boardSave.error && isMissingDatabaseFunction(boardSave.error)) {
+        const legacySave = await supabaseAdmin.rpc("orby_save_turn", turnArgs);
+        savedTurn = legacySave.data;
+        saveTurnError = legacySave.error;
+        boardPersisted = false;
+        console.warn("[Orby Tutor] Board RPC is not installed yet; saved the atomic text turn only.");
+      }
       if (saveTurnError || !savedTurn || typeof savedTurn !== "object" || (savedTurn as { ok?: boolean }).ok !== true) {
         console.error("[Orby Tutor] Atomic turn persistence failed.", { code: saveTurnError?.code });
         return NextResponse.json({ error: "Orby respondió, pero no se pudo guardar el turno. Inténtalo de nuevo." }, { status: 503 });
@@ -1151,7 +1169,7 @@ No uses bloques Markdown ni texto fuera del JSON.
     });
 
     // Do not expose document names, providers, authors, topics or page metadata in student-facing API payloads.
-    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources, ...(board ? { board } : {}) }, {
+    return NextResponse.json({ reply: deliveredReply, checkQuestion: finalCheckQuestion, verification: qualityStatus, sources: deliveredSources, ...(board ? { board } : {}), ...(board && !boardPersisted ? { boardPersistenceWarning: "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." } : {}) }, {
       headers: {
         "Cache-Control": "private, no-store",
         "Server-Timing": serverTiming,

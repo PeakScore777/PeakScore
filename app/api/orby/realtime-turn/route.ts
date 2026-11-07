@@ -8,6 +8,14 @@ import { sanitizeOrbyBoard } from "@/lib/ai/orby-board";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function isMissingDatabaseFunction(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  if (error.code === "PGRST202" || error.code === "42883") return true;
+  const message = error.message?.toLowerCase() ?? "";
+  return message.includes("could not find the function")
+    || (message.includes("function") && message.includes("does not exist"));
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -60,22 +68,29 @@ export async function POST(request: Request) {
 
     // The database claims the stable turn ID while holding the conversation
     // row lock. Concurrent retries therefore serialize and only one can insert.
-    const { data, error } = board
-      ? await supabaseAdmin.rpc("orby_save_voice_turn_with_board", {
-          p_user_id: user.id,
-          p_conversation_id: conversationId,
-          p_turn_id: turnId,
-          p_user_content: userContent,
-          p_assistant_content: assistantContent,
-          p_teaching_board: board,
-        })
-      : await supabaseAdmin.rpc("orby_save_voice_turn", {
-          p_user_id: user.id,
-          p_conversation_id: conversationId,
-          p_turn_id: turnId,
-          p_user_content: userContent,
-          p_assistant_content: assistantContent,
-        });
+    const voiceTurnArgs = {
+      p_user_id: user.id, p_conversation_id: conversationId, p_turn_id: turnId,
+      p_user_content: userContent, p_assistant_content: assistantContent,
+    };
+    let data: { ok?: boolean; code?: string } | null = null;
+    let error: { code?: string; message?: string } | null = null;
+    let boardPersisted: boolean | null = board ? true : null;
+    if (board) {
+      const boardSave = await supabaseAdmin.rpc("orby_save_voice_turn_with_board", { ...voiceTurnArgs, p_teaching_board: board });
+      data = boardSave.data as { ok?: boolean; code?: string } | null;
+      error = boardSave.error;
+      if (boardSave.error && isMissingDatabaseFunction(boardSave.error)) {
+        const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", voiceTurnArgs);
+        data = legacySave.data as { ok?: boolean; code?: string } | null;
+        error = legacySave.error;
+        boardPersisted = false;
+        console.warn("[Orby Realtime] Board RPC is not installed yet; saved the idempotent text turn only.");
+      }
+    } else {
+      const legacySave = await supabaseAdmin.rpc("orby_save_voice_turn", voiceTurnArgs);
+      data = legacySave.data as { ok?: boolean; code?: string } | null;
+      error = legacySave.error;
+    }
     if (error || !data?.ok) {
       console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });
       return NextResponse.json({
@@ -83,8 +98,11 @@ export async function POST(request: Request) {
         code: error ? "SAVE_TURN_DATABASE_ERROR" : (typeof data?.code === "string" ? data.code : "SAVE_TURN_REJECTED"),
       }, { status: 503, headers: { "Cache-Control": "no-store" } });
     }
-
-    return NextResponse.json({ saved: true }, { headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({
+      saved: true,
+      ...(boardPersisted === null ? {} : { boardPersisted }),
+      ...(board && boardPersisted === false ? { boardPersistenceWarning: "La pizarra se muestra en esta sesión, pero todavía no puede guardarse en el historial. Falta aplicar la migración correspondiente de Supabase." } : {}),
+    }, { headers: { "Cache-Control": "no-store" } });
   } catch {
     return NextResponse.json({ error: "No se pudo guardar el turno de voz." }, { status: 500 });
   }

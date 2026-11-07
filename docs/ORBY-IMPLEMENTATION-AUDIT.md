@@ -148,3 +148,8 @@ Pruebas necesarias:
 - Importante: el subtítulo representa la transcripción textual que el proveedor entrega, no una alineación palabra-a-palabra con el audio. El tablero aparece cuando llega la herramienta; no se puede garantizar todavía que cada trazo coincida temporalmente con una palabra pronunciada.
 - El modo fallback por turnos sigue siendo degradado: transcribe la pregunta y responde en texto según el aviso existente; esta mejora no inventa voz ni consume un proveedor de voz adicional.
 - Validación: archivos releídos en GitHub y prueba estática añadida; no se ejecutaron navegador, micrófono, TypeScript, ESLint ni build. CI no reportó workflow para el commit consultado.
+
+
+## 12. Especificación funcional voz + tablero + subtítulos
+- Creado docs/ORBY-VOICE-WHITEBOARD-SPEC.md como contrato de producto y QA: escenario de llamada, chat durante llamada, subtítulos incrementales, snapshots acumulativos, interrupciones, filtros, accesibilidad, fallback y cuota gratuita.
+- Distingue explícitamente lo implementado, lo parcial y lo pendiente; incluye checklist para no declarar listo antes de probar micrófono, responsive y snapshots reales.

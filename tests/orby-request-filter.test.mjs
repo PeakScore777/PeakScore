@@ -2375,6 +2375,14 @@ test("la salida de Orby corrige tildes académicas frecuentes sin alterar la pun
     filter.normalizeOrbySpanishOutput("Tambien se analiza el numero, el proposito y las caracteristicas del fenomeno."),
     "También se analiza el número, el propósito y las características del fenómeno.",
   );
+  assert.equal(
+    filter.normalizeOrbySpanishOutput("En la pagina del capitulo aparece el indice, la linea y la seccion; el analisis academico, cientifico y estadistico incluye la reaccion, la concentracion y la representacion."),
+    "En la página del capítulo aparece el índice, la línea y la sección; el análisis académico, científico y estadístico incluye la reacción, la concentración y la representación.",
+  );
+  assert.equal(
+    filter.normalizeOrbySpanishOutput("La investigacion compara una explicacion teorica con un metodo aritmetico y geometrico."),
+    "La investigación compara una explicación teórica con un método aritmético y geométrico.",
+  );
 });
 
 test("la lectura de Orby conserva tablas y verbaliza fórmulas matemáticas", () => {

@@ -24,13 +24,16 @@ export function dedupeAdjacentAssistantMessages<T extends {
       && normalize(previous.checkQuestion) === normalize(message.checkQuestion);
     if (repeatedAssistant && previous) {
       // Live may attach board/media metadata in a later update to identical text.
-      const merged = { ...(previous as T & Record<string, unknown>), ...(message as T & Record<string, unknown>) } as T & Record<string, unknown>;
+      const merged: Record<string, unknown> = {
+        ...(previous as unknown as Record<string, unknown>),
+        ...(message as unknown as Record<string, unknown>),
+      };
       // Preserve the first display-ready text; a retransmitted copy may contain
       // only whitespace differences and must not reintroduce leading/trailing spaces.
       merged.content = previous.content;
       merged.checkQuestion = previous.checkQuestion;
-      const previousRecord = previous as T & Record<string, unknown>;
-      const messageRecord = message as T & Record<string, unknown>;
+      const previousRecord = previous as unknown as Record<string, unknown>;
+      const messageRecord = message as unknown as Record<string, unknown>;
       for (const key of ["board", "sources", "generatedImage", "attachmentName", "attachmentPreview", "attachmentKind"]) {
         const latestValue = messageRecord[key];
         const previousValue = previousRecord[key];

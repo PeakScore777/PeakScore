@@ -305,3 +305,5 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 - Pendiente de validación: ejecutar tests Orby, TypeScript, ESLint y build sobre este commit; probar Chrome con audio y micrófono; confirmar que la voz reproduce cada fragmento una sola vez, que el tablero recibe varias instantáneas y que una interrupción descarta todo lo anterior. La persistencia completa de escenas requiere aplicar las migraciones de pizarra ya presentes en la rama.
 
 - Compatibilidad adicional: si la RPC de pizarra existe pero responde `invalid_input` ante una escena version 2 (por una migración SQL anterior que aún solo acepta version 1), se guarda el turno mediante la RPC textual idempotente/atómica y se informa de que la escena no se conservará al recargar.
+
+- TypeScript: el deduplicador de mensajes conserva el merge de metadatos visuales mediante un registro mutable no genérico para evitar TS2862; mantiene el texto original y las propiedades visuales más recientes sin modificar la API pública.

@@ -683,3 +683,18 @@ Corrección:
 - Se añadió una regresión que comprueba tanto la condición de respuesta incompleta como el orden de limpieza antes del reinicio de referencias.
 
 Esto corrige el fragmento obsoleto observado en la grabación. No se presenta como solución de todos los problemas acústicos: la nueva ejecución CI debe pasar y la misma secuencia debe repetirse en Chrome con micrófono real.
+
+
+### Aislamiento de generación anterior y turno nuevo
+
+La inspección del mismo video reveló que retirar la burbuja parcial no bastaba: Live puede entregar el texto final de una generación anterior después de que comienza la nueva actividad del micrófono, pero antes del evento `interrupted`. Ese texto tardío podía atribuirse al turno nuevo porque el estudiante ya estaba marcado como pendiente.
+
+Se añadió un guard de una sola generación:
+- Al detectar nueva actividad mientras existe una generación anterior sin finalizar, se marca esa generación como obsoleta y se elimina su burbuja parcial.
+- Se descartan texto, audio y cierre de esa generación mientras llega el límite `interrupted`.
+- El evento `interrupted` cierra el guard para que la siguiente generación legítima pueda responder.
+- Si no llega el evento de interrupción pero sí el cierre de la generación vieja, ese cierre descartado también libera el guard.
+- Si no existe un turno nuevo, se limpia además el marcador de barge-in para no contaminar el siguiente mensaje.
+- Las regresiones verifican el aislamiento y el orden de liberación del guard.
+
+Este cambio apunta al fallo visible de respuestas repetidas/fragmentos antiguos atribuidos al mensaje siguiente. No se declara validado acústicamente hasta repetir la secuencia en Chrome real y completar CI.

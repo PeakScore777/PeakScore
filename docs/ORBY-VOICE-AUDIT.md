@@ -199,3 +199,8 @@ No se crean ni reconstruyen materiales del Lab; se usa exclusivamente el materia
 ### Verificación CI del límite de búsquedas (6 de noviembre)
 
 La primera ejecución completa del CI para el límite de dos búsquedas detectó una prueba estática demasiado rígida: esperaba cinco apariciones de la programación `WHEN_IDLE`, pero el nuevo camino de respuesta de límite añadió una sexta aparición válida. Las otras 110 pruebas pasaron. Se ajusta la expectativa estructural a seis; no se modifica el comportamiento de producción por este fallo. La siguiente ejecución debe confirmar la suite completa, TypeScript, ESLint y build.
+
+
+### Cancelación aislada de búsquedas hermanas
+
+La auditoría del lote de llamadas Live encontró que el aborto de una búsqueda ejecutaba un `return` desde el manejador completo. Si el modelo había enviado más de una llamada y solo una era cancelada, ese retorno podía descartar también las respuestas de las llamadas hermanas que seguían vigentes. Ahora se descarta únicamente el resultado abortado y se continúa procesando el lote, siempre que la sesión y la generación del turno sigan siendo actuales. Se añadió una regresión estática para este guard. Pendiente de CI y validación funcional con micrófono real.

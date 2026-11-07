@@ -1891,6 +1891,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceKnowledgeToolTurnRef.current = beginOrbyVoiceToolTurn(currentToolTurn, acceptedToolCalls);
     }
 
+    // Register every accepted request before the first await. Gemini can cancel
+    // sibling calls while the first fetch is still pending; registering lazily
+    // inside the sequential loop leaves later siblings invisible to cancellation.
+    const requestControllersById = new Map<string, AbortController>();
+    for (const call of validCalls.slice(0, acceptedToolCalls)) {
+      if (call.name !== "search_orby_learning_knowledge") continue;
+      const controller = new AbortController();
+      cancelPendingOrbyKnowledgeRequests([call.id]);
+      requestControllersById.set(call.id, controller);
+      voiceKnowledgeRequestsRef.current.set(call.id, controller);
+    }
+
     setVoiceStatus("Orby está consultando conocimiento académico…");
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
 
@@ -1928,6 +1940,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
       const toolQuery = typeof args.query === "string" ? args.query.trim().slice(0, 1600) : "";
       if (toolQuery.length < 3) {
+        const unusedController = requestControllersById.get(id);
+        if (unusedController) {
+          if (voiceKnowledgeRequestsRef.current.get(id) === unusedController) voiceKnowledgeRequestsRef.current.delete(id);
+          unusedController.abort();
+        }
         responses.push({ id, name, response: { found: false, error: "No se recibió un tema académico claro." }, scheduling: FunctionResponseScheduling.WHEN_IDLE });
         continue;
       }
@@ -1938,9 +1955,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       // with an unrelated topic or a subject the student has already left.
       const query = toolQuery.slice(0, 2000);
       const requestedSubject = typeof args.subject === "string" ? args.subject.slice(0, 80) : activeSubjectRef.current;
-      const requestController = new AbortController();
-      cancelPendingOrbyKnowledgeRequests([id]);
-      voiceKnowledgeRequestsRef.current.set(id, requestController);
+      const requestController = requestControllersById.get(id);
+      if (!requestController) continue;
 
       try {
         const response = await fetch("/api/orby/knowledge-search", {

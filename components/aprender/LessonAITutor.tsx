@@ -1004,7 +1004,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       let rateLimitWaitCount = 0;
       let safetyTimer: number | null = null;
       let requestController: AbortController | null = null;
-      let prefetchedAudio: { index: number; controller: AbortController; request: Promise<Response> } | null = null;
+      let prefetchedAudio: { index: number; controller: AbortController; request: Promise<Response | null> } | null = null;
       let audioElement: HTMLAudioElement | null = null;
       let audioBufferSource: AudioBufferSourceNode | null = null;
       let audioObjectUrl: string | null = null;
@@ -1118,9 +1118,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           headers: { "Content-Type": "application/json" },
           signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]),
           body: JSON.stringify({ text: chunks[nextIndex] }),
-        }).catch((error: unknown) => {
+        }).catch(() => {
           if (prefetchedAudio?.controller === controller) prefetchedAudio = null;
-          throw error;
+          // Resolve failures instead of leaving a rejected promise unobserved
+          // while the current audio segment is still playing. The consumer
+          // retries this exact chunk through the normal guarded path.
+          return null;
         });
         prefetchedAudio = { index: nextIndex, controller, request };
       };
@@ -1150,6 +1153,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 signal: AbortSignal.any([controller.signal, AbortSignal.timeout(30_000)]),
                 body: JSON.stringify({ text: chunks[chunkIndex] }),
               });
+          if (!response) throw new Error("TTS_PREFETCH_FAILED");
           if (!response.ok) {
             const payload = await response.json().catch(() => ({})) as { error?: unknown; code?: unknown };
             const unavailableCodes = new Set([

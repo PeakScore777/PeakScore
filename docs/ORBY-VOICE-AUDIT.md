@@ -204,3 +204,18 @@ La primera ejecución completa del CI para el límite de dos búsquedas detectó
 ### Cancelación aislada de búsquedas hermanas
 
 La auditoría del lote de llamadas Live encontró que el aborto de una búsqueda ejecutaba un `return` desde el manejador completo. Si el modelo había enviado más de una llamada y solo una era cancelada, ese retorno podía descartar también las respuestas de las llamadas hermanas que seguían vigentes. Ahora se descarta únicamente el resultado abortado y se continúa procesando el lote, siempre que la sesión y la generación del turno sigan siendo actuales. Se añadió una regresión estática para este guard. Pendiente de CI y validación funcional con micrófono real.
+
+## Video VC — regresión de alcance y respuestas repetidas (2026-11-06)
+
+Se revisó la grabación de pantalla de 125,7 s posterior a la prueba anterior.
+
+- Se observa que Orby sigue produciendo respuestas de alcance general ante preguntas sobre personas conocidas, fuera del objetivo de tutor ICFES.
+- La conversación mantiene mensajes/respuestas previas visibles y repite contenido de tutoría/presentación; se debe revisar asociación de turnos y contexto reciente además del filtro de dominio.
+- La captura de consola durante la prueba contiene advertencias/eventos repetidos de audio; no se atribuye una causa raíz sin correlacionar eventos y tiempos.
+- En la UI se aprecia que el estudiante puede continuar escribiendo, pero la prueba no demuestra por sí sola que todos los turnos hayan sido recibidos por el servidor.
+
+### Corrección implementada en esta iteración
+
+Se encontró un error de escape en la expresión regular de consultas generales «quién es / quién fue / who is / who was»: la expresión tenía barras invertidas duplicadas en un literal RegExp, por lo que buscaba secuencias literales y no límites de palabra/espacios. Se corrigió el patrón para reconocer consultas generales de personas y se añadieron regresiones para Westcol, Michael Scott, Lionel Messi y Taylor Swift.
+
+La regla conserva excepciones explícitas para figuras del currículo de Sociales (Simón Bolívar) y preguntas literarias sobre narrador/personaje en Lectura Crítica. Pendiente: confirmar el resultado del CI y validar el comportamiento real de Live en navegador con micrófono y audio.

@@ -344,6 +344,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceTurnAcceptedAtRef = useRef(0);
   const voiceFirstOutputTextLoggedRef = useRef(false);
   const voiceFirstAudioLoggedRef = useRef(false);
+  const voiceFirstAudioChunkReceivedRef = useRef(false);
   const voiceBoardUpdateCountRef = useRef(0);
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantOutputAtRef = useRef(0);
@@ -2520,6 +2521,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceTurnAcceptedAtRef.current = performance.now();
       voiceFirstOutputTextLoggedRef.current = false;
       voiceFirstAudioLoggedRef.current = false;
+      voiceFirstAudioChunkReceivedRef.current = false;
       voiceBoardUpdateCountRef.current = 0;
       voiceLastCommittedInputRef.current = normalizedFinal;
       voiceLastCommittedInputAtRef.current = Date.now();
@@ -2752,6 +2754,12 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         stopSpeaking();
       }
       armVoiceResponseWatchdog();
+      if (!voiceFirstAudioChunkReceivedRef.current && voiceTurnAcceptedAtRef.current > 0) {
+        voiceFirstAudioChunkReceivedRef.current = true;
+        console.info("[Orby Voice] First audio chunk received timing.", {
+          firstAudioChunkReceivedMs: Math.round(performance.now() - voiceTurnAcceptedAtRef.current),
+        });
+      }
       const chunk = {
         data: inlineData.data,
         mimeType: typeof inlineData.mimeType === "string" ? inlineData.mimeType : undefined,

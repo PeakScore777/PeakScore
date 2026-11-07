@@ -3595,8 +3595,8 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(source, /Cuaderno de Orby/);
-  assert.match(source, /voiceMode && voicePendingStudentTurnRef\.current/);
-  assert.match(source, /Preparando tus apuntes/);
+  assert.match(source, /voicePendingStudentTurnRef\.current \? "Preparando tus apuntes/);
+  assert.match(source, /Orby está preparando el dibujo, las flechas y las anotaciones/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });
 

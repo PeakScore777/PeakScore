@@ -2702,7 +2702,7 @@ test("AudioWorklet conserva la tasa PCM y los paquetes de 40 ms entre bloques de
     }
 
     const emittedSamples = postedPackets.reduce((total, packet) => total + packet.length, 0);
-    const bufferedSamples = processor.pendingPcm.length;
+    const bufferedSamples = (processor.pendingPcm?.length ?? 0);
     const totalSamples = emittedSamples + bufferedSamples;
     const expectedSamples = Math.ceil((frameCount - 1) / (sampleRate / 16_000));
 
@@ -2751,12 +2751,12 @@ test("AudioWorklet conserva muestras con bloques variables y mezcla estéreo sin
   }
 
   const emittedSamples = postedPackets.reduce((sum, packet) => sum + packet.length, 0);
-  const totalSamples = emittedSamples + processor.pendingPcm.length;
+  const totalSamples = emittedSamples + (processor.pendingPcm?.length ?? 0);
   const expectedSamples = Math.ceil((totalInputFrames - 1) / 3);
   assert.ok(postedPackets.length > 0);
   assert.ok(postedPackets.every((packet) => packet.length === 640));
   assert.equal(totalSamples, expectedSamples, "no debe perder muestras entre bloques de distinto tamaño");
-  assert.ok(processor.pendingPcm.length < 640);
+  assert.ok((processor.pendingPcm?.length ?? 0) < 640);
   const allSamples = postedPackets.flatMap((packet) => Array.from(packet));
   assert.ok(allSamples.every((sample) => Math.abs(sample - 16_384) <= 2),
     "la mezcla estéreo debe promediar ambos canales sin duplicar el volumen");

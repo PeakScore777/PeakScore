@@ -245,3 +245,5 @@ La primera ruta de respaldo visual reutilizaba `generateWithCloudflareTutor`. Es
 ### Estado de validación
 
 Los cambios están guardados en `feat/orby-studio-classroom`. No se ha confirmado una compilación ni una prueba de navegador: el estado de Vercel sigue reportando `build-rate-limit`. No se declara lista para producción hasta probar una sesión real, observar los snapshots Live y comprobar el fallback Cloudflare con cuota disponible y agotada.
+
+- La voz alternativa actualiza cada caption cuando comienza realmente su fragmento de audio (Web Audio o reproducción HTML), no al iniciar la solicitud de síntesis; evita subtítulos adelantados si el proveedor gratuito rechaza la lectura.

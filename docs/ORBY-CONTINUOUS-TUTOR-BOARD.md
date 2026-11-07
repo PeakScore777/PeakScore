@@ -264,3 +264,25 @@ La definición oficial de `FunctionResponseScheduling` en `googleapis/js-genai`,
 
 - En cada nuevo turno de estudiante se limpia la referencia interna de pizarra y la cola de cues. La escena anterior permanece asociada a su mensaje histórico, pero no puede filtrarse ni persistirse otra vez como parte de la respuesta nueva.
 - El contrato `sketch` también se añadió al tutor escrito y al fallback de voz por turnos; las mismas restricciones de trazos se validan antes de renderizar. Live continúa usando el contrato no bloqueante para voz simultánea.
+
+## Implementación directa en GitHub — corrección de pizarra Live (2026-11-07)
+
+### Cambios aplicados en `feat/founder-intro`
+
+- Se retiró `spokenCue` del contrato de nuevas llamadas Live y del prompt de sesión. El sanitizador conserva compatibilidad con pizarras antiguas que todavía contengan ese campo.
+- El callback Live procesa primero VAD/transcripción del alumno cuando comparte evento con una llamada de herramienta. Después despacha herramientas y finalmente procesa salida/audio una sola vez.
+- Se añadió una cola temporal de una instantánea acumulativa para cuando la llamada de pizarra llegue antes de la transcripción final. Solo se muestra tras el preflight académico y de idioma; expira a los 15 segundos y queda ligada a la generación activa.
+- Las instantáneas de un turno validado aparecen al recibirlas y usan respuesta `SILENT`; no esperan frases reconocidas ni el final del audio.
+- Interrupciones, saludos, rechazos de política, fallback y cambios de conversación limpian los dibujos provisionales.
+- La pizarra pasa a ocupar el espacio principal de la pantalla de voz; el orbe se reduce al aparecer el tablero.
+- El cursor circular se sustituyó por un lápiz SVG animado; se amplió el lienzo y se conserva `prefers-reduced-motion`.
+- La selección manual del historial recupera `teaching_board`; el deduplicador conserva metadatos visuales y adjuntos cuando llegan en una actualización posterior.
+- Se añadieron pruebas de regresión para el orden entrada-antes-de-herramienta, la retirada del gate por frase, la restauración del historial y la conservación de metadatos.
+
+### Límites y validación pendiente
+
+- `NON_BLOCKING` y `SILENT` evitan que cada dibujo solicite otra generación. No fuerzan al modelo a invocar la herramienta en toda explicación ni crean timestamps fonéticos; la frecuencia depende de las llamadas que emita Gemini Live.
+- No se añadió proveedor, modelo, solicitud extra de inferencia, búsqueda adicional, generación de imágenes ni fallback facturable.
+- No se cambió `ORBY_GEMINI_LIVE_ENABLED`, privacidad, cuotas, migraciones ni configuración de Supabase.
+- La CI debe finalizar tests Orby, TypeScript, ESLint y build sobre el commit nuevo. Después se requiere Chrome con micrófono: primera escena durante voz, varias actualizaciones acumulativas, interrupción, nueva pregunta e historial manual.
+- No hacer Pull, merge a `main` ni despliegue hasta revisar los resultados.

@@ -1033,10 +1033,10 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.doesNotMatch(lessonTutorSource, /voiceInternalPolicyTextRef|isInternalPolicySpeechEcho/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
-  assert.match(lessonTutorSource, /const turn = \\{ conversationId: id, turnId: crypto\\.randomUUID\\(\\), userContent, assistantContent \\}/);
+  assert.match(lessonTutorSource, /const turn = \{ conversationId: id, turnId: crypto\.randomUUID\(\), userContent, assistantContent \}/);
   assert.match(lessonTutorSource, /waitingForVoiceReplyRef\.current = true/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
-  assert.match(lessonTutorSource, /const turn = \\{ conversationId: id, turnId: crypto\\.randomUUID\\(\\), userContent, assistantContent \\}/);
+  assert.match(lessonTutorSource, /const turn = \{ conversationId: id, turnId: crypto\.randomUUID\(\), userContent, assistantContent \}/);
   const fallbackDecision = lessonTutorSource.indexOf("const needsSpeechFallback =");
   const flushBeforeFallback = lessonTutorSource.lastIndexOf("flushPendingGeminiAudio();", fallbackDecision);
   assert.ok(flushBeforeFallback >= 0 && fallbackDecision > flushBeforeFallback,
@@ -1810,7 +1810,7 @@ test("una voz atascada se recupera por texto sin duplicar el mensaje del usuario
 test("el endpoint de persistencia de voz autentica al alumno y guarda turnos atómicos", () => {
   assert.match(realtimeTurnSource, /supabase\.auth\.getUser\(\)/);
   assert.match(realtimeTurnSource, /\.slice\(0, 8000\)/);
-  assert.match(realtimeTurnSource, /supabaseAdmin\\.rpc\\("orby_save_voice_turn"/);
+  assert.match(realtimeTurnSource, /supabaseAdmin\.rpc\("orby_save_voice_turn"/);
   assert.match(realtimeTurnSource, /p_user_id: user\.id/);
   assert.match(realtimeTurnSource, /p_conversation_id: conversationId/);
   assert.match(realtimeTurnSource, /Cache-Control": "no-store"/);
@@ -2438,12 +2438,12 @@ test("el filtro conserva confirmaciones, términos estadísticos y aclaraciones 
   assert.ok(realtimeTurnSource.includes("getOrbySubjectSelectionReply(userContent)"));
   assert.ok(realtimeTurnSource.includes(".update({ subject: selectedSubject })"));
   assert.ok(realtimeTurnSource.includes('.eq("user_id", user.id)'));
-  assert.match(realtimeTurnSource, /const turnId = typeof body\\.turnId === "string" \\? body\\.turnId : ""/);
-  assert.match(realtimeTurnSource, /!isUuid\\(turnId\\)/);
+  assert.match(realtimeTurnSource, /const turnId = typeof body\.turnId === "string" \? body\.turnId : ""/);
+  assert.match(realtimeTurnSource, /!isUuid\(turnId\)/);
   assert.match(realtimeTurnSource, /p_turn_id: turnId/);
-  assert.match(voiceTurnIdempotencyMigration, /primary key \\(conversation_id, user_id, turn_id\\)/i);
+  assert.match(voiceTurnIdempotencyMigration, /primary key \(conversation_id, user_id, turn_id\)/i);
   assert.match(voiceTurnIdempotencyMigration, /for update/i);
-  assert.match(voiceTurnIdempotencyMigration, /on conflict \\(conversation_id, user_id, turn_id\\) do nothing/i);
+  assert.match(voiceTurnIdempotencyMigration, /on conflict \(conversation_id, user_id, turn_id\) do nothing/i);
   assert.match(voiceTurnIdempotencyMigration, /already_saved/);
   assert.ok(lessonTutorSource.includes("async function retryFailedVoiceTurn()"));
   assert.ok(lessonTutorSource.includes("voiceTurnRetryInFlightRef.current"));

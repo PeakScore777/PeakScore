@@ -236,3 +236,27 @@ Corrección aplicada:
 - Conservar el comportamiento de no descartar resultados hermanos válidos cuando solo se cancela una búsqueda.
 
 Se añadió una prueba estática que verifica el orden de registro respecto al primer `await` y la limpieza de solicitudes obsoletas. Pendiente CI y prueba acústica real en navegador.
+
+
+## 2026-11-06 — revisión de las dos grabaciones y optimización de turnos
+
+Se revisaron las grabaciones de pantalla de 80,1 s y 125,7 s. Los hallazgos reproducibles en la UI fueron:
+
+- La transcripción abreviada «qn es Westcol» llegaba al modelo como pregunta general y producía una biografía fuera del alcance Saber 11.
+- La transcripción «q y es PeakScore?» no activaba la respuesta de identidad de la plataforma. Después, «es recomendable?» permitía una respuesta promocional sobre PeakScore.
+- La transcripción breve «qn soy o» recibía una respuesta de identidad personal poco clara, aunque el tutor no debe afirmar que conoce quién es el estudiante.
+
+### Correcciones implementadas
+
+1. lib/ai/orby-request-filter.ts: el filtro de consultas generales reconoce variantes ASR/coloquiales (qn, qien, kien, q y es, q es, además de who is/was) sin quitar la excepción para preguntas curriculares sobre narradores, conceptos o textos. La clasificación distingue la intención actual de una mención contextual.
+2. lib/ai/orby-scope.ts: la detección de identidad de PeakScore/Orby incorpora variantes abreviadas para que «qn es PeakScore» y «q y es PeakScore» reciban la respuesta determinista de identidad.
+3. app/api/lesson-tutor/route.ts: un seguimiento como «es recomendable?» después de una pregunta de identidad de PeakScore recibe una respuesta neutral: Orby aclara que no puede valorar independientemente su propia plataforma ni prometer resultados, y ofrece describir funciones y limitaciones. La pregunta «qn soy o» recibe una aclaración de privacidad: el tutor no puede identificar al estudiante ni presume acceso a su identidad.
+4. components/aprender/LessonAITutor.tsx: la lectura TTS por fragmentos prepara como máximo un segmento por delante mientras se reproduce el actual. Mantiene el orden, el texto completo, los límites del endpoint y la cancelación del segmento anticipado al interrumpir o cerrar la lectura.
+5. tests/orby-request-filter.test.mjs: se añadieron regresiones para las abreviaturas observadas, la excepción curricular, la respuesta neutral sobre la plataforma, la aclaración de identidad y la preparación/cancelación de TTS anticipado.
+
+### Validación y límites
+
+- La suite automatizada, TypeScript, ESLint y build deben aprobar en el workflow asociado al commit final de esta tanda antes de considerar la rama lista para Pull.
+- El prefetch reduce la espera de red entre fragmentos TTS; no se presenta como una medición de latencia en Chrome ni cambia el tiempo de generación del proveedor.
+- Aún se necesita una prueba manual en Chrome con micrófono real: «qn es Westcol», «q y es PeakScore», «es recomendable», «qn soy yo», una pregunta académica abreviada («q y es fotosíntesis»), una respuesta larga y una interrupción durante el TTS.
+- No se modifica main, no se reconstruye el material eliminado del Lab y no se introduce un proveedor de pago.

@@ -817,7 +817,8 @@ test("Orby reconoce sus llamadas y no acepta transcripciones en escrituras ajena
   assert.equal(filter.containsUnsupportedSpanishScript("こんにちは"), true);
   assert.equal(filter.containsUnsupportedSpanishScript("¡Claro! ¿Qué tema de Saber 11 quieres estudiar?"), false);
   assert.equal(filter.containsUnsupportedSpanishScript("Let's practice the ICFES English reading section."), false);
-  assert.match(filter.ORBY_GREETING_REPLY, /PeakScore/);
+  assert.doesNotMatch(filter.ORBY_GREETING_REPLY, /PeakScore|Soy Orby/);
+  assert.match(filter.ORBY_GREETING_REPLY, /Matemáticas/);
   assert.match(filter.ORBY_SPANISH_ONLY_REPLY, /repetirla/);
   assert.match(filter.ORBY_SPANISH_OUTPUT_FALLBACK, /español/);
 });
@@ -855,7 +856,9 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(lessonTutorSource, /unsupportedInputScript/);
   assert.match(lessonTutorSource, /ORBY_SPANISH_ONLY_REPLY/);
   assert.match(lessonTutorSource, /const preflight = preflightOrbyRequest\(voiceUserTextRef\.current, voiceScopeContext\)/);
-  assert.doesNotMatch(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)/);
+  assert.match(lessonTutorSource, /isOrbyGreetingRequest\(voiceUserTextRef\.current\)/);
+  assert.match(lessonTutorSource, /getOrbyGreetingFollowUpReply\(greetingContext, activeSubjectRef\.current\)/);
+  assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, greetingReply, false\)/);
   assert.match(cloudflareTutorRoute, /REGLA DE IDIOMA Y VOZ/);
   assert.match(cloudflareTutorRoute, /ORTOGRAFÍA/);
   assert.match(cloudflareTutorRoute, /sin repetir toda tu presentación/);

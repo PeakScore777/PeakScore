@@ -352,3 +352,10 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Auditoría estática: Live ya recibe snapshots de tablero, pero OrbyBoard.tsx los representa como SVG estático. Aún falta el motor de dibujo progresivo y el contrato de acciones visuales enlazadas a voz. No afirmar que ya se comporta como el video.
 - Prioridad: acciones tipadas incrementales con ids/secuencia/generación, cancelación segura, accesibilidad reduced-motion y pruebas de sincronización. No inventar timestamps ni añadir llamadas/proveedores pagados.
 - Solo trabajar en feat/founder-intro; no modificar main, desplegar ni ejecutar migraciones remotas sin autorización. No reconstruir material eliminado intencionalmente del Orby ICFES Lab.
+
+
+## 2026-11-07 — primera animación de trazos de Orby
+- OrbyBoard ahora marca conexiones, ejes, curvas, vectores, enlaces moleculares, circuitos y ADN para trazarse al montarse; nodos de diagramas aparecen suavemente.
+- CSS incluye movimiento reducido sin animación. Prueba estática añadida para proteger el contrato visual.
+- Es una primera capa de presentación para snapshots progresivos, no escritura manuscrita ni sincronización exacta con voz. El secuenciador de acciones y alineación con narración siguen pendientes.
+- Relectura de GitHub completada; Node tests/TS/ESLint/build/navegador no ejecutados. La rama sigue divergente de main; no hacer Pull/merge/rebase.

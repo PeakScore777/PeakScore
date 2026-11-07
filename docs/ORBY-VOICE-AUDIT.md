@@ -530,3 +530,22 @@ Commits:
 - `8bc40f9` — regresión para ambos límites.
 
 El CI de esta punta debe validar la prueba nueva, TypeScript, ESLint y build. La ejecución anterior `42333196498` corresponde a `fa2cd3a` y no valida estos cambios posteriores.
+
+
+## 2026-11-07 — contabilidad constante de la cola de audio
+
+Al revisar el presupuesto dual de audio pendiente se detectó que calcular el tamaño acumulado con `Array.reduce()` en cada fragmento podía volver cuadrática la contabilidad bajo una cola larga. Se reemplazó por un contador incremental:
+
+- `voicePendingAudioEncodedCharsRef` mantiene el total de caracteres Base64 retenidos.
+- Cada fragmento suma su longitud una sola vez al entrar en la cola.
+- `clearPendingGeminiAudioQueue()` vacía la cola y reinicia el contador en un único punto.
+- La comprobación del presupuesto queda en O(1) por fragmento, sin recorrer toda la cola.
+- Se añadió regresión para verificar el contador, la limpieza centralizada y la ausencia del recorrido repetido.
+
+El límite de 512 fragmentos y 8 MiB se mantiene sin cambios. No se modificó la reproducción de audio ya validado.
+
+Commits:
+- `3c87d6c` — contabilidad incremental.
+- `b870f34` — regresión de complejidad y limpieza.
+
+La ejecución CI `42333407752` corresponde a la versión anterior `ca5cc6e`; no valida estos commits nuevos. La punta actual necesita una ejecución completa.

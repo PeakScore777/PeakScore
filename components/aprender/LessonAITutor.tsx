@@ -506,6 +506,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             role: item.role === "assistant" ? "assistant" : "user",
             content: typeof item.content === "string" ? item.content : "",
             checkQuestion: typeof item.check_question === "string" ? item.check_question : "",
+            ...(item.teaching_board && typeof item.teaching_board === "object" ? { board: item.teaching_board as OrbyBoardData } : {}),
             attachmentKind: item.attachment_kind === "audio" || item.attachment_kind === "image" ? item.attachment_kind : undefined,
             attachmentName: typeof item.attachment_label === "string" ? item.attachment_label : undefined,
             createdAt: typeof item.created_at === "string" ? item.created_at : undefined,

@@ -35,6 +35,8 @@ export type OrbyBoardVisual =
   | { type: "circuit"; title: string; components: Array<{ id: string; kind: "battery" | "resistor" | "lamp" | "switch"; x: number; y: number; label: string }>; connections: Array<{ from: string; to: string }> }
   | { type: "cell"; title: string; cellType: "animal" | "plant" | "prokaryotic"; organelles: Array<{ id: string; kind: "nucleus" | "mitochondrion" | "chloroplast" | "vacuole" | "membrane" | "cell-wall" | "ribosome" | "endoplasmic-reticulum" | "golgi" | "cytoplasm"; x: number; y: number; label: string }> }
   | { type: "dna"; title: string; pairs: Array<{ left: "A" | "T" | "C" | "G"; right: "A" | "T" | "C" | "G" }> }
+  | { type: "punnett"; title: string; topAlleles: [string, string]; sideAlleles: [string, string] }
+  | { type: "cell-division"; title: string; mode: "mitosis" | "meiosis"; phases: Array<{ name: string; detail: string }> }
   | {
       type: "timeline";
       title: string;
@@ -250,6 +252,38 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       pairs.push({ left: pair.left as "A" | "T" | "C" | "G", right: pair.right as "A" | "T" | "C" | "G" });
     }
     return { type: "dna", title: safeText(raw.title, 80), pairs };
+  }
+
+  if (raw.type === "punnett") {
+    if (!Array.isArray(raw.topAlleles) || raw.topAlleles.length !== 2
+      || !Array.isArray(raw.sideAlleles) || raw.sideAlleles.length !== 2) return null;
+    const validAllele = (value: unknown) => typeof value === "string" && /^[A-Za-z]$/.test(value);
+    if (!raw.topAlleles.every(validAllele) || !raw.sideAlleles.every(validAllele)) return null;
+    return {
+      type: "punnett",
+      title: safeText(raw.title, 80),
+      topAlleles: raw.topAlleles as [string, string],
+      sideAlleles: raw.sideAlleles as [string, string],
+    };
+  }
+
+  if (raw.type === "cell-division") {
+    const expected = raw.mode === "mitosis"
+      ? ["Profase", "Metafase", "Anafase", "Telofase y citocinesis"]
+      : ["Profase I", "Metafase I", "Anafase I", "Telofase I", "Profase II", "Metafase II", "Anafase II", "Telofase II"];
+    if ((raw.mode !== "mitosis" && raw.mode !== "meiosis")
+      || !Array.isArray(raw.phases) || raw.phases.length !== expected.length) return null;
+    const phases: Array<{ name: string; detail: string }> = [];
+    for (let index = 0; index < expected.length; index += 1) {
+      const entry = raw.phases[index];
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const phase = entry as Record<string, unknown>;
+      const name = safeText(phase.name, 40);
+      const detail = safeText(phase.detail, 120);
+      if (name !== expected[index] || !detail) return null;
+      phases.push({ name, detail });
+    }
+    return { type: "cell-division", title: safeText(raw.title, 80), mode: raw.mode, phases };
   }
 
   if (raw.type === "timeline") {

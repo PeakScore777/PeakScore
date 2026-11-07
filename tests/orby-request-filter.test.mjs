@@ -3892,8 +3892,8 @@ test("el aula de voz usa un lienzo de clase y un respaldo visual gratuito indepe
   assert.match(provider, /export async function generateWithCloudflareBoard/);
   assert.match(provider, /única propiedad board/);
   assert.match(fallback, /sanitizeOrbyBoard/);
-  assert.match(fallback, /!board\\.visuals\\?\\.length/);
-  assert.match(fallback, /containsProgrammingInstruction\\(question, academicContext\\)/);
-  assert.match(lesson, /setVoiceCaptionText\\(getOrbyLiveCaption\\(partialReply\\)\\)/);
+  assert.ok(fallback.includes("if (!board || !board.visuals?.length)"));
+  assert.ok(fallback.includes("containsProgrammingInstruction(question, academicContext)"));
+  assert.ok(lesson.includes("setVoiceCaptionText(getOrbyLiveCaption(partialReply))"));
   assert.match(fallback, /No activará ningún servicio de pago/);
 });

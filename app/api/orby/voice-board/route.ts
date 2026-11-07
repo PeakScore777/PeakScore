@@ -88,8 +88,8 @@ export async function POST(request: Request) {
     }
 
     const board = sanitizeOrbyBoard(parsed.board);
-    if (!board || (!board.blocks.length && !(board.visuals?.length))) {
-      return NextResponse.json({ error: "El esquema generado no superó la validación visual.", code: "ORBY_BOARD_VALIDATION_FAILED" }, { status: 502 });
+    if (!board || !board.visuals?.length) {
+      return NextResponse.json({ error: "Orby no generó un dibujo válido para esta clase. Vuelve a intentarlo en unos segundos.", code: "ORBY_BOARD_VALIDATION_FAILED" }, { status: 502 });
     }
 
     return NextResponse.json({ board, source: "cloudflare_free_fallback" }, {

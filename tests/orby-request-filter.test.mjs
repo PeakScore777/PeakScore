@@ -43,6 +43,7 @@ const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-ca
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
 const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-config.ts", import.meta.url), "utf8");
 const liveSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
@@ -496,7 +497,9 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("voiceSessionResumeHandleRef.current"));
   assert.ok(lessonTutorSource.includes("MAX_VOICE_RECORDING_MS = 5 * 60_000"));
   assert.ok(realtimeSessionSource.includes("2 * 60 * 60 * 1000"));
-  assert.match(cloudflareVoiceSource, /CLOUDFLARE_EMBEDDING_MODEL,[\s\S]*?\{ text: normalized \},\s*8_000,/);
+  assert.match(cloudflareVoiceSource, /createCloudflareEmbeddings\(texts: string\[\], timeoutMs = 25_000\)/);
+  assert.match(cloudflareVoiceSource, /CLOUDFLARE_EMBEDDING_MODEL,[\s\S]*?\{ text: normalized \},\s*timeoutMs,/);
+  assert.match(orbyKnowledgeSource, /createCloudflareEmbeddings\(\[text\], 8_000\)/);
   assert.ok(cloudflareVoiceSource.includes("45_000,"));
 
   assert.ok(lessonTutorSource.includes("never let the two speakers overlap"));

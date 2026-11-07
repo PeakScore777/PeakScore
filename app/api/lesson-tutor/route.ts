@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateTutorVision, validateTutorImage } from "@/lib/ai/tutor-vision";
 import { hasFalseOrbyCreatorAttribution, isOrbyIdentityQuestion, normalizeIcfesSubject, expandIcfesEnglishSearchTerms, ORBY_IDENTITY_REPLY } from "@/lib/ai/orby-scope";
-import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, isLowQualityOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
+import { containsCookingInstruction, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyGreetingRequest, isOrbySubjectAlreadyActive, getOrbySubjectSelectionReply, normalizeOrbySpanishOutput, correctOrbyDnaMitosisSequence, isLowQualityOrbyReply, ORBY_EXTERNAL_PREICFES_REPLY, getOrbyGreetingFollowUpReply, ORBY_ICFES_SCOPE_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, containsExplicitNonIcfesTopic, isIcfesScopedAssistantTurn, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest, shouldRetrieveOrbyAcademicKnowledge, sanitizeOrbyKnowledgeExcerpt, isOrbyStudyGuidanceRequest, ORBY_STUDY_GUIDANCE_REPLY } from "@/lib/ai/orby-request-filter";
 import { searchOrbyKnowledge, getOrbyRelatedKnowledge, selectOrbyRelevantConcepts, selectOrbyRelevantPedagogy, searchOrbyKnowledgeConcepts } from "@/lib/ai/orby-knowledge";
 import { CloudflareWorkersAIError, generateWithCloudflareTutor } from "@/lib/ai/cloudflare-workers-ai";
 import { searchOrbyPublicSources, shouldSearchOrbyPublicSources, reconcileOrbyPublicCitations, type OrbyWebSource } from "@/lib/ai/orby-web-research";
@@ -937,7 +937,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       return NextResponse.json({ error: "No pude interpretar la respuesta. Inténtalo de nuevo." }, { status: 502 });
     }
 
-    let reply = cleanText(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000)), 7000);
+    let reply = cleanText(correctOrbyDnaMitosisSequence(normalizeOrbySpanishOutput(cleanText(parsed.reply, 7000))), 7000);
     let checkQuestion = cleanText(parsed.checkQuestion, 500);
 
     // Gemma sometimes emits a bare "no"/"sí" for a one-word academic topic.
@@ -967,7 +967,7 @@ No uses bloques Markdown ni texto fuera del JSON.
         retryParsed = null;
       }
       const retryReply = retryParsed && typeof retryParsed === "object" && !Array.isArray(retryParsed)
-        ? cleanText(normalizeOrbySpanishOutput(cleanText(retryParsed.reply, 7000)), 7000)
+        ? cleanText(correctOrbyDnaMitosisSequence(normalizeOrbySpanishOutput(cleanText(retryParsed.reply, 7000))), 7000)
         : "";
       const retryCheckQuestion = retryParsed
         ? cleanText(retryParsed.checkQuestion, 500)

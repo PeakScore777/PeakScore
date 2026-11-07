@@ -2798,6 +2798,18 @@ test("una interrupción del estudiante descarta el final de audio anterior sin c
   assert.match(eventMethod, /if \(!discardInterruptedGenerationOutput[\s\S]*?serverContent\.turnComplete/);
 });
 
+test("Orby mide por turno la latencia hasta la primera transcripción y el primer audio Live", async () => {
+  const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(source, /voiceTurnAcceptedAtRef = useRef\(0\)/);
+  assert.match(source, /voiceFirstOutputTextLoggedRef = useRef\(false\)/);
+  assert.match(source, /voiceFirstAudioLoggedRef = useRef\(false\)/);
+  assert.match(source, /voiceTurnAcceptedAtRef\.current = performance\.now\(\)/);
+  assert.match(source, /firstTranscriptMs:\s*Math\.round\(performance\.now\(\) - voiceTurnAcceptedAtRef\.current\)/);
+  assert.match(source, /firstAudioMs:\s*Math\.round\(performance\.now\(\) - voiceTurnAcceptedAtRef\.current\)/);
+  assert.match(source, /voiceFirstOutputTextLoggedRef\.current = false/);
+  assert.match(source, /voiceFirstAudioLoggedRef\.current = false/);
+});
+
 test("Gemini Live usa endpointing de voz de 500 ms en cliente y token efímero", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const sessionRouteSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");

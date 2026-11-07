@@ -374,3 +374,8 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - La transcripción depende del texto que Live emite; no hay alineación palabra-a-palabra con el audio. El tablero se actualiza al llegar la herramienta, sin sincronía exacta por trazo todavía.
 - Fallback por turnos conserva su aviso y comportamiento degradado; no se fuerza voz adicional.
 - Prueba estática añadida y archivos releídos en GitHub; navegador/micrófono/build/TS/ESLint no ejecutados.
+
+
+## Especificación de experiencia voz + tablero
+- Fuente de verdad funcional: docs/ORBY-VOICE-WHITEBOARD-SPEC.md. Define llamada con subtítulos en vivo y tablero simultáneo, continuidad al volver al chat, snapshots acumulativos, interrupciones seguras y QA.
+- No declarar listo para Pull hasta validar con Chrome/micrófono y ejecutar Node tests, TypeScript, ESLint y build.

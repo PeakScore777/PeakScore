@@ -3908,3 +3908,13 @@ test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva s
   assert.match(lessonTutorSource, /orby-class-board/);
   assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);
 });
+
+
+test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
+  assert.match(boardComponentSource, /key=\{stroke\.id\}/);
+  assert.match(boardComponentSource, /orby-board-sketch-stroke/);
+  assert.match(boardComponentSource, /orby-board-pen-tip/);
+  assert.match(liveToolsSource, /set spokenCue to an exact short phrase/);
+  assert.match(liveToolsSource, /client animates only newly mounted strokes/);
+  assert.doesNotMatch(liveToolsSource, /Do not use transcript phrase matching to synchronize display/);
+});

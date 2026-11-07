@@ -1033,7 +1033,10 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.doesNotMatch(lessonTutorSource, /voiceInternalPolicyTextRef|isInternalPolicySpeechEcho/);
   assert.doesNotMatch(lessonTutorSource, /new SpeechSynthesisUtterance\(policyReply\)/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
-  assert.match(lessonTutorSource, /const turn = \{ conversationId: id, turnId: crypto\.randomUUID\(\), userContent, assistantContent \}/);
+  assert.match(lessonTutorSource, /const previousTurn = pendingVoicePersistenceRef\.current/);
+  assert.match(lessonTutorSource, /turnId: crypto\.randomUUID\(\)/);
+  assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = turn/);
+  assert.match(lessonTutorSource, /pendingVoicePersistenceRef\.current = null/);
   assert.match(lessonTutorSource, /waitingForVoiceReplyRef\.current = true/);
   assert.match(lessonTutorSource, /voiceTurnPersistenceChainRef/);
   assert.match(lessonTutorSource, /const turn = \{ conversationId: id, turnId: crypto\.randomUUID\(\), userContent, assistantContent \}/);

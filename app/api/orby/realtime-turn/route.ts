@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { normalizeIcfesSubject } from "@/lib/ai/orby-scope";
 import { getOrbySubjectSelectionReply } from "@/lib/ai/orby-request-filter";
+import { sanitizeOrbyBoard } from "@/lib/ai/orby-board";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
     const turnId = typeof body.turnId === "string" ? body.turnId : "";
     const userContent = typeof body.userContent === "string" ? body.userContent.trim().slice(0, 8000) : "";
     const assistantContent = typeof body.assistantContent === "string" ? body.assistantContent.trim().slice(0, 8000) : "";
+    const board = body.board == null ? null : sanitizeOrbyBoard(body.board);
+    if (body.board != null && !board) return NextResponse.json({ error: "La pizarra del turno no pasó la validación." }, { status: 400 });
     const isUuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
     if (!isUuid(conversationId) || !isUuid(turnId) || !userContent || !assistantContent) {
       return NextResponse.json({ error: "No se pudo validar el turno de voz." }, { status: 400 });
@@ -57,13 +60,22 @@ export async function POST(request: Request) {
 
     // The database claims the stable turn ID while holding the conversation
     // row lock. Concurrent retries therefore serialize and only one can insert.
-    const { data, error } = await supabaseAdmin.rpc("orby_save_voice_turn", {
-      p_user_id: user.id,
-      p_conversation_id: conversationId,
-      p_turn_id: turnId,
-      p_user_content: userContent,
-      p_assistant_content: assistantContent,
-    });
+    const { data, error } = board
+      ? await supabaseAdmin.rpc("orby_save_voice_turn_with_board", {
+          p_user_id: user.id,
+          p_conversation_id: conversationId,
+          p_turn_id: turnId,
+          p_user_content: userContent,
+          p_assistant_content: assistantContent,
+          p_teaching_board: board,
+        })
+      : await supabaseAdmin.rpc("orby_save_voice_turn", {
+          p_user_id: user.id,
+          p_conversation_id: conversationId,
+          p_turn_id: turnId,
+          p_user_content: userContent,
+          p_assistant_content: assistantContent,
+        });
     if (error || !data?.ok) {
       console.error("[Orby Realtime] Could not save voice turn.", { code: error?.code, reason: data?.code });
       return NextResponse.json({

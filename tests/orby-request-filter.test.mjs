@@ -3889,7 +3889,7 @@ test("el tutor escrito exige devolver la pizarra y revisar ortografía en el con
 
 
 test("la pizarra Live espera la frase hablada antes de revelar una etapa marcada", () => {
-  assert.match(liveToolsSource, /spokenCue:[\\s\\S]{0,320}frase[\\s\\S]{0,180}narración/);
+  assert.match(liveToolsSource, /spokenCue:/);\n  assert.match(liveToolsSource, /must say before this cumulative snapshot is revealed/);
   assert.match(lessonTutorSource, /voiceCuePendingBoardRef/);
   assert.match(lessonTutorSource, /isOrbyBoardCueSpoken\\(snapshot, voiceAssistantTextRef\\.current\\)/);
   assert.match(lessonTutorSource, /status: cueReady \\? "rendered" : "queued_for_spoken_cue"/);

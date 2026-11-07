@@ -93,7 +93,7 @@ async function runModel<T>(
   return envelope.result;
 }
 
-export async function createCloudflareEmbeddings(texts: string[]): Promise<number[][]> {
+export async function createCloudflareEmbeddings(texts: string[], timeoutMs = 25_000): Promise<number[][]> {
   const normalized = texts.map((text) => text.trim().slice(0, 6000)).filter(Boolean);
   if (!normalized.length || normalized.length !== texts.length || normalized.length > 16) {
     throw new CloudflareWorkersAIError("INVALID_EMBEDDING_INPUT");
@@ -106,7 +106,7 @@ export async function createCloudflareEmbeddings(texts: string[]): Promise<numbe
   }>(
     CLOUDFLARE_EMBEDDING_MODEL,
     { text: normalized },
-    8_000,
+    timeoutMs,
   );
 
   const rawVectors = Array.isArray(result.data)

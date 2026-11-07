@@ -604,6 +604,30 @@ export function containsExternalPreIcfesPromotion(text: string): boolean {
   return namesExternalProvider || promotionalVerb && externalCategory;
 }
 
+/**
+ * Reject promotional copy about a study platform in either chat or Live.
+ * This is intentionally narrower than ordinary study advice: recommending
+ * practice, examples or review strategies remains allowed; endorsing a paid/
+ * branded tool or describing a generic platform with sales language does not.
+ */
+export function containsPlatformMarketingClaim(text: string): boolean {
+  const normalized = normalizeOrbyRequestText(text);
+  if (!normalized) return false;
+  const explicitNeutrality = /\b(?:no puedo|no debo|no voy a)\b.{0,80}\b(?:promocionar|recomendar|evaluar|valorar)\b/.test(normalized);
+  if (explicitNeutrality) return false;
+
+  const namesPlatform = /\b(?:peak\s*score|peakscore|orby|nuestra plataforma|esta plataforma|esta herramienta)\b/.test(normalized);
+  const platformPraise = /\b(?:es|resulta|seria|seria una|puede ser)\b.{0,50}\b(?:muy recomendable|recomendable|una excelente opcion|una buena opcion|ideal|excelente|la mejor opcion|una gran herramienta)\b/.test(normalized)
+    || /\b(?:te recomiendo|recomiendo)\b.{0,70}\b(?:peak\s*score|peakscore|orby|plataforma|herramienta|preicfes)\b/.test(normalized);
+  const genericToolPraise = /\b(?:utilizar|usar|elegir|escoger|contar con)\b.{0,100}\b(?:herramienta|plataforma|aplicacion|servicio|programa)\b.{0,100}\b(?:muy recomendable|recomendable|ideal|excelente|una buena opcion|una gran herramienta)\b/.test(normalized);
+  const marketingBundle = /\b(?:recursos enfocados|practica dirigida|retroalimentacion para mejorar tus resultados|mejorar tus resultados con nuestra plataforma)\b/.test(normalized);
+  return (namesPlatform && platformPraise) || genericToolPraise || (namesPlatform && marketingBundle);
+}
+
+export const ORBY_PLATFORM_NEUTRALITY_REPLY =
+  "No puedo promocionar ni evaluar de forma independiente una plataforma, incluida aquella en la que funciona Orby. Puedo describir sus funciones y límites con objetividad para que decidas si te sirve.";
+
+
 const INJECTION_PATTERNS = [
   /\b(ignore|ignora|olvida|forget|disregard)\b.{0,80}\b(instrucciones|instructions|rules|reglas|restricciones|restrictions|previous instructions|prior instructions|system prompt|prompt del sistema)\b/i,
   /\b(revela|muestra|imprime|exporta|show|reveal|print|dump|disclose)\b.{0,60}\b(prompt del sistema|system prompt|hidden prompt|instrucciones internas|hidden instructions|api.?key|secretos?|secrets?|credenciales|credentials?|variables de entorno|environment variables|private key|access token)\b/i,

@@ -31,6 +31,8 @@ export type OrbyBoardVisual =
       vectors: Array<{ label: string; dx: number; dy: number }>;
     }
   | { type: "table"; title: string; headers: string[]; rows: string[][] }
+  | { type: "molecule"; title: string; atoms: Array<{ id: string; element: string; x: number; y: number; charge?: string }>; bonds: Array<{ from: string; to: string; order: 1 | 2 | 3 }> }
+  | { type: "circuit"; title: string; components: Array<{ id: string; kind: "battery" | "resistor" | "lamp" | "switch"; x: number; y: number; label: string }>; connections: Array<{ from: string; to: string }> }
   | {
       type: "timeline";
       title: string;
@@ -145,6 +147,70 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
       rows.push(cells);
     }
     return { type: "table", title: safeText(raw.title, 80), headers, rows };
+  }
+
+  if (raw.type === "molecule") {
+    if (!Array.isArray(raw.atoms) || raw.atoms.length < 2 || raw.atoms.length > 16
+      || !Array.isArray(raw.bonds) || raw.bonds.length < 1 || raw.bonds.length > 24) return null;
+    const atoms: Array<{ id: string; element: string; x: number; y: number; charge?: string }> = [];
+    const ids = new Set<string>();
+    for (const entry of raw.atoms) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const atom = entry as Record<string, unknown>;
+      const id = safeId(atom.id);
+      const element = safeText(atom.element, 2);
+      const charge = safeText(atom.charge, 3);
+      if (!id || ids.has(id) || !/^[A-Z][a-z]?$/.test(element)
+        || !finite(atom.x, 8, 92) || !finite(atom.y, 8, 92)
+        || (atom.charge !== undefined && !/^(?:[+-]|[1-9][+-])$/.test(charge))) return null;
+      ids.add(id);
+      atoms.push({ id, element, x: atom.x, y: atom.y, ...(charge ? { charge } : {}) });
+    }
+    const bonds: Array<{ from: string; to: string; order: 1 | 2 | 3 }> = [];
+    const seenBonds = new Set<string>();
+    for (const entry of raw.bonds) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const bond = entry as Record<string, unknown>;
+      const from = safeId(bond.from);
+      const to = safeId(bond.to);
+      const key = [from, to].sort().join(":");
+      if (!from || !to || from === to || !ids.has(from) || !ids.has(to)
+        || seenBonds.has(key) || (bond.order !== 1 && bond.order !== 2 && bond.order !== 3)) return null;
+      seenBonds.add(key);
+      bonds.push({ from, to, order: bond.order });
+    }
+    return { type: "molecule", title: safeText(raw.title, 80), atoms, bonds };
+  }
+
+  if (raw.type === "circuit") {
+    if (!Array.isArray(raw.components) || raw.components.length < 2 || raw.components.length > 12
+      || !Array.isArray(raw.connections) || raw.connections.length < 1 || raw.connections.length > 20) return null;
+    const components: Array<{ id: string; kind: "battery" | "resistor" | "lamp" | "switch"; x: number; y: number; label: string }> = [];
+    const ids = new Set<string>();
+    for (const entry of raw.components) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const component = entry as Record<string, unknown>;
+      const id = safeId(component.id);
+      const kind = component.kind;
+      const label = safeText(component.label, 24);
+      if (!id || ids.has(id) || !["battery", "resistor", "lamp", "switch"].includes(String(kind))
+        || !label || !finite(component.x, 8, 92) || !finite(component.y, 8, 92)) return null;
+      ids.add(id);
+      components.push({ id, kind: kind as "battery" | "resistor" | "lamp" | "switch", x: component.x, y: component.y, label });
+    }
+    const connections: Array<{ from: string; to: string }> = [];
+    const seenConnections = new Set<string>();
+    for (const entry of raw.connections) {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const connection = entry as Record<string, unknown>;
+      const from = safeId(connection.from);
+      const to = safeId(connection.to);
+      const key = [from, to].sort().join(":");
+      if (!from || !to || from === to || !ids.has(from) || !ids.has(to) || seenConnections.has(key)) return null;
+      seenConnections.add(key);
+      connections.push({ from, to });
+    }
+    return { type: "circuit", title: safeText(raw.title, 80), components, connections };
   }
 
   if (raw.type === "timeline") {

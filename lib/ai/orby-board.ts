@@ -414,3 +414,37 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   }
   return { version: 2, title, blocks, visuals };
 }
+
+
+/**
+ * Keeps Live teaching-board updates progressive when the model sends a shorter
+ * or partially repeated snapshot. New blocks are appended once; a visual with
+ * the same type/title is updated in place. Inputs must already be sanitized.
+ */
+export function mergeOrbyBoardSnapshots(previous: OrbyBoard | null, next: OrbyBoard): OrbyBoard {
+  if (!previous) return next;
+
+  const blocks = [...previous.blocks];
+  const blockKeys = new Set(blocks.map((block) =>
+    block.type + "\\u0000" + block.text + ("label" in block ? "\\u0000" + block.label : ""),
+  ));
+  for (const block of next.blocks) {
+    const key = block.type + "\\u0000" + block.text + ("label" in block ? "\\u0000" + block.label : "");
+    if (blockKeys.has(key)) continue;
+    blockKeys.add(key);
+    blocks.push(block);
+  }
+
+  const visuals = [...(previous.visuals ?? [])];
+  for (const visual of next.visuals ?? []) {
+    const index = visuals.findIndex((item) => item.type === visual.type && item.title === visual.title);
+    if (index >= 0) visuals[index] = visual;
+    else visuals.push(visual);
+  }
+
+  const boundedBlocks = blocks.slice(-MAX_BLOCKS);
+  const boundedVisuals = visuals.slice(-MAX_VISUALS);
+  return boundedVisuals.length > 0
+    ? { version: 2, title: next.title, blocks: boundedBlocks, visuals: boundedVisuals }
+    : { version: 1, title: next.title, blocks: boundedBlocks };
+}

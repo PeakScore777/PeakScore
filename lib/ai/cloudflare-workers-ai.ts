@@ -106,7 +106,7 @@ export async function createCloudflareEmbeddings(texts: string[]): Promise<numbe
   }>(
     CLOUDFLARE_EMBEDDING_MODEL,
     { text: normalized },
-    25_000,
+    8_000,
   );
 
   const rawVectors = Array.isArray(result.data)

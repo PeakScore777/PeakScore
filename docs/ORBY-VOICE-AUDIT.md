@@ -549,3 +549,21 @@ Commits:
 - `b870f34` — regresión de complejidad y limpieza.
 
 La ejecución CI `42333407752` corresponde a la versión anterior `ca5cc6e`; no valida estos commits nuevos. La punta actual necesita una ejecución completa.
+
+
+## 2026-11-07 — liberación explícita de recursos de audio decodificado
+
+La auditoría del ciclo de vida de audio encontró que los nodos `AudioBufferSourceNode` se desconectaban al terminar, pero podían conservar su callback `onended` y la referencia al `AudioBuffer` hasta que el recolector liberara el nodo. Se endureció la liberación en las rutas Live y TTS:
+
+- Al finalizar naturalmente, se elimina el nodo del conjunto de fuentes, se retira `onended`, se desconecta y se asigna `buffer = null`.
+- Al cancelar/interrumpir, se retira primero el callback, se detiene el nodo de forma segura, se desconecta y se libera el buffer.
+- Se conserva el control por generación de reproducción para impedir que callbacks antiguos finalicen o persistan un turno nuevo.
+- Se añadieron regresiones para final natural, cancelación y limpieza de Live/TTS.
+
+La auditoría también confirmó que la reconexión usa identificadores de conexión y generación de sesión para ignorar eventos atrasados del socket anterior; no se modificó ese flujo ni la persistencia del turno. La prueba de estabilidad de diez minutos sigue requiriendo una sesión real de Chrome, no se afirma como simulada.
+
+Commits:
+- `db7a0d6` — liberar buffers decodificados y callbacks.
+- `373d43f` — regresiones de limpieza de recursos.
+
+La CI anterior `42333562718` corresponde a `29f9cb4`; no valida estos cambios. La punta actual necesita CI completo.

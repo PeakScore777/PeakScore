@@ -3196,7 +3196,7 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
     "Gemini Live debe conocer todos los tipos visuales que acepta el sanitizador, incluido sketch");
   assert.match(tools, /Coordinate ranges: diagram nodes 5–95; vector origin 10–90/,
     "las instrucciones de coordenadas deben coincidir con la validación del tablero");
-  assert.match(lesson, /Es un esquema educativo 2D/);
+  assert.match(lesson, /esquemas educativos 2D/);
   assert.match(voice, /no es una simulación/);
   assert.doesNotMatch(renderer, /dangerouslySetInnerHTML/);
 });

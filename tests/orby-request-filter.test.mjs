@@ -3696,3 +3696,67 @@ test("las RPC atómicas permiten persistir pizarras visuales version 2 sin perde
   assert.equal((migration.match(/octet_length\(p_teaching_board::text\) > 24000/g) ?? []).length, 2);
   assert.match(migration, /on conflict \(conversation_id, user_id, turn_id\) do nothing/);
 });
+
+
+
+test("Orby admite trazos libres seguros y progresivos para dibujar como profesor", () => {
+  const { sanitizeOrbyBoard } = boardModule;
+  const valid = {
+    version: 2,
+    title: "Membrana y núcleo",
+    spokenCue: "Mira primero la membrana celular",
+    blocks: [{ type: "heading", text: "Estructura celular" }],
+    visuals: [{
+      type: "sketch",
+      title: "Boceto celular",
+      strokes: [
+        { id: "membrana", points: [{ x: 12, y: 28 }, { x: 25, y: 12 }, { x: 70, y: 14 }, { x: 88, y: 35 }, { x: 72, y: 82 }, { x: 25, y: 85 }, { x: 12, y: 28 }], tone: "ink", width: 1.4 },
+        { id: "nucleo", points: [{ x: 42, y: 38 }, { x: 49, y: 32 }, { x: 59, y: 36 }, { x: 61, y: 49 }, { x: 50, y: 57 }, { x: 41, y: 48 }], tone: "accent", width: 1.8, label: "Núcleo", labelX: 63, labelY: 48 },
+      ],
+    }],
+  };
+  const board = sanitizeOrbyBoard(valid);
+  assert.ok(board);
+  assert.equal(board.version, 2);
+  assert.equal(board.spokenCue, "Mira primero la membrana celular");
+  assert.equal(board.visuals?.[0]?.type, "sketch");
+  if (board.visuals?.[0]?.type !== "sketch") assert.fail("expected sketch visual");
+  assert.equal(board.visuals[0].strokes.length, 2);
+  assert.equal(board.visuals[0].strokes[1].label, "Núcleo");
+
+  const invalidWidth = structuredClone(valid);
+  invalidWidth.visuals[0].strokes[0].width = 3;
+  assert.equal(sanitizeOrbyBoard(invalidWidth), null);
+
+  const invalidPoint = structuredClone(valid);
+  invalidPoint.visuals[0].strokes[0].points[0].x = 101;
+  assert.equal(sanitizeOrbyBoard(invalidPoint), null);
+
+  const duplicateId = structuredClone(valid);
+  duplicateId.visuals[0].strokes[1].id = "membrana";
+  assert.equal(sanitizeOrbyBoard(duplicateId), null);
+});
+
+test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento reducido", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(renderer, /function smoothSketchPath/);
+  assert.match(renderer, /orby-board-sketch-stroke/);
+  assert.match(renderer, /<animateMotion path=\{path\}/);
+  assert.match(renderer, /dur=\{\x60\$\{duration\}ms\x60\}/);
+  assert.match(renderer, /stroke\.points\.map/);
+  assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
+  assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
+});
+
+test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async () => {
+  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  const tools = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
+  const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(route, /nunca pauses la voz para esperar una herramienta NON_BLOCKING/);
+  assert.match(route, /2–6 trazos nuevos por actualización/);
+  assert.match(tools, /Freehand sketch strokes/);
+  assert.match(tools, /tone: \{ type: Type.STRING, description: "ink, accent, muted or success\."/);
+  assert.match(lesson, /Reveal no more than one cue per transcript event/);
+  assert.doesNotMatch(lesson.slice(lesson.indexOf("const normalizedSpokenReply"), lesson.indexOf("const normalizedSpokenReply") + 1000), /while \(voicePendingBoardCuesRef/);
+});

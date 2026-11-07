@@ -1117,6 +1117,14 @@ test("el texto nunca queda bloqueado por el arranque de la voz y las conexiones 
   assert.match(lessonTutorSource, /startupSignal\.addEventListener\("abort"/);
 });
 
+
+test("Cloudflare Workers AI fails closed unless the zero-billing Free plan is explicitly confirmed", () => {
+  assert.match(cloudflareVoiceSource, /ORBY_CLOUDFLARE_FREE_PLAN_CONFIRMED !== "true"/);
+  assert.match(cloudflareVoiceSource, /FREE_PLAN_NOT_CONFIRMED/);
+  assert.match(cloudflareVoiceSource, /ORBY_CLOUDFLARE_FREE_PLAN_CONFIRMED === "true"/);
+  assert.match(envExampleSource, /ORBY_CLOUDFLARE_FREE_PLAN_CONFIRMED=false/);
+});
+
 test("el tutor usa Cloudflare directamente y no hace fallback a modelos de pago", () => {
   assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));
   assert.ok(!cloudflareTutorRoute.includes("generateAI("));

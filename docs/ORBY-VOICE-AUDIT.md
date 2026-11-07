@@ -803,3 +803,12 @@ No se aplicó la migración al proyecto Supabase activo. Es un cambio de esquema
 ### CI final — commit `9e9b32d`
 
 Workflow `42339106392` terminó con `success`. Pasaron las 130 pruebas de regresión de Orby, TypeScript, ESLint y el build de producción de Next.js. La auditoría de dependencias terminó correctamente. La conclusión valida el código de ese commit; no valida la migración remota, que sigue sin aplicarse en Supabase.
+
+## 2026-11-07 — stable idempotency key across automatic persistence retries
+
+- Found a client-side edge case during the post-migration audit: if the first persistence request timed out after the database had committed, a later automatic persistence attempt could generate a fresh UUID for the same completed voice exchange. The database receipt would then treat it as a new turn, weakening the duplicate-prevention guarantee.
+- The client now retains the pending immutable turn (including its UUID) while persistence is unresolved, reuses it for automatic retries of the same conversation/user/assistant content, and clears it only after confirmed persistence.
+- The explicit retry path continues to reuse the same immutable turn object.
+- Change: `57517d2e9cf73ecadc1d188676ba1ef374912c4f`.
+- Validation: pending GitHub Actions for this commit. No Pull or deployment requested/performed.
+

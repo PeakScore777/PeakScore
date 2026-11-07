@@ -1902,6 +1902,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       requestControllersById.set(call.id, controller);
       voiceKnowledgeRequestsRef.current.set(call.id, controller);
     }
+    const cleanupToolRequestControllers = () => {
+      for (const [pendingId, pendingController] of requestControllersById) {
+        if (voiceKnowledgeRequestsRef.current.get(pendingId) === pendingController) {
+          voiceKnowledgeRequestsRef.current.delete(pendingId);
+        }
+        if (!pendingController.signal.aborted) pendingController.abort();
+      }
+    };
 
     setVoiceStatus("Orby está consultando conocimiento académico…");
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
@@ -1967,7 +1975,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           body: JSON.stringify({ query, subject: requestedSubject }),
         });
         const result = await response.json().catch(() => ({}));
-        if (!isCurrentToolTurn()) return;
+        if (!isCurrentToolTurn()) {
+          cleanupToolRequestControllers();
+          return;
+        }
         // A cancelled sibling lookup must not discard other still-valid calls
         // from the same Live tool batch. Skip only this result and continue.
         if (requestController.signal.aborted) continue;
@@ -2056,7 +2067,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     try {
       // Recheck immediately before delivery: an older async lookup must never
       // answer a newer turn or send tool output into a replaced socket.
-      if (!isCurrentToolTurn()) return;
+      if (!isCurrentToolTurn()) {
+        cleanupToolRequestControllers();
+        return;
+      }
       const toolSession = session as unknown as {
         sendToolResponse: (payload: {
           functionResponses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }>;

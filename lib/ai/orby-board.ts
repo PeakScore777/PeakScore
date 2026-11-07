@@ -39,6 +39,7 @@ export type OrbyBoardVisual =
   | { type: "cell-division"; title: string; mode: "mitosis" | "meiosis"; phases: Array<{ name: string; detail: string }> }
   | { type: "organ-system"; title: string; system: "nervous" | "circulatory" | "respiratory" | "digestive" | "endocrine" | "urinary" | "skeletal" | "muscular"; structures: Array<{ id: string; name: string; x: number; y: number; role: string }> }
   | { type: "neuron"; title: string; parts: Array<{ id: string; name: string; role: string }> }
+  | { type: "physiology-process"; title: string; process: "blood-flow" | "gas-exchange" | "digestion" | "nephron-filtration" | "muscle-contraction" | "synaptic-transmission"; stages: Array<{ name: string; detail: string; location: string }> }
   | {
       type: "timeline";
       title: string;
@@ -326,6 +327,31 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
     }
     if (!["dendritas", "soma", "axón", "terminales sinápticas"].every((name) => names.has(name))) return null;
     return { type: "neuron", title: safeText(raw.title, 80), parts };
+  }
+
+  if (raw.type === "physiology-process") {
+    const sequences: Record<string, string[]> = {
+      "blood-flow": ["Venas cavas", "Aurícula derecha", "Ventrículo derecho", "Arterias pulmonares", "Pulmones", "Venas pulmonares", "Aurícula izquierda", "Ventrículo izquierdo", "Aorta y cuerpo"],
+      "gas-exchange": ["Aire llega al alvéolo", "Ventilación y difusión", "Oxígeno pasa a la sangre", "Dióxido de carbono pasa al alvéolo", "La sangre sale oxigenada"],
+      digestion: ["Boca", "Esófago", "Estómago", "Intestino delgado", "Absorción de nutrientes", "Intestino grueso", "Eliminación"],
+      "nephron-filtration": ["Glomérulo", "Cápsula de Bowman", "Túbulo proximal", "Asa de Henle", "Túbulo distal", "Conducto colector", "Orina hacia la pelvis renal"],
+      "muscle-contraction": ["Impulso llega a la unión neuromuscular", "Se libera acetilcolina", "Se propaga el potencial muscular", "Retículo libera calcio", "Actina y miosina interactúan", "Sarcómero se acorta", "Calcio se retira y el músculo se relaja"],
+      "synaptic-transmission": ["Potencial llega al terminal", "Entran iones calcio", "Vesículas liberan neurotransmisor", "Neurotransmisor cruza la hendidura", "Se une a receptores", "La célula postsináptica responde", "Neurotransmisor se elimina o recicla"],
+    };
+    const expected = sequences[String(raw.process)];
+    if (!expected || !Array.isArray(raw.stages) || raw.stages.length !== expected.length) return null;
+    const stages: Array<{ name: string; detail: string; location: string }> = [];
+    for (let index = 0; index < expected.length; index += 1) {
+      const entry = raw.stages[index];
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
+      const item = entry as Record<string, unknown>;
+      const name = safeText(item.name, 64);
+      const detail = safeText(item.detail, 140);
+      const location = safeText(item.location, 64);
+      if (name !== expected[index] || !detail || !location) return null;
+      stages.push({ name, detail, location });
+    }
+    return { type: "physiology-process", title: safeText(raw.title, 80), process: raw.process as "blood-flow" | "gas-exchange" | "digestion" | "nephron-filtration" | "muscle-contraction" | "synaptic-transmission", stages };
   }
 
   if (raw.type === "timeline") {

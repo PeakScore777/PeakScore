@@ -3679,10 +3679,12 @@ test("Gemini Live recibe instrucciones de dibujar por secciones y limita las act
   assert.match(lesson, /normalizedSpokenReply\.includes\(pendingCue\.cue\)/);
   assert.match(lesson, /finalPendingBoard/);
   assert.match(renderer, /key=\{`\$\{visual\.type\}:\$\{visual\.title\}:\$\{index\}`\}/);
-  assert.match(renderer, /node\.id:\$\{node\.x\}:\$\{node\.y\}/);
+  assert.match(renderer, /node\.id\}:\$\{node\.x\}:\$\{node\.y\}/);
   assert.match(renderer, /Math\.min\(index \* 90, 630\)/);
   assert.match(renderer, /bond\.from.*bond\.to.*from\.x.*to\.x/);
   assert.match(renderer, /component\.id.*component\.kind.*component\.x.*component\.y/);
+  assert.match(renderer, /pair\.left.*pair\.right.*y/);
+  assert.match(renderer, /item\.id.*item\.x.*item\.y.*item\.label/);
   assert.doesNotMatch(renderer, /key=\{\x60\$\{visual\.type\}:\$\{visual\.title\}:\$\{index\}:\$\{JSON\.stringify\(visual\)\}\x60\}/);
 });
 

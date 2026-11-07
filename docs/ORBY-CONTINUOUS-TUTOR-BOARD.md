@@ -137,3 +137,27 @@ La experiencia objetivo de Orby Voice es la del video de referencia del responsa
 En una sesión real de Chrome, pedir a Orby que resuelva oralmente un ejercicio de Saber 11. Mientras habla, comprobar que el contenido visual aparece y progresa acompasado con la explicación; interrumpirlo a mitad de un paso y hacer una pregunta nueva. Orby debe detener el dibujo anterior, responder a la nueva intervención y continuar sin mostrar elementos atrasados. Repetir con una fórmula y con un esquema conceptual.
 
 La herramienta actual `render_orby_teaching_board` de escena completa por turno es solo un primer puente técnico: **no satisface por sí sola este requisito**. La siguiente implementación debe usar actualizaciones incrementales de pizarra durante la misma generación Live, con validación, límites y asociación a la generación activa. No declarar la experiencia lista hasta superar la prueba real de voz y dibujo simultáneos.
+
+## Auditoría de continuidad — commit 91cc242 (2026-11-07)
+
+### Qué cambió realmente
+
+- El diff de `91cc2425731962c65e13ed1518ef1775fe6c64cd` contiene un único cambio funcional: la descripción de la herramienta `render_orby_teaching_board` en `lib/ai/orby-live-tools.ts`.
+- La nueva instrucción pide al modelo enviar instantáneas acumulativas repetidas durante la explicación. No añade un protocolo nuevo de eventos temporizados ni una señal de alineación con fragmentos de audio.
+- El manejador `handleOrbyLiveTeachingBoardTool` en `components/aprender/LessonAITutor.tsx` ya valida cada instantánea y actualiza el objeto `board` del mismo mensaje de asistente. Por tanto, varias llamadas pueden reemplazar la pizarra sin crear burbujas adicionales.
+- El manejador verifica la sesión y la generación de actividad vigentes y rechaza llamadas si el turno ya terminó. La cancelación/interrupción elimina la respuesta Live incompleta.
+- La respuesta de herramienta usa `FunctionResponseScheduling.WHEN_IDLE`; hay que comprobar en navegador que las llamadas repetidas no introduzcan pausas perceptibles en la voz ni acumulen escenas que lleguen tarde.
+
+### Estado de validación observado
+
+- El estado combinado consultado para `91cc242` informa un check Vercel exitoso. La consulta de ejecuciones de GitHub Actions asociadas no devolvió ejecuciones; esto no demuestra por sí solo que las pruebas de TypeScript, ESLint, tests y build hayan corrido para este SHA.
+- No se ha realizado aquí una prueba real de Chrome con micrófono y audio. No declarar sincronización voz-pizarra aprobada.
+- El commit `91cc242` es una mejora de instrucciones del modelo, no la implementación completa del criterio de aceptación de voz y dibujo simultáneos.
+
+### Próximos pasos obligatorios
+
+1. Ejecutar y registrar explícitamente tests Orby, TypeScript, ESLint y build sobre el SHA exacto de la rama.
+2. Probar en Chrome que dos o más instantáneas de pizarra aparecen durante una misma respuesta mientras el audio sigue reproduciéndose sin cortes ni duplicados.
+3. Interrumpir a Orby durante una actualización y comprobar que ninguna llamada o escena de la generación anterior reaparece.
+4. Comprobar que la escena final se persiste una sola vez y se recupera al recargar el historial.
+5. Solo después de esas pruebas, actualizar el estado de aceptación. Mantener prohibidos Pull, merge a `main` y despliegue hasta autorización expresa.

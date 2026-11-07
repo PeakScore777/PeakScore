@@ -58,25 +58,14 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
                   }, required: ["label", "position"] } },
                   strokes: { type: Type.ARRAY, description: "Freehand sketch strokes. Use a short progressive subset per update and include the complete cumulative set that should remain visible.", items: { type: Type.OBJECT, properties: {
                     id: { type: Type.STRING, description: "Stable unique stroke ID, reused when this stroke remains unchanged." },
-                    points: { type: Type.ARRAY, description: "2–40 ordered points; x and y must stay between 4 and 96.", items: { type: Type.OBJECT, properties: {
-                      x: { type: Type.NUMBER }, y: { type: Type.NUMBER },
-                    }, required: ["x", "y"] } },
-                    tone: { type: Type.STRING, description: "ink, accent, muted or success." },
-                    width: { type: Type.NUMBER, description: "0.6–2.4." },
-                    label: { type: Type.STRING, description: "Optional short label revealed after the stroke." },
-                    labelX: { type: Type.NUMBER }, labelY: { type: Type.NUMBER },
-                  }, required: ["id", "points"] } },
-
-                  strokes: { type: Type.ARRAY, description: "Freehand sketch strokes. Use a short progressive subset per update and include the complete cumulative set that should remain visible.", items: { type: Type.OBJECT, properties: {
-                    id: { type: Type.STRING, description: "Stable unique stroke ID, reused when this stroke remains unchanged." },
-                    points: { type: Type.ARRAY, description: "2–40 points in order on the 0–100 canvas, each coordinate between 4 and 96.", items: { type: Type.OBJECT, properties: {
+                    points: { type: Type.ARRAY, description: "2–40 points in order on the 0–100 canvas, each coordinate between 4 and 96; keep curves simple and natural.", items: { type: Type.OBJECT, properties: {
                       x: { type: Type.NUMBER }, y: { type: Type.NUMBER },
                     }, required: ["x", "y"] } },
                     tone: { type: Type.STRING, description: "ink, accent, muted or success." },
                     width: { type: Type.NUMBER, description: "Stroke width from 0.6 to 2.4." },
-                    label: { type: Type.STRING, description: "Optional concise label, drawn after its stroke." },
-                    labelX: { type: Type.NUMBER, description: "Label x position from 4 to 96." },
-                    labelY: { type: Type.NUMBER, description: "Label y position from 4 to 96." },
+                    label: { type: Type.STRING, description: "Optional concise label; when present, both labelX and labelY are required and it appears after its stroke." },
+                    labelX: { type: Type.NUMBER, description: "Required with label; x position from 4 to 96." },
+                    labelY: { type: Type.NUMBER, description: "Required with label; y position from 4 to 96." },
                   }, required: ["id", "points"] } },
 
                   atoms: { type: Type.ARRAY, description: "Molecular atoms; element is a chemical symbol, coordinates 8–92.", items: { type: Type.OBJECT, properties: {

@@ -328,6 +328,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     activityGeneration: number;
     createdAt: number;
   }>>([]);
+  // Snapshots with a spokenCue wait until that exact teaching phrase appears
+  // in a validated Live transcript. This avoids revealing a result before Orby
+  // has actually explained the corresponding step.
+  const voiceCuePendingBoardRef = useRef<Array<{
+    board: OrbyBoardData;
+    sessionGeneration: number;
+    activityGeneration: number;
+    createdAt: number;
+  }>>([]);
   const voiceAwaitingInputTranscriptionRef = useRef(false);
   const voiceInputPreflightAcceptedRef = useRef(false);
   const voiceInputActivityStartedAtRef = useRef(0);
@@ -2027,6 +2036,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
   function clearPendingOrbyTeachingBoard() {
     voicePendingBoardSnapshotsRef.current = [];
+    voiceCuePendingBoardRef.current = [];
     voiceAwaitingInputTranscriptionRef.current = false;
     voiceInputPreflightAcceptedRef.current = false;
     voiceInputActivityStartedAtRef.current = 0;
@@ -2042,6 +2052,32 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         ? current.map((message) => message.id === assistantId ? { ...message, board } : message)
         : [...current, { id: assistantId, role: "assistant", content: voiceAssistantTextRef.current.trim(), board }];
     });
+  }
+
+  function isOrbyBoardCueSpoken(board: OrbyBoardData, transcript: string): boolean {
+    const cue = board.spokenCue ? normalizeVoiceComparison(board.spokenCue).replace(/\\s+/g, " ").trim() : "";
+    if (!cue) return true;
+    const spoken = normalizeVoiceComparison(transcript).replace(/\\s+/g, " ").trim();
+    return cue.length >= 8 && spoken.includes(cue);
+  }
+
+  function flushCuePendingOrbyTeachingBoard() {
+    if (!voiceOutputTranscriptValidatedRef.current || voiceOutputAudioBlockedRef.current
+      || voiceDiscardStaleLiveOutputRef.current || voiceBargeInPendingRef.current) return;
+    const sessionGeneration = voiceSessionGenerationRef.current;
+    const activityGeneration = voiceActivityGenerationRef.current;
+    const eligible: typeof voiceCuePendingBoardRef.current = [];
+    const stillPending: typeof voiceCuePendingBoardRef.current = [];
+    for (const snapshot of voiceCuePendingBoardRef.current) {
+      if (snapshot.sessionGeneration !== sessionGeneration
+        || snapshot.activityGeneration !== activityGeneration
+        || Date.now() - snapshot.createdAt > 15_000) continue;
+      if (isOrbyBoardCueSpoken(snapshot.board, voiceAssistantTextRef.current)) eligible.push(snapshot);
+      else stillPending.push(snapshot);
+    }
+    voiceCuePendingBoardRef.current = stillPending.slice(-MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN);
+    const latestReady = eligible.at(-1);
+    if (latestReady) publishOrbyTeachingBoardSnapshot(latestReady.board);
   }
 
   function flushPendingOrbyTeachingBoard() {
@@ -2128,15 +2164,29 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       acceptedSnapshotInEvent = true;
       voiceBoardUpdateCountRef.current += 1;
       if (activeAcademicTurn) {
-        publishOrbyTeachingBoardSnapshot(snapshot);
+        const cueReady = !snapshot.spokenCue
+          || (voiceOutputTranscriptValidatedRef.current && isOrbyBoardCueSpoken(snapshot, voiceAssistantTextRef.current));
+        if (cueReady) {
+          publishOrbyTeachingBoardSnapshot(snapshot);
+        } else {
+          voiceCuePendingBoardRef.current = [
+            ...voiceCuePendingBoardRef.current.filter((item) =>
+              item.sessionGeneration === sessionGeneration
+              && item.activityGeneration === activityGeneration
+              && Date.now() - item.createdAt <= 15_000),
+            { board: snapshot, sessionGeneration, activityGeneration, createdAt: Date.now() },
+          ].slice(-MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN);
+        }
         responses.push({
           id: call.id,
           name: "render_orby_teaching_board",
           response: {
             accepted: true,
-            status: "rendered",
+            status: cueReady ? "rendered" : "queued_for_spoken_cue",
             retryable: false,
-            guidance: "Pizarra visible y actualizada. Continúa hablando con naturalidad; no esperes a que termine la animación.",
+            guidance: cueReady
+              ? "Pizarra visible y actualizada. Continúa hablando con naturalidad; no esperes a que termine la animación."
+              : "Pizarra validada y preparada. Se mostrará cuando la frase spokenCue aparezca en la transcripción de voz validada; continúa explicando sin repetir el dibujo.",
           },
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
         });
@@ -2879,7 +2929,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         const hasCompleteSafeSentence = partialReply.length >= 18
           && /[.!?;]["'”’)}\]]*\s*$/.test(partialReply);
         voiceOutputTranscriptValidatedRef.current = hasCompleteSafeSentence;
-        if (hasCompleteSafeSentence) flushPendingGeminiAudio();
+        if (hasCompleteSafeSentence) {
+          flushPendingGeminiAudio();
+          flushCuePendingOrbyTeachingBoard();
+        }
         const visibleReply = forcedExpected || partialReply;
         const assistantId = voiceAssistantMessageIdRef.current;
         setMessages((current) => {

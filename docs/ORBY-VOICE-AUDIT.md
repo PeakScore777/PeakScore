@@ -670,3 +670,16 @@ La auditoría estática identifica causas plausibles y corrige rutas controlable
 
 
 - **Emisión del token Live:** el cliente ya limitaba el fetch a 15 s, pero el SDK del servidor no declaraba su propio timeout. Ahora la llamada de emisión del token efímero también tiene un límite de 12 s, y existe una prueba para impedir que se quite accidentalmente.
+
+
+## 2026-11-07 — corrección de burbujas parciales huérfanas al iniciar una nueva intervención
+
+La grabación de Chrome del 7 de noviembre muestra un fragmento de respuesta de Orby que permanece visible después de que el estudiante vuelve a hablar. La causa estaba en la rama `ACTIVITY_START`: cuando no había audio reproduciéndose (por ejemplo, porque Live aún estaba acumulando la primera frase para validarla), el cliente limpiaba las referencias de la generación anterior, pero no retiraba del chat la burbuja parcial que ya había insertado.
+
+Corrección:
+- Antes de reiniciar las referencias de un nuevo ciclo de micrófono, se identifica la burbuja del asistente solo si la respuesta anterior aún no había finalizado.
+- Se elimina esa burbuja parcial antes de limpiar `voiceAssistantMessageIdRef`.
+- Las respuestas completas no se eliminan ni se vuelven a guardar.
+- Se añadió una regresión que comprueba tanto la condición de respuesta incompleta como el orden de limpieza antes del reinicio de referencias.
+
+Esto corrige el fragmento obsoleto observado en la grabación. No se presenta como solución de todos los problemas acústicos: la nueva ejecución CI debe pasar y la misma secuencia debe repetirse en Chrome con micrófono real.

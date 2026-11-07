@@ -3918,3 +3918,13 @@ test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
   assert.match(liveToolsSource, /client animates only newly mounted strokes/);
   assert.doesNotMatch(liveToolsSource, /Do not use transcript phrase matching to synchronize display/);
 });
+
+
+test("la clase de voz prioriza la hoja digital y mantiene controles accesibles", () => {
+  assert.match(lessonTutorSource, /Hoja de clase/);
+  assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-\[1600px\]/);
+  assert.match(lessonTutorSource, /aria-label="Clase en vivo con Orby"/);
+  assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
+  assert.match(boardComponentSource, /Apuntes de clase/);
+  assert.match(boardComponentSource, /min-h-\[60vh\]/);
+});

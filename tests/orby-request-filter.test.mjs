@@ -1097,9 +1097,21 @@ test("bloquea consultas generales sobre personas sin bloquear figuras del currí
   }
 
   assert.equal(filter.preflightOrbyRequest("Analiza el papel de Simón Bolívar en la independencia de Colombia.").allowed, true);
+  assert.equal(scope.isOrbyIdentityQuestion("qn es PeakScore?"), true);
+  assert.equal(scope.isOrbyIdentityQuestion("kien es Orby?"), true);
+  assert.equal(scope.isOrbyIdentityQuestion("qien fue PeakScore?"), true);
+  assert.equal(scope.isOrbyIdentityQuestion("qn es Westcol?"), false);
   assert.equal(filter.preflightOrbyRequest("¿Quién es el narrador del texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
   assert.equal(filter.preflightOrbyRequest("qn es el narrador del texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
   assert.equal(filter.preflightOrbyRequest("¿Quién es Westcol en el texto?", "Área de estudio: Lectura Crítica. Estamos analizando un texto narrativo.").allowed, true);
+});
+
+test("Orby no promociona su propia plataforma cuando le preguntan si es recomendable", async () => {
+  const tutor = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  assert.match(tutor, /hasRecentPeakScoreIdentityExchange/);
+  assert.match(tutor, /asksPeakScoreRecommendationFollowUp/);
+  assert.match(tutor, /No puedo darte una valoración independiente de mi propia plataforma ni prometer resultados/);
+  assert.match(tutor, /if \(asksOrbyIdentity \|\| asksPeakScoreRecommendationFollowUp\)/);
 });
 
 test("rechaza solicitudes explícitas de programación con una redirección breve", () => {

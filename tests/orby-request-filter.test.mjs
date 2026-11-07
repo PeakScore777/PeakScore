@@ -80,7 +80,7 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
 });
 
 test("cancelar una búsqueda Live no descarta llamadas hermanas todavía válidas", () => {
-  assert.match(lessonTutorSource, /if \(!isCurrentToolTurn\(\)\) return;[\\s\\S]*?if \(requestController\.signal\.aborted\) continue;/);
+  assert.match(lessonTutorSource, /if \(!isCurrentToolTurn\(\)\) return;[\s\\S]*?if \(requestController\.signal\.aborted\) continue;/);
 });
 
 test("el turno Live espera el aporte asíncrono del Lab y solo finaliza tras recibirlo", () => {

@@ -50,6 +50,8 @@ export type OrbyBoard = {
   version: 1 | 2;
   title: string;
   blocks: OrbyBoardBlock[];
+  /** Exact short phrase that should be heard before this snapshot is shown in Live voice. */
+  spokenCue?: string;
   visuals?: OrbyBoardVisual[];
 };
 
@@ -381,6 +383,8 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
     || raw.blocks.length === 0 || raw.blocks.length > MAX_BLOCKS) return null;
   const title = safeText(raw.title, 100);
   if (!title) return null;
+  const spokenCue = raw.spokenCue === undefined ? "" : safeText(raw.spokenCue, 100);
+  if (raw.spokenCue !== undefined && !spokenCue) return null;
 
   const blocks: OrbyBoardBlock[] = [];
   for (const candidate of raw.blocks) {
@@ -403,7 +407,7 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
 
   if (raw.version === 1) {
     if (raw.visuals !== undefined) return null;
-    return { version: 1, title, blocks };
+    return { version: 1, title, blocks, ...(spokenCue ? { spokenCue } : {}) };
   }
   if (!Array.isArray(raw.visuals) || raw.visuals.length > MAX_VISUALS) return null;
   const visuals: OrbyBoardVisual[] = [];
@@ -412,5 +416,5 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
     if (!visual) return null;
     visuals.push(visual);
   }
-  return { version: 2, title, blocks, visuals };
+  return { version: 2, title, blocks, visuals, ...(spokenCue ? { spokenCue } : {}) };
 }

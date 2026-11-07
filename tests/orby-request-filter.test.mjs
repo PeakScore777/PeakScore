@@ -2760,6 +2760,21 @@ test("AudioWorklet conserva muestras con bloques variables y mezcla estéreo sin
 });
 
 
+test("Orby descarta texto y audio tardíos antes del evento interrupted tras un barge-in escrito", async () => {
+  const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(source, /let discardInterruptedGenerationOutput = Boolean\(\s*voiceBargeInPendingRef\.current && voicePendingStudentTurnRef\.current/);
+  const guardStart = source.indexOf("let discardInterruptedGenerationOutput = Boolean(");
+  const outputStart = source.indexOf("const outputTranscript =", guardStart);
+  const audioStart = source.indexOf("const modelTurn =", outputStart);
+  const completionStart = source.indexOf("if (!discardInterruptedGenerationOutput", audioStart);
+  assert.ok(guardStart >= 0 && outputStart > guardStart);
+  assert.ok(audioStart > outputStart);
+  assert.ok(completionStart > audioStart);
+  assert.match(source.slice(outputStart, audioStart), /if \(discardInterruptedGenerationOutput/);
+  assert.match(source.slice(audioStart, completionStart), /if \(discardInterruptedGenerationOutput/);
+  assert.match(source, /voiceBargeInPendingRef\.current = false;[\s\S]{0,220}discardInterruptedGenerationOutput = true/);
+});
+
 test("interrumpir una respuesta Live limpia la transcripción anterior antes del nuevo turno", async () => {
   const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   const interruptStart = lessonTutorSource.indexOf("function interruptCurrentVoiceOutput()");

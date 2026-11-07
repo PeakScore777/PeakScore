@@ -12,7 +12,7 @@ import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBarg
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
-import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";
+import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";
 
 const MAX_VOICE_RECORDING_MS = 5 * 60_000;
 const MAX_VOICE_TRANSCRIPT_CHARS = 8_000;
@@ -1878,23 +1878,36 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
     if (!Array.isArray(calls) || calls.length === 0) return;
-    const validCallCount = calls.slice(0, 3).filter((rawCall) => {
+    const validCalls = calls.slice(0, 3).filter((rawCall) => {
       if (!rawCall || typeof rawCall !== "object") return false;
       const call = rawCall as { id?: unknown; name?: unknown };
       return typeof call.id === "string" && Boolean(call.id) && typeof call.name === "string" && Boolean(call.name);
-    }).length;
-    if (!validCallCount) return;
-    voiceKnowledgeToolTurnRef.current = beginOrbyVoiceToolTurn(voiceKnowledgeToolTurnRef.current);
+    }) as Array<{ id: string; name: string; args?: unknown }>;
+    if (!validCalls.length) return;
+    const currentToolTurn = voiceKnowledgeToolTurnRef.current;
+    const remainingToolCalls = Math.max(0, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN - currentToolTurn.toolCallsStarted);
+    const acceptedToolCalls = Math.min(validCalls.length, remainingToolCalls);
+    if (acceptedToolCalls > 0) {
+      voiceKnowledgeToolTurnRef.current = beginOrbyVoiceToolTurn(currentToolTurn, acceptedToolCalls);
+    }
 
     setVoiceStatus("Orby está consultando conocimiento académico…");
     const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
 
-    for (const rawCall of calls.slice(0, 3)) {
-      if (!rawCall || typeof rawCall !== "object") continue;
-      const call = rawCall as { id?: unknown; name?: unknown; args?: unknown };
-      const id = typeof call.id === "string" ? call.id : "";
-      const name = typeof call.name === "string" ? call.name : "";
-      if (!id || !name) continue;
+    for (const [callIndex, call] of validCalls.entries()) {
+      const { id, name } = call;
+      if (callIndex >= acceptedToolCalls) {
+        responses.push({
+          id,
+          name,
+          response: {
+            found: false,
+            guidance: "Ya se alcanzó el límite de consultas de conocimiento para esta pregunta. Continúa con la explicación usando la evidencia disponible; no repitas la búsqueda.",
+          },
+          scheduling: FunctionResponseScheduling.WHEN_IDLE,
+        });
+        continue;
+      }
 
       if (name !== "search_orby_learning_knowledge") {
         responses.push({ id, name, response: { error: "Herramienta no disponible." }, scheduling: FunctionResponseScheduling.WHEN_IDLE });

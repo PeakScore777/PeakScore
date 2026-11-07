@@ -3861,3 +3861,10 @@ test("las RPC antiguas de pizarra no hacen perder turnos con escenas visuales ve
   assert.match(realtimeTurnSource, /rejectedByLegacyBoardSchema/);
   assert.match(realtimeTurnSource, /boardPersisted = false/);
 });
+
+
+test("el modo por turnos explica con precisión la cuota y el proveedor de voz", () => {
+  assert.match(lessonTutorSource, /la cuota gratuita y la configuración de privacidad lo permiten/);
+  assert.doesNotMatch(lessonTutorSource, /No consume cuota Gemini/);
+  assert.doesNotMatch(lessonTutorSource, /no se activará una voz sintética facturada/);
+});

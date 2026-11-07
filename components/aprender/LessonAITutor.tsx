@@ -5193,7 +5193,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             <p className="mt-1 text-xs leading-5 text-slate-600">La voz continúa mientras se valida la primera entrada. No se espera al final de la explicación.</p>
           </section>}
           {voiceFallbackMode && <div role="status" className="mt-4 max-w-lg rounded-xl border border-orange-400/30 bg-orange-500/10 px-4 py-3 text-left text-sm leading-6 text-orange-700">
-            <strong>Modo por turnos activo.</strong> Pulsa el micrófono para hablar y vuelve a pulsarlo para detener la grabación. Orby transcribirá con Whisper y responderá con el tutor de Cloudflare. La respuesta se mostrará por escrito; no se activará una voz sintética facturada ni una voz genérica del navegador. No consume cuota Gemini.
+            <strong>Modo por turnos activo.</strong> Pulsa el micrófono para hablar y vuelve a pulsarlo para enviar la grabación. Whisper transcribe tu pregunta y Cloudflare prepara la explicación. Orby intentará leerla con Gemini TTS si la cuota gratuita y la configuración de privacidad lo permiten; si no, la respuesta quedará por escrito. No se usa una voz genérica del navegador ni se cambia automáticamente a otro proveedor.
           </div>}
           {liveTranscript && showVoiceTranscript && <div className="mt-4 max-h-28 w-full max-w-lg overflow-y-auto rounded-xl border border-current/10 bg-black/10 px-4 py-3 text-left text-sm leading-6">{liveTranscript}</div>}
           {voiceError && <p role="alert" className="mt-4 max-w-lg rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-600">{voiceError}</p>}

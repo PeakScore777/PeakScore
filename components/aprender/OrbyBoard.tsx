@@ -186,9 +186,10 @@ function Dna({ visual }: { visual: Extract<OrbyBoardVisual, { type: "dna" }> }) 
 }
 
 function Punnett({ visual }: { visual: Extract<OrbyBoardVisual, { type: "punnett" }> }) {
+  const combine = (first: string, second: string) => [first, second].sort((a, b) => a === a.toUpperCase() ? -1 : b === b.toUpperCase() ? 1 : 0).join("");
   const cells = [
-    [visual.topAlleles[0] + visual.sideAlleles[0], visual.topAlleles[1] + visual.sideAlleles[0]],
-    [visual.topAlleles[0] + visual.sideAlleles[1], visual.topAlleles[1] + visual.sideAlleles[1]],
+    [combine(visual.topAlleles[0], visual.sideAlleles[0]), combine(visual.topAlleles[1], visual.sideAlleles[0])],
+    [combine(visual.topAlleles[0], visual.sideAlleles[1]), combine(visual.topAlleles[1], visual.sideAlleles[1])],
   ];
   return (
     <div className="mx-auto grid max-w-xs grid-cols-3 gap-1 text-center text-sm">

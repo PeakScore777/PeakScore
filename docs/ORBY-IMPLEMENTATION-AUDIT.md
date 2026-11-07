@@ -100,3 +100,14 @@ Pruebas necesarias:
 - La migración de idempotencia de voz documentada previamente continúa pendiente de aplicación/verificación en la base activa; no se debe asumir que el código de persistencia ya está operativo en producción.
 - No hacer Pull todavía. Esperar CI completa y pruebas reales, y confirmar el estado de la migración antes de despliegue.
 
+
+
+## 6. Referencia obligatoria: tutor que habla y dibuja en directo
+
+- Especificación permanente: [docs/ORBY-LIVE-TUTOR-SPEC.md](ORBY-LIVE-TUTOR-SPEC.md).
+- El video compartido el 2026-11-07 define el estándar: voz y escritura/dibujo ocurren en paralelo; el esquema se construye progresivamente con trazos, etiquetas y relaciones, como un tutor que desarrolla la explicación en una pizarra.
+- Hallazgo confirmado al inspeccionar LessonAITutor.tsx y OrbyBoard.tsx: Live acepta snapshots acumulativos y los actualiza en el mensaje activo, pero el renderer actual entrega SVG estático. No se encontró un motor de trazos progresivos ni una secuencia de acciones visuales vinculada a segmentos reales de voz.
+- Esto significa que la experiencia solicitada **todavía no está completa**. No confundir “varias actualizaciones de tablero durante el audio” con “dibujar cada paso sincronizado con lo que el tutor está diciendo”.
+- Próxima prioridad técnica: diseñar acciones visuales tipadas e incrementales con id/orden/generación, acumulación y cancelación segura al interrumpir; luego enlazar acciones con eventos o segmentos de narración que el proveedor realmente exponga. No inventar timestamps si no existe alineación de voz.
+- La especificación exige accesibilidad con movimiento reducido, tablero final estático legible, consistencia académica y pruebas en Live/fallback, sin servicios ni llamadas de IA de pago.
+- No se ejecutaron pruebas de navegador ni compilación en esta revisión; estado pendiente de validación.

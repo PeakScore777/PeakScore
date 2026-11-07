@@ -3549,6 +3549,7 @@ test("el fallback de voz puede devolver la misma pizarra visual tipada que el tu
 test("La pizarra revela trazos SVG progresivamente y respeta movimiento reducido", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const sanitizer = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
   assert.match(renderer, /className="orby-board /);
   assert.match(renderer, /orby-board-stroke/);
   assert.match(renderer, /pathLength={1}/);
@@ -3786,6 +3787,8 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   assert.match(renderer, /stroke\.points\.map/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
+  assert.match(sanitizer, /MAX_BOARD_BYTES = 18_000/);
+  assert.match(sanitizer, /withinBoardBudget\(board\)/);
 });
 
 test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async () => {
@@ -3796,7 +3799,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(route, /no retrases la primera frase oral/);
   assert.match(route, /2–6 trazos nuevos por actualización/);
   assert.match(tools, /Freehand sketch strokes/);
-  assert.match(tools, /Exact lowercase type: sketch \\| diagram/);
+  assert.ok(tools.includes("Exact lowercase type: sketch | diagram"));
   assert.match(tools, /never wait for search completion before the first spoken sentence/);
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 1);
   assert.match(tools, /stable IDs for unchanged strokes/);

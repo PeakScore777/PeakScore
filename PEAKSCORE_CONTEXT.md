@@ -389,3 +389,10 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 ## 2026-11-07 — estado de preparación de pizarra
 - Durante una pregunta activa sin visual recibido, la llamada muestra una superficie provisional de pizarra; al llegar el tablero validado del mensaje activo, se sustituye por OrbyBoard. Si no se requiere visual, el estado se retira al terminar el turno.
 - No genera tablero ficticio ni llamada extra. Test estático añadido; ejecución runtime/build/browser pendiente.
+
+
+## 2026-11-07 — voz más ágil
+- El cierre automático de turno Live se ajustó de 500 a 400 ms en cliente y token efímero servidor, manteniendo configuración alineada.
+- Prompt de voz actualizado para respuestas directas, sin relleno, seguimiento contextual y explicación por pasos cuando se necesite; no revela razonamiento interno ni salta filtros.
+- 1 segundo es objetivo para primera señal útil, no garantía de respuesta completa. Medir p50/p95 y validar que 400 ms no corte frases.
+- Test estático añadido; runtime, Chrome/micrófono, TS/ESLint/build no ejecutados.

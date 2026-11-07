@@ -3676,6 +3676,9 @@ test("Gemini Live recibe instrucciones de dibujar por secciones y limita las act
   assert.match(tools, /FULL cumulative current board/);
   assert.match(tools, /spokenCue: a short exact Spanish phrase/);
   assert.match(lesson, /voicePendingBoardCuesRef\.current\.push/);
+  assert.match(lesson, /const cueAlreadySpoken = Boolean\(cue\) && normalizedExistingSpeech\.includes/);
+  assert.match(lesson, /if \(revealBoardNow\) \{\s*setMessages/);
+  assert.match(lesson, /Pizarra en cola\. Di exactamente spokenCue/);
   assert.match(lesson, /normalizedSpokenReply\.includes\(pendingCue\.cue\)/);
   assert.match(lesson, /finalPendingBoard/);
   assert.match(renderer, /key=\{`\$\{visual\.type\}:\$\{visual\.title\}:\$\{index\}`\}/);

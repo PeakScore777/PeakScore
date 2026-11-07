@@ -3867,3 +3867,23 @@ test("el modo por turnos explica con precisión la cuota y el proveedor de voz",
   assert.doesNotMatch(lessonTutorSource, /No consume cuota Gemini/);
   assert.doesNotMatch(lessonTutorSource, /no se activará una voz sintética facturada/);
 });
+
+
+test("el aula de voz usa un lienzo de clase y un respaldo visual gratuito independiente", async () => {
+  const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  const board = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  const fallback = await readFile(new URL("../app/api/orby/voice-board/route.ts", import.meta.url), "utf8");
+  assert.match(lesson, /requestOrbyVoiceBoardFallback/);
+  assert.match(lesson, /\/api\/orby\/voice-board/);
+  assert.match(lesson, /voiceBoardFallbackControllerRef\.current\?\.abort\(\)/);
+  assert.match(lesson, /voiceTeachingBoardRef\.current\) return/);
+  assert.match(lesson, /Pizarra de enseñanza/);
+  assert.match(lesson, /Clase particular en directo/);
+  assert.match(board, /Aula en directo/);
+  assert.match(board, /Pizarra activa/);
+  assert.match(fallback, /orby_take_rate_limit/);
+  assert.match(fallback, /orby_voice_board/);
+  assert.match(fallback, /generateWithCloudflareTutor/);
+  assert.match(fallback, /sanitizeOrbyBoard/);
+  assert.match(fallback, /No activará ningún servicio de pago/);
+});

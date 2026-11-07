@@ -6,7 +6,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
       {
         name: "render_orby_teaching_board",
         behavior: Behavior.NON_BLOCKING,
-        description: "Builds the current visual teaching board DURING a spoken Saber 11 lesson. Call repeatedly as the explanation progresses, not only at the end. Send a cumulative snapshot with the current blocks and up to four visual primitives. Use version 1 for text-only boards; use version 2 when visuals are included. Visuals available: diagram (nodes and directed edges), graph (explicit bounded axes and points), vectors (origin and labeled components), table (headers and rows), timeline (ordered events). Coordinates for diagrams/vectors use a 0-100 canvas; diagram nodes should be between 5 and 95. Graph values must lie within declared axis bounds. Do not invent measurements, dates, formulas, labels or experimental results. Use concise Spanish text; no HTML, SVG, Markdown, URLs or code. Keep updates synchronized with the spoken explanation. Omit the board for greetings or short replies.",
+        description: "Builds the current visual teaching board DURING a spoken Saber 11 lesson. Call repeatedly as the explanation progresses, not only at the end. Send a cumulative snapshot with the current blocks and up to four visual primitives. Use version 1 for text-only boards; use version 2 when visuals are included. Visuals available: diagram (nodes and directed edges), graph (explicit bounded axes and points), vectors (origin and labeled components), table (headers and rows), timeline (ordered events), molecule (atoms and single/double/triple covalent bonds), circuit (battery/resistor/lamp/switch components and wire connections). Coordinates for diagrams/vectors/molecules/circuits use a 0-100 canvas; diagram nodes should be between 5 and 95; molecule/circuit coordinates 8–92. Graph values must lie within declared axis bounds. Do not invent measurements, dates, formulas, labels or experimental results. Use concise Spanish text; no HTML, SVG, Markdown, URLs or code. Keep updates synchronized with the spoken explanation. Omit the board for greetings or short replies.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -55,6 +55,18 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
                   events: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: {
                     label: { type: Type.STRING }, detail: { type: Type.STRING }, position: { type: Type.NUMBER },
                   }, required: ["label", "position"] } },
+                  atoms: { type: Type.ARRAY, description: "Molecular atoms; element is a chemical symbol, coordinates 8–92.", items: { type: Type.OBJECT, properties: {
+                    id: { type: Type.STRING }, element: { type: Type.STRING }, x: { type: Type.NUMBER }, y: { type: Type.NUMBER }, charge: { type: Type.STRING },
+                  }, required: ["id", "element", "x", "y"] } },
+                  bonds: { type: Type.ARRAY, description: "Covalent bonds between declared atom IDs; order 1, 2 or 3.", items: { type: Type.OBJECT, properties: {
+                    from: { type: Type.STRING }, to: { type: Type.STRING }, order: { type: Type.NUMBER },
+                  }, required: ["from", "to", "order"] } },
+                  components: { type: Type.ARRAY, description: "Circuit components placed on the 0–100 canvas.", items: { type: Type.OBJECT, properties: {
+                    id: { type: Type.STRING }, kind: { type: Type.STRING, description: "battery, resistor, lamp or switch." }, x: { type: Type.NUMBER }, y: { type: Type.NUMBER }, label: { type: Type.STRING },
+                  }, required: ["id", "kind", "x", "y", "label"] } },
+                  connections: { type: Type.ARRAY, description: "Wire connections between component IDs.", items: { type: Type.OBJECT, properties: {
+                    from: { type: Type.STRING }, to: { type: Type.STRING },
+                  }, required: ["from", "to"] } },
                 },
                 required: ["type"],
               },

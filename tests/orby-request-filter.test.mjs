@@ -2766,7 +2766,7 @@ test("AudioWorklet conserva muestras con bloques variables y mezcla estéreo sin
 test("Orby descarta texto y audio tardíos antes del evento interrupted tras un barge-in escrito", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(source, /let discardInterruptedGenerationOutput = voiceDiscardStaleLiveOutputRef\.current\s*\|\| Boolean\(voiceBargeInPendingRef\.current && voicePendingStudentTurnRef\.current\)/);
-  const guardStart = source.indexOf("let discardInterruptedGenerationOutput = Boolean(");
+  const guardStart = source.indexOf("let discardInterruptedGenerationOutput = voiceDiscardStaleLiveOutputRef.current");
   const outputStart = source.indexOf("const outputTranscript =", guardStart);
   const audioStart = source.indexOf("const modelTurn =", outputStart);
   const completionStart = source.indexOf("if (!discardInterruptedGenerationOutput", audioStart);
@@ -2783,7 +2783,8 @@ test("una nueva actividad de micrófono elimina la burbuja parcial de la generac
   const activityEnd = lessonTutorSource.indexOf('} else if (voiceActivity?.type === "ACTIVITY_END")', activityStart);
   assert.ok(activityStart >= 0 && activityEnd > activityStart);
   const activityHandler = lessonTutorSource.slice(activityStart, activityEnd);
-  assert.match(activityHandler, /const unfinishedAssistantId = !voiceResponseDoneRef\.current[\s\S]{0,180}voiceAssistantMessageIdRef\.current/);
+  assert.match(activityHandler, /const hasUnfinishedLiveGeneration = !voiceResponseDoneRef\.current[\s\S]{0,140}voiceAssistantMessageIdRef\.current/);
+  assert.match(activityHandler, /const unfinishedAssistantId = hasUnfinishedLiveGeneration[\s\S]{0,100}voiceAssistantMessageIdRef\.current/);
   assert.match(activityHandler, /if \(unfinishedAssistantId\) \{\s*setMessages\(\(current\) => current\.filter\(\(message\) => message\.id !== unfinishedAssistantId\)\)/);
   assert.ok(activityHandler.indexOf("setMessages((current)") < activityHandler.indexOf("voiceAssistantMessageIdRef.current = null"));
   assert.match(activityHandler, /voiceDiscardStaleLiveOutputRef\.current = true/);

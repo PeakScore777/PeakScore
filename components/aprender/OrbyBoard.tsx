@@ -59,13 +59,12 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
     success: "#0f766e",
   } as const;
   return (
-    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-80 w-full overflow-visible">
+    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-[560px] w-full overflow-visible">
       {visual.strokes.map((stroke, index) => {
         const color = palette[stroke.tone];
         const delay = Math.min(index * 110, 1_650);
         const path = smoothSketchPath(stroke.points);
         const duration = Math.min(1_400, Math.max(360, stroke.points.length * 34));
-        const firstPoint = stroke.points[0];
         const lastPoint = stroke.points[stroke.points.length - 1];
         return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
           <path
@@ -79,9 +78,13 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
             strokeLinejoin="round"
             style={{ animationDelay: `${delay}ms`, animationDuration: `${duration}ms` }}
           />
-          <circle className="orby-board-pen-tip" cx={firstPoint.x} cy={firstPoint.y} r="1.15" fill={color}>
+          <g className="orby-board-pen-tip" aria-hidden="true">
+            <path d="M -3.2 -1.15 L 1.9 -1.15 L 3.4 0 L 1.9 1.15 L -3.2 1.15 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.38" strokeLinejoin="round"/>
+            <path d="M -1.7 -1.05 L -1.7 1.05 M -2.6 -1.05 L -2.6 1.05" stroke="#78350f" strokeWidth="0.22"/>
+            <path d="M 2.5 -0.62 L 3.4 0 L 2.5 0.62 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.22"/>
             <animateMotion path={path} dur={`${duration}ms`} begin={`${delay}ms`} rotate="auto" fill="freeze"/>
-          </circle>
+            <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.82;1" dur={`${duration}ms`} begin={`${delay}ms`} fill="freeze"/>
+          </g>
           {stroke.label && stroke.labelX !== undefined && stroke.labelY !== undefined
             ? <text
                 x={stroke.labelX}
@@ -404,12 +407,12 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
 
 export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   return (
-    <section aria-label={"Pizarra: " + board.title} className="orby-board mt-4 overflow-hidden rounded-xl border border-orange-200 bg-[#fffdf8] text-slate-900 shadow-sm">
+    <section aria-label={"Pizarra: " + board.title} className="orby-board mt-2 overflow-hidden rounded-xl border border-orange-200 bg-[#fffdf8] text-slate-900 shadow-[0_16px_44px_rgba(15,23,42,.12)]" style={{ backgroundImage: "radial-gradient(rgba(148,163,184,.17) .55px, transparent .55px)", backgroundSize: "16px 16px" }}>
       <header className="flex items-center gap-2 border-b border-orange-100 bg-orange-50 px-4 py-3">
         <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 text-sm font-black text-white">O</span>
         <h3 className="text-xs font-extrabold uppercase tracking-[0.12em] text-orange-950">Pizarra · {board.title}</h3>
       </header>
-      <div className="space-y-3 p-4">
+      <div className="space-y-4 p-4 sm:p-6">
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
           const revealClass = "orby-board-appear";

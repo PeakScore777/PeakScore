@@ -1,5 +1,11 @@
 # PeakScore — Changelog técnico
 
+## 2026-11-07 — continuidad del tutor de voz dentro del chat
+- La respuesta de voz activa muestra estado EN VIVO en su burbuja y el texto incremental usa aria-live polite para accesibilidad.
+- El tablero permanece debajo del mismo mensaje y conserva el id compartido con el escenario de llamada.
+- Test estático añadido; no ejecutados runtime/Chrome/micrófono/TS/ESLint/build.
+
+
 ## 2026-11-07 — especificación de voz, pizarra y subtítulos
 - Nuevo docs/ORBY-VOICE-WHITEBOARD-SPEC.md: experiencia esperada, contrato de eventos, reglas pedagógicas y checklist de aceptación.
 - Separa estado implementado/parcial/pendiente y bloquea la declaración de listo hasta QA real en Chrome/micrófono y checks técnicos.

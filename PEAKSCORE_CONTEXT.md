@@ -384,3 +384,8 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 ## 2026-11-07 — respuesta de voz visible en el chat
 - El mensaje de Orby del turno de voz activo se identifica con estado EN VIVO y anuncia sus cambios de texto mediante aria-live polite; la pizarra permanece en la misma burbuja.
 - Escenario de llamada y chat comparten el id del mismo mensaje. Prueba estática añadida; runtime/Chrome/build aún no ejecutados.
+
+
+## 2026-11-07 — estado de preparación de pizarra
+- Durante una pregunta activa sin visual recibido, la llamada muestra una superficie provisional de pizarra; al llegar el tablero validado del mensaje activo, se sustituye por OrbyBoard. Si no se requiere visual, el estado se retira al terminar el turno.
+- No genera tablero ficticio ni llamada extra. Test estático añadido; ejecución runtime/build/browser pendiente.

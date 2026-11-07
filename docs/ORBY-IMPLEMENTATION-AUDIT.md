@@ -138,3 +138,13 @@ Pruebas necesarias:
 - La prueba estática nueva comprueba claves, clases de revelación y retrasos.
 - Esto es una aparición progresiva de bloques completos, no un efecto de escritura carácter por carácter. Tampoco establece sincronía temporal exacta con audio; esa capa requiere eventos incrementales y alineación real del proveedor.
 - Validación actual: archivos releídos en GitHub; no hay workflow asociado al commit de test. Node tests, TypeScript, ESLint, build y pruebas de navegador siguen sin ejecutarse.
+
+
+## 11. Voz en escenario con tablero y subtítulos — 2026-11-07
+
+- En el modo de llamada del workspace se muestra ahora el tablero del mensaje de voz activo debajo del escenario de voz, usando el mismo componente `OrbyBoard` y el mismo objeto que se guarda en el mensaje de conversación.
+- Se añadió una zona de subtítulos en vivo que lee el texto incremental de `outputTranscription` ya validado por los filtros existentes. El control de subtítulos permite ocultar/mostrar esta zona.
+- El tablero se actualiza cuando la herramienta Live `render_orby_teaching_board` actualiza el mensaje activo; no se añadió una segunda llamada de IA ni un proveedor adicional.
+- Importante: el subtítulo representa la transcripción textual que el proveedor entrega, no una alineación palabra-a-palabra con el audio. El tablero aparece cuando llega la herramienta; no se puede garantizar todavía que cada trazo coincida temporalmente con una palabra pronunciada.
+- El modo fallback por turnos sigue siendo degradado: transcribe la pregunta y responde en texto según el aviso existente; esta mejora no inventa voz ni consume un proveedor de voz adicional.
+- Validación: archivos releídos en GitHub y prueba estática añadida; no se ejecutaron navegador, micrófono, TypeScript, ESLint ni build. CI no reportó workflow para el commit consultado.

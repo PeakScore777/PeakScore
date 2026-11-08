@@ -612,3 +612,8 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 
 - **Extensión del 2026-11-08:** los retos de speaking y frases modelo de repetición ahora tienen bancos propios por nivel A1–C2. El prompt cambia con el selector; el audio modelo pronuncia la frase dinámica del nivel y cambiar de nivel queda bloqueado mientras exista grabación/transcripción pendiente. No es certificación.
 - Inventario estático actualizado tras esta regresión: **253 pruebas nombradas, 0 duplicados**; no ejecutadas.
+
+
+- **Refactor de consistencia 2026-11-08:** el tutor de respaldo importa y reutiliza `buildIcfesPedagogyInstruction(normalizeIcfesSubject(...))` desde `lib/ai/orby-scope.ts`, de modo que Live y fallback comparten los perfiles curriculares en lugar de mantener una segunda lista paralela.
+- Última regresión añadida: `Live y fallback enseñan inglés CEFR en pizarra y diferencian las cinco áreas ICFES`; inventario estático permanece en 253 tests nombrados, sin duplicados.
+- Último commit de código/prueba consultado: `9c09a7e`. Status de Vercel: `build-rate-limit`; consulta de workflow runs no devolvió ejecuciones asociadas. Suite, TypeScript, ESLint, build y QA manual siguen pendientes.

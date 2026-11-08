@@ -5577,7 +5577,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   ].join("\\n");
                   requestWorkspaceStudyPrompt(prompt);
                 }}
-                onSaveTranscript={(title, content) => saveLearningItem("recording", title, content)}
+                onSaveTranscript={(title, content) => saveLearningItem(
+                  /English Studio · (?:Comprensión auditiva|Comprensión lectora|Producción escrita)/.test(title) ? "note" : "recording",
+                  title,
+                  content,
+                )}
               />
             ) : learningView === "flashcards" ? (
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,.8fr)]">

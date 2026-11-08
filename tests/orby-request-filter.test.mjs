@@ -4094,3 +4094,13 @@ test("el lápiz y la tinta comparten temporización lineal para permanecer sincr
   assert.match(boardComponentSource, /pathLength="1"/);
   assert.match(boardComponentSource, /animationDelay: `\$\{delay\}ms`/);
 });
+
+
+test("la temporización de escritura es determinista, acotada y crece por orden", () => {
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(0, 2), { delay: 0, duration: 760 });
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(1, 10), { delay: 260, duration: 760 });
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(5, 40), { delay: 1300, duration: 1360 });
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(99, 40), { delay: 1300, duration: 1360 });
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(-4, 1), { delay: 0, duration: 760 });
+  assert.deepEqual(boardModule.getOrbySketchStrokeTiming(Number.NaN, Number.NaN), { delay: 0, duration: 760 });
+});

@@ -207,6 +207,15 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
   return null;
 }
 
+function rectanglesOverlap(
+  first: { x: number; y: number; width: number; height: number },
+  second: { x: number; y: number; width: number; height: number },
+): boolean {
+  return first.x < second.x + second.width
+    && first.x + first.width > second.x
+    && first.y < second.y + second.height
+    && first.y + first.height > second.y;
+}
 function validateUpdatedBoard(candidate: OrbyBoard): OrbyBoard | null {
   const validated = sanitizeOrbyBoard(candidate);
   if (!validated) return null;
@@ -217,7 +226,8 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
   if (action.operation === "append-block") {
     if (board.version !== 2 || !board.layout || board.blocks.length >= 8
       || board.layout.elements.length >= 12
-      || board.layout.elements.some((element) => element.id === action.elementId)) return null;
+      || board.layout.elements.some((element) => element.id === action.elementId)
+      || board.layout.elements.some((element) => rectanglesOverlap(action.position, element))) return null;
     const nextLayoutSequence = Math.max(
       action.sequence,
       ...board.layout.elements.map((element) => element.sequence + 1),

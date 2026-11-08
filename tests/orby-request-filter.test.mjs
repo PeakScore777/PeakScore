@@ -5057,3 +5057,11 @@ test("live subtitle words keep readable contrast on the light teaching stage", a
   assert.match(tutorComponent, /: "font-medium text-slate-800"/);
   assert.doesNotMatch(tutorComponent, /: "text-slate-100"/);
 });
+
+test("OmegaX workspace copy and Live resumption timeout use the selected assistant identity", async () => {
+  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutorComponent, /\$\{assistantLabel\} tardó demasiado en restaurar el contexto de voz/);
+  assert.match(tutorComponent, /\{assistantLabel\} los mantendrá organizados en tu cuenta/);
+  assert.doesNotMatch(tutorComponent, /Orby los mantendrá organizados en tu cuenta/);
+  assert.doesNotMatch(tutorComponent, /new Error\("Orby tardó demasiado en restaurar el contexto de voz/);
+});

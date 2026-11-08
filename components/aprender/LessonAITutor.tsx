@@ -5758,6 +5758,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   </div>
                   {learningSignals.length > 0 ? <div className="mt-5 space-y-2.5">
                     {learningSignals.slice(0, 8).map((signal) => {
+                      const skillKey = getEnglishStudioSkillForSignal(signal.topic);
+                      const skillLabel = ENGLISH_STUDIO_SKILLS.find((item) => item.key === skillKey)?.label;
+                      const displayTopic = skillKey
+                        ? signal.topic.replace(/^English Studio · (?:Speaking|Pronunciation|Listening|Reading|Writing) · /i, "")
+                        : signal.topic;
                       const stateLabel = signal.learning_state === "understands" ? "En comprensión"
                         : signal.learning_state === "needs_review" ? "Conviene repasar"
                         : signal.learning_state === "misconception" ? "Revisar una confusión"
@@ -5765,7 +5770,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                       const stateClass = signal.learning_state === "understands" ? "border-emerald-500/20 bg-emerald-50 text-emerald-700"
                         : "border-orange-200 bg-orange-50 text-orange-800";
                       return <article key={signal.id} className="rounded-lg border border-[#eee6dc] bg-[#fffdfa] p-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-semibold text-slate-900">{signal.subject} <span className="font-normal text-slate-500">· {signal.topic}</span></p><span className={"rounded-full border px-2.5 py-1 text-[9px] font-semibold " + stateClass}>{stateLabel}</span></div>
+                        <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-semibold text-slate-900">{signal.subject} {skillLabel && <span className="ml-1 rounded bg-orange-50 px-1.5 py-0.5 text-[9px] font-semibold text-orange-800">{skillLabel}</span>} <span className="font-normal text-slate-500">· {displayTopic}</span></p><span className={"rounded-full border px-2.5 py-1 text-[9px] font-semibold " + stateClass}>{stateLabel}</span></div>
                         <p className="mt-3 text-sm text-slate-700">{signal.concept}</p>
                         {signal.misconception && <p className="mt-2 text-xs leading-5 text-slate-600">Confusión observada: {signal.misconception}</p>}
                         {signal.teaching_hint && <p className="mt-1 text-xs leading-5 text-slate-600">Próxima estrategia: {signal.teaching_hint}</p>}

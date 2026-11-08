@@ -4429,7 +4429,7 @@ test("append-block y append-strokes modifican una sola pizarra espacial sin perd
     turnGeneration: 7,
     elementId: "adjacent-note",
     block: { type: "text", text: "Este bloque toca el borde sin superponerse." },
-    position: { x: 34, y: 18, width: 20, height: 10 },
+    position: { x: 34, y: 3, width: 20, height: 10 },
   });
   assert.ok(touchingBlock);
   assert.ok(boardActions.applyOrbyBoardAction(board, touchingBlock));

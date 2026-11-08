@@ -293,7 +293,8 @@ La base de datos y las funciones de búsqueda usan `extensions.vector(768)`; no 
 
 - Run [42536897095](https://github.com/PeakScore777/PeakScore/actions/runs/42536897095), SHA `c31e7c11c5766ab4120fab400ae081a47141f5ce`: **éxito completo** de npm ci, auditoría de dependencias, 260/260 tests, TypeScript, ESLint y `next build`.
 - Run [42537054107](https://github.com/PeakScore777/PeakScore/actions/runs/42537054107), SHA `4a7e21230deb385b94860848cf6bc4d71e7712b9`: **éxito completo** de npm ci, auditoría de dependencias, tests, TypeScript, ESLint y `next build). Este SHA incluye la puerta de uso gratuito/datos en la importación de PDFs y la prueba correspondiente.
-- Después de ese build verde se ajustó el endpoint PDF para autenticar/verificar rol admin antes de devolver el estado de proveedor. El SHA posterior es `a0c859d8d88cf749a55f86bfab30e8697dc351f2`; su pipeline está registrado como run [42537169406](https://github.com/PeakScore777/PeakScore/actions/runs/42537169406). **No se declara verde hasta que esa ejecución termine.**
+- Después de ese build verde se ajustó el endpoint PDF para autenticar/verificar rol admin antes de devolver el estado del proveedor. El SHA `a0c859d8d88cf749a55f86bfab30e8697dc351f2` quedó validado por run [42537169406](https://github.com/PeakScore777/PeakScore/actions/runs/42537169406), con tests, TypeScript, ESLint y `next build` aprobados.
+- El commit documental `5fa9fc8df55aac393c3d2ae244fc49b1eb80ee20` (este informe, la bitácora Live y el changelog) también pasó el pipeline completo: run [42537279655](https://github.com/PeakScore777/PeakScore/actions/runs/42537279655).
 - El pipeline pasó por fallos reales de TS y ESLint durante la iteración; ambos se corrigieron y la ejecución `c31e7c11` verificó tests/TS/ESLint/build íntegros.
 
 ### Riesgos abiertos que no se deben ocultar
@@ -305,4 +306,4 @@ La base de datos y las funciones de búsqueda usan `extensions.vector(768)`; no 
 5. **Cobertura académica:** 260 tests dan regresiones técnicas, no certifican exactitud pedagógica, completitud curricular ni desempeño con estudiantes. No se han hecho pruebas con estudiantes.
 6. **Supabase:** no se aplicaron migraciones ni se modificaron RLS. La auditoría de memoria sigue dependiendo de probar persistencia con usuarios reales/aislados en un entorno de prueba.
 
-**Estado de esta fase:** rutas principales de inferencia localizadas y protegidas con puertas de coste/privacidad; 260 tests y build completos verdes en SHA `4a7e212`; último ajuste de orden de autenticación en importación PDF pendiente de su CI del SHA `a0c859d`. Sin cambios a `main`, sin despliegues y sin migraciones remotas.
+**Estado de esta fase:** rutas principales de inferencia localizadas y protegidas con puertas de coste/privacidad; el SHA `a0c859d` y el commit documental `5fa9fc8` pasaron 260 tests, TypeScript, ESLint, auditoría de dependencias y build. Siguen pendientes las verificaciones operacionales y el QA manual descritos arriba. Sin cambios a `main`, sin despliegues y sin migraciones remotas.

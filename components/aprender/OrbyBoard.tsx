@@ -60,9 +60,11 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
     else svg.pauseAnimations();
   }, [drawingActive]);
   const palette = {
-    ink: "#334155",
-    accent: colors.orange,
-    muted: "#94a3b8",
+    ink: "#252525",
+    blue: "#2563eb",
+    red: "#dc2626",
+    accent: "#2563eb",
+    muted: "#64748b",
     success: "#0f766e",
   } as const;
   return (
@@ -70,9 +72,9 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
       {visual.strokes.map((stroke, index) => {
         const color = palette[stroke.tone];
         const path = smoothSketchPath(stroke.points);
-        // Draw strokes one after another, like a teacher writing on a tablet.
-        // A short pause between pen lifts keeps words and diagram parts legible.
-        const { duration, delay } = getOrbySketchStrokeTiming(index, stroke.points.length);
+        // Duration follows the real path length. A short, capped stagger
+        // separates pen lifts without making late cumulative strokes wait seconds.
+        const { duration, delay } = getOrbySketchStrokeTiming(index, stroke.points);
         const lastPoint = stroke.points[stroke.points.length - 1];
         return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
           <path
@@ -383,7 +385,10 @@ function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type
 
 function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean }) {
   if (visual.type === "annotation") {
-    const palette = visual.tone === "success" ? "#0f766e" : visual.tone === "muted" ? "#64748b" : "#ea580c";
+    const palette = visual.tone === "red" ? "#dc2626"
+      : visual.tone === "blue" ? "#2563eb"
+        : visual.tone === "success" ? "#0f766e"
+          : visual.tone === "muted" ? "#64748b" : "#2563eb";
     const first = visual.points[0], last = visual.points[visual.points.length - 1];
     const path = visual.points.map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`).join(" ");
     const minX = Math.min(...visual.points.map((point) => point.x));
@@ -442,24 +447,24 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
   return (
     <>
       <style>{`@media print {@page { size: A4; margin: 12mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board > div { position: static !important; max-width: none !important; padding: 8mm 0 !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip, .orby-board [data-orby-teacher-focus] { display: none !important; }} .orby-board svg[data-orby-drawing-active="false"] .orby-board-appear, .orby-board svg[data-orby-drawing-active="false"] .orby-board-sketch-stroke { animation-play-state: paused !important; } .orby-board svg[data-orby-drawing-active="false"] .orby-board-pen-tip { visibility: hidden !important; } @media (prefers-reduced-motion: reduce) { .orby-board [data-orby-teacher-focus] animate { display: none; } }`} </style>
-    <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white text-slate-900 shadow-none sm:rounded-2xl">
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-4 py-3 backdrop-blur-sm sm:px-8">
-        <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Clase en vivo</h3></div><button type="button" data-orby-no-print onClick={() => window.print()} className="rounded-lg border border-slate-200 px-3 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-50">Exportar PDF</button>
-        <span className="truncate text-right text-xs font-semibold text-slate-700 sm:text-sm">{board.title}</span>
+    <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden bg-white text-slate-900">
+      <header className="flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 py-2 sm:px-8">
+        <h3 className="orby-board-handwriting min-w-0 truncate text-base font-medium text-slate-700 sm:text-lg">{board.title}</h3>
+        <button type="button" data-orby-no-print onClick={() => window.print()} className="shrink-0 rounded-md px-2 py-1 text-[10px] font-semibold text-slate-500 hover:bg-slate-50">Exportar PDF</button>
       </header>
-      <div className="mx-auto min-h-[60vh] w-full space-y-8 px-5 py-8 sm:space-y-10 sm:px-10 sm:py-12">
+      <div className="mx-auto min-h-[60vh] w-full max-w-[1200px] space-y-5 px-4 py-5 sm:space-y-7 sm:px-10 sm:py-8">
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
           const revealClass = "orby-board-appear";
-          const stageStyle = { animationDelay: `${Math.min(index * 110, 770)}ms` };
-          if (block.type === "heading") return <h4 key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-2xl font-medium leading-tight tracking-tight text-slate-900 sm:text-4xl ${revealClass}`}>{block.text}</h4>;
-          if (block.type === "formula") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono text-sm font-semibold text-slate-900 ${revealClass}`}>{block.text}</div>;
-          if (block.type === "step") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`flex gap-3 rounded-lg bg-white p-3 ${revealClass}`}><span className="shrink-0 rounded-md bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-900">{block.label}</span><p className="text-sm leading-6 text-slate-700">{block.text}</p></div>;
-          if (block.type === "callout") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
-          return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-base leading-7 text-slate-800 sm:text-lg ${revealClass}`}>{block.text}</p>;
+          const stageStyle = { animationDelay: `${Math.min(index * 65, 260)}ms` };
+          if (block.type === "heading") return <h4 key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-2xl font-medium leading-tight tracking-tight text-slate-900 decoration-red-400 decoration-2 underline underline-offset-4 sm:text-4xl ${revealClass}`}>{block.text}</h4>;
+          if (block.type === "formula") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting overflow-x-auto text-lg font-medium leading-8 text-blue-700 sm:text-2xl ${revealClass}`}>{block.text}</p>;
+          if (block.type === "step") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-base leading-7 text-slate-800 sm:text-xl ${revealClass}`}><span className="font-semibold text-blue-700">{block.label}: </span>{block.text}</p>;
+          if (block.type === "callout") return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting border-l-2 border-red-400 pl-3 text-base leading-7 text-red-700 sm:text-xl ${revealClass}`}>{block.text}</p>;
+          return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-base leading-7 text-slate-800 sm:text-xl ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 110, 1_100)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-none border-0 bg-transparent p-0 shadow-none sm:p-0">
-          {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 65, 325)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-2 border-0 bg-transparent p-0">
+          {visual.title && visual.type !== "sketch" ? <h4 className="orby-board-handwriting text-base font-medium text-slate-700">{visual.title}</h4> : null}
           <Visual visual={visual} board={board} drawingActive={drawingActive}/>
         </section>)}
       </div>

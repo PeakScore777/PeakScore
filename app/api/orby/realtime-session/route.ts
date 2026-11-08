@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     // must never activate Gemini on an account that could bill over free quotas.
     if (!isGeminiFreeTierConfigured()) {
       return NextResponse.json({
-        error: "La voz está desactivada: el servidor no ha confirmado el plan gratuito de Gemini. No se ha enviado ninguna solicitud al proveedor.",
+        error: "La voz está desactivada: el servidor no ha confirmado el plan gratuito ni la autorización de uso de datos de Gemini. No se ha enviado ninguna solicitud al proveedor.",
         code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
       }, { status: 503 });
     }

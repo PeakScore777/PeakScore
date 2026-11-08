@@ -3961,3 +3961,12 @@ test("la hoja de clase ofrece exportacion mediante impresion del navegador", () 
   assert.match(boardComponentSource, /window\.print\(\)/);
   assert.match(boardComponentSource, /print:hidden/);
 });
+
+test("la exportacion de la clase a PDF aísla la hoja y desactiva animaciones", () => {
+  assert.match(boardComponentSource, /@media print/);
+  assert.match(boardComponentSource, /body \* \{ visibility: hidden/);
+  assert.match(boardComponentSource, /\.orby-board, \.orby-board \* \{ visibility: visible/);
+  assert.match(boardComponentSource, /orby-board-toolbar/);
+  assert.match(boardComponentSource, /animation: none !important/);
+  assert.match(boardComponentSource, /orby-board-pen-tip/);
+});

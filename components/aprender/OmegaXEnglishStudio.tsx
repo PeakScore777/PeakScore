@@ -307,7 +307,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <select value={roleplayIndex} onChange={(event) => setRoleplayIndex(Number(event.target.value))} className="mt-4 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">{ROLEPLAYS.map((item, index) => <option key={item[0]} value={index}>{item[0]}</option>)}</select>
             <p className="mt-3 rounded-xl bg-[#fffaf4] p-3 text-xs leading-5 text-slate-700">{roleplay[1]}</p>
             <button type="button" onClick={() => onStartRoleplay("Actúa como mi compañero de práctica de inglés. Nivel " + level + ". " + roleplay[1] + " Mantén la conversación en inglés, una pregunta a la vez. Corrige como máximo dos errores importantes después de cada respuesta con una explicación breve en español colombiano. Empieza ahora y adapta el nivel.")} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-semibold text-orange-900"><Play className="h-4 w-4" /> Comenzar roleplay en el chat</button>
-            <p className="mt-2 text-[10px] leading-5 text-slate-500">Al abrir el chat, activa la llamada de voz para conversar hablando en inglés.</p>
+            <p className="mt-2 text-[10px] leading-5 text-slate-500">OmegaX inicia la llamada de voz al comenzar; si Live no está disponible, continúa con el modo gratuito por turnos.</p>
           </section>
           <section className="rounded-2xl border border-[#eee6dc] bg-white p-5">
             <p className="text-xs font-semibold text-slate-900">Cómo te ayuda OmegaX</p>

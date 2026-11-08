@@ -471,7 +471,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes('/api/orby/voice-speech'));
   assert.ok(lessonTutorSource.includes("new Audio(audioObjectUrl)"));
   assert.ok(lessonTutorSource.includes("finishWithoutGenericVoice"));
-  assert.ok(voiceSpeechRouteSource.includes("gemini-3.8-flash-tts"));
+  assert.ok(voiceSpeechRouteSource.includes("gemini-3.8-flash-lite-tts"));
   assert.doesNotMatch(voiceSpeechRouteSource, /ORBY_GEMINI_TTS_FREE_VERIFIED|FREE_TIER_TTS_NOT_AVAILABLE/);
   assert.match(voiceSpeechRouteSource, /NODE_ENV === "production" && process\.env\.ORBY_GEMINI_LIVE_ENABLED !== "true"/);
   assert.ok(voiceSpeechRouteSource.includes("GEMINI_API_KEY"));
@@ -493,8 +493,8 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));
   assert.ok(lessonTutorSource.includes("voiceResponseSlowNoticeRef"));
   assert.ok(lessonTutorSource.includes("Orby está tardando más de lo normal. Sigo esperando tu respuesta…"));
-  assert.ok(lessonTutorSource.includes("}, 12_000);"));
-  assert.ok(lessonTutorSource.includes("}, 32_000);"));
+  assert.ok(lessonTutorSource.includes("}, 5_000);"));
+  assert.ok(lessonTutorSource.includes("}, 15_000);"));
   assert.ok(lessonTutorSource.includes('if (voicePlaybackOwnerRef.current === "tts") return;'));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "live"'));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef.current = "tts"'));
@@ -659,7 +659,7 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(!cloudflareImageRouteSource.includes("GEMINI_API_KEY"));
   assert.ok(!cloudflareImageRouteSource.includes("gemini-nano-banana"));
   assert.ok(cloudflareImageRouteSource.includes("FREE_QUOTA_EXCEEDED"));
-  assert.ok(voiceSpeechRouteSource.includes("gemini-3.8-flash-tts"));
+  assert.ok(voiceSpeechRouteSource.includes("gemini-3.8-flash-lite-tts"));
   assert.ok(voiceSpeechRouteSource.includes("FREE_TIER_TTS_QUOTA_EXCEEDED"));
   assert.ok(voiceSpeechRouteSource.includes("ORBY_GEMINI_LIVE_ENABLED"));
   assert.doesNotMatch(voiceSpeechRouteSource, /CLOUDFLARE_API_TOKEN|GROQ_API_KEY|synthesizeWithCloudflareSpeech/);

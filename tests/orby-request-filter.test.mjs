@@ -262,7 +262,7 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
   assert.match(lessonTutorSource, /\$\{assistantLabel\} está completando la explicación con el material del Lab/);
   assert.match(realtimeSessionSource, /SEGUIMIENTO DEL LAB ASÍNCRONO/);
   assert.match(realtimeSessionSource, /no repitas toda la respuesta/);
-  assert.match(lessonTutorSource, /reconnectLiveSession = async \(\) => \{[\s\S]{0,650}voiceKnowledgeToolTurnRef\.current\.pending[\s\S]{0,500}fallbackVoiceTurnToText\("La conexión se renovó mientras Orby consultaba el Lab/);
+  assert.match(lessonTutorSource, /reconnectLiveSession = async \(\) => \{[\s\S]{0,650}voiceKnowledgeToolTurnRef\.current\.pending[\s\S]{0,500}La conexión se renovó mientras \$\{assistantLabel\} consultaba el material de estudio/);
   assert.match(lessonTutorSource, /toolCallCancellation[\s\S]{0,1100}fallbackVoiceTurnToText\("La consulta del Lab se canceló/);
 });
 
@@ -525,7 +525,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(!lessonTutorSource.includes("waitForSpanishBrowserVoice"));
   assert.ok(lessonTutorSource.includes('voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none")'));
   assert.ok(lessonTutorSource.includes("voiceResponseSlowNoticeRef"));
-  assert.ok(lessonTutorSource.includes("Orby está tardando más de lo normal. Sigo esperando tu respuesta…"));
+  assert.match(lessonTutorSource, /\$\{assistantLabel\} está tardando más de lo normal\. Sigo esperando tu respuesta…/);
   assert.ok(lessonTutorSource.includes("}, 5_000);"));
   assert.ok(lessonTutorSource.includes("}, 15_000);"));
   assert.ok(lessonTutorSource.includes('if (voicePlaybackOwnerRef.current === "tts") return;'));
@@ -1120,7 +1120,7 @@ test("la voz comparte alcance ICFES y resuelve negativas sin esperar otra genera
   assert.ok(lessonTutorSource.includes('const configuredVoiceName = typeof tokenPayload.voiceName === "string"'));
   assert.ok(lessonTutorSource.includes("prebuiltVoiceConfig: { voiceName: configuredVoiceName }"));
   assert.match(realtimeSessionSource, /speechConfig:\s*\{\s*voiceConfig:\s*\{\s*prebuiltVoiceConfig:\s*\{ voiceName: ORBY_LIVE_VOICE_NAME/);
-  assert.match(realtimeSessionSource, /"VOZ DE ORBY: " \+ ORBY_VOICE_STYLE/);
+  assert.match(realtimeSessionSource, /assistantName === "OmegaX" \\? "VOZ DE OMEGAX: " : "VOZ DE ORBY: " \\) \\+ ORBY_VOICE_STYLE/);
   assert.match(orbyVoiceConfigSource, /voz femenina suave, natural y clara/);
   assert.match(realtimeSessionSource, /CONVERSACIÓN ORAL NATURAL Y DIDÁCTICA/);
   assert.match(realtimeSessionSource, /no aceleres al final/);

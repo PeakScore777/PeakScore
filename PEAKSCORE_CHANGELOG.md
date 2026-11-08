@@ -470,3 +470,8 @@
 - Students may send the transcript to the existing OmegaX chat for grammar/vocabulary/clarity feedback or save only the transcript to their learning library.
 - Pronunciation comparison is explicitly approximate ASR word matching, not phoneme/accent/intonation scoring.
 - Added static regression coverage and updated continuity docs. Tests, TypeScript, ESLint, production build and real microphone QA are not certified; Vercel reports build-rate-limit.
+
+## 2026-11-08 — live captions contrast
+- Fixed the live karaoke subtitle palette for the light teaching stage: regular words now use slate-800; the active word uses orange-950 on orange-100 with orange underline.
+- Added a static regression to prevent low-contrast slate-100 subtitle spans from returning.
+- Browser visual verification and test execution remain pending.

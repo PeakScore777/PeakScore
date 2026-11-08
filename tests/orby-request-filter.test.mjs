@@ -4249,6 +4249,134 @@ test("las acciones de pizarra aceptan optionals undefined y rechazan labels mal 
   }), null);
 });
 
+test("las acciones incrementales de pizarra validan ID, secuencia y dependencias por generación", () => {
+  const first = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block",
+    actionId: "write-1",
+    sequence: 1,
+    elementId: "nucleus-note",
+    block: { type: "text", text: "El núcleo contiene el ADN." },
+    position: { x: 6, y: 18, width: 24, height: 14 },
+  });
+  assert.ok(first);
+  const initial = boardActions.createOrbyBoardActionSequenceState(7);
+  const accepted = boardActions.evaluateOrbyBoardActionSequence(initial, first, 7);
+  assert.equal(accepted.accepted, true);
+  assert.equal(accepted.nextState.lastSequence, 1);
+
+  const duplicate = boardActions.evaluateOrbyBoardActionSequence(accepted.nextState, first, 7);
+  assert.equal(duplicate.accepted, false);
+  assert.equal(duplicate.reason, "duplicate");
+
+  const outOfOrderAction = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block",
+    actionId: "write-old",
+    sequence: 1,
+    elementId: "old-note",
+    block: { type: "text", text: "Texto antiguo." },
+    position: { x: 6, y: 18, width: 24, height: 14 },
+  });
+  const outOfOrder = boardActions.evaluateOrbyBoardActionSequence(accepted.nextState, outOfOrderAction, 7);
+  assert.equal(outOfOrder.accepted, false);
+  assert.equal(outOfOrder.reason, "out_of_order");
+
+  const missingDependencyAction = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-strokes",
+    actionId: "draw-2",
+    sequence: 2,
+    dependsOn: ["missing-action"],
+    elementId: "sketch-stage",
+    strokes: [{ id: "nucleus-outline", points: [{ x: 20, y: 20 }, { x: 40, y: 20 }], tone: "ink", width: 1.2 }],
+  });
+  const missingDependency = boardActions.evaluateOrbyBoardActionSequence(accepted.nextState, missingDependencyAction, 7);
+  assert.equal(missingDependency.accepted, false);
+  assert.equal(missingDependency.reason, "dependency_not_applied");
+
+  const nextGeneration = boardActions.evaluateOrbyBoardActionSequence(accepted.nextState, first, 8);
+  assert.equal(nextGeneration.accepted, true);
+  assert.deepEqual(nextGeneration.nextState.actionIds, ["write-1"]);
+});
+
+test("append-block y append-strokes modifican una sola pizarra espacial sin perder tinta previa", () => {
+  const board = boardModule.sanitizeOrbyBoard({
+    version: 2,
+    title: "Célula",
+    blocks: [{ type: "heading", text: "Célula animal" }],
+    visuals: [{
+      type: "sketch",
+      title: "Esquema celular",
+      strokes: [{ id: "cell-outline", points: [{ x: 10, y: 10 }, { x: 90, y: 10 }, { x: 90, y: 90 }], tone: "ink", width: 1.3 }],
+    }],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [
+        { id: "class-title", sequence: 1, kind: "block", index: 0, x: 4, y: 3, width: 30, height: 12 },
+        { id: "sketch-stage", sequence: 2, kind: "visual", index: 0, x: 30, y: 18, width: 50, height: 70 },
+      ],
+    },
+  });
+  assert.ok(board);
+
+  const addText = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block",
+    actionId: "write-1",
+    sequence: 1,
+    elementId: "nucleus-note",
+    block: { type: "text", text: "El núcleo contiene el ADN." },
+    position: { x: 5, y: 20, width: 24, height: 12 },
+  });
+  assert.ok(addText);
+  const withText = boardActions.applyOrbyBoardAction(board, addText);
+  assert.ok(withText);
+  assert.equal(withText.blocks.length, 2);
+  assert.equal(withText.layout.elements.at(-1).sequence, 3);
+  assert.equal(withText.layout.elements.at(-1).id, "nucleus-note");
+  assert.ok(boardModule.sanitizeOrbyBoard(withText));
+
+  const addInk = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-strokes",
+    actionId: "draw-2",
+    sequence: 2,
+    dependsOn: ["write-1"],
+    elementId: "sketch-stage",
+    strokes: [{ id: "nucleus-outline", points: [{ x: 35, y: 30 }, { x: 50, y: 30 }, { x: 50, y: 45 }], tone: "blue", width: 1.2 }],
+  });
+  assert.ok(addInk);
+  const withInk = boardActions.applyOrbyBoardAction(withText, addInk);
+  assert.ok(withInk);
+  const sketch = withInk.visuals.find((visual) => visual.type === "sketch");
+  assert.equal(sketch.strokes.length, 2);
+  assert.equal(sketch.strokes[0].id, "cell-outline");
+  assert.equal(sketch.strokes[1].id, "nucleus-outline");
+  assert.ok(boardModule.sanitizeOrbyBoard(withInk));
+});
+
+test("las acciones incrementales rechazan payloads fuera de límites y esquemas inseguros", () => {
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block", actionId: "write-1", sequence: 1, elementId: "note",
+    block: { type: "text", text: "<script>alert(1)</script>" },
+    position: { x: 95, y: 90, width: 20, height: 20 },
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "append-strokes", actionId: "draw-1", sequence: 1, elementId: "sketch",
+    strokes: Array.from({ length: 6 }, (_, index) => ({
+      id: "stroke-" + index,
+      points: [{ x: 10, y: 10 }, { x: 20, y: 20 }],
+    })),
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block", actionId: "write-1", sequence: 1, elementId: "note",
+    block: { type: "step", text: "Una etapa" },
+    position: { x: 5, y: 5, width: 30, height: 20 },
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block", actionId: "write-1", sequence: 1, elementId: "note",
+    block: { type: "text", text: "Texto" },
+    position: { x: 5, y: 5, width: 30, height: 20 },
+    dependsOn: ["write-1"],
+  }), null);
+});
+
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
   assert.match(liveToolsSource, /Exact operation: focus, erase or replace/);

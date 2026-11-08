@@ -4931,6 +4931,28 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
 
 
 
+test("las etapas SVG inician sus trazos cuando llega su etapa espacial, no antes", () => {
+  assert.equal(boardModule.getOrbyBoardProgressiveDelay(-2), 0);
+  assert.equal(boardModule.getOrbyBoardProgressiveDelay(Number.NaN), 0);
+  assert.equal(boardModule.getOrbyBoardProgressiveDelay(0), 0);
+  assert.equal(boardModule.getOrbyBoardProgressiveDelay(2), 180);
+  assert.equal(boardModule.getOrbyBoardProgressiveDelay(7), 630);
+
+  assert.match(boardComponentSource, /function Visual\([\s\S]*?startDelayMs = 0/);
+  assert.match(boardComponentSource, /<Diagram visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<Graph visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<Vectors visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<Molecule visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<Circuit visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<Cell visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<Dna visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<PhysiologyProcess visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+
+  assert.match(boardComponentSource, /style=\{\{ animationDelay: `\$\{startDelayMs \+ getOrbyBoardProgressiveDelay\(index\)\}ms` \}\} pathLength=\{1\}/);
+  assert.match(boardComponentSource, /style=\{\{ animationDelay: `\$\{startDelayMs\}ms` \}\} pathLength=\{1\}/);
+  assert.match(boardComponentSource, /style=\{\{ animationDelay: `\$\{startDelayMs \+ 120\}ms` \}\} pathLength=\{1\}/);
+});
+
 test("cada prueba Saber 11 recibe una rutina pedagógica y de tablero propia", () => {
   const subjects = [
     "Matemáticas", "Lectura Crítica", "Sociales y Ciudadanas", "Ciencias Naturales", "Inglés",

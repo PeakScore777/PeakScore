@@ -618,3 +618,12 @@
 - Inventario estático: 255 tests nombrados y sin duplicados; no ejecutados. Validación completa pendiente.
 
 - Robustez adicional: se evita perder respuestas de texto sin guardar al cambiar nivel y se impide que la tarjeta activa reinicie accidentalmente la actividad. El TTS se detiene al cambiar de nivel.
+## 2026-11-08 — memoria de aprendizaje segmentada por destreza
+- English Studio propaga el modo de práctica al tutor y conserva ese metadato aunque el mensaje pase por la cola de envío.
+- Las señales se etiquetan como `English Studio · Speaking/Pronunciation/Listening/Reading/Writing · ...` dentro de la tabla ya existente de señales; `subject` es Inglés.
+- El tutor recupera observaciones solo de la destreza actual y del usuario autenticado, para que el siguiente feedback pueda adaptar la práctica sin mezclar habilidades.
+- El límite de mensaje se amplía a 7.000 caracteres solo en feedback con una skill válida, evitando truncar lectura/escritura; el límite normal no cambia.
+- El panel Progreso ahora separa las cinco destrezas, con recuentos y señales observadas; no representa certificación ni porcentaje de dominio.
+- Umbral conservado: no persistir señales sin concepto, estado permitido y confianza >= 0.8.
+- Supabase verificado: tabla existente, RLS habilitado, 0 filas y 0 políticas registradas. El acceso sigue server-side con filtro por user_id; no se cambió esquema ni se agregó migración.
+- Los roleplays Live sin solicitud explícita de feedback todavía no escriben señales automáticamente. Pruebas añadidas; ejecución completa y build pendientes por build-rate-limit.

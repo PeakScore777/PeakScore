@@ -132,3 +132,31 @@ Pendiente:
 **Commits:** `a98e415` (pizarra), `d298a6c` (clase y guardado), `e783b4f` (regresión).
 
 **Alcance:** la persistencia sigue siendo local al navegador y no sincroniza entre dispositivos. El ID utilizado corresponde al mensaje activo de la sesión; hace falta probar cambios de turno, recarga y restauración de clases antiguas para comprobar que las anotaciones se mantienen asociadas a la clase correcta.
+
+
+## Duodécima mutación — etapas visuales progresivas de la clase
+
+**Fecha:** 8 de noviembre de 2026  
+**Rama:** `feat/founder-intro`
+
+### Implementado
+- Los bloques de explicación de la hoja digital reciben un orden de revelado progresivo con intervalos cortos y acotados.
+- Los apoyos visuales se incorporan después de los bloques, con una secuencia de aparición independiente y un retraso máximo limitado.
+- Cada bloque y visual expone un índice de etapa mediante atributos `data-board-stage` y `data-board-visual-stage`, útiles para pruebas y diagnóstico visual.
+- Se conserva el modelo acumulativo: el contenido anterior permanece visible mientras llegan nuevas etapas; no se borra la hoja para cada actualización.
+- Se añadió una prueba de regresión estática para comprobar la secuencia y los límites de animación.
+
+### Archivos
+- `components/aprender/OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+### Alcance y limitaciones
+- Esta mutación mejora el ritmo de aparición del contenido que ya llega a la pizarra; **no crea por sí sola trazos que el modelo no haya generado** ni garantiza sincronización exacta con fonemas o timestamps del audio.
+- Los retrasos de entrada son una presentación visual, no un sistema de planificación temporal de la voz.
+- Sigue pendiente validar en Chrome la interacción entre snapshots rápidos, animaciones SVG, modo de movimiento reducido, pizarra extensa y exportación A4.
+- No se introducen dependencias, llamadas de IA, proveedores ni servicios de pago.
+- No se modificó `main` ni se desplegó producción.
+
+**Commits:** `1379677` (revelado progresivo de bloques y visuales), `fac4abb` (prueba de regresión).
+
+**Validación:** pendiente de resultado de GitHub Actions para este commit; no se declara TypeScript, ESLint, tests completos ni build aprobados.

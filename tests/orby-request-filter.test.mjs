@@ -5202,6 +5202,7 @@ test("el tutor de respaldo conserva derivaciones paso a paso en voz y pizarra", 
   assert.match(fallbackRoute, /block independiente de tipo formula o step/);
   assert.match(fallbackRoute, /DERIVACIONES EN VOZ Y PIZARRA/);
   assert.match(fallbackRoute, /No muestres el resultado final antes de los pasos/);
+  assert.match(fallbackRoute, /SEGUIMIENTOS CON CÁLCULOS/);
   assert.match(liveRoute, /UNA sola línea o transformación por cada evento append-block/);
   assert.match(liveRoute, /No adelantes el resultado final/);
 });

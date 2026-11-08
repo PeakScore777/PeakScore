@@ -527,3 +527,14 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Se mantiene `feat/founder-intro`; no se tocó `main`, Supabase remoto, proveedores ni despliegue.
 
 - **Corrección adicional del perfil SMIL:** la versión inicial del easing declaraba cuatro keyTimes pese a que el trazo solo tiene los extremos implícitos. Se corrigió a un único intervalo válido `0;1`; `animateMotion` declara explícitamente `keyPoints="0;1"`. La spline se adapta dentro del intervalo sin inventar keyframes. Prueba ajustada para verificar la cardinalidad y el mismo perfil en tinta y lápiz. Commits: `3c18f41`, `f18ade7`, `d7cb8da`.
+
+
+## 2026-11-08 — derivaciones por etapas también en tutor de respaldo
+- Se encontró una diferencia de pedagogía: `app/api/orby/realtime-session/route.ts` exigía derivaciones incrementales, pero el prompt del tutor de respaldo `app/api/lesson-tutor/route.ts` solo pedía un tablero tipado genérico.
+- Se sincronizó el fallback: en Matemáticas, Física y Química, cada transformación debe ir en un bloque `formula` o `step` independiente, conservar los pasos anteriores, explicar la operación, definir símbolos/unidades y comprobar el resultado. Se añadieron reglas equivalentes para voz y para seguimientos cortos que requieren varias operaciones; los saludos/respuestas simples no fuerzan pizarra.
+- Se corrigieron las regresiones del perfil SMIL para probar el intervalo real `0;1`, el punto de recorrido `0;1` y los valores spline compartidos entre tinta y lápiz.
+- Se añadieron regresiones para el fallback de voz/pizarra y la continuidad de las derivaciones. Inventario estático actual: 245 pruebas nombradas, sin títulos duplicados; no significa que se hayan ejecutado.
+- Commits de continuidad: `4b5254a` (corrección de aserciones SMIL), `156159a` (fallback paso a paso), `056d33a` (seguimientos), `480164b` (prueba fallback), `da3a3a8` (prueba de seguimiento).
+- Verificación de rama: `feat/founder-intro` figura divergente respecto a `main` (comparación: 3724 ahead / 9 behind en el comparador); no se hizo merge, rebase ni cambio de `main`.
+- Validación pendiente: no se ha ejecutado `npm run test:orby`, TypeScript, ESLint ni `next build` para este HEAD. El status disponible de Vercel reporta `build-rate-limit`; el conector no expone ejecuciones push de GitHub Actions. El checkout local también falló por resolución DNS de github.com en este entorno. Sí se comprobó en Node el patrón regex corregido de la prueba SMIL, pero no sustituye la suite.
+- No se añadieron proveedores, modelos, dependencias ni APIs facturables. Sin despliegue, sin migraciones remotas y sin acceso de escritura a `main`.

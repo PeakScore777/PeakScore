@@ -4180,6 +4180,53 @@ test("el tablero expone anotaciones sin código ejecutable en la herramienta Liv
   assert.match(boardComponentSource, /visual\.type === "annotation"/);
 });
 
+test("las anotaciones normalizan propiedades opcionales undefined sin filtrarlas al modelo de salida", () => {
+  const payload = {
+    type: "annotation",
+    title: undefined,
+    mark: "arrow",
+    tone: "blue",
+    label: undefined,
+    points: [
+      { x: 12, y: 18, sdkMetadata: undefined },
+      { x: 70, y: 82, sdkMetadata: undefined },
+    ],
+  };
+  const board = boardModule.sanitizeOrbyBoard({
+    version: 2, title: "Anotaciones", blocks: [], visuals: [payload],
+  });
+  assert.ok(board);
+  assert.deepEqual(board.visuals?.[0], {
+    type: "annotation",
+    title: "",
+    mark: "arrow",
+    points: [{ x: 12, y: 18 }, { x: 70, y: 82 }],
+    tone: "blue",
+  });
+  assert.doesNotMatch(JSON.stringify(board), /undefined/);
+});
+
+test("las anotaciones aceptan optionals ausentes y rechazan null o tipos incorrectos", () => {
+  const base = {
+    type: "annotation",
+    mark: "circle",
+    points: [{ x: 20, y: 20 }, { x: 60, y: 60 }],
+  };
+  const accepts = (annotation) => boardModule.sanitizeOrbyBoard({
+    version: 2, title: "Prueba", blocks: [], visuals: [annotation],
+  });
+  assert.ok(accepts(base));
+  assert.ok(accepts({ ...base, title: undefined, label: undefined }));
+  assert.ok(accepts({ ...base, label: "Evidencia" }));
+  assert.equal(accepts({ ...base, label: null }), null);
+  assert.equal(accepts({ ...base, label: 42 }), null);
+  assert.equal(accepts({ ...base, title: null }), null);
+  assert.equal(accepts({ ...base, title: {} }), null);
+  assert.equal(accepts({ ...base, points: [{ x: 20, y: undefined }, { x: 60, y: 60 }] }), null);
+  assert.equal(accepts({ ...base, tone: null }), null);
+});
+
+
 
 test("cada prueba Saber 11 recibe una rutina pedagógica y de tablero propia", () => {
   const subjects = [

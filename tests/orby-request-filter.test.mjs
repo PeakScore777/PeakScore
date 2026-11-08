@@ -4059,4 +4059,6 @@ test("el señalador contextual es independiente del lápiz y no crea tinta", () 
   assert.match(boardComponentSource, /focus\?\.strokeId === stroke\.id/);
   assert.match(boardComponentSource, /teacherFocus/);
   assert.match(boardComponentSource, /<animate attributeName="r"/);
+  assert.match(boardComponentSource, /prefers-reduced-motion: reduce/);
+  assert.match(boardComponentSource, /data-orby-teacher-focus \{ display: none !important; \}/);
 });

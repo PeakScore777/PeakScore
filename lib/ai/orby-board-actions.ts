@@ -56,7 +56,7 @@ const safeId = (value: unknown): value is string =>
 
 function cleanText(value: unknown, max = 240): string {
   return typeof value === "string"
-    ? value.replace(/[<>\\u0000-\\u001f]/g, " ").replace(/\\s+/g, " ").trim().slice(0, max)
+    ? value.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max)
     : "";
 }
 
@@ -206,8 +206,11 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
   if (action.operation === "append-block") {
     if (board.version !== 2 || !board.layout || board.blocks.length >= 8
       || board.layout.elements.length >= 12
-      || board.layout.elements.some((element) => element.id === action.elementId)
-      || action.sequence <= Math.max(0, ...board.layout.elements.map((element) => element.sequence))) return null;
+      || board.layout.elements.some((element) => element.id === action.elementId)) return null;
+    const nextLayoutSequence = Math.max(
+      action.sequence,
+      ...board.layout.elements.map((element) => element.sequence + 1),
+    );
     const candidate: OrbyBoard = {
       ...board,
       blocks: [...board.blocks, action.block],
@@ -215,7 +218,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
         ...board.layout,
         elements: [...board.layout.elements, {
           id: action.elementId,
-          sequence: action.sequence,
+          sequence: nextLayoutSequence,
           kind: "block",
           index: board.blocks.length,
           ...action.position,

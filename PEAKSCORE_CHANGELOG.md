@@ -481,3 +481,10 @@
 - Replaced two remaining user-facing hardcoded Orby strings in the general workspace with the selected assistant label, preserving Orby when that tutor is active.
 - Added regression assertions. Static inventory: 238 named tests, 0 duplicate titles; this is not a test execution result.
 - CI remains unavailable for this HEAD: Vercel reports build-rate-limit; no associated GitHub Actions workflow run was returned.
+
+## 2026-11-08 — prevent overlapping incremental teaching blocks
+- `applyOrbyBoardAction(append-block)` now rejects new text stages whose rectangles intersect existing text or visual layout elements; edge-touching without overlap remains valid.
+- Live tool rejection feedback now distinguishes spatial/limit conflicts from missing IDs.
+- Added regression coverage for intersection rejection, adjacent edge acceptance and the explanatory Live error.
+- Scope is limited to new incremental append actions; saved historical snapshots and the v2 layout sanitizer are not retroactively tightened.
+- Tests, TypeScript, ESLint, build and browser QA remain unexecuted.

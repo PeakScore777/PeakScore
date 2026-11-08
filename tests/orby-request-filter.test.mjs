@@ -5516,3 +5516,30 @@ test("English Studio usa temas de speaking y frases modelo adaptadas a cada nive
   assert.match(englishStudio, /disabled=\{recording \|\| transcribing \|\| Boolean\(blob\)\}/);
 });
 
+test("English Studio ofrece laboratorios A1-C2 de listening, reading y writing", async () => {
+  const studio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  for (const level of ["A1", "A2", "B1", "B2", "C1", "C2"]) {
+    assert.match(studio, new RegExp("^  " + level + ": \\[", "m"));
+  }
+  assert.match(studio, /LISTENING_TASKS_BY_LEVEL/);
+  assert.match(studio, /READING_TASKS_BY_LEVEL/);
+  assert.match(studio, /WRITING_TASKS_BY_LEVEL/);
+  assert.match(studio, /function playListeningTask\(/);
+  assert.match(studio, /Revelar transcripción/);
+  assert.match(studio, /Tu respuesta en inglés/);
+  assert.match(studio, /targetWords/);
+  assert.match(studio, /Recibir feedback de OmegaX/);
+  assert.match(studio, /taskFeedbackContext/);
+});
+
+test("OmegaX distingue feedback de listening, reading y writing y guarda las respuestas como notas", async () => {
+  const tutor = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutor, /Actividad de comprensión auditiva/);
+  assert.match(tutor, /Actividad de comprensión lectora/);
+  assert.match(tutor, /Actividad de producción escrita/);
+  assert.match(tutor, /Cita la evidencia del guion que respalda la respuesta/);
+  assert.match(tutor, /Evalúa comprensión global, detalle, inferencia y evidencia textual/);
+  assert.match(tutor, /Evalúa la producción escrita según cumplimiento de tarea/);
+  assert.match(tutor, /English Studio · \(\?:Comprensión auditiva\|Comprensión lectora\|Producción escrita\)/);
+});
+

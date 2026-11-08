@@ -45,19 +45,19 @@ export function getOrbyKaraokeWordIndex(
  * rather than a claim of exact transcription/audio alignment.
  */
 function getOrbySubtitleWordWeight(token: string): number {
-  const normalized = token.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "")
-    .replace(/[^\\p{L}\\p{N}]/gu, "").toLocaleLowerCase("es-CO");
+  const normalized = token.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}]/gu, "").toLocaleLowerCase("es-CO");
   if (!normalized) return 0.75;
 
   const letters = normalized.replace(/[0-9]/g, "");
   const vowelGroups = letters.match(/[aeiouy]+/g)?.length ?? 0;
-  const estimatedSyllables = /^\\d+$/.test(normalized)
+  const estimatedSyllables = /^\d+$/.test(normalized)
     ? Math.ceil(normalized.length / 2)
     : Math.max(1, vowelGroups, Math.ceil(Array.from(normalized).length / 6));
   const boundedSyllables = Math.min(6, estimatedSyllables);
-  const punctuationPause = /[.!?…][”’\"')\\]]*$/.test(token)
+  const punctuationPause = /[.!?…][”’"')\]]*$/.test(token)
     ? 0.42
-    : /[,;:][”’\"')\\]]*$/.test(token)
+    : /[,;:][”’"')\]]*$/.test(token)
       ? 0.18
       : 0;
   return 0.52 + boundedSyllables * 0.48 + punctuationPause;

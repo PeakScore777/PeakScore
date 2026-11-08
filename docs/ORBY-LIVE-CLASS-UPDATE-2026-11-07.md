@@ -1133,3 +1133,85 @@ Referencia consultada: https://googleapis.github.io/js-genai/release_docs/interf
 - La especificación permanente `ORBY-LIVE-TUTOR-SPEC.md` sigue siendo el contrato de aceptación de la experiencia incremental.
 - La sección histórica de `ORBY-VOICE-WHITEBOARD-SPEC.md` que describe `spokenCue` por coincidencia de frase queda marcada como obsoleta por el addendum de esa especificación; no debe reintroducirse sin metadatos de voz fiables.
 - El código de aplicación no se modificó en esta reconciliación. Se actualizaron únicamente documentos de continuidad/especificación.
+
+## Primera implementación del lienzo espacial docente — contrato y renderer v2
+
+**Objetivo de esta mutación:** comenzar la evolución del tutor real sobre las piezas existentes, sin reemplazar voz Live, snapshots completos, visuales tipados, operaciones teacher-only, historial ni fallback.
+
+### Entrega implementada
+
+1. **Contrato espacial opcional en OrbyBoard v2**
+   - Nuevo `OrbyBoardLayout` con `aspectRatio: "16:9"` y `elements[]`.
+   - Cada etapa contiene `id`, `sequence`, `kind` (`block`/`visual`), `index` y rectángulo normalizado `x/y/width/height`.
+   - El layout debe referenciar cada bloque y visual exactamente una vez; no acepta IDs/índices repetidos, etapas fuera de orden o no contiguas, posiciones/tamaños inválidos ni rectángulos fuera del lienzo.
+   - `layout` es opcional para snapshots v2 antiguos. Version 1 sigue siendo texto-only y rechaza el nuevo campo.
+
+2. **Renderer espacial**
+   - `OrbyBoard.tsx` conserva el renderer heredado para v1/v2 sin layout.
+   - Cuando recibe layout, coloca bloques y visuales en el mismo canvas 16:9, en el orden de `sequence`, mediante posiciones y tamaños porcentuales.
+   - Las etapas usan IDs estables como key React para no desmontar ni reiniciar las anteriores al recibir snapshots acumulativos.
+   - Se agregó scroll horizontal para conservar la composición apaisada en pantallas estrechas, en vez de aplastar el tablero.
+   - La impresión del canvas espacial usa A4 horizontal y conserva la cuadrícula de puntos.
+
+3. **Superficie visual de referencia**
+   - Fondo blanco con cuadrícula de puntos muy tenue.
+   - Tipografía manuscrita heredada para bloques y etiquetas.
+   - Título de la clase en encabezado; el modelo ubica la idea/título pedagógico como bloque dentro del lienzo.
+   - El modelo recibe la distribución recomendada: título/idea arriba, notas a la izquierda, dibujo principal al centro y explicaciones/anotaciones a la derecha.
+   - Los bloques tienen tamaño tipográfico adaptable al ancho del canvas; el contenido de texto queda contenido en su región.
+
+4. **Contrato Gemini y tutor escrito**
+   - `render_orby_teaching_board` ya declara `layout` y sus campos.
+   - El schema expresa enum para `aspectRatio`/`kind`, formato/longitud/patrón de IDs, límites de secuencia/índice y rangos numéricos de geometría; el sanitizador sigue siendo la autoridad final.
+   - Los prompts de Gemini Live y del tutor por turnos piden una composición espacial completa y snapshots acumulativos que preservan IDs, secuencias y posiciones.
+   - El contrato sigue permitiendo v2 legacy sin layout para no invalidar historial ni respuestas antiguas.
+
+5. **Persistencia**
+   - Se inspeccionaron `orby_save_turn_with_board` y `orby_save_voice_turn_with_board`: ambas guardan `teaching_board` como JSONB, aceptan v2 y no validan una lista cerrada de propiedades del objeto.
+   - La RPC visual existente permite hasta 24 KB; el sanitizador cliente mantiene 18 KB. El layout queda incluido en el mismo objeto, sin nueva columna ni cambio de RPC.
+   - **No se creó ni aplicó migración Supabase.**
+
+### Regresiones añadidas
+
+- Layout 16:9 válido con intercalado de bloques y visual.
+- Rechazo de aspect ratio incorrecto, IDs duplicados, secuencias repetidas o con huecos, índices duplicados/no existentes, rectángulos fuera del canvas y referencias incompletas.
+- Compatibilidad de v1 y v2 sin layout.
+- Continuidad de snapshots: IDs, posiciones y secuencias previas permanecen iguales al añadir una nueva etapa.
+- Contrato estático compartido entre renderer, herramienta Live, prompts y CSS.
+
+**Suite declarada al finalizar esta mutación:** 220 pruebas en `tests/orby-request-filter.test.mjs`, sin nombres duplicados ni pruebas vacías en la inspección del archivo. Este recuento no equivale a 220 aprobadas.
+
+### Límite funcional de esta primera entrega
+
+El canvas espacial es el primer paso hacia el video, no el final del tutor humano:
+- La composición y revelación de etapas ya pueden intercalar texto y visuales; la narración sigue llegando mediante el flujo Live/fallback existente.
+- La secuencia de canvas controla orden/revelación, pero todavía no es una alineación fonética o timestamp exacta con cada palabra del audio.
+- El mecanismo de snapshots sigue siendo completo y acumulativo. No se convirtió en una cola de fragmentos.
+- La herramienta `focus/erase/replace` y el lápiz serial se conservan; falta probarlas en una escena espacial real con voz interrumpida y reanudada.
+
+### Validación honesta
+
+- **Inspección estática:** contratos, renderer, prompts, persistencia JSONB y pruebas revisados en GitHub.
+- **Tests ejecutados:** no ejecutados en este entorno; no se afirma aprobación.
+- **TypeScript / ESLint / build:** pendientes de ejecución real en el SHA resultante.
+- **CI de Vercel:** la última comprobación disponible sigue reportando `build-rate-limit`; no es un build aprobado ni prueba por sí sola un error de código.
+- **QA Chrome/micrófono:** pendiente.
+
+### Commits de esta mutación
+
+- Contrato espacial/sanitizador: `6f15fde`, `887968e`, `fafb858`.
+- Renderer de canvas y compatibilidad legacy: `02fe661`, `5012e8d`, `2bbbb60`.
+- CSS de papel punteado/layout: `24417f3`, `b32dae3`, `4c5b9c1`.
+- Herramienta y prompts Gemini: `8a51f7a`, `de326c5`, `558a7f6`, `08aa496`.
+- Regresiones: `963badc`, `a4b959f`, `c735b23`, `9a01262`, `483a186`.
+
+### Siguiente fase exacta
+
+1. Añadir acciones visuales incrementales tipadas sobre el mismo canvas: escribir bloque, dibujar trazo/forma/flecha, colocar etiqueta, señalar, borrar/corregir.
+2. Mantener `turnGeneration`, sequence, idempotencia y cancelación de operaciones antiguas; no mezclar turnos tras barge-in.
+3. Conservar `focus/erase/replace` y traducirlas al mismo sistema de elementos sin dar herramientas de edición al estudiante.
+4. Usar metadatos/segmentos reales de voz si el proveedor los entrega; en ausencia de ellos, secuencia pedagógica aproximada y sin timestamps inventados.
+5. Evaluar el schema en una llamada Live aislada y ejecutar suite, TypeScript, ESLint, build y QA de navegador.
+6. Reproducir la escena de la célula del video y ajustar composición, tiempos, densidad de tinta y tamaño del lápiz.
+
+**Criterio de aceptación:** el estudiante debe ver una sola hoja docente donde Orby intercala nota → dibujo → flecha → etiqueta → explicación, sin reiniciar lo ya escrito, sin saltos de lápiz y sin dejar de hablar. La base existente se conserva.

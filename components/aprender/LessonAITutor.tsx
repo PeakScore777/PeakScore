@@ -24,7 +24,7 @@ const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
-type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording"; title: string; content: string; created_at: string };
+type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz"; title: string; content: string; created_at: string };
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
 type StoredImage = { name: string; path: string; signedUrl: string; createdAt: string; size: number };
 type ReviewQuestion = {
@@ -669,7 +669,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setImageAssets(Array.isArray(payload.images) ? payload.images : []);
   }
 
-  async function saveLearningItem(kind: "note" | "topic" | "flashcard" | "summary" | "recording", title: string, content: string) {
+  async function saveLearningItem(kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz", title: string, content: string) {
     try {
       setLearningError("");
       const response = await fetch("/api/orby/learning", {
@@ -679,7 +679,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "No se pudo guardar.");
       setLearningItems((current) => [payload.item as LearningItem, ...current]);
-      setLearningView(kind === "note" ? "notes" : kind === "topic" ? "topics" : kind === "flashcard" ? "flashcards" : kind === "summary" ? "summaries" : "recordings");
+      setLearningView(kind === "note" ? "notes" : kind === "topic" ? "topics" : kind === "flashcard" ? "flashcards" : kind === "summary" ? "summaries" : kind === "recording" ? "recordings" : "quizzes");
       if (kind === "flashcard") { setFlashcardFront(""); setFlashcardBack(""); setFlashcardBackVisible(false); }
     } catch (caught) {
       setLearningError(caught instanceof Error ? caught.message : "No se pudo guardar.");
@@ -5350,7 +5350,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       <header className="flex min-h-[68px] shrink-0 items-center justify-between gap-4 border-b border-[#eee6dc] bg-white px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-orange-200 bg-orange-50 text-orange-600"><AudioLines className="h-5 w-5" /></div>
-          <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">Orby AI</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">Tutor ICFES</span></div><p className="mt-0.5 text-[11px] text-slate-500">Tu espacio de estudio</p></div>
+          <div className="min-w-0"><div className="flex items-center gap-2"><h1 className="text-[15px] font-semibold tracking-tight text-slate-900">{assistantLabel}</h1><span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">Tutor ICFES</span></div><p className="mt-0.5 text-[11px] text-slate-500">Tu espacio de estudio</p></div>
         </div>
         <div className="flex items-center gap-1.5">
           {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} title="Panel lateral" className="rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700 md:hidden"><Search className="h-4 w-4" /></button>}
@@ -5360,17 +5360,21 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       </header>
 
       <div className={workspace ? "flex min-h-0 flex-1 bg-[#fffdfa]" : "contents"}>
-        {workspace && <aside className={historyOpen ? "absolute bottom-0 left-0 top-[68px] z-30 flex w-[min(86%,310px)] flex-col border-r border-[#eee6dc] bg-[#fffaf4] text-slate-800 shadow-xl md:relative md:top-auto md:z-auto md:w-[292px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[292px] md:shrink-0 md:flex-col border-r border-[#eee6dc] bg-[#fffaf4] text-slate-800"} aria-label="Herramientas y conversaciones de Orby">
+        {workspace && <aside className={historyOpen ? "absolute bottom-0 left-0 top-[68px] z-30 flex w-[min(86%,310px)] flex-col border-r border-[#eee6dc] bg-[#fffaf4] text-slate-800 shadow-xl md:relative md:top-auto md:z-auto md:w-[292px] md:shrink-0 md:shadow-none" : "hidden md:relative md:flex md:w-[292px] md:shrink-0 md:flex-col border-r border-[#eee6dc] bg-[#fffaf4] text-slate-800"} aria-label={"Herramientas y conversaciones de " + assistantLabel}>
           <div className="border-b border-[#eee6dc] p-4">
             <button type="button" onClick={startNewConversation} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#f58216] px-3 text-[13px] font-semibold text-white shadow-sm transition hover:bg-[#e96e0b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400"><Plus className="h-4 w-4" /> Nuevo chat</button>
             <div className="mt-5 flex items-center justify-between px-1"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Herramientas de estudio</p></div>
             <nav className="mt-2 grid gap-1" aria-label="Herramientas">
-              <button type="button" onClick={() => setLearningView("chat")} className={learningView === "chat" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><MessageSquare className="h-4 w-4" /> Chat con Orby</button>
-              <button type="button" onClick={() => setLearningView("notes")} className={learningView === "notes" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><FileText className="h-4 w-4" /> Anotaciones y apuntes <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "note").length}</span></button>
-              <button type="button" onClick={() => setLearningView("topics")} className={learningView === "topics" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Bookmark className="h-4 w-4" /> Temas guardados <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "topic").length}</span></button>
-              <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><BookOpen className="h-4 w-4" /> Progreso de aprendizaje</button>
-              <button type="button" onClick={() => setLearningView("storage")} className={learningView === "storage" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Images className="h-4 w-4" /> Biblioteca de archivos <span className="ml-auto text-[10px] tabular-nums text-slate-500">{imageAssets.length}</span></button>
-            </nav>
+  <button type="button" onClick={() => setLearningView("chat")} className={learningView === "chat" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><MessageSquare className="h-4 w-4" /> Chat con {assistantLabel}</button>
+  <button type="button" onClick={() => setLearningView("flashcards")} className={learningView === "flashcards" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Layers3 className="h-4 w-4" /> Flashcards <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length}</span></button>
+  <button type="button" onClick={() => setLearningView("notes")} className={learningView === "notes" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><FileText className="h-4 w-4" /> Anotaciones <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "note").length}</span></button>
+  <button type="button" onClick={() => setLearningView("recordings")} className={learningView === "recordings" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Mic className="h-4 w-4" /> Grabaciones <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "recording").length}</span></button>
+  <button type="button" onClick={() => setLearningView("summaries")} className={learningView === "summaries" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Sparkles className="h-4 w-4" /> Resúmenes <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "summary").length}</span></button>
+  <button type="button" onClick={() => setLearningView("quizzes")} className={learningView === "quizzes" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><ClipboardList className="h-4 w-4" /> Cuestionarios <span className="ml-auto text-[10px] tabular-nums text-slate-500">{learningItems.filter((item) => item.kind === "quiz").length}</span></button>
+  <button type="button" onClick={() => setLearningView("topics")} className={learningView === "topics" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Bookmark className="h-4 w-4" /> Temas guardados</button>
+  <button type="button" onClick={() => setLearningView("progress")} className={learningView === "progress" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><BookOpen className="h-4 w-4" /> Progreso</button>
+  <button type="button" onClick={() => setLearningView("storage")} className={learningView === "storage" ? "flex w-full items-center gap-3 rounded-lg bg-orange-100 px-3 py-2.5 text-left text-[12px] font-semibold text-orange-900" : "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-[12px] font-medium text-slate-600 transition hover:bg-white hover:text-slate-900"}><Images className="h-4 w-4" /> Biblioteca de archivos</button>
+</nav>
             <div className="mt-5 flex items-center justify-between border-t border-[#eee6dc] px-1 pt-4"><p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Historial de chats</p><span className="text-[10px] tabular-nums text-slate-400">{conversations.length}/50</span></div>
             <label className="mt-2 flex h-9 items-center gap-2 rounded-lg border border-[#e7ded3] bg-white px-2.5"><Search className="h-3.5 w-3.5 shrink-0 text-slate-400"/><input value={historyQuery} onChange={(event) => setHistoryQuery(event.target.value)} placeholder="Buscar conversación…" aria-label="Buscar conversación" className="min-w-0 flex-1 bg-transparent text-[11px] text-slate-700 outline-none placeholder:text-slate-400"/></label>
           </div>
@@ -5508,7 +5512,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {messages.map((message, index) => (
               <article key={message.id ?? `${message.role}-${index}`} className={`orby-message ${message.role === "user" ? `ml-auto w-fit max-w-[min(88%,760px)] rounded-2xl rounded-br-sm px-4 py-3 text-white ${orbyAccent ? "bg-orange-600" : "bg-sky-600"}` : "mr-auto w-fit max-w-[min(94%,900px)] rounded-2xl rounded-tl-sm border border-slate-200 bg-white px-4 py-3 text-slate-800 shadow-sm"}`}>
                 <div className="mb-1 flex items-center gap-2">
-                  <p className={message.role === "user" ? "text-[10px] font-bold uppercase tracking-wider text-orange-100" : `text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "Orby · Tutor PeakScore"}</p>
+                  <p className={message.role === "user" ? "text-[10px] font-bold uppercase tracking-wider text-orange-100" : `text-[10px] font-bold uppercase tracking-wider ${orbyAccent ? "text-orange-700" : "text-sky-700"}`}>{message.role === "user" ? "Tú" : "{assistantLabel} · PeakScore"}</p>
                   {message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current && !voiceResponseDoneRef.current && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"/> EN VIVO</span>}
                 </div>
                 <div className="break-words text-[15px] leading-7 sm:text-base" aria-live={message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current ? "polite" : undefined} aria-atomic="false">{renderTutorContent(message.content)}</div>
@@ -5541,7 +5545,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 {message.checkQuestion && <div className="mt-3 rounded-lg border-l-2 border-amber-400 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-950"><strong>Comprueba lo aprendido:</strong> {message.checkQuestion}</div>}
               </article>
             ))}
-            {loading && <div role="status" className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> Orby está preparando una explicación…</div>}
+            {loading && <div role="status" className="flex items-center gap-2 text-sm text-slate-500"><LoaderCircle className="h-4 w-4 animate-spin" /> {assistantLabel} está preparando una explicación…</div>}
           </div>
         )}
         {voiceMode && liveTranscript && <div className="mt-3 flex justify-end">
@@ -5553,7 +5557,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         {error && <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
       </div>
 
-      {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-4 sm:py-3" aria-label="Clase en vivo con Orby">
+      {workspace && workspaceMode === "voice" && <section className="orby-voice-stage relative flex min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-4 sm:py-3" aria-label={"Clase en vivo con " + assistantLabel}>
         <div className="orby-class-topbar flex shrink-0 items-center justify-between gap-3 rounded-t-xl border border-b-0 border-slate-200/80 bg-white/95 px-4 py-2 text-slate-800 sm:px-6">
           <div className="flex min-w-0 items-center gap-2.5">
             <span className="orby-live-indicator h-2.5 w-2.5 shrink-0 rounded-full bg-emerald-500" />

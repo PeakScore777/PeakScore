@@ -5588,3 +5588,25 @@ test("Learning signals de English Studio se recuperan solo para su propia destre
   assert.match(learningApi, /Cache-Control.*private, no-store/);
 });
 
+
+test("focus label sanitizer preserves letters, accents, numbers and academic notation", () => {
+  const label = "Mira esta unión: ADN, ATP y 2x + 3 = 11";
+  const action = boardActions.sanitizeOrbyBoardAction({
+    operation: "focus",
+    turnGeneration: 7,
+    strokeId: "cell_outline",
+    label,
+  });
+
+  assert.ok(action);
+  assert.equal(action.label, label);
+
+  const unsafeLabel = boardActions.sanitizeOrbyBoardAction({
+    operation: "focus",
+    turnGeneration: 7,
+    strokeId: "cell_outline",
+    label: "Mira<svg>\u0001 esta unión",
+  });
+  assert.ok(unsafeLabel);
+  assert.equal(unsafeLabel.label, "Mira svg   esta unión");
+});

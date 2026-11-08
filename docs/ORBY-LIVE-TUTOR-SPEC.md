@@ -349,3 +349,9 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - The client tool response confirms that the spotlight was removed and all content/ink remains intact.
 - Regression test verifies content preservation and rejection of missing generation or extra target fields. Static inventory: 247 named tests, no duplicate names; this is not an execution result.
 - Tests, TypeScript, ESLint, production build and real Chrome/Gemini Live QA remain pending. No deployment, migration or main-branch changes.
+
+
+### Prompt/schema synchronization after clear-focus (2026-11-08)
+- The Live instruction's operation list now explicitly includes `clear-focus`; the contract test regex was corrected to match the actual tool enum syntax.
+- Static test inventory: 247 named tests, no duplicate names. Tests are not executed for this HEAD.
+- Follow-up commits: `1b88395` (Live prompt) and `3e7d2f3` (test assertion).

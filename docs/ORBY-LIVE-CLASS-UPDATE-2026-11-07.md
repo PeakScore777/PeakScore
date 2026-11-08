@@ -177,6 +177,7 @@ La referencia de clase muestra un profesor que escribe y señala; el estudiante 
 - Se retiró la prop `storageId` de la pizarra y su uso desde la vista de clase.
 - La superficie de clase ahora es blanca y lisa: sin cuadrícula, sin tarjetas decorativas alrededor de cada visual y sin la apariencia de cuaderno.
 - Se añadió una banda informativa de herramientas del profesor (dibujar, señalar y borrar). Es indicativa y no interactiva para el estudiante.
+- Se conservó la acción independiente «Exportar PDF» en la cabecera; no devuelve herramientas de dibujo al estudiante.
 - Los trazos SVG de Orby y su punta animada de lápiz se conservan.
 
 ### Archivos
@@ -190,6 +191,6 @@ La referencia de clase muestra un profesor que escribe y señala; el estudiante 
 - El guardado de apuntes conserva bloques y datos de apoyos visuales, pero ya no incluye anotaciones del alumno.
 - Requiere ejecutar CI y QA visual en Chrome para verificar layout, exportación PDF, animaciones y ausencia completa de interacción de tinta.
 
-**Commits:** `792e042` (retirada de la capa de tinta), `dd8d21d` (integración y apuntes), `91c7ba3` (regresiones teacher-only), `4875b7a` (banda de herramientas del profesor), `97ddc67` (prueba de herramientas visibles).
+**Commits:** `792e042` (retirada de la capa de tinta), `dd8d21d` (integración y apuntes), `91c7ba3` (regresiones teacher-only), `4875b7a` (banda de herramientas del profesor), `97ddc67` (prueba de herramientas visibles), `af4687a` (exportación PDF en cabecera), `6205a42` (ajuste de regresiones de interfaz).
 
 **Validación:** pendiente de CI completa y prueba real en navegador. No se declara build aprobado.

@@ -197,3 +197,85 @@ Los commits posteriores de ajustes de schema, sanitización y documentación se 
 **Primero leer este MD, el MD del 7, `docs/ORBY-LIVE-TUTOR-SPEC.md`, `docs/ORBY-IMPLEMENTATION-AUDIT.md` y revisar el HEAD actual de `feat/founder-intro`.**
 
 No volver a implementar snapshots acumulativos, pizarra espacial v2, lápiz serial, pausa/reanudación, foco, borrado o reemplazo: ya existen. No reconstruir nada del Lab eliminado. El siguiente paso es validar la capa existente y cerrar sus brechas reales con pruebas, no volver a empezar ni duplicar arquitectura.
+
+
+---
+
+## Fidelidad al video, cobertura ICFES y subtítulos (actualización 8 de noviembre)
+
+### Referencia visual confirmada
+Se revisó el video original de 42.7 s, incluidos fotogramas de la clase y la hoja final. Su lenguaje visual es una sola hoja blanca lisa, notas manuscritas, subrayados, flechas y un dibujo principal que se desarrolla por etapas. No es un cuaderno punteado, un tablero cuadriculado ni una cuadrícula de tarjetas.
+
+**Corrección aplicada en esta tanda:**
+- `app/globals.css`: el fondo de `.orby-board-canvas` queda blanco con `background-image: none`.
+- `components/aprender/LessonAITutor.tsx`: la superficie `.orby-class-paper` y su contenedor quedan blancos y sin textura. El canvas dentro de la llamada pierde borde, radio y sombra; la composición ya no se coloca en una rejilla de tarjetas.
+- `tests/orby-request-filter.test.mjs`: nueva regresión estática para impedir que el papel vuelva a tener puntos, cuadrícula o textura.
+
+La cuadrícula geométrica que forme parte de una gráfica matemática/científica (ejes, marcas o líneas de referencia) sí puede seguir apareciendo cuando sea necesaria para leer los datos; lo que se elimina es la textura del papel de fondo.
+
+### Estándar pedagógico transversal
+La referencia no se debe limitar a biología. El criterio nuevo es que aproximadamente el 90 % de las explicaciones académicas sustantivas de Saber 11 tenga una representación visual útil. No significa dibujar decoración para saludos o respuestas breves: el dibujo puede ser un subrayado, mapa, línea de tiempo, ecuación construida, gráfica, diagrama de argumentos, flechas de causalidad, anotación de un texto, diálogo o proceso experimental.
+
+Mapa de visualización:
+- **Matemáticas:** desarrollo de ecuaciones, representaciones, gráficas con unidades, geometría y visualización estadística.
+- **Lectura Crítica:** subrayar tesis/evidencia/conectores, relacionar afirmaciones, premisas e inferencias, anotar textos continuos y discontinuos.
+- **Sociales y Ciudadanas:** mapas anotados, cronologías, actores e instituciones, intereses, perspectivas y cadenas causales.
+- **Ciencias Naturales:** mecanismos biológicos, estructura atómica y molecular, reacciones, vectores, circuitos, fuerzas, energía, ondas y diseño de experimentos.
+- **Inglés:** conservar las siete partes del examen; mapas de vocabulario, pistas de contexto, turnos de diálogo, intención comunicativa, roles gramaticales, tiempos verbales y anotaciones sobre textos.
+
+El plan curricular existente `docs/ORBY-ICFES-CURRICULUM-PLAN.md` sigue siendo la base de cobertura. La guía Icfes Saber 11 2026-2 y los cinco marcos oficiales delimitan competencias y evidencias. Los ejemplos/dibujos/preguntas deben ser originales; no copiar cuadernillos protegidos.
+
+### Orby Lab — conexión actual auditada y alineación
+El tutor sí dispone de recuperación del Lab:
+- Cliente Live → `search_orby_learning_knowledge`.
+- Ruta autenticada `/api/orby/knowledge-search`.
+- Recupera fragmentos, conceptos y documentos relacionados con `visibility: "published"`.
+- La búsqueda pública externa solo se ejecuta cuando la pregunta requiere referencias, datos actuales o verificación externa; no se usa para cada definición básica.
+
+Se detectó una contradicción: la directiva del servidor pedía buscar el Lab en paralelo ante cada pregunta académica nueva, pero la descripción de la herramienta decía que era opcional y que no debía llamarse en cada pregunta. Se corrigió la descripción en `lib/ai/orby-live-tools.ts`:
+- una consulta publicada no bloqueante al iniciar cada nuevo tema sustantivo;
+- una segunda consulta solo para un prerrequisito o afirmación que siga necesitando evidencia;
+- máximo dos llamadas por turno, usando el límite ya existente;
+- voz y primera pizarra deben comenzar sin esperar el resultado;
+- si el Lab no tiene contenido publicado, falla o agota la cuota gratuita, Orby sigue con conocimiento fiable y no inventa material.
+
+Esto es recuperación de documentos publicados, no entrenamiento automático del modelo ni garantía de que todo el contenido del Lab esté publicado.
+
+### Subtítulos palabra por palabra — brecha abierta
+La UI actual muestra transcripción normal y aún no resalta una palabra activa. El usuario exige subtítulos tipo karaoke: una palabra iluminada mientras se pronuncia, sin adelantos ni retrocesos, y con reinicio inmediato si interrumpe.
+
+Verificación técnica:
+- El cliente recibe `outputTranscription.text` y programa audio PCM con Web Audio.
+- La documentación oficial del Gemini Live API indica que la transcripción de Live no entrega marcas de tiempo por palabra, sino marcas a nivel de enunciado: https://ai.google.dev/gemini-api/docs/live-api/live-transcribe
+- Gemini 3.5 Transcribe en modo de archivo puede producir marcas por palabra; el modelo de transcripción en streaming Live no las soporta. La documentación indica además que las marcas por palabra pueden reducir la exactitud: https://ai.google.dev/gemini-api/docs/transcribe y https://ai.google.dev/gemini-api/docs/models/gemini-3.5-transcribe
+- No se debe fingir sincronización fonética exacta con el contrato actual. Tampoco se debe añadir una llamada adicional, proveedor de pago o procesamiento de audio completo sin medir coste, cuota, privacidad y latencia.
+
+**Siguiente trabajo P0:** investigar una fuente de marcas de tiempo compatible con voz Live y cuota gratuita real. Solo como prototipo claramente aproximado se puede mapear el texto incremental a la duración de reproducción de cada fragmento de audio; no debe presentarse como precisión palabra a palabra. Cualquier estado de palabra activa debe quedar invalidado al interrumpir o cambiar la generación de voz.
+
+### Voz natural y tiempo de respuesta
+Objetivo del producto: primera frase útil tan pronto Orby entienda la pregunta, idealmente alrededor de un segundo después del cierre de voz del estudiante. Es una meta de rendimiento, no una garantía certificada.
+
+Medir por separado:
+- fin de voz del alumno → primer texto de respuesta;
+- fin de voz → primer fragmento de audio recibido;
+- fin de voz → primer audio programado/reproducido;
+- fin de voz → primera acción visible en la pizarra;
+- latencia de parada ante interrupción y rearme de escucha.
+
+El cliente actual valida una frase/transcripción antes de reproducir audio Live para evitar voz duplicada o contenido no validado; esta protección puede añadir latencia. Mejorar el inicio del audio sin eliminar los filtros de idioma, alcance, seguridad o identidad. No hay mediciones p50/p95 de Chrome en esta actualización.
+
+### Conteo de pruebas y verificación
+- Archivo `tests/orby-request-filter.test.mjs`: 229 definiciones de prueba con nombre; 0 nombres duplicados y 0 pruebas vacías en inspección estática.
+- Nueva prueba de superficie blanca añadida.
+- El conteo estático no equivale a tests ejecutados. No se certificaron Node tests, TypeScript, ESLint, build ni QA real con micrófono.
+- Los subtítulos karaoke, la alineación palabra-audio, la calidad visual de las cinco áreas y los objetivos de latencia siguen pendientes de pruebas en Chrome.
+
+### Archivos y commits de esta actualización
+- `app/globals.css` — canvas sin textura.
+- `components/aprender/LessonAITutor.tsx` — papel de clase liso y superficies de tablero sin tarjetas; consulta de Lab no bloqueante ya alineada con la directiva.
+- `lib/ai/orby-live-tools.ts` — recuperación publicada en cada nuevo tema sustantivo, límite de dos llamadas.
+- `tests/orby-request-filter.test.mjs` — regresión de papel blanco.
+- `docs/ORBY-LIVE-TUTOR-SPEC.md` — estándar visual, mapa por materia, Lab y subtítulos palabra activa.
+
+No se tocó `main`, producción ni Supabase; no se ejecutaron migraciones ni se añadieron proveedores de pago.
+

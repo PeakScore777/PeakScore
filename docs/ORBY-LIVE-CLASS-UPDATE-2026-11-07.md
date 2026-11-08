@@ -893,3 +893,83 @@ Este apartado consolida el reporte local compartido después de la primera ronda
 **Commits relevantes de la ronda:** `9dae15f`, `b38dc04`, `e7d6e22`, `8788147`, `ae1277d`, `31224b0`, `5e62d00`, `2ea808a`, `8aad8c9`, `8550daf`, `919300f`, `3f2fbd4`, `aa5521d`, `6806471`, `8044280`, `dea8391`, `9dd8d85`, `e02c4f0`.
 
 **Validación al último commit de código:** el check Vercel sigue mostrando `build-rate-limit`; no existe una ejecución nueva de GitHub Actions visible. La última compilación ejecutada terminó por pruebas antiguas desactualizadas, que se corrigieron posteriormente. El código actual permanece sin confirmación de build verde.
+
+
+## Mutación — cierre de sanitización, guards y continuidad de la pizarra de Orby
+
+**Fecha de trabajo:** 7 de noviembre de 2026  
+**Rama:** `feat/founder-intro`  
+**Referencia visual:** video de clase compartido por el usuario (42,746 s).
+
+### 1. Sanitizador de anotaciones: propiedades opcionales
+
+- Se corrigió el tratamiento de `title` y `label` en anotaciones: campo ausente o explícitamente `undefined` se normaliza/omite; `null`, números u objetos se rechazan.
+- Cada punto se reconstruye copiando únicamente `x` e `y`; metadatos auxiliares del SDK, aunque contengan `undefined`, no pasan al modelo de salida.
+- El tono y la geometría siguen dentro de las listas permitidas y de los límites del lienzo.
+- Se aplicó el mismo criterio a las acciones del profesor `focus` y `replace`: optionals ausentes/undefined se omiten y valores mal formados se rechazan.
+- Regresiones añadidas para: annotation sin optionals, annotation con optionals undefined, metadata undefined en puntos, null/tipos incorrectos, coordenadas inválidas y replacement/focus con labels opcionales.
+
+### 2. Una sola capa de escritura y un solo lápiz
+
+- `sanitizeOrbyBoard` rechaza más de una visual `sketch` por tablero. Todos los trazos libres deben pertenecer a una única visual acumulativa.
+- `applyOrbyBoardAction` también rechaza tableros con capas sketch paralelas; no se permite corregir o señalar una escena que generaría varios relojes de lápiz.
+- El contrato de Gemini Live y el prompt del tutor por turnos indican explícitamente una sola visual sketch acumulativa.
+- La capacidad se alineó con el máximo funcional de ocho actualizaciones por turno y hasta cinco trazos nuevos por actualización: **40 trazos acumulativos por visual**.
+- Se conserva el límite duro de **18 KB por tablero completo**, además de límites por puntos, geometría, texto y cantidad de visuales. Los dibujos grandes deben rechazarse antes de renderizar o persistir.
+- La sesión Live y el tutor por turnos ya expresan el mismo máximo de 40 y la misma regla de capa única.
+
+### 3. Pausa coordinada de toda la hoja
+
+- `OrbyBoard` ahora mantiene una referencia a la hoja y pausa/reanuda cada SVG descendiente con `pauseAnimations/unpauseAnimations`.
+- El estado `data-orby-drawing-active` se aplica a la hoja raíz.
+- CSS detiene las animaciones de revelado, anotaciones, trazos y etiquetas cuando la voz se interrumpe; no se limita al sketch principal.
+- La cola de lápiz conserva una sola secuencia temporal, con una preparación de 60 ms para montar los nodos SMIL y 110 ms de levantamiento entre trazos.
+- El primer trazo se programa después de montar el DOM; los trazos acumulados ya programados conservan su tiempo y su ID, evitando reinicios innecesarios.
+
+### 4. Estabilidad de React y de las etapas acumulativas
+
+- El `useId` del marcador de anotación se movió al nivel superior de `Visual`; ahora se llama incondicionalmente antes de decidir la primitiva que se renderiza.
+- La identidad de cada bloque y visual depende del tipo y su posición, no del texto/título. Una actualización acumulativa del texto no debe desmontar y volver a animar etapas anteriores.
+- La identidad de un trazo depende del ID, geometría, tono y grosor. Cambiar solo una etiqueta no vuelve a dibujar el trazo ya completado.
+
+### 5. Regresiones y revisión del conjunto
+
+Se incorporaron o actualizaron pruebas para:
+- Normalización de annotation `undefined`, ausentes, `null` y tipos inválidos.
+- Acciones `focus/replace` y sus optionals.
+- 40 trazos aceptados, 41 rechazados y bloqueo por bytes.
+- Rechazo de dos visuales sketch y de acciones sobre capas paralelas.
+- Pausa/reanudación de todos los SVG y del CSS de la hoja.
+- Hook `useId` incondicional.
+- Claves estables para que las etapas acumulativas no se desmonten al cambiar el texto.
+- Asociación de la pizarra/historial/apuntes al ID del mensaje, no al título de la clase.
+
+El archivo `tests/orby-request-filter.test.mjs` contiene actualmente **215 pruebas declaradas**; la inspección del archivo no encontró pruebas vacías ni nombres duplicados. Esta inspección estructural no equivale a ejecutar esas pruebas.
+
+### Estado de validación
+
+- **Pruebas ejecutadas:** no certificadas en esta ronda; no se dispone de un entorno de ejecución del repositorio desde el conector.
+- **TypeScript / ESLint / build:** pendientes de una ejecución real sobre el SHA final.
+- **CI:** Vercel continúa devolviendo `build-rate-limit` para la rama; no aparece un nuevo workflow de GitHub Actions. No se debe confundir la limitación de CI con un build verde o con un error nuevo del código.
+- **QA Chrome:** todavía pendiente comprobar trazos múltiples, actualización durante un trazo, focus/erase/replace, interrupción y reanudación de voz, etiquetas y movimiento reducido.
+- **No se declara “cero errores” ni equivalencia visual final hasta completar ejecución automatizada y reproducción real del video en navegador.**
+
+### Commits clave de esta mutación
+
+- Sanitizador annotation undefined: `61bfab1165567b9c8fe731858329dfef60885589`.
+- Regresiones de annotation: `cdde8c8efd7cc006bb067fc30739dcbf5cc95d87`.
+- Capacidad acumulativa 40 y esquema: `3766d3d42cc67aa546a373268e21b581d71a4936`, `c933e7ec4efa6c0fa964ea00f80f5b31871efc8b`, `db8cce81a1394bd4b74a416d6abe14841de0a0d4`.
+- Pausa integral de SVG/CSS: `b6efff10807dc0e24df32ddade3a94e3a8fecdc9`, `79913c44235e2141f33758139eebd490e6ed93af`.
+- Capa sketch única: `e18a75e6c7315a17e8e0df4c0bd21f7395447bde`, `e9be72d97a1440889d822996870f75f593eebdd9`.
+- Hook y claves estables: `79f2ff17566a6596e3c41b1789e22e3af46834df`, `9e778324f7ff64993dd8b1b1acfa5d5d5d0a79ce`.
+- Cola con margen de montaje y pausa de levantamiento: `2ca48ef4ef1f1f7c79dcfbb68e92654622a92c4a`.
+- Regresiones de guards/cola: `eb63721425aca158ddde0fc657431dd76629df4f`, `a1c4c72286902d1b80bb7db9b0ab344d820841b7`, `8290ea3b2207babf3fecab1745d9403ecbae031e`, `b666fe2a9198a12f43cdf477949260be91b411b6`.
+- Prompt Live máximo 40: `522a64f924f695023aca26442fd5dd153b311f0e`.
+
+### Orden de continuidad
+
+1. Obtener ejecución automatizada completa cuando CI lo permita: `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build`.
+2. Hacer QA real en Chrome de una clase completa con 1, 5, 16 y 40 trazos, snapshots consecutivos, corrección de un trazo, interrupción y reanudación.
+3. Comparar la secuencia visual y la voz con el video; corregir cualquier salto, desfase o reinicio antes de continuar con mejoras periféricas.
+
+**Protección:** solo `feat/founder-intro`; sin merge a `main`, deploy, migraciones Supabase ni servicios de IA facturables. El material del Orby ICFES Lab eliminado intencionalmente no se reconstruye.

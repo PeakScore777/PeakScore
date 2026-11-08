@@ -25,6 +25,14 @@ type OrbyPublicSource = { title: string; url: string; publisher: string; publish
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz"; title: string; content: string; created_at: string };
+type FlashcardData = { front: string; back: string };
+function parseFlashcard(item: LearningItem): FlashcardData {
+  try {
+    const value = JSON.parse(item.content) as Record<string, unknown>;
+    if (typeof value.front === "string" && typeof value.back === "string") return { front: value.front, back: value.back };
+  } catch { /* Older entries stay readable as plain text. */ }
+  return { front: item.title, back: item.content };
+}
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
 type StoredImage = { name: string; path: string; signedUrl: string; createdAt: string; size: number };
 type ReviewQuestion = {
@@ -273,6 +281,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [flashcardBack, setFlashcardBack] = useState("");
   const [flashcardReviewIndex, setFlashcardReviewIndex] = useState(0);
   const [flashcardBackVisible, setFlashcardBackVisible] = useState(false);
+  const [noteDraftTitle, setNoteDraftTitle] = useState("");
+  const [noteDraftContent, setNoteDraftContent] = useState("");
   const [studyRecordingState, setStudyRecordingState] = useState<"idle" | "recording" | "ready">("idle");
   const [studyRecordingTitle, setStudyRecordingTitle] = useState("Clase grabada");
   const [studyRecordingBlob, setStudyRecordingBlob] = useState<Blob | null>(null);
@@ -684,6 +694,15 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     } catch (caught) {
       setLearningError(caught instanceof Error ? caught.message : "No se pudo guardar.");
     }
+  }
+
+  function saveManualNote() {
+    const title = noteDraftTitle.trim();
+    const content = noteDraftContent.trim();
+    if (!title || !content) return;
+    void saveLearningItem("note", title, content.slice(0, 7900));
+    setNoteDraftTitle("");
+    setNoteDraftContent("");
   }
 
   async function startStudyRecording() {

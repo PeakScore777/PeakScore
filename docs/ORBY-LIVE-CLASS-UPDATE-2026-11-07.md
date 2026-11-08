@@ -652,3 +652,17 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Tras el pull, confirmar que git show HEAD:tests/orby-request-filter.test.mjs | Select-String 'liveToolsSource' muestra una sola declaración (las demás líneas serán aserciones).
 - Ejecutar npm run test:orby; no se declara la suite aprobada desde GitHub.
 - Solo feat/founder-intro; no se toca main, no se despliega.
+## Auditoría de fallo de sintaxis de regex en la suite — 7 de noviembre de 2026
+
+### Causa raíz confirmada
+- La suite ya superó el error de declaración duplicada. El nuevo fallo ocurre al parsear el archivo de pruebas, antes de ejecutar casos: la regex de la aserción del selector [data-orby-teacher-focus] tenía barras invertidas duplicadas dentro de una regex literal.
+- La expresión se interpretaba como una clase de caracteres con rango inválido (Range out of order in character class). No era un error del CSS ni del componente OrbyBoard.
+
+### Corrección
+- Se sustituyó la regex literal defectuosa por una comprobación de inclusión de cadena exacta sobre el selector CSS real: .orby-board [data-orby-teacher-focus] animate { display: none; }.
+- Se inspeccionó el resto del archivo para buscar otros patrones de regex literal con escapes duplicados equivalentes; solo se encontró esta otra ocurrencia en forma de regex literal. La ocurrencia en la línea 678 está dentro de una cadena pasada a includes y no se compila como regex.
+
+### QA
+- Corrección publicada en tests/orby-request-filter.test.mjs.
+- Pendiente ejecutar npm run test:orby en el entorno local; la suite puede revelar fallos de aserciones posteriores una vez que el parser termine de cargar.
+- Solo feat/founder-intro; no se toca main, no se despliega y no se añaden dependencias ni servicios de pago.

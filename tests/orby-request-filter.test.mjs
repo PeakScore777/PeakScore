@@ -19,6 +19,7 @@ async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = 
 
 const boardModule = await loadTypeScriptModule("../lib/ai/orby-board.ts");
 const boardActions = await loadTypeScriptModule("../lib/ai/orby-board-actions.ts");
+const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
 const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServerOnly: true });
 const publication = await loadTypeScriptModule("../lib/ai/orby-publication.ts");
@@ -40,6 +41,7 @@ const knowledgeWorkerSource = await readFile(new URL("../lib/ai/orby-knowledge-w
 const knowledgeQueueSource = await readFile(new URL("../lib/ai/orby-knowledge-queue.ts", import.meta.url), "utf8");
 const manualWorkerRoute = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
 const automaticWorkerRoute = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
+const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
 const lessonTutorSource = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
 const boardComponentSource = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
 const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-capture.worklet.js", import.meta.url), "utf8");
@@ -4039,4 +4041,21 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
   }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: ["missing"] })?.operation, "erase");
   assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "erase", strokeIds: ["missing"] }), null);
+});
+
+test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
+  assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
+  assert.match(liveToolsSource, /Exact operation: focus, erase or replace/);
+  assert.match(lessonTutorSource, /function handleOrbyLiveBoardActionTool/);
+  assert.match(lessonTutorSource, /applyOrbyBoardAction\(currentBoard, action\)/);
+  assert.match(lessonTutorSource, /const boardActionCalls = activeCalls\.filter/);
+  assert.match(lessonTutorSource, /handleOrbyLiveBoardActionTool\(\{ functionCalls: boardActionCalls \}\)/);
+  assert.match(realtimeSessionSource, /OPERACIONES DE PIZARRA DEL PROFESOR/);
+});
+
+test("el señalador contextual es independiente del lápiz y no crea tinta", () => {
+  assert.match(boardComponentSource, /data-orby-teacher-focus=\{stroke\.id\}/);
+  assert.match(boardComponentSource, /focus\?\.strokeId === stroke\.id/);
+  assert.match(boardComponentSource, /teacherFocus/);
+  assert.match(boardComponentSource, /<animate attributeName="r"/);
 });

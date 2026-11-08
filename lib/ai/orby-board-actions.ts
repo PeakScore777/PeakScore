@@ -25,12 +25,16 @@ function sanitizeStroke(value: unknown, expectedId: string): OrbySketchStroke | 
   const width = raw.width === undefined ? 1.25 : raw.width;
   if (!["ink", "blue", "red", "accent", "muted", "success"].includes(String(tone))
     || typeof width !== "number" || !Number.isFinite(width) || width < 0.6 || width > 2.4) return null;
-  const label = typeof raw.label === "string"
-    ? raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48)
-    : "";
+  const hasOwn = (key: string) => Object.prototype.hasOwnProperty.call(raw, key);
+  if ((hasOwn("label") && raw.label !== undefined && typeof raw.label !== "string")
+    || (hasOwn("labelX") && raw.labelX !== undefined && typeof raw.labelX !== "number")
+    || (hasOwn("labelY") && raw.labelY !== undefined && typeof raw.labelY !== "number")) return null;
+  const label = raw.label === undefined
+    ? ""
+    : raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48);
   const hasLabelPosition = raw.labelX !== undefined || raw.labelY !== undefined;
-  if ((label && (typeof raw.labelX !== "number" || !Number.isFinite(raw.labelX) || raw.labelX < 4 || raw.labelX > 96
-      || typeof raw.labelY !== "number" || !Number.isFinite(raw.labelY) || raw.labelY < 4 || raw.labelY > 96))
+  if ((label && (!Number.isFinite(raw.labelX) || (raw.labelX as number) < 4 || (raw.labelX as number) > 96
+      || !Number.isFinite(raw.labelY) || (raw.labelY as number) < 4 || (raw.labelY as number) > 96))
     || (hasLabelPosition && !label)) return null;
   return {
     id: expectedId, points, tone: tone as OrbySketchStroke["tone"], width,
@@ -43,9 +47,11 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
   const raw = value as Record<string, unknown>;
   if (raw.operation === "focus") {
     if (!safeId(raw.strokeId)) return null;
-    const label = typeof raw.label === "string"
-      ? raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48)
-      : "";
+    if (Object.prototype.hasOwnProperty.call(raw, "label")
+      && raw.label !== undefined && typeof raw.label !== "string") return null;
+    const label = raw.label === undefined
+      ? ""
+      : raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48);
     return { operation: "focus", strokeId: raw.strokeId, ...(label ? { label } : {}) };
   }
   if (raw.operation === "erase") {

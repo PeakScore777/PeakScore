@@ -644,3 +644,11 @@
 - Conectar las cinco habilidades de inglés con pizarra progresiva y después extender la memoria/recomendación a las cinco materias de Saber 11.
 - Añadir controles de transparencia, pausa, consulta y borrado de la memoria personal; revisar RLS antes de cualquier acceso nuevo.
 - Presupuesto obligatorio: servicios gratuitos reales dentro de cuota, sin APIs/modelos pagos, créditos facturados ni fallback silencioso.
+
+
+## 2026-11-08 — diagnóstico preciso de preview/build (corrección de estado anterior)
+- El último build ejecutado para el commit `a53918ddae0bf5b6b30802154f796c9f7727498f` no falló por `build-rate-limit`: Vercel ejecutó `npm run build` y terminó con 1 por una aserción obsoleta del selector de nivel en `tests/orby-request-filter.test.mjs`.
+- Se corrigió esa aserción en `b01c3e4f56169679e5a7f39652165ac9f920f759` para exigir el guard que protege respuestas de texto sin guardar.
+- No hay aún un deployment Preview para el HEAD actual. La creación manual fue rechazada por Vercel HTTP 402, recurso `api-deployments-free-per-day`, límite de más de 100 deployments API gratuitos diarios, reintento tras 24 h. No se desplegó producción.
+- Preview READY anterior (HTTP 200), commit `3be12f33d4b2dc7d3fa527aad6b080e5de271cda`: https://peak-score-5daaqgf8a-peak-score.vercel.app. Es solo una muestra desactualizada; no incluye Listening/Reading/Writing ni memoria de aprendizaje por destreza.
+- Inventario estático: 257 tests nombrados, cero duplicados. Suite, TypeScript, ESLint y build del HEAD actual siguen sin certificarse.

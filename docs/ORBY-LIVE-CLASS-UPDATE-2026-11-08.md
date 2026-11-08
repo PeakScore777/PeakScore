@@ -331,3 +331,45 @@ Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos tur
 - Cloudflare Workers AI — asignación de 10.000 neuronas gratis al día y reinicio UTC: https://developers.cloudflare.com/workers-ai/platform/pricing/
 - Anthropic — facturación de la API de Claude mediante créditos prepagados: https://support.claude.com/es/articles/8977456-como-pago-mi-uso-de-la-api-de-claude
 - Anthropic — límites variables del plan gratuito de Claude.ai y reinicio de cinco horas: https://support.claude.com/es/articles/8114491-comienza-con-claude
+
+
+---
+
+## 2026-11-08 — auditoría de fidelidad al video y subtítulos karaoke
+
+### Referencia visual revisada
+- Se inspeccionó el video completo compartido (42,73 s), incluidos los fotogramas donde el tutor muestra un tablero de célula animal: contorno dibujado a mano, núcleo/ADN, ribosomas, mitocondria/ATP, flechas, notas manuscritas y punta de lápiz visible.
+- La referencia combina explicación oral, construcción progresiva del dibujo y subtítulos en la franja inferior. La palabra que está pronunciando se destaca mientras la frase permanece legible.
+- Se mantiene la superficie lisa blanca ya adoptada en la rama; no se introduce textura, cuadrícula ni controles de escritura para el estudiante.
+
+### Auditoría del estado encontrado
+- La rama ya contenía una base real de pizarra v2 16:9, SVG progresivo, trazo libre `sketch`, punta de lápiz animada, etiquetas posteriores al trazo, foco temporal del profesor, operaciones incrementales `append-block`/`append-strokes`, snapshots acumulativos y validación/sanitización antes de renderizar.
+- Live usa audio PCM 24 kHz de salida, voz nativa, transcripción de salida y una sesión WebSocket persistente. El cliente reproduce chunks secuencialmente por Web Audio y mantiene la interrupción por generación.
+- Hallazgo visual concreto: los subtítulos Live mostraban el texto acumulado, pero no tenían índice de palabra activa ni avance ligado al reloj de reproducción. Por eso no replicaban el efecto karaoke de la referencia.
+- Hallazgo de precisión: Gemini Live no proporciona marcas de tiempo por palabra. La documentación oficial declara que los timestamps por palabra no están disponibles en el streaming Live; los offsets por palabra pertenecen al flujo de transcripción no streaming y requieren una operación adicional.
+
+### Correcciones implementadas en `feat/founder-intro`
+- Se añadió `lib/ai/orby-subtitle-timing.ts`: cuenta palabras, separa palabras/espacios sin alterar puntuación y calcula el índice activo de forma monotónica.
+- El cliente registra el instante inicial y el final programado del audio PCM de la respuesta usando `AudioContext.currentTime`. Un `requestAnimationFrame` actualiza únicamente la palabra resaltada; no genera llamadas de red, transcripciones adicionales ni tokens.
+- La palabra activa usa un fondo ámbar tenue, negrita y subrayado; el resto de la frase permanece visible sobre una banda oscura debajo de la pizarra.
+- El reloj y el resaltado se reinician al interrumpir/cambiar de turno. La posición no retrocede cuando llegan más palabras o chunks de audio.
+- Se añadieron pruebas del tokenizador, conteo de palabras, posiciones inicial/mitad/final, entradas inválidas y monotonicidad.
+- Se corrigió el mensaje de error del endpoint TTS: el límite real es 900 caracteres y el mensaje decía 500.
+
+### Límite conocido y decisión de presupuesto
+- El resaltado actual es una aproximación proporcional al tiempo real de reproducción y al total de audio ya programado, no una sincronización fonética exacta. Puede desviarse en frases largas, pausas expresivas, cambios de prosodia o cuando la transcripción llega después del audio.
+- No se añadió una llamada de transcripción por cada respuesta: eso introduciría más latencia y consumo de cuota compartida. Tampoco se añadió ningún modelo/proveedor de pago ni un fallback facturable.
+- Gemini Live y TTS tienen disponibilidad Free Tier documentada, pero con límites variables por modelo/proyecto y sin una cantidad diaria universal garantizada. La cuota restante de este proyecto solo se confirma en AI Studio; no se promete uso ilimitado.
+
+### Fuentes técnicas revisadas
+- Gemini Live API — salida de audio y transcripción de la salida: https://ai.google.dev/gemini-api/docs/live-api/capabilities
+- Referencia WebSocket Live — `outputTranscription`, `modelTurn` y orden no garantizado entre audio y transcripción: https://ai.google.dev/api/live
+- Transcripción Live — no admite timestamps de palabra en streaming: https://ai.google.dev/gemini-api/docs/live-api/live-transcribe
+- Transcripción no streaming — timestamps granulares por palabra: https://ai.google.dev/gemini-api/docs/transcribe
+- Precios/Free Tier de Gemini 3.8 Live y TTS: https://ai.google.dev/gemini-api/docs/pricing
+
+### Validación y pendientes
+- En el commit `b23cd247`, 232 pruebas pasaron y TypeScript pasó; ESLint falló únicamente por una referencia de animación no utilizada. Se corrigió esa referencia, se hizo el tokenizador reutilizable y se ajustó el mensaje TTS.
+- CI debe volver a aprobar tests, TypeScript, ESLint y build sobre el SHA más reciente antes de declarar esta etapa verde.
+- Sigue pendiente una prueba manual en Chrome con micrófono real: 20 turnos cortos, cinco explicaciones largas, varias interrupciones, nueva pregunta durante el audio, revisión visual de la pizarra y seguimiento de subtítulos en escritorio/móvil.
+- La prueba de código no valida permisos reales, cuotas remanentes del proyecto, configuración de privacidad de producción ni persistencia remota. No habilitar Live en producción, aplicar migraciones Supabase, hacer Pull ni desplegar como parte de esta auditoría.

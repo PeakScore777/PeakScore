@@ -685,3 +685,48 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - El usuario debe actualizar a la revisión que contiene 6553c17 y ejecutar npm run test:orby. Solo después de ver los fallos reales restantes se deben corregir los asserts de comportamiento que estén desactualizados, sin borrar pruebas válidas ni debilitar cobertura.
 - No se debe declarar cero errores hasta que la suite, TypeScript/ESLint y build hayan terminado correctamente.
 - Sin cambios a main ni despliegue.
+
+## Auditoría profunda y primera ronda de correcciones — 7 de noviembre de 2026
+
+### Evidencia de partida
+Se tomó como evidencia el log local compartido por el usuario, que reportaba siete pruebas fallidas. Se contrastaron las aserciones con los archivos reales de la rama `feat/founder-intro`, en lugar de asumir que cada fallo representaba una regresión funcional.
+
+### Causas identificadas y correcciones aplicadas
+
+1. **La pizarra descartaba snapshots visuales sin bloques de texto — bug real corregido.**
+   - `sanitizeOrbyBoard` exigía al menos un bloque textual antes de procesar cualquier tablero.
+   - El contrato Live permite que el primer snapshot sea un dibujo pequeño y que el texto llegue en una actualización posterior. La validación rechazaba precisamente ese flujo visual progresivo.
+   - Ahora la versión 2 acepta snapshots con visuales y cero bloques; sigue rechazando un tablero completamente vacío. La versión 1 conserva la exigencia de bloques de texto.
+   - Commit: `987ccf3a5fc67cb21cdf8293fc5101c5276cbd24`.
+
+2. **Las pruebas de la pizarra estaban acopladas a una implementación antigua — pruebas corregidas, no lógica degradada.**
+   - El renderizador ya utiliza `getOrbySketchStrokeTiming`; los tests buscaban una variable intermedia `strokeTimings` y una fórmula duplicada dentro del componente.
+   - El contrato JSX real usa `pathLength={1}`, no el texto HTML `pathLength="1"`.
+   - El schema Live ya incluye `annotation`; la aserción esperaba una lista antigua que omitía ese tipo.
+   - Se actualizaron las comprobaciones para verificar el helper real, su uso en el componente, la forma JSX y el conjunto actual de tipos.
+   - Commits: `55af96ce6daa156dcfe0e367514f8199115ecd82` y `134204d222413cddb4770e2d8d4cf6c4e24707ce`.
+
+3. **La prueba de montaje de la hoja esperaba un JSX que ya no existe.**
+   - La clase ahora monta el tablero dentro del contenedor `orby-class-board` y pasa `drawingActive` para sincronizar la pausa de voz.
+   - Se ajustó la aserción para comprobar ese contrato actual, sin eliminar la verificación de que la hoja se reserva y muestra el tablero validado.
+
+4. **La instrucción pedagógica sí prohibía inventar datos, pero la prueba exigía una frase literal distinta.**
+   - Se hizo explícita y más legible la regla: no inventar afirmaciones, evidencias, porcentajes ni distribuciones oficiales.
+   - Commit: `cd0151cecd838493fcc8d67342c56de925fa2dc4`.
+
+5. **Movimiento reducido.**
+   - La hoja ya cuenta con reglas `prefers-reduced-motion` que desactivan animaciones de tinta, lápiz y aparición, y ocultan la punta del lápiz.
+   - Se añadió una regresión que comprueba ese contrato; no se sustituyó la animación real por una solución estática para todos los usuarios.
+
+### Auditoría adicional del flujo inspeccionado
+- La sesión Live autentica al usuario, aplica rate limit, limita la vigencia del token efímero y devuelve errores explícitos al agotarse la cuota gratuita; no activa un proveedor de pago como fallback.
+- El historial persistido se consulta por `conversation_id` y `user_id`; las señales adaptativas se consultan por usuario y materia canónica.
+- La herramienta de pizarra es NON_BLOCKING y el contrato indica que la voz no debe esperar su ejecución.
+- Las acciones de foco, borrado y reemplazo validan IDs, geometría y unicidad antes de modificar trazos.
+- La superficie de clase no contiene herramientas de tinta del estudiante; el lápiz es una animación SVG asociada a los trazos de Orby.
+
+### Validación y límites
+- Se verificó en GitHub el estado combinado del commit `134204d222413cddb4770e2d8d4cf6c4e24707ce`: Vercel informa `failure` con destino `build-rate-limit`. Ese estado no demuestra que los tests Node hayan fallado ni que el código compile; indica que Vercel no completó la comprobación por su límite de builds.
+- No se ejecutaron Node tests, TypeScript, ESLint, build ni una llamada real de Gemini Live desde este entorno. Por tanto, estas mutaciones no se declaran verificadas en ejecución.
+- La revisión de archivos fuente no sustituye una auditoría de RLS/migraciones, pruebas de navegador ni una prueba de carga real. Esas áreas siguen abiertas.
+- No se modificó `main`, no se desplegó, no se añadieron dependencias ni proveedores/API de pago.

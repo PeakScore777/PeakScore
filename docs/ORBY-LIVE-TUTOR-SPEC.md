@@ -330,3 +330,11 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 ### Equation text rendering contract (2026-11-08)
 - `formula` and `step` blocks currently render as handwritten-face plain text, not TeX/MathJax. Model instructions in both Live and the fallback therefore require readable plain-text notation (for example, `2x + 3 = 11`) and forbid raw LaTeX commands, HTML or complex Markdown in these fields.
 - A future dedicated math renderer would require an explicit typed/sanitized contract and its own tests; do not assume TeX support from the `formula` block name.
+
+
+### Exact teacher spotlight target (2026-11-08)
+- The Live action `focus` accepts optional zero-based `pointIndex` only when a `strokeId` is supplied. It must point to an existing point in that stroke; arbitrary coordinates are not accepted. Omitting the index preserves midpoint focus. `elementId` focus remains whole-stage only.
+- The server checks the point index against the actual stroke geometry after schema validation. Invalid points are rejected with a specific tool response; accepted focus does not add, erase or replace ink.
+- The renderer displays a local ring, center dot, optional leader and short label at the selected point. Under reduced motion it remains visible as a static indicator.
+- Live instructions teach the model to use exact points for joins/endpoints/details and to omit the index for midpoint focus.
+- Regression coverage was added for exact targeting, invalid/out-of-range indices, actual geometry length, unchanged ink, renderer and prompt contract. Tests/TypeScript/ESLint/build and browser QA remain unexecuted for this HEAD.

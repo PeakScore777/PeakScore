@@ -475,6 +475,8 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
     setDraft(null);
   }
   return (
+    <>
+      <style>{"@media print {@page { size: A4; margin: 12mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board > div { position: static !important; max-width: none !important; padding: 8mm 0 !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip { display: none !important; }}"} </style>
     <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden rounded-xl border border-slate-200/90 bg-[#fffefb] text-slate-900 shadow-[0_10px_34px_rgba(15,23,42,.10)] sm:rounded-2xl" style={{ backgroundImage: "linear-gradient(rgba(148,163,184,.075) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.075) 1px, transparent 1px)", backgroundSize: "30px 30px" }}>
       <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200/90 bg-[#fffefb]/95 px-4 py-3 backdrop-blur-sm sm:px-8">
         <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Apuntes de clase</h3></div>
@@ -511,5 +513,6 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
         {draft && <polyline points={draft.points.map((p) => p.x + "," + p.y).join(" ")} fill="none" stroke={draft.mode === "highlight" ? "#fbbf24" : "#ea580c"} strokeWidth={draft.mode === "highlight" ? 3.8 : 0.9} strokeLinecap="round" strokeLinejoin="round" opacity={draft.mode === "highlight" ? 0.32 : 0.9}/>}
       </svg>
     </section>
+    </>
   );
 }

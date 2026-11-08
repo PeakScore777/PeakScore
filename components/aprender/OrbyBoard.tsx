@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import { useId } from "react";
 import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-board";
@@ -412,87 +412,15 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
   );
 }
 
-type StudentStroke = { points: Array<{ x: number; y: number }>; mode: "pen" | "highlight" };
-
-export default function OrbyBoard({ board, storageId }: { board: OrbyBoardData; storageId?: string }) {
-  const [tool, setTool] = useState<"pen" | "highlight" | "eraser">("pen");
-  const [strokes, setStrokes] = useState<StudentStroke[]>([]);
-  const [redoStrokes, setRedoStrokes] = useState<StudentStroke[]>([]);
-  const [storageReady, setStorageReady] = useState(false);
-  const storageKey = "peakscore:orby-board-ink:" + encodeURIComponent(storageId || board.title || "clase");
-  const [draft, setDraft] = useState<StudentStroke | null>(null);
-  const [drawing, setDrawing] = useState(false);
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(storageKey);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) setStrokes(parsed.filter((stroke) => stroke && (stroke.mode === "pen" || stroke.mode === "highlight") && Array.isArray(stroke.points) && stroke.points.length >= 2 && stroke.points.every((point) => Number.isFinite(point.x) && Number.isFinite(point.y) && point.x >= 0 && point.x <= 100 && point.y >= 0 && point.y <= 100)));
-      }
-    } catch {}
-    setStorageReady(true);
-  }, [storageKey]);
-  useEffect(() => {
-    if (!storageReady) return;
-    try { window.localStorage.setItem(storageKey, JSON.stringify(strokes)); } catch {}
-  }, [storageKey, storageReady, strokes]);
-  function getPoint(event: React.PointerEvent<SVGSVGElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
-    return { x: Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100)), y: Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100)) };
-  }
-  function pointerDown(event: React.PointerEvent<SVGSVGElement>) {
-    const point = getPoint(event);
-    if (tool === "eraser") {
-      event.preventDefault();
-      event.currentTarget.setPointerCapture(event.pointerId);
-      eraseAt(point);
-      return;
-    }
-    event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDrawing(true);
-    setDraft({ points: [point], mode: tool });
-  }
-  function eraseAt(point: { x: number; y: number }) {
-    setStrokes((current) => current.filter((stroke) =>
-      !stroke.points.some((p) => Math.hypot(p.x - point.x, p.y - point.y) < 5)
-    ));
-  }
-  function pointerMove(event: React.PointerEvent<SVGSVGElement>) {
-    if (tool === "eraser" && event.buttons !== 0) {
-      eraseAt(getPoint(event));
-      return;
-    }
-    if (drawing) {
-      const point = getPoint(event);
-      setDraft((current) => current ? { ...current, points: [...current.points, point] } : current);
-    }
-  }
-  function pointerUp() {
-    if (!drawing) return;
-    setDrawing(false);
-    if (draft && draft.points.length > 1) { setStrokes((items) => [...items, draft]); setRedoStrokes([]); }
-    setDraft(null);
-  }
+export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
   return (
     <>
       <style>{"@media print {@page { size: A4; margin: 12mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board > div { position: static !important; max-width: none !important; padding: 8mm 0 !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip { display: none !important; }}"} </style>
-    <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden rounded-xl border border-slate-200/90 bg-[#fffefb] text-slate-900 shadow-[0_10px_34px_rgba(15,23,42,.10)] sm:rounded-2xl" style={{ backgroundImage: "linear-gradient(rgba(148,163,184,.075) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,.075) 1px, transparent 1px)", backgroundSize: "30px 30px" }}>
-      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200/90 bg-[#fffefb]/95 px-4 py-3 backdrop-blur-sm sm:px-8">
-        <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Apuntes de clase</h3></div>
+    <section aria-label={"Pizarra: " + board.title} className="orby-board mx-auto min-h-full w-full overflow-hidden rounded-xl border border-slate-200/90 bg-white text-slate-900 shadow-none sm:rounded-2xl">
+      <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-slate-200/90 bg-white/95 px-4 py-3 backdrop-blur-sm sm:px-8">
+        <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Clase en vivo</h3></div>
         <span className="truncate text-right text-xs font-semibold text-slate-700 sm:text-sm">{board.title}</span>
       </header>
-      <div className="sticky top-[49px] z-10 flex flex-wrap items-center gap-1.5 border-b border-slate-200 bg-[#fffefb]/95 px-3 py-2 backdrop-blur-sm print:hidden" aria-label="Herramientas de anotación">
-        <span className="mr-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Mis trazos</span>
-        <button type="button" onClick={() => setTool("pen")} aria-pressed={tool === "pen"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "pen" ? "bg-orange-100 text-orange-800" : "text-slate-600 hover:bg-slate-100")}>Lápiz</button>
-        <button type="button" onClick={() => setTool("highlight")} aria-pressed={tool === "highlight"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "highlight" ? "bg-amber-100 text-amber-800" : "text-slate-600 hover:bg-slate-100")}>Resaltador</button>
-        <button type="button" onClick={() => setTool("eraser")} aria-pressed={tool === "eraser"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "eraser" ? "bg-slate-200 text-slate-900" : "text-slate-600 hover:bg-slate-100")}>Borrador</button>
-        <button type="button" onClick={() => { const last = strokes[strokes.length - 1]; if (!last) return; setStrokes((items) => items.slice(0, -1)); setRedoStrokes((items) => [...items, last]); }} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Deshacer</button>
-        <button type="button" onClick={() => { const last = redoStrokes[redoStrokes.length - 1]; if (!last) return; setRedoStrokes((items) => items.slice(0, -1)); setStrokes((items) => [...items, last]); }} disabled={!redoStrokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Rehacer</button>
-        <button type="button" onClick={() => { setStrokes([]); setRedoStrokes([]); }} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Limpiar</button>
-        <button type="button" data-orby-no-print onClick={() => window.print()} className="rounded-md bg-slate-900 px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-slate-700">Exportar / PDF</button>
-        <span className="ml-auto text-[9px] text-slate-400">{strokes.length} trazos</span>
-      </div>
       <div className="mx-auto min-h-[60vh] max-w-6xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-10 sm:py-10">
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
@@ -504,15 +432,11 @@ export default function OrbyBoard({ board, storageId }: { board: OrbyBoardData; 
           if (block.type === "callout") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
           return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 110, 1_100)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-xl border border-slate-200/70 bg-white/75 p-3 shadow-[0_2px_12px_rgba(15,23,42,.025)] sm:p-5">
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 110, 1_100)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-xl border-0 bg-transparent p-0 shadow-none sm:p-0">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
           <Visual visual={visual}/>
         </section>)}
       </div>
-      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Capa de escritura personal" className={"absolute inset-0 z-[8] h-full w-full touch-none " + (tool === "eraser" ? "cursor-cell" : "cursor-crosshair")} onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerUp} onPointerCancel={pointerUp} onLostPointerCapture={pointerUp}>
-        {strokes.map((stroke, index) => <polyline key={index} points={stroke.points.map((p) => p.x + "," + p.y).join(" ")} fill="none" stroke={stroke.mode === "highlight" ? "#fbbf24" : "#ea580c"} strokeWidth={stroke.mode === "highlight" ? 3.8 : 0.9} strokeLinecap="round" strokeLinejoin="round" opacity={stroke.mode === "highlight" ? 0.32 : 0.9}/>)}
-        {draft && <polyline points={draft.points.map((p) => p.x + "," + p.y).join(" ")} fill="none" stroke={draft.mode === "highlight" ? "#fbbf24" : "#ea580c"} strokeWidth={draft.mode === "highlight" ? 3.8 : 0.9} strokeLinecap="round" strokeLinejoin="round" opacity={draft.mode === "highlight" ? 0.32 : 0.9}/>}
-      </svg>
     </section>
     </>
   );

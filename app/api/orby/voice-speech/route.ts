@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     if (!isGeminiFreeTierConfigured()) {
       return jsonError(
-        "La voz está desactivada: el servidor no ha confirmado el plan gratuito de Gemini. No se ha enviado ninguna solicitud al proveedor.",
+        "La voz está desactivada: el servidor no ha confirmado el plan gratuito ni la autorización de uso de datos de Gemini. No se ha enviado ninguna solicitud al proveedor.",
         "GEMINI_FREE_TIER_NOT_CONFIRMED",
         503,
       );

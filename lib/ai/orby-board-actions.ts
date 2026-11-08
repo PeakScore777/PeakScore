@@ -63,13 +63,17 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
 
 export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction): OrbyBoard | null {
   const sketches = (board.visuals ?? []).filter((visual) => visual.type === "sketch");
-  const existingIds = new Set(sketches.flatMap((visual) => visual.strokes.map((stroke) => stroke.id)));
+  const strokeIdCounts = new Map<string, number>();
+  for (const visual of sketches) {
+    for (const stroke of visual.strokes) strokeIdCounts.set(stroke.id, (strokeIdCounts.get(stroke.id) ?? 0) + 1);
+  }
+  const existsExactlyOnce = (id: string) => strokeIdCounts.get(id) === 1;
   if (action.operation === "focus") {
-    if (!existingIds.has(action.strokeId)) return null;
+    if (!existsExactlyOnce(action.strokeId)) return null;
     return { ...board, teacherFocus: { strokeId: action.strokeId, revision: (board.teacherFocus?.revision ?? 0) + 1, ...(action.label ? { label: action.label } : {}) } };
   }
   if (action.operation === "erase") {
-    if (!action.strokeIds.every((id) => existingIds.has(id))) return null;
+    if (!action.strokeIds.every(existsExactlyOnce)) return null;
     const visuals = (board.visuals ?? []).flatMap((visual) => {
       if (visual.type !== "sketch") return [visual];
       const strokes = visual.strokes.filter((stroke) => !action.strokeIds.includes(stroke.id));

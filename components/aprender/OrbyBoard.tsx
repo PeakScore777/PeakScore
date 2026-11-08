@@ -65,11 +65,6 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
     muted: "#94a3b8",
     success: "#0f766e",
   } as const;
-  // Cumulative snapshots keep prior strokes mounted. Use a short stagger,
-  // not the sum of every previous stroke duration, so later updates stay live.
-  const strokeTimings = visual.strokes.map((_stroke, index) => ({
-    delay: Math.min(index * 260, 1_300),
-  }));
   return (
     <svg ref={svgRef} data-orby-drawing-active={drawingActive ? "true" : "false"} viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto min-h-[440px] w-full overflow-visible sm:min-h-[560px]">
       {visual.strokes.map((stroke, index) => {
@@ -77,8 +72,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
         const path = smoothSketchPath(stroke.points);
         // Draw strokes one after another, like a teacher writing on a tablet.
         // A short pause between pen lifts keeps words and diagram parts legible.
-        const duration = Math.min(1_600, Math.max(760, stroke.points.length * 34));
-        const delay = strokeTimings[index]?.delay ?? 0;
+        const { duration, delay } = getOrbySketchStrokeTiming(index, stroke.points.length);
         const lastPoint = stroke.points[stroke.points.length - 1];
         return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
           <path

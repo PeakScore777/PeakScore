@@ -151,7 +151,7 @@ export async function POST(request: Request) {
     const stage = body.stage === "practice" ? "práctica" : "teoría";
     const question = cleanText(body.question, 1200);
     const context = cleanText(body.context, 1600);
-    const userMessage = cleanText(body.message, 1200);
+    const userMessage = cleanText(body.message, learningSkill ? 7000 : 1200);
     const conversationId = cleanText(body.conversationId, 64);
     let ownedConversation: { id: string; title: string; subject: string; topic: string } | null = null;
     if (conversationId) {

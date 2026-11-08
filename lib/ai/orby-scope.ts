@@ -10,6 +10,109 @@ export const ICFES_SUBJECTS = [
 
 export type IcfesSubject = (typeof ICFES_SUBJECTS)[number];
 
+export type IcfesPedagogyProfile = {
+  subject: IcfesSubject;
+  purpose: string;
+  reasoningRoutine: readonly string[];
+  boardPriorities: readonly string[];
+  commonRisks: readonly string[];
+  feedbackFocus: string;
+};
+
+/**
+ * Subject-specific teaching contract grounded in the current ICFES Saber 11
+ * orientation and subject reference frameworks. This is guidance, not a
+ * fabricated exhaustive list of official evidences or question quotas.
+ */
+const ICFES_PEDAGOGY_PROFILES: Record<IcfesSubject, Omit<IcfesPedagogyProfile, "subject">> = {
+  "Matemáticas": {
+    purpose: "interpretar información, formular y ejecutar estrategias para resolver problemas, y justificar procedimientos matemáticos en contextos variados",
+    reasoningRoutine: [
+      "identificar contexto, datos, incógnita y restricciones",
+      "traducir la situación a representaciones numéricas, algebraicas, geométricas, gráficas o tabulares",
+      "seleccionar y justificar la estrategia; desarrollar operaciones mostrando pasos y unidades",
+      "interpretar el resultado dentro del contexto y comprobar orden de magnitud, dominio y coherencia",
+    ],
+    boardPriorities: ["datos e incógnita", "representación y fórmula pertinente", "operaciones paso a paso", "gráfica con ejes y unidades", "comprobación contextual"],
+    commonRisks: ["aplicar una fórmula sin justificar su pertinencia", "confundir variable independiente y dependiente", "leer escalas o unidades incorrectamente", "dar un resultado numérico sin interpretarlo"],
+    feedbackFocus: "ubica el primer paso donde se rompe la estrategia, distingue error conceptual de aritmético y propone una pista antes de revelar toda la solución",
+  },
+  "Lectura Crítica": {
+    purpose: "identificar y ubicar información local, relacionar e interpretar información, y evaluar y reflexionar sobre la forma y el contenido de textos continuos y discontinuos",
+    reasoningRoutine: [
+      "reconocer tipo de texto, situación comunicativa, tema y propósito",
+      "localizar la evidencia textual exacta relevante",
+      "inferir relaciones entre partes, voces, tesis, supuestos y conclusiones sin exceder lo que permite el texto",
+      "evaluar la opción frente a la evidencia y explicar por qué los distractores agregan, contradicen o deforman información",
+    ],
+    boardPriorities: ["fragmento textual breve", "tesis o idea central", "evidencia subrayada", "relación entre afirmación e inferencia", "comparación de distractores"],
+    commonRisks: ["responder desde opinión personal y no desde el texto", "confundir tema con tesis", "tratar una inferencia plausible como información explícita", "ignorar propósito, tono o estructura"],
+    feedbackFocus: "pide justificar cada interpretación con una pista del texto y enseña a descartar opciones con evidencia, no por intuición",
+  },
+  "Sociales y Ciudadanas": {
+    purpose: "comprender fenómenos sociales desde perspectivas de las ciencias sociales y analizar situaciones de ciudadanía, convivencia, participación y organización política",
+    reasoningRoutine: [
+      "ubicar actores, espacio, periodo y contexto sin anacronismos",
+      "distinguir hechos, interpretaciones, intereses y fuentes",
+      "relacionar causas, consecuencias, continuidades, cambios y escalas territoriales",
+      "contrastar perspectivas y analizar derechos, principios constitucionales e instituciones cuando sean pertinentes",
+      "sustentar la conclusión con información del caso y evitar juicios descontextualizados",
+    ],
+    boardPriorities: ["línea de tiempo o mapa conceptual", "actores e intereses", "cadena causal", "perspectivas contrastadas", "institución, derecho o principio pertinente"],
+    commonRisks: ["anacronismo", "confundir causa con consecuencia", "generalizar un proceso a todos los territorios", "reducir conflictos a una sola perspectiva", "confundir opinión con evidencia"],
+    feedbackFocus: "solicita contexto y perspectiva omitidos, y muestra cómo cambian las conclusiones según la evidencia disponible",
+  },
+  "Ciencias Naturales": {
+    purpose: "usar conceptos científicos para explicar fenómenos, comprender sistemas vivos, físicos y químicos, e indagar a partir de observaciones, patrones y datos",
+    reasoningRoutine: [
+      "identificar fenómeno, sistema y pregunta investigable",
+      "definir variables independiente, dependiente y de control cuando aplique",
+      "conectar mecanismo o modelo científico con observaciones y datos",
+      "leer tablas, gráficas, unidades y patrones; distinguir asociación de causalidad",
+      "evaluar diseño experimental, limitaciones y conclusión respaldada por evidencia",
+    ],
+    boardPriorities: ["modelo o mecanismo", "variables y controles", "tabla/gráfica con unidades", "secuencia causal", "conclusión y límites de evidencia"],
+    commonRisks: ["confundir correlación con causalidad", "alterar variables de control", "concluir más de lo que muestran los datos", "mezclar modelos esquemáticos con observaciones reales"],
+    feedbackFocus: "separa conocimiento conceptual, lectura de datos y diseño experimental para localizar con precisión la dificultad",
+  },
+  "Inglés": {
+    purpose: "comprender y usar inglés en contextos comunicativos; interpretar avisos, mensajes, diálogos y textos según propósito, vocabulario y contexto",
+    reasoningRoutine: [
+      "identificar situación, interlocutores, propósito y tipo de texto",
+      "usar contexto y cognados con cautela para inferir vocabulario",
+      "analizar referencias, conectores, estructuras gramaticales y coherencia",
+      "contrastar cada opción con las pistas del texto o diálogo",
+      "explicar la estrategia en español y conservar en inglés solo el material que el ejercicio requiera",
+    ],
+    boardPriorities: ["contexto comunicativo", "palabra o expresión en contexto", "conector/referencia", "pista textual", "razón para elegir la opción"],
+    commonRisks: ["traducir palabra por palabra", "elegir por parecido léxico sin contexto", "confundir tiempo verbal con intención comunicativa", "responder sin revisar concordancia o cohesión"],
+    feedbackFocus: "explica en español la pista que resuelve el ítem, ofrece una reformulación breve en inglés y adapta el vocabulario al nivel observado",
+  },
+};
+
+export function getIcfesPedagogyProfile(value: unknown): IcfesPedagogyProfile | null {
+  const subject = normalizeIcfesSubject(value);
+  if (!subject) return null;
+  const profile = ICFES_PEDAGOGY_PROFILES[subject];
+  return { subject, ...profile };
+}
+
+export function buildIcfesPedagogyInstruction(value: unknown): string {
+  const profile = getIcfesPedagogyProfile(value);
+  if (!profile) return "";
+  return [
+    `PERFIL PEDAGÓGICO ACTIVO — ${profile.subject}:`,
+    `Propósito: ${profile.purpose}.`,
+    `Secuencia de razonamiento: ${profile.reasoningRoutine.map((item, index) => `${index + 1}) ${item}`).join("; ")}.`,
+    `Prioridades de pizarra: ${profile.boardPriorities.join("; ")}.`,
+    `Errores frecuentes que debes vigilar: ${profile.commonRisks.join("; ")}.`,
+    `Retroalimentación: ${profile.feedbackFocus}.`,
+    "Selecciona solo los pasos pertinentes a la pregunta; no conviertas esta secuencia en una plantilla rígida ni inventes afirmaciones, evidencias, porcentajes o distribución oficial de preguntas. Si el estudiante cambia de materia, cambia también el perfil.",
+    profile.subject === "Inglés" ? "Regla adicional: la explicación oral y la retroalimentación van en español colombiano; usa inglés para ejemplos, fragmentos y práctica cuando el ejercicio lo requiera." : "",
+  ].filter(Boolean).join(" ");
+}
+
+
 /** Adds English equivalents for common Spanish ICFES grammar terms before Lab retrieval. */
 export function expandIcfesEnglishSearchTerms(query: string): string {
   const normalized = query.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("es-CO");

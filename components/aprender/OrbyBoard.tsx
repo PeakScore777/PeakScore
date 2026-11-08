@@ -88,7 +88,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
             strokeLinejoin="round"
             style={{ animationDelay: `${delay}ms`, animationDuration: `${duration}ms`, animationTimingFunction: "linear", animationPlayState: drawingActive ? "running" : "paused" }}
           />
-          <g className="orby-board-pen-tip" data-orby-teacher-pointer={stroke.id} aria-hidden="true">
+          <g opacity={0} className="orby-board-pen-tip" data-orby-teacher-pointer={stroke.id} aria-hidden="true">
             <path d="M -5.2 -1.25 L 2.8 -1.25 L 5.2 0 L 2.8 1.25 L -5.2 1.25 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.42" strokeLinejoin="round"/>
             <path d="M -2.8 -1.1 L -2.8 1.1 M -3.8 -1.1 L -3.8 1.1" stroke="#78350f" strokeWidth="0.25"/>
             <path d="M 4.2 -0.72 L 5.2 0 L 4.2 0.72 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.25"/>

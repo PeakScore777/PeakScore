@@ -3967,7 +3967,9 @@ test("la hoja revela bloques y apoyos visuales en etapas pedagógicas acumulativ
 });
 
 test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
-  assert.match(boardComponentSource, /key=\{`\$\{stroke\.id\}:/);
+  assert.match(boardComponentSource, /function getSketchStrokeKey\(stroke: OrbySketchStroke\)/);
+  assert.match(boardComponentSource, /return `\$\{stroke\.id\}:/);
+  assert.match(boardComponentSource, /return <g key=\{key\}>/);
   assert.match(boardComponentSource, /orby-board-sketch-stroke/);
   assert.match(boardComponentSource, /orby-board-pen-tip/);
   assert.doesNotMatch(liveToolsSource, /set spokenCue to an exact short phrase/);

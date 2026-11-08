@@ -743,3 +743,29 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - `npm run test:orby`: **241/241 aprobadas**; TypeScript, ESLint, auditoría de dependencias y Next.js production build: correctos.
 - SHA de código de pizarra verificado: `6faaa500bea535cdcf9c40680a4f9ae8630d0095`; helper/propagación y regresión quedaron en el mismo HEAD validado de la rama.
 - Sigue pendiente QA manual de Chrome con voz Live real para comprobar la sincronía percibida con el audio y las pausas del profesor; CI solo valida contratos y compilación.
+
+## 2026-11-08 — siguiente bloque OmegaX: mano natural, accesibilidad y pasos matemáticos
+
+### Auditoría previa
+- Se revisaron la especificación `docs/ORBY-LIVE-TUTOR-SPEC.md`, la bitácora del 8 de noviembre, `app/api/orby/realtime-session/route.ts`, `lib/ai/orby-live-tools.ts`, `components/aprender/OrbyBoard.tsx` y `tests/orby-request-filter.test.mjs`.
+- Hallazgo documental: la especificación conservaba una frase antigua que afirmaba que el karaoke de palabra aún no estaba implementado. Se corrigió: existe un resaltado aproximado calculado desde el reloj de reproducción y ponderado por longitud/grupos vocálicos/puntuación; no son timestamps fonéticos exactos.
+- La escritura progresiva acumulativa, operaciones incrementales y cola de lápiz ya existían. Esta tanda no las reconstruyó ni cambió su protocolo.
+
+### Correcciones aplicadas
+1. **Movimiento reducido real:** `OrbyBoard.tsx` ahora convierte el tablero en una salida estática completa al activarse `prefers-reduced-motion`. La tinta, etiquetas y puntos finales siguen visibles; se elimina el movimiento del lápiz, los SMIL y la aparición animada.
+2. **Perfil del lápiz:** tinta y punta usan la misma curva spline, derivada de la geometría del trazo. Se conserva la cola serial y la pausa/reanudación.
+3. **Derivaciones de ciencias exactas:** la instrucción de sesión Live pide una transformación visible por evento incremental, alineación de igualdades, explicación del cambio y comprobación de unidades/cálculos.
+4. **Regresiones:** se añadieron pruebas para movimiento reducido y derivaciones por etapas.
+
+### Commits
+- `777b66a` — reduce motion.
+- `e9174ae` — derivaciones por etapas.
+- `d501f01` — pruebas de regresión.
+- `7e77325` — reconciliación de especificación.
+
+### Validación pendiente y límites
+- No se ha ejecutado `npm run test:orby`, TypeScript, ESLint ni build para el HEAD de esta tanda. Los tests nuevos son regresiones añadidas, no pruebas aprobadas.
+- La CI histórica 42521925925 (241/241) valida un SHA anterior y no debe atribuirse a estos cambios.
+- Vercel ha mostrado `build-rate-limit`; no se ha intentado cambiar el plan ni habilitar facturación.
+- Falta comprobar en Chrome real la preferencia de movimiento del sistema, voz Gemini Live, interrupción a mitad de un trazo y que las derivaciones lleguen incrementalmente en el orden explicado.
+- No se afirma alineación exacta palabra-audio; la heurística de subtítulos sigue siendo aproximada.

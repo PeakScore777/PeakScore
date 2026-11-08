@@ -509,3 +509,10 @@
 - Se conserva el reloj de Web Audio y el avance monotónico durante transcripción incremental; no se añaden timers ni llamadas de modelo.
 - La ponderación es aproximada, no alineación fonética.
 - CI run 42520586985: 240/240 tests, TypeScript, ESLint, dependency audit y `next build` aprobados.
+
+## 2026-11-08 — progressive SVG board stage timing
+- Fixed a visual timing defect: CSS animation-delay on SVG wrapper groups does not cascade to child paths/lines. Several strokes could finish while their spatial stage was still hidden by its entry animation.
+- Added `getOrbyBoardProgressiveDelay` and propagated the spatial `startDelayMs` into diagram, graph, vector, molecule, circuit, cell, DNA and physiology-process visuals.
+- Actual SVG paths/lines now receive the stage offset plus per-item stagger. Removed redundant nested appear animations for diagram nodes and graph points.
+- Preserved the freehand Sketch SMIL queue and pause/resume behavior.
+- CI run 42521925925: 241/241 tests, TypeScript, ESLint, dependency audit and Next.js production build passed. Manual Chrome/Live voice synchronization QA remains pending.

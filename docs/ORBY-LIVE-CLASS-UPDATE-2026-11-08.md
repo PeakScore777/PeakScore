@@ -863,3 +863,15 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 
 ### Último ajuste de regresión
 - La prueba estática del renderer ahora comprueba también el objetivo `component.id` usado por los circuitos, además de nodos, átomos y elementos anatómicos/orgánulos. Inventario estático: 249 pruebas, sin duplicados; no ejecutadas.
+
+
+## Auditoría correctiva transversal — 8 de noviembre de 2026
+
+- La fase de revisión se amplió a los 109 archivos de TypeScript/JavaScript de servidor bajo `app/api` y `lib`. El uso de proveedores de inferencia quedó centralizado o bloqueado por `lib/ai/provider-free-tier.ts`; el único endpoint adicional con cliente Gemini directo encontrado en las rutas API fue `app/api/import.pdf/route.ts`, ahora protegido con aprobación de nivel gratuito y uso de datos antes de procesar el PDF y después de autenticar al administrador.
+- Gemini Free requiere dos confirmaciones separadas: `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED` (plan sin coste verificado por el operador) y `PEAKSCORE_GEMINI_DATA_USE_APPROVED` (aprobación independiente del uso de datos de Free Tier). Ambas quedan apagadas por defecto. Esta decisión no sustituye consentimiento legal ni consulta automática de facturación.
+- Groq, LLM7 y Cloudflare Workers AI también requieren confirmaciones explícitas de plan sin coste; no hay fallback silencioso a proveedores no confirmados. El OpenAI legacy client está bloqueado.
+- El cronómetro de English Studio arranca al recibir `MediaRecorder.onstart` y usa `performance.now()`.
+- La etiqueta de foco de pizarra tiene una regresión que verifica preservación de tildes, siglas, cifras y fórmulas.
+- CI completó tests, TypeScript, ESLint y build en SHA `4a7e21230deb385b94860848cf6bc4d71e7712b9` (run 42537054107). Un ajuste posterior movió la comprobación del importador PDF después de autenticación y verificación de rol admin; pendiente run 42537169406.
+- Pendiente QA real Chrome/Gemini Live/micrófono, verificación manual de planes/cuotas y transición compatible de embeddings antes de la retirada del modelo actual. No cambiar el índice de 768 dimensiones sin probar/reindexar.
+- Sin cambios a `main`, sin deploy y sin migraciones remotas.

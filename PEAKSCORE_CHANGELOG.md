@@ -429,3 +429,12 @@
 - Gemini Live recibe instrucciones para construir cada explicación en snapshots acumulativos: contorno, estructuras, flechas y etiquetas, priorizando sketch sobre tarjetas.
 - Se actualizan pruebas y la mutación queda documentada en `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.
 - Pendiente de CI y QA real; sin servicios ni APIs de pago y sin tocar `main`.
+
+
+## 2026-11-08 — contrato único de dibujo progresivo
+- Se unificó en 2–5 el máximo de trazos nuevos por snapshot en el schema de Live y el prompt de sesión.
+- Orby recibe una instrucción más clara de conservar IDs y añadir solo el siguiente paso, evitando redibujar elementos ya presentes.
+- Se refuerza la secuenciación visual para evitar ráfagas simultáneas.
+- Se agregaron pruebas estáticas de consistencia entre schema y prompt.
+- Se documentó el plan inmediato: validar CI completa, QA de cuatro snapshots, cursor que desaparece al terminar, señalamiento contextual y rendimiento.
+- Pendiente de CI/QA visual; sin consumo adicional de IA, proveedores de pago, cambios a `main` ni despliegues.

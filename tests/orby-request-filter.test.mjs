@@ -3826,6 +3826,8 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(tools, /never wait for search completion before the first spoken sentence/);
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 1);
   assert.match(tools, /stable IDs for unchanged strokes/);
+  assert.match(tools, /2–5 new strokes per update/);
+  assert.match(route, /no lo vuelvas a trazar ni cambies su ID/);
   assert.match(tools, /tone: \{ type: Type.STRING, description: "ink, accent, muted or success\."/);
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
   assert.doesNotMatch(lesson, /spokenCue|voicePendingBoardCuesRef/);

@@ -221,3 +221,33 @@ La estudiante observa una clase impartida por Orby. El lápiz visible es el punt
 - Sin dependencias nuevas, sin proveedores/API de pago, sin cambios a `main` ni despliegues.
 
 **Validación:** pendiente de GitHub Actions y prueba visual real. No se declara build aprobado.
+
+
+## Decimoquinta mutación — contrato único de dibujo progresivo
+
+**Fecha:** 8 de noviembre de 2026  
+**Rama:** `feat/founder-intro`
+
+### Qué sigue y qué se ajustó
+La siguiente prioridad es que la tinta se construya por pequeños movimientos observables, sin duplicar elementos ya escritos ni convertir cada actualización en una lámina nueva.
+
+- Se unificó el límite de trazos nuevos por etapa en **2–5** tanto en la descripción de la herramienta Live como en las instrucciones de sesión.
+- Se reforzó la instrucción de conservar los IDs de tinta existente y añadir únicamente el siguiente paso visual.
+- Se pide evitar ráfagas simultáneas de trazos para que el alumno alcance a seguir la construcción del esquema.
+- Se añadieron regresiones estáticas para detectar divergencias entre el contrato de herramienta y el prompt de Live.
+
+### Plan de continuación
+1. Validar CI completa del commit anterior (pruebas, TypeScript, ESLint, build y auditoría de dependencias).
+2. Probar en Chrome una clase de 60–90 segundos con al menos cuatro snapshots acumulativos, verificando que la tinta previa no se duplica.
+3. Ajustar el cursor/lápiz para que solo aparezca durante trazos nuevos y desaparezca al terminar, incluso al interrumpir una clase.
+4. Añadir señalamiento contextual independiente (halo/indicador temporal sobre una parte ya dibujada), sin permitir escritura del estudiante.
+5. Validar accesibilidad, movimiento reducido, exportación PDF y rendimiento en pantallas pequeñas.
+
+### Límites
+- El contrato del modelo orienta el ritmo, pero no garantiza por sí solo que Gemini Live emita exactamente 2–5 trazos ni que cada explicación tenga cuatro etapas.
+- El puntero actual recorre el path SVG del trazo; aún no existe una orden estructurada de señalamiento independiente para apuntar a tinta ya dibujada.
+- La prueba automatizada de esta capa es estática; la sincronización real voz–tinta necesita QA de navegador.
+- No se añadieron llamadas ni modelos de IA, no se añadieron proveedores ni servicios de pago, no se modificó `main` y no se desplegó producción.
+
+**Commit de esta mutación:** pendiente al momento de documentar.  
+**Validación:** CI del commit anterior en ejecución; no se declara build aprobado.

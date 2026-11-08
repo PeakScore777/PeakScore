@@ -651,3 +651,18 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - El endpoint selecciona el prompt pedagógico completo cuando hay skill activa para que el feedback use la memoria previa; esto no habilita recuperación vectorial del Lab. La búsqueda documental y la memoria del alumno permanecen separadas.
 
 - Tras recibir feedback de English Studio, el panel de progreso vuelve a leer `/api/orby/learning` y actualiza las señales sin otra llamada al modelo; un fallo de refresco no elimina ni bloquea la respuesta.
+
+
+## Backlog acordado — siguiente evolución de OmegaX (pendiente, no implementado)
+
+1. **Cerrar la base actual:** arreglar regresiones de tests detectadas por Vercel, ejecutar suite completa, TypeScript, ESLint, build y QA Chrome; obtener Preview READY del HEAD antes de presentarlo como actual.
+2. **Perfil longitudinal por habilidad:** consolidar observaciones repetidas por usuario/materia/destreza/concepto con fechas y evidencia; diferenciar error aislado de patrón persistente, y medir recurrencia/retención sin fabricar porcentajes de dominio.
+3. **Patrones y eficacia pedagógica:** detectar confusión conceptual, procedimiento, vocabulario o lectura de consigna; registrar si una estrategia fue seguida por mejora observable, sin atribución causal injustificada.
+4. **Siguiente práctica recomendada:** escoger una actividad nueva según evidencia reciente, recurrencia, dificultad y objetivo del alumno; explicar el motivo, dejar descartarla y adaptar gradualmente A1–C2 sin etiquetar permanentemente.
+5. **Revisión espaciada:** repreguntar conceptos en intervalos y evaluar transferencia con ejercicios diferentes, no con repetición literal.
+6. **Live y roleplay:** guardar señales al final de turnos completos cuando haya transcripción/contexto suficientes, con idempotencia; no registrar fragmentos parciales ni fingir medición fonética/acústica desde texto.
+7. **Pizarra integrada:** desarrollar secuencias didácticas para Writing, Reading, Listening y Speaking; mantener dibujo y voz sincronizados y acumulativos.
+8. **Privacidad/control:** explicar señales, pausar personalización, borrar observaciones o reiniciar memoria personal; conservar aislamiento por usuario y revisar RLS antes de ampliar acceso.
+9. **Cobertura ICFES:** trasladar el recomendador y la memoria a Matemáticas, Lectura Crítica, Sociales y Ciudadanas y Ciencias Naturales, manteniendo cinco áreas y las habilidades CEFR del inglés por separado.
+
+Criterios: evidencia visible para cada recomendación; dos errores aislados no diagnostican patrón; destrezas no se mezclan; el alumno puede pausar/borrar memoria; nada de porcentajes de dominio ni certificaciones no validadas. Mantener presupuesto gratuito estricto: sin API/modelo pago, créditos facturados o fallback silencioso; agotada la cuota gratuita, avisar y degradar/pausar.

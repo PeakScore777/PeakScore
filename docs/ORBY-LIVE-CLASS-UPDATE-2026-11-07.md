@@ -1230,3 +1230,11 @@ El contrato `apply_orby_board_action`, su schema Live, el prompt de clase y el r
 **Regresiones nuevas:** focus de etapa existente, destino inexistente, rechazo de ambos destinos/ninguno, ausencia de cambios de bloques/visuales y pausa del halo durante barge-in.
 
 **Suite declarada tras esta extensión:** 221 tests en `tests/orby-request-filter.test.mjs`, sin nombres duplicados ni pruebas vacías en inspección estática. No afirmar que se ejecutaron/aprobaron.
+
+### Ajuste de continuidad tras operaciones erase y temporización del lápiz
+
+- El primer trazo de un sketch espacial ahora espera el mismo lead-in que la etapa visual (\`sequence\`); tinta y lápiz no avanzan mientras su etapa está oculta.
+- Ese lead-in se aplica únicamente al primer grupo de trazos del sketch. Cuando llega un snapshot acumulativo posterior, los trazos nuevos continúan después del trazo pendiente y de la pausa de levantamiento; no vuelven a esperar el retraso completo de la etapa.
+- La secuencia espacial ahora es **estrictamente creciente**, no necesariamente consecutiva, con rango 1–1000. Esto permite eliminar una etapa sin renumerar las que sobreviven.
+- Al ejecutar \`erase\`, si se elimina el último trazo de la visual sketch, la visual vacía se retira del arreglo y se quita su elemento de layout. Los índices de visuales posteriores se desplazan, pero sus IDs, coordenadas y sequence se conservan. La prueba vuelve a sanitizar el resultado para verificar que el layout sigue siendo válido.
+- Suite declarada tras estas regresiones: **222 tests**, sin nombres duplicados ni pruebas vacías en inspección estática. Sigue sin equivaler a tests ejecutados/aprobados.

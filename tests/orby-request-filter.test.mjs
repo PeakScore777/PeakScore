@@ -18,6 +18,7 @@ async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = 
 }
 
 const boardModule = await loadTypeScriptModule("../lib/ai/orby-board.ts");
+const boardActions = await loadTypeScriptModule("../lib/ai/orby-board-actions.ts");
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
 const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServerOnly: true });
 const publication = await loadTypeScriptModule("../lib/ai/orby-publication.ts");
@@ -3987,4 +3988,55 @@ test("guardar clase conserva bloques, formulas, apoyos visuales y resumen de ano
 });
 
 test("las anotaciones de la pizarra se aíslan por ID de clase y no solo por título", () => {
+});
+
+
+test("las acciones del profesor validan focus, borrado selectivo y reemplazo conservando IDs", () => {
+  const board = {
+    version: 2,
+    title: "Célula",
+    blocks: [{ type: "heading", text: "Membrana celular" }],
+    visuals: [{ type: "sketch", title: "Esquema", strokes: [
+      { id: "outer", points: [{ x: 10, y: 10 }, { x: 80, y: 10 }], tone: "ink", width: 1.2 },
+      { id: "inner", points: [{ x: 20, y: 20 }, { x: 70, y: 20 }], tone: "accent", width: 1.1 },
+    ] }],
+  };
+  const focus = boardActions.sanitizeOrbyBoardAction({ operation: "focus", strokeId: "outer", label: "Membrana" });
+  assert.deepEqual(focus, { operation: "focus", strokeId: "outer", label: "Membrana" });
+  const focused = boardActions.applyOrbyBoardAction(board, focus);
+  assert.equal(focused.teacherFocus.strokeId, "outer");
+  assert.equal(focused.visuals[0].strokes.length, 2);
+
+  const erase = boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: ["inner"] });
+  const erased = boardActions.applyOrbyBoardAction(focused, erase);
+  assert.deepEqual(erased.visuals[0].strokes.map((stroke) => stroke.id), ["outer"]);
+  assert.equal(erased.teacherFocus, undefined);
+
+  const replacement = boardActions.sanitizeOrbyBoardAction({
+    operation: "replace",
+    strokeId: "outer",
+    replacement: { id: "outer", points: [{ x: 12, y: 12 }, { x: 82, y: 12 }], tone: "success", width: 1.4 },
+  });
+  const replaced = boardActions.applyOrbyBoardAction(board, replacement);
+  assert.equal(replaced.visuals[0].strokes[0].id, "outer");
+  assert.equal(replaced.visuals[0].strokes[0].points[0].x, 12);
+  assert.equal(replaced.teacherFocus.strokeId, "outer");
+});
+
+test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválidas y borrados sin selección", () => {
+  const board = {
+    version: 2, title: "Esquema", blocks: [{ type: "text", text: "Explicación" }],
+    visuals: [{ type: "sketch", title: "Trazo", strokes: [
+      { id: "stroke1", points: [{ x: 10, y: 10 }, { x: 20, y: 20 }], tone: "ink", width: 1 },
+    ] }],
+  };
+  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "focus", strokeId: "missing" })?.operation, "focus");
+  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "focus", strokeId: "missing" }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: [] }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "replace", strokeId: "stroke1",
+    replacement: { id: "stroke1", points: [{ x: 101, y: 10 }, { x: 20, y: 20 }] },
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: ["missing"] })?.operation, "erase");
+  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "erase", strokeIds: ["missing"] }), null);
 });

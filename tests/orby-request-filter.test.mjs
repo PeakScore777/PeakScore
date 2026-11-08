@@ -51,6 +51,7 @@ async function loadTypeScriptModule(relativePath, options = {}) {
 
 const boardModule = await loadTypeScriptModule("../lib/ai/orby-board.ts");
 const boardActions = await loadTypeScriptModule("../lib/ai/orby-board-actions.ts");
+const providerFreeTier = await loadTypeScriptModule("../lib/ai/provider-free-tier.ts");
 // Única carga compartida de las definiciones de herramientas Live para toda la suite.
 const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
@@ -5241,7 +5242,7 @@ test("las etapas SVG inician sus trazos cuando llega su etapa espacial, no antes
   assert.equal(boardModule.getOrbyBoardProgressiveDelay(7), 630);
 
   assert.match(boardComponentSource, /function Visual\([\s\S]*?startDelayMs = 0/);
-  assert.match(boardComponentSource, /<Diagram visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<Diagram visual=\{visual\} startDelayMs=\{startDelayMs\} focus=\{visualFocus\}\/\>/);
   assert.match(boardComponentSource, /<Graph visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
   assert.match(boardComponentSource, /<Vectors visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
   assert.match(boardComponentSource, /<Molecule visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
@@ -5399,7 +5400,9 @@ test("OmegaX English Studio reuses the existing free transcription route and own
 
   assert.match(tutorComponent, /learningView === "english"/);
   assert.match(tutorComponent, /<OmegaXEnglishStudio/);
-  assert.match(englishStudio, /60-second speaking/);
+  assert.match(englishStudio, /Speaking · 60 segundos/);
+  assert.match(englishStudio, /Your 60-second challenge/);
+  assert.match(englishStudio, /elapsed >= 60 && recorder\\.state !== "inactive"/);
   assert.match(englishStudio, /Pronunciation practice/);
   assert.match(englishStudio, /Real-life roleplay/);
   assert.match(englishStudio, /\/api\/orby\/audio\/transcribe/);
@@ -5479,7 +5482,7 @@ test("OmegaX English Studio recorre los seis niveles CEFR A1-C2 con guías didá
     assert.match(englishStudio, new RegExp('^  ' + level + ':', "m"));
   }
   assert.match(englishStudio, /MCER A1–C2/);
-  assert.match(englishStudio, /no certificación oficial/);
+  assert.match(englishStudio, /no es una certificación ni un nivel oficial de desempeño de Saber 11/i);
   assert.match(englishStudio, /matices implícitos, ironía, idiomaticidad/);
 });
 
@@ -5500,7 +5503,7 @@ test("Live y fallback enseñan inglés CEFR en pizarra y diferencian las cinco �
   assert.match(fallback, /RUTA DE INGLÉS GENERAL MCER\/CEFR A1–C2/);
   assert.match(fallback, /PIZARRA PARA INGLÉS/);
   assert.match(fallback, /buildIcfesPedagogyInstruction\(normalizeIcfesSubject\(subject, topic \|\| question\)\)/);
-  assert.match(fallback, /el MCER A1–C2 es una ruta general de aprendizaje/);
+  assert.match(fallback, /el MCER A1–C2 es una ruta general de aprendizaje/i);
   assert.match(live, /SEPARACIÓN INGLÉS GENERAL E INGLÉS SABER 11/);
   assert.match(fallback, /siete partes del formato de Inglés/);
   assert.match(fallback, /banco manual y los materiales autorizados existentes/);
@@ -5609,4 +5612,70 @@ test("focus label sanitizer preserves letters, accents, numbers and academic not
   });
   assert.ok(unsafeLabel);
   assert.equal(unsafeLabel.label, "Mira svg esta unión");
+});
+
+
+test("provider gates require an explicit no-charge account confirmation", () => {
+  const keyOnlyGemini = { GEMINI_API_KEY: "key" };
+  assert.equal(providerFreeTier.isGeminiFreeTierConfigured(keyOnlyGemini), false);
+  assert.equal(providerFreeTier.isGeminiFreeTierConfigured({
+    ...keyOnlyGemini, PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
+  }), true);
+  assert.equal(providerFreeTier.isGeminiFreeTierConfigured({
+    PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
+  }), false);
+
+  assert.equal(providerFreeTier.isGroqFreeTierConfigured({ GROQ_API_KEY: "key" }), false);
+  assert.equal(providerFreeTier.isGroqFreeTierConfigured({
+    GROQ_API_KEY: "key", PEAKSCORE_GROQ_FREE_TIER_CONFIRMED: "true",
+  }), true);
+
+  assert.equal(providerFreeTier.isLLM7FreeTierConfigured({
+    LLM7_API_KEY: "key", LLM7_MODEL: "free-model", LLM7_ENABLED: "true",
+  }), false);
+  assert.equal(providerFreeTier.isLLM7FreeTierConfigured({
+    LLM7_API_KEY: "key", LLM7_MODEL: "free-model", LLM7_ENABLED: "true",
+    PEAKSCORE_LLM7_FREE_TIER_CONFIRMED: "true",
+  }), true);
+
+  const cloudflare = { CLOUDFLARE_ACCOUNT_ID: "0123456789abcdef0123456789abcdef", CLOUDFLARE_API_TOKEN: "token" };
+  assert.equal(providerFreeTier.isCloudflareWorkersAIFreeTierConfigured(cloudflare), false);
+  assert.equal(providerFreeTier.isCloudflareWorkersAIFreeTierConfigured({
+    ...cloudflare, PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED: "true",
+  }), true);
+  assert.equal(providerFreeTier.isCloudflareWorkersAIFreeTierConfigured({
+    ...cloudflare, CLOUDFLARE_ACCOUNT_ID: "not-an-account-id", PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED: "true",
+  }), false);
+});
+
+test("direct inference and router fallback paths fail closed without free-tier approval", async () => {
+  const router = await readFile(new URL("../lib/ai/router.ts", import.meta.url), "utf8");
+  const cloudflare = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
+  const knowledge = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
+  const vision = await readFile(new URL("../lib/ai/tutor-vision.ts", import.meta.url), "utf8");
+  const live = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  const tts = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
+  const envExample = await readFile(new URL("../.env.example", import.meta.url), "utf8");
+
+  assert.match(router, /isGeminiFreeTierConfigured\\(\\)/);
+  assert.match(router, /isGroqFreeTierConfigured\\(\\)/);
+  assert.match(router, /isLLM7FreeTierConfigured\\(\\)/);
+  assert.match(router, /if \\(candidate === "gemini"\\) return isGeminiFreeTierConfigured\\(\\)/);
+  assert.match(router, /if \\(candidate === "groq"\\) return isGroqFreeTierConfigured\\(\\)/);
+  assert.match(router, /if \\(candidate === "llm7"\\) return isLLM7FreeTierConfigured\\(\\)/);
+
+  assert.match(cloudflare, /if \\(!isCloudflareWorkersAIFreeTierConfigured\\(\\)\\)/);
+  assert.match(cloudflare, /FREE_TIER_NOT_CONFIRMED/);
+  assert.match(knowledge, /if \\(isGeminiFreeTierConfigured\\(\\)\\)/);
+  assert.match(knowledge, /model: "gemini-3\\.1-flash-lite"/);
+  assert.doesNotMatch(knowledge, /ORBY_KNOWLEDGE_PROFILE_MODEL/);
+  assert.match(vision, /if \\(!isGeminiFreeTierConfigured\\(\\)\\)/);
+  assert.match(live, /if \\(!isGeminiFreeTierConfigured\\(\\)\\)/);
+  assert.match(tts, /if \\(!isGeminiFreeTierConfigured\\(\\)\\)/);
+  for (const flag of [
+    "PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=false",
+    "PEAKSCORE_GROQ_FREE_TIER_CONFIRMED=false",
+    "PEAKSCORE_LLM7_FREE_TIER_CONFIRMED=false",
+    "PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=false",
+  ]) assert.ok(envExample.includes(flag), flag + " defaults closed");
 });

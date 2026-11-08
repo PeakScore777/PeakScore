@@ -579,3 +579,19 @@ Un mismo origen autorizado (material, grabación transcrita, nota o conversació
 - Confirmado: `LessonAITutor` ya contiene funcionalidades relacionadas con conversaciones, notas, adjuntos e interacción de voz; se debe auditar cada una antes de añadir una segunda implementación.
 - No se modificó código funcional en esta actualización; solo se registra la dirección de producto, los requisitos y el orden seguro de implementación.
 - No se ha implementado aún la nueva sidebar ni se ha validado funcionalmente ninguna herramienta adicional.
+
+
+### Aclaración del usuario y primer cambio de interfaz — 2026-11-08
+La instrucción correcta es **rediseñar la interfaz actual de Orby para que las herramientas de estudio y los chats convivan en la columna izquierda, y cambiar el workspace completo de oscuro a claro**. No se trata de crear una página de herramientas separada ni conservar el modo oscuro.
+
+#### Primer cambio aplicado en `feat/founder-intro`
+- `components/aprender/LessonAITutor.tsx`: el workspace usa tema claro explícito; cabecera blanca; sidebar marfil; texto y estados de selección legibles; navegación lateral agrupa Chat con Orby, Anotaciones y apuntes, Temas guardados, Progreso, Biblioteca de archivos y el Historial de chats con buscador. Nuevo chat se mantiene arriba. El área central conserva la conversación actual.
+- El compositor del chat y la nota inferior de seguridad también usan fondo claro en workspace.
+- `components/aprender/OrbyWorkspacePage.tsx`: el shell exterior pasa a fondo claro.
+- Los controles ya existentes se conectan a vistas ya existentes (`learningView`); no se presentan Flashcards, Grabaciones o Resúmenes como funciones terminadas porque aún requieren implementación/conexión real.
+- Se mantiene el modo clase/tablero como experiencia independiente de la edición de apuntes del estudiante.
+
+#### Validación y límites
+- Escrituras confirmadas en GitHub en la rama `feat/founder-intro`; no se tocó `main`.
+- Estado Vercel observado para los commits iniciales: pending al momento de consulta; no declarar build/QA aprobado.
+- Falta validar visualmente en navegador, revisar las vistas de aprendizaje restantes para eliminar todos los tokens oscuros, y completar las herramientas que hoy no tienen flujo funcional.

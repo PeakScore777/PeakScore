@@ -121,3 +121,14 @@ Reglas de interacción:
 - La animación visual puede seguir el orden de eventos, pero no debe presentarse como sincronía fonética exacta sin metadatos temporales del proveedor.
 
 Este hito es una especificación pendiente, no una función terminada. Requiere regresiones automatizadas y QA manual de voz, micrófono, interrupciones y responsive.
+
+
+## Addendum — pizarra de OmegaX para English Studio y todas las áreas (2026-11-08)
+
+English Studio dispone de selector A1–C2 y sus prompts piden adaptar complejidad y feedback al nivel objetivo. En una explicación de inglés, la pizarra debe enseñar el elemento lingüístico: orden de palabras, parte de la frase, corrección, patrón, tiempo verbal, conectores, vocabulario, referencia o evidencia textual. El objetivo es que el alumno vuelva a producir una versión mejorada.
+
+Las mismas reglas de atención se extienden a las cinco áreas ICFES con sus representaciones propias: operaciones/gráficas; texto/evidencias; cronologías/perspectivas; modelos/mecanismos/datos; estructuras y pistas del idioma.
+
+El nivel CEFR seleccionado no es certificación ni nivel oficial de Inglés Saber 11. La ruta de examen mantiene las siete partes y el banco manual autorizado. No asignar puntuación de pronunciación desde transcripciones.
+
+QA pendiente: probar A1, A2, B1, B2, C1 y C2 con explicaciones gramaticales que generen pizarra, roleplay, interrupción, reintento, fallback y persistencia en Chrome.

@@ -5375,7 +5375,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         </div>
         <div className="flex items-center gap-1.5">
           {workspace && <button type="button" onClick={() => setHistoryOpen((value) => !value)} aria-label={historyOpen ? "Ocultar panel lateral" : "Mostrar panel lateral"} title="Panel lateral" className="rounded-lg p-2 text-slate-500 transition hover:bg-orange-50 hover:text-orange-700 md:hidden"><Search className="h-4 w-4" /></button>}
-          {workspace && <button type="button" onClick={handleCloseTutor} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-rose-700 transition duration-200 hover:border-rose-300 hover:bg-rose-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">Salir <X className="h-3.5 w-3.5" /></button>}
+          {workspace && <button type="button" onClick={handleCloseTutor} aria-label={"Cerrar tutor " + assistantLabel} title={"Cerrar " + assistantLabel} className="inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-rose-700 transition duration-200 hover:border-rose-300 hover:bg-rose-600 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">Salir <X className="h-3.5 w-3.5" /></button>}
           {!workspace && <button type="button" onClick={handleCloseTutor} aria-label="Cerrar tutor Orby" className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"><X className="h-5 w-5" /></button>}
         </div>
       </header>

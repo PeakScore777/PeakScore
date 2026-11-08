@@ -4213,6 +4213,60 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
   assert.equal(boardActions.applyOrbyBoardAction(parallelSketches, { operation: "focus", turnGeneration: 7, strokeId: "stroke1" }), null);
 });
 
+test("focus puede señalar un punto exacto de un trazo sin añadir ni modificar tinta", () => {
+  const board = {
+    version: 2,
+    title: "Diagrama de célula",
+    blocks: [{ type: "heading", text: "Membrana y núcleo" }],
+    visuals: [{
+      type: "sketch",
+      title: "Célula",
+      strokes: [{
+        id: "cell_outline",
+        points: [{ x: 10, y: 12 }, { x: 48, y: 22 }, { x: 76, y: 64 }, { x: 55, y: 88 }],
+        tone: "ink",
+        width: 1.2,
+      }],
+    }],
+  };
+  const action = boardActions.sanitizeOrbyBoardAction({
+    operation: "focus",
+    turnGeneration: 7,
+    strokeId: "cell_outline",
+    pointIndex: 2,
+    label: "Mira esta unión",
+  });
+  assert.deepEqual(action, {
+    operation: "focus",
+    turnGeneration: 7,
+    strokeId: "cell_outline",
+    pointIndex: 2,
+    label: "Mira esta unión",
+  });
+  const focused = boardActions.applyOrbyBoardAction(board, action);
+  assert.deepEqual(focused.teacherFocus, {
+    strokeId: "cell_outline",
+    pointIndex: 2,
+    label: "Mira esta unión",
+    revision: 1,
+  });
+  assert.deepEqual(focused.visuals[0].strokes, board.visuals[0].strokes);
+  assert.equal(focused.visuals[0].strokes.length, 1);
+
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", turnGeneration: 7, strokeId: "cell_outline", pointIndex: -1,
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", turnGeneration: 7, strokeId: "cell_outline", pointIndex: 40,
+  }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", turnGeneration: 7, elementId: "some_stage", pointIndex: 1,
+  }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(board, {
+    operation: "focus", turnGeneration: 7, strokeId: "cell_outline", pointIndex: 4,
+  }), null, "la acción debe comprobar el número de puntos del trazo real, no solo el máximo del schema");
+});
+
 test("focus puede señalar una etapa espacial sin crear tinta y rechaza IDs que no existen", () => {
   const spatialBoard = {
     version: 2,
@@ -4568,7 +4622,11 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
   assert.match(liveToolsSource, /Exact operation: focus, erase, replace, append-block or append-strokes/);
   assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus or append-strokes/);
+
+  assert.match(liveToolsSource, /pointIndex: \\{ type: Type\\.NUMBER, format: "int32", minimum: 0, maximum: 39/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
+
+  assert.match(realtimeSessionSource, /puedes incluir pointIndex, el índice desde cero de uno de sus puntos existentes/);
   assert.match(liveToolsSource, /Replacement geometry for the existing stroke[\s\S]*?ink \(black\), blue, red, accent, muted or success/);
   assert.match(lessonTutorSource, /function handleOrbyLiveBoardActionTool/);
   assert.match(lessonTutorSource, /applyOrbyBoardAction\(currentBoard, action\)/);
@@ -4581,6 +4639,12 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /data-orby-teacher-focus=\{stroke\.id\}/);
   assert.match(boardComponentSource, /focus\?\.strokeId === stroke\.id/);
+
+  assert.match(boardComponentSource, /focus\\.pointIndex/);
+  assert.match(boardComponentSource, /data-orby-focus-point=\\{focusIndex\\}/);
+  assert.match(boardComponentSource, /orby-board-focus-ring/);
+  assert.match(boardComponentSource, /orby-board-focus-dot/);
+  assert.match(boardComponentSource, /Math\\.floor\\(stroke\\.points\\.length \\/ 2\\)/);
   assert.match(boardComponentSource, /typeof board\.teacherFocus\?\.elementId === "string"/);
   assert.match(boardComponentSource, /orby-board-layout-stage-focused/);
   assert.match(boardComponentSource, /key=\{\x60\$\{focus\.strokeId\}:\$\{focus\.revision\}\x60\}/);

@@ -16,7 +16,7 @@ import {
 } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
-import { buildIcfesPedagogyInstruction, normalizeIcfesSubject } from "@/lib/ai/orby-scope";
+import { buildIcfesPedagogyInstruction, normalizeIcfesSubject, summarizeIcfesLearningSignals } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -162,12 +162,16 @@ export async function POST(request: Request) {
             return { concept, state, misconception, hint, confidence };
           }).filter((signal) => signal.concept && signal.confidence >= 0.8)
             .slice(0, 8);
-          studentLearningContext = JSON.stringify(verifiedLearningSignals.map((signal) => ({
-            concept: signal.concept,
-            state: signal.state,
-            misconception: signal.misconception,
-            teachingHint: signal.hint,
-          })));
+          const diagnostic = summarizeIcfesLearningSignals(learningSignals);
+          studentLearningContext = JSON.stringify({
+            diagnostic,
+            recentSignals: verifiedLearningSignals.map((signal) => ({
+              concept: signal.concept,
+              state: signal.state,
+              misconception: signal.misconception,
+              teachingHint: signal.hint,
+            })),
+          });
         }
       } catch {
         console.warn("[Orby Voice] Student learning profile lookup failed.");

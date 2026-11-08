@@ -273,3 +273,26 @@ Ask: "Explícame cómo funciona la célula". Orby starts speaking immediately, w
 Repeat visual QA across the five ICFES areas using a graph/equation (Math), highlighted source argument (Critical Reading), annotated historical/political map or perspectives (Social Studies), mechanism/experiment (Natural Sciences), and contextual text/grammar/vocabulary marking (English).
 
 Do not mark the experience as video-level complete until the Chrome/microphone tests, word-highlight validation, all-five-subject visual QA and voice-latency measurements pass.
+
+
+## Addendum — rendimiento conversacional y presupuestos gratuitos (2026-11-08)
+
+### Comportamiento de respuesta
+- Meta: primera frase útil idealmente en menos de 1 s desde el fin de habla del estudiante; esto es un objetivo que hay que medir, no una promesa.
+- Live debe mantener una sesión persistente entre preguntas; no crear una sesión/tóken nuevo para cada mensaje.
+- Avisar si no llega ningún avance en 5 s y recuperar la misma pregunta por el tutor de texto cuando Live lleve 15 s sin texto/audio/herramienta. Cualquier evento válido reinicia el watchdog.
+- Un 429 no es automáticamente cuota diaria agotada. Distinguir límite RPM/TPM temporal de RPD real. No devolver Retry-After de una hora por un error temporal.
+- El respaldo de voz nunca debe acumular esperas de minutos ni descartar silenciosamente la explicación completa. Si la voz no se puede generar, dejar el texto entero visible y mantener la conversación disponible.
+
+### Presupuesto gratuito del stack
+- Gemini 3.8 Live (`gemini-3.8-live`) y Gemini 3.8 Flash-Lite TTS (`gemini-3.8-flash-lite-tts`) aparecen con nivel gratuito en Gemini Developer API. Las cuotas de Gemini se miden por RPM/TPM/RPD por proyecto; se comparten entre todos los alumnos que usan el proyecto. RPD se restablece a medianoche del Pacífico. Los límites efectivos deben verificarse en Google AI Studio y no son un número universal garantizado.
+- Cloudflare Workers AI concede 10.000 neuronas/día gratis para el proyecto; las inferencias del tutor, embeddings y Whisper comparten ese presupuesto. El límite se reinicia a las 00:00 UTC.
+- Claude Free en claude.ai tiene límites por sesión de usuario, reinicio cada 5 horas y variación según demanda; no es cuota API para PeakScore. La API de Claude/Console requiere créditos prepagados (salvo créditos especiales de otros planes/contratos). No usar como fallback gratuito.
+- Mantener únicamente proveedores confirmados como gratuitos en el plan concreto que realmente se está usando. No configurar proveedores con facturación activa, no hacer fallback silencioso a modalidad pagada ni actualizar a Workers Paid.
+- No prometer días enteros de voz o un número fijo de turnos hasta observar los límites y el uso del proyecto.
+
+### Presupuesto de llamadas en el cliente
+- Live: conexión persistente, máximo seis inicios de sesión por usuario por minuto.
+- TTS secundario: endpoint de máximo 900 caracteres y 20 peticiones por usuario por minuto; el cliente forma fragmentos de hasta 880 caracteres y reduce requests de fallback.
+- TTS throttle: un único reintento si Retry-After <= 2 s; si la pausa excede ese valor, conserva la respuesta escrita y permite una pregunta nueva.
+- Orby Lab: una consulta NON_BLOCKING por nuevo tema y una segunda solo por necesidad concreta; máximo dos llamadas por turno.

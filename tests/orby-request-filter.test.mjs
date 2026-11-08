@@ -4418,13 +4418,13 @@ test("todas las operaciones de pizarra quedan ligadas a la generación activa", 
 });
 
 test("Gemini Live y la directiva de clase exigen turnGeneration en cada acción docente", () => {
-  assert.match(liveToolsSource, /name: "apply_orby_board_action"[\\s\\S]*?required: \\["operation", "turnGeneration"\\]/);
+  assert.match(liveToolsSource, /name: "apply_orby_board_action"[\s\S]*?required: \["operation", "turnGeneration"\]/);
   assert.match(liveToolsSource, /EVERY operation must echo the exact turnGeneration/);
   assert.match(realtimeSessionSource, /incluidas focus, erase y replace, debe incluir turnGeneration exactamente igual/);
-  assert.match(lessonTutorSource, /createOrbyBoardActionSequenceState\\(voiceActivityGenerationRef\\.current\\)/);
-  assert.match(lessonTutorSource, /evaluateOrbyBoardActionSequence\\(voiceBoardActionSequenceRef\\.current, action, activityGeneration\\)/);
+  assert.match(lessonTutorSource, /createOrbyBoardActionSequenceState\(voiceActivityGenerationRef\.current\)/);
+  assert.match(lessonTutorSource, /evaluateOrbyBoardActionSequence\(voiceBoardActionSequenceRef\.current, action, activityGeneration\)/);
   assert.match(lessonTutorSource, /turnGeneration: activityGeneration/);
-  assert.match(lessonTutorSource, /pendingBoardSnapshot\\.activityGeneration === activityGeneration/);
+  assert.match(lessonTutorSource, /pendingBoardSnapshot\.activityGeneration === activityGeneration/);
 });
 
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {

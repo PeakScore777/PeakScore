@@ -47,6 +47,55 @@ const ROLEPLAYS = [
   ["Meeting someone", "You have just met a student from another country. Introduce yourself and find something you have in common."],
   ["Giving directions", "A visitor is lost in your city. Explain how to reach a museum, a bus station and a restaurant."],
 ];
+type CefrLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+
+const CEFR_LEVEL_GUIDANCE: Record<CefrLevel, { label: string; descriptor: string; coaching: string }> = {
+  A1: {
+    label: "Principiante",
+    descriptor: "Comprende y usa frases muy sencillas sobre datos personales y necesidades inmediatas.",
+    coaching: "Usa frases cortas, vocabulario cotidiano y estructuras frecuentes. Habla despacio, formula una sola pregunta concreta y ofrece un modelo breve si se bloquea. Acepta respuestas simples antes de pedir ampliación.",
+  },
+  A2: {
+    label: "Básico",
+    descriptor: "Se comunica en intercambios cotidianos y describe aspectos sencillos de su entorno.",
+    coaching: "Usa situaciones familiares, presente y pasado básicos, preguntas directas y conectores frecuentes. Pide dos o tres frases y ayuda a ampliar respuestas sin subir bruscamente la dificultad.",
+  },
+  B1: {
+    label: "Intermedio",
+    descriptor: "Explica experiencias, planes y opiniones con un discurso sencillo y conectado.",
+    coaching: "Invita a narrar experiencias, explicar razones y justificar opiniones. Trabaja conectores, tiempos narrativos y organización de ideas; permite que el estudiante se autocorrija.",
+  },
+  B2: {
+    label: "Intermedio alto",
+    descriptor: "Sostiene argumentos y comprende textos o conversaciones de cierta complejidad.",
+    coaching: "Pide argumentos desarrollados, ejemplos, matices y respuestas espontáneas. Trabaja collocations, precisión gramatical, contraargumentos y registro; no simplifiques en exceso.",
+  },
+  C1: {
+    label: "Avanzado",
+    descriptor: "Se expresa con flexibilidad y eficacia en contextos académicos, sociales y profesionales.",
+    coaching: "Exige precisión, fluidez discursiva, cohesión, reformulación y adaptación de registro. Señala matices léxicos y estructuras complejas sin interrumpir cada idea.",
+  },
+  C2: {
+    label: "Dominio avanzado",
+    descriptor: "Comprende prácticamente todo tipo de discurso y expresa matices con precisión y naturalidad.",
+    coaching: "Trabaja significados implícitos, matices semánticos, ironía, tono, estilo, idiomaticidad y reformulación precisa. Propón debates y síntesis complejas; evita convertir C2 en una lista de palabras raras.",
+  },
+};
+
+function buildRoleplayPrompt(level: CefrLevel, situation: string): string {
+  const profile = CEFR_LEVEL_GUIDANCE[level];
+  return [
+    "Actúa como el coach conversacional de inglés de OmegaX en PeakScore, inspirado en una práctica de habla breve, feedback accionable y repetición enfocada.",
+    "Nivel objetivo CEFR elegido por el estudiante: " + level + " (" + profile.label + "). " + profile.coaching,
+    "Objetivo de la sesión: que el estudiante hable más, reciba una corrección útil y vuelva a intentarlo. No afirmes certificar su nivel a partir de una sola conversación.",
+    situation,
+    "Mantén la conversación principalmente en inglés, una pregunta por turno. Después de cada respuesta, elige como máximo dos correcciones de mayor impacto: muestra lo que dijo, una versión natural y una explicación breve en español colombiano; después continúa el diálogo.",
+    "Si el estudiante pide explicar gramática, vocabulario o una diferencia entre expresiones, cambia temporalmente a modo profesora: explica con un ejemplo sencillo y construye en la pizarra una estructura, una línea de tiempo verbal, una tabla de contraste o un mapa de vocabulario cuando ayude. Conserva los elementos anteriores y señala la pieza que explicas; no dibujes por decorar.",
+    "Ajusta la complejidad de ejemplos y preguntas al nivel elegido. Si el desempeño parece estar por debajo o por encima, ofrece apoyo o reto sin cambiar silenciosamente el nivel seleccionado.",
+    "No afirmes evaluar pronunciación, fonemas, acento o entonación si solo dispones de una transcripción. Si falta contexto, pregunta con naturalidad. Empieza ahora con una pregunta breve y adecuada al nivel.",
+  ].join("\\n");
+}
+
 
 function words(value: string) {
   return value.toLocaleLowerCase("en-US").replace(/[^a-z0-9\s']/g, " ").split(/\s+/).filter(Boolean);
@@ -69,7 +118,7 @@ function wordMatch(expected: string, actual: string) {
 
 export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback, onSaveTranscript }: Props) {
   const [mode, setMode] = useState<Mode>("speaking");
-  const [level, setLevel] = useState("A2");
+  const [level, setLevel] = useState<CefrLevel>("A2");
   const [topicIndex, setTopicIndex] = useState(0);
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [roleplayIndex, setRoleplayIndex] = useState(0);
@@ -89,6 +138,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
 
   const prompt = mode === "speaking" ? TOPICS[topicIndex] : PHRASES[phraseIndex];
   const match = mode === "pronunciation" && transcript ? wordMatch(prompt, transcript) : null;
+  const levelProfile = CEFR_LEVEL_GUIDANCE[level];
 
   function cleanupTimer() {
     if (timerRef.current !== null) window.clearInterval(timerRef.current);
@@ -243,15 +293,25 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
       <section className="overflow-hidden rounded-3xl border border-[#eee6dc] bg-white">
         <div className="flex flex-col gap-5 border-b border-[#eee6dc] bg-[#fffaf4] p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
           <div className="max-w-2xl">
-            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-orange-800"><AudioLines className="h-3.5 w-3.5" /> OMEGAX · ENGLISH STUDIO</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[.14em] text-orange-800"><AudioLines className="h-3.5 w-3.5" /> OMEGAX · ENGLISH STUDIO · MCER A1–C2</span>
             <h3 className="mt-4 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Speak with confidence.</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Practica hablando, ensaya situaciones reales y recibe correcciones útiles. Mejora un detalle en cada sesión.</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Habla, recibe feedback concreto y vuelve a practicar. OmegaX adapta la conversación, la explicación y la pizarra al nivel A1–C2 que elijas.</p>
           </div>
-          <label className="block min-w-48 text-xs font-semibold text-slate-700">Tu nivel de inglés
-            <select value={level} onChange={(event) => setLevel(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">
-              <option value="A1">A1 · Principiante</option><option value="A2">A2 · Básico</option><option value="B1">B1 · Intermedio</option><option value="B2">B2 · Intermedio alto</option><option value="C1">C1 · Avanzado</option>
+          <label className="block min-w-48 text-xs font-semibold text-slate-700">Nivel objetivo · MCER
+            <select value={level} onChange={(event) => setLevel(event.target.value as CefrLevel)} className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">
+              <option value="A1">A1 · Principiante</option><option value="A2">A2 · Básico</option><option value="B1">B1 · Intermedio</option><option value="B2">B2 · Intermedio alto</option><option value="C1">C1 · Avanzado</option><option value="C2">C2 · Dominio avanzado</option>
             </select>
+            <span className="mt-2 block text-[11px] font-normal leading-5 text-slate-500">{levelProfile.descriptor} Nivel de práctica elegido, no certificación oficial.</span>
           </label>
+        </div>
+        <div className="border-b border-[#eee6dc] px-5 py-3 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-[.12em] text-slate-500">
+            <span>Tu ruta de inglés · A1 → C2</span><span>Objetivo actual: {level}</span>
+          </div>
+          <div className="mt-2 grid grid-cols-6 gap-1.5">
+            {(["A1", "A2", "B1", "B2", "C1", "C2"] as const).map((item) => <span key={item} className={`rounded-md px-1.5 py-1.5 text-center text-[10px] font-bold ${item === level ? "bg-orange-600 text-white" : "bg-[#f4f0eb] text-slate-500"}`}>{item}</span>)}
+          </div>
+          <p className="mt-2 text-xs leading-5 text-slate-600">{levelProfile.coaching}</p>
         </div>
         <div className="grid gap-4 p-5 md:grid-cols-3 sm:p-6">
           <article className="rounded-2xl border border-orange-200 bg-[#fffaf4] p-5">
@@ -264,7 +324,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
           </article>
           <article className="rounded-2xl border border-[#eee6dc] bg-white p-5">
             <BookOpen className="h-5 w-5 text-emerald-700" /><h4 className="mt-4 text-sm font-semibold text-slate-900">Real-life roleplay</h4><p className="mt-1 text-xs leading-5 text-slate-600">Practica viajes, estudio, trabajo y situaciones cotidianas con OmegaX.</p>
-            <button type="button" onClick={() => onStartRoleplay("Actúa como mi compañero de práctica de inglés. Nivel " + level + ". " + roleplay[1] + " Mantén la conversación en inglés, una pregunta a la vez. Adapta el vocabulario a mi nivel. Después de cada respuesta mía, corrige como máximo dos errores importantes con una explicación breve en español colombiano y continúa el diálogo en inglés. Empieza con una pregunta natural. No finjas que has evaluado sonidos que no has escuchado.")} className="mt-4 rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-700">Practicar con OmegaX</button>
+            <button type="button" onClick={() => onStartRoleplay(buildRoleplayPrompt(level, roleplay[1]))} className="mt-4 rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-700">Practicar con OmegaX</button>
           </article>
         </div>
       </section>
@@ -306,7 +366,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <p className="mt-2 text-xs leading-5 text-slate-600">Elige una situación y practica un diálogo adaptado a tu nivel.</p>
             <select value={roleplayIndex} onChange={(event) => setRoleplayIndex(Number(event.target.value))} className="mt-4 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">{ROLEPLAYS.map((item, index) => <option key={item[0]} value={index}>{item[0]}</option>)}</select>
             <p className="mt-3 rounded-xl bg-[#fffaf4] p-3 text-xs leading-5 text-slate-700">{roleplay[1]}</p>
-            <button type="button" onClick={() => onStartRoleplay("Actúa como mi compañero de práctica de inglés. Nivel " + level + ". " + roleplay[1] + " Mantén la conversación en inglés, una pregunta a la vez. Corrige como máximo dos errores importantes después de cada respuesta con una explicación breve en español colombiano. Empieza ahora y adapta el nivel.")} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-semibold text-orange-900"><Play className="h-4 w-4" /> Comenzar roleplay en el chat</button>
+            <button type="button" onClick={() => onStartRoleplay(buildRoleplayPrompt(level, roleplay[1]))} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-xs font-semibold text-orange-900"><Play className="h-4 w-4" /> Comenzar roleplay en el chat</button>
             <p className="mt-2 text-[10px] leading-5 text-slate-500">OmegaX inicia la llamada de voz al comenzar; si Live no está disponible, continúa con el modo gratuito por turnos.</p>
           </section>
           <section className="rounded-2xl border border-[#eee6dc] bg-white p-5">

@@ -23,7 +23,7 @@ function Diagram({ visual }: { visual: Extract<OrbyBoardVisual, { type: "diagram
         const midX = (from.x + to.x) / 2;
         const midY = (from.y + to.y) / 2;
         return <g key={`${edge.from}:${edge.to}:${from.x}:${from.y}:${to.x}:${to.y}:${edge.label || ""}`} style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
-          <line className="orby-board-stroke" pathLength={1} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="0.8" markerEnd={`url(#${markerId})`} />
+          <line className="orby-board-stroke" style={{ animationDelay: `${getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="0.8" markerEnd={`url(#${markerId})`} />
           {edge.label ? <text x={midX} y={midY - 2} fontSize="3.2" textAnchor="middle" fill={colors.ink}>{edge.label}</text> : null}
         </g>;
       })}
@@ -208,9 +208,9 @@ function Graph({ visual }: { visual: Extract<OrbyBoardVisual, { type: "graph" }>
       })}
       <line className="orby-board-stroke" pathLength={1} x1={left} y1={top} x2={left} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
       <line className="orby-board-stroke" pathLength={1} x1={left} y1={bottom} x2={right} y2={bottom} stroke={colors.ink} strokeWidth="0.8"/>
-      {visual.kind === "line" ? <path key={path} className="orby-board-stroke" pathLength={1} d={path} fill="none" stroke={colors.orange} strokeWidth="1.5" strokeLinejoin="round"/> : null}
+      {visual.kind === "line" ? <path key={path} className="orby-board-stroke" style={{ animationDelay: "120ms" }} pathLength={1} d={path} fill="none" stroke={colors.orange} strokeWidth="1.5" strokeLinejoin="round"/> : null}
       {visual.points.map((point, index) => <g key={`${point.x}:${point.y}:${point.label || index}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
-        <circle className="orby-board-appear" cx={px(point.x)} cy={py(point.y)} r="1.8" fill={colors.orange}/>
+        <circle cx={px(point.x)} cy={py(point.y)} r="1.8" fill={colors.orange}/>
         {point.label ? <text x={px(point.x)} y={py(point.y) - 3} fontSize="3" textAnchor="middle" fill={colors.ink}>{point.label}</text> : null}
       </g>)}
       <text x="53" y="94" fontSize="4" textAnchor="middle" fill={colors.ink}>{visual.xLabel}</text>
@@ -233,7 +233,7 @@ function Vectors({ visual }: { visual: Extract<OrbyBoardVisual, { type: "vectors
         const endX = visual.origin.x + vector.dx;
         const endY = visual.origin.y - vector.dy;
         return <g key={`${vector.label}:${visual.origin.x}:${visual.origin.y}:${vector.dx}:${vector.dy}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
-          <line className="orby-board-stroke" pathLength={1} x1={visual.origin.x} y1={visual.origin.y} x2={endX} y2={endY} stroke={colors.orange} strokeWidth="1.2" markerEnd={`url(#${markerId})`}/>
+          <line className="orby-board-stroke" style={{ animationDelay: `${getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} x1={visual.origin.x} y1={visual.origin.y} x2={endX} y2={endY} stroke={colors.orange} strokeWidth="1.2" markerEnd={`url(#${markerId})`}/>
           <text x={endX + 2} y={endY - 2} fontSize="3.6" fill={colors.ink}>{vector.label}</text>
         </g>;
       })}
@@ -252,7 +252,7 @@ function Molecule({ visual }: { visual: Extract<OrbyBoardVisual, { type: "molecu
         const length = Math.hypot(dx, dy) || 1;
         const offsetX = (-dy / length) * 1.5, offsetY = (dx / length) * 1.5;
         const offsets = bond.order === 1 ? [0] : bond.order === 2 ? [-1.5, 1.5] : [-3, 0, 3];
-        return <g key={`${bond.from}:${bond.to}:${bond.order}:${from.x}:${from.y}:${to.x}:${to.y}`} style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>{offsets.map((offset) => <line className="orby-board-stroke" pathLength={1} key={offset}
+        return <g key={`${bond.from}:${bond.to}:${bond.order}:${from.x}:${from.y}:${to.x}:${to.y}`} style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>{offsets.map((offset) => <line className="orby-board-stroke" style={{ animationDelay: `${getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} key={offset}
           x1={from.x + offsetX * offset} y1={from.y + offsetY * offset}
           x2={to.x + offsetX * offset} y2={to.y + offsetY * offset}
           stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>)}</g>;
@@ -269,10 +269,10 @@ function Circuit({ visual }: { visual: Extract<OrbyBoardVisual, { type: "circuit
   const components = new Map(visual.components.map((component) => [component.id, component]));
   return (
     <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Circuito eléctrico esquemático"} className="h-auto max-h-72 w-full">
-      {visual.connections.map((connection) => {
+      {visual.connections.map((connection, index) => {
         const from = components.get(connection.from), to = components.get(connection.to);
         if (!from || !to) return null;
-        return <line className="orby-board-stroke" pathLength={1} key={`${connection.from}:${connection.to}:${from.x}:${from.y}:${to.x}:${to.y}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>;
+        return <line className="orby-board-stroke" style={{ animationDelay: `${getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} key={`${connection.from}:${connection.to}:${from.x}:${from.y}:${to.x}:${to.y}`} x1={from.x} y1={from.y} x2={to.x} y2={to.y} stroke={colors.ink} strokeWidth="1.1" strokeLinecap="round"/>;
       })}
       {visual.components.map((component, index) => <g key={`${component.id}:${component.kind}:${component.x}:${component.y}:${component.label}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
         {component.kind === "battery" ? <g>
@@ -331,7 +331,7 @@ function Dna({ visual }: { visual: Extract<OrbyBoardVisual, { type: "dna" }> }) 
         const x1 = 50 + Math.sin(index * 0.9) * 18;
         const x2 = 50 - Math.sin(index * 0.9) * 18;
         return <g key={`${index}:${pair.left}:${pair.right}:${y}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
-          <line className="orby-board-stroke" pathLength={1} x1={x1} y1={y} x2={x2} y2={y} stroke={colors.ink} strokeWidth="1.2"/>
+          <line className="orby-board-stroke" style={{ animationDelay: `${getOrbyBoardProgressiveDelay(index)}ms` }} pathLength={1} x1={x1} y1={y} x2={x2} y2={y} stroke={colors.ink} strokeWidth="1.2"/>
           <circle cx={x1} cy={y} r="5" fill="#dbeafe" stroke={colors.ink} strokeWidth="0.5"/>
           <circle cx={x2} cy={y} r="5" fill="#fee2e2" stroke={colors.ink} strokeWidth="0.5"/>
           <text x={x1} y={y + 1.5} fontSize="4" textAnchor="middle" fill={colors.ink}>{pair.left}</text>

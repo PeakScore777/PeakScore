@@ -503,3 +503,9 @@
 - Los diálogos de roleplay permiten inglés natural y correcciones breves en español colombiano. El fallback gratuito por turnos conserva el mismo modo.
 - Los filtros de seguridad permanecen activos; solo se permite la respuesta predominantemente inglesa en la sesión explícita de English Studio.
 - CI run 42519666204: 240/240 tests, TypeScript, ESLint, audit y production build aprobados. QA real de micrófono/voz y cuotas sigue pendiente.
+
+## 2026-11-08 — sincronización karaoke de subtítulos
+- El resaltado Live usa ponderación estimada por longitud/grupos vocálicos y pausas de puntuación, en vez de repartir el audio por igual entre las palabras.
+- Se conserva el reloj de Web Audio y el avance monotónico durante transcripción incremental; no se añaden timers ni llamadas de modelo.
+- La ponderación es aproximada, no alineación fonética.
+- CI run 42520586985: 240/240 tests, TypeScript, ESLint, dependency audit y `next build` aprobados.

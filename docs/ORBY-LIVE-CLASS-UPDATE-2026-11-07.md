@@ -277,3 +277,54 @@ La siguiente prioridad es que la tinta se construya por pequeños movimientos ob
 Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del build y luego realizar QA manual con una clase real de 60–90 segundos. No se declara la clase lista para producción.
 
 **Sin nuevas dependencias, llamadas de IA, modelos ni proveedores de pago. Sin cambios a `main`, sin despliegue y sin migraciones remotas.**
+
+
+## Decimoséptima mutación — operaciones teacher-only sobre tinta existente
+
+**Fecha:** 8 de noviembre de 2026  
+**Rama:** `feat/founder-intro`
+
+### Implementado
+- Se creó `lib/ai/orby-board-actions.ts` con validación estricta y operaciones tipadas `focus`, `erase` y `replace`.
+- `focus` solo acepta IDs de trazos existentes y añade metadatos de foco temporal; no modifica geometría ni agrega tinta.
+- La pizarra muestra un halo SVG independiente del lápiz y una etiqueta contextual opcional sobre el trazo señalado.
+- `erase` retira únicamente los IDs seleccionados y conserva los demás trazos, bloques y visuales.
+- `replace` corrige geometría conservando el mismo ID, para que la actualización se trate como corrección del trazo existente y no como tinta nueva.
+- Se añadió la herramienta Live `apply_orby_board_action` con tres operaciones explícitas y schema acotado.
+- `LessonAITutor.tsx` enruta las operaciones de pizarra por un manejador separado de la búsqueda académica; cada operación requiere turno académico validado, sesión vigente y un ID que exista en la pizarra actual.
+- Se limita a una operación por evento y comparte el máximo de ocho operaciones visuales por turno con las actualizaciones de pizarra.
+- El prompt de sesión instruye al modelo a no inventar IDs, señalar sin redibujar y corregir solo tinta propia.
+- Se añadieron pruebas unitarias para foco, borrado selectivo, reemplazo, IDs inexistentes, coordenadas inválidas y enrutamiento Live.
+
+### Archivos
+- `lib/ai/orby-board-actions.ts` (nuevo)
+- `lib/ai/orby-board.ts`
+- `lib/ai/orby-live-tools.ts`
+- `components/aprender/OrbyBoard.tsx`
+- `components/aprender/LessonAITutor.tsx`
+- `app/api/orby/realtime-session/route.ts`
+- `tests/orby-request-filter.test.mjs`
+
+### Commits
+- `444e556` — acciones de pizarra validadas.
+- `5df6dda` — metadatos de foco temporal en el modelo de pizarra.
+- `2628de2` — contrato de herramienta Live para focus/erase/replace.
+- `08bac0f` — halo contextual independiente del lápiz.
+- `43988ce` — integración de operaciones en la sesión Live.
+- Pendientes los commits de prompt y pruebas de regresión que se están registrando en esta actualización.
+
+### Seguridad y límites
+- Las operaciones no aceptan HTML, SVG ni código; solo datos estructurados tipados.
+- Las coordenadas de reemplazo se limitan al canvas 4–96, entre 2 y 40 puntos por trazo, tonos conocidos y grosor 0.6–2.4.
+- Los IDs deben existir en la tinta actualmente publicada; un ID desconocido no puede borrar ni reemplazar nada.
+- El estudiante no recibe controles ni eventos para ejecutar estas operaciones.
+- El foco se renderiza como una animación SVG efímera; no altera el trazo original.
+- No se añadieron dependencias, modelos, proveedores ni servicios de pago. No se modificó `main`, no se desplegó y no se aplicaron migraciones remotas.
+
+### Validación pendiente
+- Ejecutar Node tests, TypeScript, ESLint y build tras los commits de esta mutación.
+- QA manual en Chrome: foco sobre trazos antiguos, borrar uno entre varios, reemplazar un trazo sin duplicarlo, snapshots posteriores y barge-in durante el halo.
+- Verificar en dispositivo táctil y con movimiento reducido.
+- No declarar listo para producción hasta completar CI y QA real.
+
+**Estado:** implementación conectada en la rama; validación completa todavía no certificada.

@@ -462,3 +462,11 @@
 - Se cambió el fondo exterior de `OrbyWorkspacePage.tsx` a claro.
 - Las herramientas nuevas que todavía no tienen flujo funcional no se marcan como completadas. Falta terminar el tema claro de todas las vistas, QA de navegador y la implementación de Flashcards/Grabaciones/Resúmenes/Cuestionarios.
 - Commits en `feat/founder-intro`; sin cambios a `main`, Supabase remoto o despliegue. CI/Vercel pendiente.
+
+
+## 2026-11-08 — OmegaX English Studio
+- Added English Studio to the OmegaX workspace: 60-second speaking prompts, guided pronunciation repetition and level-aware real-life roleplays.
+- Audio capture is permission-based, capped at 60 seconds/8 MB, and transcribed only on explicit request through the existing Cloudflare Workers AI free-only endpoint.
+- Students may send the transcript to the existing OmegaX chat for grammar/vocabulary/clarity feedback or save only the transcript to their learning library.
+- Pronunciation comparison is explicitly approximate ASR word matching, not phoneme/accent/intonation scoring.
+- Added static regression coverage and updated continuity docs. Tests, TypeScript, ESLint, production build and real microphone QA are not certified; Vercel reports build-rate-limit.

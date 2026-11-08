@@ -301,7 +301,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <select value={level} onChange={(event) => setLevel(event.target.value as CefrLevel)} className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">
               <option value="A1">A1 · Principiante</option><option value="A2">A2 · Básico</option><option value="B1">B1 · Intermedio</option><option value="B2">B2 · Intermedio alto</option><option value="C1">C1 · Avanzado</option><option value="C2">C2 · Dominio avanzado</option>
             </select>
-            <span className="mt-2 block text-[11px] font-normal leading-5 text-slate-500">{levelProfile.descriptor} Nivel de práctica elegido, no certificación oficial.</span>
+            <span className="mt-2 block text-[11px] font-normal leading-5 text-slate-500">{levelProfile.descriptor} Nivel de práctica elegido; no es una certificación ni un nivel oficial de desempeño de Saber 11.</span>
           </label>
         </div>
         <div className="border-b border-[#eee6dc] px-5 py-3 sm:px-6">

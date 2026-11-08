@@ -1814,7 +1814,7 @@ test("Gemini Live cancela búsquedas de conocimiento obsoletas y restaura el tem
 test("el token efímero autoriza en servidor la reanudación y compresión solicitadas por el navegador", async () => {
   const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   assert.match(route, /liveConnectConstraints:[\s\S]*?config:[\s\S]*?sessionResumption:\s*\{\}/);
-  assert.match(route, /contextWindowCompression:\\s*\\{\\s*slidingWindow:\\s*\\{\\}\\s*\\}/);
+  assert.match(route, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
 });
 
 test("la reconexión conserva el micrófono, la pizarra y el turno pedagógico activos", () => {
@@ -4537,7 +4537,7 @@ test("la pizarra detiene SMIL, lápiz y animaciones al interrumpir la clase", ()
 test("tinta y lápiz comparten una línea temporal SVG que se pausa coordinadamente", () => {
   assert.match(boardComponentSource, /animation: "none", strokeDasharray: 1, strokeDashoffset: 1/);
   assert.match(boardComponentSource, /<animate[\s\S]*?attributeName="stroke-dashoffset"/);
-  assert.match(boardComponentSource, /<animateMotion path=\{path\} dur=\{\x60\$\{duration\}s\x60\} begin=\{animationReady \? \x60\$\{beginTime\}s\x60\} : "indefinite"\}/);
+  assert.ok(boardComponentSource.includes('<animateMotion path={path} dur={`${duration}s`} begin={animationReady ? `${beginTime}s` : "indefinite"} rotate="auto" fill="freeze"/>'));
   assert.match(boardComponentSource, /const scheduledStrokeKeysRef = useRef\(new Set<string>\(\)\)/);
   assert.match(boardComponentSource, /const strokeEndTimesRef = useRef\(new Map<string, number>\(\)\)/);
   assert.ok(boardComponentSource.includes("const queuedStrokeEnds = [...strokeEndTimesRef.current.values()]"));

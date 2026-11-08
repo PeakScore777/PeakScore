@@ -630,3 +630,5 @@
 
 - Se aisló la memoria personal de señales frente a la recuperación del Lab: el modo de English Studio por sí solo consulta solo señales del alumno por destreza y no fuerza búsquedas vectoriales/graph del Lab. Las búsquedas académicas usan su detector habitual.
 - Inventario estático al cierre de esta tanda: 257 tests nombrados, cero duplicados; no ejecutados.
+
+- El feedback con skill válida utiliza el prompt pedagógico completo para recibir la memoria previa y las rúbricas específicas, sin obligar a buscar documentos vectoriales.

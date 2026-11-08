@@ -2511,8 +2511,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       const updatedBoard = applyOrbyBoardAction(currentBoard, action);
       if (!updatedBoard) {
+        const rejectionReason = action.operation === "append-block"
+          ? "El bloque no puede añadirse: el espacio se superpone con otra etapa o se alcanzó un límite de la pizarra."
+          : action.operation === "append-strokes"
+            ? "No se pudieron añadir los trazos: comprueba la etapa de dibujo y el límite de tinta."
+            : "El ID indicado no existe en la tinta o composición visible.";
         responses.push({ id: call.id, name: "apply_orby_board_action",
-          response: { accepted: false, status: "rejected", retryable: false, reason: "El ID indicado no existe en la tinta visible." },
+          response: { accepted: false, status: "rejected", retryable: false, reason: rejectionReason },
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
         continue;
       }

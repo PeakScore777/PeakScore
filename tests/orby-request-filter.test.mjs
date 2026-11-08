@@ -4437,10 +4437,10 @@ test("el preflight de snapshots y el staging de acciones usan guardas distintas"
     lessonTutorSource.indexOf("function handleOrbyLiveKnowledgeTool"),
   );
   assert.doesNotMatch(snapshotHandler, /pendingBoardSnapshot/);
-  assert.match(snapshotHandler, /voiceInputActivityStartedAtRef\\.current/);
-  assert.match(actionHandler, /pendingBoardSnapshot\\.sessionGeneration === sessionGeneration/);
-  assert.match(actionHandler, /pendingBoardSnapshot\\.activityGeneration === activityGeneration/);
-  assert.match(actionHandler, /Date\\.now\\(\\) - pendingBoardSnapshot\\.createdAt <= 15_000/);
+  assert.match(snapshotHandler, /voiceInputActivityStartedAtRef\.current/);
+  assert.match(actionHandler, /pendingBoardSnapshot\.sessionGeneration === sessionGeneration/);
+  assert.match(actionHandler, /pendingBoardSnapshot\.activityGeneration === activityGeneration/);
+  assert.match(actionHandler, /Date\.now\(\) - pendingBoardSnapshot\.createdAt <= 15_000/);
 });
 
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {

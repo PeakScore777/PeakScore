@@ -25,10 +25,9 @@ function sanitizeStroke(value: unknown, expectedId: string): OrbySketchStroke | 
   const width = raw.width === undefined ? 1.25 : raw.width;
   if (!["ink", "blue", "red", "accent", "muted", "success"].includes(String(tone))
     || typeof width !== "number" || !Number.isFinite(width) || width < 0.6 || width > 2.4) return null;
-  const hasOwn = (key: string) => Object.prototype.hasOwnProperty.call(raw, key);
-  if ((hasOwn("label") && raw.label !== undefined && typeof raw.label !== "string")
-    || (hasOwn("labelX") && raw.labelX !== undefined && typeof raw.labelX !== "number")
-    || (hasOwn("labelY") && raw.labelY !== undefined && typeof raw.labelY !== "number")) return null;
+  if ((raw.label !== undefined && typeof raw.label !== "string")
+    || (raw.labelX !== undefined && typeof raw.labelX !== "number")
+    || (raw.labelY !== undefined && typeof raw.labelY !== "number")) return null;
   const label = raw.label === undefined
     ? ""
     : raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48);
@@ -47,8 +46,7 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
   const raw = value as Record<string, unknown>;
   if (raw.operation === "focus") {
     if (!safeId(raw.strokeId)) return null;
-    if (Object.prototype.hasOwnProperty.call(raw, "label")
-      && raw.label !== undefined && typeof raw.label !== "string") return null;
+    if (raw.label !== undefined && typeof raw.label !== "string") return null;
     const label = raw.label === undefined
       ? ""
       : raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48);

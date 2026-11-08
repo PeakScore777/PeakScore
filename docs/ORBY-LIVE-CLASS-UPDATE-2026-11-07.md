@@ -1215,3 +1215,18 @@ El canvas espacial es el primer paso hacia el video, no el final del tutor human
 6. Reproducir la escena de la célula del video y ajustar composición, tiempos, densidad de tinta y tamaño del lápiz.
 
 **Criterio de aceptación:** el estudiante debe ver una sola hoja docente donde Orby intercala nota → dibujo → flecha → etiqueta → explicación, sin reiniciar lo ya escrito, sin saltos de lápiz y sin dejar de hablar. La base existente se conserva.
+
+### Segunda extensión del lienzo: Orby puede señalar una idea completa
+
+Se amplió la operación teacher-only `focus` para aceptar uno de dos destinos excluyentes:
+
+- `strokeId`: conserva el halo sobre un trazo manual, como antes.
+- `elementId`: señala una etapa espacial completa del canvas (bloque de texto, fórmula, nota o visual) por el ID exacto declarado en `layout.elements[]`.
+
+La acción valida que exista exactamente un destino. Rechaza ambos IDs, ninguno, IDs mal formados y etapas inexistentes. El foco por etapa usa un halo exterior rojo, independiente del lápiz y sin crear ni modificar tinta. El halo se pausa cuando se interrumpe la voz y queda estático en movimiento reducido.
+
+El contrato `apply_orby_board_action`, su schema Live, el prompt de clase y el renderer están conectados. La publicación actualiza el mismo mensaje de clase; no requiere nueva RPC ni migración. El foco permanece temporal: un nuevo snapshot completo sustituye el estado anterior, como ocurre con el resto de la escena.
+
+**Regresiones nuevas:** focus de etapa existente, destino inexistente, rechazo de ambos destinos/ninguno, ausencia de cambios de bloques/visuales y pausa del halo durante barge-in.
+
+**Suite declarada tras esta extensión:** 221 tests en `tests/orby-request-filter.test.mjs`, sin nombres duplicados ni pruebas vacías en inspección estática. No afirmar que se ejecutaron/aprobaron.

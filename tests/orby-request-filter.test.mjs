@@ -4041,6 +4041,7 @@ test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválida
   }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: ["missing"] })?.operation, "erase");
   assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "erase", strokeIds: ["missing"] }), null);
+  assert.equal(boardActions.applyOrbyBoardAction(board, { operation: "erase", strokeIds: ["stroke1", "missing"] }), null);
 });
 
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {

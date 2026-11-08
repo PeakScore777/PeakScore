@@ -144,3 +144,12 @@ Invariants:
 The implementation is backward-compatible with the current JSONB teaching_board persistence. Client sanitizer budget (18 KB) remains below the existing RPC limit (24 KB); no database migration is needed for the optional field.
 
 Next implementation layer: a typed incremental action queue with generation IDs, idempotency, dependencies, cancellation on interruption, and compatibility with focus/erase/replace. Do not restore student drawing controls.
+
+## Addendum — teacher focus for spatial layout elements
+
+The existing teacher-only `focus` operation may target exactly one of:
+- `strokeId`: an existing freehand stroke (legacy behavior).
+- `elementId`: an existing spatial stage in `layout.elements[]`.
+
+A spatial element focus is temporary, non-destructive and adds no ink. It must reference an ID from the active complete snapshot. The renderer shows an outer focus halo, pauses it on voice interruption, and keeps a static indication for reduced-motion users. `erase` and `replace` remain stroke-specific. Student drawing/editing controls remain absent.
+

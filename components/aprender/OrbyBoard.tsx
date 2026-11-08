@@ -55,7 +55,7 @@ function getSketchStrokeKey(stroke: OrbySketchStroke): string {
   return `${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`;
 }
 
-function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }>; focus?: { strokeId: string; label?: string; revision: number }; drawingActive: boolean; startDelayMs?: number }) {
+function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }>; focus?: { strokeId: string; pointIndex?: number; label?: string; revision: number }; drawingActive: boolean; startDelayMs?: number }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const scheduledStrokeKeysRef = useRef(new Set<string>());
   const strokeEndTimesRef = useRef(new Map<string, number>());
@@ -185,13 +185,24 @@ function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Ex
           <circle data-orby-sketch-endpoint="true" cx={lastPoint.x} cy={lastPoint.y} r="0.45" fill={color} opacity={0}>
             <animate attributeName="opacity" from="0" to="1" begin={animationReady ? `${beginTime + duration}s` : "indefinite"} dur="0.12s" fill="freeze"/>
           </circle>
-          {focus?.strokeId === stroke.id ? <g key={`${focus.strokeId}:${focus.revision}`} data-orby-teacher-focus={stroke.id} pointerEvents="none">
-            <circle cx={stroke.points[Math.floor(stroke.points.length / 2)].x} cy={stroke.points[Math.floor(stroke.points.length / 2)].y} r="3.2" fill="none" stroke="#dc2626" strokeWidth="0.9">
-              <animate attributeName="r" values="2.6;5.2;2.6" dur="1.35s" repeatCount="2" fill="freeze"/>
-              <animate attributeName="opacity" values="0.95;0.35;0" dur="1.35s" repeatCount="2" fill="freeze"/>
-            </circle>
-            {focus.label ? <text x={Math.min(88, stroke.points[Math.floor(stroke.points.length / 2)].x + 5)} y={Math.max(7, stroke.points[Math.floor(stroke.points.length / 2)].y - 5)} fontSize="3.5" fontWeight="700" fill="#b91c1c">{focus.label}<animate attributeName="opacity" values="1;1;0" keyTimes="0;0.75;1" dur="2.7s" fill="freeze"/></text> : null}
-          </g> : null}
+          {focus?.strokeId === stroke.id ? (() => {
+            const focusIndex = Number.isInteger(focus.pointIndex)
+              ? Math.max(0, Math.min(stroke.points.length - 1, focus.pointIndex as number))
+              : Math.floor(stroke.points.length / 2);
+            const target = stroke.points[focusIndex];
+            const labelOnLeft = target.x > 72;
+            const labelX = labelOnLeft ? Math.max(8, target.x - 7) : Math.min(92, target.x + 7);
+            const labelY = Math.max(8, target.y - 6);
+            return <g key={`${focus.strokeId}:${focus.revision}`} data-orby-teacher-focus={stroke.id} data-orby-focus-point={focusIndex} pointerEvents="none" aria-label={focus.label || "Punto señalado por la profesora"}>
+              {focus.label ? <path d={`M ${target.x} ${target.y} L ${labelOnLeft ? labelX + 1.5 : labelX - 1.5} ${labelY + 1}`} fill="none" stroke="#dc2626" strokeWidth="0.55" strokeDasharray="1.4 1"/> : null}
+              <circle className="orby-board-focus-ring" cx={target.x} cy={target.y} r="4.2" fill="none" stroke="#dc2626" strokeWidth="0.85">
+                <animate attributeName="r" values="3.4;5.8;3.4" dur="1.25s" repeatCount="2" fill="freeze"/>
+                <animate attributeName="opacity" values="0.95;0.55;0" dur="1.25s" repeatCount="2" fill="freeze"/>
+              </circle>
+              <circle className="orby-board-focus-dot" cx={target.x} cy={target.y} r="1.45" fill="#dc2626" stroke="#fff" strokeWidth="0.55"/>
+              {focus.label ? <text data-orby-teacher-focus-label="true" x={labelX} y={labelY} textAnchor={labelOnLeft ? "end" : "start"} fontSize="3.8" fontWeight="700" fill="#b91c1c">{focus.label}<animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.12;0.8;1" dur="2.7s" fill="freeze"/></text> : null}
+            </g>;
+          })() : null}
         </g>;
       })}
     </svg>

@@ -485,7 +485,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }, appendUserMessage?: boolean) => Promise<void>>(async () => {});
+  const sendMessageRef = useRef<(text: string, includeAttachment?: boolean, voiceInteraction?: boolean, attachmentMeta?: { kind: "image" | "audio"; label: string }, appendUserMessage?: boolean, learningSkill?: "speaking" | "pronunciation" | "listening" | "reading" | "writing") => Promise<void>>(async () => {});
   const stopRealtimeVoiceRef = useRef<(updateState?: boolean) => void>(() => {});
   const lastInitialPromptRef = useRef<string | null>(null);
   const activeConversationRef = useRef<string | null>(null);
@@ -497,7 +497,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const textRequestGenerationRef = useRef(0);
   const activeTextRequestRef = useRef<AbortController | null>(null);
   const lastSubmittedMessageRef = useRef<{ key: string; at: number } | null>(null);
-  const pendingMessagesRef = useRef<Array<{ text: string; attachmentMeta?: { kind: "image" | "audio"; label: string } }>>([]);
+  const pendingMessagesRef = useRef<Array<{ text: string; attachmentMeta?: { kind: "image" | "audio"; label: string }; learningSkill?: "speaking" | "pronunciation" | "listening" | "reading" | "writing" }>>([]);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const stopAudioRecordingRef = useRef<(discard?: boolean) => void>(() => {});
   const audioStreamRef = useRef<MediaStream | null>(null);
@@ -807,9 +807,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
-  function requestWorkspaceStudyPrompt(prompt: string) {
+  function requestWorkspaceStudyPrompt(prompt: string, learningSkill?: "speaking" | "pronunciation" | "listening" | "reading" | "writing") {
     setLearningView("chat");
-    window.setTimeout(() => sendMessageRef.current(prompt), 0);
+    window.setTimeout(() => sendMessageRef.current(prompt, false, false, undefined, true, learningSkill), 0);
   }
 
   async function startOmegaXEnglishRoleplay(prompt: string) {
@@ -4461,11 +4461,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setQueuedMessageCount(pendingMessagesRef.current.length);
     if (!nextQueuedMessage) return;
     window.setTimeout(() => {
-      void sendMessageRef.current(nextQueuedMessage.text, false, false, nextQueuedMessage.attachmentMeta);
+      void sendMessageRef.current(nextQueuedMessage.text, false, false, nextQueuedMessage.attachmentMeta, true, nextQueuedMessage.learningSkill);
     }, 0);
   }
 
-  async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }, appendUserMessage = true) {
+  async function sendMessage(text: string, includeAttachment = false, voiceInteraction = false, attachmentMeta?: { kind: "image" | "audio"; label: string }, appendUserMessage = true, learningSkill?: "speaking" | "pronunciation" | "listening" | "reading" | "writing") {
     const message = text.trim();
     const previousActiveSubject = activeSubjectRef.current;
     const selectedSubject = getOrbySubjectSelectionLabel(message);
@@ -4506,7 +4506,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setError(`La cola de ${assistantLabel} está llena. Espera a que termine de cargar el historial.`);
         return;
       }
-      pendingMessagesRef.current.push({ text: message, attachmentMeta });
+      pendingMessagesRef.current.push({ text: message, attachmentMeta, learningSkill });
       setQueuedMessageCount(pendingMessagesRef.current.length);
       setInput("");
       setError("");
@@ -4714,6 +4714,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           attachmentLabel: attachmentMeta?.label ?? (selectedFile ? "Imagen adjunta" : null),
           voiceMode: isVoiceInteraction,
           englishPracticeMode: isVoiceInteraction && assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
+          learningSkill: assistantName === "OmegaX" ? learningSkill ?? null : null,
           workspace,
           history: messagesRef.current.slice(-8).map(({ role, content }) => ({ role, content })),
           ...(imagePayload ? { image: imagePayload } : {}),
@@ -5575,7 +5576,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     practice.transcript.slice(0, 6000),
                     "FIN DE RESPUESTA DEL ESTUDIANTE.",
                   ].join("\\n");
-                  requestWorkspaceStudyPrompt(prompt);
+                  requestWorkspaceStudyPrompt(prompt, practice.mode);
                 }}
                 onSaveTranscript={(title, content) => saveLearningItem(
                   /English Studio · (?:Comprensión auditiva|Comprensión lectora|Producción escrita)/.test(title) ? "note" : "recording",

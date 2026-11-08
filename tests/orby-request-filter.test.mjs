@@ -4395,6 +4395,38 @@ test("las acciones incrementales rechazan payloads fuera de límites y esquemas 
   }), null);
 });
 
+test("todas las operaciones de pizarra quedan ligadas a la generación activa", () => {
+  const action = boardActions.sanitizeOrbyBoardAction({
+    operation: "focus",
+    turnGeneration: 12,
+    strokeId: "membrane",
+    label: "Membrana",
+  });
+  assert.ok(action);
+  assert.equal(action.turnGeneration, 12);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "focus", strokeId: "membrane",
+  }), null);
+
+  const state = boardActions.createOrbyBoardActionSequenceState(12);
+  const stale = boardActions.evaluateOrbyBoardActionSequence(state, action, 13);
+  assert.equal(stale.accepted, false);
+  assert.equal(stale.reason, "wrong_generation");
+
+  const current = boardActions.evaluateOrbyBoardActionSequence(state, action, 12);
+  assert.equal(current.accepted, true);
+});
+
+test("Gemini Live y la directiva de clase exigen turnGeneration en cada acción docente", () => {
+  assert.match(liveToolsSource, /name: "apply_orby_board_action"[\\s\\S]*?required: \\["operation", "turnGeneration"\\]/);
+  assert.match(liveToolsSource, /EVERY operation must echo the exact turnGeneration/);
+  assert.match(realtimeSessionSource, /incluidas focus, erase y replace, debe incluir turnGeneration exactamente igual/);
+  assert.match(lessonTutorSource, /createOrbyBoardActionSequenceState\\(voiceActivityGenerationRef\\.current\\)/);
+  assert.match(lessonTutorSource, /evaluateOrbyBoardActionSequence\\(voiceBoardActionSequenceRef\\.current, action, activityGeneration\\)/);
+  assert.match(lessonTutorSource, /turnGeneration: activityGeneration/);
+  assert.match(lessonTutorSource, /pendingBoardSnapshot\\.activityGeneration === activityGeneration/);
+});
+
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
   assert.match(liveToolsSource, /Exact operation: focus, erase or replace/);

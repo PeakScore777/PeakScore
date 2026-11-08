@@ -249,16 +249,16 @@ Every new substantive question should be answered in the voice and developed on 
 - If no relevant published document exists, retrieval fails or a free quota is exhausted, continue from reliable academic knowledge and disclose the limitation when needed. Never claim the Lab contains material that was not actually returned.
 - This tool integration is retrieval, not model training or autonomous learning. Do not describe Orby as having learned a document unless the documented ingestion/publishing workflow actually processed and published it.
 
-### Spoken captions — word-highlight requirement and technical limit
-- Required visual behaviour: a stable subtitle line follows Orby's spoken explanation, with one active word highlighted as it is spoken. The highlight must not run ahead of the audible voice, jump back as text grows, or keep highlighting after interruption.
-- The current client reads Gemini Live `outputTranscription.text` and separately schedules PCM audio chunks using Web Audio. It currently renders a plain transcript; it does not yet have active-word karaoke highlighting.
-- The official Gemini Live transcription documentation states that Live streaming does not provide word-level timestamps; it provides utterance-level transcription. Gemini 3.5 Transcribe's non-streaming audio-file mode can return word-level timestamps, but those timestamps are not supported by its Live streaming mode and can reduce transcription accuracy. See:
+### Spoken captions — approximate word highlight and technical limit
+- Required visual behaviour: a stable subtitle line follows the selected tutor's spoken explanation, with the currently estimated word highlighted. The active word must not persist after barge-in or a session-generation change.
+- The client reads Gemini Live `outputTranscription.text` and schedules PCM chunks with Web Audio. It now segments the transcript and estimates the active word using a weighted playback-duration heuristic (word length / vowel-group estimate / punctuation pauses) driven by the audio playback clock.
+- This karaoke is a visual estimate, not a provider-supplied word alignment. Gemini Live supplies utterance-level transcription, not reliable word timestamps; the highlight can drift from the actual phoneme/word boundary. Never advertise it as exact or phoneme-level synchronization.
+- References for the provider limitation:
   - https://ai.google.dev/gemini-api/docs/live-api/live-transcribe
   - https://ai.google.dev/gemini-api/docs/transcribe
   - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-transcribe
-- Therefore, do not claim exact word alignment from the current Live transcript. The correct implementation path is to investigate a free, quota-safe timing source that is compatible with Live playback. A playback-duration heuristic may be prototyped only if explicitly described and tested as approximate; it must never be represented as precise phonetic alignment.
-- Do not add a paid transcription provider, silently switch providers, or buffer the whole answer for a second transcription pass without first proving cost, latency, free quota, privacy and interruption behaviour.
-- The karaoke state must be invalidated on barge-in and session-generation change, and must follow actual scheduled playback time rather than the arrival time of transcript text.
+- Do not add a paid transcription provider, silently switch providers, or buffer a full answer for a second transcription pass without proving cost, latency, free quota, privacy and interruption behaviour.
+- On barge-in, playback cancellation or session-generation change, clear the active highlight and invalidate queued timing so an old transcript cannot continue highlighting over the new answer.
 
 ### Natural, low-latency conversation
 - Target: the first useful spoken response should begin as soon as the tutor understands the question, ideally within approximately one second after the end-of-utterance boundary. This is a performance target to measure, not a guarantee.
@@ -305,3 +305,9 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - Cloudflare Workers AI — asignación de 10.000 neuronas gratis al día y reinicio UTC: https://developers.cloudflare.com/workers-ai/platform/pricing/
 - Anthropic — facturación de la API de Claude mediante créditos prepagados: https://support.claude.com/es/articles/8977456-como-pago-mi-uso-de-la-api-de-claude
 - Anthropic — límites variables del plan gratuito de Claude.ai y reinicio de cinco horas: https://support.claude.com/es/articles/8114491-comienza-con-claude
+
+### Handwriting motion and reduced-motion accessibility (2026-11-08)
+- Freehand sketch strokes use `getOrbySketchMotionProfile(points)` to create a smooth, bounded SMIL spline. The same key times and curve profile are applied to the ink reveal and moving pen tip so the cursor follows the visible stroke.
+- The profile responds modestly to changes in direction; it does not change the geometric path or claim handwriting recognition. Queue order, geometry-based duration, cumulative stroke IDs, pause/resume and stage lead-in remain intact.
+- Under `prefers-reduced-motion: reduce`, the board must show the complete static content: disable layout/appearance/dash/SMIL animations, hide the moving pen tip and animated focus, and keep ink, labels and endpoints visible. Reduced motion must never make the explanation disappear.
+- Regression coverage checks the static final-state CSS and the shared pen/ink spline. Browser-level OS preference verification remains required.

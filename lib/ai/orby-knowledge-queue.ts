@@ -2,6 +2,7 @@ import "server-only";
 
 import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isGeminiFreeTierConfigured, isCloudflareWorkersAIFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 import type { OrbyKnowledgeChunk } from "@/lib/ai/orby-knowledge";
 
 export const ORBY_KNOWLEDGE_PIPELINE_VERSION = 7;
@@ -218,11 +219,8 @@ export async function enqueueOrbyKnowledgeDocument(
 export const ORBY_EMBEDDING_PROVIDER_WAIT_MARKER = "ORBY_EMBEDDING_PROVIDER_NOT_CONFIGURED";
 
 export async function resumeOrbyJobsWaitingForEmbeddingProvider(): Promise<number> {
-  const hasGemini = Boolean(process.env.GEMINI_API_KEY?.trim());
-  const hasCloudflare = Boolean(
-    /^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "")
-    && process.env.CLOUDFLARE_API_TOKEN?.trim()
-  );
+  const hasGemini = isGeminiFreeTierConfigured();
+  const hasCloudflare = isCloudflareWorkersAIFreeTierConfigured();
   if (!hasGemini && !hasCloudflare) return 0;
 
   const { data: candidates, error: lookupError } = await supabaseAdmin

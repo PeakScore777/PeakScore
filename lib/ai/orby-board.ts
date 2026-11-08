@@ -615,7 +615,8 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   }
 
   if (raw.version === 1) {
-    if (blocks.length === 0 || raw.visuals !== undefined) return null;
+    // Spatial composition is an additive v2 capability; legacy v1 stays text-only.
+    if (blocks.length === 0 || raw.visuals !== undefined || raw.layout !== undefined) return null;
     const board: OrbyBoard = { version: 1, title, blocks, ...(spokenCue ? { spokenCue } : {}) };
     return withinBoardBudget(board) ? board : null;
   }

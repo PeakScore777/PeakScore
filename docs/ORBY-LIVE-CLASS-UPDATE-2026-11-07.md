@@ -666,3 +666,22 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Corrección publicada en tests/orby-request-filter.test.mjs.
 - Pendiente ejecutar npm run test:orby en el entorno local; la suite puede revelar fallos de aserciones posteriores una vez que el parser termine de cargar.
 - Solo feat/founder-intro; no se toca main, no se despliega y no se añaden dependencias ni servicios de pago.
+## Auditoría estática ampliada de la suite Orby — 7 de noviembre de 2026
+
+### Alcance comprobado en la revisión actual de GitHub
+- Se inspeccionó tests/orby-request-filter.test.mjs completo (4.199 líneas, 204 casos test()).
+- Se validaron sintácticamente 969 regex literales utilizadas por assert.match/assert.doesNotMatch; no se detectaron expresiones inválidas en la revisión actual.
+- Se contaron 47 declaraciones const de nivel superior: no hay nombres duplicados.
+- Se contaron 204 nombres de pruebas: no hay títulos duplicados.
+- La aserción del selector CSS se sustituyó por includes() para evitar que el parser de Node vuelva a interpretar escapes ambiguos.
+- package.json confirma que test:orby ejecuta node --test tests/orby-request-filter.test.mjs y que build depende de que esa suite pase antes de next build.
+
+### Límite crítico de esta auditoría
+- Estas comprobaciones estáticas no equivalen a ejecutar Node sobre el repositorio ni garantizan que las 204 pruebas pasen: los asserts pueden fallar al ejecutarse y el entorno de GitHub no ha producido una ejecución de Actions para esta rama.
+- La última captura del usuario muestra que su pull terminó en el commit 1f3dc7a; la corrección de la regex se publicó después en 6553c17 y la documentación en 455c598. Por tanto, el error mostrado corresponde a una revisión anterior a la corrección.
+- El estado combinado del commit 455c598 muestra Vercel failure por build-rate-limit; no es un resultado de la suite Orby.
+
+### Siguiente validación necesaria
+- El usuario debe actualizar a la revisión que contiene 6553c17 y ejecutar npm run test:orby. Solo después de ver los fallos reales restantes se deben corregir los asserts de comportamiento que estén desactualizados, sin borrar pruebas válidas ni debilitar cobertura.
+- No se debe declarar cero errores hasta que la suite, TypeScript/ESLint y build hayan terminado correctamente.
+- Sin cambios a main ni despliegue.

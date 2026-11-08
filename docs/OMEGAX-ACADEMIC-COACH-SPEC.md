@@ -261,3 +261,11 @@ Este backlog conserva la siguiente evolución acordada para OmegaX. No debe inte
 4. Añadir recomendador explicable de siguiente práctica.
 5. Integrar señales de Live con idempotencia.
 6. Conectar la recomendación con tablero y actividades de las cinco materias ICFES.
+
+
+## Estado de preview y validación — 2026-11-08
+- El build de Vercel inspeccionado para `a53918ddae0bf5b6b30802154f796c9f7727498f` ejecutó `npm run build` y falló por una expectativa obsoleta en test de English Studio: el selector ya deshabilita también cuando existe `writtenResponse` sin guardar.
+- La expectativa se actualizó en `b01c3e4f56169679e5a7f39652165ac9f920f759`; el HEAD actual de documentación/backlog consultado es `9c971d377234429aa272566cfe512180ea1ac749`.
+- No existe preview del HEAD actual. Vercel rechazó una nueva creación por límite API gratuito diario (>100, HTTP 402, reintento tras 24 h). No se hizo deploy de producción.
+- Preview anterior HTTP 200: https://peak-score-5daaqgf8a-peak-score.vercel.app, commit `3be12f33d4b2dc7d3fa527aad6b080e5de271cda`; es anterior al English Studio ampliado y a la memoria por destreza, por lo que no sirve para validar esas funciones.
+- El inventario tiene 257 pruebas nombradas sin duplicados, no equivalentes a ejecución. Build, TypeScript, ESLint y QA Chrome del HEAD actual permanecen pendientes.

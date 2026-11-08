@@ -453,6 +453,8 @@ function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type
 }
 
 function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean }) {
+  // Keep hooks unconditional even when the visual primitive changes between snapshots.
+  const annotationMarkerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
   if (visual.type === "annotation") {
     const palette = visual.tone === "red" ? "#dc2626"
       : visual.tone === "blue" ? "#2563eb"
@@ -464,7 +466,7 @@ function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; boa
     const maxX = Math.max(...visual.points.map((point) => point.x));
     const minY = Math.min(...visual.points.map((point) => point.y));
     const maxY = Math.max(...visual.points.map((point) => point.y));
-    const markerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
+    const markerId = annotationMarkerId;
     return <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Anotación del profesor"} className="h-auto max-h-72 w-full overflow-visible">
       <defs><marker id={markerId} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill={palette}/></marker></defs>
       {visual.mark === "circle" ? <ellipse className="orby-board-stroke" pathLength={1} cx={(minX + maxX) / 2} cy={(minY + maxY) / 2} rx={Math.max(2, (maxX - minX) / 2)} ry={Math.max(2, (maxY - minY) / 2)} fill="none" stroke={palette} strokeWidth="1.35" strokeDasharray="3 1" /> : null}

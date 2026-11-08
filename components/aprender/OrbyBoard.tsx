@@ -3,7 +3,7 @@
 import React from "react";
 
 import { useEffect, useId, useRef } from "react";
-import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-board";
+import { getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual } from "@/lib/ai/orby-board";
 
 const colors = {
   orange: "#f97316",

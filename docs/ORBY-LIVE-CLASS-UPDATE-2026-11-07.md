@@ -251,3 +251,29 @@ La siguiente prioridad es que la tinta se construya por pequeños movimientos ob
 
 **Commit de esta mutación:** pendiente al momento de documentar.  
 **Validación:** CI del commit anterior en ejecución; no se declara build aprobado.
+
+
+## Decimosexta mutación — consistencia del contrato y limpieza de ESLint
+
+**Fecha:** 8 de noviembre de 2026  
+**Rama:** `feat/founder-intro`
+
+### Trabajo realizado
+- Se alineó el schema de `render_orby_teaching_board` y el prompt de Gemini Live para limitar cada snapshot a 2–5 trazos nuevos.
+- Se reforzó la conservación de IDs y la instrucción de no volver a dibujar elementos que ya están en el tablero.
+- Se pide evitar ráfagas de trazos para hacer más legible la progresión.
+- Se corrigieron cinco pruebas estáticas que estaban desactualizadas respecto al comportamiento actual (commit `35421b6`).
+- La ejecución de CI `42431535166` confirmó que las pruebas de Orby y TypeScript pasan, pero ESLint falló por dos constantes no utilizadas en `LessonAITutor.tsx` (`showVoiceTranscript` y `voiceBoardActive`). Ambas declaraciones se retiraron sin cambiar el flujo funcional.
+
+### Validación y estado
+- Pruebas de regresión: 190 aprobadas en la ejecución `42431535166`.
+- TypeScript: aprobado en esa ejecución.
+- ESLint: falló por dos variables no utilizadas; se corrigieron en el commit `926f849`. Pendiente de reejecución.
+- Build de Next.js: no se ejecutó porque el workflow se detuvo al fallar ESLint.
+- Auditoría de dependencias: paso de auditoría ejecutado antes del fallo; no se completó la compuerta final del workflow.
+- QA visual en Chrome, voz Live, interrupciones, snapshots y PDF: pendiente.
+
+### Próximo paso
+Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del build y luego realizar QA manual con una clase real de 60–90 segundos. No se declara la clase lista para producción.
+
+**Sin nuevas dependencias, llamadas de IA, modelos ni proveedores de pago. Sin cambios a `main`, sin despliegue y sin migraciones remotas.**

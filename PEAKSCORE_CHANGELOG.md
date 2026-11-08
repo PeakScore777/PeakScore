@@ -438,3 +438,11 @@
 - Se agregaron pruebas estáticas de consistencia entre schema y prompt.
 - Se documentó el plan inmediato: validar CI completa, QA de cuatro snapshots, cursor que desaparece al terminar, señalamiento contextual y rendimiento.
 - Pendiente de CI/QA visual; sin consumo adicional de IA, proveedores de pago, cambios a `main` ni despliegues.
+
+
+## 2026-11-08 — consistencia del dibujo progresivo y limpieza ESLint
+- Schema y prompt de Live alineados a 2–5 trazos nuevos por snapshot; se refuerza conservar IDs y no redibujar tinta existente.
+- Se ajustaron regresiones estáticas obsoletas. En CI, 190 pruebas y TypeScript pasaron; ESLint detectó dos constantes no utilizadas.
+- Se retiraron `showVoiceTranscript` y `voiceBoardActive` sin alterar la lógica de clase. Pendiente nueva CI y build.
+- QA manual de voz/pizarra/PDF continúa pendiente. Sin dependencias o APIs de pago; no se toca `main` ni producción.
+- Detalle: `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.

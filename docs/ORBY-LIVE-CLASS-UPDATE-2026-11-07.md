@@ -1143,7 +1143,7 @@ Referencia consultada: https://googleapis.github.io/js-genai/release_docs/interf
 1. **Contrato espacial opcional en OrbyBoard v2**
    - Nuevo `OrbyBoardLayout` con `aspectRatio: "16:9"` y `elements[]`.
    - Cada etapa contiene `id`, `sequence`, `kind` (`block`/`visual`), `index` y rectángulo normalizado `x/y/width/height`.
-   - El layout debe referenciar cada bloque y visual exactamente una vez; no acepta IDs/índices repetidos, etapas fuera de orden o no contiguas, posiciones/tamaños inválidos ni rectángulos fuera del lienzo.
+   - El layout debe referenciar cada bloque y visual exactamente una vez; no acepta IDs/índices repetidos ni secuencias no monótonas, posiciones/tamaños inválidos ni rectángulos fuera del lienzo.
    - `layout` es opcional para snapshots v2 antiguos. Version 1 sigue siendo texto-only y rechaza el nuevo campo.
 
 2. **Renderer espacial**

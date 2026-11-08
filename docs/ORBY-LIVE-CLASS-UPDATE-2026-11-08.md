@@ -666,3 +666,25 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - No se permite texto flotando encima de una etapa de dibujo con este tipo de acción. Las etiquetas que forman parte del sketch siguen pudiendo vivir dentro del propio SVG mediante `labelX/labelY`.
 - No se ha ejecutado el test runner ni QA de Chrome. La revisión estática del inventario de tests es independiente de su ejecución.
 - No se modificó el renderer, la cola del lápiz, el transporte de audio, los prompts de conocimiento ni la cuota de proveedores.
+
+## Cierre de validación CI — 8 de noviembre de 2026
+
+**Run GitHub Actions:** https://github.com/PeakScore777/PeakScore/actions/runs/42519075898
+**SHA validado:** `69eebdcdacf94dd0403b1e7d01ab8e3f7d3135c9` (`feat/founder-intro`).
+
+- `npm ci`: correcto.
+- Auditoría de dependencias: correcta; sin vulnerabilidades reportadas por el gate.
+- `npm run test:orby`: **239/239 aprobadas, 0 fallidas**.
+- `npx tsc --noEmit`: correcto.
+- `npm run lint`: correcto.
+- `npx next build`: correcto.
+
+### Incidencias cerradas durante esta validación
+- Se alinearon las regresiones estáticas con la identidad dinámica `assistantLabel` y los textos condicionales OmegaX/Orby, sin cambiar el tutor especializado.
+- Se acotó la regresión de desbloqueo de AudioContext al método `startRealtimeVoice`, evitando comparar el micrófono de la grabadora de estudio con el permiso de la clase Live.
+- Se reintrodujo en la directiva Live la desambiguación por intención/contexto para no rechazar palabras aisladas como «sí», «moda», «cocina» o «Python».
+- Se restauró la dirección de voz femenina, natural y colombiana ligera en el estilo compartido de OmegaX y Orby.
+- Se corrigió el cierre prematuro del template literal CSS de `LessonAITutor.tsx`: las reglas de tema claro quedaron de nuevo dentro de `<style jsx global>`.
+- Se conserva la protección contra solapamientos de `append-block`, con borde adyacente permitido y feedback espacial claro al modelo.
+
+**Alcance de esta certificación:** es una compilación de producción y suite automatizada con las variables placeholder definidas por el workflow. No equivale a QA de micrófono físico, sesión Gemini Live real, prueba visual de Chrome ni despliegue de producción.

@@ -5554,6 +5554,8 @@ test("OmegaX guarda y recupera memoria de aprendizaje separada por destreza de E
   assert.match(fallback, /Boolean\(learningSkill\) \|\| shouldRetrieveOrbyAcademicKnowledge/);
   assert.match(fallback, /signalSubject = learningSkill[\s\S]{0,80}"Inglés"/);
   assert.match(fallback, /getEnglishStudioTopicPrefix\(learningSkill\)/);
+  assert.match(fallback, /retrievalSubject = learningSkill \? "Inglés" : detectedSubject/);
+  assert.match(fallback, /subject: retrievalSubject/);
   assert.match(fallback, /\.like\("topic", skillPrefix \+ "%"/);
   assert.match(fallback, /Destreza de English Studio:/);
 
@@ -5562,6 +5564,8 @@ test("OmegaX guarda y recupera memoria de aprendizaje separada por destreza de E
   assert.match(tutor, /requestWorkspaceStudyPrompt\(prompt, practice\.mode\)/);
   assert.match(tutor, /function summarizeEnglishStudioSignals\(signals: LearningSignal\[\]\)/);
   assert.match(tutor, /Tu progreso por destreza/);
+  assert.match(tutor, /getEnglishStudioSkillForSignal\(signal\.topic\)/);
+  assert.match(tutor, /const displayTopic = skillKey/);
   assert.match(tutor, /proporción de señales guardadas como/);
 });
 

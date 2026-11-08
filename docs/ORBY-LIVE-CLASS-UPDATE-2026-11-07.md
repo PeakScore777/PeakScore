@@ -323,6 +323,12 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - `aca57fb` — actualización del registro de continuidad.
 - `3dede39` — respeto a movimiento reducido y ocultación del foco en exportación PDF.
 - `a5077c9` — regresión estática para movimiento reducido y exportación.
+- `1739186` — revisión incremental del foco en el modelo.
+- `78093de` — incremento de revisión al enfocar o corregir.
+- `1c555dc` — intento inicial de conectar la revisión al indicador (sin cambio efectivo en el componente).
+- `3f644a4` — pruebas de revisión repetida.
+- `185a22a` — documentación de la repetición fiable y estado de Vercel.
+- `6cacbc2` — key efectiva del halo para reiniciar solo el indicador.
 
 ### Seguridad y límites
 - Las operaciones no aceptan HTML, SVG ni código; solo datos estructurados tipados.
@@ -334,7 +340,7 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 
 ### Validación pendiente
 - Ejecutar Node tests, TypeScript, ESLint y build tras los commits de esta mutación.
-- QA manual en Chrome: foco sobre trazos antiguos, borrar uno entre varios, reemplazar un trazo sin duplicarlo, snapshots posteriores y barge-in durante el halo.
+- QA manual en Chrome: foco sobre trazos antiguos y repetidos, borrar uno entre varios, reemplazar un trazo sin duplicarlo, snapshots posteriores y barge-in durante el halo.
 - Verificar en dispositivo táctil y con movimiento reducido.
 - No declarar listo para producción hasta completar CI y QA real.
 
@@ -344,5 +350,7 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 ### Ajuste adicional — repetición fiable del señalamiento
 - Se añadió una revisión incremental al foco del profesor. Si Orby vuelve a señalar el mismo trazo con la misma etiqueta, React remonta únicamente el indicador y reinicia el halo; no se vuelve a montar ni animar la tinta.
 - La revisión también aumenta al corregir un trazo para que el señalamiento de corrección vuelva a ser visible.
-- Se extendieron las pruebas unitarias para comprobar la revisión inicial del foco.
+- Se extendieron las pruebas unitarias para comprobar que cada señalamiento repetido incrementa la revisión y reinicia el halo.
+- El grupo SVG del halo usa esa revisión como key: React remonta el indicador, pero conserva la key del trazo, por lo que no vuelve a animar la tinta previa.
+- Se corrigió el montaje del grupo contextual para aplicar efectivamente esa key.
 - Estado CI consultado para el commit anterior: el único estado reportado es Vercel en fallo por límite de builds del plan (`upgradeToPro=build-rate-limit`); no hay evidencia de ejecución satisfactoria de Node tests, TypeScript, ESLint o build en ese commit. No se intenta forzar otro build que pueda generar costes.

@@ -4196,8 +4196,8 @@ test("tinta y lápiz comparten una línea temporal SVG que se pausa coordinadame
   assert.match(boardComponentSource, /<animateMotion path=\{path\} dur=\{\x60\$\{duration\}s\x60\} begin=\{animationReady \? \x60\$\{beginTime\}s\x60\} : "indefinite"\}/);
   assert.match(boardComponentSource, /const scheduledStrokeKeysRef = useRef\(new Set<string>\(\)\)/);
   assert.match(boardComponentSource, /const strokeEndTimesRef = useRef\(new Map<string, number>\(\)\)/);
-  assert.match(boardComponentSource, /const queuedStrokeEnds = \\[\\.\\.\\.strokeEndTimesRef\\.current\\.values\\(\\)\\]/);
-  assert.match(boardComponentSource, /let queueCursor = Math\\.max\\(now \\+ 0\\.06, \\.\\.\\.queuedStrokeEnds\\.map\\(\\(endAt\\) => endAt \\+ 0\\.11\\)\\)/);
+  assert.ok(boardComponentSource.includes("const queuedStrokeEnds = [...strokeEndTimesRef.current.values()]"));
+  assert.ok(boardComponentSource.includes("let queueCursor = Math.max(now + 0.06, ...queuedStrokeEnds.map((endAt) => endAt + 0.11))"));
   assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);
   assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
   assert.match(boardComponentSource, /<g opacity=\{0\} className="orby-board-pen-tip"/);

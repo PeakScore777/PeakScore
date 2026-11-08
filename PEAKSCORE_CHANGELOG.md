@@ -409,3 +409,14 @@
 - Se añadió una prueba estática de regresión y se documentó la mutación en `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.
 - El cambio mejora el ritmo visual del contenido recibido; no sustituye la generación de dibujos ni garantiza alineación exacta con el audio.
 - Pendiente de CI completa y QA en navegador. Sin nuevas dependencias, consumo de IA, proveedores de pago, cambios a `main` o despliegues.
+
+
+## 2026-11-08 — pizarra exclusiva de Orby
+- Se eliminó la capa interactiva de tinta del estudiante y sus herramientas de lápiz, resaltador, borrador, deshacer y rehacer.
+- Se retiró la persistencia local de anotaciones personales de la clase y el resumen de esa tinta en apuntes; se mantienen los apuntes del contenido didáctico generado por Orby.
+- La pizarra ahora usa una superficie blanca lisa, sin cuadrícula ni tarjetas visuales decorativas.
+- Se muestra una banda informativa con las capacidades del profesor: dibujar, señalar y borrar. No son controles interactivos del alumno.
+- Se conservan los trazos SVG y la punta de lápiz animada generados por Orby.
+- La banda de herramientas es visual; el puntero independiente y el borrado controlado por eventos de Orby quedan pendientes. CI y QA de navegador aún requeridos.
+- Cambios en `feat/founder-intro`; sin dependencias nuevas, sin APIs de pago, sin cambios a `main` ni despliegues.
+- Especificación detallada: `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.

@@ -514,3 +514,14 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Commits: `3be12f3` (helper), `e6f869c` (renderer), `8c7d72c` (prueba).
 - Estado de validación: los commits están en `feat/founder-intro`; no se ha ejecutado localmente el test runner, TypeScript, ESLint ni build para esta tanda. No atribuirle la validación CI de commits anteriores. La comprobación visual con voz Live real en Chrome sigue pendiente.
 - No se modificó transporte de voz, cuotas, proveedor IA, pizarra espacial, `main`, despliegue ni Supabase remoto.
+
+
+## 2026-11-08 — movimiento de escritura, accesibilidad y derivaciones por etapas
+- `components/aprender/OrbyBoard.tsx`: se añadió una regla real para `prefers-reduced-motion: reduce`. Desactiva animaciones de entrada, SMIL y trazado por dash; oculta el cursor móvil y deja visibles la tinta completa, los rótulos y los puntos finales. El contenido no desaparece al reducir movimiento.
+- La tinta manuscrita y la punta del lápiz comparten ahora `getOrbySketchMotionProfile(points)`, con curvas spline suaves adaptadas de forma moderada a la curvatura del recorrido. No altera geometría ni pretende modelar escritura humana exacta.
+- `app/api/orby/realtime-session/route.ts`: se reforzó la instrucción de enseñanza de Matemáticas, Física y Química para construir derivaciones una línea por evento incremental, conservar igualdades anteriores, explicar transformaciones y unidades y no adelantar resultados.
+- `tests/orby-request-filter.test.mjs`: pruebas de regresión para movimiento reducido y derivaciones visibles. La suite aún requiere ejecución en el HEAD final.
+- `docs/ORBY-LIVE-TUTOR-SPEC.md`: se corrigió un estado obsoleto que decía que el karaoke no existía. El estado real es resaltado aproximado por reloj de reproducción, no alineación fonética/word timestamps exactos; se añadió el contrato de movimiento reducido.
+- Commits de esta tanda: `777b66a` (reduce motion), `e9174ae` (derivaciones por etapas), `d501f01` (regresiones), `7e77325` (especificación).
+- Validación: ningún test runner, TypeScript, ESLint ni build fue ejecutado para estos commits. El Vercel build-rate-limit visto en el historial es un límite del servicio, no una validación del nuevo HEAD. Chrome/micrófono y preferencia OS siguen pendientes.
+- Se mantiene `feat/founder-intro`; no se tocó `main`, Supabase remoto, proveedores ni despliegue.

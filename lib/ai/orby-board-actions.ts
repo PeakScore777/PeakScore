@@ -69,7 +69,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
     return { ...board, teacherFocus: { strokeId: action.strokeId, ...(action.label ? { label: action.label } : {}) } };
   }
   if (action.operation === "erase") {
-    if (!action.strokeIds.some((id) => existingIds.has(id))) return null;
+    if (!action.strokeIds.every((id) => existingIds.has(id))) return null;
     const visuals = (board.visuals ?? []).flatMap((visual) => {
       if (visual.type !== "sketch") return [visual];
       const strokes = visual.strokes.filter((stroke) => !action.strokeIds.includes(stroke.id));

@@ -321,6 +321,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
   const voiceFallbackModeRef = useRef(false);
+  const voiceEnglishPracticeRef = useRef(false);
   const voiceStartupAbortRef = useRef<AbortController | null>(null);
   const voiceSessionGenerationRef = useRef(0);
   const voiceSessionResumeHandleRef = useRef<string | null>(null);
@@ -809,6 +810,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function requestWorkspaceStudyPrompt(prompt: string) {
     setLearningView("chat");
     window.setTimeout(() => sendMessageRef.current(prompt), 0);
+  }
+
+  async function startOmegaXEnglishRoleplay(prompt: string) {
+    setLearningView("chat");
+    setVoiceError("");
+
+    // A Spanish-first Live session cannot be safely switched to English midstream.
+    // Reopen one explicit OmegaX English Studio session so the server can apply
+    // the narrowly-scoped English-practice instruction from its first token.
+    if (voiceModeRef.current && !voiceEnglishPracticeRef.current) {
+      finishVoiceCall();
+    }
+    voiceEnglishPracticeRef.current = true;
+
+    if (!voiceModeRef.current) await toggleVoiceMode();
+
+    const voiceReady = voiceModeRef.current
+      && (Boolean(voiceChannelRef.current) || voiceFallbackModeRef.current);
+    if (!voiceReady) {
+      voiceEnglishPracticeRef.current = false;
+      setVoiceError("No se pudo activar la llamada de voz. Abrí el roleplay por chat para que no pierdas la práctica.");
+      window.setTimeout(() => void sendMessageRef.current(prompt), 0);
+      return;
+    }
+
+    // The explicit roleplay click is the student's action to start microphone use.
+    // Reuse the existing Live channel, or its free turn-based fallback; never open
+    // a second concurrent session.
+    window.setTimeout(() => void sendMessageRef.current(prompt, false, true), 0);
   }
 
   useEffect(() => () => {
@@ -3253,7 +3283,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         || containsExplicitNonIcfesTopic(partialReply, voiceScopeContext)
         || containsPlatformMarketingClaim(partialReply)
         || containsExternalPreIcfesPromotion(partialReply)
-        || isLikelyEnglishOnlyOrbyReply(partialReply)
+        || (!voiceEnglishPracticeRef.current && isLikelyEnglishOnlyOrbyReply(partialReply))
         || hasFalseOrbyCreatorAttribution(partialReply)
         || partialExposesProvider
       );
@@ -3422,7 +3452,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 ? ORBY_PLATFORM_NEUTRALITY_REPLY
                 : containsExternalPreIcfesPromotion(rawReply)
                 ? ORBY_EXTERNAL_PREICFES_REPLY
-              : isLikelyEnglishOnlyOrbyReply(rawReply)
+              : !voiceEnglishPracticeRef.current && isLikelyEnglishOnlyOrbyReply(rawReply)
                 ? isGenericIcfesEnglishRequest(voiceUserTextRef.current) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : assistantName === "OmegaX" ? "Soy OmegaX, tu asistente de estudio de PeakScore. Te responderé en español colombiano y puedo ayudarte a organizar tu preparación Saber 11." : "Soy Orby, tu tutor especializado de Ciencias Naturales de PeakScore. Te responderé en español colombiano y puedo ayudarte con Biología, Química, Física y CTS."
                 : voiceInputPolicyRef.current === "programming" || unsafeGeneratedContent
                   ? preflightOrbyRequest("programar").reply
@@ -3667,6 +3697,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           signal: AbortSignal.any([startupSignal, AbortSignal.timeout(15_000)]),
           body: JSON.stringify({
             assistantName,
+            englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
             subject: activeSubjectRef.current,
             topic,
             context,
@@ -4101,6 +4132,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   subject: activeSubjectRef.current,
                   topic,
                   context,
+                  assistantName,
+                  englishPracticeMode: assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
                   conversationId: activeConversationRef.current ?? conversationId,
                   history: messagesRef.current.slice(-12).map(({ role, content }) => ({ role, content })),
                 }),
@@ -4350,6 +4383,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   function finishVoiceCall() {
     stopAudioRecording(true);
     stopRealtimeVoice();
+    voiceEnglishPracticeRef.current = false;
     setWorkspaceMode("chat");
     drainPendingMessageQueue();
   }
@@ -4674,6 +4708,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           attachmentKind: attachmentMeta?.kind ?? (selectedFile ? "image" : null),
           attachmentLabel: attachmentMeta?.label ?? (selectedFile ? "Imagen adjunta" : null),
           voiceMode: isVoiceInteraction,
+          englishPracticeMode: isVoiceInteraction && assistantName === "OmegaX" && voiceEnglishPracticeRef.current,
           workspace,
           history: messagesRef.current.slice(-8).map(({ role, content }) => ({ role, content })),
           ...(imagePayload ? { image: imagePayload } : {}),
@@ -5489,7 +5524,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <div className="flex items-center gap-3 py-12 text-sm text-slate-600"><LoaderCircle className="h-4 w-4 animate-spin text-orange-400" /> Preparando tu biblioteca…</div>
              ) : learningView === "english" ? (
               <OmegaXEnglishStudio
-                onStartRoleplay={requestWorkspaceStudyPrompt}
+                onStartRoleplay={startOmegaXEnglishRoleplay}
                 onSendForFeedback={(practice) => {
                   const activity = practice.mode === "speaking" ? "Reto de speaking de 60 segundos" : "Práctica de repetición y reconocimiento de pronunciación";
                   const prompt = [

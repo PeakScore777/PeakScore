@@ -1278,7 +1278,7 @@ Pasar de snapshots visuales completos a pequeñas operaciones docentes sobre la 
 - Append de texto y tinta en una misma pizarra espacial, preservando trazos previos e IDs.
 - Límites de posición, tipos de bloque, cantidad de trazos y sanitización.
 - Contrato Live y directiva de sesión con generación obligatoria.
-- La suite contiene ahora **229 declaraciones `test()`** según inspección estática del archivo. Este número describe casos declarados, no un resultado de ejecución.
+- La suite contiene ahora **230 declaraciones `test()`** según inspección estática del archivo. Este número describe casos declarados, no un resultado de ejecución.
 
 ### Límites y verificación honesta
 - La capa ya permite intercalar escritura y tinta por operaciones ordenadas; no garantiza que Gemini emita acciones en todo turno ni que el momento coincida exactamente con cada palabra hablada.

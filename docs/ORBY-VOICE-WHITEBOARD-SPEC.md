@@ -98,3 +98,7 @@ La primera fase del lienzo espacial queda implementada en la rama:
 La coincidencia de frases/timestamps sigue descartada como método artificial de sincronización. El orden visual no es sincronización palabra-a-palabra. Solo usar segmentos/tiempos reales que proporcione Live.
 
 La entrega espacial y sus regresiones se describen en la bitácora diaria y en `ORBY-LIVE-TUTOR-SPEC.md`. La siguiente capa pendiente es la cola de acciones incrementales por generación, con cancelación segura durante interrupciones.
+
+## Addendum — señalar elementos completos de la pizarra
+
+Orby puede usar `apply_orby_board_action` con `focus` para señalar un trazo existente (`strokeId`) o una etapa espacial completa (`elementId`). La acción requiere un único ID válido que ya exista en la pizarra activa. El halo no escribe ni altera contenido; se congela al interrumpir la clase y respeta movimiento reducido. Borrado y reemplazo siguen limitados a trazos.

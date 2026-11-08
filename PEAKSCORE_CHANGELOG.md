@@ -454,3 +454,11 @@
 - Se aplaza el Atlas de anatomía humana 3D y cualquier recurso que requiera Blender/render pesado por limitación del PC actual. Se mantienen esquemas ligeros 2D ya existentes.
 - Se revisaron `app/orby/page.tsx`, `components/aprender/OrbyWorkspacePage.tsx` y la estructura de `LessonAITutor.tsx`; se confirma el shell workspace actual y la necesidad de auditar funcionalidades existentes antes de duplicarlas.
 - Esta entrada es documentación/plan de implementación; no afirma que las herramientas laterales estén construidas. Sin cambios de código funcional, base de datos, proveedores, dependencias, `main` o despliegue.
+
+
+## 2026-11-08 — primer rediseño real del workspace Orby: herramientas a la izquierda y tema claro
+- El usuario aclaró que quiere transformar la interfaz actual, no crear una página separada: chats e instrumentos de estudio en la columna izquierda y toda la experiencia en modo claro.
+- Se actualizó `LessonAITutor.tsx`: navegación lateral clara con Chat con Orby, Anotaciones, Temas guardados, Progreso, Biblioteca e Historial buscable; cabecera, compositor y footer claros.
+- Se cambió el fondo exterior de `OrbyWorkspacePage.tsx` a claro.
+- Las herramientas nuevas que todavía no tienen flujo funcional no se marcan como completadas. Falta terminar el tema claro de todas las vistas, QA de navegador y la implementación de Flashcards/Grabaciones/Resúmenes/Cuestionarios.
+- Commits en `feat/founder-intro`; sin cambios a `main`, Supabase remoto o despliegue. CI/Vercel pendiente.

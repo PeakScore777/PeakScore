@@ -577,7 +577,10 @@ export async function POST(request: Request) {
     // Only the student's current words count as an explicit topic. Lesson
     // prompt/history is used to resolve short academic follow-ups, not to turn
     // an unrelated casual question into an unnecessary vector search.
-    const shouldRetrieveAcademicKnowledge = Boolean(learningSkill) || shouldRetrieveOrbyAcademicKnowledge({
+    // English Studio skill feedback only needs the learner's own evidence.
+    // Keep it separate from Orby Lab/vector retrieval to avoid unrelated ICFES
+    // material lookups and unnecessary embedding/search work.
+    const shouldRetrieveAcademicKnowledge = !learningSkill && shouldRetrieveOrbyAcademicKnowledge({
       message: userMessage,
       subject: subject === "Preparación Saber 11" ? "" : subject,
       topic,
@@ -586,6 +589,7 @@ export async function POST(request: Request) {
       // last academic exchange, not just the generic lesson subject.
       context: recentScopeContext,
     });
+    const shouldRetrieveStudentSignals = Boolean(learningSkill) || shouldRetrieveAcademicKnowledge;
     type StudentKnowledgeSource = {
       document_id: string;
       title: string;
@@ -640,7 +644,7 @@ export async function POST(request: Request) {
     }> = [];
 
     const emptyStudentSignals: Array<{ topic: string; concept: string; learning_state: string; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string }> = [];
-    const studentSignalsPromise: Promise<typeof emptyStudentSignals> = shouldRetrieveAcademicKnowledge
+    const studentSignalsPromise: Promise<typeof emptyStudentSignals> = shouldRetrieveStudentSignals
       ? (async () => {
           try {
             const signalSubject = learningSkill

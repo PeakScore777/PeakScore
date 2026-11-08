@@ -3888,15 +3888,12 @@ test("el tutor escrito exige devolver la pizarra y revisar ortografía en el con
 });
 
 
-test("la pizarra Live espera la frase hablada antes de revelar una etapa marcada", () => {
-  assert.ok(liveToolsSource.includes("spokenCue:"));
-  assert.ok(liveToolsSource.includes("must say before this cumulative snapshot is revealed"));
-  assert.ok(lessonTutorSource.includes("voiceCuePendingBoardRef"));
-  assert.ok(lessonTutorSource.includes("isOrbyBoardCueSpoken(snapshot, voiceAssistantTextRef.current)"));
-  assert.ok(lessonTutorSource.includes('status: cueReady ? "rendered" : "queued_for_spoken_cue"'));
-  assert.ok(lessonTutorSource.includes("flushCuePendingOrbyTeachingBoard()"));
-  assert.ok(lessonTutorSource.includes("snapshot.sessionGeneration !== sessionGeneration"));
-  assert.ok(lessonTutorSource.includes("snapshot.activityGeneration !== activityGeneration"));
+test("la pizarra Live publica cada snapshot aceptado sin esperar coincidencias de voz", () => {
+  assert.doesNotMatch(liveToolsSource, /spokenCue:/);
+  assert.doesNotMatch(lessonTutorSource, /voiceCuePendingBoardRef|isOrbyBoardCueSpoken|flushCuePendingOrbyTeachingBoard/);
+  assert.match(lessonTutorSource, /publishOrbyTeachingBoardSnapshot\(snapshot\)/);
+  assert.match(lessonTutorSource, /status: "rendered"/);
+  assert.match(liveToolsSource, /Every valid snapshot is rendered immediately/);
 });
 
 
@@ -3914,7 +3911,7 @@ test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
   assert.match(boardComponentSource, /key=\{`\$\{stroke\.id\}:/);
   assert.match(boardComponentSource, /orby-board-sketch-stroke/);
   assert.match(boardComponentSource, /orby-board-pen-tip/);
-  assert.match(liveToolsSource, /set spokenCue to an exact short phrase/);
+  assert.doesNotMatch(liveToolsSource, /set spokenCue to an exact short phrase/);
   assert.match(liveToolsSource, /client animates only newly mounted strokes/);
   assert.doesNotMatch(liveToolsSource, /Do not use transcript phrase matching to synchronize display/);
 });

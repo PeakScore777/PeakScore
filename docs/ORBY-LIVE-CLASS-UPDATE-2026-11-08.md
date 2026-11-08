@@ -501,3 +501,11 @@ El tablero deseado se parece a una hoja digital real: blanco amplio, limpio, man
 
 **Diseño:** el usuario pidió primero una imagen del resultado visual del tablero para decidirlo antes de tocar código. Mantener el aspecto manuscrito y de hoja blanca del video de referencia, no el dashboard futurista/tarjetas.
 **Cambios en código para esta entrada:** ninguno. Solo continuidad y registro de fallos, sin cambios en `main`, despliegues, Supabase remoto o secretos.
+
+
+### Propuesta visual del tablero — mockup del 8 de noviembre
+- Se preparó una imagen estática de referencia `orby-board-design.png` para esta conversación. No es implementación ni está incluida todavía en el repositorio.
+- Dirección visual: lienzo blanco amplio como superficie principal; papel con textura/puntos casi imperceptibles; trazos de aspecto manuscrito; contorno/ideas principales en tinta oscura; azul para conceptos y flechas; rojo para relaciones o énfasis; notas explicativas a ambos lados del dibujo central; lápiz visible en el borde como señal de escritura en curso.
+- Interfaz mínima: franja superior compacta con materia y estado; herramientas de lápiz/borrar/deshacer pequeñas y discretas; subtítulo en una banda inferior fina; controles de pausa/salida compactos. Sin gran mascota lateral, sin tarjetas, sin columnas de dashboard, sin bloques de color que compitan con la hoja.
+- El mockup muestra una escena de célula animal con núcleo/ADN, mitocondria, ribosomas, membrana y citoplasma. Los ejemplos reales de clase deben variar el esquema según el concepto.
+- La implementación futura tiene que revelar el dibujo por etapas y por trazos sincronizados con el habla; no se acepta que la escena final aparezca completa de golpe. Esta propuesta visual no reemplaza la prioridad pendiente de recuperar primero la reproducción audible y la llamada/render real del tablero.

@@ -4160,18 +4160,18 @@ test("el señalador contextual es independiente del lápiz y no crea tinta", () 
 });
 
 
-test("la pizarra detiene SMIL, lápiz y animación del trazo al interrumpir la clase", () => {
-  assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);
-  assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
-  assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);\n  assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
-  assert.match(boardComponentSource, /<g opacity=\{0\} className="orby-board-pen-tip" data-orby-teacher-pointer=\{stroke\.id\}/);
-  assert.match(boardComponentSource, /data-orby-drawing-active="false"\] \.orby-board-pen-tip \{ visibility: hidden/);
-  assert.match(lessonTutorSource, /function interruptCurrentVoiceOutput\(\) \{\s*setVoiceBoardDrawingActive\(false\)/);
-  assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(false\)/);
-  assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(true\)/);
-  assert.match(lessonTutorSource, /drawingActive=\{voiceBoardDrawingActive\}/);
+test("la pizarra detiene SMIL, lápiz y animaciones al interrumpir la clase", () => {
+  assert.match(boardComponentSource, /svg\\.pauseAnimations\\(\\)/);
+  assert.match(boardComponentSource, /svg\\.unpauseAnimations\\(\\)/);
+  assert.match(boardComponentSource, /boardElement\\.querySelectorAll<SVGSVGElement>\\("svg"\\)/);
+  assert.match(boardComponentSource, /data-orby-drawing-active=\\{drawingActive \\? "true" : "false"\\}/);
+  assert.match(boardComponentSource, /<g opacity=\\{0\\} className="orby-board-pen-tip"/);
+  assert.match(boardComponentSource, /data-orby-drawing-active="false"\\] \\.orby-board-pen-tip \\{ visibility: hidden/);
+  assert.match(lessonTutorSource, /function interruptCurrentVoiceOutput\\(\\) \\{\\s*setVoiceBoardDrawingActive\\(false\\)/);
+  assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\\(false\\)/);
+  assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\\(true\\)/);
+  assert.match(lessonTutorSource, /drawingActive=\\{voiceBoardDrawingActive\\}/);
 });
-
 
 test("tinta y lápiz comparten una línea temporal SVG que se pausa coordinadamente", () => {
   assert.match(boardComponentSource, /animation: "none", strokeDasharray: 1, strokeDashoffset: 1/);

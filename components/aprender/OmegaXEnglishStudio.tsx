@@ -239,11 +239,11 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         <div className="grid gap-4 p-5 md:grid-cols-3 sm:p-6">
           <article className="rounded-2xl border border-orange-200 bg-[#fffaf4] p-5">
             <Mic className="h-5 w-5 text-orange-800" /><h4 className="mt-4 text-sm font-semibold text-slate-900">60-second speaking</h4><p className="mt-1 text-xs leading-5 text-slate-600">Habla sobre un tema durante un minuto y revisa gramática, vocabulario y claridad.</p>
-            <button type="button" onClick={() => { discard(); setMode("speaking"); }} className="mt-4 rounded-xl border border-orange-200 bg-white px-3 py-2.5 text-xs font-semibold text-orange-800">Abrir reto</button>
+            <button type="button" onClick={() => { discard(); setMode("speaking"); }} className="mt-4 rounded-xl border border-orange-200 bg-white px-3 py-2.5 text-xs font-semibold text-orange-800 disabled:opacity-45" disabled={recording || transcribing}>Abrir reto</button>
           </article>
           <article className="rounded-2xl border border-[#eee6dc] bg-white p-5">
             <Headphones className="h-5 w-5 text-slate-700" /><h4 className="mt-4 text-sm font-semibold text-slate-900">Pronunciation practice</h4><p className="mt-1 text-xs leading-5 text-slate-600">Escucha una frase modelo, repítela y compara las palabras reconocidas.</p>
-            <button type="button" onClick={() => { discard(); setMode("pronunciation"); }} className="mt-4 rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-700">Abrir práctica</button>
+            <button type="button" onClick={() => { discard(); setMode("pronunciation"); }} className="mt-4 rounded-xl border border-[#e7ded3] px-3 py-2.5 text-xs font-semibold text-slate-700 disabled:opacity-45" disabled={recording || transcribing}>Abrir práctica</button>
           </article>
           <article className="rounded-2xl border border-[#eee6dc] bg-white p-5">
             <BookOpen className="h-5 w-5 text-emerald-700" /><h4 className="mt-4 text-sm font-semibold text-slate-900">Real-life roleplay</h4><p className="mt-1 text-xs leading-5 text-slate-600">Practica viajes, estudio, trabajo y situaciones cotidianas con OmegaX.</p>
@@ -260,8 +260,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <p className="mt-3 text-lg font-semibold leading-7 text-slate-900">{prompt}</p>
             <div className="mt-3 flex flex-wrap gap-3">
               {mode === "speaking"
-                ? <button type="button" onClick={() => { setTopicIndex((value) => (value + 1) % TOPICS.length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800">Cambiar tema</button>
-                : <><button type="button" onClick={speakModel} className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-orange-800"><Volume2 className="h-4 w-4" /> Escuchar modelo</button><button type="button" onClick={() => { setPhraseIndex((value) => (value + 1) % PHRASES.length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800">Otra frase</button></>}
+                ? <button type="button" onClick={() => { setTopicIndex((value) => (value + 1) % TOPICS.length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800 disabled:opacity-45" disabled={recording || transcribing}>Cambiar tema</button>
+                : <><button type="button" onClick={speakModel} className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-orange-800"><Volume2 className="h-4 w-4" /> Escuchar modelo</button><button type="button" onClick={() => { setPhraseIndex((value) => (value + 1) % PHRASES.length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800 disabled:opacity-45" disabled={recording || transcribing}>Otra frase</button></>}
             </div>
           </div>
           <div className="mt-5 flex flex-wrap items-center gap-3">

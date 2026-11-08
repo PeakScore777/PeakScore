@@ -4306,6 +4306,9 @@ test("clear-focus retira solo el señalador y conserva intactos bloques, tinta y
   assert.equal(boardActions.sanitizeOrbyBoardAction({
     operation: "clear-focus", turnGeneration: 7, strokeId: "outer",
   }), null, "clear-focus no acepta un target: debe retirar solo el foco activo");
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "clear-focus", turnGeneration: 7, targetId: "nucleus",
+  }), null, "clear-focus no debe recibir subtargets");
 });
 
 test("focus puede señalar subelementos reales de diagramas, moléculas, células, circuitos y sistemas", () => {
@@ -4772,7 +4775,7 @@ test("el preflight de snapshots y el staging de acciones usan guardas distintas"
 
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
-  assert.match(liveToolsSource, /Exact operation: focus, erase, replace, append-block or append-strokes/);
+  assert.ok(liveToolsSource.includes("Exact operation: focus, clear-focus, erase, replace, append-block or append-strokes."));
   assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus or append-strokes/);
 
   assert.match(liveToolsSource, /pointIndex: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 39/);
@@ -4790,7 +4793,7 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(lessonTutorSource, /handleOrbyLiveBoardActionTool\(\{ functionCalls: boardActionCalls \}\)/);
   assert.match(realtimeSessionSource, /OPERACIONES DE PIZARRA DEL PROFESOR/);
   assert.match(realtimeSessionSource, /usa operation=clear-focus con solo turnGeneration actual/);
-  assert.match(lessonTutorSource, /Señalador retirado\\. Todo el contenido y la tinta permanecen intactos/);
+  assert.ok(lessonTutorSource.includes("Señalador retirado. Todo el contenido y la tinta permanecen intactos."));
 
 });
 

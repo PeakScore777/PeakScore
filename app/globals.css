@@ -1394,6 +1394,13 @@ body {
   min-width: 0;
   max-width: 100%;
 }
+
+.orby-board-layout-stage[data-orby-layout-kind="block"] {
+  overflow: hidden;
+}
+.orby-board-layout-stage[data-orby-layout-kind="visual"] {
+  overflow: visible;
+}
 .orby-board-layout-visual {
   display: flex;
   min-width: 0;

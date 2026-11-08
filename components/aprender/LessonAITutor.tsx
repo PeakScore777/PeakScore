@@ -35,6 +35,34 @@ function parseFlashcard(item: LearningItem): FlashcardData {
   return { front: item.title, back: item.content, mastery: "review" };
 }
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
+
+type EnglishStudioSkillKey = "speaking" | "pronunciation" | "listening" | "reading" | "writing";
+const ENGLISH_STUDIO_SKILLS: Array<{ key: EnglishStudioSkillKey; label: string; description: string }> = [
+  { key: "speaking", label: "Speaking", description: "Producción oral y organización de ideas" },
+  { key: "pronunciation", label: "Pronunciation", description: "Repetición y reconocimiento aproximado de palabras" },
+  { key: "listening", label: "Listening", description: "Comprensión de información oral" },
+  { key: "reading", label: "Reading", description: "Comprensión y evidencia textual" },
+  { key: "writing", label: "Writing", description: "Producción escrita y cohesión" },
+];
+
+function getEnglishStudioSkillForSignal(topic: string): EnglishStudioSkillKey | null {
+  const match = topic.match(/^English Studio · (Speaking|Pronunciation|Listening|Reading|Writing) · /i);
+  return match ? (match[1].toLocaleLowerCase("en-US") as EnglishStudioSkillKey) : null;
+}
+
+function summarizeEnglishStudioSignals(signals: LearningSignal[]) {
+  return ENGLISH_STUDIO_SKILLS.map((skill) => {
+    const items = signals.filter((signal) => getEnglishStudioSkillForSignal(signal.topic) === skill.key);
+    return {
+      ...skill,
+      count: items.length,
+      needsReview: items.filter((item) => item.learning_state !== "understands").length,
+      understands: items.filter((item) => item.learning_state === "understands").length,
+      latest: items[0] ?? null,
+      concepts: [...new Set(items.slice(0, 3).map((item) => item.concept))],
+    };
+  });
+}
 type StoredImage = { name: string; path: string; signedUrl: string; createdAt: string; size: number };
 type ReviewQuestion = {
   id: string;
@@ -5690,6 +5718,39 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {[{label:"Conversaciones",value:conversations.length,detail:"En tu historial"},{label:"Apuntes",value:learningItems.filter((item)=>item.kind==="note").length,detail:"Explicaciones guardadas"},{label:"Temas guardados",value:learningItems.filter((item)=>item.kind==="topic").length,detail:"Para volver a estudiar"},{label:"Imágenes",value:imageAssets.length+" / 20",detail:"Espacio de almacenamiento"}].map((stat,index)=><div key={stat.label} className="relative overflow-hidden rounded-xl border border-[#eee6dc] bg-white p-5"><span className="orby-pixel-label text-[7px] text-slate-500">0{index+1} / LEARNING</span><p className="mt-5 text-3xl font-semibold tracking-tight text-slate-900">{stat.value}</p><p className="mt-1 text-xs font-medium text-slate-700">{stat.label}</p><p className="mt-1 text-[10px] text-slate-500">{stat.detail}</p><span className="pointer-events-none absolute -bottom-8 -right-5 h-24 w-24 rounded-full bg-orange-500/[0.05] blur-2xl"/></div>)}
                 </div>
+                <section className="rounded-xl border border-[#eee6dc] bg-white p-5 sm:p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="orby-pixel-label text-[8px] text-orange-700">ENGLISH STUDIO · SKILL MEMORY</p>
+                      <h3 className="mt-3 text-lg font-semibold text-slate-900">Tu progreso por destreza</h3>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">OmegaX conserva observaciones de cada práctica para orientar la siguiente. Son evidencias parciales, no notas ni certificaciones MCER.</p>
+                    </div>
+                    <span className="rounded-full border border-[#e7ded3] px-3 py-1.5 text-[10px] text-slate-600">{summarizeEnglishStudioSignals(learningSignals).reduce((sum, item) => sum + item.count, 0)} observaciones etiquetadas</span>
+                  </div>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    {summarizeEnglishStudioSignals(learningSignals).map((skill) => (
+                      <article key={skill.key} className="rounded-lg border border-[#eee6dc] bg-[#fffdfa] p-3.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-slate-900">{skill.label}</p>
+                          <span className="text-[10px] tabular-nums text-slate-500">{skill.count}</span>
+                        </div>
+                        <p className="mt-1 text-[10px] leading-4 text-slate-500">{skill.description}</p>
+                        {skill.count > 0 ? <>
+                          <div className="mt-3 flex items-center justify-between text-[9px] text-slate-500">
+                            <span>{skill.understands} con evidencia de comprensión</span>
+                            <span>{skill.needsReview} por reforzar</span>
+                          </div>
+                          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${Math.round((skill.understands / skill.count) * 100)}%` }} />
+                          </div>
+                          {skill.latest && <p className="mt-3 text-[9px] leading-4 text-slate-500">Última observación: {new Date(skill.latest.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}</p>}
+                          {skill.concepts.length > 0 && <p className="mt-1 line-clamp-2 text-[10px] leading-4 text-slate-700">{skill.concepts.join(" · ")}</p>}
+                        </> : <p className="mt-3 rounded-md border border-dashed border-[#e7ded3] px-2 py-2 text-[10px] leading-4 text-slate-500">Aún sin observaciones.</p>}
+                      </article>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[10px] leading-4 text-slate-500">La barra solo resume la proporción de señales guardadas como «En comprensión» frente a las demás observaciones; no representa una calificación ni un porcentaje de dominio.</p>
+                </section>
                 <section className="rounded-xl border border-[#eee6dc] bg-white p-5 sm:p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div><p className="orby-pixel-label text-[8px] text-orange-700">ADAPTIVE LEARNING</p><h3 className="mt-3 text-lg font-semibold text-slate-900">Lo que {assistantLabel} ha observado en tu aprendizaje</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Señales tentativas a partir de tus conversaciones. No son notas ni diagnósticos; sirven para elegir una explicación o práctica más útil.</p></div>

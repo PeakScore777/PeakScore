@@ -450,7 +450,7 @@ export async function POST(request: Request) {
     });
     if (limitError || !limitData || typeof limitData !== "object") {
       console.error("[Orby Tutor] Shared rate limiter unavailable.", { code: limitError?.code });
-      return NextResponse.json({ error: "Orby no está disponible temporalmente. Inténtalo de nuevo en unos segundos." }, { status: 503 });
+      return NextResponse.json({ error: `${assistantName} no está disponible temporalmente. Inténtalo de nuevo en unos segundos.` }, { status: 503 });
     }
     const limit = limitData as { allowed?: boolean; retryAfter?: number };
     if (!limit.allowed) {
@@ -490,7 +490,7 @@ export async function POST(request: Request) {
     if (untrustedText && isClearlyOutOfScopeOrInjection(untrustedText)) {
       await recordSecurityEvent(user.id, "prompt_injection", { source: "context_or_history" });
       return NextResponse.json(
-        { error: "Soy Orby, el tutor de PeakScore. No puedo seguir instrucciones para cambiar mis reglas ni revelar información interna. Sí puedo ayudarte con una pregunta académica." },
+        { error: `Soy ${assistantName}, el asistente educativo de PeakScore. No puedo seguir instrucciones para cambiar mis reglas ni revelar información interna. Sí puedo ayudarte con una pregunta académica.` },
         { status: 400 }
       );
     }
@@ -1242,6 +1242,6 @@ No uses bloques Markdown ni texto fuera del JSON.
     console.error("[Orby Tutor] No se pudo responder.", {
       errorName: error instanceof Error ? error.name : "UnknownError",
     });
-    return NextResponse.json({ error: "Orby no está disponible en este momento. Tu solicitud no se enviará a otro proveedor de pago." }, { status: 503 });
+    return NextResponse.json({ error: `${assistantName} no está disponible en este momento. Tu solicitud no se enviará a otro proveedor de pago.` }, { status: 503 });
   }
 }

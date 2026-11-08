@@ -138,7 +138,7 @@ Invariants:
 - All normalized rectangles remain inside 0–100; the renderer places them on one responsive 16:9 paper canvas.
 - New v2 tutor output should include layout. Legacy v1 and v2 without layout remain valid and use the old renderer.
 - Every snapshot remains complete and cumulative; it carries existing layout elements plus any appended stages.
-- The canvas has a subtle dotted paper background; text, sketch strokes and typed visuals can be interleaved spatially.
+- The class canvas is one continuous, pure-white sheet: no dotted pattern, graph-paper grid, texture, panels or card-like containers. Text, handwriting, freehand strokes and accurate supporting visuals are placed directly on that sheet.
 - Spatial order is not exact audio alignment. Use actual provider speech-segment metadata if available; never guess timestamps.
 
 The implementation is backward-compatible with the current JSONB teaching_board persistence. Client sanitizer budget (18 KB) remains below the existing RPC limit (24 KB); no database migration is needed for the optional field.
@@ -183,3 +183,93 @@ A spatial element focus is temporary, non-destructive and adds no ink. It must r
 - A layout still contains at most 12 visible elements and references every current block and visual exactly once.
 - When erasing the last stroke removes a sketch visual, remove that visual's layout element, shift only subsequent visual array indexes, and preserve all remaining element IDs/positions/sequences.
 - The first sketch strokes wait for their spatial stage lead-in. Later cumulative snapshots append new strokes to the existing SVG pen queue without restarting the stage delay.
+
+
+## Addendum — exact reference-video experience and all-five-subject visual teaching (2026-11-08)
+
+### Product reference
+The owner-provided 42.7-second video is the visual source of truth. Match its teaching behaviour and visual language rather than adding a generic "AI whiteboard" look.
+
+- One continuous, plain-white sheet. No dot pattern, graph-paper texture, grids, beige paper, card collections, floating panels or decorative boxes.
+- Handwritten-looking headings, labels, underlines, symbols, arrows, brackets and annotations live directly on the sheet.
+- The main sketch is large and central; notes and labels are composed around it without overlapping or hiding the drawing.
+- The teacher constructs the explanation progressively: outline → internal structures → relationships/arrows → labels/emphasis → conclusion. The same sheet and prior ink stay visible.
+- The pen movement should feel continuous and intentional. Avoid isolated dots, sudden complete diagrams, duplicated paths, jumps, or unrelated decorative doodles.
+- Typed diagrams/tables may be used when they improve mathematical or scientific accuracy, but must remain integrated into the same white sheet and must not replace the teacher's hand-drawn explanation by default.
+- Caption treatment: polished, readable spoken subtitles in Spanish Colombian, with the current word visibly highlighted as Orby says it. The line should advance naturally and retain a short recent context, not display a long paragraph in a tiny scroll box.
+
+### Visual-first rule for Saber 11
+For roughly 90% of substantive teaching explanations, Orby should use a meaningful visual action. This is a pedagogical target, not a requirement to draw irrelevant artwork for greetings or one-word confirmations. A visual can be a handwritten annotation, underline, arrow, diagram, graph, map, timeline, comparison, argument structure, equation, table, or experiment setup; it does not always need to be a biological illustration.
+
+Every new substantive question should be answered in the voice and developed on the sheet in parallel. The voice must not wait for the board tool or Lab lookup to finish. The model should decide what representation actually expresses the concept and explain each element while it appears.
+
+### Five subject-specific visual grammars
+
+**Mathematics**
+- Build equations and transformations line by line; align equal signs and label the reason for important steps.
+- Draw number lines, geometric constructions, coordinate axes, functions, tables and statistical plots when relevant.
+- Keep units, scale, axis labels, signs, ratios, domains and data consistent. Draw the representation the question uses (table, chart, diagram, symbolic expression), then connect it to the result.
+- Show modelling, execution and justification; do not turn every answer into a bare formula card.
+
+**Critical Reading**
+- Treat the passage, image, graph or cartoon as the object being examined.
+- Underline the thesis, evidence, connectors, assumptions, conclusion and relevant phrases; use arrows/brackets to show how claims and evidence relate.
+- Build argument maps, paragraph structures, point-of-view comparisons, inference chains and text/visual relationships directly on the sheet.
+- Do not invent or draw content that was not supplied by the source passage. Distinguish what the text states from what can be inferred or evaluated.
+
+**Social Studies and Citizenship**
+- Use annotated maps, timelines, actor/institution diagrams, causal chains, historical change/continuity, economic flows and perspective comparisons.
+- Label locations, dates, actors, interests, rights, responsibilities and institutional relationships accurately.
+- Draw contrasting perspectives and their evidence; do not replace analysis with the tutor's personal political opinion.
+
+**Natural Sciences**
+- Use appropriate diagrams for cells, organelles, DNA, inheritance, ecosystems, body systems, cycles, molecules, reactions, forces, motion, energy, waves, circuits, experiments and evidence.
+- Show mechanisms in order and label structures while speaking about them. For experiments, distinguish independent, dependent and controlled variables, hypothesis, evidence and conclusion.
+- Preserve scientific constraints already established in the Orby specification: cell-type differences, correct DNA pairing, separate stages of meiosis, action potential versus synaptic transmission, actin-myosin mechanics, correct molecular bonds and reaction balancing.
+- Use units, arrows, energy/matter flows and causal relationships where they clarify a process.
+
+**English**
+- Preserve the seven-part Saber 11 structure and manually managed question bank. Do not generate or alter the English question bank with AI without explicit authorization.
+- Visuals can include vocabulary maps, context-clue highlighting, dialogue turns, speaker intention, grammar roles, verb timelines, cloze blanks, reference links in a paragraph and reading-inference markings.
+- Keep the source example in English while explaining the reasoning in Colombian Spanish when useful. Label which English test part and skill is being practised.
+
+### Curriculum source hierarchy and topic coverage
+- The current Icfes 2026-2 Orientation Guide and the five official Saber 11 reference frameworks define the tested competencies, evidence and assessment formats.
+- MEN Basic Learning Rights and competency standards supply school-grade prerequisites.
+- Published Orby Lab documents add the project's own material, teaching methods, worked examples and misconceptions. Only retrieved, published and relevant evidence may be attributed to the Lab.
+- Reputable public sources (official bodies, universities, scientific institutions and peer-reviewed research) are used selectively for external verification, current facts or requests for references. Do not web-search every elementary definition: it would add latency and is not a substitute for teaching.
+- Create original teaching examples and diagrams. Do not reproduce Icfes protected questions or rebuild deleted Lab material. Distinguish core Saber 11 content from school prerequisites and optional advanced enrichment.
+
+### Orby Lab integration — current implementation and desired contract
+- The Live client already exposes `search_orby_learning_knowledge`; the authenticated `/api/orby/knowledge-search` endpoint queries only `visibility: "published"` fragments, the published concept graph and related published documents.
+- The current route may add public web research only when the query asks for sources, current information or external verification.
+- The server lesson directive already says to start the spoken explanation immediately and call the Lab lookup in parallel for a new substantive academic question. The tool declaration had contradicted it by calling retrieval optional and discouraging calls on every question; the declaration was aligned on 2026-11-08.
+- Intended contract: one non-blocking published-Lab lookup for each new substantive ICFES topic, plus at most one follow-up lookup when the first result reveals a specific unresolved prerequisite or materially important claim. The existing per-turn cap remains two tool calls.
+- The Live generation must continue while retrieval runs. Use the result only after it arrives, add only information that materially helps, and never repeat the full explanation.
+- If no relevant published document exists, retrieval fails or a free quota is exhausted, continue from reliable academic knowledge and disclose the limitation when needed. Never claim the Lab contains material that was not actually returned.
+- This tool integration is retrieval, not model training or autonomous learning. Do not describe Orby as having learned a document unless the documented ingestion/publishing workflow actually processed and published it.
+
+### Spoken captions — word-highlight requirement and technical limit
+- Required visual behaviour: a stable subtitle line follows Orby's spoken explanation, with one active word highlighted as it is spoken. The highlight must not run ahead of the audible voice, jump back as text grows, or keep highlighting after interruption.
+- The current client reads Gemini Live `outputTranscription.text` and separately schedules PCM audio chunks using Web Audio. It currently renders a plain transcript; it does not yet have active-word karaoke highlighting.
+- The official Gemini Live transcription documentation states that Live streaming does not provide word-level timestamps; it provides utterance-level transcription. Gemini 3.5 Transcribe's non-streaming audio-file mode can return word-level timestamps, but those timestamps are not supported by its Live streaming mode and can reduce transcription accuracy. See:
+  - https://ai.google.dev/gemini-api/docs/live-api/live-transcribe
+  - https://ai.google.dev/gemini-api/docs/transcribe
+  - https://ai.google.dev/gemini-api/docs/models/gemini-3.5-transcribe
+- Therefore, do not claim exact word alignment from the current Live transcript. The correct implementation path is to investigate a free, quota-safe timing source that is compatible with Live playback. A playback-duration heuristic may be prototyped only if explicitly described and tested as approximate; it must never be represented as precise phonetic alignment.
+- Do not add a paid transcription provider, silently switch providers, or buffer the whole answer for a second transcription pass without first proving cost, latency, free quota, privacy and interruption behaviour.
+- The karaoke state must be invalidated on barge-in and session-generation change, and must follow actual scheduled playback time rather than the arrival time of transcript text.
+
+### Natural, low-latency conversation
+- Target: the first useful spoken response should begin as soon as the tutor understands the question, ideally within approximately one second after the end-of-utterance boundary. This is a performance target to measure, not a guarantee.
+- The first sentence should answer the core question while the Lab lookup and first visual action run in parallel.
+- Record p50 and p95 for end-of-utterance → first audio chunk received, end-of-utterance → first audio scheduled, and end-of-utterance → first visible board action. Also measure interruption-stop latency and time to resume listening.
+- Keep the existing free-quota safeguards, output validation and voice safety filters. Improve latency without removing validation gates that prevent unsafe or off-scope speech.
+- An interruption must stop the previous voice and invalidate its pending drawing, captions and tool actions immediately. A follow-up question should become the new active generation without waiting for old playback to finish.
+
+### Acceptance scenario
+Ask: "Explícame cómo funciona la célula". Orby starts speaking immediately, writes a heading on a smooth white sheet, draws the cell outline, adds nucleus and DNA, labels each structure, adds mitochondrion and ATP relation, and explains each step. The subtitles highlight the currently spoken word. Interrupt during the mitochondrion drawing with "¿y para qué sirve el ATP?"; Orby stops the old explanation, responds naturally, continues from the ATP question, and no stale cell action or subtitle word appears afterwards.
+
+Repeat visual QA across the five ICFES areas using a graph/equation (Math), highlighted source argument (Critical Reading), annotated historical/political map or perspectives (Social Studies), mechanism/experiment (Natural Sciences), and contextual text/grammar/vocabulary marking (English).
+
+Do not mark the experience as video-level complete until the Chrome/microphone tests, word-highlight validation, all-five-subject visual QA and voice-latency measurements pass.

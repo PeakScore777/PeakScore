@@ -112,6 +112,34 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
         },
       },
       {
+        name: "apply_orby_board_action",
+        behavior: Behavior.NON_BLOCKING,
+        description: "Performs one teacher-only operation on ink already present on the current cumulative board. Use focus to point at an existing stroke without drawing; erase to remove selected stroke IDs; replace to correct the geometry of an existing stroke while preserving its ID. Only call after a valid board snapshot exists. Never use this to replace the whole board. Coordinates and stroke geometry are validated by the client. Keep narration aligned with the operation; focus is temporary and must not be used as a substitute for explaining.",
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            operation: { type: Type.STRING, description: "Exact operation: focus, erase or replace." },
+            strokeId: { type: Type.STRING, description: "Existing stroke ID for focus or replace." },
+            label: { type: Type.STRING, description: "Optional short Spanish focus label, maximum 48 characters." },
+            strokeIds: { type: Type.ARRAY, description: "One to eight existing stroke IDs for selective erase.", items: { type: Type.STRING } },
+            replacement: {
+              type: Type.OBJECT,
+              description: "Replacement geometry for the existing stroke. Keep its exact strokeId as id.",
+              properties: {
+                id: { type: Type.STRING },
+                points: { type: Type.ARRAY, minItems: 2, maxItems: 40, items: { type: Type.OBJECT, properties: {
+                  x: { type: Type.NUMBER }, y: { type: Type.NUMBER },
+                }, required: ["x", "y"] } },
+                tone: { type: Type.STRING }, width: { type: Type.NUMBER },
+                label: { type: Type.STRING }, labelX: { type: Type.NUMBER }, labelY: { type: Type.NUMBER },
+              },
+              required: ["id", "points"],
+            },
+          },
+          required: ["operation"],
+        },
+      },
+      {
         name: "search_orby_learning_knowledge",
         behavior: Behavior.NON_BLOCKING,
         description: "Searches PeakScore’s published Saber 11 learning library and may add free public research only when the student asks for sources or external verification. MUST call this tool for each new substantive academic question that could benefit from published material: a new concept, exercise, reading or graph analysis, exam competency, misconception, or request to deepen an explanation. LATENCY RULE: begin speaking immediately with one short, accurate core answer from reliable knowledge while this NON_BLOCKING search runs in parallel; never wait for search completion before the first spoken sentence. Use results to deepen, correct, or evidence the remainder only after they arrive; never cite or claim retrieved content before receiving it. Resolve short follow-ups from the conversation and search only when they introduce a new concept or need evidence beyond the existing exchange. Do not call for greetings, confirmations, or a follow-up already fully answered in the current context. Send the complete contextualized question and current Saber 11 subject. If no relevant published material is found, continue teaching from reliable model knowledge without pretending the library contained evidence.",

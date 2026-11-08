@@ -555,3 +555,12 @@
 - Estado: código y pruebas añadidas en `feat/founder-intro`; tests, TypeScript, ESLint, build y QA de navegador todavía no ejecutados para este HEAD.
 
 - Inventario estático tras la mutación: **246 pruebas con nombre, sin duplicados**; no se ejecutaron.
+
+
+## 2026-11-08 — clear-focus: retirar el resaltado sin tocar el contenido
+- Nueva operación `clear-focus` para finalizar un señalamiento docente. A diferencia de `erase`, elimina solamente el estado temporal de atención (`teacherFocus`).
+- Mantiene intactos bloques, visuales, trazos, puntos, IDs, posiciones espaciales y secuencias.
+- Gemini Live conoce el comando y debe usarlo al terminar de explicar el detalle o cambiar de zona. Nunca debe borrar tinta para quitar un halo.
+- El cliente confirma: «Señalador retirado. Todo el contenido y la tinta permanecen intactos».
+- Prueba específica añadida para conservar todo el tablero y rechazar payloads con targets adicionales. Inventario estático: 247 tests nombrados, sin duplicados; no ejecutados.
+- Validación completa y QA Chrome siguen pendientes; Vercel sigue reportando `build-rate-limit`.

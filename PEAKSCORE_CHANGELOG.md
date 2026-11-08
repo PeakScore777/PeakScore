@@ -401,3 +401,11 @@
 - LessonAITutor retiene las etapas hasta que la transcripción de salida validada contiene esa frase; valida generación/sesión y descarta etapas antiguas.
 - No añade llamadas de IA ni servicios; conserva compatibilidad para snapshots sin cue y respeta los filtros existentes.
 - Es sincronización aproximada por frase, no alineación temporal exacta con el audio. Falta QA real y ejecución de tests/build.
+
+
+## 2026-11-08 — clase Orby: revelado progresivo de etapas
+- La hoja digital ahora revela bloques y apoyos visuales con un orden progresivo y retrasos acotados, conservando el contenido acumulado.
+- Cada etapa expone un índice de diagnóstico para pruebas y futuras métricas de interacción visual.
+- Se añadió una prueba estática de regresión y se documentó la mutación en `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.
+- El cambio mejora el ritmo visual del contenido recibido; no sustituye la generación de dibujos ni garantiza alineación exacta con el audio.
+- Pendiente de CI completa y QA en navegador. Sin nuevas dependencias, consumo de IA, proveedores de pago, cambios a `main` o despliegues.

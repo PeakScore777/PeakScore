@@ -1,3 +1,17 @@
+## 2026-11-08 — OmegaX English Studio A1–C2 y feedback con reintento
+- Se amplió el selector de English Studio de A1–C1 a A1–C2, con descriptor y pauta pedagógica específica por nivel.
+- Se adaptaron los prompts de roleplay para conversar una pregunta por vez, corregir hasta dos aspectos y guiar un reintento. El nivel elegido es una meta didáctica, no una certificación.
+- Se reformuló el feedback de speaking/repetición: evidencia textual, fortaleza, máximo dos mejoras, frase original → reformulación → razón → modelo → mini-reto de 30–60 segundos.
+- No se atribuyen puntuaciones fonéticas ni evaluación de acento/entonación a una transcripción de texto.
+
+## 2026-11-08 — pizarra pedagógica transversal de OmegaX
+- Live y fallback reciben instrucciones visuales diferenciadas para las cinco áreas ICFES, reutilizando `orby-scope.ts` y sus perfiles existentes.
+- English Studio usa el tablero para orden de palabras, corrección de frases, estructuras, tiempos verbales, conectores, vocabulario y pistas de lectura cuando sean pedagógicamente útiles.
+- Se separó explícitamente inglés general MCER A1–C2 de Inglés Saber 11: conservar las siete partes y el banco manual, sin generar preguntas dentro de ese banco ni confundir C1/C2 con la escala oficial del examen.
+- Se creó `docs/OMEGAX-ACADEMIC-COACH-SPEC.md` para preservar arquitectura, estado implementado, brechas y próximos pasos.
+- Se añadieron tres regresiones; inventario estático actual: 252 tests nombrados sin duplicados. No significa que estén ejecutados.
+- Validación pendiente para el HEAD: suite, TypeScript, ESLint, build y QA real de voz/pizarra. Sin cambios a main, sin despliegue, sin migraciones y sin proveedores facturables.
+
 ## 2026-11-08 — siguiente hito documentado: coreografía de enseñanza OmegaX
 - Se definió el siguiente objetivo de producto a partir de las referencias Studdy/Studley: una explicación completa debe sentirse como una clase continua, no como una sucesión de comandos visuales independientes.
 - Secuencia objetivo: dibujar/actualizar → enfocar una pieza existente → explicar → limpiar solo el foco → enfocar otra pieza → comparar → añadir una relación conservando el tablero.

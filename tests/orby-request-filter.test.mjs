@@ -3832,12 +3832,15 @@ test("el renderizador dibuja trazos en SVG y respeta movimiento reducido", async
   assert.match(renderer, /attributeName="opacity" from="0" to="1"/);
   assert.match(renderer, /svg\.pauseAnimations\(\)/);
   assert.match(renderer, /svg\.unpauseAnimations\(\)/);
+  assert.match(renderer, /boardElement\.querySelectorAll<SVGSVGElement>\("svg"\)/);
+  assert.match(renderer, /ref=\{boardRef\} data-orby-drawing-active=\{drawingActive \? "true" : "false"\}/);
   assert.match(sanitizer, /delay: Math\.min\(safeIndex \* 70, 350\)/);
   assert.match(sanitizer, /pathLength \* 14/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
   assert.match(styles, /\.orby-board svg text \{\s*font-family:/);
   assert.match(styles, /data-orby-sketch-label[\s\S]*?opacity: 1 !important/);
+  assert.match(styles, /orby-board\[data-orby-drawing-active="false"\][\s\S]*?animation-play-state: paused !important/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board \.orby-board-sketch-stroke[\s\S]*?animation: none !important/);
   assert.match(sanitizer, /MAX_BOARD_BYTES = 18_000/);
   assert.match(sanitizer, /withinBoardBudget\(board\)/);
@@ -4254,6 +4257,21 @@ test("el tablero admite secuencias acumulativas de hasta 32 trazos y conserva el
     labelY: 50,
   }));
   assert.equal(accept(oversized), null);
+
+
+test("el sanitizador rechaza dos capas sketch para conservar un único lápiz", () => {
+  const stroke = { id: "outer", points: [{ x: 10, y: 10 }, { x: 80, y: 80 }], tone: "ink", width: 1.2 };
+  const board = {
+    version: 2,
+    title: "Una sola pizarra",
+    blocks: [],
+    visuals: [
+      { type: "sketch", title: "Contorno", strokes: [stroke] },
+      { type: "sketch", title: "Interior", strokes: [{ ...stroke, id: "inner" }] },
+    ],
+  };
+  assert.equal(boardModule.sanitizeOrbyBoard(board), null);
+});
 });
 
 

@@ -4613,6 +4613,21 @@ test("la temporización heredada sigue estable para compatibilidad", () => {
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(Number.NaN, Number.NaN), { delay: 0, duration: 760 });
 });
 
+test("la tinta manuscrita usa una curva suave y el lápiz comparte el mismo perfil", () => {
+  const straight = boardModule.getOrbySketchMotionProfile([
+    { x: 0, y: 0 }, { x: 20, y: 0 }, { x: 40, y: 0 },
+  ]);
+  const curved = boardModule.getOrbySketchMotionProfile([
+    { x: 0, y: 0 }, { x: 20, y: 0 }, { x: 20, y: 20 }, { x: 40, y: 20 },
+  ]);
+  assert.match(straight.keyTimes, /^0;0\.\d+;0\.\d+;1$/);
+  assert.equal(straight.keySplines, "0.42 0 1 1;0 0 1 1;0 0 0.58 1");
+  assert.notEqual(curved.keyTimes, straight.keyTimes);
+  assert.match(boardComponentSource, /getOrbySketchMotionProfile\(stroke\.points\)/);
+  assert.match(boardComponentSource, /calcMode="spline"/);
+  assert.match(boardComponentSource, /keySplines=\{motion\.keySplines\}/);
+});
+
 test("los trazos nuevos se temporizan por longitud real y el escalonado nunca supera 350 ms", () => {
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(0, [{ x: 0, y: 0 }, { x: 10, y: 0 }]), { delay: 0, duration: 420 });
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(1, [{ x: 0, y: 0 }, { x: 50, y: 0 }]), { delay: 70, duration: 700 });

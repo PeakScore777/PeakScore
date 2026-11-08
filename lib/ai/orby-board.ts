@@ -111,13 +111,16 @@ export function getOrbySketchMotionProfile(points: readonly { x: number; y: numb
     const delta = Math.atan2(Math.sin(second - first), Math.cos(second - first));
     turnRadians += Math.abs(delta);
   }
+
+  // Keep a single valid 0→1 SMIL interval. Curvier paths get a slightly
+  // softer easing curve without introducing nonexistent keyframe values.
   const complexity = Math.min(1, turnRadians / (Math.PI * 2));
-  const middle = (0.28 + complexity * 0.08).toFixed(2);
-  const late = (0.78 + complexity * 0.06).toFixed(2);
+  const controlStart = (0.28 + complexity * 0.08).toFixed(2);
+  const controlEnd = (0.72 - complexity * 0.08).toFixed(2);
   return {
-    keyTimes: `0;${middle};${late};1`,
-    // Gentle acceleration, a readable middle pass, and a soft pen lift.
-    keySplines: "0.42 0 1 1;0 0 1 1;0 0 0.58 1",
+    keyPoints: "0;1",
+    keyTimes: "0;1",
+    keySplines: `${controlStart} 0 ${controlEnd} 1`,
   };
 }
 

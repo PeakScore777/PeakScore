@@ -413,6 +413,6 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - La bitácora del 7 conserva solo los registros hasta el 7: `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.
 - No empezar de cero: ya existían clase Live, pizarra teacher-only, board v2 espacial, snapshots acumulativos, sanitización, SVG progresivo, cola serial del lápiz, pausa/reanudación por interrupción, focus espacial, erase/replace, exportación e historial.
 - En la tanda del 8 se añadieron `append-block` y `append-strokes` sobre el mismo board v2, con `turnGeneration`, `actionId`, `sequence`, dependencias y staging provisional controlado por sesión/actividad/expiración.
-- Se corrigió una regresión de alcance de la guarda provisional y se añadió una prueba específica. Conteo estático al cierre de esta tanda: 228 declaraciones `test()`, sin nombres duplicados ni pruebas vacías detectadas; no equivale a suite ejecutada.
+- Se corrigió una regresión de alcance de la guarda provisional y se añadió una prueba específica. Conteo estático al cierre de esta tanda: 228 definiciones de prueba con nombre, sin nombres duplicados ni pruebas vacías detectadas; no equivale a suite ejecutada.
 - Pendiente: ejecutar Node tests, TypeScript, ESLint y QA real en Chrome/micrófono. Vercel sigue limitado por `build-rate-limit`; no forzar builds facturables.
 - Continuar validando la capa existente antes de crear más arquitectura. No reconstruir material del Orby ICFES Lab eliminado intencionalmente. No tocar `main`, desplegar ni aplicar migraciones remotas.

@@ -97,7 +97,6 @@ Pendiente:
 - Se fuerza la visibilidad final de los contenidos animados para que la exportación no dependa de cuánto haya avanzado la animación de escritura.
 - Se oculta la punta animada del lápiz y la barra de herramientas en la impresión.
 - Se añadió una prueba estática para verificar estas reglas.
-
 **Commits:** `8975602` (aislamiento de hoja y reglas de impresión), `1c16dec` (ocultar barra), `6b8c52f` (prueba de regresión).
 
 **Alcance:** la exportación sigue usando el diálogo de impresión del navegador y “Guardar como PDF”. Aún requiere revisión manual en Chrome para validar saltos de página, SVG largos, varias páginas y la presencia de los trazos locales. No se considera certificada hasta ejecutar Node tests, TypeScript, ESLint, build y QA visual.
@@ -197,7 +196,6 @@ La referencia de clase muestra un profesor que escribe y señala; el estudiante 
 
 
 ## Decimocuarta mutación — clase manuscrita y puntero de profesor
-
 **Fecha:** 7 de noviembre de 2026  
 **Rama:** `feat/founder-intro`
 
@@ -297,8 +295,7 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - Se añadieron pruebas unitarias para foco, borrado selectivo, reemplazo, IDs inexistentes, coordenadas inválidas y enrutamiento Live.
 
 ### Archivos
-- `lib/ai/orby-board-actions.ts` (nuevo)
-- `lib/ai/orby-board.ts`
+- `lib/ai/orby-board-actions.ts` (nuevo)- `lib/ai/orby-board.ts`
 - `lib/ai/orby-live-tools.ts`
 - `components/aprender/OrbyBoard.tsx`
 - `components/aprender/LessonAITutor.tsx`
@@ -397,7 +394,6 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - No se añaden proveedores, modelos, dependencias ni servicios de pago. No se modifica `main`, no se despliega y no se fuerzan builds que puedan generar cargos.
 
 **Estado:** cambios implementados en la rama; validación de CI y QA manual pendientes.
-
 
 ### Corrección de integración de interrupción confirmada
 
@@ -498,7 +494,6 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 
 
 ## Mutación — núcleo pedagógico especializado por prueba Saber 11
-
 ### Investigación oficial aplicada
 - Fuente de estructura vigente consultada: Guía de Orientación Saber 11° 2026-2, publicada por ICFES en marzo de 2026.
 - Se tomó como principio de diseño el enfoque por competencias y tareas; para las pruebas descritas con Diseño Centrado en Evidencias, se respeta la relación competencia → afirmación → evidencia → tarea.
@@ -598,7 +593,6 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 
 
 ## Fase 1 — desacoplar enseñanza de la búsqueda del Lab — 7 de noviembre de 2026
-
 ### Evidencia revisada
 - Se compararon fotogramas de la grabación de referencia `1000189532.mp4` y de la grabación local `20261108-0156-42.6476291.mp4`: la referencia muestra escritura progresiva manual sobre un tablero; la grabación local mantiene el tablero vacío durante la sesión capturada.
 - La herramienta `search_orby_learning_knowledge` estaba descrita como obligatoria para cada pregunta académica nueva. El endpoint de recuperación puede depender de embeddings de Cloudflare Workers AI, y la grabación/captura local mostró un rechazo de credenciales de ese motor.
@@ -698,7 +692,6 @@ Se tomó como evidencia el log local compartido por el usuario, que reportaba si
    - El contrato Live permite que el primer snapshot sea un dibujo pequeño y que el texto llegue en una actualización posterior. La validación rechazaba precisamente ese flujo visual progresivo.
    - Ahora la versión 2 acepta snapshots con visuales y cero bloques; sigue rechazando un tablero completamente vacío. La versión 1 conserva la exigencia de bloques de texto.
    - Commit: `987ccf3a5fc67cb21cdf8293fc5101c5276cbd24`.
-
 2. **Las pruebas de la pizarra estaban acopladas a una implementación antigua — pruebas corregidas, no lógica degradada.**
    - El renderizador ya utiliza `getOrbySketchStrokeTiming`; los tests buscaban una variable intermedia `strokeTimings` y una fórmula duplicada dentro del componente.
    - El contrato JSX real usa `pathLength={1}`, no el texto HTML `pathLength="1"`.
@@ -780,3 +773,41 @@ Se tomó como evidencia el log local compartido por el usuario, que reportaba si
 - Esta protección es estática: no sustituye una prueba real de WebSocket/AudioWorklet en navegador.
 - No se modificaron el algoritmo de dibujo, los tipos visuales, la animación SVG, la secuencia acumulativa ni las instrucciones de docencia visual.
 - No se tocó `main`, no se desplegó y no se añadieron servicios de pago.
+
+
+## Registro consolidado de los siete fallos reportados — 2026-11-07
+
+Este apartado consolida el reporte local compartido después de la primera ronda de correcciones. Los siete fallos son hallazgos de pruebas; no deben contarse automáticamente como siete bugs de producción. Se separan defectos reales, contratos de prueba desactualizados y puntos que todavía requieren reproducción.
+
+| # | Área reportada | Clasificación actual | Evidencia / estado |
+|---|---|---|---|
+| 1 | Reserva de la pizarra / primer render | **Bug real corregido en código; QA pendiente** | El sanitizador rechazaba un snapshot Live versión 2 que contenía visuales pero todavía ningún bloque de texto. Se permitió esa forma válida de snapshot, manteniendo el rechazo de tableros completamente vacíos y la exigencia de texto para versión 1. Commit `987ccf3a5fc67cb21cdf8293fc5101c5276cbd24`. |
+| 2 | Temporización de la animación del lápiz | **Parte era una expectativa antigua; defecto de import corregido; runtime pendiente** | El componente usa el helper compartido `getOrbySketchStrokeTiming`; la prueba buscaba una variable intermedia/fórmula que ya no pertenece a la implementación. Después se detectó que el componente no importaba el helper como valor. Se corrigió el import y se añadió regresión: `b936ac96346a5cae91d3b73a8859927be3d5af9b` y `f77fd399d2973a355ca6185a93fbaf7bdfb74e2f`. Aún falta confirmar la temporización visual en Chrome. |
+| 3 | Contrato de herramientas Gemini Live | **Prueba desactualizada; contrato actualizado; runtime pendiente** | El schema actual incluye `annotation` y tipos visuales que no aparecían en la lista antigua de la prueba. Se actualizaron las aserciones para reflejar el contrato actual. Esto no sustituye probar que Gemini Live acepte y despache todas las herramientas en una sesión real. |
+| 4 | Exclusividad de la pizarra de Orby | **No certificado** | El requisito funcional es que el estudiante no tenga herramientas para escribir/dibujar y que el lápiz represente acciones de Orby. El reporte indicó discrepancias entre las condiciones de animación y las expectativas de prueba. El código/documentación describe una pizarra exclusiva de Orby, pero falta una prueba de interacción que demuestre que no existe ruta de escritura del estudiante ni animación indebida al actualizar props. |
+| 5 | Sincronización lápiz/tinta (`pathLength`) | **Discrepancia de aserción; comportamiento visual pendiente** | El JSX usa `pathLength={1}`; la prueba antigua buscaba el literal HTML `pathLength="1"`. Se corrigió la expectativa para comprobar JSX real. La presencia del atributo no demuestra por sí sola que el trazo y la punta del lápiz estén sincronizados correctamente en navegador. |
+| 6 | Sanitizador de anotaciones con propiedad `undefined` | **ABIERTO — requiere investigación directa** | El reporte detectó una propiedad `undefined` en el flujo de anotaciones y un sanitizador que no cubría completamente ese caso. No hay evidencia suficiente en el registro para declarar este punto corregido. Revisar normalización de entrada, valores opcionales, serialización JSON y límites antes de renderizar o persistir. Añadir pruebas para propiedad ausente, `undefined`, `null`, tipo incorrecto y payload válido. |
+| 7 | Perfiles pedagógicos / afirmaciones inventadas | **Instrucción reforzada; validación semántica pendiente** | Se explicitó que Orby no debe inventar afirmaciones, evidencias, porcentajes ni distribuciones oficiales. Commit `cd0151cecd838493fcc8d67342c56de925fa2dc4`. La instrucción reduce el riesgo, pero no constituye un verificador semántico general; hacen falta casos adversariales y positivos para comprobar que no inventa ni elimina datos legítimos. |
+
+### Defectos adicionales confirmados durante la investigación
+
+- **Import faltante del temporizador:** `OrbyBoard.tsx` invocaba `getOrbySketchStrokeTiming` sin importarlo como valor. Corregido en `b936ac96346a5cae91d3b73a8859927be3d5af9b`; regresión en `f77fd399d2973a355ca6185a93fbaf7bdfb74e2f`.
+- **Autorización de reanudación Live en token efímero:** el navegador solicitaba `sessionResumption`, pero el servidor no autorizaba esa capacidad en las restricciones del token. Se añadieron `sessionResumption: {}` y `contextWindowCompression: { slidingWindow: {} }`. Código `7ab8b8f224d8204340d616603bc52dcaa511124e`; regresión `455b030245e452f6d502a1f33816a39368750886`. Falta comprobar reconexión real.
+- **Primer snapshot visual anterior al texto:** se corrigió la validación para que un dibujo válido pueda aparecer antes de que llegue el primer bloque textual, sin aceptar escenas vacías.
+
+### Estado de validación — no confundir corrección con aprobación
+
+- Último estado de pruebas comunicado por el usuario: 170 pruebas, 165 aprobadas y 5 fallidas. El reporte posterior enumera siete áreas/fallos de auditoría; no implica que los siete sean siete fallos simultáneos de la misma ejecución.
+- Se actualizaron aserciones obsoletas y se añadieron correcciones de código, pero **no consta una nueva ejecución completa** que certifique el resultado después de todos esos cambios.
+- No hay evidencia de aprobación final de `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` ni `npm run build` sobre el último SHA.
+- Vercel reportó `build-rate-limit`; ese estado no debe interpretarse como un error de compilación ni como una suite aprobada.
+- No se ha certificado QA real de Chrome/micrófono, dibujo de lápiz, exclusividad de pizarra, reconexión Live ni persistencia.
+- Prioridad inmediata: resolver el sanitizador de anotaciones (`undefined`), revisar el contrato de herramientas y las condiciones de exclusividad, y después ejecutar la suite completa sin eliminar aserciones válidas.
+
+### Protección del proyecto
+
+- Rama de trabajo: `feat/founder-intro`.
+- No modificar `main`, no hacer merge/Pull, no desplegar y no aplicar migraciones a la base Supabase compartida.
+- Mantener el requisito de servicios gratuitos dentro de sus cuotas reales; nunca introducir fallback facturable.
+- No reconstruir material del Orby ICFES Lab eliminado intencionalmente.
+- No declarar “cero errores” hasta tener resultados verificables de tests, TypeScript, ESLint, build y QA de navegador.

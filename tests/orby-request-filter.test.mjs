@@ -19,6 +19,7 @@ async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = 
 
 const boardModule = await loadTypeScriptModule("../lib/ai/orby-board.ts");
 const boardActions = await loadTypeScriptModule("../lib/ai/orby-board-actions.ts");
+// Única carga compartida de las definiciones de herramientas Live para toda la suite.
 const liveToolsSource = await readFile(new URL("../lib/ai/orby-live-tools.ts", import.meta.url), "utf8");
 const filter = await loadTypeScriptModule("../lib/ai/orby-request-filter.ts");
 const scope = await loadTypeScriptModule("../lib/ai/orby-scope.ts", { stripServerOnly: true });

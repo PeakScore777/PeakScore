@@ -775,3 +775,29 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Se corrigió el perfil a un solo intervalo `keyTimes="0;1"` y una spline. `animateMotion` especifica además `keyPoints="0;1"`. La complejidad del recorrido ajusta los puntos de control de esa curva única; la tinta y la punta comparten los mismos parámetros.
 - La prueba ahora verifica exactamente un intervalo, una spline válida y que los trazos curvos obtengan una curva distinta a los rectos.
 - Commits: `3c18f41` (helper), `f18ade7` (renderer), `d7cb8da` (prueba). No se ha ejecutado aún la suite ni QA Chrome de este HEAD.
+
+
+## 2026-11-08 — consistencia de derivaciones entre Live y tutor de respaldo
+
+### Hallazgo
+- Live ya exigía una etapa incremental por transformación en Matemáticas, Física y Química; el endpoint de respaldo por turnos no tenía una regla equivalente y podía condensar una derivación en un solo bloque.
+- También había una prueba de movimiento manuscrito cuyo contrato debía reflejar con precisión el perfil SMIL de una transición única, no una secuencia de keyframes inexistente.
+
+### Cambios
+- `app/api/lesson-tutor/route.ts`: se reforzó el prompt académico, el prompt de voz y el prompt de seguimiento. Una derivación debe identificar datos/incógnita, presentar una transformación por bloque `formula`/`step`, mantener los pasos previos, explicar la operación y comprobar cálculos/unidades. Las respuestas sencillas no se obligan a dibujar.
+- `tests/orby-request-filter.test.mjs`: se corrigieron las aserciones de perfil SMIL y se añadieron regresiones que exigen derivaciones paso a paso tanto en Live como en el fallback, incluso en un seguimiento con varias operaciones.
+- Perfil SMIL actual: una curva spline válida `keyTimes="0;1"`; `animateMotion` utiliza `keyPoints="0;1"`. Los parámetros de la spline son compartidos entre tinta y movimiento de lápiz.
+
+### Commits
+- `4b5254a` — corregir contrato de prueba del perfil SMIL.
+- `156159a` — alinear tutor de respaldo con derivaciones paso a paso.
+- `056d33a` — preservar el método en seguimientos breves.
+- `480164b` — probar Live y fallback.
+- `da3a3a8` — probar la continuidad de seguimientos.
+
+### Validación
+- Revisión estática: 245 tests nombrados, sin títulos duplicados. No se han ejecutado.
+- Se ejecutó únicamente un smoke-check Node de la expresión regular del perfil spline; no equivale a la suite ni a TypeScript/ESLint/build.
+- El status Vercel del HEAD reporta `build-rate-limit`. No se obtuvo un resultado de push de GitHub Actions mediante el conector disponible.
+- Pendiente ejecutar `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npx next build` y QA manual Chrome/micrófono, voz Live, interrupciones y movimiento reducido.
+- La rama se comprobó divergente de `main`; no se fusionó, rebasó ni desplegó.

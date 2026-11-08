@@ -492,3 +492,10 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - La excepción no elimina filtros de programación, cocina, contenido dañino, promoción externa, privacidad ni prompt injection. El fallback gratuito por turnos usa el mismo flag restringido.
 - CI del SHA `f1a08ccff8cf7c144d183af8d4acbaa9e259eb60`: 240/240 tests, TypeScript, ESLint, dependency audit y Next.js build aprobados. Run: https://github.com/PeakScore777/PeakScore/actions/runs/42519666204
 - QA pendiente: Chrome/micrófono físico, ASR de inglés en tiempo real, barge-in durante inglés, audibilidad del fallback y cuotas reales. No afirmar evaluación fonética.
+
+## 2026-11-08 — karaoke de voz ajustado por palabra
+- El karaoke Live calcula el índice usando `getOrbyKaraokeWordIndexForText`, ponderando grupos vocálicos aproximados, longitud y puntuación. Se abandona el reparto uniforme que daba igual duración visual a palabras cortas y largas.
+- La animación sigue el reloj real de Web Audio, usa `requestAnimationFrame`, mantiene el índice monotónico y no agrega llamadas al modelo ni temporizadores.
+- Es una estimación visual, no alineación fonética ni timestamp palabra por palabra; Gemini Live no suministra esos datos.
+- GitHub Actions SHA `8b8894928b5ccd96d010c5509b88338ebe56cb7f`: 240/240 tests, TypeScript, ESLint, dependency audit y Next.js production build aprobados. Run: https://github.com/PeakScore777/PeakScore/actions/runs/42520586985
+- Próxima comprobación manual: voz Live real en Chrome, diferencias de ritmo, silencios, respuestas largas y crecimiento de transcripción durante playback.

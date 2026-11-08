@@ -629,3 +629,5 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Se amplió el tipo Mode compartido y se reinicia el TTS cuando cambia nivel/actividad para evitar estados colgados.
 - Nuevo inventario estático tras esta tanda: **255 pruebas nombradas, 0 duplicados**. No se ejecutaron localmente.
 - Pendiente: ejecutar suite/TypeScript/ESLint/build y QA Chrome en los cinco modos. La reproducción de listening es TTS del navegador, no una grabación de acento nativo; no hay todavía progreso longitudinal por habilidad.
+
+- Robustez UX: el selector de nivel queda desactivado mientras existe una respuesta de texto sin guardar o una grabación pendiente; la tarjeta ya activa se desactiva para no reiniciar accidentalmente el ejercicio. El cambio de nivel detiene el TTS y reinicia el estado de listening.

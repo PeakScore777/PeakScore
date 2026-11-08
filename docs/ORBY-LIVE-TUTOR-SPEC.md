@@ -340,3 +340,12 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - Regression coverage was added for exact targeting, invalid/out-of-range indices, actual geometry length, unchanged ink, renderer and prompt contract. Tests/TypeScript/ESLint/build and browser QA remain unexecuted for this HEAD.
 
 - Regression inventory after exact spotlight work: 246 named tests, no duplicate titles. This is a static inventory only; the suite, TypeScript, ESLint, production build and browser QA have not been run for this HEAD.
+
+
+### Clear teacher spotlight without erasing the board (2026-11-08)
+- New `clear-focus` action removes only temporary `teacherFocus`. It requires the current `turnGeneration` and rejects target IDs, point indexes, labels and stroke selections.
+- Applying it returns the same board with `teacherFocus: undefined`; all blocks, visuals, freehand strokes, coordinates, IDs, layout positions and ordering remain unchanged.
+- Gemini Live's `apply_orby_board_action` schema exposes the new operation. Live instructions tell OmegaX to clear the spotlight after finishing a detail or moving to another part, and explicitly forbid using `erase` to clear a spotlight.
+- The client tool response confirms that the spotlight was removed and all content/ink remains intact.
+- Regression test verifies content preservation and rejection of missing generation or extra target fields. Static inventory: 247 named tests, no duplicate names; this is not an execution result.
+- Tests, TypeScript, ESLint, production build and real Chrome/Gemini Live QA remain pending. No deployment, migration or main-branch changes.

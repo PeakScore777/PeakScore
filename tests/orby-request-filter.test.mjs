@@ -5608,5 +5608,5 @@ test("focus label sanitizer preserves letters, accents, numbers and academic not
     label: "Mira<svg>\u0001 esta unión",
   });
   assert.ok(unsafeLabel);
-  assert.equal(unsafeLabel.label, "Mira svg   esta unión");
+  assert.equal(unsafeLabel.label, "Mira svg esta unión");
 });

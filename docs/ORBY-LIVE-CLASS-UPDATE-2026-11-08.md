@@ -821,3 +821,5 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Regresiones añadidas para selección exacta, índices negativos/máximos, índice mayor que el tamaño real del trazo, incompatibilidad con `elementId`, conservación de la tinta y contrato de renderer/schema/prompt.
 - No se ha ejecutado `npm run test:orby`, TypeScript, ESLint ni build para el HEAD de esta mutación. Falta QA real en Chrome con voz Live y sistema configurado con movimiento reducido.
 - No se añadieron servicios/modelos de pago, migraciones ni cambios a `main`; no se desplegó producción.
+
+- Cierre de inventario estático: 246 pruebas nombradas y 0 títulos duplicados. El conteo no certifica ejecución; la suite/TypeScript/ESLint/build y QA de navegador permanecen pendientes.

@@ -524,3 +524,12 @@
 - Commits: `3be12f3` (helper), `e6f869c` (renderer), `8c7d72c` (prueba).
 - Estado de validación: los commits están en `feat/founder-intro`; no se ha ejecutado localmente el test runner, TypeScript, ESLint ni build para esta tanda. No atribuirle la validación CI de commits anteriores. La comprobación visual con voz Live real en Chrome sigue pendiente.
 - No se modificó transporte de voz, cuotas, proveedor IA, pizarra espacial, `main`, despliegue ni Supabase remoto.
+
+
+## 2026-11-08 — handwriting accessibility and stepwise derivations
+- Added a shared spline motion profile for the ink reveal and moving pen, so both tracks follow the same path timing.
+- Added a static final-state mode for `prefers-reduced-motion`: all marks/labels stay visible, SMIL and entrance animation are disabled, and the moving pen/focus animation is hidden.
+- Strengthened Live teacher instructions so maths/physics/chemistry derivations are written one transformation per incremental block, with aligned equality signs, explanations and unit checks.
+- Added regression assertions for the accessibility and teaching prompt. The test suite, TypeScript, ESLint and production build have **not** been run for this HEAD.
+- Corrected stale tutor specification text: current karaoke is a weighted playback-clock estimate, not exact word-level alignment.
+- Commits: `777b66a`, `e9174ae`, `d501f01`, `7e77325`. Manual Chrome/microphone/OS reduced-motion QA remains pending. No paid providers, migrations, production deployment or main-branch changes.

@@ -576,3 +576,5 @@
 - Se excluyen intencionalmente flechas/conexiones, enlaces de moléculas, cables, puntos de gráficas/vectores, partes neuronales y membrana/pared celular: en el estado actual no tienen un subelemento posicionado con ID estable en el renderer.
 - Nuevas pruebas cubren los cinco tipos compatibles y los casos no soportados/ambiguos. Inventario estático: 249 tests nombrados, sin duplicados; no ejecutados.
 - QA completo (suite, TypeScript, ESLint, build y Chrome/Gemini Live) sigue pendiente.
+
+- Aserción de renderer ampliada para comprobar también `currentId={component.id}` del circuito. Inventario: 249 pruebas nombradas, 0 duplicados; sin ejecución local/CI confirmada.

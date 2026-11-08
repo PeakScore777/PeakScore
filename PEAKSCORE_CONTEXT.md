@@ -608,3 +608,7 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Nueva especificación: `docs/OMEGAX-ACADEMIC-COACH-SPEC.md`, con ciclo hablar → feedback → reintento, ruta de inglés por habilidades, cinco métodos ICFES, estado real y roadmap.
 - Inventario estático de `tests/orby-request-filter.test.mjs`: **252 pruebas nombradas y 0 duplicados**. Es un conteo del archivo, no ejecución. Para este HEAD siguen pendientes suite, TypeScript, ESLint, build y QA Chrome/micrófono.
 - Sin proveedores ni cargos nuevos, sin migraciones remotas, sin despliegue y sin cambios a `main`.
+
+
+- **Extensión del 2026-11-08:** los retos de speaking y frases modelo de repetición ahora tienen bancos propios por nivel A1–C2. El prompt cambia con el selector; el audio modelo pronuncia la frase dinámica del nivel y cambiar de nivel queda bloqueado mientras exista grabación/transcripción pendiente. No es certificación.
+- Inventario estático actualizado tras esta regresión: **253 pruebas nombradas, 0 duplicados**; no ejecutadas.

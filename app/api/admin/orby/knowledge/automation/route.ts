@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getOrbyOwner } from "@/lib/auth/orby-owner";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
+import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -400,7 +401,7 @@ export async function GET() {
         && new Date(settingsResult.data.manual_worker_lock_expires_at).getTime() > Date.now()),
     },
     configured: Boolean(process.env.CRON_SECRET) && workerConfiguration.data === true,
-    embeddingProviderConfigured: Boolean(process.env.GEMINI_API_KEY?.trim()) || isCloudflareWorkersAIConfigured(),
+    embeddingProviderConfigured: isGeminiFreeTierConfigured() || isCloudflareWorkersAIConfigured(),
     counts: {
       queued: queued.count ?? 0,
       running: running.count ?? 0,

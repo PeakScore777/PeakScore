@@ -4638,12 +4638,15 @@ test("la tinta manuscrita usa una curva suave y el lápiz comparte el mismo perf
   const curved = boardModule.getOrbySketchMotionProfile([
     { x: 0, y: 0 }, { x: 20, y: 0 }, { x: 20, y: 20 }, { x: 40, y: 20 },
   ]);
-  assert.match(straight.keyTimes, /^0;0\.\d+;0\.\d+;1$/);
-  assert.equal(straight.keySplines, "0.42 0 1 1;0 0 1 1;0 0 0.58 1");
-  assert.notEqual(curved.keyTimes, straight.keyTimes);
+  assert.equal(straight.keyPoints, "0;1");
+  assert.equal(straight.keyTimes, "0;1");
+  assert.match(straight.keySplines, /^0\\.\\d+ 0 0\\.\\d+ 1$/);
+  assert.notEqual(curved.keySplines, straight.keySplines);
+  assert.equal(curved.keyTimes, straight.keyTimes);
   assert.match(boardComponentSource, /getOrbySketchMotionProfile\(stroke\.points\)/);
   assert.match(boardComponentSource, /calcMode="spline"/);
   assert.match(boardComponentSource, /keySplines=\{motion\.keySplines\}/);
+  assert.match(boardComponentSource, /keyPoints=\\{motion\\.keyPoints\\}/);
 });
 
 test("los trazos nuevos se temporizan por longitud real y el escalonado nunca supera 350 ms", () => {

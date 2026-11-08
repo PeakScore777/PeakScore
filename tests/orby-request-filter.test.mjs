@@ -3826,6 +3826,13 @@ test("Visual mantiene todos los hooks fuera de ramas condicionales", () => {
   assert.match(boardComponentSource, /const markerId = annotationMarkerId/);
 });
 
+test("las etapas acumulativas conservan su identidad y no reinician animaciones por cambios de texto", () => {
+  assert.match(boardComponentSource, /const blockKey = `\$\{block\.type\}:\$\{index\}`/);
+  assert.match(boardComponentSource, /key=\{\x60\$\{visual\.type\}:\$\{index\}\x60\}/);
+  assert.doesNotMatch(boardComponentSource, /const blockKey = `\$\{block\.type\}:\$\{block\.text\}/);
+  assert.doesNotMatch(boardComponentSource, /key=\{\x60\$\{visual\.type\}:\$\{visual\.title\}/);
+});
+
 test("el renderizador dibuja trazos en SVG y respeta movimiento reducido", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

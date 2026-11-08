@@ -80,8 +80,10 @@ const safeId = (value: unknown): value is string =>
   typeof value === "string" && /^[a-zA-Z0-9_-]{1,24}$/.test(value);
 
 function cleanText(value: unknown, max = 240): string {
+  // These values are rendered by React as text nodes/attributes, not injected HTML.
+  // Preserve mathematical symbols such as < and >; remove only control characters.
   return typeof value === "string"
-    ? value.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max)
+    ? value.replace(/[\u0000-\u001f\u007f-\u009f]/g, " ").replace(/\s+/g, " ").trim().slice(0, max)
     : "";
 }
 
@@ -145,9 +147,7 @@ function sanitizeStroke(value: unknown, expectedId: string): OrbySketchStroke | 
   if ((raw.label !== undefined && typeof raw.label !== "string")
     || (raw.labelX !== undefined && typeof raw.labelX !== "number")
     || (raw.labelY !== undefined && typeof raw.labelY !== "number")) return null;
-  const label = raw.label === undefined
-    ? ""
-    : raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48);
+const label = raw.label === undefined ? "" : cleanText(raw.label, 48);
   const hasLabelPosition = raw.labelX !== undefined || raw.labelY !== undefined;
   if ((label && (!Number.isFinite(raw.labelX) || (raw.labelX as number) < 4 || (raw.labelX as number) > 96
       || !Number.isFinite(raw.labelY) || (raw.labelY as number) < 4 || (raw.labelY as number) > 96))
@@ -218,9 +218,7 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
       || raw.pointIndex < 0 || raw.pointIndex > 39)) return null;
     if (hasTargetId && (!hasElementId || hasStrokeId || hasPointIndex || !safeId(raw.targetId))) return null;
     if (raw.label !== undefined && typeof raw.label !== "string") return null;
-    const label = raw.label === undefined
-      ? ""
-      : raw.label.replace(/[<>\\u0000-\\u001f]/g, " ").replace(/\\s+/g, " ").trim().slice(0, 48);
+const label = raw.label === undefined ? "" : cleanText(raw.label, 48);
     return hasStrokeId
       ? {
           ...meta,

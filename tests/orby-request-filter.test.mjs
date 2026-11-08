@@ -3955,3 +3955,9 @@ test("la hoja permite rehacer y borrar trazos mediante arrastre", () => {
   assert.match(boardComponentSource, /event\.buttons !== 0/);
   assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
 });
+
+test("la hoja de clase ofrece exportacion mediante impresion del navegador", () => {
+  assert.match(boardComponentSource, /Exportar \/ PDF/);
+  assert.match(boardComponentSource, /window\.print\(\)/);
+  assert.match(boardComponentSource, /print:hidden/);
+});

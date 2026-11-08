@@ -158,7 +158,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
               type: { type: Type.STRING, format: "enum", enum: ["heading", "text", "formula", "step", "callout"] },
               text: { type: Type.STRING },
               label: { type: Type.STRING },
-            }, required: ["type"] },
+            }, required: ["type", "text"] },
             position: { type: Type.OBJECT, description: "For append-block: normalized 0–100 position and size in the shared 16:9 canvas.", properties: {
               x: { type: Type.NUMBER, minimum: 0, maximum: 100 },
               y: { type: Type.NUMBER, minimum: 0, maximum: 100 },

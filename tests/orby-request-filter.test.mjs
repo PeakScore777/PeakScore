@@ -3943,22 +3943,19 @@ test("la clase en vivo permite guardar los apuntes de la pizarra en la bibliotec
 });
 
 
-test("la pizarra ofrece herramientas de anotacion independientes para el estudiante", () => {
-  assert.match(boardComponentSource, /setTool\("pen"\)/);
-  assert.match(boardComponentSource, /setTool\("highlight"\)/);
-  assert.match(boardComponentSource, /setTool\("eraser"\)/);
-  assert.match(boardComponentSource, /aria-label="Capa de escritura personal"/);
-  assert.match(boardComponentSource, /Deshacer/);
-  assert.match(boardComponentSource, /Limpiar/);
-  assert.match(boardComponentSource, /setPointerCapture/);
+test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudiante", () => {
+  assert.doesNotMatch(boardComponentSource, /StudentStroke|Mis trazos|Capa de escritura personal|setPointerCapture|function eraseAt/);
+  assert.doesNotMatch(boardComponentSource, /Lápiz|Resaltador|Borrador|Deshacer|Rehacer/);
+  assert.doesNotMatch(boardComponentSource, /localStorage|storageId/);
+  assert.match(boardComponentSource, /Clase en vivo/);
+  assert.match(boardComponentSource, /<Visual visual=\{visual\} \/>/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });
 
-test("la hoja permite rehacer y borrar trazos mediante arrastre", () => {
-  assert.match(boardComponentSource, /Rehacer/);
-  assert.match(boardComponentSource, /setRedoStrokes/);
-  assert.match(boardComponentSource, /function eraseAt/);
-  assert.match(boardComponentSource, /event\.buttons !== 0/);
-  assert.match(boardComponentSource, /setPointerCapture\(event\.pointerId\)/);
+test("la hoja usa una superficie blanca lisa sin cuadrícula ni tarjetas decorativas", () => {
+  assert.doesNotMatch(boardComponentSource, /backgroundImage:/);
+  assert.match(boardComponentSource, /bg-white text-slate-900 shadow-none/);
+  assert.match(boardComponentSource, /border-0 bg-transparent p-0 shadow-none/);
 });
 
 test("la hoja de clase ofrece exportacion mediante impresion del navegador", () => {
@@ -3979,14 +3976,8 @@ test("la exportacion de la clase a PDF aísla la hoja y desactiva animaciones", 
 test("guardar clase conserva bloques, formulas, apoyos visuales y resumen de anotaciones", () => {
   assert.match(lessonTutorSource, /## Datos de los apoyos visuales/);
   assert.match(lessonTutorSource, /visual\.nodes\.map/);
-  assert.match(lessonTutorSource, /Mis anotaciones/);
-  assert.match(lessonTutorSource, /peakscore:orby-board-ink:/);
   assert.match(lessonTutorSource, /7900/);
 });
 
 test("las anotaciones de la pizarra se aíslan por ID de clase y no solo por título", () => {
-  assert.match(boardComponentSource, /storageId\?: string/);
-  assert.match(boardComponentSource, /encodeURIComponent\(storageId \|\| board\.title/);
-  assert.match(lessonTutorSource, /storageId=\{activeVoiceAssistantMessage\.id\}/);
-  assert.match(lessonTutorSource, /encodeURIComponent\(activeVoiceAssistantMessage\?\.id \|\| board\.title/);
 });

@@ -109,7 +109,7 @@ function Sketch({ visual, focus }: { visual: Extract<OrbyBoardVisual, { type: "s
               <animate attributeName="r" values="2.6;5.2;2.6" dur="1.35s" repeatCount="2" fill="freeze"/>
               <animate attributeName="opacity" values="0.95;0.35;0" dur="1.35s" repeatCount="2" fill="freeze"/>
             </circle>
-            {focus.label ? <text x={Math.min(88, stroke.points[Math.floor(stroke.points.length / 2)].x + 5)} y={Math.max(7, stroke.points[Math.floor(stroke.points.length / 2)].y - 5)} fontSize="3.5" fontWeight="700" fill="#c2410c">{focus.label}</text> : null}
+            {focus.label ? <text x={Math.min(88, stroke.points[Math.floor(stroke.points.length / 2)].x + 5)} y={Math.max(7, stroke.points[Math.floor(stroke.points.length / 2)].y - 5)} fontSize="3.5" fontWeight="700" fill="#c2410c">{focus.label}<animate attributeName="opacity" values="1;1;0" keyTimes="0;0.75;1" dur="2.7s" fill="freeze"/></text> : null}
           </g> : null}
         </g>;
       })}

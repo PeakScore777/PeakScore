@@ -83,7 +83,10 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
 
     // One teacher pen at a time. Existing strokes keep their original place
     // in the timeline; new strokes follow only the still-pending work.
-    let queueCursor = Math.max(now, ...strokeEndTimesRef.current.values());
+    const queuedStrokeEnds = [...strokeEndTimesRef.current.values()];
+    // Give React one frame to mount the SMIL nodes before the pen starts.
+    // Keep a small, deliberate pen-lift pause after every queued stroke.
+    let queueCursor = Math.max(now + 0.06, ...queuedStrokeEnds.map((endAt) => endAt + 0.11));
     const additions: Array<[string, { beginTime: number; duration: number }]> = [];
     for (const stroke of visual.strokes) {
       const key = getSketchStrokeKey(stroke);

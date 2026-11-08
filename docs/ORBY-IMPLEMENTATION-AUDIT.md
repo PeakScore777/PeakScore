@@ -525,3 +525,18 @@ CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1
 - Status de Vercel para ese SHA: `failure / build-rate-limit`; el enlace informa que el servicio bloqueó la compilación por límite de builds. No equivale a un error TypeScript/build del código.
 - GitHub workflow runs asociados consultados: ninguno devuelto. No se afirma que la suite o build se hayan ejecutado.
 - Conteo estático: 253 pruebas nombradas, 0 duplicados. Pendiente correr tests, TypeScript, ESLint, build y QA Chrome/Gemini Live/micrófono real.
+
+
+## Auditoría de continuidad — English Studio con cinco destrezas (2026-11-08)
+
+### Archivos modificados
+- `components/aprender/OmegaXEnglishStudio.tsx`: amplía Mode a speaking, pronunciation, listening, reading, writing. Crea bancos por nivel A1–C2 para listening, reading y writing (dos actividades por nivel), controles de TTS/revelar transcripción, lectura de pasajes, editor de escritura, contador de palabras y botones de feedback/guardado.
+- `components/aprender/LessonAITutor.tsx`: mapea los cinco modos a etiquetas y criterios de feedback independientes. Listening se evalúa contra el guion y las pistas; reading contra el pasaje y evidencia; writing contra la consigna, extensión, organización, cohesión, gramática, vocabulario y registro. Las respuestas escritas se guardan como notas; la voz se guarda como grabación. Las respuestas del estudiante se delimitan como datos no confiables.
+- `tests/orby-request-filter.test.mjs`: se añadieron dos regresiones para bancos A1–C2 por destreza e integración de feedback/guardado.
+
+### Límites y validación
+- Listening actualmente reproduce un guion escrito con TTS nativo del navegador `SpeechSynthesisUtterance`; la UI lo declara y no afirma ser audio grabado de hablante nativo.
+- Dos ejercicios por nivel/habilidad son una primera base, no el curso completo ni un test MCER certificado.
+- Inventario estático del archivo de pruebas: 255 pruebas nombradas, sin duplicados; no es ejecución.
+- No se han ejecutado aún test runner, TypeScript, ESLint, build, ni QA de Chrome/voz para este HEAD.
+- No se agregaron servicios/modelos ni costes nuevos, ni migraciones remotas, despliegues o cambios a `main`.

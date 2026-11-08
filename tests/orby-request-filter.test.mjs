@@ -5530,6 +5530,8 @@ test("English Studio ofrece laboratorios A1-C2 de listening, reading y writing",
   assert.match(studio, /targetWords/);
   assert.match(studio, /Recibir feedback de OmegaX/);
   assert.match(studio, /taskFeedbackContext/);
+  assert.match(studio, /Boolean\(writtenResponse\.trim\(\)\)/);
+  assert.match(studio, /disabled=\{recording \|\| transcribing \|\| active\}/);
 });
 
 test("OmegaX distingue feedback de listening, reading y writing y guarda las respuestas como notas", async () => {

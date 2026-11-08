@@ -584,3 +584,5 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Inventario estático actual: **249 pruebas nombradas, 0 títulos duplicados**. Son pruebas escritas/contabilizadas, no ejecutadas.
 - Commits de esta mutación: `b6e9849` (validación de targets), `bb305b8` (tipo teacherFocus), `c9eaaf9` (marcadores SVG), `e6853a8` (schema Live), `bfb8918` (prompt), `2061256` (respuesta de error/éxito), `3c2b6fa` (regresiones), `06536d7` (JSX de orgánulos), `f08e97a`, `73b0246`, `673bae6` y `9c06d2e` (robustez de pruebas y clear-focus).
 - Pendiente: ejecutar `npm run test:orby`, TypeScript, ESLint, build y QA Chrome/Gemini Live. No se tocó `main`, no se hizo merge/rebase ni despliegue, y no se añadieron proveedores de pago.
+
+- Cierre de prueba de renderer: se agregó una aserción explícita para el target de componentes de circuito (`currentId={component.id}`). Inventario estático final permanece en **249 pruebas nombradas, 0 duplicados**; no ejecutadas.

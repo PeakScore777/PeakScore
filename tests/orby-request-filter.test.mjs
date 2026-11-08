@@ -643,7 +643,7 @@ test("la creación y conexión de tokens efímeros Live usan v1alpha y rechazan 
 test("el fallback de voz no guarda en lesson-tutor antes de reproducir y conserva el endpoint idempotente de voz", () => {
   assert.match(cloudflareTutorRoute, /const voiceModeRequest = body\.voiceMode === true/);
   assert.match(cloudflareTutorRoute, /if \(conversationId && ownedConversation && !voiceModeRequest\)/);
-  assert.match(lessonTutorSource, /await persistRealtimeTurnIfReady\(\)/);
+  assert.match(lessonTutorSource, /void persistRealtimeTurnIfReady\(\)/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/realtime-turn"/);
   assert.match(cloudflareTutorRoute, /voiceModeRequest/);
   assert.match(lessonTutorSource, /setVoiceStatus\("Voz alternativa en espera"\)[\s\S]*?setVoiceError\(caught instanceof Error[\s\S]*?setIsListening\(false\)/);

@@ -273,7 +273,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [imageAssets, setImageAssets] = useState<StoredImage[]>([]);
   const [imageAssetsLoading, setImageAssetsLoading] = useState(false);
   const [imageStorageError, setImageStorageError] = useState("");
-  const showVoiceTranscript = true;
   const [showAssistantSubtitles, setShowAssistantSubtitles] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<File | null>(null);
@@ -4957,7 +4956,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     ? messages.find((message) => message.id === voiceAssistantMessageIdRef.current && message.role === "assistant")
     : undefined;
   const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
-  const voiceBoardActive = Boolean(activeVoiceAssistantMessage?.board);
 
   function saveCurrentBoardAsNote() {
     const board = activeVoiceAssistantMessage?.board;

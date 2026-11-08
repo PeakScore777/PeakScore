@@ -447,3 +447,26 @@ Commits de esta mutación:
 - `0bf0a55` — documentación de continuidad.
 
 Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de builds del plan (`build-rate-limit`). No se ha ejecutado ni certificado el build de esta mutación.
+
+
+## Mutación siguiente — contrato determinista de tiempos de escritura
+
+### Implementado
+- Se extrajo el cálculo de duración y retraso de cada trazo a `getOrbySketchStrokeTiming()` en el módulo puro de pizarra.
+- La UI ya no mantiene una tabla de tiempos duplicada ni recalcula por separado duración y retraso.
+- La función normaliza índices y cantidad de puntos, limita la duración entre 760 y 1.600 ms y limita el retraso acumulado a 1.300 ms.
+- Se agregaron pruebas de límites, valores inválidos, progresión por orden y duración máxima.
+- La animación del lápiz y el trazo consumen exactamente el mismo resultado, conservando la sincronización existente.
+
+### Archivos
+- `lib/ai/orby-board.ts`
+- `components/aprender/OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+- `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`
+
+### Validación pendiente
+- Ejecutar la suite Node y TypeScript; comprobar build y QA de navegador cuando CI lo permita sin coste adicional.
+- Vercel sigue reportando `build-rate-limit`; no se fuerza un build ni se habilita un proveedor de pago.
+- No se modifica `main`, no se despliega y no se agregan dependencias ni servicios de IA.
+
+**Estado:** helper puro conectado y pruebas añadidas; ejecución de tests y QA real pendientes.

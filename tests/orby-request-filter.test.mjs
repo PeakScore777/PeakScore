@@ -4311,7 +4311,7 @@ test("el tablero admite secuencias acumulativas de hasta 32 trazos y conserva el
     labelY: 50,
   }));
   assert.equal(accept(oversized), null);
-
+});
 
 test("el sanitizador rechaza dos capas sketch para conservar un único lápiz", () => {
   const stroke = { id: "outer", points: [{ x: 10, y: 10 }, { x: 80, y: 80 }], tone: "ink", width: 1.2 };
@@ -4325,7 +4325,6 @@ test("el sanitizador rechaza dos capas sketch para conservar un único lápiz", 
     ],
   };
   assert.equal(boardModule.sanitizeOrbyBoard(board), null);
-});
 });
 
 

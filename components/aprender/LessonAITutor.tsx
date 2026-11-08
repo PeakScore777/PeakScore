@@ -12,6 +12,7 @@ import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsEx
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
+import { countOrbySubtitleWords, getOrbyKaraokeWordIndex } from "@/lib/ai/orby-subtitle-timing";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
 import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";
@@ -288,6 +289,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
   const [voiceBoardDrawingActive, setVoiceBoardDrawingActive] = useState(true);
+  const [voiceSubtitlePlaybackActive, setVoiceSubtitlePlaybackActive] = useState(false);
+  const [voiceSubtitleWordIndex, setVoiceSubtitleWordIndex] = useState(-1);
   const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
   const voiceFallbackModeRef = useRef(false);
@@ -312,6 +315,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceMuteGainRef = useRef<GainNode | null>(null);
   const voiceAudioSourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const voiceNextPlaybackTimeRef = useRef(0);
+  const voiceSubtitlePlaybackStartRef = useRef(0);
+  const voiceSubtitlePlaybackEndRef = useRef(0);
+  const voiceSubtitleWordIndexRef = useRef(-1);
   const voiceUserTextRef = useRef("");
   const voiceUserMessageIdRef = useRef<string | null>(null);
   const voiceActivityGenerationRef = useRef(0);
@@ -364,12 +370,50 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLastAssistantOutputAtRef = useRef(0);
   const voiceRecentAssistantOutputsRef = useRef<Array<{ text: string; at: number }>>([]);
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
+  const voiceSubtitleAnimationFrameRef = useRef<number | null>(null);
   const voiceBrowserSpeechActiveRef = useRef(false);
   const voiceSpeechCancelRef = useRef<(() => void) | null>(null);
   const voiceSpeechPlaybackGenerationRef = useRef(0);
   const voiceTtsQuotaExhaustedRef = useRef(false);
   const voicePlaybackOwnerRef = useRef<"none" | "live" | "tts">("none");
   const waitingForVoiceReplyRef = useRef(false);
+  useEffect(() => {
+    if (!voiceSubtitlePlaybackActive || !voiceModeRef.current || voiceFallbackModeRef.current) return;
+    let frameId = 0;
+
+    const updateKaraokeHighlight = () => {
+      const audioContext = voiceAudioContextRef.current;
+      const startAt = voiceSubtitlePlaybackStartRef.current;
+      const endAt = voiceSubtitlePlaybackEndRef.current;
+      const wordCount = countOrbySubtitleWords(voiceAssistantTextRef.current);
+      if (audioContext && startAt > 0 && endAt >= startAt && wordCount > 0) {
+        const elapsed = Math.max(0, audioContext.currentTime - startAt);
+        const duration = Math.max(0.08, endAt - startAt);
+        const nextWordIndex = getOrbyKaraokeWordIndex(
+          elapsed,
+          duration,
+          wordCount,
+          voiceSubtitleWordIndexRef.current,
+        );
+        if (nextWordIndex !== voiceSubtitleWordIndexRef.current) {
+          voiceSubtitleWordIndexRef.current = nextWordIndex;
+          setVoiceSubtitleWordIndex(nextWordIndex);
+        }
+        const audioStillScheduled = voiceAudioSourcesRef.current.size > 0
+          || audioContext.currentTime < voiceNextPlaybackTimeRef.current;
+        if (!audioStillScheduled && elapsed >= duration) {
+          setVoiceSubtitlePlaybackActive(false);
+          return;
+        }
+      }
+
+      frameId = window.requestAnimationFrame(updateKaraokeHighlight);
+    };
+
+    frameId = window.requestAnimationFrame(updateKaraokeHighlight);
+    return () => window.cancelAnimationFrame(frameId);
+  }, [voiceSubtitlePlaybackActive, messages]);
+
   function rememberVoiceAssistantOutput(value: string) {
     const text = value.trim().slice(0, 5_000);
     if (!text) return;
@@ -1432,6 +1476,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
     const audioContext = voiceAudioContextRef.current;
     voiceNextPlaybackTimeRef.current = audioContext?.currentTime ?? 0;
+    voiceSubtitlePlaybackStartRef.current = 0;
+    voiceSubtitlePlaybackEndRef.current = 0;
+    voiceSubtitleWordIndexRef.current = -1;
+    setVoiceSubtitleWordIndex(-1);
+    setVoiceSubtitlePlaybackActive(false);
   }
 
   function clearVoiceResponseWatchdog() {
@@ -1933,6 +1982,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       return;
     }
     if (voicePlaybackOwnerRef.current === "live") voicePlaybackOwnerRef.current = "none";
+    setVoiceSubtitlePlaybackActive(false);
     waitingForVoiceReplyRef.current = false;
     voicePendingStudentTurnRef.current = false;
     if (!voiceListeningReadyLoggedRef.current && voiceTurnAcceptedAtRef.current > 0) {
@@ -1991,6 +2041,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       source.connect(audioContext.destination);
       if (voiceAnalyserRef.current) source.connect(voiceAnalyserRef.current);
       const scheduledAt = Math.max(audioContext.currentTime + 0.015, voiceNextPlaybackTimeRef.current);
+      if (voiceRealtimeAudioChunkCountRef.current === 0) {
+        voiceSubtitlePlaybackStartRef.current = scheduledAt;
+        voiceSubtitleWordIndexRef.current = -1;
+        setVoiceSubtitleWordIndex(-1);
+      }
       source.start(scheduledAt);
       if (voiceRealtimeAudioChunkCountRef.current === 0) {
         if (!voiceFirstAudioLoggedRef.current && voiceTurnAcceptedAtRef.current > 0) {
@@ -2008,6 +2063,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       voicePlaybackOwnerRef.current = "live";
       voiceNextPlaybackTimeRef.current = scheduledAt + audioBuffer.duration;
+      voiceSubtitlePlaybackEndRef.current = voiceNextPlaybackTimeRef.current;
+      setVoiceSubtitlePlaybackActive(true);
       voiceLastAssistantPlaybackUntilRef.current = Date.now()
         + Math.max(0, voiceNextPlaybackTimeRef.current - audioContext.currentTime) * 1000
         + 1_800;

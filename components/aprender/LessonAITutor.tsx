@@ -1681,7 +1681,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceResponseSlowNoticeRef.current = window.setTimeout(() => {
       voiceResponseSlowNoticeRef.current = null;
       if (voiceModeRef.current && waitingForVoiceReplyRef.current && !voiceResponseDoneRef.current) {
-        setVoiceStatus("Orby está tardando más de lo normal. Sigo esperando tu respuesta…");
+        setVoiceStatus(`${assistantLabel} está tardando más de lo normal. Sigo esperando tu respuesta…`);
       }
     }, 5_000);
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
@@ -2752,7 +2752,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceKnowledgeToolTurnRef.current = markOrbyVoiceToolResponseSent(voiceKnowledgeToolTurnRef.current);
         toolSession.sendToolResponse({ functionResponses: responses });
       }
-      setVoiceStatus("Orby está incorporando el material a tu explicación…");
+      setVoiceStatus(`${assistantLabel} está incorporando el material a tu explicación…`);
     } catch (error) {
       console.error("[Orby Voice] Tool response could not be sent.", {
         name: error instanceof Error ? error.name : "UnknownError",
@@ -2761,7 +2761,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (isCurrentToolTurn()) {
         fallbackVoiceTurnToText("No pude incorporar el material del Lab en esta respuesta. Conservo tu pregunta y continúo con el tutor gratuito.");
       } else {
-        setVoiceError("Orby no pudo incorporar el material en este turno. Puedes repetir la pregunta.");
+        setVoiceError(`${assistantLabel} no pudo incorporar el material en este turno. Puedes repetir la pregunta.`);
         setVoiceStatus("Consulta académica interrumpida");
       }
     }
@@ -3117,7 +3117,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       else clearPendingOrbyTeachingBoard();
       void persistRealtimeTurnIfReady();
       armVoiceResponseWatchdog();
-      setVoiceStatus("Orby está pensando…");
+      setVoiceStatus(`${assistantLabel} está pensando…`);
       setIsListening(false);
     }
     if (serverContent.interrupted === true && !voiceLocalReplyInFlightRef.current) {
@@ -3381,7 +3381,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             : containsUnsupportedSpanishLanguage(rawReply)
             ? ORBY_SPANISH_OUTPUT_FALLBACK
             : voiceInputPolicyRef.current === "identity" || exposesProvider || (hasFalseOrbyCreatorAttribution(rawReply) && !rawReply.toLowerCase().includes("peakscore"))
-            ? "Soy Orby, el asistente educativo creado por PeakScore para acompañarte en tu preparación para las pruebas Saber 11."
+            ? `Soy ${assistantLabel}, el asistente educativo de PeakScore para acompañarte en tu preparación para Saber 11.`
             : containsCookingInstruction(rawReply, voiceScopeContext)
               ? ORBY_COOKING_REPLY
               : containsExplicitNonIcfesTopic(rawReply, voiceScopeContext)
@@ -3391,7 +3391,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 : containsExternalPreIcfesPromotion(rawReply)
                 ? ORBY_EXTERNAL_PREICFES_REPLY
               : isLikelyEnglishOnlyOrbyReply(rawReply)
-                ? isGenericIcfesEnglishRequest(voiceUserTextRef.current) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : "Soy Orby, tu tutor de PeakScore especializado en Saber 11. Te responderé en español colombiano y puedo ayudarte con las cinco áreas del examen."
+                ? isGenericIcfesEnglishRequest(voiceUserTextRef.current) ? ORBY_ICFES_ENGLISH_INTRO_REPLY : assistantName === "OmegaX" ? "Soy OmegaX, tu asistente de estudio de PeakScore. Te responderé en español colombiano y puedo ayudarte a organizar tu preparación Saber 11." : "Soy Orby, tu tutor especializado de Ciencias Naturales de PeakScore. Te responderé en español colombiano y puedo ayudarte con Biología, Química, Física y CTS."
                 : voiceInputPolicyRef.current === "programming" || unsafeGeneratedContent
                   ? preflightOrbyRequest("programar").reply
                   : voiceInputPolicyRef.current === "outside"
@@ -3917,7 +3917,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           onopen: () => {
             if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted
               || initialConnectionId !== connectionSequence) return;
-            setVoiceStatus("Conectado; esperando confirmación de Orby…");
+            setVoiceStatus(`Conectado; esperando confirmación de ${assistantLabel}…`);
           },
           onmessage: (message) => {
             if (sessionGeneration !== voiceSessionGenerationRef.current || startupSignal.aborted
@@ -4023,7 +4023,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           // same student question through the free turn-based tutor instead.
           cancelPendingOrbyKnowledgeRequests();
           voiceKnowledgeToolTurnRef.current = resetOrbyVoiceToolTurn();
-          fallbackVoiceTurnToText("La conexión se renovó mientras Orby consultaba el Lab. Conservo tu pregunta y termino la explicación con el tutor gratuito.");
+          fallbackVoiceTurnToText(`La conexión se renovó mientras ${assistantLabel} consultaba el material de estudio. Conservo tu pregunta y termino la explicación con el servicio gratuito.`);
           return;
         }
         const resumeHandle = voiceSessionResumeConversationRef.current === activeConversationRef.current
@@ -4090,7 +4090,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 callbacks: {
                   onopen: () => {
                     if (resumedConnectionId !== connectionSequence || startupSignal.aborted) return;
-                    setVoiceStatus("Restaurando el contexto de Orby…");
+                    setVoiceStatus(`Restaurando el contexto de ${assistantLabel}…`);
                   },
                   onmessage: (message) => {
                     if (resumedConnectionId !== connectionSequence || startupSignal.aborted
@@ -4541,7 +4541,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         setIsListening(true);
         return;
       }
-      setVoiceStatus("Orby está pensando…");
+      setVoiceStatus(`${assistantLabel} está pensando…`);
       armVoiceResponseWatchdog();
       return;
     }
@@ -4649,7 +4649,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       });
       const data = await response.json().catch(() => ({}));
       if (!isCurrentRequest()) return;
-      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : "${assistantLabel} no está disponible por ahora.");
+      if (!response.ok) throw new Error(typeof data.error === "string" ? data.error : `${assistantLabel} no está disponible por ahora.`);
       if (typeof data.reply !== "string" || !data.reply.trim()) throw new Error("La respuesta llegó incompleta. Inténtalo de nuevo.");
       if (selectedSubject) activeSubjectRef.current = selectedSubject;
       const fallbackAssistantId = isVoiceInteraction && voiceFallbackModeRef.current
@@ -5285,7 +5285,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         voiceTurnPersistedRef.current = false;
         waitingForVoiceReplyRef.current = true;
         setLiveTranscript(transcript);
-        setVoiceStatus("Orby está procesando tu pregunta…");
+        setVoiceStatus(`${assistantLabel} está procesando tu pregunta…`);
         setVoiceError("");
         void sendMessageRef.current(transcript, false, true, {
           kind: "audio",

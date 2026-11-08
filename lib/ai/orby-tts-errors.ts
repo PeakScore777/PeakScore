@@ -28,18 +28,22 @@ export function classifyGeminiProviderFailure(error: unknown): GeminiProviderFai
   const code = typeof detail.code === "string" ? detail.code.toUpperCase() : "";
   const message = readProviderMessage(detail);
   const status = typeof detail.status === "number" ? detail.status : Number(detail.status);
-  if (
-    code === "RESOURCE_EXHAUSTED"
-    || code === "QUOTA_EXCEEDED"
-    || /RESOURCE_EXHAUSTED|QUOTA_EXCEEDED|quota exceeded|quota has been exceeded|free[- ]tier.{0,30}quota|limit: 0|daily quota/i.test(message)
-  ) {
+  const normalizedMessage = message.toLowerCase();
+  const explicitMinuteThrottle = /(?:requests?|tokens?|input tokens?|output tokens?).{0,50}(?:per minute|\/minute|per_minute|rpm|tpm)|(?:per minute|\/minute|per_minute|rpm|tpm).{0,50}(?:requests?|tokens?)|too many requests|rate limit|retry[- ]after/i.test(normalizedMessage);
+  const explicitDailyQuota = /daily quota|quota per day|requests per day|tokens per day|per_day|daily limit|limit: 0|free[- ]tier.{0,30}quota|quota exceeded|quota has been exceeded/i.test(normalizedMessage);
+
+  // Google uses RESOURCE_EXHAUSTED for both daily quota exhaustion and
+  // short rolling-window throttles. Prefer the explicit quota dimension;
+  // a 429 or generic RESOURCE_EXHAUSTED response alone is not a daily lockout.
+  if (code === "QUOTA_EXCEEDED" || (explicitDailyQuota && !explicitMinuteThrottle)) {
     return "quota_exhausted";
   }
   if (
-    status === 429
+    explicitMinuteThrottle
+    || status === 429
+    || code === "RESOURCE_EXHAUSTED"
     || code === "TOO_MANY_REQUESTS"
     || code === "RATE_LIMITED"
-    || /too many requests|rate limit|requests per minute|per minute/i.test(message)
   ) {
     return "rate_limited";
   }

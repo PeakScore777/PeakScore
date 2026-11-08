@@ -1067,7 +1067,9 @@ No uses bloques Markdown ni texto fuera del JSON.
       await recordSecurityEvent(user.id, "suspicious_output", { reason: "english_only_reply" });
       modelReply = isGenericIcfesEnglishRequest(userMessage)
         ? ORBY_ICFES_ENGLISH_INTRO_REPLY
-        : "${assistantName === "OmegaX" ? "Soy OmegaX, tu asistente de estudio de PeakScore. Te responderé en español colombiano y puedo ayudarte a organizar tu estudio y preparar Saber 11." : "Soy Orby, tu tutor especializado en Ciencias Naturales de PeakScore. Te responderé en español colombiano y puedo ayudarte con Biología, Química, Física y CTS."}";
+        : assistantName === "OmegaX"
+          ? "Soy OmegaX, tu asistente de estudio de PeakScore. Te responderé en español colombiano y puedo ayudarte a organizar tu estudio y preparar Saber 11."
+          : "Soy Orby, tu tutor especializado en Ciencias Naturales de PeakScore. Te responderé en español colombiano y puedo ayudarte con Biología, Química, Física y CTS.";
       parsed.checkQuestion = "";
     }
 

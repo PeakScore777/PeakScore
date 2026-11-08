@@ -458,6 +458,9 @@ function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type
 function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean }) {
   // Keep hooks unconditional even when the visual primitive changes between snapshots.
   const annotationMarkerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
+  const sketchFocus = board.teacherFocus && "strokeId" in board.teacherFocus
+    ? board.teacherFocus
+    : undefined;
   if (visual.type === "annotation") {
     const palette = visual.tone === "red" ? "#dc2626"
       : visual.tone === "blue" ? "#2563eb"
@@ -480,7 +483,7 @@ function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; boa
     </svg>;
   }
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
-  if (visual.type === "sketch") return <Sketch visual={visual} focus={board.teacherFocus} drawingActive={drawingActive}/>;
+  if (visual.type === "sketch") return <Sketch visual={visual} focus={sketchFocus} drawingActive={drawingActive}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
   if (visual.type === "vectors") return <Vectors visual={visual}/>;
   if (visual.type === "molecule") return <Molecule visual={visual}/>;
@@ -577,14 +580,17 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
                 const accessibleLabel = block
                   ? block.type === "step" ? `${block.label}: ${block.text}` : block.text
                   : visual?.title || `Apoyo visual ${element.sequence}`;
+                const isFocusedStage = board.teacherFocus && "elementId" in board.teacherFocus
+                  && board.teacherFocus.elementId === element.id;
                 return (
                   <div
                     key={element.id}
                     data-orby-layout-element={element.id}
                     data-orby-layout-kind={element.kind}
                     data-orby-layout-sequence={element.sequence}
+                    data-orby-teacher-focus={isFocusedStage ? "element" : undefined}
                     aria-label={accessibleLabel}
-                    className="orby-board-layout-stage"
+                    className={isFocusedStage ? "orby-board-layout-stage orby-board-layout-stage-focused" : "orby-board-layout-stage"}
                     style={style}
                   >
                     {block ? renderBoardBlock(block, element.index)

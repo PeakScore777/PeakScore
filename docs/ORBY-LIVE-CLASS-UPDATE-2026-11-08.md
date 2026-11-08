@@ -373,3 +373,25 @@ Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos tur
 - CI debe volver a aprobar tests, TypeScript, ESLint y build sobre el SHA más reciente antes de declarar esta etapa verde.
 - Sigue pendiente una prueba manual en Chrome con micrófono real: 20 turnos cortos, cinco explicaciones largas, varias interrupciones, nueva pregunta durante el audio, revisión visual de la pizarra y seguimiento de subtítulos en escritorio/móvil.
 - La prueba de código no valida permisos reales, cuotas remanentes del proyecto, configuración de privacidad de producción ni persistencia remota. No habilitar Live en producción, aplicar migraciones Supabase, hacer Pull ni desplegar como parte de esta auditoría.
+
+### Resultado de CI — commit de código `49024376f9a5d603e619ef97618f467fb070b686`
+
+- GitHub Actions workflow `42497670325` terminó en `success`.
+- Suite Orby: 232 pruebas, 232 aprobadas, 0 fallidas.
+- `npx tsc --noEmit`: aprobado.
+- `npm run lint` con `--max-warnings=0`: aprobado.
+- `npx next build`: aprobado.
+- `npm audit`: 0 vulnerabilidades (info/low/moderate/high/critical: 0).
+- Este CI valida código y build con variables placeholder; no valida credenciales, permisos de micrófono, proveedor Live real, cuota restante ni persistencia remota Supabase.
+
+### Vercel separado del CI de aplicación
+- Git status de Vercel continúa en `failure` con destino `?upgradeToPro=build-rate-limit`.
+- Vercel deployment context identifica el equipo PeakScore como plan Hobby. No existe un deployment Vercel asociado al SHA `49024376f9a5d603e619ef97618f467fb070b686` en la consulta de despliegues exactos.
+- Esto se registra como bloqueo externo de builds/preview por límite del plan, no como fallo de TypeScript, ESLint, tests ni Next build del repositorio.
+- No se cambió plan, no se creó/deployó ningún deployment, no se tocó `main` ni se habilitó producción.
+
+### Prueba de producto todavía pendiente
+- No se ejecutó una sesión manual de Chrome con micrófono y audio real en esta etapa. El efecto karaoke está validado por tests/código, pero la sensación visual y la precisión percibida requieren prueba real.
+- El resaltado usa reloj de reproducción PCM y duración de audio programado; es monotónico y no genera llamadas extra, pero NO equivale a timestamp fonético por palabra. La API Gemini Live streaming no expone dichos timestamps.
+- Fallback TTS por turnos deja el contenido visible si falla/agota cuota, pero en esta etapa el resaltado por palabra solo está integrado en la reproducción Live PCM; no declarar karaoke equivalente en el fallback TTS.
+- No se afirma que el tutor ya esté idéntico al video. El siguiente criterio de aceptación es probar la clase real y ajustar cadencia/diagramas a partir de esa observación.

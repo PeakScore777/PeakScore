@@ -338,3 +338,5 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - The renderer displays a local ring, center dot, optional leader and short label at the selected point. Under reduced motion it remains visible as a static indicator.
 - Live instructions teach the model to use exact points for joins/endpoints/details and to omit the index for midpoint focus.
 - Regression coverage was added for exact targeting, invalid/out-of-range indices, actual geometry length, unchanged ink, renderer and prompt contract. Tests/TypeScript/ESLint/build and browser QA remain unexecuted for this HEAD.
+
+- Regression inventory after exact spotlight work: 246 named tests, no duplicate titles. This is a static inventory only; the suite, TypeScript, ESLint, production build and browser QA have not been run for this HEAD.

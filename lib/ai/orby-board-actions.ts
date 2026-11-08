@@ -6,6 +6,7 @@ type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: 
 export type OrbyBoardAction =
   | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; label?: string })
   | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; pointIndex?: never; label?: string })
+  | (OptionalActionMeta & { operation: "clear-focus" })
   | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })
   | (OptionalActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
   | (RequiredActionMeta & { operation: "append-block"; elementId: string; block: OrbyBoardBlock; position: { x: number; y: number; width: number; height: number } })
@@ -206,6 +207,12 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
         }
       : { ...meta, operation: "focus", elementId: raw.elementId as string, ...(label ? { label } : {}) };
   }
+  if (raw.operation === "clear-focus") {
+    const forbidden = ["strokeId", "elementId", "pointIndex", "label", "strokeIds", "replacement", "block", "position", "strokes"];
+    if (forbidden.some((key) => raw[key] !== undefined)) return null;
+    return { ...meta, operation: "clear-focus" };
+  }
+
   if (raw.operation === "erase") {
     if (!Array.isArray(raw.strokeIds) || raw.strokeIds.length < 1 || raw.strokeIds.length > 8
       || !raw.strokeIds.every(safeId) || new Set(raw.strokeIds).size !== raw.strokeIds.length) return null;
@@ -316,6 +323,12 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
       },
     };
   }
+  if (action.operation === "clear-focus") {
+    // Clearing teacher attention is presentation-only; keep every board block,
+    // sketch stroke, layout ID and sequence exactly as they were.
+    return { ...board, teacherFocus: undefined };
+  }
+
   if (action.operation === "erase") {
     if (!action.strokeIds.every(existsExactlyOnce)) return null;
     const originalVisuals = board.visuals ?? [];

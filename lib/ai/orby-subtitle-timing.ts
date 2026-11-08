@@ -37,3 +37,12 @@ export function getOrbyKaraokeWordIndex(
   const candidate = Math.min(safeWordCount - 1, Math.floor(progress * safeWordCount));
   return Math.max(safePrevious, candidate);
 }
+
+/**
+ * Keep whitespace as separate segments so the UI can highlight words without
+ * changing the transcript's punctuation or spacing.
+ */
+export function splitOrbySubtitleSegments(value: string): string[] {
+  const text = typeof value === "string" ? value.trim() : "";
+  return text ? (text.match(/\\S+|\\s+/gu) ?? []) : [];
+}

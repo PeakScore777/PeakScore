@@ -584,3 +584,12 @@ CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1
 - Restricción de coste: solo cuotas gratuitas reales; sin proveedores pagos, créditos de inferencia facturados ni fallback silencioso.
 
 Criterio de finalización: los tests de regresión cubren aislamiento, deduplicación, idempotencia, pausa/borrado y selección de ejercicios; build y QA navegador verificados; preview apunta al commit exacto validado.
+
+
+## Diagnóstico de build y disponibilidad de preview — 2026-11-08
+
+- Se inspeccionaron los logs de Vercel del deployment `dpl_CKwQtpiMfuTXYAUDsaArB343fu3s`, SHA `a53918ddae0bf5b6b30802154f796c9f7727498f`. El deployment ejecutó `npm run build` y falló por `ERR_ASSERTION` en `tests/orby-request-filter.test.mjs:5516`: test antiguo esperaba el selector sin la protección de texto no guardado.
+- La aserción se corrigió en `b01c3e4f56169679e5a7f39652165ac9f920f759`; no hay ejecución nueva de build que confirme que no existan más fallos.
+- Se intentó crear un preview explícito para la rama, pero Vercel respondió HTTP 402: `api-deployments-free-per-day`, >100 deployments API gratuitos diarios, bloqueo de 24 h. No hay CLI instalado/checkout local en este entorno para fallback. No se tocó producción.
+- Única preview READY comprobada HTTP 200: https://peak-score-5daaqgf8a-peak-score.vercel.app (SHA `3be12f33d4b2dc7d3fa527aad6b080e5de271cda`). Es antigua; no contiene English Studio Listening/Reading/Writing ni memoria por destreza. No presentarla como actual.
+- Conteo del archivo de regresiones: 257 pruebas nombradas, sin duplicados; no se ha certificado suite completa, TypeScript, ESLint, build ni QA navegador del HEAD actual.

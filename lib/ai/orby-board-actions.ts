@@ -5,7 +5,7 @@ type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: 
 
 export type OrbyBoardAction =
   | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; label?: string })
-  | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; label?: string })
+  | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; pointIndex?: never; label?: string })
   | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })
   | (OptionalActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
   | (RequiredActionMeta & { operation: "append-block"; elementId: string; block: OrbyBoardBlock; position: { x: number; y: number; width: number; height: number } })

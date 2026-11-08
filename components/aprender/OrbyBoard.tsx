@@ -488,6 +488,7 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
         <button type="button" onClick={() => { const last = strokes[strokes.length - 1]; if (!last) return; setStrokes((items) => items.slice(0, -1)); setRedoStrokes((items) => [...items, last]); }} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Deshacer</button>
         <button type="button" onClick={() => { const last = redoStrokes[redoStrokes.length - 1]; if (!last) return; setRedoStrokes((items) => items.slice(0, -1)); setStrokes((items) => [...items, last]); }} disabled={!redoStrokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Rehacer</button>
         <button type="button" onClick={() => { setStrokes([]); setRedoStrokes([]); }} disabled={!strokes.length} className="rounded-md px-2 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-35">Limpiar</button>
+        <button type="button" data-orby-no-print onClick={() => window.print()} className="rounded-md bg-slate-900 px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-slate-700">Exportar / PDF</button>
         <span className="ml-auto text-[9px] text-slate-400">{strokes.length} trazos</span>
       </div>
       <div className="mx-auto min-h-[60vh] max-w-6xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-10 sm:py-10">

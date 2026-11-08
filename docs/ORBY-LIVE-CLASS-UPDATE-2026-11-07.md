@@ -117,3 +117,18 @@ Pendiente:
 **Commits:** `e1bf6fd` (guardado estructurado), `02891b2` (prueba estática).
 
 **Alcance real:** el registro de apuntes conserva una representación textual y metadatos JSON limitados; no almacena imágenes rasterizadas ni una copia editable de los SVG. Las anotaciones personales se resumen por trazo, no se convierten en una imagen. Se requiere QA para confirmar la legibilidad y el límite de tamaño con clases largas.
+
+## Undécima mutación — aislamiento de anotaciones por clase
+
+**Fecha:** 7 de noviembre de 2026  
+**Hora:** 19:10:23 (UTC−05:00, Colombia)
+
+- La clave de almacenamiento local de los trazos ahora puede recibir el ID único del mensaje/clase activa, en lugar de depender solo del título.
+- La vista de clase pasa ese ID al componente de la pizarra.
+- Al guardar los apuntes, la lectura de las anotaciones usa el mismo ID de clase.
+- Esto evita que dos clases distintas con el mismo título compartan accidentalmente la misma capa de anotaciones.
+- Se añadieron comprobaciones estáticas para verificar que el ID se propaga desde la clase hasta la persistencia y el guardado.
+
+**Commits:** `a98e415` (pizarra), `d298a6c` (clase y guardado), `e783b4f` (regresión).
+
+**Alcance:** la persistencia sigue siendo local al navegador y no sincroniza entre dispositivos. El ID utilizado corresponde al mensaje activo de la sesión; hace falta probar cambios de turno, recarga y restauración de clases antiguas para comprobar que las anotaciones se mantienen asociadas a la clase correcta.

@@ -66,7 +66,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
   const existingIds = new Set(sketches.flatMap((visual) => visual.strokes.map((stroke) => stroke.id)));
   if (action.operation === "focus") {
     if (!existingIds.has(action.strokeId)) return null;
-    return { ...board, teacherFocus: { strokeId: action.strokeId, ...(action.label ? { label: action.label } : {}) } };
+    return { ...board, teacherFocus: { strokeId: action.strokeId, revision: (board.teacherFocus?.revision ?? 0) + 1, ...(action.label ? { label: action.label } : {}) } };
   }
   if (action.operation === "erase") {
     if (!action.strokeIds.every((id) => existingIds.has(id))) return null;
@@ -85,5 +85,5 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
       strokes: visual.strokes.map((stroke) => stroke.id === action.strokeId ? action.replacement : stroke),
     };
   });
-  return { ...board, visuals, teacherFocus: { strokeId: action.strokeId, label: "Corrección" } };
+  return { ...board, visuals, teacherFocus: { strokeId: action.strokeId, label: "Corrección", revision: (board.teacherFocus?.revision ?? 0) + 1 } };
 }

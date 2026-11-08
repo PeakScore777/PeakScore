@@ -5,7 +5,7 @@ type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: 
 
 export type OrbyBoardAction =
   | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; label?: string })
-  | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; pointIndex?: never; label?: string })
+  | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; pointIndex?: never; targetId?: string; label?: string })
   | (OptionalActionMeta & { operation: "clear-focus" })
   | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })
   | (OptionalActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
@@ -53,6 +53,27 @@ export function evaluateOrbyBoardActionSequence(
       actionIds: [...current.actionIds, action.actionId].slice(-32),
     },
   };
+}
+
+function getFocusableVisualTargetIds(visual: OrbyBoardVisual): string[] {
+  switch (visual.type) {
+    case "diagram":
+      return visual.nodes.map((node) => node.id);
+    case "molecule":
+      return visual.atoms.map((atom) => atom.id);
+    case "cell":
+      // Outer membrane and cell-wall are not individually positioned glyphs
+      // in the current renderer, so do not claim exact targeting for them yet.
+      return visual.organelles
+        .filter((item) => item.kind !== "membrane" && item.kind !== "cell-wall")
+        .map((item) => item.id);
+    case "circuit":
+      return visual.components.map((component) => component.id);
+    case "organ-system":
+      return visual.structures.map((structure) => structure.id);
+    default:
+      return [];
+  }
 }
 
 const safeId = (value: unknown): value is string =>
@@ -186,13 +207,16 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
     const hasStrokeId = raw.strokeId !== undefined;
     const hasElementId = raw.elementId !== undefined;
     const hasPointIndex = raw.pointIndex !== undefined;
+    const hasTargetId = raw.targetId !== undefined;
     if (hasStrokeId === hasElementId) return null;
     if ((hasStrokeId && !safeId(raw.strokeId)) || (hasElementId && !safeId(raw.elementId))) return null;
-    // pointIndex selects an existing point from a teacher stroke; it is not a
-    // free-form coordinate. Element focus remains stage-level and has no index.
-    if (hasPointIndex && (!hasStrokeId || hasElementId
+    // pointIndex selects a real point on freehand ink. targetId selects a
+    // stable, renderer-backed child inside a spatial visual. Neither accepts
+    // free-form coordinates or can be mixed with the other target family.
+    if (hasPointIndex && (!hasStrokeId || hasElementId || hasTargetId
       || typeof raw.pointIndex !== "number" || !Number.isInteger(raw.pointIndex)
       || raw.pointIndex < 0 || raw.pointIndex > 39)) return null;
+    if (hasTargetId && (!hasElementId || hasStrokeId || hasPointIndex || !safeId(raw.targetId))) return null;
     if (raw.label !== undefined && typeof raw.label !== "string") return null;
     const label = raw.label === undefined
       ? ""
@@ -205,7 +229,13 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
           ...(hasPointIndex ? { pointIndex: raw.pointIndex as number } : {}),
           ...(label ? { label } : {}),
         }
-      : { ...meta, operation: "focus", elementId: raw.elementId as string, ...(label ? { label } : {}) };
+      : {
+          ...meta,
+          operation: "focus",
+          elementId: raw.elementId as string,
+          ...(hasTargetId ? { targetId: raw.targetId as string } : {}),
+          ...(label ? { label } : {}),
+        };
   }
   if (raw.operation === "clear-focus") {
     const forbidden = ["strokeId", "elementId", "pointIndex", "label", "strokeIds", "replacement", "block", "position", "strokes"];
@@ -299,11 +329,20 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
   if (action.operation === "focus") {
     const revision = (board.teacherFocus?.revision ?? 0) + 1;
     if (typeof action.elementId === "string") {
-      if (!board.layout?.elements.some((element) => element.id === action.elementId)) return null;
+      const targetElement = board.layout?.elements.find((element) => element.id === action.elementId);
+      if (!targetElement) return null;
+      if (action.targetId !== undefined) {
+        if (targetElement.kind !== "visual") return null;
+        const visual = board.visuals?.[targetElement.index];
+        if (!visual) return null;
+        const matchingTargets = getFocusableVisualTargetIds(visual).filter((id) => id === action.targetId);
+        if (matchingTargets.length !== 1) return null;
+      }
       return {
         ...board,
         teacherFocus: {
           elementId: action.elementId,
+          ...(action.targetId ? { targetId: action.targetId } : {}),
           revision,
           ...(action.label ? { label: action.label } : {}),
         },

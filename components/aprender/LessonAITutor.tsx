@@ -2213,7 +2213,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const sequenceCheck = action
         ? evaluateOrbyBoardActionSequence(voiceBoardActionSequenceRef.current, action, activityGeneration)
         : null;
-      const currentBoard = voiceTeachingBoardRef.current;
+      const pendingBoardSnapshot = voicePendingBoardSnapshotsRef.current.at(-1) ?? null;
+      const currentBoard = voiceTeachingBoardRef.current ?? pendingBoardSnapshot?.board ?? null;
       const activeAcademicTurn = voicePendingStudentTurnRef.current
         && Boolean(voiceUserTextRef.current.trim())
         && voiceInputPreflightAcceptedRef.current
@@ -2224,7 +2225,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && !voiceResponseDoneRef.current
         && !voiceDiscardStaleLiveOutputRef.current
         && !voiceBargeInPendingRef.current;
-      const allowed = action && sequenceCheck?.accepted && currentBoard && activeAcademicTurn
+      const canStageBeforeFinalTranscript = voiceAwaitingInputTranscriptionRef.current
+        && voiceInputActivityStartedAtRef.current > 0
+        && Date.now() - voiceInputActivityStartedAtRef.current <= 15_000
+        && !voiceResponseDoneRef.current
+        && !voiceDiscardStaleLiveOutputRef.current
+        && !voiceBargeInPendingRef.current;
+      const allowedTurn = activeAcademicTurn || (canStageBeforeFinalTranscript && Boolean(pendingBoardSnapshot));
+      const allowed = action && sequenceCheck?.accepted && currentBoard && allowedTurn
         && !acceptedActionInEvent
         && voiceBoardUpdateCountRef.current < MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
       if (!allowed) {
@@ -2235,7 +2243,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 : sequenceCheck.reason === "dependency_not_applied" ? "Primero envía la acción de la que depende este paso."
                   : "La secuencia debe ser creciente dentro de la clase activa."
             : !currentBoard ? "Todavía no existe una pizarra activa."
-              : !activeAcademicTurn ? "No hay una pregunta académica validada para modificar la pizarra."
+              : !allowedTurn ? "No hay una pregunta académica activa ni una pizarra provisional válida para modificar."
                 : acceptedActionInEvent ? "Envía una sola operación por evento."
                   : "Se alcanzó el límite de ocho operaciones visuales de este turno.";
         responses.push({ id: call.id, name: "apply_orby_board_action",
@@ -2254,7 +2262,18 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       acceptedActionInEvent = true;
       voiceBoardActionSequenceRef.current = sequenceCheck!.nextState;
       voiceBoardUpdateCountRef.current += 1;
-      publishOrbyTeachingBoardSnapshot(updatedBoard);
+      if (activeAcademicTurn) {
+        publishOrbyTeachingBoardSnapshot(updatedBoard);
+      } else if (pendingBoardSnapshot && canStageBeforeFinalTranscript
+        && pendingBoardSnapshot.sessionGeneration === sessionGeneration
+        && pendingBoardSnapshot.activityGeneration === activityGeneration
+        && Date.now() - pendingBoardSnapshot.createdAt <= 15_000) {
+        // Keep early actions attached to the provisional board. The complete
+        // composition is published only after the student's input passes preflight.
+        voicePendingBoardSnapshotsRef.current = [{ ...pendingBoardSnapshot, board: updatedBoard }];
+      } else {
+        return;
+      }
       responses.push({ id: call.id, name: "apply_orby_board_action",
         response: { accepted: true, status: "applied", retryable: false,
           guidance: action.operation === "focus" ? "Elemento señalado. Continúa explicándolo sin redibujarlo."
@@ -2769,8 +2788,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceFirstAudioLoggedRef.current = false;
       voiceFirstAudioChunkReceivedRef.current = false;
       voiceListeningReadyLoggedRef.current = false;
-      if (voicePendingBoardSnapshotsRef.current.length === 0) voiceBoardUpdateCountRef.current = 0;
-      voiceBoardActionSequenceRef.current = createOrbyBoardActionSequenceState(voiceActivityGenerationRef.current);
+      if (voicePendingBoardSnapshotsRef.current.length === 0) {
+        voiceBoardUpdateCountRef.current = 0;
+        voiceBoardActionSequenceRef.current = createOrbyBoardActionSequenceState(voiceActivityGenerationRef.current);
+      }
       voiceAwaitingInputTranscriptionRef.current = false;
       voiceInputActivityStartedAtRef.current = 0;
       voiceInputPreflightAcceptedRef.current = false;

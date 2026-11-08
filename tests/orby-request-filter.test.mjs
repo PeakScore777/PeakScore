@@ -4075,8 +4075,8 @@ test("el señalador contextual es independiente del lápiz y no crea tinta", () 
 
 
 test("la pizarra detiene SMIL, lápiz y animación del trazo al interrumpir la clase", () => {
-  assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);
-  assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
+  assert.match(boardComponentSource, /svg\\.pauseAnimations\\(\\)/);
+  assert.match(boardComponentSource, /svg\\.unpauseAnimations\\(\\)/);
   assert.match(boardComponentSource, /animationPlayState: drawingActive \? "running" : "paused"/);
   assert.match(boardComponentSource, /drawingActive \? <g className="orby-board-pen-tip"/);
   assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(false\)/);

@@ -390,10 +390,16 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - `tests/orby-request-filter.test.mjs`
 
 ### Límites / QA
-- La pausa se activa en el branch que ya identifica actividad real del estudiante; el branch de eco de audio no la dispara.
+- La pausa se activa tanto en la ruta de actividad del micrófono como en `interruptCurrentVoiceOutput()`, que se invoca cuando el detector de voz confirma un barge-in fuerte. Los fragmentos identificados como eco no interrumpen ni pausan la clase.
 - La reanudación solo ocurre al publicar un snapshot válido nuevo.
 - Falta probar en Chrome la pausa a mitad de un trazo, la reanudación tras la respuesta y el comportamiento de SVG SMIL en navegadores/dispositivos reales.
 - No se han ejecutado Node tests, TypeScript, ESLint ni build desde esta mutación.
 - No se añaden proveedores, modelos, dependencias ni servicios de pago. No se modifica `main`, no se despliega y no se fuerzan builds que puedan generar cargos.
 
 **Estado:** cambios implementados en la rama; validación de CI y QA manual pendientes.
+
+
+### Corrección de integración de interrupción confirmada
+- La pausa se conectó también directamente a `interruptCurrentVoiceOutput()`, el punto común que detiene la salida cuando el detector acepta una interrupción real por transcripción interim o final.
+- Esto cubre el caso de barge-in significativo mientras Orby está reproduciendo audio, además del evento de actividad de micrófono sin salida activa.
+- La rama de eco acústico continúa sin invocar la interrupción.

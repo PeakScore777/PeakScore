@@ -553,3 +553,5 @@
 - El renderer dibuja un marcador puntual (anillo, punto, línea guía y etiqueta) sobre el punto elegido; no crea, borra ni modifica trazos. La preferencia de movimiento reducido conserva un marcador estático.
 - Gemini Live recibe el nuevo contrato y el cliente explica específicamente un índice inválido. Se añadieron pruebas de límites, existencia real del punto y conservación de la tinta.
 - Estado: código y pruebas añadidas en `feat/founder-intro`; tests, TypeScript, ESLint, build y QA de navegador todavía no ejecutados para este HEAD.
+
+- Inventario estático tras la mutación: **246 pruebas con nombre, sin duplicados**; no se ejecutaron.

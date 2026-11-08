@@ -4957,9 +4957,11 @@ test("optional Live knowledge lookup never exposes provider credential errors", 
 
 
 test("los subtítulos de Orby cuentan palabras y calculan una posición karaoke monotónica", () => {
-  const { countOrbySubtitleWords, getOrbyKaraokeWordIndex } = subtitleTiming;
+  const { countOrbySubtitleWords, getOrbyKaraokeWordIndex, splitOrbySubtitleSegments } = subtitleTiming;
   assert.equal(countOrbySubtitleWords(""), 0);
   assert.equal(countOrbySubtitleWords("La fotosíntesis transforma energía."), 4);
+  assert.deepEqual(splitOrbySubtitleSegments("La fotosíntesis transforma energía."), ["La", " ", "fotosíntesis", " ", "transforma", " ", "energía."]);
+  assert.deepEqual(splitOrbySubtitleSegments(""), []);
   assert.equal(getOrbyKaraokeWordIndex(0, 4, 4), 0);
   assert.equal(getOrbyKaraokeWordIndex(1, 4, 4), 1);
   assert.equal(getOrbyKaraokeWordIndex(3.9, 4, 4), 3);

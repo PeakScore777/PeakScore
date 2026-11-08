@@ -452,3 +452,13 @@ La ruta conserva el objeto de error completo para inspeccionar campos anidados. 
 - Regresiones nuevas cubren rechazo de intersección, aceptación de borde adyacente y mensaje de error al modelo.
 - **Alcance conservador:** no se endureció `sanitizeOrbyBoardLayout` para snapshots existentes, evitando invalidar de forma retroactiva composiciones guardadas. La protección está aplicada a nuevas acciones `append-block`.
 - **No certificado:** tests/TS/lint/build y QA Chrome siguen pendientes; Vercel mantiene `build-rate-limit`.
+
+## Cierre de validación integral — 2026-11-08
+
+- Commit validado en `feat/founder-intro`: `69eebdcdacf94dd0403b1e7d01ab8e3f7d3135c9`.
+- GitHub Actions run 42519075898: https://github.com/PeakScore777/PeakScore/actions/runs/42519075898
+- Resultado verde en todos los pasos: instalación, auditoría de dependencias, 239 pruebas Orby, TypeScript, ESLint y Next.js production build.
+- El run confirmó `239 tests / 239 pass / 0 fail`.
+- La compilación reveló un cierre prematuro de template literal en el CSS JSX del workspace claro. Se movió el cierre hasta después de las últimas reglas de tema claro; el build posterior pasó.
+- Esto certifica los checks automatizados del SHA, no el comportamiento de voz con micrófono físico, cuotas reales del proyecto, la sesión Live en Chrome ni QA visual manual.
+- Se mantiene el trabajo exclusivamente en `feat/founder-intro`; `main` no se modificó.

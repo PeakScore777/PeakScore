@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 import { useId } from "react";
 import { Eraser, MousePointer2, PenLine } from "lucide-react";

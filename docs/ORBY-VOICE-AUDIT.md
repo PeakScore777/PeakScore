@@ -855,3 +855,13 @@ Workflow `42339106392` terminó con `success`. Pasaron las 130 pruebas de regres
 - Corrección aplicada únicamente en el lector de archivos fuente de `tests/orby-request-filter.test.mjs`: normaliza finales de línea en memoria. Las aserciones permanecen intactas; no se ha modificado código de ejecución del tutor ni CSS.
 - npm advirtió que cinco paquetes tienen scripts de instalación aún no aprobados por `allowScripts`. No se aprobaron de forma global; hay que evaluar si alguno necesita su script antes de considerar validado el setup local.
 - CI del commit con la corrección pendiente de resultado. Hasta que termine, no declarar las 232 pruebas verdes.
+
+
+### Resultado final de compatibilidad Windows — 8 de noviembre de 2026
+
+- SHA validado: `4a2612b47833fc67af51ceb612e21ff3bae32773`.
+- Workflow GitHub Actions `42499733806`: `success`.
+- Orby tests: 232 pasaron, 0 fallaron.
+- TypeScript, ESLint y build Next.js: aprobados.
+- `npm audit`: 0 vulnerabilidades.
+- La normalización de finales de línea en el lector de fixtures solucionó la incompatibilidad de las aserciones estáticas en Windows sin modificar ni aflojar el comportamiento probado.

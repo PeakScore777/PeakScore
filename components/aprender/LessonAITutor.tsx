@@ -3,7 +3,7 @@
 import Image from "next/image";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
 import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
-import { applyOrbyBoardAction, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
+import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyBoardActionSequence, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
@@ -358,6 +358,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceFirstAudioChunkReceivedRef = useRef(false);
   const voiceListeningReadyLoggedRef = useRef(false);
   const voiceBoardUpdateCountRef = useRef(0);
+  const voiceBoardActionSequenceRef = useRef(createOrbyBoardActionSequenceState());
   const voiceLastAssistantOutputRef = useRef("");
   const voiceLastAssistantOutputAtRef = useRef(0);
   const voiceRecentAssistantOutputsRef = useRef<Array<{ text: string; at: number }>>([]);
@@ -2207,6 +2208,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         try { args = JSON.parse(args); } catch { args = null; }
       }
       const action = sanitizeOrbyBoardAction(args);
+      const sequenceCheck = action
+        ? evaluateOrbyBoardActionSequence(voiceBoardActionSequenceRef.current, action, activityGeneration)
+        : null;
       const currentBoard = voiceTeachingBoardRef.current;
       const activeAcademicTurn = voicePendingStudentTurnRef.current
         && Boolean(voiceUserTextRef.current.trim())
@@ -2218,15 +2222,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && !voiceResponseDoneRef.current
         && !voiceDiscardStaleLiveOutputRef.current
         && !voiceBargeInPendingRef.current;
-      const allowed = action && currentBoard && activeAcademicTurn
+      const allowed = action && sequenceCheck?.accepted && currentBoard && activeAcademicTurn
         && !acceptedActionInEvent
         && voiceBoardUpdateCountRef.current < MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
       if (!allowed) {
         const reason = !action ? "La operación de pizarra no pasó la validación."
-          : !currentBoard ? "Todavía no existe una pizarra activa."
-            : !activeAcademicTurn ? "No hay una pregunta académica validada para modificar la pizarra."
-              : acceptedActionInEvent ? "Envía una sola operación de pizarra por evento."
-                : "Se alcanzó el límite de ocho operaciones visuales de este turno.";
+          : sequenceCheck && !sequenceCheck.accepted
+            ? sequenceCheck.reason === "duplicate" ? "La acción ya fue aplicada; no la repitas."
+              : sequenceCheck.reason === "dependency_not_applied" ? "Primero envía la acción de la que depende este paso."
+                : "La secuencia debe ser creciente dentro de la clase activa."
+            : !currentBoard ? "Todavía no existe una pizarra activa."
+              : !activeAcademicTurn ? "No hay una pregunta académica validada para modificar la pizarra."
+                : acceptedActionInEvent ? "Envía una sola operación por evento."
+                  : "Se alcanzó el límite de ocho operaciones visuales de este turno.";
         responses.push({ id: call.id, name: "apply_orby_board_action",
           response: { accepted: false, status: "rejected", retryable: false, reason },
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
@@ -2241,6 +2249,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       if (!isCurrent()) return;
       acceptedActionInEvent = true;
+      voiceBoardActionSequenceRef.current = sequenceCheck!.nextState;
       voiceBoardUpdateCountRef.current += 1;
       publishOrbyTeachingBoardSnapshot(updatedBoard);
       responses.push({ id: call.id, name: "apply_orby_board_action",
@@ -2569,6 +2578,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }
         if (voiceResponseDoneRef.current) void persistRealtimeTurnIfReady();
         voiceActivityGenerationRef.current += 1;
+        voiceBoardActionSequenceRef.current = createOrbyBoardActionSequenceState(voiceActivityGenerationRef.current);
         clearPendingOrbyTeachingBoard();
         voiceAwaitingInputTranscriptionRef.current = true;
         voiceInputPreflightAcceptedRef.current = false;
@@ -2757,6 +2767,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceFirstAudioChunkReceivedRef.current = false;
       voiceListeningReadyLoggedRef.current = false;
       if (voicePendingBoardSnapshotsRef.current.length === 0) voiceBoardUpdateCountRef.current = 0;
+      voiceBoardActionSequenceRef.current = createOrbyBoardActionSequenceState(voiceActivityGenerationRef.current);
       voiceAwaitingInputTranscriptionRef.current = false;
       voiceInputActivityStartedAtRef.current = 0;
       voiceInputPreflightAcceptedRef.current = false;

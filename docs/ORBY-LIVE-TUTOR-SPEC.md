@@ -355,3 +355,18 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - The Live instruction's operation list now explicitly includes `clear-focus`; the contract test regex was corrected to match the actual tool enum syntax.
 - Static test inventory: 247 named tests, no duplicate names. Tests are not executed for this HEAD.
 - Follow-up commits: `1b88395` (Live prompt) and `3e7d2f3` (test assertion).
+
+
+### Nested spotlight targets in spatial visuals (2026-11-08)
+- Live `focus` accepts optional `targetId` only alongside a spatial visual `elementId`. The server verifies the exact visual stage and the exact child ID; it does not accept arbitrary coordinates or a target copied from another visual.
+- Supported child targets:
+  - `diagram.nodes[].id`
+  - `molecule.atoms[].id`
+  - independently drawn `cell.organelles[].id` (the abstract membrane/cell-wall outline is excluded)
+  - `circuit.components[].id`
+  - `organ-system.structures[].id`
+- A reusable SVG marker renders a ring, center dot, optional leader and label at the child's existing coordinates. The visual data, IDs, lines and layout remain unchanged; reduced-motion mode keeps the target visible as a static marker.
+- Not yet supported: diagram edges/arrows, molecule bonds, circuit wires, graph/vector points, neuron part labels, and cell membrane/cell-wall outline. Those primitives do not currently expose individually positioned stable-ID targets in their renderers.
+- Live instructions only permit IDs provided in the current snapshot. Invalid or cross-visual IDs are rejected with a specific explanation; if a part cannot be matched, OmegaX should focus the whole visual instead.
+- Regression coverage now includes five supported visual types, preservation of the visual payload, unknown IDs, targeting a text block, graph targets without stable IDs, and the undrawn membrane outline.
+- Static regression inventory: **249 named tests, no duplicate titles**. This is not a test execution result. Test runner, TypeScript, ESLint, production build and Chrome/Gemini Live QA remain pending. No deployment or main-branch change.

@@ -259,7 +259,7 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
   assert.match(lessonTutorSource, /markOrbyVoiceToolFollowupOutput/);
   assert.match(lessonTutorSource, /completeOrbyVoiceToolGeneration/);
   assert.match(lessonTutorSource, /voiceKnowledgeToolTurnRef\.current = resetOrbyVoiceToolTurn\(\)/);
-  assert.match(lessonTutorSource, /Orby está completando la explicación con el material del Lab/);
+  assert.match(lessonTutorSource, /\$\{assistantLabel\} está completando la explicación con el material del Lab/);
   assert.match(realtimeSessionSource, /SEGUIMIENTO DEL LAB ASÍNCRONO/);
   assert.match(realtimeSessionSource, /no repitas toda la respuesta/);
   assert.match(lessonTutorSource, /reconnectLiveSession = async \(\) => \{[\s\S]{0,650}voiceKnowledgeToolTurnRef\.current\.pending[\s\S]{0,500}fallbackVoiceTurnToText\("La conexión se renovó mientras Orby consultaba el Lab/);
@@ -494,7 +494,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(cloudflareTutorRoute.includes("generateWithCloudflareTutor(activePrompt)"));
   assert.doesNotMatch(cloudflareTutorRoute, /generateAI\(|verifyTutorAnswer\(|getProviderForTask\(/);
   assert.ok(cloudflareTutorRoute.includes("FREE_QUOTA_EXCEEDED"));
-  assert.ok(cloudflareTutorRoute.includes("No eres un asistente general"));
+  assert.ok(cloudflareTutorRoute.includes("Mantén siempre el alcance exclusivo de Saber 11"));
   assert.ok(!cloudflareTutorRoute.includes("También puedes conversar con naturalidad sobre preguntas cotidianas"));
   assert.ok(!cloudflareTutorRoute.includes("No rechaces conversaciones casuales"));
   assert.ok(cloudflareTutorRoute.includes("Mantén siempre el alcance exclusivo de Saber 11"));
@@ -956,7 +956,7 @@ test("Gemini Live usa español como pista de transcripción y sanitiza audio no 
   assert.match(realtimeSessionSource, /containsExternalPreIcfesPromotion\(item\.content\)/);
   assert.match(realtimeSessionSource, /isLikelyEnglishOnlyOrbyReply\(item\.content\)/);
   assert.match(realtimeSessionSource, /hasFalseOrbyCreatorAttribution\(item\.content\)/);
-  assert.match(realtimeSessionSource, /ALCANCE EXCLUSIVO SABER 11/);
+  assert.match(realtimeSessionSource, /ALCANCE EDUCATIVO/);
   assert.match(realtimeSessionSource, /No bloquees palabras aisladas/);
   assert.match(realtimeSessionSource, /Los saludos y llamadas breves son válidos/);
   assert.match(realtimeSessionSource, /body\.history\.slice\(-12\)/);
@@ -1265,7 +1265,7 @@ test("Orby no promociona su propia plataforma cuando le preguntan si es recomend
   assert.match(tutor, /hasRecentPeakScoreIdentityExchange/);
   assert.match(lessonTutorSource, /containsPlatformMarketingClaim\(rawReply\)/);
   assert.match(tutor, /TRANSPARENCIA COMERCIAL: no actúes como portavoz ni vendedor de PeakScore/);
-  assert.match(realtimeSessionSource, /Tampoco elogies, recomiendes ni califiques PeakScore u Orby/);
+  assert.match(realtimeSessionSource, /Tampoco elogies, recomiendes ni califiques PeakScore, OmegaX u Orby/);
   assert.match(realtimeSessionSource, /no repitas una bienvenida genérica/);
   assert.match(realtimeSessionSource, /pregunta qué área de Saber 11 quiere retomar/);
   const partialSafetyGate = lessonTutorSource.slice(lessonTutorSource.indexOf("const partialUnsafe ="), lessonTutorSource.indexOf("if (partialUnsafe)", lessonTutorSource.indexOf("const partialUnsafe =")));
@@ -1809,10 +1809,12 @@ test("Orby Lab nunca amplía silenciosamente una búsqueda vacía a otras materi
 });
 
 test("la voz desbloquea AudioContext antes del permiso y lo conserva para el TTS de respaldo", () => {
-  const permissionIndex = lessonTutorSource.indexOf("navigator.mediaDevices.getUserMedia({");
-  const contextIndex = lessonTutorSource.indexOf("const audioContext = voiceAudioContextRef.current && voiceAudioContextRef.current.state !== \"closed\"");
-  const resumeIndex = lessonTutorSource.indexOf("const audioContextReady = audioContext.state === \"suspended\"");
-  assert.ok(contextIndex >= 0 && resumeIndex > contextIndex && permissionIndex > resumeIndex,
+  const liveStartIndex = lessonTutorSource.indexOf("async function startRealtimeVoice(");
+  const liveStartupSource = lessonTutorSource.slice(liveStartIndex);
+  const permissionIndex = liveStartupSource.indexOf("navigator.mediaDevices.getUserMedia({");
+  const contextIndex = liveStartupSource.indexOf("const audioContext = voiceAudioContextRef.current && voiceAudioContextRef.current.state !== \"closed\"");
+  const resumeIndex = liveStartupSource.indexOf("const audioContextReady = audioContext.state === \"suspended\"");
+  assert.ok(liveStartIndex >= 0 && contextIndex >= 0 && resumeIndex > contextIndex && permissionIndex > resumeIndex,
     "AudioContext.resume debe invocarse desde el gesto original antes de abrir el diálogo del micrófono.");
   assert.match(lessonTutorSource, /stopRealtimeVoice\(false, true\)/,
     "El fallback debe liberar Live sin cerrar el AudioContext desbloqueado.");
@@ -4027,9 +4029,9 @@ test("la pizarra Live publica cada snapshot aceptado sin esperar coincidencias d
 
 
 test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva subtítulos", () => {
-  assert.match(lessonTutorSource, /aria-label="Clase en vivo con Orby"/);
+  assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /orby-class-paper/);
-  assert.match(lessonTutorSource, /aria-label="Subtítulos en vivo de Orby"/);
+  assert.match(lessonTutorSource, /aria-label=\{"Subtítulos en vivo de " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
   assert.match(lessonTutorSource, /orby-class-board/);
   assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);
@@ -4058,7 +4060,7 @@ test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
 test("la clase de voz prioriza la hoja digital y mantiene controles accesibles", () => {
   assert.match(lessonTutorSource, /Hoja de clase/);
   assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-\[1600px\]/);
-  assert.match(lessonTutorSource, /aria-label="Clase en vivo con Orby"/);
+  assert.match(lessonTutorSource, /aria-label=\{"Clase en vivo con " \+ assistantLabel\}/);
   assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
   assert.match(boardComponentSource, /orby-board-handwriting/);
   assert.match(boardComponentSource, /min-h-\[60vh\]/);

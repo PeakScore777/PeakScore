@@ -488,3 +488,11 @@
 - Added regression coverage for intersection rejection, adjacent edge acceptance and the explanatory Live error.
 - Scope is limited to new incremental append actions; saved historical snapshots and the v2 layout sanitizer are not retroactively tightened.
 - Tests, TypeScript, ESLint, build and browser QA remain unexecuted.
+
+## 2026-11-08 — CI verde del tutor y la pizarra
+- Cerrado el solapamiento espacial de `append-block` y actualizado el feedback de rechazo de herramientas Live.
+- Alineadas regresiones con identidad dinámica OmegaX/Orby y validación del desbloqueo de AudioContext de la sesión Live.
+- Restauradas reglas Live de desambiguación por contexto y voz compartida femenina/natural con pronunciación colombiana ligera.
+- Reparado el cierre del template literal CSS de `LessonAITutor.tsx`, que hacía que el CSS del workspace claro quedara fuera de `<style jsx global>`.
+- GitHub Actions 42519075898: 239/239 tests, TypeScript, ESLint, dependency audit y `next build` aprobados.
+- La validación automatizada no sustituye pruebas de micrófono físico, Gemini Live real ni QA visual manual.

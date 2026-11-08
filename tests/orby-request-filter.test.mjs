@@ -1785,6 +1785,12 @@ test("Gemini Live cancela búsquedas de conocimiento obsoletas y restaura el tem
   assert.match(realtimeSessionSource, /topic = storedTopic/);
 });
 
+test("el token efímero autoriza en servidor la reanudación y compresión solicitadas por el navegador", async () => {
+  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(route, /liveConnectConstraints:[\\s\\S]*?config:[\\s\\S]*?sessionResumption:\\s*\\{\\}/);
+  assert.match(route, /contextWindowCompression:\\s*\\{\\s*slidingWindow:\\s*\\{\\}\\s*\\}/);
+});
+
 test("Gemini Live comprime el contexto y conserva el handle de reanudación por conversación", () => {
   assert.match(lessonTutorSource, /contextWindowCompression:\s*\{\s*slidingWindow:\s*\{\}\s*\}/);
   assert.match(lessonTutorSource, /sessionResumption:\s*resumeHandle\s*\?\s*\{\s*handle:\s*resumeHandle\s*\}\s*:\s*\{\}/);

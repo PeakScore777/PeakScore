@@ -320,7 +320,8 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - `7a53c4c` — prueba para rechazar borrados con mezcla de IDs válidos y desconocidos.
 - `0041c8b` — registro de regresiones y commits previos.
 - `0721d00` — desvanecimiento de la etiqueta contextual.
-- `aca57fb` — actualización final del registro de continuidad.
+- `aca57fb` — actualización del registro de continuidad.
+- `3dede39` — respeto a movimiento reducido y ocultación del foco en exportación PDF.
 
 ### Seguridad y límites
 - Las operaciones no aceptan HTML, SVG ni código; solo datos estructurados tipados.

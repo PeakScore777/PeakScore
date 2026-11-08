@@ -4839,6 +4839,7 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   assert.match(boardComponentSource, /function VisualTargetFocus/);
   assert.ok(boardComponentSource.includes("currentId={node.id}"));
   assert.ok(boardComponentSource.includes("currentId={atom.id}"));
+  assert.ok(boardComponentSource.includes("currentId={component.id}"));
   assert.ok(boardComponentSource.includes("currentId={item.id}"));
   assert.ok(boardComponentSource.includes(".orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; }"));
   assert.match(boardComponentSource, /Math\.floor\(stroke\.points\.length \/ 2\)/);

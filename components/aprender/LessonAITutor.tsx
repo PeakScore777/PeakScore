@@ -5357,8 +5357,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           data-orby-subtitle-word={wordIndex}
           aria-current={active ? "true" : undefined}
           className={active
-            ? "rounded bg-amber-300/20 px-0.5 font-bold text-amber-300 underline decoration-amber-400 decoration-2 underline-offset-4 transition-colors duration-100"
-            : "text-slate-100"}
+            ? "rounded bg-orange-100 px-0.5 font-bold text-orange-950 underline decoration-orange-600 decoration-2 underline-offset-4 transition-colors duration-100"
+            : "font-medium text-slate-800"}
         >{part}</span>;
       })
     : null;

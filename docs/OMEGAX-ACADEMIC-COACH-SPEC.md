@@ -137,3 +137,33 @@ No crear un segundo tutor ni duplicar sesión/proveedor. Conservar el flag de En
 
 ### Adaptación reciente de los retos por nivel
 Los temas de speaking de 60 segundos y las frases modelo de repetición ya se seleccionan desde bancos separados por cada nivel A1–C2. El audio de referencia pronuncia la frase activa. El selector reinicia los índices al cambiar de meta y se desactiva mientras haya una grabación, transcripción o audio pendiente. Esto adapta el estímulo visible; no constituye por sí mismo una evaluación calibrada del MCER.
+
+
+## 2026-11-08 — English Studio amplía cuatro habilidades (siguiente iteración)
+
+### Actividades nuevas implementadas en la UI
+- **Listening Lab:** dos ejercicios por nivel A1–C2, con guion corto, pregunta de comprensión, pistas y clave de evidencia para el feedback. El audio se reproduce con `SpeechSynthesisUtterance` del navegador en inglés; el estudiante responde y puede revelar la transcripción después. No se presenta como una grabación de hablante nativo.
+- **Reading Lab:** dos textos originales por nivel A1–C2, pregunta de comprensión y evidencia textual para justificar la respuesta.
+- **Writing Lab:** dos consignas por nivel A1–C2, extensión orientativa y checklist de revisión. Incluye editor de texto, conteo de palabras y borrado/reinicio.
+- Cada actividad tiene botón para cambiar tarea y envía el contexto junto con la respuesta al feedback de OmegaX.
+- Las respuestas de listening/reading/writing se guardan como notas de estudio; los audios/transcripciones de speaking/pronunciation siguen en grabaciones.
+- Al cambiar de nivel o actividad se reinician los estados correspondientes; la reproducción de listening se detiene al cambiar de tarea/nivel.
+
+### Evaluación del feedback
+- Listening: idea principal, detalles, inferencia, confusiones entre datos y soporte del guion. Aceptar paráfrasis válidas.
+- Reading: comprensión global/detallada, inferencia y evidencia del pasaje. Aceptar paráfrasis y no exigir repetición literal.
+- Writing: cumplimiento de tarea, organización, cohesión, gramática, vocabulario y registro. Priorizar dos patrones y preservar la intención del alumno.
+- El texto del estudiante se marca explícitamente como contenido no confiable, no instrucciones.
+
+### Límites conocidos
+- El listening usa TTS del navegador sobre guiones originales. No hay todavía biblioteca de audios grabados con voces/acento variados ni medición acústica.
+- Las actividades actuales son un primer banco pequeño: dos por habilidad y nivel; no reemplazan el curso completo ni un diagnóstico MCER validado.
+- No hay aún seguimiento longitudinal por destreza, revisión espaciada, rúbrica calibrada ni informes de progreso.
+- Pruebas nuevas añadidas al archivo estático; ejecutar suite, TypeScript, ESLint, build y QA Chrome antes de declarar listo.
+
+### Siguiente trabajo recomendado
+1. Probar visualmente los cinco modos y seis niveles, incluida pausa/reproducción y cambio de actividad.
+2. Expandir listening con grabaciones originales reales solo si se dispone de material autorizado/gratuito; mantener TTS como fallback honesto.
+3. Añadir una rúbrica consistente y no certificadora por habilidad, que cite evidencia y no genere puntajes ficticios.
+4. Guardar progreso por habilidad con consentimiento y señales reversibles; usar el historial para elegir el siguiente ejercicio.
+5. Llevar estrategias del tutor al tablero: pronunciación/estructura, evidencia textual, esquema de ideas, organización de párrafos y corrección progresiva.

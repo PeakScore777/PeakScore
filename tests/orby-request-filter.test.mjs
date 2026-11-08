@@ -4623,7 +4623,7 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(liveToolsSource, /Exact operation: focus, erase, replace, append-block or append-strokes/);
   assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus or append-strokes/);
 
-  assert.match(liveToolsSource, /pointIndex: \\{ type: Type\\.NUMBER, format: "int32", minimum: 0, maximum: 39/);
+  assert.match(liveToolsSource, /pointIndex: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 39/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
 
   assert.match(realtimeSessionSource, /puedes incluir pointIndex, el índice desde cero de uno de sus puntos existentes/);
@@ -4640,11 +4640,11 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   assert.match(boardComponentSource, /data-orby-teacher-focus=\{stroke\.id\}/);
   assert.match(boardComponentSource, /focus\?\.strokeId === stroke\.id/);
 
-  assert.match(boardComponentSource, /focus\\.pointIndex/);
-  assert.match(boardComponentSource, /data-orby-focus-point=\\{focusIndex\\}/);
+  assert.match(boardComponentSource, /focus\.pointIndex/);
+  assert.match(boardComponentSource, /data-orby-focus-point=\{focusIndex\}/);
   assert.match(boardComponentSource, /orby-board-focus-ring/);
   assert.match(boardComponentSource, /orby-board-focus-dot/);
-  assert.match(boardComponentSource, /Math\\.floor\\(stroke\\.points\\.length \\/ 2\\)/);
+  assert.match(boardComponentSource, /Math\.floor\(stroke\.points\.length \/ 2\)/);
   assert.match(boardComponentSource, /typeof board\.teacherFocus\?\.elementId === "string"/);
   assert.match(boardComponentSource, /orby-board-layout-stage-focused/);
   assert.match(boardComponentSource, /key=\{\x60\$\{focus\.strokeId\}:\$\{focus\.revision\}\x60\}/);

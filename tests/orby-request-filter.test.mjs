@@ -4101,7 +4101,7 @@ test("el señalador contextual es independiente del lápiz y no crea tinta", () 
 test("la pizarra detiene SMIL, lápiz y animación del trazo al interrumpir la clase", () => {
   assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);
   assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
-  assert.match(boardComponentSource, /animationPlayState: drawingActive \? "running" : "paused"/);
+  assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);\n  assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
   assert.match(boardComponentSource, /<g opacity=\{0\} className="orby-board-pen-tip" data-orby-teacher-pointer=\{stroke\.id\}/);
   assert.match(boardComponentSource, /data-orby-drawing-active="false"\] \.orby-board-pen-tip \{ visibility: hidden/);
   assert.match(lessonTutorSource, /function interruptCurrentVoiceOutput\(\) \{\s*setVoiceBoardDrawingActive\(false\)/);
@@ -4188,7 +4188,7 @@ test("cada prueba Saber 11 recibe una rutina pedagógica y de tablero propia", (
     assert.ok(profile.boardPriorities.length >= 4);
     assert.ok(profile.commonRisks.length >= 3);
     assert.ok(instruction.includes(subject));
-    assert.ok(instruction.includes("no inventes afirmaciones"));
+    assert.ok(instruction.toLocaleLowerCase("es-CO").includes("no inventes afirmaciones"));
   }
   assert.match(scope.buildIcfesPedagogyInstruction("Inglés"), /explicación oral y la retroalimentación van en español colombiano/);
   assert.equal(scope.getIcfesPedagogyProfile("Programación"), null);

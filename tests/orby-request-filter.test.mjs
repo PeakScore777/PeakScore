@@ -4308,6 +4308,10 @@ test("clear-focus retira solo el señalador y conserva intactos bloques, tinta y
   }), null, "clear-focus no acepta un target: debe retirar solo el foco activo");
   assert.equal(boardActions.sanitizeOrbyBoardAction({
     operation: "clear-focus", turnGeneration: 7, targetId: "nucleus",
+  }), null, "clear-focus no debe aceptar subtargets");
+
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "clear-focus", turnGeneration: 7, targetId: "nucleus",
   }), null, "clear-focus no debe recibir subtargets");
 });
 
@@ -4411,6 +4415,32 @@ test("el foco interno rechaza targets ajenos, etapas de texto y combinaciones am
   assert.equal(boardActions.applyOrbyBoardAction(board, {
     operation: "focus", turnGeneration: 7, elementId: "title", targetId: "node_a",
   }), null);
+  const graphBoard = {
+    ...board,
+    visuals: [{
+      type: "graph", title: "Datos", xLabel: "x", yLabel: "y",
+      xMin: 0, xMax: 10, yMin: 0, yMax: 10,
+      points: [{ x: 0, y: 1 }, { x: 10, y: 9 }], kind: "line",
+    }],
+  };
+  assert.equal(boardActions.applyOrbyBoardAction(graphBoard, {
+    operation: "focus", turnGeneration: 7, elementId: "visual_stage", targetId: "point_1",
+  }), null, "una gráfica sin IDs estables no debe aceptar un target inventado");
+
+  const cellBoard = {
+    ...board,
+    visuals: [{
+      type: "cell", title: "Célula animal", cellType: "animal",
+      organelles: [
+        { id: "nucleus", kind: "nucleus", x: 50, y: 50, label: "Núcleo" },
+        { id: "membrane", kind: "membrane", x: 50, y: 12, label: "Membrana" },
+      ],
+    }],
+  };
+  assert.equal(boardActions.applyOrbyBoardAction(cellBoard, {
+    operation: "focus", turnGeneration: 7, elementId: "visual_stage", targetId: "membrane",
+  }), null, "la membrana exterior no se puede señalar como objeto interno separado todavía");
+
   assert.equal(boardActions.sanitizeOrbyBoardAction({
     operation: "focus", turnGeneration: 7, strokeId: "stroke1", targetId: "node_a",
   }), null);

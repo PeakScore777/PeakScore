@@ -287,6 +287,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [voiceMuted, setVoiceMuted] = useState(false);
   const [workspaceMode, setWorkspaceMode] = useState<"chat" | "voice">("chat");
   const [voiceStatus, setVoiceStatus] = useState("Preparando conexión…");
+  const [voiceBoardDrawingActive, setVoiceBoardDrawingActive] = useState(true);
   const [liveTranscript, setLiveTranscript] = useState("");
   const voiceModeRef = useRef(false);
   const voiceFallbackModeRef = useRef(false);
@@ -1510,6 +1511,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     voiceStartupAbortRef.current?.abort();
     voiceStartupAbortRef.current = null;
     voiceModeRef.current = false;
+    setVoiceBoardDrawingActive(false);
     clearPendingOrbyTeachingBoard();
     voiceTeachingBoardRef.current = null;
     voiceBargeInPendingRef.current = false;
@@ -2033,6 +2035,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   }
 
   function publishOrbyTeachingBoardSnapshot(board: OrbyBoardData) {
+    setVoiceBoardDrawingActive(true);
     voiceTeachingBoardRef.current = board;
     const assistantId = voiceAssistantMessageIdRef.current ?? ("voice-" + Date.now());
     voiceAssistantMessageIdRef.current = assistantId;
@@ -2535,6 +2538,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // response watchdog while Orby is still speaking.
         setVoiceStatus("Orby está hablando…");
       } else {
+        setVoiceBoardDrawingActive(false);
         cancelPendingOrbyKnowledgeRequests();
         clearVoiceResponseWatchdog();
         // A new microphone activity can arrive before Live has produced its
@@ -5241,7 +5245,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   {message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current && !voiceResponseDoneRef.current && <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500"/> EN VIVO</span>}
                 </div>
                 <div className="break-words text-[15px] leading-7 sm:text-base" aria-live={message.role === "assistant" && voiceMode && message.id === voiceAssistantMessageIdRef.current ? "polite" : undefined} aria-atomic="false">{renderTutorContent(message.content)}</div>
-                {message.board && <OrbyBoard board={message.board} />}
+                {message.board && <OrbyBoard board={message.board} drawingActive={message.id === voiceAssistantMessageIdRef.current && voiceBoardDrawingActive} />}
                 {message.boardPersistenceWarning && <p role="status" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">{message.boardPersistenceWarning}</p>}
                 {message.sources && message.sources.length > 0 && <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-700" aria-label="Fuentes públicas consultadas">
                   <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">Fuentes públicas de apoyo</p>
@@ -5303,7 +5307,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
-                  <OrbyBoard board={activeVoiceAssistantMessage.board} />
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} drawingActive={voiceBoardDrawingActive} />
                 </div>
               : <div className="orby-class-empty mx-auto flex min-h-[280px] h-full max-w-5xl flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 px-6 text-center text-slate-500">
                   <BookOpen className="mb-3 h-8 w-8 text-orange-500/70" />

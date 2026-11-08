@@ -4,7 +4,7 @@ type OptionalActionMeta = { actionId?: string; sequence?: number; turnGeneration
 type RequiredActionMeta = { actionId: string; sequence: number; turnGeneration: number; dependsOn?: string[] };
 
 export type OrbyBoardAction =
-  | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; label?: string })
+  | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; pointIndex?: number; label?: string })
   | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; label?: string })
   | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })
   | (OptionalActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
@@ -184,14 +184,26 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
   if (raw.operation === "focus") {
     const hasStrokeId = raw.strokeId !== undefined;
     const hasElementId = raw.elementId !== undefined;
+    const hasPointIndex = raw.pointIndex !== undefined;
     if (hasStrokeId === hasElementId) return null;
     if ((hasStrokeId && !safeId(raw.strokeId)) || (hasElementId && !safeId(raw.elementId))) return null;
+    // pointIndex selects an existing point from a teacher stroke; it is not a
+    // free-form coordinate. Element focus remains stage-level and has no index.
+    if (hasPointIndex && (!hasStrokeId || hasElementId
+      || typeof raw.pointIndex !== "number" || !Number.isInteger(raw.pointIndex)
+      || raw.pointIndex < 0 || raw.pointIndex > 39)) return null;
     if (raw.label !== undefined && typeof raw.label !== "string") return null;
     const label = raw.label === undefined
       ? ""
-      : raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48);
+      : raw.label.replace(/[<>\\u0000-\\u001f]/g, " ").replace(/\\s+/g, " ").trim().slice(0, 48);
     return hasStrokeId
-      ? { ...meta, operation: "focus", strokeId: raw.strokeId as string, ...(label ? { label } : {}) }
+      ? {
+          ...meta,
+          operation: "focus",
+          strokeId: raw.strokeId as string,
+          ...(hasPointIndex ? { pointIndex: raw.pointIndex as number } : {}),
+          ...(label ? { label } : {}),
+        }
       : { ...meta, operation: "focus", elementId: raw.elementId as string, ...(label ? { label } : {}) };
   }
   if (raw.operation === "erase") {
@@ -291,10 +303,14 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
       };
     }
     if (!existsExactlyOnce(action.strokeId)) return null;
+    const targetStroke = sketches.flatMap((visual) => visual.strokes)
+      .find((stroke) => stroke.id === action.strokeId);
+    if (!targetStroke || (action.pointIndex !== undefined && action.pointIndex >= targetStroke.points.length)) return null;
     return {
       ...board,
       teacherFocus: {
         strokeId: action.strokeId,
+        ...(action.pointIndex !== undefined ? { pointIndex: action.pointIndex } : {}),
         revision,
         ...(action.label ? { label: action.label } : {}),
       },

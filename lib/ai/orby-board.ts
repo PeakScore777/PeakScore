@@ -94,6 +94,33 @@ export function getOrbySketchStrokeTiming(
   };
 }
 
+/**
+ * A small handwriting motion profile shared by the ink and the moving pen.
+ * The pen accelerates gently after each lift, travels naturally through the
+ * middle of a stroke, and eases out before lifting. Keeping both SMIL tracks
+ * on the same profile prevents the nib from drifting away from the ink.
+ */
+export function getOrbySketchMotionProfile(points: readonly { x: number; y: number }[]) {
+  let turnRadians = 0;
+  for (let index = 2; index < points.length; index += 1) {
+    const a = points[index - 2];
+    const b = points[index - 1];
+    const c = points[index];
+    const first = Math.atan2(b.y - a.y, b.x - a.x);
+    const second = Math.atan2(c.y - b.y, c.x - b.x);
+    const delta = Math.atan2(Math.sin(second - first), Math.cos(second - first));
+    turnRadians += Math.abs(delta);
+  }
+  const complexity = Math.min(1, turnRadians / (Math.PI * 2));
+  const middle = (0.28 + complexity * 0.08).toFixed(2);
+  const late = (0.78 + complexity * 0.06).toFixed(2);
+  return {
+    keyTimes: `0;${middle};${late};1`,
+    // Gentle acceleration, a readable middle pass, and a soft pen lift.
+    keySplines: "0.42 0 1 1;0 0 1 1;0 0 0.58 1",
+  };
+}
+
 export type OrbySketchStroke = {
   id: string;
   points: Array<{ x: number; y: number }>;

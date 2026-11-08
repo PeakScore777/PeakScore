@@ -643,3 +643,7 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Estado Supabase comprobado: la tabla existe, RLS habilitado, 0 filas y 0 políticas en pg_policies. El endpoint GET usa supabaseAdmin con filtro explícito por user_id autenticado; no dar acceso directo desde navegador.
 - Los roleplays Live no generan señales automáticamente aún: la señal se crea cuando el alumno envía una práctica desde English Studio para feedback.
 - Suite, TypeScript, ESLint, build y QA de navegador siguen pendientes; Vercel reporta build-rate-limit.
+
+- **Separación importante:** un `learningSkill` válido activa solo la memoria personal de señales de esa destreza; no fuerza por sí mismo búsqueda vectorial/grafo conceptual en Orby Lab. La búsqueda académica habitual conserva su detector independiente. Así, una corrección de Reading/Writing no provoca búsquedas de documentos del Lab sin necesidad.
+- Si una consulta además requiere material académico por su propia intención, la búsqueda se limita a Inglés cuando la skill activa es de English Studio.
+- Inventario estático actual: 257 tests nombrados, 0 duplicados; no ejecutados.

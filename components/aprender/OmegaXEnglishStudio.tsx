@@ -347,7 +347,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         streamRef.current = null;
         recorderRef.current = null;
         const audio = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        const duration = Math.max(1, Math.min(60, Math.round((Date.now() - startRef.current) / 1000)));
+        const duration = Math.max(1, Math.min(60, Math.round((performance.now() - startRef.current) / 1000)));
         setSeconds(duration);
         if (audio.size < 1024) {
           setRecording(false);
@@ -358,11 +358,11 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         setAudioUrl(URL.createObjectURL(audio));
         setRecording(false);
       };
-      startRef.current = Date.now();
+      startRef.current = performance.now();
       recorder.start(500);
       setRecording(true);
       timerRef.current = window.setInterval(() => {
-        const elapsed = Math.min(60, Math.floor((Date.now() - startRef.current) / 1000));
+        const elapsed = Math.min(60, Math.floor((performance.now() - startRef.current) / 1000));
         setSeconds(elapsed);
         if (elapsed >= 60 && recorder.state !== "inactive") recorder.stop();
       }, 250);

@@ -164,7 +164,7 @@ function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Ex
             <path d="M -5.2 -1.25 L 2.8 -1.25 L 5.2 0 L 2.8 1.25 L -5.2 1.25 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.42" strokeLinejoin="round"/>
             <path d="M -2.8 -1.1 L -2.8 1.1 M -3.8 -1.1 L -3.8 1.1" stroke="#78350f" strokeWidth="0.25"/>
             <path d="M 4.2 -0.72 L 5.2 0 L 4.2 0.72 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.25"/>
-            <animateMotion path={path} dur={`${duration}s`} begin={animationReady ? `${beginTime}s` : "indefinite"} rotate="auto" calcMode="spline" keyTimes={motion.keyTimes} keySplines={motion.keySplines} fill="freeze"/>
+            <animateMotion path={path} dur={`${duration}s`} begin={animationReady ? `${beginTime}s` : "indefinite"} rotate="auto" calcMode="spline" keyPoints={motion.keyPoints} keyTimes={motion.keyTimes} keySplines={motion.keySplines} fill="freeze"/>
             <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.96;1" dur={`${duration}s`} begin={animationReady ? `${beginTime}s` : "indefinite"} fill="freeze"/>
           </g>
           {stroke.label && stroke.labelX !== undefined && stroke.labelY !== undefined

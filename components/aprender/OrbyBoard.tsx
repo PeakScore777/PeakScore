@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 
 import { useId } from "react";
+import { Eraser, MousePointer2, PenLine } from "lucide-react";
 import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-board";
 
 const colors = {
@@ -421,6 +422,12 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
         <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Clase en vivo</h3></div>
         <span className="truncate text-right text-xs font-semibold text-slate-700 sm:text-sm">{board.title}</span>
       </header>
+      <div className="flex items-center justify-center gap-2 border-b border-slate-100 bg-white px-3 py-2" aria-label="Herramientas de Orby">
+        <span className="mr-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Orby enseña</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-semibold text-orange-700" title="Orby dibuja los trazos"><PenLine className="h-3.5 w-3.5"/> Dibujar</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-semibold text-slate-600" title="Orby señala el concepto mientras explica"><MousePointer2 className="h-3.5 w-3.5"/> Señalar</span>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-semibold text-slate-600" title="Orby corrige o limpia sus trazos"><Eraser className="h-3.5 w-3.5"/> Borrar</span>
+      </div>
       <div className="mx-auto min-h-[60vh] max-w-6xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-10 sm:py-10">
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;

@@ -4150,7 +4150,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                 resumedSetup,
                 new Promise<never>((_, reject) => {
                   setupTimeoutId = window.setTimeout(
-                    () => reject(new Error("Orby tardó demasiado en restaurar el contexto de voz.")),
+                    () => reject(new Error("${assistantLabel} tardó demasiado en restaurar el contexto de voz.")),
                     10_000,
                   );
                 }),
@@ -5634,7 +5634,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                     })}
                   </div> : <div className="mt-5 rounded-lg border border-dashed border-[#e7ded3] px-5 py-10 text-center"><p className="text-sm font-semibold text-slate-900">Aún no hay observaciones suficientes</p><p className="mt-2 text-xs leading-5 text-slate-600">Cuando {assistantLabel} identifique una dificultad o una comprensión clara en una conversación, aparecerá aquí una sugerencia para adaptar el siguiente ejercicio.</p></div>}
                 </section>
-                <div className="rounded-xl border border-[#eee6dc] bg-white p-5 sm:p-6"><p className="orby-pixel-label text-[8px] text-orange-700">RECENT ACTIVITY</p><h3 className="mt-3 text-lg font-semibold text-slate-900">Continúa construyendo tu biblioteca</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Guarda las explicaciones que te ayuden a comprender un concepto y los temas que quieras reforzar. Orby los mantendrá organizados en tu cuenta.</p><div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={()=>setLearningView("notes")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Ver mis apuntes</button><button type="button" onClick={()=>setLearningView("topics")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Ver temas guardados</button><button type="button" onClick={()=>setLearningView("storage")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Administrar imágenes</button></div></div>
+                <div className="rounded-xl border border-[#eee6dc] bg-white p-5 sm:p-6"><p className="orby-pixel-label text-[8px] text-orange-700">RECENT ACTIVITY</p><h3 className="mt-3 text-lg font-semibold text-slate-900">Continúa construyendo tu biblioteca</h3><p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Guarda las explicaciones que te ayuden a comprender un concepto y los temas que quieras reforzar. {assistantLabel} los mantendrá organizados en tu cuenta.</p><div className="mt-5 flex flex-wrap gap-2"><button type="button" onClick={()=>setLearningView("notes")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Ver mis apuntes</button><button type="button" onClick={()=>setLearningView("topics")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Ver temas guardados</button><button type="button" onClick={()=>setLearningView("storage")} className="rounded-lg border border-[#e7ded3] px-3 py-2 text-xs font-medium text-[#d1d5db] hover:border-orange-200">Administrar imágenes</button></div></div>
               </div>
             ) : (
               <div>

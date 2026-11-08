@@ -4254,6 +4254,7 @@ test("las acciones incrementales de pizarra validan ID, secuencia y dependencias
     operation: "append-block",
     actionId: "write-1",
     sequence: 1,
+    turnGeneration: 7,
     elementId: "nucleus-note",
     block: { type: "text", text: "El núcleo contiene el ADN." },
     position: { x: 6, y: 18, width: 24, height: 14 },
@@ -4272,6 +4273,7 @@ test("las acciones incrementales de pizarra validan ID, secuencia y dependencias
     operation: "append-block",
     actionId: "write-old",
     sequence: 1,
+    turnGeneration: 7,
     elementId: "old-note",
     block: { type: "text", text: "Texto antiguo." },
     position: { x: 6, y: 18, width: 24, height: 14 },
@@ -4284,6 +4286,7 @@ test("las acciones incrementales de pizarra validan ID, secuencia y dependencias
     operation: "append-strokes",
     actionId: "draw-2",
     sequence: 2,
+    turnGeneration: 7,
     dependsOn: ["missing-action"],
     elementId: "sketch-stage",
     strokes: [{ id: "nucleus-outline", points: [{ x: 20, y: 20 }, { x: 40, y: 20 }], tone: "ink", width: 1.2 }],
@@ -4292,9 +4295,22 @@ test("las acciones incrementales de pizarra validan ID, secuencia y dependencias
   assert.equal(missingDependency.accepted, false);
   assert.equal(missingDependency.reason, "dependency_not_applied");
 
-  const nextGeneration = boardActions.evaluateOrbyBoardActionSequence(accepted.nextState, first, 8);
+  const staleGeneration = boardActions.evaluateOrbyBoardActionSequence(accepted.nextState, first, 8);
+  assert.equal(staleGeneration.accepted, false);
+  assert.equal(staleGeneration.reason, "wrong_generation");
+
+  const newTurnAction = boardActions.sanitizeOrbyBoardAction({
+    operation: "append-block",
+    actionId: "write-8",
+    sequence: 1,
+    turnGeneration: 8,
+    elementId: "new-turn-note",
+    block: { type: "text", text: "Nuevo turno." },
+    position: { x: 6, y: 18, width: 24, height: 14 },
+  });
+  const nextGeneration = boardActions.evaluateOrbyBoardActionSequence(accepted.nextState, newTurnAction, 8);
   assert.equal(nextGeneration.accepted, true);
-  assert.deepEqual(nextGeneration.nextState.actionIds, ["write-1"]);
+  assert.deepEqual(nextGeneration.nextState.actionIds, ["write-8"]);
 });
 
 test("append-block y append-strokes modifican una sola pizarra espacial sin perder tinta previa", () => {
@@ -4321,6 +4337,7 @@ test("append-block y append-strokes modifican una sola pizarra espacial sin perd
     operation: "append-block",
     actionId: "write-1",
     sequence: 1,
+    turnGeneration: 7,
     elementId: "nucleus-note",
     block: { type: "text", text: "El núcleo contiene el ADN." },
     position: { x: 5, y: 20, width: 24, height: 12 },
@@ -4337,6 +4354,7 @@ test("append-block y append-strokes modifican una sola pizarra espacial sin perd
     operation: "append-strokes",
     actionId: "draw-2",
     sequence: 2,
+    turnGeneration: 7,
     dependsOn: ["write-1"],
     elementId: "sketch-stage",
     strokes: [{ id: "nucleus-outline", points: [{ x: 35, y: 30 }, { x: 50, y: 30 }, { x: 50, y: 45 }], tone: "blue", width: 1.2 }],
@@ -4353,24 +4371,24 @@ test("append-block y append-strokes modifican una sola pizarra espacial sin perd
 
 test("las acciones incrementales rechazan payloads fuera de límites y esquemas inseguros", () => {
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "append-block", actionId: "write-1", sequence: 1, elementId: "note",
+    operation: "append-block", actionId: "write-1", sequence: 1, turnGeneration: 7, elementId: "note",
     block: { type: "text", text: "<script>alert(1)</script>" },
     position: { x: 95, y: 90, width: 20, height: 20 },
   }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "append-strokes", actionId: "draw-1", sequence: 1, elementId: "sketch",
+    operation: "append-strokes", actionId: "draw-1", sequence: 1, turnGeneration: 7, elementId: "sketch",
     strokes: Array.from({ length: 6 }, (_, index) => ({
       id: "stroke-" + index,
       points: [{ x: 10, y: 10 }, { x: 20, y: 20 }],
     })),
   }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "append-block", actionId: "write-1", sequence: 1, elementId: "note",
+    operation: "append-block", actionId: "write-1", sequence: 1, turnGeneration: 7, elementId: "note",
     block: { type: "step", text: "Una etapa" },
     position: { x: 5, y: 5, width: 30, height: 20 },
   }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
-    operation: "append-block", actionId: "write-1", sequence: 1, elementId: "note",
+    operation: "append-block", actionId: "write-1", sequence: 1, turnGeneration: 7, elementId: "note",
     block: { type: "text", text: "Texto" },
     position: { x: 5, y: 5, width: 30, height: 20 },
     dependsOn: ["write-1"],

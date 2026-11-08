@@ -3,7 +3,7 @@
 **Rama inspeccionada:** `feat/founder-intro`  
 **Commit que añadió este informe:** `590f33f06592a118e07d5af6aec054ee4692bad7`. El SHA `99537c472b42fbea3e88cdc152f5b1010b202610` corresponde al `base_commit` reportado para `main` en la comparación consultada; no debe citarse como HEAD de `feat/founder-intro`.  
 **Alcance:** revisión estática cruzada de tests, componentes, rutas API, filtros, proveedor, pizarra, English Studio, memoria de aprendizaje, documentación y estado de CI.  
-**Importante:** esta auditoría no equivale a ejecutar localmente el repositorio ni a QA en navegador. No se modificó código de runtime, `main`, Supabase remoto ni despliegues.
+**Importante:** la auditoría comenzó como revisión estática y derivó en correcciones de runtime y validaciones remotas de GitHub Actions. No se modificó `main`, no se aplicaron migraciones remotas de Supabase ni se desplegó producción. CI no sustituye QA manual de navegador.
 
 ## 1. Resumen ejecutivo
 
@@ -268,3 +268,41 @@ La base de datos y las funciones de búsqueda usan `extensions.vector(768)`; no 
 - Sin despliegue y sin migraciones remotas de Supabase.
 - No se añadieron proveedores de pago, modelos nuevos ni dependencias.
 - No se afirma que TypeScript, ESLint, build o QA de navegador estén aprobados. La segunda CI debe terminar antes de cerrar el lote.
+
+
+## Addendum — cierre de la primera fase correctiva (2026-11-08)
+
+### Defectos de runtime corregidos
+
+- `lib/ai/orby-board-actions.ts`: se corrigió el sanitizador de la etiqueta de foco. Las expresiones con escapes duplicados podían alterar letras, acentos y contenido académico en etiquetas. Se centralizó el saneamiento de la etiqueta con el helper correcto y se añadió una regresión que conserva texto español, siglas y fórmulas, además de retirar etiquetas/controles inseguros.
+- `components/aprender/OrbyBoard.tsx`: TypeScript no podía estrechar el foco opcional al leerlo repetidamente desde `board.teacherFocus`. Se captura una sola vez en `teacherFocus` y se deriva el foco de sketch/visual desde ese valor.
+- `components/aprender/OmegaXEnglishStudio.tsx`: el cronómetro de speaking ahora inicia en `MediaRecorder.onstart`, no al pedir permiso de micrófono. Usa `performance.now()` para medir duración monotónica y evita que el tiempo de permisos se compute como tiempo hablado.
+- `app/api/import.pdf/route.ts`: se encontró un cliente Gemini directo que no pasaba por el router. Se eliminó la construcción del cliente a nivel de módulo, se hizo lazy, se aplicó `isGeminiFreeTierConfigured()` antes de las llamadas y se movió el bloqueo después de autenticación y verificación de rol admin, antes del rate limit y de procesar el documento. La regresión comprueba que el cliente no se construye a nivel superior y que la puerta precede a cualquier operación de importación.
+
+### Protección de coste y privacidad aplicada a todas las rutas de inferencia localizadas
+
+- `lib/ai/provider-free-tier.ts` es `server-only`. Gemini, Groq, LLM7 y Cloudflare requieren credenciales más confirmación operativa de plan sin coste. Las flags están apagadas por defecto en `.env.example`.
+- Gemini requiere además `PEAKSCORE_GEMINI_DATA_USE_APPROVED=true`, separada de la confirmación de no coste. La Free Tier de Gemini declara que el contenido puede usarse para mejorar productos; no se debe activar sin una decisión explícita de privacidad. Esta flag representa aprobación del operador y no sustituye una política/consentimiento legal con los estudiantes.
+- Se protegieron router y fallbacks, tutor, embeddings/perfiles, visión, Live, TTS, Gemini Files, transcripción, worker/cola/cron y automatización administrativa.
+- El cliente OpenAI legado ahora lanza `OPENAI_PROVIDER_DISABLED` y no instancia SDK ni envía solicitudes.
+- `LLM7_BASE_URL` dejó de aceptar overrides; el host se fija para evitar redirección del token.
+- El panel de conocimiento ya no confunde “no hay credenciales” con “hay claves pero no hay proveedor habilitado”. Comunica que los flags son atestaciones operativas y que la cuota restante no se consulta automáticamente.
+- Este mecanismo falla cerrado, pero no consulta por sí mismo el nivel de facturación de una cuenta. Solo activar cada flag tras comprobar la consola real del proveedor. Sin esa verificación, el servicio permanece deshabilitado.
+
+### Estado de validación automatizada
+
+- Run [42536897095](https://github.com/PeakScore777/PeakScore/actions/runs/42536897095), SHA `c31e7c11c5766ab4120fab400ae081a47141f5ce`: **éxito completo** de npm ci, auditoría de dependencias, 260/260 tests, TypeScript, ESLint y `next build`.
+- Run [42537054107](https://github.com/PeakScore777/PeakScore/actions/runs/42537054107), SHA `4a7e21230deb385b94860848cf6bc4d71e7712b9`: **éxito completo** de npm ci, auditoría de dependencias, tests, TypeScript, ESLint y `next build). Este SHA incluye la puerta de uso gratuito/datos en la importación de PDFs y la prueba correspondiente.
+- Después de ese build verde se ajustó el endpoint PDF para autenticar/verificar rol admin antes de devolver el estado de proveedor. El SHA posterior es `a0c859d8d88cf749a55f86bfab30e8697dc351f2`; su pipeline está registrado como run [42537169406](https://github.com/PeakScore777/PeakScore/actions/runs/42537169406). **No se declara verde hasta que esa ejecución termine.**
+- El pipeline pasó por fallos reales de TS y ESLint durante la iteración; ambos se corrigieron y la ejecución `c31e7c11` verificó tests/TS/ESLint/build íntegros.
+
+### Riesgos abiertos que no se deben ocultar
+
+1. **Gemini/Cloudflare/Groq/LLM7:** verificar manualmente nivel de facturación y cuota real. No basta con que la documentación del modelo anuncie una cuota gratuita. Mantener flags en `false` si no se puede certificar el plan.
+2. **Privacidad Gemini Free:** no activar `PEAKSCORE_GEMINI_DATA_USE_APPROVED` sin evaluar que el proveedor pueda usar contenido para mejorar sus productos y documentar la decisión institucional. Si no se aprueba, Gemini permanece bloqueado.
+3. **Retirada de EmbeddingGemma:** Cloudflare anuncia que `@cf/google/embeddinggemma-300m` dejará de responder el **20 de noviembre de 2026** con 410 Gone. El índice actual es de 768 dimensiones; no cambiar a un embedding de dimensión diferente ni mezclar vectores. Confirmar reemplazo y dimensiones, probar búsqueda y planear reindexación; hasta entonces degradar a búsqueda léxica si el vector service se retira.
+4. **QA manual:** no se ha probado la clase Live de extremo a extremo con Chrome, micrófono, interrupción durante voz/trazo, reanudación, transcripción real y reducción de movimiento. Tampoco se ha validado listening con hablantes reales, ni pronunciación acústica: la transcripción no puntúa fonemas.
+5. **Cobertura académica:** 260 tests dan regresiones técnicas, no certifican exactitud pedagógica, completitud curricular ni desempeño con estudiantes. No se han hecho pruebas con estudiantes.
+6. **Supabase:** no se aplicaron migraciones ni se modificaron RLS. La auditoría de memoria sigue dependiendo de probar persistencia con usuarios reales/aislados en un entorno de prueba.
+
+**Estado de esta fase:** rutas principales de inferencia localizadas y protegidas con puertas de coste/privacidad; 260 tests y build completos verdes en SHA `4a7e212`; último ajuste de orden de autenticación en importación PDF pendiente de su CI del SHA `a0c859d`. Sin cambios a `main`, sin despliegues y sin migraciones remotas.

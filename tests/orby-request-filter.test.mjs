@@ -5501,5 +5501,8 @@ test("Live y fallback enseñan inglés CEFR en pizarra y diferencian las cinco �
   assert.match(fallback, /PIZARRA PARA INGLÉS/);
   assert.match(fallback, /1B\. MÉTODO VISUAL POR ÁREA/);
   assert.match(fallback, /el MCER A1–C2 es una ruta general de aprendizaje/);
+  assert.match(live, /SEPARACIÓN INGLÉS GENERAL E INGLÉS SABER 11/);
+  assert.match(fallback, /siete partes del formato de Inglés/);
+  assert.match(fallback, /banco manual y los materiales autorizados existentes/);
 });
 

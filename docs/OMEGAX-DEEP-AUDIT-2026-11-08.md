@@ -179,13 +179,14 @@ Por tanto, los cuatro fallos visibles son falsos positivos de pruebas estáticas
 - Mantener los tests estáticos para contratos críticos, pero mover validaciones de comportamiento a módulos puros ejecutables y pruebas de integración: sanitización, ownership, cuotas, idempotencia, secuencia/cancelación de acciones y paridad Live/fallback.
 - La salida de terminal adjunta se encuentra truncada y no conserva el resumen TAP final. No es correcto inferir el total de aprobadas a partir de ella.
 
-### Hallazgo funcional adicional — política contradictoria de recuperación Live
+### Revisión de recuperación Live — falsa alarma descartada
 
-En `app/api/orby/realtime-session/route.ts`, la instrucción de uso selectivo de Internet dice que la búsqueda se reserva para solicitudes de fuentes, actualidad o verificación externa. Sin embargo, la instrucción siguiente ordena activar `search_orby_learning_knowledge` ante cada pregunta académica nueva y sustantiva. Son reglas incompatibles.
+Una lectura contextual más precisa de `app/api/orby/realtime-session/route.ts` y del esquema `ORBY_LIVE_KNOWLEDGE_TOOLS` aclara que las dos reglas hablan de herramientas distintas:
 
-**Impacto:** Gemini Live puede seguir invocando recuperación para preguntas ordinarias, pese a que la política del proyecto y la documentación dicen que la recuperación es opcional. Esto puede añadir latencia, consumir cuota gratuita y crear ruido cuando el material publicado no está disponible.
+- `USO SELECTIVO DE INTERNET` regula la búsqueda pública externa: solo cuando el estudiante pide fuentes, actualidad o verificación.
+- `ORBY LAB Y CONOCIMIENTO` regula la búsqueda interna de fragmentos privados publicados en el Lab: una llamada no bloqueante ante una pregunta académica nueva y sustantiva, con un máximo de dos por turno cuando el segundo resultado pueda resolver una necesidad pendiente.
 
-**Prioridad:** alta. Unificar la instrucción: enseñar primero con conocimiento fiable; consultar solo si existe material publicado relevante y la recuperación está habilitada, o cuando el estudiante pida fuentes/actualidad/verificación. La búsqueda nunca debe bloquear voz ni clase. No reconstruir el Lab eliminado.
+No existe contradicción semántica entre web pública y recuperación privada interna. **Se descarta el hallazgo anterior** y no se cambia ese prompt. Se mantienen las reglas de no bloquear voz, no afirmar que se recuperó material antes de recibir resultado y continuar enseñando con conocimiento fiable cuando la búsqueda no devuelve contenido. El material eliminado intencionalmente del Lab no se reconstruye.
 
 ### CI y referencia de rama
 
@@ -199,3 +200,71 @@ En `app/api/orby/realtime-session/route.ts`, la instrucción de uso selectivo de
 El tutor por turnos y la transcripción usan Cloudflare Workers AI; el código detiene/degrada ante cuota y no cambia silenciosamente de proveedor. Gemini Live y algunos procesos de embeddings/perfil documental usan Gemini API con comentarios de uso de AI Studio/free tier y manejo de cuota. El código fija el modelo Live y no acepta un override arbitrario, pero **no puede demostrar por sí solo que el proyecto Google tenga la facturación deshabilitada**. Verificar la configuración del proyecto y las cuotas en consola sin activar billing ni provocar consumo deliberado. Mantener el requisito: si no se puede garantizar cuota gratuita, desactivar la ruta afectada y mostrar aviso.
 
 **Estado del addendum:** auditoría estática; no se modificó código de runtime, `main`, Supabase remoto ni despliegues.
+
+## Addendum — ejecución real de CI y nuevas correcciones (2026-11-08)
+
+### Primera ejecución de GitHub Actions
+
+- Run: [42536069416](https://github.com/PeakScore777/PeakScore/actions/runs/42536069416)
+- SHA: `794968c3fd9b94bee0ae451c513a1b4f30c43fe6`.
+- Resultado: `npm run test:orby` falló con **260 pruebas: 251 aprobadas y 9 fallidas**. TypeScript, ESLint y build quedaron omitidos por el orden del workflow.
+- El paso de auditoría de dependencias terminó correctamente. La causa global de fallo fue el conjunto de tests, no Vercel.
+
+### Clasificación de las nueve fallas
+
+Las nueve fueron aserciones que no reflejaban los contratos actuales; no se demostró una regresión funcional en esos nueve puntos:
+
+1. El test de rutas gratuitas todavía exigía la comprobación directa `process.env.GEMINI_API_KEY`; se cambió a exigir `isGeminiFreeTierConfigured()`.
+2. El test de estado de Autopilot esperaba que una API key activara la disponibilidad; se cambió a la puerta de plan gratuito.
+3. El test de `clear-focus` invocaba `sanitizeOrbyBoard` en `orby-board-actions.ts`, módulo que no exporta esa función. La sanitización de tablero pertenece a `orby-board.ts`; se corrigió la referencia del test.
+4. El test de movimiento reducido omitía `!important` presente en la regla CSS real.
+5. El test del lápiz esperaba un `animateMotion` anterior a la incorporación de `calcMode`, `keyPoints`, `keyTimes` y `keySplines`; se actualizó al contrato vigente.
+6. El test del lienzo espacial omitía `elementId={element.id}` al comprobar el render de cada visual.
+7. El test de propagación de retraso espacial esperaba que `Molecule`, `Circuit` y `Cell` no recibieran el prop adicional `focus`; se actualizó para verificar que el foco interno también se propaga.
+8. El test de English Studio dependía de una frase informativa retirada y de una descripción textual antigua del proveedor. Se cambió a verificar que la transcripción se utiliza y que la ruta consulta el guard de Cloudflare.
+9. El test de la guía C2 esperaba una secuencia literal abreviada; el texto vigente incluye explícitamente significados implícitos, matices semánticos, ironía, tono, estilo e idiomaticidad.
+
+La salida completa confirmó además que los tests 258, 259 y 260 añadidos para sanitización y puertas de plan gratuito sí pasaron en esa ejecución.
+
+### Segunda ejecución
+
+- SHA sometido a CI: `5f0bbfe3c81cfe060b8b4e31ebe64bc5225c0502`.
+- Run: [42536456444](https://github.com/PeakScore777/PeakScore/actions/runs/42536456444).
+- Estado al redactar esta actualización: en curso; no se da por aprobada la suite.
+
+### Controles de coste incorporados en esta fase
+
+Se agregó `lib/ai/provider-free-tier.ts` como módulo `server-only`. Los proveedores de inferencia ahora requieren dos condiciones: credenciales existentes y una confirmación explícita de cuenta sin coste:
+
+- `PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED`
+- `PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED`
+- `PEAKSCORE_GROQ_FREE_TIER_CONFIRMED`
+- `PEAKSCORE_LLM7_FREE_TIER_CONFIRMED`
+
+Todos quedan en `false` en `.env.example`. Son declaraciones operativas, no una detección automática del plan comercial. No activar un flag hasta comprobar la consola de la cuenta correspondiente. La falta de confirmación bloquea la solicitud antes de llamar al proveedor.
+
+Rutas y procesos protegidos:
+- Router de Groq, Gemini y LLM7; la selección de fallbacks filtra cualquier proveedor no confirmado.
+- Cloudflare Workers AI, incluyendo tutor textual, imágenes, análisis, embeddings y transcripción.
+- Gemini Live, TTS, análisis visual, embeddings/perfiles y Files API de lectura de PDFs.
+- Worker, reanudación de cola, automatización administrativa y cron de indexación.
+- Cliente OpenAI legado sustituido por un export de compatibilidad que lanza `OPENAI_PROVIDER_DISABLED`; no construye el SDK ni puede generar una solicitud OpenAI.
+- `LLM7_BASE_URL` ya no puede redirigir el token a un host alternativo; el endpoint se fija en el origen aprobado.
+
+Límite de esta protección: el código no puede consultar ni certificar automáticamente el plan de facturación del proveedor. La confirmación debe hacerse manualmente en la consola de cada cuenta. Hasta entonces el comportamiento correcto es fallar cerrado.
+
+### Riesgo de retirada — embeddinggemma-300m
+
+La implementación usa `@cf/google/embeddinggemma-300m`, con salida validada de 768 dimensiones. La documentación oficial de Cloudflare marca el modelo como planned deprecation para **20 de noviembre de 2026** y advierte que desde esa fecha responderá `410 Gone` (`5028`). Cloudflare menciona `@cf/google/embeddinggemma-2` como reemplazo “available soon”:
+
+- Modelo y fecha: https://developers.cloudflare.com/workers-ai/models/embeddinggemma-300m/
+- Aviso de retirada y reemplazo: https://developers.cloudflare.com/changelog/product/workers-ai/
+
+La base de datos y las funciones de búsqueda usan `extensions.vector(768)`; no se debe cambiar de forma aislada a un embedding de dimensión distinta ni mezclar modelos en el mismo espacio vectorial. Plan seguro: verificar que `embeddinggemma-2` esté disponible, confirmar experimentalmente que devuelve 768 dimensiones, comprobar compatibilidad de búsqueda y después decidir si se reindexan los documentos. Si el reemplazo no está listo para la fecha de retirada, usar el proveedor de embeddings ya soportado y confirmado como gratuito, o degradar temporalmente a búsqueda léxica; nunca enviar peticiones a un modelo retirado ni crear facturación como fallback.
+
+### Restricciones y estado de esta tanda
+
+- Solo `feat/founder-intro`; `main` no se ha modificado.
+- Sin despliegue y sin migraciones remotas de Supabase.
+- No se añadieron proveedores de pago, modelos nuevos ni dependencias.
+- No se afirma que TypeScript, ESLint, build o QA de navegador estén aprobados. La segunda CI debe terminar antes de cerrar el lote.

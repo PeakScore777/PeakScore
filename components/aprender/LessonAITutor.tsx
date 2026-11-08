@@ -2236,12 +2236,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         && !voiceDiscardStaleLiveOutputRef.current
         && !voiceBargeInPendingRef.current;
       const allowedTurn = activeAcademicTurn || (canStageBeforeFinalTranscript && Boolean(pendingBoardSnapshot));
-      const allowed = action && sequenceCheck?.accepted && currentBoard && allowedTurn
-        && !acceptedActionInEvent
-        && voiceBoardUpdateCountRef.current < MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
-      if (!allowed) {
-        const reason = !action ? "La operación de pizarra no pasó la validación."
-          : sequenceCheck && !sequenceCheck.accepted
+      if (!action || !sequenceCheck || !sequenceCheck.accepted || !currentBoard || !allowedTurn
+        || acceptedActionInEvent
+        || voiceBoardUpdateCountRef.current >= MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN) {
+        const reason = !action || !sequenceCheck ? "La operación de pizarra no pasó la validación."
+          : !sequenceCheck.accepted
             ? sequenceCheck.reason === "wrong_generation" ? "La acción pertenece a una clase anterior; crea una acción nueva para el turno activo."
               : sequenceCheck.reason === "duplicate" ? "La acción ya fue aplicada; no la repitas."
                 : sequenceCheck.reason === "dependency_not_applied" ? "Primero envía la acción de la que depende este paso."
@@ -2264,7 +2263,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       }
       if (!isCurrent()) return;
       acceptedActionInEvent = true;
-      voiceBoardActionSequenceRef.current = sequenceCheck!.nextState;
+      voiceBoardActionSequenceRef.current = sequenceCheck.nextState;
       voiceBoardUpdateCountRef.current += 1;
       if (activeAcademicTurn) {
         publishOrbyTeachingBoardSnapshot(updatedBoard);

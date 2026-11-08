@@ -414,12 +414,12 @@ function Visual({ visual }: { visual: OrbyBoardVisual }) {
 
 type StudentStroke = { points: Array<{ x: number; y: number }>; mode: "pen" | "highlight" };
 
-export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
+export default function OrbyBoard({ board, storageId }: { board: OrbyBoardData; storageId?: string }) {
   const [tool, setTool] = useState<"pen" | "highlight" | "eraser">("pen");
   const [strokes, setStrokes] = useState<StudentStroke[]>([]);
   const [redoStrokes, setRedoStrokes] = useState<StudentStroke[]>([]);
   const [storageReady, setStorageReady] = useState(false);
-  const storageKey = "peakscore:orby-board-ink:" + encodeURIComponent(board.title || "clase");
+  const storageKey = "peakscore:orby-board-ink:" + encodeURIComponent(storageId || board.title || "clase");
   const [draft, setDraft] = useState<StudentStroke | null>(null);
   const [drawing, setDrawing] = useState(false);
   useEffect(() => {

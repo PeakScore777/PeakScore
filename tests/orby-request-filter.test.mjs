@@ -5402,8 +5402,8 @@ test("OmegaX English Studio reuses the existing free transcription route and own
   assert.match(tutorComponent, /<OmegaXEnglishStudio/);
   assert.match(englishStudio, /Speaking · 60 segundos/);
   assert.match(englishStudio, /Your 60-second challenge/);
-  assert.match(englishStudio, /elapsed >= 60 && recorder\\.state !== "inactive"/);
-  assert.match(englishStudio, /Pronunciation practice/);
+  assert.ok(englishStudio.includes('elapsed >= 60 && recorder.state !== "inactive"'));
+  assert.ok(englishStudio.includes('id: "pronunciation" as const, title: "Pronunciation"'));
   assert.match(englishStudio, /Real-life roleplay/);
   assert.match(englishStudio, /\/api\/orby\/audio\/transcribe/);
   assert.match(englishStudio, /PeakScore conserva solo la transcripción/);
@@ -5657,21 +5657,21 @@ test("direct inference and router fallback paths fail closed without free-tier a
   const tts = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
   const envExample = await readFile(new URL("../.env.example", import.meta.url), "utf8");
 
-  assert.match(router, /isGeminiFreeTierConfigured\\(\\)/);
-  assert.match(router, /isGroqFreeTierConfigured\\(\\)/);
-  assert.match(router, /isLLM7FreeTierConfigured\\(\\)/);
-  assert.match(router, /if \\(candidate === "gemini"\\) return isGeminiFreeTierConfigured\\(\\)/);
-  assert.match(router, /if \\(candidate === "groq"\\) return isGroqFreeTierConfigured\\(\\)/);
-  assert.match(router, /if \\(candidate === "llm7"\\) return isLLM7FreeTierConfigured\\(\\)/);
+  assert.ok(router.includes("isGeminiFreeTierConfigured()"));
+  assert.ok(router.includes("isGroqFreeTierConfigured()"));
+  assert.ok(router.includes("isLLM7FreeTierConfigured()"));
+  assert.ok(router.includes('if (candidate === "gemini") return isGeminiFreeTierConfigured();'));
+  assert.ok(router.includes('if (candidate === "groq") return isGroqFreeTierConfigured();'));
+  assert.ok(router.includes('if (candidate === "llm7") return isLLM7FreeTierConfigured();'));
 
-  assert.match(cloudflare, /if \\(!isCloudflareWorkersAIFreeTierConfigured\\(\\)\\)/);
-  assert.match(cloudflare, /FREE_TIER_NOT_CONFIRMED/);
-  assert.match(knowledge, /if \\(isGeminiFreeTierConfigured\\(\\)\\)/);
-  assert.match(knowledge, /model: "gemini-3\\.1-flash-lite"/);
+  assert.ok(cloudflare.includes("if (!isCloudflareWorkersAIFreeTierConfigured())"));
+  assert.ok(cloudflare.includes("FREE_TIER_NOT_CONFIRMED"));
+  assert.ok(knowledge.includes("if (isGeminiFreeTierConfigured())"));
+  assert.ok(knowledge.includes('model: "gemini-3.1-flash-lite"'));
   assert.doesNotMatch(knowledge, /ORBY_KNOWLEDGE_PROFILE_MODEL/);
-  assert.match(vision, /if \\(!isGeminiFreeTierConfigured\\(\\)\\)/);
-  assert.match(live, /if \\(!isGeminiFreeTierConfigured\\(\\)\\)/);
-  assert.match(tts, /if \\(!isGeminiFreeTierConfigured\\(\\)\\)/);
+  assert.ok(vision.includes("if (!isGeminiFreeTierConfigured())"));
+  assert.ok(live.includes("if (!isGeminiFreeTierConfigured())"));
+  assert.ok(tts.includes("if (!isGeminiFreeTierConfigured())"));
   for (const flag of [
     "PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=false",
     "PEAKSCORE_GROQ_FREE_TIER_CONFIRMED=false",

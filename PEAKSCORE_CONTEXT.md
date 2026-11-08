@@ -617,3 +617,15 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - **Refactor de consistencia 2026-11-08:** el tutor de respaldo importa y reutiliza `buildIcfesPedagogyInstruction(normalizeIcfesSubject(...))` desde `lib/ai/orby-scope.ts`, de modo que Live y fallback comparten los perfiles curriculares en lugar de mantener una segunda lista paralela.
 - Última regresión añadida: `Live y fallback enseñan inglés CEFR en pizarra y diferencian las cinco áreas ICFES`; inventario estático permanece en 253 tests nombrados, sin duplicados.
 - Último commit de código/prueba consultado: `9c09a7e`. Status de Vercel: `build-rate-limit`; consulta de workflow runs no devolvió ejecuciones asociadas. Suite, TypeScript, ESLint, build y QA manual siguen pendientes.
+
+
+## 2026-11-08 — English Studio: Listening, Reading y Writing
+- Se ampliaron los modos del componente `OmegaXEnglishStudio` de `speaking/pronunciation` a cinco destrezas: `speaking`, `pronunciation`, `listening`, `reading`, `writing`.
+- Listening: dos guiones/preguntas originales por cada nivel A1–C2; reproducción mediante voz TTS del navegador, controles de repetir/revelar transcripción y respuesta escrita. El UI informa que no es audio nativo de hablante.
+- Reading: dos textos breves originales por nivel con preguntas y evidencia textual esperada.
+- Writing: dos consignas por nivel, rango de palabras orientativo, checklist y editor con contador.
+- Cada ejercicio envía a OmegaX contexto de tarea y respuesta; el prompt de feedback diferencia comprensión auditiva, lectura y producción escrita, valida paráfrasis y no inventa errores.
+- Guardado: speaking/pronunciation permanece en grabaciones; respuestas de listening/reading/writing se guardan como notas.
+- Se amplió el tipo Mode compartido y se reinicia el TTS cuando cambia nivel/actividad para evitar estados colgados.
+- Nuevo inventario estático tras esta tanda: **255 pruebas nombradas, 0 duplicados**. No se ejecutaron localmente.
+- Pendiente: ejecutar suite/TypeScript/ESLint/build y QA Chrome en los cinco modos. La reproducción de listening es TTS del navegador, no una grabación de acento nativo; no hay todavía progreso longitudinal por habilidad.

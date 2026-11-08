@@ -724,3 +724,22 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - GitHub Actions run 42520586985: https://github.com/PeakScore777/PeakScore/actions/runs/42520586985
 - `npm run test:orby`: **240/240 aprobadas**; TypeScript, ESLint, auditoría de dependencias y Next.js production build: correctos.
 - Pendiente: comparar visualmente el resaltado con voz real en Chrome y ajustar la heurística mediante observación; la CI no mide sincronía auditiva humana.
+
+## 2026-11-08 — sincronización de animación interna con etapas espaciales
+
+### Hallazgo corregido
+- Las visuales SVG se montaban con su `stageDelay` espacial, pero varios `line`/`path` hijos iniciaban su animación al montar. CSS `animation-delay` en el grupo contenedor no se hereda; en consecuencia, el trazo podía terminar mientras la etapa seguía oculta por su transición de entrada.
+- En algunos elementos compuestos (por ejemplo, nodos de diagramas y puntos de gráfica) había animaciones `orby-board-appear` duplicadas en padre e hijo, que también desincronizaban el conjunto.
+
+### Corrección aplicada
+- `lib/ai/orby-board.ts`: helper compartido `getOrbyBoardProgressiveDelay(index)` con retraso escalonado de 90 ms y tope de 630 ms.
+- `components/aprender/OrbyBoard.tsx`: `Visual` propaga el `startDelayMs` del elemento espacial a diagramas, gráficas, vectores, moléculas, circuitos, células, ADN y procesos fisiológicos.
+- Los `line`/`path` que realmente ejecutan `orby-board-draw` reciben directamente el retraso de etapa más su escalonado por elemento; nodos/componentes reciben el mismo retraso en su transición de aparición.
+- Se eliminaron animaciones anidadas redundantes en nodos de diagrama y puntos de gráfica para que la figura se revele como una unidad coherente.
+- Sketch conserva su cola SMIL, pausa/reanudación y punta de lápiz existentes; no se modificó el transporte de audio, karaoke, proveedor ni lógica de interrupción.
+
+### Validación
+- GitHub Actions run 42521925925: https://github.com/PeakScore777/PeakScore/actions/runs/42521925925
+- `npm run test:orby`: **241/241 aprobadas**; TypeScript, ESLint, auditoría de dependencias y Next.js production build: correctos.
+- SHA de código de pizarra verificado: `6faaa500bea535cdcf9c40680a4f9ae8630d0095`; helper/propagación y regresión quedaron en el mismo HEAD validado de la rama.
+- Sigue pendiente QA manual de Chrome con voz Live real para comprobar la sincronía percibida con el audio y las pausas del profesor; CI solo valida contratos y compilación.

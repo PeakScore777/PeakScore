@@ -55,7 +55,7 @@ function getSketchStrokeKey(stroke: OrbySketchStroke): string {
   return `${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`;
 }
 
-function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }>; focus?: { strokeId: string; label?: string; revision: number }; drawingActive: boolean }) {
+function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }>; focus?: { strokeId: string; label?: string; revision: number }; drawingActive: boolean; startDelayMs?: number }) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const scheduledStrokeKeysRef = useRef(new Set<string>());
   const strokeEndTimesRef = useRef(new Map<string, number>());
@@ -86,7 +86,8 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
     const queuedStrokeEnds = [...strokeEndTimesRef.current.values()];
     // Give React one frame to mount the SMIL nodes before the pen starts.
     // Keep a small, deliberate pen-lift pause after every queued stroke.
-    let queueCursor = Math.max(now + 0.06, ...queuedStrokeEnds.map((endAt) => endAt + 0.11));
+    const stageStartTime = now + Math.max(0, startDelayMs) / 1_000;
+    let queueCursor = Math.max(now + 0.06, stageStartTime, ...queuedStrokeEnds.map((endAt) => endAt + 0.11));
     const additions: Array<[string, { beginTime: number; duration: number }]> = [];
     for (const stroke of visual.strokes) {
       const key = getSketchStrokeKey(stroke);
@@ -111,7 +112,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
         return next;
       });
     }
-  }, [drawingActive, visual.strokes]);
+  }, [drawingActive, startDelayMs, visual.strokes]);
 
   const palette = {
     ink: "#252525",
@@ -455,7 +456,7 @@ function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type
   );
 }
 
-function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean }) {
+function Visual({ visual, board, drawingActive, startDelayMs = 0 }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean; startDelayMs?: number }) {
   // Keep hooks unconditional even when the visual primitive changes between snapshots.
   const annotationMarkerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
   const sketchFocus = typeof board.teacherFocus?.strokeId === "string"
@@ -483,7 +484,7 @@ function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; boa
     </svg>;
   }
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
-  if (visual.type === "sketch") return <Sketch visual={visual} focus={sketchFocus} drawingActive={drawingActive}/>;
+  if (visual.type === "sketch") return <Sketch visual={visual} focus={sketchFocus} drawingActive={drawingActive} startDelayMs={startDelayMs}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
   if (visual.type === "vectors") return <Vectors visual={visual}/>;
   if (visual.type === "molecule") return <Molecule visual={visual}/>;
@@ -598,7 +599,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
                           {visual.title && visual.type !== "sketch"
                             ? <h4 className="orby-board-handwriting orby-board-layout-visual-title">{visual.title}</h4>
                             : null}
-                          <Visual visual={visual} board={board} drawingActive={drawingActive}/>
+                          <Visual visual={visual} board={board} drawingActive={drawingActive} startDelayMs={stageDelay}/>
                         </div>
                         : null}
                   </div>

@@ -158,7 +158,7 @@ Los temas de speaking de 60 segundos y las frases modelo de repetición ya se se
 ### Límites conocidos
 - El listening usa TTS del navegador sobre guiones originales. No hay todavía biblioteca de audios grabados con voces/acento variados ni medición acústica.
 - Las actividades actuales son un primer banco pequeño: dos por habilidad y nivel; no reemplazan el curso completo ni un diagnóstico MCER validado.
-- No hay aún seguimiento longitudinal por destreza, revisión espaciada, rúbrica calibrada ni informes de progreso.
+- Existe un primer registro de señales por destreza y un panel de observaciones; todavía no hay tendencias temporales deduplicadas, revisión espaciada, rúbrica MCER calibrada ni informes de progreso.
 - Pruebas nuevas añadidas al archivo estático; ejecutar suite, TypeScript, ESLint, build y QA Chrome antes de declarar listo.
 
 ### Siguiente trabajo recomendado

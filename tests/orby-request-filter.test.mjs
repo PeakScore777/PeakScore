@@ -5506,3 +5506,13 @@ test("Live y fallback enseñan inglés CEFR en pizarra y diferencian las cinco �
   assert.match(fallback, /banco manual y los materiales autorizados existentes/);
 });
 
+test("English Studio usa temas de speaking y frases modelo adaptadas a cada nivel CEFR", async () => {
+  const englishStudio = await readFile(new URL("../components/aprender/OmegaXEnglishStudio.tsx", import.meta.url), "utf8");
+  assert.match(englishStudio, /const TOPICS_BY_LEVEL: Record<CefrLevel, string\[\]>/);
+  assert.match(englishStudio, /const PHRASES_BY_LEVEL: Record<CefrLevel, string\[\]>/);
+  assert.match(englishStudio, /TOPICS_BY_LEVEL\[level\]\[topicIndex % TOPICS_BY_LEVEL\[level\]\.length\]/);
+  assert.match(englishStudio, /PHRASES_BY_LEVEL\[level\]\[phraseIndex % PHRASES_BY_LEVEL\[level\]\.length\]/);
+  assert.match(englishStudio, /new SpeechSynthesisUtterance\(prompt\)/);
+  assert.match(englishStudio, /disabled=\{recording \|\| transcribing \|\| Boolean\(blob\)\}/);
+});
+

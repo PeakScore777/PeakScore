@@ -108,6 +108,7 @@ export type OrbyBoard = {
 
 const MAX_BLOCKS = 8;
 const MAX_VISUALS = 4;
+const MAX_SKETCH_STROKES = 32;
 const MAX_TEXT = 240;
 const MAX_BOARD_BYTES = 18_000;
 
@@ -132,7 +133,7 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
   if (raw.type === "sketch") {
-    if (!Array.isArray(raw.strokes) || raw.strokes.length < 1 || raw.strokes.length > 16) return null;
+    if (!Array.isArray(raw.strokes) || raw.strokes.length < 1 || raw.strokes.length > MAX_SKETCH_STROKES) return null;
     const strokes: OrbySketchStroke[] = [];
     const ids = new Set<string>();
     for (const entry of raw.strokes) {

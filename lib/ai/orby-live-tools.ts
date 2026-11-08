@@ -150,7 +150,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
           type: Type.OBJECT,
           properties: {
             operation: { type: Type.STRING, enum: ["focus", "erase", "replace", "append-block", "append-strokes"], description: "Exact operation: focus, erase, replace, append-block or append-strokes." },
-            turnGeneration: { type: Type.NUMBER, format: "int32", minimum: 0, maximum: 1000000, description: "Required for append operations; echo the exact generation returned by the active board snapshot. Stale generations are rejected." },
+            turnGeneration: { type: Type.NUMBER, format: "int32", minimum: 0, maximum: 1000000, description: "Required for every teacher board action; echo the exact generation returned by the active board snapshot. Stale generations are rejected." },
             actionId: { type: Type.STRING, minLength: "1", maxLength: "24", pattern: "^[a-zA-Z0-9_-]+$", description: "Required for append operations; stable idempotency key unique in this turn." },
             sequence: { type: Type.NUMBER, format: "int32", minimum: 1, maximum: 1000, description: "Required for append operations; strictly increasing action order within the active student turn." },
             dependsOn: { type: Type.ARRAY, maxItems: "5", description: "Optional previously accepted action IDs that must already exist before this action.", items: { type: Type.STRING, minLength: "1", maxLength: "24", pattern: "^[a-zA-Z0-9_-]+$" } },

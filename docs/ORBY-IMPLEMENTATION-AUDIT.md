@@ -480,3 +480,14 @@ La ruta conserva el objeto de error completo para inspeccionar campos anidados. 
 - Regresión amplía la cobertura de palabra larga, punto final, palabra final, texto vacío, duración inválida y no retroceso del índice durante streaming.
 - CI run 42520586985: 240/240 tests, TypeScript, ESLint, dependency audit y `next build` aprobados. https://github.com/PeakScore777/PeakScore/actions/runs/42520586985
 - Requiere QA manual con reproducción de voz real en Chrome; observar si el resaltado se adelanta/atrasa en voz natural, pausas y respuestas largas.
+
+## Auditoría del renderer — desincronización de strokes SVG y spatial stages (2026-11-08)
+
+- **Causa raíz:** `animation-delay` definido en grupos SVG no se hereda por los paths/lines hijos. La transición de la etapa espacial podía ocultar un trazo que ya había completado sus 680 ms de dibujo.
+- **Corregido:** se añadió `getOrbyBoardProgressiveDelay(index)` y se propagó `startDelayMs` desde el layout espacial a las visuales relevantes. Los elementos que ejecutan `orby-board-draw` reciben su propio `animationDelay` con la suma `startDelayMs + stagger`.
+- Diagramas, gráficas, vectores, moléculas, circuitos, células, ADN, anotaciones y procesos fisiológicos ahora inician el contenido animado al llegar su etapa, no al montar toda la pizarra.
+- Eliminadas animaciones duplicadas en elementos anidados de nodos/puntos donde el grupo ya animaba el conjunto.
+- Se conserva el reloj SMIL del sketch y su pausa/reanudación al interrumpir la clase.
+- Regresión cubre valores negativos/NaN/topes del escalonado, propagación del delay y aplicación al trazo SVG real.
+- CI run 42521925925: 241/241 tests, TypeScript, ESLint, dependency audit y Next.js production build aprobados. https://github.com/PeakScore777/PeakScore/actions/runs/42521925925
+- Pendiente QA auditivo/visual manual de Chrome: la CI no certifica percepción humana de sincronización con voz real ni el comportamiento de un dispositivo físico.

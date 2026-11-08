@@ -865,3 +865,32 @@ Workflow `42339106392` terminó con `success`. Pasaron las 130 pruebas de regres
 - TypeScript, ESLint y build Next.js: aprobados.
 - `npm audit`: 0 vulnerabilidades.
 - La normalización de finales de línea en el lector de fixtures solucionó la incompatibilidad de las aserciones estáticas en Windows sin modificar ni aflojar el comportamiento probado.
+
+
+## 2026-11-08 — recuperación de voz Live y fallback (video 16:31)
+
+### Evidencia del video local
+- Video recibido: 75,8 s, Chrome/localhost:3000.
+- Al inicio se observa el diálogo de permiso de micrófono del navegador y el estado de la clase permanece en «Solicitando permiso del micrófono…».
+- Más adelante la clase cambia a «Voz alternativa en espera» sin transcripción, voz ni pizarra.
+- La consola muestra literalmente el warning del SDK `@google/genai` 2.17.1: la autenticación efímera de Live solo está soportada en `v1alpha`, pero el cliente estaba configurado en `v1beta`.
+- También se observa `POST /api/lesson-tutor` con HTTP 503. El video no muestra el cuerpo JSON ni el log servidor de esa respuesta; por tanto, no atribuir ese 503 a una única causa sin evidencia adicional.
+
+### Correcciones en `feat/founder-intro`
+- Emisión del token efímero en `app/api/orby/realtime-session/route.ts`: `v1alpha`.
+- Conexión Live inicial y reconexión del navegador en `components/aprender/LessonAITutor.tsx`: `v1alpha`.
+- El SDK se verificó directamente en el código fuente de la versión instalada `@google/genai@2.17.1`: `src/tokens.ts` documenta soporte v1alpha y `src/live.ts` emite exactamente el warning observado si una sesión con `auth_tokens/` usa otra versión.
+- El fallback por turnos marca `voiceModeRequest` y no intenta guardar el turno desde `/api/lesson-tutor` antes de reproducir audio. El turno de voz se conserva para la ruta idempotente `/api/orby/realtime-turn` al completar la reproducción. Los turnos de texto normales conservan su guardado atómico existente.
+- Las pruebas se actualizaron para proteger la versión compatible, la reconexión y el orden de persistencia.
+
+### Validación CI
+- SHA de código validado: `a67b78d937c864a5bab616b2149b37be432a4194`.
+- Workflow `42501757928`: success.
+- Orby: 233/233 pruebas; 0 fallidas.
+- TypeScript, ESLint y build Next.js: aprobados.
+- `npm audit`: 0 vulnerabilidades.
+
+### Pendiente de producto (no simular como resuelto)
+- La conexión Live y el fallback todavía requieren prueba manual en Chrome con permiso de micrófono concedido y audio real de ida/vuelta.
+- El 503 del fallback debe confirmarse mediante el JSON de respuesta de `/api/lesson-tutor` o el log del servidor. El código puede responder 503, entre otros casos, por fallo del limitador RPC de Supabase, error de actualización de materia o configuración/autenticación del motor Cloudflare. El video solo acredita el status HTTP, no cuál de esos casos ocurrió.
+- No se modificó el diseño, CSS, tablero, colores o renderer. No se tocó `main`, producción, cuotas, secretos ni Supabase remoto; no se desplegó.

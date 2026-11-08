@@ -248,3 +248,23 @@ Pruebas necesarias:
 **Correcciones guardadas:** commit `3f2fbd440ba0f30e38770670632b64bb2e938975`.
 
 **Resultado posterior:** el check de Vercel para el commit corregido muestra `build-rate-limit`, y no se encontró una nueva ejecución de despliegue para ese SHA. Por tanto, las aserciones anteriores están corregidas en el código de pruebas, pero el build posterior continúa **sin verificar**. No declarar la suite verde.
+
+
+### Ajustes finales de paleta, rótulos y trazos — 7 de noviembre de 2026
+
+- La tinta principal y los contornos del tablero usan negro oscuro; `blue` usa azul; `red` y el tono heredado `accent` usan rojo para evitar que el contrato antiguo vuelva a introducir naranja en la escritura.
+- Los textos SVG del tablero heredan la familia manuscrita de los bloques escritos. Se conserva la legibilidad de diagramas y etiquetas.
+- La punta del lápiz permanece visible hasta el 96 % del recorrido y solo se desvanece al terminar.
+- El contrato de corrección `apply_orby_board_action` ahora documenta explícitamente los tonos admitidos, para que Orby no cambie la paleta al corregir un trazo.
+- Se reforzaron las pruebas estáticas para verificar paleta, rótulos y finalización del lápiz.
+
+**Commits relevantes de la ronda:** `9dae15f`, `b38dc04`, `e7d6e22`, `8788147`, `ae1277d`, `31224b0`, `5e62d00`, `2ea808a`, `8aad8c9`, `8550daf`, `919300f`, `3f2fbd4`, `aa5521d`, `6806471`, `8044280`, `dea8391`, `9dd8d85`, `e02c4f0`.
+
+**Validación al último commit de código:** el check Vercel sigue mostrando `build-rate-limit`; no existe una ejecución nueva de GitHub Actions visible. La última compilación ejecutada terminó por pruebas antiguas desactualizadas, que se corrigieron posteriormente. El código actual permanece sin confirmación de build verde.
+
+
+### Estado de la última iteración
+
+- Los checks que fallaron en el primer intento se identificaron en logs de Vercel y se actualizaron: aserción sensible a mayúsculas/minúsculas, expectativas CSS retiradas al migrar el trazo a SMIL, y expectativas de pausa CSS sustituidas por pausa del reloj SVG.
+- Se amplió además el esquema de la acción de corrección del profesor para conservar tonos negro/azul/rojo.
+- La inspección del estado del commit más reciente sigue devolviendo `build-rate-limit`; no hay un nuevo resultado de compilación, TypeScript, ESLint ni suite completa. No declarar la rama lista para producción.

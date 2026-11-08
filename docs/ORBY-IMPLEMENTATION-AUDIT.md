@@ -441,3 +441,14 @@ La ruta conserva el objeto de error completo para inspeccionar campos anidados. 
 - Cloudflare Workers AI — asignación de 10.000 neuronas gratis al día y reinicio UTC: https://developers.cloudflare.com/workers-ai/platform/pricing/
 - Anthropic — facturación de la API de Claude mediante créditos prepagados: https://support.claude.com/es/articles/8977456-como-pago-mi-uso-de-la-api-de-claude
 - Anthropic — límites variables del plan gratuito de Claude.ai y reinicio de cinco horas: https://support.claude.com/es/articles/8114491-comienza-con-claude
+
+
+## Auditoría incremental — prevención de solapamientos en append-block (2026-11-08)
+
+- **Corregido:** `applyOrbyBoardAction(append-block)` comprueba el rectángulo nuevo frente a cada `layout.elements` existente usando intersección estricta de rectángulos. Un contacto de borde sin área compartida se permite; cualquier intersección de área se rechaza.
+- La protección comprende bloques y visuales, por lo que un bloque nuevo no puede cubrir un sketch/diagram/graph existente ni texto previo.
+- Las etiquetas propias del sketch siguen usando la geometría/labels internos del SVG; no requieren un `append-block` superpuesto.
+- El manejador Live devuelve una razón específica para bloque superpuesto o límite de layout, en lugar del mensaje incorrecto de ID de tinta inexistente.
+- Regresiones nuevas cubren rechazo de intersección, aceptación de borde adyacente y mensaje de error al modelo.
+- **Alcance conservador:** no se endureció `sanitizeOrbyBoardLayout` para snapshots existentes, evitando invalidar de forma retroactiva composiciones guardadas. La protección está aplicada a nuevas acciones `append-block`.
+- **No certificado:** tests/TS/lint/build y QA Chrome siguen pendientes; Vercel mantiene `build-rate-limit`.

@@ -210,3 +210,28 @@ Pruebas necesarias:
 - No se ha podido certificar una nueva ejecución completa de tests Orby, TypeScript, ESLint y build tras todas las correcciones. El estado `build-rate-limit` de Vercel no es evidencia de fallo de código ni de aprobación.
 - No se ejecutó QA real de Chrome/micrófono, ni se aplicaron migraciones remotas, ni se desplegó. La configuración Supabase compartida con producción permanece protegida.
 - Próximo orden: (1) reproducir y corregir el sanitizador de anotaciones `undefined`; (2) inspeccionar los guards de sesión/generación y exclusividad del tablero; (3) ejecutar tests, TS, lint y build sobre SHA exacto; (4) prueba real de interrupción, reconexión y dibujo durante voz; (5) revisar la divergencia con `main` por grupos de commits, sin integración automática.
+
+## Auditoría de referencia visual del tutor con pizarra — 2026-11-07
+
+- Se inspeccionó el video de referencia de 42,746 segundos. El requisito visual es una pizarra blanca continua, escritura a mano y construcción incremental de los diagramas con tinta negra, azul y roja.
+- La implementación anterior mezclaba demora por índice del trazo con tiempo SVG, y podía lanzar varios marcadores de lápiz a la vez. También fijaba opacidad desde CSS mientras SMIL manejaba el recorrido.
+- Se sustituyó el esquema de temporización del nuevo renderizador por una cola serial basada en duración geométrica. Cada trazo nuevo se agenda después del trazo pendiente anterior; los IDs ya vistos no vuelven a animarse al recibir snapshots acumulativos.
+- Tinta, punta y etiqueta se programan en el reloj SVG común. La pausa/reanudación de la pizarra afecta ese mismo reloj, evitando correcciones paralelas por tiempo de pared.
+- Se añadieron tonos azul/rojo a tipos, sanitizadores, acciones de corrección y contratos de herramientas Live. Los prompts del tutor por voz y por turnos se alinearon con la misma paleta y secuencia pedagógica.
+- Los bloques visuales dejaron de usar tarjetas de fórmula/paso y se acercaron a escritura manuscrita sobre hoja blanca.
+
+### Riesgos pendientes / límites de certificación
+
+1. La cola se ha revisado estáticamente, pero aún necesita una prueba real de navegador con snapshots muy próximos, cambios/correcciones de IDs, interrupción de audio en mitad del trazo y reanudación. 
+2. SVG SMIL y movimiento reducido requieren QA en Chrome; no declarar accesibilidad ni pausa/reanudación certificadas solo por la inspección del JSX.
+3. La sincronización con el discurso sigue siendo aproximada por la cadencia de llamadas de herramienta, no una sincronización fonética o por timestamp del audio.
+4. No se dispone de una ejecución verde de la suite completa, TypeScript, ESLint ni build para el SHA final de esta ronda.
+5. El check de Vercel consultado para los commits de esta ronda devolvió `build-rate-limit`; no debe interpretarse como error de compilación. No hay evidencia de CI aprobada.
+6. No se hicieron cambios en `main`, despliegues ni migraciones Supabase remotas.
+
+### Próximo orden de validación
+
+- Ejecutar `npm run test:orby` y corregir las regresiones reales sin borrar validaciones útiles.
+- Ejecutar `npx tsc --noEmit`, `npm run lint` y `npm run build` sobre el SHA final.
+- Probar en Chrome: 1 trazo, 10+ trazos, nuevos snapshots durante una animación, corrección/borrado del profesor, interrupción, reanudación, subtítulos y exportación.
+- Comparar visualmente con el video de referencia antes de considerar terminada la mutación.

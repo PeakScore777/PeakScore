@@ -1026,7 +1026,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         .replace(/\s+/g, " ")
         .trim();
       // Use near-maximum endpoint chunks to reduce free-tier requests without truncating content.
-      const chunks = splitOrbySpeechIntoChunks(clean, 480);
+      const chunks = splitOrbySpeechIntoChunks(clean, 880);
       if (!chunks.length) {
         if (isLocalVoiceTurn) finishLocalVoiceReply(localVoiceMessageId);
         resolve();

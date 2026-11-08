@@ -13,12 +13,12 @@ async function compileTypeScriptModuleUrl(relativePath, { stripServerOnly = fals
   if (cached) return cached;
 
   let source = await readFile(absoluteUrl, "utf8");
-  if (stripServerOnly) source = source.replace(/^import\\s+["']server-only["'];?\\s*/m, "");
+  if (stripServerOnly) source = source.replace(/^import\s+["']server-only["'];?\s*/m, "");
 
   // Resolve the app's @/ aliases before putting a module in a data: URL.
   // Node cannot resolve Next.js aliases from data modules, but the Orby
   // board-action tests must execute the real board sanitizer dependency.
-  const aliasSpecifiers = [...source.matchAll(/from\\s+(["'])(@\\/[^"']+)\\1/g)]
+  const aliasSpecifiers = [...source.matchAll(/from\s+(["'])(@\/[^"']+)\1/g)]
     .map((match) => ({ full: match[0], specifier: match[2] }));
   for (const alias of aliasSpecifiers) {
     const dependencyPath = "../" + alias.specifier.slice(2) + ".ts";

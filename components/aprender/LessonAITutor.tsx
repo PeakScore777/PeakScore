@@ -2144,7 +2144,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             accepted: true,
             status: "rendered",
             retryable: false,
-            guidance: "Pizarra visible y actualizada. Continúa hablando con naturalidad; añade la siguiente etapa acumulativa cuando cambie la idea."
+            turnGeneration: activityGeneration,
+            guidance: "Pizarra visible y actualizada. Usa exactamente este turnGeneration en cada acción append del turno. Continúa hablando con naturalidad; añade la siguiente etapa acumulativa cuando cambie la idea."
           },
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
         });
@@ -2162,7 +2163,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             accepted: true,
             status: "queued_for_input_validation",
             retryable: false,
-            guidance: "Instantánea recibida. Continúa la explicación oral; no repitas el dibujo. Se mostrará al validar la pregunta.",
+            turnGeneration: activityGeneration,
+            guidance: "Instantánea recibida. Usa exactamente este turnGeneration para las acciones append de este turno. Continúa la explicación oral; no repitas el dibujo. Se mostrará al validar la pregunta.",
           },
           scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT,
         });
@@ -2228,9 +2230,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!allowed) {
         const reason = !action ? "La operación de pizarra no pasó la validación."
           : sequenceCheck && !sequenceCheck.accepted
-            ? sequenceCheck.reason === "duplicate" ? "La acción ya fue aplicada; no la repitas."
-              : sequenceCheck.reason === "dependency_not_applied" ? "Primero envía la acción de la que depende este paso."
-                : "La secuencia debe ser creciente dentro de la clase activa."
+            ? sequenceCheck.reason === "wrong_generation" ? "La acción pertenece a una clase anterior; crea una acción nueva para el turno activo."
+              : sequenceCheck.reason === "duplicate" ? "La acción ya fue aplicada; no la repitas."
+                : sequenceCheck.reason === "dependency_not_applied" ? "Primero envía la acción de la que depende este paso."
+                  : "La secuencia debe ser creciente dentro de la clase activa."
             : !currentBoard ? "Todavía no existe una pizarra activa."
               : !activeAcademicTurn ? "No hay una pregunta académica validada para modificar la pizarra."
                 : acceptedActionInEvent ? "Envía una sola operación por evento."

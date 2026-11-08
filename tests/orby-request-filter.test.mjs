@@ -4085,3 +4085,12 @@ test("la pizarra detiene SMIL, lápiz y animación del trazo al interrumpir la c
   assert.match(lessonTutorSource, /setVoiceBoardDrawingActive\(true\)/);
   assert.match(lessonTutorSource, /drawingActive=\{voiceBoardDrawingActive\}/);
 });
+
+
+test("el lápiz y la tinta comparten temporización lineal para permanecer sincronizados", () => {
+  assert.match(boardComponentSource, /animationTimingFunction: "linear"/);
+  assert.match(boardComponentSource, /animationDuration: `\$\{duration\}ms`/);
+  assert.match(boardComponentSource, /<animateMotion path=\{path\} dur=\{\x60\$\{duration\}ms\x60\} begin=\{\x60\$\{delay\}ms\x60\}/);
+  assert.match(boardComponentSource, /pathLength="1"/);
+  assert.match(boardComponentSource, /animationDelay: `\$\{delay\}ms`/);
+});

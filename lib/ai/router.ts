@@ -1,6 +1,7 @@
 import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
+import { isGeminiFreeTierConfigured, isGroqFreeTierConfigured, isLLM7FreeTierConfigured } from "@/lib/ai/provider-free-tier";
 
 /* =====================================================
    PROVEEDORES
@@ -267,6 +268,7 @@ interface LLM7ChatResponse {
 }
 
 async function generateWithLLM7(prompt: string, task?: AITask): Promise<{ text: string }> {
+  if (!isLLM7FreeTierConfigured()) throw new AIServiceError("AI_CONFIGURATION");
   const apiKey = process.env.LLM7_API_KEY;
   if (!apiKey) {
     throw new AIServiceError("AI_CONFIGURATION");
@@ -332,6 +334,7 @@ async function generateWithLLM7(prompt: string, task?: AITask): Promise<{ text: 
 ===================================================== */
 
 function getGemini(): GoogleGenAI {
+  if (!isGeminiFreeTierConfigured()) throw new AIServiceError("AI_CONFIGURATION");
   const apiKey =
     process.env.GEMINI_API_KEY;
 
@@ -1315,6 +1318,7 @@ async function generateWithGroq(
   prompt: string,
   task?: AITask
 ): Promise<string> {
+  if (!isGroqFreeTierConfigured()) throw new AIServiceError("AI_CONFIGURATION");
   const apiKey =
     process.env.GROQ_API_KEY;
 
@@ -2084,13 +2088,12 @@ function buildProviderChain(
         primaryProvider,
       ];
 
+  // An API key alone is not proof of a no-charge plan. Only providers explicitly confirmed by the operator may run.
   return Array.from(new Set(providers)).filter((candidate) => {
-    // LLM7 returned HTTP 400 for the implicit Nemotron default in production.
-    // Keep it out of every fallback chain unless the model is explicitly set.
-    if (candidate === "llm7") {
-      return Boolean(process.env.LLM7_ENABLED === "true" && process.env.LLM7_API_KEY && process.env.LLM7_MODEL?.trim());
-    }
-    return true;
+    if (candidate === "gemini") return isGeminiFreeTierConfigured();
+    if (candidate === "groq") return isGroqFreeTierConfigured();
+    if (candidate === "llm7") return isLLM7FreeTierConfigured();
+    return false;
   });
 }
 

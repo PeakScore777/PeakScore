@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isCloudflareWorkersAIFreeTierConfigured } from "@/lib/ai/provider-free-tier";
+
 const WHISPER_MODEL = "@cf/openai/whisper-large-v3-turbo";
 const TUTOR_MODEL = "@cf/google/gemma-4-26b-a4b-it";
 export const CLOUDFLARE_EMBEDDING_MODEL = "@cf/google/embeddinggemma-300m";
@@ -23,6 +25,9 @@ export class CloudflareWorkersAIError extends Error {
 }
 
 function getConfig() {
+  if (!isCloudflareWorkersAIFreeTierConfigured()) {
+    throw new CloudflareWorkersAIError("FREE_TIER_NOT_CONFIRMED");
+  }
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "";
   const apiToken = process.env.CLOUDFLARE_API_TOKEN?.trim() ?? "";
   if (!/^[a-f0-9]{32}$/i.test(accountId)) {
@@ -233,8 +238,5 @@ export async function generateWithCloudflareTutor(prompt: string): Promise<{ tex
 }
 
 export function isCloudflareWorkersAIConfigured(): boolean {
-  return Boolean(
-    /^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "")
-    && process.env.CLOUDFLARE_API_TOKEN?.trim(),
-  );
+  return isCloudflareWorkersAIFreeTierConfigured();
 }

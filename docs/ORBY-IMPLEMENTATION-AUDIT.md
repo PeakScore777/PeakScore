@@ -568,3 +568,5 @@ CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1
 - Inventario de `tests/orby-request-filter.test.mjs`: 257 pruebas nombradas y cero duplicados. El archivo no se ha ejecutado en CI/local; Vercel sigue en `build-rate-limit`.
 
 - El selector de prompt utiliza el prompt pedagógico completo para feedback con `learningSkill`, que incluye memoria personal y las reglas específicas de la materia, mientras mantiene desactivada la recuperación documental salvo que su detector independiente la solicite.
+
+- Tras una respuesta de feedback con `learningSkill`, el cliente vuelve a consultar `/api/orby/learning` para refrescar `learningSignals`; no genera una segunda llamada de modelo y el fallo del refresco no bloquea la respuesta entregada.

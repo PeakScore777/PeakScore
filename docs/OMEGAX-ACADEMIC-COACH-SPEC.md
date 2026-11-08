@@ -202,3 +202,5 @@ Los temas de speaking de 60 segundos y las frases modelo de repetición ya se se
 - Auditoría estática actual: 257 pruebas nombradas, sin duplicados; todavía no ejecutadas.
 
 - Para las solicitudes con skill válida, el selector del tutor utiliza el prompt pedagógico completo (incluye memoria previa y rúbrica de la destreza), sin activar por ello la búsqueda vectorial/graph. El prompt conversacional ligero queda para turnos que no requieren memoria de habilidad ni recuperación académica.
+
+- Después de responder un feedback con skill válida, el cliente vuelve a consultar `/api/orby/learning` para actualizar las tarjetas de progreso inmediatamente; no genera otra respuesta de IA. Si el refresco falla, conserva la respuesta y muestra un aviso no bloqueante.

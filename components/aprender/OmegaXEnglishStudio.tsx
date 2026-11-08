@@ -10,36 +10,84 @@ type Props = {
   onSaveTranscript: (title: string, content: string) => Promise<boolean>;
 };
 
-const TOPICS = [
-  "Describe a place in your city that you would recommend to a visitor.",
-  "Talk about a skill you would like to learn and explain why.",
-  "Describe a challenge you solved at school.",
-  "Do you prefer studying alone or with other people? Explain why.",
-  "Talk about a person who has influenced your life.",
-  "Describe a technology that makes everyday life easier.",
-  "What does a perfect weekend look like for you?",
-  "Talk about a book, film or series you enjoyed.",
-  "Describe a tradition that is important in your family.",
-  "What would you change about your school and why?",
-  "Explain how you usually prepare for an important exam.",
-  "Describe a meal you could eat every week.",
-  "Would you rather live in a big city or a small town?",
-  "Talk about an environmental problem in your community.",
-  "Describe a goal you want to achieve this year.",
-  "What makes a good friend?",
-  "Should students use technology in every class? Explain.",
-  "Describe a memorable trip or a place you would like to visit.",
-  "What is one habit you would like to improve?",
-  "Talk about a job you think is important for society.",
-  "Is it better to learn from mistakes or from success?",
-  "Describe something new you learned recently.",
-];
-const PHRASES = [
-  "I thought the weather would be better this morning.",
-  "Three students are working through the same problem.",
-  "Could you explain the difference between these two ideas?",
-  "I would rather practice a little every day.",
-];
+const TOPICS_BY_LEVEL: Record<CefrLevel, string[]> = {
+  A1: [
+    "Introduce yourself. Say where you study, what you like and one thing you do every day.",
+    "Describe your classroom using simple words for people, objects and colours.",
+    "Talk about your favourite food and say when you usually eat it.",
+    "Describe your daily routine using simple present verbs and times.",
+  ],
+  A2: [
+    "Describe a place you visited and explain what you did there.",
+    "Talk about your usual weekend and one activity you would like to try.",
+    "Explain how you get to school and describe places on the way.",
+    "Describe a plan for your next holiday and give two reasons for it.",
+  ],
+  B1: [
+    "Describe a challenge you solved at school and explain what you learned.",
+    "Compare studying alone with studying in a group. Which works better for you?",
+    "Talk about an environmental problem in your community and suggest a solution.",
+    "Describe a skill you would like to develop and explain how you would practise it.",
+  ],
+  B2: [
+    "Should mobile phones be used in every lesson? Defend your view and address one counterargument.",
+    "Discuss the advantages and disadvantages of online learning compared with classroom learning.",
+    "How can technology change the future of work? Support your ideas with examples.",
+    "Should cities prioritize public transport over private cars? Explain the trade-offs.",
+  ],
+  C1: [
+    "Evaluate whether artificial intelligence should play a role in assessing students. Discuss benefits, risks and safeguards.",
+    "How should societies balance economic growth with environmental sustainability? Defend a nuanced position.",
+    "Discuss how digital platforms influence cultural identity and public debate.",
+    "Assess the ethical tension between educational personalization and the collection of student data.",
+  ],
+  C2: [
+    "Analyze how framing, irony and implied meaning can change the interpretation of a public argument.",
+    "Discuss an ethical dilemma in which two defensible principles conflict; qualify your position and its limits.",
+    "Evaluate the unintended consequences of a policy whose stated purpose is broadly beneficial.",
+    "Explain how tone, register and cultural assumptions affect whether a translation preserves the force of an original text.",
+  ],
+};
+
+const PHRASES_BY_LEVEL: Record<CefrLevel, string[]> = {
+  A1: [
+    "I go to school every day.",
+    "My favourite subject is science.",
+    "I usually have breakfast at home.",
+    "There is a book on the table.",
+  ],
+  A2: [
+    "I visited a new place with my family last weekend.",
+    "Could you tell me how to get to the bus station?",
+    "I am going to study English after school.",
+    "There were fewer people at the museum than I expected.",
+  ],
+  B1: [
+    "Although the task was difficult, our group found a solution.",
+    "I would rather practise every day than study only before an exam.",
+    "The project was successful because everyone contributed.",
+    "If I had more time, I would join an environmental project.",
+  ],
+  B2: [
+    "Despite the initial difficulties, the team managed to reach an agreement.",
+    "What matters most is whether the evidence supports the conclusion.",
+    "The proposal would be more effective if local communities were involved.",
+    "Having considered both perspectives, I still favour the second option.",
+  ],
+  C1: [
+    "Had the evidence been interpreted differently, the conclusion might have changed.",
+    "The extent to which technology improves learning depends on how it is implemented.",
+    "Notwithstanding its advantages, the policy raises questions about accountability.",
+    "What distinguishes a persuasive argument is the careful handling of counterevidence.",
+  ],
+  C2: [
+    "The remark was deliberately ambiguous, allowing it to convey approval and criticism simultaneously.",
+    "Were the assumptions left unchallenged, the argument would appear more conclusive than it is.",
+    "The translation preserves the literal meaning while subtly altering the speaker's tone.",
+    "Far from resolving the dispute, the qualification exposed the disagreement beneath it.",
+  ],
+};
+
 const ROLEPLAYS = [
   ["At a café", "You are ordering breakfast. Ask about the menu, prices and ingredients. You are the customer; OmegaX is the barista."],
   ["At the airport", "You are checking in for an international flight. Ask about your seat, baggage and boarding time."],
@@ -136,7 +184,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
   const startRef = useRef(0);
   const timerRef = useRef<number | null>(null);
 
-  const prompt = mode === "speaking" ? TOPICS[topicIndex] : PHRASES[phraseIndex];
+  const prompt = mode === "speaking" ? TOPICS_BY_LEVEL[level][topicIndex % TOPICS_BY_LEVEL[level].length] : PHRASES_BY_LEVEL[level][phraseIndex % PHRASES_BY_LEVEL[level].length];
   const match = mode === "pronunciation" && transcript ? wordMatch(prompt, transcript) : null;
   const levelProfile = CEFR_LEVEL_GUIDANCE[level];
 
@@ -255,7 +303,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
       return;
     }
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(PHRASES[phraseIndex]);
+    const utterance = new SpeechSynthesisUtterance(prompt);
     utterance.lang = "en-US";
     utterance.rate = 0.88;
     window.speechSynthesis.speak(utterance);
@@ -298,7 +346,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <p className="mt-2 text-sm leading-6 text-slate-600">Habla, recibe feedback concreto y vuelve a practicar. OmegaX adapta la conversación, la explicación y la pizarra al nivel A1–C2 que elijas.</p>
           </div>
           <label className="block min-w-48 text-xs font-semibold text-slate-700">Nivel objetivo · MCER
-            <select value={level} onChange={(event) => setLevel(event.target.value as CefrLevel)} className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400">
+            <select value={level} onChange={(event) => { setLevel(event.target.value as CefrLevel); setTopicIndex(0); setPhraseIndex(0); }} disabled={recording || transcribing || Boolean(blob)} className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-white px-3 text-sm text-slate-800 outline-none focus:border-orange-400 disabled:cursor-not-allowed disabled:opacity-55">
               <option value="A1">A1 · Principiante</option><option value="A2">A2 · Básico</option><option value="B1">B1 · Intermedio</option><option value="B2">B2 · Intermedio alto</option><option value="C1">C1 · Avanzado</option><option value="C2">C2 · Dominio avanzado</option>
             </select>
             <span className="mt-2 block text-[11px] font-normal leading-5 text-slate-500">{levelProfile.descriptor} Nivel de práctica elegido; no es una certificación ni un nivel oficial de desempeño de Saber 11.</span>
@@ -337,8 +385,8 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
             <p className="mt-3 text-lg font-semibold leading-7 text-slate-900">{prompt}</p>
             <div className="mt-3 flex flex-wrap gap-3">
               {mode === "speaking"
-                ? <button type="button" onClick={() => { setTopicIndex((value) => (value + 1) % TOPICS.length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800 disabled:opacity-45" disabled={recording || transcribing}>Cambiar tema</button>
-                : <><button type="button" onClick={speakModel} className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-orange-800"><Volume2 className="h-4 w-4" /> Escuchar modelo</button><button type="button" onClick={() => { setPhraseIndex((value) => (value + 1) % PHRASES.length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800 disabled:opacity-45" disabled={recording || transcribing}>Otra frase</button></>}
+                ? <button type="button" onClick={() => { setTopicIndex((value) => (value + 1) % TOPICS_BY_LEVEL[level].length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800 disabled:opacity-45" disabled={recording || transcribing}>Cambiar tema</button>
+                : <><button type="button" onClick={speakModel} className="inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-white px-3 py-2 text-xs font-semibold text-orange-800"><Volume2 className="h-4 w-4" /> Escuchar modelo</button><button type="button" onClick={() => { setPhraseIndex((value) => (value + 1) % PHRASES_BY_LEVEL[level].length); setTranscript(""); setSaved(false); }} className="text-xs font-semibold text-orange-800 disabled:opacity-45" disabled={recording || transcribing}>Otra frase</button></>}
             </div>
           </div>
           <div className="mt-5 flex flex-wrap items-center gap-3">

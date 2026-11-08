@@ -475,3 +475,9 @@
 - Fixed the live karaoke subtitle palette for the light teaching stage: regular words now use slate-800; the active word uses orange-950 on orange-100 with orange underline.
 - Added a static regression to prevent low-contrast slate-100 subtitle spans from returning.
 - Browser visual verification and test execution remain pending.
+
+## 2026-11-08 — live subtitle and selected-assistant identity fixes
+- Improved word-level karaoke subtitle contrast on the light live stage.
+- Replaced two remaining user-facing hardcoded Orby strings in the general workspace with the selected assistant label, preserving Orby when that tutor is active.
+- Added regression assertions. Static inventory: 237 named tests, 0 duplicate titles; this is not a test execution result.
+- CI remains unavailable for this HEAD: Vercel reports build-rate-limit; no associated GitHub Actions workflow run was returned.

@@ -411,7 +411,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
     frameId = window.requestAnimationFrame(updateKaraokeHighlight);
     return () => window.cancelAnimationFrame(frameId);
-  }, [voiceSubtitlePlaybackActive, messages]);
+  }, [voiceSubtitlePlaybackActive]);
 
   function rememberVoiceAssistantOutput(value: string) {
     const text = value.trim().slice(0, 5_000);

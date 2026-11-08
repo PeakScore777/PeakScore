@@ -567,3 +567,20 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 
 - Sincronización final: la enumeración del prompt ahora incluye expresamente `clear-focus`; se corrigió también la expresión regular de la prueba de schema para reflejar el JSON real. Commits adicionales: `1b88395` (prompt) y `3e7d2f3` (aserción).
 - Inventario estático tras añadir la prueba de clear-focus: **247 pruebas nombradas, 0 títulos duplicados**. No se han ejecutado.
+
+
+## 2026-11-08 — señalamiento de subelementos dentro de visuales
+- Se amplió `focus` con `targetId` opcional junto a `elementId`. El ID debe pertenecer al visual exacto del layout espacial; no son coordenadas libres. El servidor comprueba el tipo del visual y que el target exista exactamente una vez antes de guardar el foco.
+- Tipos compatibles en esta iteración:
+  - `diagram`: nodos (`nodes[].id`).
+  - `molecule`: átomos (`atoms[].id`).
+  - `cell`: orgánulos que el renderer dibuja como elemento independiente (`organelles[].id`); membrana y pared celular quedan excluidas porque hoy se pintan como contorno general.
+  - `circuit`: componentes (`components[].id`).
+  - `organ-system`: estructuras anatómicas (`structures[].id`).
+- `components/aprender/OrbyBoard.tsx` muestra un anillo rojo, punto, línea guía y etiqueta en la geometría existente. Usa el mismo componente visual de foco en los cinco renderers, mantiene el escalado del SVG y respeta la configuración de movimiento reducido.
+- No se habilitaron todavía flechas/conexiones de diagramas, enlaces moleculares, cables, puntos de gráficas/vectores, partes neuronales ni contornos de membrana/pared celular: no disponen de un target visual con ID/posición independiente adecuado en el renderer actual.
+- Gemini Live expone `targetId` y recibe instrucciones para enviarlo solo junto al `elementId` correcto. El cliente devuelve una explicación cuando el ID no pertenece a ese visual.
+- Se añadieron regresiones para los cinco tipos soportados, conservación del visual original, target inexistente, target dirigido a un bloque de texto, gráfica sin IDs y membrana no renderizada como objetivo separado.
+- Inventario estático actual: **249 pruebas nombradas, 0 títulos duplicados**. Son pruebas escritas/contabilizadas, no ejecutadas.
+- Commits de esta mutación: `b6e9849` (validación de targets), `bb305b8` (tipo teacherFocus), `c9eaaf9` (marcadores SVG), `e6853a8` (schema Live), `bfb8918` (prompt), `2061256` (respuesta de error/éxito), `3c2b6fa` (regresiones), `06536d7` (JSX de orgánulos), `f08e97a`, `73b0246`, `673bae6` y `9c06d2e` (robustez de pruebas y clear-focus).
+- Pendiente: ejecutar `npm run test:orby`, TypeScript, ESLint, build y QA Chrome/Gemini Live. No se tocó `main`, no se hizo merge/rebase ni despliegue, y no se añadieron proveedores de pago.

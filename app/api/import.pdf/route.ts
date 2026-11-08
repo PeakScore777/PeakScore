@@ -2387,14 +2387,6 @@ ${validation.detected_session}`
 export async function POST(
   req: Request
 ) {
-  if (!isGeminiFreeTierConfigured()) {
-    return NextResponse.json({
-      success: false,
-      error: "La importación de PDFs está desactivada: el servidor no ha confirmado el plan gratuito ni la autorización de uso de datos de Gemini. No se ha enviado el documento al proveedor.",
-      code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
-    }, { status: 503 });
-  }
-
   let supabase:
     | Awaited<
         ReturnType<typeof createServerClient>
@@ -2487,7 +2479,13 @@ export async function POST(
        4. GEMINI KEY
     ===================================================== */
 
-    // Gemini plan/data-use authorization was checked before parsing or processing the PDF.
+    if (!isGeminiFreeTierConfigured()) {
+      return NextResponse.json({
+        success: false,
+        error: "La importación de PDFs está desactivada: el servidor no ha confirmado el plan gratuito ni la autorización de uso de datos de Gemini. No se ha enviado el documento al proveedor.",
+        code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
+      }, { status: 503 });
+    }
 
     const { data: rateAllowed, error: rateError } = await supabase.rpc("consume_api_rate_limit", {
       p_bucket: "import-pdf",

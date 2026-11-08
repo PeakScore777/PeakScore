@@ -46,7 +46,7 @@ const lessonTutorSource = await readFile(new URL("../components/aprender/LessonA
 const boardComponentSource = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
 const voiceWorkletSource = await readFile(new URL("../public/audio/orby-audio-capture.worklet.js", import.meta.url), "utf8");
 const cloudflareTutorRoute = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
-const realtimeSessionSource = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+
 const cloudflareVoiceSource = await readFile(new URL("../lib/ai/cloudflare-workers-ai.ts", import.meta.url), "utf8");
 const orbyKnowledgeSource = await readFile(new URL("../lib/ai/orby-knowledge.ts", import.meta.url), "utf8");
 const orbyVoiceConfigSource = await readFile(new URL("../lib/ai/orby-voice-config.ts", import.meta.url), "utf8");

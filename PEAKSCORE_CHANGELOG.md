@@ -533,3 +533,5 @@
 - Added regression assertions for the accessibility and teaching prompt. The test suite, TypeScript, ESLint and production build have **not** been run for this HEAD.
 - Corrected stale tutor specification text: current karaoke is a weighted playback-clock estimate, not exact word-level alignment.
 - Commits: `777b66a`, `e9174ae`, `d501f01`, `7e77325`. Manual Chrome/microphone/OS reduced-motion QA remains pending. No paid providers, migrations, production deployment or main-branch changes.
+
+- **SMIL fix:** corrected an invalid multi-keyframe spline on a two-endpoint stroke. Ink now uses one `0;1` interval and pen motion explicitly uses `keyPoints="0;1"`; regression asserts one valid spline interval and a curvature-sensitive curve. Commits: `3c18f41`, `f18ade7`, `d7cb8da`. Still not run on this HEAD.

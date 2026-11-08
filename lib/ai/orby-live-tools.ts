@@ -179,7 +179,6 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
             }, required: ["id", "points"] } },
             strokeId: { type: Type.STRING, description: "Existing stroke ID for focus or replace. For focus, use either strokeId or elementId, never both." },
             pointIndex: { type: Type.NUMBER, format: "int32", minimum: 0, maximum: 39, description: "Optional zero-based point index for exact focus within an existing strokeId. Must be less than that stroke's actual point count. Omit to focus its middle point; do not send with elementId." },
-            strokeIds: { type: Type.ARRAY, description: "One to eight existing stroke IDs for selective erase.", items: { type: Type.STRING } },
             label: { type: Type.STRING, description: "Optional short Spanish focus label, maximum 48 characters." },
             strokeIds: { type: Type.ARRAY, description: "One to eight existing stroke IDs for selective erase.", items: { type: Type.STRING } },
             replacement: {

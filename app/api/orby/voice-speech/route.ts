@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       : "";
     if (!text || text.length > MAX_TEXT_LENGTH) {
       return jsonError(
-        "La frase de voz debe contener entre 1 y 500 caracteres.",
+        "La frase de voz debe contener entre 1 y 900 caracteres.",
         "INVALID_TTS_INPUT",
         400,
       );

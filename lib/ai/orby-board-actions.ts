@@ -1,7 +1,8 @@
 import type { OrbyBoard, OrbySketchStroke } from "@/lib/ai/orby-board";
 
 export type OrbyBoardAction =
-  | { operation: "focus"; strokeId: string; label?: string }
+  | { operation: "focus"; strokeId: string; elementId?: never; label?: string }
+  | { operation: "focus"; elementId: string; strokeId?: never; label?: string }
   | { operation: "erase"; strokeIds: string[] }
   | { operation: "replace"; strokeId: string; replacement: OrbySketchStroke };
 
@@ -45,12 +46,17 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
   if (raw.operation === "focus") {
-    if (!safeId(raw.strokeId)) return null;
+    const hasStrokeId = raw.strokeId !== undefined;
+    const hasElementId = raw.elementId !== undefined;
+    if (hasStrokeId === hasElementId) return null;
+    if ((hasStrokeId && !safeId(raw.strokeId)) || (hasElementId && !safeId(raw.elementId))) return null;
     if (raw.label !== undefined && typeof raw.label !== "string") return null;
     const label = raw.label === undefined
       ? ""
       : raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48);
-    return { operation: "focus", strokeId: raw.strokeId, ...(label ? { label } : {}) };
+    return hasStrokeId
+      ? { operation: "focus", strokeId: raw.strokeId as string, ...(label ? { label } : {}) }
+      : { operation: "focus", elementId: raw.elementId as string, ...(label ? { label } : {}) };
   }
   if (raw.operation === "erase") {
     if (!Array.isArray(raw.strokeIds) || raw.strokeIds.length < 1 || raw.strokeIds.length > 8
@@ -75,8 +81,27 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
   }
   const existsExactlyOnce = (id: string) => strokeIdCounts.get(id) === 1;
   if (action.operation === "focus") {
+    const revision = (board.teacherFocus?.revision ?? 0) + 1;
+    if ("elementId" in action) {
+      if (!board.layout?.elements.some((element) => element.id === action.elementId)) return null;
+      return {
+        ...board,
+        teacherFocus: {
+          elementId: action.elementId,
+          revision,
+          ...(action.label ? { label: action.label } : {}),
+        },
+      };
+    }
     if (!existsExactlyOnce(action.strokeId)) return null;
-    return { ...board, teacherFocus: { strokeId: action.strokeId, revision: (board.teacherFocus?.revision ?? 0) + 1, ...(action.label ? { label: action.label } : {}) } };
+    return {
+      ...board,
+      teacherFocus: {
+        strokeId: action.strokeId,
+        revision,
+        ...(action.label ? { label: action.label } : {}),
+      },
+    };
   }
   if (action.operation === "erase") {
     if (!action.strokeIds.every(existsExactlyOnce)) return null;

@@ -157,7 +157,7 @@ export function buildIcfesPedagogyInstruction(value: unknown): string {
     `Prioridades de pizarra: ${profile.boardPriorities.join("; ")}.`,
     `Errores frecuentes que debes vigilar: ${profile.commonRisks.join("; ")}.`,
     `Retroalimentación: ${profile.feedbackFocus}.`,
-    "Selecciona solo los pasos pertinentes a la pregunta; no conviertas esta secuencia en una plantilla rígida ni inventes afirmaciones, evidencias, porcentajes o distribución oficial de preguntas. Si el estudiante cambia de materia, cambia también el perfil.",
+    "Selecciona solo los pasos pertinentes a la pregunta; no conviertas esta secuencia en una plantilla rígida. No inventes afirmaciones, evidencias, porcentajes ni distribuciones oficiales de preguntas. Si el estudiante cambia de materia, cambia también el perfil.",
     profile.subject === "Inglés" ? "Regla adicional: la explicación oral y la retroalimentación van en español colombiano; usa inglés para ejemplos, fragmentos y práctica cuando el ejercicio lo requiera." : "",
   ].filter(Boolean).join(" ");
 }

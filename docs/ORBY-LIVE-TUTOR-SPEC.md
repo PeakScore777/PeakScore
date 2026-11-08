@@ -412,3 +412,6 @@ La preparación de Inglés Saber 11 conserva el formato específico de la prueba
 - Inglés: propósito, pista, estructura, vocabulario y reformulación contextual.
 
 Las directivas ya se integraron a las rutas Live y fallback; no se certifica todavía la calibración CEFR por habilidades ni la calidad auditiva/visual de sesiones reales. QA, TypeScript, ESLint y build deben ejecutarse antes de declarar el hito listo.
+
+
+- English Studio ahora presenta temas y frases modelo por nivel A1–C2; el feedback debe analizar la respuesta respecto de ese estímulo concreto y terminar con reintento enfocado. No reutilizar un tema A1 como tarea C2 solo cambiando la etiqueta.

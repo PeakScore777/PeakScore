@@ -101,3 +101,19 @@ Pendiente:
 **Commits:** `8975602` (aislamiento de hoja y reglas de impresión), `1c16dec` (ocultar barra), `6b8c52f` (prueba de regresión).
 
 **Alcance:** la exportación sigue usando el diálogo de impresión del navegador y “Guardar como PDF”. Aún requiere revisión manual en Chrome para validar saltos de página, SVG largos, varias páginas y la presencia de los trazos locales. No se considera certificada hasta ejecutar Node tests, TypeScript, ESLint, build y QA visual.
+
+## Décima mutación — apuntes de clase estructurados
+
+**Fecha:** 7 de noviembre de 2026  
+**Hora:** 19:12 (UTC−05:00, Colombia)
+
+- El guardado de la clase ahora estructura títulos, subtítulos, pasos, fórmulas y recuadros de explicación en Markdown.
+- Añade detalles legibles de los apoyos visuales: etiquetas de diagramas, tablas y rótulos de trazos cuando existen.
+- Incluye un resumen de las anotaciones personales recuperables desde el almacenamiento local del navegador.
+- Añade un bloque JSON acotado con la estructura de los apoyos visuales para que no se pierdan todos sus metadatos al guardar.
+- Limita el contenido final a 7.900 caracteres para respetar el máximo de 8.000 caracteres de la API de aprendizaje.
+- Si el almacenamiento local no está disponible, el guardado de la explicación continúa sin las anotaciones.
+
+**Commits:** `e1bf6fd` (guardado estructurado), `02891b2` (prueba estática).
+
+**Alcance real:** el registro de apuntes conserva una representación textual y metadatos JSON limitados; no almacena imágenes rasterizadas ni una copia editable de los SVG. Las anotaciones personales se resumen por trazo, no se convierten en una imagen. Se requiere QA para confirmar la legibilidad y el límite de tamaño con clases largas.

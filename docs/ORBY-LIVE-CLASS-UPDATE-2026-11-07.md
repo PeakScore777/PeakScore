@@ -730,3 +730,11 @@ Se tomó como evidencia el log local compartido por el usuario, que reportaba si
 - No se ejecutaron Node tests, TypeScript, ESLint, build ni una llamada real de Gemini Live desde este entorno. Por tanto, estas mutaciones no se declaran verificadas en ejecución.
 - La revisión de archivos fuente no sustituye una auditoría de RLS/migraciones, pruebas de navegador ni una prueba de carga real. Esas áreas siguen abiertas.
 - No se modificó `main`, no se desplegó, no se añadieron dependencias ni proveedores/API de pago.
+
+
+### Hallazgo adicional — import faltante del temporizador de trazos
+- La revisión del componente completo detectó un defecto de ejecución que los tests de regex anteriores no capturaban: `OrbyBoard.tsx` llamaba `getOrbySketchStrokeTiming`, pero solo importaba los tipos del módulo. El helper no existía en el ámbito de ejecución del componente.
+- Se corrigió el import como valor junto con los imports de tipos y se añadió una regresión que exige ese import explícito.
+- Commit de código: `b936ac96346a5cae91d3b73a8859927be3d5af9b`.
+- Commit de regresión: `f77fd399d2973a355ca6185a93fbaf7bdfb74e2f`.
+- Este defecto podía provocar un error de referencia al renderizar un sketch; no se debe considerar cerrado hasta que TypeScript y la prueba de navegador confirmen el render real.

@@ -469,3 +469,10 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - The remaining user-facing workspace text for library ownership and Live resumption timeout uses `assistantLabel`, so OmegaX does not refer to itself as Orby; the specialized Orby identity still works when selected.
 - Regression coverage added. 238 named test blocks were counted statically with no duplicate titles; they have not been run.
 - Current CI limitation: Vercel build-rate-limit; no GitHub Actions workflow run associated with the current HEAD. Do not claim runtime/build/test success.
+
+## 2026-11-08 — prevención de solapamientos del tablero
+- `append-block` ahora rechaza nuevas cajas de texto que se superpongan con cualquier etapa de texto o visual existente en el layout 16:9. El contacto exacto de bordes se permite.
+- El feedback de rechazo de la herramienta Live indica conflicto espacial/límite, no un falso problema de ID de tinta.
+- Tests añadidos para intersección, borde adyacente y motivo de rechazo útil.
+- Protección limitada a acciones incrementales nuevas; no se invalida el historial espacial v2 existente.
+- Sigue pendiente ejecutar test runner, TypeScript, ESLint, build y QA real de Chrome/micrófono.

@@ -17,6 +17,7 @@ import {
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
+import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 import { buildIcfesAdaptiveTeachingDirective, buildIcfesPedagogyInstruction, normalizeIcfesSubject, summarizeIcfesLearningSignals } from "@/lib/ai/orby-scope";
 
 export const runtime = "nodejs";
@@ -42,6 +43,15 @@ export async function POST(request: Request) {
     authMs = performance.now() - authStartedAt;
     if (authError || !user) {
       return NextResponse.json({ error: "Inicia sesión para iniciar una clase de estudio." }, { status: 401 });
+    }
+
+    // Plan-tier confirmation is independent from the privacy opt-in. A key alone
+    // must never activate Gemini on an account that could bill over free quotas.
+    if (!isGeminiFreeTierConfigured()) {
+      return NextResponse.json({
+        error: "La voz está desactivada: el servidor no ha confirmado el plan gratuito de Gemini. No se ha enviado ninguna solicitud al proveedor.",
+        code: "GEMINI_FREE_TIER_NOT_CONFIRMED",
+      }, { status: 503 });
     }
 
     // Gemini Live free-tier requests may be used to improve Google's products.

@@ -860,3 +860,6 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Inventario estático: **249 pruebas con nombre, 0 duplicados**; no implica ejecución.
 - Pendiente: `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npx next build` y QA manual de Live/Chrome. Sin despliegue ni cambios a `main`.
 
+
+### Último ajuste de regresión
+- La prueba estática del renderer ahora comprueba también el objetivo `component.id` usado por los circuitos, además de nodos, átomos y elementos anatómicos/orgánulos. Inventario estático: 249 pruebas, sin duplicados; no ejecutadas.

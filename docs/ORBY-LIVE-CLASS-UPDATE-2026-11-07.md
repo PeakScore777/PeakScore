@@ -470,3 +470,28 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - No se modifica `main`, no se despliega y no se agregan dependencias ni servicios de IA.
 
 **Estado:** helper puro conectado y pruebas añadidas; ejecución de tests y QA real pendientes.
+
+
+## Mutación — anotaciones pedagógicas universales para las cinco pruebas
+
+### Investigación de referencia
+- Se consultó la Guía de Orientación Saber 11° 2026 del ICFES, actualizada el 26 de marzo de 2026.
+- Se verificó que el examen contempla cinco pruebas: Lectura Crítica, Matemáticas, Sociales y Ciudadanas, Ciencias Naturales e Inglés.
+- Se revisó la organización oficial por competencias, afirmaciones y evidencias; el diseño del tablero debe ayudar a hacer visibles evidencias del razonamiento, no limitarse a decorar respuestas.
+- Fuentes oficiales:
+  - Guía 2026: https://www.icfes.gov.co/evaluaciones-icfes/saber-11/guia-de-orientacion-examen-saber-11/
+  - Marcos de referencia: https://www.icfes.gov.co/marcos-de-referencia-examen-saber-11/
+  - Caja de herramientas: https://www.icfes.gov.co/caja-de-herramientas-saber-11/que-se-evalua/
+
+### Implementado
+- Nuevo visual tipado `annotation` para círculos, subrayados, flechas y corchetes.
+- Cada anotación acepta entre 2 y 12 puntos acotados al lienzo 4–96; tono permitido y etiqueta corta opcional.
+- Render SVG visual, sin HTML/SVG aportado por el modelo ni ejecución de código.
+- La herramienta Live anuncia el nuevo tipo y sus propiedades.
+- Pruebas de sanitización positiva/negativa y contrato de herramienta.
+- Utilidad transversal: rodear tesis/evidencia en Lectura, destacar datos y operaciones en Matemáticas, conectar causas y consecuencias en Sociales, señalar variables/mecanismos en Naturales y marcar pistas contextuales en Inglés.
+
+### Límites y QA
+- Esta mutación añade la primitiva visual universal; no declara completo el currículo de las cinco áreas ni sustituye la revisión pedagógica de cada explicación.
+- Pendiente ejecutar Node tests, TypeScript, ESLint, build y QA en Chrome.
+- No se agregan dependencias ni proveedores de IA de pago. No se toca `main` ni se despliega.

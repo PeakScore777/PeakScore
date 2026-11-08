@@ -550,3 +550,5 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Se añadieron regresiones para índice exacto, límite inválido, índice fuera del tamaño real, conservación de tinta y renderer/schema/prompt. Inventario estático actual se verificará al cerrar; no confundirlo con ejecución.
 - Commits de esta mutación: `9abd98b`, `437422c`, `0c79237`, `08f3ee3`, `29e041e`, `0131870`, `39292bc`, `0276b71`, `7056c1b`, `e6f8990`, `3f14540`.
 - Validación: no se ha ejecutado la suite completa, TypeScript, ESLint ni build para este HEAD. QA real de Chrome/Live y movimiento reducido permanece pendiente. Sin proveedores facturables, migraciones, despliegue, merge ni rebase de `main`.
+
+- Cierre de inventario estático de regresiones: **246 pruebas nombradas, 0 nombres duplicados**. Es conteo/inspección del archivo, no ejecución; `npm run test:orby`, TypeScript, ESLint, build y QA Chrome siguen pendientes para este HEAD.

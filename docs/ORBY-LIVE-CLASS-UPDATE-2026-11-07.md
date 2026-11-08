@@ -744,3 +744,10 @@ Se tomó como evidencia el log local compartido por el usuario, que reportaba si
 - Se verificó el JSX real de la clase: el tablero se monta con `drawingActive={voiceBoardDrawingActive}`; la aserción antigua sin esa prop fue reemplazada por la forma efectiva.
 - Se corrigió el patrón de prueba de `prefers-reduced-motion` para que coincida con el CSS real, sin exigir barras invertidas que no existen en la hoja de estilos.
 - Commit: `1336e5fbaa65b6328540776955d6df8b32ff1eda`.
+
+
+### Rectificación de la hipótesis sobre duración de Gemini Live
+- La revisión inicial de la ruta del servidor no mostraba toda la configuración: el manejo de sesión está implementado en el cliente, en `LessonAITutor.tsx`.
+- La configuración real sí activa `contextWindowCompression: { slidingWindow: {} }` y `sessionResumption`; el cliente recibe `sessionResumptionUpdate`, conserva el handle por conversación, atiende `goAway` y reintenta la reanudación con un token efímero nuevo.
+- Por tanto, **no se registra como bug la ausencia de reanudación**. La hipótesis inicial queda descartada tras inspeccionar el código completo.
+- Queda pendiente QA real de reconexión: probar cierre voluntario del socket, evento `goAway`, handle no resumible, token expirado, límite de cuota y preservación de audio/micrófono. La presencia de código no certifica que esos caminos funcionen en Chrome.

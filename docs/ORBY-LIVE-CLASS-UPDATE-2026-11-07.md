@@ -530,3 +530,25 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Pendiente ejecutar Node tests, TypeScript, ESLint, build y pruebas de voz/tablero en Chrome.
 - No se recupera ni reconstruye contenido de Orby ICFES Lab eliminado intencionalmente.
 - No se agregan servicios de pago, dependencias ni cambios a `main`; no se despliega.
+
+ 
+## Mutación — diagnóstico adaptativo de aprendizaje por materia
+
+### Implementado
+- Se agregó `summarizeIcfesLearningSignals()` al núcleo académico.
+- Resume señales existentes en conceptos prioritarios, fortalezas, misconceptions repetidas y enfoque recomendado.
+- Solo considera registros con confianza entre 0.80 y 1.0; señales dudosas o corruptas no se interpretan como dominio.
+- Distingue entre reteaching, práctica guiada, reto y diagnóstico inicial; ausencia de datos nunca significa dominio.
+- La sesión Live incluye un resumen diagnóstico junto con señales recientes, filtradas por usuario y materia como en la consulta existente.
+- No se crean tablas ni se escriben señales nuevas en esta mutación.
+
+### Archivos
+- `lib/ai/orby-scope.ts`
+- `app/api/orby/realtime-session/route.ts`
+- `tests/orby-request-filter.test.mjs`
+- `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`
+
+### QA
+- Pruebas añadidas para dificultades, fortalezas, misconceptions repetidas, registros inválidos y ausencia de evidencia.
+- Pendiente ejecutar Node tests, TypeScript, ESLint, build y pruebas Live integrales.
+- No se reconstruye Orby ICFES Lab eliminado intencionalmente. Sin servicios de pago, sin cambios a `main` y sin despliegue.

@@ -39,7 +39,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
                     type: Type.OBJECT,
                     properties: {
                       id: { type: Type.STRING, minLength: "1", maxLength: "24", pattern: "^[a-zA-Z0-9_-]+$", description: "Stable unique element ID, preserved across snapshots." },
-                      sequence: { type: Type.NUMBER, format: "int32", minimum: 1, maximum: 12, description: "Strictly increasing positive integer teaching order; never renumber existing elements." },
+                      sequence: { type: Type.NUMBER, format: "int32", minimum: 1, maximum: 1000, description: "Strictly increasing positive integer teaching order; preserve surviving values when a stage is removed and never renumber existing elements." },
                       kind: { type: Type.STRING, format: "enum", enum: ["block", "visual"], description: "Exactly block or visual." },
                       index: { type: Type.NUMBER, format: "int32", minimum: 0, maximum: 11, description: "Zero-based index into blocks[] or visuals[] according to kind." },
                       x: { type: Type.NUMBER, minimum: 0, maximum: 100, description: "Left position from 0 to 100." },

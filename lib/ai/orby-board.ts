@@ -56,6 +56,15 @@ export type OrbyBoardVisual =
  * Numeric input remains supported for compatibility with older tests/tools.
  * The live renderer schedules new strokes against the active drawing timeline.
  */
+/**
+ * Shared stagger for SVG components whose actual stroke animation lives on
+ * a child path/line. CSS animation-delay is not inherited by SVG descendants.
+ */
+export function getOrbyBoardProgressiveDelay(index: number): number {
+  const safeIndex = Number.isFinite(index) ? Math.max(0, Math.floor(index)) : 0;
+  return Math.min(safeIndex * 90, 630);
+}
+
 export function getOrbySketchStrokeTiming(
   index: number,
   pointsOrPointCount: number | readonly { x: number; y: number }[],

@@ -235,7 +235,7 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
 
 test("una respuesta Live lenta muestra aviso temprano y recupera el turno sin esperar minutos", () => {
   assert.ok(lessonTutorSource.includes("Every transcript/audio/tool event rearms this inactivity timer."));
-  assert.match(lessonTutorSource, /fallbackVoiceTurnToText\\(voiceChannelRef\\.current\\s*\\?/);
+  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText(voiceChannelRef.current ?"));
   assert.ok(lessonTutorSource.includes("}, 15_000);"));
   assert.ok(lessonTutorSource.includes("}, 5_000);"));
   assert.match(lessonTutorSource, /Gemini Live dejó de enviar avances/);
@@ -2408,7 +2408,7 @@ test("Orby distingue cuota diaria de Gemini, rate limit temporal y error general
   assert.match(lessonTutorSource, /const rateLimited = liveFailure === "rate_limited"/);
   assert.match(lessonTutorSource, /if \(rateLimited\)[\s\S]{0,180}fallbackVoiceTurnToText\(rateLimitMessage\)/);
   assert.match(lessonTutorSource, /retryAfter <= 2 && rateLimitWaitCount < 1/);
-  assert.doesNotMatch(lessonTutorSource, /rateLimitWaitCount < 1/);
+  assert.doesNotMatch(lessonTutorSource, /rateLimitWaitCount < 12/);
   assert.doesNotMatch(lessonTutorSource, /detail\.status === 429\s*\|\|/);
   assert.match(lessonTutorSource, /voiceTtsQuotaExhaustedRef\.current = true/);
   assert.match(lessonTutorSource, /if \(voiceTtsQuotaExhaustedRef\.current\)/);

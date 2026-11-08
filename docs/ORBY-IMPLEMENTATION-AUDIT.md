@@ -326,3 +326,11 @@ Se implementó una representación espacial aditiva para OrbyBoard v2:
 - El primer grupo de trazos de un sketch espacial respeta el retraso de aparición de su etapa. Los snapshots posteriores agregan trazos a la cola actual sin volver a aplicar el lead-in de la etapa.
 - Nuevas regresiones cubren borrado del último trazo con otras visuales después, layout válido después de la acción, secuencia no monótona rechazada y valores crecientes con huecos aceptados.
 - Suite declarada estáticamente: 222, sin nombres duplicados ni pruebas vacías; no ejecutada.
+
+## Incidente de build y corrección — prueba espacial
+
+- El deployment del SHA \`07b6e153c3e16f8616042f4baa2b759d74b8a255\` llegó a ejecutar \`npm run build\`, pero Node detuvo la carga de \`tests/orby-request-filter.test.mjs\` con \`SyntaxError: Invalid or unexpected token\` en la línea 4587.
+- La causa fue un \`\\n\` literal insertado dentro de la declaración de un test, no un error de TypeScript ni del renderer.
+- Se corrigió en \`aa90b02e56ecdf03c8f765642bf69f9b69298e76\`.
+- Revisión estática posterior: 222 tests declarados, cero nombres duplicados y cero bloques de test vacíos.
+- El check posterior reporta \`build-rate-limit\` y no hay un deployment posterior registrado para el SHA arreglado. Tests, TypeScript, ESLint y build continúan pendientes de ejecución verde.

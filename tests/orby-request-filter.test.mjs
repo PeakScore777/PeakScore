@@ -4188,3 +4188,10 @@ test("Live requires an immediate visual teaching board for substantive academic 
   assert.match(realtimeSessionSource, /Antes de desarrollar la primera explicación oral extensa, invoca render_orby_teaching_board/);
   assert.match(realtimeSessionSource, /Nunca esperes una búsqueda de conocimiento para comenzar a explicar o dibujar/);
 });
+
+
+test("optional Live knowledge lookup never exposes provider credential errors", () => {
+  assert.match(lessonTutorSource, /Optional knowledge lookup unavailable/);
+  assert.match(lessonTutorSource, /sin mencionar errores técnicos ni afirmar que consultaste material/);
+  assert.doesNotMatch(lessonTutorSource, /guidance: typeof result\.error === "string"\s*\? result\.error\.slice\(0, 240\)/);
+});

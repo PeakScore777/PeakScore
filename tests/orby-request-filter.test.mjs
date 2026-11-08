@@ -3740,6 +3740,15 @@ test("Gemini Live publica la pizarra sin sincronización por frases y procesa pr
   assert.match(lesson, /voiceAwaitingInputTranscriptionRef/);
   assert.match(lesson, /voiceInputPreflightAcceptedRef/);
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
+  assert.match(lesson, /voicePendingBoardSnapshotsRef\.current\.push\(/);
+  assert.match(lesson, /voiceBoardSnapshotFlushRef/);
+  assert.match(lesson, /pendingSnapshots\[pendingSnapshots\.length - 1\] = \{ \.\.\.pendingBoardSnapshot, board: updatedBoard \}/);
+  const flushStart = lesson.indexOf("function flushPendingOrbyTeachingBoard()");
+  const flushEnd = lesson.indexOf("function handleOrbyLiveTeachingBoardTool", flushStart);
+  const pendingBoardFlush = lesson.slice(flushStart, flushEnd);
+  assert.match(pendingBoardFlush, /const pendingSnapshots = voicePendingBoardSnapshotsRef\.current/);
+  assert.match(pendingBoardFlush, /pendingSnapshots\[nextIndex\]/);
+  assert.match(pendingBoardFlush, /setTimeout\(publishNextSnapshot, 90\)/);
   assert.match(lesson, /status: "queued_for_input_validation"/);
   assert.match(lesson, /status: "rendered"/);
   assert.match(lesson, /clearPendingOrbyTeachingBoard/);

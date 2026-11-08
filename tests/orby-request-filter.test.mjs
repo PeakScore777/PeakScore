@@ -724,7 +724,7 @@ test("todas las rutas de Orby se mantienen en proveedores gratuitos sin fallback
   assert.ok(adminStudioSource.includes("current.filter(item => item.id !== pendingMessageId)"));
   assert.ok(adminOrbyChatSource.includes("reply.matchAll(/\\[([^\\]]+)\\]/g)"));
   assert.ok(!adminOrbyChatSource.includes("useFallback: true"));
-  assert.ok(orbyKnowledgeSource.includes("if (process.env.GEMINI_API_KEY)"));
+  assert.ok(orbyKnowledgeSource.includes("if (isGeminiFreeTierConfigured())"));
 
 });
 
@@ -2394,7 +2394,7 @@ test("el laboratorio no presenta un estado desconocido del Autopilot como motor 
   assert.ok(adminStudioSource.includes("CARGANDO ESTADO"));
   assert.ok(adminStudioSource.includes("embeddingProviderConfigured: boolean"));
   assert.ok(adminAutomationRouteSource.includes("isCloudflareWorkersAIConfigured()"));
-  assert.ok(adminAutomationRouteSource.includes("Boolean(process.env.GEMINI_API_KEY?.trim())"));
+  assert.ok(adminAutomationRouteSource.includes("isGeminiFreeTierConfigured()"));
   assert.ok(adminAutomationRouteSource.includes("embeddingProviderConfigured:"));
 });
 
@@ -4302,7 +4302,7 @@ test("clear-focus retira solo el señalador y conserva intactos bloques, tinta y
   assert.deepEqual(cleared.blocks, board.blocks);
   assert.deepEqual(cleared.visuals, board.visuals);
   assert.deepEqual(cleared.layout, board.layout);
-  assert.equal(boardActions.sanitizeOrbyBoard(cleared) !== null, true);
+  assert.equal(boardModule.sanitizeOrbyBoard(cleared) !== null, true);
   assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "clear-focus" }), null);
   assert.equal(boardActions.sanitizeOrbyBoardAction({
     operation: "clear-focus", turnGeneration: 7, strokeId: "outer",
@@ -4852,7 +4852,7 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   assert.match(boardStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board-layout-stage-focused::after/);
   assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus or append-strokes/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
-  assert.ok(boardComponentSource.includes(".orby-board [data-orby-teacher-focus] animate { display: none; }"));
+  assert.ok(boardComponentSource.includes(".orby-board [data-orby-teacher-focus] animate { display: none !important; }"));
 });
 
 
@@ -4874,7 +4874,7 @@ test("la pizarra detiene SMIL, lápiz y animaciones al interrumpir la clase", ()
 test("tinta y lápiz comparten una línea temporal SVG que se pausa coordinadamente", () => {
   assert.match(boardComponentSource, /animation: "none", strokeDasharray: 1, strokeDashoffset: 1/);
   assert.match(boardComponentSource, /<animate[\s\S]*?attributeName="stroke-dashoffset"/);
-  assert.ok(boardComponentSource.includes('<animateMotion path={path} dur={`${duration}s`} begin={animationReady ? `${beginTime}s` : "indefinite"} rotate="auto" fill="freeze"/>'));
+  assert.ok(boardComponentSource.includes('<animateMotion path={path} dur={`${duration}s`} begin={animationReady ? `${beginTime}s` : "indefinite"} rotate="auto" calcMode="spline" keyPoints={motion.keyPoints} keyTimes={motion.keyTimes} keySplines={motion.keySplines} fill="freeze"/>'));
   assert.match(boardComponentSource, /const scheduledStrokeKeysRef = useRef\(new Set<string>\(\)\)/);
   assert.match(boardComponentSource, /const strokeEndTimesRef = useRef\(new Map<string, number>\(\)\)/);
   assert.ok(boardComponentSource.includes("const queuedStrokeEnds = [...strokeEndTimesRef.current.values()]"));
@@ -5205,7 +5205,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(boardComponentSource, /function renderBoardBlock/);
   assert.match(boardComponentSource, /const stageDelay = Math\.min\(\(element\.sequence - 1\) \* 135, 945\)/);
   assert.match(boardComponentSource, /startDelayMs\?: number/);
-  assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\} startDelayMs=\{stageDelay\}\s*\/>/);
+  assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\} startDelayMs=\{stageDelay\} elementId=\{element\.id\}\s*\/>/);
   assert.match(boardComponentSource, /scheduledStrokeKeysRef\.current\.size === 0[\s\S]*?Math\.max\(0, startDelayMs\)/);
 
   assert.match(boardStyles, /\.orby-board-canvas \{[\s\S]*?aspect-ratio: 16 \/ 9/);
@@ -5245,9 +5245,9 @@ test("las etapas SVG inician sus trazos cuando llega su etapa espacial, no antes
   assert.match(boardComponentSource, /<Diagram visual=\{visual\} startDelayMs=\{startDelayMs\} focus=\{visualFocus\}\/\>/);
   assert.match(boardComponentSource, /<Graph visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
   assert.match(boardComponentSource, /<Vectors visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
-  assert.match(boardComponentSource, /<Molecule visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
-  assert.match(boardComponentSource, /<Circuit visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
-  assert.match(boardComponentSource, /<Cell visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
+  assert.match(boardComponentSource, /<Molecule visual=\{visual\} startDelayMs=\{startDelayMs\} focus=\{visualFocus\}\/\>/);
+  assert.match(boardComponentSource, /<Circuit visual=\{visual\} startDelayMs=\{startDelayMs\} focus=\{visualFocus\}\/\>/);
+  assert.match(boardComponentSource, /<Cell visual=\{visual\} startDelayMs=\{startDelayMs\} focus=\{visualFocus\}\/\>/);
   assert.match(boardComponentSource, /<Dna visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
   assert.match(boardComponentSource, /<PhysiologyProcess visual=\{visual\} startDelayMs=\{startDelayMs\}\/\>/);
 
@@ -5406,9 +5406,9 @@ test("OmegaX English Studio reuses the existing free transcription route and own
   assert.ok(englishStudio.includes('id: "pronunciation" as const, title: "Pronunciation"'));
   assert.match(englishStudio, /Real-life roleplay/);
   assert.match(englishStudio, /\/api\/orby\/audio\/transcribe/);
-  assert.match(englishStudio, /PeakScore conserva solo la transcripción/);
+  assert.ok(englishStudio.includes("setTranscript(payload.transcript.trim().slice(0, 6000))"));
   assert.match(englishStudio, /no produce una puntuación fonética/);
-  assert.match(transcriptionRoute, /Cloudflare Workers AI is the only transcription provider/);
+  assert.ok(transcriptionRoute.includes("isCloudflareWorkersAIConfigured()"));
   assert.match(transcriptionRoute, /p_max_requests: 5/);
   assert.match(learningRoute, /\.eq\("user_id", user\.id\)/);
   assert.doesNotMatch(englishStudio, /https?:\/\/|openai|anthropic|elevenlabs/i);
@@ -5483,7 +5483,7 @@ test("OmegaX English Studio recorre los seis niveles CEFR A1-C2 con guías didá
   }
   assert.match(englishStudio, /MCER A1–C2/);
   assert.match(englishStudio, /no es una certificación ni un nivel oficial de desempeño de Saber 11/i);
-  assert.match(englishStudio, /matices implícitos, ironía, idiomaticidad/);
+  assert.match(englishStudio, /significados implícitos, matices semánticos, ironía, tono, estilo, idiomaticidad/);
 });
 
 test("OmegaX English feedback cierra el ciclo hablar-feedback-reintento con evidencia", async () => {

@@ -627,3 +627,6 @@
 - Umbral conservado: no persistir señales sin concepto, estado permitido y confianza >= 0.8.
 - Supabase verificado: tabla existente, RLS habilitado, 0 filas y 0 políticas registradas. El acceso sigue server-side con filtro por user_id; no se cambió esquema ni se agregó migración.
 - Los roleplays Live sin solicitud explícita de feedback todavía no escriben señales automáticamente. Pruebas añadidas; ejecución completa y build pendientes por build-rate-limit.
+
+- Se aisló la memoria personal de señales frente a la recuperación del Lab: el modo de English Studio por sí solo consulta solo señales del alumno por destreza y no fuerza búsquedas vectoriales/graph del Lab. Las búsquedas académicas usan su detector habitual.
+- Inventario estático al cierre de esta tanda: 257 tests nombrados, cero duplicados; no ejecutados.

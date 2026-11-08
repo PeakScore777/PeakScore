@@ -316,3 +316,12 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 ### Nota de corrección SMIL — 2026-11-08
 - El easing manuscrito usa una sola transición válida de inicio a fin (`keyTimes 0;1`, una spline) en tinta y lápiz; el movimiento sobre el path especifica `keyPoints 0;1`.
 - La variación por curvatura solo ajusta los puntos de control de esta única transición. No se añaden keyframes inexistentes ni se afirma una simulación de escritura humana exacta.
+
+
+### Stepwise derivations — Live and non-Live tutor paths (2026-11-08)
+- For multi-step work in Maths, Physics and Chemistry, one algebraic/numeric transformation must be represented as one `formula` or `step` block. Keep prior equalities visible, explain the operation, define symbols/units as introduced and verify the result before revealing it.
+- The Live path expresses each transformation as a new incremental board action. The non-Live/voice fallback returns an ordered board with separate formula/step blocks; short follow-ups preserve the existing derivation rather than restarting it. Greetings and simple factual replies must not be forced into a board.
+- These are prompt contracts, not a guarantee that the model will always emit the ideal sequence. Verify with real multi-step questions and measure the order of spoken explanation versus each visible block.
+- The fallback uses text-only blocks for equations; it does not claim a full TeX renderer or true pen-written glyph rendering. Freehand sketch remains an additional visual for geometry/axes/arrows when it materially helps.
+- The spline motion profile is a single valid SMIL interval (`keyTimes="0;1"`, one `keySplines` curve); the pen's path animation explicitly uses `keyPoints="0;1"`. Ink and pen use the same curve. Tests assert this contract, but browser timing/visual verification remains outstanding.
+- Static regression inventory after this work: 245 named tests, no duplicate titles; this is not an execution result. TypeScript, ESLint, production build, real Gemini Live, fallback TTS and Chrome accessibility checks remain required.

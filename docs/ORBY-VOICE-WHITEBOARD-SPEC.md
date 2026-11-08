@@ -106,3 +106,18 @@ Orby puede usar `apply_orby_board_action` con `focus` para señalar un trazo exi
 ### Rectificación del orden y borrado espacial
 
 El orden de las etapas del canvas es estrictamente creciente, no necesariamente consecutivo. Se permiten huecos después de borrar una etapa para conservar los números de secuencia originales. Si \`erase\` elimina la última tinta del sketch, se elimina esa etapa y se ajustan referencias de índice posteriores sin renumerar los elementos que permanecen. El primer trazo espera el retraso de su etapa; los snapshots acumulativos siguientes continúan la cola existente.
+
+
+## Hito siguiente — clase continua con objetivos encadenados (2026-11-08)
+
+La pizarra debe conservar el contexto de una clase mientras OmegaX cambia la atención entre partes. La secuencia demostrativa es: dibujar un átomo, señalar un electrón identificado, explicar, retirar el foco, señalar el núcleo, comparar y dibujar una relación adicional. El tablero no debe borrarse ni reconstruirse entre pasos.
+
+Reglas de interacción:
+- Reutilizar IDs del snapshot actual; cada objetivo debe pertenecer al visual que se está explicando.
+- `clear-focus` limpia el señalador, nunca el contenido.
+- Acciones encadenadas con orden explícito, confirmación individual, idempotencia y cancelación por generación al interrumpir.
+- La pausa/reanudación continúa desde el último paso confirmado; no repetir audio ni animaciones ya completadas.
+- Para partes todavía no direccionables (p. ej., flechas, enlaces, cables o puntos), usar foco del visual completo hasta implementar geometría/IDs propios.
+- La animación visual puede seguir el orden de eventos, pero no debe presentarse como sincronía fonética exacta sin metadatos temporales del proveedor.
+
+Este hito es una especificación pendiente, no una función terminada. Requiere regresiones automatizadas y QA manual de voz, micrófono, interrupciones y responsive.

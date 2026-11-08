@@ -66,7 +66,9 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
 }
 
 export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction): OrbyBoard | null {
-  const sketches = (board.visuals ?? []).filter((visual) => visual.type === "sketch");
+  const visuals = board.visuals ?? [];
+  const sketches = visuals.filter((visual) => visual.type === "sketch");
+  if (sketches.length > 1) return null;
   const strokeIdCounts = new Map<string, number>();
   for (const visual of sketches) {
     for (const stroke of visual.strokes) strokeIdCounts.set(stroke.id, (strokeIdCounts.get(stroke.id) ?? 0) + 1);

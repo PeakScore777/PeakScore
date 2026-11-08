@@ -13,13 +13,14 @@ export default function OrbyWorkspacePage() {
           subject="Preparación Saber 11"
           topic="Estudio y aprendizaje"
           stage="theory"
-          context="El estudiante está en el espacio principal de estudio con Orby. Ayúdalo con explicaciones, preguntas, notas de voz, imágenes y organización de su aprendizaje."
+          context="El estudiante está en el espacio de estudio de OmegaX. Ayúdalo a comprender temas de Saber 11, organizar recursos, crear apuntes y practicar con herramientas de estudio."
           open
           onOpenChange={(nextOpen) => {
             if (!nextOpen) router.push("/dashboard");
           }}
           accent="orby"
           workspace
+          assistantName="OmegaX"
         />
       </div>
     </main>

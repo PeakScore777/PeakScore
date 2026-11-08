@@ -3970,3 +3970,11 @@ test("la exportacion de la clase a PDF aísla la hoja y desactiva animaciones", 
   assert.match(boardComponentSource, /animation: none !important/);
   assert.match(boardComponentSource, /orby-board-pen-tip/);
 });
+
+test("guardar clase conserva bloques, formulas, apoyos visuales y resumen de anotaciones", () => {
+  assert.match(lessonTutorSource, /## Datos de los apoyos visuales/);
+  assert.match(lessonTutorSource, /visual\.nodes\.map/);
+  assert.match(lessonTutorSource, /Mis anotaciones/);
+  assert.match(lessonTutorSource, /peakscore:orby-board-ink:/);
+  assert.match(lessonTutorSource, /7900/);
+});

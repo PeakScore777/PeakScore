@@ -3333,8 +3333,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       voiceKnowledgeToolTurnRef.current = toolCompletion.state;
       if (!toolCompletion.shouldFinalize) {
         setVoiceStatus(toolCompletion.state.responseSent
-          ? "Orby está completando la explicación con el material del Lab…"
-          : "Orby terminó su primera explicación y está esperando el resultado del Lab…");
+          ? `${assistantLabel} está completando la explicación con el material del Lab…`
+          : `${assistantLabel} terminó su primera explicación y está esperando el resultado del Lab…`);
         return;
       }
       clearVoiceResponseWatchdog();
@@ -3660,13 +3660,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         : configuredModel;
       const systemInstruction = typeof tokenPayload.systemInstruction === "string"
         ? tokenPayload.systemInstruction
-        : "Eres Orby, el tutor de PeakScore. Responde exclusivamente en español colombiano y alfabeto latino. Nunca cambies a hindi ni a otro idioma. Si no entiendes, pide repetir en español. Ayuda únicamente con Saber 11.";
+        : `Eres ${assistantLabel}, el asistente educativo de PeakScore. Responde exclusivamente en español colombiano y alfabeto latino. Nunca cambies a hindi ni a otro idioma. Si no entiendes, pide repetir en español. Mantén el propósito educativo de PeakScore.`;
       const configuredVoiceName = typeof tokenPayload.voiceName === "string"
         && /^[A-Za-z]{3,24}$/.test(tokenPayload.voiceName)
         ? tokenPayload.voiceName
         : "Despina";
 
-      setVoiceStatus("Conectando con Orby…");
+      setVoiceStatus(`Conectando con ${assistantLabel}…`);
       const voiceSdk = await voiceSdkPromise;
       startupTimings.sdkLoadMs = performance.now() - voiceSdkStartedAt;
       voiceSdkRef.current = voiceSdk;
@@ -3802,7 +3802,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               ? quotaMessage
               : rateLimited
                 ? rateLimitMessage
-                : "No se pudo establecer la conexión de voz de Orby. Inténtalo de nuevo."));
+                : `No se pudo establecer la conexión de voz de ${assistantLabel}. Inténtalo de nuevo.`));
           }
           return;
         }
@@ -3951,7 +3951,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             ].filter(Boolean).join(" · ");
             if (!liveSessionEstablished) {
               console.warn("[Orby Voice] Connection closed before setup completed.", { detail });
-              rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de Orby. " + detail));
+              rejectSetup?.(new Error("No se pudo iniciar la conversación de voz de " + assistantLabel + ". " + detail));
               return;
             }
             if (voiceModeRef.current) {
@@ -3990,7 +3990,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           new Promise<never>((_, reject) => {
             acknowledgementTimeoutId = window.setTimeout(
               () => reject(new Error(
-                "Orby no confirmó la conexión de voz. Continúa por el chat de texto."
+                `${assistantLabel} no confirmó la conexión de voz. Continúa por el chat de texto.`
                 + (lastLiveSocketError ? " Último evento de red: " + lastLiveSocketError : ""),
               )),
               8_000,
@@ -4432,7 +4432,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
       if (pendingMessagesRef.current.length >= 4) {
-        setError("La cola de Orby está llena. Espera a que termine de cargar el historial.");
+        setError(`La cola de ${assistantLabel} está llena. Espera a que termine de cargar el historial.`);
         return;
       }
       pendingMessagesRef.current.push({ text: message, attachmentMeta });
@@ -4461,7 +4461,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
       if (pendingMessagesRef.current.length >= 4) {
-        setError("La cola de Orby está llena. Espera a que responda antes de enviar otra pregunta.");
+        setError(`La cola de ${assistantLabel} está llena. Espera a que responda antes de enviar otra pregunta.`);
         return;
       }
       pendingMessagesRef.current.push({ text: message, attachmentMeta });
@@ -4850,7 +4850,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return;
       }
       if (typeof payload.imageDataUrl !== "string" || !payload.imageDataUrl.startsWith("data:image/")) {
-        throw new Error("Orby no devolvió una imagen válida. Inténtalo de nuevo.");
+        throw new Error(`${assistantLabel} no devolvió una imagen válida. Inténtalo de nuevo.`);
       }
 
       const caption = typeof payload.caption === "string"
@@ -5237,7 +5237,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         // Turn-based Whisper can capture the laptop speaker after Orby finishes.
         // Discard a near-verbatim match instead of treating Orby's greeting as a student question.
         setLiveTranscript("");
-        setVoiceError("Ignoré el audio de Orby captado por el micrófono. Espera a que termine de hablar y graba tu pregunta.");
+        setVoiceError(`Ignoré el audio de ${assistantLabel} captado por el micrófono. Espera a que termine de hablar y graba tu pregunta.`);
         return;
       }
       if (ambiguousShortProgrammingTranscript(transcript)) {
@@ -5696,23 +5696,23 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             {voiceError && <p role="alert" className="mx-auto mt-3 max-w-3xl rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-700">{voiceError}</p>}
             {voiceFallbackMode && <p role="status" className="mx-auto mt-3 max-w-3xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs leading-5 text-amber-900"><strong>Modo por turnos:</strong> pulsa el micrófono para grabar tu pregunta. La respuesta puede tardar más que en la llamada en vivo y respetará las cuotas gratuitas disponibles.</p>}
           </div>
-          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label="Subtítulos en vivo de Orby" aria-live="polite" aria-atomic="false">
+          {showAssistantSubtitles && <section className="orby-live-captions shrink-0 px-3 pb-3 pt-1 sm:px-6 sm:pb-4" aria-label={"Subtítulos en vivo de " + assistantLabel} aria-live="polite" aria-atomic="false">
             <div className="mx-auto max-w-5xl rounded-lg border border-slate-700 bg-[#10151d]/95 px-3 py-2 text-slate-100 shadow-lg backdrop-blur-sm sm:px-4">
               <div className="mb-1 flex items-center gap-2">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" />
                 <p className="text-[9px] font-extrabold uppercase tracking-[0.16em] text-amber-300">Explicación en vivo · palabra activa</p>
               </div>
-              <p className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-7 sm:text-base" aria-label="Subtítulos de la explicación de Orby">{assistantSubtitleContent || (voiceMode ? "Aquí aparecerá lo que Orby vaya explicando…" : "Conecta con Orby para comenzar la clase.")}</p>
+              <p className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-7 sm:text-base" aria-label={"Subtítulos de la explicación de " + assistantLabel}>{assistantSubtitleContent || (voiceMode ? `Aquí aparecerá lo que ${assistantLabel} vaya explicando…` : `Conecta con ${assistantLabel} para comenzar la clase.`)}</p>
             </div>
           </section>}
         </div>
         <footer className="orby-class-controls flex shrink-0 flex-wrap items-center justify-between gap-3 rounded-b-xl border border-t-0 border-slate-700/80 bg-[#10151d] px-3 py-2.5 text-white sm:px-5">
           <div className="hidden min-w-0 items-center gap-2 sm:flex">
             <span className="flex h-2.5 w-2.5 items-center justify-center"><span className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" /></span>
-            <div className="min-w-0"><p className="text-[11px] font-bold">Orby está en clase</p><p className="truncate text-[10px] text-slate-400">{topic || subject}</p></div>
+            <div className="min-w-0"><p className="text-[11px] font-bold">{assistantLabel} está en clase</p><p className="truncate text-[10px] text-slate-400">{topic || subject}</p></div>
           </div>
           <div className="mx-auto flex items-center justify-center gap-2 sm:gap-3">
-            <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label="Abrir chat de Orby" title="Chat"><MessageSquare className="h-5 w-5" /></button>
+            <button type="button" onClick={() => setWorkspaceMode("chat")} className="orby-call-control" aria-label={"Abrir chat de " + assistantLabel} title="Chat"><MessageSquare className="h-5 w-5" /></button>
             <button type="button" onClick={() => void (voiceFallbackMode ? (isRecording ? stopAudioRecording() : requestMicrophonePermission()) : toggleVoiceMute())} disabled={!voiceMode || loading || (voiceFallbackMode && audioTranscribing)} className={`orby-call-control ${voiceMuted ? "orby-call-control-active" : ""}`} aria-label={voiceFallbackMode ? (isRecording ? "Detener grabación" : "Grabar pregunta") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"} title={voiceFallbackMode ? (isRecording ? "Detener grabación" : "Grabar pregunta") : voiceMuted ? "Activar micrófono" : "Silenciar micrófono"}>{voiceFallbackMode ? (isRecording ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-5 w-5" />) : voiceMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}</button>
             <button type="button" onClick={() => setShowAssistantSubtitles((value) => !value)} className={`orby-call-control ${showAssistantSubtitles ? "orby-call-control-active" : ""}`} aria-label={showAssistantSubtitles ? "Ocultar subtítulos" : "Mostrar subtítulos"} title="Subtítulos"><Captions className="h-5 w-5" /></button>
             <button type="button" onClick={finishVoiceCall} className="orby-call-end flex h-11 items-center gap-2 rounded-full bg-red-600 px-4 text-sm font-bold text-white shadow-lg transition hover:bg-red-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300" aria-label="Salir de la clase"><X className="h-4 w-4" /> <span>Salir</span></button>
@@ -5789,10 +5789,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         <input ref={cameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="hidden" aria-label="Tomar foto de una pregunta" onChange={(event) => handleAttachment(event.currentTarget.files?.[0])} />
         <button type="button" onClick={() => fileInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Adjuntar imagen o audio" title={workspace && imageAssets.length >= 20 ? "Almacenamiento lleno: elimina una imagen para continuar" : "Adjuntar imagen o nota de voz"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Paperclip className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={loading || isRecording || audioTranscribing || (workspace && imageAssets.length >= 20)} aria-label="Tomar foto" title="Tomar foto de una pregunta" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Camera className="h-[18px] w-[18px]" /></button>
-        <button type="button" onClick={() => void generateVisualAid()} disabled={loading || imageGenerationLoading || isRecording || audioTranscribing || input.trim().length < 5} aria-label="Generar una imagen educativa" title={imageGenerationLoading ? "Orby está creando tu imagen…" : "Crear un apoyo visual con el tema escrito"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-orange-500/25 bg-orange-500/[0.07] text-orange-300 transition hover:border-orange-400 hover:bg-orange-500/15 disabled:opacity-35"><ImagePlus className={imageGenerationLoading ? "h-[18px] w-[18px] animate-pulse" : "h-[18px] w-[18px]"} /></button>
-        <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label={voiceFallbackMode ? "Grabar pregunta para Orby" : "Grabar nota de voz"} title={voiceFallbackMode ? "Habla y vuelve a pulsar para detener; Orby responderá por voz sin Gemini Live" : "Grabar una nota de voz para transcribir"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Mic className="h-[18px] w-[18px]" /></button>
+        <button type="button" onClick={() => void generateVisualAid()} disabled={loading || imageGenerationLoading || isRecording || audioTranscribing || input.trim().length < 5} aria-label="Generar una imagen educativa" title={imageGenerationLoading ? `${assistantLabel} está creando tu imagen…` : "Crear un apoyo visual con el tema escrito"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-orange-500/25 bg-orange-500/[0.07] text-orange-300 transition hover:border-orange-400 hover:bg-orange-500/15 disabled:opacity-35"><ImagePlus className={imageGenerationLoading ? "h-[18px] w-[18px] animate-pulse" : "h-[18px] w-[18px]"} /></button>
+        <button type="button" onClick={() => void requestMicrophonePermission()} disabled={loading || isRecording || audioTranscribing} aria-label={voiceFallbackMode ? `Grabar pregunta para ${assistantLabel}` : "Grabar nota de voz"} title={voiceFallbackMode ? `Habla y vuelve a pulsar para detener; ${assistantLabel} responderá por voz con el servicio gratuito disponible` : "Grabar una nota de voz para transcribir"} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-[#aeb4bd] transition hover:border-orange-500/40 hover:bg-white/[0.04] hover:text-white disabled:opacity-35"><Mic className="h-[18px] w-[18px]" /></button>
         <button type="button" onClick={toggleVoiceMode} disabled={loading} aria-label={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} title={voiceMode ? "Finalizar conversación por voz" : "Iniciar conversación por voz"} className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition disabled:opacity-40 ${voiceMode ? "border-orange-500 bg-orange-500 text-[#17120c]" : "border-orange-500/30 bg-orange-500/10 text-orange-300 hover:border-orange-400 hover:bg-orange-500/20"}`}><AudioLines className="h-[18px] w-[18px]" /></button>
-        <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a Orby</label>
+        <label className="sr-only" htmlFor="orby-tutor-message">Pregunta a {assistantLabel}</label>
         <textarea ref={inputRef} id="orby-tutor-message" value={input} onKeyDown={(event) => {
           if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
             event.preventDefault();
@@ -5807,9 +5807,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           const extension = pastedImage.type === "image/jpeg" ? "jpg" : pastedImage.type === "image/webp" ? "webp" : "png";
           handleAttachment(new File([pastedImage], "captura-" + Date.now() + "." + extension, { type: pastedImage.type }));
         }} onChange={(event) => { setInput(event.target.value); const element = event.currentTarget; element.style.height = "48px"; element.style.height = `${Math.min(element.scrollHeight, 112)}px`; }} maxLength={1200} rows={1} placeholder="Escribe tu pregunta o pega una imagen con Ctrl + V…" style={{ scrollbarWidth: "none" }} className="orby-composer-input min-h-10 max-h-28 flex-1 resize-none overflow-y-auto rounded-lg border border-white/10 bg-[#15181d] px-3 py-2.5 text-sm leading-5 text-white outline-none placeholder:text-[#747b85] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/20" />
-        <button type="submit" disabled={(!input.trim() && !attachment) || isRecording || audioTranscribing} aria-label="Enviar mensaje a Orby" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
+        <button type="submit" disabled={(!input.trim() && !attachment) || isRecording || audioTranscribing} aria-label={"Enviar mensaje a " + assistantLabel} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f28a18] text-[#17120c] transition hover:bg-[#ffa12f] disabled:cursor-not-allowed disabled:opacity-35"><Send className="h-5 w-5" /></button>
       </form>
-      {queuedMessageCount > 0 && <p className="shrink-0 border-t border-orange-500/15 bg-orange-500/[0.06] px-4 py-1.5 text-[11px] text-orange-200" role="status">{queuedMessageCount} pregunta{queuedMessageCount === 1 ? "" : "s"} en cola; Orby las responderá en orden.</p>}
+      {queuedMessageCount > 0 && <p className="shrink-0 border-t border-orange-500/15 bg-orange-500/[0.06] px-4 py-1.5 text-[11px] text-orange-200" role="status">{queuedMessageCount} pregunta{queuedMessageCount === 1 ? "" : "s"} en cola; {assistantLabel} las responderá en orden.</p>}
       {conversationError && workspace && <div role="alert" className="shrink-0 border-t border-rose-100 bg-rose-50 px-3 py-2 text-xs text-rose-700">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span>{conversationError}</span>

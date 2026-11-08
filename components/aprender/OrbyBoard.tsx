@@ -480,7 +480,7 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
         <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Apuntes de clase</h3></div>
         <span className="truncate text-right text-xs font-semibold text-slate-700 sm:text-sm">{board.title}</span>
       </header>
-      <div className="sticky top-[49px] z-10 flex flex-wrap items-center gap-1.5 border-b border-slate-200 bg-[#fffefb]/95 px-3 py-2 backdrop-blur-sm" aria-label="Herramientas de anotación">
+      <div className="sticky top-[49px] z-10 flex flex-wrap items-center gap-1.5 border-b border-slate-200 bg-[#fffefb]/95 px-3 py-2 backdrop-blur-sm print:hidden" aria-label="Herramientas de anotación">
         <span className="mr-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Mis trazos</span>
         <button type="button" onClick={() => setTool("pen")} aria-pressed={tool === "pen"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "pen" ? "bg-orange-100 text-orange-800" : "text-slate-600 hover:bg-slate-100")}>Lápiz</button>
         <button type="button" onClick={() => setTool("highlight")} aria-pressed={tool === "highlight"} className={"rounded-md px-2.5 py-1.5 text-[10px] font-semibold " + (tool === "highlight" ? "bg-amber-100 text-amber-800" : "text-slate-600 hover:bg-slate-100")}>Resaltador</button>

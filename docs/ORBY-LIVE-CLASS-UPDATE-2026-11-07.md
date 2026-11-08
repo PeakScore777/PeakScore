@@ -973,3 +973,137 @@ El archivo `tests/orby-request-filter.test.mjs` contiene actualmente **215 prueb
 3. Comparar la secuencia visual y la voz con el video; corregir cualquier salto, desfase o reinicio antes de continuar con mejoras periféricas.
 
 **Protección:** solo `feat/founder-intro`; sin merge a `main`, deploy, migraciones Supabase ni servicios de IA facturables. El material del Orby ICFES Lab eliminado intencionalmente no se reconstruye.
+
+## Reconciliación integral del tutor existente con la referencia en video — 7 de noviembre de 2026 (UTC−05)
+
+**Rama inspeccionada:** `feat/founder-intro`  
+**Video de aceptación:** `1000189532.mp4`, duración 42,746 s.  
+**Documentos cotejados:** este registro diario, `ORBY-IMPLEMENTATION-AUDIT.md`, `ORBY-LIVE-TUTOR-SPEC.md` y `ORBY-VOICE-WHITEBOARD-SPEC.md`.  
+**Archivos de fuente cotejados:** `LessonAITutor.tsx`, `OrbyBoard.tsx`, `orby-board.ts`, `orby-board-actions.ts`, `orby-live-tools.ts`, `orby-scope.ts`, rutas Live y tutor por turnos, estilos y suite de regresión.
+
+> Esta sección reconcilia el trabajo ya realizado. No crea un tutor nuevo, no sustituye la arquitectura existente y no afirma que las capacidades inspeccionadas hayan pasado QA de navegador.
+
+### 1. Inventario de capacidades que ya existen — no duplicar ni retirar
+
+| Capacidad | Evidencia en la rama | Madurez real |
+|---|---|---|
+| Escenario de clase de voz, estado de micrófono, subtítulos y controles de llamada | `LessonAITutor.tsx` | Implementado en interfaz; QA real pendiente |
+| Subtítulos de salida y continuidad entre llamada y chat | Transcripción Live validada, mismo mensaje de asistente y tablero asociado por ID | Implementado; sin alineación palabra-a-palabra garantizada |
+| Herramienta de tablero no bloqueante con snapshots completos y acumulativos | `render_orby_teaching_board` y manejador Live | Implementado; depende de que Gemini emita llamadas válidas |
+| Fallback por turnos con tablero versión 2 y visuales tipados | `app/api/lesson-tutor/route.ts` | Contrato implementado; QA de desconexión pendiente |
+| Primitivas visuales educativas | `orby-board.ts` y `OrbyBoard.tsx`: sketch, annotation, diagram, graph, vectors, table, timeline, molecule, circuit, cell, dna, punnett, cell-division, organ-system, neuron y physiology-process | 16 tipos definidos y sanitizados; no todos equivalen a escritura manual |
+| Tinta acumulativa y lápiz serial | IDs estables, una sola visual sketch, cola SVG, duración geométrica y margen de levantamiento | Implementado en código; sincronización visual real no certificada |
+| Interrupción y pausa de dibujo | `drawingActive`, pausa/reanudación SVG y reglas CSS | Implementado; falta QA de navegador a mitad del trazo |
+| Operaciones teacher-only | `focus`, `erase`, `replace`, IDs únicos, halo independiente y corrección de geometría | Implementadas en contrato, sanitizador y enrutamiento |
+| Exclusividad del profesor | No hay herramientas de tinta, borrador ni controles de escritura del estudiante | Decisión preservada; no restaurar las herramientas retiradas |
+| Guardado de apuntes y exportación | Apuntes estructurados y diálogo de impresión/PDF | Implementados; fidelidad de exportación pendiente de QA |
+| Pedagogía de las cinco áreas Saber 11 | Perfiles en `orby-scope.ts` para Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés | Implementados como directivas; precisión semántica sigue requiriendo evaluación |
+| Diagnóstico y enseñanza adaptativa | Resumen de señales y directiva pedagógica acotada por usuario/materia | Implementados; dependen de señales válidas existentes |
+| Reconexión, historial y protección de turnos | Handle de reanudación, compresión de contexto, generaciones y persistencia atómica | Código presente; reconexión y persistencia real pendientes de QA |
+| Restricción económica | Sin proveedores nuevos ni fallback de voz facturable silencioso; cuotas y errores explícitos | Restricción de diseño preservada |
+
+La base existente es sustancial. La siguiente fase debe **conectar y completar estas capacidades**, no volver a implementarlas en paralelo.
+
+### 2. Lectura precisa del video — criterio visual que prevalece
+
+La referencia no es una columna de bloques seguida de una imagen. Es una composición didáctica libre sobre una misma superficie de escritura:
+
+- Fondo blanco con una **cuadrícula de puntos muy tenue**. La descripción histórica de una hoja lisa/sin cuadrícula no reproduce este detalle del video y queda rectificada para la aceptación visual.
+- Título manuscrito en la zona superior, con énfasis/subrayado.
+- Notas y conceptos a la izquierda, conectados por flechas con el dibujo principal.
+- Esquema biológico grande en el centro: contorno celular, núcleo y estructuras internas.
+- Etiquetas y anotaciones laterales a la derecha, incluyendo una explicación contextual.
+- Tinta negra para contornos y texto principal, azul para estructuras/etiquetas y rojo para énfasis, subrayados y conexiones.
+- El lápiz/indicador acompaña el trazo que se está construyendo; no debe saltar entre zonas ni hacer que una figura completa aparezca de golpe.
+- Los subtítulos permanecen en el área inferior de la clase, separados del lienzo, mientras voz y tablero avanzan en paralelo.
+
+La prueba de aceptación no es que aparezca “una célula” ni que haya un SVG bonito: es reproducir **la distribución espacial, el orden pedagógico y la sensación de construcción en vivo** observados entre los segundos 26 y 38 del video.
+
+### 3. Brechas actuales confirmadas al cotejar código y especificaciones
+
+#### P0 — El modelo de datos no representa todavía una pizarra espacial ordenada
+
+- `OrbyBoard` mantiene `blocks[]` y `visuals[]` como colecciones separadas.
+- `OrbyBoard.tsx` renderiza todos los bloques primero y después cada visual en secciones independientes.
+- Los bloques de texto no tienen posición, tamaño ni relación espacial con trazos, flechas o anotaciones.
+- Los visuales se dibujan en componentes separados; el sketch usa un `viewBox` cuadrado 100×100. No hay un sistema de coordenadas compartido para componer un título, notas laterales, esquema central y callout en un solo lienzo apaisado.
+- El retraso de aparición de las secciones visuales depende de `board.blocks.length`. Al cambiar la cantidad de bloques, puede cambiar el retraso calculado para una visual que ya estaba montada. La clave React estable no corrige por sí sola este acoplamiento temporal.
+
+**Consecuencia:** la implementación puede presentar texto y diagramas durante una misma clase, pero no puede reproducir todavía la composición libre del video.
+
+#### P0 — El contrato Gemini y el sanitizador tienen distinta fuerza
+
+- El sanitizador aplica límites estrictos: bloques, visuales, puntos, IDs, tonos, geometría y presupuesto completo de 18 KB.
+- La declaración de `render_orby_teaching_board` describe varios límites en prosa, pero los arreglos de visuales no expresan de forma consistente `minItems/maxItems`; los IDs se declaran como cadenas sin longitud/formato formal; y varios campos enumerados se describen, pero no se restringen con enum.
+- En la revisión del schema de render se identificaron 24 propiedades declaradas como arreglos y ninguna con `minItems/maxItems` formales. Es una medida estructural del archivo, no una prueba de que Gemini siempre produzca datos inválidos.
+- El SDK fijado por el lockfile es `@google/genai@2.17.1`. Su interfaz oficial `Schema` documenta `minItems`, `maxItems`, `minLength`, `maxLength`, `pattern`, `enum`, `minimum` y `maximum`. Para `minItems/maxItems/minLength/maxLength`, la interfaz declara valores de tipo string. La aceptación efectiva debe comprobarse con un pequeño test de contrato Live; el sanitizador de cliente sigue siendo la autoridad final.
+- Referencia SDK: https://googleapis.github.io/js-genai/release_docs/interfaces/types.Schema.html
+
+**Consecuencia:** el modelo puede recibir una descripción menos precisa que las reglas que el cliente utiliza para rechazar el tablero. El siguiente trabajo debe alinear ambos contratos sin relajar el sanitizador ni crear una definición desmesurada que el endpoint Live no acepte.
+
+#### P1 — La especificación anterior de `spokenCue` está desfasada
+
+- `ORBY-VOICE-WHITEBOARD-SPEC.md` conserva una propuesta histórica de `spokenCue` y coincidencia de frase con transcripción.
+- La herramienta Live actual no declara `spokenCue`; el cliente publica el snapshot aceptado inmediatamente y las pruebas rechazan volver a sincronizar por coincidencia textual.
+- `ORBY-LIVE-TUTOR-SPEC.md` establece el criterio más seguro: usar referencia a segmentos/eventos de narración solo cuando el proveedor entregue metadatos fiables; no inventar timestamps ni inferir sincronía exacta a partir de texto.
+- Por tanto, la propuesta antigua de coincidencia de frase no debe reintroducirse como solución de sincronización. La sincronía actual es por orden de llamadas/etapas pedagógicas y es aproximada, no fonética ni palabra-a-palabra.
+
+#### P1 — El almacenamiento de snapshot pendiente necesita una prueba de flujo, no un reemplazo apresurado
+
+- El modelo de la herramienta exige que cada snapshot sea el **tablero acumulativo completo**. Por ese contrato, conservar el último snapshot completo pendiente antes de validar la transcripción puede ser correcto: el último debe contener los elementos anteriores que siguen vigentes.
+- No clasificar `voicePendingBoardSnapshotsRef` como pérdida de etapas sin reproducir un caso real. La suite existente verifica que el último snapshot sea autoritativo, pero no demuestra por sí sola que varios snapshots reales pendientes se fusionen correctamente.
+- Prueba pendiente: enviar dos o más snapshots completos en el estado de prevalidación, comprobar que el último conserva los IDs/etapas previas, validar la entrada y comprobar que se publica una sola escena coherente. Si la prueba falla, corregir el contrato o la acumulación; no convertir indiscriminadamente snapshots completos en una cola que duplique tinta.
+
+#### P1 — La animación actual es una base, no la sincronización completa del video
+
+- Hay revelado CSS de bloques, dibujos SVG con `stroke-dashoffset`, movimiento SMIL del lápiz, etiquetas posteriores, cola serial y pausa/reanudación.
+- No existe todavía un flujo general de acciones espaciales intercaladas (escribir nota → dibujar contorno → añadir flecha → señalar etiqueta) con secuencia monotónica compartida.
+- La presencia de una llamada de tablero durante el audio no demuestra que cada elemento aparezca en el momento exacto en que se pronuncia. Sin marcas temporales/segmentos del proveedor, no prometer sincronización exacta.
+
+### 4. Arquitectura de continuación — evolución compatible, no reemplazo total
+
+La especificación permanente `ORBY-LIVE-TUTOR-SPEC.md` ya recomienda una secuencia de acciones visuales tipadas. La evolución debe seguir esa especificación y reutilizar los mecanismos existentes:
+
+1. **Conservar compatibilidad:** mantener lectura/renderizado de los tableros versión 1 y 2 y su ruta de fallback. La nueva representación debe ser aditiva y versionada.
+2. **Definir una escena espacial compartida:** un lienzo apaisado con coordenadas normalizadas y elementos tipados colocables: texto manuscrito, título, trazo, flecha, etiqueta, énfasis, forma/diagrama y borrado/corrección.
+3. **Definir acciones incrementales:** `turnGeneration`, `sequence` monotónico, `actionId` estable, `elementId`, tipo, payload tipado, `dependsOn` opcional y duración sugerida acotada. Las referencias a voz son opcionales y solo se aceptan si Live entrega un segmento verificable.
+4. **Aplicar idempotencia:** rechazar acciones duplicadas o antiguas, conservar lo ya dibujado, cancelar acciones pendientes al interrumpir y no mezclar generaciones. Las operaciones existentes `focus/erase/replace` deben seguir trabajando sobre IDs de elementos/trazos existentes.
+5. **Un solo lienzo y un solo motor:** los elementos tipados se convierten en primitivas de la misma superficie; no crear múltiples SVG de sketch con relojes de lápiz paralelos.
+6. **Añadir el fondo de puntos con baja intensidad:** debe ayudar a orientar la escritura sin competir con el contenido y respetar impresión, contraste y movimiento reducido.
+7. **Renderizar el estado final estático:** si hay movimiento reducido, interrupción o exportación, la información completa sigue legible sin depender de animaciones.
+
+No se aprueba todavía una versión 3 de código ni se cambia el contrato en esta mutación documental. Primero se diseña y prueba la compatibilidad con los datos, persistencia y fallback actuales.
+
+### 5. Criterios de aceptación nuevos, medibles y comparables con el video
+
+- Lienzo apaisado de relación de aspecto adaptable, con cuadrícula de puntos sutil y sin tarjetas separadas que rompan la composición.
+- Título arriba, notas/conceptos a la izquierda, dibujo principal central y anotaciones explicativas a la derecha; en móvil, distribución responsive sin perder el orden.
+- En una clase biológica comparable al video, mostrar en secuencia contorno celular → núcleo/ADN → ribosomas/relaciones → mitocondria → flecha/ATP → explicación lateral. No anticipar elementos antes de explicarlos.
+- La misma secuencia debe poder intercalar texto, trazos, flechas y etiquetas en el orden de enseñanza.
+- Cada acción aparece una sola vez; los elementos anteriores no parpadean ni se redibujan cuando llega la siguiente actualización.
+- Un solo lápiz activo; punta y tinta comparten tiempo; pausa durante interrupción y cancelación de eventos antiguos.
+- Al pedir «repite esa parte», focus debe señalar sin agregar tinta; replace/erase solo afectan los IDs elegidos.
+- La voz inicia sin esperar al tablero; subtítulos son de la transcripción de Orby validada, nunca de la pregunta del alumno.
+- Si no existe alineación fiable del proveedor, se mantiene sincronía por secuencia/eventos y se documenta como aproximada.
+- Probar snapshot rechazado, snapshot completo acumulativo, snapshots en prevalidación, cambio de generación, reconexión, fallback, movimiento reducido, exportación PDF y cuotas gratuitas sin proveedor facturable.
+
+### 6. Validación y límites de esta reconciliación
+
+- Se confirmó en GitHub la presencia de los archivos y contratos descritos. Esta revisión es estática; no ejecutó Node, TypeScript, ESLint, build, micrófono ni Chrome.
+- La suite contiene 215 declaraciones `test()` en `tests/orby-request-filter.test.mjs`; varias comprobaciones de tablero son aserciones estáticas del código. El número de tests no es un resultado de tests aprobados.
+- Último estado de Vercel consultado: `build-rate-limit`. No hay una nueva ejecución visible de GitHub Actions para certificar el SHA actual.
+- La comparación de ramas consultada muestra `feat/founder-intro` divergente (3387 commits ahead, 9 behind). No hacer merge, rebase ni cambios en `main`.
+- No se modificó código, datos, RLS, migraciones ni despliegue como parte de esta reconciliación.
+- No se reintroducen herramientas de dibujo del estudiante, material eliminado intencionalmente del Orby ICFES Lab, proveedores de pago ni llamadas adicionales de IA por defecto.
+
+### 7. Orden de trabajo inmediato
+
+1. Diseñar el schema espacial/acciones con compatibilidad v1/v2 y documentar sus invariantes antes de tocar el renderer.
+2. Alinear schema Gemini con los límites del sanitizador y probar la declaración Live en aislamiento; mantener el sanitizador como autoridad.
+3. Implementar el lienzo apaisado compartido, la cuadrícula punteada sutil y las posiciones libres de texto/dibujo.
+4. Adaptar el renderer para consumir acciones ordenadas en un solo reloj/lienzo, preservando focus/erase/replace y cancelación por generación.
+5. Añadir pruebas unitarias de secuencia, idempotencia, dependencias, snapshots completos y prevalidación.
+6. Ejecutar `npm run test:orby`, `npx tsc --noEmit`, `npm run lint`, `npm run build` y QA real en Chrome cuando la vía de CI/ejecución esté disponible sin generar coste.
+7. Comparar una clase completa con el video y registrar primera palabra audible, primer audio, primera acción visual, latencia entre voz/acción, acciones rechazadas, cancelaciones y resultado final.
+
+**Regla de cierre:** no declarar el tutor equivalente al video hasta reproducir visualmente la composición y el orden de escritura/dibujo en navegador. La base existente se conserva; la meta es conectarla y elevarla, no rehacerla.

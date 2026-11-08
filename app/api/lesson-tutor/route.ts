@@ -26,6 +26,33 @@ function cleanText(value: unknown, maxLength: number): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
+const ENGLISH_STUDIO_SKILL_LABELS = {
+  speaking: "Speaking",
+  pronunciation: "Pronunciation",
+  listening: "Listening",
+  reading: "Reading",
+  writing: "Writing",
+} as const;
+
+type EnglishStudioSkill = keyof typeof ENGLISH_STUDIO_SKILL_LABELS;
+
+function normalizeEnglishStudioSkill(value: unknown): EnglishStudioSkill | null {
+  return typeof value === "string" && Object.prototype.hasOwnProperty.call(ENGLISH_STUDIO_SKILL_LABELS, value)
+    ? value as EnglishStudioSkill
+    : null;
+}
+
+function getEnglishStudioTopicPrefix(skill: EnglishStudioSkill): string {
+  return "English Studio · " + ENGLISH_STUDIO_SKILL_LABELS[skill];
+}
+
+function getEnglishStudioSkillFromTopic(topic: string): EnglishStudioSkill | null {
+  const match = topic.match(/^English Studio · (Speaking|Pronunciation|Listening|Reading|Writing) · /i);
+  if (!match) return null;
+  const normalized = match[1].toLocaleLowerCase("en-US") as EnglishStudioSkill;
+  return Object.prototype.hasOwnProperty.call(ENGLISH_STUDIO_SKILL_LABELS, normalized) ? normalized : null;
+}
+
 
 function redactPrivateKnowledgeTitles(
   reply: string,
@@ -116,7 +143,8 @@ export async function POST(request: Request) {
     // reject the generated answer or create a duplicate exchange.
     assistantName = body.assistantName === "OmegaX" ? "OmegaX" : "Orby";
     const voiceModeRequest = body.voiceMode === true;
-  const englishPracticeMode = assistantName === "OmegaX" && body.englishPracticeMode === true;
+    const englishPracticeMode = assistantName === "OmegaX" && body.englishPracticeMode === true;
+    const learningSkill = assistantName === "OmegaX" ? normalizeEnglishStudioSkill(body.learningSkill) : null;
 
     let subject = cleanText(body.subject, 80) || "Preparación Saber 11";
     const topic = cleanText(body.topic, 160);
@@ -614,14 +642,20 @@ export async function POST(request: Request) {
     const studentSignalsPromise: Promise<typeof emptyStudentSignals> = shouldRetrieveAcademicKnowledge
       ? (async () => {
           try {
-            const signalSubject = detectedSubject ?? normalizeIcfesSubject(subject, recentScopeContext);
+            const signalSubject = learningSkill
+              ? "Inglés"
+              : detectedSubject ?? normalizeIcfesSubject(subject, recentScopeContext);
             const baseSignalQuery = supabaseAdmin.from("orby_student_learning_signals")
               .select("topic,concept,learning_state,misconception,teaching_hint,confidence,created_at")
               .eq("user_id", user.id);
             const scopedSignalQuery = signalSubject
               ? baseSignalQuery.eq("subject", signalSubject)
               : baseSignalQuery;
-            const signalResult = await scopedSignalQuery
+            const skillPrefix = learningSkill ? getEnglishStudioTopicPrefix(learningSkill) + " ·" : null;
+            const skillFilteredQuery = skillPrefix
+              ? scopedSignalQuery.like("topic", skillPrefix + "%")
+              : scopedSignalQuery;
+            const signalResult = await skillFilteredQuery
               .order("created_at", { ascending: false })
               .limit(8);
             if (signalResult.error) {
@@ -753,11 +787,16 @@ export async function POST(request: Request) {
       "Evidencia académica: " + sanitizeOrbyKnowledgeExcerpt(item.evidence_summary, item.title).slice(0, 350),
       "Confianza documental: " + item.confidence.toFixed(2),
     ].join("\n")).join("\n\n");
-    const learningContext = studentSignals.map((signal) =>
-      "- Tema: " + signal.topic + "; concepto: " + signal.concept + "; estado observado: " + signal.learning_state
-      + (signal.misconception ? "; confusión observada: " + signal.misconception : "")
-      + (signal.teaching_hint ? "; estrategia que conviene probar: " + signal.teaching_hint : "")
-    ).join("\n");
+    const learningContext = studentSignals.map((signal) => {
+      const storedSkill = getEnglishStudioSkillFromTopic(signal.topic);
+      const cleanTopic = storedSkill
+        ? signal.topic.replace(/^English Studio · (?:Speaking|Pronunciation|Listening|Reading|Writing) · /i, "")
+        : signal.topic;
+      return "- " + (storedSkill ? "Destreza de English Studio: " + ENGLISH_STUDIO_SKILL_LABELS[storedSkill] + "; " : "")
+        + "Tema: " + cleanTopic + "; concepto: " + signal.concept + "; estado observado: " + signal.learning_state
+        + (signal.misconception ? "; confusión observada: " + signal.misconception : "")
+        + (signal.teaching_hint ? "; estrategia que conviene probar: " + signal.teaching_hint : "");
+    }).join("\n");
 
     const assistantIdentity = assistantName === "OmegaX"
       ? "Eres OmegaX, el asistente de estudio general de PeakScore. Acompañas al estudiante a organizar su aprendizaje, comprender contenidos, crear recursos de repaso y prepararse para Saber 11 en Matemáticas, Lectura Crítica, Sociales y Ciudadanas, Ciencias Naturales e Inglés. Mantén el propósito educativo de PeakScore."
@@ -1141,19 +1180,25 @@ No uses bloques Markdown ni texto fuera del JSON.
       ? parsed.learningSignal as Record<string, unknown>
       : null;
     if (rawSignal) {
-      const signalSubject = normalizeIcfesSubject(subject, [topic, question, userMessage].filter(Boolean).join(" ")) || detectedSubject;
+      const signalSubject = learningSkill
+        ? "Inglés"
+        : normalizeIcfesSubject(subject, [topic, question, userMessage].filter(Boolean).join(" ")) || detectedSubject;
       const allowedStates = ["needs_review", "misconception", "struggling", "understands"];
       const signalState = allowedStates.includes(String(rawSignal.state)) ? String(rawSignal.state) : null;
       const concept = cleanText(rawSignal.concept, 160);
       const confidence = typeof rawSignal.confidence === "number" && Number.isFinite(rawSignal.confidence)
         ? Math.max(0, Math.min(1, rawSignal.confidence))
         : 0;
+      const signalTopicDetail = cleanText(topic, 110) || signalSubject || "Práctica de inglés";
+      const signalTopic = learningSkill
+        ? (getEnglishStudioTopicPrefix(learningSkill) + " · " + signalTopicDetail).slice(0, 180)
+        : signalTopicDetail.slice(0, 180);
       if (signalSubject && signalState && concept && confidence >= 0.8) {
         const { error: signalError } = await supabaseAdmin.from("orby_student_learning_signals").insert({
           user_id: user.id,
           conversation_id: conversationId || null,
           subject: signalSubject,
-          topic: cleanText(topic, 180) || signalSubject,
+          topic: signalTopic,
           concept,
           learning_state: signalState,
           misconception: cleanText(rawSignal.misconception, 400) || null,

@@ -354,3 +354,9 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - El grupo SVG del halo usa esa revisión como key: React remonta el indicador, pero conserva la key del trazo, por lo que no vuelve a animar la tinta previa.
 - Se corrigió el montaje del grupo contextual para aplicar efectivamente esa key.
 - Estado CI consultado para el commit anterior: el único estado reportado es Vercel en fallo por límite de builds del plan (`upgradeToPro=build-rate-limit`); no hay evidencia de ejecución satisfactoria de Node tests, TypeScript, ESLint o build en ese commit. No se intenta forzar otro build que pueda generar costes.
+
+
+### Endurecimiento de IDs globales — 7 de noviembre
+- Las operaciones teacher-only ahora exigen que cada ID afectado aparezca exactamente una vez en toda la pizarra, no solo dentro de su visual.
+- Si una pizarra contiene accidentalmente IDs duplicados entre dos esquemas, focus, replace y erase rechazan la operación en lugar de señalar o borrar más de un elemento.
+- Se añadieron regresiones para los tres casos de ID duplicado.

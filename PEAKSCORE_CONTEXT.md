@@ -430,3 +430,14 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Nueva bitácora incluye detalles: `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-08.md`; especificación permanente: `docs/ORBY-LIVE-TUTOR-SPEC.md`.
 - Tests estáticos nombrados: 229; no ejecutados. No se certifican TypeScript, ESLint, build ni QA de micrófono. Vercel sigue con `build-rate-limit`.
 - No tocar `main`, producción ni Supabase; no ejecutar migraciones; no incorporar proveedores de pago. No reconstruir material del Lab eliminado intencionalmente.
+
+
+## 2026-11-08 — cuotas y velocidad de Orby Live
+- Se corrigió el error crítico que trataba cada HTTP 429/RESOURCE_EXHAUSTED de Gemini como agotamiento de cuota diaria y devolvía bloqueo de 3600 s. Ahora se distingue `quota_exhausted` de throttling RPM/TPM temporal con `GEMINI_LIVE_RATE_LIMITED` y Retry-After 2–30 s.
+- Watchdog Live: aviso a 5 s sin progreso, fallback de la misma pregunta a texto a 15 s; se rearma con eventos nuevos, no corta respuestas que siguen avanzando.
+- Respaldo TTS: `gemini-3.8-flash-lite-tts`, fragmentos cliente 880 caracteres y endpoint 900 (antes 480/500), máximo un reintento breve de throttling; no dejar al alumno esperando minutos.
+- Conteo estático en `tests/orby-request-filter.test.mjs`: 230 tests nombrados, sin duplicados ni tests vacíos. No ejecutados.
+- Cuotas reales: Gemini es gratis en Free Tier, pero RPM/TPM/RPD se miden por proyecto y se comparten entre todos los alumnos; consulta Google AI Studio para límites efectivos. Cloudflare comparte 10.000 neuronas/día entre tutor, embeddings y Whisper. No activar billing/plan pagado.
+- Claude Free de claude.ai no es Claude API gratuito; la API de Console usa créditos prepagados. No usar como fallback de PeakScore.
+- Sigue pendiente: medir p50/p95 en Chrome, revisar uso real de AI Studio/Cloudflare y ejecutar tests/TS/ESLint/build. No afirmar compilación verde.
+- Archivos clave: `lib/ai/orby-tts-errors.ts`, `app/api/orby/realtime-session/route.ts`, `app/api/orby/voice-speech/route.ts`, `components/aprender/LessonAITutor.tsx`.

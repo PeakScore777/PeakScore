@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile as readRawFile } from "node:fs/promises";
+import { runInNewContext } from "node:vm";
+import ts from "typescript";
 
 // Normalize source fixtures so static regression checks behave identically
 // on Linux/macOS and Windows (where Git may check out CRLF line endings).
@@ -8,8 +10,6 @@ async function readFile(path, encoding = "utf8") {
   const content = await readRawFile(path, encoding);
   return typeof content === "string" ? content.replace(/\r\n?/g, "\n") : content;
 }
-import { runInNewContext } from "node:vm";
-import ts from "typescript";
 
 const compiledTestModuleUrls = new Map();
 

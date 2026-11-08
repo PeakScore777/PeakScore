@@ -616,3 +616,5 @@
 - Los textos de listening/reading/writing se guardan como notas; las grabaciones/transcripciones de speaking/pronunciation siguen en grabaciones.
 - TTS es voz del navegador, no grabación nativa ni evaluación de acento. No se añadió proveedor ni coste externo.
 - Inventario estático: 255 tests nombrados y sin duplicados; no ejecutados. Validación completa pendiente.
+
+- Robustez adicional: se evita perder respuestas de texto sin guardar al cambiar nivel y se impide que la tarjeta activa reinicie accidentalmente la actividad. El TTS se detiene al cambiar de nivel.

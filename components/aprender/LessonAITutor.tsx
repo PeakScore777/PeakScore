@@ -5451,6 +5451,86 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
 
             {learningLoading || (learningView === "storage" && imageAssetsLoading) ? (
               <div className="flex items-center gap-3 py-12 text-sm text-[#9299a3]"><LoaderCircle className="h-4 w-4 animate-spin text-orange-400" /> Preparando tu biblioteca…</div>
+            ) : learningView === "flashcards" ? (
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,.8fr)]">
+                <form onSubmit={(event) => { event.preventDefault(); if (flashcardFront.trim() && flashcardBack.trim()) void saveLearningItem("flashcard", flashcardFront.trim().slice(0,120), JSON.stringify({ front: flashcardFront.trim(), back: flashcardBack.trim() })); }} className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
+                  <div className="flex items-center gap-2 text-orange-700"><Layers3 className="h-5 w-5"/><p className="text-sm font-semibold">Crear una tarjeta</p></div>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">Escribe una pregunta breve y su respuesta. Practica recordando antes de revelar.</p>
+                  <label className="mt-5 block text-xs font-semibold text-slate-700">Frente · pregunta o concepto</label>
+                  <textarea value={flashcardFront} onChange={(event) => setFlashcardFront(event.target.value)} maxLength={500} rows={3} placeholder="Ej. ¿Qué función cumple el núcleo celular?" className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400"/>
+                  <label className="mt-4 block text-xs font-semibold text-slate-700">Reverso · respuesta y explicación</label>
+                  <textarea value={flashcardBack} onChange={(event) => setFlashcardBack(event.target.value)} maxLength={1800} rows={4} placeholder="Escribe una respuesta clara y una idea clave para recordarla." className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400"/>
+                  <button type="submit" disabled={!flashcardFront.trim() || !flashcardBack.trim()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-45"><Plus className="h-4 w-4"/> Guardar flashcard</button>
+                  <button type="button" onClick={() => requestWorkspaceStudyPrompt("Crea ocho flashcards originales de repaso sobre el tema de nuestra conversación actual. Para cada tarjeta entrega una pregunta breve y una respuesta precisa de 1–3 frases. Adecuadas para Saber 11; no copies preguntas protegidas ni inventes información. Numéralas para que pueda guardarlas individualmente.")} className="ml-2 mt-4 inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-semibold text-orange-800"><Sparkles className="h-4 w-4"/> Proponer tarjetas con {assistantLabel}</button>
+                </form>
+                <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
+                  <div className="flex items-center justify-between"><div><p className="text-xs font-semibold text-slate-800">Repaso activo</p><p className="mt-1 text-[11px] text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length} tarjetas guardadas</p></div><span className="rounded-full bg-orange-50 px-3 py-1 text-[10px] font-semibold text-orange-700">Recuperación activa</span></div>
+                  {learningItems.filter((item) => item.kind === "flashcard").length > 0 ? (() => {
+                    const cards = learningItems.filter((item) => item.kind === "flashcard");
+                    const activeIndex = Math.min(flashcardReviewIndex, cards.length - 1);
+                    const active = cards[activeIndex];
+                    const card = parseFlashcard(active);
+                    return <div className="mt-6">
+                      <div className="min-h-64 rounded-2xl border border-[#f2e5d8] bg-[#fffaf4] p-6">
+                        <p className="text-[10px] font-bold uppercase tracking-[.14em] text-orange-700">{flashcardBackVisible ? "Respuesta" : "Pregunta"} · {activeIndex + 1} / {cards.length}</p>
+                        <p className="mt-6 whitespace-pre-wrap text-lg font-semibold leading-8 text-slate-900">{flashcardBackVisible ? card.back : card.front}</p>
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button type="button" onClick={() => setFlashcardBackVisible((value) => !value)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white"><RotateCcw className="h-4 w-4"/> {flashcardBackVisible ? "Volver a la pregunta" : "Mostrar respuesta"}</button>
+                        <button type="button" onClick={() => { setFlashcardReviewIndex((value) => (value + cards.length - 1) % cards.length); setFlashcardBackVisible(false); }} className="rounded-xl border border-[#e7ded3] px-4 py-2.5 text-xs text-slate-700">Anterior</button>
+                        <button type="button" onClick={() => { setFlashcardReviewIndex((value) => (value + 1) % cards.length); setFlashcardBackVisible(false); }} className="rounded-xl border border-[#e7ded3] px-4 py-2.5 text-xs text-slate-700">Siguiente</button>
+                        <button type="button" onClick={() => void deleteLearningItem(active.id)} className="rounded-xl border border-rose-200 px-4 py-2.5 text-xs text-rose-700">Eliminar tarjeta</button>
+                      </div>
+                    </div>;
+                  })() : <div className="mt-6 rounded-xl border border-dashed border-[#e7ded3] px-5 py-12 text-center"><Layers3 className="mx-auto h-7 w-7 text-orange-500"/><p className="mt-3 text-sm font-semibold text-slate-800">Aún no tienes tarjetas</p><p className="mt-1 text-xs text-slate-500">Crea una o pide a {assistantLabel} que te proponga varias.</p></div>}
+                </section>
+              </div>
+            ) : learningView === "recordings" ? (
+              <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,.8fr)]">
+                <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
+                  <div className="flex items-center gap-2 text-orange-700"><Mic className="h-5 w-5"/><h3 className="text-sm font-semibold">Grabadora de clase</h3></div>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">Graba con permiso explícito del micrófono. El audio se conserva temporalmente en esta pestaña. Al guardar se persiste únicamente la transcripción.</p>
+                  <label className="mt-5 block text-xs font-semibold text-slate-700">Nombre de la clase</label>
+                  <input value={studyRecordingTitle} onChange={(event) => setStudyRecordingTitle(event.target.value)} maxLength={120} className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 text-sm text-slate-800 outline-none focus:border-orange-400"/>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {studyRecordingState === "idle" && <button type="button" onClick={() => void startStudyRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white"><Mic className="h-4 w-4"/> Iniciar grabación</button>}
+                    {studyRecordingState === "recording" && <button type="button" onClick={stopStudyRecording} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-semibold text-white"><Square className="h-3.5 w-3.5"/> Detener grabación</button>}
+                    {studyRecordingState === "ready" && <><button type="button" disabled={studyRecordingBusy} onClick={() => void transcribeAndSaveStudyRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><FileText className="h-4 w-4"/> {studyRecordingBusy ? "Transcribiendo…" : "Transcribir y guardar"}</button><button type="button" onClick={discardStudyRecording} className="rounded-xl border border-[#e7ded3] px-4 py-2.5 text-xs text-slate-600">Descartar</button></>}
+                  </div>
+                  {studyRecordingUrl && <audio controls src={studyRecordingUrl} className="mt-5 w-full"/>}
+                  {studyRecordingError && <p role="alert" className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{studyRecordingError}</p>}
+                  <p className="mt-5 text-[10px] leading-5 text-slate-500">La transcripción depende de la cuota gratuita disponible. Si se agota, la aplicación no cambia a proveedores facturables.</p>
+                </section>
+                <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6"><h3 className="text-sm font-semibold text-slate-800">Transcripciones guardadas</h3><div className="mt-4 space-y-3">
+                  {learningItems.filter((item) => item.kind === "recording").map((item) => <article key={item.id} className="rounded-xl border border-[#eee6dc] bg-[#fffdfa] p-4"><div className="flex items-start justify-between gap-3"><p className="text-sm font-semibold text-slate-800">{item.title}</p><button type="button" onClick={() => void deleteLearningItem(item.id)} aria-label="Eliminar transcripción" className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4"/></button></div><p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap text-xs leading-6 text-slate-600">{item.content}</p></article>)}
+                  {learningItems.every((item) => item.kind !== "recording") && <p className="rounded-xl border border-dashed border-[#e7ded3] px-4 py-10 text-center text-xs text-slate-500">Tus transcripciones aparecerán aquí después de guardarlas.</p>}
+                </div></section>
+              </div>
+            ) : learningView === "summaries" ? (
+              <div className="space-y-5">
+                <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
+                  <div className="flex items-center gap-2 text-orange-700"><Sparkles className="h-5 w-5"/><h3 className="text-sm font-semibold">Síntesis inteligente</h3></div>
+                  <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-600">Solicita a {assistantLabel} un resumen de estudio basado en la conversación actual. Guarda su respuesta desde el chat para conservarla en esta biblioteca.</p>
+                  <button type="button" disabled={messages.length === 0 || loading} onClick={() => requestWorkspaceStudyPrompt("Prepara un resumen de estudio claro y fiel a nuestra conversación actual. Organízalo en: idea central, conceptos y definiciones, proceso o razonamiento paso a paso, ejemplo original, errores frecuentes y tres preguntas para comprobar comprensión. No inventes información que no aparezca en el contexto y mantén el enfoque Saber 11.")} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-45"><Sparkles className="h-4 w-4"/> Resumir conversación actual</button>
+                  {messages.length === 0 && <p className="mt-2 text-[11px] text-slate-500">Inicia una conversación para generar una síntesis.</p>}
+                </section>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {learningItems.filter((item) => item.kind === "summary").map((item) => <article key={item.id} className="rounded-2xl border border-[#eee6dc] bg-white p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-wider text-orange-700">RESUMEN DE ESTUDIO</p><h3 className="mt-2 text-sm font-semibold text-slate-900">{item.title}</h3></div><button type="button" onClick={() => void deleteLearningItem(item.id)} aria-label="Eliminar resumen" className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4"/></button></div><p className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap text-xs leading-6 text-slate-600">{item.content}</p></article>)}
+                  {learningItems.every((item) => item.kind !== "summary") && <p className="rounded-xl border border-dashed border-[#e7ded3] px-4 py-10 text-center text-xs text-slate-500">Aún no has guardado resúmenes. Guarda la respuesta de {assistantLabel} desde el chat.</p>}
+                </div>
+              </div>
+            ) : learningView === "quizzes" ? (
+              <div className="space-y-5">
+                <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
+                  <div className="flex items-center gap-2 text-orange-700"><ClipboardList className="h-5 w-5"/><h3 className="text-sm font-semibold">Práctica original Saber 11</h3></div>
+                  <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-600">Crea una práctica guiada con {assistantLabel}. Responde en el chat, recibe retroalimentación y guarda el conjunto para repasarlo después.</p>
+                  <button type="button" disabled={loading} onClick={() => requestWorkspaceStudyPrompt("Diseña un cuestionario original de cinco preguntas de selección múltiple con única respuesta, estilo Saber 11, sobre el tema de la conversación actual. Cada pregunta debe tener enunciado contextual, cuatro opciones A-D y una sola correcta. Presenta primero todas las preguntas sin revelar la clave y espera mis respuestas. Cuando conteste, evalúa una por una y explica por qué cada opción es correcta o incorrecta. No copies preguntas oficiales ni inventes fuentes.")} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-45"><ClipboardList className="h-4 w-4"/> Crear práctica en el chat</button>
+                </section>
+                <div className="grid gap-3 md:grid-cols-2">
+                  {learningItems.filter((item) => item.kind === "quiz").map((item) => <article key={item.id} className="rounded-2xl border border-[#eee6dc] bg-white p-5"><div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-wider text-orange-700">CUESTIONARIO</p><h3 className="mt-2 text-sm font-semibold text-slate-900">{item.title}</h3></div><button type="button" onClick={() => void deleteLearningItem(item.id)} aria-label="Eliminar cuestionario" className="rounded-lg p-2 text-slate-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 className="h-4 w-4"/></button></div><p className="mt-3 max-h-64 overflow-y-auto whitespace-pre-wrap text-xs leading-6 text-slate-600">{item.content}</p></article>)}
+                  {learningItems.every((item) => item.kind !== "quiz") && <p className="rounded-xl border border-dashed border-[#e7ded3] px-4 py-10 text-center text-xs text-slate-500">Los cuestionarios guardados aparecerán aquí.</p>}
+                </div>
+              </div>
             ) : learningView === "storage" ? (
               <div>
                 <div className="mb-5 flex flex-wrap items-end justify-between gap-3">

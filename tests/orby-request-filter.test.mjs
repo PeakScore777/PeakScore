@@ -233,11 +233,11 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
   assert.match(lessonTutorSource, /toolCallCancellation[\s\S]{0,1100}fallbackVoiceTurnToText\("La consulta del Lab se canceló/);
 });
 
-test("una respuesta Live lenta no fuerza TTS si el canal sigue conectado", () => {
+test("una respuesta Live lenta muestra aviso temprano y recupera el turno sin esperar minutos", () => {
   assert.ok(lessonTutorSource.includes("Every transcript/audio/tool event rearms this inactivity timer."));
-  assert.match(lessonTutorSource, /fallbackVoiceTurnToText\(voiceChannelRef\.current\s*\?/);
-  assert.ok(lessonTutorSource.includes("}, 32_000);"));
-  assert.ok(lessonTutorSource.includes("}, 12_000);"));
+  assert.match(lessonTutorSource, /fallbackVoiceTurnToText\\(voiceChannelRef\\.current\\s*\\?/);
+  assert.ok(lessonTutorSource.includes("}, 15_000);"));
+  assert.ok(lessonTutorSource.includes("}, 5_000);"));
   assert.match(lessonTutorSource, /Gemini Live dejó de enviar avances/);
 });
 

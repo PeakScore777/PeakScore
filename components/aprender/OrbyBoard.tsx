@@ -529,11 +529,13 @@ function PhysiologyProcess({ visual, startDelayMs = 0 }: { visual: Extract<OrbyB
 function Visual({ visual, board, drawingActive, startDelayMs = 0, elementId }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean; startDelayMs?: number; elementId?: string }) {
   // Keep hooks unconditional even when the visual primitive changes between snapshots.
   const annotationMarkerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
-  const sketchFocus = typeof board.teacherFocus?.strokeId === "string"
-    ? board.teacherFocus
+  // Capture the optional focus object once so TypeScript can preserve its narrowing.
+  const teacherFocus = board.teacherFocus;
+  const sketchFocus = teacherFocus && typeof teacherFocus.strokeId === "string"
+    ? teacherFocus
     : undefined;
-  const visualFocus = board.teacherFocus?.elementId === elementId && typeof board.teacherFocus.targetId === "string"
-    ? { targetId: board.teacherFocus.targetId, label: board.teacherFocus.label, revision: board.teacherFocus.revision }
+  const visualFocus = teacherFocus && teacherFocus.elementId === elementId && typeof teacherFocus.targetId === "string"
+    ? { targetId: teacherFocus.targetId, label: teacherFocus.label, revision: teacherFocus.revision }
     : undefined;
   if (visual.type === "annotation") {
     const palette = visual.tone === "red" ? "#dc2626"

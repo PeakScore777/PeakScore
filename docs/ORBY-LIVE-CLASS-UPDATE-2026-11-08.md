@@ -710,3 +710,17 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - `npm run test:orby`: **240/240 aprobadas**.
 - TypeScript, ESLint, auditoría de dependencias y Next.js production build: correctos.
 - No equivale a QA manual con micrófono físico, revisión visual de la clase ni verificación de cuotas reales/proveedor en producción.
+
+## 2026-11-08 — karaoke ponderado por palabra
+
+- La clase Live ya no distribuye el tiempo de audio por igual entre todas las palabras. El resaltado usa `getOrbyKaraokeWordIndexForText`, anclado al reloj real `AudioContext.currentTime` y ponderado por núcleos vocálicos estimados, longitud y pausas de puntuación.
+- Palabras largas reciben una ventana visual más amplia; comas, dos puntos, punto y signos de cierre añaden una pausa relativa.
+- El índice permanece monotónico cuando la transcripción incremental crece, y el ciclo sigue usando `requestAnimationFrame` sin intervalos ni llamadas adicionales al modelo.
+- La aproximación no es alineación fonética: Gemini Live no entrega marcas temporales por palabra. No afirmar precisión a nivel de fonema.
+- La función previa `getOrbyKaraokeWordIndex` se conserva para compatibilidad; el componente Live usa el nuevo cálculo ponderado.
+
+### Validación
+- Código validado en SHA `8b8894928b5ccd96d010c5509b88338ebe56cb7f`.
+- GitHub Actions run 42520586985: https://github.com/PeakScore777/PeakScore/actions/runs/42520586985
+- `npm run test:orby`: **240/240 aprobadas**; TypeScript, ESLint, auditoría de dependencias y Next.js production build: correctos.
+- Pendiente: comparar visualmente el resaltado con voz real en Chrome y ajustar la heurística mediante observación; la CI no mide sincronía auditiva humana.

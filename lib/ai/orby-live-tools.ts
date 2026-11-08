@@ -145,7 +145,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
       {
         name: "apply_orby_board_action",
         behavior: Behavior.NON_BLOCKING,
-        description: "Teacher-only incremental actions on the active cumulative board. Legacy operations remain available: focus (strokeId or spatial elementId), erase (existing stroke IDs), and replace (same stroke ID with corrected geometry). For new writing/drawing, use append-block to write one validated heading/text/formula/step/callout at a position on the existing 16:9 canvas, or append-strokes to add 1–5 new freehand strokes to the existing sketch element. Every new append action MUST include the exact turnGeneration returned by the latest accepted board snapshot for this student turn, a stable actionId, a strictly increasing integer sequence starting at 1 for this turn, and optional dependsOn action IDs that have already been accepted. Never reuse action IDs, skip ahead of an unaccepted dependency, or send old actions after interruption. Use one action per event. Keep existing content and IDs; never replace the entire board. All payloads are sanitized by the client. Narrate the writing/drawing naturally while it appears; never wait for the action response to continue speaking.",
+        description: "Teacher-only incremental actions on the active cumulative board. EVERY operation must echo the exact turnGeneration returned by the current board snapshot; stale generations are rejected. Legacy operations remain available: focus (strokeId or spatial elementId), erase (existing stroke IDs), and replace (same stroke ID with corrected geometry). For new writing/drawing, use append-block to write one validated heading/text/formula/step/callout at a position on the existing 16:9 canvas, or append-strokes to add 1–5 new freehand strokes to the existing sketch element. Every new append action also MUST include a stable actionId, a strictly increasing integer sequence starting at 1 for this turn, and optional dependsOn action IDs that have already been accepted. Never reuse action IDs, skip ahead of an unaccepted dependency, or send old actions after interruption. Use one action per event. Keep existing content and IDs; never replace the entire board. All payloads are sanitized by the client. Narrate the writing/drawing naturally while it appears; never wait for the action response to continue speaking.",
         parameters: {
           type: Type.OBJECT,
           properties: {
@@ -195,7 +195,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
               required: ["id", "points"],
             },
           },
-          required: ["operation"],
+          required: ["operation", "turnGeneration"],
         },
       },
       {

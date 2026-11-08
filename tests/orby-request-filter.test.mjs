@@ -259,15 +259,15 @@ test("Orby divide respuestas largas sin reordenar frases ni exceder el límite T
   assert.ok(chunks.join(" ").indexOf("Primera") < chunks.join(" ").indexOf("Segunda"));
   assert.ok(chunks.join(" ").indexOf("Segunda") < chunks.join(" ").indexOf("Tercera"));
 
-  const single = speechChunks.splitOrbySpeechIntoChunks("Una sola frase.", 480);
+  const single = speechChunks.splitOrbySpeechIntoChunks("Una sola frase.", 880);
   assert.deepEqual(single, ["Una sola frase."]);
   assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("   ", 480), []);
 
   const academicAnswer = "La densidad es 3.14 g/cm³. Por ejemplo, el Dr. explica el resultado.";
-  const academicChunks = speechChunks.splitOrbySpeechIntoChunks(academicAnswer, 480);
+  const academicChunks = speechChunks.splitOrbySpeechIntoChunks(academicAnswer, 880);
   assert.deepEqual(academicChunks, [academicAnswer],
     "Los decimales y las abreviaturas no deben crear pausas ni perder puntuación.");
-  assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("Primero. Después.", 480), ["Primero. Después."],
+  assert.deepEqual(speechChunks.splitOrbySpeechIntoChunks("Primero. Después.", 880), ["Primero. Después."],
     "Las oraciones completas pueden compartir un fragmento, pero deben conservar su puntuación y orden.");
 });
 
@@ -509,7 +509,7 @@ test("Orby usa Gemini Live y TTS con el mismo opt-in de Preview", () => {
   assert.ok(lessonTutorSource.includes("words.length <= 4"));
   assert.ok(lessonTutorSource.includes("AbortSignal.timeout(12_000)"));
   assert.ok(lessonTutorSource.includes("Repítela brevemente para no bloquear una pregunta válida."));
-  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 480)"));
+  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 880)"));
   assert.ok(lessonTutorSource.includes("activateTurnBasedVoiceFallback"));
   assert.ok(lessonTutorSource.includes("const buildLiveConfig = (resumeHandle?: string)"));
   assert.match(lessonTutorSource, /inputAudioTranscription: \{[\s\S]*?languageCodes: \[\]/);
@@ -2408,10 +2408,19 @@ test("Orby distingue cuota diaria de Gemini, rate limit temporal y error general
   assert.match(lessonTutorSource, /const rateLimited = liveFailure === "rate_limited"/);
   assert.match(lessonTutorSource, /if \(rateLimited\)[\s\S]{0,180}fallbackVoiceTurnToText\(rateLimitMessage\)/);
   assert.match(lessonTutorSource, /retryAfter <= 2 && rateLimitWaitCount < 1/);
-  assert.doesNotMatch(lessonTutorSource, /rateLimitWaitCount < 12/);
+  assert.doesNotMatch(lessonTutorSource, /rateLimitWaitCount < 1/);
   assert.doesNotMatch(lessonTutorSource, /detail\.status === 429\s*\|\|/);
   assert.match(lessonTutorSource, /voiceTtsQuotaExhaustedRef\.current = true/);
   assert.match(lessonTutorSource, /if \(voiceTtsQuotaExhaustedRef\.current\)/);
+});
+
+test("Orby minimiza llamadas TTS y evita esperas largas por rate limit", () => {
+  assert.match(voiceSpeechRouteSource, /const MAX_TEXT_LENGTH = 900/);
+  assert.match(lessonTutorSource, /splitOrbySpeechIntoChunks\(clean, 880\)/);
+  assert.match(voiceSpeechRouteSource, /p_max_requests: 20/);
+  assert.match(lessonTutorSource, /retryAfter <= 2 && rateLimitWaitCount < 1/);
+  assert.doesNotMatch(lessonTutorSource, /rateLimitWaitCount < 12/);
+  assert.match(lessonTutorSource, /La explicación completa sigue escrita y puedes continuar preguntando/);
 });
 
 test("Gemini 3.8 TTS conserva el WAV completo y solo envuelve PCM sin cabecera", () => {
@@ -2617,9 +2626,9 @@ test("las respuestas TTS largas conservan el texto completo y no omiten fragment
   assert.doesNotMatch(lessonTutorSource, /composeOrbySpeechText\(text, checkQuestion\)\.slice/);
   assert.ok(lessonTutorSource.includes("recoverCurrentTtsChunk"));
   assert.ok(lessonTutorSource.includes("chunkRetryCount < 4"));
-  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 480)"));
-  assert.ok(lessonTutorSource.includes("rateLimitWaitCount < 12"));
-  assert.ok(lessonTutorSource.includes("retry the SAME chunk"));
+  assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 880)"));
+  assert.ok(lessonTutorSource.includes("rateLimitWaitCount < 1"));
+  assert.ok(lessonTutorSource.includes("Never stack minute-long retries"));
   assert.ok(lessonTutorSource.includes("La lectura se pausó en una frase"));
   assert.ok(!lessonTutorSource.includes("skippedAudioChunks"));
   assert.ok(lessonTutorSource.includes("Math.min(900_000,"));

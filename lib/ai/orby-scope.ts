@@ -97,6 +97,37 @@ export function getIcfesPedagogyProfile(value: unknown): IcfesPedagogyProfile | 
   return { subject, ...profile };
 }
 
+
+export type IcfesLearningDiagnostic = {
+  reviewed: number;
+  priorityConcepts: string[];
+  strengths: string[];
+  repeatedMisconceptions: string[];
+  recommendedApproach: "reteach" | "guided_practice" | "challenge" | "diagnose";
+};
+
+/** Summarize only high-confidence persisted signals; missing evidence is not mastery. */
+export function summarizeIcfesLearningSignals(rawSignals: unknown, minimumConfidence = 0.8): IcfesLearningDiagnostic {
+  if (!Array.isArray(rawSignals)) return { reviewed: 0, priorityConcepts: [], strengths: [], repeatedMisconceptions: [], recommendedApproach: "diagnose" };
+  const valid = rawSignals.flatMap((raw) => {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+    const item = raw as Record<string, unknown>;
+    const concept = typeof item.concept === "string" ? item.concept.trim().slice(0, 140) : "";
+    const state = typeof item.learning_state === "string" ? item.learning_state : "needs_review";
+    const confidence = typeof item.confidence === "number" && Number.isFinite(item.confidence) ? item.confidence : 0;
+    if (!concept || confidence < minimumConfidence || confidence > 1) return [];
+    const misconception = typeof item.misconception === "string" ? item.misconception.trim().slice(0, 180) : "";
+    return [{ concept, state, misconception }];
+  });
+  const priorityConcepts = [...new Set(valid.filter((item) => ["needs_review", "misunderstood", "developing"].includes(item.state)).map((item) => item.concept))].slice(0, 5);
+  const strengths = [...new Set(valid.filter((item) => ["mastered", "secure", "understood"].includes(item.state)).map((item) => item.concept))].slice(0, 5);
+  const counts = new Map<string, number>();
+  for (const item of valid) if (item.misconception) counts.set(item.misconception, (counts.get(item.misconception) ?? 0) + 1);
+  const repeatedMisconceptions = [...counts].filter(([, count]) => count >= 2).map(([text]) => text).slice(0, 3);
+  const recommendedApproach = priorityConcepts.length ? "reteach" : strengths.length ? "challenge" : valid.length ? "guided_practice" : "diagnose";
+  return { reviewed: valid.length, priorityConcepts, strengths, repeatedMisconceptions, recommendedApproach };
+}
+
 export function buildIcfesPedagogyInstruction(value: unknown): string {
   const profile = getIcfesPedagogyProfile(value);
   if (!profile) return "";

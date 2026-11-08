@@ -4434,13 +4434,13 @@ test("los tableros version 1 y 2 sin layout conservan la compatibilidad heredada
   }), null);
 });
 
-test("el renderer y Gemini comparten el contrato del lienzo espacial", () => {
+test("el renderer y Gemini comparten el contrato del lienzo espacial", async () => {\n  const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /orby-board-canvas/);
   assert.match(boardComponentSource, /spatialLayout\.elements\.map/);
   assert.match(boardComponentSource, /function renderBoardBlock/);
   assert.match(boardComponentSource, /const stageDelay = Math\.min\(\(element\.sequence - 1\) \* 135, 945\)/);
-  assert.match(styles, /\.orby-board-canvas \{[\s\S]*?aspect-ratio: 16 \/ 9/);
-  assert.match(styles, /background-image: radial-gradient\(rgba\(100, 116, 139, \.22\)/);
+  assert.match(boardStyles, /\.orby-board-canvas \{[\s\S]*?aspect-ratio: 16 \/ 9/);
+  assert.match(boardStyles, /background-image: radial-gradient\(rgba\(100, 116, 139, \.22\)/);
   assert.match(boardComponentSource, /data-orby-layout-sequence=\{element\.sequence\}/);
   assert.match(boardComponentSource, /key=\{element\.id\}/);
   assert.match(liveToolsSource, /layout: \{/);

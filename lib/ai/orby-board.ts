@@ -166,7 +166,7 @@ export type OrbyBoard = {
   layout?: OrbyBoardLayout;
   /** Temporary teacher-only focus target; never an input surface for students. */
   teacherFocus?:
-    | { strokeId: string; elementId?: never; label?: string; revision: number }
+    | { strokeId: string; elementId?: never; pointIndex?: number; label?: string; revision: number }
     | { elementId: string; strokeId?: never; label?: string; revision: number };
 };
 

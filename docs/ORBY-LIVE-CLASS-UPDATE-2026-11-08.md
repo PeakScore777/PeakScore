@@ -688,3 +688,25 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 - Se conserva la protección contra solapamientos de `append-block`, con borde adyacente permitido y feedback espacial claro al modelo.
 
 **Alcance de esta certificación:** es una compilación de producción y suite automatizada con las variables placeholder definidas por el workflow. No equivale a QA de micrófono físico, sesión Gemini Live real, prueba visual de Chrome ni despliegue de producción.
+
+## 2026-11-08 — English Studio roleplay con voz Live
+
+### Experiencia
+- El botón de roleplay del English Studio abre/reutiliza una llamada de voz OmegaX y envía el escenario como primer turno; no exige que el estudiante active el micrófono desde un segundo control.
+- Si ya hay una sesión general de voz, el tutor la cierra antes de iniciar una sesión dedicada a English Studio, porque el prompt/idioma de Live se fija al crear el token efímero.
+- Si Gemini Live no está disponible por cuota, privacidad o red, conserva el escenario en el flujo gratuito por turnos de OmegaX. No introduce otro proveedor.
+
+### Excepción lingüística, acotada
+- El cliente envía `englishPracticeMode` solo mientras el estudiante está en English Studio.
+- El servidor acepta el flag únicamente si `assistantName === "OmegaX"`; Orby no puede activar el modo.
+- En este modo el roleplay se mantiene en inglés natural, una pregunta a la vez, con hasta dos correcciones breves en español colombiano. Las explicaciones gramaticales se dan en español con ejemplos en inglés.
+- Se permite la salida en inglés únicamente dentro de esta sesión seleccionada; permanecen activos los filtros de programación, cocina, daño, promoción externa, privacidad, prompt injection y atribución falsa.
+- El fallback gratuito del tutor escrito usa el mismo flag de sesión para mantener el roleplay bilingüe cuando Live no está disponible.
+- La comparación de pronunciación sigue siendo ASR aproximado; no se afirma que se midan fonemas, acento o entonación.
+
+### Validación CI
+- SHA validado: `f1a08ccff8cf7c144d183af8d4acbaa9e259eb60`.
+- GitHub Actions run 42519666204: https://github.com/PeakScore777/PeakScore/actions/runs/42519666204
+- `npm run test:orby`: **240/240 aprobadas**.
+- TypeScript, ESLint, auditoría de dependencias y Next.js production build: correctos.
+- No equivale a QA manual con micrófono físico, revisión visual de la clase ni verificación de cuotas reales/proveedor en producción.

@@ -167,3 +167,5 @@ Los temas de speaking de 60 segundos y las frases modelo de repetición ya se se
 3. Añadir una rúbrica consistente y no certificadora por habilidad, que cite evidencia y no genere puntajes ficticios.
 4. Guardar progreso por habilidad con consentimiento y señales reversibles; usar el historial para elegir el siguiente ejercicio.
 5. Llevar estrategias del tutor al tablero: pronunciación/estructura, evidencia textual, esquema de ideas, organización de párrafos y corrección progresiva.
+
+- Protección de estado: el selector de nivel se desactiva mientras haya grabación/transcripción o respuesta escrita sin guardar; la tarjeta activa no reinicia la tarea al pulsarla. Cambiar de nivel/tarea detiene el TTS de listening y reinicia el estado asociado.

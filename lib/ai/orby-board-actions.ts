@@ -105,12 +105,36 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
   }
   if (action.operation === "erase") {
     if (!action.strokeIds.every(existsExactlyOnce)) return null;
-    const visuals = (board.visuals ?? []).flatMap((visual) => {
+    const originalVisuals = board.visuals ?? [];
+    let removedVisualIndex = -1;
+    const visuals = originalVisuals.flatMap((visual, visualIndex) => {
       if (visual.type !== "sketch") return [visual];
       const strokes = visual.strokes.filter((stroke) => !action.strokeIds.includes(stroke.id));
-      return strokes.length ? [{ ...visual, strokes }] : [];
+      if (strokes.length) return [{ ...visual, strokes }];
+      removedVisualIndex = visualIndex;
+      return [];
     });
-    return { ...board, visuals, teacherFocus: undefined };
+
+    // If the last freehand stroke is erased, remove its now-empty visual stage
+    // and shift only later visual indexes. Keep all surviving element IDs and
+    // their monotonic sequence numbers unchanged.
+    const layout = board.layout && removedVisualIndex >= 0
+      ? {
+          ...board.layout,
+          elements: board.layout.elements
+            .filter((element) => !(element.kind === "visual" && element.index === removedVisualIndex))
+            .map((element) => element.kind === "visual" && element.index > removedVisualIndex
+              ? { ...element, index: element.index - 1 }
+              : element),
+        }
+      : board.layout;
+
+    return {
+      ...board,
+      visuals,
+      ...(layout ? { layout } : {}),
+      teacherFocus: undefined,
+    };
   }
   if (!existsExactlyOnce(action.strokeId)) return null;
   const visuals = (board.visuals ?? []).map((visual) => {

@@ -465,7 +465,7 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
   if ((raw.version !== 1 && raw.version !== 2) || !Array.isArray(raw.blocks)
-    || raw.blocks.length === 0 || raw.blocks.length > MAX_BLOCKS) return null;
+    || raw.blocks.length > MAX_BLOCKS) return null;
   const title = safeText(raw.title, 100);
   if (!title) return null;
   const spokenCue = raw.spokenCue === undefined ? "" : safeText(raw.spokenCue, 100);
@@ -493,7 +493,7 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   }
 
   if (raw.version === 1) {
-    if (raw.visuals !== undefined) return null;
+    if (blocks.length === 0 || raw.visuals !== undefined) return null;
     const board: OrbyBoard = { version: 1, title, blocks, ...(spokenCue ? { spokenCue } : {}) };
     return withinBoardBudget(board) ? board : null;
   }
@@ -504,6 +504,9 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
     if (!visual) return null;
     visuals.push(visual);
   }
+  // A visual-only snapshot is valid: Live can draw the first sketch before
+  // sending its accompanying text block. Reject only a completely empty board.
+  if (blocks.length === 0 && visuals.length === 0) return null;
   const board: OrbyBoard = { version: 2, title, blocks, visuals, ...(spokenCue ? { spokenCue } : {}) };
   return withinBoardBudget(board) ? board : null;
 }

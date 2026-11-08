@@ -145,11 +145,37 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
       {
         name: "apply_orby_board_action",
         behavior: Behavior.NON_BLOCKING,
-        description: "Performs one teacher-only operation on ink already present on the current cumulative board. Use focus with an existing strokeId or spatial elementId to point at visible content without drawing; elementId targets a block/visual stage in the active 16:9 layout. Use erase to remove selected stroke IDs; replace to correct the geometry of an existing stroke while preserving its ID. Only call after a valid board snapshot exists. Never use this to replace the whole board. Coordinates and stroke geometry are validated by the client. Keep narration aligned with the operation; focus is temporary and must not be used as a substitute for explaining.",
+        description: "Teacher-only incremental actions on the active cumulative board. Legacy operations remain available: focus (strokeId or spatial elementId), erase (existing stroke IDs), and replace (same stroke ID with corrected geometry). For new writing/drawing, use append-block to write one validated heading/text/formula/step/callout at a position on the existing 16:9 canvas, or append-strokes to add 1–5 new freehand strokes to the existing sketch element. Every new append action MUST include a stable actionId, a strictly increasing integer sequence for this student turn, and optional dependsOn action IDs that have already been accepted. Never reuse action IDs, skip ahead of an unaccepted dependency, or send old actions after interruption. Use one action per event. Keep existing content and IDs; never replace the entire board. All payloads are sanitized by the client. Narrate the writing/drawing naturally while it appears; never wait for the action response to continue speaking.",
         parameters: {
           type: Type.OBJECT,
           properties: {
-            operation: { type: Type.STRING, enum: ["focus", "erase", "replace"], description: "Exact operation: focus, erase or replace." },
+            operation: { type: Type.STRING, enum: ["focus", "erase", "replace", "append-block", "append-strokes"], description: "Exact operation: focus, erase, replace, append-block or append-strokes." },
+            actionId: { type: Type.STRING, minLength: "1", maxLength: "24", pattern: "^[a-zA-Z0-9_-]+$", description: "Required for append operations; stable idempotency key unique in this turn." },
+            sequence: { type: Type.NUMBER, format: "int32", minimum: 1, maximum: 1000, description: "Required for append operations; strictly increasing action order within the active student turn." },
+            dependsOn: { type: Type.ARRAY, maxItems: "5", description: "Optional previously accepted action IDs that must already exist before this action.", items: { type: Type.STRING, minLength: "1", maxLength: "24", pattern: "^[a-zA-Z0-9_-]+$" } },
+            elementId: { type: Type.STRING, description: "Existing layout element ID for focus or append-strokes; for append-block this is the new stage ID." },
+            block: { type: Type.OBJECT, description: "For append-block: one block with type heading/text/formula/callout and text, or step with label and text.", properties: {
+              type: { type: Type.STRING, format: "enum", enum: ["heading", "text", "formula", "step", "callout"] },
+              text: { type: Type.STRING },
+              label: { type: Type.STRING },
+            }, required: ["type"] },
+            position: { type: Type.OBJECT, description: "For append-block: normalized 0–100 position and size in the shared 16:9 canvas.", properties: {
+              x: { type: Type.NUMBER, minimum: 0, maximum: 100 },
+              y: { type: Type.NUMBER, minimum: 0, maximum: 100 },
+              width: { type: Type.NUMBER, minimum: 8, maximum: 100 },
+              height: { type: Type.NUMBER, minimum: 8, maximum: 100 },
+            }, required: ["x", "y", "width", "height"] },
+            strokes: { type: Type.ARRAY, description: "For append-strokes: 1–5 NEW strokes to append to the existing single sketch visual; preserve all previous stroke IDs by not resending them.", minItems: "1", maxItems: "5", items: { type: Type.OBJECT, properties: {
+              id: { type: Type.STRING, minLength: "1", maxLength: "24", pattern: "^[a-zA-Z0-9_-]+$" },
+              points: { type: Type.ARRAY, minItems: "2", maxItems: "40", items: { type: Type.OBJECT, properties: {
+                x: { type: Type.NUMBER, minimum: 4, maximum: 96 }, y: { type: Type.NUMBER, minimum: 4, maximum: 96 },
+              }, required: ["x", "y"] } },
+              tone: { type: Type.STRING, format: "enum", enum: ["ink", "blue", "red", "accent", "muted", "success"] },
+              width: { type: Type.NUMBER, minimum: 0.6, maximum: 2.4 },
+              label: { type: Type.STRING, maxLength: "48" },
+              labelX: { type: Type.NUMBER, minimum: 4, maximum: 96 },
+              labelY: { type: Type.NUMBER, minimum: 4, maximum: 96 },
+            }, required: ["id", "points"] } },
             strokeId: { type: Type.STRING, description: "Existing stroke ID for focus or replace. For focus, use either strokeId or elementId, never both." },
             elementId: { type: Type.STRING, description: "Existing layout element ID for focus only. Use the exact ID from the active board layout; do not invent one." },
             label: { type: Type.STRING, description: "Optional short Spanish focus label, maximum 48 characters." },

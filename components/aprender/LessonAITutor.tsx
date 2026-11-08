@@ -25,13 +25,13 @@ type OrbyPublicSource = { title: string; url: string; publisher: string; publish
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
 type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz"; title: string; content: string; created_at: string };
-type FlashcardData = { front: string; back: string };
+type FlashcardData = { front: string; back: string; mastery: "review" | "familiar" | "mastered" };
 function parseFlashcard(item: LearningItem): FlashcardData {
   try {
     const value = JSON.parse(item.content) as Record<string, unknown>;
-    if (typeof value.front === "string" && typeof value.back === "string") return { front: value.front, back: value.back };
+    if (typeof value.front === "string" && typeof value.back === "string") return { front: value.front, back: value.back, mastery: value.mastery === "familiar" || value.mastery === "mastered" ? value.mastery : "review" };
   } catch { /* Older entries stay readable as plain text. */ }
-  return { front: item.title, back: item.content };
+  return { front: item.title, back: item.content, mastery: "review" };
 }
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
 type StoredImage = { name: string; path: string; signedUrl: string; createdAt: string; size: number };
@@ -679,7 +679,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setImageAssets(Array.isArray(payload.images) ? payload.images : []);
   }
 
-  async function saveLearningItem(kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz", title: string, content: string) {
+  async function saveLearningItem(kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz", title: string, content: string): Promise<boolean> {
     try {
       setLearningError("");
       const response = await fetch("/api/orby/learning", {
@@ -691,18 +691,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       setLearningItems((current) => [payload.item as LearningItem, ...current]);
       setLearningView(kind === "note" ? "notes" : kind === "topic" ? "topics" : kind === "flashcard" ? "flashcards" : kind === "summary" ? "summaries" : kind === "recording" ? "recordings" : "quizzes");
       if (kind === "flashcard") { setFlashcardFront(""); setFlashcardBack(""); setFlashcardBackVisible(false); }
+      return true;
     } catch (caught) {
       setLearningError(caught instanceof Error ? caught.message : "No se pudo guardar.");
+      return false;
     }
   }
 
-  function saveManualNote() {
+  async function saveManualNote() {
     const title = noteDraftTitle.trim();
     const content = noteDraftContent.trim();
     if (!title || !content) return;
-    void saveLearningItem("note", title, content.slice(0, 7900));
-    setNoteDraftTitle("");
-    setNoteDraftContent("");
+    const saved = await saveLearningItem("note", title, content.slice(0, 7900));
+    if (saved) { setNoteDraftTitle(""); setNoteDraftContent(""); }
   }
 
   async function startStudyRecording() {
@@ -722,7 +723,14 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       studyRecorderRef.current = recorder;
       recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) studyRecordingChunksRef.current.push(event.data);
+        if (event.data.size <= 0) return;
+        studyRecordingChunksRef.current.push(event.data);
+        const totalBytes = studyRecordingChunksRef.current.reduce((total, chunk) => total + chunk.size, 0);
+        if (totalBytes > 8 * 1024 * 1024) {
+          studyRecordingChunksRef.current.pop();
+          setStudyRecordingError("La grabación alcanzó el límite de 8 MB y se detuvo automáticamente. Puedes transcribir el fragmento capturado.");
+          if (recorder.state !== "inactive") recorder.stop();
+        }
       };
       recorder.onstop = () => {
         const type = recorder.mimeType || "audio/webm";
@@ -733,11 +741,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         if (blob.size < 1024) {
           setStudyRecordingState("idle");
           setStudyRecordingError("La grabación quedó demasiado corta. Graba al menos unos segundos.");
-          return;
-        }
-        if (blob.size > 8 * 1024 * 1024) {
-          setStudyRecordingState("idle");
-          setStudyRecordingError("La grabación supera el límite de 8 MB para transcripción. Haz una grabación más corta.");
           return;
         }
         setStudyRecordingBlob(blob);
@@ -790,7 +793,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (!response.ok || typeof payload.transcript !== "string" || !payload.transcript.trim()) {
         throw new Error(payload.error || "No se pudo transcribir la grabación.");
       }
-      await saveLearningItem("recording", studyRecordingTitle.trim() || "Clase grabada", payload.transcript.trim());
+      const saved = await saveLearningItem("recording", studyRecordingTitle.trim() || "Clase grabada", payload.transcript.trim());
+      if (saved) discardStudyRecording();
     } catch (caught) {
       setStudyRecordingError(caught instanceof Error ? caught.message : "No se pudo procesar la grabación.");
     } finally {
@@ -808,6 +812,25 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     studyRecordingStreamRef.current?.getTracks().forEach((track) => track.stop());
     if (studyRecordingUrl) URL.revokeObjectURL(studyRecordingUrl);
   }, [studyRecordingUrl]);
+
+  async function updateLearningItem(id: string, update: { title?: string; content?: string }) {
+    try {
+      const response = await fetch("/api/orby/learning", {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...update }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.item) throw new Error(payload.error || "No se pudo actualizar el recurso.");
+      setLearningItems((current) => current.map((item) => item.id === id ? payload.item as LearningItem : item));
+      setLearningError("");
+      return true;
+    } catch (caught) {
+      setLearningError(caught instanceof Error ? caught.message : "No se pudo actualizar el recurso.");
+      return false;
+    }
+  }
 
   async function deleteLearningItem(id: string) {
     try {
@@ -5456,30 +5479,35 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               <div className="flex items-center gap-3 py-12 text-sm text-slate-600"><LoaderCircle className="h-4 w-4 animate-spin text-orange-400" /> Preparando tu biblioteca…</div>
             ) : learningView === "flashcards" ? (
               <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,.8fr)]">
-                <form onSubmit={(event) => { event.preventDefault(); if (flashcardFront.trim() && flashcardBack.trim()) void saveLearningItem("flashcard", flashcardFront.trim().slice(0,120), JSON.stringify({ front: flashcardFront.trim(), back: flashcardBack.trim() })); }} className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
+                <form onSubmit={(event) => { event.preventDefault(); if (flashcardFront.trim() && flashcardBack.trim()) void saveLearningItem("flashcard", flashcardFront.trim().slice(0,120), JSON.stringify({ front: flashcardFront.trim(), back: flashcardBack.trim(), mastery: "review" })); }} className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
                   <div className="flex items-center gap-2 text-orange-700"><Layers3 className="h-5 w-5"/><p className="text-sm font-semibold">Crear una tarjeta</p></div>
                   <p className="mt-1 text-xs leading-5 text-slate-500">Escribe una pregunta breve y su respuesta. Practica recordando antes de revelar.</p>
                   <label className="mt-5 block text-xs font-semibold text-slate-700">Frente · pregunta o concepto</label>
                   <textarea value={flashcardFront} onChange={(event) => setFlashcardFront(event.target.value)} maxLength={500} rows={3} placeholder="Ej. ¿Qué función cumple el núcleo celular?" className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400"/>
                   <label className="mt-4 block text-xs font-semibold text-slate-700">Reverso · respuesta y explicación</label>
                   <textarea value={flashcardBack} onChange={(event) => setFlashcardBack(event.target.value)} maxLength={1800} rows={4} placeholder="Escribe una respuesta clara y una idea clave para recordarla." className="mt-2 w-full resize-y rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 py-3 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-orange-400"/>
-                  <button type="submit" disabled={!flashcardFront.trim() || !flashcardBack.trim()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-slate-900 transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-45"><Plus className="h-4 w-4"/> Guardar flashcard</button>
+                  <button type="submit" disabled={!flashcardFront.trim() || !flashcardBack.trim()} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#e96e0b] disabled:cursor-not-allowed disabled:opacity-45"><Plus className="h-4 w-4"/> Guardar flashcard</button>
                   <button type="button" onClick={() => requestWorkspaceStudyPrompt("Crea ocho flashcards originales de repaso sobre el tema de nuestra conversación actual. Para cada tarjeta entrega una pregunta breve y una respuesta precisa de 1–3 frases. Adecuadas para Saber 11; no copies preguntas protegidas ni inventes información. Numéralas para que pueda guardarlas individualmente.")} className="ml-2 mt-4 inline-flex items-center gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-2.5 text-xs font-semibold text-orange-800"><Sparkles className="h-4 w-4"/> Proponer tarjetas con {assistantLabel}</button>
                 </form>
                 <section className="rounded-2xl border border-[#eee6dc] bg-white p-5 sm:p-6">
-                  <div className="flex items-center justify-between"><div><p className="text-xs font-semibold text-slate-800">Repaso activo</p><p className="mt-1 text-[11px] text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length} tarjetas guardadas</p></div><span className="rounded-full bg-orange-50 px-3 py-1 text-[10px] font-semibold text-orange-700">Recuperación activa</span></div>
+                  <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-semibold text-slate-800">Repaso activo</p><p className="mt-1 text-[11px] text-slate-500">{learningItems.filter((item) => item.kind === "flashcard").length} tarjetas · {learningItems.filter((item) => item.kind === "flashcard" && parseFlashcard(item).mastery === "mastered").length} dominadas</p></div><span className="rounded-full bg-orange-50 px-3 py-1 text-[10px] font-semibold text-orange-700">Recuperación activa</span></div>
                   {learningItems.filter((item) => item.kind === "flashcard").length > 0 ? (() => {
                     const cards = learningItems.filter((item) => item.kind === "flashcard");
                     const activeIndex = Math.min(flashcardReviewIndex, cards.length - 1);
                     const active = cards[activeIndex];
                     const card = parseFlashcard(active);
+                    const setMastery = (mastery: FlashcardData["mastery"]) => void updateLearningItem(active.id, { content: JSON.stringify({ front: card.front, back: card.back, mastery }) });
                     return <div className="mt-6">
                       <div className="min-h-64 rounded-2xl border border-[#f2e5d8] bg-[#fffaf4] p-6">
                         <p className="text-[10px] font-bold uppercase tracking-[.14em] text-orange-700">{flashcardBackVisible ? "Respuesta" : "Pregunta"} · {activeIndex + 1} / {cards.length}</p>
                         <p className="mt-6 whitespace-pre-wrap text-lg font-semibold leading-8 text-slate-900">{flashcardBackVisible ? card.back : card.front}</p>
+                        <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-[#eee6dc] pt-4"><span className="mr-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">Dominio</span><span className={"rounded-full px-2.5 py-1 text-[10px] font-semibold " + (card.mastery === "review" ? "bg-rose-50 text-rose-700" : card.mastery === "familiar" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700")}>{card.mastery === "review" ? "Por repasar" : card.mastery === "familiar" ? "Familiar" : "Dominada"}</span></div>
                       </div>
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <button type="button" onClick={() => setFlashcardBackVisible((value) => !value)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-slate-900"><RotateCcw className="h-4 w-4"/> {flashcardBackVisible ? "Volver a la pregunta" : "Mostrar respuesta"}</button>
+                        <button type="button" onClick={() => setFlashcardBackVisible((value) => !value)} className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white"><RotateCcw className="h-4 w-4"/> {flashcardBackVisible ? "Volver a la pregunta" : "Mostrar respuesta"}</button>
+                        <button type="button" onClick={() => setMastery("review")} className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-semibold text-rose-700">Repasar</button>
+                        <button type="button" onClick={() => setMastery("familiar")} className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold text-amber-700">Familiar</button>
+                        <button type="button" onClick={() => setMastery("mastered")} className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-700">Dominada</button>
                         <button type="button" onClick={() => { setFlashcardReviewIndex((value) => (value + cards.length - 1) % cards.length); setFlashcardBackVisible(false); }} className="rounded-xl border border-[#e7ded3] px-4 py-2.5 text-xs text-slate-700">Anterior</button>
                         <button type="button" onClick={() => { setFlashcardReviewIndex((value) => (value + 1) % cards.length); setFlashcardBackVisible(false); }} className="rounded-xl border border-[#e7ded3] px-4 py-2.5 text-xs text-slate-700">Siguiente</button>
                         <button type="button" onClick={() => void deleteLearningItem(active.id)} className="rounded-xl border border-rose-200 px-4 py-2.5 text-xs text-rose-700">Eliminar tarjeta</button>
@@ -5496,9 +5524,9 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
                   <label className="mt-5 block text-xs font-semibold text-slate-700">Nombre de la clase</label>
                   <input value={studyRecordingTitle} onChange={(event) => setStudyRecordingTitle(event.target.value)} maxLength={120} className="mt-2 h-11 w-full rounded-xl border border-[#e7ded3] bg-[#fffdfa] px-3 text-sm text-slate-800 outline-none focus:border-orange-400"/>
                   <div className="mt-5 flex flex-wrap gap-2">
-                    {studyRecordingState === "idle" && <button type="button" onClick={() => void startStudyRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-slate-900"><Mic className="h-4 w-4"/> Iniciar grabación</button>}
-                    {studyRecordingState === "recording" && <button type="button" onClick={stopStudyRecording} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-semibold text-slate-900"><Square className="h-3.5 w-3.5"/> Detener grabación</button>}
-                    {studyRecordingState === "ready" && <><button type="button" disabled={studyRecordingBusy} onClick={() => void transcribeAndSaveStudyRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-slate-900 disabled:opacity-50"><FileText className="h-4 w-4"/> {studyRecordingBusy ? "Transcribiendo…" : "Transcribir y guardar"}</button><button type="button" onClick={discardStudyRecording} className="rounded-xl border border-[#e7ded3] px-4 py-2.5 text-xs text-slate-600">Descartar</button></>}
+                    {studyRecordingState === "idle" && <button type="button" onClick={() => void startStudyRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white"><Mic className="h-4 w-4"/> Iniciar grabación</button>}
+                    {studyRecordingState === "recording" && <button type="button" onClick={stopStudyRecording} className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-semibold text-white"><Square className="h-3.5 w-3.5"/> Detener grabación</button>}
+                    {studyRecordingState === "ready" && <><button type="button" disabled={studyRecordingBusy} onClick={() => void transcribeAndSaveStudyRecording()} className="inline-flex items-center gap-2 rounded-xl bg-[#f58216] px-4 py-2.5 text-xs font-semibold text-white disabled:opacity-50"><FileText className="h-4 w-4"/> {studyRecordingBusy ? "Transcribiendo…" : "Transcribir y guardar"}</button><button type="button" onClick={discardStudyRecording} className="rounded-xl border border-[#e7ded3] px-4 py-2.5 text-xs text-slate-600">Descartar</button></>}
                   </div>
                   {studyRecordingUrl && <audio controls src={studyRecordingUrl} className="mt-5 w-full"/>}
                   {studyRecordingError && <p role="alert" className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{studyRecordingError}</p>}

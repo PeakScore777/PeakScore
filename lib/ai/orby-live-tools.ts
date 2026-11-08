@@ -145,12 +145,13 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
       {
         name: "apply_orby_board_action",
         behavior: Behavior.NON_BLOCKING,
-        description: "Performs one teacher-only operation on ink already present on the current cumulative board. Use focus to point at an existing stroke without drawing; erase to remove selected stroke IDs; replace to correct the geometry of an existing stroke while preserving its ID. Only call after a valid board snapshot exists. Never use this to replace the whole board. Coordinates and stroke geometry are validated by the client. Keep narration aligned with the operation; focus is temporary and must not be used as a substitute for explaining.",
+        description: "Performs one teacher-only operation on ink already present on the current cumulative board. Use focus with an existing strokeId or spatial elementId to point at visible content without drawing; elementId targets a block/visual stage in the active 16:9 layout. Use erase to remove selected stroke IDs; replace to correct the geometry of an existing stroke while preserving its ID. Only call after a valid board snapshot exists. Never use this to replace the whole board. Coordinates and stroke geometry are validated by the client. Keep narration aligned with the operation; focus is temporary and must not be used as a substitute for explaining.",
         parameters: {
           type: Type.OBJECT,
           properties: {
             operation: { type: Type.STRING, enum: ["focus", "erase", "replace"], description: "Exact operation: focus, erase or replace." },
-            strokeId: { type: Type.STRING, description: "Existing stroke ID for focus or replace." },
+            strokeId: { type: Type.STRING, description: "Existing stroke ID for focus or replace. For focus, use either strokeId or elementId, never both." },
+            elementId: { type: Type.STRING, description: "Existing layout element ID for focus only. Use the exact ID from the active board layout; do not invent one." },
             label: { type: Type.STRING, description: "Optional short Spanish focus label, maximum 48 characters." },
             strokeIds: { type: Type.ARRAY, description: "One to eight existing stroke IDs for selective erase.", items: { type: Type.STRING } },
             replacement: {

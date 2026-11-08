@@ -69,7 +69,8 @@ function sanitizeActionMeta(raw: Record<string, unknown>, required = false): Opt
     || !Number.isInteger(raw.sequence) || raw.sequence < 1 || raw.sequence > 1_000) return null;
   if (raw.dependsOn !== undefined && (!Array.isArray(raw.dependsOn)
     || raw.dependsOn.length > 5 || !raw.dependsOn.every(safeId)
-    || new Set(raw.dependsOn).size !== raw.dependsOn.length)) return null;
+    || new Set(raw.dependsOn).size !== raw.dependsOn.length
+    || (hasId && raw.dependsOn.includes(raw.actionId)))) return null;
   return {
     actionId: raw.actionId,
     sequence: raw.sequence,

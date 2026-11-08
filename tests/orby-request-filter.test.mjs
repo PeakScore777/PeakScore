@@ -4640,13 +4640,17 @@ test("la tinta manuscrita usa una curva suave y el lápiz comparte el mismo perf
   ]);
   assert.equal(straight.keyPoints, "0;1");
   assert.equal(straight.keyTimes, "0;1");
-  assert.match(straight.keySplines, /^0\\.\\d+ 0 0\\.\\d+ 1$/);
+  assert.match(straight.keySplines, /^0\.\d+ 0 0\.\d+ 1$/);
   assert.notEqual(curved.keySplines, straight.keySplines);
   assert.equal(curved.keyTimes, straight.keyTimes);
-  assert.match(boardComponentSource, /getOrbySketchMotionProfile\(stroke\.points\)/);
-  assert.match(boardComponentSource, /calcMode="spline"/);
-  assert.match(boardComponentSource, /keySplines=\{motion\.keySplines\}/);
-  assert.match(boardComponentSource, /keyPoints=\\{motion\\.keyPoints\\}/);
+  assert.equal(curved.keyPoints, straight.keyPoints);
+  assert.ok(boardComponentSource.includes("getOrbySketchMotionProfile(stroke.points)"));
+  assert.ok(boardComponentSource.includes('calcMode="spline"'));
+  assert.ok(boardComponentSource.includes("keySplines={motion.keySplines}"));
+  assert.ok(boardComponentSource.includes("keyTimes={motion.keyTimes}"));
+  assert.ok(boardComponentSource.includes("keyPoints={motion.keyPoints}"));
+  assert.ok(boardComponentSource.includes('attributeName="stroke-dashoffset"'));
+  assert.ok(boardComponentSource.includes("animateMotion path={path}"));
 });
 
 test("los trazos nuevos se temporizan por longitud real y el escalonado nunca supera 350 ms", () => {

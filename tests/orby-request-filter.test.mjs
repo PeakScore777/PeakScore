@@ -4125,3 +4125,23 @@ test("el tablero expone anotaciones sin código ejecutable en la herramienta Liv
   assert.match(liveToolsSource, /For annotation: circle, underline, arrow or bracket/);
   assert.match(boardComponentSource, /visual\.type === "annotation"/);
 });
+
+
+test("cada prueba Saber 11 recibe una rutina pedagógica y de tablero propia", () => {
+  const subjects = [
+    "Matemáticas", "Lectura Crítica", "Sociales y Ciudadanas", "Ciencias Naturales", "Inglés",
+  ];
+  for (const subject of subjects) {
+    const profile = scope.getIcfesPedagogyProfile(subject);
+    const instruction = scope.buildIcfesPedagogyInstruction(subject);
+    assert.equal(profile?.subject, subject);
+    assert.ok(profile.reasoningRoutine.length >= 4);
+    assert.ok(profile.boardPriorities.length >= 4);
+    assert.ok(profile.commonRisks.length >= 3);
+    assert.ok(instruction.includes(subject));
+    assert.ok(instruction.includes("no inventes afirmaciones"));
+  }
+  assert.match(scope.buildIcfesPedagogyInstruction("Inglés"), /explicación oral y la retroalimentación van en español colombiano/);
+  assert.equal(scope.getIcfesPedagogyProfile("Programación"), null);
+  assert.equal(scope.buildIcfesPedagogyInstruction(null), "");
+});

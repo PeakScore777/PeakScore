@@ -468,7 +468,7 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
     const content = [
       "Nivel objetivo MCER: " + level,
       "Actividad: " + activityNames[mode],
-      "Duración de grabación: " + seconds + " segundos",
+      "Duración de la grabación: " + (seconds > 0 ? seconds + " segundos" : "No aplica a esta respuesta escrita"),
       "Consigna: " + taskFeedbackContext,
       "",
       "Respuesta del estudiante:",

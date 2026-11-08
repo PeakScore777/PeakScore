@@ -586,3 +586,13 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Pendiente: ejecutar `npm run test:orby`, TypeScript, ESLint, build y QA Chrome/Gemini Live. No se tocó `main`, no se hizo merge/rebase ni despliegue, y no se añadieron proveedores de pago.
 
 - Cierre de prueba de renderer: se agregó una aserción explícita para el target de componentes de circuito (`currentId={component.id}`). Inventario estático final permanece en **249 pruebas nombradas, 0 duplicados**; no ejecutadas.
+
+
+## 2026-11-08 — siguiente fase OmegaX: coreografía pedagógica de acciones
+- La meta inmediata no es añadir más dibujos aislados: OmegaX debe coordinar una explicación como una secuencia pedagógica continua sobre un mismo tablero.
+- Flujo objetivo: crear/actualizar un visual → señalar un subelemento existente → explicar su función → retirar únicamente el foco con `clear-focus` → señalar otro objetivo → comparar → añadir una relación nueva sin borrar el contexto previo.
+- Cada acción debe pertenecer al `turnGeneration`/`activityGeneration` activo, conservar IDs estables y validar sus referencias contra el snapshot vigente. Una interrupción debe cancelar las acciones pendientes y descartar resultados tardíos.
+- La secuencia debe ser incremental e idempotente: no duplicar dibujos, no reiniciar el tablero y no reproducir acciones ya confirmadas al reanudar.
+- Prioridad de ampliación de targets: electrones/partículas y componentes internos de visuales existentes; después enlaces moleculares, flechas/aristas, cables y puntos de gráficas/vectores. Cada target necesita ID y coordenadas reales del renderer antes de habilitarse.
+- No simular sincronía palabra-a-palabra. Usar el orden real de eventos y, si el proveedor aporta segmentos temporales fiables, vincularlos sin inferir timestamps.
+- Criterios de cierre: pruebas ejecutadas (no solo inventariadas), TypeScript, ESLint, build y QA Chrome/Gemini Live con voz real, pausa, reanudación e interrupción. `main` permanece intacta.

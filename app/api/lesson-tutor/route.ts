@@ -110,6 +110,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "La solicitud no es válida." }, { status: 400 });
     }
 
+    // Voice fallback turns are persisted once, after playback, through the
+    // idempotent /api/orby/realtime-turn endpoint. Saving here as well can
+    // reject the generated answer or create a duplicate exchange.
+    const voiceModeRequest = body.voiceMode === true;
+
     let subject = cleanText(body.subject, 80) || "Preparación Saber 11";
     const topic = cleanText(body.topic, 160);
     const stage = body.stage === "practice" ? "práctica" : "teoría";
@@ -935,7 +940,7 @@ No uses bloques Markdown ni texto fuera del JSON.
       }
       raw = await generateTutorVision(prompt, tutorImage.mimeType, tutorImage.base64);
     } else {
-      const isVoiceRequest = body.voiceMode === true;
+      const isVoiceRequest = voiceModeRequest;
       // Every voice turn, including short contextual follow-ups, must use the
       // dedicated voice prompt. The lighter conversational prompt omits the
       // stricter spoken-language and delivery checks students need.
@@ -1123,7 +1128,7 @@ No uses bloques Markdown ni texto fuera del JSON.
 
     const persistenceStartedAt = performance.now();
     let boardPersisted = Boolean(board);
-    if (conversationId && ownedConversation) {
+    if (conversationId && ownedConversation && !voiceModeRequest) {
       const turnArgs = {
         p_user_id: user.id,
         p_conversation_id: conversationId,

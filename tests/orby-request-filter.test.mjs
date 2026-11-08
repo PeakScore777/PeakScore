@@ -4203,6 +4203,8 @@ test("las acciones de pizarra aceptan optionals undefined y rechazan labels mal 
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
   assert.match(liveToolsSource, /Exact operation: focus, erase or replace/);
+  assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus only/);
+  assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
   assert.match(liveToolsSource, /Replacement geometry for the existing stroke[\s\S]*?ink \(black\), blue, red, accent, muted or success/);
   assert.match(lessonTutorSource, /function handleOrbyLiveBoardActionTool/);
   assert.match(lessonTutorSource, /applyOrbyBoardAction\(currentBoard, action\)/);
@@ -4215,7 +4217,7 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /data-orby-teacher-focus=\{stroke\.id\}/);
   assert.match(boardComponentSource, /focus\?\.strokeId === stroke\.id/);
-  assert.match(boardComponentSource, /board\.teacherFocus && "elementId" in board\.teacherFocus/);
+  assert.match(boardComponentSource, /typeof board\.teacherFocus\?\.elementId === "string"/);
   assert.match(boardComponentSource, /orby-board-layout-stage-focused/);
   assert.match(boardComponentSource, /key=\{\x60\$\{focus\.strokeId\}:\$\{focus\.revision\}\x60\}/);
   assert.match(boardStyles, /orby-board-layout-stage-focused::after/);

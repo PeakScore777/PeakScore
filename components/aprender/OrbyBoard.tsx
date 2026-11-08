@@ -338,8 +338,8 @@ function Dna({ visual, startDelayMs = 0 }: { visual: Extract<OrbyBoardVisual, { 
           <text x={x2} y={y + 1.5} fontSize="4" textAnchor="middle" fill={colors.ink}>{pair.right}</text>
         </g>;
       })}
-      <path key={visual.pairs.map((pair) => pair.left + pair.right).join("") + "-left"} className="orby-board-stroke" pathLength={1} d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 + Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke={colors.orange} strokeWidth="1.3"/>
-      <path key={visual.pairs.map((pair) => pair.left + pair.right).join("") + "-right"} className="orby-board-stroke" pathLength={1} d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 - Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke="#0f766e" strokeWidth="1.3"/>
+      <path key={visual.pairs.map((pair) => pair.left + pair.right).join("") + "-left"} className="orby-board-stroke" style={{ animationDelay: `${startDelayMs}ms` }} pathLength={1} d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 + Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke={colors.orange} strokeWidth="1.3"/>
+      <path key={visual.pairs.map((pair) => pair.left + pair.right).join("") + "-right"} className="orby-board-stroke" style={{ animationDelay: `${startDelayMs}ms` }} pathLength={1} d={visual.pairs.map((_, index) => `${index ? "L" : "M"} ${50 - Math.sin(index * 0.9) * 18} ${12 + index * step}`).join(" ")} fill="none" stroke="#0f766e" strokeWidth="1.3"/>
     </svg>
   );
 }

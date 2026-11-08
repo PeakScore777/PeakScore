@@ -312,6 +312,10 @@ export async function POST(request: Request) {
               },
             },
             tools: ORBY_LIVE_KNOWLEDGE_TOOLS,
+            // Ephemeral tokens must explicitly authorize resumption; a client
+            // request alone is ignored when this capability is not constrained here.
+            sessionResumption: {},
+            contextWindowCompression: { slidingWindow: {} },
           },
         },
       },

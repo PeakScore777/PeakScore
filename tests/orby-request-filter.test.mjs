@@ -4221,6 +4221,7 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   assert.match(boardComponentSource, /orby-board-layout-stage-focused/);
   assert.match(boardComponentSource, /key=\{\x60\$\{focus\.strokeId\}:\$\{focus\.revision\}\x60\}/);
   assert.match(boardStyles, /orby-board-layout-stage-focused::after/);
+  assert.ok(boardStyles.includes('.orby-board[data-orby-drawing-active="false"] .orby-board-layout-stage-focused::after {\n  animation-play-state: paused !important;\n}'));
   assert.match(boardStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board-layout-stage-focused::after/);
   assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus only/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);

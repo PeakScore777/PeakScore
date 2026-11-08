@@ -634,3 +634,13 @@
 - El feedback con skill válida utiliza el prompt pedagógico completo para recibir la memoria previa y las rúbricas específicas, sin obligar a buscar documentos vectoriales.
 
 - El panel de progreso refresca las señales después del feedback de una habilidad, sin generar otra llamada de IA. Si la lectura falla, la respuesta se conserva y aparece un aviso no bloqueante.
+
+
+## Backlog reservado — evolución del perfil adaptativo de OmegaX (pendiente)
+- Cerrar regresiones del build, ejecutar tests/TypeScript/ESLint/build y QA Chrome; Preview READY del HEAD antes de compartir una URL como actualizada.
+- Agregar memoria longitudinal deduplicada por usuario/materia/destreza/concepto, tendencias con evidencia y detección de patrones repetidos sin diagnosticar por un error aislado.
+- Medir respuesta a estrategias de enseñanza con cautela, introducir revisión espaciada y recomendar la siguiente actividad explicando la evidencia que la motiva.
+- Integrar señales de roleplays Live al finalizar turnos completos, con idempotencia y límites honestos sobre pronunciación acústica.
+- Conectar las cinco habilidades de inglés con pizarra progresiva y después extender la memoria/recomendación a las cinco materias de Saber 11.
+- Añadir controles de transparencia, pausa, consulta y borrado de la memoria personal; revisar RLS antes de cualquier acceso nuevo.
+- Presupuesto obligatorio: servicios gratuitos reales dentro de cuota, sin APIs/modelos pagos, créditos facturados ni fallback silencioso.

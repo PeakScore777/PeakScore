@@ -84,8 +84,8 @@ export async function POST(request: Request) {
 
   if (!isCloudflareWorkersAIConfigured()) {
     return NextResponse.json({
-      error: "La transcripción no está configurada. El servicio de transcripción no está disponible temporalmente.",
-      code: "TRANSCRIPTION_NOT_CONFIGURED",
+      error: "La transcripción está desactivada: el plan gratuito de Cloudflare Workers AI no está confirmado en el servidor. No se ha enviado ninguna solicitud al proveedor.",
+      code: "CLOUDFLARE_FREE_TIER_NOT_CONFIRMED",
     }, { status: 503 });
   }
 

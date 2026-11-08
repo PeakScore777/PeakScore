@@ -5178,8 +5178,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const assistantVoiceSubtitle = activeVoiceAssistantMessage?.content?.trim() || voiceAssistantTextRef.current.trim();
   let subtitleWordIndex = 0;
   const assistantSubtitleContent = assistantVoiceSubtitle
-    ? assistantVoiceSubtitle.split(/(\\s+)/u).map((part, index) => {
-        if (/^\\s+$/u.test(part)) return <span key={`subtitle-space-${index}`}>{part}</span>;
+    ? splitOrbySubtitleSegments(assistantVoiceSubtitle).map((part, index) => {
+        if (part.trim().length === 0) return <span key={`subtitle-space-${index}`}>{part}</span>;
         const wordIndex = subtitleWordIndex;
         subtitleWordIndex += 1;
         const active = voiceSubtitlePlaybackActive && wordIndex === voiceSubtitleWordIndex;

@@ -618,3 +618,23 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Pendiente instrumentar/validar si Live invoca `render_orby_teaching_board` y si el snapshot aceptado llega al componente visual durante el audio. Si no ocurre, la siguiente mutación debe abordar la invocación y el flujo de snapshots, no maquillar el tablero con puntos decorativos.
 - Pendiente revisar las credenciales de Cloudflare en el entorno local; nunca copiar ni compartir tokens en el chat.
 - Solo `feat/founder-intro`; no se toca `main`, no se despliega y no se agregan dependencias ni servicios de pago.
+
+
+## Fase 2 — prioridad explícita de pizarra durante la clase Live — 7 de noviembre de 2026
+
+### Cambio aplicado
+- Se añadió una directiva docente prioritaria en la instrucción de cada sesión Live: para preguntas académicas sustanciales, Orby debe invocar la herramienta de pizarra antes de la primera explicación oral extensa, continuar con snapshots acumulativos por etapas y narrar lo que escribe.
+- Se especifica cuándo NO dibujar (saludos, confirmaciones y turnos sin tema académico), para evitar diagramas artificiales.
+- Si la herramienta falla, Orby debe continuar la explicación oral sin esperar ni afirmar que la pizarra se actualizó.
+- La directiva no depende de Cloudflare ni de recuperar material del Lab. No cambia modelos, proveedores ni límites de coste.
+
+### Archivos
+- `app/api/orby/realtime-session/route.ts`
+- `tests/orby-request-filter.test.mjs`
+- `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`
+
+### QA y límites
+- Se añadió una prueba estática de contrato para la directiva Live.
+- Pendiente ejecutar `npm run test:orby`, TypeScript, build y validar en navegador que el modelo realmente invoque la herramienta y que el componente muestre la pizarra durante el audio.
+- Esta directiva mejora el contrato del modelo, pero no garantiza por sí sola la invocación; la siguiente verificación debe medir eventos de herramienta y render efectivo.
+- Solo `feat/founder-intro`; sin cambios a `main`, sin despliegue, sin servicios de pago y sin reconstrucción del Lab eliminado.

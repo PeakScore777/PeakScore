@@ -178,7 +178,6 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
               labelY: { type: Type.NUMBER, minimum: 4, maximum: 96 },
             }, required: ["id", "points"] } },
             strokeId: { type: Type.STRING, description: "Existing stroke ID for focus or replace. For focus, use either strokeId or elementId, never both." },
-            elementId: { type: Type.STRING, description: "Existing layout element ID for focus only. Use the exact ID from the active board layout; do not invent one." },
             label: { type: Type.STRING, description: "Optional short Spanish focus label, maximum 48 characters." },
             strokeIds: { type: Type.ARRAY, description: "One to eight existing stroke IDs for selective erase.", items: { type: Type.STRING } },
             replacement: {
@@ -186,7 +185,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
               description: "Replacement geometry for the existing stroke. Keep its exact strokeId as id and preserve the teacher palette: ink (black), blue, red, accent, muted or success.",
               properties: {
                 id: { type: Type.STRING },
-                points: { type: Type.ARRAY, minItems: 2, maxItems: 40, items: { type: Type.OBJECT, properties: {
+                points: { type: Type.ARRAY, minItems: "2", maxItems: "40", items: { type: Type.OBJECT, properties: {
                   x: { type: Type.NUMBER }, y: { type: Type.NUMBER },
                 }, required: ["x", "y"] } },
                 tone: { type: Type.STRING, description: "ink (black), blue, red, accent, muted or success." }, width: { type: Type.NUMBER },

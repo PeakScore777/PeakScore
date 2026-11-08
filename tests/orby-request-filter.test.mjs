@@ -4584,7 +4584,8 @@ test("los tableros version 1 y 2 sin layout conservan la compatibilidad heredada
   }), null);
 });
 
-test("el renderer y Gemini comparten el contrato del lienzo espacial", async () => {\n  const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+test("el renderer y Gemini comparten el contrato del lienzo espacial", async () => {
+  const boardStyles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(boardComponentSource, /orby-board-canvas/);
   assert.match(boardComponentSource, /spatialLayout\.elements\.map/);
   assert.match(boardComponentSource, /function renderBoardBlock/);

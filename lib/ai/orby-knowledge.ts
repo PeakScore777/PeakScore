@@ -1,6 +1,7 @@
 import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
+import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 import { createCloudflareEmbeddings, CLOUDFLARE_EMBEDDING_MODEL, isCloudflareWorkersAIConfigured } from "@/lib/ai/cloudflare-workers-ai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { CloudflareWorkersAIError, generateWithCloudflareAnalysis } from "@/lib/ai/cloudflare-workers-ai";
@@ -25,7 +26,7 @@ const EMBEDDING_BATCH_SIZE = 16;
 
 /** True when at least one explicitly configured free-tier embedding provider is available. */
 export function isOrbyEmbeddingProviderConfigured(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY?.trim()) || isCloudflareWorkersAIConfigured();
+  return isGeminiFreeTierConfigured() || isCloudflareWorkersAIConfigured();
 }
 
 export type OrbyKnowledgeChunk = {
@@ -137,7 +138,8 @@ function throwEmbeddingQuotaExceeded(): never {
 }
 
 function getEmbeddingClient() {
-  const apiKey = process.env.GEMINI_API_KEY;
+  if (!isGeminiFreeTierConfigured()) throw new Error("GEMINI_FREE_TIER_NOT_CONFIRMED");
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) throw new Error("GEMINI_API_KEY is not configured.");
   return new GoogleGenAI({ apiKey });
 }
@@ -328,7 +330,7 @@ export async function createOrbyEmbeddings(
     let usedModel = EMBEDDING_MODEL;
     let geminiFailure: unknown = null;
 
-    if (process.env.GEMINI_API_KEY) {
+    if (isGeminiFreeTierConfigured()) {
       try {
         const response = await getEmbeddingClient().models.embedContent({
           model: EMBEDDING_MODEL,
@@ -835,7 +837,7 @@ export async function generateOrbyKnowledgePageBatch(
 
   const client = getEmbeddingClient();
   const response = await client.models.generateContent({
-    model: process.env.ORBY_KNOWLEDGE_PROFILE_MODEL || "gemini-3.1-flash-lite",
+    model: "gemini-3.1-flash-lite",
     contents: [
       { fileData: { fileUri: pdfFileUri, mimeType: "application/pdf" } },
       { text: prompt },
@@ -1222,7 +1224,7 @@ export async function saveOrbyKnowledgeProfile(documentId: string, profile: Orby
   const { data, error } = await supabaseAdmin.rpc("orby_save_knowledge_profile", {
     p_document_id: documentId,
     p_profile: profile,
-    p_model: process.env.ORBY_KNOWLEDGE_PROFILE_MODEL || "gemini-3.1-flash-lite",
+    p_model: "gemini-3.1-flash-lite",
   });
   if (error) throw new Error("Could not save knowledge profile: " + error.code);
   const { error: pedagogyError } = await supabaseAdmin
@@ -1264,7 +1266,7 @@ export async function createOrbyQueryEmbedding(query: string): Promise<OrbyQuery
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
   let geminiFailure: unknown = null;
 
-  if (process.env.GEMINI_API_KEY) {
+  if (isGeminiFreeTierConfigured()) {
     try {
       const response = await Promise.race([
         getEmbeddingClient().models.embedContent({
@@ -1325,7 +1327,7 @@ async function createOrbyQueryEmbeddingForModel(
       return values ?? null;
     }
 
-    if (model === EMBEDDING_MODEL && process.env.GEMINI_API_KEY) {
+    if (model === EMBEDDING_MODEL && isGeminiFreeTierConfigured()) {
       const response = await getEmbeddingClient().models.embedContent({
         model: EMBEDDING_MODEL,
         contents: text,

@@ -334,3 +334,31 @@ Se implementó una representación espacial aditiva para OrbyBoard v2:
 - Se corrigió en \`aa90b02e56ecdf03c8f765642bf69f9b69298e76\`.
 - Revisión estática posterior: 222 tests declarados, cero nombres duplicados y cero bloques de test vacíos.
 - El check posterior reporta \`build-rate-limit\` y no hay un deployment posterior registrado para el SHA arreglado. Tests, TypeScript, ESLint y build continúan pendientes de ejecución verde.
+
+
+## Actualización de auditoría — motor incremental de acciones docentes (2026-11-08)
+
+### Estado de implementación
+Se implementó una primera capa aditiva de acciones incrementales sobre el canvas espacial v2. Ya no dependemos exclusivamente de enviar snapshots completos para cada actualización: Orby puede añadir un bloque de escritura o un pequeño conjunto de trazos a la pizarra existente.
+
+- Operaciones nuevas: `append-block` y `append-strokes`.
+- Operaciones previas preservadas: `focus`, `erase`, `replace`.
+- Envelope de seguridad: `turnGeneration` obligatorio en todas las operaciones docentes; `actionId`, `sequence` y `dependsOn` obligatorios para append.
+- La secuencia verifica generación actual, idempotencia, orden creciente y dependencias aceptadas.
+- Los bloques y trazos nuevos pasan por sanitización tipada; se validan geometría, límites, tipos y presupuesto del tablero.
+- La herramienta Live devuelve `turnGeneration` al aceptar una instantánea. La directiva de sesión exige que el modelo lo reenvíe en acciones posteriores.
+- Durante preflight se permite acumular acciones solamente en la pizarra provisional de la misma sesión/actividad y dentro de su ventana de vigencia; no se publica hasta validar la pregunta.
+- Se limpian selecciones temporales al agregar contenido para evitar halos antiguos.
+
+### Riesgo residual
+La secuencia implementa orden e idempotencia de operaciones visuales; no proporciona alineación fonética/timestamps. La sincronización observada depende de la cadencia de eventos que entregue Gemini Live. No se garantiza que cada segmento oral tenga su acción visual correspondiente.
+
+### Validación
+- Revisión estática de contratos, integración de cliente, schema Live, directiva de sesión y pruebas.
+- Suite declarada: 229 tests según conteo del archivo; no ejecutada en esta sesión.
+- TypeScript, ESLint y build: pendientes. Último estado conocido de Vercel fue `build-rate-limit`.
+- Chrome/micrófono, interrupción a mitad de trazo e historial: pendientes de QA manual.
+- Sin cambios a `main`, producción, Supabase ni migraciones remotas. Sin proveedores/modelos de pago ni dependencias nuevas.
+
+### Siguiente P0
+Ejecutar validaciones locales del SHA final sin forzar una cuota facturable y realizar una clase real con micrófono: al menos tres append operations durante voz, interrupción, pregunta nueva, recuperación del tablero y comprobación de ausencia de acciones antiguas.

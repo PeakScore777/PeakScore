@@ -540,3 +540,13 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - No se añadieron proveedores, modelos, dependencias ni APIs facturables. Sin despliegue, sin migraciones remotas y sin acceso de escritura a `main`.
 
 - **Compatibilidad de fórmulas con el renderer:** Live y tutor de respaldo ahora exigen notación matemática legible en texto plano para los bloques `formula`/`step` (sin comandos LaTeX, HTML ni Markdown complejo), porque `OrbyBoard` renderiza esos bloques como texto manuscrito. Se añadieron aserciones para ambas rutas. Commits: `36a3587`, `4f34a50`, `9625453`.
+
+
+## 2026-11-08 — señalamiento exacto de un punto del dibujo
+- Se amplió la acción docente `focus`: ahora admite `strokeId` y un `pointIndex` opcional, índice desde cero dentro de los puntos reales de ese trazo. Si se omite, el foco conserva el comportamiento anterior y apunta al punto medio. El foco por `elementId` sigue siendo de etapa completa y no admite `pointIndex`.
+- `lib/ai/orby-board-actions.ts` valida tipo entero, rango permitido del contrato y luego comprueba contra la longitud real del trazo. Un índice que pase el schema pero no exista en la geometría es rechazado. La operación no cambia ni añade tinta.
+- `components/aprender/OrbyBoard.tsx` muestra un foco localizado: anillo pulsante, punto central, línea guía y etiqueta; usa solamente coordenadas existentes. Con movimiento reducido se conserva el marcador en estado estático.
+- `lib/ai/orby-live-tools.ts` expone `pointIndex`; el prompt de sesión Live explica cuándo usarlo y prohíbe inventar índices/coordenadas. El cliente devuelve un motivo específico cuando el punto no existe.
+- Se añadieron regresiones para índice exacto, límite inválido, índice fuera del tamaño real, conservación de tinta y renderer/schema/prompt. Inventario estático actual se verificará al cerrar; no confundirlo con ejecución.
+- Commits de esta mutación: `9abd98b`, `437422c`, `0c79237`, `08f3ee3`, `29e041e`, `0131870`, `39292bc`, `0276b71`, `7056c1b`, `e6f8990`, `3f14540`.
+- Validación: no se ha ejecutado la suite completa, TypeScript, ESLint ni build para este HEAD. QA real de Chrome/Live y movimiento reducido permanece pendiente. Sin proveedores facturables, migraciones, despliegue, merge ni rebase de `main`.

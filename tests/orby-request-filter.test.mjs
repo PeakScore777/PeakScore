@@ -3593,9 +3593,9 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
 
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(source, /Pizarra de Orby preparándose/);
-  assert.match(source, /voiceMode && voicePendingStudentTurnRef\.current/);
-  assert.match(source, /Preparando el apoyo visual/);
+  assert.match(source, /voiceMode && workspaceMode === "voice"/);
+  assert.match(source, /Hoja de clase/);
+  assert.match(source, /activeVoiceAssistantMessage\?\.board/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });
 
@@ -3679,9 +3679,9 @@ test("Gemini Live publica la pizarra sin sincronización por frases y procesa pr
   const callbackInput = lesson.indexOf("Process VAD/student input first");
   const callbackTools = lesson.indexOf("const liveCalls =", callbackInput);
   assert.ok(callbackInput >= 0 && callbackTools > callbackInput);
-  assert.match(tools, /Do not use transcript phrase matching/);
+  assert.match(tools, /do not synchronize drawing to transcript phrase matching/);
   assert.doesNotMatch(tools, /spokenCue: \{ type: Type\.STRING/);
-  assert.match(route, /no incluyas spokenCue/);
+  assert.match(route, /sin depender de transcripciones ni de frases coincidentes/);
   assert.match(renderer, /orby-board-pen-tip/);
   assert.match(renderer, /fill="#f59e0b"/);
   assert.match(renderer, /max-h-\[680px\]/);
@@ -3805,7 +3805,7 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   assert.match(renderer, /dur=\{\x60\$\{duration\}ms\x60\}/);
   assert.match(renderer, /stroke\.points\.map/);
   assert.match(renderer, /const strokeTimings = visual\.strokes\.map/);
-  assert.match(renderer, /delay: Math\.min\(index \* 180, 900\)/);
+  assert.match(renderer, /delay: Math\.min\(index \* 120, 600\)/);
   assert.match(renderer, /const delay = strokeTimings\[index\]\?\.delay \?\? 0/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
@@ -3867,7 +3867,7 @@ test("las RPC antiguas de pizarra no hacen perder turnos con escenas visuales ve
 
 
 test("el modo por turnos explica con precisión la cuota y el proveedor de voz", () => {
-  assert.match(lessonTutorSource, /la cuota gratuita y la configuración de privacidad lo permiten/);
+  assert.match(lessonTutorSource, /respetará las cuotas gratuitas disponibles/);
   assert.doesNotMatch(lessonTutorSource, /No consume cuota Gemini/);
   assert.doesNotMatch(lessonTutorSource, /no se activará una voz sintética facturada/);
 });
@@ -3901,7 +3901,7 @@ test("la pizarra Live publica cada snapshot aceptado sin esperar coincidencias d
 test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva subtítulos", () => {
   assert.match(lessonTutorSource, /aria-label="Clase en vivo con Orby"/);
   assert.match(lessonTutorSource, /orby-class-paper/);
-  assert.match(lessonTutorSource, /Orby · Subtítulos en vivo/);
+  assert.match(lessonTutorSource, /aria-label="Subtítulos en vivo de Orby"/);
   assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
   assert.match(lessonTutorSource, /orby-class-board/);
   assert.doesNotMatch(lessonTutorSource, /orby-voice-stage[^]*?voiceStageOrbRef/);

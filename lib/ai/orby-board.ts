@@ -78,7 +78,9 @@ export function getOrbySketchStrokeTiming(
     pathLength += Math.hypot(current.x - previous.x, current.y - previous.y);
   }
   return {
-    delay: 0,
+    // Only a brief pen-lift gap is allowed; do not accumulate multi-second
+    // waits as the board grows across cumulative snapshots.
+    delay: Math.min(safeIndex * 70, 350),
     duration: Math.round(Math.min(1_900, Math.max(420, pathLength * 14))),
   };
 }

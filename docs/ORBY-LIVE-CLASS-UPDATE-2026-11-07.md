@@ -751,3 +751,13 @@ Se tomó como evidencia el log local compartido por el usuario, que reportaba si
 - La configuración real sí activa `contextWindowCompression: { slidingWindow: {} }` y `sessionResumption`; el cliente recibe `sessionResumptionUpdate`, conserva el handle por conversación, atiende `goAway` y reintenta la reanudación con un token efímero nuevo.
 - Por tanto, **no se registra como bug la ausencia de reanudación**. La hipótesis inicial queda descartada tras inspeccionar el código completo.
 - Queda pendiente QA real de reconexión: probar cierre voluntario del socket, evento `goAway`, handle no resumible, token expirado, límite de cuota y preservación de audio/micrófono. La presencia de código no certifica que esos caminos funcionen en Chrome.
+
+
+### Bug real — reanudación no autorizada por el token efímero
+- El navegador ya solicitaba `sessionResumption` y manejaba `sessionResumptionUpdate` / `goAway`, pero el servidor no incluía esa capacidad en `liveConnectConstraints.config` al crear el token efímero.
+- La documentación oficial de Gemini especifica que la reanudación debe autorizarse en el token del servidor; pedirla únicamente desde el cliente no basta. También se autoriza explícitamente la compresión deslizante que el cliente ya utiliza.
+- Se añadió `sessionResumption: {}` y `contextWindowCompression: { slidingWindow: {} }` a las restricciones del token. No se modificó el algoritmo de reconexión del navegador.
+- Código: `7ab8b8f224d8204340d616603bc52dcaa511124e`.
+- Regresión: `455b030245e452f6d502a1f33816a39368750886`.
+- Fuentes oficiales revisadas: https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens y https://ai.google.dev/gemini-api/docs/live-api/session-management.
+- Pendiente de prueba real: comprobar que el servidor emita un `sessionResumptionUpdate` válido tras un turno completo y que la reanudación recupere contexto y audio sin saltar a fallback.

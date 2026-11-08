@@ -372,3 +372,25 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - Static regression inventory: **249 named tests, no duplicate titles**. This is not a test execution result. Test runner, TypeScript, ESLint, production build and Chrome/Gemini Live QA remain pending. No deployment or main-branch change.
 
 - The renderer source regression now explicitly verifies the `component.id` target for circuit components, in addition to diagram nodes, atoms and anatomy/organelle targets. Static inventory remains 249 named tests with no duplicates; tests are not executed.
+
+
+### Siguiente iteración — coreografía de una explicación completa (2026-11-08)
+
+La experiencia objetivo es una profesora que construye y recorre una explicación completa sin que el estudiante perciba acciones desconectadas. Ejemplo de aceptación: dibuja un átomo → enfoca un electrón real → explica su papel → retira el foco sin borrar el átomo → enfoca el núcleo → compara ambas partes → añade una relación nueva al mismo tablero.
+
+Contrato requerido:
+- Toda acción debe estar ligada a la generación y actividad vigentes. Los IDs de visual/target deben existir en el snapshot activo y pertenecer al visual exacto.
+- La cola conserva el orden pedagógico, pero cada acción se confirma por separado; no se debe presentar una acción futura como completada antes de validarla.
+- `clear-focus` retira solo el indicador temporal. Nunca usar `erase` para cambiar de objetivo.
+- `append`/actualización incremental conserva contenido anterior y evita duplicados mediante IDs estables e idempotencia.
+- Pause/resume conserva el progreso confirmado; una interrupción cancela acciones pendientes y descarta respuestas tardías de generaciones anteriores.
+- Si un subelemento no tiene ID y geometría propios, OmegaX debe señalar el visual completo o explicar la limitación; no inventar coordenadas ni targets.
+- No prometer alineación exacta palabra-a-palabra mientras Gemini Live no exponga timestamps/segmentos fiables. Mantener el orden de eventos y el karaoke aproximado descrito arriba.
+
+Orden de implementación recomendado:
+1. Auditar la cola actual de acciones y definir un contrato mínimo de secuencia cancelable por generación.
+2. Cubrir el ciclo `focus → explain → clear-focus → focus` sin pérdida de tinta ni repetición.
+3. Añadir targets internos únicamente cuando cada renderer ofrezca ID estable y posición verificable (prioridad: electrones/partículas; luego enlaces, aristas, cables y puntos de gráfica).
+4. Probar interrupción, pausa, reanudación, snapshots acumulativos y fallback por turnos.
+
+No marcar este hito como implementado hasta ejecutar suite, TypeScript, ESLint, build y QA real en Chrome con Gemini Live/micrófono.

@@ -4982,20 +4982,8 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         return "**Apoyo visual — " + (visual.title || visual.type) + ":** " + (detail || "Se conserva la descripción estructurada de este recurso.");
       }),
     ].filter(Boolean);
-    let studentInk = "";
-    try {
-      const key = "peakscore:orby-board-ink:" + encodeURIComponent(activeVoiceAssistantMessage?.id || board.title || "clase");
-      const saved = window.localStorage.getItem(key);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) studentInk = "\n\n## Mis anotaciones\n" + parsed
-          .filter((stroke) => stroke && (stroke.mode === "pen" || stroke.mode === "highlight") && Array.isArray(stroke.points))
-          .map((stroke) => "- " + (stroke.mode === "highlight" ? "Resaltado" : "Trazo") + " (" + stroke.points.length + " puntos)")
-          .join("\n");
-      }
-    } catch { /* A note must still save if local annotations are unavailable. */ }
     const visualData = JSON.stringify(board.visuals ?? []).slice(0, 2600);
-    const content = (sections.join("\n\n") + studentInk + "\n\n## Datos de los apoyos visuales\n```json\n" + visualData + "\n```").slice(0, 7900);
+    const content = (sections.join("\n\n") + "\n\n## Datos de los apoyos visuales\n```json\n" + visualData + "\n```").slice(0, 7900);
     void saveLearningItem("note", board.title || "Apuntes de clase", content);
   }
 
@@ -5239,7 +5227,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
-                  <OrbyBoard board={activeVoiceAssistantMessage.board} storageId={activeVoiceAssistantMessage.id} />
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} />
                 </div>
               : <div className="orby-class-empty mx-auto flex min-h-[280px] h-full max-w-5xl flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 px-6 text-center text-slate-500">
                   <BookOpen className="mb-3 h-8 w-8 text-orange-500/70" />

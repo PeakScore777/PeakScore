@@ -90,6 +90,7 @@ function isSafeTutorOutput(text: string): boolean {
 }
 
 export async function POST(request: Request) {
+  let assistantName: "OmegaX" | "Orby" = "Orby";
   const requestStartedAt = performance.now();
   const stageTimings = { retrievalMs: 0, generationMs: 0, reviewMs: 0, persistenceMs: 0 };
   try {
@@ -101,7 +102,7 @@ export async function POST(request: Request) {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return NextResponse.json({ error: "Inicia sesión para conversar con Orby." }, { status: 401 });
+      return NextResponse.json({ error: "Inicia sesión para conversar con el asistente de estudio." }, { status: 401 });
     }
 
     const body = await request.json().catch(() => null);
@@ -113,7 +114,7 @@ export async function POST(request: Request) {
     // Voice fallback turns are persisted once, after playback, through the
     // idempotent /api/orby/realtime-turn endpoint. Saving here as well can
     // reject the generated answer or create a duplicate exchange.
-    const assistantName = body.assistantName === "OmegaX" ? "OmegaX" : "Orby";
+    assistantName = body.assistantName === "OmegaX" ? "OmegaX" : "Orby";
     const voiceModeRequest = body.voiceMode === true;
 
     let subject = cleanText(body.subject, 80) || "Preparación Saber 11";
@@ -1234,7 +1235,7 @@ No uses bloques Markdown ni texto fuera del JSON.
           : authenticationFailure
             ? "Cloudflare rechazó las credenciales del motor académico. Revisa el token y sus permisos de Workers AI."
             : connectionFailure
-              ? "No se pudo conectar con el motor académico gratuito de Orby. Conservé tu pregunta; vuelve a intentarlo."
+              ? `No se pudo conectar con el motor académico gratuito de ${assistantName}. Conservé tu pregunta; vuelve a intentarlo.`
               : "Cloudflare no pudo generar esta respuesta. No se activará ningún proveedor de pago; vuelve a intentarlo.",
         code: error.code,
       }, { status: configurationFailure || authenticationFailure ? 503 : 502 });

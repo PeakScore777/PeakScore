@@ -362,3 +362,45 @@ La secuencia implementa orden e idempotencia de operaciones visuales; no proporc
 
 ### Siguiente P0
 Ejecutar validaciones locales del SHA final sin forzar una cuota facturable y realizar una clase real con micrófono: al menos tres append operations durante voz, interrupción, pregunta nueva, recuperación del tablero y comprobación de ausencia de acciones antiguas.
+
+
+## Auditoría de fidelidad al video — 2026-11-08
+
+### Cambios comprobados
+- Se inspeccionó el video del propietario (42.7 segundos) y se tomó como referencia una hoja blanca lisa, manuscrita, con dibujo principal progresivo, flechas, etiquetas y anotaciones.
+- Se quitó la textura punteada del canvas global y de la hoja de clase Live; el canvas en la llamada queda sin borde, radio ni sombra de tarjeta.
+- Se añadió una regresión estática en `tests/orby-request-filter.test.mjs` para proteger la superficie lisa.
+- Se mantuvo el renderer progresivo y las acciones incrementales ya existentes; no se creó otra pizarra.
+
+### Cobertura ICFES
+La guía 2026-2 y los marcos Icfes se reflejaron en una gramática visual para las cinco pruebas:
+- Matemáticas: ecuaciones, gráficas, geometría, datos y justificación.
+- Lectura Crítica: subrayado, argumentos, inferencias, conectores y análisis de textos/infografías.
+- Sociales y Ciudadanas: mapas, cronologías, instituciones, actores, perspectivas y causalidad.
+- Ciencias Naturales: mecanismos y estructuras biológicas/químicas/físicas, CTS y experimentos.
+- Inglés: siete partes, vocabulario contextual, diálogo, intención comunicativa, gramática y lectura.
+
+La base curricular preexistente permanece en `docs/ORBY-ICFES-CURRICULUM-PLAN.md`. No copiar preguntas protegidas ni reconstruir materiales del Lab eliminados.
+
+### Recuperación Orby Lab
+- La integración existente sí consulta el Lab mediante `search_orby_learning_knowledge` y `/api/orby/knowledge-search`, limitándose a material `published`, conceptos y documentos relacionados.
+- La herramienta se ejecuta como NON_BLOCKING; el resultado no debe retrasar la primera frase ni la primera acción visual.
+- Se corrigió una contradicción de instrucciones: el servidor ordenaba recuperar por tema académico nuevo, pero el schema decía que la búsqueda era opcional. Ahora el schema exige una búsqueda publicada por nuevo tema sustantivo, con máximo dos llamadas por turno; una segunda solo se admite si resuelve un prerrequisito o evidencia nueva.
+- La web pública sigue reservada para referencias, actualidad o verificación externa. Si no hay Lab publicado o se agota la cuota gratuita, Orby continúa desde conocimiento académico fiable y no inventa fuentes.
+
+### Brecha principal — subtítulos palabra activa
+- La UI sigue mostrando una transcripción normal; el resaltado palabra por palabra aún no existe.
+- Gemini Live streaming no entrega marcas de tiempo por palabra. Gemini 3.5 Transcribe no streaming puede entregar offsets por palabra, pero no ofrece ese alineamiento en su endpoint Live y las marcas pueden afectar la precisión.
+- No fingir sincronización exacta mediante un temporizador arbitrario. Investigar un mecanismo de alineación compatible con la voz Live, cuota gratuita real, privacidad e interrupciones antes de implementarlo.
+- Las palabras activas deben seguir el reloj de reproducción real, no el tiempo de llegada de la transcripción; invalidar toda palabra pendiente con barge-in/generación nueva.
+
+### Latencia y voz natural
+- Meta de producto: primera frase útil idealmente ~1 s después de cerrar el turno de voz; no está garantizada ni medida.
+- Medir p50/p95 desde fin de voz hasta texto, primer audio recibido, audio programado y primera acción de pizarra; medir también parada por interrupción y rearme del micrófono.
+- Mantener filtros y validación de salida; no eliminarlos para bajar latencia.
+
+### Validación
+- Conteo estático: 229 pruebas nombradas; cero nombres duplicados y cero bloques vacíos detectados. No ejecutadas aquí.
+- TypeScript, ESLint, build y QA Chrome/micrófono siguen pendientes.
+- El check Vercel del SHA de documentación `ffcda699528ff73729740a796f9395b1770d8acc` reporta `failure`; el conector no devuelve la causa detallada de esa ejecución. No se afirma que sea verde.
+- No se tocaron `main`, producción ni Supabase. Sin migraciones, proveedores ni servicios de pago añadidos.

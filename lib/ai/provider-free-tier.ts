@@ -5,12 +5,19 @@ import "server-only";
  *
  * These flags are operator attestations, not account-plan introspection:
  * set them only after verifying each account is on its no-charge tier.
+ * Gemini also requires explicit approval for Free Tier data use.
  * Missing flags fail closed, so an API key alone never enables inference.
  */
 type ProviderEnvironment = Readonly<Record<string, string | undefined>>;
 
+/** Google AI Studio Free Tier data use is separate from account billing. */
+export function isGeminiDataUseApproved(env: ProviderEnvironment = process.env): boolean {
+  return env.PEAKSCORE_GEMINI_DATA_USE_APPROVED === "true";
+}
+
 export function isGeminiFreeTierConfigured(env: ProviderEnvironment = process.env): boolean {
   return env.PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED === "true"
+    && isGeminiDataUseApproved(env)
     && Boolean(env.GEMINI_API_KEY?.trim());
 }
 

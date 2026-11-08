@@ -8,7 +8,7 @@
  */
 export function countOrbySubtitleWords(value: string): number {
   const text = typeof value === "string" ? value.trim() : "";
-  return text ? (text.match(/\S+|\s+/gu) ?? []) : [];
+  return text ? (text.match(/\S+/gu)?.length ?? 0) : 0;
 }
 
 /**
@@ -44,5 +44,5 @@ export function getOrbyKaraokeWordIndex(
  */
 export function splitOrbySubtitleSegments(value: string): string[] {
   const text = typeof value === "string" ? value.trim() : "";
-  return text ? (text.match(/\\S+|\\s+/gu) ?? []) : [];
+  return text ? (text.match(/\S+|\s+/gu) ?? []) : [];
 }

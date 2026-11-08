@@ -570,7 +570,8 @@ export async function POST(request: Request) {
       context,
       ...history.slice(-8).map((item) => item.content),
     ].filter(Boolean).join(" ").slice(0, 3000);
-    const learningQuery = (detectedSubject === "Inglés"
+    const retrievalSubject = learningSkill ? "Inglés" : detectedSubject;
+    const learningQuery = (retrievalSubject === "Inglés"
       ? expandIcfesEnglishSearchTerms(learningQueryBase)
       : learningQueryBase).slice(0, 3200);
     // Only the student's current words count as an explicit topic. Lesson
@@ -678,13 +679,13 @@ export async function POST(request: Request) {
       const [knowledgeOutcome, conceptOutcome] = await Promise.allSettled([
         searchOrbyKnowledge({
           query: learningQuery,
-          subject: detectedSubject,
+          subject: retrievalSubject,
           visibility: "published",
           limit: 5,
         }),
         searchOrbyKnowledgeConcepts({
           query: learningQuery,
-          subject: detectedSubject,
+          subject: retrievalSubject,
           visibility: "published",
           limit: 12,
         }),

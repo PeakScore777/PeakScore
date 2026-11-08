@@ -170,17 +170,36 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
   if (raw.type === "annotation") {
     if (!["circle", "underline", "arrow", "bracket"].includes(String(raw.mark))
       || !Array.isArray(raw.points) || raw.points.length < 2 || raw.points.length > 12) return null;
+
+    // Optional fields may be absent or explicitly undefined (some SDK payloads
+    // materialize optional keys this way). Normalize both to omission. Reject
+    // null/objects/numbers instead of silently hiding malformed model output.
+    const hasOwn = (key: string) => Object.prototype.hasOwnProperty.call(raw, key);
+    if ((hasOwn("title") && raw.title !== undefined && typeof raw.title !== "string")
+      || (hasOwn("label") && raw.label !== undefined && typeof raw.label !== "string")) return null;
+    const title = raw.title === undefined ? "" : safeText(raw.title, 80);
+    const label = raw.label === undefined ? "" : safeText(raw.label, 48);
+
     const points: Array<{ x: number; y: number }> = [];
     for (const entry of raw.points) {
       if (!entry || typeof entry !== "object" || Array.isArray(entry)) return null;
       const point = entry as Record<string, unknown>;
+      // Only the two coordinates are part of the public contract. Additional
+      // SDK metadata (including undefined values) is intentionally discarded.
       if (!finite(point.x, 4, 96) || !finite(point.y, 4, 96)) return null;
       points.push({ x: point.x, y: point.y });
     }
+
     const tone = raw.tone === undefined ? "accent" : raw.tone;
     if (tone !== "blue" && tone !== "red" && tone !== "accent" && tone !== "success" && tone !== "muted") return null;
-    const label = safeText(raw.label, 48);
-    return { type: "annotation", title: safeText(raw.title, 80), mark: raw.mark as "circle" | "underline" | "arrow" | "bracket", points, tone, ...(label ? { label } : {}) };
+    return {
+      type: "annotation",
+      title,
+      mark: raw.mark as "circle" | "underline" | "arrow" | "bracket",
+      points,
+      tone,
+      ...(label ? { label } : {}),
+    };
   }
 
   if (raw.type === "diagram") {

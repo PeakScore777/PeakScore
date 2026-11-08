@@ -1248,47 +1248,6 @@ El contrato `apply_orby_board_action`, su schema Live, el prompt de clase y el r
 - Tras el fix, Vercel vuelve a informar \`build-rate-limit\`; no hay deployment asociado al SHA corregido en la lista disponible. Por tanto, **el test runner aún no volvió a ejecutarse y el build permanece sin certificar**.
 
 
-## Motor incremental de escritura y dibujo docente — implementación inicial (2026-11-08)
+## Continuidad documental
 
-### Objetivo
-Pasar de snapshots visuales completos a pequeñas operaciones docentes sobre la misma hoja espacial, conservando voz Live, pizarra v2, sketches acumulativos, lápiz único, historial y fallback existentes.
-
-### Entrega implementada en `feat/founder-intro`
-- `lib/ai/orby-board-actions.ts` incorpora `append-block` para escribir títulos, notas, fórmulas, pasos y llamadas, y `append-strokes` para añadir de 1 a 5 trazos nuevos al sketch activo.
-- Las dos operaciones actualizan el mismo tablero v2/16:9; no crean mensajes ni SVG paralelos, no vuelven a enviar tinta anterior y no sustituyen el resto de la composición.
-- Cada operación append exige `turnGeneration`, `actionId` único, `sequence` creciente y admite `dependsOn` limitado a acciones ya aceptadas.
-- La validación rechaza generaciones obsoletas, IDs duplicados, secuencias repetidas/anteriores, dependencias ausentes o propias, geometría fuera del lienzo, bloques no permitidos, exceso de trazos y tinta duplicada.
-- Las operaciones existentes `focus`, `erase` y `replace` siguen disponibles, pero ahora también deben incluir la generación exacta del snapshot activo. Así una llamada tardía de una clase anterior no puede modificar la pizarra nueva.
-- `render_orby_teaching_board` devuelve el identificador de generación activo en sus respuestas aceptadas; la herramienta y la directiva de sesión instruyen a Gemini para reutilizarlo únicamente dentro de esa clase.
-- La secuencia se reinicia al cambiar de actividad/generación. El contador general de operaciones visuales continúa limitado a ocho por turno.
-- Las acciones que llegan durante la validación inicial de la transcripción se aplican únicamente a la instantánea provisional vigente y permanecen ocultas hasta que el preflight del estudiante apruebe el turno. Se rechazan si la sesión/generación no coincide o si la instantánea expira.
-- Al añadir contenido nuevo se retira el halo de foco anterior; no se deja una selección visual antigua activa sobre una etapa que ya está cambiando.
-
-### Archivos modificados
-- `lib/ai/orby-board-actions.ts`
-- `lib/ai/orby-live-tools.ts`
-- `components/aprender/LessonAITutor.tsx`
-- `app/api/orby/realtime-session/route.ts`
-- `tests/orby-request-filter.test.mjs`
-
-### Regresiones añadidas
-- Secuencia creciente, rechazo de duplicados y acciones fuera de orden.
-- Dependencias no aceptadas y autopertenencia de dependencias.
-- Rechazo de generación obsoleta y aceptación de una nueva secuencia en una generación nueva.
-- Append de texto y tinta en una misma pizarra espacial, preservando trazos previos e IDs.
-- Límites de posición, tipos de bloque, cantidad de trazos y sanitización.
-- Contrato Live y directiva de sesión con generación obligatoria.
-- La suite contiene ahora **228 declaraciones `test()`** según inspección estática del archivo. Este número describe casos declarados, no un resultado de ejecución.
-
-### Límites y verificación honesta
-- La capa ya permite intercalar escritura y tinta por operaciones ordenadas; no garantiza que Gemini emita acciones en todo turno ni que el momento coincida exactamente con cada palabra hablada.
-- La alineación continúa basada en orden/eventos de la herramienta, no en timestamps fonéticos que el proveedor no expone en el contrato utilizado.
-- No se ejecutaron aquí Node tests, TypeScript, ESLint ni build. Vercel había reportado `build-rate-limit`; no se forzó un nuevo build.
-- Sigue pendiente la sesión real de Chrome/micrófono: varias escrituras y trazos mientras el audio continúa, barge-in, nueva pregunta, recuperación del historial, exportación y movimiento reducido.
-- No se añadieron proveedores, modelos, dependencias ni servicios de pago. No se tocaron `main`, producción ni Supabase; no se aplicaron migraciones.
-
-### Siguiente validación prioritaria
-1. Ejecutar `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npm run build` sobre el SHA resultante, sin activar una vía que genere cargos.
-2. En Chrome, pedir una clase de biología y comprobar escritura → contorno → estructuras → flechas → etiquetas mientras se reproduce voz.
-3. Interrumpir en mitad de una acción y comprobar que no aparece ninguna acción pendiente de la generación anterior.
-4. Confirmar que la escena final se persiste una sola vez y se recupera igual desde el historial.
+El trabajo del 8 de noviembre de 2026 se registra por separado en `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-08.md`. Esta bitácora conserva el estado y los avances registrados hasta el 7 de noviembre; no volver a implementar sus capacidades ya existentes.

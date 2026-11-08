@@ -2,6 +2,7 @@ import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 
 const BUCKET = "orby-knowledge";
 const FILE_TTL_MS = 47 * 60 * 60 * 1000;
@@ -14,7 +15,8 @@ export type OrbyGeminiDocumentFile = {
 };
 
 function getClient(): GoogleGenAI {
-  const apiKey = process.env.GEMINI_API_KEY;
+  if (!isGeminiFreeTierConfigured()) throw new Error("GEMINI_FREE_TIER_NOT_CONFIRMED");
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) throw new Error("GEMINI_API_KEY no está configurada para la lectura multimodal de Orby.");
   return new GoogleGenAI({ apiKey });
 }

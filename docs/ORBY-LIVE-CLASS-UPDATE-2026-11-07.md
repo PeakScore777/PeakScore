@@ -418,3 +418,25 @@ Commits de esta mutación:
 - La pausa se conectó también directamente a `interruptCurrentVoiceOutput()`, el punto común que detiene la salida cuando el detector acepta una interrupción real por transcripción interim o final.
 - Esto cubre el caso de barge-in significativo mientras Orby está reproduciendo audio, además del evento de actividad de micrófono sin salida activa.
 - La rama de eco acústico continúa sin invocar la interrupción.
+
+
+## Mutación siguiente — sincronización temporal de lápiz y tinta
+
+### Implementado
+- La animación del trazo y el movimiento del lápiz comparten la misma duración y el mismo retraso por trazo.
+- Se eliminó la diferencia de curvas de velocidad: el dash-offset de la tinta usa `linear`, igual que el movimiento paced del lápiz sobre el recorrido SVG.
+- Así, la punta no debería adelantarse ni quedarse atrás respecto a la tinta durante el recorrido.
+- Se conserva el controlador de pausa/reanudación del SVG; la animación sincronizada se congela y continúa en el mismo reloj de la pizarra.
+- Se añadió una regresión estática que comprueba duración, retraso, longitud normalizada del path y temporización lineal.
+
+### Archivos
+- `components/aprender/OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+- `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`
+
+### Validación pendiente
+- Verificar visualmente en Chrome que el movimiento paced de `animateMotion` y el dash-offset lineal coincidan en curvas con longitudes muy distintas entre segmentos.
+- Ejecutar Node tests, TypeScript, ESLint y build cuando la cuota de CI permita hacerlo sin coste adicional.
+- No se modifican proveedores, modelos, dependencias, servicios de pago ni `main`; no se despliega.
+
+**Estado:** temporización sincronizada implementada en la rama; QA visual y CI pendientes.

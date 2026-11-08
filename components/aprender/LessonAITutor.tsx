@@ -710,6 +710,13 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setImageAssets(Array.isArray(payload.images) ? payload.images : []);
   }
 
+  async function refreshLearningSignals() {
+    const response = await fetch("/api/orby/learning", { credentials: "same-origin", cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || "No se pudo actualizar tu progreso.");
+    setLearningSignals(Array.isArray(payload.signals) ? payload.signals : []);
+  }
+
   async function saveLearningItem(kind: "note" | "topic" | "flashcard" | "summary" | "recording" | "quiz", title: string, content: string): Promise<boolean> {
     try {
       setLearningError("");
@@ -4775,6 +4782,11 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
         }).slice(0, 4) : [],
       };
       setMessages((current) => dedupeAdjacentAssistantMessages([...current, assistantMessage]));
+      if (workspace && learningSkill) {
+        void refreshLearningSignals().catch(() => {
+          setLearningError("La respuesta se recibió, pero no se pudo actualizar el panel de progreso. Vuelve a abrirlo más tarde.");
+        });
+      }
       if (workspace && selectedFile && selectedFile.type.startsWith("image/")) {
         // Persist the optional gallery copy after the answer is visible. Storage
         // maintenance must not hold the send lock or delay the next study turn.

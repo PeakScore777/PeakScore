@@ -6,8 +6,8 @@ import { useEffect, useId, useRef, useState } from "react";
 import { getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual, type OrbySketchStroke } from "@/lib/ai/orby-board";
 
 const colors = {
-  orange: "#f97316",
-  ink: "#334155",
+  orange: "#dc2626",
+  ink: "#252525",
   grid: "#e2e8f0",
 };
 
@@ -29,8 +29,8 @@ function Diagram({ visual }: { visual: Extract<OrbyBoardVisual, { type: "diagram
       })}
       <defs><marker id={markerId} markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 z" fill={colors.ink}/></marker></defs>
       {visual.nodes.map((node, index) => <g key={`${node.id}:${node.x}:${node.y}:${node.label}`} className="orby-board-appear" style={{ animationDelay: `${Math.min(index * 90, 630)}ms` }}>
-        <rect className="orby-board-appear" x={node.x - 8} y={node.y - 5} width="16" height="10" rx="2" fill="#ffedd5" stroke={colors.orange} strokeWidth="0.7"/>
-        <text x={node.x} y={node.y + 1} fontSize="3.1" textAnchor="middle" fill="#7c2d12">{node.label}</text>
+        <rect className="orby-board-appear" x={node.x - 8} y={node.y - 5} width="16" height="10" rx="2" fill="#fee2e2" stroke={colors.orange} strokeWidth="0.7"/>
+        <text x={node.x} y={node.y + 1} fontSize="3.1" textAnchor="middle" fill="#7f1d1d">{node.label}</text>
       </g>)}
     </svg>
   );
@@ -114,7 +114,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
     ink: "#252525",
     blue: "#2563eb",
     red: "#dc2626",
-    accent: "#2563eb",
+    accent: "#dc2626",
     muted: "#64748b",
     success: "#0f766e",
   } as const;
@@ -164,6 +164,7 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
                 y={stroke.labelY}
                 opacity={0}
                 data-orby-sketch-label="true"
+                className="orby-board-handwriting"
                 fontSize="4"
                 fontWeight="600"
                 fill={color}
@@ -176,11 +177,11 @@ function Sketch({ visual, focus, drawingActive }: { visual: Extract<OrbyBoardVis
             <animate attributeName="opacity" from="0" to="1" begin={animationReady ? `${beginTime + duration}s` : "indefinite"} dur="0.12s" fill="freeze"/>
           </circle>
           {focus?.strokeId === stroke.id ? <g key={`${focus.strokeId}:${focus.revision}`} data-orby-teacher-focus={stroke.id} pointerEvents="none">
-            <circle cx={stroke.points[Math.floor(stroke.points.length / 2)].x} cy={stroke.points[Math.floor(stroke.points.length / 2)].y} r="3.2" fill="none" stroke="#f97316" strokeWidth="0.9">
+            <circle cx={stroke.points[Math.floor(stroke.points.length / 2)].x} cy={stroke.points[Math.floor(stroke.points.length / 2)].y} r="3.2" fill="none" stroke="#dc2626" strokeWidth="0.9">
               <animate attributeName="r" values="2.6;5.2;2.6" dur="1.35s" repeatCount="2" fill="freeze"/>
               <animate attributeName="opacity" values="0.95;0.35;0" dur="1.35s" repeatCount="2" fill="freeze"/>
             </circle>
-            {focus.label ? <text x={Math.min(88, stroke.points[Math.floor(stroke.points.length / 2)].x + 5)} y={Math.max(7, stroke.points[Math.floor(stroke.points.length / 2)].y - 5)} fontSize="3.5" fontWeight="700" fill="#c2410c">{focus.label}<animate attributeName="opacity" values="1;1;0" keyTimes="0;0.75;1" dur="2.7s" fill="freeze"/></text> : null}
+            {focus.label ? <text x={Math.min(88, stroke.points[Math.floor(stroke.points.length / 2)].x + 5)} y={Math.max(7, stroke.points[Math.floor(stroke.points.length / 2)].y - 5)} fontSize="3.5" fontWeight="700" fill="#b91c1c">{focus.label}<animate attributeName="opacity" values="1;1;0" keyTimes="0;0.75;1" dur="2.7s" fill="freeze"/></text> : null}
           </g> : null}
         </g>;
       })}
@@ -456,7 +457,7 @@ function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; boa
     const palette = visual.tone === "red" ? "#dc2626"
       : visual.tone === "blue" ? "#2563eb"
         : visual.tone === "success" ? "#0f766e"
-          : visual.tone === "muted" ? "#64748b" : "#2563eb";
+         : visual.tone === "muted" ? "#64748b" : "#dc2626";
     const first = visual.points[0], last = visual.points[visual.points.length - 1];
     const path = visual.points.map((point, index) => `${index ? "L" : "M"} ${point.x} ${point.y}`).join(" ");
     const minX = Math.min(...visual.points.map((point) => point.x));

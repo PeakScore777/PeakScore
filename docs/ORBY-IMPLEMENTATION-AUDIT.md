@@ -355,7 +355,7 @@ La secuencia implementa orden e idempotencia de operaciones visuales; no proporc
 
 ### Validación
 - Revisión estática de contratos, integración de cliente, schema Live, directiva de sesión y pruebas.
-- Suite declarada: 230 tests según conteo del archivo; no ejecutada en esta sesión.
+- Suite declarada: 228 tests según conteo del archivo; no ejecutada en esta sesión.
 - TypeScript, ESLint y build: pendientes. Último estado conocido de Vercel fue `build-rate-limit`.
 - Chrome/micrófono, interrupción a mitad de trazo e historial: pendientes de QA manual.
 - Sin cambios a `main`, producción, Supabase ni migraciones remotas. Sin proveedores/modelos de pago ni dependencias nuevas.

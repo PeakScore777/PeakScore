@@ -4407,6 +4407,9 @@ test("el layout espacial rechaza índices repetidos, etapas desordenadas y eleme
     base.layout.elements[0], { ...base.layout.elements[1], sequence: 1 },
   ] } }), null);
   assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    base.layout.elements[0], { ...base.layout.elements[1], sequence: 3 },
+  ] } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
     base.layout.elements[0], { ...base.layout.elements[1], index: 1 },
   ] } }), null);
   assert.equal(accept({ ...base, layout: { ...base.layout, elements: [

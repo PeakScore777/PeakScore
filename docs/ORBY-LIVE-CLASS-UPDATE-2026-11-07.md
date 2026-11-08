@@ -377,10 +377,12 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - Cuando el micrófono detecta una nueva intervención real del estudiante (rama de barge-in, no el eco de los altavoces), la UI marca inmediatamente la animación como pausada.
 - El SVG de cada esquema usa `pauseAnimations()` / `unpauseAnimations()` para detener y reanudar sus animaciones SMIL, incluyendo el movimiento del lápiz.
 - La animación CSS del trazo conserva su progreso con `animationPlayState: paused`; no reinicia ni reproduce de nuevo el camino desde cero.
-- El lápiz desaparece mientras la pizarra está pausada, evitando que quede flotando en el punto de interrupción.
+- El lápiz se oculta visualmente mientras la pizarra está pausada, pero permanece montado: al reanudar conserva exactamente la posición SMIL alcanzada y no vuelve al inicio del trazo.
 - La llegada de un nuevo snapshot válido de Orby reactiva la pizarra; los snapshots rechazados o de generaciones obsoletas no la reactivan.
 - Al cerrar la sesión de voz se detiene también la animación.
 - Se añadieron pruebas estáticas del contrato de pausa, reanudación, lápiz y conexión con el barge-in.
+- La pausa del lápiz se realiza por visibilidad y no desmontando el elemento SVG, de modo que el estado de `animateMotion` se conserva durante la interrupción.
+- Se verificó que `drawingActive` llega desde el componente de clase hasta cada visual y el componente Sketch.
 
 ### Archivos
 - `components/aprender/OrbyBoard.tsx`

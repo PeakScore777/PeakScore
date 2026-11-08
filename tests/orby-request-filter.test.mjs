@@ -4776,13 +4776,13 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus or append-strokes/);
 
   assert.match(liveToolsSource, /pointIndex: \{ type: Type\.NUMBER, format: "int32", minimum: 0, maximum: 39/);
-  assert.match(liveToolsSource, /targetId: \\{ type: Type\\.STRING, description: "Optional stable ID of an existing internal visual target/);
+  assert.ok(liveToolsSource.includes('targetId: { type: Type.STRING, description: "Optional stable ID of an existing internal visual target'));
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
   assert.match(lessonTutorSource, /El punto indicado no existe dentro de ese trazo/);
-  assert.match(lessonTutorSource, /La parte indicada no existe dentro de ese visual/);
+  assert.ok(lessonTutorSource.includes("La parte indicada no existe dentro de ese visual"));
 
   assert.match(realtimeSessionSource, /puedes incluir pointIndex, el índice desde cero de uno de sus puntos existentes/);
-  assert.match(realtimeSessionSource, /targetId para señalar una parte interna con ID real/);
+  assert.ok(realtimeSessionSource.includes("targetId para señalar una parte interna con ID real"));
   assert.match(liveToolsSource, /Replacement geometry for the existing stroke[\s\S]*?ink \(black\), blue, red, accent, muted or success/);
   assert.match(lessonTutorSource, /function handleOrbyLiveBoardActionTool/);
   assert.match(lessonTutorSource, /applyOrbyBoardAction\(currentBoard, action\)/);
@@ -4804,9 +4804,9 @@ test("el señalador contextual puede enfocar un trazo o una etapa espacial sin c
   assert.match(boardComponentSource, /orby-board-focus-ring/);
   assert.match(boardComponentSource, /orby-board-focus-dot/);
   assert.match(boardComponentSource, /function VisualTargetFocus/);
-  assert.match(boardComponentSource, /currentId=\\{node\\.id\\}/);
-  assert.match(boardComponentSource, /currentId=\\{atom\\.id\\}/);
-  assert.match(boardComponentSource, /currentId=\\{item\\.id\\}/);
+  assert.ok(boardComponentSource.includes("currentId={node.id}"));
+  assert.ok(boardComponentSource.includes("currentId={atom.id}"));
+  assert.ok(boardComponentSource.includes("currentId={item.id}"));
   assert.ok(boardComponentSource.includes(".orby-board .orby-board-focus-ring, .orby-board .orby-board-focus-dot, .orby-board [data-orby-teacher-focus-label] { opacity: 1 !important; }"));
   assert.match(boardComponentSource, /Math\.floor\(stroke\.points\.length \/ 2\)/);
   assert.match(boardComponentSource, /typeof board\.teacherFocus\?\.elementId === "string"/);

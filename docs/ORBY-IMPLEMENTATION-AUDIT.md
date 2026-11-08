@@ -540,3 +540,23 @@ CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1
 - Inventario estático del archivo de pruebas: 255 pruebas nombradas, sin duplicados; no es ejecución.
 - No se han ejecutado aún test runner, TypeScript, ESLint, build, ni QA de Chrome/voz para este HEAD.
 - No se agregaron servicios/modelos ni costes nuevos, ni migraciones remotas, despliegues o cambios a `main`.
+
+
+## Auditoría de continuidad — memoria por destreza de English Studio (2026-11-08)
+
+### Cambios de código
+- `app/api/lesson-tutor/route.ts`: allowlist de `learningSkill` válida solo para OmegaX; prefijo estable por habilidad; recuperación por `user_id` + `subject = Inglés` + prefijo del modo; signalTopic con `English Studio · <Skill> · <topic>`; mayor límite (7.000 caracteres) solo para contexto completo de feedback de English Studio; aprendizaje previo insertado como contexto de la destreza activa.
+- `components/aprender/LessonAITutor.tsx`: el modo de práctica viaja en el callback, en el cuerpo de la API y en la cola de mensajes; progreso con cinco tarjetas y observaciones segmentadas; mantiene filtro por skill y disclaimer de que la barra no es dominio real.
+- `tests/orby-request-filter.test.mjs`: regresiones para normalización, aislamiento por usuario/materia/habilidad, persistencia con confianza alta, paso del modo por la cola, límite de mensaje y UI del panel.
+- Sin cambios en esquema, columnas, migraciones ni políticas Supabase.
+
+### Verificación Supabase
+- Proyecto `PeakScore`, tabla `public.orby_student_learning_signals` existente, RLS habilitado.
+- Conteo consultado: 0 señales totales; 0 señales por cada una de las cinco destrezas. Es estado vacío actual, no error.
+- `pg_policies` devolvió cero políticas para la tabla. El endpoint de aprendizaje lee las señales con `supabaseAdmin` filtrado explícitamente por el usuario autenticado. No dar acceso directo desde cliente ni modificar las políticas sin una decisión de seguridad separada.
+
+### Límites
+- El guardado sigue requiriendo `learningSignal` con estado permitido, concepto y confianza >= 0.8. Se pueden quedar destrezas sin observaciones si no hay evidencia sólida.
+- Las señales no están consolidadas por repetición/recencia; el panel muestra observaciones acumuladas de la ventana de hasta 50 señales.
+- Live roleplay aún requiere que el estudiante solicite feedback desde la actividad para crear una señal; no hay auto-persistencia en cada evento de voz.
+- Inventario de tests se actualizará después de comprobar el archivo. No se ha ejecutado runner/TypeScript/ESLint/build/QA de Chrome. Vercel reporta `build-rate-limit`.

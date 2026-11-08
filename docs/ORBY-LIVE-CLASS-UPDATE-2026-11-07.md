@@ -573,3 +573,25 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Validación estática posterior a los cambios pendiente.
 - Ejecución de tests, TypeScript, ESLint, build y QA funcional pendiente; Vercel mantiene `build-rate-limit`.
 - Sin cambios a `main`, sin dependencias ni APIs de pago. No se reconstruye el contenido del Lab eliminado intencionalmente.
+
+
+## Corrección de bloqueos locales de compilación — 7 de noviembre de 2026
+
+### Hallazgos reportados al probar en Windows
+- Next.js/Turbopack detenía el parseo de `components/aprender/OrbyBoard.tsx` en la línea del bloque CSS de impresión: el literal JSX delimitado con comillas dobles contenía selectores CSS con comillas dobles (por ejemplo, `[data-orby-drawing-active="false"]`), cerrando prematuramente la cadena y haciendo que el parser interpretara `false` como JSX.
+- `tests/orby-request-filter.test.mjs` declaraba dos veces `realtimeSessionSource`, provocando `SyntaxError: Identifier 'realtimeSessionSource' has already been declared` antes de ejecutar cualquier prueba.
+
+### Corrección
+- Se delimitó el literal CSS de `<style>` con template literal, conservando las reglas existentes sin cambiar su comportamiento.
+- Se eliminó únicamente la segunda declaración redundante de `realtimeSessionSource`; la primera permanece disponible para todas las aserciones posteriores.
+
+### Archivos
+- `components/aprender/OrbyBoard.tsx`
+- `tests/orby-request-filter.test.mjs`
+- `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`
+
+### Validación
+- Corrección basada en los dos errores reproducidos y capturados localmente por el usuario.
+- Pendiente que el usuario actualice la rama y vuelva a ejecutar `npm run dev` y `npm run test:orby` (o el script de pruebas configurado en `package.json`).
+- No se ha ejecutado el entorno local del usuario desde GitHub; no se afirma que el build o la suite estén aprobados.
+- Solo se modifica `feat/founder-intro`; no se toca `main`, no se despliega y no se añaden dependencias ni servicios de pago.

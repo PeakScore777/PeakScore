@@ -381,7 +381,10 @@ function Cell({ visual, startDelayMs = 0, focus }: { visual: Extract<OrbyBoardVi
         if (item.kind === "cell-wall" || item.kind === "membrane") return null;
         return <g key={`${item.id}:${item.x}:${item.y}:${item.label}`} className="orby-board-appear" style={{ animationDelay: `${startDelayMs + getOrbyBoardProgressiveDelay(index)}ms` }}><ellipse cx={item.x} cy={item.y} rx="6" ry="3.5" fill={fill} stroke={colors.ink} strokeWidth="0.5"/></g>;
       })}
-      {visual.organelles.map((item) => <text key={item.id + "-label"} x={item.x} y={item.y + 10} fontSize="3.1" textAnchor="middle" fill={colors.ink}>{item.label}</text><VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>)}
+      {visual.organelles.map((item) => <g key={item.id + "-label"}>
+        <text x={item.x} y={item.y + 10} fontSize="3.1" textAnchor="middle" fill={colors.ink}>{item.label}</text>
+        <VisualTargetFocus targetId={focus?.targetId} currentId={item.id} x={item.x} y={item.y} label={focus?.label} revision={focus?.revision}/>
+      </g>)}
     </svg>
   );
 }

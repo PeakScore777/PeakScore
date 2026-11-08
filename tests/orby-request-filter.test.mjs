@@ -766,7 +766,7 @@ test("el audio Live comienza tras la primera oración segura y la cola espera al
 
   const partialTranscriptStart = lessonTutorSource.indexOf("const outputTranscript");
   const modelAudioStart = lessonTutorSource.indexOf("const modelTurn", partialTranscriptStart);
-  const firstSafeSentenceFlush = lessonTutorSource.indexOf("if (hasCompleteSafeSentence) flushPendingGeminiAudio();", partialTranscriptStart);
+  const firstSafeSentenceFlush = lessonTutorSource.indexOf("if (hasCompleteSafeSentence) {\n          flushPendingGeminiAudio();\n        }", partialTranscriptStart);
   const finalTurnValidation = lessonTutorSource.indexOf("serverContent.turnComplete === true", partialTranscriptStart);
   const finalAudioFlush = lessonTutorSource.indexOf("flushPendingGeminiAudio();", finalTurnValidation);
   assert.ok(partialTranscriptStart >= 0 && firstSafeSentenceFlush > partialTranscriptStart);
@@ -1797,7 +1797,7 @@ test("la reproducción de voz ignora chunks obsoletos y recupera AudioContext su
   assert.match(lessonTutorSource, /audioContext.resume()/);
   assert.match(lessonTutorSource, /bytes.byteLength % Int16Array.BYTES_PER_ELEMENT/);
   assert.match(lessonTutorSource, /const hasCompleteSafeSentence = partialReply.length >= 18/);
-  assert.match(lessonTutorSource, /if \(hasCompleteSafeSentence\) flushPendingGeminiAudio\(\)/);
+  assert.match(lessonTutorSource, /if \(hasCompleteSafeSentence\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
   assert.match(lessonTutorSource, /if \(voiceOutputTranscriptValidatedRef\.current\) \{[\s\S]*?playGeminiAudio\(chunk\.data, chunk\.mimeType\)/);
   assert.match(lessonTutorSource, /if \(!voiceOutputAudioBlockedRef\.current && voiceOutputTranscriptValidatedRef\.current\) \{\s*flushPendingGeminiAudio\(\);\s*\}/);
   const finalAudioValidationIndex = lessonTutorSource.indexOf("voiceOutputTranscriptValidatedRef.current = true;");
@@ -3684,7 +3684,7 @@ test("Gemini Live publica la pizarra sin sincronización por frases y procesa pr
   assert.match(route, /sin depender de transcripciones ni de frases coincidentes/);
   assert.match(renderer, /orby-board-pen-tip/);
   assert.match(renderer, /fill="#f59e0b"/);
-  assert.match(renderer, /max-h-\[680px\]/);
+  assert.match(renderer, /min-h-\[440px\]/);
 });
 
 test("el deduplicador conserva pizarra, fuentes e imagen cuando llega un mensaje duplicado", () => {
@@ -3805,7 +3805,7 @@ test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento redu
   assert.match(renderer, /dur=\{\x60\$\{duration\}ms\x60\}/);
   assert.match(renderer, /stroke\.points\.map/);
   assert.match(renderer, /const strokeTimings = visual\.strokes\.map/);
-  assert.match(renderer, /delay: Math\.min\(index \* 120, 600\)/);
+  assert.match(renderer, /delay: Math\.min\(index \* 260, 1_300\)/);
   assert.match(renderer, /const delay = strokeTimings\[index\]\?\.delay \?\? 0/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
@@ -3819,8 +3819,8 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   const lesson = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
   assert.match(route, /nunca pauses la voz para esperar una herramienta NON_BLOCKING/);
   assert.match(route, /no retrases la primera frase oral/);
-  assert.match(route, /2–6 trazos NUEVOS por etapa/);
-  assert.match(route, /al menos 3 etapas visuales distintas/);
+  assert.match(route, /2–5 trazos NUEVOS por snapshot/);
+  assert.match(route, /secuencia de snapshots acumulativos/);
   assert.match(tools, /Freehand sketch strokes/);
   assert.ok(tools.includes("Exact lowercase type: sketch | diagram"));
   assert.match(tools, /never wait for search completion before the first spoken sentence/);

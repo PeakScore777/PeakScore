@@ -3978,3 +3978,10 @@ test("guardar clase conserva bloques, formulas, apoyos visuales y resumen de ano
   assert.match(lessonTutorSource, /peakscore:orby-board-ink:/);
   assert.match(lessonTutorSource, /7900/);
 });
+
+test("las anotaciones de la pizarra se aíslan por ID de clase y no solo por título", () => {
+  assert.match(boardComponentSource, /storageId\?: string/);
+  assert.match(boardComponentSource, /encodeURIComponent\(storageId \|\| board\.title/);
+  assert.match(lessonTutorSource, /storageId=\{activeVoiceAssistantMessage\.id\}/);
+  assert.match(lessonTutorSource, /encodeURIComponent\(activeVoiceAssistantMessage\?\.id \|\| board\.title/);
+});

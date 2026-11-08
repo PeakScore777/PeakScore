@@ -761,3 +761,22 @@ Se tomó como evidencia el log local compartido por el usuario, que reportaba si
 - Regresión: `455b030245e452f6d502a1f33816a39368750886`.
 - Fuentes oficiales revisadas: https://ai.google.dev/gemini-api/docs/live-api/ephemeral-tokens y https://ai.google.dev/gemini-api/docs/live-api/session-management.
 - Pendiente de prueba real: comprobar que el servidor emita un `sessionResumptionUpdate` válido tras un turno completo y que la reanudación recupere contexto y audio sin saltar a fallback.
+
+
+## Continuidad protegida durante reconexión Live — siguiente ronda
+
+### Auditoría
+- Se inspeccionó el ciclo completo de `reconnectLiveSession` y el grafo de audio.
+- Durante una reanudación se reemplaza únicamente `voiceChannelRef`; el stream del micrófono, el AudioWorklet, la fuente de micrófono y el estado del tablero no se limpian ni recrean.
+- El Worklet consulta `voiceChannelRef.current` por cada bloque PCM, por lo que vuelve a enviar audio por el canal reanudado sin reconstruir la captura.
+- La reconexión reutiliza el handle de la misma conversación y no reinicia el turno pedagógico. Si hay una llamada de herramienta pendiente, se evita reenviar un ID de tool obsoleto y se recupera la pregunta por el modo alternativo gratuito.
+- Se confirmó también que la interfaz de clase mantiene la pizarra exclusiva de Orby y que el control de salida finaliza la sesión explícitamente.
+
+### Protección añadida
+- Se añadió una regresión que exige que el ciclo de reconexión no anule el stream, el Worklet ni la referencia del tablero, y que sustituya el canal solo después de restaurar la sesión.
+- Commit de prueba: `3c119e70c9ec5f4ec4b43805fee915837be0d545`.
+
+### Límites
+- Esta protección es estática: no sustituye una prueba real de WebSocket/AudioWorklet en navegador.
+- No se modificaron el algoritmo de dibujo, los tipos visuales, la animación SVG, la secuencia acumulativa ni las instrucciones de docencia visual.
+- No se tocó `main`, no se desplegó y no se añadieron servicios de pago.

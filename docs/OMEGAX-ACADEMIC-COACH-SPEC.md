@@ -200,3 +200,5 @@ Los temas de speaking de 60 segundos y las frases modelo de repetición ya se se
 - Cuando una consulta académica normal también requiere material, el subject de recuperación para una skill de English Studio se fija a Inglés, nunca a otra materia.
 - Esta separación evita búsquedas vectoriales innecesarias para corregir una práctica de Listening/Writing y respeta que la memoria personal no es el material académico del Lab.
 - Auditoría estática actual: 257 pruebas nombradas, sin duplicados; todavía no ejecutadas.
+
+- Para las solicitudes con skill válida, el selector del tutor utiliza el prompt pedagógico completo (incluye memoria previa y rúbrica de la destreza), sin activar por ello la búsqueda vectorial/graph. El prompt conversacional ligero queda para turnos que no requieren memoria de habilidad ni recuperación académica.

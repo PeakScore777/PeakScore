@@ -86,7 +86,9 @@ function Sketch({ visual, focus, drawingActive, startDelayMs = 0 }: { visual: Ex
     const queuedStrokeEnds = [...strokeEndTimesRef.current.values()];
     // Give React one frame to mount the SMIL nodes before the pen starts.
     // Keep a small, deliberate pen-lift pause after every queued stroke.
-    const stageStartTime = now + Math.max(0, startDelayMs) / 1_000;
+    const stageStartTime = now + (scheduledStrokeKeysRef.current.size === 0
+      ? Math.max(0, startDelayMs) / 1_000
+      : 0);
     let queueCursor = Math.max(now + 0.06, stageStartTime, ...queuedStrokeEnds.map((endAt) => endAt + 0.11));
     const additions: Array<[string, { beginTime: number; duration: number }]> = [];
     for (const stroke of visual.strokes) {

@@ -550,6 +550,9 @@ export function sanitizeOrbyBoard(value: unknown): OrbyBoard | null {
   // A visual-only snapshot is valid: Live can draw the first sketch before
   // sending its accompanying text block. Reject only a completely empty board.
   if (blocks.length === 0 && visuals.length === 0) return null;
+  // A single cumulative sketch owns the teacher pen. Multiple independent
+  // sketch SVGs would create parallel pen timelines and violate the lesson UX.
+  if (visuals.filter((visual) => visual.type === "sketch").length > 1) return null;
   const board: OrbyBoard = { version: 2, title, blocks, visuals, ...(spokenCue ? { spokenCue } : {}) };
   return withinBoardBudget(board) ? board : null;
 }

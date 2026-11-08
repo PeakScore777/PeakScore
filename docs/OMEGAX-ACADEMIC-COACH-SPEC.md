@@ -193,3 +193,10 @@ Los temas de speaking de 60 segundos y las frases modelo de repetición ya se se
 - Las señales son append-only en este flujo; no se consolidan aún en una tendencia temporal deduplicada ni se ponderan por recencia/consistencia. El panel muestra observaciones, no un diagnóstico.
 - El modo de speaking/pronunciation se persiste cuando el estudiante solicita feedback desde English Studio; los roleplays Live sin solicitar feedback todavía no generan automáticamente señales por destreza.
 - Suite, TypeScript, ESLint, build y QA real siguen pendientes. El check de Vercel continúa bloqueado por `build-rate-limit`.
+
+
+### Aislamiento de búsquedas y coste
+- Corrección de arquitectura: `learningSkill` activa únicamente la recuperación de `orby_student_learning_signals` de esa destreza. No fuerza por sí sola búsqueda vectorial, grafo conceptual ni recuperación de material del Lab. La recuperación académica normal sigue funcionando solo cuando su detector independiente lo solicita.
+- Cuando una consulta académica normal también requiere material, el subject de recuperación para una skill de English Studio se fija a Inglés, nunca a otra materia.
+- Esta separación evita búsquedas vectoriales innecesarias para corregir una práctica de Listening/Writing y respeta que la memoria personal no es el material académico del Lab.
+- Auditoría estática actual: 257 pruebas nombradas, sin duplicados; todavía no ejecutadas.

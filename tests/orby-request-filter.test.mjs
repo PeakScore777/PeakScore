@@ -4292,7 +4292,7 @@ test("las anotaciones aceptan optionals ausentes y rechazan null o tipos incorre
   assert.equal(accepts({ ...base, tone: null }), null);
 });
 
-test("el tablero admite secuencias acumulativas de hasta 32 trazos y conserva el límite de bytes", () => {
+test("el tablero admite secuencias acumulativas de hasta 40 trazos y conserva el límite de bytes", () => {
   const makeStrokes = (count) => Array.from({ length: count }, (_, index) => ({
     id: `stroke-${index}`,
     points: [{ x: 10, y: 10 }, { x: 20, y: 20 }],
@@ -4306,10 +4306,10 @@ test("el tablero admite secuencias acumulativas de hasta 32 trazos y conserva el
     visuals: [{ type: "sketch", title: "Dibujo", strokes }],
   });
   assert.equal(accept(makeStrokes(16))?.visuals?.[0]?.type, "sketch");
-  assert.equal(accept(makeStrokes(32))?.visuals?.[0]?.type, "sketch");
-  assert.equal(accept(makeStrokes(33)), null);
+  assert.equal(accept(makeStrokes(40))?.visuals?.[0]?.type, "sketch");
+  assert.equal(accept(makeStrokes(41)), null);
 
-  const oversized = makeStrokes(32).map((stroke) => ({
+  const oversized = makeStrokes(40).map((stroke) => ({
     ...stroke,
     points: Array.from({ length: 40 }, (_, index) => ({
       x: 4 + (index % 90),

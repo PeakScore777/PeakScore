@@ -295,7 +295,7 @@ Se cerraron en código las brechas de la siguiente ronda:
 ## Auditoría de implementación — primera capa de composición espacial
 
 Se implementó una representación espacial aditiva para OrbyBoard v2:
-- `OrbyBoardLayout` define un canvas 16:9 y etapas con ID estable, secuencia contigua, referencia tipada a `blocks[]`/`visuals[]` y rectángulo normalizado.
+- `OrbyBoardLayout` define un canvas 16:9 y etapas con ID estable, secuencia estrictamente creciente (puede tener huecos tras erase), referencia tipada a `blocks[]`/`visuals[]` y rectángulo normalizado.
 - `sanitizeOrbyBoardLayout` exige cobertura exacta de cada bloque/visual, IDs únicos, índices válidos, secuencia 1..N, dimensiones positivas mínimas y límites dentro del canvas.
 - v1 sigue texto-only; v2 sin layout conserva el renderer heredado.
 - `OrbyBoard.tsx` representa etapas como elementos posicionados sobre una sola superficie, usando keys estables. La vista legacy no se elimina.
@@ -303,7 +303,7 @@ Se implementó una representación espacial aditiva para OrbyBoard v2:
 - El schema Live ahora expone layout, enum de tipo/relación, ID ASCII de 1–24 caracteres, límites de secuencia/índice y rangos de geometría. Los prompts Live y turn-based piden la misma composición espacial acumulativa.
 - Las RPC actuales guardan el tablero v2 como JSONB y permiten 24 KB; el cliente limita a 18 KB. No hace falta migración por este campo.
 
-**Pruebas añadidas:** escenas válidas, cobertura exacta, IDs/índices repetidos, secuencia no contigua, dimensiones fuera del canvas, compatibilidad legacy y snapshots acumulativos. El archivo contiene 220 declaraciones de test, sin nombres duplicados ni bloques vacíos en inspección estática.
+**Pruebas añadidas:** escenas válidas, cobertura exacta, IDs/índices repetidos, secuencia repetida/invertida, huecos válidos tras erase, dimensiones fuera del canvas, compatibilidad legacy y snapshots acumulativos. En ese checkpoint el archivo contenía 220 declaraciones de test, sin nombres duplicados ni bloques vacíos en inspección estática.
 
 **Pendiente P0:** convertir los snapshots en una secuencia de acciones docentes idempotentes (texto/trazo/flecha/etiqueta/focus/erase/replace) con una misma generación y cancelación. El layout actual ordena la composición, pero no ofrece aún sincronización exacta palabra-a-palabra con el audio ni mide la latencia real entre voz y acción.
 

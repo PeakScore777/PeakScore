@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object" || Array.isArray(body)) return jsonError("Solicitud no válida.", 400);
-    const allowedKinds = new Set(["note", "topic", "flashcard", "summary", "recording"]);
+    const allowedKinds = new Set(["note", "topic", "flashcard", "summary", "recording", "quiz"]);
     const kind = typeof body.kind === "string" && allowedKinds.has(body.kind) ? body.kind : null;
     const title = typeof body.title === "string" ? body.title.trim().slice(0, 120) : "";
     const content = typeof body.content === "string" ? body.content.trim().slice(0, 8000) : "";

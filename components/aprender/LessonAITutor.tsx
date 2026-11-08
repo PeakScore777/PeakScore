@@ -7,7 +7,7 @@ import { applyOrbyBoardAction, createOrbyBoardActionSequenceState, evaluateOrbyB
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
-import { AudioLines, Bookmark, BookOpen, Camera, Captions, FileText, ImagePlus, Images, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, ScanText, Search, Send, Square, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Bookmark, BookOpen, Camera, Captions, Check, ClipboardList, Download, FileText, ImagePlus, Images, Layers3, LoaderCircle, MessageSquare, Mic, MicOff, Paperclip, Plus, RotateCcw, ScanText, Search, Send, Sparkles, Square, Trash2, Volume2, X } from "lucide-react";
 import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsExplicitNonIcfesTopic, containsExternalPreIcfesPromotion, containsPlatformMarketingClaim, ORBY_PLATFORM_NEUTRALITY_REPLY, getOrbyGreetingFollowUpReply, isOrbyGreetingRequest, containsProgrammingInstruction, containsUnsupportedSpanishLanguage, hasFalseOrbyCreatorAttribution, isGenericIcfesEnglishRequest, isLikelyEnglishOnlyOrbyReply, isOrbyUnclearInput, isOrbyStudyGuidanceRequest, isLowQualityOrbyReply, ORBY_STUDY_GUIDANCE_REPLY, ORBY_INCOMPLETE_REPLY_FALLBACK, normalizeOrbySpanishOutput, getOrbySubjectSelectionLabel, composeOrbySpeechText, ORBY_EXTERNAL_PREICFES_REPLY, ORBY_COOKING_REPLY, ORBY_SAFETY_REPLY, ORBY_ICFES_ENGLISH_INTRO_REPLY, ORBY_SPANISH_ONLY_REPLY, ORBY_SPANISH_OUTPUT_FALLBACK, preflightOrbyRequest } from "@/lib/ai/orby-request-filter";
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
@@ -24,7 +24,7 @@ const MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN = 8;
 type OrbyPublicSource = { title: string; url: string; publisher: string; publishedAt: string | null; kind: "encyclopedia" | "research"; citationNumber: number };
 type Message = { id?: string; role: "user" | "assistant"; content: string; board?: OrbyBoardData; boardPersistenceWarning?: string; checkQuestion?: string; sources?: OrbyPublicSource[]; attachmentName?: string; attachmentPreview?: string; attachmentKind?: "image" | "audio"; generatedImage?: string; createdAt?: string };
 type Conversation = { id: string; title: string; subject: string; topic: string; created_at: string; updated_at: string };
-type LearningItem = { id: string; kind: "note" | "topic"; title: string; content: string; created_at: string };
+type LearningItem = { id: string; kind: "note" | "topic" | "flashcard" | "summary" | "recording"; title: string; content: string; created_at: string };
 type LearningSignal = { id: string; subject: string; topic: string; concept: string; learning_state: "understands" | "needs_review" | "misconception" | "struggling"; misconception: string | null; teaching_hint: string | null; confidence: number; created_at: string };
 type StoredImage = { name: string; path: string; signedUrl: string; createdAt: string; size: number };
 type ReviewQuestion = {
@@ -51,6 +51,7 @@ type Props = {
   initialPrompt?: string;
   accent?: "default" | "orby";
   workspace?: boolean;
+  assistantName?: "OmegaX" | "Orby";
 };
 
 
@@ -191,8 +192,9 @@ const starters = [
   "No entiendo por qué una opción es incorrecta",
 ];
 
-export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false }: Props) {
+export default function LessonAITutor({ subject, topic, stage = "theory", question = "", context = "", open, onOpenChange, initialPrompt, accent = "default", reviewQuestions = [], workspace = false, assistantName = "Orby" }: Props) {
   const orbyAccent = accent === "orby";
+  const assistantLabel = assistantName === "OmegaX" ? "OmegaX" : "Orby";
   const activeSubjectRef = useRef(subject);
   useEffect(() => {
     activeSubjectRef.current = subject;
@@ -266,7 +268,20 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const [retryingVoiceTurn, setRetryingVoiceTurn] = useState(false);
   // Keep the same idempotency key if a completed turn is retried after a timeout.
   const pendingVoicePersistenceRef = useRef<{ conversationId: string; turnId: string; userContent: string; assistantContent: string; board?: OrbyBoardData } | null>(null);
-  const [learningView, setLearningView] = useState<"chat" | "notes" | "topics" | "progress" | "storage">("chat");
+  const [learningView, setLearningView] = useState<"chat" | "notes" | "topics" | "progress" | "storage" | "flashcards" | "recordings" | "summaries" | "quizzes">("chat");
+  const [flashcardFront, setFlashcardFront] = useState("");
+  const [flashcardBack, setFlashcardBack] = useState("");
+  const [flashcardReviewIndex, setFlashcardReviewIndex] = useState(0);
+  const [flashcardBackVisible, setFlashcardBackVisible] = useState(false);
+  const [studyRecordingState, setStudyRecordingState] = useState<"idle" | "recording" | "ready">("idle");
+  const [studyRecordingTitle, setStudyRecordingTitle] = useState("Clase grabada");
+  const [studyRecordingBlob, setStudyRecordingBlob] = useState<Blob | null>(null);
+  const [studyRecordingUrl, setStudyRecordingUrl] = useState("");
+  const [studyRecordingBusy, setStudyRecordingBusy] = useState(false);
+  const [studyRecordingError, setStudyRecordingError] = useState("");
+  const studyRecorderRef = useRef<MediaRecorder | null>(null);
+  const studyRecordingStreamRef = useRef<MediaStream | null>(null);
+  const studyRecordingChunksRef = useRef<Blob[]>([]);
   const [learningItems, setLearningItems] = useState<LearningItem[]>([]);
   const [learningSignals, setLearningSignals] = useState<LearningSignal[]>([]);
   const [learningSearch, setLearningSearch] = useState("");
@@ -654,7 +669,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     setImageAssets(Array.isArray(payload.images) ? payload.images : []);
   }
 
-  async function saveLearningItem(kind: "note" | "topic", title: string, content: string) {
+  async function saveLearningItem(kind: "note" | "topic" | "flashcard" | "summary" | "recording", title: string, content: string) {
     try {
       setLearningError("");
       const response = await fetch("/api/orby/learning", {
@@ -664,11 +679,116 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "No se pudo guardar.");
       setLearningItems((current) => [payload.item as LearningItem, ...current]);
-      setLearningView(kind === "note" ? "notes" : "topics");
+      setLearningView(kind === "note" ? "notes" : kind === "topic" ? "topics" : kind === "flashcard" ? "flashcards" : kind === "summary" ? "summaries" : "recordings");
+      if (kind === "flashcard") { setFlashcardFront(""); setFlashcardBack(""); setFlashcardBackVisible(false); }
     } catch (caught) {
       setLearningError(caught instanceof Error ? caught.message : "No se pudo guardar.");
     }
   }
+
+  async function startStudyRecording() {
+    setStudyRecordingError("");
+    setStudyRecordingBlob(null);
+    if (studyRecordingUrl) URL.revokeObjectURL(studyRecordingUrl);
+    setStudyRecordingUrl("");
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setStudyRecordingError("Este navegador no permite grabar audio. Usa Chrome o Edge actualizado.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      studyRecordingStreamRef.current = stream;
+      studyRecordingChunksRef.current = [];
+      const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"].find((candidate) => MediaRecorder.isTypeSupported(candidate));
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      studyRecorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) studyRecordingChunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        const type = recorder.mimeType || "audio/webm";
+        const blob = new Blob(studyRecordingChunksRef.current, { type });
+        studyRecordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+        studyRecordingStreamRef.current = null;
+        studyRecorderRef.current = null;
+        if (blob.size < 1024) {
+          setStudyRecordingState("idle");
+          setStudyRecordingError("La grabación quedó demasiado corta. Graba al menos unos segundos.");
+          return;
+        }
+        if (blob.size > 8 * 1024 * 1024) {
+          setStudyRecordingState("idle");
+          setStudyRecordingError("La grabación supera el límite de 8 MB para transcripción. Haz una grabación más corta.");
+          return;
+        }
+        setStudyRecordingBlob(blob);
+        setStudyRecordingUrl(URL.createObjectURL(blob));
+        setStudyRecordingState("ready");
+      };
+      recorder.start(1000);
+      setStudyRecordingState("recording");
+    } catch (caught) {
+      studyRecordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+      studyRecordingStreamRef.current = null;
+      setStudyRecordingError(caught instanceof Error && caught.name === "NotAllowedError"
+        ? "No se concedió permiso para usar el micrófono. Actívalo en los permisos del sitio."
+        : "No se pudo iniciar la grabación. Comprueba que el micrófono esté disponible.");
+    }
+  }
+
+  function stopStudyRecording() {
+    const recorder = studyRecorderRef.current;
+    if (recorder && recorder.state !== "inactive") recorder.stop();
+  }
+
+  function discardStudyRecording() {
+    if (studyRecorderRef.current && studyRecorderRef.current.state !== "inactive") studyRecorderRef.current.stop();
+    studyRecordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+    studyRecordingStreamRef.current = null;
+    if (studyRecordingUrl) URL.revokeObjectURL(studyRecordingUrl);
+    setStudyRecordingUrl("");
+    setStudyRecordingBlob(null);
+    setStudyRecordingState("idle");
+    setStudyRecordingError("");
+  }
+
+  async function transcribeAndSaveStudyRecording() {
+    if (!studyRecordingBlob || studyRecordingBusy) return;
+    setStudyRecordingBusy(true);
+    setStudyRecordingError("");
+    try {
+      const extension = studyRecordingBlob.type.includes("ogg") ? "ogg" : "webm";
+      const audioFile = new File([studyRecordingBlob], `peakscore-clase.${extension}`, { type: studyRecordingBlob.type || "audio/webm" });
+      const form = new FormData();
+      form.set("audio", audioFile);
+      const response = await fetch("/api/orby/audio/transcribe", {
+        method: "POST",
+        credentials: "same-origin",
+        body: form,
+        signal: AbortSignal.timeout(90_000),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || typeof payload.transcript !== "string" || !payload.transcript.trim()) {
+        throw new Error(payload.error || "No se pudo transcribir la grabación.");
+      }
+      await saveLearningItem("recording", studyRecordingTitle.trim() || "Clase grabada", payload.transcript.trim());
+    } catch (caught) {
+      setStudyRecordingError(caught instanceof Error ? caught.message : "No se pudo procesar la grabación.");
+    } finally {
+      setStudyRecordingBusy(false);
+    }
+  }
+
+  function requestWorkspaceStudyPrompt(prompt: string) {
+    setLearningView("chat");
+    window.setTimeout(() => sendMessageRef.current(prompt), 0);
+  }
+
+  useEffect(() => () => {
+    studyRecorderRef.current?.stop();
+    studyRecordingStreamRef.current?.getTracks().forEach((track) => track.stop());
+    if (studyRecordingUrl) URL.revokeObjectURL(studyRecordingUrl);
+  }, [studyRecordingUrl]);
 
   async function deleteLearningItem(id: string) {
     try {

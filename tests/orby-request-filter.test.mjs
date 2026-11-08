@@ -4533,6 +4533,10 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(boardComponentSource, /spatialLayout\.elements\.map/);
   assert.match(boardComponentSource, /function renderBoardBlock/);
   assert.match(boardComponentSource, /const stageDelay = Math\.min\(\(element\.sequence - 1\) \* 135, 945\)/);
+  assert.match(boardComponentSource, /startDelayMs\?: number/);
+  assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\} startDelayMs=\{stageDelay\} \/>/);
+  assert.match(boardComponentSource, /scheduledStrokeKeysRef\.current\.size === 0[\s\S]*?Math\.max\(0, startDelayMs\)/);
+
   assert.match(boardStyles, /\.orby-board-canvas \{[\s\S]*?aspect-ratio: 16 \/ 9/);
   assert.match(boardStyles, /background-image: radial-gradient\(rgba\(100, 116, 139, \.22\)/);
   assert.match(boardStyles, /data-orby-layout-kind="block"\][\s\S]*?overflow: hidden/);

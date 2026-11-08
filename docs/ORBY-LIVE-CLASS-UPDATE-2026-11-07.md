@@ -194,3 +194,30 @@ La referencia de clase muestra un profesor que escribe y señala; el estudiante 
 **Commits:** `792e042` (retirada de la capa de tinta), `dd8d21d` (integración y apuntes), `91c7ba3` (regresiones teacher-only), `4875b7a` (banda de herramientas del profesor), `97ddc67` (prueba de herramientas visibles), `af4687a` (exportación PDF en cabecera), `6205a42` (ajuste de regresiones de interfaz).
 
 **Validación:** pendiente de CI completa y prueba real en navegador. No se declara build aprobado.
+
+
+## Decimocuarta mutación — clase manuscrita y puntero de profesor
+
+**Fecha:** 7 de noviembre de 2026  
+**Rama:** `feat/founder-intro`
+
+### Objetivo de la referencia
+La estudiante observa una clase impartida por Orby. El lápiz visible es el puntero del profesor sobre una tablet; no es una herramienta para que el alumno escriba. El tablero debe ser una superficie blanca lisa y el contenido debe construirse a mano mientras se explica.
+
+### Implementado en esta mutación
+- Se retiró la banda de herramientas ficticias del tablero: no se presentan controles de lápiz, señalador o borrador al estudiante.
+- La punta animada de lápiz de Orby se hace más visible y queda identificada por el ID del trazo que está recorriendo.
+- Los trazos manuscritos se espacian de forma progresiva con un intervalo acotado; el lápiz acompaña el recorrido y las etiquetas aparecen después de su trazo.
+- Se amplió la superficie de dibujo para que el esquema respire como una pizarra de clase, no como una tarjeta.
+- Los bloques breves de explicación adoptan tipografía manuscrita de sistema cuando está disponible.
+- La instrucción de Gemini Live prioriza sketch acumulativo por encima de tarjetas/nodos; pide contorno, estructuras, flechas y etiquetas en snapshots separados, ligados a la narración.
+- Se actualizan pruebas estáticas para verificar el puntero docente, el ritmo progresivo y la ausencia de controles falsos para el alumno.
+
+### Límites honestos
+- El lápiz sigue el path SVG generado por Orby; no es seguimiento físico de mano ni cursor de stylus capturado desde el dispositivo.
+- La calidad y cantidad de trazos dependen de que Gemini Live invoque la herramienta con snapshots válidos. El prompt orienta, pero no garantiza por sí solo una secuencia perfecta.
+- El fallback tipado sigue disponible para visuales que requieren precisión; se solicita como apoyo secundario, no como reemplazo del sketch.
+- Pendiente: QA real en Chrome con voz Live, múltiples snapshots, pausa/interrupción, exportación PDF y movimiento reducido.
+- Sin dependencias nuevas, sin proveedores/API de pago, sin cambios a `main` ni despliegues.
+
+**Validación:** pendiente de GitHub Actions y prueba visual real. No se declara build aprobado.

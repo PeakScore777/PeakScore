@@ -3,7 +3,6 @@
 import React from "react";
 
 import { useId } from "react";
-import { Eraser, MousePointer2, PenLine } from "lucide-react";
 import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-board";
 
 const colors = {
@@ -62,16 +61,16 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
   // Cumulative snapshots keep prior strokes mounted. Use a short stagger,
   // not the sum of every previous stroke duration, so later updates stay live.
   const strokeTimings = visual.strokes.map((_stroke, index) => ({
-    delay: Math.min(index * 120, 600),
+    delay: Math.min(index * 260, 1_300),
   }));
   return (
-    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto max-h-[680px] min-h-[320px] w-full overflow-visible">
+    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto min-h-[440px] w-full overflow-visible sm:min-h-[560px]">
       {visual.strokes.map((stroke, index) => {
         const color = palette[stroke.tone];
         const path = smoothSketchPath(stroke.points);
         // Draw strokes one after another, like a teacher writing on a tablet.
         // A short pause between pen lifts keeps words and diagram parts legible.
-        const duration = Math.min(1_800, Math.max(520, stroke.points.length * 48));
+        const duration = Math.min(1_600, Math.max(760, stroke.points.length * 34));
         const delay = strokeTimings[index]?.delay ?? 0;
         const lastPoint = stroke.points[stroke.points.length - 1];
         return <g key={`${stroke.id}:${stroke.points.map((point) => point.x + "," + point.y).join(";")}:${stroke.tone}:${stroke.width}`}>
@@ -86,10 +85,10 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
             strokeLinejoin="round"
             style={{ animationDelay: `${delay}ms`, animationDuration: `${duration}ms` }}
           />
-          <g className="orby-board-pen-tip" aria-hidden="true">
-            <path d="M -3.2 -1.15 L 1.9 -1.15 L 3.4 0 L 1.9 1.15 L -3.2 1.15 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.38" strokeLinejoin="round"/>
-            <path d="M -1.7 -1.05 L -1.7 1.05 M -2.6 -1.05 L -2.6 1.05" stroke="#78350f" strokeWidth="0.22"/>
-            <path d="M 2.5 -0.62 L 3.4 0 L 2.5 0.62 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.22"/>
+          <g className="orby-board-pen-tip" data-orby-teacher-pointer={stroke.id} aria-hidden="true">
+            <path d="M -5.2 -1.25 L 2.8 -1.25 L 5.2 0 L 2.8 1.25 L -5.2 1.25 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.42" strokeLinejoin="round"/>
+            <path d="M -2.8 -1.1 L -2.8 1.1 M -3.8 -1.1 L -3.8 1.1" stroke="#78350f" strokeWidth="0.25"/>
+            <path d="M 4.2 -0.72 L 5.2 0 L 4.2 0.72 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.25"/>
             <animateMotion path={path} dur={`${duration}ms`} begin={`${delay}ms`} rotate="auto" fill="freeze"/>
             <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.82;1" dur={`${duration}ms`} begin={`${delay}ms`} fill="freeze"/>
           </g>
@@ -422,24 +421,18 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
         <div className="flex min-w-0 items-center gap-2"><span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-orange-500" /><h3 className="truncate text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Clase en vivo</h3></div><button type="button" data-orby-no-print onClick={() => window.print()} className="rounded-lg border border-slate-200 px-3 py-1.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-50">Exportar PDF</button>
         <span className="truncate text-right text-xs font-semibold text-slate-700 sm:text-sm">{board.title}</span>
       </header>
-      <div className="flex items-center justify-center gap-2 border-b border-slate-100 bg-white px-3 py-2" aria-label="Herramientas de Orby">
-        <span className="mr-2 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">Orby enseña</span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-2.5 py-1 text-[10px] font-semibold text-orange-700" title="Orby dibuja los trazos"><PenLine className="h-3.5 w-3.5"/> Dibujar</span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-semibold text-slate-600" title="Orby señala el concepto mientras explica"><MousePointer2 className="h-3.5 w-3.5"/> Señalar</span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 text-[10px] font-semibold text-slate-600" title="Orby corrige o limpia sus trazos"><Eraser className="h-3.5 w-3.5"/> Borrar</span>
-      </div>
-      <div className="mx-auto min-h-[60vh] max-w-6xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-10 sm:py-10">
+      <div className="mx-auto min-h-[60vh] w-full space-y-8 px-5 py-8 sm:space-y-10 sm:px-10 sm:py-12">
         {board.blocks.map((block, index) => {
           const blockKey = `${block.type}:${block.text}:${"label" in block ? block.label : ""}:${index}`;
           const revealClass = "orby-board-appear";
           const stageStyle = { animationDelay: `${Math.min(index * 110, 770)}ms` };
-          if (block.type === "heading") return <h4 key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`font-serif text-xl font-bold leading-tight tracking-tight text-slate-900 sm:text-3xl ${revealClass}`}>{block.text}</h4>;
+          if (block.type === "heading") return <h4 key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-2xl font-medium leading-tight tracking-tight text-slate-900 sm:text-4xl ${revealClass}`}>{block.text}</h4>;
           if (block.type === "formula") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`overflow-x-auto rounded-lg border border-slate-200 bg-white px-3 py-3 text-center font-mono text-sm font-semibold text-slate-900 ${revealClass}`}>{block.text}</div>;
           if (block.type === "step") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`flex gap-3 rounded-lg bg-white p-3 ${revealClass}`}><span className="shrink-0 rounded-md bg-orange-100 px-2 py-1 text-[10px] font-bold text-orange-900">{block.label}</span><p className="text-sm leading-6 text-slate-700">{block.text}</p></div>;
           if (block.type === "callout") return <div key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`rounded-lg border-l-4 border-orange-500 bg-orange-50 px-3 py-2 text-sm leading-6 text-orange-950 ${revealClass}`}>{block.text}</div>;
-          return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`text-sm leading-6 text-slate-700 ${revealClass}`}>{block.text}</p>;
+          return <p key={blockKey} style={stageStyle} data-board-stage={index + 1} className={`orby-board-handwriting text-base leading-7 text-slate-800 sm:text-lg ${revealClass}`}>{block.text}</p>;
         })}
-        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 110, 1_100)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-xl border-0 bg-transparent p-0 shadow-none sm:p-0">
+        {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 110, 1_100)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-none border-0 bg-transparent p-0 shadow-none sm:p-0">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
           <Visual visual={visual}/>
         </section>)}

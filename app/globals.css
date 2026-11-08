@@ -1313,3 +1313,26 @@ body {
   }
   .orby-board .orby-board-pen-tip { display: none !important; }
 }
+
+
+/* Orby live teacher board: the page itself is the canvas, never a student worksheet. */
+.orby-board-handwriting {
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  letter-spacing: -0.015em;
+}
+.orby-board .orby-board-sketch-stroke {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.orby-board .orby-board-pen-tip {
+  opacity: 0;
+  filter: drop-shadow(0 1px 2px rgba(15,23,42,.42));
+  pointer-events: none;
+}
+.orby-board [data-orby-teacher-pointer] {
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  .orby-board .orby-board-pen-tip { display: none !important; }
+}

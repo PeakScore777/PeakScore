@@ -420,3 +420,12 @@
 - La banda de herramientas es visual; el puntero independiente y el borrado controlado por eventos de Orby quedan pendientes. CI y QA de navegador aún requeridos.
 - Cambios en `feat/founder-intro`; sin dependencias nuevas, sin APIs de pago, sin cambios a `main` ni despliegues.
 - Especificación detallada: `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.
+
+
+## 2026-11-07 — clase manuscrita y puntero de profesor
+- Se retiró la banda ficticia de herramientas; el estudiante no recibe controles de escritura.
+- Se reforzó el puntero de lápiz que recorre cada trazo SVG de Orby, con etapas manuscritas progresivas.
+- La pizarra gana superficie amplia, lisa y texto complementario con tipografía manuscrita.
+- Gemini Live recibe instrucciones para construir cada explicación en snapshots acumulativos: contorno, estructuras, flechas y etiquetas, priorizando sketch sobre tarjetas.
+- Se actualizan pruebas y la mutación queda documentada en `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`.
+- Pendiente de CI y QA real; sin servicios ni APIs de pago y sin tocar `main`.

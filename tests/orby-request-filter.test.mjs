@@ -3948,10 +3948,10 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.doesNotMatch(boardComponentSource, /Lápiz|Resaltador|Borrador|Deshacer|Rehacer/);
   assert.doesNotMatch(boardComponentSource, /localStorage|storageId/);
   assert.match(boardComponentSource, /Clase en vivo/);
-  assert.match(boardComponentSource, /aria-label="Herramientas de Orby"/);
-  assert.match(boardComponentSource, /PenLine/);
-  assert.match(boardComponentSource, /MousePointer2/);
-  assert.match(boardComponentSource, /Eraser/);
+  assert.doesNotMatch(boardComponentSource, /Herramientas de Orby|Dibujar|Señalar|Borrar/);
+  assert.match(boardComponentSource, /data-orby-teacher-pointer=\{stroke\.id\}/);
+  assert.match(boardComponentSource, /animateMotion path=\{path\}/);
+  assert.match(boardComponentSource, /delay: Math\.min\(index \* 260, 1_300\)/);
   assert.match(boardComponentSource, /<Visual visual=\{visual\}\/\>/);
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });
@@ -3960,6 +3960,7 @@ test("la hoja usa una superficie blanca lisa sin cuadrícula ni tarjetas decorat
   assert.doesNotMatch(boardComponentSource, /backgroundImage:/);
   assert.match(boardComponentSource, /bg-white text-slate-900 shadow-none/);
   assert.match(boardComponentSource, /border-0 bg-transparent p-0 shadow-none/);
+  assert.match(boardComponentSource, /orby-board-handwriting/);
 });
 
 test("la hoja de clase ofrece exportacion mediante impresion del navegador", () => {

@@ -199,3 +199,14 @@ Pruebas necesarias:
 - Las tres migraciones de pizarra están presentes en la rama equivocada, no se han aplicado a Supabase y no se deben ejecutar allí. Antes hay que portar/revisar los cambios necesarios directamente en `feat/founder-intro` y disponer de una base de pruebas aislada (proyecto Supabase de staging o branch DB, previa verificación de coste) para aplicar y validar el esquema. Si se decide usar la base compartida, solicitar confirmación explícita indicando que también modifica el esquema de producción.
 - Estado de código comprobado en `feat/founder-intro`: existe `OrbyBoard.tsx` y `lib/ai/orby-board.ts`; existe `/api/orby/realtime-turn`; todavía no existe `/api/orby/voice-board`. No asumir que el código de la otra rama está integrado.
 - No se han modificado datos, políticas RLS, migraciones ni configuración de producción durante esta verificación.
+
+
+## Actualización de auditoría — 2026-11-07 (registro de errores y estado de rama)
+
+- Se amplió el registro diario `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md` con la clasificación individual de los siete hallazgos reportados, diferenciando bugs reales, aserciones obsoletas y puntos abiertos.
+- Queda expresamente abierto el caso de sanitización de anotaciones que contienen propiedades `undefined`; no se declara resuelto por falta de evidencia de una corrección y de pruebas específicas.
+- Se registraron como correcciones de código pendientes de validación runtime: import de `getOrbySketchStrokeTiming`, aceptación de snapshots visuales sin bloques textuales y autorización de `sessionResumption` en el token efímero.
+- Estado de rama consultado contra GitHub: `feat/founder-intro` está divergente respecto de `main`, con 3.320 commits ahead y 9 behind según la comparación actual. El tamaño del historial y la divergencia hacen inseguro cualquier merge/rebase automático; no integrar ni reescribir historial como parte de esta auditoría.
+- No se ha podido certificar una nueva ejecución completa de tests Orby, TypeScript, ESLint y build tras todas las correcciones. El estado `build-rate-limit` de Vercel no es evidencia de fallo de código ni de aprobación.
+- No se ejecutó QA real de Chrome/micrófono, ni se aplicaron migraciones remotas, ni se desplegó. La configuración Supabase compartida con producción permanece protegida.
+- Próximo orden: (1) reproducir y corregir el sanitizador de anotaciones `undefined`; (2) inspeccionar los guards de sesión/generación y exclusividad del tablero; (3) ejecutar tests, TS, lint y build sobre SHA exacto; (4) prueba real de interrupción, reconexión y dibujo durante voz; (5) revisar la divergencia con `main` por grupos de commits, sin integración automática.

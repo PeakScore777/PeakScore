@@ -542,14 +542,15 @@ function sanitizeOrbyBoardLayout(
   const ids = new Set<string>();
   const blockIndexes = new Set<number>();
   const visualIndexes = new Set<number>();
+  let previousSequence = 0;
 
   for (const candidate of raw.elements) {
     if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return null;
     const item = candidate as Record<string, unknown>;
     const id = safeId(item.id);
     if (!id || ids.has(id)
-      || !Number.isInteger(item.sequence) || item.sequence !== elements.length + 1
-      || !finite(item.sequence, 1, MAX_BLOCKS + MAX_VISUALS)
+      || !Number.isInteger(item.sequence) || !finite(item.sequence, 1, 1_000)
+      || item.sequence <= previousSequence
       || (item.kind !== "block" && item.kind !== "visual")
       || !Number.isInteger(item.index)
       || !finite(item.x, 0, 100) || !finite(item.y, 0, 100)
@@ -566,6 +567,7 @@ function sanitizeOrbyBoardLayout(
     }
 
     ids.add(id);
+    previousSequence = item.sequence as number;
     elements.push({
       id,
       sequence: item.sequence as number,

@@ -1495,7 +1495,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       if (voiceModeRef.current && waitingForVoiceReplyRef.current && !voiceResponseDoneRef.current) {
         setVoiceStatus("Orby está tardando más de lo normal. Sigo esperando tu respuesta…");
       }
-    }, 12_000);
+    }, 5_000);
     voiceResponseWatchdogRef.current = window.setTimeout(() => {
       voiceResponseWatchdogRef.current = null;
       voiceResponseSlowNoticeRef.current = null;
@@ -1503,7 +1503,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
       fallbackVoiceTurnToText(voiceChannelRef.current
         ? "Gemini Live dejó de enviar avances. Conservé tu pregunta y continuaré con el tutor gratuito por turnos."
         : "La conexión de voz se interrumpió. Conservé tu pregunta y continuaré con el tutor gratuito por turnos.");
-    }, 32_000);
+    }, 15_000);
   }
 
   function stopRealtimeVoice(updateState = true, preserveAudioContext = false) {

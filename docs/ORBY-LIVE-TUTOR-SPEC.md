@@ -370,3 +370,5 @@ Do not mark the experience as video-level complete until the Chrome/microphone t
 - Live instructions only permit IDs provided in the current snapshot. Invalid or cross-visual IDs are rejected with a specific explanation; if a part cannot be matched, OmegaX should focus the whole visual instead.
 - Regression coverage now includes five supported visual types, preservation of the visual payload, unknown IDs, targeting a text block, graph targets without stable IDs, and the undrawn membrane outline.
 - Static regression inventory: **249 named tests, no duplicate titles**. This is not a test execution result. Test runner, TypeScript, ESLint, production build and Chrome/Gemini Live QA remain pending. No deployment or main-branch change.
+
+- The renderer source regression now explicitly verifies the `component.id` target for circuit components, in addition to diagram nodes, atoms and anatomy/organelle targets. Static inventory remains 249 named tests with no duplicates; tests are not executed.

@@ -806,3 +806,18 @@ La ruta incremental `append-block` comprobaba límites del canvas y duplicados d
 ### Contrato adicional de notación legible
 - Los bloques `formula`/`step` se renderizan como texto manuscrito en HTML, no como TeX. Las instrucciones de Live y del tutor de respaldo ahora exigen notación de texto plano (ej. `2x + 3 = 11`) y prohíben comandos LaTeX/HTML/Markdown complejo.
 - Regresiones añadidas para exigir esta regla en ambas rutas. Commits: `36a3587` (Live), `4f34a50` (fallback), `9625453` (tests).
+
+
+## 2026-11-08 — señalador del profesor con selección de punto exacto
+
+### Implementado
+- La acción `focus` admite `pointIndex` opcional junto a `strokeId`. Es un índice desde cero de un punto existente dentro del trazo; no es una coordenada libre. Omitirlo conserva el foco al punto medio.
+- El foco sobre un `elementId` sigue destacando la etapa completa y rechaza `pointIndex`.
+- La validación comprueba primero el tipo/rango del índice y luego la cantidad real de puntos del trazo. El índice inexistente se rechaza con una guía clara para Gemini Live.
+- La UI muestra un anillo pulsante sobre el punto exacto, punto central, línea guía y rótulo. No altera ni añade tinta. En `prefers-reduced-motion` el foco conserva un estado estático visible.
+- El prompt de Live explica cuándo apuntar a una unión/extremo/parte específica y cuándo omitir el índice para usar el centro.
+
+### Pruebas y límites
+- Regresiones añadidas para selección exacta, índices negativos/máximos, índice mayor que el tamaño real del trazo, incompatibilidad con `elementId`, conservación de la tinta y contrato de renderer/schema/prompt.
+- No se ha ejecutado `npm run test:orby`, TypeScript, ESLint ni build para el HEAD de esta mutación. Falta QA real en Chrome con voz Live y sistema configurado con movimiento reducido.
+- No se añadieron servicios/modelos de pago, migraciones ni cambios a `main`; no se desplegó producción.

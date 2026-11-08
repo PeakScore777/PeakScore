@@ -12,7 +12,7 @@ import { containsCookingInstruction, dedupeAdjacentAssistantMessages, containsEx
 import { ORBY_LIVE_KNOWLEDGE_TOOLS } from "@/lib/ai/orby-live-tools";
 import { isLikelyVoicePlaybackEcho as detectVoicePlaybackEcho, isStrongVoiceBargeIn, isDuplicateVoiceTranscriptInActivity } from "@/lib/ai/orby-voice-echo";
 import { splitOrbySpeechIntoChunks } from "@/lib/ai/orby-speech-chunks";
-import { countOrbySubtitleWords, getOrbyKaraokeWordIndex } from "@/lib/ai/orby-subtitle-timing";
+import { countOrbySubtitleWords, getOrbyKaraokeWordIndex, splitOrbySubtitleSegments } from "@/lib/ai/orby-subtitle-timing";
 import { reconcileOrbyPublicCitations } from "@/lib/ai/orby-web-research";
 import { classifyGeminiProviderFailure } from "@/lib/ai/orby-tts-errors";
 import { beginOrbyVoiceToolTurn, completeOrbyVoiceToolGeneration, createOrbyVoiceToolTurnState, markOrbyVoiceToolFollowupOutput, markOrbyVoiceToolResponseSent, MAX_ORBY_VOICE_TOOL_CALLS_PER_TURN, resetOrbyVoiceToolTurn } from "@/lib/ai/orby-voice-tool-turn";
@@ -370,7 +370,6 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
   const voiceLastAssistantOutputAtRef = useRef(0);
   const voiceRecentAssistantOutputsRef = useRef<Array<{ text: string; at: number }>>([]);
   const voiceLastAssistantPlaybackUntilRef = useRef(0);
-  const voiceSubtitleAnimationFrameRef = useRef<number | null>(null);
   const voiceBrowserSpeechActiveRef = useRef(false);
   const voiceSpeechCancelRef = useRef<(() => void) | null>(null);
   const voiceSpeechPlaybackGenerationRef = useRef(0);

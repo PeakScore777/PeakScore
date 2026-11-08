@@ -404,3 +404,31 @@ La base curricular preexistente permanece en `docs/ORBY-ICFES-CURRICULUM-PLAN.md
 - TypeScript, ESLint, build y QA Chrome/micrófono siguen pendientes.
 - El check Vercel del SHA de documentación `ffcda699528ff73729740a796f9395b1770d8acc` reporta `failure`; el conector no devuelve la causa detallada de esa ejecución. No se afirma que sea verde.
 - No se tocaron `main`, producción ni Supabase. Sin migraciones, proveedores ni servicios de pago añadidos.
+
+
+## Rendimiento y cuotas de Orby Live — 2026-11-08
+
+### Causa identificada y corregida
+La ruta de creación de sesión clasificaba todo HTTP 429/RESOURCE_EXHAUSTED de Google como cuota gratuita diaria agotada y bloqueaba Live durante 3600 s. La misma respuesta 429 también puede representar throttling temporal de RPM/TPM. El clasificador ahora diferencia:
+- `quota_exhausted`: marcador explícito de cuota diaria/QUOTA_EXCEEDED.
+- `rate_limited`: 429 o RESOURCE_EXHAUSTED ambiguo, y límites explícitos por minuto/tokens por minuto.
+- `provider_error`: fallos restantes.
+
+La ruta conserva el objeto de error completo para inspeccionar campos anidados. El error temporal devuelve `GEMINI_LIVE_RATE_LIMITED` y Retry-After limitado entre 2 y 30 s, no una cuarentena de una hora.
+
+### Latencia y TTS
+- Advertencia si Live no emite avances: 5 s.
+- Recuperación de la misma pregunta por turno de texto si Live queda inactivo: 15 s. El temporizador se rearma con cada evento de texto/audio/herramienta.
+- TTS rate-limited: un máximo de un reintento corto si Retry-After <= 2 s; no se encadenan reintentos de hasta 12 veces.
+- Fragmento TTS: 880 caracteres en el cliente, 900 máximo en endpoint (antes 480/500); reduce casi a la mitad las peticiones en respuestas largas.
+- Modelo TTS: `gemini-3.8-flash-lite-tts` gratuito, optimizado por Google para baja latencia y alto volumen. Live principal: `gemini-3.8-live`.
+
+### Límites de cuota — no prometer uso ilimitado
+- Google aplica RPM, TPM y RPD por proyecto, no por API key; el RPD se reinicia a medianoche Pacífico. Los límites dependen del modelo/tier, pueden cambiar y deben verificarse en AI Studio. Gemini 3.8 Live y Flash-Lite TTS están marcados como gratuitos en el Free Tier, pero no tienen una cifra universal de sesiones/hora publicada en la tabla de precios.
+- Cloudflare Workers AI tiene 10.000 neuronas gratuitas/día por cuenta/proyecto; modelos de tutor, embeddings y transcripción comparten esa cuota. Superar el límite detiene operaciones; PeakScore no activa plan de pago.
+- Claude Free en claude.ai se mide por sesiones de usuario (reinicio cada cinco horas, demanda variable). Claude API/Console usa créditos prepagados; no es un respaldo de API gratuito permanente.
+
+### Revisión estática y validación
+- 230 tests nombrados, sin duplicados ni bloques vacíos detectados estáticamente.
+- Node tests, TypeScript, ESLint, build y QA real del micrófono siguen sin ejecutarse/certificarse. El estado de Vercel del SHA final debe revisarse; no afirmar CI verde.
+- Sin cambios a main, producción, Supabase remoto o migraciones. Sin proveedor pagado ni dependencia nueva.

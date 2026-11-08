@@ -25,7 +25,7 @@ export function evaluateOrbyBoardActionSequence(
   state: OrbyBoardActionSequenceState,
   action: OrbyBoardAction,
   generation: number,
-): { accepted: boolean; reason?: "duplicate" | "out_of_order" | "dependency_not_applied"; nextState: OrbyBoardActionSequenceState } {
+): { accepted: boolean; reason?: "duplicate" | "out_of_order" | "dependency_not_applied" | "wrong_generation"; nextState: OrbyBoardActionSequenceState } {
   const current = state.generation === generation ? state : createOrbyBoardActionSequenceState(generation);
   // Legacy focus/erase/replace calls remain accepted during migration. New
   // writing/drawing calls always carry the idempotency and ordering envelope.
@@ -142,7 +142,7 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
   if (!meta) return null;
 
   if (raw.operation === "append-block") {
-    if (!meta.actionId || meta.sequence === undefined || !safeId(raw.elementId)) return null;
+    if (!meta.actionId || meta.sequence === undefined || meta.turnGeneration === undefined || !safeId(raw.elementId)) return null;
     const block = sanitizeBoardBlock(raw.block);
     const position = raw.position && typeof raw.position === "object" && !Array.isArray(raw.position)
       ? raw.position as Record<string, unknown>
@@ -154,13 +154,13 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
       || typeof position.height !== "number" || !Number.isFinite(position.height) || position.height < 8 || position.height > 100
       || position.x + position.width > 100 || position.y + position.height > 100) return null;
     return {
-      ...meta, actionId: meta.actionId, sequence: meta.sequence,
+      ...meta, actionId: meta.actionId, sequence: meta.sequence, turnGeneration: meta.turnGeneration,
       operation: "append-block", elementId: raw.elementId, block,
       position: { x: position.x, y: position.y, width: position.width, height: position.height },
     };
   }
   if (raw.operation === "append-strokes") {
-    if (!meta.actionId || meta.sequence === undefined || !safeId(raw.elementId)
+    if (!meta.actionId || meta.sequence === undefined || meta.turnGeneration === undefined || !safeId(raw.elementId)
       || !Array.isArray(raw.strokes) || raw.strokes.length < 1 || raw.strokes.length > 5) return null;
     const strokes: OrbySketchStroke[] = [];
     const ids = new Set<string>();
@@ -175,7 +175,7 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
       strokes.push(stroke);
     }
     return {
-      ...meta, actionId: meta.actionId, sequence: meta.sequence,
+      ...meta, actionId: meta.actionId, sequence: meta.sequence, turnGeneration: meta.turnGeneration,
       operation: "append-strokes", elementId: raw.elementId, strokes,
     };
   }

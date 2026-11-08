@@ -366,3 +366,32 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - Las operaciones teacher-only ahora exigen que cada ID afectado aparezca exactamente una vez en toda la pizarra, no solo dentro de su visual. La misma regla aplica a focus, replace y erase.
 - Si una pizarra contiene accidentalmente IDs duplicados entre dos esquemas, focus, replace y erase rechazan la operación en lugar de señalar o borrar más de un elemento.
 - Se añadieron regresiones para los tres casos de ID duplicado.
+
+
+## Mutación siguiente — pausa inmediata del lápiz al interrumpir la clase
+
+**Rama:** `feat/founder-intro`
+
+### Implementado
+- La pizarra recibe un estado explícito `drawingActive`, controlado por el ciclo de voz y no por el modelo.
+- Cuando el micrófono detecta una nueva intervención real del estudiante (rama de barge-in, no el eco de los altavoces), la UI marca inmediatamente la animación como pausada.
+- El SVG de cada esquema usa `pauseAnimations()` / `unpauseAnimations()` para detener y reanudar sus animaciones SMIL, incluyendo el movimiento del lápiz.
+- La animación CSS del trazo conserva su progreso con `animationPlayState: paused`; no reinicia ni reproduce de nuevo el camino desde cero.
+- El lápiz desaparece mientras la pizarra está pausada, evitando que quede flotando en el punto de interrupción.
+- La llegada de un nuevo snapshot válido de Orby reactiva la pizarra; los snapshots rechazados o de generaciones obsoletas no la reactivan.
+- Al cerrar la sesión de voz se detiene también la animación.
+- Se añadieron pruebas estáticas del contrato de pausa, reanudación, lápiz y conexión con el barge-in.
+
+### Archivos
+- `components/aprender/OrbyBoard.tsx`
+- `components/aprender/LessonAITutor.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+### Límites / QA
+- La pausa se activa en el branch que ya identifica actividad real del estudiante; el branch de eco de audio no la dispara.
+- La reanudación solo ocurre al publicar un snapshot válido nuevo.
+- Falta probar en Chrome la pausa a mitad de un trazo, la reanudación tras la respuesta y el comportamiento de SVG SMIL en navegadores/dispositivos reales.
+- No se han ejecutado Node tests, TypeScript, ESLint ni build desde esta mutación.
+- No se añaden proveedores, modelos, dependencias ni servicios de pago. No se modifica `main`, no se despliega y no se fuerzan builds que puedan generar cargos.
+
+**Estado:** cambios implementados en la rama; validación de CI y QA manual pendientes.

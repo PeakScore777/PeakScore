@@ -51,7 +51,7 @@ function smoothSketchPath(points: Array<{ x: number; y: number }>): string {
   return path + ` T ${last.x} ${last.y}`;
 }
 
-function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }> }) {
+function Sketch({ visual, focus }: { visual: Extract<OrbyBoardVisual, { type: "sketch" }>; focus?: { strokeId: string; label?: string } }) {
   const palette = {
     ink: "#334155",
     accent: colors.orange,
@@ -104,6 +104,13 @@ function Sketch({ visual }: { visual: Extract<OrbyBoardVisual, { type: "sketch" 
               >{stroke.label}</text>
             : null}
           <circle cx={lastPoint.x} cy={lastPoint.y} r="0.45" fill={color} className="orby-board-appear" style={{ animationDelay: `${delay + duration}ms` }}/>
+          {focus?.strokeId === stroke.id ? <g data-orby-teacher-focus={stroke.id} pointerEvents="none">
+            <circle cx={stroke.points[Math.floor(stroke.points.length / 2)].x} cy={stroke.points[Math.floor(stroke.points.length / 2)].y} r="3.2" fill="none" stroke="#f97316" strokeWidth="0.9">
+              <animate attributeName="r" values="2.6;5.2;2.6" dur="1.35s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.95;0.35;0.95" dur="1.35s" repeatCount="indefinite"/>
+            </circle>
+            {focus.label ? <text x={Math.min(88, stroke.points[Math.floor(stroke.points.length / 2)].x + 5)} y={Math.max(7, stroke.points[Math.floor(stroke.points.length / 2)].y - 5)} fontSize="3.5" fontWeight="700" fill="#c2410c">{focus.label}</text> : null}
+          </g> : null}
         </g>;
       })}
     </svg>
@@ -373,9 +380,9 @@ function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type
   );
 }
 
-function Visual({ visual }: { visual: OrbyBoardVisual }) {
+function Visual({ visual, board }: { visual: OrbyBoardVisual; board: OrbyBoardData }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
-  if (visual.type === "sketch") return <Sketch visual={visual}/>;
+  if (visual.type === "sketch") return <Sketch visual={visual} focus={board.teacherFocus}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
   if (visual.type === "vectors") return <Vectors visual={visual}/>;
   if (visual.type === "molecule") return <Molecule visual={visual}/>;
@@ -434,7 +441,7 @@ export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
         })}
         {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 110, 1_100)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-none border-0 bg-transparent p-0 shadow-none sm:p-0">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
-          <Visual visual={visual}/>
+          <Visual visual={visual} board={board}/>
         </section>)}
       </div>
     </section>

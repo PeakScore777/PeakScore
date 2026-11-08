@@ -175,9 +175,8 @@ function sanitizeVisual(value: unknown): OrbyBoardVisual | null {
     // Optional fields may be absent or explicitly undefined (some SDK payloads
     // materialize optional keys this way). Normalize both to omission. Reject
     // null/objects/numbers instead of silently hiding malformed model output.
-    const hasOwn = (key: string) => Object.prototype.hasOwnProperty.call(raw, key);
-    if ((hasOwn("title") && raw.title !== undefined && typeof raw.title !== "string")
-      || (hasOwn("label") && raw.label !== undefined && typeof raw.label !== "string")) return null;
+    if ((raw.title !== undefined && typeof raw.title !== "string")
+      || (raw.label !== undefined && typeof raw.label !== "string")) return null;
     const title = raw.title === undefined ? "" : safeText(raw.title, 80);
     const label = raw.label === undefined ? "" : safeText(raw.label, 48);
 

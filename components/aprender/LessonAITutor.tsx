@@ -5032,7 +5032,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     ].filter(Boolean);
     let studentInk = "";
     try {
-      const key = "peakscore:orby-board-ink:" + encodeURIComponent(board.title || "clase");
+      const key = "peakscore:orby-board-ink:" + encodeURIComponent(activeVoiceAssistantMessage?.id || board.title || "clase");
       const saved = window.localStorage.getItem(key);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -5287,7 +5287,7 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
           <div className="orby-class-paper relative min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
             {activeVoiceAssistantMessage?.board
               ? <div className="orby-class-board mx-auto min-h-full w-full max-w-[1600px]">
-                  <OrbyBoard board={activeVoiceAssistantMessage.board} />
+                  <OrbyBoard board={activeVoiceAssistantMessage.board} storageId={activeVoiceAssistantMessage.id} />
                 </div>
               : <div className="orby-class-empty mx-auto flex min-h-[280px] h-full max-w-5xl flex-col items-center justify-center rounded-xl border border-dashed border-slate-300/80 px-6 text-center text-slate-500">
                   <BookOpen className="mb-3 h-8 w-8 text-orange-500/70" />

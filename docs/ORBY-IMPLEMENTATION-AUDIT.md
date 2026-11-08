@@ -268,3 +268,18 @@ Pruebas necesarias:
 - Los checks que fallaron en el primer intento se identificaron en logs de Vercel y se actualizaron: aserción sensible a mayúsculas/minúsculas, expectativas CSS retiradas al migrar el trazo a SMIL, y expectativas de pausa CSS sustituidas por pausa del reloj SVG.
 - Se amplió además el esquema de la acción de corrección del profesor para conservar tonos negro/azul/rojo.
 - La inspección del estado del commit más reciente sigue devolviendo `build-rate-limit`; no hay un nuevo resultado de compilación, TypeScript, ESLint ni suite completa. No declarar la rama lista para producción.
+
+
+## Auditoría — guards y consistencia de contrato del tablero (7 nov 2026)
+
+Se cerraron en código las brechas de la siguiente ronda:
+- Undefined/null en annotation y acciones teacher-only.
+- Límite acumulativo 40 trazos alineado a ocho actualizaciones de hasta cinco trazos, con tope completo de 18 KB.
+- Una sola visual sketch por tablero, tanto al sanitizar como al ejecutar acciones.
+- Pausa de cada SVG descendiente y CSS de todos los elementos animados de la hoja.
+- Hook `useId` incondicional y claves estables para no reiniciar etapas al cambiar texto/título.
+- Cola serial con lead-in 60 ms y pen-lift 110 ms.
+
+**Verificación estructural del repositorio:** 215 declaraciones de test detectadas en `tests/orby-request-filter.test.mjs`, sin casos vacíos ni nombres duplicados. La inspección cruzada confirma que sanitizer, acción, herramienta Live y tutor por turnos coinciden en el límite de 40 trazos, capa única y presupuesto de bytes.
+
+**Estado real:** Vercel aún presenta `build-rate-limit`; no hay nuevo workflow de GitHub Actions. Tests, TypeScript, ESLint, build y QA visual de Chrome continúan sin certificación después de esta mutación. No aprobar la rama ni declarar cero errores hasta ejecutar todos esos pasos en el SHA resultante.

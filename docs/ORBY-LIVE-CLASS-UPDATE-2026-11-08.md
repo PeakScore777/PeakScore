@@ -509,3 +509,73 @@ El tablero deseado se parece a una hoja digital real: blanco amplio, limpio, man
 - Interfaz mínima: franja superior compacta con materia y estado; herramientas de lápiz/borrar/deshacer pequeñas y discretas; subtítulo en una banda inferior fina; controles de pausa/salida compactos. Sin gran mascota lateral, sin tarjetas, sin columnas de dashboard, sin bloques de color que compitan con la hoja.
 - El mockup muestra una escena de célula animal con núcleo/ADN, mitocondria, ribosomas, membrana y citoplasma. Los ejemplos reales de clase deben variar el esquema según el concepto.
 - La implementación futura tiene que revelar el dibujo por etapas y por trazos sincronizados con el habla; no se acepta que la escena final aparezca completa de golpe. Esta propuesta visual no reemplaza la prioridad pendiente de recuperar primero la reproducción audible y la llamada/render real del tablero.
+
+
+---
+
+## 2026-11-08 — rediseño del espacio Orby e integración de herramientas de estudio (referencias Studley AI / Studdy AI)
+
+### Decisión del usuario y alcance visual
+El usuario compartió capturas del Orby actual de PeakScore y referencias de Studley AI/Studdy AI, además de un video de recorrido de Studdy AI (archivo aportado en la conversación). La petición no es reemplazar Orby por un producto nuevo ni convertirlo en un dashboard genérico: hay que **evolucionar la interfaz oscura de Orby que ya existe**, conservando su identidad y el área principal de conversación, y convertir la columna izquierda en un centro de herramientas de estudio.
+
+La referencia de Studdy muestra un lienzo de clase muy amplio, blanco/casi blanco, sin cuadrícula visible, con escritura manuscrita, diagramas que aparecen progresivamente, anotaciones con flechas/círculos y controles discretos en las esquinas. La explicación se acompaña de transcripción en la parte inferior. El contenido no debe aparecer como una imagen completa precargada: el tutor lo construye mientras habla.
+
+### Layout acordado para la web PeakScore
+- **Shell global:** conservar la navbar superior actual de PeakScore y el tema oscuro del espacio Orby actual (captura proporcionada por el usuario). No reemplazar todo por la estética beige de Studley ni por un dashboard blanco ajeno a PeakScore.
+- **Columna izquierda:** pasa de ser únicamente una lista de conversaciones a una navegación de herramientas. Orden inicial:
+  1. Nuevo chat.
+  2. Flashcards.
+  3. Anotaciones / apuntes personales.
+  4. Grabaciones.
+  5. Resúmenes.
+  6. Cuestionarios / práctica tipo Saber 11.
+  7. Material de estudio / archivos y enlaces.
+  8. Historial de conversaciones, conservado como sección accesible y buscable (no se elimina).
+- **Área central:** mantiene el chat actual de Orby como vista por defecto. Cuando se inicia una clase en vivo, el área central cambia al modo de tablero docente, ocupando el espacio disponible; no se abre una segunda página aislada ni se mezcla el tablero con burbujas de chat.
+- **Modo clase en vivo:** hoja blanca/casi blanca lisa, sin cuadrícula decorativa, con manuscrito natural, tinta oscura, colores semánticos para conceptos/relaciones, dibujos y anotaciones incrementales. La voz, el dibujo y los subtítulos deben avanzar coordinados. Mantener controles de pausa, reanudar, interrumpir, micrófono, velocidad, subtítulos y salir en una barra compacta.
+- **Responsividad:** en escritorio, herramientas en sidebar fija y panel central flexible. En pantallas estrechas, las herramientas se contraen a un menú/drawer; el lienzo conserva prioridad y no se convierte en una columna ilegible.
+
+### Contratos funcionales de las herramientas laterales
+Cada herramienta debe ser una vista real, no una tarjeta decorativa. Debe aprovechar el tema, la conversación o los materiales que el estudiante ya seleccionó, con autorización explícita para guardar contenido.
+
+- **Flashcards:** generar tarjetas desde un tema, conversación, apunte o material seleccionado; anverso/reverso; revelar respuesta; autoevaluación; estados de dominio (desconocido, aprendiendo, familiar, dominado); repaso de pendientes y persistencia del progreso. No copiar preguntas protegidas del Icfes.
+- **Anotaciones:** editor personal independiente de la pizarra docente; crear/editar/guardar notas vinculadas a materia, tema, conversación o material; permitir que el estudiante escriba aquí. Esta herramienta NO devuelve lápiz, resaltador, borrador ni controles de edición sobre el tablero de Orby.
+- **Grabaciones:** iniciar/detener grabación con permiso explícito del navegador; indicar claramente grabando/pausado/finalizado; guardar audio solo tras consentimiento; permitir reproducción y, si existe transcripción válida, convertirla en resumen/apuntes. Gestionar tamaño, duración, errores y eliminación; no subir ni procesar audio silenciosamente.
+- **Resúmenes:** producir síntesis estructuradas desde una conversación, grabación transcrita o material seleccionado; separar conceptos clave, definiciones, pasos, ejemplos, errores frecuentes y preguntas de repaso; conservar vínculo a la fuente y permitir guardar en Anotaciones.
+- **Cuestionarios:** práctica original estilo Saber 11 basada en el tema/material seleccionado; retroalimentación explicativa y registro de resultados. Mantener Inglés con sus siete partes y la creación/curación manual establecida.
+- **Material de estudio:** subir archivos compatibles y pegar enlaces/texto; mostrar progreso de procesamiento y límites de tamaño; organizar por carpetas/materias/temas; reutilizar el material como contexto para tutor, resúmenes, flashcards y cuestionarios. Validar tipo, tamaño, permisos y estado de procesamiento.
+- **Historial:** conservar búsqueda, nuevo chat, selección y reanudación de conversaciones existentes. No sacrificar la recuperación del historial al introducir herramientas.
+
+### Flujo compartido de contenido
+Un mismo origen autorizado (material, grabación transcrita, nota o conversación) puede alimentar varias herramientas. Mantener referencia de origen, materia, tema, fecha y propietario para que el estudiante pueda volver a la fuente. No duplicar archivos grandes por cada herramienta ni mezclar datos entre usuarios. Las herramientas deben funcionar con contenido existente; no depender de reconstruir el Orby ICFES Lab eliminado intencionalmente.
+
+### Límite de hardware: anatomía humana 3D aplazada
+- El usuario confirma que los modelos/partes humanas para Medicina dependen de Blender y que su PC actual no puede ejecutarlos.
+- **Se aplaza el Atlas humano 3D y cualquier pipeline/asset que requiera Blender, render pesado o ejecución local equivalente.** No instalar Blender, no exigir GPU ni añadir esa dependencia.
+- Se conservan por ahora las representaciones didácticas ligeras 2D ya implementadas (SVG/React y esquemas tipados) cuando sean pertinentes para Saber 11. No confundirlas con modelos anatómicos 3D.
+- Cualquier simulación 3D futura debe pasar primero una evaluación de peso, compatibilidad con navegador y rendimiento en el equipo objetivo. No forma parte del alcance inmediato.
+
+### Restricciones de producto y seguridad
+- Mantener Orby dentro del alcance Saber 11/ICFES y en español colombiano.
+- Mantener la regla de presupuesto: solo modelos/servicios con cuota gratuita real confirmada; si se agota, avisar/degradar sin fallback facturable silencioso.
+- No pedir al estudiante que escriba sobre la pizarra del profesor. Las anotaciones personales viven en su herramienta independiente.
+- Permisos de micrófono/archivos explícitos, límites de tamaño/duración, propiedad por usuario y validación server-side.
+- No añadir proveedores, modelos, dependencias o servicios de pago para imitar funciones comerciales de Studley/Studdy.
+- No cambiar `main`, no desplegar ni ejecutar migraciones remotas como parte de esta definición.
+
+### Orden de implementación propuesto
+1. Auditar el código real de `OrbyWorkspacePage` y `LessonAITutor`; inventariar qué historial, notas, grabaciones, adjuntos y persistencia ya existen antes de duplicarlos.
+2. Rediseñar primero la sidebar del espacio Orby manteniendo el chat actual, con rutas/vistas funcionales y estados vacíos/carga/error.
+3. Conectar Anotaciones y Resúmenes con las fuentes de conversación ya existentes, sin nueva tabla si el esquema actual basta.
+4. Auditar el soporte real de audio y persistencia antes de construir Grabaciones; no asumir que una grabación de micrófono ya está almacenada.
+5. Implementar Flashcards y Cuestionarios reutilizando los datos y servicios existentes, después de revisar esquema/RLS.
+6. Integrar Material de estudio y carpetas solo tras inspeccionar tablas/buckets y límites reales de Storage.
+7. Mantener el modo Live/whiteboard como experiencia central separada de las herramientas personales; validar voz audible, dibujo progresivo y subtítulos en Chrome.
+8. Probar ownership/RLS, permisos, cuotas gratuitas, móvil y rendimiento. Actualizar la bitácora con resultados reales, no con tareas planeadas como si estuvieran terminadas.
+
+### Estado de esta actualización
+- Se revisó el código de `app/orby/page.tsx`, `components/aprender/OrbyWorkspacePage.tsx` y la cabecera/contratos de `components/aprender/LessonAITutor.tsx`.
+- Confirmado: `/orby` renderiza `OrbyWorkspacePage`, que contiene `LessonAITutor` en modo workspace; el workspace actual es un shell oscuro con el tutor como contenido principal.
+- Confirmado: `LessonAITutor` ya contiene funcionalidades relacionadas con conversaciones, notas, adjuntos e interacción de voz; se debe auditar cada una antes de añadir una segunda implementación.
+- No se modificó código funcional en esta actualización; solo se registra la dirección de producto, los requisitos y el orden seguro de implementación.
+- No se ha implementado aún la nueva sidebar ni se ha validado funcionalmente ninguna herramienta adicional.

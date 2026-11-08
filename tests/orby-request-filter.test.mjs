@@ -5565,3 +5565,16 @@ test("OmegaX guarda y recupera memoria de aprendizaje separada por destreza de E
   assert.match(tutor, /proporción de señales guardadas como/);
 });
 
+test("Learning signals de English Studio se recuperan solo para su propia destreza y usuario", async () => {
+  const fallback = await readFile(new URL("../app/api/lesson-tutor/route.ts", import.meta.url), "utf8");
+  const learningApi = await readFile(new URL("../app/api/orby/learning/route.ts", import.meta.url), "utf8");
+
+  assert.match(fallback, /\.eq\("user_id", user\.id\)/);
+  assert.match(fallback, /\.eq\("subject", signalSubject\)/);
+  assert.match(fallback, /\.like\("topic", skillPrefix \+ "%"/);
+  assert.match(fallback, /confidence >= 0\.8/);
+  assert.match(learningApi, /supabaseAdmin\.from\("orby_student_learning_signals"\)/);
+  assert.match(learningApi, /\.eq\("user_id", user\.id\)/);
+  assert.match(learningApi, /Cache-Control.*private, no-store/);
+});
+

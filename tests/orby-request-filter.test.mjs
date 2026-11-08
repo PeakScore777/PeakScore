@@ -4104,3 +4104,24 @@ test("la temporización de escritura es determinista, acotada y crece por orden"
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(-4, 1), { delay: 0, duration: 760 });
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(Number.NaN, Number.NaN), { delay: 0, duration: 760 });
 });
+
+
+test("las anotaciones pedagógicas validan geometría y tipo antes de renderizar", () => {
+  const valid = boardModule.sanitizeOrbyBoard({ version: 2, title: "Lectura crítica", blocks: [], visuals: [
+    { type: "annotation", title: "Tesis", mark: "circle", tone: "accent", points: [{ x: 20, y: 25 }, { x: 42, y: 38 }], label: "Tesis" },
+    { type: "annotation", title: "Evidencia", mark: "underline", tone: "success", points: [{ x: 15, y: 60 }, { x: 45, y: 60 }] },
+    { type: "annotation", title: "Relación", mark: "arrow", tone: "muted", points: [{ x: 20, y: 75 }, { x: 50, y: 70 }] },
+    { type: "annotation", title: "Fragmento", mark: "bracket", tone: "accent", points: [{ x: 55, y: 20 }, { x: 80, y: 40 }] },
+  ] });
+  assert.equal(valid?.visuals?.length, 4);
+  const invalid = boardModule.sanitizeOrbyBoard({ version: 2, title: "Inválida", blocks: [], visuals: [
+    { type: "annotation", mark: "circle", tone: "accent", points: [{ x: 2, y: 2 }, { x: 50, y: 50 }] },
+  ] });
+  assert.equal(invalid, null);
+});
+
+test("el tablero expone anotaciones sin código ejecutable en la herramienta Live", () => {
+  assert.match(liveToolsSource, /annotation \| diagram/);
+  assert.match(liveToolsSource, /For annotation: circle, underline, arrow or bracket/);
+  assert.match(boardComponentSource, /visual\.type === "annotation"/);
+});

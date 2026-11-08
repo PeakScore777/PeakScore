@@ -134,7 +134,7 @@ layout: {
 Invariants:
 - Each block and each visual is referenced exactly once by zero-based index.
 - Element IDs are stable, unique ASCII identifiers (1–24 characters).
-- Sequence is contiguous and increasing from 1; append new stages without renumbering existing stages.
+- Sequence is a strictly increasing positive integer (maximum 1000); gaps are valid after erase, and surviving stages must never be renumbered.
 - All normalized rectangles remain inside 0–100; the renderer places them on one responsive 16:9 paper canvas.
 - New v2 tutor output should include layout. Legacy v1 and v2 without layout remain valid and use the old renderer.
 - Every snapshot remains complete and cumulative; it carries existing layout elements plus any appended stages.

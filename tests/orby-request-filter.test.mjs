@@ -55,6 +55,7 @@ const knowledgeNormalization = await loadTypeScriptModule("../lib/ai/orby-knowle
 const questionSolutions = await loadTypeScriptModule("../lib/ai/orby-question-solution.ts");
 const voiceEcho = await loadTypeScriptModule("../lib/ai/orby-voice-echo.ts");
 const speechChunks = await loadTypeScriptModule("../lib/ai/orby-speech-chunks.ts");
+const subtitleTiming = await loadTypeScriptModule("../lib/ai/orby-subtitle-timing.ts");
 const publicResearch = await loadTypeScriptModule("../lib/ai/orby-web-research.ts");
 const ttsAudio = await loadTypeScriptModule("../lib/ai/orby-tts-audio.ts");
 const ttsErrors = await loadTypeScriptModule("../lib/ai/orby-tts-errors.ts");
@@ -4952,4 +4953,29 @@ test("optional Live knowledge lookup never exposes provider credential errors", 
   assert.match(lessonTutorSource, /Optional knowledge lookup unavailable/);
   assert.match(lessonTutorSource, /sin mencionar errores técnicos ni afirmar que consultaste material/);
   assert.doesNotMatch(lessonTutorSource, /guidance: typeof result\.error === "string"\s*\? result\.error\.slice\(0, 240\)/);
+});
+
+
+test("los subtítulos de Orby cuentan palabras y calculan una posición karaoke monotónica", () => {
+  const { countOrbySubtitleWords, getOrbyKaraokeWordIndex } = subtitleTiming;
+  assert.equal(countOrbySubtitleWords(""), 0);
+  assert.equal(countOrbySubtitleWords("La fotosíntesis transforma energía."), 4);
+  assert.equal(getOrbyKaraokeWordIndex(0, 4, 4), 0);
+  assert.equal(getOrbyKaraokeWordIndex(1, 4, 4), 1);
+  assert.equal(getOrbyKaraokeWordIndex(3.9, 4, 4), 3);
+  assert.equal(getOrbyKaraokeWordIndex(20, 4, 4), 3);
+  assert.equal(getOrbyKaraokeWordIndex(1, 0, 4), -1);
+  assert.equal(getOrbyKaraokeWordIndex(0.2, 10, 5, 3), 3);
+  assert.equal(getOrbyKaraokeWordIndex(Number.NaN, 4, 4, 2), 2);
+});
+
+test("los subtítulos Live siguen el reloj real de Web Audio y no generan llamadas extra", () => {
+  assert.match(lessonTutorSource, /voiceSubtitlePlaybackStartRef/);
+  assert.match(lessonTutorSource, /voiceSubtitlePlaybackEndRef/);
+  assert.match(lessonTutorSource, /audioContext\.currentTime - startAt/);
+  assert.match(lessonTutorSource, /getOrbyKaraokeWordIndex/);
+  assert.match(lessonTutorSource, /data-orby-subtitle-word/);
+  assert.match(lessonTutorSource, /voiceSubtitlePlaybackActive/);
+  assert.match(lessonTutorSource, /requestAnimationFrame\(updateKaraokeHighlight\)/);
+  assert.match(lessonTutorSource, /voiceSubtitlePlaybackEndRef\.current = voiceNextPlaybackTimeRef\.current/);
 });

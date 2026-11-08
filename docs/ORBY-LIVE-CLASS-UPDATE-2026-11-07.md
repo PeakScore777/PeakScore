@@ -339,3 +339,10 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - No declarar listo para producción hasta completar CI y QA real.
 
 **Estado:** implementación conectada en la rama; validación completa todavía no certificada.
+
+
+### Ajuste adicional — repetición fiable del señalamiento
+- Se añadió una revisión incremental al foco del profesor. Si Orby vuelve a señalar el mismo trazo con la misma etiqueta, React remonta únicamente el indicador y reinicia el halo; no se vuelve a montar ni animar la tinta.
+- La revisión también aumenta al corregir un trazo para que el señalamiento de corrección vuelva a ser visible.
+- Se extendieron las pruebas unitarias para comprobar la revisión inicial del foco.
+- Estado CI consultado para el commit anterior: el único estado reportado es Vercel en fallo por límite de builds del plan (`upgradeToPro=build-rate-limit`); no hay evidencia de ejecución satisfactoria de Node tests, TypeScript, ESLint o build en ese commit. No se intenta forzar otro build que pueda generar costes.

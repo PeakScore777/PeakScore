@@ -1,7 +1,7 @@
 # Auditoría profunda OmegaX / Orby — 2026-11-08
 
 **Rama inspeccionada:** `feat/founder-intro`  
-**Commit de referencia consultado:** `99537c472b42fbea3e88cdc152f5b1010b202610`  
+**Commit que añadió este informe:** `590f33f06592a118e07d5af6aec054ee4692bad7`. El SHA `99537c472b42fbea3e88cdc152f5b1010b202610` corresponde al `base_commit` reportado para `main` en la comparación consultada; no debe citarse como HEAD de `feat/founder-intro`.  
 **Alcance:** revisión estática cruzada de tests, componentes, rutas API, filtros, proveedor, pizarra, English Studio, memoria de aprendizaje, documentación y estado de CI.  
 **Importante:** esta auditoría no equivale a ejecutar localmente el repositorio ni a QA en navegador. No se modificó código de runtime, `main`, Supabase remoto ni despliegues.
 
@@ -11,10 +11,10 @@ Se contaron **257 declaraciones `test()`** en `tests/orby-request-filter.test.mj
 
 Los cuatro fallos no tienen la misma causa:
 
-- **Tres son expectativas estáticas desactualizadas o demasiado literales** frente a UI/código que ya implementa el comportamiento con otra redacción o composición.
-- **Uno sí revela una asimetría de instrucciones entre Live y fallback**: el fallback no contiene la aclaración explícita de que MCER A1–C2 es una ruta general de aprendizaje y no la escala de Inglés Saber 11.
+- **Los cuatro son fallos de aserciones estáticas demasiado literales**, no cuatro defectos funcionales demostrados.
+- El cuarto fallo también es de comparación textual: el fallback sí contiene la salvaguarda MCER/ICFES, pero comienza con `El MCER...` y la expresión regular exige `el MCER...` con distinción de mayúsculas.
 
-No se deben “arreglar” los tres tests de UI añadiendo cadenas artificiales al producto. Se deben fortalecer las pruebas para comprobar comportamiento real y actualizar la expectativa al contrato actual. La brecha del fallback sí requiere corregir la instrucción compartida y añadir una regresión semántica.
+No se deben “arreglar” estas pruebas añadiendo cadenas artificiales al producto. Se deben actualizar para verificar el contrato semántico y el forwarding funcional sin exigir JSX exacto ni capitalización accidental. Con la evidencia de estos cuatro fallos no se confirma una regresión funcional del tutor; sí permanecen riesgos independientes descritos más abajo.
 
 ## 2. Los cuatro fallos de test: causa y corrección correcta
 
@@ -58,11 +58,9 @@ La prueba exige `no certificación oficial`. El texto actual expresa la misma sa
 **Prueba:** `Live y fallback enseñan inglés CEFR en pizarra y diferencian las cinco áreas ICFES`  
 **Ubicación observada:** línea 5503.
 
-La ruta Live sí contiene la separación entre MCER A1–C2 e Inglés Saber 11. El fallback ya tiene una sección `RUTA DE INGLÉS GENERAL MCER/CEFR A1–C2`, instrucciones de pizarra y reutiliza `buildIcfesPedagogyInstruction`, pero no incluye la frase de salvaguarda que la prueba exige: que MCER A1–C2 es una ruta general de aprendizaje.
+La ruta Live y el fallback contienen la separación entre MCER A1–C2 e Inglés Saber 11. El fallback incluye literalmente `El MCER A1–C2 es una ruta general de aprendizaje...`; la prueba falla porque su regex `/el MCER A1–C2 es una ruta general de aprendizaje/` es sensible a mayúsculas y espera `el` en minúscula.
 
-Esto deja una asimetría pedagógica: al pasar de Live al tutor por turnos, el límite entre inglés general y el examen puede quedar menos explícito.
-
-**Corrección:** añadir al prompt de fallback la misma distinción semántica que Live: MCER A1–C2 es práctica general; no es escala oficial de Saber 11; la preparación ICFES conserva sus siete partes y el banco manual; no se deben inventar preguntas para ese banco. Añadir test de paridad entre rutas.
+**Corrección:** hacer la regex case-insensitive (`/i`) o comprobar la frase sin depender de capitalización. No hace falta cambiar el prompt pedagógico por este fallo.
 
 ## 3. English Studio: estado funcional y límites comprobados
 
@@ -137,8 +135,8 @@ La función `buildIcfesPedagogyInstruction` y los perfiles de `lib/ai/orby-scope
 
 ## 8. Plan de corrección ordenado
 
-1. Corregir las tres expectativas estáticas obsoletas sin alterar la UI funcional.
-2. Corregir la asimetría del prompt fallback para inglés MCER/ICFES.
+1. Corregir las cuatro expectativas estáticas obsoletas sin alterar la UI ni los prompts que ya expresan el contrato correcto.
+2. Resolver la contradicción de recuperación del Lab en el prompt Live: una sola política, opcional y coherente con la disponibilidad real del material.
 3. Ejecutar de nuevo `npm run test:orby` y conservar la salida completa TAP, no solo los fragmentos de fallo.
 4. Ejecutar `npx tsc --noEmit`.
 5. Ejecutar `npm run lint`.
@@ -159,3 +157,45 @@ La función `buildIcfesPedagogyInstruction` y los perfiles de `lib/ai/orby-scope
 - Mantener a Orby como tutor especializado en Ciencias Naturales y a OmegaX como asistente general de estudio.
 
 **Resultado de esta tanda:** auditoría estática ampliada y cuatro fallos clasificados. No se afirma que el código esté corregido ni que tests, TypeScript, ESLint, build o QA de navegador estén aprobados.
+
+
+## Addendum de precisión — revisión posterior del mismo HEAD
+
+### Reclasificación de los cuatro fallos
+
+Una inspección línea por línea de las cuatro aserciones y del código actual corrige la clasificación anterior:
+
+1. **SVG / Diagram:** el test exige el JSX sin props adicionales; el componente actual pasa también `focus={visualFocus}`. El retraso `startDelayMs` sí se transmite.
+2. **Speaking:** el test busca la cadena exacta `60-second speaking`; la UI muestra `Speaking · 60 segundos` y `Your 60-second challenge`. El temporizador corta la grabación al llegar a 60 s.
+3. **Aviso de certificación:** el test busca `no certificación oficial`; la UI expresa la misma salvaguarda con la frase “no es una certificación ni un nivel oficial de desempeño de Saber 11”.
+4. **MCER en fallback:** el contenido sí está presente. La regex de la prueba es sensible a mayúsculas y espera `el MCER...`, mientras que el prompt empieza con `El MCER...`.
+
+Por tanto, los cuatro fallos visibles son falsos positivos de pruebas estáticas literales. Esto no demuestra que toda la suite esté verde ni que no existan otros defectos.
+
+### Calidad del conjunto de pruebas
+
+- El archivo contiene 257 declaraciones `test()`, 0 nombres duplicados y aproximadamente 2.297 aserciones.
+- Un análisis heurístico del archivo identifica 128 pruebas centradas en lectura/assert de fuentes y otras 35 que mezclan inspección de fuente con ejecución de lógica. Esta proporción hace que la suite sea sensible a refactors de JSX, wording y organización interna.
+- Mantener los tests estáticos para contratos críticos, pero mover validaciones de comportamiento a módulos puros ejecutables y pruebas de integración: sanitización, ownership, cuotas, idempotencia, secuencia/cancelación de acciones y paridad Live/fallback.
+- La salida de terminal adjunta se encuentra truncada y no conserva el resumen TAP final. No es correcto inferir el total de aprobadas a partir de ella.
+
+### Hallazgo funcional adicional — política contradictoria de recuperación Live
+
+En `app/api/orby/realtime-session/route.ts`, la instrucción de uso selectivo de Internet dice que la búsqueda se reserva para solicitudes de fuentes, actualidad o verificación externa. Sin embargo, la instrucción siguiente ordena activar `search_orby_learning_knowledge` ante cada pregunta académica nueva y sustantiva. Son reglas incompatibles.
+
+**Impacto:** Gemini Live puede seguir invocando recuperación para preguntas ordinarias, pese a que la política del proyecto y la documentación dicen que la recuperación es opcional. Esto puede añadir latencia, consumir cuota gratuita y crear ruido cuando el material publicado no está disponible.
+
+**Prioridad:** alta. Unificar la instrucción: enseñar primero con conocimiento fiable; consultar solo si existe material publicado relevante y la recuperación está habilitada, o cuando el estudiante pida fuentes/actualidad/verificación. La búsqueda nunca debe bloquear voz ni clase. No reconstruir el Lab eliminado.
+
+### CI y referencia de rama
+
+- El workflow real es `.github/workflows/peakscore-checks.yml`: instala con `npm ci`, ejecuta auditoría de dependencias, `npm run test:orby`, `npx tsc --noEmit`, `npm run lint` y `npx next build`.
+- La consulta de estado sobre SHA `99537c4...` devolvió Vercel `build-rate-limit`, pero ese SHA aparece como `base_commit` de `main` en la comparación. No atribuir ese estado a la rama de trabajo.
+- La consulta de workflow runs asociadas a ese SHA no devolvió ejecuciones. No hay evidencia suficiente para declarar CI verde para el HEAD actual de `feat/founder-intro`.
+- La comparación entre refs reportó `diverged`; los contadores del conector no se usan para planear un merge. Antes de integrar, obtener SHAs exactos de ambas refs y comparar el rango correcto.
+
+### Riesgo de coste — verificación operacional pendiente
+
+El tutor por turnos y la transcripción usan Cloudflare Workers AI; el código detiene/degrada ante cuota y no cambia silenciosamente de proveedor. Gemini Live y algunos procesos de embeddings/perfil documental usan Gemini API con comentarios de uso de AI Studio/free tier y manejo de cuota. El código fija el modelo Live y no acepta un override arbitrario, pero **no puede demostrar por sí solo que el proyecto Google tenga la facturación deshabilitada**. Verificar la configuración del proyecto y las cuotas en consola sin activar billing ni provocar consumo deliberado. Mantener el requisito: si no se puede garantizar cuota gratuita, desactivar la ruta afectada y mostrar aviso.
+
+**Estado del addendum:** auditoría estática; no se modificó código de runtime, `main`, Supabase remoto ni despliegues.

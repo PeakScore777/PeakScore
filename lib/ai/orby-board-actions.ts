@@ -1,13 +1,96 @@
-import type { OrbyBoard, OrbySketchStroke } from "@/lib/ai/orby-board";
+import { sanitizeOrbyBoard, type OrbyBoard, type OrbyBoardBlock, type OrbySketchStroke } from "@/lib/ai/orby-board";
+
+type OptionalActionMeta = { actionId?: string; sequence?: number; dependsOn?: string[] };
+type RequiredActionMeta = { actionId: string; sequence: number; dependsOn?: string[] };
 
 export type OrbyBoardAction =
-  | { operation: "focus"; strokeId: string; elementId?: never; label?: string }
-  | { operation: "focus"; elementId: string; strokeId?: never; label?: string }
-  | { operation: "erase"; strokeIds: string[] }
-  | { operation: "replace"; strokeId: string; replacement: OrbySketchStroke };
+  | (OptionalActionMeta & { operation: "focus"; strokeId: string; elementId?: never; label?: string })
+  | (OptionalActionMeta & { operation: "focus"; elementId: string; strokeId?: never; label?: string })
+  | (OptionalActionMeta & { operation: "erase"; strokeIds: string[] })
+  | (OptionalActionMeta & { operation: "replace"; strokeId: string; replacement: OrbySketchStroke })
+  | (RequiredActionMeta & { operation: "append-block"; elementId: string; block: OrbyBoardBlock; position: { x: number; y: number; width: number; height: number } })
+  | (RequiredActionMeta & { operation: "append-strokes"; elementId: string; strokes: OrbySketchStroke[] });
+
+export type OrbyBoardActionSequenceState = {
+  generation: number;
+  lastSequence: number;
+  actionIds: string[];
+};
+
+export function createOrbyBoardActionSequenceState(generation = -1): OrbyBoardActionSequenceState {
+  return { generation, lastSequence: 0, actionIds: [] };
+}
+
+export function evaluateOrbyBoardActionSequence(
+  state: OrbyBoardActionSequenceState,
+  action: OrbyBoardAction,
+  generation: number,
+): { accepted: boolean; reason?: "duplicate" | "out_of_order" | "dependency_not_applied"; nextState: OrbyBoardActionSequenceState } {
+  const current = state.generation === generation ? state : createOrbyBoardActionSequenceState(generation);
+  // Legacy focus/erase/replace calls remain accepted during migration. New
+  // writing/drawing calls always carry the idempotency and ordering envelope.
+  if (!action.actionId || action.sequence === undefined) {
+    return { accepted: true, nextState: current };
+  }
+  if (current.actionIds.includes(action.actionId)) {
+    return { accepted: false, reason: "duplicate", nextState: current };
+  }
+  if (action.sequence <= current.lastSequence) {
+    return { accepted: false, reason: "out_of_order", nextState: current };
+  }
+  if (action.dependsOn?.some((dependency) => !current.actionIds.includes(dependency))) {
+    return { accepted: false, reason: "dependency_not_applied", nextState: current };
+  }
+  return {
+    accepted: true,
+    nextState: {
+      generation,
+      lastSequence: action.sequence,
+      actionIds: [...current.actionIds, action.actionId].slice(-32),
+    },
+  };
+}
 
 const safeId = (value: unknown): value is string =>
   typeof value === "string" && /^[a-zA-Z0-9_-]{1,24}$/.test(value);
+
+function cleanText(value: unknown, max = 240): string {
+  return typeof value === "string"
+    ? value.replace(/[<>\\u0000-\\u001f]/g, " ").replace(/\\s+/g, " ").trim().slice(0, max)
+    : "";
+}
+
+function sanitizeActionMeta(raw: Record<string, unknown>, required = false): OptionalActionMeta | null {
+  const hasId = raw.actionId !== undefined;
+  const hasSequence = raw.sequence !== undefined;
+  if (hasId !== hasSequence) return null;
+  if (!hasId) return required ? null : {};
+  if (!safeId(raw.actionId) || typeof raw.sequence !== "number"
+    || !Number.isInteger(raw.sequence) || raw.sequence < 1 || raw.sequence > 1_000) return null;
+  if (raw.dependsOn !== undefined && (!Array.isArray(raw.dependsOn)
+    || raw.dependsOn.length > 5 || !raw.dependsOn.every(safeId)
+    || new Set(raw.dependsOn).size !== raw.dependsOn.length)) return null;
+  return {
+    actionId: raw.actionId,
+    sequence: raw.sequence,
+    ...(Array.isArray(raw.dependsOn) && raw.dependsOn.length ? { dependsOn: raw.dependsOn as string[] } : {}),
+  };
+}
+
+function sanitizeBoardBlock(value: unknown): OrbyBoardBlock | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  if (raw.type === "heading" || raw.type === "text" || raw.type === "formula" || raw.type === "callout") {
+    const text = cleanText(raw.text);
+    return text ? { type: raw.type, text } : null;
+  }
+  if (raw.type === "step") {
+    const label = cleanText(raw.label, 48);
+    const text = cleanText(raw.text);
+    return label && text ? { type: "step", label, text } : null;
+  }
+  return null;
+}
 
 function sanitizeStroke(value: unknown, expectedId: string): OrbySketchStroke | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
@@ -45,6 +128,48 @@ function sanitizeStroke(value: unknown, expectedId: string): OrbySketchStroke | 
 export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
+  const meta = sanitizeActionMeta(raw, raw.operation === "append-block" || raw.operation === "append-strokes");
+  if (!meta) return null;
+
+  if (raw.operation === "append-block") {
+    if (!meta.actionId || meta.sequence === undefined || !safeId(raw.elementId)) return null;
+    const block = sanitizeBoardBlock(raw.block);
+    const position = raw.position && typeof raw.position === "object" && !Array.isArray(raw.position)
+      ? raw.position as Record<string, unknown>
+      : null;
+    if (!block || !position
+      || typeof position.x !== "number" || !Number.isFinite(position.x) || position.x < 0 || position.x > 100
+      || typeof position.y !== "number" || !Number.isFinite(position.y) || position.y < 0 || position.y > 100
+      || typeof position.width !== "number" || !Number.isFinite(position.width) || position.width < 8 || position.width > 100
+      || typeof position.height !== "number" || !Number.isFinite(position.height) || position.height < 8 || position.height > 100
+      || position.x + position.width > 100 || position.y + position.height > 100) return null;
+    return {
+      ...meta, actionId: meta.actionId, sequence: meta.sequence,
+      operation: "append-block", elementId: raw.elementId, block,
+      position: { x: position.x, y: position.y, width: position.width, height: position.height },
+    };
+  }
+  if (raw.operation === "append-strokes") {
+    if (!meta.actionId || meta.sequence === undefined || !safeId(raw.elementId)
+      || !Array.isArray(raw.strokes) || raw.strokes.length < 1 || raw.strokes.length > 5) return null;
+    const strokes: OrbySketchStroke[] = [];
+    const ids = new Set<string>();
+    for (const entry of raw.strokes) {
+      const id = entry && typeof entry === "object" && !Array.isArray(entry)
+        ? (entry as Record<string, unknown>).id
+        : undefined;
+      if (!safeId(id) || ids.has(id)) return null;
+      const stroke = sanitizeStroke(entry, id);
+      if (!stroke) return null;
+      ids.add(id);
+      strokes.push(stroke);
+    }
+    return {
+      ...meta, actionId: meta.actionId, sequence: meta.sequence,
+      operation: "append-strokes", elementId: raw.elementId, strokes,
+    };
+  }
+
   if (raw.operation === "focus") {
     const hasStrokeId = raw.strokeId !== undefined;
     const hasElementId = raw.elementId !== undefined;
@@ -55,23 +180,69 @@ export function sanitizeOrbyBoardAction(value: unknown): OrbyBoardAction | null 
       ? ""
       : raw.label.replace(/[<>\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 48);
     return hasStrokeId
-      ? { operation: "focus", strokeId: raw.strokeId as string, ...(label ? { label } : {}) }
-      : { operation: "focus", elementId: raw.elementId as string, ...(label ? { label } : {}) };
+      ? { ...meta, operation: "focus", strokeId: raw.strokeId as string, ...(label ? { label } : {}) }
+      : { ...meta, operation: "focus", elementId: raw.elementId as string, ...(label ? { label } : {}) };
   }
   if (raw.operation === "erase") {
     if (!Array.isArray(raw.strokeIds) || raw.strokeIds.length < 1 || raw.strokeIds.length > 8
       || !raw.strokeIds.every(safeId) || new Set(raw.strokeIds).size !== raw.strokeIds.length) return null;
-    return { operation: "erase", strokeIds: raw.strokeIds };
+    return { ...meta, operation: "erase", strokeIds: raw.strokeIds };
   }
   if (raw.operation === "replace") {
     if (!safeId(raw.strokeId)) return null;
     const replacement = sanitizeStroke(raw.replacement, raw.strokeId);
-    return replacement ? { operation: "replace", strokeId: raw.strokeId, replacement } : null;
+    return replacement ? { ...meta, operation: "replace", strokeId: raw.strokeId, replacement } : null;
   }
   return null;
 }
 
+function validateUpdatedBoard(candidate: OrbyBoard): OrbyBoard | null {
+  const validated = sanitizeOrbyBoard(candidate);
+  if (!validated) return null;
+  return candidate.teacherFocus ? { ...validated, teacherFocus: candidate.teacherFocus } : validated;
+}
+
 export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction): OrbyBoard | null {
+  if (action.operation === "append-block") {
+    if (board.version !== 2 || !board.layout || board.blocks.length >= 8
+      || board.layout.elements.length >= 12
+      || board.layout.elements.some((element) => element.id === action.elementId)
+      || action.sequence <= Math.max(0, ...board.layout.elements.map((element) => element.sequence))) return null;
+    const candidate: OrbyBoard = {
+      ...board,
+      blocks: [...board.blocks, action.block],
+      layout: {
+        ...board.layout,
+        elements: [...board.layout.elements, {
+          id: action.elementId,
+          sequence: action.sequence,
+          kind: "block",
+          index: board.blocks.length,
+          ...action.position,
+        }],
+      },
+    };
+    return validateUpdatedBoard(candidate);
+  }
+
+  if (action.operation === "append-strokes") {
+    if (!board.layout || !board.visuals || board.version !== 2) return null;
+    const target = board.layout.elements.find((element) =>
+      element.id === action.elementId && element.kind === "visual");
+    if (!target) return null;
+    const visual = board.visuals[target.index];
+    if (!visual || visual.type !== "sketch" || visual.strokes.length + action.strokes.length > 40) return null;
+    const existingIds = new Set(visual.strokes.map((stroke) => stroke.id));
+    if (action.strokes.some((stroke) => existingIds.has(stroke.id))) return null;
+    const candidate: OrbyBoard = {
+      ...board,
+      visuals: board.visuals.map((item, index) => index === target.index && item.type === "sketch"
+        ? { ...item, strokes: [...item.strokes, ...action.strokes] }
+        : item),
+    };
+    return validateUpdatedBoard(candidate);
+  }
+
   const visuals = board.visuals ?? [];
   const sketches = visuals.filter((visual) => visual.type === "sketch");
   if (sketches.length > 1) return null;

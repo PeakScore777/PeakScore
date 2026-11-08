@@ -632,3 +632,5 @@
 - Inventario estático al cierre de esta tanda: 257 tests nombrados, cero duplicados; no ejecutados.
 
 - El feedback con skill válida utiliza el prompt pedagógico completo para recibir la memoria previa y las rúbricas específicas, sin obligar a buscar documentos vectoriales.
+
+- El panel de progreso refresca las señales después del feedback de una habilidad, sin generar otra llamada de IA. Si la lectura falla, la respuesta se conserva y aparece un aviso no bloqueante.

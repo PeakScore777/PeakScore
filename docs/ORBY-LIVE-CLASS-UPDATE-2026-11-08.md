@@ -279,3 +279,46 @@ El cliente actual valida una frase/transcripción antes de reproducir audio Live
 
 No se tocó `main`, producción ni Supabase; no se ejecutaron migraciones ni se añadieron proveedores de pago.
 
+
+
+---
+
+## Rendimiento de voz y cuota gratuita — actualización (8 de noviembre de 2026)
+
+### Problema investigado
+Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos turnos y esperar demasiado. Había dos causas corregibles en el código:
+1. El inicio de Gemini Live trataba cualquier HTTP 429 o RESOURCE_EXHAUSTED como cuota diaria agotada y devolvía Retry-After de 3600 segundos. Google también usa 429 para límites temporales RPM/TPM; no es prueba suficiente de que se agotó el día.
+2. El respaldo TTS podía volver a intentar el mismo fragmento hasta 12 veces y aceptar esperas de Retry-After largas, acumulando minutos en una sola respuesta.
+
+### Correcciones implementadas
+- `lib/ai/orby-tts-errors.ts`: la clasificación separa `quota_exhausted`, `rate_limited` y error general. Un 429 o RESOURCE_EXHAUSTED ambiguo se clasifica como límite temporal. Solo los marcadores explícitos de cuota diaria o `QUOTA_EXCEEDED` se clasifican como cuota agotada. Cuando un mensaje indica explícitamente per-minute/RPM/TPM, esa dimensión tiene prioridad.
+- `app/api/orby/realtime-session/route.ts`: usa el error original de Google para conservar campos anidados y metadatos. Devuelve `GEMINI_LIVE_RATE_LIMITED` para throttling temporal con Retry-After corto limitado a 2–30 s; solo usa `GEMINI_FREE_QUOTA_EXCEEDED` y 3600 s cuando el clasificador ve agotamiento real de cuota diaria.
+- `components/aprender/LessonAITutor.tsx`: el watchdog de una respuesta Live muestra aviso tras 5 s y pasa la misma pregunta al respaldo tras 15 s de inactividad. Cada evento nuevo de transcripción/audio/herramienta vuelve a armar el watchdog, por lo que una clase que sigue avanzando no se corta por duración total.
+- `components/aprender/LessonAITutor.tsx`: el cliente solo reintenta una vez un throttling TTS si Retry-After es de 2 s o menos. Los límites más largos no bloquean el turno; deja el texto completo visible y permite continuar preguntando.
+- `app/api/orby/voice-speech/route.ts`: el tamaño máximo aceptado del fragmento TTS subió de 500 a 900 caracteres.
+- `components/aprender/LessonAITutor.tsx`: el fallback divide texto en fragmentos de hasta 880 caracteres (antes 480), reduciendo aproximadamente a la mitad las peticiones de audio en respuestas largas.
+- `app/api/orby/voice-speech/route.ts`: el fallback usa `gemini-3.8-flash-lite-tts`, modelo gratuito optimizado para bajo retardo y alto volumen de conversación, en lugar de la variante Flash de mayor fidelidad de estudio. La voz Live principal sigue siendo `gemini-3.8-live`.
+
+### Qué significa realmente "gratis durante el día"
+- Google mide Gemini API con RPM, TPM y RPD. Los límites dependen del modelo y del proyecto; no son por API key y todos los alumnos que usan el mismo proyecto comparten el presupuesto. El RPD se reinicia a medianoche del Pacífico. Google indica que los límites concretos deben consultarse en AI Studio y que no garantiza capacidad fija. El precio de la capa Free para Gemini 3.8 Live y TTS se muestra como gratuito; eso no significa uso ilimitado.
+- Cloudflare Workers AI permite 10.000 neuronas gratuitas al día por cuenta/proyecto de Workers AI; se comparten entre los modelos que utiliza PeakScore y se reinician a las 00:00 UTC. Si se supera el límite, las operaciones adicionales fallan. No se activa Workers Paid.
+- El plan gratuito de Claude en claude.ai es un límite de sesiones de usuario que se restablece cada cinco horas y varía según demanda. La API de Claude/Console se factura con créditos prepagados; no existe un cupo gratuito perpetuo de API que podamos integrar como fallback estable. No añadir Claude API como supuesto proveedor gratuito.
+- No se conoce desde este repositorio la cuota real restante del proyecto de Google ni las neuronas disponibles de Cloudflare. Revisar los dashboards oficiales antes de prometer una cantidad de horas o mensajes.
+
+### Presupuesto interno y límites existentes
+- Inicio de sesión Live: límite interno actual 6 intentos por usuario y ventana de 60 s. Se aplica a arranque/reconexión de sesión, no a cada pregunta dentro de una sesión activa.
+- TTS de respaldo: 20 solicitudes por usuario en 60 s; cada petición admite ahora hasta 900 caracteres.
+- Consulta Live de Orby Lab: máximo dos llamadas por turno, con una consulta ordinaria no bloqueante al iniciar un tema nuevo y una segunda excepcional solo si resuelve un prerrequisito/evidencia.
+- No se reduce la calidad de enseñanza para ahorrar una llamada ni se eliminan los filtros de idioma/alcance/seguridad. Se evita consultar web externa para definiciones y ejemplos rutinarios.
+
+### Validación
+- Archivo `tests/orby-request-filter.test.mjs`: 230 pruebas nombradas, 0 nombres duplicados y 0 pruebas vacías según inspección estática.
+- Se actualizaron regresiones para separar cuota diaria de RPM/TPM, proteger contra esperas TTS largas, mantener los fragmentos íntegros, y comprobar el límite de inactividad de Live.
+- Esto no equivale a una ejecución de tests. No se han certificado Node tests, TypeScript, ESLint, build ni Chrome/micrófono en esta sesión.
+- Vercel seguía mostrando fallo en las consultas anteriores; se debe revisar el motivo exacto del nuevo SHA. No marcar verde sin CI exitoso.
+
+### Siguiente P0
+1. Verificar en Google AI Studio > Rate limits los valores actuales de `gemini-3.8-live`, `gemini-3.8-flash-lite-tts` y `gemini-embedding-001` del proyecto conectado.
+2. Verificar el uso diario real de neuronas Cloudflare y separar qué porcentaje consume `@cf/google/gemma-4-26b-a4b-it` frente a embeddings/Whisper.
+3. En Chrome, ejecutar una conversación de al menos 20 turnos cortos y 5 explicaciones largas. Registrar first transcript/audio, primer tablero, errores 429, fallback, y p50/p95. Confirmar que nunca se queda en silencio ni bloquea tres minutos.
+4. Solo con datos de consumo reales decidir si conviene un segundo proveedor genuinamente gratuito. No integrar Anthropic API pagada ni activar servicios con cargo.

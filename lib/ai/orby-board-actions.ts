@@ -259,8 +259,8 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
     return validateUpdatedBoard(candidate);
   }
 
-  const visuals = board.visuals ?? [];
-  const sketches = visuals.filter((visual) => visual.type === "sketch");
+  const boardVisuals = board.visuals ?? [];
+  const sketches = boardVisuals.filter((visual) => visual.type === "sketch");
   if (sketches.length > 1) return null;
   const strokeIdCounts = new Map<string, number>();
   for (const visual of sketches) {

@@ -4267,6 +4267,47 @@ test("focus puede señalar un punto exacto de un trazo sin añadir ni modificar 
   }), null, "la acción debe comprobar el número de puntos del trazo real, no solo el máximo del schema");
 });
 
+test("clear-focus retira solo el señalador y conserva intactos bloques, tinta y layout", () => {
+  const board = {
+    version: 2,
+    title: "Célula",
+    blocks: [{ type: "heading", text: "Membrana celular" }, { type: "text", text: "Protege la célula." }],
+    visuals: [{
+      type: "sketch",
+      title: "Esquema",
+      strokes: [
+        { id: "outer", points: [{ x: 10, y: 10 }, { x: 80, y: 10 }, { x: 80, y: 80 }], tone: "ink", width: 1.2 },
+        { id: "inner", points: [{ x: 20, y: 20 }, { x: 60, y: 60 }], tone: "blue", width: 1.1 },
+      ],
+    }],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [
+        { id: "title", sequence: 1, kind: "block", index: 0, x: 4, y: 4, width: 35, height: 12 },
+        { id: "detail", sequence: 2, kind: "block", index: 1, x: 4, y: 20, width: 35, height: 14 },
+        { id: "sketch", sequence: 3, kind: "visual", index: 0, x: 40, y: 12, width: 55, height: 76 },
+      ],
+    },
+    teacherFocus: { strokeId: "outer", pointIndex: 1, label: "Mira la membrana", revision: 3 },
+  };
+  const action = boardActions.sanitizeOrbyBoardAction({
+    operation: "clear-focus",
+    turnGeneration: 7,
+  });
+  assert.deepEqual(action, { operation: "clear-focus", turnGeneration: 7 });
+  const cleared = boardActions.applyOrbyBoardAction(board, action);
+  assert.ok(cleared);
+  assert.equal(cleared.teacherFocus, undefined);
+  assert.deepEqual(cleared.blocks, board.blocks);
+  assert.deepEqual(cleared.visuals, board.visuals);
+  assert.deepEqual(cleared.layout, board.layout);
+  assert.equal(boardActions.sanitizeOrbyBoard(cleared) !== null, true);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({ operation: "clear-focus" }), null);
+  assert.equal(boardActions.sanitizeOrbyBoardAction({
+    operation: "clear-focus", turnGeneration: 7, strokeId: "outer",
+  }), null, "clear-focus no acepta un target: debe retirar solo el foco activo");
+});
+
 test("focus puede señalar una etapa espacial sin crear tinta y rechaza IDs que no existen", () => {
   const spatialBoard = {
     version: 2,
@@ -4595,7 +4636,10 @@ test("todas las operaciones de pizarra quedan ligadas a la generación activa", 
 test("Gemini Live y la directiva de clase exigen turnGeneration en cada acción docente", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"[\s\S]*?required: \["operation", "turnGeneration"\]/);
   assert.match(liveToolsSource, /EVERY operation must echo the exact turnGeneration/);
-  assert.match(realtimeSessionSource, /incluidas focus, erase y replace, debe incluir turnGeneration exactamente igual/);
+  assert.match(liveToolsSource, /enum: \\["focus", "clear-focus", "erase", "replace", "append-block", "append-strokes"\\]/);
+  assert.match(liveToolsSource, /clear-focus \\(remove only the temporary teacher spotlight/);
+
+  assert.match(realtimeSessionSource, /incluidas focus, clear-focus, erase y replace, debe incluir turnGeneration exactamente igual/);
   assert.match(lessonTutorSource, /createOrbyBoardActionSequenceState\(voiceActivityGenerationRef\.current\)/);
   assert.match(lessonTutorSource, /evaluateOrbyBoardActionSequence\(voiceBoardActionSequenceRef\.current, action, activityGeneration\)/);
   assert.match(lessonTutorSource, /turnGeneration: activityGeneration/);
@@ -4634,6 +4678,9 @@ test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la b
   assert.match(lessonTutorSource, /const boardActionCalls = activeCalls\.filter/);
   assert.match(lessonTutorSource, /handleOrbyLiveBoardActionTool\(\{ functionCalls: boardActionCalls \}\)/);
   assert.match(realtimeSessionSource, /OPERACIONES DE PIZARRA DEL PROFESOR/);
+  assert.match(realtimeSessionSource, /usa operation=clear-focus con solo turnGeneration actual/);
+  assert.match(lessonTutorSource, /Señalador retirado\\. Todo el contenido y la tinta permanecen intactos/);
+
 });
 
 test("el señalador contextual puede enfocar un trazo o una etapa espacial sin crear tinta", async () => {

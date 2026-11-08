@@ -4038,7 +4038,13 @@ test("guardar clase conserva bloques, formulas, apoyos visuales y resumen de ano
   assert.match(lessonTutorSource, /7900/);
 });
 
-test("las anotaciones de la pizarra se aíslan por ID de clase y no solo por título", () => {
+test("la pizarra y sus apuntes se vinculan al mensaje de clase por ID y no por título", () => {
+  assert.match(lessonTutorSource, /messages\.find\(\(message\) => message\.id === voiceAssistantMessageIdRef\.current && message\.role === "assistant"\)/);
+  assert.match(lessonTutorSource, /const board = activeVoiceAssistantMessage\?\.board/);
+  assert.match(lessonTutorSource, /id: String\(item\.id\)/);
+  assert.match(lessonTutorSource, /item\.teaching_board && typeof item\.teaching_board === "object"/);
+  assert.match(lessonTutorSource, /saveLearningItem\("note", board\.title/);
+  assert.doesNotMatch(lessonTutorSource, /messages\.find\([^\n]*board\.title/);
 });
 
 

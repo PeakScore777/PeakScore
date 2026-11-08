@@ -126,7 +126,7 @@ test("la búsqueda de Orby Lab no bloquea la conversación Live mientras recuper
   const boardHandlerStart = lessonTutorSource.indexOf("function handleOrbyLiveTeachingBoardTool");
   const boardHandlerEnd = lessonTutorSource.indexOf("async function handleOrbyLiveKnowledgeTool", boardHandlerStart);
   const boardHandler = lessonTutorSource.slice(boardHandlerStart, boardHandlerEnd);
-  assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 3,
+  assert.equal((boardHandler.match(/FunctionResponseScheduling\.SILENT/g) ?? []).length, 6,
     "las instantáneas visibles, provisionales y rechazadas responden en silencio sin disparar otra generación de voz");
   assert.doesNotMatch(boardHandler, /FunctionResponseScheduling\.(?:WHEN_IDLE|INTERRUPT)/);
 });
@@ -3653,11 +3653,11 @@ test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcrip
 
 test("El chat identifica la respuesta de voz activa y anuncia su texto incremental", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(source, /voiceAssistantMessageIdRef\\.current/);
+  assert.match(source, /voiceAssistantMessageIdRef\.current/);
   assert.match(source, /EN VIVO/);
-  assert.match(source, /aria-live=\\{message\\.role === "assistant" && voiceMode/);
-  assert.match(source, /activeVoiceAssistantMessage\\?\\.board/);
-  assert.match(source, /<OrbyBoard board=\\{activeVoiceAssistantMessage\\.board\\} drawingActive=\\{voiceBoardDrawingActive\\} \\/>/);
+  assert.match(source, /aria-live=\{message\.role === "assistant" && voiceMode/);
+  assert.match(source, /activeVoiceAssistantMessage\?\.board/);
+  assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
 });
 
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
@@ -3920,7 +3920,7 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(tools, /natural freehand pen strokes/);
   assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram"));
   assert.match(tools, /never wait for search completion before speaking/);
-  assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 1);
+  assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 2);
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /2–5 new strokes per update/);
   assert.match(route, /no lo vuelvas a trazar ni cambies su ID/);
@@ -4541,7 +4541,7 @@ test("tinta y lápiz comparten una línea temporal SVG que se pausa coordinadame
   assert.match(boardComponentSource, /const scheduledStrokeKeysRef = useRef\(new Set<string>\(\)\)/);
   assert.match(boardComponentSource, /const strokeEndTimesRef = useRef\(new Map<string, number>\(\)\)/);
   assert.ok(boardComponentSource.includes("const queuedStrokeEnds = [...strokeEndTimesRef.current.values()]"));
-  assert.ok(boardComponentSource.includes("let queueCursor = Math.max(now + 0.06, ...queuedStrokeEnds.map((endAt) => endAt + 0.11))"));
+  assert.ok(boardComponentSource.includes("let queueCursor = Math.max(now + 0.06, stageStartTime, ...queuedStrokeEnds.map((endAt) => endAt + 0.11))"));
   assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);
   assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
   assert.match(boardComponentSource, /<g opacity=\{0\} className="orby-board-pen-tip"/);
@@ -4863,7 +4863,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(liveToolsSource, /kind: \{ type: Type\.STRING, format: "enum", enum: \["block", "visual"\]/);
   assert.match(liveToolsSource, /minItems: "1"/);
   assert.match(liveToolsSource, /maxItems: "12"/);
-  assert.match(liveToolsSource, /sequence: \\{ type: Type\\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
+  assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
   assert.match(liveToolsSource, /pattern: "\^\[a-zA-Z0-9_-\]\+\$"/);
   assert.match(liveToolsSource, /Every block and visual must be referenced exactly once/);
   assert.match(realtimeSessionSource, /incluye layout con aspectRatio 16:9/);

@@ -358,14 +358,19 @@ export default function OmegaXEnglishStudio({ onStartRoleplay, onSendForFeedback
         setAudioUrl(URL.createObjectURL(audio));
         setRecording(false);
       };
-      startRef.current = performance.now();
+      recorder.onstart = () => {
+        // Start the clock only when MediaRecorder confirms that capture began.
+        // This avoids counting permission/setup time and keeps the clock read out
+        // of the component's render path.
+        startRef.current = performance.now();
+        timerRef.current = window.setInterval(() => {
+          const elapsed = Math.min(60, Math.floor((performance.now() - startRef.current) / 1000));
+          setSeconds(elapsed);
+          if (elapsed >= 60 && recorder.state !== "inactive") recorder.stop();
+        }, 250);
+      };
       recorder.start(500);
       setRecording(true);
-      timerRef.current = window.setInterval(() => {
-        const elapsed = Math.min(60, Math.floor((performance.now() - startRef.current) / 1000));
-        setSeconds(elapsed);
-        if (elapsed >= 60 && recorder.state !== "inactive") recorder.stop();
-      }, 250);
     } catch (cause) {
       streamRef.current?.getTracks().forEach((track) => track.stop());
       streamRef.current = null;

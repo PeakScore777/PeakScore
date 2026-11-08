@@ -31,8 +31,11 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  type: { type: Type.STRING, description: "Exact lowercase type: sketch | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process." },
+                  type: { type: Type.STRING, description: "Exact lowercase type: sketch | annotation | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process." },
                   title: { type: Type.STRING },
+                  mark: { type: Type.STRING, description: "For annotation: circle, underline, arrow or bracket." },
+                  tone: { type: Type.STRING, description: "For annotation: accent, success or muted." },
+                  label: { type: Type.STRING, description: "Optional concise annotation label." },
                   nodes: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: {
                     id: { type: Type.STRING }, label: { type: Type.STRING }, x: { type: Type.NUMBER }, y: { type: Type.NUMBER },
                   }, required: ["id", "label", "x", "y"] } },

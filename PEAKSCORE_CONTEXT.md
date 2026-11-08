@@ -467,5 +467,5 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 ## 2026-11-08 — Live subtitle contrast and assistant identity
 - Live captions on the white teaching stage now use readable slate/orange contrast.
 - The remaining user-facing workspace text for library ownership and Live resumption timeout uses `assistantLabel`, so OmegaX does not refer to itself as Orby; the specialized Orby identity still works when selected.
-- Regression coverage added. 237 named test blocks were counted statically with no duplicate titles; they have not been run.
+- Regression coverage added. 238 named test blocks were counted statically with no duplicate titles; they have not been run.
 - Current CI limitation: Vercel build-rate-limit; no GitHub Actions workflow run associated with the current HEAD. Do not claim runtime/build/test success.

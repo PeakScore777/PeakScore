@@ -3593,7 +3593,7 @@ test("El chat identifica la respuesta de voz activa y anuncia su texto increment
 
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(source, /voiceMode && workspaceMode === "voice"/);
+  assert.match(source, /workspace && workspaceMode === "voice"/);
   assert.match(source, /Hoja de clase/);
   assert.match(source, /activeVoiceAssistantMessage\?\.board/);
   assert.match(source, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
@@ -3930,7 +3930,7 @@ test("la clase de voz prioriza la hoja digital y mantiene controles accesibles",
   assert.match(lessonTutorSource, /orby-class-board mx-auto min-h-full w-full max-w-\[1600px\]/);
   assert.match(lessonTutorSource, /aria-label="Clase en vivo con Orby"/);
   assert.match(lessonTutorSource, /aria-label="Salir de la clase"/);
-  assert.match(boardComponentSource, /Apuntes de clase/);
+  assert.match(boardComponentSource, /Clase en vivo/);
   assert.match(boardComponentSource, /min-h-\[60vh\]/);
 });
 
@@ -3952,7 +3952,7 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.match(boardComponentSource, /PenLine/);
   assert.match(boardComponentSource, /MousePointer2/);
   assert.match(boardComponentSource, /Eraser/);
-  assert.match(boardComponentSource, /<Visual visual=\{visual\} \/>/);
+  assert.match(boardComponentSource, /<Visual visual=\{visual\}\/\>/);
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} \/>/);
 });
 
@@ -3963,9 +3963,9 @@ test("la hoja usa una superficie blanca lisa sin cuadrícula ni tarjetas decorat
 });
 
 test("la hoja de clase ofrece exportacion mediante impresion del navegador", () => {
-  assert.match(boardComponentSource, /Exportar \/ PDF/);
+  assert.match(boardComponentSource, /Exportar PDF/);
   assert.match(boardComponentSource, /window\.print\(\)/);
-  assert.match(boardComponentSource, /print:hidden/);
+  assert.match(boardComponentSource, /data-orby-no-print/);
 });
 
 test("la exportacion de la clase a PDF aísla la hoja y desactiva animaciones", () => {

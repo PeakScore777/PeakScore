@@ -3,6 +3,7 @@
 import Image from "next/image";
 import OrbyBoard from "@/components/aprender/OrbyBoard";
 import { sanitizeOrbyBoard, type OrbyBoard as OrbyBoardData } from "@/lib/ai/orby-board";
+import { applyOrbyBoardAction, sanitizeOrbyBoardAction } from "@/lib/ai/orby-board-actions";
 
 import { FormEvent, type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import type { FunctionResponseScheduling, Session } from "@google/genai";
@@ -2181,6 +2182,81 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
     }
   }
 
+  function handleOrbyLiveBoardActionTool(toolCall: unknown) {
+    const session = voiceChannelRef.current;
+    if (!session || !toolCall || typeof toolCall !== "object") return;
+    const sessionGeneration = voiceSessionGenerationRef.current;
+    const activityGeneration = voiceActivityGenerationRef.current;
+    const isCurrent = () => voiceChannelRef.current === session
+      && voiceSessionGenerationRef.current === sessionGeneration
+      && voiceActivityGenerationRef.current === activityGeneration;
+    const calls = (toolCall as { functionCalls?: unknown }).functionCalls;
+    if (!Array.isArray(calls)) return;
+    const responses: Array<{ id: string; name: string; response: Record<string, unknown>; scheduling: FunctionResponseScheduling }> = [];
+    let acceptedActionInEvent = false;
+    for (const raw of calls.slice(0, 3)) {
+      if (!raw || typeof raw !== "object") continue;
+      const call = raw as { id?: unknown; name?: unknown; args?: unknown };
+      if (call.name !== "apply_orby_board_action" || typeof call.id !== "string" || !call.id) continue;
+      let args: unknown = call.args;
+      if (typeof args === "string") {
+        try { args = JSON.parse(args); } catch { args = null; }
+      }
+      const action = sanitizeOrbyBoardAction(args);
+      const currentBoard = voiceTeachingBoardRef.current;
+      const activeAcademicTurn = voicePendingStudentTurnRef.current
+        && Boolean(voiceUserTextRef.current.trim())
+        && voiceInputPreflightAcceptedRef.current
+        && voiceInputPolicyRef.current === null
+        && !voicePreflightReplyRef.current
+        && !isOrbyGreetingRequest(voiceUserTextRef.current)
+        && !getOrbySubjectSelectionLabel(voiceUserTextRef.current)
+        && !voiceResponseDoneRef.current
+        && !voiceDiscardStaleLiveOutputRef.current
+        && !voiceBargeInPendingRef.current;
+      const allowed = action && currentBoard && activeAcademicTurn
+        && !acceptedActionInEvent
+        && voiceBoardUpdateCountRef.current < MAX_ORBY_LIVE_BOARD_UPDATES_PER_TURN;
+      if (!allowed) {
+        const reason = !action ? "La operación de pizarra no pasó la validación."
+          : !currentBoard ? "Todavía no existe una pizarra activa."
+            : !activeAcademicTurn ? "No hay una pregunta académica validada para modificar la pizarra."
+              : acceptedActionInEvent ? "Envía una sola operación de pizarra por evento."
+                : "Se alcanzó el límite de ocho operaciones visuales de este turno.";
+        responses.push({ id: call.id, name: "apply_orby_board_action",
+          response: { accepted: false, status: "rejected", retryable: false, reason },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
+        continue;
+      }
+      const updatedBoard = applyOrbyBoardAction(currentBoard, action);
+      if (!updatedBoard) {
+        responses.push({ id: call.id, name: "apply_orby_board_action",
+          response: { accepted: false, status: "rejected", retryable: false, reason: "El ID indicado no existe en la tinta visible." },
+          scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
+        continue;
+      }
+      if (!isCurrent()) return;
+      acceptedActionInEvent = true;
+      voiceBoardUpdateCountRef.current += 1;
+      publishOrbyTeachingBoardSnapshot(updatedBoard);
+      responses.push({ id: call.id, name: "apply_orby_board_action",
+        response: { accepted: true, status: "applied", retryable: false,
+          guidance: action.operation === "focus" ? "Elemento señalado. Continúa explicándolo sin redibujarlo."
+            : action.operation === "erase" ? "Trazos seleccionados eliminados. Continúa la explicación."
+              : "Trazo corregido conservando su ID. Continúa la explicación." },
+        scheduling: voiceSdkRef.current!.FunctionResponseScheduling.SILENT });
+    }
+    if (!isCurrent() || !responses.length) return;
+    try {
+      (session as unknown as { sendToolResponse: (payload: { functionResponses: typeof responses }) => void })
+        .sendToolResponse({ functionResponses: responses });
+    } catch (error) {
+      console.error("[Orby Voice] Board action response failed.", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
+    }
+  }
+
   async function handleOrbyLiveKnowledgeTool(toolCall: unknown) {
     const session = voiceChannelRef.current;
     if (!session || !toolCall || typeof toolCall !== "object") return;
@@ -3515,8 +3591,10 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
             const activeCalls = liveCalls.filter((call) => !!call && typeof call === "object"
               && !cancelledIds.includes((call as { id?: unknown }).id as string));
             const boardCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "render_orby_teaching_board");
-            const knowledgeCalls = activeCalls.filter((call) => (call as { name?: unknown }).name !== "render_orby_teaching_board");
+            const boardActionCalls = activeCalls.filter((call) => (call as { name?: unknown }).name === "apply_orby_board_action");
+            const knowledgeCalls = activeCalls.filter((call) => !["render_orby_teaching_board", "apply_orby_board_action"].includes(String((call as { name?: unknown }).name)));
             if (boardCalls.length) void handleOrbyLiveTeachingBoardTool({ functionCalls: boardCalls });
+            if (boardActionCalls.length) void handleOrbyLiveBoardActionTool({ functionCalls: boardActionCalls });
             if (knowledgeCalls.length) void handleOrbyLiveKnowledgeTool({ functionCalls: knowledgeCalls });
           }
 

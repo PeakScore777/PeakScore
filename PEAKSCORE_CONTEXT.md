@@ -525,3 +525,5 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Commits de esta tanda: `777b66a` (reduce motion), `e9174ae` (derivaciones por etapas), `d501f01` (regresiones), `7e77325` (especificación).
 - Validación: ningún test runner, TypeScript, ESLint ni build fue ejecutado para estos commits. El Vercel build-rate-limit visto en el historial es un límite del servicio, no una validación del nuevo HEAD. Chrome/micrófono y preferencia OS siguen pendientes.
 - Se mantiene `feat/founder-intro`; no se tocó `main`, Supabase remoto, proveedores ni despliegue.
+
+- **Corrección adicional del perfil SMIL:** la versión inicial del easing declaraba cuatro keyTimes pese a que el trazo solo tiene los extremos implícitos. Se corrigió a un único intervalo válido `0;1`; `animateMotion` declara explícitamente `keyPoints="0;1"`. La spline se adapta dentro del intervalo sin inventar keyframes. Prueba ajustada para verificar la cardinalidad y el mismo perfil en tinta y lápiz. Commits: `3c18f41`, `f18ade7`, `d7cb8da`.

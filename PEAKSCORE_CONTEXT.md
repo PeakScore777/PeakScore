@@ -631,3 +631,15 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Pendiente: ejecutar suite/TypeScript/ESLint/build y QA Chrome en los cinco modos. La reproducción de listening es TTS del navegador, no una grabación de acento nativo; no hay todavía progreso longitudinal por habilidad.
 
 - Robustez UX: el selector de nivel queda desactivado mientras existe una respuesta de texto sin guardar o una grabación pendiente; la tarjeta ya activa se desactiva para no reiniciar accidentalmente el ejercicio. El cambio de nivel detiene el TTS y reinicia el estado de listening.
+
+
+## 2026-11-08 — memoria de aprendizaje por destreza de English Studio
+- El callback de feedback transmite el modo exacto a `sendMessage` y a `/api/lesson-tutor`: speaking, pronunciation, listening, reading o writing. El modo también viaja dentro de la cola de mensajes si la carga de historial retrasa el turno.
+- El endpoint normaliza la destreza con allowlist y solo la acepta para OmegaX. Los mensajes de feedback con skill válido admiten hasta 7.000 caracteres para no truncar texto/pregunta/respuesta; el resto mantiene 1.200.
+- Las señales se guardan en la tabla existente `orby_student_learning_signals`, con `subject = Inglés` y prefijo de tema `English Studio · <Skill> · <topic>`. No hubo migración ni cambio de columnas.
+- El retrieval de feedback fuerza recuperación de aprendizaje, filtra por usuario, Inglés y la destreza exacta; la próxima práctica de esa misma destreza puede usar confusiones y teaching_hint anteriores. No mezcla señales entre habilidades.
+- Se conserva el umbral de confianza >= 0.8, concepto no vacío y estado permitido. No hay puntaje automático ni certificación CEFR.
+- El panel Progreso incluye tarjetas separadas para Speaking, Pronunciation, Listening, Reading y Writing; muestra recuentos de observaciones y proporción de estados guardados, aclarando que no es porcentaje de dominio.
+- Estado Supabase comprobado: la tabla existe, RLS habilitado, 0 filas y 0 políticas en pg_policies. El endpoint GET usa supabaseAdmin con filtro explícito por user_id autenticado; no dar acceso directo desde navegador.
+- Los roleplays Live no generan señales automáticamente aún: la señal se crea cuando el alumno envía una práctica desde English Studio para feedback.
+- Suite, TypeScript, ESLint, build y QA de navegador siguen pendientes; Vercel reporta build-rate-limit.

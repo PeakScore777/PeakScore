@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { enqueueNextPendingOrbyKnowledgeDocument } from "@/lib/ai/orby-knowledge-queue";
 import { processNextOrbyKnowledgeJob } from "@/lib/ai/orby-knowledge-worker";
 import { resumeOrbyJobsWaitingForEmbeddingProvider } from "@/lib/ai/orby-knowledge-queue";
+import { isGeminiFreeTierConfigured, isCloudflareWorkersAIFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -65,9 +66,7 @@ export async function POST(request: Request) {
     // Reopen provider-waiting jobs only when credentials exist; never enqueue
     // new embedding work while all free embedding providers are unconfigured.
     const resumed = await resumeOrbyJobsWaitingForEmbeddingProvider();
-    const hasEmbeddingProvider = Boolean(process.env.GEMINI_API_KEY?.trim()) || Boolean(
-      /^[a-f0-9]{32}$/i.test(process.env.CLOUDFLARE_ACCOUNT_ID?.trim() ?? "") && process.env.CLOUDFLARE_API_TOKEN?.trim()
-    );
+    const hasEmbeddingProvider = isGeminiFreeTierConfigured() || isCloudflareWorkersAIFreeTierConfigured();
     const queued = hasEmbeddingProvider
       ? await enqueueNextPendingOrbyKnowledgeDocument()
       : false;

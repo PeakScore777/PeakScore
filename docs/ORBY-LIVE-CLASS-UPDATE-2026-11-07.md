@@ -552,3 +552,24 @@ Estado de CI consultado para `0bf0a55`: Vercel permanece en fallo por límite de
 - Pruebas añadidas para dificultades, fortalezas, misconceptions repetidas, registros inválidos y ausencia de evidencia.
 - Pendiente ejecutar Node tests, TypeScript, ESLint, build y pruebas Live integrales.
 - No se reconstruye Orby ICFES Lab eliminado intencionalmente. Sin servicios de pago, sin cambios a `main` y sin despliegue.
+
+
+## Mutación — directiva docente adaptativa a partir del diagnóstico
+
+### Implementado
+- Se agregó `buildIcfesAdaptiveTeachingDirective()`, que transforma el diagnóstico estructurado en acciones concretas para la sesión: comprobación inicial, reenseñanza focalizada, uso de fortalezas, revisión de misconceptions y reto/práctica guiada.
+- La ruta Live valida y acota los campos del diagnóstico antes de generar la directiva; los datos históricos no se insertan como instrucciones libres.
+- La directiva exige verificar el desempeño actual y permite que la evidencia nueva contradiga el historial.
+- Si no existen señales fiables, no se genera una directiva adaptativa ni se inventa un diagnóstico.
+- Se añadieron pruebas para acciones docentes y ausencia de señales.
+
+### Archivos
+- `lib/ai/orby-scope.ts`
+- `app/api/orby/realtime-session/route.ts`
+- `tests/orby-request-filter.test.mjs`
+- `docs/ORBY-LIVE-CLASS-UPDATE-2026-11-07.md`
+
+### QA
+- Validación estática posterior a los cambios pendiente.
+- Ejecución de tests, TypeScript, ESLint, build y QA funcional pendiente; Vercel mantiene `build-rate-limit`.
+- Sin cambios a `main`, sin dependencias ni APIs de pago. No se reconstruye el contenido del Lab eliminado intencionalmente.

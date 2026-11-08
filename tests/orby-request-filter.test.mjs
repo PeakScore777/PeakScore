@@ -3911,6 +3911,24 @@ test("las etapas acumulativas conservan su identidad y no reinician animaciones 
   assert.doesNotMatch(boardComponentSource, /key=\{\x60\$\{visual\.type\}:\$\{visual\.title\}/);
 });
 
+test("la pizarra respeta reduce motion y conserva el contenido dibujado completo", async () => {
+  const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
+  assert.match(renderer, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board-sketch-stroke[\s\S]*?stroke-dasharray: none !important/);
+  assert.match(renderer, /data-orby-sketch-endpoint="true"/);
+  assert.match(renderer, /data-orby-sketch-label/);
+  assert.match(renderer, /orby-board-pen-tip \{ display: none !important; \}/);
+  assert.match(renderer, /svg animate, \.orby-board svg animateMotion/);
+});
+
+test("Live solicita derivaciones matemáticas y científicas línea por línea", async () => {
+  const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
+  assert.match(route, /DERIVACIONES VISIBLES/);
+  assert.match(route, /UNA sola línea o transformación por cada evento append-block/);
+  assert.match(route, /alineando los signos igual/);
+  assert.match(route, /No adelantes el resultado final/);
+  assert.match(route, /Comprueba cálculos y unidades/);
+});
+
 test("el renderizador dibuja trazos en SVG y respeta movimiento reducido", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");

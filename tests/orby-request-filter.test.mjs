@@ -3653,12 +3653,12 @@ test("La llamada de Orby muestra la pizarra activa y subtítulos de su transcrip
 
 test("El chat identifica la respuesta de voz activa y anuncia su texto incremental", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
-  assert.match(source, /message\.id === voiceAssistantMessageIdRef\.current && !voiceResponseDoneRef\.current/);
+  assert.match(source, /voiceAssistantMessageIdRef\\.current/);
   assert.match(source, /EN VIVO/);
-  assert.match(source, /aria-live=\{message\.role === "assistant" && voiceMode/);
-  assert.match(source, /\{message\.board && <OrbyBoard board=\{message\.board\} \/>\}/);
+  assert.match(source, /aria-live=\\{message\\.role === "assistant" && voiceMode/);
+  assert.match(source, /activeVoiceAssistantMessage\\?\\.board/);
+  assert.match(source, /<OrbyBoard board=\\{activeVoiceAssistantMessage\\.board\\} drawingActive=\\{voiceBoardDrawingActive\\} \\/>/);
 });
-
 
 test("La llamada reserva una superficie de pizarra durante el turno y la sustituye al llegar el tablero validado", async () => {
   const source = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");

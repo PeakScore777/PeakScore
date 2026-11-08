@@ -544,3 +544,5 @@
 - Recuento estático del archivo de regresiones: 245 pruebas con nombre, sin nombres duplicados. **No ejecutadas** para este HEAD.
 - Commits: `4b5254a`, `156159a`, `056d33a`, `480164b`, `da3a3a8`.
 - La rama continúa divergente de `main`; no se hizo merge/rebase. Vercel devuelve `build-rate-limit`; no equivale a un resultado de build. Sin proveedores pagados ni despliegue.
+
+- Fórmulas de pizarra Live y fallback restringidas a notación matemática legible en texto plano; no usar comandos LaTeX, HTML ni Markdown complejo en bloques `formula`/`step`. Regresiones de contrato añadidas. Commits: `36a3587`, `4f34a50`, `9625453`.

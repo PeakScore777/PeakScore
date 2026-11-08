@@ -3817,19 +3817,21 @@ test("el contrato de trazos exige etiquetas posicionadas y una frase hablada rea
   assert.equal(sanitizeOrbyBoard(punctuationCue), null);
 });
 
-test("el renderizador mueve un lápiz sobre trazos SVG y respeta movimiento reducido", async () => {
+test("el renderizador dibuja trazos en SVG y respeta movimiento reducido", async () => {
   const renderer = await readFile(new URL("../components/aprender/OrbyBoard.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const sanitizer = await readFile(new URL("../lib/ai/orby-board.ts", import.meta.url), "utf8");
   assert.match(renderer, /function smoothSketchPath/);
-  assert.match(renderer, /import \{ getOrbySketchStrokeTiming, type OrbyBoard as OrbyBoardData, type OrbyBoardVisual \} from "@\/lib\/ai\/orby-board"/);
+  assert.match(renderer, /type OrbySketchStroke/);
   assert.match(renderer, /orby-board-sketch-stroke/);
-  assert.match(renderer, /<animateMotion path=\{path\}/);
-  assert.match(renderer, /dur=\{\x60\$\{duration\}ms\x60\}/);
-  assert.match(renderer, /stroke\.points\.map/);
-  assert.match(renderer, /getOrbySketchStrokeTiming\(index, stroke\.points\)/);
-  assert.match(sanitizer, /delay: Math\.min\(safeIndex \* 260, 1_300\)/);
-  assert.match(renderer, /animationDelay: `\$\{delay\}ms`, animationDuration: `\$\{duration\}ms`/);
+  assert.match(renderer, /getOrbySketchStrokeTiming\(0, stroke\.points\)/);
+  assert.match(renderer, /strokeDasharray: 1, strokeDashoffset: 1/);
+  assert.match(renderer, /attributeName="stroke-dashoffset"/);
+  assert.match(renderer, /attributeName="opacity" from="0" to="1"/);
+  assert.match(renderer, /svg\.pauseAnimations\(\)/);
+  assert.match(renderer, /svg\.unpauseAnimations\(\)/);
+  assert.match(sanitizer, /delay: Math\.min\(safeIndex \* 70, 350\)/);
+  assert.match(sanitizer, /pathLength \* 14/);
   assert.match(styles, /orby-board-sketch-stroke[\s\S]*?stroke-dashoffset: 1/);
   assert.match(styles, /orby-board-pen-tip \{ display: none !important; \}/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?orby-board \.orby-board-sketch-stroke[\s\S]*?animation: none !important/);
@@ -3973,12 +3975,12 @@ test("la pizarra de la clase es exclusiva de Orby y no acepta tinta del estudian
   assert.doesNotMatch(boardComponentSource, /StudentStroke|Mis trazos|Capa de escritura personal|setPointerCapture|function eraseAt/);
   assert.doesNotMatch(boardComponentSource, /Lápiz|Resaltador|Borrador|Deshacer|Rehacer/);
   assert.doesNotMatch(boardComponentSource, /localStorage|storageId/);
-  assert.match(boardComponentSource, /Clase en vivo/);
+  assert.match(boardComponentSource, /orby-board-handwriting/);
   assert.doesNotMatch(boardComponentSource, /Herramientas de Orby|Dibujar|Señalar|Borrar/);
   assert.match(boardComponentSource, /data-orby-teacher-pointer=\{stroke\.id\}/);
   assert.match(boardComponentSource, /animateMotion path=\{path\}/);
-  assert.match(boardComponentSource, /getOrbySketchStrokeTiming\(index, stroke\.points\.length\)/);
-  assert.match(boardComponentSource, /<Visual visual=\{visual\}\/\>/);
+  assert.match(boardComponentSource, /getOrbySketchStrokeTiming\(0, stroke\.points\)/);
+  assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\}\/\>/);
   assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
 });
 
@@ -4109,14 +4111,18 @@ test("la pizarra detiene SMIL, lápiz y animación del trazo al interrumpir la c
 });
 
 
-test("el lápiz y la tinta comparten temporización lineal para permanecer sincronizados", () => {
-  assert.match(boardComponentSource, /animationTimingFunction: "linear"/);
-  assert.match(boardComponentSource, /animationDuration: `\$\{duration\}ms`/);
-  assert.match(boardComponentSource, /<animateMotion path=\{path\} dur=\{\x60\$\{duration\}ms\x60\} begin=\{\x60\$\{delay\}ms\x60\}/);
-  assert.match(boardComponentSource, /pathLength=\{1\}/);
-  assert.match(boardComponentSource, /animationDelay: `\$\{delay\}ms`/);
+test("tinta y lápiz comparten una línea temporal SVG que se pausa coordinadamente", () => {
+  assert.match(boardComponentSource, /animation: "none", strokeDasharray: 1, strokeDashoffset: 1/);
+  assert.match(boardComponentSource, /<animate[\s\S]*?attributeName="stroke-dashoffset"/);
+  assert.match(boardComponentSource, /<animateMotion path=\{path\} dur=\{\x60\$\{duration\}s\x60\} begin=\{animationReady \? \x60\$\{beginTime\}s\x60\} : "indefinite"\}/);
+  assert.match(boardComponentSource, /const scheduledStrokeKeysRef = useRef\(new Set<string>\(\)\)/);
+  assert.match(boardComponentSource, /const strokeEndTimesRef = useRef\(new Map<string, number>\(\)\)/);
+  assert.match(boardComponentSource, /let queueCursor = Math\.max\(now, \.\.\.strokeEndTimesRef\.current\.values\(\)\)/);
+  assert.match(boardComponentSource, /svg\.pauseAnimations\(\)/);
+  assert.match(boardComponentSource, /svg\.unpauseAnimations\(\)/);
+  assert.match(boardComponentSource, /<g opacity=\{0\} className="orby-board-pen-tip"/);
+  assert.match(boardComponentSource, /getOrbySketchStrokeTiming\(0, stroke\.points\)/);
 });
-
 
 test("la temporización heredada sigue estable para compatibilidad", () => {
   assert.deepEqual(boardModule.getOrbySketchStrokeTiming(0, 2), { delay: 0, duration: 760 });

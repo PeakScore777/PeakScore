@@ -4546,8 +4546,15 @@ test("el layout espacial rechaza índices repetidos, etapas desordenadas y eleme
   assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
     base.layout.elements[0], { ...base.layout.elements[1], sequence: 1 },
   ] } }), null);
-  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+  assert.ok(accept({ ...base, layout: { ...base.layout, elements: [
     base.layout.elements[0], { ...base.layout.elements[1], sequence: 3 },
+  ] } }));
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    { ...base.layout.elements[0], sequence: 3 },
+    { ...base.layout.elements[1], sequence: 2 },
+  ] } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    base.layout.elements[0], { ...base.layout.elements[1], sequence: 1_001 },
   ] } }), null);
   assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
     base.layout.elements[0], { ...base.layout.elements[1], index: 1 },
@@ -4599,6 +4606,7 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(liveToolsSource, /kind: \{ type: Type\.STRING, format: "enum", enum: \["block", "visual"\]/);
   assert.match(liveToolsSource, /minItems: "1"/);
   assert.match(liveToolsSource, /maxItems: "12"/);
+  assert.match(liveToolsSource, /sequence: \\{ type: Type\\.NUMBER, format: "int32", minimum: 1, maximum: 1000/);
   assert.match(liveToolsSource, /pattern: "\^\[a-zA-Z0-9_-\]\+\$"/);
   assert.match(liveToolsSource, /Every block and visual must be referenced exactly once/);
   assert.match(realtimeSessionSource, /incluye layout con aspectRatio 16:9/);

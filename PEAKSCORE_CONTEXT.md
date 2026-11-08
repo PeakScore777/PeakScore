@@ -450,3 +450,11 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Cloudflare Workers AI — asignación de 10.000 neuronas gratis al día y reinicio UTC: https://developers.cloudflare.com/workers-ai/platform/pricing/
 - Anthropic — facturación de la API de Claude mediante créditos prepagados: https://support.claude.com/es/articles/8977456-como-pago-mi-uso-de-la-api-de-claude
 - Anthropic — límites variables del plan gratuito de Claude.ai y reinicio de cinco horas: https://support.claude.com/es/articles/8114491-comienza-con-claude
+
+## 2026-11-08 — OmegaX English Studio
+- Vista nueva de English Studio dentro del workspace general OmegaX: speaking de 60 segundos, repetición guiada con frase modelo y roleplays cotidianos ajustados a nivel A1–C1.
+- La captura de audio requiere consentimiento explícito, máximo 60 segundos/8 MB y se procesa solo tras pulsar transcribir mediante la ruta ya existente de Cloudflare Workers AI gratuita. No se añaden APIs/proveedores ni fallbacks pagados.
+- El feedback se remite al chat existente de OmegaX; se puede guardar solo la transcripción como recurso personal.
+- Pronunciation practice informa solo coincidencia aproximada de palabras ASR. No simula una puntuación fonética, acento ni entonación.
+- Documentación: docs/ORBY-LIVE-CLASS-UPDATE-2026-11-08.md. Prueba estática específica añadida a tests/orby-request-filter.test.mjs.
+- Pendiente: ejecutar Node tests, TypeScript, ESLint, build y QA real de micrófono/navegador. No tocar main, producción ni Supabase remoto.

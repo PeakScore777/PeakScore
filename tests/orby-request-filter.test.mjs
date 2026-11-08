@@ -4,9 +4,28 @@ import { readFile } from "node:fs/promises";
 import { runInNewContext } from "node:vm";
 import ts from "typescript";
 
-async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = {}) {
-  let source = await readFile(new URL(relativePath, import.meta.url), "utf8");
-  if (stripServerOnly) source = source.replace(/^import\s+["']server-only["'];?\s*/m, "");
+const compiledTestModuleUrls = new Map();
+
+async function compileTypeScriptModuleUrl(relativePath, { stripServerOnly = false } = {}) {
+  const absoluteUrl = new URL(relativePath, import.meta.url);
+  const cacheKey = absoluteUrl.href + (stripServerOnly ? "|server-only" : "");
+  const cached = compiledTestModuleUrls.get(cacheKey);
+  if (cached) return cached;
+
+  let source = await readFile(absoluteUrl, "utf8");
+  if (stripServerOnly) source = source.replace(/^import\\s+["']server-only["'];?\\s*/m, "");
+
+  // Resolve the app's @/ aliases before putting a module in a data: URL.
+  // Node cannot resolve Next.js aliases from data modules, but the Orby
+  // board-action tests must execute the real board sanitizer dependency.
+  const aliasSpecifiers = [...source.matchAll(/from\\s+(["'])(@\\/[^"']+)\\1/g)]
+    .map((match) => ({ full: match[0], specifier: match[2] }));
+  for (const alias of aliasSpecifiers) {
+    const dependencyPath = "../" + alias.specifier.slice(2) + ".ts";
+    const dependencyUrl = await compileTypeScriptModuleUrl(dependencyPath, { stripServerOnly: true });
+    source = source.replace(alias.full, "from " + JSON.stringify(dependencyUrl));
+  }
+
   const compiled = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.ESNext,
@@ -14,7 +33,13 @@ async function loadTypeScriptModule(relativePath, { stripServerOnly = false } = 
     },
   }).outputText;
   const encoded = Buffer.from(compiled, "utf8").toString("base64");
-  return import("data:text/javascript;base64," + encoded);
+  const dataUrl = "data:text/javascript;base64," + encoded;
+  compiledTestModuleUrls.set(cacheKey, dataUrl);
+  return dataUrl;
+}
+
+async function loadTypeScriptModule(relativePath, options = {}) {
+  return import(await compileTypeScriptModuleUrl(relativePath, options));
 }
 
 const boardModule = await loadTypeScriptModule("../lib/ai/orby-board.ts");

@@ -566,3 +566,5 @@ CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1
 - `learningSkill` activa `shouldRetrieveStudentSignals`, no `shouldRetrieveAcademicKnowledge`. La memoria personal de la habilidad se recupera sin provocar una consulta vectorial o conceptual en el Lab. Solo un motivo académico independiente activa la recuperación documental.
 - Si esa recuperación académica independiente coincide con un modo English Studio, el filtro de materia se fija a Inglés.
 - Inventario de `tests/orby-request-filter.test.mjs`: 257 pruebas nombradas y cero duplicados. El archivo no se ha ejecutado en CI/local; Vercel sigue en `build-rate-limit`.
+
+- El selector de prompt utiliza el prompt pedagógico completo para feedback con `learningSkill`, que incluye memoria personal y las reglas específicas de la materia, mientras mantiene desactivada la recuperación documental salvo que su detector independiente la solicite.

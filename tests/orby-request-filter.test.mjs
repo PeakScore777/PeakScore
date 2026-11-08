@@ -646,6 +646,8 @@ test("el fallback de voz no guarda en lesson-tutor antes de reproducir y conserv
   assert.match(lessonTutorSource, /await persistRealtimeTurnIfReady\(\)/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/realtime-turn"/);
   assert.match(cloudflareTutorRoute, /voiceModeRequest/);
+  assert.match(lessonTutorSource, /setVoiceStatus\("Voz alternativa en espera"\)[\s\S]*?setVoiceError\(caught instanceof Error[\s\S]*?setIsListening\(false\)/);
+  assert.match(lessonTutorSource, /\{voiceError && <p role="alert"/);
 });
 
 test("la voz distingue eco, interrupciones deliberadas y respuestas repetidas en turnos distintos", () => {

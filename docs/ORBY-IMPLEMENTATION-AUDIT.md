@@ -462,3 +462,12 @@ La ruta conserva el objeto de error completo para inspeccionar campos anidados. 
 - La compilación reveló un cierre prematuro de template literal en el CSS JSX del workspace claro. Se movió el cierre hasta después de las últimas reglas de tema claro; el build posterior pasó.
 - Esto certifica los checks automatizados del SHA, no el comportamiento de voz con micrófono físico, cuotas reales del proyecto, la sesión Live en Chrome ni QA visual manual.
 - Se mantiene el trabajo exclusivamente en `feat/founder-intro`; `main` no se modificó.
+
+## English Studio — roleplay por voz y aislamiento de idioma (2026-11-08)
+
+- La vista English Studio ahora inicia/reutiliza la llamada Live de OmegaX desde el CTA de roleplay y envía el escenario como primer mensaje. Una sesión Live general se renueva antes de cambiar el idioma de la sesión.
+- `englishPracticeMode` viaja en la creación de sesión y reanudación Live, pero el servidor lo acepta únicamente con `assistantName === "OmegaX"`. La excepción de inglés nunca se activa para Orby.
+- Los roleplays hablan inglés natural y corrigen brevemente en español colombiano; las explicaciones de gramática pueden darse en español. El fallback gratuito por turnos también recibe el flag limitado.
+- Se mantiene la validación de programación, cocina, temas dañinos, privacidad, promoción externa y prompt injection. El filtro de respuesta inglesa se omite únicamente durante una sesión English Studio autorizada.
+- GitHub Actions run 42519666204: 240/240 tests, TypeScript, ESLint, dependency audit y `next build` aprobados. https://github.com/PeakScore777/PeakScore/actions/runs/42519666204
+- Pendiente de validación fuera de CI: Chrome con micrófono real, inglés hablado con ASR real, cortes/interrupciones, salida audible del fallback y cuotas reales. No declarar fidelidad fonética ni pronunciación evaluada.

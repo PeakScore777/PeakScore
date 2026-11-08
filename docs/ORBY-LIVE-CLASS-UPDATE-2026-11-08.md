@@ -466,3 +466,38 @@ Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos tur
 5. Si aparece HTTP 503 en el fallback, capturar únicamente el campo `code` y el mensaje JSON de esa respuesta junto con la línea correspondiente del terminal servidor; nunca compartir API keys ni variables secretas.
 
 **Alcance de esta tanda:** voz y continuidad de turnos solamente. No se cambiaron CSS, colores, texto de la pizarra ni renderer visual. No se tocó `main`, despliegues, migraciones o datos remotos.
+
+
+---
+
+## Última prueba del usuario — 2026-11-08 (video 16:54)
+
+**Estado real:** Orby continúa sin cumplir la experiencia solicitada. El usuario informa que no habla y no dibuja. La CI aprobada no se debe presentar como arreglo funcional.
+
+### Lo que se ve en `20261108-1654-50.8443353.mp4` (67,27 s)
+- 12 s aprox.: Chrome solicita permiso del micrófono para localhost:3000.
+- 24 s aprox.: el estado pasa a «TE ESTÁ ESCUCHANDO».
+- 42 s aprox.: consola muestra el warning genérico de token efímero experimental, `Startup stage timings` y `First response transcript timing`.
+- 42–60 s: aparece una transcripción/saludo en los subtítulos. Esto prueba que llegó texto de salida, pero NO que el navegador reprodujo voz.
+- Del comienzo al final: el lienzo central no recibe ni muestra dibujos; permanece en «Preparando la pizarra de la clase…».
+- Esta grabación no muestra el cuerpo de un 503. El 503 previo de `/api/lesson-tutor` sigue registrado como incidente anterior, no como fallo confirmado en este último ensayo.
+- El usuario confirma que no escucha la voz; esta revisión visual no permite verificar la salida acústica de forma independiente.
+
+### Comparación con la referencia `1000189532.mp4`
+El tablero deseado se parece a una hoja digital real: blanco amplio, limpio, manuscrito natural, trazos que aparecen progresivamente, flechas y esquemas sencillos. Tinta negra como base, azul para conceptos y rojo para énfasis; explicación oral/subtítulos en banda inferior discreta. No es un dashboard de tarjetas ni una pizarra vacía con un gran placeholder.
+
+### Siguiente trabajo (orden estricto)
+1. Auditar y corregir la cadena de salida acústica Live: evento de audio → chunks PCM → validación → AudioContext/programación → reproducción real. El log de transcripción por sí solo no sirve como criterio.
+2. Auditar y corregir la cadena del tablero: llamada de herramienta → ejecución → respuesta de herramienta → sanitización/estado → render. Agregar logs/mediciones no sensibles por etapa para localizar el primer corte.
+3. Probar en Chrome con una respuesta audible real y al menos una escena de tablero dibujada progresivamente.
+4. Solo después implementar el diseño aprobado a partir de la referencia de video.
+
+### Evidencia / límites
+- No atribuir el silencio al warning genérico del SDK sin revisar chunks y reproducción.
+- No atribuir el 503 a Cloudflare o Supabase sin cuerpo JSON y log del servidor.
+- No considerar «Connected», «Te está escuchando» ni una transcripción de saludo como prueba de voz audible.
+- No considerar CI/build verde como prueba de tablero real.
+- No volver a cambiar el diseño a ciegas ni mezclar reparación funcional con rediseño.
+
+**Diseño:** el usuario pidió primero una imagen del resultado visual del tablero para decidirlo antes de tocar código. Mantener el aspecto manuscrito y de hoja blanca del video de referencia, no el dashboard futurista/tarjetas.
+**Cambios en código para esta entrada:** ninguno. Solo continuidad y registro de fallos, sin cambios en `main`, despliegues, Supabase remoto o secretos.

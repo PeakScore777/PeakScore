@@ -1238,3 +1238,11 @@ El contrato `apply_orby_board_action`, su schema Live, el prompt de clase y el r
 - La secuencia espacial ahora es **estrictamente creciente**, no necesariamente consecutiva, con rango 1–1000. Esto permite eliminar una etapa sin renumerar las que sobreviven.
 - Al ejecutar \`erase\`, si se elimina el último trazo de la visual sketch, la visual vacía se retira del arreglo y se quita su elemento de layout. Los índices de visuales posteriores se desplazan, pero sus IDs, coordenadas y sequence se conservan. La prueba vuelve a sanitizar el resultado para verificar que el layout sigue siendo válido.
 - Suite declarada tras estas regresiones: **222 tests**, sin nombres duplicados ni pruebas vacías en inspección estática. Sigue sin equivaler a tests ejecutados/aprobados.
+
+### Build de verificación — corrección de sintaxis en regresión espacial
+
+- Vercel ejecutó \`npm run build\` para el SHA \`07b6e153c3e16f8616042f4baa2b759d74b8a255\`. La ejecución se detuvo al cargar \`tests/orby-request-filter.test.mjs\`, antes de ejecutar los tests: \`SyntaxError: Invalid or unexpected token\` en la línea 4587.
+- Causa raíz: la declaración del test espacial contenía los caracteres literales \`\\n\` después de \`() => {\`, en lugar de un salto de línea real.
+- Corregido en el commit \`aa90b02e56ecdf03c8f765642bf69f9b69298e76\`.
+- Se inspeccionó el archivo corregido: 222 declaraciones \`test()\`, sin nombres duplicados ni pruebas vacías; la declaración espacial ya usa un salto de línea real.
+- Tras el fix, Vercel vuelve a informar \`build-rate-limit\`; no hay deployment asociado al SHA corregido en la lista disponible. Por tanto, **el test runner aún no volvió a ejecutarse y el build permanece sin certificar**.

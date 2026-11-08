@@ -434,3 +434,35 @@ Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos tur
 - Build de Next.js: aprobado.
 - `npm audit`: 0 vulnerabilidades.
 - La corrección del lector que normaliza finales de línea queda validada en CI. Para validar el mismo cambio en el equipo Windows, actualizar la rama local y volver a correr `npm run test:orby`.
+
+
+---
+
+## 2026-11-08 — prioridad: recuperar voz antes de retocar la pizarra
+
+### Evidencia del video del estudiante (16:31)
+- Duración aproximada: 75,8 s; Chrome en `localhost:3000`.
+- Se ve el prompt del navegador solicitando permiso del micrófono; después la clase sigue sin transcripción ni reproducción.
+- La interfaz cae a «Voz alternativa en espera».
+- DevTools muestra el warning de `@google/genai@2.17.1`: los tokens efímeros Live requieren `v1alpha`, aunque el cliente estaba utilizando `v1beta`.
+- DevTools también registra HTTP 503 en `/api/lesson-tutor`. No se ve el cuerpo JSON de esa respuesta y no hay evidencia suficiente para asignar el status 503 a Cloudflare, Supabase u otra causa específica.
+
+### Cambios de recuperación
+- `app/api/orby/realtime-session/route.ts`: token efímero se crea usando `v1alpha`.
+- `components/aprender/LessonAITutor.tsx`: cliente Live inicial y reconexión usan `v1alpha`.
+- `app/api/lesson-tutor/route.ts`: las peticiones `voiceMode` ya no persisten antes de la reproducción. La persistencia idempotente se deja al endpoint de voz `/api/orby/realtime-turn` al completar el audio; la persistencia normal del chat escrito no cambia.
+- Se añadieron/actualizaron regresiones para versión de SDK, reanudación y persistencia del fallback.
+
+### Resultado CI — SHA `a67b78d937c864a5bab616b2149b37be432a4194`
+- Workflow `42501757928`: success.
+- 233/233 pruebas Orby, TypeScript, ESLint y build de Next.js aprobados.
+- Auditoría npm: 0 vulnerabilidades.
+
+### Siguiente puerta de aceptación
+1. Actualizar la rama local y volver a iniciar Next.js después de terminar el Fast Refresh.
+2. Conceder explícitamente el permiso del micrófono a `localhost:3000`; sin ese permiso, el navegador no puede enviar audio.
+3. Confirmar en consola que ya no aparece el warning de token efímero `v1alpha` ni el cambio inmediato al modo por turnos.
+4. Confirmar una pregunta real, transcripción entrante, primer audio de Orby y respuesta oral.
+5. Si aparece HTTP 503 en el fallback, capturar únicamente el campo `code` y el mensaje JSON de esa respuesta junto con la línea correspondiente del terminal servidor; nunca compartir API keys ni variables secretas.
+
+**Alcance de esta tanda:** voz y continuidad de turnos solamente. No se cambiaron CSS, colores, texto de la pizarra ni renderer visual. No se tocó `main`, despliegues, migraciones o datos remotos.

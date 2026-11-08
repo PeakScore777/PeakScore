@@ -5050,3 +5050,10 @@ test("OmegaX English Studio reuses the existing free transcription route and own
   assert.match(learningRoute, /\.eq\("user_id", user\.id\)/);
   assert.doesNotMatch(englishStudio, /https?:\/\/|openai|anthropic|elevenlabs/i);
 });
+
+test("live subtitle words keep readable contrast on the light teaching stage", async () => {
+  const tutorComponent = await readFile(new URL("../components/aprender/LessonAITutor.tsx", import.meta.url), "utf8");
+  assert.match(tutorComponent, /rounded bg-orange-100 px-0\.5 font-bold text-orange-950 underline decoration-orange-600/);
+  assert.match(tutorComponent, /: "font-medium text-slate-800"/);
+  assert.doesNotMatch(tutorComponent, /: "text-slate-100"/);
+});

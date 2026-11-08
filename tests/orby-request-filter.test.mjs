@@ -260,7 +260,7 @@ test("el cliente conserva el mismo turno Live mientras espera la respuesta WHEN_
 
 test("una respuesta Live lenta muestra aviso temprano y recupera el turno sin esperar minutos", () => {
   assert.ok(lessonTutorSource.includes("Every transcript/audio/tool event rearms this inactivity timer."));
-  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText(voiceChannelRef.current ?"));
+  assert.ok(lessonTutorSource.includes("fallbackVoiceTurnToText(voiceChannelRef.current"));
   assert.ok(lessonTutorSource.includes("}, 15_000);"));
   assert.ok(lessonTutorSource.includes("}, 5_000);"));
   assert.match(lessonTutorSource, /Gemini Live dejó de enviar avances/);
@@ -1742,8 +1742,8 @@ test("la sesión Live conecta sin esperar a la búsqueda de toda la biblioteca",
   assert.match(realtimeSessionSource, /pregunta académica nueva y sustantiva/);
   assert.match(realtimeSessionSource, /Si no se recupera material publicado/);
   assert.match(realtimeSessionSource, /import \{ ORBY_LIVE_KNOWLEDGE_TOOLS \}/);
-  assert.match(liveToolsSource, /MUST call this tool for each new substantive academic question/);
-  assert.match(liveToolsSource, /never wait for search completion before the first spoken sentence/);
+  assert.match(liveToolsSource, /MUST call this tool once for each new substantive Saber 11 academic question/);
+  assert.match(liveToolsSource, /never wait for search completion before speaking/);
   assert.match(lessonTutorSource, /fetch\("\/api\/orby\/knowledge-search"/);
   assert.match(lessonTutorSource, /const query = toolQuery\.slice\(0, 2000\)/);
   assert.doesNotMatch(lessonTutorSource, /const currentTranscript = voiceUserTextRef\.current/);
@@ -1813,7 +1813,7 @@ test("Gemini Live cancela búsquedas de conocimiento obsoletas y restaura el tem
 
 test("el token efímero autoriza en servidor la reanudación y compresión solicitadas por el navegador", async () => {
   const route = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
-  assert.match(route, /liveConnectConstraints:[\\s\\S]*?config:[\\s\\S]*?sessionResumption:\\s*\\{\\}/);
+  assert.match(route, /liveConnectConstraints:[\s\S]*?config:[\s\S]*?sessionResumption:\s*\{\}/);
   assert.match(route, /contextWindowCompression:\\s*\\{\\s*slidingWindow:\\s*\\{\\}\\s*\\}/);
 });
 
@@ -2653,7 +2653,7 @@ test("las respuestas TTS largas conservan el texto completo y no omiten fragment
   assert.ok(lessonTutorSource.includes("chunkRetryCount < 4"));
   assert.ok(lessonTutorSource.includes("splitOrbySpeechIntoChunks(clean, 880)"));
   assert.ok(lessonTutorSource.includes("rateLimitWaitCount < 1"));
-  assert.ok(lessonTutorSource.includes("Never stack minute-long retries"));
+  assert.ok(lessonTutorSource.includes("A rolling-window throttle is not a daily quota. Never stack minute-long"));
   assert.ok(lessonTutorSource.includes("La lectura se pausó en una frase"));
   assert.ok(!lessonTutorSource.includes("skippedAudioChunks"));
   assert.ok(lessonTutorSource.includes("Math.min(900_000,"));
@@ -3117,7 +3117,8 @@ test("la pizarra de Orby valida escenas acotadas y nunca acepta marcado o códig
   assert.match(boardComponentSource, /aria-label=\{"Pizarra: " \+ board\.title\}/);
   assert.doesNotMatch(boardComponentSource, /dangerouslySetInnerHTML/);
   assert.match(cloudflareTutorRoute, /sanitizeOrbyBoard\(parsed\.board\)/);
-  assert.match(lessonTutorSource, /message\.board && <OrbyBoard board=\{message\.board\} \/>/);
+  assert.match(lessonTutorSource, /activeVoiceAssistantMessage\?\.board/);
+  assert.match(lessonTutorSource, /<OrbyBoard board=\{activeVoiceAssistantMessage\.board\} drawingActive=\{voiceBoardDrawingActive\} \/>/);
 });
 
 test("la pizarra se guarda de forma atómica y se recupera en el historial", async () => {
@@ -3261,7 +3262,7 @@ test("El renderizador y la herramienta Live ofrecen primitivas de química y cir
   assert.match(tools, /bonds:/);
   assert.match(tools, /components:/);
   assert.match(tools, /connections:/);
-  assert.ok(tools.includes("Exact lowercase type: sketch | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process"),
+  assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram | graph | vectors | table | timeline | molecule | circuit | cell | dna | punnett | cell-division | organ-system | neuron | physiology-process"),
     "Gemini Live debe conocer todos los tipos visuales que acepta el sanitizador, incluido sketch");
   assert.match(tools, /Coordinate ranges: diagram nodes 5–95; vector origin 10–90/,
     "las instrucciones de coordenadas deben coincidir con la validación del tablero");
@@ -3916,9 +3917,9 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(route, /no retrases la primera frase oral/);
   assert.match(route, /2–5 trazos NUEVOS por snapshot/);
   assert.match(route, /secuencia de snapshots acumulativos/);
-  assert.match(tools, /Freehand sketch strokes/);
+  assert.match(tools, /natural freehand pen strokes/);
   assert.ok(tools.includes("Exact lowercase type: sketch | annotation | diagram"));
-  assert.match(tools, /never wait for search completion before the first spoken sentence/);
+  assert.match(tools, /never wait for search completion before speaking/);
   assert.equal((tools.match(/strokes: \{ type: Type\.ARRAY/g) ?? []).length, 1);
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /2–5 new strokes per update/);
@@ -4491,7 +4492,7 @@ test("el preflight de snapshots y el staging de acciones usan guardas distintas"
 
 test("Gemini Live conoce las operaciones teacher-only y las enruta fuera de la búsqueda académica", () => {
   assert.match(liveToolsSource, /name: "apply_orby_board_action"/);
-  assert.match(liveToolsSource, /Exact operation: focus, erase or replace/);
+  assert.match(liveToolsSource, /Exact operation: focus, erase, replace, append-block or append-strokes/);
   assert.match(liveToolsSource, /elementId: \{ type: Type\.STRING, description: "Existing layout element ID for focus only/);
   assert.match(realtimeSessionSource, /elementId para señalar un bloque\/visual del layout espacial/);
   assert.match(liveToolsSource, /Replacement geometry for the existing stroke[\s\S]*?ink \(black\), blue, red, accent, muted or success/);
@@ -4845,11 +4846,12 @@ test("el renderer y Gemini comparten el contrato del lienzo espacial", async () 
   assert.match(boardComponentSource, /function renderBoardBlock/);
   assert.match(boardComponentSource, /const stageDelay = Math\.min\(\(element\.sequence - 1\) \* 135, 945\)/);
   assert.match(boardComponentSource, /startDelayMs\?: number/);
-  assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\} startDelayMs=\{stageDelay\} \/>/);
+  assert.match(boardComponentSource, /<Visual visual=\{visual\} board=\{board\} drawingActive=\{drawingActive\} startDelayMs=\{stageDelay\}\s*\/>/);
   assert.match(boardComponentSource, /scheduledStrokeKeysRef\.current\.size === 0[\s\S]*?Math\.max\(0, startDelayMs\)/);
 
   assert.match(boardStyles, /\.orby-board-canvas \{[\s\S]*?aspect-ratio: 16 \/ 9/);
-  assert.match(boardStyles, /background-image: radial-gradient\(rgba\(100, 116, 139, \.22\)/);
+  assert.match(boardStyles, /\.orby-board-canvas\s*\{[\s\S]*?background-image:\s*none/);
+  assert.doesNotMatch(boardStyles.match(/\.orby-board-canvas\s*\{[^}]*\}/s)?.[0] ?? "", /radial-gradient|repeating-linear-gradient/);
   assert.match(boardStyles, /data-orby-layout-kind="block"\][\s\S]*?overflow: hidden/);
   assert.match(boardComponentSource, /data-orby-layout-sequence=\{element\.sequence\}/);
   assert.match(boardComponentSource, /data-orby-layout-kind=\{element\.kind\}/);

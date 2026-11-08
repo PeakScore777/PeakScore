@@ -1289,14 +1289,18 @@ No uses bloques Markdown ni texto fuera del JSON.
       }, { status: 429, headers: { "Retry-After": "30" } });
     }
     if (error instanceof CloudflareWorkersAIError) {
-      const configurationFailure = error.code === "NOT_CONFIGURED"
+      const freeTierNotConfirmed = error.code === "FREE_TIER_NOT_CONFIRMED";
+      const configurationFailure = freeTierNotConfirmed
+        || error.code === "NOT_CONFIGURED"
         || error.code === "ACCOUNT_ID_INVALID"
         || error.code === "API_TOKEN_MISSING";
       const authenticationFailure = error.code === "AUTH_FAILED";
       const connectionFailure = error.code === "CONNECTION_FAILED";
-      const configurationMessage = error.code === "ACCOUNT_ID_INVALID"
-        ? "El identificador de Cloudflare no tiene el formato esperado. Comprueba CLOUDFLARE_ACCOUNT_ID: debe ser el ID de cuenta de 32 caracteres, no el ID de zona."
-        : error.code === "API_TOKEN_MISSING"
+      const configurationMessage = freeTierNotConfirmed
+        ? "El plan gratuito de Cloudflare Workers AI no está confirmado en el servidor. No se ha enviado ninguna solicitud al proveedor. Verifica la cuenta y activa PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED solo si permanece en Workers Free."
+        : error.code === "ACCOUNT_ID_INVALID"
+          ? "El identificador de Cloudflare no tiene el formato esperado. Comprueba CLOUDFLARE_ACCOUNT_ID: debe ser el ID de cuenta de 32 caracteres, no el ID de zona."
+          : error.code === "API_TOKEN_MISSING"
           ? "Falta CLOUDFLARE_API_TOKEN en el entorno del servidor. Añádelo y reinicia el servidor."
           : "El motor académico gratuito de Orby no está configurado en este entorno. Comprueba CLOUDFLARE_ACCOUNT_ID y CLOUDFLARE_API_TOKEN en el servidor.";
       console.error("[Orby Tutor] Cloudflare tutor request failed.", {

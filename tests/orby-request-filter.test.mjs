@@ -4007,6 +4007,7 @@ test("las acciones del profesor validan focus, borrado selectivo y reemplazo con
   assert.deepEqual(focus, { operation: "focus", strokeId: "outer", label: "Membrana" });
   const focused = boardActions.applyOrbyBoardAction(board, focus);
   assert.equal(focused.teacherFocus.strokeId, "outer");
+  assert.equal(focused.teacherFocus.revision, 1);
   assert.equal(focused.visuals[0].strokes.length, 2);
 
   const erase = boardActions.sanitizeOrbyBoardAction({ operation: "erase", strokeIds: ["inner"] });
@@ -4023,6 +4024,7 @@ test("las acciones del profesor validan focus, borrado selectivo y reemplazo con
   assert.equal(replaced.visuals[0].strokes[0].id, "outer");
   assert.equal(replaced.visuals[0].strokes[0].points[0].x, 12);
   assert.equal(replaced.teacherFocus.strokeId, "outer");
+  assert.equal(replaced.teacherFocus.revision, 1);
 });
 
 test("las acciones del profesor rechazan IDs inexistentes, coordenadas inválidas y borrados sin selección", () => {

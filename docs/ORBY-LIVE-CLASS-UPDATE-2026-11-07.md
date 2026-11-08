@@ -400,6 +400,21 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 
 
 ### Corrección de integración de interrupción confirmada
+
+Commits de esta mutación:
+- `477d7f1` — contrato inicial de pausa/reanudación en la pizarra.
+- `5f69e6f` — conexión al estado de voz.
+- `079aff7` — regresiones iniciales.
+- `dd2fd92` — documentación de pausa inmediata.
+- `fb2fd0e` — controlador SMIL del SVG.
+- `86e5c20` — propagación del estado a los esquemas.
+- `c43e8ef` — aserciones de pausa.
+- `e9059bc` — conservar montado el lápiz para reanudar desde su posición.
+- `791b2b9` — prueba del lápiz persistente.
+- `a9b471c` — documentación del estado persistente.
+- `fb6691f` — pausa en el punto común de interrupción confirmada.
+- `77d46e2` — prueba del punto de interrupción.
+- `5720714` — actualización final de continuidad.
 - La pausa se conectó también directamente a `interruptCurrentVoiceOutput()`, el punto común que detiene la salida cuando el detector acepta una interrupción real por transcripción interim o final.
 - Esto cubre el caso de barge-in significativo mientras Orby está reproduciendo audio, además del evento de actividad de micrófono sin salida activa.
 - La rama de eco acústico continúa sin invocar la interrupción.

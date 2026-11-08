@@ -476,3 +476,12 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Tests añadidos para intersección, borde adyacente y motivo de rechazo útil.
 - Protección limitada a acciones incrementales nuevas; no se invalida el historial espacial v2 existente.
 - Sigue pendiente ejecutar test runner, TypeScript, ESLint, build y QA real de Chrome/micrófono.
+
+## 2026-11-08 — resultado validado del bloque tutor/pizarra
+- En `feat/founder-intro`, `append-block` rechaza intersecciones espaciales con bloques y visuales existentes; el contacto exacto de bordes se permite. La herramienta Live devuelve una causa espacial clara.
+- El prompt Live ahora diferencia intención/contexto de palabras sueltas; «sí», «no», «moda», «cocina» o «Python» no provocan rechazo automático.
+- La identidad seleccionada gobierna textos y directivas de voz: OmegaX para asistente general, Orby para Ciencias Naturales. Se conserva la dirección de voz femenina suave, natural y con pronunciación colombiana ligera compartida.
+- Se corrigió el cierre prematuro del `<style jsx global>` en `LessonAITutor.tsx`; el CSS del workspace claro vuelve a permanecer dentro del template literal.
+- GitHub Actions SHA `69eebdcdacf94dd0403b1e7d01ab8e3f7d3135c9`: 239/239 tests, TypeScript, ESLint, audit y Next production build en verde. Run: https://github.com/PeakScore777/PeakScore/actions/runs/42519075898
+- Pendiente de validar manualmente: audio/voz Gemini Live real, interrupciones con micrófono físico, render y lápiz de pizarra en Chrome, responsive y permisos/cuotas reales. El build automatizado no certifica estas pruebas.
+- `main` permanece intacta; continuar desde `feat/founder-intro`.

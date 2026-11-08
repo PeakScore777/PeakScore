@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
 import type { OrbyBoard as OrbyBoardData, OrbyBoardVisual } from "@/lib/ai/orby-board";
 
 const colors = {
@@ -64,7 +64,7 @@ function Sketch({ visual, focus }: { visual: Extract<OrbyBoardVisual, { type: "s
     delay: Math.min(index * 260, 1_300),
   }));
   return (
-    <svg viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto min-h-[440px] w-full overflow-visible sm:min-h-[560px]">
+    <svg ref={svgRef} data-orby-drawing-active={drawingActive ? "true" : "false"} viewBox="0 0 100 100" role="img" aria-label={visual.title || "Dibujo a mano alzada"} className="h-auto min-h-[440px] w-full overflow-visible sm:min-h-[560px]">
       {visual.strokes.map((stroke, index) => {
         const color = palette[stroke.tone];
         const path = smoothSketchPath(stroke.points);
@@ -83,15 +83,15 @@ function Sketch({ visual, focus }: { visual: Extract<OrbyBoardVisual, { type: "s
             strokeWidth={stroke.width}
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{ animationDelay: `${delay}ms`, animationDuration: `${duration}ms` }}
+            style={{ animationDelay: `${delay}ms`, animationDuration: `${duration}ms`, animationPlayState: drawingActive ? "running" : "paused" }}
           />
-          <g className="orby-board-pen-tip" data-orby-teacher-pointer={stroke.id} aria-hidden="true">
+          {drawingActive ? <g className="orby-board-pen-tip" data-orby-teacher-pointer={stroke.id} aria-hidden="true">
             <path d="M -5.2 -1.25 L 2.8 -1.25 L 5.2 0 L 2.8 1.25 L -5.2 1.25 Z" fill="#f59e0b" stroke="#78350f" strokeWidth="0.42" strokeLinejoin="round"/>
             <path d="M -2.8 -1.1 L -2.8 1.1 M -3.8 -1.1 L -3.8 1.1" stroke="#78350f" strokeWidth="0.25"/>
             <path d="M 4.2 -0.72 L 5.2 0 L 4.2 0.72 Z" fill="#f8fafc" stroke="#78350f" strokeWidth="0.25"/>
             <animateMotion path={path} dur={`${duration}ms`} begin={`${delay}ms`} rotate="auto" fill="freeze"/>
             <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.03;0.82;1" dur={`${duration}ms`} begin={`${delay}ms`} fill="freeze"/>
-          </g>
+          </g> : null}
           {stroke.label && stroke.labelX !== undefined && stroke.labelY !== undefined
             ? <text
                 x={stroke.labelX}
@@ -380,9 +380,9 @@ function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type
   );
 }
 
-function Visual({ visual, board }: { visual: OrbyBoardVisual; board: OrbyBoardData }) {
+function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean }) {
   if (visual.type === "diagram") return <Diagram visual={visual}/>;
-  if (visual.type === "sketch") return <Sketch visual={visual} focus={board.teacherFocus}/>;
+  if (visual.type === "sketch") return <Sketch visual={visual} focus={board.teacherFocus} drawingActive={drawingActive}/>;
   if (visual.type === "graph") return <Graph visual={visual}/>;
   if (visual.type === "vectors") return <Vectors visual={visual}/>;
   if (visual.type === "molecule") return <Molecule visual={visual}/>;
@@ -419,7 +419,7 @@ function Visual({ visual, board }: { visual: OrbyBoardVisual; board: OrbyBoardDa
   );
 }
 
-export default function OrbyBoard({ board }: { board: OrbyBoardData }) {
+export default function OrbyBoard({ board, drawingActive = true }: { board: OrbyBoardData; drawingActive?: boolean }) {
   return (
     <>
       <style>{"@media print {@page { size: A4; margin: 12mm; } html, body { background: #fff !important; } body * { visibility: hidden !important; } .orby-board, .orby-board * { visibility: visible !important; } .orby-board { position: absolute !important; inset: 0 auto auto 0 !important; width: 100% !important; max-width: none !important; min-height: 0 !important; overflow: visible !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: #fff !important; } .orby-board [data-orby-no-print], .orby-board .orby-board-toolbar { display: none !important; } .orby-board > header { position: static !important; background: #fff !important; } .orby-board > div { position: static !important; max-width: none !important; padding: 8mm 0 !important; } .orby-board section { break-inside: avoid; box-shadow: none !important; } .orby-board svg { overflow: visible !important; } .orby-board .orby-board-appear, .orby-board .orby-board-sketch-stroke { animation: none !important; opacity: 1 !important; } .orby-board .orby-board-pen-tip, .orby-board [data-orby-teacher-focus] { display: none !important; }} @media (prefers-reduced-motion: reduce) { .orby-board [data-orby-teacher-focus] animate { display: none; } }"} </style>

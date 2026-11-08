@@ -108,7 +108,7 @@ export type OrbyBoard = {
 
 const MAX_BLOCKS = 8;
 const MAX_VISUALS = 4;
-const MAX_SKETCH_STROKES = 32;
+const MAX_SKETCH_STROKES = 40;
 const MAX_TEXT = 240;
 const MAX_BOARD_BYTES = 18_000;
 

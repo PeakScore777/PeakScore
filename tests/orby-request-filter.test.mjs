@@ -5620,6 +5620,12 @@ test("provider gates require an explicit no-charge account confirmation", () => 
   assert.equal(providerFreeTier.isGeminiFreeTierConfigured(keyOnlyGemini), false);
   assert.equal(providerFreeTier.isGeminiFreeTierConfigured({
     ...keyOnlyGemini, PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
+  }), false, "billing tier confirmation alone must not approve Free Tier data use");
+  assert.equal(providerFreeTier.isGeminiDataUseApproved({ PEAKSCORE_GEMINI_DATA_USE_APPROVED: "false" }), false);
+  assert.equal(providerFreeTier.isGeminiFreeTierConfigured({
+    ...keyOnlyGemini,
+    PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
+    PEAKSCORE_GEMINI_DATA_USE_APPROVED: "true",
   }), true);
   assert.equal(providerFreeTier.isGeminiFreeTierConfigured({
     PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED: "true",
@@ -5681,6 +5687,7 @@ test("direct inference and router fallback paths fail closed without free-tier a
   assert.ok(tts.includes("if (!isGeminiFreeTierConfigured())"));
   for (const flag of [
     "PEAKSCORE_GEMINI_FREE_TIER_CONFIRMED=false",
+    "PEAKSCORE_GEMINI_DATA_USE_APPROVED=false",
     "PEAKSCORE_GROQ_FREE_TIER_CONFIRMED=false",
     "PEAKSCORE_LLM7_FREE_TIER_CONFIRMED=false",
     "PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=false",

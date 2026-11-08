@@ -359,11 +359,9 @@ export async function POST(request: Request) {
     const message = typeof typed.message === "string"
       ? typed.message.replace(/AIza[0-9A-Za-z_-]{20,}/g, "[redacted]").slice(0, 280)
       : "UnknownError";
-    const failureKind = classifyGeminiProviderFailure({
-      status: typed.status,
-      code: typed.code,
-      message,
-    });
+    // Preserve nested Google error details and retry metadata so a transient
+    // RESOURCE_EXHAUSTED/RPM response is not mistaken for a daily quota lockout.
+    const failureKind = classifyGeminiProviderFailure(error);
     const exhaustedFreeQuota = failureKind === "quota_exhausted";
     const rateLimited = failureKind === "rate_limited";
     const retryAfterHeader = error && typeof error === "object" && "headers" in error

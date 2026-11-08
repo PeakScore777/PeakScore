@@ -3908,6 +3908,13 @@ test("la llamada de Orby prioriza la pizarra como una clase en vivo y conserva s
 });
 
 
+test("la hoja revela bloques y apoyos visuales en etapas pedagógicas acumulativas", () => {
+  assert.match(boardComponentSource, /data-board-stage=\{index \+ 1\}/);
+  assert.match(boardComponentSource, /Math\.min\(index \* 110, 770\)/);
+  assert.match(boardComponentSource, /data-board-visual-stage=\{board\.blocks\.length \+ index \+ 1\}/);
+  assert.match(boardComponentSource, /Math\.min\(\(board\.blocks\.length \+ index\) \* 110, 1_100\)/);
+});
+
 test("la pizarra conserva tinta acumulada y solo anima trazos nuevos", () => {
   assert.match(boardComponentSource, /key=\{`\$\{stroke\.id\}:/);
   assert.match(boardComponentSource, /orby-board-sketch-stroke/);

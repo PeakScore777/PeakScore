@@ -5656,6 +5656,13 @@ test("direct inference and router fallback paths fail closed without free-tier a
   const live = await readFile(new URL("../app/api/orby/realtime-session/route.ts", import.meta.url), "utf8");
   const tts = await readFile(new URL("../app/api/orby/voice-speech/route.ts", import.meta.url), "utf8");
   const envExample = await readFile(new URL("../.env.example", import.meta.url), "utf8");
+  const geminiFiles = await readFile(new URL("../lib/ai/orby-gemini-file.ts", import.meta.url), "utf8");
+  const neuralSpeech = await readFile(new URL("../lib/ai/orby-neural-speech.ts", import.meta.url), "utf8");
+  const worker = await readFile(new URL("../lib/ai/orby-knowledge-queue.ts", import.meta.url), "utf8");
+  const cron = await readFile(new URL("../app/api/cron/orby-knowledge/route.ts", import.meta.url), "utf8");
+  const manualWorker = await readFile(new URL("../app/api/admin/orby/knowledge/automation/run/route.ts", import.meta.url), "utf8");
+  const adminAutomation = await readFile(new URL("../app/api/admin/orby/knowledge/automation/route.ts", import.meta.url), "utf8");
+  const openaiClient = await readFile(new URL("../lib/ai/openai.ts", import.meta.url), "utf8");
 
   assert.ok(router.includes("isGeminiFreeTierConfigured()"));
   assert.ok(router.includes("isGroqFreeTierConfigured()"));
@@ -5678,4 +5685,14 @@ test("direct inference and router fallback paths fail closed without free-tier a
     "PEAKSCORE_LLM7_FREE_TIER_CONFIRMED=false",
     "PEAKSCORE_CLOUDFLARE_FREE_TIER_CONFIRMED=false",
   ]) assert.ok(envExample.includes(flag), flag + " defaults closed");
+  assert.ok(geminiFiles.includes("isGeminiFreeTierConfigured()"));
+  assert.ok(neuralSpeech.includes("isGeminiFreeTierConfigured()"));
+  assert.ok(worker.includes("isGeminiFreeTierConfigured()"));
+  assert.ok(worker.includes("isCloudflareWorkersAIFreeTierConfigured()"));
+  assert.ok(cron.includes("isGeminiFreeTierConfigured()"));
+  assert.ok(manualWorker.includes("isGeminiFreeTierConfigured()"));
+  assert.ok(adminAutomation.includes("isGeminiFreeTierConfigured()"));
+  assert.ok(openaiClient.includes("OPENAI_PROVIDER_DISABLED"));
+  assert.doesNotMatch(openaiClient, /new OpenAI\\(/);
+  assert.doesNotMatch(router, /LLM7_BASE_URL/);
 });

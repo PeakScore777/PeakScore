@@ -2383,21 +2383,32 @@ test("los rechazos de política usan Gemini Live y solo liberan el texto autoriz
   assert.match(lessonTutorSource, /requestLivePolicyReply\(voiceUserTextRef\.current, voicePreflightReplyRef\.current, false\)/);
 });
 
-test("Orby distingue cuota agotada, rate limit temporal y error general en Gemini Live y TTS", () => {
+test("Orby distingue cuota diaria de Gemini, rate limit temporal y error general", () => {
   assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, message: "Too many requests" }), "rate_limited");
-  assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, code: "RESOURCE_EXHAUSTED" }), "quota_exhausted");
+  assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, code: "RESOURCE_EXHAUSTED", message: "Too many requests; retry after 10 seconds" }), "rate_limited");
+  assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 429, code: "RESOURCE_EXHAUSTED", message: "Quota exceeded for free tier requests per day" }), "quota_exhausted");
   assert.equal(ttsErrors.classifyGeminiTtsFailure({ status: 503, message: "temporary provider failure" }), "provider_error");
 
   assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, message: "Too many requests" }), "rate_limited");
   assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, code: "RATE_LIMITED" }), "rate_limited");
-  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, message: "Quota exceeded for free tier" }), "quota_exhausted");
-  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, code: "RESOURCE_EXHAUSTED" }), "quota_exhausted");
+  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, code: "RESOURCE_EXHAUSTED", message: "Quota exceeded for quota metric requests per minute" }), "rate_limited");
+  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, message: "Quota exceeded for free tier requests per day" }), "quota_exhausted");
+  assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 429, code: "RESOURCE_EXHAUSTED" }), "rate_limited");
   assert.equal(ttsErrors.classifyGeminiProviderFailure({ status: 503, message: "temporary provider failure" }), "provider_error");
+
+  assert.match(realtimeSessionSource, /classifyGeminiProviderFailure\(/);
+  assert.match(realtimeSessionSource, /const exhaustedFreeQuota = failureKind === "quota_exhausted"/);
+  assert.match(realtimeSessionSource, /const rateLimited = failureKind === "rate_limited"/);
+  assert.match(realtimeSessionSource, /GEMINI_LIVE_RATE_LIMITED/);
+  assert.match(realtimeSessionSource, /Retry-After.*retryAfter/s);
+  assert.doesNotMatch(realtimeSessionSource, /typed\.status === 429\s*\|\|/);
 
   assert.match(lessonTutorSource, /classifyGeminiProviderFailure\(/);
   assert.match(lessonTutorSource, /const quotaReached = liveFailure === "quota_exhausted"/);
   assert.match(lessonTutorSource, /const rateLimited = liveFailure === "rate_limited"/);
   assert.match(lessonTutorSource, /if \(rateLimited\)[\s\S]{0,180}fallbackVoiceTurnToText\(rateLimitMessage\)/);
+  assert.match(lessonTutorSource, /retryAfter <= 2 && rateLimitWaitCount < 1/);
+  assert.doesNotMatch(lessonTutorSource, /rateLimitWaitCount < 12/);
   assert.doesNotMatch(lessonTutorSource, /detail\.status === 429\s*\|\|/);
   assert.match(lessonTutorSource, /voiceTtsQuotaExhaustedRef\.current = true/);
   assert.match(lessonTutorSource, /if \(voiceTtsQuotaExhaustedRef\.current\)/);

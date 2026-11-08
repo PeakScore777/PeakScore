@@ -274,7 +274,7 @@ async function generateWithLLM7(prompt: string, task?: AITask): Promise<{ text: 
     throw new AIServiceError("AI_CONFIGURATION");
   }
 
-  const baseUrl = (process.env.LLM7_BASE_URL || "https://api.llm7.io/v1").replace(/\/+$/, "");
+  const baseUrl = "https://api.llm7.io/v1";
   const model = process.env.LLM7_MODEL?.trim();
   if (!model) {
     console.warn("[PeakScore AI] LLM7 omitido: configura LLM7_MODEL con un modelo habilitado antes de activarlo.");

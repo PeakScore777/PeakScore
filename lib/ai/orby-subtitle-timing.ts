@@ -8,7 +8,7 @@
  */
 export function countOrbySubtitleWords(value: string): number {
   const text = typeof value === "string" ? value.trim() : "";
-  return text ? (text.match(/\S+/gu) ?? []).length : 0;
+  return text ? (text.match(/\S+|\s+/gu) ?? []) : [];
 }
 
 /**

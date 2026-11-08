@@ -595,3 +595,33 @@ La instrucción correcta es **rediseñar la interfaz actual de Orby para que las
 - Escrituras confirmadas en GitHub en la rama `feat/founder-intro`; no se tocó `main`.
 - Estado Vercel observado para los commits iniciales: pending al momento de consulta; no declarar build/QA aprobado.
 - Falta validar visualmente en navegador, revisar las vistas de aprendizaje restantes para eliminar todos los tokens oscuros, y completar las herramientas que hoy no tienen flujo funcional.
+
+---
+
+## 2026-11-08 — OmegaX English Studio (inspiración funcional: Stimuler)
+
+### Objetivo
+Añadir práctica oral de inglés dentro del workspace de OmegaX, conservando el tutor general, Orby de Ciencias Naturales y el chat existente. Se toma como referencia funcional el ciclo hablar → recibir feedback → practicar el error; no se copia marca, personaje, textos ni interfaz de Stimuler.
+
+### Alcance incorporado
+- **Speaking de 60 segundos:** tema abierto, grabación voluntaria, transcripción y feedback en la conversación existente de OmegaX.
+- **Pronunciation practice:** frase modelo pronunciada por la voz del navegador, repetición del estudiante y comparación aproximada de palabras reconocidas.
+- **Roleplay:** situaciones cotidianas (cafetería, aeropuerto, entrevista, conocer personas y direcciones), con nivel A1–C1 y correcciones breves en español colombiano.
+- **Biblioteca:** opción explícita para guardar la transcripción como un recurso personal tipo grabación; no se guarda el audio bruto.
+
+### Integración técnica
+- Nuevo componente: components/aprender/OmegaXEnglishStudio.tsx.
+- Integración: components/aprender/LessonAITutor.tsx, nueva vista learningView === english.
+- La grabación solicita micrófono solo después de una acción del estudiante, limita cada toma a 60 segundos y 8 MB y ofrece reproducción local temporal.
+- La transcripción reutiliza únicamente /api/orby/audio/transcribe y Cloudflare Workers AI, bajo los límites/rate limits gratuitos ya existentes. No se añade proveedor, modelo, dependencia ni fallback facturable.
+- La grabación se mantiene temporal en el navegador; se envía a transcripción solo cuando el usuario pulsa el botón y solo se guarda el texto cuando el usuario lo solicita.
+- El feedback se envía al hilo actual del chat de OmegaX; el roleplay se desarrolla usando el mismo chat y la llamada Live existente.
+
+### Límites honestos
+- La comparación de frase modelo solo mide coincidencia de palabras reconocidas por ASR. No es puntuación de pronunciación, fonemas, acento ni entonación.
+- La transcripción y el feedback dependen de la cuota gratuita compartida de Cloudflare Workers AI. Al agotarse, la herramienta debe mostrar el aviso del endpoint existente y no cambiar a otro proveedor.
+- La interfaz todavía requiere pruebas reales de micrófono, permisos, navegadores, interrupciones y sesiones largas.
+- El nuevo componente y su conexión se someten a pruebas estáticas nuevas; no declarar que Node tests, TypeScript, ESLint, build o QA visual están aprobados hasta ejecutarlos realmente.
+
+### Inspiración de producto consultada
+Stimuler describe en su sitio oficial retos improvisados de 60 segundos, conversaciones sobre distintos temas y un ciclo de hablar, recibir feedback y repetir. PeakScore adopta esa estructura educativa y la integra a su propio tutor/identidad. Fuente: https://stimuler.tech/es

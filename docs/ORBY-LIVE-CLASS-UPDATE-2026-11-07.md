@@ -160,3 +160,36 @@ Pendiente:
 **Commits:** `1379677` (revelado progresivo de bloques y visuales), `fac4abb` (prueba de regresión).
 
 **Validación:** pendiente de resultado de GitHub Actions para este commit; no se declara TypeScript, ESLint, tests completos ni build aprobados.
+
+
+## Decimotercera mutación — pizarra exclusiva del profesor
+
+**Fecha:** 8 de noviembre de 2026  
+**Rama:** `feat/founder-intro`
+
+### Decisión de producto
+La referencia de clase muestra un profesor que escribe y señala; el estudiante observa. El puntero/lápiz visible en el vídeo es del profesor y no representa una herramienta de anotación del alumno.
+
+### Implementado
+- Se eliminó del componente de clase la capa SVG interactiva que permitía al estudiante dibujar encima de la pizarra.
+- Se retiraron lápiz, resaltador, borrador, deshacer, rehacer y limpieza de trazos del estudiante.
+- Se eliminó la lectura/escritura de tinta local desde la pizarra y su inclusión en el guardado de apuntes; se mantienen los apuntes estructurados del contenido generado por Orby.
+- Se retiró la prop `storageId` de la pizarra y su uso desde la vista de clase.
+- La superficie de clase ahora es blanca y lisa: sin cuadrícula, sin tarjetas decorativas alrededor de cada visual y sin la apariencia de cuaderno.
+- Se añadió una banda informativa de herramientas del profesor (dibujar, señalar y borrar). Es indicativa y no interactiva para el estudiante.
+- Los trazos SVG de Orby y su punta animada de lápiz se conservan.
+
+### Archivos
+- `components/aprender/OrbyBoard.tsx`
+- `components/aprender/LessonAITutor.tsx`
+- `tests/orby-request-filter.test.mjs`
+
+### Limitaciones explícitas
+- La banda de herramientas muestra las capacidades previstas; no implementa todavía un cursor de señalamiento independiente ni un modo de borrado invocable por eventos del modelo.
+- El lápiz animado acompaña los trazos `sketch` que envía Orby; no es un puntero físico ni una entrada del estudiante.
+- El guardado de apuntes conserva bloques y datos de apoyos visuales, pero ya no incluye anotaciones del alumno.
+- Requiere ejecutar CI y QA visual en Chrome para verificar layout, exportación PDF, animaciones y ausencia completa de interacción de tinta.
+
+**Commits:** `792e042` (retirada de la capa de tinta), `dd8d21d` (integración y apuntes), `91c7ba3` (regresiones teacher-only), `4875b7a` (banda de herramientas del profesor), `97ddc67` (prueba de herramientas visibles).
+
+**Validación:** pendiente de CI completa y prueba real en navegador. No se declara build aprobado.

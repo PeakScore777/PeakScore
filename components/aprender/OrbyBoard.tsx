@@ -458,7 +458,7 @@ function PhysiologyProcess({ visual }: { visual: Extract<OrbyBoardVisual, { type
 function Visual({ visual, board, drawingActive }: { visual: OrbyBoardVisual; board: OrbyBoardData; drawingActive: boolean }) {
   // Keep hooks unconditional even when the visual primitive changes between snapshots.
   const annotationMarkerId = `orby-annotation-arrow-${useId().replace(/:/g, "")}`;
-  const sketchFocus = board.teacherFocus && "strokeId" in board.teacherFocus
+  const sketchFocus = typeof board.teacherFocus?.strokeId === "string"
     ? board.teacherFocus
     : undefined;
   if (visual.type === "annotation") {
@@ -580,7 +580,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
                 const accessibleLabel = block
                   ? block.type === "step" ? `${block.label}: ${block.text}` : block.text
                   : visual?.title || `Apoyo visual ${element.sequence}`;
-                const isFocusedStage = board.teacherFocus && "elementId" in board.teacherFocus
+                const isFocusedStage = typeof board.teacherFocus?.elementId === "string"
                   && board.teacherFocus.elementId === element.id;
                 return (
                   <div

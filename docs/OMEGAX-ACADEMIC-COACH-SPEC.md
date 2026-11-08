@@ -204,3 +204,60 @@ Los temas de speaking de 60 segundos y las frases modelo de repetición ya se se
 - Para las solicitudes con skill válida, el selector del tutor utiliza el prompt pedagógico completo (incluye memoria previa y rúbrica de la destreza), sin activar por ello la búsqueda vectorial/graph. El prompt conversacional ligero queda para turnos que no requieren memoria de habilidad ni recuperación académica.
 
 - Después de responder un feedback con skill válida, el cliente vuelve a consultar `/api/orby/learning` para actualizar las tarjetas de progreso inmediatamente; no genera otra respuesta de IA. Si el refresco falla, conserva la respuesta y muestra un aviso no bloqueante.
+
+
+## Pendientes reservados — Perfil de aprendizaje dinámico (NO implementados todavía)
+
+Este backlog conserva la siguiente evolución acordada para OmegaX. No debe interpretarse como funcionalidad ya disponible.
+
+### P0 — cerrar y validar la base actual
+- [ ] Corregir todas las regresiones de tests descubiertas por Vercel, no solo la primera que falle; ejecutar `npm test`/comando del repositorio, TypeScript, ESLint y build completo.
+- [ ] Hacer QA real en Chrome de los cinco modos A1–C2: grabación, TTS, respuesta escrita, cambio de actividad/nivel, feedback, guardado y refresco de Progreso.
+- [ ] Conseguir un deployment Preview READY del HEAD actual y comprobar su URL antes de compartirlo como versión actualizada.
+- [ ] Confirmar que el feedback de Writing/Reading largo no se trunca en el transporte, en la persistencia ni en los límites del proveedor gratuito.
+
+### P1 — memoria longitudinal, no solo señales sueltas
+- [ ] Consolidar señales repetidas por usuario + materia + destreza + concepto, conservando evidencia/fechas y sin convertir un error aislado en diagnóstico permanente.
+- [ ] Calcular tendencias explicables por ventana temporal: primera observación, última observación, recurrencia, evidencia reciente y estado tentativo. No presentar porcentajes de dominio sin una rúbrica validada.
+- [ ] Detectar patrones de error repetidos y distinguir confusión conceptual, error de procedimiento, vocabulario, comprensión de consigna y falta de evidencia.
+- [ ] Registrar si una estrategia de enseñanza fue seguida por una mejora observable, sin atribuir causalidad a una sola respuesta.
+- [ ] Incluir revisión espaciada: proponer volver a practicar conceptos después de intervalos configurables y comprobar retención con preguntas nuevas.
+
+### P1 — recomendación adaptativa
+- [ ] Elegir la siguiente actividad a partir de señales recientes, repetición, dificultad y objetivos del alumno; explicar por qué se recomienda.
+- [ ] Ajustar dificultad gradualmente dentro de A1–C2 y permitir que el estudiante cambie el nivel. Nunca encasillar ni afirmar certificación MCER.
+- [ ] Generar variantes nuevas de práctica a partir del patrón observado, sin repetir literalmente el mismo ejercicio ni inventar una clave no verificada.
+- [ ] Mantener separados Listening, Reading, Writing, Speaking y Pronunciation; no cruzar evidencia de una habilidad a otra.
+
+### P1 — memoria de voz y Live
+- [ ] Permitir que los turnos Live/roleplay produzcan señales de aprendizaje cuando haya transcripción y contexto suficientes, sin exigir que el estudiante salga de la llamada para solicitar feedback.
+- [ ] Persistir una señal por turno con idempotencia y protección frente a duplicados; no guardar cada fragmento parcial de audio.
+- [ ] En Speaking/Pronunciation, distinguir lo que puede inferirse de una transcripción frente a lo que necesitaría análisis acústico. No puntuar fonemas, acento o entonación cuando solo hay texto.
+- [ ] Mostrar feedback breve durante o al finalizar el roleplay, con opción de revisar y guardar el resumen.
+
+### P2 — tutoría visual en el tablero
+- [ ] Conectar la memoria con la pizarra: frase original → corrección → explicación → ejemplo nuevo (Writing); fragmento → evidencia → inferencia (Reading); guion → detalle → respuesta (Listening); idea → reformulación (Speaking).
+- [ ] Añadir objetivos de práctica y una comprobación final para confirmar si el alumno pudo transferir lo aprendido.
+- [ ] Hacer que la escena sea acumulativa, legible y sincronizada con la explicación hablada, sin borrar pasos anteriores ni dibujar por decorar.
+
+### P1 — privacidad y controles del estudiante
+- [ ] Explicar qué señales se guardan y para qué se usan, con control para pausar la personalización.
+- [ ] Permitir consultar y borrar observaciones individuales o reiniciar la memoria personal sin borrar el material académico del Lab.
+- [ ] Mantener cada consulta estrictamente filtrada por el usuario autenticado y no habilitar lectura directa desde cliente mientras la tabla carezca de políticas RLS explícitas.
+- [ ] Evaluar retención/límites de señales y deduplicación antes de ampliar tráfico; documentar cualquier migración y revisar RLS/advisors primero.
+
+### Criterios de aceptación
+- La siguiente actividad sugerida cita qué evidencia previa la motivó y permite descartarla.
+- Dos errores aislados no bastan para etiquetar una dificultad persistente.
+- Una mejora se confirma con una tarea nueva de transferencia, no por repetir la respuesta corregida.
+- Los datos de una destreza no alteran las recomendaciones de otra.
+- El alumno puede revisar, pausar y borrar su memoria; otro usuario no puede leerla.
+- No se añaden proveedores, modelos, APIs de pago, créditos facturados ni fallbacks que generen cargos. Si se agota la cuota gratuita, se informa y se degrada/pausa.
+
+### Orden de trabajo recomendado
+1. Cerrar build y QA del English Studio existente.
+2. Añadir función de agregación/deduplicación en servidor y pruebas de aislamiento.
+3. Mostrar historial de evidencia por destreza con controles de pausa/borrado.
+4. Añadir recomendador explicable de siguiente práctica.
+5. Integrar señales de Live con idempotencia.
+6. Conectar la recomendación con tablero y actividades de las cinco materias ICFES.

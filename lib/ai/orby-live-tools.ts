@@ -118,7 +118,7 @@ export const ORBY_LIVE_KNOWLEDGE_TOOLS: Tool[] = [
         parameters: {
           type: Type.OBJECT,
           properties: {
-            operation: { type: Type.STRING, description: "Exact operation: focus, erase or replace." },
+            operation: { type: Type.STRING, enum: ["focus", "erase", "replace"], description: "Exact operation: focus, erase or replace." },
             strokeId: { type: Type.STRING, description: "Existing stroke ID for focus or replace." },
             label: { type: Type.STRING, description: "Optional short Spanish focus label, maximum 48 characters." },
             strokeIds: { type: Type.ARRAY, description: "One to eight existing stroke IDs for selective erase.", items: { type: Type.STRING } },

@@ -448,7 +448,7 @@ export default function OrbyBoard({ board, drawingActive = true }: { board: Orby
         })}
         {board.visuals?.map((visual, index) => <section key={`${visual.type}:${visual.title}:${index}`} style={{ animationDelay: `${Math.min((board.blocks.length + index) * 110, 1_100)}ms` }} data-board-visual-stage={board.blocks.length + index + 1} aria-label={visual.title} className="orby-board-appear space-y-3 rounded-none border-0 bg-transparent p-0 shadow-none sm:p-0">
           {visual.title ? <h4 className="text-xs font-bold text-slate-800">{visual.title}</h4> : null}
-          <Visual visual={visual} board={board}/>
+          <Visual visual={visual} board={board} drawingActive={drawingActive}/>
         </section>)}
       </div>
     </section>

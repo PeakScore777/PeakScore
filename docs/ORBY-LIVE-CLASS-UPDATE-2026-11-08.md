@@ -395,3 +395,30 @@ Se auditó por qué el alumno podía ver "cuota gratuita agotada" tras pocos tur
 - El resaltado usa reloj de reproducción PCM y duración de audio programado; es monotónico y no genera llamadas extra, pero NO equivale a timestamp fonético por palabra. La API Gemini Live streaming no expone dichos timestamps.
 - Fallback TTS por turnos deja el contenido visible si falla/agota cuota, pero en esta etapa el resaltado por palabra solo está integrado en la reproducción Live PCM; no declarar karaoke equivalente en el fallback TTS.
 - No se afirma que el tutor ya esté idéntico al video. El siguiente criterio de aceptación es probar la clase real y ajustar cadencia/diagramas a partir de esa observación.
+
+
+---
+
+## Validación local en Windows — compatibilidad de finales de línea
+
+### Evidencia recibida
+- La instalación local quedó completada con `npm ci --include=dev`: 546 paquetes añadidos, auditoría npm con 0 vulnerabilidades y TypeScript `5.9.3` disponible.
+- La salida local reportó 230 pruebas aprobadas y 2 fallidas de 232.
+- Los dos fallos eran aserciones estáticas que buscaban fragmentos con saltos de línea `\n` exactos dentro de archivos fuente:
+  - orden de la primera oración segura y del primer flush de audio Live;
+  - pausa de la animación del foco contextual en CSS.
+- Ambos fallos son sensibles al checkout Windows con finales `CRLF`; no eran fallos de una respuesta Live ni de la animación en runtime. No se deben ocultar relajando o quitando las aserciones.
+
+### Corrección aplicada
+- El lector de fixtures de `tests/orby-request-filter.test.mjs` ahora normaliza `CRLF` y `CR` a `LF` en memoria, antes de ejecutar las comprobaciones estáticas.
+- El cambio se limita al harness de pruebas. No reescribe archivos del proyecto, no altera el CSS ni cambia el flujo de audio Live.
+- No se ha cambiado el comportamiento de Orby ni se ha debilitado ninguna expectativa funcional.
+
+### Advertencias de instalación observadas
+- npm mostró `allow-scripts` para cinco paquetes (`@google/genai`, `core-js`, `protobufjs`, `tesseract.js` y `unrs-resolver`). La instalación terminó, pero esas advertencias deben revisarse antes de aprobar el entorno como completamente validado; no aprobar scripts masivamente sin determinar cuáles son necesarios y seguros.
+- También apareció una advertencia deprecada de `node-domexception`; no es la causa de los dos tests fallidos.
+- El CI Linux del commit de corrección debe confirmar que el cambio conserva las 232 pruebas, TypeScript, ESLint y build.
+
+### Estado al registrar esta nota
+- Corrección subida a `feat/founder-intro`; CI del nuevo commit pendiente.
+- No se tocó `main`, no se desplegó, no se modificaron secretos/cuotas ni se aplicaron migraciones Supabase.

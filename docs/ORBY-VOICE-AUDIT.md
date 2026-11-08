@@ -846,3 +846,12 @@ Workflow `42339106392` terminó con `success`. Pasaron las 130 pruebas de regres
 - El resaltado usa reloj de reproducción PCM y duración de audio programado; es monotónico y no genera llamadas extra, pero NO equivale a timestamp fonético por palabra. La API Gemini Live streaming no expone dichos timestamps.
 - Fallback TTS por turnos deja el contenido visible si falla/agota cuota, pero en esta etapa el resaltado por palabra solo está integrado en la reproducción Live PCM; no declarar karaoke equivalente en el fallback TTS.
 - No se afirma que el tutor ya esté idéntico al video. El siguiente criterio de aceptación es probar la clase real y ajustar cadencia/diagramas a partir de esa observación.
+
+
+## 2026-11-08 — compatibilidad de la suite en Windows
+
+- Instalación local completada: 546 paquetes; `npm audit` reportó 0 vulnerabilidades; TypeScript `5.9.3` quedó disponible.
+- Resultado inicial de `npm run test:orby`: 230/232. Los dos fallos eran verificaciones de texto con saltos de línea exactos: el orden del primer flush de audio Live y la regla CSS que pausa el foco contextual. Ambos comparaban `LF` y podían fallar con fixtures `CRLF` de Windows.
+- Corrección aplicada únicamente en el lector de archivos fuente de `tests/orby-request-filter.test.mjs`: normaliza finales de línea en memoria. Las aserciones permanecen intactas; no se ha modificado código de ejecución del tutor ni CSS.
+- npm advirtió que cinco paquetes tienen scripts de instalación aún no aprobados por `allowScripts`. No se aprobaron de forma global; hay que evaluar si alguno necesita su script antes de considerar validado el setup local.
+- CI del commit con la corrección pendiente de resultado. Hasta que termine, no declarar las 232 pruebas verdes.

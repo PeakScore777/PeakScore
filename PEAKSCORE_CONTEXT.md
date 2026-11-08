@@ -647,3 +647,5 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - **Separación importante:** un `learningSkill` válido activa solo la memoria personal de señales de esa destreza; no fuerza por sí mismo búsqueda vectorial/grafo conceptual en Orby Lab. La búsqueda académica habitual conserva su detector independiente. Así, una corrección de Reading/Writing no provoca búsquedas de documentos del Lab sin necesidad.
 - Si una consulta además requiere material académico por su propia intención, la búsqueda se limita a Inglés cuando la skill activa es de English Studio.
 - Inventario estático actual: 257 tests nombrados, 0 duplicados; no ejecutados.
+
+- El endpoint selecciona el prompt pedagógico completo cuando hay skill activa para que el feedback use la memoria previa; esto no habilita recuperación vectorial del Lab. La búsqueda documental y la memoria del alumno permanecen separadas.

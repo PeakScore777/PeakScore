@@ -960,7 +960,7 @@ El archivo `tests/orby-request-filter.test.mjs` contiene actualmente **215 prueb
 - Regresiones de annotation: `cdde8c8efd7cc006bb067fc30739dcbf5cc95d87`.
 - Capacidad acumulativa 40 y esquema: `3766d3d42cc67aa546a373268e21b581d71a4936`, `c933e7ec4efa6c0fa964ea00f80f5b31871efc8b`, `db8cce81a1394bd4b74a416d6abe14841de0a0d4`.
 - Pausa integral de SVG/CSS: `b6efff10807dc0e24df32ddade3a94e3a8fecdc9`, `79913c44235e2141f33758139eebd490e6ed93af`.
-- Capa sketch única: `e18a75e6c7315a17e8e0df4c0bd21f7395447bde`, `e9be72d97a1440889d822996870f75f593eebdd9`.
+- Capa sketch única: `e18a75e6c7315a17e8e0df4c0bd21f7395447bde`, `e9be72d97a1440889d822796870f75f593eebdd9`.
 - Hook y claves estables: `79f2ff17566a6596e3c41b1789e22e3af46834df`, `9e778324f7ff64993dd8b1b1acfa5d5d5d0a79ce`.
 - Cola con margen de montaje y pausa de levantamiento: `2ca48ef4ef1f1f7c79dcfbb68e92654622a92c4a`.
 - Regresiones de guards/cola: `eb63721425aca158ddde0fc657431dd76629df4f`, `a1c4c72286902d1b80bb7db9b0ab344d820841b7`, `8290ea3b2207babf3fecab1745d9403ecbae031e`, `b666fe2a9198a12f43cdf477949260be91b411b6`.
@@ -1278,7 +1278,7 @@ Pasar de snapshots visuales completos a pequeñas operaciones docentes sobre la 
 - Append de texto y tinta en una misma pizarra espacial, preservando trazos previos e IDs.
 - Límites de posición, tipos de bloque, cantidad de trazos y sanitización.
 - Contrato Live y directiva de sesión con generación obligatoria.
-- La suite contiene ahora **229 declaraciones `test()`** según inspección estática del archivo. Este número describe casos declarados, no un resultado de ejecución.
+- La suite contiene ahora **227 declaraciones `test()`** según inspección estática del archivo. Este número describe casos declarados, no un resultado de ejecución.
 
 ### Límites y verificación honesta
 - La capa ya permite intercalar escritura y tinta por operaciones ordenadas; no garantiza que Gemini emita acciones en todo turno ni que el momento coincida exactamente con cada palabra hablada.

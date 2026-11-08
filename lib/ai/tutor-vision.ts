@@ -1,6 +1,7 @@
 import "server-only";
 
 import { GoogleGenAI } from "@google/genai";
+import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const MAX_IMAGE_BYTES = 1 * 1024 * 1024;
@@ -47,7 +48,8 @@ export function validateTutorImage(mimeType: unknown, base64: unknown):
  * text-only Groq fallback, because that could produce a fabricated analysis.
  */
 export async function generateTutorVision(prompt: string, mimeType: string, base64: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  if (!isGeminiFreeTierConfigured()) throw new Error("GEMINI_FREE_TIER_NOT_CONFIRMED");
+  const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) throw new Error("GEMINI_TUTOR_VISION_NOT_CONFIGURED");
 
   try {

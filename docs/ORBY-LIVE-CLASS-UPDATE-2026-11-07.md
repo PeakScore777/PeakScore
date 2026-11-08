@@ -317,6 +317,8 @@ Esperar CI completa tras `926f849`. Si ESLint pasa, revisar el resultado del bui
 - `9ecc6c9` — el borrado exige que todos los IDs seleccionados existan.
 - `81ac2c0` — el halo del señalador se desvanece tras dos pulsos.
 - `5a96a84` — enum explícito para las operaciones del schema Live.
+- `7a53c4c` — prueba para rechazar borrados con mezcla de IDs válidos y desconocidos.
+- `0041c8b` — registro final de commits y alcance en este documento.
 
 ### Seguridad y límites
 - Las operaciones no aceptan HTML, SVG ni código; solo datos estructurados tipados.

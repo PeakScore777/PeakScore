@@ -3924,7 +3924,8 @@ test("Gemini Live dibuja a mano sin bloquear la primera respuesta oral", async (
   assert.match(tools, /stable IDs for unchanged strokes/);
   assert.match(tools, /2–5 new strokes per update/);
   assert.match(route, /no lo vuelvas a trazar ni cambies su ID/);
-  assert.match(tools, /tone: \{ type: Type.STRING, description: "ink (black), blue, red, accent, muted or success\."/);
+  assert.ok(tools.includes('tone: { type: Type.STRING, format: "enum", enum: ["ink", "blue", "red", "accent", "muted", "success"] }'),
+    "el esquema de trazos debe exponer la paleta de profesor como enum validado");
   assert.match(lesson, /flushPendingOrbyTeachingBoard/);
   assert.doesNotMatch(lesson, /spokenCue|voicePendingBoardCuesRef/);
 });

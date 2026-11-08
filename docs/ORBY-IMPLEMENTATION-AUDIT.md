@@ -512,3 +512,8 @@ CEFR A1–C2 es una ruta general de aprendizaje elegible. No se debe llamar a C1
 - El status de Vercel consultado para el commit de integración devuelve `build-rate-limit`; no es un resultado de compilación de este HEAD. No se recibió workflow run de GitHub Actions asociado.
 - Quedan pendientes actividades dedicadas de listening/reading/writing, evaluación CEFR por habilidades, persistencia de progreso lingüístico y QA de pizarra real para todos los niveles.
 - Sin proveedor nuevo, coste nuevo, migración remota, despliegue ni cambio de `main`.
+
+
+### Ajuste final de tareas CEFR por nivel
+- `OmegaXEnglishStudio.tsx` ahora usa `TOPICS_BY_LEVEL` y `PHRASES_BY_LEVEL` para variar speaking prompts y frases de repetición según A1–C2. `speakModel` lee la frase dinámica seleccionada; el selector se bloquea mientras exista grabación, transcripción o blob pendiente.
+- Se agregó la regresión de bancos específicos por nivel. Inventario estático al 2026-11-08: 253 tests nombrados, cero duplicados. Sigue pendiente ejecutar el runner y validación TypeScript/ESLint/build/browser.

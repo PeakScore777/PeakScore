@@ -19,6 +19,7 @@ function cleanText(value: unknown, max: number): string {
 }
 
 export async function POST(request: Request) {
+  let assistantName: "OmegaX" | "Orby" = "Orby";
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
       return jsonError("La solicitud de imagen no es válida.", 400);
     }
 
-    const assistantName = body.assistantName === "OmegaX" ? "OmegaX" : "Orby";
+    assistantName = body.assistantName === "OmegaX" ? "OmegaX" : "Orby";
     const studentPrompt = cleanText(body.prompt, 1200);
     const subjectInput = cleanText(body.subject, 80);
     const topic = cleanText(body.topic, 180) || "Preparación Saber 11";

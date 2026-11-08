@@ -1,3 +1,14 @@
+## 2026-11-08 — auditoría transversal y puertas de coste/privacidad de inferencia
+- Se auditó el flujo de inferencia de OmegaX/Orby en chat, voz, visión, embeddings, lectura de PDFs, TTS, administración, worker y cron.
+- Se añadieron confirmaciones fail-closed para Gemini, Groq, LLM7 y Cloudflare Workers AI. Una API key por sí sola ya no habilita llamadas; los flags de cuenta sin coste quedan en false por defecto.
+- Gemini exige además aprobación separada para el uso de datos del nivel gratuito; mantenerla apagada si no existe una decisión explícita de privacidad.
+- Se protegió el cliente Gemini directo de importación PDF y se deshabilitó el cliente OpenAI legacy. El endpoint LLM7 se fija al host aprobado.
+- Se corrigió el estrechamiento TypeScript del foco de pizarra, el reloj de speaking (inicio en MediaRecorder.onstart y reloj monotónico) y el sanitizador de etiquetas focus.
+- Se añadieron regresiones para las puertas de proveedor, privacidad, importación PDF y preservación de etiquetas académicas.
+- Validación completa (260 tests, TypeScript, ESLint, build y auditoría de dependencias): run 42537054107, SHA 4a7e212. Ajuste posterior de orden auth/admin en importación PDF pendiente de CI final.
+- Riesgo pendiente: Cloudflare anuncia retirada de `@cf/google/embeddinggemma-300m` el 20 de noviembre de 2026; el índice actual usa 768 dimensiones. No sustituir/reindexar sin validar dimensiones y búsqueda.
+- QA manual de Live, voz, navegador, cuotas reales y privacidad sigue pendiente. Sin cambios a `main`, sin deploy ni migraciones remotas.
+
 ## 2026-11-08 — OmegaX English Studio A1–C2 y feedback con reintento
 - Se amplió el selector de English Studio de A1–C1 a A1–C2, con descriptor y pauta pedagógica específica por nivel.
 - Se adaptaron los prompts de roleplay para conversar una pregunta por vez, corregir hasta dos aspectos y guiar un reintento. El nivel elegido es una meta didáctica, no una certificación.

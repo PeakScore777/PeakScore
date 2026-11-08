@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { ORBY_VOICE_NAME, ORBY_VOICE_STYLE } from "@/lib/ai/orby-voice-config";
 import { normalizeGeminiTtsAudio } from "@/lib/ai/orby-tts-audio";
 import { classifyGeminiTtsFailure } from "@/lib/ai/orby-tts-errors";
+import { isGeminiFreeTierConfigured } from "@/lib/ai/provider-free-tier";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,6 +30,14 @@ export async function POST(request: Request) {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return jsonError("Inicia sesión para escuchar a Orby.", "UNAUTHORIZED", 401);
+    }
+
+    if (!isGeminiFreeTierConfigured()) {
+      return jsonError(
+        "La voz está desactivada: el servidor no ha confirmado el plan gratuito de Gemini. No se ha enviado ninguna solicitud al proveedor.",
+        "GEMINI_FREE_TIER_NOT_CONFIRMED",
+        503,
+      );
     }
 
     // Free-tier Gemini requests may be used to improve Google's products.

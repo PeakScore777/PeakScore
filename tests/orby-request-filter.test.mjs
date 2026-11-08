@@ -4345,6 +4345,104 @@ test("el sanitizador rechaza dos capas sketch para conservar un único lápiz", 
   assert.equal(boardModule.sanitizeOrbyBoard(board), null);
 });
 
+test("el layout espacial compone bloques y visuales una sola vez en orden 16:9", () => {
+  const board = {
+    version: 2,
+    title: "La célula animal",
+    blocks: [
+      { type: "heading", text: "La célula animal" },
+      { type: "text", text: "La membrana regula el intercambio." },
+    ],
+    visuals: [{
+      type: "sketch",
+      title: "Esquema",
+      strokes: [{
+        id: "cell_outline",
+        points: [{ x: 8, y: 50 }, { x: 28, y: 20 }, { x: 70, y: 25 }, { x: 92, y: 60 }, { x: 65, y: 88 }, { x: 20, y: 82 }, { x: 8, y: 50 }],
+        tone: "ink",
+        width: 1.4,
+      }],
+    }],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [
+        { id: "heading", sequence: 1, kind: "block", index: 0, x: 4, y: 2, width: 92, height: 12 },
+        { id: "membrane_note", sequence: 2, kind: "block", index: 1, x: 4, y: 20, width: 24, height: 45 },
+        { id: "cell_drawing", sequence: 3, kind: "visual", index: 0, x: 32, y: 18, width: 58, height: 74 },
+      ],
+    },
+  };
+  const result = boardModule.sanitizeOrbyBoard(board);
+  assert.ok(result);
+  assert.equal(result.layout?.aspectRatio, "16:9");
+  assert.deepEqual(result.layout?.elements.map((element) => element.id), ["heading", "membrane_note", "cell_drawing"]);
+  assert.deepEqual(result.layout?.elements.map((element) => element.sequence), [1, 2, 3]);
+  assert.equal(result.blocks.length, 2);
+  assert.equal(result.visuals?.length, 1);
+});
+
+test("el layout espacial rechaza índices repetidos, etapas desordenadas y elementos fuera del lienzo", () => {
+  const base = {
+    version: 2,
+    title: "Escena",
+    blocks: [{ type: "heading", text: "Tema" }],
+    visuals: [{ type: "timeline", title: "Proceso", events: [
+      { label: "Inicio", position: 20 }, { label: "Final", position: 80 },
+    ] }],
+    layout: {
+      aspectRatio: "16:9",
+      elements: [
+        { id: "heading", sequence: 1, kind: "block", index: 0, x: 4, y: 2, width: 30, height: 14 },
+        { id: "process", sequence: 2, kind: "visual", index: 0, x: 40, y: 20, width: 56, height: 70 },
+      ],
+    },
+  };
+  const accept = (value) => boardModule.sanitizeOrbyBoard(value);
+  assert.ok(accept(base));
+  assert.equal(accept({ ...base, layout: { ...base.layout, aspectRatio: "4:3" } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    base.layout.elements[0], { ...base.layout.elements[1], id: "heading" },
+  ] } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    base.layout.elements[0], { ...base.layout.elements[1], sequence: 1 },
+  ] } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    base.layout.elements[0], { ...base.layout.elements[1], index: 1 },
+  ] } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [
+    base.layout.elements[0], { ...base.layout.elements[1], x: 80, width: 30 },
+  ] } }), null);
+  assert.equal(accept({ ...base, layout: { ...base.layout, elements: [base.layout.elements[0]] } }), null);
+});
+
+test("los tableros version 1 y 2 sin layout conservan la compatibilidad heredada", () => {
+  const legacyV1 = boardModule.sanitizeOrbyBoard({
+    version: 1, title: "Explicación", blocks: [{ type: "text", text: "Una idea." }],
+  });
+  const legacyV2 = boardModule.sanitizeOrbyBoard({
+    version: 2, title: "Explicación", blocks: [{ type: "text", text: "Una idea." }], visuals: [],
+  });
+  assert.ok(legacyV1);
+  assert.ok(legacyV2);
+  assert.equal(legacyV1.layout, undefined);
+  assert.equal(legacyV2.layout, undefined);
+});
+
+test("el renderer y Gemini comparten el contrato del lienzo espacial", () => {
+  assert.match(boardComponentSource, /orby-board-canvas/);
+  assert.match(boardComponentSource, /spatialLayout\.elements\.map/);
+  assert.match(boardComponentSource, /data-orby-layout-sequence=\{element\.sequence\}/);
+  assert.match(boardComponentSource, /key=\{element\.id\}/);
+  assert.match(liveToolsSource, /layout: \{/);
+  assert.match(liveToolsSource, /aspectRatio: \{ type: Type\.STRING/);
+  assert.match(liveToolsSource, /sequence: \{ type: Type\.NUMBER/);
+  assert.match(liveToolsSource, /Every block and visual must be referenced exactly once/);
+  assert.match(realtimeSessionSource, /incluye layout con aspectRatio 16:9/);
+  assert.match(cloudflareTutorRoute, /Para cada board version 2 nuevo incluye layout/);
+});
+
+
+
 
 
 

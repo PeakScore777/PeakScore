@@ -1257,18 +1257,19 @@ export default function LessonAITutor({ subject, topic, stage = "theory", questi
               return;
             }
             if (payload.code === "RATE_LIMITED") {
-              // This is our per-user rolling-window limit, not exhausted provider quota.
-              // Wait and retry the SAME chunk; never abandon the rest of a long explanation.
+              // A rolling-window throttle is not a daily quota. Never stack minute-long
+              // retries on the student's speaking turn: allow one tiny recovery only.
               const retryAfter = Number(response.headers.get("Retry-After") ?? 0);
-              if (Number.isFinite(retryAfter) && retryAfter >= 0 && rateLimitWaitCount < 12) {
+              if (Number.isFinite(retryAfter) && retryAfter >= 0
+                && retryAfter <= 2 && rateLimitWaitCount < 1) {
                 rateLimitWaitCount += 1;
                 requestController = null;
-                setVoiceStatus("Pausa breve de la lectura gratuita; continuaré desde la misma frase…");
-                window.setTimeout(() => void playFreeTtsChunk(), Math.max(2, retryAfter + 1) * 1000);
+                setVoiceStatus("Recuperando la voz…");
+                window.setTimeout(() => void playFreeTtsChunk(), Math.max(250, retryAfter * 1000));
                 return;
               }
               finishWithoutGenericVoice(
-                "La lectura se detuvo por el límite temporal del servicio gratuito. El texto completo sigue visible; no se ha omitido deliberadamente ninguna parte ni se activará un servicio de pago.",
+                "La voz está temporalmente limitada. La explicación completa sigue escrita y puedes continuar preguntando; no voy a dejarte esperando varios minutos ni activar un servicio de pago.",
               );
               return;
             }

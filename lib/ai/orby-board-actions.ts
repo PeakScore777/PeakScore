@@ -82,7 +82,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
   const existsExactlyOnce = (id: string) => strokeIdCounts.get(id) === 1;
   if (action.operation === "focus") {
     const revision = (board.teacherFocus?.revision ?? 0) + 1;
-    if ("elementId" in action) {
+    if (typeof action.elementId === "string") {
       if (!board.layout?.elements.some((element) => element.id === action.elementId)) return null;
       return {
         ...board,

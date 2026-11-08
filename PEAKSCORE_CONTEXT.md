@@ -441,3 +441,12 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - Claude Free de claude.ai no es Claude API gratuito; la API de Console usa créditos prepagados. No usar como fallback de PeakScore.
 - Sigue pendiente: medir p50/p95 en Chrome, revisar uso real de AI Studio/Cloudflare y ejecutar tests/TS/ESLint/build. No afirmar compilación verde.
 - Archivos clave: `lib/ai/orby-tts-errors.ts`, `app/api/orby/realtime-session/route.ts`, `app/api/orby/voice-speech/route.ts`, `components/aprender/LessonAITutor.tsx`.
+
+
+### Fuentes oficiales consultadas para esta actualización
+- Gemini API — límites por RPM/TPM/RPD, límites por proyecto y reinicio de RPD: https://ai.google.dev/gemini-api/docs/rate-limits
+- Gemini API — precios Free Tier de Gemini 3.8 Live y Flash-Lite TTS: https://ai.google.dev/gemini-api/docs/pricing
+- Gemini API — modelos de audio y TTS: https://ai.google.dev/gemini-api/docs/speech-generation
+- Cloudflare Workers AI — asignación de 10.000 neuronas gratis al día y reinicio UTC: https://developers.cloudflare.com/workers-ai/platform/pricing/
+- Anthropic — facturación de la API de Claude mediante créditos prepagados: https://support.claude.com/es/articles/8977456-como-pago-mi-uso-de-la-api-de-claude
+- Anthropic — límites variables del plan gratuito de Claude.ai y reinicio de cinco horas: https://support.claude.com/es/articles/8114491-comienza-con-claude

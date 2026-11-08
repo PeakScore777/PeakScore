@@ -650,3 +650,19 @@ La vista de clase en vivo utiliza una superficie de subtítulos blanca, pero los
 - Inventario estático actual del archivo de pruebas: 238 pruebas nombradas, sin títulos duplicados. Este conteo no equivale a ejecución ni aprobación de pruebas.
 - GitHub Actions no reporta workflow run asociado al HEAD consultado. Vercel reporta `build-rate-limit`; TypeScript, ESLint, tests, build y QA Chrome/micrófono siguen pendientes de ejecución.
 - Se verificó que `main` permanece intacta; los cambios continúan únicamente en `feat/founder-intro`.
+
+## 2026-11-08 — rechazo de solapamientos en append-block
+
+### Hallazgo
+La ruta incremental `append-block` comprobaba límites del canvas y duplicados de ID, pero permitía que el nuevo rectángulo cubriera una etapa de texto o una visual existente. La bitácora ya marcaba esa validación geométrica como pendiente.
+
+### Corrección aplicada
+- `lib/ai/orby-board-actions.ts`: se agregó `rectanglesOverlap` y `applyOrbyBoardAction(append-block)` ahora rechaza el nuevo bloque si intersecta cualquier rectángulo de `layout.elements`. Los bordes que solo se tocan no cuentan como solapamiento.
+- `components/aprender/LessonAITutor.tsx`: si se rechaza `append-block`, Gemini Live recibe un motivo espacial útil; `append-strokes` conserva un motivo específico y las operaciones sobre IDs mantienen su mensaje.
+- `tests/orby-request-filter.test.mjs`: regresiones para bloque superpuesto, bloque adyacente que solo toca el borde y mensaje explicativo devuelto al modelo.
+
+### Alcance y límites
+- La regla afecta solo a nuevas acciones incrementales `append-block`; no invalida snapshots históricos ni cambia el contrato de layout v2 heredado.
+- No se permite texto flotando encima de una etapa de dibujo con este tipo de acción. Las etiquetas que forman parte del sketch siguen pudiendo vivir dentro del propio SVG mediante `labelX/labelY`.
+- No se ha ejecutado el test runner ni QA de Chrome. La revisión estática del inventario de tests es independiente de su ejecución.
+- No se modificó el renderer, la cola del lápiz, el transporte de audio, los prompts de conocimiento ni la cuota de proveedores.

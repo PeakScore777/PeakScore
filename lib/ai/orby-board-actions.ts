@@ -81,7 +81,7 @@ export function applyOrbyBoardAction(board: OrbyBoard, action: OrbyBoardAction):
     });
     return { ...board, visuals, teacherFocus: undefined };
   }
-  if (!existingIds.has(action.strokeId)) return null;
+  if (!existsExactlyOnce(action.strokeId)) return null;
   const visuals = (board.visuals ?? []).map((visual) => {
     if (visual.type !== "sketch" || !visual.strokes.some((stroke) => stroke.id === action.strokeId)) return visual;
     return {

@@ -485,3 +485,10 @@ Toda nueva función, API, Server Action, RPC, policy o Storage policy debe evalu
 - GitHub Actions SHA `69eebdcdacf94dd0403b1e7d01ab8e3f7d3135c9`: 239/239 tests, TypeScript, ESLint, audit y Next production build en verde. Run: https://github.com/PeakScore777/PeakScore/actions/runs/42519075898
 - Pendiente de validar manualmente: audio/voz Gemini Live real, interrupciones con micrófono físico, render y lápiz de pizarra en Chrome, responsive y permisos/cuotas reales. El build automatizado no certifica estas pruebas.
 - `main` permanece intacta; continuar desde `feat/founder-intro`.
+
+## 2026-11-08 — English Studio roleplay de voz
+- Al iniciar un roleplay, el CTA abre/reutiliza la llamada de voz de OmegaX y envía el escenario como primer turno. Si hay una sesión Live general activa, se renueva para aplicar el prompt de práctica bilingüe desde el inicio.
+- El servidor solo acepta `englishPracticeMode` cuando el asistente es OmegaX. La excepción permite diálogo inglés con correcciones breves en español colombiano; Orby conserva español y Ciencias Naturales.
+- La excepción no elimina filtros de programación, cocina, contenido dañino, promoción externa, privacidad ni prompt injection. El fallback gratuito por turnos usa el mismo flag restringido.
+- CI del SHA `f1a08ccff8cf7c144d183af8d4acbaa9e259eb60`: 240/240 tests, TypeScript, ESLint, dependency audit y Next.js build aprobados. Run: https://github.com/PeakScore777/PeakScore/actions/runs/42519666204
+- QA pendiente: Chrome/micrófono físico, ASR de inglés en tiempo real, barge-in durante inglés, audibilidad del fallback y cuotas reales. No afirmar evaluación fonética.

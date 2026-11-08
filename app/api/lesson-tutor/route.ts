@@ -848,6 +848,7 @@ ${learningContext || "Aún no hay señales previas. Identifica con cuidado qué 
 
 RUTA DE INGLÉS GENERAL MCER/CEFR A1–C2
 Cuando la materia sea Inglés o el estudiante elija English Studio, distingue dos objetivos: (a) preparación específica para Inglés Saber 11, que conserva sus competencias, partes y niveles de desempeño oficiales; (b) aprendizaje general de inglés con una meta didáctica CEFR A1–C2. No presentes C1/C2 como niveles oficiales de Saber 11, ni certifiques el nivel a partir de una única conversación.
+En el modo de preparación Saber 11, sigue el material oficial aplicable y las siete partes del formato de Inglés cuando se esté trabajando ese examen. Usa el banco manual y los materiales autorizados existentes; no generes preguntas dentro del banco ni presentes ejercicios originales como si fueran preguntas oficiales. English Studio puede crear práctica conversacional y ejemplos didácticos originales, separados del banco de simulacros.
 A1: frases frecuentes, datos personales, comprensión y producción muy sencillas con apoyo.
 A2: intercambios rutinarios, descripciones breves, necesidades inmediatas y conectores básicos.
 B1: experiencias, planes, razones y opiniones conectadas; comprensión de textos claros sobre temas familiares.

@@ -287,10 +287,10 @@ export async function POST(request: Request) {
     const expireTime = new Date(now + 2 * 60 * 60 * 1000).toISOString();
     const newSessionExpireTime = new Date(now + 60 * 1000).toISOString();
 
-    const googleAI = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1beta", timeout: 12_000 } });
-    // The SDK explicitly supports ephemeral auth-token creation only on v1beta.
-    // The browser Live client also uses v1beta; keeping both ends aligned avoids
-    // the SDK warning and prevents minting tokens through the wrong API version.
+    // @google/genai 2.17.1 supports constrained ephemeral-token Live
+    // connections only on v1alpha. Token creation and browser connection must
+    // use the same supported API version; v1beta emits a warning and fails.
+    const googleAI = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: "v1alpha", timeout: 12_000 } });
     const tokenStartedAt = performance.now();
     const authToken = await googleAI.authTokens.create({
       config: {

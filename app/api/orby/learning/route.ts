@@ -75,6 +75,44 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return jsonError("Inicia sesión para actualizar tu biblioteca.", 401);
+
+    const body = await request.json().catch(() => null);
+    const id = body && typeof body.id === "string" ? body.id : "";
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+      return jsonError("El elemento seleccionado no es válido.", 400);
+    }
+    const update: { title?: string; content?: string } = {};
+    if (typeof body.title === "string") {
+      const title = body.title.trim().slice(0, 120);
+      if (!title) return jsonError("El título no puede quedar vacío.", 400);
+      update.title = title;
+    }
+    if (typeof body.content === "string") {
+      const content = body.content.trim().slice(0, 8000);
+      if (!content) return jsonError("El contenido no puede quedar vacío.", 400);
+      update.content = content;
+    }
+    if (!Object.keys(update).length) return jsonError("No hay cambios para guardar.", 400);
+
+    const { data, error } = await supabase.from("orby_learning_items")
+      .update(update).eq("id", id).eq("user_id", user.id)
+      .select("id,kind,title,content,created_at").maybeSingle();
+    if (error) {
+      console.error("[OmegaX Learning] Update failed.", { code: error.code });
+      return jsonError("No se pudo actualizar el elemento.", 503);
+    }
+    if (!data) return jsonError("El elemento no existe.", 404);
+    return NextResponse.json({ item: data }, { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return jsonError("No se pudo actualizar el elemento.", 500);
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const supabase = await createClient();

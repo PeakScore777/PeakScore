@@ -102,3 +102,7 @@ La entrega espacial y sus regresiones se describen en la bitácora diaria y en `
 ## Addendum — señalar elementos completos de la pizarra
 
 Orby puede usar `apply_orby_board_action` con `focus` para señalar un trazo existente (`strokeId`) o una etapa espacial completa (`elementId`). La acción requiere un único ID válido que ya exista en la pizarra activa. El halo no escribe ni altera contenido; se congela al interrumpir la clase y respeta movimiento reducido. Borrado y reemplazo siguen limitados a trazos.
+
+### Rectificación del orden y borrado espacial
+
+El orden de las etapas del canvas es estrictamente creciente, no necesariamente consecutivo. Se permiten huecos después de borrar una etapa para conservar los números de secuencia originales. Si \`erase\` elimina la última tinta del sketch, se elimina esa etapa y se ajustan referencias de índice posteriores sin renumerar los elementos que permanecen. El primer trazo espera el retraso de su etapa; los snapshots acumulativos siguientes continúan la cola existente.
